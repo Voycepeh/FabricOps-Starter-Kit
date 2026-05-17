@@ -6,11 +6,7 @@
 
 ## Module dependency summary
 
-<div class="module-table-scroll">
-| Callable count | Internal helper count | Outbound references | Inbound references |
-|---:|---:|---:|---:|
-| 1 | 2 | 1 | 1 |
-</div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 1</span><span class="reference-chip">Outbound: 1</span><span class="reference-chip">Inbound: 1</span></div>
 
 ## Module purpose
 
@@ -19,9 +15,26 @@ Owns deterministic profiling evidence such as schema, nulls, distincts, min/max,
 ## Public callables
 
 <div class="module-table-scroll">
-| Callable | Tier | Type | Summary | Related helpers |
-|---|---|---|---|---|
-| [`profile_dataframe`](../../reference/profile_dataframe/) | Essential | function | Build canonical DQ-ready profiling rows from a Spark DataFrame. | [`_get_profiled_columns`](../../reference/internal/data_profiling/_get_profiled_columns/) (internal), [`_is_min_max_supported_type`](../../reference/internal/data_profiling/_is_min_max_supported_type/) (internal) |
+<table>
+  <thead>
+    <tr>
+      <th>Callable</th>
+      <th>Tier</th>
+      <th>Type</th>
+      <th>Summary</th>
+      <th>Related helpers</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><a href="../../reference/profile_dataframe/"><code>profile_dataframe</code></a></td>
+      <td>Essential</td>
+      <td>function</td>
+      <td>Build canonical DQ-ready profiling rows from a Spark DataFrame.</td>
+      <td><a href="../../reference/internal/data_profiling/_get_profiled_columns/"><code>_get_profiled_columns</code></a> (internal), <a href="../../reference/internal/data_profiling/_is_min_max_supported_type/"><code>_is_min_max_supported_type</code></a> (internal)</td>
+    </tr>
+  </tbody>
+</table>
 </div>
 
 ## Advanced dependency sections
@@ -30,10 +43,24 @@ Owns deterministic profiling evidence such as schema, nulls, distincts, min/max,
 ### Related internal helpers
 
 <div class="module-table-scroll">
-| Helper | Related public callables |
-|---|---|
-| [`_get_profiled_columns`](../../reference/internal/data_profiling/_get_profiled_columns/) | [`profile_dataframe`](../../reference/profile_dataframe/) |
-| [`_is_min_max_supported_type`](../../reference/internal/data_profiling/_is_min_max_supported_type/) | [`profile_dataframe`](../../reference/profile_dataframe/) |
+<table>
+  <thead>
+    <tr>
+      <th>Helper</th>
+      <th>Related public callables</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><a href="../../reference/internal/data_profiling/_get_profiled_columns/"><code>_get_profiled_columns</code></a></td>
+      <td><a href="../../reference/profile_dataframe/"><code>profile_dataframe</code></a></td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/data_profiling/_is_min_max_supported_type/"><code>_is_min_max_supported_type</code></a></td>
+      <td><a href="../../reference/profile_dataframe/"><code>profile_dataframe</code></a></td>
+    </tr>
+  </tbody>
+</table>
 </div>
 
 ### Module internal callable dependencies
@@ -46,7 +73,7 @@ flowchart LR
 ```
 </div>
 
-### Cross-module references
+### Outbound
 
 Graph omitted because dependencies are simple one-to-one references.
 <div class="module-table-scroll">

@@ -6,11 +6,7 @@
 
 ## Module dependency summary
 
-<div class="module-table-scroll">
-| Callable count | Internal helper count | Outbound references | Inbound references |
-|---:|---:|---:|---:|
-| 3 | 3 | 0 | 0 |
-</div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 3</span><span class="reference-chip">Outbound: 0</span><span class="reference-chip">Inbound: 0</span></div>
 
 ## Module purpose
 
@@ -19,11 +15,40 @@ Owns agreement discovery and selection helpers used to anchor notebook workflows
 ## Public callables
 
 <div class="module-table-scroll">
-| Callable | Tier | Type | Summary | Related helpers |
-|---|---|---|---|---|
-| [`get_selected_agreement`](../../reference/get_selected_agreement/) | Essential | function | Return selected agreement from widget flow. | — |
-| [`load_agreements`](../../reference/load_agreements/) | Essential | function | Load latest distinct agreement metadata rows for widget selection. | [`_coerce_row_dicts`](../../reference/internal/data_agreement/_coerce_row_dicts/) (internal), [`_latest_distinct_agreements`](../../reference/internal/data_agreement/_latest_distinct_agreements/) (internal) |
-| [`select_agreement`](../../reference/select_agreement/) | Essential | function | Render a widget dropdown and store selected agreement metadata row in module state. | [`_agreement_option_label`](../../reference/internal/data_agreement/_agreement_option_label/) (internal), [`_coerce_row_dicts`](../../reference/internal/data_agreement/_coerce_row_dicts/) (internal) |
+<table>
+  <thead>
+    <tr>
+      <th>Callable</th>
+      <th>Tier</th>
+      <th>Type</th>
+      <th>Summary</th>
+      <th>Related helpers</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><a href="../../reference/get_selected_agreement/"><code>get_selected_agreement</code></a></td>
+      <td>Essential</td>
+      <td>function</td>
+      <td>Return selected agreement from widget flow.</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/load_agreements/"><code>load_agreements</code></a></td>
+      <td>Essential</td>
+      <td>function</td>
+      <td>Load latest distinct agreement metadata rows for widget selection.</td>
+      <td><a href="../../reference/internal/data_agreement/_coerce_row_dicts/"><code>_coerce_row_dicts</code></a> (internal), <a href="../../reference/internal/data_agreement/_latest_distinct_agreements/"><code>_latest_distinct_agreements</code></a> (internal)</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/select_agreement/"><code>select_agreement</code></a></td>
+      <td>Essential</td>
+      <td>function</td>
+      <td>Render a widget dropdown and store selected agreement metadata row in module state.</td>
+      <td><a href="../../reference/internal/data_agreement/_agreement_option_label/"><code>_agreement_option_label</code></a> (internal), <a href="../../reference/internal/data_agreement/_coerce_row_dicts/"><code>_coerce_row_dicts</code></a> (internal)</td>
+    </tr>
+  </tbody>
+</table>
 </div>
 
 ## Advanced dependency sections
@@ -32,11 +57,28 @@ Owns agreement discovery and selection helpers used to anchor notebook workflows
 ### Related internal helpers
 
 <div class="module-table-scroll">
-| Helper | Related public callables |
-|---|---|
-| [`_agreement_option_label`](../../reference/internal/data_agreement/_agreement_option_label/) | [`select_agreement`](../../reference/select_agreement/) |
-| [`_coerce_row_dicts`](../../reference/internal/data_agreement/_coerce_row_dicts/) | [`load_agreements`](../../reference/load_agreements/), [`select_agreement`](../../reference/select_agreement/) |
-| [`_latest_distinct_agreements`](../../reference/internal/data_agreement/_latest_distinct_agreements/) | [`load_agreements`](../../reference/load_agreements/) |
+<table>
+  <thead>
+    <tr>
+      <th>Helper</th>
+      <th>Related public callables</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><a href="../../reference/internal/data_agreement/_agreement_option_label/"><code>_agreement_option_label</code></a></td>
+      <td><a href="../../reference/select_agreement/"><code>select_agreement</code></a></td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/data_agreement/_coerce_row_dicts/"><code>_coerce_row_dicts</code></a></td>
+      <td><a href="../../reference/load_agreements/"><code>load_agreements</code></a>, <a href="../../reference/select_agreement/"><code>select_agreement</code></a></td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/data_agreement/_latest_distinct_agreements/"><code>_latest_distinct_agreements</code></a></td>
+      <td><a href="../../reference/load_agreements/"><code>load_agreements</code></a></td>
+    </tr>
+  </tbody>
+</table>
 </div>
 
 ### Module internal callable dependencies
@@ -51,6 +93,6 @@ flowchart LR
 ```
 </div>
 
-### Cross-module references
+### Outbound
 
-No cross-module references detected.
+No outbound references detected.

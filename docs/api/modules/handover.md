@@ -6,11 +6,7 @@
 
 ## Module dependency summary
 
-<div class="module-table-scroll">
-| Callable count | Internal helper count | Outbound references | Inbound references |
-|---:|---:|---:|---:|
-| 2 | 1 | 0 | 0 |
-</div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 2</span><span class="reference-chip">Outbound: 0</span><span class="reference-chip">Inbound: 0</span></div>
 
 ## Module purpose
 
@@ -19,10 +15,33 @@ Owns generated maintainer-facing handover and contract narrative output.
 ## Public callables
 
 <div class="module-table-scroll">
-| Callable | Tier | Type | Summary | Related helpers |
-|---|---|---|---|---|
-| [`build_handover`](../../reference/build_handover/) | Essential | function | Build a handover-friendly summary for one data product run. | — |
-| [`render_handover_markdown`](../../reference/render_handover_markdown/) | Essential | function | Render a handover summary dictionary into Markdown for handover notes. | [`_status_of`](../../reference/internal/handover/_status_of/) (internal) |
+<table>
+  <thead>
+    <tr>
+      <th>Callable</th>
+      <th>Tier</th>
+      <th>Type</th>
+      <th>Summary</th>
+      <th>Related helpers</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><a href="../../reference/build_handover/"><code>build_handover</code></a></td>
+      <td>Essential</td>
+      <td>function</td>
+      <td>Build a handover-friendly summary for one data product run.</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/render_handover_markdown/"><code>render_handover_markdown</code></a></td>
+      <td>Essential</td>
+      <td>function</td>
+      <td>Render a handover summary dictionary into Markdown for handover notes.</td>
+      <td><a href="../../reference/internal/handover/_status_of/"><code>_status_of</code></a> (internal)</td>
+    </tr>
+  </tbody>
+</table>
 </div>
 
 ## Advanced dependency sections
@@ -31,9 +50,20 @@ Owns generated maintainer-facing handover and contract narrative output.
 ### Related internal helpers
 
 <div class="module-table-scroll">
-| Helper | Related public callables |
-|---|---|
-| [`_status_of`](../../reference/internal/handover/_status_of/) | [`render_handover_markdown`](../../reference/render_handover_markdown/) |
+<table>
+  <thead>
+    <tr>
+      <th>Helper</th>
+      <th>Related public callables</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><a href="../../reference/internal/handover/_status_of/"><code>_status_of</code></a></td>
+      <td><a href="../../reference/render_handover_markdown/"><code>render_handover_markdown</code></a></td>
+    </tr>
+  </tbody>
+</table>
 </div>
 
 ### Module internal callable dependencies
@@ -47,6 +77,6 @@ flowchart LR
 ```
 </div>
 
-### Cross-module references
+### Outbound
 
-No cross-module references detected.
+No outbound references detected.

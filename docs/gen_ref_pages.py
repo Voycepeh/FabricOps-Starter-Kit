@@ -143,6 +143,37 @@ exports = _parse_exports()
 modules, imports = _build_index()
 module_call_map, reverse_refs = _collect_calls(modules, imports, exports)
 
+
+def _parts(qualified_name: str) -> tuple[str, str]:
+    parts = qualified_name.split(".")
+    return parts[-2], parts[-1]
+
+
+def _is_public_callable(symbol: str) -> bool:
+    return symbol in exports
+
+
+def _callable_href(qualified_name: str) -> str:
+    module_name, callable_name = _parts(qualified_name)
+    if _is_public_callable(callable_name):
+        return f"../{callable_name}/"
+    return f"../internal/{module_name}/{callable_name}/"
+
+
+def _callable_label(qualified_name: str, *, current_module: str | None = None) -> str:
+    module_name, callable_name = _parts(qualified_name)
+    if current_module and module_name == current_module:
+        return callable_name
+    return f"{module_name}.{callable_name}"
+
+
+def _link_md(qualified_name: str, *, current_module: str | None = None) -> str:
+    return f"[`{_callable_label(qualified_name, current_module=current_module)}`]({_callable_href(qualified_name)})"
+
+
+def _link_html(qualified_name: str, *, current_module: str | None = None) -> str:
+    return f'<a href="{_callable_href(qualified_name)}"><code>{_callable_label(qualified_name, current_module=current_module)}</code></a>'
+
 for row in sorted(public_symbol_docs, key=lambda item: item["symbol_name"]):
     if row.get("kind") not in {"function", "class"}:
         continue
@@ -160,73 +191,84 @@ for row in sorted(public_symbol_docs, key=lambda item: item["symbol_name"]):
     dep_internal_helpers = sorted(dep.get("internal_helpers_used", []))
     calls = dep_calls or sorted(module_call_map.get(module_name, {}).get(symbol_name, set()))
     helper_calls = dep_internal_helpers or [c for c in calls if c.startswith(f"{PACKAGE}.{module_name}._")]
-    cross = [c for c in calls if c.startswith(f"{PACKAGE}.") and not c.startswith(f"{PACKAGE}.{module_name}.")]
     referenced_by = dep_used_by or sorted(reverse_refs.get(qn, set()))
 
     with mkdocs_gen_files.open(doc_path, "w") as fd:
         fd.write(f"# `{symbol_name}`\n\n")
 
-        calls_count = int(dep.get("calls_count", len(calls)))
-        used_by_count = int(dep.get("used_by_count", len(referenced_by)))
-        internal_helper_count = int(dep.get("internal_helper_count", len(helper_calls)))
+        outbound_count = int(dep.get("calls_count", len(calls)))
+        inbound_count = int(dep.get("used_by_count", len(referenced_by)))
         classification = str(dep.get("classification", row.get("role", "optional"))).capitalize()
 
         fd.write("## Dependency metadata\n\n")
         fd.write(f"- Module: `{module_name}`\n")
         fd.write(f"- Classification: {classification}\n")
-        fd.write(f"- Calls: {calls_count}\n")
-        fd.write(f"- Used By: {used_by_count}\n")
-        fd.write(f"- Internal Helpers: {internal_helper_count}\n\n")
-
-        def link(c):
-            m, n = c.split(".")[-2], c.split(".")[-1]
-            if n in exports:
-                return f"[`{n}`](../{n}/)"
-            return f"[`{n}`](../internal/{m}/{n}/)"
+        fd.write(f"- Inbound references: {inbound_count}\n")
+        fd.write(f"- Outbound references: {outbound_count}\n\n")
 
         def _dep_details(title: str, items: list[str]) -> None:
             fd.write(f"<details>\n<summary>{title}</summary>\n\n")
             if not items:
-                fd.write("None\n")
+                fd.write("<p>None</p>\n")
             else:
+                fd.write("<ul>\n")
                 for item in items:
-                    fd.write(f"- {link(item)}\n")
+                    fd.write(f"  <li>{_link_html(item, current_module=module_name)}</li>\n")
+                fd.write("</ul>\n")
             fd.write("\n</details>\n\n")
 
-        _dep_details("Calls", calls)
-        _dep_details("Used By", referenced_by)
-        _dep_details("Internal Helpers Used", helper_calls)
+        _dep_details("Outbound", calls)
+        _dep_details("Inbound", referenced_by)
 
-        has_relationships = bool(helper_calls or cross or referenced_by)
-        flow_edges = helper_calls + cross
+        outbound_edges = sorted(set(calls))
+        inbound_edges = sorted(set(referenced_by))
+        flow_edges = sorted(set(outbound_edges))
         relationship_rows = []
-        if helper_calls:
-            relationship_rows.append(("Internal helpers used", ', '.join(link(c) for c in helper_calls)))
-        if cross:
-            relationship_rows.append(("Cross-module FabricOps calls", ', '.join(link(c) for c in cross)))
+        if outbound_edges:
+            relationship_rows.append(("Outbound", ', '.join(_link_md(c, current_module=module_name) for c in outbound_edges)))
         if referenced_by:
-            referenced_by_links: list[str] = []
-            for c in referenced_by:
-                m, n = c.split(".")[-2], c.split(".")[-1]
-                if n in exports:
-                    referenced_by_links.append(f"[`{n}`](../{n}/)")
-                else:
-                    referenced_by_links.append(f"`{PACKAGE}.{m}.{n}`")
-            relationship_rows.append(("Referenced by", ', '.join(referenced_by_links)))
+            relationship_rows.append(("Inbound", ', '.join(_link_md(c, current_module=module_name) for c in referenced_by)))
 
-        src_to_dst = {}
-        dst_from_src = {}
-        for edge in flow_edges:
-            src_to_dst.setdefault(symbol_name, set()).add(edge)
-            dst_from_src.setdefault(edge, set()).add(symbol_name)
-        show_mermaid = any(len(v) >= 2 for v in src_to_dst.values()) or any(len(v) >= 2 for v in dst_from_src.values())
-
-        if show_mermaid and flow_edges:
+        show_mermaid = bool(inbound_edges or outbound_edges)
+        if show_mermaid:
             fd.write("## Callable flow\n\n")
-            fd.write("```mermaid\nflowchart TD\n")
-            for target in flow_edges[:20]:
-                fd.write(f"  {symbol_name} --> {target.split('.')[-1]}\n")
+            fd.write('<div class="module-mermaid-scroll">\n\n')
+            fd.write("```mermaid\nflowchart LR\n")
+            fd.write("  classDef current fill:#ffecb3,stroke:#ef6c00,stroke-width:2px,color:#3e2723;\n")
+            fd.write("  classDef inbound fill:#e3f2fd,stroke:#1565c0,stroke-width:1.5px,color:#0d47a1;\n")
+            fd.write("  classDef outbound fill:#e8f5e9,stroke:#2e7d32,stroke-width:1.5px,color:#1b5e20;\n")
+            fd.write("  classDef helper fill:#f5f5f5,stroke:#616161,stroke-width:1px,color:#424242;\n")
+            fd.write(f'  current["{module_name}.{symbol_name}"]\n')
+
+            inbound_ids: list[str] = []
+            for i, source in enumerate(inbound_edges[:20], start=1):
+                node_id = f"in{i}"
+                inbound_ids.append(node_id)
+                fd.write(f'  {node_id}["{_callable_label(source, current_module=module_name)}"] --> current\n')
+
+            outbound_public_ids: list[str] = []
+            outbound_helper_ids: list[str] = []
+            for i, target in enumerate(outbound_edges[:20], start=1):
+                node_id = f"out{i}"
+                fd.write(f'  current --> {node_id}["{_callable_label(target, current_module=module_name)}"]\n')
+                t_module, t_name = _parts(target)
+                if t_name.startswith("_"):
+                    outbound_helper_ids.append(node_id)
+                elif _is_public_callable(t_name):
+                    outbound_public_ids.append(node_id)
+                else:
+                    outbound_helper_ids.append(node_id)
+
+            fd.write("  class current current;\n")
+            if inbound_ids:
+                fd.write(f"  class {','.join(inbound_ids)} inbound;\n")
+            if outbound_public_ids:
+                fd.write(f"  class {','.join(outbound_public_ids)} outbound;\n")
+            if outbound_helper_ids:
+                fd.write(f"  class {','.join(outbound_helper_ids)} helper;\n")
             fd.write("```\n\n")
+            fd.write("</div>\n\n")
+            fd.write("- **Legend:** Current function · Inbound · Outbound · Internal outbound\n\n")
 
         if relationship_rows:
             fd.write("## Callable relationships\n\n| Relationship | Callables |\n|---|---|\n")
@@ -239,7 +281,7 @@ for row in sorted(public_symbol_docs, key=lambda item: item["symbol_name"]):
             for i, c in enumerate(flow_edges[:20], start=1):
                 m, n = c.split(".")[-2], c.split(".")[-1]
                 purpose = modules.get(m, {}).get(n) or n.replace("_", " ").capitalize()
-                fd.write(f"| {i} | {link(c)} | {purpose} |\n")
+                fd.write(f"| {i} | {_link_md(c, current_module=module_name)} | {purpose} |\n")
             fd.write("\n")
 
         fd.write(f"::: {PACKAGE}.{module_name}.{symbol_name}\n")
