@@ -4,6 +4,14 @@
   <span class="api-chip api-chip-module">Module overview</span>
 </div>
 
+## Module dependency summary
+
+- **Essential:** 0
+- **Optional:** 4
+- **Internal:** 14
+- **Depends On:** 1 modules
+- **Used By:** 0 modules
+
 ## Essential callables
 
 | Callable | Type | Summary | Related helpers |
@@ -37,3 +45,65 @@
 | [`_safe_spark_collect`](../../reference/internal/drift/_safe_spark_collect/) | — |
 | [`_utc_now_iso`](../../reference/internal/drift/_utc_now_iso/) | — |
 | [`_write_metadata_rows`](../../reference/internal/drift/_write_metadata_rows/) | — |
+
+## Module internal callable graph
+
+```mermaid
+flowchart LR
+  detect_dataframe_engine --> UnsupportedDataFrameEngineError
+  _build_pandas_schema_snapshot --> _column_hash
+  _build_spark_schema_snapshot --> _column_hash
+  build_schema_snapshot --> detect_dataframe_engine
+  build_schema_snapshot --> _build_pandas_schema_snapshot
+  build_schema_snapshot --> _build_spark_schema_snapshot
+  compare_schema_snapshots --> default_schema_drift_policy
+  compare_schema_snapshots --> _resolve_change_behavior
+  compare_schema_snapshots --> _resolve_change_behavior
+  compare_schema_snapshots --> _resolve_change_behavior
+  compare_schema_snapshots --> _resolve_change_behavior
+  compare_schema_snapshots --> _resolve_change_behavior
+  assert_no_blocking_schema_drift --> SchemaDriftError
+  check_schema_drift --> build_schema_snapshot
+  check_schema_drift --> compare_schema_snapshots
+  check_schema_drift --> default_schema_drift_policy
+  build_and_write_schema_snapshot --> build_schema_snapshot
+  build_and_write_schema_snapshot --> _write_metadata_rows
+  build_and_write_schema_snapshot --> _json_dumps
+  build_and_write_schema_snapshot --> _utc_now_iso
+  load_latest_schema_snapshot --> _safe_spark_collect
+  load_latest_schema_snapshot --> _safe_spark_collect
+  load_latest_schema_snapshot --> _is_missing_table_error
+  check_partition_drift --> build_partition_snapshot
+  check_partition_drift --> compare_partition_snapshots
+  check_partition_drift --> default_incremental_safety_policy
+  build_and_write_partition_snapshot --> build_partition_snapshot
+  build_and_write_partition_snapshot --> _write_metadata_rows
+  build_and_write_partition_snapshot --> _json_dumps
+  build_and_write_partition_snapshot --> _json_dumps
+  build_and_write_partition_snapshot --> _utc_now_iso
+  load_latest_partition_snapshot --> _safe_spark_collect
+  load_latest_partition_snapshot --> _safe_spark_collect
+  load_latest_partition_snapshot --> _is_missing_table_error
+  build_drift_evidence_record --> _json_dumps
+  build_drift_evidence_record --> _json_dumps
+  build_drift_evidence_record --> _utc_now_iso
+  _build_partition_hash --> _hash
+  _build_pandas_partition_snapshot --> _hash
+  _build_pandas_partition_snapshot --> _build_partition_hash
+```
+
+## Cross-module callable graph
+
+```mermaid
+flowchart LR
+  fabricops_kit_drift__json_dumps --> fabricops_kit__utils__to_jsonable
+  fabricops_kit_drift__build_pandas_partition_snapshot --> fabricops_kit__utils__to_jsonable
+  fabricops_kit_drift__build_pandas_partition_snapshot --> fabricops_kit__utils__to_jsonable
+  fabricops_kit_drift__build_pandas_partition_snapshot --> fabricops_kit__utils__to_jsonable
+  fabricops_kit_drift__build_spark_partition_snapshot --> fabricops_kit__utils__to_jsonable
+  fabricops_kit_drift__build_spark_partition_snapshot --> fabricops_kit__utils__to_jsonable
+  fabricops_kit_drift__build_spark_partition_snapshot --> fabricops_kit__utils__to_jsonable
+  fabricops_kit_drift_compare_partition_snapshots --> fabricops_kit__utils__to_jsonable
+  fabricops_kit_drift_compare_partition_snapshots --> fabricops_kit__utils__to_jsonable
+  fabricops_kit_drift_build_incremental_safety_records --> fabricops_kit__utils__to_jsonable
+```

@@ -4,6 +4,14 @@
   <span class="api-chip api-chip-module">Module overview</span>
 </div>
 
+## Module dependency summary
+
+- **Essential:** 4
+- **Optional:** 2
+- **Internal:** 6
+- **Depends On:** 1 modules
+- **Used By:** 0 modules
+
 ## Essential callables
 
 | Callable | Type | Summary | Related helpers |
@@ -30,3 +38,25 @@
 | [`_extract_pii_suggestions`](../../reference/internal/data_governance/_extract_pii_suggestions/) | [`extract_governance_suggestions`](../../reference/extract_governance_suggestions/) |
 | [`_prepare_governance_input`](../../reference/internal/data_governance/_prepare_governance_input/) | [`prepare_governance_input`](../../reference/prepare_governance_input/) |
 | [`_undo_last_action`](../../reference/internal/data_governance/_undo_last_action/) | [`review_governance`](../../reference/review_governance/) |
+
+## Module internal callable graph
+
+```mermaid
+flowchart LR
+  prepare_governance_input --> _prepare_governance_input
+  extract_governance_suggestions --> _extract_pii_suggestions
+  review_governance --> _undo_last_action
+  write_governance --> _approved_widget_rows
+  load_governance --> _coerce_row_dicts
+  load_governance --> _coerce_row_dicts
+```
+
+## Cross-module callable graph
+
+```mermaid
+flowchart LR
+  fabricops_kit_data_governance_review_governance --> fabricops_kit_metadata_build_metadata_table_key
+  fabricops_kit_data_governance_review_governance --> fabricops_kit_metadata_build_metadata_column_key
+  fabricops_kit_data_governance_review_governance --> fabricops_kit_metadata__now_utc_iso
+  fabricops_kit_data_governance__approved_widget_rows --> fabricops_kit_metadata__resolve_action_by
+```

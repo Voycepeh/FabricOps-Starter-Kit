@@ -4,6 +4,14 @@
   <span class="api-chip api-chip-module">Module overview</span>
 </div>
 
+## Module dependency summary
+
+- **Essential:** 3
+- **Optional:** 3
+- **Internal:** 4
+- **Depends On:** 1 modules
+- **Used By:** 0 modules
+
 ## Essential callables
 
 | Callable | Type | Summary | Related helpers |
@@ -28,3 +36,22 @@
 | [`_parse_ai_dict_response`](../../reference/internal/business_context/_parse_ai_dict_response/) | — |
 | [`_prepare_business_context_profile_input`](../../reference/internal/business_context/_prepare_business_context_profile_input/) | [`prepare_business_context_profile_input`](../../reference/prepare_business_context_profile_input/) |
 | [`_require_ipywidgets`](../../reference/internal/business_context/_require_ipywidgets/) | [`review_business_context`](../../reference/review_business_context/) |
+
+## Module internal callable graph
+
+```mermaid
+flowchart LR
+  _extract_column_business_context_suggestions --> _parse_ai_dict_response
+  prepare_business_context_profile_input --> _prepare_business_context_profile_input
+  extract_column_business_context_suggestions --> _extract_column_business_context_suggestions
+  review_business_context --> _require_ipywidgets
+```
+
+## Cross-module callable graph
+
+```mermaid
+flowchart LR
+  fabricops_kit_business_context_review_business_context --> fabricops_kit_metadata_build_metadata_table_key
+  fabricops_kit_business_context_review_business_context --> fabricops_kit_metadata_build_metadata_column_key
+  fabricops_kit_business_context_write_business_context --> fabricops_kit_metadata_write_column_business_context
+```

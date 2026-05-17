@@ -4,6 +4,14 @@
   <span class="api-chip api-chip-module">Module overview</span>
 </div>
 
+## Module dependency summary
+
+- **Essential:** 1
+- **Optional:** 0
+- **Internal:** 2
+- **Depends On:** 1 modules
+- **Used By:** 1 modules
+
 ## Essential callables
 
 | Callable | Type | Summary | Related helpers |
@@ -20,3 +28,18 @@ No advanced helpers listed for this module.
 |---|---|
 | [`_get_profiled_columns`](../../reference/internal/data_profiling/_get_profiled_columns/) | [`profile_dataframe`](../../reference/profile_dataframe/) |
 | [`_is_min_max_supported_type`](../../reference/internal/data_profiling/_is_min_max_supported_type/) | [`profile_dataframe`](../../reference/profile_dataframe/) |
+
+## Module internal callable graph
+
+```mermaid
+flowchart LR
+  profile_dataframe --> _get_profiled_columns
+  profile_dataframe --> _is_min_max_supported_type
+```
+
+## Cross-module callable graph
+
+```mermaid
+flowchart LR
+  fabricops_kit_data_profiling__get_profiled_columns --> fabricops_kit_technical_columns__default_technical_columns
+```

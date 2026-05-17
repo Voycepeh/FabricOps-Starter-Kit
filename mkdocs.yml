@@ -56,7 +56,7 @@ nav:
       # AUTO-GENERATED-MODULES-END
 
   - Developer:
-      - Callable Dependency Map: reference/callable-map.md
+      - Callable Dependency Diagnostic: reference/callable-map.md
 
 markdown_extensions:
   - admonition

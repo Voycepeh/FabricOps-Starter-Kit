@@ -4,6 +4,14 @@
   <span class="api-chip api-chip-module">Module overview</span>
 </div>
 
+## Module dependency summary
+
+- **Essential:** 2
+- **Optional:** 0
+- **Internal:** 13
+- **Depends On:** 0 modules
+- **Used By:** 0 modules
+
 ## Essential callables
 
 | Callable | Type | Summary | Related helpers |
@@ -32,3 +40,34 @@ No advanced helpers listed for this module.
 | [`_scan_notebook_lineage`](../../reference/internal/data_lineage/_scan_notebook_lineage/) | — |
 | [`_step`](../../reference/internal/data_lineage/_step/) | — |
 | [`_validate_lineage_steps`](../../reference/internal/data_lineage/_validate_lineage_steps/) | — |
+
+## Module internal callable graph
+
+```mermaid
+flowchart LR
+  _flatten_chain --> _name
+  _resolve_write_target --> _literal
+  _resolve_write_target --> _literal
+  _resolve_write_target --> _literal
+  _scan_notebook_lineage --> _name
+  _scan_notebook_lineage --> _call_name
+  _scan_notebook_lineage --> _flatten_chain
+  _scan_notebook_lineage --> _call_name
+  _scan_notebook_lineage --> _step
+  _scan_notebook_lineage --> _step
+  _scan_notebook_lineage --> _step
+  _scan_notebook_lineage --> _name
+  _scan_notebook_lineage --> _step
+  _scan_notebook_lineage --> _resolve_write_target
+  _scan_notebook_cells --> _scan_notebook_lineage
+  _enrich_lineage_steps_with_ai --> _fallback_copilot_lineage_prompt
+  _build_lineage_record_from_steps --> _validate_lineage_steps
+  _build_lineage_records --> _build_lineage_record_from_steps
+```
+
+## Cross-module callable graph
+
+```mermaid
+flowchart LR
+  no_cross_edges[No cross-module callable edges detected]
+```

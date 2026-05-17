@@ -4,6 +4,14 @@
   <span class="api-chip api-chip-module">Module overview</span>
 </div>
 
+## Module dependency summary
+
+- **Essential:** 3
+- **Optional:** 0
+- **Internal:** 3
+- **Depends On:** 0 modules
+- **Used By:** 0 modules
+
 ## Essential callables
 
 | Callable | Type | Summary | Related helpers |
@@ -23,3 +31,20 @@ No advanced helpers listed for this module.
 | [`_agreement_option_label`](../../reference/internal/data_agreement/_agreement_option_label/) | [`select_agreement`](../../reference/select_agreement/) |
 | [`_coerce_row_dicts`](../../reference/internal/data_agreement/_coerce_row_dicts/) | [`load_agreements`](../../reference/load_agreements/), [`select_agreement`](../../reference/select_agreement/) |
 | [`_latest_distinct_agreements`](../../reference/internal/data_agreement/_latest_distinct_agreements/) | [`load_agreements`](../../reference/load_agreements/) |
+
+## Module internal callable graph
+
+```mermaid
+flowchart LR
+  load_agreements --> _latest_distinct_agreements
+  load_agreements --> _coerce_row_dicts
+  select_agreement --> _coerce_row_dicts
+  select_agreement --> _agreement_option_label
+```
+
+## Cross-module callable graph
+
+```mermaid
+flowchart LR
+  no_cross_edges[No cross-module callable edges detected]
+```

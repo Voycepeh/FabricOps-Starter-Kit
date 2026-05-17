@@ -4,6 +4,14 @@
   <span class="api-chip api-chip-module">Module overview</span>
 </div>
 
+## Module dependency summary
+
+- **Essential:** 4
+- **Optional:** 4
+- **Internal:** 3
+- **Depends On:** 1 modules
+- **Used By:** 2 modules
+
 ## Essential callables
 
 | Callable | Type | Summary | Related helpers |
@@ -28,3 +36,32 @@
 | [`_convert_single_parquet_ns_to_us`](../../reference/internal/fabric_input_output/_convert_single_parquet_ns_to_us/) | [`read_lakehouse_parquet`](../../reference/read_lakehouse_parquet/) |
 | [`_get_fabric_runtime_context`](../../reference/internal/fabric_input_output/_get_fabric_runtime_context/) | — |
 | [`_get_spark`](../../reference/internal/fabric_input_output/_get_spark/) | [`read_lakehouse_csv`](../../reference/read_lakehouse_csv/), [`read_lakehouse_excel`](../../reference/read_lakehouse_excel/), [`read_lakehouse_parquet`](../../reference/read_lakehouse_parquet/), [`read_lakehouse_table`](../../reference/read_lakehouse_table/), [`read_warehouse_table`](../../reference/read_warehouse_table/) |
+
+## Module internal callable graph
+
+```mermaid
+flowchart LR
+  read_lakehouse_table --> _get_spark
+  read_lakehouse_csv --> _get_spark
+  read_warehouse_table --> _get_spark
+  read_lakehouse_parquet --> _get_spark
+  read_lakehouse_parquet --> _convert_single_parquet_ns_to_us
+  read_lakehouse_excel --> _get_spark
+  check_naming_convention --> _get_fabric_runtime_context
+  seed_minimal_sample_source_table --> _get_spark
+  seed_minimal_sample_source_table --> write_lakehouse_table
+```
+
+## Cross-module callable graph
+
+```mermaid
+flowchart LR
+  fabricops_kit_fabric_input_output_load_config --> fabricops_kit_config_load_config
+  fabricops_kit_fabric_input_output_read_lakehouse_table --> fabricops_kit_config__get_store
+  fabricops_kit_fabric_input_output_write_lakehouse_table --> fabricops_kit_config__get_store
+  fabricops_kit_fabric_input_output_read_lakehouse_csv --> fabricops_kit_config__get_store
+  fabricops_kit_fabric_input_output_read_warehouse_table --> fabricops_kit_config__get_store
+  fabricops_kit_fabric_input_output_write_warehouse_table --> fabricops_kit_config__get_store
+  fabricops_kit_fabric_input_output_read_lakehouse_parquet --> fabricops_kit_config__get_store
+  fabricops_kit_fabric_input_output_read_lakehouse_excel --> fabricops_kit_config__get_store
+```
