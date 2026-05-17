@@ -6,22 +6,33 @@
 
 ## Module dependency summary
 
-| Essential | Optional | Internal | Depends On | Used By |
-|---:|---:|---:|---:|---:|
-| 1 | 0 | 10 | 0 | 1 |
+<div class="module-table-scroll">
+| Callable count | Internal helper count | Outbound references | Inbound references |
+|---:|---:|---:|---:|
+| 1 | 10 | 0 | 1 |
+</div>
 
-## Essential callables
+## Module purpose
 
-| Callable | Type | Summary | Related helpers |
-|---|---|---|---|
-| [`standardize_columns`](../../reference/standardize_columns/) | function | Apply canonical technical/audit enrichment in one notebook-facing wrapper. | — |
+Owns standard output/audit columns for pipeline outputs.
 
-## Optional callables
+## Public callables
 
-No advanced helpers listed for this module.
+<div class="module-table-scroll">
+| Callable | Tier | Type | Summary | Related helpers |
+|---|---|---|---|---|
+| [`standardize_columns`](../../reference/standardize_columns/) | Essential | function | Apply canonical technical/audit enrichment in one notebook-facing wrapper. | — |
+</div>
 
-## Related internal helpers
+## Advanced dependency sections
 
+
+### Related internal helpers
+
+<details>
+<summary>Expand internal helper table</summary>
+
+<div class="module-table-scroll">
 | Helper | Related public callables |
 |---|---|
 | [`__add_audit_columns`](../../reference/internal/technical_columns/__add_audit_columns/) | — |
@@ -34,9 +45,16 @@ No advanced helpers listed for this module.
 | [`_hash_row`](../../reference/internal/technical_columns/_hash_row/) | — |
 | [`_non_technical_columns`](../../reference/internal/technical_columns/_non_technical_columns/) | — |
 | [`_safe_string`](../../reference/internal/technical_columns/_safe_string/) | — |
+</div>
 
-## Module internal callable graph
+</details>
 
+### Module internal callable dependencies
+
+<details>
+<summary>Expand module internal callable graph</summary>
+
+<div class="module-mermaid-scroll">
 ```mermaid
 flowchart LR
   n1["technical_columns.__add_audit_columns"] --> n1b["technical_columns._assert_columns_exist"]
@@ -50,14 +68,10 @@ flowchart LR
   n9["technical_columns._hash_row"] --> n9b["technical_columns._safe_string"]
   n10["technical_columns._non_technical_columns"] --> n10b["technical_columns._default_technical_columns"]
 ```
+</div>
 
-## Cross-module callable graph
+</details>
 
-```mermaid
-flowchart LR
-  no_cross_edges[No cross-module callable edges detected]
-```
-
-## Cross-module references
+### Cross-module references
 
 No cross-module references detected.

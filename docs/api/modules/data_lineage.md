@@ -6,26 +6,34 @@
 
 ## Module dependency summary
 
-| Essential | Optional | Internal | Depends On | Used By |
-|---:|---:|---:|---:|---:|
-| 2 | 0 | 13 | 0 | 0 |
+<div class="module-table-scroll">
+| Callable count | Internal helper count | Outbound references | Inbound references |
+|---:|---:|---:|---:|
+| 2 | 13 | 0 | 0 |
+</div>
 
-## Essential callables
+## Module purpose
 
-| Callable | Type | Summary | Related helpers |
-|---|---|---|---|
-| [`build_lineage_handover_markdown`](../../reference/build_lineage_handover_markdown/) | function | Build a concise markdown handover summary from lineage execution results. | — |
-| [`build_lineage_records`](../../reference/build_lineage_records/) | function | Build compact lineage records for downstream metadata sinks. | — |
+Owns source-to-target lineage and transformation evidence.
 
-## Optional callables
+## Public callables
 
-No advanced helpers listed for this module.
+<div class="module-table-scroll">
+| Callable | Tier | Type | Summary | Related helpers |
+|---|---|---|---|---|
+| [`build_lineage_handover_markdown`](../../reference/build_lineage_handover_markdown/) | Essential | function | Build a concise markdown handover summary from lineage execution results. | — |
+| [`build_lineage_records`](../../reference/build_lineage_records/) | Essential | function | Build compact lineage records for downstream metadata sinks. | — |
+</div>
 
-## Related internal helpers
+## Advanced dependency sections
+
+
+### Related internal helpers
 
 <details>
 <summary>Expand internal helper table</summary>
 
+<div class="module-table-scroll">
 | Helper | Related public callables |
 |---|---|
 | [`_build_lineage_record_from_steps`](../../reference/internal/data_lineage/_build_lineage_record_from_steps/) | — |
@@ -41,11 +49,16 @@ No advanced helpers listed for this module.
 | [`_scan_notebook_lineage`](../../reference/internal/data_lineage/_scan_notebook_lineage/) | — |
 | [`_step`](../../reference/internal/data_lineage/_step/) | — |
 | [`_validate_lineage_steps`](../../reference/internal/data_lineage/_validate_lineage_steps/) | — |
+</div>
 
 </details>
 
-## Module internal callable graph
+### Module internal callable dependencies
 
+<details>
+<summary>Expand module internal callable graph</summary>
+
+<div class="module-mermaid-scroll">
 ```mermaid
 flowchart LR
   n1["data_lineage._build_lineage_record_from_steps"] --> n1b["data_lineage._validate_lineage_steps"]
@@ -60,14 +73,10 @@ flowchart LR
   n10["data_lineage._scan_notebook_lineage"] --> n10b["data_lineage._resolve_write_target"]
   n11["data_lineage._scan_notebook_lineage"] --> n11b["data_lineage._step"]
 ```
+</div>
 
-## Cross-module callable graph
+</details>
 
-```mermaid
-flowchart LR
-  no_cross_edges[No cross-module callable edges detected]
-```
-
-## Cross-module references
+### Cross-module references
 
 No cross-module references detected.

@@ -6,43 +6,47 @@
 
 ## Module dependency summary
 
-| Essential | Optional | Internal | Depends On | Used By |
-|---:|---:|---:|---:|---:|
-| 2 | 0 | 1 | 0 | 0 |
+<div class="module-table-scroll">
+| Callable count | Internal helper count | Outbound references | Inbound references |
+|---:|---:|---:|---:|
+| 2 | 1 | 0 | 0 |
+</div>
 
-## Essential callables
+## Module purpose
 
-| Callable | Type | Summary | Related helpers |
-|---|---|---|---|
-| [`build_handover`](../../reference/build_handover/) | function | Build a handover-friendly summary for one data product run. | — |
-| [`render_handover_markdown`](../../reference/render_handover_markdown/) | function | Render a handover summary dictionary into Markdown for handover notes. | [`_status_of`](../../reference/internal/handover/_status_of/) (internal) |
+Owns generated maintainer-facing handover and contract narrative output.
 
-## Optional callables
+## Public callables
 
-No advanced helpers listed for this module.
+<div class="module-table-scroll">
+| Callable | Tier | Type | Summary | Related helpers |
+|---|---|---|---|---|
+| [`build_handover`](../../reference/build_handover/) | Essential | function | Build a handover-friendly summary for one data product run. | — |
+| [`render_handover_markdown`](../../reference/render_handover_markdown/) | Essential | function | Render a handover summary dictionary into Markdown for handover notes. | [`_status_of`](../../reference/internal/handover/_status_of/) (internal) |
+</div>
 
-## Related internal helpers
+## Advanced dependency sections
 
+
+### Related internal helpers
+
+<div class="module-table-scroll">
 | Helper | Related public callables |
 |---|---|
 | [`_status_of`](../../reference/internal/handover/_status_of/) | [`render_handover_markdown`](../../reference/render_handover_markdown/) |
+</div>
 
-## Module internal callable graph
+### Module internal callable dependencies
 
+<div class="module-mermaid-scroll">
 ```mermaid
 flowchart LR
   n1["handover.build_handover_record"] --> n1b["handover._status_of"]
   n2["handover.build_handover_record"] --> n2b["handover.render_handover_markdown"]
   n3["handover.render_handover_markdown"] --> n3b["handover._status_of"]
 ```
+</div>
 
-## Cross-module callable graph
-
-```mermaid
-flowchart LR
-  no_cross_edges[No cross-module callable edges detected]
-```
-
-## Cross-module references
+### Cross-module references
 
 No cross-module references detected.

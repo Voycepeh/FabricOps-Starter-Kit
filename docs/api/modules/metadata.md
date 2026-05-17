@@ -6,23 +6,31 @@
 
 ## Module dependency summary
 
-| Essential | Optional | Internal | Depends On | Used By |
-|---:|---:|---:|---:|---:|
-| 2 | 0 | 8 | 1 | 3 |
+<div class="module-table-scroll">
+| Callable count | Internal helper count | Outbound references | Inbound references |
+|---:|---:|---:|---:|
+| 2 | 8 | 1 | 3 |
+</div>
 
-## Essential callables
+## Module purpose
 
-| Callable | Type | Summary | Related helpers |
-|---|---|---|---|
-| [`load_notebook_registry`](../../reference/load_notebook_registry/) | function | Load notebook registration metadata rows for agreement notebook traceability. | — |
-| [`register_current_notebook`](../../reference/register_current_notebook/) | function | Register current notebook metadata evidence for agreement traceability. | [`_context_get`](../../reference/internal/metadata/_context_get/) (internal), [`_runtime_context`](../../reference/internal/metadata/_runtime_context/) (internal), [`_safe_str`](../../reference/internal/metadata/_safe_str/) (internal) |
+Owns metadata/contract store access, evidence persistence, agreement metadata, notebook evidence, and contract assembly inputs.
 
-## Optional callables
+## Public callables
 
-No advanced helpers listed for this module.
+<div class="module-table-scroll">
+| Callable | Tier | Type | Summary | Related helpers |
+|---|---|---|---|---|
+| [`load_notebook_registry`](../../reference/load_notebook_registry/) | Essential | function | Load notebook registration metadata rows for agreement notebook traceability. | — |
+| [`register_current_notebook`](../../reference/register_current_notebook/) | Essential | function | Register current notebook metadata evidence for agreement traceability. | [`_context_get`](../../reference/internal/metadata/_context_get/) (internal), [`_runtime_context`](../../reference/internal/metadata/_runtime_context/) (internal), [`_safe_str`](../../reference/internal/metadata/_safe_str/) (internal) |
+</div>
 
-## Related internal helpers
+## Advanced dependency sections
 
+
+### Related internal helpers
+
+<div class="module-table-scroll">
 | Helper | Related public callables |
 |---|---|
 | [`_context_get`](../../reference/internal/metadata/_context_get/) | [`register_current_notebook`](../../reference/register_current_notebook/) |
@@ -33,9 +41,14 @@ No advanced helpers listed for this module.
 | [`_runtime_context`](../../reference/internal/metadata/_runtime_context/) | [`register_current_notebook`](../../reference/register_current_notebook/) |
 | [`_safe_str`](../../reference/internal/metadata/_safe_str/) | [`register_current_notebook`](../../reference/register_current_notebook/) |
 | [`_sha256_key`](../../reference/internal/metadata/_sha256_key/) | — |
+</div>
 
-## Module internal callable graph
+### Module internal callable dependencies
 
+<details>
+<summary>Expand module internal callable graph</summary>
+
+<div class="module-mermaid-scroll">
 ```mermaid
 flowchart LR
   n1["metadata._resolve_action_by"] --> n1b["metadata._context_get"]
@@ -54,16 +67,15 @@ flowchart LR
   n14["metadata.write_column_governance_context"] --> n14b["metadata.write_metadata_rows"]
   n15["metadata.write_metadata_rows"] --> n15b["metadata.column_context_rows_for_spark"]
 ```
+</div>
 
-## Cross-module callable graph
+</details>
 
-```mermaid
-flowchart LR
-  c1[metadata.write_metadata_rows] --> d1[fabric_input_output.write_lakehouse_table]
-```
+### Cross-module references
 
-## Cross-module references
-
+Graph omitted because dependencies are simple one-to-one references.
+<div class="module-table-scroll">
 | Caller | Callee |
 |---|---|
 | `metadata.write_metadata_rows` | `fabric_input_output.write_lakehouse_table` |
+</div>

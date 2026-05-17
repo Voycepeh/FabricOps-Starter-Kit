@@ -6,44 +6,51 @@
 
 ## Module dependency summary
 
-| Essential | Optional | Internal | Depends On | Used By |
-|---:|---:|---:|---:|---:|
-| 1 | 0 | 2 | 1 | 1 |
+<div class="module-table-scroll">
+| Callable count | Internal helper count | Outbound references | Inbound references |
+|---:|---:|---:|---:|
+| 1 | 2 | 1 | 1 |
+</div>
 
-## Essential callables
+## Module purpose
 
-| Callable | Type | Summary | Related helpers |
-|---|---|---|---|
-| [`profile_dataframe`](../../reference/profile_dataframe/) | function | Build canonical DQ-ready profiling rows from a Spark DataFrame. | [`_get_profiled_columns`](../../reference/internal/data_profiling/_get_profiled_columns/) (internal), [`_is_min_max_supported_type`](../../reference/internal/data_profiling/_is_min_max_supported_type/) (internal) |
+Owns deterministic profiling evidence such as schema, nulls, distincts, min/max, and samples.
 
-## Optional callables
+## Public callables
 
-No advanced helpers listed for this module.
+<div class="module-table-scroll">
+| Callable | Tier | Type | Summary | Related helpers |
+|---|---|---|---|---|
+| [`profile_dataframe`](../../reference/profile_dataframe/) | Essential | function | Build canonical DQ-ready profiling rows from a Spark DataFrame. | [`_get_profiled_columns`](../../reference/internal/data_profiling/_get_profiled_columns/) (internal), [`_is_min_max_supported_type`](../../reference/internal/data_profiling/_is_min_max_supported_type/) (internal) |
+</div>
 
-## Related internal helpers
+## Advanced dependency sections
 
+
+### Related internal helpers
+
+<div class="module-table-scroll">
 | Helper | Related public callables |
 |---|---|
 | [`_get_profiled_columns`](../../reference/internal/data_profiling/_get_profiled_columns/) | [`profile_dataframe`](../../reference/profile_dataframe/) |
 | [`_is_min_max_supported_type`](../../reference/internal/data_profiling/_is_min_max_supported_type/) | [`profile_dataframe`](../../reference/profile_dataframe/) |
+</div>
 
-## Module internal callable graph
+### Module internal callable dependencies
 
+<div class="module-mermaid-scroll">
 ```mermaid
 flowchart LR
   n1["data_profiling.profile_dataframe"] --> n1b["data_profiling._get_profiled_columns"]
   n2["data_profiling.profile_dataframe"] --> n2b["data_profiling._is_min_max_supported_type"]
 ```
+</div>
 
-## Cross-module callable graph
+### Cross-module references
 
-```mermaid
-flowchart LR
-  c1[data_profiling._get_profiled_columns] --> d1[technical_columns._default_technical_columns]
-```
-
-## Cross-module references
-
+Graph omitted because dependencies are simple one-to-one references.
+<div class="module-table-scroll">
 | Caller | Callee |
 |---|---|
 | `data_profiling._get_profiled_columns` | `technical_columns._default_technical_columns` |
+</div>

@@ -22,7 +22,7 @@ From the repository root:
 ```bash
 git checkout main
 git pull
-uv sync
+uv sync --extra docs
 ```
 
 ## Validate before build

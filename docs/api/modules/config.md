@@ -6,26 +6,34 @@
 
 ## Module dependency summary
 
-| Essential | Optional | Internal | Depends On | Used By |
-|---:|---:|---:|---:|---:|
-| 2 | 0 | 13 | 0 | 1 |
+<div class="module-table-scroll">
+| Callable count | Internal helper count | Outbound references | Inbound references |
+|---:|---:|---:|---:|
+| 2 | 13 | 0 | 1 |
+</div>
 
-## Essential callables
+## Module purpose
 
-| Callable | Type | Summary | Related helpers |
-|---|---|---|---|
-| [`load_config`](../../reference/load_config/) | function | Validate and return a user-supplied framework configuration. | [`_validate_framework_config`](../../reference/internal/config/_validate_framework_config/) (internal) |
-| [`setup_notebook`](../../reference/setup_notebook/) | function | Run consolidated FabricOps startup for exploration and pipeline notebooks. | [`_get_store`](../../reference/internal/config/_get_store/) (internal), [`_run_config_smoke_tests`](../../reference/internal/config/_run_config_smoke_tests/) (internal) |
+Owns environment setup, runtime initialization, paths, and notebook-wide configuration.
 
-## Optional callables
+## Public callables
 
-No advanced helpers listed for this module.
+<div class="module-table-scroll">
+| Callable | Tier | Type | Summary | Related helpers |
+|---|---|---|---|---|
+| [`load_config`](../../reference/load_config/) | Essential | function | Validate and return a user-supplied framework configuration. | [`_validate_framework_config`](../../reference/internal/config/_validate_framework_config/) (internal) |
+| [`setup_notebook`](../../reference/setup_notebook/) | Essential | function | Run consolidated FabricOps startup for exploration and pipeline notebooks. | [`_get_store`](../../reference/internal/config/_get_store/) (internal), [`_run_config_smoke_tests`](../../reference/internal/config/_run_config_smoke_tests/) (internal) |
+</div>
 
-## Related internal helpers
+## Advanced dependency sections
+
+
+### Related internal helpers
 
 <details>
 <summary>Expand internal helper table</summary>
 
+<div class="module-table-scroll">
 | Helper | Related public callables |
 |---|---|
 | [`_bootstrap_fabric_env`](../../reference/internal/config/_bootstrap_fabric_env/) | — |
@@ -41,11 +49,16 @@ No advanced helpers listed for this module.
 | [`_run_config_smoke_tests`](../../reference/internal/config/_run_config_smoke_tests/) | [`setup_notebook`](../../reference/setup_notebook/) |
 | [`_validate_framework_config`](../../reference/internal/config/_validate_framework_config/) | [`load_config`](../../reference/load_config/) |
 | [`_validate_notebook_name`](../../reference/internal/config/_validate_notebook_name/) | — |
+</div>
 
 </details>
 
-## Module internal callable graph
+### Module internal callable dependencies
 
+<details>
+<summary>Expand module internal callable graph</summary>
+
+<div class="module-mermaid-scroll">
 ```mermaid
 flowchart LR
   n1["config._bootstrap_fabric_env"] --> n1b["config._get_fabric_runtime_metadata"]
@@ -68,14 +81,10 @@ flowchart LR
   n18["config.validate_dataset_contract"] --> n18b["config._format_error_path"]
   n19["config.validate_dataset_contract"] --> n19b["config._load_schema"]
 ```
+</div>
 
-## Cross-module callable graph
+</details>
 
-```mermaid
-flowchart LR
-  no_cross_edges[No cross-module callable edges detected]
-```
-
-## Cross-module references
+### Cross-module references
 
 No cross-module references detected.

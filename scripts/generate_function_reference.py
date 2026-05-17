@@ -398,7 +398,7 @@ def render_callable_map_page(nodes: list[dict[str, Any]], edges: list[dict[str, 
         "",
         "> Developer diagnostic only. Primary user documentation now lives on Function Reference and module pages.",
         "",
-        "## 1. Module dependency graph",
+        "## 1. Module dependency graph (diagnostic)",
         "",
         "```mermaid",
         "flowchart LR",
@@ -406,23 +406,7 @@ def render_callable_map_page(nodes: list[dict[str, Any]], edges: list[dict[str, 
     for caller, callee in module_edges:
         lines.append(f"  {caller} --> {callee}")
 
-    lines.extend(
-        [
-            "```",
-            "",
-            "## 2. Module relationship summary",
-            "",
-            "| Module | Calls modules | Called by modules | Public callables |",
-            "|---|---|---|---:|",
-        ]
-    )
-    for row in module_summary:
-        lines.append(
-            f"| `{row['module']}` | {', '.join(f'`{m}`' for m in row['calls_modules']) or '—'} | "
-            f"{', '.join(f'`{m}`' for m in row['called_by_modules']) or '—'} | {row['public_callable_count']} |"
-        )
-
-    lines.extend(["", "## 3. Public callables grouped by module", ""])
+    lines.extend(["```", "", "## 2. Public callables grouped by module", ""])
     by_mod: dict[str, list[str]] = {}
     for node in public_nodes:
         by_mod.setdefault(node["module_name"], []).append(node["callable_name"])
@@ -434,7 +418,7 @@ def render_callable_map_page(nodes: list[dict[str, Any]], edges: list[dict[str, 
         if edge["callee_qualified_name"]:
             ref_by.setdefault(edge["callee_qualified_name"], set()).add(edge["caller_qualified_name"])
 
-    lines.extend(["", "## 4. Internal helper index", "", "| Module | Internal helper | Called by public callables |", "|---|---|---|"])
+    lines.extend(["", "## 3. Internal helper index", "", "| Module | Internal helper | Called by public callables |", "|---|---|---|"])
     public_qns = {n["qualified_name"] for n in public_nodes}
     for node in helper_nodes:
         qn = node["qualified_name"]
@@ -444,7 +428,7 @@ def render_callable_map_page(nodes: list[dict[str, Any]], edges: list[dict[str, 
             f"{', '.join(f'`{x}`' for x in callers) or '—'} |"
         )
 
-    lines.extend(["", "## 5. Cross-module FabricOps calls", "", "| Caller | Callee | Callee kind |", "|---|---|---|"])
+    lines.extend(["", "## 4. Cross-module FabricOps calls", "", "| Caller | Callee | Callee kind |", "|---|---|---|"])
     for edge in cross_edges:
         lines.append(
             f"| `{edge['caller_qualified_name']}` | `{edge['callee_qualified_name']}` | `{edge['callee_kind']}` |"
@@ -452,12 +436,11 @@ def render_callable_map_page(nodes: list[dict[str, Any]], edges: list[dict[str, 
 
     lines.extend([
         "",
-        "## 6. Notes",
+        "## 5. Notes",
         "",
         "Per-function callable flows and helper/callee details are generated on each public callable page.",
     ])
     return "\n".join(lines) + "\n"
-
 
 def main() -> None:
     public = parse_public_exports()
@@ -603,11 +586,18 @@ def main() -> None:
         lines.extend([
             "## Module dependency summary",
             "",
-            "| Essential | Optional | Internal | Depends On | Used By |",
-            "|---:|---:|---:|---:|---:|",
-            f"| {essential_count} | {optional_count} | {internal_count} | {len(outbound_mods)} | {len(inbound_mods)} |",
+            '<div class="module-table-scroll">',
+            '| Callable count | Internal helper count | Outbound references | Inbound references |',
+            '|---:|---:|---:|---:|',
+            f'| {essential_count + optional_count} | {internal_count} | {len(outbound_mods)} | {len(inbound_mods)} |',
+            '</div>',
             "",
         ])
+
+        module_purpose = module_manifest.get(module, {}).get("module_summary", "").strip()
+        if module_purpose:
+            lines.extend(["## Module purpose", "", module_purpose, ""])
+
         if module == "data_product_metadata":
             lines.extend(
                 [
@@ -620,17 +610,29 @@ def main() -> None:
         if public_in_module:
             recommended = sorted([s for s in public_in_module if s.role == "essential"], key=lambda x: x.name.lower())
             advanced = sorted([s for s in public_in_module if s.role == "optional"], key=lambda x: x.name.lower())
-            lines.extend(["## Essential callables", ""])
-            lines.extend(["| Callable | Type | Summary | Related helpers |", "|---|---|---|---|"])
+            lines.extend(["## Public callables", ""])
+            lines.extend([
+                '<div class="module-table-scroll">',
+                '| Callable | Tier | Type | Summary | Related helpers |',
+                '|---|---|---|---|---|',
+            ])
             for s in recommended:
                 related = sorted([c for c in info["calls"].get(s.name, set()) if c in info["functions"] and c.startswith("_")])
                 callable_link = callable_docs_link(s.name, module, docs_metadata)
                 lines.append(
-                    f"| [`{s.name}`]({callable_link}) | {s.obj_type} | {s.summary or '—'} | "
+                    f"| [`{s.name}`]({callable_link}) | Essential | {s.obj_type} | {s.summary or '—'} | "
                     f"{', '.join(f'[`{r}`]({internal_helper_link(s.actual_module, r)}) (internal)' for r in related) or '—'} |"
                 )
-            if not recommended:
-                lines.append("| — | — | No recommended entrypoints configured. | — |")
+            for s in advanced:
+                related = sorted([c for c in info["calls"].get(s.name, set()) if c in info["functions"] and c.startswith("_")])
+                callable_link = callable_docs_link(s.name, module, docs_metadata)
+                lines.append(
+                    f"| [`{s.name}`]({callable_link}) | Optional | {s.obj_type} | {s.summary or '—'} | "
+                    f"{', '.join(f'[`{r}`]({internal_helper_link(s.actual_module, r)}) (internal)' for r in related) or '—'} |"
+                )
+            if not recommended and not advanced:
+                lines.append("| — | — | — | No public exports in this module. | — |")
+            lines.extend(['</div>'])
             if module == "data_quality":
                 lines.extend(
                     [
@@ -638,66 +640,100 @@ def main() -> None:
                         "Split a Spark DataFrame into pass/quarantine outputs for row-level DQ rules.",
                     ]
                 )
-
-            lines.extend(["", "## Optional callables", ""])
-            if advanced:
-                lines.extend(["| Callable | Type | Summary | Related helpers |", "|---|---|---|---|"])
-                for s in advanced:
-                    related = sorted([c for c in info["calls"].get(s.name, set()) if c in info["functions"] and c.startswith("_")])
-                    callable_link = callable_docs_link(s.name, module, docs_metadata)
-                    lines.append(
-                        f"| [`{s.name}`]({callable_link}) | {s.obj_type} | {s.summary or '—'} | "
-                        f"{', '.join(f'[`{r}`]({internal_helper_link(s.actual_module, r)}) (internal)' for r in related) or '—'} |"
-                    )
-            else:
-                lines.append("No advanced helpers listed for this module.")
         else:
-            lines.extend(["## Essential callables", "", "No public exports in this module.", "", "## Optional callables", "", "No advanced helpers listed for this module."])
-        lines.extend(["", "## Related internal helpers", ""])
+            lines.extend(["## Public callables", "", "No public exports in this module."])
+
+        lines.extend(["", "## Advanced dependency sections", ""])
+        lines.extend(["", "### Related internal helpers", ""])
         internal_fns = sorted([f for f in info["functions"] if f.startswith("_")])
         if internal_fns:
-            if len(internal_fns) > 10:
+            helper_details = len(internal_fns) > 8
+            if helper_details:
                 lines.extend(["<details>", "<summary>Expand internal helper table</summary>", ""])
-            lines.extend(["| Helper | Related public callables |", "|---|---|"])
+            lines.extend([
+                '<div class="module-table-scroll">',
+                '| Helper | Related public callables |',
+                '|---|---|',
+            ])
             for helper in internal_fns:
                 users = sorted([u for u in info["used_by"].get(helper, set()) if u in {p.name for p in public_in_module}])
                 users_links = ", ".join(
                     f"[`{u}`]({callable_docs_link(u, module, docs_metadata)})" for u in users
                 ) or "—"
                 lines.append(f"| [`{helper}`]({internal_helper_link(actual_module, helper)}) | {users_links} |")
-            if len(internal_fns) > 10:
+            lines.extend(['</div>'])
+            if helper_details:
                 lines.extend(["", "</details>"])
         else:
             lines.append("No module-level internal helpers detected.")
-        lines.extend(["", "## Module internal callable graph", "", "```mermaid", "flowchart LR"])
+
         same_edges = [e for e in edges if _is_callable_edge(e) and e["caller_qualified_name"].split(".")[-2] == actual_module and e["callee_qualified_name"].split(".")[-2] == actual_module]
         same_edge_pairs = sorted({(e["caller_qualified_name"], e["callee_qualified_name"]) for e in same_edges})
-        if same_edge_pairs:
-            for idx, (src_qn, dst_qn) in enumerate(same_edge_pairs[:40], start=1):
+        same_src_to_dst = {}
+        same_dst_from_src = {}
+        for src_qn, dst_qn in same_edge_pairs:
+            same_src_to_dst.setdefault(src_qn, set()).add(dst_qn)
+            same_dst_from_src.setdefault(dst_qn, set()).add(src_qn)
+        internal_graph_meaningful = any(len(v) >= 2 for v in same_src_to_dst.values()) or any(len(v) >= 2 for v in same_dst_from_src.values())
+
+        lines.extend(["", "### Module internal callable dependencies", ""])
+        if same_edge_pairs and internal_graph_meaningful:
+            if len(same_edge_pairs) > 8:
+                lines.extend(["<details>", "<summary>Expand module internal callable graph</summary>", ""])
+            lines.extend(['<div class="module-mermaid-scroll">', "```mermaid", "flowchart LR"])
+            for idx, (src_qn, dst_qn) in enumerate(same_edge_pairs[:80], start=1):
                 lines.append(f'  n{idx}["{_label(src_qn)}"] --> n{idx}b["{_label(dst_qn)}"]')
+            lines.extend(["```", "</div>"])
+            if len(same_edge_pairs) > 8:
+                lines.extend(["", "</details>"])
+        elif same_edge_pairs:
+            lines.append("Graph omitted because dependencies are simple one-to-one references.")
+            lines.extend([
+                '<div class="module-table-scroll">',
+                '| Caller | Callee |',
+                '|---|---|',
+            ])
+            for src_qn, dst_qn in same_edge_pairs:
+                lines.append(f"| `{_label(src_qn)}` | `{_label(dst_qn)}` |")
+            lines.extend(['</div>'])
         else:
-            lines.append("  no_internal_edges[No module-scoped callable edges detected]")
-        lines.extend(["```", "", "## Cross-module callable graph", "", "```mermaid", "flowchart LR"])
+            lines.append("No module-scoped callable dependencies detected.")
+
         module_cross = [e for e in edges if _is_callable_edge(e) and e["caller_qualified_name"].split(".")[-2] == actual_module and e["callee_qualified_name"].split(".")[-2] != actual_module]
         cross_pairs = sorted({(e["caller_qualified_name"], e["callee_qualified_name"]) for e in module_cross})
-        if cross_pairs:
-            for idx, (src_qn, dst_qn) in enumerate(cross_pairs[:40], start=1):
-                lines.append(f"  c{idx}[{_label(src_qn)}] --> d{idx}[{_label(dst_qn)}]")
-        else:
-            lines.append("  no_cross_edges[No cross-module callable edges detected]")
-        lines.append("```")
-        lines.extend(["", "## Cross-module references", ""])
-        if cross_pairs:
-            if len(cross_pairs) > 12:
+        cross_src_to_dst = {}
+        cross_dst_from_src = {}
+        for src_qn, dst_qn in cross_pairs:
+            cross_src_to_dst.setdefault(src_qn, set()).add(dst_qn)
+            cross_dst_from_src.setdefault(dst_qn, set()).add(src_qn)
+        cross_graph_meaningful = any(len(v) >= 2 for v in cross_src_to_dst.values()) or any(len(v) >= 2 for v in cross_dst_from_src.values())
+
+        lines.extend(["", "### Cross-module references", ""])
+        if cross_pairs and cross_graph_meaningful:
+            if len(cross_pairs) > 8:
+                lines.extend(["<details>", "<summary>Expand cross-module callable graph</summary>", ""])
+            lines.extend(['<div class="module-mermaid-scroll">', "```mermaid", "flowchart LR"])
+            for idx, (src_qn, dst_qn) in enumerate(cross_pairs[:80], start=1):
+                lines.append(f'  c{idx}["{_label(src_qn)}"] --> d{idx}["{_label(dst_qn)}"]')
+            lines.extend(["```", "</div>"])
+            if len(cross_pairs) > 8:
+                lines.extend(["", "</details>"])
+        elif cross_pairs:
+            lines.append("Graph omitted because dependencies are simple one-to-one references.")
+            if len(cross_pairs) > 8:
                 lines.extend(["<details>", "<summary>Expand cross-module references</summary>", ""])
-            lines.extend(["| Caller | Callee |", "|---|---|"])
+            lines.extend([
+                '<div class="module-table-scroll">',
+                '| Caller | Callee |',
+                '|---|---|',
+            ])
             for src_qn, dst_qn in cross_pairs:
                 lines.append(f"| `{_label(src_qn)}` | `{_label(dst_qn)}` |")
-            if len(cross_pairs) > 12:
+            lines.extend(['</div>'])
+            if len(cross_pairs) > 8:
                 lines.extend(["", "</details>"])
         else:
             lines.append("No cross-module references detected.")
-
         if public_in_module:
             for s in sorted([x for x in public_in_module if x.role in {"essential", "optional"}], key=lambda x: x.name.lower()):
                 expected_target = callable_docs_link(s.name, module, docs_metadata)
