@@ -202,16 +202,17 @@ def test_callable_map_generated_with_required_sections() -> None:
     assert "# Callable Map" in content
     assert "## 1. Module dependency graph" in content
     assert "```mermaid" in content
-    assert "## 2. Public callables by module" in content
-    assert "## 3. Internal helper index" in content
-    assert "## 4. Cross-module FabricOps calls" in content
-    assert "## 5. Module dependency summary" in content
+    assert "## 2. Module relationship summary" in content
+    assert "## 3. Public callables grouped by module" in content
+    assert "## 4. Internal helper index" in content
+    assert "## 5. Cross-module FabricOps calls" in content
+    assert "## 6. Module dependency summary" in content
 
 
 def test_callable_map_has_static_markdown_tables() -> None:
     generate_reference()
     content = CALLABLE_MAP_FILE.read_text(encoding="utf-8")
-    assert "| Module | Public callable | Referenced by |" in content
+    assert "| Module | Calls modules | Called by modules | Public callables |" in content
     assert "| Module | Internal helper | Called by public callables |" in content
     assert "| Caller | Callee | Callee kind |" in content
 
@@ -448,3 +449,43 @@ def test_read_lakehouse_table_reference_uses_config_env_target_example() -> None
     callable_page = (ROOT / "docs" / "api" / "reference" / "read_lakehouse_table.md").read_text(encoding="utf-8")
     assert 'read_lakehouse_table(CONFIG, ENV, "source", "RAW_ORDERS")' in callable_page
     assert "| [`load_config`]" in (ROOT / "docs/api/modules/config.md").read_text(encoding="utf-8")
+
+
+def test_review_dq_rules_generated_page_has_callable_flow_and_no_noisy_calls(tmp_path, monkeypatch) -> None:
+    import io
+    import runpy
+    import sys
+    import types
+
+    outputs: dict[str, io.StringIO] = {}
+
+    class _Writer:
+        def __init__(self, path: str):
+            self.path = path
+            self.buf = io.StringIO()
+
+        def write(self, text: str) -> int:
+            return self.buf.write(text)
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            outputs[self.path] = self.buf
+            return False
+
+    fake_mod = types.SimpleNamespace(open=lambda path, mode="w": _Writer(path))
+    monkeypatch.setitem(sys.modules, "mkdocs_gen_files", fake_mod)
+
+    runpy.run_path(str(ROOT / "docs" / "gen_ref_pages.py"), run_name="__main__")
+
+    page = outputs["api/reference/review_dq_rules.md"].getvalue()
+    assert "## Callable flow" in page
+    assert "```mermaid" in page
+    assert "## Callable relationships" in page
+    assert "## Function flow details" in page
+    assert "widgets.Button" not in page
+    assert "json.dumps" not in page
+    assert ".append" not in page
+    assert ".get" not in page
+    assert "fabricops_kit.APPROVED_RULES_FROM_WIDGET.append" not in page

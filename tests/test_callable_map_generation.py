@@ -29,10 +29,11 @@ def test_callable_map_markdown_sections_present() -> None:
     assert "# Callable Map" in content
     assert "## 1. Module dependency graph" in content
     assert "```mermaid" in content
-    assert "## 2. Public callables by module" in content
-    assert "## 3. Internal helper index" in content
-    assert "## 4. Cross-module FabricOps calls" in content
-    assert "## 5. Module dependency summary" in content
+    assert "## 2. Module relationship summary" in content
+    assert "## 3. Public callables grouped by module" in content
+    assert "## 4. Internal helper index" in content
+    assert "## 5. Cross-module FabricOps calls" in content
+    assert "## 6. Module dependency summary" in content
 
 
 def test_callable_map_excludes_iframe_and_script_tags() -> None:
@@ -49,3 +50,19 @@ def test_callable_map_contains_non_trivial_module_edges() -> None:
         "data_quality --> metadata" in content
         or "fabric_input_output --> config" in content
     )
+
+
+def test_callable_map_includes_relationship_tables() -> None:
+    generate_reference()
+    content = CALLABLE_MAP_FILE.read_text(encoding="utf-8")
+    assert "| Module | Internal helper | Called by public callables |" in content
+    assert "| Caller | Callee | Callee kind |" in content
+
+
+def test_callable_map_excludes_noisy_calls() -> None:
+    generate_reference()
+    content = CALLABLE_MAP_FILE.read_text(encoding="utf-8")
+    assert "widgets.Button" not in content
+    assert "json.dumps" not in content
+    assert ".append" not in content
+    assert ".get" not in content
