@@ -21,7 +21,7 @@ flowchart LR
 
 | Module | Calls modules | Called by modules | Public callables |
 |---|---|---|---:|
-| `_utils` | — | — | 0 |
+| `_utils` | — | `drift` | 0 |
 | `business_context` | `metadata` | — | 6 |
 | `config` | — | `fabric_input_output` | 2 |
 | `data_agreement` | — | — | 3 |
@@ -31,9 +31,9 @@ flowchart LR
 | `data_quality` | `data_profiling`, `fabric_input_output`, `metadata` | — | 9 |
 | `docs_metadata` | — | — | 0 |
 | `drift` | `_utils` | — | 4 |
-| `fabric_input_output` | `config` | `data_quality` | 8 |
+| `fabric_input_output` | `config` | — | 8 |
 | `handover` | — | — | 2 |
-| `metadata` | `fabric_input_output` | `business_context`, `data_quality` | 2 |
+| `metadata` | `fabric_input_output` | `business_context`, `data_governance` | 2 |
 | `technical_columns` | — | `data_profiling` | 1 |
 
 ## 3. Public callables grouped by module
@@ -201,7 +201,7 @@ flowchart LR
 
 | Module | Calls modules | Called by modules | Public callables | Internal helpers |
 |---|---|---|---:|---:|
-| `_utils` | — | — | 0 | 1 |
+| `_utils` | — | `drift` | 0 | 1 |
 | `business_context` | `metadata` | — | 6 | 4 |
 | `config` | — | `fabric_input_output` | 2 | 13 |
 | `data_agreement` | — | — | 3 | 3 |
@@ -211,9 +211,9 @@ flowchart LR
 | `data_quality` | `data_profiling`, `fabric_input_output`, `metadata` | — | 9 | 20 |
 | `docs_metadata` | — | — | 0 | 0 |
 | `drift` | `_utils` | — | 4 | 14 |
-| `fabric_input_output` | `config` | `data_quality` | 8 | 3 |
+| `fabric_input_output` | `config` | — | 8 | 3 |
 | `handover` | — | — | 2 | 1 |
-| `metadata` | `fabric_input_output` | `business_context`, `data_quality` | 2 | 8 |
+| `metadata` | `fabric_input_output` | `business_context`, `data_governance` | 2 | 8 |
 | `technical_columns` | — | `data_profiling` | 1 | 10 |
 
 ## 7. Notes

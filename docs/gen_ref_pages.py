@@ -166,14 +166,23 @@ for row in sorted(public_symbol_docs, key=lambda item: item["symbol_name"]):
         else:
             fd.write("No direct FabricOps callable relationships detected.\n\n")
         fd.write("## Callable relationships\n\n| Relationship | Callables |\n|---|---|\n")
+
         def link(c):
             m, n = c.split(".")[-2], c.split(".")[-1]
             if n in exports:
                 return f"[`{n}`](../{n}/)"
             return f"[`{n}`](../internal/{m}/{n}/)"
+
         fd.write(f"| Internal helpers used | {', '.join(link(c) for c in helper_calls) or '—'} |\n")
         fd.write(f"| Cross-module FabricOps calls | {', '.join(link(c) for c in cross) or '—'} |\n")
-        fd.write(f"| Referenced by | {', '.join(f'`{c}`' for c in referenced_by) or '—'} |\n\n")
+        referenced_by_links: list[str] = []
+        for c in referenced_by:
+            m, n = c.split(".")[-2], c.split(".")[-1]
+            if n in exports:
+                referenced_by_links.append(f"[`{n}`](../{n}/)")
+            else:
+                referenced_by_links.append(f"`{PACKAGE}.{m}.{n}`")
+        fd.write(f"| Referenced by | {', '.join(referenced_by_links) or '—'} |\n\n")
         fd.write("## Function flow details\n\n| Step | Callable | Purpose |\n|---:|---|---|\n")
         for i, c in enumerate(flow_edges[:20], start=1):
             m, n = c.split(".")[-2], c.split(".")[-1]
@@ -183,4 +192,21 @@ for row in sorted(public_symbol_docs, key=lambda item: item["symbol_name"]):
             fd.write("| 1 | — | — |\n")
         fd.write("\n")
         fd.write(f"::: {PACKAGE}.{module_name}.{symbol_name}\n")
+        fd.write("    options:\n")
+        fd.write("      show_root_heading: false\n")
+        fd.write("      show_source: true\n")
+        fd.write("      docstring_style: numpy\n")
+        fd.write("      docstring_section_style: table\n")
 
+for module_name, callable_docs in sorted(modules.items()):
+    for helper_name in sorted(name for name in callable_docs if name.startswith("_")):
+        helper_doc_path = f"api/reference/internal/{module_name}/{helper_name}.md"
+        with mkdocs_gen_files.open(helper_doc_path, "w") as fd:
+            fd.write(f"# `{helper_name}`\n\n")
+            fd.write("Internal helper notice\n\n")
+            fd.write(f"::: {PACKAGE}.{module_name}.{helper_name}\n")
+            fd.write("    options:\n")
+            fd.write("      show_root_heading: false\n")
+            fd.write("      show_source: true\n")
+            fd.write("      docstring_style: numpy\n")
+            fd.write("      docstring_section_style: table\n")
