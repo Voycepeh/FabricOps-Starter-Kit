@@ -891,6 +891,9 @@ def main() -> None:
     def _strip_backticks(label: str) -> str:
         return label[1:-1] if label.startswith("`") and label.endswith("`") else label
 
+    def _short_callable_name(qualified_name: str) -> str:
+        return qualified_name.split(".")[-1]
+
     notebook_page_files = {
         "00_env_config": "00-env-config.md",
         "02_ex": "02-exploration.md",
@@ -1051,9 +1054,21 @@ def main() -> None:
         starter_path = ", ".join(sorted(starter_symbol_to_notebooks.get(s.name, set()))) or "—"
         purpose = s.purpose or s.summary or "—"
         qn = f"{PACKAGE_NAME}.{s.actual_module}.{s.name}"
-        calls_count = len(calls_index.get(qn, set()))
-        used_by_count = len(used_by_index.get(qn, set()))
-        internal_helper_count = len([c for c in calls_index.get(qn, set()) if c.startswith(f"{PACKAGE_NAME}.{s.actual_module}._")])
+        dep = dependency_callables.get(qn, {})
+        calls = sorted(dep.get("calls", list(calls_index.get(qn, set()))))
+        used_by = sorted(dep.get("used_by", list(used_by_index.get(qn, set()))))
+        internal_helpers_used = sorted(
+            dep.get(
+                "internal_helpers_used",
+                [c for c in calls_index.get(qn, set()) if c.startswith(f"{PACKAGE_NAME}.{s.actual_module}._")],
+            )
+        )
+        calls_count = int(dep.get("calls_count", len(calls)))
+        used_by_count = int(dep.get("used_by_count", len(used_by)))
+        internal_helper_count = int(dep.get("internal_helper_count", len(internal_helpers_used)))
+        classification = str(dep.get("classification", s.role)).capitalize()
+        calls_list = "".join(f"<li><code>{_esc(_short_callable_name(name))}</code></li>" for name in calls) or "<li><em>None</em></li>"
+        used_by_list = "".join(f"<li><code>{_esc(_short_callable_name(name))}</code></li>" for name in used_by) or "<li><em>None</em></li>"
         all_items.extend(
             [
                 (
@@ -1066,18 +1081,22 @@ def main() -> None:
                 ),
                 f'  <h3 class="reference-catalogue-item-name">{_anchor(symbol_link, s.name, code=True)}</h3>',
                 (
-                    '  <p class="reference-catalogue-item-meta">'
+                    '  <p class="reference-catalogue-item-chips">'
                     f'{_module_link(s.public_module)}'
-                    f' <span class="reference-catalogue-separator">·</span> <span>{_esc(s.role)}</span>'
-                    f' <span class="reference-catalogue-separator">·</span> <span>{_esc(starter_path)}</span>'
+                    f' <span class="reference-catalogue-chip reference-catalogue-chip-role">{_esc(classification)}</span>'
                     "</p>"
                 ),
                 (
                     '  <p class="reference-catalogue-item-meta">'
-                    f'<span>Calls: {_esc(str(calls_count))}</span>'
-                    f' <span class="reference-catalogue-separator">·</span> <span>Used By: {_esc(str(used_by_count))}</span>'
-                    f' <span class="reference-catalogue-separator">·</span> <span>Internal Helpers: {_esc(str(internal_helper_count))}</span>'
+                    f'<span class="reference-catalogue-chip reference-catalogue-chip-subtle">Starter Path: {_esc(starter_path)}</span>'
                     "</p>"
+                ),
+                (
+                    '  <div class="reference-catalogue-metrics">'
+                    f'<details class="reference-catalogue-metric"><summary>Calls: {_esc(str(calls_count))}</summary><ul>{calls_list}</ul></details>'
+                    f'<details class="reference-catalogue-metric"><summary>Used By: {_esc(str(used_by_count))}</summary><ul>{used_by_list}</ul></details>'
+                    f'<span class="reference-catalogue-chip reference-catalogue-chip-count">Internal Helpers: {_esc(str(internal_helper_count))}</span>'
+                    "</div>"
                 ),
                 f'  <p class="reference-catalogue-item-purpose">{_esc(purpose)}</p>',
                 "</article>",

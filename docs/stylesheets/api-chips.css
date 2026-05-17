@@ -186,6 +186,50 @@
   font-size: 0.84rem;
   color: var(--md-default-fg-color--light);
 }
+.reference-catalogue-item-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0 0 0.3rem;
+}
+.reference-catalogue-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.14rem 0.5rem;
+  font-size: 0.78rem;
+  line-height: 1.3;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  white-space: nowrap;
+}
+.reference-catalogue-chip-role { background: rgba(16, 185, 129, 0.12); }
+.reference-catalogue-chip-subtle { background: rgba(99, 102, 241, 0.1); }
+.reference-catalogue-chip-count { background: rgba(245, 158, 11, 0.12); }
+.reference-catalogue-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.2rem;
+}
+.reference-catalogue-metric {
+  margin: 0;
+}
+.reference-catalogue-metric > summary {
+  list-style: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  padding: 0.14rem 0.5rem;
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+.reference-catalogue-metric > summary::-webkit-details-marker { display: none; }
+.reference-catalogue-metric > ul {
+  margin: 0.28rem 0 0 1rem;
+  font-size: 0.8rem;
+}
 
 .reference-catalogue-separator {
   padding: 0 0.35rem;
@@ -250,10 +294,6 @@
   .reference-catalogue-item {
     padding: 0.62rem 0.72rem;
     border-radius: 0.6rem;
-  }
-
-  .reference-catalogue-item-meta {
-    display: none;
   }
 
   .reference-catalogue-item-name {

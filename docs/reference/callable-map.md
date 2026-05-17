@@ -25,17 +25,17 @@ flowchart LR
 |---|---|---|---:|
 | `_utils` | — | — | 0 |
 | `business_context` | `metadata` | — | 6 |
-| `config` | — | `fabric_input_output` | 2 |
+| `config` | — | — | 2 |
 | `data_agreement` | — | — | 3 |
 | `data_governance` | `metadata` | — | 6 |
 | `data_lineage` | — | — | 2 |
-| `data_profiling` | `technical_columns` | — | 1 |
+| `data_profiling` | `technical_columns` | `data_quality` | 1 |
 | `data_quality` | `data_profiling`, `fabric_input_output`, `metadata` | — | 9 |
 | `docs_metadata` | — | — | 0 |
 | `drift` | `_utils` | — | 4 |
-| `fabric_input_output` | `config` | — | 8 |
+| `fabric_input_output` | `config` | `data_quality`, `metadata` | 8 |
 | `handover` | — | — | 2 |
-| `metadata` | `fabric_input_output` | `business_context`, `data_quality` | 2 |
+| `metadata` | `fabric_input_output` | `data_governance`, `data_quality` | 2 |
 | `technical_columns` | — | — | 1 |
 
 ## 3. Public callables grouped by module
