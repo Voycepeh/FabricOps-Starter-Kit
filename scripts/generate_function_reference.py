@@ -450,16 +450,9 @@ def render_callable_map_page(nodes: list[dict[str, Any]], edges: list[dict[str, 
             f"| `{edge['caller_qualified_name']}` | `{edge['callee_qualified_name']}` | `{edge['callee_kind']}` |"
         )
 
-    lines.extend(["", "## 6. Module dependency summary", "", "| Module | Calls modules | Called by modules | Public callables | Internal helpers |", "|---|---|---|---:|---:|"])
-    for row in module_summary:
-        lines.append(
-            f"| `{row['module']}` | {', '.join(f'`{m}`' for m in row['calls_modules']) or '—'} | "
-            f"{', '.join(f'`{m}`' for m in row['called_by_modules']) or '—'} | {row['public_callable_count']} | {row['internal_helper_count']} |"
-        )
-
     lines.extend([
         "",
-        "## 7. Notes",
+        "## 6. Notes",
         "",
         "Per-function callable flows and helper/callee details are generated on each public callable page.",
     ])
@@ -532,6 +525,25 @@ def main() -> None:
 
     function_symbol_map = {name: symbol for name, symbol in symbol_map.items() if symbol.obj_type == "function"}
     nodes, edges, _ = build_callable_graph(module_data, symbol_map, public, docs_metadata)
+    node_lookup = {n["qualified_name"]: n for n in nodes}
+
+    def _is_callable_edge(edge: dict[str, Any]) -> bool:
+        callee = edge.get("callee_qualified_name")
+        if not callee:
+            return False
+        caller = edge["caller_qualified_name"]
+        if caller not in node_lookup or callee not in node_lookup:
+            return False
+        caller_node = node_lookup[caller]
+        callee_node = node_lookup[callee]
+        return (
+            caller_node["callable_name"] in module_data[caller_node["module_name"]]["functions"]
+            and callee_node["callable_name"] in module_data[callee_node["module_name"]]["functions"]
+        )
+
+    def _label(qn: str) -> str:
+        parts = qn.split(".")
+        return f"{parts[-2]}.{parts[-1]}"
     MODULE_DIR.mkdir(parents=True, exist_ok=True)
     module_manifest = {row["module_name"]: row for row in module_docs_metadata}
     discovered_doc_modules = [INTERNAL_ALIAS_MODULES.get(module, module) for module in discovered_modules]
@@ -591,11 +603,9 @@ def main() -> None:
         lines.extend([
             "## Module dependency summary",
             "",
-            f"- **Essential:** {essential_count}",
-            f"- **Optional:** {optional_count}",
-            f"- **Internal:** {internal_count}",
-            f"- **Depends On:** {len(outbound_mods)} modules",
-            f"- **Used By:** {len(inbound_mods)} modules",
+            "| Essential | Optional | Internal | Depends On | Used By |",
+            "|---:|---:|---:|---:|---:|",
+            f"| {essential_count} | {optional_count} | {internal_count} | {len(outbound_mods)} | {len(inbound_mods)} |",
             "",
         ])
         if module == "data_product_metadata":
@@ -646,6 +656,8 @@ def main() -> None:
         lines.extend(["", "## Related internal helpers", ""])
         internal_fns = sorted([f for f in info["functions"] if f.startswith("_")])
         if internal_fns:
+            if len(internal_fns) > 10:
+                lines.extend(["<details>", "<summary>Expand internal helper table</summary>", ""])
             lines.extend(["| Helper | Related public callables |", "|---|---|"])
             for helper in internal_fns:
                 users = sorted([u for u in info["used_by"].get(helper, set()) if u in {p.name for p in public_in_module}])
@@ -653,25 +665,38 @@ def main() -> None:
                     f"[`{u}`]({callable_docs_link(u, module, docs_metadata)})" for u in users
                 ) or "—"
                 lines.append(f"| [`{helper}`]({internal_helper_link(actual_module, helper)}) | {users_links} |")
+            if len(internal_fns) > 10:
+                lines.extend(["", "</details>"])
         else:
             lines.append("No module-level internal helpers detected.")
         lines.extend(["", "## Module internal callable graph", "", "```mermaid", "flowchart LR"])
-        same_edges = [e for e in edges if e.get("callee_qualified_name") and e["caller_qualified_name"].split(".")[-2] == actual_module and e["callee_qualified_name"].split(".")[-2] == actual_module]
-        if same_edges:
-            for edge in same_edges[:40]:
-                lines.append(f"  {edge['caller_qualified_name'].split('.')[-1]} --> {edge['callee_qualified_name'].split('.')[-1]}")
+        same_edges = [e for e in edges if _is_callable_edge(e) and e["caller_qualified_name"].split(".")[-2] == actual_module and e["callee_qualified_name"].split(".")[-2] == actual_module]
+        same_edge_pairs = sorted({(e["caller_qualified_name"], e["callee_qualified_name"]) for e in same_edges})
+        if same_edge_pairs:
+            for idx, (src_qn, dst_qn) in enumerate(same_edge_pairs[:40], start=1):
+                lines.append(f'  n{idx}["{_label(src_qn)}"] --> n{idx}b["{_label(dst_qn)}"]')
         else:
             lines.append("  no_internal_edges[No module-scoped callable edges detected]")
         lines.extend(["```", "", "## Cross-module callable graph", "", "```mermaid", "flowchart LR"])
-        module_cross = [e for e in edges if e.get("callee_qualified_name") and e["caller_qualified_name"].split(".")[-2] == actual_module and e["callee_qualified_name"].split(".")[-2] != actual_module]
-        if module_cross:
-            for edge in module_cross[:40]:
-                src = edge["caller_qualified_name"].replace(".", "_")
-                dst = edge["callee_qualified_name"].replace(".", "_")
-                lines.append(f"  {src} --> {dst}")
+        module_cross = [e for e in edges if _is_callable_edge(e) and e["caller_qualified_name"].split(".")[-2] == actual_module and e["callee_qualified_name"].split(".")[-2] != actual_module]
+        cross_pairs = sorted({(e["caller_qualified_name"], e["callee_qualified_name"]) for e in module_cross})
+        if cross_pairs:
+            for idx, (src_qn, dst_qn) in enumerate(cross_pairs[:40], start=1):
+                lines.append(f"  c{idx}[{_label(src_qn)}] --> d{idx}[{_label(dst_qn)}]")
         else:
             lines.append("  no_cross_edges[No cross-module callable edges detected]")
         lines.append("```")
+        lines.extend(["", "## Cross-module references", ""])
+        if cross_pairs:
+            if len(cross_pairs) > 12:
+                lines.extend(["<details>", "<summary>Expand cross-module references</summary>", ""])
+            lines.extend(["| Caller | Callee |", "|---|---|"])
+            for src_qn, dst_qn in cross_pairs:
+                lines.append(f"| `{_label(src_qn)}` | `{_label(dst_qn)}` |")
+            if len(cross_pairs) > 12:
+                lines.extend(["", "</details>"])
+        else:
+            lines.append("No cross-module references detected.")
 
         if public_in_module:
             for s in sorted([x for x in public_in_module if x.role in {"essential", "optional"}], key=lambda x: x.name.lower()):

@@ -6,11 +6,9 @@
 
 ## Module dependency summary
 
-- **Essential:** 3
-- **Optional:** 0
-- **Internal:** 3
-- **Depends On:** 0 modules
-- **Used By:** 0 modules
+| Essential | Optional | Internal | Depends On | Used By |
+|---:|---:|---:|---:|---:|
+| 3 | 0 | 3 | 0 | 0 |
 
 ## Essential callables
 
@@ -36,10 +34,10 @@ No advanced helpers listed for this module.
 
 ```mermaid
 flowchart LR
-  load_agreements --> _latest_distinct_agreements
-  load_agreements --> _coerce_row_dicts
-  select_agreement --> _coerce_row_dicts
-  select_agreement --> _agreement_option_label
+  n1["data_agreement.load_agreements"] --> n1b["data_agreement._coerce_row_dicts"]
+  n2["data_agreement.load_agreements"] --> n2b["data_agreement._latest_distinct_agreements"]
+  n3["data_agreement.select_agreement"] --> n3b["data_agreement._agreement_option_label"]
+  n4["data_agreement.select_agreement"] --> n4b["data_agreement._coerce_row_dicts"]
 ```
 
 ## Cross-module callable graph
@@ -48,3 +46,7 @@ flowchart LR
 flowchart LR
   no_cross_edges[No cross-module callable edges detected]
 ```
+
+## Cross-module references
+
+No cross-module references detected.

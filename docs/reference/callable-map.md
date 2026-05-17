@@ -23,9 +23,9 @@ flowchart LR
 
 | Module | Calls modules | Called by modules | Public callables |
 |---|---|---|---:|
-| `_utils` | — | `drift` | 0 |
+| `_utils` | — | — | 0 |
 | `business_context` | `metadata` | — | 6 |
-| `config` | — | — | 2 |
+| `config` | — | `fabric_input_output` | 2 |
 | `data_agreement` | — | — | 3 |
 | `data_governance` | `metadata` | — | 6 |
 | `data_lineage` | — | — | 2 |
@@ -33,10 +33,10 @@ flowchart LR
 | `data_quality` | `data_profiling`, `fabric_input_output`, `metadata` | — | 9 |
 | `docs_metadata` | — | — | 0 |
 | `drift` | `_utils` | — | 4 |
-| `fabric_input_output` | `config` | `data_quality`, `metadata` | 8 |
+| `fabric_input_output` | `config` | — | 8 |
 | `handover` | — | — | 2 |
-| `metadata` | `fabric_input_output` | `business_context`, `data_governance`, `data_quality` | 2 |
-| `technical_columns` | — | `data_profiling` | 1 |
+| `metadata` | `fabric_input_output` | `business_context`, `data_quality` | 2 |
+| `technical_columns` | — | — | 1 |
 
 ## 3. Public callables grouped by module
 
@@ -199,25 +199,6 @@ flowchart LR
 | `fabricops_kit.fabric_input_output.write_warehouse_table` | `fabricops_kit.config._get_store` | `internal_helper` |
 | `fabricops_kit.metadata.write_metadata_rows` | `fabricops_kit.fabric_input_output.write_lakehouse_table` | `public_export` |
 
-## 6. Module dependency summary
-
-| Module | Calls modules | Called by modules | Public callables | Internal helpers |
-|---|---|---|---:|---:|
-| `_utils` | — | `drift` | 0 | 1 |
-| `business_context` | `metadata` | — | 6 | 4 |
-| `config` | — | — | 2 | 13 |
-| `data_agreement` | — | — | 3 | 3 |
-| `data_governance` | `metadata` | — | 6 | 6 |
-| `data_lineage` | — | — | 2 | 13 |
-| `data_profiling` | `technical_columns` | — | 1 | 2 |
-| `data_quality` | `data_profiling`, `fabric_input_output`, `metadata` | — | 9 | 20 |
-| `docs_metadata` | — | — | 0 | 0 |
-| `drift` | `_utils` | — | 4 | 14 |
-| `fabric_input_output` | `config` | `data_quality`, `metadata` | 8 | 3 |
-| `handover` | — | — | 2 | 1 |
-| `metadata` | `fabric_input_output` | `business_context`, `data_governance`, `data_quality` | 2 | 8 |
-| `technical_columns` | — | `data_profiling` | 1 | 10 |
-
-## 7. Notes
+## 6. Notes
 
 Per-function callable flows and helper/callee details are generated on each public callable page.

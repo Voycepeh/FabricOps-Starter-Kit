@@ -6,11 +6,9 @@
 
 ## Module dependency summary
 
-- **Essential:** 2
-- **Optional:** 0
-- **Internal:** 8
-- **Depends On:** 1 modules
-- **Used By:** 3 modules
+| Essential | Optional | Internal | Depends On | Used By |
+|---:|---:|---:|---:|---:|
+| 2 | 0 | 8 | 1 | 3 |
 
 ## Essential callables
 
@@ -40,44 +38,32 @@ No advanced helpers listed for this module.
 
 ```mermaid
 flowchart LR
-  build_evidence_row --> _now_utc_iso
-  _resolve_action_by --> _runtime_context
-  _resolve_action_by --> _context_get
-  _sha256_key --> _key_part
-  build_metadata_table_key --> _sha256_key
-  build_metadata_column_key --> _sha256_key
-  build_dq_rule_key --> _sha256_key
-  write_metadata_rows --> column_context_rows_for_spark
-  write_column_business_context --> write_metadata_rows
-  write_column_governance_context --> write_metadata_rows
-  _runtime_context --> _context_get
-  register_current_notebook --> _runtime_context
-  register_current_notebook --> _context_get
-  register_current_notebook --> _context_get
-  register_current_notebook --> _context_get
-  register_current_notebook --> _context_get
-  register_current_notebook --> _context_get
-  register_current_notebook --> write_metadata_rows
-  register_current_notebook --> _context_get
-  register_current_notebook --> _safe_str
-  register_current_notebook --> _safe_str
-  register_current_notebook --> _safe_str
-  register_current_notebook --> _safe_str
-  register_current_notebook --> _safe_str
-  register_current_notebook --> _safe_str
-  register_current_notebook --> _safe_str
-  register_current_notebook --> _safe_str
-  register_current_notebook --> _safe_str
-  register_current_notebook --> _safe_str
-  register_current_notebook --> _safe_str
-  register_current_notebook --> _safe_str
-  register_current_notebook --> _safe_str
-  register_current_notebook --> _safe_str
+  n1["metadata._resolve_action_by"] --> n1b["metadata._context_get"]
+  n2["metadata._resolve_action_by"] --> n2b["metadata._runtime_context"]
+  n3["metadata._runtime_context"] --> n3b["metadata._context_get"]
+  n4["metadata._sha256_key"] --> n4b["metadata._key_part"]
+  n5["metadata.build_dq_rule_key"] --> n5b["metadata._sha256_key"]
+  n6["metadata.build_evidence_row"] --> n6b["metadata._now_utc_iso"]
+  n7["metadata.build_metadata_column_key"] --> n7b["metadata._sha256_key"]
+  n8["metadata.build_metadata_table_key"] --> n8b["metadata._sha256_key"]
+  n9["metadata.register_current_notebook"] --> n9b["metadata._context_get"]
+  n10["metadata.register_current_notebook"] --> n10b["metadata._runtime_context"]
+  n11["metadata.register_current_notebook"] --> n11b["metadata._safe_str"]
+  n12["metadata.register_current_notebook"] --> n12b["metadata.write_metadata_rows"]
+  n13["metadata.write_column_business_context"] --> n13b["metadata.write_metadata_rows"]
+  n14["metadata.write_column_governance_context"] --> n14b["metadata.write_metadata_rows"]
+  n15["metadata.write_metadata_rows"] --> n15b["metadata.column_context_rows_for_spark"]
 ```
 
 ## Cross-module callable graph
 
 ```mermaid
 flowchart LR
-  fabricops_kit_metadata_write_metadata_rows --> fabricops_kit_fabric_input_output_write_lakehouse_table
+  c1[metadata.write_metadata_rows] --> d1[fabric_input_output.write_lakehouse_table]
 ```
+
+## Cross-module references
+
+| Caller | Callee |
+|---|---|
+| `metadata.write_metadata_rows` | `fabric_input_output.write_lakehouse_table` |

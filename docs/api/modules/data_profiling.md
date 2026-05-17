@@ -6,11 +6,9 @@
 
 ## Module dependency summary
 
-- **Essential:** 1
-- **Optional:** 0
-- **Internal:** 2
-- **Depends On:** 1 modules
-- **Used By:** 1 modules
+| Essential | Optional | Internal | Depends On | Used By |
+|---:|---:|---:|---:|---:|
+| 1 | 0 | 2 | 1 | 1 |
 
 ## Essential callables
 
@@ -33,13 +31,19 @@ No advanced helpers listed for this module.
 
 ```mermaid
 flowchart LR
-  profile_dataframe --> _get_profiled_columns
-  profile_dataframe --> _is_min_max_supported_type
+  n1["data_profiling.profile_dataframe"] --> n1b["data_profiling._get_profiled_columns"]
+  n2["data_profiling.profile_dataframe"] --> n2b["data_profiling._is_min_max_supported_type"]
 ```
 
 ## Cross-module callable graph
 
 ```mermaid
 flowchart LR
-  fabricops_kit_data_profiling__get_profiled_columns --> fabricops_kit_technical_columns__default_technical_columns
+  c1[data_profiling._get_profiled_columns] --> d1[technical_columns._default_technical_columns]
 ```
+
+## Cross-module references
+
+| Caller | Callee |
+|---|---|
+| `data_profiling._get_profiled_columns` | `technical_columns._default_technical_columns` |

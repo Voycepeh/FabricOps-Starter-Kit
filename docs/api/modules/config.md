@@ -6,11 +6,9 @@
 
 ## Module dependency summary
 
-- **Essential:** 2
-- **Optional:** 0
-- **Internal:** 13
-- **Depends On:** 0 modules
-- **Used By:** 1 modules
+| Essential | Optional | Internal | Depends On | Used By |
+|---:|---:|---:|---:|---:|
+| 2 | 0 | 13 | 0 | 1 |
 
 ## Essential callables
 
@@ -24,6 +22,9 @@
 No advanced helpers listed for this module.
 
 ## Related internal helpers
+
+<details>
+<summary>Expand internal helper table</summary>
 
 | Helper | Related public callables |
 |---|---|
@@ -41,45 +42,31 @@ No advanced helpers listed for this module.
 | [`_validate_framework_config`](../../reference/internal/config/_validate_framework_config/) | [`load_config`](../../reference/load_config/) |
 | [`_validate_notebook_name`](../../reference/internal/config/_validate_notebook_name/) | — |
 
+</details>
+
 ## Module internal callable graph
 
 ```mermaid
 flowchart LR
-  _validate_framework_config --> FrameworkConfig
-  _validate_framework_config --> keys
-  load_config --> _validate_framework_config
-  _validate_notebook_name --> _normalize_name
-  _run_config_smoke_tests --> _check_spark_session
-  _run_config_smoke_tests --> _get_fabric_runtime_metadata
-  _run_config_smoke_tests --> ConfigSmokeCheckResult
-  _run_config_smoke_tests --> ConfigSmokeCheckResult
-  _run_config_smoke_tests --> _validate_notebook_name
-  _run_config_smoke_tests --> _get_store
-  _run_config_smoke_tests --> ConfigSmokeCheckResult
-  _run_config_smoke_tests --> ConfigSmokeCheckResult
-  _run_config_smoke_tests --> ConfigSmokeCheckResult
-  _run_config_smoke_tests --> ConfigSmokeCheckResult
-  _run_config_smoke_tests --> ConfigSmokeCheckResult
-  _run_config_smoke_tests --> ConfigSmokeCheckResult
-  _run_config_smoke_tests --> ConfigSmokeCheckResult
-  _run_config_smoke_tests --> ConfigSmokeCheckResult
-  _run_config_smoke_tests --> ConfigSmokeCheckResult
-  _bootstrap_fabric_env --> _get_fabric_runtime_metadata
-  _bootstrap_fabric_env --> ConfigBootstrapResult
-  _bootstrap_fabric_env --> load_config
-  _bootstrap_fabric_env --> _get_store
-  _bootstrap_fabric_env --> _run_config_smoke_tests
-  setup_notebook --> load_config
-  setup_notebook --> _run_config_smoke_tests
-  setup_notebook --> NotebookSetupContext
-  setup_notebook --> _get_store
-  _load_schema --> _default_schema_text
-  validate_dataset_contract --> _load_schema
-  validate_dataset_contract --> _format_error_path
-  assert_valid_dataset_contract --> validate_dataset_contract
-  assert_valid_dataset_contract --> DatasetContractValidationError
-  load_and_validate_dataset_contract --> load_dataset_contract
-  load_and_validate_dataset_contract --> validate_dataset_contract
+  n1["config._bootstrap_fabric_env"] --> n1b["config._get_fabric_runtime_metadata"]
+  n2["config._bootstrap_fabric_env"] --> n2b["config._get_store"]
+  n3["config._bootstrap_fabric_env"] --> n3b["config._run_config_smoke_tests"]
+  n4["config._bootstrap_fabric_env"] --> n4b["config.load_config"]
+  n5["config._load_schema"] --> n5b["config._default_schema_text"]
+  n6["config._run_config_smoke_tests"] --> n6b["config._check_spark_session"]
+  n7["config._run_config_smoke_tests"] --> n7b["config._get_fabric_runtime_metadata"]
+  n8["config._run_config_smoke_tests"] --> n8b["config._get_store"]
+  n9["config._run_config_smoke_tests"] --> n9b["config._validate_notebook_name"]
+  n10["config._validate_notebook_name"] --> n10b["config._normalize_name"]
+  n11["config.assert_valid_dataset_contract"] --> n11b["config.validate_dataset_contract"]
+  n12["config.load_and_validate_dataset_contract"] --> n12b["config.load_dataset_contract"]
+  n13["config.load_and_validate_dataset_contract"] --> n13b["config.validate_dataset_contract"]
+  n14["config.load_config"] --> n14b["config._validate_framework_config"]
+  n15["config.setup_notebook"] --> n15b["config._get_store"]
+  n16["config.setup_notebook"] --> n16b["config._run_config_smoke_tests"]
+  n17["config.setup_notebook"] --> n17b["config.load_config"]
+  n18["config.validate_dataset_contract"] --> n18b["config._format_error_path"]
+  n19["config.validate_dataset_contract"] --> n19b["config._load_schema"]
 ```
 
 ## Cross-module callable graph
@@ -88,3 +75,7 @@ flowchart LR
 flowchart LR
   no_cross_edges[No cross-module callable edges detected]
 ```
+
+## Cross-module references
+
+No cross-module references detected.

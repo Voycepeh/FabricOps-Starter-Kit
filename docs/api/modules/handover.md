@@ -6,11 +6,9 @@
 
 ## Module dependency summary
 
-- **Essential:** 2
-- **Optional:** 0
-- **Internal:** 1
-- **Depends On:** 0 modules
-- **Used By:** 0 modules
+| Essential | Optional | Internal | Depends On | Used By |
+|---:|---:|---:|---:|---:|
+| 2 | 0 | 1 | 0 | 0 |
 
 ## Essential callables
 
@@ -33,15 +31,9 @@ No advanced helpers listed for this module.
 
 ```mermaid
 flowchart LR
-  render_handover_markdown --> _status_of
-  render_handover_markdown --> _status_of
-  render_handover_markdown --> _status_of
-  render_handover_markdown --> _status_of
-  build_handover_record --> _status_of
-  build_handover_record --> _status_of
-  build_handover_record --> _status_of
-  build_handover_record --> _status_of
-  build_handover_record --> render_handover_markdown
+  n1["handover.build_handover_record"] --> n1b["handover._status_of"]
+  n2["handover.build_handover_record"] --> n2b["handover.render_handover_markdown"]
+  n3["handover.render_handover_markdown"] --> n3b["handover._status_of"]
 ```
 
 ## Cross-module callable graph
@@ -50,3 +42,7 @@ flowchart LR
 flowchart LR
   no_cross_edges[No cross-module callable edges detected]
 ```
+
+## Cross-module references
+
+No cross-module references detected.

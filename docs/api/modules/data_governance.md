@@ -6,11 +6,9 @@
 
 ## Module dependency summary
 
-- **Essential:** 4
-- **Optional:** 2
-- **Internal:** 6
-- **Depends On:** 1 modules
-- **Used By:** 0 modules
+| Essential | Optional | Internal | Depends On | Used By |
+|---:|---:|---:|---:|---:|
+| 4 | 2 | 6 | 1 | 0 |
 
 ## Essential callables
 
@@ -43,20 +41,28 @@
 
 ```mermaid
 flowchart LR
-  prepare_governance_input --> _prepare_governance_input
-  extract_governance_suggestions --> _extract_pii_suggestions
-  review_governance --> _undo_last_action
-  write_governance --> _approved_widget_rows
-  load_governance --> _coerce_row_dicts
-  load_governance --> _coerce_row_dicts
+  n1["data_governance.extract_governance_suggestions"] --> n1b["data_governance._extract_pii_suggestions"]
+  n2["data_governance.load_governance"] --> n2b["data_governance._coerce_row_dicts"]
+  n3["data_governance.prepare_governance_input"] --> n3b["data_governance._prepare_governance_input"]
+  n4["data_governance.review_governance"] --> n4b["data_governance._undo_last_action"]
+  n5["data_governance.write_governance"] --> n5b["data_governance._approved_widget_rows"]
 ```
 
 ## Cross-module callable graph
 
 ```mermaid
 flowchart LR
-  fabricops_kit_data_governance_review_governance --> fabricops_kit_metadata_build_metadata_table_key
-  fabricops_kit_data_governance_review_governance --> fabricops_kit_metadata_build_metadata_column_key
-  fabricops_kit_data_governance_review_governance --> fabricops_kit_metadata__now_utc_iso
-  fabricops_kit_data_governance__approved_widget_rows --> fabricops_kit_metadata__resolve_action_by
+  c1[data_governance._approved_widget_rows] --> d1[metadata._resolve_action_by]
+  c2[data_governance.review_governance] --> d2[metadata._now_utc_iso]
+  c3[data_governance.review_governance] --> d3[metadata.build_metadata_column_key]
+  c4[data_governance.review_governance] --> d4[metadata.build_metadata_table_key]
 ```
+
+## Cross-module references
+
+| Caller | Callee |
+|---|---|
+| `data_governance._approved_widget_rows` | `metadata._resolve_action_by` |
+| `data_governance.review_governance` | `metadata._now_utc_iso` |
+| `data_governance.review_governance` | `metadata.build_metadata_column_key` |
+| `data_governance.review_governance` | `metadata.build_metadata_table_key` |
