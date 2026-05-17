@@ -19,6 +19,7 @@ NOISE_CALLS = {
     "widgets.VBox",
     "widgets.HTML",
 }
+DEPENDENCY_METADATA_PATH = Path(__file__).resolve().parents[1] / "docs" / "reference" / "dependency-metadata.json"
 
 
 def _read_literal(path: Path, name: str):
@@ -134,6 +135,10 @@ def _collect_calls(modules, imports, exports):
 
 
 public_symbol_docs = _read_literal(DOCS_METADATA_PATH, "PUBLIC_SYMBOL_DOCS")
+dependency_metadata = {}
+if DEPENDENCY_METADATA_PATH.exists():
+    import json
+    dependency_metadata = json.loads(DEPENDENCY_METADATA_PATH.read_text(encoding="utf-8"))
 exports = _parse_exports()
 modules, imports = _build_index()
 module_call_map, reverse_refs = _collect_calls(modules, imports, exports)
@@ -149,6 +154,7 @@ for row in sorted(public_symbol_docs, key=lambda item: item["symbol_name"]):
         raise RuntimeError(f"Public export missing required docs metadata/module ownership: {symbol_name} in {module_name}")
     doc_path = f"api/reference/{symbol_name}.md"
     qn = f"{PACKAGE}.{module_name}.{symbol_name}"
+    dep = dependency_metadata.get("callables", {}).get(qn, {})
     calls = sorted(module_call_map.get(module_name, {}).get(symbol_name, set()))
     helper_calls = [c for c in calls if c.startswith(f"{PACKAGE}.{module_name}._")]
     cross = [c for c in calls if c.startswith(f"{PACKAGE}.") and not c.startswith(f"{PACKAGE}.{module_name}.")]
@@ -183,6 +189,10 @@ for row in sorted(public_symbol_docs, key=lambda item: item["symbol_name"]):
             else:
                 referenced_by_links.append(f"`{PACKAGE}.{m}.{n}`")
         fd.write(f"| Referenced by | {', '.join(referenced_by_links) or '—'} |\n\n")
+        fd.write("## Dependency Metadata\n\n")
+        fd.write(f"- Calls: {dep.get('calls_count', len(calls))} functions\n")
+        fd.write(f"- Used By: {dep.get('used_by_count', len(referenced_by))} functions\n")
+        fd.write(f"- Internal Helpers Used: {dep.get('internal_helper_count', len(helper_calls))}\n\n")
         fd.write("## Function flow details\n\n| Step | Callable | Purpose |\n|---:|---|---|\n")
         for i, c in enumerate(flow_edges[:20], start=1):
             m, n = c.split(".")[-2], c.split(".")[-1]

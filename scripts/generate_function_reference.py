@@ -18,6 +18,7 @@ MODULE_DIR = ROOT / "docs" / "api" / "modules"
 MKDOCS_PATH = ROOT / "mkdocs.yml"
 MANIFEST_PATH = ROOT / "docs" / "reference" / "manifest.json"
 CALLABLE_MAP_PATH = ROOT / "docs" / "reference" / "callable-map.md"
+DEPENDENCY_METADATA_PATH = ROOT / "docs" / "reference" / "dependency-metadata.json"
 
 PUBLIC_MODULE_PREFERRED_NAMES = {
     "config": "config",
@@ -391,9 +392,11 @@ def render_callable_map_page(nodes: list[dict[str, Any]], edges: list[dict[str, 
     )
 
     lines = [
-        "# Callable Map",
+        "# Callable Map (Developer Diagnostic)",
         "",
         "This page is generated from FabricOps source code using static AST parsing.",
+        "",
+        "> Developer diagnostic only. Primary user documentation now lives on Function Reference and module pages.",
         "",
         "## 1. Module dependency graph",
         "",
@@ -447,16 +450,9 @@ def render_callable_map_page(nodes: list[dict[str, Any]], edges: list[dict[str, 
             f"| `{edge['caller_qualified_name']}` | `{edge['callee_qualified_name']}` | `{edge['callee_kind']}` |"
         )
 
-    lines.extend(["", "## 6. Module dependency summary", "", "| Module | Calls modules | Called by modules | Public callables | Internal helpers |", "|---|---|---|---:|---:|"])
-    for row in module_summary:
-        lines.append(
-            f"| `{row['module']}` | {', '.join(f'`{m}`' for m in row['calls_modules']) or '—'} | "
-            f"{', '.join(f'`{m}`' for m in row['called_by_modules']) or '—'} | {row['public_callable_count']} | {row['internal_helper_count']} |"
-        )
-
     lines.extend([
         "",
-        "## 7. Notes",
+        "## 6. Notes",
         "",
         "Per-function callable flows and helper/callee details are generated on each public callable page.",
     ])
@@ -528,6 +524,26 @@ def main() -> None:
             raise RuntimeError(f"Underscore callable cannot be public role: {symbol.name}")
 
     function_symbol_map = {name: symbol for name, symbol in symbol_map.items() if symbol.obj_type == "function"}
+    nodes, edges, _ = build_callable_graph(module_data, symbol_map, public, docs_metadata)
+    node_lookup = {n["qualified_name"]: n for n in nodes}
+
+    def _is_callable_edge(edge: dict[str, Any]) -> bool:
+        callee = edge.get("callee_qualified_name")
+        if not callee:
+            return False
+        caller = edge["caller_qualified_name"]
+        if caller not in node_lookup or callee not in node_lookup:
+            return False
+        caller_node = node_lookup[caller]
+        callee_node = node_lookup[callee]
+        return (
+            caller_node["callable_name"] in module_data[caller_node["module_name"]]["functions"]
+            and callee_node["callable_name"] in module_data[callee_node["module_name"]]["functions"]
+        )
+
+    def _label(qn: str) -> str:
+        parts = qn.split(".")
+        return f"{parts[-2]}.{parts[-1]}"
     MODULE_DIR.mkdir(parents=True, exist_ok=True)
     module_manifest = {row["module_name"]: row for row in module_docs_metadata}
     discovered_doc_modules = [INTERNAL_ALIAS_MODULES.get(module, module) for module in discovered_modules]
@@ -566,6 +582,32 @@ def main() -> None:
                 '</div>'
             )
         lines = [title, "", status_banner, ""]
+        module_nodes = [n for n in nodes if n["module_name"] == actual_module]
+        essential_count = len([n for n in module_nodes if n["role"] == "essential"])
+        optional_count = len([n for n in module_nodes if n["role"] == "optional"])
+        internal_count = len([n for n in module_nodes if n["callable_name"].startswith("_")])
+        outbound_mods = sorted({
+            e["callee_qualified_name"].split(".")[-2]
+            for e in edges
+            if e.get("callee_qualified_name")
+            and e["caller_qualified_name"].split(".")[-2] == actual_module
+            and e["callee_qualified_name"].split(".")[-2] != actual_module
+        })
+        inbound_mods = sorted({
+            e["caller_qualified_name"].split(".")[-2]
+            for e in edges
+            if e.get("callee_qualified_name")
+            and e["callee_qualified_name"].split(".")[-2] == actual_module
+            and e["caller_qualified_name"].split(".")[-2] != actual_module
+        })
+        lines.extend([
+            "## Module dependency summary",
+            "",
+            "| Essential | Optional | Internal | Depends On | Used By |",
+            "|---:|---:|---:|---:|---:|",
+            f"| {essential_count} | {optional_count} | {internal_count} | {len(outbound_mods)} | {len(inbound_mods)} |",
+            "",
+        ])
         if module == "data_product_metadata":
             lines.extend(
                 [
@@ -614,6 +656,8 @@ def main() -> None:
         lines.extend(["", "## Related internal helpers", ""])
         internal_fns = sorted([f for f in info["functions"] if f.startswith("_")])
         if internal_fns:
+            if len(internal_fns) > 10:
+                lines.extend(["<details>", "<summary>Expand internal helper table</summary>", ""])
             lines.extend(["| Helper | Related public callables |", "|---|---|"])
             for helper in internal_fns:
                 users = sorted([u for u in info["used_by"].get(helper, set()) if u in {p.name for p in public_in_module}])
@@ -621,8 +665,38 @@ def main() -> None:
                     f"[`{u}`]({callable_docs_link(u, module, docs_metadata)})" for u in users
                 ) or "—"
                 lines.append(f"| [`{helper}`]({internal_helper_link(actual_module, helper)}) | {users_links} |")
+            if len(internal_fns) > 10:
+                lines.extend(["", "</details>"])
         else:
             lines.append("No module-level internal helpers detected.")
+        lines.extend(["", "## Module internal callable graph", "", "```mermaid", "flowchart LR"])
+        same_edges = [e for e in edges if _is_callable_edge(e) and e["caller_qualified_name"].split(".")[-2] == actual_module and e["callee_qualified_name"].split(".")[-2] == actual_module]
+        same_edge_pairs = sorted({(e["caller_qualified_name"], e["callee_qualified_name"]) for e in same_edges})
+        if same_edge_pairs:
+            for idx, (src_qn, dst_qn) in enumerate(same_edge_pairs[:40], start=1):
+                lines.append(f'  n{idx}["{_label(src_qn)}"] --> n{idx}b["{_label(dst_qn)}"]')
+        else:
+            lines.append("  no_internal_edges[No module-scoped callable edges detected]")
+        lines.extend(["```", "", "## Cross-module callable graph", "", "```mermaid", "flowchart LR"])
+        module_cross = [e for e in edges if _is_callable_edge(e) and e["caller_qualified_name"].split(".")[-2] == actual_module and e["callee_qualified_name"].split(".")[-2] != actual_module]
+        cross_pairs = sorted({(e["caller_qualified_name"], e["callee_qualified_name"]) for e in module_cross})
+        if cross_pairs:
+            for idx, (src_qn, dst_qn) in enumerate(cross_pairs[:40], start=1):
+                lines.append(f"  c{idx}[{_label(src_qn)}] --> d{idx}[{_label(dst_qn)}]")
+        else:
+            lines.append("  no_cross_edges[No cross-module callable edges detected]")
+        lines.append("```")
+        lines.extend(["", "## Cross-module references", ""])
+        if cross_pairs:
+            if len(cross_pairs) > 12:
+                lines.extend(["<details>", "<summary>Expand cross-module references</summary>", ""])
+            lines.extend(["| Caller | Callee |", "|---|---|"])
+            for src_qn, dst_qn in cross_pairs:
+                lines.append(f"| `{_label(src_qn)}` | `{_label(dst_qn)}` |")
+            if len(cross_pairs) > 12:
+                lines.extend(["", "</details>"])
+        else:
+            lines.append("No cross-module references detected.")
 
         if public_in_module:
             for s in sorted([x for x in public_in_module if x.role in {"essential", "optional"}], key=lambda x: x.name.lower()):
@@ -705,6 +779,62 @@ def main() -> None:
         })
     MANIFEST_PATH.write_text(json.dumps({"modules": manifest_modules, "callables": manifest_rows}, indent=2) + "\n", encoding="utf-8")
     nodes, edges, module_summary = build_callable_graph(module_data, symbol_map, public, docs_metadata)
+    node_by_qn = {n["qualified_name"]: n for n in nodes}
+    calls_by_qn: dict[str, list[str]] = {}
+    used_by_qn: dict[str, list[str]] = {}
+    for e in edges:
+        caller = e["caller_qualified_name"]
+        callee = e.get("callee_qualified_name")
+        if not callee:
+            continue
+        calls_by_qn.setdefault(caller, []).append(callee)
+        used_by_qn.setdefault(callee, []).append(caller)
+    dependency_callables: dict[str, dict[str, Any]] = {}
+    for qn, node in node_by_qn.items():
+        deps = sorted(set(calls_by_qn.get(qn, [])))
+        internal_helpers = [d for d in deps if d.startswith(f"{PACKAGE_NAME}.{node['module_name']}._")]
+        used_by = sorted(set(used_by_qn.get(qn, [])))
+        dependency_callables[qn] = {
+            "module": node["module_name"],
+            "callable": node["callable_name"],
+            "classification": node["role"],
+            "calls": deps,
+            "calls_count": len(deps),
+            "used_by": used_by,
+            "used_by_count": len(used_by),
+            "internal_helpers_used": internal_helpers,
+            "internal_helper_count": len(internal_helpers),
+        }
+    dependency_modules: dict[str, dict[str, Any]] = {}
+    for module in sorted({n["module_name"] for n in nodes}):
+        module_nodes = [n for n in nodes if n["module_name"] == module]
+        essential = sum(1 for n in module_nodes if n["role"] == "essential")
+        optional = sum(1 for n in module_nodes if n["role"] == "optional")
+        internal = sum(1 for n in module_nodes if n["callable_name"].startswith("_"))
+        out_mods, in_mods = set(), set()
+        for e in edges:
+            callee = e.get("callee_qualified_name")
+            if not callee:
+                continue
+            src_mod = e["caller_qualified_name"].split(".")[-2]
+            dst_mod = callee.split(".")[-2]
+            if src_mod == module and dst_mod != module:
+                out_mods.add(dst_mod)
+            if dst_mod == module and src_mod != module:
+                in_mods.add(src_mod)
+        dependency_modules[module] = {
+            "essential_count": essential,
+            "optional_count": optional,
+            "internal_count": internal,
+            "outbound_modules": sorted(out_mods),
+            "inbound_modules": sorted(in_mods),
+            "outbound_count": len(out_mods),
+            "inbound_count": len(in_mods),
+        }
+    DEPENDENCY_METADATA_PATH.write_text(
+        json.dumps({"callables": dependency_callables, "modules": dependency_modules}, indent=2) + "\n",
+        encoding="utf-8",
+    )
     CALLABLE_MAP_PATH.parent.mkdir(parents=True, exist_ok=True)
     CALLABLE_MAP_PATH.write_text(render_callable_map_page(nodes, edges, module_summary), encoding="utf-8", newline="\n")
 
@@ -907,10 +1037,23 @@ def main() -> None:
         ]
     )
     all_items: list[str] = []
+    calls_index: dict[str, set[str]] = {}
+    used_by_index: dict[str, set[str]] = {}
+    for edge in edges:
+        callee = edge.get("callee_qualified_name")
+        if not callee:
+            continue
+        caller = edge["caller_qualified_name"]
+        calls_index.setdefault(caller, set()).add(callee)
+        used_by_index.setdefault(callee, set()).add(caller)
     for s in sorted(function_symbol_map.values(), key=lambda x: x.name.lower()):
         symbol_link = public_reference_link(s.name, docs_metadata, context="reference")
         starter_path = ", ".join(sorted(starter_symbol_to_notebooks.get(s.name, set()))) or "—"
         purpose = s.purpose or s.summary or "—"
+        qn = f"{PACKAGE_NAME}.{s.actual_module}.{s.name}"
+        calls_count = len(calls_index.get(qn, set()))
+        used_by_count = len(used_by_index.get(qn, set()))
+        internal_helper_count = len([c for c in calls_index.get(qn, set()) if c.startswith(f"{PACKAGE_NAME}.{s.actual_module}._")])
         all_items.extend(
             [
                 (
@@ -927,6 +1070,13 @@ def main() -> None:
                     f'{_module_link(s.public_module)}'
                     f' <span class="reference-catalogue-separator">·</span> <span>{_esc(s.role)}</span>'
                     f' <span class="reference-catalogue-separator">·</span> <span>{_esc(starter_path)}</span>'
+                    "</p>"
+                ),
+                (
+                    '  <p class="reference-catalogue-item-meta">'
+                    f'<span>Calls: {_esc(str(calls_count))}</span>'
+                    f' <span class="reference-catalogue-separator">·</span> <span>Used By: {_esc(str(used_by_count))}</span>'
+                    f' <span class="reference-catalogue-separator">·</span> <span>Internal Helpers: {_esc(str(internal_helper_count))}</span>'
                     "</p>"
                 ),
                 f'  <p class="reference-catalogue-item-purpose">{_esc(purpose)}</p>',
