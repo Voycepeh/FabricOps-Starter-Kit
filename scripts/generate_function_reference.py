@@ -380,20 +380,24 @@ def render_callable_map_page(nodes: list[dict[str, Any]], edges: list[dict[str, 
     public_nodes = sorted([n for n in nodes if n["exported"]], key=lambda x: (x["module_name"], x["callable_name"]))
     helper_nodes = sorted([n for n in nodes if n["callable_name"].startswith("_")], key=lambda x: (x["module_name"], x["callable_name"]))
     cross_edges = sorted([e for e in edges if e["callee_qualified_name"] and e["edge_type"] == "cross_module"], key=lambda x: (x["caller_qualified_name"], x["callee_qualified_name"]))
-    lines = ["# Callable Map", "", "This page is generated from FabricOps source code using static AST parsing. It shows module dependencies, public callables, internal helpers, and cross-module calls.", "", "## 1. Module dependency graph", "", "```mermaid", "flowchart LR"]
+    lines = ["# Callable Map", "", "This page is generated from FabricOps source code using static AST parsing. It gives a concise module-level overview.", "", "## 1. Module dependency graph", "", "```mermaid", "flowchart LR"]
     for caller, callee in module_edges:
         lines.append(f"  {caller} --> {callee}")
-    lines.extend(["```", "", "## 2. Public callables by module", "", "| Module | Public callable | Referenced by |", "|---|---|---|"])
+    lines.extend(["```", "", "## 2. Module relationship summary", "", "| Module | Calls modules | Called by modules | Public callables |", "|---|---|---|"])
     ref_by: dict[str, set[str]] = {}
     for edge in edges:
         if not edge["callee_qualified_name"]:
             continue
         ref_by.setdefault(edge["callee_qualified_name"], set()).add(edge["caller_qualified_name"])
+    for row in module_summary:
+        lines.append(f"| `{row['module']}` | {', '.join(f'`{m}`' for m in row['calls_modules']) or '—'} | {', '.join(f'`{m}`' for m in row['called_by_modules']) or '—'} | {row['public_callable_count']} |")
+    lines.extend(["", "## 3. Public callables grouped by module", ""])
+    by_mod = {}
     for node in public_nodes:
-        qn = node["qualified_name"]
-        callers = sorted(ref_by.get(qn, set()))
-        lines.append(f"| `{node['module_name']}` | `{node['callable_name']}` | {', '.join(f'`{x}`' for x in callers) or '—'} |")
-    lines.extend(["", "## 3. Internal helper index", "", "| Module | Internal helper | Called by public callables |", "|---|---|---|"])
+        by_mod.setdefault(node["module_name"], []).append(node["callable_name"])
+    for mod in sorted(by_mod):
+        lines.append(f"- `{mod}`: " + ", ".join(f"`{n}`" for n in sorted(by_mod[mod])))
+    lines.extend(["", "## 4. Notes", "", "| Module | Internal helper | Called by public callables |", "|---|---|---|"])
     for node in helper_nodes:
         qn = node["qualified_name"]
         callers = sorted([x for x in ref_by.get(qn, set()) if x in {n['qualified_name'] for n in public_nodes}])

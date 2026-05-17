@@ -1,6 +1,6 @@
 # Callable Map
 
-This page is generated from FabricOps source code using static AST parsing. It shows module dependencies, public callables, internal helpers, and cross-module calls.
+This page is generated from FabricOps source code using static AST parsing. It gives a concise module-level overview.
 
 ## 1. Module dependency graph
 
@@ -17,58 +17,41 @@ flowchart LR
   metadata --> fabric_input_output
 ```
 
-## 2. Public callables by module
+## 2. Module relationship summary
 
-| Module | Public callable | Referenced by |
+| Module | Calls modules | Called by modules | Public callables |
 |---|---|---|
-| `business_context` | `draft_business_context` | — |
-| `business_context` | `extract_column_business_context_suggestions` | — |
-| `business_context` | `get_reviewed_business_context_rows` | — |
-| `business_context` | `prepare_business_context_profile_input` | — |
-| `business_context` | `review_business_context` | — |
-| `business_context` | `write_business_context` | — |
-| `config` | `load_config` | `fabricops_kit.config._bootstrap_fabric_env`, `fabricops_kit.config.setup_notebook`, `fabricops_kit.fabric_input_output.load_config` |
-| `config` | `setup_notebook` | — |
-| `data_agreement` | `get_selected_agreement` | — |
-| `data_agreement` | `load_agreements` | — |
-| `data_agreement` | `select_agreement` | — |
-| `data_governance` | `draft_governance` | — |
-| `data_governance` | `extract_governance_suggestions` | — |
-| `data_governance` | `load_governance` | — |
-| `data_governance` | `prepare_governance_input` | — |
-| `data_governance` | `review_governance` | — |
-| `data_governance` | `write_governance` | — |
-| `data_lineage` | `build_lineage_handover_markdown` | — |
-| `data_lineage` | `build_lineage_records` | — |
-| `data_profiling` | `profile_dataframe` | `fabricops_kit.data_quality.__prepare_dq_profile_input_rows` |
-| `data_quality` | `assert_dq_passed` | — |
-| `data_quality` | `draft_dq_rules` | — |
-| `data_quality` | `enforce_dq` | — |
-| `data_quality` | `get_dq_review_results` | — |
-| `data_quality` | `load_dq_rules` | — |
-| `data_quality` | `review_dq_rule_deactivations` | — |
-| `data_quality` | `review_dq_rules` | `fabricops_kit.data_quality.run_dq_rule_review_widget` |
-| `data_quality` | `validate_dq_rules` | `fabricops_kit.data_quality._run_dq_rules`, `fabricops_kit.data_quality._split_dq_rows`, `fabricops_kit.data_quality.enforce_dq`, `fabricops_kit.data_quality.write_dq_rules` |
-| `data_quality` | `write_dq_rules` | — |
-| `drift` | `check_partition_drift` | — |
-| `drift` | `check_profile_drift` | — |
-| `drift` | `check_schema_drift` | — |
-| `drift` | `summarize_drift_results` | — |
-| `fabric_input_output` | `FabricStore` | — |
-| `fabric_input_output` | `read_lakehouse_csv` | — |
-| `fabric_input_output` | `read_lakehouse_excel` | — |
-| `fabric_input_output` | `read_lakehouse_parquet` | — |
-| `fabric_input_output` | `read_lakehouse_table` | — |
-| `fabric_input_output` | `read_warehouse_table` | — |
-| `fabric_input_output` | `write_lakehouse_table` | `fabricops_kit.data_quality.write_dq_rules`, `fabricops_kit.fabric_input_output.seed_minimal_sample_source_table`, `fabricops_kit.metadata.write_metadata_rows` |
-| `fabric_input_output` | `write_warehouse_table` | — |
-| `handover` | `build_handover` | — |
-| `handover` | `render_handover_markdown` | `fabricops_kit.handover.build_handover_record` |
-| `metadata` | `load_notebook_registry` | — |
-| `metadata` | `register_current_notebook` | — |
-| `technical_columns` | `standardize_columns` | — |
+| `_utils` | — | — | 0 |
+| `business_context` | `metadata` | — | 6 |
+| `config` | — | `fabric_input_output` | 2 |
+| `data_agreement` | — | — | 3 |
+| `data_governance` | `metadata` | — | 6 |
+| `data_lineage` | — | — | 2 |
+| `data_profiling` | `technical_columns` | — | 1 |
+| `data_quality` | `data_profiling`, `fabric_input_output`, `metadata` | — | 9 |
+| `docs_metadata` | — | — | 0 |
+| `drift` | `_utils` | — | 4 |
+| `fabric_input_output` | `config` | `metadata` | 8 |
+| `handover` | — | — | 2 |
+| `metadata` | `fabric_input_output` | `business_context`, `data_governance` | 2 |
+| `technical_columns` | — | `data_profiling` | 1 |
 
-## 3. Internal helper index
+## 3. Public callables grouped by module
+
+- `business_context`: `draft_business_context`, `extract_column_business_context_suggestions`, `get_reviewed_business_context_rows`, `prepare_business_context_profile_input`, `review_business_context`, `write_business_context`
+- `config`: `load_config`, `setup_notebook`
+- `data_agreement`: `get_selected_agreement`, `load_agreements`, `select_agreement`
+- `data_governance`: `draft_governance`, `extract_governance_suggestions`, `load_governance`, `prepare_governance_input`, `review_governance`, `write_governance`
+- `data_lineage`: `build_lineage_handover_markdown`, `build_lineage_records`
+- `data_profiling`: `profile_dataframe`
+- `data_quality`: `assert_dq_passed`, `draft_dq_rules`, `enforce_dq`, `get_dq_review_results`, `load_dq_rules`, `review_dq_rule_deactivations`, `review_dq_rules`, `validate_dq_rules`, `write_dq_rules`
+- `drift`: `check_partition_drift`, `check_profile_drift`, `check_schema_drift`, `summarize_drift_results`
+- `fabric_input_output`: `FabricStore`, `read_lakehouse_csv`, `read_lakehouse_excel`, `read_lakehouse_parquet`, `read_lakehouse_table`, `read_warehouse_table`, `write_lakehouse_table`, `write_warehouse_table`
+- `handover`: `build_handover`, `render_handover_markdown`
+- `metadata`: `load_notebook_registry`, `register_current_notebook`
+- `technical_columns`: `standardize_columns`
+
+## 4. Notes
 
 | Module | Internal helper | Called by public callables |
 |---|---|---|
@@ -218,9 +201,9 @@ flowchart LR
 
 | Module | Calls modules | Called by modules | Public callables | Internal helpers |
 |---|---|---|---:|---:|
-| `_utils` | — | `drift` | 0 | 1 |
+| `_utils` | — | — | 0 | 1 |
 | `business_context` | `metadata` | — | 6 | 4 |
-| `config` | — | — | 2 | 13 |
+| `config` | — | `fabric_input_output` | 2 | 13 |
 | `data_agreement` | — | — | 3 | 3 |
 | `data_governance` | `metadata` | — | 6 | 6 |
 | `data_lineage` | — | — | 2 | 13 |

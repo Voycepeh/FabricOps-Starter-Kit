@@ -9,6 +9,16 @@ import mkdocs_gen_files
 PACKAGE = "fabricops_kit"
 PKG_DIR = Path(__file__).resolve().parents[1] / "src" / PACKAGE
 DOCS_METADATA_PATH = PKG_DIR / "docs_metadata.py"
+NOISE_ATTRS = {"append", "clear", "get", "items", "on_click"}
+NOISE_CALLS = {
+    "json.dumps",
+    "json.loads",
+    "widgets.Button",
+    "widgets.Dropdown",
+    "widgets.HBox",
+    "widgets.VBox",
+    "widgets.HTML",
+}
 
 
 def _read_literal(path: Path, name: str):
@@ -21,120 +31,156 @@ def _read_literal(path: Path, name: str):
     raise RuntimeError(f"Missing literal {name} in {path}")
 
 
-def _load_internal_helpers() -> dict[str, list[str]]:
-    module_helpers: dict[str, list[str]] = {}
-    for module_path in sorted(PKG_DIR.glob("*.py")):
-        if module_path.name in {"__init__.py", "docs_metadata.py"}:
-            continue
-        tree = ast.parse(module_path.read_text(encoding="utf-8"))
-        helpers = sorted(
-            node.name
-            for node in tree.body
-            if isinstance(node, ast.FunctionDef) and node.name.startswith("_")
-        )
-        if helpers:
-            module_helpers[module_path.stem] = helpers
-    return module_helpers
+def _first_sentence(doc: str | None) -> str:
+    if not doc:
+        return ""
+    line = doc.strip().splitlines()[0].strip()
+    return line
 
 
-def _module_calls() -> dict[str, dict[str, set[str]]]:
-    call_map: dict[str, dict[str, set[str]]] = {}
-    for module_path in sorted(PKG_DIR.glob("*.py")):
-        if module_path.name in {"__init__.py", "docs_metadata.py"}:
+def _parse_exports() -> set[str]:
+    tree = ast.parse((PKG_DIR / "__init__.py").read_text(encoding="utf-8"))
+    for node in tree.body:
+        if isinstance(node, ast.Assign) and any(isinstance(t, ast.Name) and t.id == "__all__" for t in node.targets):
+            if isinstance(node.value, ast.List):
+                return {elt.value for elt in node.value.elts if isinstance(elt, ast.Constant) and isinstance(elt.value, str)}
+    raise RuntimeError("Missing __all__")
+
+
+def _build_index():
+    modules: dict[str, dict[str, str]] = {}
+    imports: dict[str, tuple[dict[str, str], dict[str, str]]] = {}
+    for p in sorted(PKG_DIR.glob("*.py")):
+        if p.name in {"__init__.py", "docs_metadata.py"}:
             continue
-        tree = ast.parse(module_path.read_text(encoding="utf-8"))
-        module_name = module_path.stem
-        module_functions = {
-            node.name
-            for node in tree.body
-            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
-        }
-        fn_calls: dict[str, set[str]] = {}
+        tree = ast.parse(p.read_text(encoding="utf-8"))
+        mod = p.stem
+        functions = {}
+        for n in tree.body:
+            if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                functions[n.name] = _first_sentence(ast.get_docstring(n))
+        modules[mod] = functions
+        mod_alias, sym_alias = {}, {}
+        for n in tree.body:
+            if isinstance(n, ast.Import):
+                for a in n.names:
+                    mod_alias[a.asname or a.name] = a.name
+            elif isinstance(n, ast.ImportFrom) and n.module:
+                for a in n.names:
+                    if a.name != "*":
+                        sym_alias[a.asname or a.name] = f"{n.module}.{a.name}"
+        imports[mod] = (mod_alias, sym_alias)
+    return modules, imports
+
+
+def _resolve_call(raw: str, module: str, same_names: set[str], mod_alias: dict[str, str], sym_alias: dict[str, str], exports: set[str], modules: dict[str, dict[str, str]]) -> str | None:
+    if raw in same_names:
+        return f"{PACKAGE}.{module}.{raw}"
+    if raw in sym_alias:
+        path = sym_alias[raw]
+        parts = path.split(".")
+        if len(parts) >= 2 and (path.startswith(PACKAGE) or parts[-2] in modules):
+            return f"{PACKAGE}.{parts[-2]}.{parts[-1]}"
+    if "." in raw:
+        owner, member = raw.split(".", 1)
+        if member in NOISE_ATTRS or raw in NOISE_CALLS:
+            return None
+        mapped = mod_alias.get(owner, owner)
+        short = mapped.split(".")[-1]
+        if mapped.startswith(PACKAGE) or short in modules:
+            return f"{PACKAGE}.{short}.{member}"
+        return None
+    if raw in exports:
+        for m, names in modules.items():
+            if raw in names:
+                return f"{PACKAGE}.{m}.{raw}"
+    return None
+
+
+def _collect_calls(modules, imports, exports):
+    call_map = {m: {} for m in modules}
+    reverse: dict[str, set[str]] = {}
+    for p in sorted(PKG_DIR.glob("*.py")):
+        if p.name in {"__init__.py", "docs_metadata.py"}:
+            continue
+        mod = p.stem
+        tree = ast.parse(p.read_text(encoding="utf-8"))
+        same_names = set(modules[mod])
+        mod_alias, sym_alias = imports[mod]
         for node in tree.body:
             if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 continue
-            calls: set[str] = set()
+            caller_qn = f"{PACKAGE}.{mod}.{node.name}"
+            resolved = set()
             for child in ast.walk(node):
-                if isinstance(child, ast.Call):
-                    if isinstance(child.func, ast.Name):
-                        name = child.func.id
-                        if name in module_functions:
-                            calls.add(f"{PACKAGE}.{module_name}.{name}")
-                    elif isinstance(child.func, ast.Attribute) and isinstance(child.func.value, ast.Name):
-                        owner = child.func.value.id
-                        member = child.func.attr
-                        calls.add(f"{PACKAGE}.{owner}.{member}")
-            fn_calls[node.name] = calls
-        call_map[module_name] = fn_calls
-    return call_map
+                if not isinstance(child, ast.Call):
+                    continue
+                raw = ""
+                if isinstance(child.func, ast.Name):
+                    raw = child.func.id
+                elif isinstance(child.func, ast.Attribute):
+                    if isinstance(child.func.value, ast.Name):
+                        raw = f"{child.func.value.id}.{child.func.attr}"
+                    else:
+                        raw = child.func.attr
+                if raw in NOISE_CALLS or raw.endswith(".append"):
+                    continue
+                target = _resolve_call(raw, mod, same_names, mod_alias, sym_alias, exports, modules)
+                if target:
+                    resolved.add(target)
+                    reverse.setdefault(target, set()).add(caller_qn)
+            call_map[mod][node.name] = resolved
+    return call_map, reverse
 
 
 public_symbol_docs = _read_literal(DOCS_METADATA_PATH, "PUBLIC_SYMBOL_DOCS")
-internal_helpers_by_module = _load_internal_helpers()
-module_call_map = _module_calls()
-reverse_refs: dict[str, set[str]] = {}
-for module_name, fn_rows in module_call_map.items():
-    for caller, callees in fn_rows.items():
-        caller_qn = f"{PACKAGE}.{module_name}.{caller}"
-        for callee_qn in callees:
-            reverse_refs.setdefault(callee_qn, set()).add(caller_qn)
+exports = _parse_exports()
+modules, imports = _build_index()
+module_call_map, reverse_refs = _collect_calls(modules, imports, exports)
 
 for row in sorted(public_symbol_docs, key=lambda item: item["symbol_name"]):
     if row.get("kind") not in {"function", "class"}:
         continue
     symbol_name = row["symbol_name"]
     module_name = row["module"]
+    if symbol_name not in exports:
+        raise RuntimeError(f"Metadata symbol not exported: {symbol_name}")
+    if symbol_name not in modules.get(module_name, {}):
+        raise RuntimeError(f"Public export missing required docs metadata/module ownership: {symbol_name} in {module_name}")
     doc_path = f"api/reference/{symbol_name}.md"
+    qn = f"{PACKAGE}.{module_name}.{symbol_name}"
+    calls = sorted(module_call_map.get(module_name, {}).get(symbol_name, set()))
+    helper_calls = [c for c in calls if c.startswith(f"{PACKAGE}.{module_name}._")]
+    cross = [c for c in calls if c.startswith(f"{PACKAGE}.") and not c.startswith(f"{PACKAGE}.{module_name}.")]
+    referenced_by = sorted(reverse_refs.get(qn, set()))
+
     with mkdocs_gen_files.open(doc_path, "w") as fd:
         fd.write(f"# `{symbol_name}`\n\n")
-        fd.write(
-            f"- **Template notebook:** `{row.get('template_notebook') or '—'}`\n"
-            f"- **Template segment:** {row.get('template_segment') or '—'}\n"
-            f"- **Role:** `{row.get('role') or 'optional'}`\n"
-            f"- **Module:** `{module_name}`\n\n"
-        )
-        fd.write("## Callable relationships\n\n")
-        symbol_qn = f"{PACKAGE}.{module_name}.{symbol_name}"
-        symbol_calls = module_call_map.get(module_name, {}).get(symbol_name, set())
-        helper_calls = sorted(c for c in symbol_calls if c.startswith(f"{PACKAGE}.{module_name}._"))
-        cross_module_calls = sorted(c for c in symbol_calls if c.startswith(f"{PACKAGE}.") and not c.startswith(f"{PACKAGE}.{module_name}."))
-        referenced_by = sorted(reverse_refs.get(symbol_qn, set()))
-        if helper_calls or cross_module_calls or referenced_by:
-            fd.write("| Relationship | Callables |\n")
-            fd.write("|---|---|\n")
-            fd.write(f"| Internal helpers used | {', '.join(f'`{c}`' for c in helper_calls) or '—'} |\n")
-            fd.write(f"| Cross-module calls | {', '.join(f'`{c}`' for c in cross_module_calls) or '—'} |\n")
-            fd.write(f"| Referenced by | {', '.join(f'`{c}`' for c in referenced_by) or '—'} |\n\n")
-        fd.write("See the static [Callable Map](../../../reference/callable-map/) for module dependencies, helper relationships, and cross-module calls.\n\n")
+        fd.write("## Callable flow\n\n")
+        flow_edges = helper_calls + cross
+        if flow_edges:
+            fd.write("```mermaid\nflowchart TD\n")
+            for target in flow_edges[:20]:
+                fd.write(f"  {symbol_name} --> {target.split('.')[-1]}\n")
+            fd.write("```\n\n")
+        else:
+            fd.write("No direct FabricOps callable relationships detected.\n\n")
+        fd.write("## Callable relationships\n\n| Relationship | Callables |\n|---|---|\n")
+        def link(c):
+            m, n = c.split(".")[-2], c.split(".")[-1]
+            if n in exports:
+                return f"[`{n}`](../{n}/)"
+            return f"[`{n}`](../internal/{m}/{n}/)"
+        fd.write(f"| Internal helpers used | {', '.join(link(c) for c in helper_calls) or '—'} |\n")
+        fd.write(f"| Cross-module FabricOps calls | {', '.join(link(c) for c in cross) or '—'} |\n")
+        fd.write(f"| Referenced by | {', '.join(f'`{c}`' for c in referenced_by) or '—'} |\n\n")
+        fd.write("## Function flow details\n\n| Step | Callable | Purpose |\n|---:|---|---|\n")
+        for i, c in enumerate(flow_edges[:20], start=1):
+            m, n = c.split(".")[-2], c.split(".")[-1]
+            purpose = modules.get(m, {}).get(n) or n.replace("_", " ").capitalize()
+            fd.write(f"| {i} | {link(c)} | {purpose} |\n")
+        if not flow_edges:
+            fd.write("| 1 | — | — |\n")
+        fd.write("\n")
         fd.write(f"::: {PACKAGE}.{module_name}.{symbol_name}\n")
-        fd.write("    options:\n")
-        fd.write("      show_root_heading: false\n")
-        fd.write("      show_source: true\n")
-        fd.write("      docstring_style: numpy\n")
-        fd.write("      docstring_section_style: table\n")
 
-
-for module_name, helpers in internal_helpers_by_module.items():
-    for helper_name in helpers:
-        doc_path = f"api/reference/internal/{module_name}/{helper_name}.md"
-        with mkdocs_gen_files.open(doc_path, "w") as fd:
-            fd.write(f"# `{helper_name}`\n\n")
-            fd.write('<div class="api-status-block">\n')
-            fd.write('  <span class="api-chip api-chip-internal">Internal helper</span>\n')
-            fd.write('  <div class="api-chip-subtitle">This page documents an internal implementation helper, not a primary public API.</div>\n')
-            fd.write('</div>\n\n')
-            fd.write(f"::: {PACKAGE}.{module_name}.{helper_name}\n")
-            fd.write("    options:\n")
-            fd.write("      show_root_heading: false\n")
-            fd.write("      show_source: true\n")
-            fd.write("      docstring_style: numpy\n")
-            fd.write("      docstring_section_style: table\n")
-
-with mkdocs_gen_files.open("reference/SUMMARY.md", "w") as fd:
-    fd.write("- [Reference Home](index.md)\n")
-    if internal_helpers_by_module:
-        fd.write("- Internal Helpers\n")
-        for module_name, helpers in sorted(internal_helpers_by_module.items()):
-            fd.write(f"  - {module_name}\n")
-            for helper_name in helpers:
-                fd.write(f"    - [{helper_name}](../api/reference/internal/{module_name}/{helper_name}.md)\n")

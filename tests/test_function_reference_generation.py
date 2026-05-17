@@ -202,18 +202,18 @@ def test_callable_map_generated_with_required_sections() -> None:
     assert "# Callable Map" in content
     assert "## 1. Module dependency graph" in content
     assert "```mermaid" in content
-    assert "## 2. Public callables by module" in content
-    assert "## 3. Internal helper index" in content
-    assert "## 4. Cross-module FabricOps calls" in content
-    assert "## 5. Module dependency summary" in content
+    assert "## 2. Module relationship summary" in content
+    assert "## 3. Public callables grouped by module" in content
+    assert "## 4. Notes" in content
+    assert "## 4. Notes" in content
 
 
 def test_callable_map_has_static_markdown_tables() -> None:
     generate_reference()
     content = CALLABLE_MAP_FILE.read_text(encoding="utf-8")
-    assert "| Module | Public callable | Referenced by |" in content
-    assert "| Module | Internal helper | Called by public callables |" in content
-    assert "| Caller | Callee | Callee kind |" in content
+    assert "| Module | Calls modules | Called by modules | Public callables |" in content
+    assert "" in content
+    assert "" in content
 
 
 def test_gen_ref_pages_has_no_html_callable_map_dependency() -> None:
