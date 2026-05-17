@@ -6,11 +6,7 @@
 
 ## Module dependency summary
 
-<div class="module-table-scroll">
-| Callable count | Internal helper count | Outbound references | Inbound references |
-|---:|---:|---:|---:|
-| 4 | 14 | 1 | 0 |
-</div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 4</span><span class="reference-chip">Outbound: 1</span><span class="reference-chip">Inbound: 0</span></div>
 
 ## Module purpose
 
@@ -19,12 +15,47 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
 ## Public callables
 
 <div class="module-table-scroll">
-| Callable | Tier | Type | Summary | Related helpers |
-|---|---|---|---|---|
-| [`check_partition_drift`](../../reference/check_partition_drift/) | Optional | function | Check partition-level drift using keys, partitions, and optional watermark baselines. | — |
-| [`check_profile_drift`](../../reference/check_profile_drift/) | Optional | function | Compare profile metrics against a baseline profile and drift thresholds. | — |
-| [`check_schema_drift`](../../reference/check_schema_drift/) | Optional | function | Compare a current dataframe schema against a baseline schema snapshot. | — |
-| [`summarize_drift_results`](../../reference/summarize_drift_results/) | Optional | function | Summarize schema, partition, and profile drift outcomes into one decision. | — |
+<table>
+  <thead>
+    <tr>
+      <th>Callable</th>
+      <th>Tier</th>
+      <th>Type</th>
+      <th>Summary</th>
+      <th>Related helpers</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><a href="../../reference/check_partition_drift/"><code>check_partition_drift</code></a></td>
+      <td>Optional</td>
+      <td>function</td>
+      <td>Check partition-level drift using keys, partitions, and optional watermark baselines.</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/check_profile_drift/"><code>check_profile_drift</code></a></td>
+      <td>Optional</td>
+      <td>function</td>
+      <td>Compare profile metrics against a baseline profile and drift thresholds.</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/check_schema_drift/"><code>check_schema_drift</code></a></td>
+      <td>Optional</td>
+      <td>function</td>
+      <td>Compare a current dataframe schema against a baseline schema snapshot.</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/summarize_drift_results/"><code>summarize_drift_results</code></a></td>
+      <td>Optional</td>
+      <td>function</td>
+      <td>Summarize schema, partition, and profile drift outcomes into one decision.</td>
+      <td>—</td>
+    </tr>
+  </tbody>
+</table>
 </div>
 
 ## Advanced dependency sections
@@ -36,22 +67,72 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
 <summary>Expand internal helper table</summary>
 
 <div class="module-table-scroll">
-| Helper | Related public callables |
-|---|---|
-| [`_build_pandas_partition_snapshot`](../../reference/internal/drift/_build_pandas_partition_snapshot/) | — |
-| [`_build_pandas_schema_snapshot`](../../reference/internal/drift/_build_pandas_schema_snapshot/) | — |
-| [`_build_partition_hash`](../../reference/internal/drift/_build_partition_hash/) | — |
-| [`_build_spark_partition_snapshot`](../../reference/internal/drift/_build_spark_partition_snapshot/) | — |
-| [`_build_spark_schema_snapshot`](../../reference/internal/drift/_build_spark_schema_snapshot/) | — |
-| [`_column_hash`](../../reference/internal/drift/_column_hash/) | — |
-| [`_hash`](../../reference/internal/drift/_hash/) | — |
-| [`_is_closed_partition`](../../reference/internal/drift/_is_closed_partition/) | — |
-| [`_is_missing_table_error`](../../reference/internal/drift/_is_missing_table_error/) | — |
-| [`_json_dumps`](../../reference/internal/drift/_json_dumps/) | — |
-| [`_resolve_change_behavior`](../../reference/internal/drift/_resolve_change_behavior/) | — |
-| [`_safe_spark_collect`](../../reference/internal/drift/_safe_spark_collect/) | — |
-| [`_utc_now_iso`](../../reference/internal/drift/_utc_now_iso/) | — |
-| [`_write_metadata_rows`](../../reference/internal/drift/_write_metadata_rows/) | — |
+<table>
+  <thead>
+    <tr>
+      <th>Helper</th>
+      <th>Related public callables</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><a href="../../reference/internal/drift/_build_pandas_partition_snapshot/"><code>_build_pandas_partition_snapshot</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/drift/_build_pandas_schema_snapshot/"><code>_build_pandas_schema_snapshot</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/drift/_build_partition_hash/"><code>_build_partition_hash</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/drift/_build_spark_partition_snapshot/"><code>_build_spark_partition_snapshot</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/drift/_build_spark_schema_snapshot/"><code>_build_spark_schema_snapshot</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/drift/_column_hash/"><code>_column_hash</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/drift/_hash/"><code>_hash</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/drift/_is_closed_partition/"><code>_is_closed_partition</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/drift/_is_missing_table_error/"><code>_is_missing_table_error</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/drift/_json_dumps/"><code>_json_dumps</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/drift/_resolve_change_behavior/"><code>_resolve_change_behavior</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/drift/_safe_spark_collect/"><code>_safe_spark_collect</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/drift/_utc_now_iso/"><code>_utc_now_iso</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/drift/_write_metadata_rows/"><code>_write_metadata_rows</code></a></td>
+      <td>—</td>
+    </tr>
+  </tbody>
+</table>
 </div>
 
 </details>
@@ -105,7 +186,7 @@ flowchart LR
 
 </details>
 
-### Cross-module references
+### Outbound
 
 <div class="module-mermaid-scroll">
 ```mermaid

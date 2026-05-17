@@ -176,9 +176,24 @@
 }
 
 .reference-catalogue-item-name {
-  margin: 0 0 0.25rem;
-  font-size: 1rem;
-  line-height: 1.35;
+  margin: 0 0 0.34rem;
+  font-size: 1.18rem;
+  line-height: 1.3;
+  font-weight: 700;
+}
+
+.reference-catalogue-item-title {
+  display: block;
+  width: 100%;
+  padding: 0.2rem 0.4rem;
+  margin: 0 -0.4rem;
+  border-radius: 0.45rem;
+  background: color-mix(in srgb, var(--md-default-bg-color) 86%, rgb(99, 102, 241) 14%);
+  text-decoration: none;
+}
+
+.reference-catalogue-item-title:hover {
+  background: color-mix(in srgb, var(--md-default-bg-color) 78%, rgb(99, 102, 241) 22%);
 }
 
 .reference-catalogue-item-meta {
@@ -209,6 +224,15 @@
   font-size: 0.74rem;
   white-space: nowrap;
   background: color-mix(in srgb, var(--md-default-bg-color) 94%, rgb(99, 102, 241) 6%);
+}
+.reference-chip-count {
+  font-size: 0.7rem;
+  padding: 0.06rem 0.48rem;
+}
+
+.reference-chip-muted {
+  color: var(--md-default-fg-color--light);
+  background: color-mix(in srgb, var(--md-default-bg-color) 98%, rgb(148, 163, 184) 2%);
 }
 
 .reference-chip-role.reference-chip-essential {
@@ -244,7 +268,7 @@
 }
 
 .reference-catalogue-item-purpose {
-  margin: 0.34rem 0 0;
+  margin: 0 0 0.38rem;
   font-size: 0.9rem;
   line-height: 1.45;
 }
@@ -306,8 +330,8 @@
 
 
   .reference-catalogue-item-name {
-    margin-bottom: 0.18rem;
-    font-size: 0.96rem;
+    margin-bottom: 0.22rem;
+    font-size: 1.05rem;
   }
 
   
@@ -362,8 +386,7 @@
   color: var(--md-default-fg-color--light);
 }
 
-.reference-catalogue-item-purpose {
-    margin-top: 0;
+  .reference-catalogue-item-purpose {
     font-size: 0.86rem;
     line-height: 1.38;
   }

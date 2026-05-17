@@ -6,11 +6,7 @@
 
 ## Module dependency summary
 
-<div class="module-table-scroll">
-| Callable count | Internal helper count | Outbound references | Inbound references |
-|---:|---:|---:|---:|
-| 1 | 10 | 0 | 1 |
-</div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 1</span><span class="reference-chip">Outbound: 0</span><span class="reference-chip">Inbound: 1</span></div>
 
 ## Module purpose
 
@@ -19,9 +15,26 @@ Owns standard output/audit columns for pipeline outputs.
 ## Public callables
 
 <div class="module-table-scroll">
-| Callable | Tier | Type | Summary | Related helpers |
-|---|---|---|---|---|
-| [`standardize_columns`](../../reference/standardize_columns/) | Essential | function | Apply canonical technical/audit enrichment in one notebook-facing wrapper. | — |
+<table>
+  <thead>
+    <tr>
+      <th>Callable</th>
+      <th>Tier</th>
+      <th>Type</th>
+      <th>Summary</th>
+      <th>Related helpers</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><a href="../../reference/standardize_columns/"><code>standardize_columns</code></a></td>
+      <td>Essential</td>
+      <td>function</td>
+      <td>Apply canonical technical/audit enrichment in one notebook-facing wrapper.</td>
+      <td>—</td>
+    </tr>
+  </tbody>
+</table>
 </div>
 
 ## Advanced dependency sections
@@ -33,18 +46,56 @@ Owns standard output/audit columns for pipeline outputs.
 <summary>Expand internal helper table</summary>
 
 <div class="module-table-scroll">
-| Helper | Related public callables |
-|---|---|
-| [`__add_audit_columns`](../../reference/internal/technical_columns/__add_audit_columns/) | — |
-| [`__add_datetime_features`](../../reference/internal/technical_columns/__add_datetime_features/) | — |
-| [`__add_hash_columns`](../../reference/internal/technical_columns/__add_hash_columns/) | — |
-| [`_assert_columns_exist`](../../reference/internal/technical_columns/_assert_columns_exist/) | — |
-| [`_bucket_values_pandas`](../../reference/internal/technical_columns/_bucket_values_pandas/) | — |
-| [`_default_technical_columns`](../../reference/internal/technical_columns/_default_technical_columns/) | — |
-| [`_get_fabric_runtime_context`](../../reference/internal/technical_columns/_get_fabric_runtime_context/) | — |
-| [`_hash_row`](../../reference/internal/technical_columns/_hash_row/) | — |
-| [`_non_technical_columns`](../../reference/internal/technical_columns/_non_technical_columns/) | — |
-| [`_safe_string`](../../reference/internal/technical_columns/_safe_string/) | — |
+<table>
+  <thead>
+    <tr>
+      <th>Helper</th>
+      <th>Related public callables</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><a href="../../reference/internal/technical_columns/__add_audit_columns/"><code>__add_audit_columns</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/technical_columns/__add_datetime_features/"><code>__add_datetime_features</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/technical_columns/__add_hash_columns/"><code>__add_hash_columns</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/technical_columns/_assert_columns_exist/"><code>_assert_columns_exist</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/technical_columns/_bucket_values_pandas/"><code>_bucket_values_pandas</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/technical_columns/_default_technical_columns/"><code>_default_technical_columns</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/technical_columns/_get_fabric_runtime_context/"><code>_get_fabric_runtime_context</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/technical_columns/_hash_row/"><code>_hash_row</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/technical_columns/_non_technical_columns/"><code>_non_technical_columns</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/technical_columns/_safe_string/"><code>_safe_string</code></a></td>
+      <td>—</td>
+    </tr>
+  </tbody>
+</table>
 </div>
 
 </details>
@@ -72,6 +123,6 @@ flowchart LR
 
 </details>
 
-### Cross-module references
+### Outbound
 
-No cross-module references detected.
+No outbound references detected.

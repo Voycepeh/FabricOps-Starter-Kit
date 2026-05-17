@@ -375,6 +375,22 @@ def canonical_public_module(module_name: str) -> str:
     return PUBLIC_MODULE_PREFERRED_NAMES.get(module_name, module_name)
 
 
+
+
+def render_html_table(headers: list[str], rows: list[list[str]], *, table_class: str = "") -> list[str]:
+    class_attr = f' class="{table_class}"' if table_class else ""
+    lines = [f"<table{class_attr}>", "  <thead>", "    <tr>"]
+    for header in headers:
+        lines.append(f"      <th>{header}</th>")
+    lines.extend(["    </tr>", "  </thead>", "  <tbody>"])
+    for row in rows:
+        lines.append("    <tr>")
+        for cell in row:
+            lines.append(f"      <td>{cell}</td>")
+        lines.append("    </tr>")
+    lines.extend(["  </tbody>", "</table>"])
+    return lines
+
 def render_callable_map_page(nodes: list[dict[str, Any]], edges: list[dict[str, Any]], module_summary: list[dict[str, Any]]) -> str:
     module_edges = sorted(
         {
@@ -582,16 +598,14 @@ def main() -> None:
             and e["callee_qualified_name"].split(".")[-2] == actual_module
             and e["caller_qualified_name"].split(".")[-2] != actual_module
         })
-        lines.extend([
-            "## Module dependency summary",
-            "",
-            '<div class="module-table-scroll">',
-            '| Callable count | Internal helper count | Outbound references | Inbound references |',
-            '|---:|---:|---:|---:|',
-            f'| {essential_count + optional_count} | {internal_count} | {len(outbound_mods)} | {len(inbound_mods)} |',
-            '</div>',
-            "",
-        ])
+        summary_cards = (
+            '<div class="module-summary-cards">'
+            f'<span class="reference-chip">Callable count: {essential_count + optional_count}</span>'
+            f'<span class="reference-chip">Outbound: {len(outbound_mods)}</span>'
+            f'<span class="reference-chip">Inbound: {len(inbound_mods)}</span>'
+            '</div>'
+        )
+        lines.extend(["## Module dependency summary", "", summary_cards, ""])
 
         module_purpose = module_manifest.get(module, {}).get("module_summary", "").strip()
         if module_purpose:
@@ -610,27 +624,31 @@ def main() -> None:
             recommended = sorted([s for s in public_in_module if s.role == "essential"], key=lambda x: x.name.lower())
             advanced = sorted([s for s in public_in_module if s.role == "optional"], key=lambda x: x.name.lower())
             lines.extend(["## Public callables", ""])
-            lines.extend([
-                '<div class="module-table-scroll">',
-                '| Callable | Tier | Type | Summary | Related helpers |',
-                '|---|---|---|---|---|',
-            ])
+            public_rows: list[list[str]] = []
             for s in recommended:
                 related = sorted([c for c in info["calls"].get(s.name, set()) if c in info["functions"] and c.startswith("_")])
                 callable_link = callable_docs_link(s.name, module, docs_metadata)
-                lines.append(
-                    f"| [`{s.name}`]({callable_link}) | Essential | {s.obj_type} | {s.summary or '—'} | "
-                    f"{', '.join(f'[`{r}`]({internal_helper_link(s.actual_module, r)}) (internal)' for r in related) or '—'} |"
-                )
+                public_rows.append([
+                    f'<a href="{callable_link}"><code>{s.name}</code></a>',
+                    "Essential",
+                    s.obj_type,
+                    s.summary or "—",
+                    ', '.join(f'<a href="{internal_helper_link(s.actual_module, r)}"><code>{r}</code></a> (internal)' for r in related) or "—",
+                ])
             for s in advanced:
                 related = sorted([c for c in info["calls"].get(s.name, set()) if c in info["functions"] and c.startswith("_")])
                 callable_link = callable_docs_link(s.name, module, docs_metadata)
-                lines.append(
-                    f"| [`{s.name}`]({callable_link}) | Optional | {s.obj_type} | {s.summary or '—'} | "
-                    f"{', '.join(f'[`{r}`]({internal_helper_link(s.actual_module, r)}) (internal)' for r in related) or '—'} |"
-                )
+                public_rows.append([
+                    f'<a href="{callable_link}"><code>{s.name}</code></a>',
+                    "Optional",
+                    s.obj_type,
+                    s.summary or "—",
+                    ', '.join(f'<a href="{internal_helper_link(s.actual_module, r)}"><code>{r}</code></a> (internal)' for r in related) or "—",
+                ])
             if not recommended and not advanced:
-                lines.append("| — | — | — | No public exports in this module. | — |")
+                public_rows.append(["—", "—", "—", "No public exports in this module.", "—"])
+            lines.extend(['<div class="module-table-scroll">'])
+            lines.extend(render_html_table(["Callable", "Tier", "Type", "Summary", "Related helpers"], public_rows))
             lines.extend(['</div>'])
             if module == "data_quality":
                 lines.extend(
@@ -649,17 +667,15 @@ def main() -> None:
             helper_details = len(internal_fns) > 8
             if helper_details:
                 lines.extend(["<details>", "<summary>Expand internal helper table</summary>", ""])
-            lines.extend([
-                '<div class="module-table-scroll">',
-                '| Helper | Related public callables |',
-                '|---|---|',
-            ])
+            helper_rows: list[list[str]] = []
             for helper in internal_fns:
                 users = sorted([u for u in info["used_by"].get(helper, set()) if u in {p.name for p in public_in_module}])
                 users_links = ", ".join(
-                    f"[`{u}`]({callable_docs_link(u, module, docs_metadata)})" for u in users
+                    f'<a href="{callable_docs_link(u, module, docs_metadata)}"><code>{u}</code></a>' for u in users
                 ) or "—"
-                lines.append(f"| [`{helper}`]({internal_helper_link(actual_module, helper)}) | {users_links} |")
+                helper_rows.append([f'<a href="{internal_helper_link(actual_module, helper)}"><code>{helper}</code></a>', users_links])
+            lines.extend(['<div class="module-table-scroll">'])
+            lines.extend(render_html_table(["Helper", "Related public callables"], helper_rows))
             lines.extend(['</div>'])
             if helper_details:
                 lines.extend(["", "</details>"])
@@ -707,7 +723,7 @@ def main() -> None:
             cross_dst_from_src.setdefault(dst_qn, set()).add(src_qn)
         cross_graph_meaningful = any(len(v) >= 2 for v in cross_src_to_dst.values()) or any(len(v) >= 2 for v in cross_dst_from_src.values())
 
-        lines.extend(["", "### Cross-module references", ""])
+        lines.extend(["", "### Outbound", ""])
         if cross_pairs and cross_graph_meaningful:
             if len(cross_pairs) > 8:
                 lines.extend(["<details>", "<summary>Expand cross-module callable graph</summary>", ""])
@@ -732,20 +748,23 @@ def main() -> None:
             if len(cross_pairs) > 8:
                 lines.extend(["", "</details>"])
         else:
-            lines.append("No cross-module references detected.")
+            lines.append("No outbound references detected.")
         if public_in_module:
             for s in sorted([x for x in public_in_module if x.role in {"essential", "optional"}], key=lambda x: x.name.lower()):
                 expected_target = callable_docs_link(s.name, module, docs_metadata)
-                expected_link = f"[`{s.name}`]({expected_target})"
-                if not any(expected_link in line for line in lines):
+                expected_href = f'href="{expected_target}"'
+                expected_md_link = f"[`{s.name}`]({expected_target})"
+                if not any((expected_md_link in line) or (expected_href in line) for line in lines):
                     raise RuntimeError(f"Missing callable table link for {module}.{s.name}")
                 if f"../../api/reference/{module}/{s.name}.md" in "\n".join(lines):
                     raise RuntimeError(
                         f"Found deprecated module-path public link for {module}.{s.name}; expected workflow-step slug path."
                     )
         for helper in internal_fns:
-            expected_helper_link = f"[`{helper}`]({internal_helper_link(actual_module, helper)})"
-            if not any(expected_helper_link in line for line in lines):
+            helper_target = internal_helper_link(actual_module, helper)
+            expected_helper_link = f"[`{helper}`]({helper_target})"
+            expected_helper_href = f'href="{helper_target}"'
+            if not any((expected_helper_link in line) or (expected_helper_href in line) for line in lines):
                 raise RuntimeError(f"Missing internal helper link for {module}.{helper}")
         if any("## Public callable details" in line for line in lines):
             raise RuntimeError(f"Public callable details section should not be rendered for {module}")
@@ -1077,10 +1096,8 @@ def main() -> None:
         dependency_meta = dependency_callables.get(qn, {})
         calls = dependency_meta.get("calls", [])
         used_by = dependency_meta.get("used_by", [])
-        internal_helpers = dependency_meta.get("internal_helpers_used", [])
         calls_count = int(dependency_meta.get("calls_count", len(calls)))
         used_by_count = int(dependency_meta.get("used_by_count", len(used_by)))
-        internal_helper_count = int(dependency_meta.get("internal_helper_count", len(internal_helpers)))
         classification_label = "Essential" if s.role == "essential" else "Optional"
         all_items.extend(
             [
@@ -1092,7 +1109,8 @@ def main() -> None:
                     f'data-role="{_esc(s.role)}" '
                     f'data-callable-purpose="{_esc(purpose)}">'
                 ),
-                f'  <h3 class="reference-catalogue-item-name">{_anchor(symbol_link, s.name, code=True)}</h3>',
+                f'  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="{_esc(symbol_link)}"><code>{_esc(s.name)}</code></a></h3>',
+                f'  <p class="reference-catalogue-item-purpose">{_esc(purpose)}</p>',
                 (
                     '  <p class="reference-catalogue-item-meta reference-catalogue-item-badges">'
                     f'{_module_link(s.public_module)}'
@@ -1102,34 +1120,20 @@ def main() -> None:
                 ),
                 '  <div class="reference-catalogue-item-counts">',
                 (
-                    f'    <details class="reference-count-details"><summary><span class="reference-chip">Calls: {_esc(str(calls_count))}</span></summary>'
-                    + (
-                        "<ul>" + "".join(
-                            f'<li><code>{_esc(name.split(".")[-1])}</code></li>' for name in calls
-                        ) + "</ul>" if calls else "<p>None</p>"
-                    )
+                    f'    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound {_esc(str(calls_count))}</span></summary>'
+                    + ("<ul>" + "".join(f'<li><code>{_esc(name.split(".")[-1])}</code></li>' for name in calls) + "</ul>" if calls_count > 0 else "")
                     + "</details>"
+                    if calls_count > 0
+                    else ""
                 ),
                 (
-                    f'    <details class="reference-count-details"><summary><span class="reference-chip">Used By: {_esc(str(used_by_count))}</span></summary>'
-                    + (
-                        "<ul>" + "".join(
-                            f'<li><code>{_esc(name.split(".")[-1])}</code></li>' for name in used_by
-                        ) + "</ul>" if used_by else "<p>None</p>"
-                    )
+                    f'    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound {_esc(str(used_by_count))}</span></summary>'
+                    + ("<ul>" + "".join(f'<li><code>{_esc(name.split(".")[-1])}</code></li>' for name in used_by) + "</ul>" if used_by_count > 0 else "")
                     + "</details>"
-                ),
-                (
-                    f'    <details class="reference-count-details"><summary><span class="reference-chip">Internal Helpers: {_esc(str(internal_helper_count))}</span></summary>'
-                    + (
-                        "<ul>" + "".join(
-                            f'<li><code>{_esc(name.split(".")[-1])}</code></li>' for name in internal_helpers
-                        ) + "</ul>" if internal_helpers else "<p>None</p>"
-                    )
-                    + "</details>"
+                    if used_by_count > 0
+                    else ""
                 ),
                 "  </div>",
-                f'  <p class="reference-catalogue-item-purpose">{_esc(purpose)}</p>',
                 "</article>",
             ]
         )

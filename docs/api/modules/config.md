@@ -6,11 +6,7 @@
 
 ## Module dependency summary
 
-<div class="module-table-scroll">
-| Callable count | Internal helper count | Outbound references | Inbound references |
-|---:|---:|---:|---:|
-| 2 | 13 | 0 | 1 |
-</div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 2</span><span class="reference-chip">Outbound: 0</span><span class="reference-chip">Inbound: 1</span></div>
 
 ## Module purpose
 
@@ -19,10 +15,33 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
 ## Public callables
 
 <div class="module-table-scroll">
-| Callable | Tier | Type | Summary | Related helpers |
-|---|---|---|---|---|
-| [`load_config`](../../reference/load_config/) | Essential | function | Validate and return a user-supplied framework configuration. | [`_validate_framework_config`](../../reference/internal/config/_validate_framework_config/) (internal) |
-| [`setup_notebook`](../../reference/setup_notebook/) | Essential | function | Run consolidated FabricOps startup for exploration and pipeline notebooks. | [`_get_store`](../../reference/internal/config/_get_store/) (internal), [`_run_config_smoke_tests`](../../reference/internal/config/_run_config_smoke_tests/) (internal) |
+<table>
+  <thead>
+    <tr>
+      <th>Callable</th>
+      <th>Tier</th>
+      <th>Type</th>
+      <th>Summary</th>
+      <th>Related helpers</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><a href="../../reference/load_config/"><code>load_config</code></a></td>
+      <td>Essential</td>
+      <td>function</td>
+      <td>Validate and return a user-supplied framework configuration.</td>
+      <td><a href="../../reference/internal/config/_validate_framework_config/"><code>_validate_framework_config</code></a> (internal)</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/setup_notebook/"><code>setup_notebook</code></a></td>
+      <td>Essential</td>
+      <td>function</td>
+      <td>Run consolidated FabricOps startup for exploration and pipeline notebooks.</td>
+      <td><a href="../../reference/internal/config/_get_store/"><code>_get_store</code></a> (internal), <a href="../../reference/internal/config/_run_config_smoke_tests/"><code>_run_config_smoke_tests</code></a> (internal)</td>
+    </tr>
+  </tbody>
+</table>
 </div>
 
 ## Advanced dependency sections
@@ -34,21 +53,68 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
 <summary>Expand internal helper table</summary>
 
 <div class="module-table-scroll">
-| Helper | Related public callables |
-|---|---|
-| [`_bootstrap_fabric_env`](../../reference/internal/config/_bootstrap_fabric_env/) | — |
-| [`_check_fabric_ai_functions_available`](../../reference/internal/config/_check_fabric_ai_functions_available/) | — |
-| [`_check_spark_session`](../../reference/internal/config/_check_spark_session/) | — |
-| [`_configure_fabric_ai_functions`](../../reference/internal/config/_configure_fabric_ai_functions/) | — |
-| [`_default_schema_text`](../../reference/internal/config/_default_schema_text/) | — |
-| [`_format_error_path`](../../reference/internal/config/_format_error_path/) | — |
-| [`_get_fabric_runtime_metadata`](../../reference/internal/config/_get_fabric_runtime_metadata/) | — |
-| [`_get_store`](../../reference/internal/config/_get_store/) | [`setup_notebook`](../../reference/setup_notebook/) |
-| [`_load_schema`](../../reference/internal/config/_load_schema/) | — |
-| [`_normalize_name`](../../reference/internal/config/_normalize_name/) | — |
-| [`_run_config_smoke_tests`](../../reference/internal/config/_run_config_smoke_tests/) | [`setup_notebook`](../../reference/setup_notebook/) |
-| [`_validate_framework_config`](../../reference/internal/config/_validate_framework_config/) | [`load_config`](../../reference/load_config/) |
-| [`_validate_notebook_name`](../../reference/internal/config/_validate_notebook_name/) | — |
+<table>
+  <thead>
+    <tr>
+      <th>Helper</th>
+      <th>Related public callables</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><a href="../../reference/internal/config/_bootstrap_fabric_env/"><code>_bootstrap_fabric_env</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/config/_check_fabric_ai_functions_available/"><code>_check_fabric_ai_functions_available</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/config/_check_spark_session/"><code>_check_spark_session</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/config/_configure_fabric_ai_functions/"><code>_configure_fabric_ai_functions</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/config/_default_schema_text/"><code>_default_schema_text</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/config/_format_error_path/"><code>_format_error_path</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/config/_get_fabric_runtime_metadata/"><code>_get_fabric_runtime_metadata</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/config/_get_store/"><code>_get_store</code></a></td>
+      <td><a href="../../reference/setup_notebook/"><code>setup_notebook</code></a></td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/config/_load_schema/"><code>_load_schema</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/config/_normalize_name/"><code>_normalize_name</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/config/_run_config_smoke_tests/"><code>_run_config_smoke_tests</code></a></td>
+      <td><a href="../../reference/setup_notebook/"><code>setup_notebook</code></a></td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/config/_validate_framework_config/"><code>_validate_framework_config</code></a></td>
+      <td><a href="../../reference/load_config/"><code>load_config</code></a></td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/config/_validate_notebook_name/"><code>_validate_notebook_name</code></a></td>
+      <td>—</td>
+    </tr>
+  </tbody>
+</table>
 </div>
 
 </details>
@@ -85,6 +151,6 @@ flowchart LR
 
 </details>
 
-### Cross-module references
+### Outbound
 
-No cross-module references detected.
+No outbound references detected.

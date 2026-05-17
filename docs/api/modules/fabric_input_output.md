@@ -6,11 +6,7 @@
 
 ## Module dependency summary
 
-<div class="module-table-scroll">
-| Callable count | Internal helper count | Outbound references | Inbound references |
-|---:|---:|---:|---:|
-| 8 | 3 | 1 | 2 |
-</div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 8</span><span class="reference-chip">Outbound: 1</span><span class="reference-chip">Inbound: 2</span></div>
 
 ## Module purpose
 
@@ -19,15 +15,68 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
 ## Public callables
 
 <div class="module-table-scroll">
-| Callable | Tier | Type | Summary | Related helpers |
-|---|---|---|---|---|
-| [`read_lakehouse_table`](../../reference/read_lakehouse_table/) | Essential | function | Read a Delta table from a Fabric lakehouse. | [`_get_spark`](../../reference/internal/fabric_input_output/_get_spark/) (internal) |
-| [`read_warehouse_table`](../../reference/read_warehouse_table/) | Essential | function | Read a table from a Microsoft Fabric warehouse. | [`_get_spark`](../../reference/internal/fabric_input_output/_get_spark/) (internal) |
-| [`write_lakehouse_table`](../../reference/write_lakehouse_table/) | Essential | function | Write a Spark DataFrame to a Fabric lakehouse Delta table. | — |
-| [`write_warehouse_table`](../../reference/write_warehouse_table/) | Essential | function | Write a Spark DataFrame to a Microsoft Fabric warehouse table. | — |
-| [`read_lakehouse_csv`](../../reference/read_lakehouse_csv/) | Optional | function | Read a CSV file from a Fabric lakehouse Files path. | [`_get_spark`](../../reference/internal/fabric_input_output/_get_spark/) (internal) |
-| [`read_lakehouse_excel`](../../reference/read_lakehouse_excel/) | Optional | function | Read an Excel file from a Fabric lakehouse Files path. | [`_get_spark`](../../reference/internal/fabric_input_output/_get_spark/) (internal) |
-| [`read_lakehouse_parquet`](../../reference/read_lakehouse_parquet/) | Optional | function | Read a Parquet file from a Fabric lakehouse Files path. | [`_convert_single_parquet_ns_to_us`](../../reference/internal/fabric_input_output/_convert_single_parquet_ns_to_us/) (internal), [`_get_spark`](../../reference/internal/fabric_input_output/_get_spark/) (internal) |
+<table>
+  <thead>
+    <tr>
+      <th>Callable</th>
+      <th>Tier</th>
+      <th>Type</th>
+      <th>Summary</th>
+      <th>Related helpers</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><a href="../../reference/read_lakehouse_table/"><code>read_lakehouse_table</code></a></td>
+      <td>Essential</td>
+      <td>function</td>
+      <td>Read a Delta table from a Fabric lakehouse.</td>
+      <td><a href="../../reference/internal/fabric_input_output/_get_spark/"><code>_get_spark</code></a> (internal)</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/read_warehouse_table/"><code>read_warehouse_table</code></a></td>
+      <td>Essential</td>
+      <td>function</td>
+      <td>Read a table from a Microsoft Fabric warehouse.</td>
+      <td><a href="../../reference/internal/fabric_input_output/_get_spark/"><code>_get_spark</code></a> (internal)</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/write_lakehouse_table/"><code>write_lakehouse_table</code></a></td>
+      <td>Essential</td>
+      <td>function</td>
+      <td>Write a Spark DataFrame to a Fabric lakehouse Delta table.</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/write_warehouse_table/"><code>write_warehouse_table</code></a></td>
+      <td>Essential</td>
+      <td>function</td>
+      <td>Write a Spark DataFrame to a Microsoft Fabric warehouse table.</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/read_lakehouse_csv/"><code>read_lakehouse_csv</code></a></td>
+      <td>Optional</td>
+      <td>function</td>
+      <td>Read a CSV file from a Fabric lakehouse Files path.</td>
+      <td><a href="../../reference/internal/fabric_input_output/_get_spark/"><code>_get_spark</code></a> (internal)</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/read_lakehouse_excel/"><code>read_lakehouse_excel</code></a></td>
+      <td>Optional</td>
+      <td>function</td>
+      <td>Read an Excel file from a Fabric lakehouse Files path.</td>
+      <td><a href="../../reference/internal/fabric_input_output/_get_spark/"><code>_get_spark</code></a> (internal)</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/read_lakehouse_parquet/"><code>read_lakehouse_parquet</code></a></td>
+      <td>Optional</td>
+      <td>function</td>
+      <td>Read a Parquet file from a Fabric lakehouse Files path.</td>
+      <td><a href="../../reference/internal/fabric_input_output/_convert_single_parquet_ns_to_us/"><code>_convert_single_parquet_ns_to_us</code></a> (internal), <a href="../../reference/internal/fabric_input_output/_get_spark/"><code>_get_spark</code></a> (internal)</td>
+    </tr>
+  </tbody>
+</table>
 </div>
 
 ## Advanced dependency sections
@@ -36,11 +85,28 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
 ### Related internal helpers
 
 <div class="module-table-scroll">
-| Helper | Related public callables |
-|---|---|
-| [`_convert_single_parquet_ns_to_us`](../../reference/internal/fabric_input_output/_convert_single_parquet_ns_to_us/) | [`read_lakehouse_parquet`](../../reference/read_lakehouse_parquet/) |
-| [`_get_fabric_runtime_context`](../../reference/internal/fabric_input_output/_get_fabric_runtime_context/) | — |
-| [`_get_spark`](../../reference/internal/fabric_input_output/_get_spark/) | [`read_lakehouse_csv`](../../reference/read_lakehouse_csv/), [`read_lakehouse_excel`](../../reference/read_lakehouse_excel/), [`read_lakehouse_parquet`](../../reference/read_lakehouse_parquet/), [`read_lakehouse_table`](../../reference/read_lakehouse_table/), [`read_warehouse_table`](../../reference/read_warehouse_table/) |
+<table>
+  <thead>
+    <tr>
+      <th>Helper</th>
+      <th>Related public callables</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><a href="../../reference/internal/fabric_input_output/_convert_single_parquet_ns_to_us/"><code>_convert_single_parquet_ns_to_us</code></a></td>
+      <td><a href="../../reference/read_lakehouse_parquet/"><code>read_lakehouse_parquet</code></a></td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/fabric_input_output/_get_fabric_runtime_context/"><code>_get_fabric_runtime_context</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/fabric_input_output/_get_spark/"><code>_get_spark</code></a></td>
+      <td><a href="../../reference/read_lakehouse_csv/"><code>read_lakehouse_csv</code></a>, <a href="../../reference/read_lakehouse_excel/"><code>read_lakehouse_excel</code></a>, <a href="../../reference/read_lakehouse_parquet/"><code>read_lakehouse_parquet</code></a>, <a href="../../reference/read_lakehouse_table/"><code>read_lakehouse_table</code></a>, <a href="../../reference/read_warehouse_table/"><code>read_warehouse_table</code></a></td>
+    </tr>
+  </tbody>
+</table>
 </div>
 
 ### Module internal callable dependencies
@@ -65,7 +131,7 @@ flowchart LR
 
 </details>
 
-### Cross-module references
+### Outbound
 
 <div class="module-mermaid-scroll">
 ```mermaid

@@ -6,11 +6,7 @@
 
 ## Module dependency summary
 
-<div class="module-table-scroll">
-| Callable count | Internal helper count | Outbound references | Inbound references |
-|---:|---:|---:|---:|
-| 2 | 8 | 1 | 3 |
-</div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 2</span><span class="reference-chip">Outbound: 1</span><span class="reference-chip">Inbound: 3</span></div>
 
 ## Module purpose
 
@@ -19,10 +15,33 @@ Owns metadata/contract store access, evidence persistence, agreement metadata, n
 ## Public callables
 
 <div class="module-table-scroll">
-| Callable | Tier | Type | Summary | Related helpers |
-|---|---|---|---|---|
-| [`load_notebook_registry`](../../reference/load_notebook_registry/) | Essential | function | Load notebook registration metadata rows for agreement notebook traceability. | — |
-| [`register_current_notebook`](../../reference/register_current_notebook/) | Essential | function | Register current notebook metadata evidence for agreement traceability. | [`_context_get`](../../reference/internal/metadata/_context_get/) (internal), [`_runtime_context`](../../reference/internal/metadata/_runtime_context/) (internal), [`_safe_str`](../../reference/internal/metadata/_safe_str/) (internal) |
+<table>
+  <thead>
+    <tr>
+      <th>Callable</th>
+      <th>Tier</th>
+      <th>Type</th>
+      <th>Summary</th>
+      <th>Related helpers</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><a href="../../reference/load_notebook_registry/"><code>load_notebook_registry</code></a></td>
+      <td>Essential</td>
+      <td>function</td>
+      <td>Load notebook registration metadata rows for agreement notebook traceability.</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/register_current_notebook/"><code>register_current_notebook</code></a></td>
+      <td>Essential</td>
+      <td>function</td>
+      <td>Register current notebook metadata evidence for agreement traceability.</td>
+      <td><a href="../../reference/internal/metadata/_context_get/"><code>_context_get</code></a> (internal), <a href="../../reference/internal/metadata/_runtime_context/"><code>_runtime_context</code></a> (internal), <a href="../../reference/internal/metadata/_safe_str/"><code>_safe_str</code></a> (internal)</td>
+    </tr>
+  </tbody>
+</table>
 </div>
 
 ## Advanced dependency sections
@@ -31,16 +50,48 @@ Owns metadata/contract store access, evidence persistence, agreement metadata, n
 ### Related internal helpers
 
 <div class="module-table-scroll">
-| Helper | Related public callables |
-|---|---|
-| [`_context_get`](../../reference/internal/metadata/_context_get/) | [`register_current_notebook`](../../reference/register_current_notebook/) |
-| [`_extract_columns_from_profile`](../../reference/internal/metadata/_extract_columns_from_profile/) | — |
-| [`_key_part`](../../reference/internal/metadata/_key_part/) | — |
-| [`_now_utc_iso`](../../reference/internal/metadata/_now_utc_iso/) | — |
-| [`_resolve_action_by`](../../reference/internal/metadata/_resolve_action_by/) | — |
-| [`_runtime_context`](../../reference/internal/metadata/_runtime_context/) | [`register_current_notebook`](../../reference/register_current_notebook/) |
-| [`_safe_str`](../../reference/internal/metadata/_safe_str/) | [`register_current_notebook`](../../reference/register_current_notebook/) |
-| [`_sha256_key`](../../reference/internal/metadata/_sha256_key/) | — |
+<table>
+  <thead>
+    <tr>
+      <th>Helper</th>
+      <th>Related public callables</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><a href="../../reference/internal/metadata/_context_get/"><code>_context_get</code></a></td>
+      <td><a href="../../reference/register_current_notebook/"><code>register_current_notebook</code></a></td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/metadata/_extract_columns_from_profile/"><code>_extract_columns_from_profile</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/metadata/_key_part/"><code>_key_part</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/metadata/_now_utc_iso/"><code>_now_utc_iso</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/metadata/_resolve_action_by/"><code>_resolve_action_by</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/metadata/_runtime_context/"><code>_runtime_context</code></a></td>
+      <td><a href="../../reference/register_current_notebook/"><code>register_current_notebook</code></a></td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/metadata/_safe_str/"><code>_safe_str</code></a></td>
+      <td><a href="../../reference/register_current_notebook/"><code>register_current_notebook</code></a></td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/metadata/_sha256_key/"><code>_sha256_key</code></a></td>
+      <td>—</td>
+    </tr>
+  </tbody>
+</table>
 </div>
 
 ### Module internal callable dependencies
@@ -71,7 +122,7 @@ flowchart LR
 
 </details>
 
-### Cross-module references
+### Outbound
 
 Graph omitted because dependencies are simple one-to-one references.
 <div class="module-table-scroll">

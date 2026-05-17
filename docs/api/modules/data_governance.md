@@ -6,11 +6,7 @@
 
 ## Module dependency summary
 
-<div class="module-table-scroll">
-| Callable count | Internal helper count | Outbound references | Inbound references |
-|---:|---:|---:|---:|
-| 6 | 6 | 1 | 0 |
-</div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 6</span><span class="reference-chip">Outbound: 1</span><span class="reference-chip">Inbound: 0</span></div>
 
 ## Module purpose
 
@@ -19,14 +15,61 @@ Owns sensitivity, PII, confidentiality, policy labels, and governance approval e
 ## Public callables
 
 <div class="module-table-scroll">
-| Callable | Tier | Type | Summary | Related helpers |
-|---|---|---|---|---|
-| [`draft_governance`](../../reference/draft_governance/) | Essential | function | Run Fabric AI personal-identifier suggestion prompt on prepared governance rows. | — |
-| [`load_governance`](../../reference/load_governance/) | Essential | function | Load approved governance metadata as read-only agreement context. | [`_coerce_row_dicts`](../../reference/internal/data_governance/_coerce_row_dicts/) (internal) |
-| [`review_governance`](../../reference/review_governance/) | Essential | function | Display governance review widget and capture approve/reject decisions in module state. | [`_undo_last_action`](../../reference/internal/data_governance/_undo_last_action/) (internal) |
-| [`write_governance`](../../reference/write_governance/) | Essential | function | Persist approved governance rows to metadata table. | [`_approved_widget_rows`](../../reference/internal/data_governance/_approved_widget_rows/) (internal) |
-| [`extract_governance_suggestions`](../../reference/extract_governance_suggestions/) | Optional | function | Extract review-ready governance suggestions from AI responses. | [`_extract_pii_suggestions`](../../reference/internal/data_governance/_extract_pii_suggestions/) (internal) |
-| [`prepare_governance_input`](../../reference/prepare_governance_input/) | Optional | function | Prepare governance prompt input rows from profile evidence and approved context. | [`_prepare_governance_input`](../../reference/internal/data_governance/_prepare_governance_input/) (internal) |
+<table>
+  <thead>
+    <tr>
+      <th>Callable</th>
+      <th>Tier</th>
+      <th>Type</th>
+      <th>Summary</th>
+      <th>Related helpers</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><a href="../../reference/draft_governance/"><code>draft_governance</code></a></td>
+      <td>Essential</td>
+      <td>function</td>
+      <td>Run Fabric AI personal-identifier suggestion prompt on prepared governance rows.</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/load_governance/"><code>load_governance</code></a></td>
+      <td>Essential</td>
+      <td>function</td>
+      <td>Load approved governance metadata as read-only agreement context.</td>
+      <td><a href="../../reference/internal/data_governance/_coerce_row_dicts/"><code>_coerce_row_dicts</code></a> (internal)</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/review_governance/"><code>review_governance</code></a></td>
+      <td>Essential</td>
+      <td>function</td>
+      <td>Display governance review widget and capture approve/reject decisions in module state.</td>
+      <td><a href="../../reference/internal/data_governance/_undo_last_action/"><code>_undo_last_action</code></a> (internal)</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/write_governance/"><code>write_governance</code></a></td>
+      <td>Essential</td>
+      <td>function</td>
+      <td>Persist approved governance rows to metadata table.</td>
+      <td><a href="../../reference/internal/data_governance/_approved_widget_rows/"><code>_approved_widget_rows</code></a> (internal)</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/extract_governance_suggestions/"><code>extract_governance_suggestions</code></a></td>
+      <td>Optional</td>
+      <td>function</td>
+      <td>Extract review-ready governance suggestions from AI responses.</td>
+      <td><a href="../../reference/internal/data_governance/_extract_pii_suggestions/"><code>_extract_pii_suggestions</code></a> (internal)</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/prepare_governance_input/"><code>prepare_governance_input</code></a></td>
+      <td>Optional</td>
+      <td>function</td>
+      <td>Prepare governance prompt input rows from profile evidence and approved context.</td>
+      <td><a href="../../reference/internal/data_governance/_prepare_governance_input/"><code>_prepare_governance_input</code></a> (internal)</td>
+    </tr>
+  </tbody>
+</table>
 </div>
 
 ## Advanced dependency sections
@@ -35,14 +78,40 @@ Owns sensitivity, PII, confidentiality, policy labels, and governance approval e
 ### Related internal helpers
 
 <div class="module-table-scroll">
-| Helper | Related public callables |
-|---|---|
-| [`_approved_widget_rows`](../../reference/internal/data_governance/_approved_widget_rows/) | [`write_governance`](../../reference/write_governance/) |
-| [`_build_governance_context`](../../reference/internal/data_governance/_build_governance_context/) | — |
-| [`_coerce_row_dicts`](../../reference/internal/data_governance/_coerce_row_dicts/) | [`load_governance`](../../reference/load_governance/) |
-| [`_extract_pii_suggestions`](../../reference/internal/data_governance/_extract_pii_suggestions/) | [`extract_governance_suggestions`](../../reference/extract_governance_suggestions/) |
-| [`_prepare_governance_input`](../../reference/internal/data_governance/_prepare_governance_input/) | [`prepare_governance_input`](../../reference/prepare_governance_input/) |
-| [`_undo_last_action`](../../reference/internal/data_governance/_undo_last_action/) | [`review_governance`](../../reference/review_governance/) |
+<table>
+  <thead>
+    <tr>
+      <th>Helper</th>
+      <th>Related public callables</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><a href="../../reference/internal/data_governance/_approved_widget_rows/"><code>_approved_widget_rows</code></a></td>
+      <td><a href="../../reference/write_governance/"><code>write_governance</code></a></td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/data_governance/_build_governance_context/"><code>_build_governance_context</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/data_governance/_coerce_row_dicts/"><code>_coerce_row_dicts</code></a></td>
+      <td><a href="../../reference/load_governance/"><code>load_governance</code></a></td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/data_governance/_extract_pii_suggestions/"><code>_extract_pii_suggestions</code></a></td>
+      <td><a href="../../reference/extract_governance_suggestions/"><code>extract_governance_suggestions</code></a></td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/data_governance/_prepare_governance_input/"><code>_prepare_governance_input</code></a></td>
+      <td><a href="../../reference/prepare_governance_input/"><code>prepare_governance_input</code></a></td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/data_governance/_undo_last_action/"><code>_undo_last_action</code></a></td>
+      <td><a href="../../reference/review_governance/"><code>review_governance</code></a></td>
+    </tr>
+  </tbody>
+</table>
 </div>
 
 ### Module internal callable dependencies
@@ -58,7 +127,7 @@ Graph omitted because dependencies are simple one-to-one references.
 | `data_governance.write_governance` | `data_governance._approved_widget_rows` |
 </div>
 
-### Cross-module references
+### Outbound
 
 <div class="module-mermaid-scroll">
 ```mermaid
