@@ -6,30 +6,36 @@
 
 ## Module dependency summary
 
-| Essential | Optional | Internal | Depends On | Used By |
-|---:|---:|---:|---:|---:|
-| 0 | 4 | 14 | 1 | 0 |
+<div class="module-table-scroll">
+| Callable count | Internal helper count | Outbound references | Inbound references |
+|---:|---:|---:|---:|
+| 4 | 14 | 1 | 0 |
+</div>
 
-## Essential callables
+## Module purpose
 
-| Callable | Type | Summary | Related helpers |
-|---|---|---|---|
-| — | — | No recommended entrypoints configured. | — |
+Owns schema/profile/data drift checks as engineering guardrails during pipeline runs.
 
-## Optional callables
+## Public callables
 
-| Callable | Type | Summary | Related helpers |
-|---|---|---|---|
-| [`check_partition_drift`](../../reference/check_partition_drift/) | function | Check partition-level drift using keys, partitions, and optional watermark baselines. | — |
-| [`check_profile_drift`](../../reference/check_profile_drift/) | function | Compare profile metrics against a baseline profile and drift thresholds. | — |
-| [`check_schema_drift`](../../reference/check_schema_drift/) | function | Compare a current dataframe schema against a baseline schema snapshot. | — |
-| [`summarize_drift_results`](../../reference/summarize_drift_results/) | function | Summarize schema, partition, and profile drift outcomes into one decision. | — |
+<div class="module-table-scroll">
+| Callable | Tier | Type | Summary | Related helpers |
+|---|---|---|---|---|
+| [`check_partition_drift`](../../reference/check_partition_drift/) | Optional | function | Check partition-level drift using keys, partitions, and optional watermark baselines. | — |
+| [`check_profile_drift`](../../reference/check_profile_drift/) | Optional | function | Compare profile metrics against a baseline profile and drift thresholds. | — |
+| [`check_schema_drift`](../../reference/check_schema_drift/) | Optional | function | Compare a current dataframe schema against a baseline schema snapshot. | — |
+| [`summarize_drift_results`](../../reference/summarize_drift_results/) | Optional | function | Summarize schema, partition, and profile drift outcomes into one decision. | — |
+</div>
 
-## Related internal helpers
+## Advanced dependency sections
+
+
+### Related internal helpers
 
 <details>
 <summary>Expand internal helper table</summary>
 
+<div class="module-table-scroll">
 | Helper | Related public callables |
 |---|---|
 | [`_build_pandas_partition_snapshot`](../../reference/internal/drift/_build_pandas_partition_snapshot/) | — |
@@ -46,11 +52,16 @@
 | [`_safe_spark_collect`](../../reference/internal/drift/_safe_spark_collect/) | — |
 | [`_utc_now_iso`](../../reference/internal/drift/_utc_now_iso/) | — |
 | [`_write_metadata_rows`](../../reference/internal/drift/_write_metadata_rows/) | — |
+</div>
 
 </details>
 
-## Module internal callable graph
+### Module internal callable dependencies
 
+<details>
+<summary>Expand module internal callable graph</summary>
+
+<div class="module-mermaid-scroll">
 ```mermaid
 flowchart LR
   n1["drift._build_pandas_partition_snapshot"] --> n1b["drift._build_partition_hash"]
@@ -90,24 +101,19 @@ flowchart LR
   n35["drift.load_latest_schema_snapshot"] --> n35b["drift._is_missing_table_error"]
   n36["drift.load_latest_schema_snapshot"] --> n36b["drift._safe_spark_collect"]
 ```
+</div>
 
-## Cross-module callable graph
+</details>
 
+### Cross-module references
+
+<div class="module-mermaid-scroll">
 ```mermaid
 flowchart LR
-  c1[drift._build_pandas_partition_snapshot] --> d1[_utils._to_jsonable]
-  c2[drift._build_spark_partition_snapshot] --> d2[_utils._to_jsonable]
-  c3[drift._json_dumps] --> d3[_utils._to_jsonable]
-  c4[drift.build_incremental_safety_records] --> d4[_utils._to_jsonable]
-  c5[drift.compare_partition_snapshots] --> d5[_utils._to_jsonable]
+  c1["drift._build_pandas_partition_snapshot"] --> d1["_utils._to_jsonable"]
+  c2["drift._build_spark_partition_snapshot"] --> d2["_utils._to_jsonable"]
+  c3["drift._json_dumps"] --> d3["_utils._to_jsonable"]
+  c4["drift.build_incremental_safety_records"] --> d4["_utils._to_jsonable"]
+  c5["drift.compare_partition_snapshots"] --> d5["_utils._to_jsonable"]
 ```
-
-## Cross-module references
-
-| Caller | Callee |
-|---|---|
-| `drift._build_pandas_partition_snapshot` | `_utils._to_jsonable` |
-| `drift._build_spark_partition_snapshot` | `_utils._to_jsonable` |
-| `drift._json_dumps` | `_utils._to_jsonable` |
-| `drift.build_incremental_safety_records` | `_utils._to_jsonable` |
-| `drift.compare_partition_snapshots` | `_utils._to_jsonable` |
+</div>

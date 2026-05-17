@@ -6,36 +6,43 @@
 
 ## Module dependency summary
 
-| Essential | Optional | Internal | Depends On | Used By |
-|---:|---:|---:|---:|---:|
-| 7 | 2 | 20 | 3 | 0 |
+<div class="module-table-scroll">
+| Callable count | Internal helper count | Outbound references | Inbound references |
+|---:|---:|---:|---:|
+| 9 | 20 | 3 | 0 |
+</div>
 
-## Essential callables
+## Module purpose
 
-| Callable | Type | Summary | Related helpers |
-|---|---|---|---|
-| [`assert_dq_passed`](../../reference/assert_dq_passed/) | function | Raise only after evidence materialization when error-severity rules fail. | — |
-| [`draft_dq_rules`](../../reference/draft_dq_rules/) | function | Draft candidate DQ rules from metadata profiles or raw DataFrame fallback. | [`__prepare_dq_profile_input_rows`](../../reference/internal/data_quality/__prepare_dq_profile_input_rows/) (internal), [`_extract_dq_rules`](../../reference/internal/data_quality/_extract_dq_rules/) (internal), [`_suggest_dq_rules`](../../reference/internal/data_quality/_suggest_dq_rules/) (internal) |
-| [`enforce_dq`](../../reference/enforce_dq/) | function | Enforce approved DQ rules and return structured deterministic outputs. | [`_load_active_dq_rules`](../../reference/internal/data_quality/_load_active_dq_rules/) (internal), [`_run_dq_rules`](../../reference/internal/data_quality/_run_dq_rules/) (internal), [`_split_dq_rows`](../../reference/internal/data_quality/_split_dq_rows/) (internal) |
-| [`get_dq_review_results`](../../reference/get_dq_review_results/) | function | Collect current approved/rejected DQ review results from widget state. | [`_attach_rule_metadata_keys`](../../reference/internal/data_quality/_attach_rule_metadata_keys/) (internal) |
-| [`load_dq_rules`](../../reference/load_dq_rules/) | function | Load latest active approved DQ rules from append-only metadata history. | [`_load_active_dq_rules`](../../reference/internal/data_quality/_load_active_dq_rules/) (internal) |
-| [`review_dq_rules`](../../reference/review_dq_rules/) | function | Review AI-suggested DQ rules sequentially with explicit approve/reject decisions. | [`_require_ipywidgets`](../../reference/internal/data_quality/_require_ipywidgets/) (internal) |
-| [`write_dq_rules`](../../reference/write_dq_rules/) | function | Validate, build, and persist approved DQ rules. | [`_build_dq_rule_history`](../../reference/internal/data_quality/_build_dq_rule_history/) (internal) |
+Owns DQ rule drafting, review, enforcement, quarantine, and quality results.
+
+## Public callables
+
+<div class="module-table-scroll">
+| Callable | Tier | Type | Summary | Related helpers |
+|---|---|---|---|---|
+| [`assert_dq_passed`](../../reference/assert_dq_passed/) | Essential | function | Raise only after evidence materialization when error-severity rules fail. | — |
+| [`draft_dq_rules`](../../reference/draft_dq_rules/) | Essential | function | Draft candidate DQ rules from metadata profiles or raw DataFrame fallback. | [`__prepare_dq_profile_input_rows`](../../reference/internal/data_quality/__prepare_dq_profile_input_rows/) (internal), [`_extract_dq_rules`](../../reference/internal/data_quality/_extract_dq_rules/) (internal), [`_suggest_dq_rules`](../../reference/internal/data_quality/_suggest_dq_rules/) (internal) |
+| [`enforce_dq`](../../reference/enforce_dq/) | Essential | function | Enforce approved DQ rules and return structured deterministic outputs. | [`_load_active_dq_rules`](../../reference/internal/data_quality/_load_active_dq_rules/) (internal), [`_run_dq_rules`](../../reference/internal/data_quality/_run_dq_rules/) (internal), [`_split_dq_rows`](../../reference/internal/data_quality/_split_dq_rows/) (internal) |
+| [`get_dq_review_results`](../../reference/get_dq_review_results/) | Essential | function | Collect current approved/rejected DQ review results from widget state. | [`_attach_rule_metadata_keys`](../../reference/internal/data_quality/_attach_rule_metadata_keys/) (internal) |
+| [`load_dq_rules`](../../reference/load_dq_rules/) | Essential | function | Load latest active approved DQ rules from append-only metadata history. | [`_load_active_dq_rules`](../../reference/internal/data_quality/_load_active_dq_rules/) (internal) |
+| [`review_dq_rules`](../../reference/review_dq_rules/) | Essential | function | Review AI-suggested DQ rules sequentially with explicit approve/reject decisions. | [`_require_ipywidgets`](../../reference/internal/data_quality/_require_ipywidgets/) (internal) |
+| [`write_dq_rules`](../../reference/write_dq_rules/) | Essential | function | Validate, build, and persist approved DQ rules. | [`_build_dq_rule_history`](../../reference/internal/data_quality/_build_dq_rule_history/) (internal) |
+| [`review_dq_rule_deactivations`](../../reference/review_dq_rule_deactivations/) | Optional | function | Review active DQ rules one at a time for governed deactivation actions. | [`_require_ipywidgets`](../../reference/internal/data_quality/_require_ipywidgets/) (internal) |
+| [`validate_dq_rules`](../../reference/validate_dq_rules/) | Optional | function | Validate canonical DQ rules before enforcement. | — |
+</div>
 
 Split a Spark DataFrame into pass/quarantine outputs for row-level DQ rules.
 
-## Optional callables
+## Advanced dependency sections
 
-| Callable | Type | Summary | Related helpers |
-|---|---|---|---|
-| [`review_dq_rule_deactivations`](../../reference/review_dq_rule_deactivations/) | function | Review active DQ rules one at a time for governed deactivation actions. | [`_require_ipywidgets`](../../reference/internal/data_quality/_require_ipywidgets/) (internal) |
-| [`validate_dq_rules`](../../reference/validate_dq_rules/) | function | Validate canonical DQ rules before enforcement. | — |
 
-## Related internal helpers
+### Related internal helpers
 
 <details>
 <summary>Expand internal helper table</summary>
 
+<div class="module-table-scroll">
 | Helper | Related public callables |
 |---|---|
 | [`__parse_dq_rules_dict_from_text`](../../reference/internal/data_quality/__parse_dq_rules_dict_from_text/) | — |
@@ -58,11 +65,16 @@ Split a Spark DataFrame into pass/quarantine outputs for row-level DQ rules.
 | [`_split_dq_rows`](../../reference/internal/data_quality/_split_dq_rows/) | [`enforce_dq`](../../reference/enforce_dq/) |
 | [`_suggest_dq_rules`](../../reference/internal/data_quality/_suggest_dq_rules/) | [`draft_dq_rules`](../../reference/draft_dq_rules/) |
 | [`_suggest_dq_rules_with_fabric_ai`](../../reference/internal/data_quality/_suggest_dq_rules_with_fabric_ai/) | — |
+</div>
 
 </details>
 
-## Module internal callable graph
+### Module internal callable dependencies
 
+<details>
+<summary>Expand module internal callable graph</summary>
+
+<div class="module-mermaid-scroll">
 ```mermaid
 flowchart LR
   n1["data_quality._extract_candidate_rules_from_responses"] --> n1b["data_quality.__parse_dq_rules_dict_from_text"]
@@ -88,36 +100,30 @@ flowchart LR
   n21["data_quality.write_dq_rules"] --> n21b["data_quality._build_dq_rule_history"]
   n22["data_quality.write_dq_rules"] --> n22b["data_quality.validate_dq_rules"]
 ```
+</div>
 
-## Cross-module callable graph
+</details>
 
+### Cross-module references
+
+<details>
+<summary>Expand cross-module callable graph</summary>
+
+<div class="module-mermaid-scroll">
 ```mermaid
 flowchart LR
-  c1[data_quality.__prepare_dq_profile_input_rows] --> d1[data_profiling.profile_dataframe]
-  c2[data_quality._attach_rule_metadata_keys] --> d2[metadata.build_dq_rule_key]
-  c3[data_quality._attach_rule_metadata_keys] --> d3[metadata.build_metadata_column_key]
-  c4[data_quality._attach_rule_metadata_keys] --> d4[metadata.build_metadata_table_key]
-  c5[data_quality._build_dq_rule_deactivation_metadata_df] --> d5[metadata._now_utc_iso]
-  c6[data_quality._build_dq_rule_deactivation_metadata_df] --> d6[metadata._resolve_action_by]
-  c7[data_quality._build_dq_rule_deactivations] --> d7[metadata._resolve_action_by]
-  c8[data_quality._build_dq_rule_history] --> d8[metadata._resolve_action_by]
-  c9[data_quality._build_dq_rules_metadata_df] --> d9[metadata._now_utc_iso]
-  c10[data_quality._build_dq_rules_metadata_df] --> d10[metadata._resolve_action_by]
-  c11[data_quality.write_dq_rules] --> d11[fabric_input_output.write_lakehouse_table]
+  c1["data_quality.__prepare_dq_profile_input_rows"] --> d1["data_profiling.profile_dataframe"]
+  c2["data_quality._attach_rule_metadata_keys"] --> d2["metadata.build_dq_rule_key"]
+  c3["data_quality._attach_rule_metadata_keys"] --> d3["metadata.build_metadata_column_key"]
+  c4["data_quality._attach_rule_metadata_keys"] --> d4["metadata.build_metadata_table_key"]
+  c5["data_quality._build_dq_rule_deactivation_metadata_df"] --> d5["metadata._now_utc_iso"]
+  c6["data_quality._build_dq_rule_deactivation_metadata_df"] --> d6["metadata._resolve_action_by"]
+  c7["data_quality._build_dq_rule_deactivations"] --> d7["metadata._resolve_action_by"]
+  c8["data_quality._build_dq_rule_history"] --> d8["metadata._resolve_action_by"]
+  c9["data_quality._build_dq_rules_metadata_df"] --> d9["metadata._now_utc_iso"]
+  c10["data_quality._build_dq_rules_metadata_df"] --> d10["metadata._resolve_action_by"]
+  c11["data_quality.write_dq_rules"] --> d11["fabric_input_output.write_lakehouse_table"]
 ```
+</div>
 
-## Cross-module references
-
-| Caller | Callee |
-|---|---|
-| `data_quality.__prepare_dq_profile_input_rows` | `data_profiling.profile_dataframe` |
-| `data_quality._attach_rule_metadata_keys` | `metadata.build_dq_rule_key` |
-| `data_quality._attach_rule_metadata_keys` | `metadata.build_metadata_column_key` |
-| `data_quality._attach_rule_metadata_keys` | `metadata.build_metadata_table_key` |
-| `data_quality._build_dq_rule_deactivation_metadata_df` | `metadata._now_utc_iso` |
-| `data_quality._build_dq_rule_deactivation_metadata_df` | `metadata._resolve_action_by` |
-| `data_quality._build_dq_rule_deactivations` | `metadata._resolve_action_by` |
-| `data_quality._build_dq_rule_history` | `metadata._resolve_action_by` |
-| `data_quality._build_dq_rules_metadata_df` | `metadata._now_utc_iso` |
-| `data_quality._build_dq_rules_metadata_df` | `metadata._resolve_action_by` |
-| `data_quality.write_dq_rules` | `fabric_input_output.write_lakehouse_table` |
+</details>

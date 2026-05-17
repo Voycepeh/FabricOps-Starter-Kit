@@ -296,3 +296,31 @@
     max-width: 360px;
   }
 }
+
+.module-table-scroll {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.module-table-scroll table,
+.module-table-scroll code {
+  white-space: nowrap;
+  word-break: normal;
+  overflow-wrap: normal;
+}
+
+.module-mermaid-scroll {
+  width: 100%;
+  overflow-x: auto;
+  padding-bottom: 0.3rem;
+}
+
+.module-mermaid-scroll .mermaid {
+  min-width: 40rem;
+}
+
+@media screen and (max-width: 760px) {
+  .module-mermaid-scroll .mermaid {
+    min-width: 48rem;
+  }
+}

@@ -4,7 +4,7 @@ This page is generated from FabricOps source code using static AST parsing.
 
 > Developer diagnostic only. Primary user documentation now lives on Function Reference and module pages.
 
-## 1. Module dependency graph
+## 1. Module dependency graph (diagnostic)
 
 ```mermaid
 flowchart LR
@@ -19,26 +19,7 @@ flowchart LR
   metadata --> fabric_input_output
 ```
 
-## 2. Module relationship summary
-
-| Module | Calls modules | Called by modules | Public callables |
-|---|---|---|---:|
-| `_utils` | — | — | 0 |
-| `business_context` | `metadata` | — | 6 |
-| `config` | — | `fabric_input_output` | 2 |
-| `data_agreement` | — | — | 3 |
-| `data_governance` | `metadata` | — | 6 |
-| `data_lineage` | — | — | 2 |
-| `data_profiling` | `technical_columns` | — | 1 |
-| `data_quality` | `data_profiling`, `fabric_input_output`, `metadata` | — | 9 |
-| `docs_metadata` | — | — | 0 |
-| `drift` | `_utils` | — | 4 |
-| `fabric_input_output` | `config` | — | 8 |
-| `handover` | — | — | 2 |
-| `metadata` | `fabric_input_output` | `business_context`, `data_quality` | 2 |
-| `technical_columns` | — | — | 1 |
-
-## 3. Public callables grouped by module
+## 2. Public callables grouped by module
 
 - `business_context`: `draft_business_context`, `extract_column_business_context_suggestions`, `get_reviewed_business_context_rows`, `prepare_business_context_profile_input`, `review_business_context`, `write_business_context`
 - `config`: `load_config`, `setup_notebook`
@@ -53,7 +34,7 @@ flowchart LR
 - `metadata`: `load_notebook_registry`, `register_current_notebook`
 - `technical_columns`: `standardize_columns`
 
-## 4. Internal helper index
+## 3. Internal helper index
 
 | Module | Internal helper | Called by public callables |
 |---|---|---|
@@ -156,7 +137,7 @@ flowchart LR
 | `technical_columns` | `_non_technical_columns` | — |
 | `technical_columns` | `_safe_string` | — |
 
-## 5. Cross-module FabricOps calls
+## 4. Cross-module FabricOps calls
 
 | Caller | Callee | Callee kind |
 |---|---|---|
@@ -199,6 +180,6 @@ flowchart LR
 | `fabricops_kit.fabric_input_output.write_warehouse_table` | `fabricops_kit.config._get_store` | `internal_helper` |
 | `fabricops_kit.metadata.write_metadata_rows` | `fabricops_kit.fabric_input_output.write_lakehouse_table` | `public_export` |
 
-## 6. Notes
+## 5. Notes
 
 Per-function callable flows and helper/callee details are generated on each public callable page.

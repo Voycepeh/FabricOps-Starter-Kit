@@ -55,8 +55,6 @@ nav:
           - metadata: api/modules/metadata.md
       # AUTO-GENERATED-MODULES-END
 
-  - Developer:
-      - Callable Dependency Diagnostic: reference/callable-map.md
 
 markdown_extensions:
   - admonition
