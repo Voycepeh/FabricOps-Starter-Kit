@@ -23,9 +23,9 @@ flowchart LR
 
 | Module | Calls modules | Called by modules | Public callables |
 |---|---|---|---:|
-| `_utils` | — | — | 0 |
+| `_utils` | — | `drift` | 0 |
 | `business_context` | `metadata` | — | 6 |
-| `config` | — | `fabric_input_output` | 2 |
+| `config` | — | — | 2 |
 | `data_agreement` | — | — | 3 |
 | `data_governance` | `metadata` | — | 6 |
 | `data_lineage` | — | — | 2 |
@@ -35,7 +35,7 @@ flowchart LR
 | `drift` | `_utils` | — | 4 |
 | `fabric_input_output` | `config` | — | 8 |
 | `handover` | — | — | 2 |
-| `metadata` | `fabric_input_output` | `business_context`, `data_quality` | 2 |
+| `metadata` | `fabric_input_output` | `business_context` | 2 |
 | `technical_columns` | — | — | 1 |
 
 ## 3. Public callables grouped by module
