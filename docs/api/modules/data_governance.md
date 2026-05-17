@@ -15,7 +15,10 @@
 
 ## Optional callables
 
-No advanced helpers listed for this module.
+| Callable | Type | Summary | Related helpers |
+|---|---|---|---|
+| [`extract_governance_suggestions`](../../reference/extract_governance_suggestions/) | function | Extract review-ready governance suggestions from AI responses. | [`_extract_pii_suggestions`](../../reference/internal/data_governance/_extract_pii_suggestions/) (internal) |
+| [`prepare_governance_input`](../../reference/prepare_governance_input/) | function | Prepare governance prompt input rows from profile evidence and approved context. | [`_prepare_governance_input`](../../reference/internal/data_governance/_prepare_governance_input/) (internal) |
 
 ## Related internal helpers
 
@@ -24,6 +27,6 @@ No advanced helpers listed for this module.
 | [`_approved_widget_rows`](../../reference/internal/data_governance/_approved_widget_rows/) | [`write_governance`](../../reference/write_governance/) |
 | [`_build_governance_context`](../../reference/internal/data_governance/_build_governance_context/) | — |
 | [`_coerce_row_dicts`](../../reference/internal/data_governance/_coerce_row_dicts/) | [`load_governance`](../../reference/load_governance/) |
-| [`_extract_pii_suggestions`](../../reference/internal/data_governance/_extract_pii_suggestions/) | — |
-| [`_prepare_governance_input`](../../reference/internal/data_governance/_prepare_governance_input/) | — |
+| [`_extract_pii_suggestions`](../../reference/internal/data_governance/_extract_pii_suggestions/) | [`extract_governance_suggestions`](../../reference/extract_governance_suggestions/) |
+| [`_prepare_governance_input`](../../reference/internal/data_governance/_prepare_governance_input/) | [`prepare_governance_input`](../../reference/prepare_governance_input/) |
 | [`_undo_last_action`](../../reference/internal/data_governance/_undo_last_action/) | [`review_governance`](../../reference/review_governance/) |

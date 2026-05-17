@@ -29,11 +29,6 @@ Exploration notebook flow used to profile source data and draft advisory AI outp
       <td data-label="Module"><a class="reference-module-link" href="../../api/modules/config/" title="Open config module page" aria-label="Open config module page">config</a></td>
       <td data-label="Why it is commonly used here">Validate and return a user-supplied framework configuration.</td>
     </tr>
-    <tr>
-      <td data-label="Callable"><a href="../../api/reference/get_path/"><code>get_path</code></a></td>
-      <td data-label="Module"><a class="reference-module-link" href="../../api/modules/config/" title="Open config module page" aria-label="Open config module page">config</a></td>
-      <td data-label="Why it is commonly used here">Resolve a configured Fabric path for an environment and target.</td>
-    </tr>
   </tbody>
 </table>
 

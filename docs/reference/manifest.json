@@ -219,6 +219,30 @@
       "template_segment": "\u2014"
     },
     {
+      "module_name": "business_context",
+      "visibility": "public",
+      "module_summary": "Owns business meaning for tables and columns.",
+      "sidebar_group": "1. Governance steward",
+      "sidebar_include": true,
+      "callable_name": "extract_column_business_context_suggestions",
+      "callable_visibility": "public",
+      "callable_role": "optional",
+      "template_notebook": "\u2014",
+      "template_segment": "\u2014"
+    },
+    {
+      "module_name": "data_governance",
+      "visibility": "public",
+      "module_summary": "Owns sensitivity, PII, confidentiality, policy labels, and governance approval evidence.",
+      "sidebar_group": "1. Governance steward",
+      "sidebar_include": true,
+      "callable_name": "extract_governance_suggestions",
+      "callable_visibility": "public",
+      "callable_role": "optional",
+      "template_notebook": "\u2014",
+      "template_segment": "\u2014"
+    },
+    {
       "module_name": "data_quality",
       "visibility": "public",
       "module_summary": "Owns DQ rule drafting, review, enforcement, quarantine, and quality results.",
@@ -227,6 +251,18 @@
       "callable_name": "get_dq_review_results",
       "callable_visibility": "public",
       "callable_role": "essential",
+      "template_notebook": "\u2014",
+      "template_segment": "\u2014"
+    },
+    {
+      "module_name": "business_context",
+      "visibility": "public",
+      "module_summary": "Owns business meaning for tables and columns.",
+      "sidebar_group": "1. Governance steward",
+      "sidebar_include": true,
+      "callable_name": "get_reviewed_business_context_rows",
+      "callable_visibility": "public",
+      "callable_role": "optional",
       "template_notebook": "\u2014",
       "template_segment": "\u2014"
     },
@@ -299,6 +335,30 @@
       "callable_name": "load_notebook_registry",
       "callable_visibility": "public",
       "callable_role": "essential",
+      "template_notebook": "\u2014",
+      "template_segment": "\u2014"
+    },
+    {
+      "module_name": "business_context",
+      "visibility": "public",
+      "module_summary": "Owns business meaning for tables and columns.",
+      "sidebar_group": "1. Governance steward",
+      "sidebar_include": true,
+      "callable_name": "prepare_business_context_profile_input",
+      "callable_visibility": "public",
+      "callable_role": "optional",
+      "template_notebook": "\u2014",
+      "template_segment": "\u2014"
+    },
+    {
+      "module_name": "data_governance",
+      "visibility": "public",
+      "module_summary": "Owns sensitivity, PII, confidentiality, policy labels, and governance approval evidence.",
+      "sidebar_group": "1. Governance steward",
+      "sidebar_include": true,
+      "callable_name": "prepare_governance_input",
+      "callable_visibility": "public",
+      "callable_role": "optional",
       "template_notebook": "\u2014",
       "template_segment": "\u2014"
     },

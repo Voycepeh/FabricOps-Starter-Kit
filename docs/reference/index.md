@@ -82,10 +82,25 @@ Use the finder below to look up public callable functions.
   <p class="reference-catalogue-item-meta"><a class="reference-module-link" href="../api/modules/data_quality/" title="Open data_quality module page" aria-label="Open data_quality module page">data_quality</a> <span class="reference-catalogue-separator">·</span> <span>essential</span> <span class="reference-catalogue-separator">·</span> <span>03_pc</span></p>
   <p class="reference-catalogue-item-purpose">Enforce approved DQ rules and return structured deterministic outputs.</p>
 </article>
+<article id="extract_column_business_context_suggestions" class="reference-catalogue-item" data-callable-row="true" data-callable-name="extract_column_business_context_suggestions" data-callable-module="business_context" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Extract review-ready business context suggestion rows from AI responses.">
+  <h3 class="reference-catalogue-item-name"><a href="../api/reference/extract_column_business_context_suggestions/"><code>extract_column_business_context_suggestions</code></a></h3>
+  <p class="reference-catalogue-item-meta"><a class="reference-module-link" href="../api/modules/business_context/" title="Open business_context module page" aria-label="Open business_context module page">business_context</a> <span class="reference-catalogue-separator">·</span> <span>optional</span> <span class="reference-catalogue-separator">·</span> <span>—</span></p>
+  <p class="reference-catalogue-item-purpose">Extract review-ready business context suggestion rows from AI responses.</p>
+</article>
+<article id="extract_governance_suggestions" class="reference-catalogue-item" data-callable-row="true" data-callable-name="extract_governance_suggestions" data-callable-module="data_governance" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Extract review-ready governance suggestions from AI responses.">
+  <h3 class="reference-catalogue-item-name"><a href="../api/reference/extract_governance_suggestions/"><code>extract_governance_suggestions</code></a></h3>
+  <p class="reference-catalogue-item-meta"><a class="reference-module-link" href="../api/modules/data_governance/" title="Open data_governance module page" aria-label="Open data_governance module page">data_governance</a> <span class="reference-catalogue-separator">·</span> <span>optional</span> <span class="reference-catalogue-separator">·</span> <span>—</span></p>
+  <p class="reference-catalogue-item-purpose">Extract review-ready governance suggestions from AI responses.</p>
+</article>
 <article id="get_dq_review_results" class="reference-catalogue-item" data-callable-row="true" data-callable-name="get_dq_review_results" data-callable-module="data_quality" data-callable-starter-path="—" data-role="essential" data-callable-purpose="Collect current approved/rejected DQ review results from widget state.">
   <h3 class="reference-catalogue-item-name"><a href="../api/reference/get_dq_review_results/"><code>get_dq_review_results</code></a></h3>
   <p class="reference-catalogue-item-meta"><a class="reference-module-link" href="../api/modules/data_quality/" title="Open data_quality module page" aria-label="Open data_quality module page">data_quality</a> <span class="reference-catalogue-separator">·</span> <span>essential</span> <span class="reference-catalogue-separator">·</span> <span>—</span></p>
   <p class="reference-catalogue-item-purpose">Collect current approved/rejected DQ review results from widget state.</p>
+</article>
+<article id="get_reviewed_business_context_rows" class="reference-catalogue-item" data-callable-row="true" data-callable-name="get_reviewed_business_context_rows" data-callable-module="business_context" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Return reviewed business context rows from widget state.">
+  <h3 class="reference-catalogue-item-name"><a href="../api/reference/get_reviewed_business_context_rows/"><code>get_reviewed_business_context_rows</code></a></h3>
+  <p class="reference-catalogue-item-meta"><a class="reference-module-link" href="../api/modules/business_context/" title="Open business_context module page" aria-label="Open business_context module page">business_context</a> <span class="reference-catalogue-separator">·</span> <span>optional</span> <span class="reference-catalogue-separator">·</span> <span>—</span></p>
+  <p class="reference-catalogue-item-purpose">Return reviewed business context rows from widget state.</p>
 </article>
 <article id="get_selected_agreement" class="reference-catalogue-item" data-callable-row="true" data-callable-name="get_selected_agreement" data-callable-module="data_agreement" data-callable-starter-path="—" data-role="essential" data-callable-purpose="Return selected agreement from widget flow.">
   <h3 class="reference-catalogue-item-name"><a href="../api/reference/get_selected_agreement/"><code>get_selected_agreement</code></a></h3>
@@ -116,6 +131,16 @@ Use the finder below to look up public callable functions.
   <h3 class="reference-catalogue-item-name"><a href="../api/reference/load_notebook_registry/"><code>load_notebook_registry</code></a></h3>
   <p class="reference-catalogue-item-meta"><a class="reference-module-link" href="../api/modules/metadata/" title="Open metadata module page" aria-label="Open metadata module page">metadata</a> <span class="reference-catalogue-separator">·</span> <span>essential</span> <span class="reference-catalogue-separator">·</span> <span>—</span></p>
   <p class="reference-catalogue-item-purpose">Load notebook registration metadata rows for agreement notebook traceability.</p>
+</article>
+<article id="prepare_business_context_profile_input" class="reference-catalogue-item" data-callable-row="true" data-callable-name="prepare_business_context_profile_input" data-callable-module="business_context" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Prepare profile rows for business context prompt drafting.">
+  <h3 class="reference-catalogue-item-name"><a href="../api/reference/prepare_business_context_profile_input/"><code>prepare_business_context_profile_input</code></a></h3>
+  <p class="reference-catalogue-item-meta"><a class="reference-module-link" href="../api/modules/business_context/" title="Open business_context module page" aria-label="Open business_context module page">business_context</a> <span class="reference-catalogue-separator">·</span> <span>optional</span> <span class="reference-catalogue-separator">·</span> <span>—</span></p>
+  <p class="reference-catalogue-item-purpose">Prepare profile rows for business context prompt drafting.</p>
+</article>
+<article id="prepare_governance_input" class="reference-catalogue-item" data-callable-row="true" data-callable-name="prepare_governance_input" data-callable-module="data_governance" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Prepare governance prompt input rows from profile evidence and approved context.">
+  <h3 class="reference-catalogue-item-name"><a href="../api/reference/prepare_governance_input/"><code>prepare_governance_input</code></a></h3>
+  <p class="reference-catalogue-item-meta"><a class="reference-module-link" href="../api/modules/data_governance/" title="Open data_governance module page" aria-label="Open data_governance module page">data_governance</a> <span class="reference-catalogue-separator">·</span> <span>optional</span> <span class="reference-catalogue-separator">·</span> <span>—</span></p>
+  <p class="reference-catalogue-item-purpose">Prepare governance prompt input rows from profile evidence and approved context.</p>
 </article>
 <article id="profile_dataframe" class="reference-catalogue-item" data-callable-row="true" data-callable-name="profile_dataframe" data-callable-module="data_profiling" data-callable-starter-path="02_ex, 03_pc" data-role="essential" data-callable-purpose="Build canonical DQ-ready profiling rows from a Spark DataFrame.">
   <h3 class="reference-catalogue-item-name"><a href="../api/reference/profile_dataframe/"><code>profile_dataframe</code></a></h3>

@@ -18,8 +18,6 @@ MODULE_DIR = ROOT / "docs" / "api" / "modules"
 MKDOCS_PATH = ROOT / "mkdocs.yml"
 MANIFEST_PATH = ROOT / "docs" / "reference" / "manifest.json"
 CALLABLE_MAP_PATH = ROOT / "docs" / "reference" / "callable-map.md"
-CALLABLE_MAP_JSON_PATH = ROOT / "docs" / "reference" / "callable-map.json"
-CALLABLE_MAP_HTML_PATH = ROOT / "docs" / "assets" / "callable-map.html"
 
 PUBLIC_MODULE_PREFERRED_NAMES = {
     "config": "config",
@@ -377,57 +375,36 @@ def canonical_public_module(module_name: str) -> str:
     return PUBLIC_MODULE_PREFERRED_NAMES.get(module_name, module_name)
 
 
-def render_callable_map_page() -> str:
-    return "\n".join([
-        "# Callable Dependency Map",
-        "",
-        '!!! note "Maintainer diagnostic page"',
-        "    This page is generated from source code and is intended for maintainers.",
-        "    For normal usage, start with the Function Usage Guide or Function Reference.",
-        "",
-        '<iframe src="../../assets/callable-map.html" title="Callable lineage explorer" style="width:100%;height:78vh;min-height:640px;border:1px solid #2a2f3a;border-radius:8px;"></iframe>',
-        "",
-    ])
-
-
-def render_callable_map_html() -> str:
-    return """<!doctype html><html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
-<style>body{margin:0;font:14px system-ui;background:#0b1020;color:#d7deff}#app{display:flex;min-height:100vh}.title{font-size:16px;font-weight:700;margin-bottom:8px}#left{flex:1;padding:12px}#graphWrap{position:relative;overflow:hidden;border:1px solid #25304a;border-radius:8px;background:#0f1730}#right{width:34%;min-width:280px;border-left:1px solid #25304a;padding:12px;overflow:auto}input,select,button{background:#121a31;color:#d7deff;border:1px solid #2f3a58;border-radius:6px;padding:6px}button{cursor:pointer}svg{width:100%;height:72vh;touch-action:none}.node{cursor:pointer}.edge{stroke:#5a6a95;stroke-opacity:.24}.edge.hl{stroke:#ffd166;stroke-opacity:.95;stroke-width:2.2}.muted{opacity:.14}.legend span{display:inline-block;margin-right:8px}.pill{display:inline-block;padding:2px 7px;border-radius:999px;border:1px solid #2f3a58;background:#121a31;margin-right:5px}.empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#b9c4e8;font-weight:600}.controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}@media(max-width:900px){#app{flex-direction:column}#right{width:auto;min-width:0;border-left:none;border-top:1px solid #25304a}svg{height:56vh}}</style></head>
-<body><div id='app'><section id='left'><div class='title'>Callable Dependency Explorer</div><div class='controls'><input id='q' placeholder='Search callable'><select id='m'><option value=''>All modules</option></select><select id='r'><option value=''>All roles</option></select><button id='reset'>Reset view</button></div><div id='graphWrap'><svg id='g'></svg><div id='empty' class='empty' style='display:none'>No callables match the current filters.</div></div><div class='legend'><span>● public</span><span>● internal helper</span><span>● internal callable</span></div></section><aside id='right'><h3>Callable Inspector</h3><div id='ins'>Select a node.</div></aside></div>
-<script>
-const color=n=>n.exported?'#66d9ef':(n.is_underscore?'#ff6b6b':'#c792ea');
-fetch('../reference/callable-map.json').then(r=>r.json()).then(data=>{
-const qEl=document.getElementById('q'),mEl=document.getElementById('m'),rEl=document.getElementById('r'),ins=document.getElementById('ins');
-const svg=document.getElementById('g'),empty=document.getElementById('empty'),resetBtn=document.getElementById('reset');
-const nodes=data.nodes, edges=data.edges.filter(e=>e.callee_qualified_name), byQ=Object.fromEntries(nodes.map(n=>[n.qualified_name,n]));
-[...new Set(nodes.map(n=>n.module_name))].sort().forEach(m=>mEl.innerHTML+=`<option>${m}</option>`);
-[...new Set(nodes.map(n=>n.role))].sort().forEach(r=>rEl.innerHTML+=`<option>${r}</option>`);
-let sel=null, visNodes=[], visEdges=[], pos={}, camera={x:0,y:0,w:100,h:100};
-let pinchDist=0;
-const related=(q)=>{const up=new Set(),down=new Set();let ch=true;while(ch){ch=false;for(const e of visEdges){if(e.callee_qualified_name===q||up.has(e.callee_qualified_name)){if(!up.has(e.caller_qualified_name)){up.add(e.caller_qualified_name);ch=true}} if(e.caller_qualified_name===q||down.has(e.caller_qualified_name)){if(!down.has(e.callee_qualified_name)){down.add(e.callee_qualified_name);ch=true}}}}return{up,down}};
-const layout=()=>{const groups=new Map();for(const n of visNodes){if(!groups.has(n.module_name))groups.set(n.module_name,[]);groups.get(n.module_name).push(n)};const modules=[...groups.keys()].sort();const rowH=34,colGap=120,colPad=36;let x=0;pos={};for(const m of modules){const arr=groups.get(m).sort((a,b)=>a.callable_name.localeCompare(b.callable_name));const h=Math.max(100,arr.length*rowH+44);for(let i=0;i<arr.length;i++)pos[arr[i].qualified_name]={x:x+70,y:i*rowH+42-h/2};x+=Math.max(200,Math.min(320,140+arr.length*7))+colGap}if(modules.length===1){for(const k in pos)pos[k].x-=x/2}};
-const bounds=(keys)=>{const pts=keys.map(k=>pos[k]).filter(Boolean);if(!pts.length)return null;let minX=1e9,minY=1e9,maxX=-1e9,maxY=-1e9;for(const p of pts){minX=Math.min(minX,p.x);maxX=Math.max(maxX,p.x+140);minY=Math.min(minY,p.y-18);maxY=Math.max(maxY,p.y+18)}return{minX,minY,maxX,maxY}};
-const fit=(targetKeys)=>{const b=bounds(targetKeys||visNodes.map(n=>n.qualified_name));if(!b){camera={x:-50,y:-50,w:100,h:100};svg.setAttribute('viewBox',`${camera.x} ${camera.y} ${camera.w} ${camera.h}`);return;}const pad=48;const w=Math.max(260,b.maxX-b.minX+pad*2),h=Math.max(200,b.maxY-b.minY+pad*2);camera={x:b.minX-pad,y:b.minY-pad,w,h};svg.setAttribute('viewBox',`${camera.x} ${camera.y} ${camera.w} ${camera.h}`)};
-const draw=()=>{svg.innerHTML='';empty.style.display=visNodes.length?'none':'flex';if(!visNodes.length){ins.textContent='No callables match the current filters.';return;}layout();const rel=sel?related(sel):{up:new Set(),down:new Set()};for(const e of visEdges){const a=pos[e.caller_qualified_name],b=pos[e.callee_qualified_name];if(!a||!b)continue;const keep=!sel||(e.caller_qualified_name===sel||e.callee_qualified_name===sel||rel.up.has(e.caller_qualified_name)&&rel.up.has(e.callee_qualified_name)||rel.down.has(e.caller_qualified_name)&&rel.down.has(e.callee_qualified_name)||rel.up.has(e.caller_qualified_name)&&e.callee_qualified_name===sel||e.caller_qualified_name===sel&&rel.down.has(e.callee_qualified_name));svg.insertAdjacentHTML('beforeend',`<line class='edge ${keep&&sel?'hl':''} ${sel&&!keep?'muted':''}' x1='${a.x}' y1='${a.y}' x2='${b.x}' y2='${b.y}'/>`);}for(const n of visNodes){const p=pos[n.qualified_name];const keep=!sel||n.qualified_name===sel||rel.up.has(n.qualified_name)||rel.down.has(n.qualified_name);const stroke=n.qualified_name===sel?'#ffd166':'#1b2542';svg.insertAdjacentHTML('beforeend',`<g class='node ${keep?'':'muted'}' data-q='${n.qualified_name}'><circle cx='${p.x}' cy='${p.y}' r='8' fill='${color(n)}' stroke='${stroke}' stroke-width='2'/><text x='${p.x+12}' y='${p.y+4}' fill='#d7deff' font-size='12'>${n.callable_name}</text></g>`);}svg.querySelectorAll('.node').forEach(el=>el.onclick=()=>select(el.dataset.q));if(sel&&pos[sel]){const relKeys=[sel,...rel.up,...rel.down];fit(relKeys)}else fit();};
-function render(){const q=qEl.value.toLowerCase(),mf=mEl.value,rf=rEl.value;visNodes=nodes.filter(n=>(!q||n.callable_name.toLowerCase().includes(q)||n.qualified_name.toLowerCase().includes(q))&&(!mf||n.module_name===mf)&&(!rf||n.role===rf));const set=new Set(visNodes.map(n=>n.qualified_name));visEdges=edges.filter(e=>set.has(e.caller_qualified_name)&&set.has(e.callee_qualified_name));if(sel&&!set.has(sel))sel=null;draw();}
-function select(qn){sel=qn;const n=byQ[qn];const upstream=[...new Set(visEdges.filter(e=>e.callee_qualified_name===qn).map(e=>e.caller_qualified_name.split('.').slice(-2).join('.')))].sort();const downstream=[...new Set(visEdges.filter(e=>e.caller_qualified_name===qn).map(e=>e.callee_qualified_name.split('.').slice(-2).join('.')))].sort();const ctype=n.exported?'public callable':(n.is_underscore?'private helper':'internal callable');ins.innerHTML=`<div class='pill'>module: ${n.module_name}</div><div class='pill'>role: ${n.role}</div><div class='pill'>type: ${ctype}</div><h4 style='margin:10px 0 4px'>${n.callable_name}</h4><b>Upstream callers</b><br>${upstream.join('<br>')||'—'}<br><br><b>Downstream calls</b><br>${downstream.join('<br>')||'—'}`;draw();}
-[qEl,mEl,rEl].forEach(x=>x.oninput=render);resetBtn.onclick=()=>{sel=null;render()};
-svg.addEventListener('wheel',e=>{if(!visNodes.length)return;e.preventDefault();const f=e.deltaY<0?0.9:1.1;camera.w*=f;camera.h*=f;svg.setAttribute('viewBox',`${camera.x} ${camera.y} ${camera.w} ${camera.h}`)},{passive:false});
-let dragging=false,sx=0,sy=0;svg.addEventListener('pointerdown',e=>{dragging=true;sx=e.clientX;sy=e.clientY;svg.setPointerCapture(e.pointerId)});svg.addEventListener('pointermove',e=>{if(!dragging)return;const dx=(e.clientX-sx)*(camera.w/svg.clientWidth),dy=(e.clientY-sy)*(camera.h/svg.clientHeight);camera.x-=dx;camera.y-=dy;sx=e.clientX;sy=e.clientY;svg.setAttribute('viewBox',`${camera.x} ${camera.y} ${camera.w} ${camera.h}`)});svg.addEventListener('pointerup',()=>dragging=false);
-svg.addEventListener('touchstart',e=>{if(e.touches.length===2){const[a,b]=e.touches;pinchDist=Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY)}if(e.touches.length===1&&e.detail===2){sel=null;render()}},{passive:true});svg.addEventListener('touchmove',e=>{if(e.touches.length!==2||!pinchDist)return;const[a,b]=e.touches;const d=Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);const f=pinchDist/d;camera.w*=f;camera.h*=f;pinchDist=d;svg.setAttribute('viewBox',`${camera.x} ${camera.y} ${camera.w} ${camera.h}`)},{passive:true});
-render();
-});
-</script></body></html>"""
-
-
-def write_callable_map_manifest(nodes: list[dict[str, Any]], edges: list[dict[str, Any]], module_summary: list[dict[str, Any]]) -> None:
-    CALLABLE_MAP_JSON_PATH.parent.mkdir(parents=True, exist_ok=True)
-    CALLABLE_MAP_JSON_PATH.write_text(
-        json.dumps({"nodes": nodes, "edges": edges, "module_summary": module_summary}, indent=2) + "\n",
-        encoding="utf-8",
-    )
-    CALLABLE_MAP_HTML_PATH.parent.mkdir(parents=True, exist_ok=True)
-    CALLABLE_MAP_HTML_PATH.write_text(render_callable_map_html(), encoding="utf-8")
+def render_callable_map_page(nodes: list[dict[str, Any]], edges: list[dict[str, Any]], module_summary: list[dict[str, Any]]) -> str:
+    module_edges = sorted({(e["caller_qualified_name"].split(".")[-2], e["callee_qualified_name"].split(".")[-2]) for e in edges if e["callee_qualified_name"] and e["edge_type"] == "cross_module"})
+    public_nodes = sorted([n for n in nodes if n["exported"]], key=lambda x: (x["module_name"], x["callable_name"]))
+    helper_nodes = sorted([n for n in nodes if n["callable_name"].startswith("_")], key=lambda x: (x["module_name"], x["callable_name"]))
+    cross_edges = sorted([e for e in edges if e["callee_qualified_name"] and e["edge_type"] == "cross_module"], key=lambda x: (x["caller_qualified_name"], x["callee_qualified_name"]))
+    lines = ["# Callable Map", "", "This page is generated from FabricOps source code using static AST parsing. It shows module dependencies, public callables, internal helpers, and cross-module calls.", "", "## 1. Module dependency graph", "", "```mermaid", "flowchart LR"]
+    for caller, callee in module_edges:
+        lines.append(f"  {caller} --> {callee}")
+    lines.extend(["```", "", "## 2. Public callables by module", "", "| Module | Public callable | Referenced by |", "|---|---|---|"])
+    ref_by: dict[str, set[str]] = {}
+    for edge in edges:
+        if not edge["callee_qualified_name"]:
+            continue
+        ref_by.setdefault(edge["callee_qualified_name"], set()).add(edge["caller_qualified_name"])
+    for node in public_nodes:
+        qn = node["qualified_name"]
+        callers = sorted(ref_by.get(qn, set()))
+        lines.append(f"| `{node['module_name']}` | `{node['callable_name']}` | {', '.join(f'`{x}`' for x in callers) or '—'} |")
+    lines.extend(["", "## 3. Internal helper index", "", "| Module | Internal helper | Called by public callables |", "|---|---|---|"])
+    for node in helper_nodes:
+        qn = node["qualified_name"]
+        callers = sorted([x for x in ref_by.get(qn, set()) if x in {n['qualified_name'] for n in public_nodes}])
+        lines.append(f"| `{node['module_name']}` | `{node['callable_name']}` | {', '.join(f'`{x}`' for x in callers) or '—'} |")
+    lines.extend(["", "## 4. Cross-module FabricOps calls", "", "| Caller | Callee | Callee kind |", "|---|---|---|"])
+    for edge in cross_edges:
+        lines.append(f"| `{edge['caller_qualified_name']}` | `{edge['callee_qualified_name']}` | `{edge['callee_kind']}` |")
+    lines.extend(["", "## 5. Module dependency summary", "", "| Module | Calls modules | Called by modules | Public callables | Internal helpers |", "|---|---|---|---:|---:|"])
+    for row in module_summary:
+        lines.append(f"| `{row['module']}` | {', '.join(f'`{m}`' for m in row['calls_modules']) or '—'} | {', '.join(f'`{m}`' for m in row['called_by_modules']) or '—'} | {row['public_callable_count']} | {row['internal_helper_count']} |")
+    return "\n".join(lines) + "\n"
 
 
 def main() -> None:
@@ -673,12 +650,7 @@ def main() -> None:
     MANIFEST_PATH.write_text(json.dumps({"modules": manifest_modules, "callables": manifest_rows}, indent=2) + "\n", encoding="utf-8")
     nodes, edges, module_summary = build_callable_graph(module_data, symbol_map, public, docs_metadata)
     CALLABLE_MAP_PATH.parent.mkdir(parents=True, exist_ok=True)
-    CALLABLE_MAP_PATH.write_text(
-        render_callable_map_page(),
-        encoding="utf-8",
-        newline="\n",
-    )
-    write_callable_map_manifest(nodes, edges, module_summary)
+    CALLABLE_MAP_PATH.write_text(render_callable_map_page(nodes, edges, module_summary), encoding="utf-8", newline="\n")
 
     starter_symbol_to_notebooks: dict[str, set[str]] = {}
     for flow in template_flow_docs:
