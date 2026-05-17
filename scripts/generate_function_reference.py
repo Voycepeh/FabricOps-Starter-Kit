@@ -384,6 +384,11 @@ def render_callable_map_page(nodes: list[dict[str, Any]], edges: list[dict[str, 
         }
     )
     public_nodes = sorted([n for n in nodes if n["exported"]], key=lambda x: (x["module_name"], x["callable_name"]))
+    helper_nodes = sorted([n for n in nodes if n["callable_name"].startswith("_")], key=lambda x: (x["module_name"], x["callable_name"]))
+    cross_edges = sorted(
+        [e for e in edges if e["callee_qualified_name"] and e["edge_type"] == "cross_module"],
+        key=lambda x: (x["caller_qualified_name"], x["callee_qualified_name"]),
+    )
 
     lines = [
         "# Callable Map",
@@ -421,15 +426,40 @@ def render_callable_map_page(nodes: list[dict[str, Any]], edges: list[dict[str, 
     for mod in sorted(by_mod):
         lines.append(f"- `{mod}`: " + ", ".join(f"`{n}`" for n in sorted(by_mod[mod])))
 
-    lines.extend(
-        [
-            "",
-            "## 4. Notes",
-            "",
-            "This callable map intentionally stays concise.",
-            "Per-function callable flows and helper/callee details are generated on each public callable page.",
-        ]
-    )
+    ref_by: dict[str, set[str]] = {}
+    for edge in edges:
+        if edge["callee_qualified_name"]:
+            ref_by.setdefault(edge["callee_qualified_name"], set()).add(edge["caller_qualified_name"])
+
+    lines.extend(["", "## 4. Internal helper index", "", "| Module | Internal helper | Called by public callables |", "|---|---|---|"])
+    public_qns = {n["qualified_name"] for n in public_nodes}
+    for node in helper_nodes:
+        qn = node["qualified_name"]
+        callers = sorted([x for x in ref_by.get(qn, set()) if x in public_qns])
+        lines.append(
+            f"| `{node['module_name']}` | `{node['callable_name']}` | "
+            f"{', '.join(f'`{x}`' for x in callers) or '—'} |"
+        )
+
+    lines.extend(["", "## 5. Cross-module FabricOps calls", "", "| Caller | Callee | Callee kind |", "|---|---|---|"])
+    for edge in cross_edges:
+        lines.append(
+            f"| `{edge['caller_qualified_name']}` | `{edge['callee_qualified_name']}` | `{edge['callee_kind']}` |"
+        )
+
+    lines.extend(["", "## 6. Module dependency summary", "", "| Module | Calls modules | Called by modules | Public callables | Internal helpers |", "|---|---|---|---:|---:|"])
+    for row in module_summary:
+        lines.append(
+            f"| `{row['module']}` | {', '.join(f'`{m}`' for m in row['calls_modules']) or '—'} | "
+            f"{', '.join(f'`{m}`' for m in row['called_by_modules']) or '—'} | {row['public_callable_count']} | {row['internal_helper_count']} |"
+        )
+
+    lines.extend([
+        "",
+        "## 7. Notes",
+        "",
+        "Per-function callable flows and helper/callee details are generated on each public callable page.",
+    ])
     return "\n".join(lines) + "\n"
 
 
