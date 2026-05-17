@@ -40,3 +40,12 @@ def test_callable_map_excludes_iframe_and_script_tags() -> None:
     content = CALLABLE_MAP_FILE.read_text(encoding="utf-8")
     assert "<iframe" not in content
     assert "<script" not in content
+
+
+def test_callable_map_contains_non_trivial_module_edges() -> None:
+    generate_reference()
+    content = CALLABLE_MAP_FILE.read_text(encoding="utf-8")
+    assert (
+        "data_quality --> metadata" in content
+        or "fabric_input_output --> config" in content
+    )
