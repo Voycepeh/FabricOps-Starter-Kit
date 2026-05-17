@@ -191,6 +191,58 @@
   padding: 0 0.35rem;
 }
 
+
+.reference-catalogue-item-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: center;
+  margin-top: 0.18rem;
+}
+
+.reference-chip {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 999px;
+  padding: 0.08rem 0.55rem;
+  font-size: 0.74rem;
+  white-space: nowrap;
+  background: color-mix(in srgb, var(--md-default-bg-color) 94%, rgb(99, 102, 241) 6%);
+}
+
+.reference-chip-role.reference-chip-essential {
+  background: color-mix(in srgb, rgb(16, 185, 129) 18%, var(--md-default-bg-color));
+}
+
+.reference-chip-role.reference-chip-optional {
+  background: color-mix(in srgb, rgb(245, 158, 11) 18%, var(--md-default-bg-color));
+}
+
+.reference-catalogue-item-counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.45rem;
+  margin-top: 0.34rem;
+}
+
+.reference-count-details summary {
+  list-style: none;
+  cursor: pointer;
+}
+
+.reference-count-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.reference-count-details ul,
+.reference-count-details p {
+  margin: 0.32rem 0 0.1rem;
+  padding-left: 1.05rem;
+  font-size: 0.79rem;
+  color: var(--md-default-fg-color--light);
+}
+
 .reference-catalogue-item-purpose {
   margin: 0.34rem 0 0;
   font-size: 0.9rem;
@@ -252,16 +304,65 @@
     border-radius: 0.6rem;
   }
 
-  .reference-catalogue-item-meta {
-    display: none;
-  }
 
   .reference-catalogue-item-name {
     margin-bottom: 0.18rem;
     font-size: 0.96rem;
   }
 
-  .reference-catalogue-item-purpose {
+  
+.reference-catalogue-item-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: center;
+  margin-top: 0.18rem;
+}
+
+.reference-chip {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 999px;
+  padding: 0.08rem 0.55rem;
+  font-size: 0.74rem;
+  white-space: nowrap;
+  background: color-mix(in srgb, var(--md-default-bg-color) 94%, rgb(99, 102, 241) 6%);
+}
+
+.reference-chip-role.reference-chip-essential {
+  background: color-mix(in srgb, rgb(16, 185, 129) 18%, var(--md-default-bg-color));
+}
+
+.reference-chip-role.reference-chip-optional {
+  background: color-mix(in srgb, rgb(245, 158, 11) 18%, var(--md-default-bg-color));
+}
+
+.reference-catalogue-item-counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.45rem;
+  margin-top: 0.34rem;
+}
+
+.reference-count-details summary {
+  list-style: none;
+  cursor: pointer;
+}
+
+.reference-count-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.reference-count-details ul,
+.reference-count-details p {
+  margin: 0.32rem 0 0.1rem;
+  padding-left: 1.05rem;
+  font-size: 0.79rem;
+  color: var(--md-default-fg-color--light);
+}
+
+.reference-catalogue-item-purpose {
     margin-top: 0;
     font-size: 0.86rem;
     line-height: 1.38;

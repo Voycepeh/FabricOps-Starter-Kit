@@ -17,7 +17,6 @@ NOTEBOOK_STRUCTURE_DIR = ROOT / "docs" / "notebook-structure"
 MODULE_DIR = ROOT / "docs" / "api" / "modules"
 MKDOCS_PATH = ROOT / "mkdocs.yml"
 MANIFEST_PATH = ROOT / "docs" / "reference" / "manifest.json"
-CALLABLE_MAP_PATH = ROOT / "docs" / "reference" / "callable-map.md"
 DEPENDENCY_METADATA_PATH = ROOT / "docs" / "reference" / "dependency-metadata.json"
 
 PUBLIC_MODULE_PREFERRED_NAMES = {
@@ -871,9 +870,6 @@ def main() -> None:
         json.dumps({"callables": dependency_callables, "modules": dependency_modules}, indent=2) + "\n",
         encoding="utf-8",
     )
-    CALLABLE_MAP_PATH.parent.mkdir(parents=True, exist_ok=True)
-    CALLABLE_MAP_PATH.write_text(render_callable_map_page(nodes, edges, module_summary), encoding="utf-8", newline="\n")
-
     starter_symbol_to_notebooks: dict[str, set[str]] = {}
     for flow in template_flow_docs:
         notebook_key = flow["notebook_key"]
@@ -1073,23 +1069,19 @@ def main() -> None:
         ]
     )
     all_items: list[str] = []
-    calls_index: dict[str, set[str]] = {}
-    used_by_index: dict[str, set[str]] = {}
-    for edge in edges:
-        callee = edge.get("callee_qualified_name")
-        if not callee:
-            continue
-        caller = edge["caller_qualified_name"]
-        calls_index.setdefault(caller, set()).add(callee)
-        used_by_index.setdefault(callee, set()).add(caller)
     for s in sorted(function_symbol_map.values(), key=lambda x: x.name.lower()):
         symbol_link = public_reference_link(s.name, docs_metadata, context="reference")
         starter_path = ", ".join(sorted(starter_symbol_to_notebooks.get(s.name, set()))) or "—"
         purpose = s.purpose or s.summary or "—"
         qn = f"{PACKAGE_NAME}.{s.actual_module}.{s.name}"
-        calls_count = len(calls_index.get(qn, set()))
-        used_by_count = len(used_by_index.get(qn, set()))
-        internal_helper_count = len([c for c in calls_index.get(qn, set()) if c.startswith(f"{PACKAGE_NAME}.{s.actual_module}._")])
+        dependency_meta = dependency_callables.get(qn, {})
+        calls = dependency_meta.get("calls", [])
+        used_by = dependency_meta.get("used_by", [])
+        internal_helpers = dependency_meta.get("internal_helpers_used", [])
+        calls_count = int(dependency_meta.get("calls_count", len(calls)))
+        used_by_count = int(dependency_meta.get("used_by_count", len(used_by)))
+        internal_helper_count = int(dependency_meta.get("internal_helper_count", len(internal_helpers)))
+        classification_label = "Essential" if s.role == "essential" else "Optional"
         all_items.extend(
             [
                 (
@@ -1102,19 +1094,41 @@ def main() -> None:
                 ),
                 f'  <h3 class="reference-catalogue-item-name">{_anchor(symbol_link, s.name, code=True)}</h3>',
                 (
-                    '  <p class="reference-catalogue-item-meta">'
+                    '  <p class="reference-catalogue-item-meta reference-catalogue-item-badges">'
                     f'{_module_link(s.public_module)}'
-                    f' <span class="reference-catalogue-separator">·</span> <span>{_esc(s.role)}</span>'
-                    f' <span class="reference-catalogue-separator">·</span> <span>{_esc(starter_path)}</span>'
+                    f'<span class="reference-chip reference-chip-role reference-chip-{_esc(s.role)}">{_esc(classification_label)}</span>'
+                    f'<span class="reference-chip">{_esc(starter_path)}</span>'
                     "</p>"
+                ),
+                '  <div class="reference-catalogue-item-counts">',
+                (
+                    f'    <details class="reference-count-details"><summary><span class="reference-chip">Calls: {_esc(str(calls_count))}</span></summary>'
+                    + (
+                        "<ul>" + "".join(
+                            f'<li><code>{_esc(name.split(".")[-1])}</code></li>' for name in calls
+                        ) + "</ul>" if calls else "<p>None</p>"
+                    )
+                    + "</details>"
                 ),
                 (
-                    '  <p class="reference-catalogue-item-meta">'
-                    f'<span>Calls: {_esc(str(calls_count))}</span>'
-                    f' <span class="reference-catalogue-separator">·</span> <span>Used By: {_esc(str(used_by_count))}</span>'
-                    f' <span class="reference-catalogue-separator">·</span> <span>Internal Helpers: {_esc(str(internal_helper_count))}</span>'
-                    "</p>"
+                    f'    <details class="reference-count-details"><summary><span class="reference-chip">Used By: {_esc(str(used_by_count))}</span></summary>'
+                    + (
+                        "<ul>" + "".join(
+                            f'<li><code>{_esc(name.split(".")[-1])}</code></li>' for name in used_by
+                        ) + "</ul>" if used_by else "<p>None</p>"
+                    )
+                    + "</details>"
                 ),
+                (
+                    f'    <details class="reference-count-details"><summary><span class="reference-chip">Internal Helpers: {_esc(str(internal_helper_count))}</span></summary>'
+                    + (
+                        "<ul>" + "".join(
+                            f'<li><code>{_esc(name.split(".")[-1])}</code></li>' for name in internal_helpers
+                        ) + "</ul>" if internal_helpers else "<p>None</p>"
+                    )
+                    + "</details>"
+                ),
+                "  </div>",
                 f'  <p class="reference-catalogue-item-purpose">{_esc(purpose)}</p>',
                 "</article>",
             ]
