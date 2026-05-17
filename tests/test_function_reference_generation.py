@@ -332,7 +332,7 @@ def test_no_generated_public_callable_markdown_files_committed() -> None:
         for path in (ROOT / "docs" / "reference").glob("*.md")
         if path.name != "index.md"
     )
-    assert public_reference_files == ["callable-map.md", "function-usage-guide.md"]
+    assert public_reference_files == ["function-usage-guide.md"]
 
 
 def test_reference_links_to_flat_public_callable_pages() -> None:

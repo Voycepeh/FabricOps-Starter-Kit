@@ -155,23 +155,28 @@ for row in sorted(public_symbol_docs, key=lambda item: item["symbol_name"]):
     doc_path = f"api/reference/{symbol_name}.md"
     qn = f"{PACKAGE}.{module_name}.{symbol_name}"
     dep = dependency_metadata.get("callables", {}).get(qn, {})
-    calls = sorted(module_call_map.get(module_name, {}).get(symbol_name, set()))
-    helper_calls = [c for c in calls if c.startswith(f"{PACKAGE}.{module_name}._")]
+    dep_calls = sorted(dep.get("calls", []))
+    dep_used_by = sorted(dep.get("used_by", []))
+    dep_internal_helpers = sorted(dep.get("internal_helpers_used", []))
+    calls = dep_calls or sorted(module_call_map.get(module_name, {}).get(symbol_name, set()))
+    helper_calls = dep_internal_helpers or [c for c in calls if c.startswith(f"{PACKAGE}.{module_name}._")]
     cross = [c for c in calls if c.startswith(f"{PACKAGE}.") and not c.startswith(f"{PACKAGE}.{module_name}.")]
-    referenced_by = sorted(reverse_refs.get(qn, set()))
+    referenced_by = dep_used_by or sorted(reverse_refs.get(qn, set()))
 
     with mkdocs_gen_files.open(doc_path, "w") as fd:
         fd.write(f"# `{symbol_name}`\n\n")
-        fd.write("## Callable flow\n\n")
-        flow_edges = helper_calls + cross
-        if flow_edges:
-            fd.write("```mermaid\nflowchart TD\n")
-            for target in flow_edges[:20]:
-                fd.write(f"  {symbol_name} --> {target.split('.')[-1]}\n")
-            fd.write("```\n\n")
-        else:
-            fd.write("No direct FabricOps callable relationships detected.\n\n")
-        fd.write("## Callable relationships\n\n| Relationship | Callables |\n|---|---|\n")
+
+        calls_count = int(dep.get("calls_count", len(calls)))
+        used_by_count = int(dep.get("used_by_count", len(referenced_by)))
+        internal_helper_count = int(dep.get("internal_helper_count", len(helper_calls)))
+        classification = str(dep.get("classification", row.get("role", "optional"))).capitalize()
+
+        fd.write("## Dependency metadata\n\n")
+        fd.write(f"- Module: `{module_name}`\n")
+        fd.write(f"- Classification: {classification}\n")
+        fd.write(f"- Calls: {calls_count}\n")
+        fd.write(f"- Used By: {used_by_count}\n")
+        fd.write(f"- Internal Helpers: {internal_helper_count}\n\n")
 
         def link(c):
             m, n = c.split(".")[-2], c.split(".")[-1]
@@ -179,28 +184,64 @@ for row in sorted(public_symbol_docs, key=lambda item: item["symbol_name"]):
                 return f"[`{n}`](../{n}/)"
             return f"[`{n}`](../internal/{m}/{n}/)"
 
-        fd.write(f"| Internal helpers used | {', '.join(link(c) for c in helper_calls) or '—'} |\n")
-        fd.write(f"| Cross-module FabricOps calls | {', '.join(link(c) for c in cross) or '—'} |\n")
-        referenced_by_links: list[str] = []
-        for c in referenced_by:
-            m, n = c.split(".")[-2], c.split(".")[-1]
-            if n in exports:
-                referenced_by_links.append(f"[`{n}`](../{n}/)")
+        def _dep_details(title: str, items: list[str]) -> None:
+            fd.write(f"<details>\n<summary>{title}</summary>\n\n")
+            if not items:
+                fd.write("None\n")
             else:
-                referenced_by_links.append(f"`{PACKAGE}.{m}.{n}`")
-        fd.write(f"| Referenced by | {', '.join(referenced_by_links) or '—'} |\n\n")
-        fd.write("## Dependency Metadata\n\n")
-        fd.write(f"- Calls: {dep.get('calls_count', len(calls))} functions\n")
-        fd.write(f"- Used By: {dep.get('used_by_count', len(referenced_by))} functions\n")
-        fd.write(f"- Internal Helpers Used: {dep.get('internal_helper_count', len(helper_calls))}\n\n")
-        fd.write("## Function flow details\n\n| Step | Callable | Purpose |\n|---:|---|---|\n")
-        for i, c in enumerate(flow_edges[:20], start=1):
-            m, n = c.split(".")[-2], c.split(".")[-1]
-            purpose = modules.get(m, {}).get(n) or n.replace("_", " ").capitalize()
-            fd.write(f"| {i} | {link(c)} | {purpose} |\n")
-        if not flow_edges:
-            fd.write("| 1 | — | — |\n")
-        fd.write("\n")
+                for item in items:
+                    fd.write(f"- {link(item)}\n")
+            fd.write("\n</details>\n\n")
+
+        _dep_details("Calls", calls)
+        _dep_details("Used By", referenced_by)
+        _dep_details("Internal Helpers Used", helper_calls)
+
+        has_relationships = bool(helper_calls or cross or referenced_by)
+        flow_edges = helper_calls + cross
+        relationship_rows = []
+        if helper_calls:
+            relationship_rows.append(("Internal helpers used", ', '.join(link(c) for c in helper_calls)))
+        if cross:
+            relationship_rows.append(("Cross-module FabricOps calls", ', '.join(link(c) for c in cross)))
+        if referenced_by:
+            referenced_by_links: list[str] = []
+            for c in referenced_by:
+                m, n = c.split(".")[-2], c.split(".")[-1]
+                if n in exports:
+                    referenced_by_links.append(f"[`{n}`](../{n}/)")
+                else:
+                    referenced_by_links.append(f"`{PACKAGE}.{m}.{n}`")
+            relationship_rows.append(("Referenced by", ', '.join(referenced_by_links)))
+
+        src_to_dst = {}
+        dst_from_src = {}
+        for edge in flow_edges:
+            src_to_dst.setdefault(symbol_name, set()).add(edge)
+            dst_from_src.setdefault(edge, set()).add(symbol_name)
+        show_mermaid = any(len(v) >= 2 for v in src_to_dst.values()) or any(len(v) >= 2 for v in dst_from_src.values())
+
+        if show_mermaid and flow_edges:
+            fd.write("## Callable flow\n\n")
+            fd.write("```mermaid\nflowchart TD\n")
+            for target in flow_edges[:20]:
+                fd.write(f"  {symbol_name} --> {target.split('.')[-1]}\n")
+            fd.write("```\n\n")
+
+        if relationship_rows:
+            fd.write("## Callable relationships\n\n| Relationship | Callables |\n|---|---|\n")
+            for label, values in relationship_rows:
+                fd.write(f"| {label} | {values} |\n")
+            fd.write("\n")
+
+        if flow_edges:
+            fd.write("## Function flow details\n\n| Step | Callable | Purpose |\n|---:|---|---|\n")
+            for i, c in enumerate(flow_edges[:20], start=1):
+                m, n = c.split(".")[-2], c.split(".")[-1]
+                purpose = modules.get(m, {}).get(n) or n.replace("_", " ").capitalize()
+                fd.write(f"| {i} | {link(c)} | {purpose} |\n")
+            fd.write("\n")
+
         fd.write(f"::: {PACKAGE}.{module_name}.{symbol_name}\n")
         fd.write("    options:\n")
         fd.write("      show_root_heading: false\n")
