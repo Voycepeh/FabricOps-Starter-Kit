@@ -17,8 +17,7 @@ NOTEBOOK_STRUCTURE_DIR = ROOT / "docs" / "notebook-structure"
 MODULE_DIR = ROOT / "docs" / "api" / "modules"
 MKDOCS_PATH = ROOT / "mkdocs.yml"
 MANIFEST_PATH = ROOT / "docs" / "reference" / "manifest.json"
-CALLABLE_MAP_PATH = ROOT / "docs" / "reference" / "callable-map.md"
-DEPENDENCY_METADATA_PATH = ROOT / "docs" / "reference" / "dependency-metadata.json"
+DEPENDENCY_METADATA_PATH = ROOT / "docs" / "generated" / "dependency-metadata.json"
 
 PUBLIC_MODULE_PREFERRED_NAMES = {
     "config": "config",
@@ -376,89 +375,6 @@ def canonical_public_module(module_name: str) -> str:
     return PUBLIC_MODULE_PREFERRED_NAMES.get(module_name, module_name)
 
 
-def render_callable_map_page(nodes: list[dict[str, Any]], edges: list[dict[str, Any]], module_summary: list[dict[str, Any]]) -> str:
-    module_edges = sorted(
-        {
-            (e["caller_qualified_name"].split(".")[-2], e["callee_qualified_name"].split(".")[-2])
-            for e in edges
-            if e["callee_qualified_name"] and e["edge_type"] == "cross_module"
-        }
-    )
-    public_nodes = sorted([n for n in nodes if n["exported"]], key=lambda x: (x["module_name"], x["callable_name"]))
-    helper_nodes = sorted([n for n in nodes if n["callable_name"].startswith("_")], key=lambda x: (x["module_name"], x["callable_name"]))
-    cross_edges = sorted(
-        [e for e in edges if e["callee_qualified_name"] and e["edge_type"] == "cross_module"],
-        key=lambda x: (x["caller_qualified_name"], x["callee_qualified_name"]),
-    )
-
-    lines = [
-        "# Callable Map (Developer Diagnostic)",
-        "",
-        "This page is generated from FabricOps source code using static AST parsing.",
-        "",
-        "> Developer diagnostic only. Primary user documentation now lives on Function Reference and module pages.",
-        "",
-        "## 1. Module dependency graph",
-        "",
-        "```mermaid",
-        "flowchart LR",
-    ]
-    for caller, callee in module_edges:
-        lines.append(f"  {caller} --> {callee}")
-
-    lines.extend(
-        [
-            "```",
-            "",
-            "## 2. Module relationship summary",
-            "",
-            "| Module | Calls modules | Called by modules | Public callables |",
-            "|---|---|---|---:|",
-        ]
-    )
-    for row in module_summary:
-        lines.append(
-            f"| `{row['module']}` | {', '.join(f'`{m}`' for m in row['calls_modules']) or '—'} | "
-            f"{', '.join(f'`{m}`' for m in row['called_by_modules']) or '—'} | {row['public_callable_count']} |"
-        )
-
-    lines.extend(["", "## 3. Public callables grouped by module", ""])
-    by_mod: dict[str, list[str]] = {}
-    for node in public_nodes:
-        by_mod.setdefault(node["module_name"], []).append(node["callable_name"])
-    for mod in sorted(by_mod):
-        lines.append(f"- `{mod}`: " + ", ".join(f"`{n}`" for n in sorted(by_mod[mod])))
-
-    ref_by: dict[str, set[str]] = {}
-    for edge in edges:
-        if edge["callee_qualified_name"]:
-            ref_by.setdefault(edge["callee_qualified_name"], set()).add(edge["caller_qualified_name"])
-
-    lines.extend(["", "## 4. Internal helper index", "", "| Module | Internal helper | Called by public callables |", "|---|---|---|"])
-    public_qns = {n["qualified_name"] for n in public_nodes}
-    for node in helper_nodes:
-        qn = node["qualified_name"]
-        callers = sorted([x for x in ref_by.get(qn, set()) if x in public_qns])
-        lines.append(
-            f"| `{node['module_name']}` | `{node['callable_name']}` | "
-            f"{', '.join(f'`{x}`' for x in callers) or '—'} |"
-        )
-
-    lines.extend(["", "## 5. Cross-module FabricOps calls", "", "| Caller | Callee | Callee kind |", "|---|---|---|"])
-    for edge in cross_edges:
-        lines.append(
-            f"| `{edge['caller_qualified_name']}` | `{edge['callee_qualified_name']}` | `{edge['callee_kind']}` |"
-        )
-
-    lines.extend([
-        "",
-        "## 6. Notes",
-        "",
-        "Per-function callable flows and helper/callee details are generated on each public callable page.",
-    ])
-    return "\n".join(lines) + "\n"
-
-
 def main() -> None:
     public = parse_public_exports()
     module_data = {p.stem: parse_module(p) for p in PKG_DIR.glob("*.py") if p.name != "__init__.py"}
@@ -778,7 +694,7 @@ def main() -> None:
             "sidebar_include": meta.get("sidebar_include", True),
         })
     MANIFEST_PATH.write_text(json.dumps({"modules": manifest_modules, "callables": manifest_rows}, indent=2) + "\n", encoding="utf-8")
-    nodes, edges, module_summary = build_callable_graph(module_data, symbol_map, public, docs_metadata)
+    nodes, edges, _ = build_callable_graph(module_data, symbol_map, public, docs_metadata)
     node_by_qn = {n["qualified_name"]: n for n in nodes}
     calls_by_qn: dict[str, list[str]] = {}
     used_by_qn: dict[str, list[str]] = {}
@@ -831,12 +747,11 @@ def main() -> None:
             "outbound_count": len(out_mods),
             "inbound_count": len(in_mods),
         }
+    DEPENDENCY_METADATA_PATH.parent.mkdir(parents=True, exist_ok=True)
     DEPENDENCY_METADATA_PATH.write_text(
         json.dumps({"callables": dependency_callables, "modules": dependency_modules}, indent=2) + "\n",
         encoding="utf-8",
     )
-    CALLABLE_MAP_PATH.parent.mkdir(parents=True, exist_ok=True)
-    CALLABLE_MAP_PATH.write_text(render_callable_map_page(nodes, edges, module_summary), encoding="utf-8", newline="\n")
 
     starter_symbol_to_notebooks: dict[str, set[str]] = {}
     for flow in template_flow_docs:

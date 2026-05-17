@@ -19,7 +19,7 @@ NOISE_CALLS = {
     "widgets.VBox",
     "widgets.HTML",
 }
-DEPENDENCY_METADATA_PATH = Path(__file__).resolve().parents[1] / "docs" / "reference" / "dependency-metadata.json"
+DEPENDENCY_METADATA_PATH = Path(__file__).resolve().parents[1] / "docs" / "generated" / "dependency-metadata.json"
 
 
 def _read_literal(path: Path, name: str):
