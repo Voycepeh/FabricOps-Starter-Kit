@@ -17,7 +17,7 @@ NOTEBOOK_STRUCTURE_DIR = ROOT / "docs" / "notebook-structure"
 MODULE_DIR = ROOT / "docs" / "api" / "modules"
 MKDOCS_PATH = ROOT / "mkdocs.yml"
 MANIFEST_PATH = ROOT / "docs" / "reference" / "manifest.json"
-CALLABLE_MAP_PATH = ROOT / "docs" / "reference" / "callable-map.md"
+CALLABLE_MAP_PATH = ROOT / ".artifacts" / "callable-map.md"
 DEPENDENCY_METADATA_PATH = ROOT / "docs" / "reference" / "dependency-metadata.json"
 
 PUBLIC_MODULE_PREFERRED_NAMES = {
