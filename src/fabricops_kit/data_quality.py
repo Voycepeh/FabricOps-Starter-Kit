@@ -90,7 +90,7 @@ def _suggest_dq_rules(profile_df, prompt_template: str | None = None, output_col
     return profile_df.ai.generate_response(prompt=active_prompt, output_col=output_col)
 
 
-def __parse_dq_rules_dict_from_text(text: str) -> dict[str, list[dict[str, Any]]]:
+def _parse_dq_rules_dict_from_text(text: str) -> dict[str, list[dict[str, Any]]]:
     cleaned = str(text or "").strip()
     match = re.search(r"DQ_RULES\s*=\s*(\{.*\})", cleaned, flags=re.DOTALL)
     payload = match.group(1) if match else cleaned
@@ -101,10 +101,8 @@ def __parse_dq_rules_dict_from_text(text: str) -> dict[str, list[dict[str, Any]]
     return parsed if isinstance(parsed, dict) else {}
 
 
-_parse_dq_rules_dict_from_text = __parse_dq_rules_dict_from_text
 
-
-def _prepare_dq_profile_input_rows(profile_rows: list[dict], table_name: str, column_contexts: list[dict]) -> list[dict]:
+def _prepare_dq_profile_rows_with_context(profile_rows: list[dict], table_name: str, column_contexts: list[dict]) -> list[dict]:
     """Join approved column business context into profile rows before DQ AI suggestion."""
     context_lookup = {r["column_name"]: r for r in column_contexts or [] if r.get("column_name")}
     out = []
@@ -140,7 +138,7 @@ def _extract_dq_rules(response_df, table_name: str, response_col: str = "respons
     """Extract notebook-shaped AI responses and deduplicate candidate DQ rules by ``rule_id``."""
     candidates: list[dict[str, Any]] = []
     for row in response_df.select(response_col).collect():
-        candidates.extend(__parse_dq_rules_dict_from_text(row[response_col]).get(table_name, []))
+        candidates.extend(_parse_dq_rules_dict_from_text(row[response_col]).get(table_name, []))
     deduped: dict[str, dict[str, Any]] = {}
     for rule in candidates:
         rid = rule.get("rule_id")
@@ -194,7 +192,7 @@ def _extract_candidate_rules_from_responses(response_rows, table_name: str, resp
     candidates: list[dict[str, Any]] = []
     for row in response_rows or []:
         text = row.get(response_col) or row.get("response") or ""
-        candidates.extend(__parse_dq_rules_dict_from_text(text).get(table_name, []))
+        candidates.extend(_parse_dq_rules_dict_from_text(text).get(table_name, []))
     by_id = {r.get("rule_id"): r for r in candidates if r.get("rule_id")}
     return list(by_id.values())
 
@@ -495,7 +493,7 @@ def assert_dq_passed(dq_result_df) -> None:
 
 
 
-def __prepare_dq_profile_input_rows(*, profile_df=None, df=None, table_name: str, business_context: str = ""):
+def _prepare_dq_profile_input_rows(*, profile_df=None, df=None, table_name: str, business_context: str = ""):
     if (profile_df is None) == (df is None):
         raise ValueError("Provide exactly one of profile_df or df.")
     if profile_df is None:
@@ -522,7 +520,7 @@ def __prepare_dq_profile_input_rows(*, profile_df=None, df=None, table_name: str
 
 def draft_dq_rules(*, profile_df=None, df=None, table_name: str, business_context: str = "", prompt_template: str | None = None, output_col: str = "response") -> list[dict[str, Any]]:
     """Draft candidate DQ rules from metadata profiles or raw DataFrame fallback."""
-    prepared = __prepare_dq_profile_input_rows(profile_df=profile_df, df=df, table_name=table_name, business_context=business_context)
+    prepared = _prepare_dq_profile_input_rows(profile_df=profile_df, df=df, table_name=table_name, business_context=business_context)
     responses = _suggest_dq_rules(prepared, prompt_template=prompt_template, output_col=output_col)
     return _extract_dq_rules(responses, table_name=table_name, response_col=output_col)
 

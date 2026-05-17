@@ -2,7 +2,7 @@ from fabricops_kit.business_context import _extract_column_business_context_sugg
 import fabricops_kit.business_context as business_context
 from fabricops_kit.config import ReviewWorkflowConfig
 from fabricops_kit.data_governance import extract_personal_identifier_suggestions, prepare_governance_profile_input
-from fabricops_kit.data_quality import _approved_dq_rules_from_review_rows, _prepare_dq_profile_input_rows
+from fabricops_kit.data_quality import _approved_dq_rules_from_review_rows, _prepare_dq_profile_rows_with_context
 
 
 def test_business_context_profile_shaping_and_extraction():
@@ -15,7 +15,7 @@ def test_business_context_profile_shaping_and_extraction():
 def test_dq_profile_prep_and_approved_extraction():
     profile_rows = [{"column_name": "id", "data_type": "string"}, {"column_name": "status", "data_type": "string"}]
     contexts = [{"column_name": "id", "approved_business_context": "Identifier"}]
-    prepared = _prepare_dq_profile_input_rows(profile_rows, table_name="orders", column_contexts=contexts)
+    prepared = _prepare_dq_profile_rows_with_context(profile_rows, table_name="orders", column_contexts=contexts)
     assert len(prepared) == 1
     approved = _approved_dq_rules_from_review_rows([{"approval_status": "approved", "proposed_rule_payload": "{'rule_id': 'id_not_null'}"}])
     assert approved[0]["rule_id"] == "id_not_null"

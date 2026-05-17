@@ -104,7 +104,7 @@ Use the finder below to look up public callable functions.
   <p class="reference-catalogue-item-purpose">Draft candidate DQ rules from metadata profiles or raw DataFrame fallback.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_quality/" title="Open data_quality module page" aria-label="Open data_quality module page">data_quality</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">02_ex</span></p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 3</span></summary><ul><li><code>__prepare_dq_profile_input_rows</code></li><li><code>_extract_dq_rules</code></li><li><code>_suggest_dq_rules</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 3</span></summary><ul><li><code>_extract_dq_rules</code></li><li><code>_prepare_dq_profile_input_rows</code></li><li><code>_suggest_dq_rules</code></li></ul></details>
 
   </div>
 </article>
@@ -240,7 +240,7 @@ Use the finder below to look up public callable functions.
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_profiling/" title="Open data_profiling module page" aria-label="Open data_profiling module page">data_profiling</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">02_ex, 03_pc</span></p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>_get_profiled_columns</code></li><li><code>_is_min_max_supported_type</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>__prepare_dq_profile_input_rows</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_prepare_dq_profile_input_rows</code></li></ul></details>
   </div>
 </article>
 <article id="read_lakehouse_csv" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_lakehouse_csv" data-callable-module="fabric_input_output" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Read a CSV file from a Fabric lakehouse Files path.">
@@ -342,6 +342,15 @@ Use the finder below to look up public callable functions.
 
   </div>
 </article>
+<article id="run_dq_rule_review_widget" class="reference-catalogue-item" data-callable-row="true" data-callable-name="run_dq_rule_review_widget" data-callable-module="data_quality" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Render the notebook widget for human review and approval/rejection of candidate DQ rules.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/run_dq_rule_review_widget/"><code>run_dq_rule_review_widget</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Render the notebook widget for human review and approval/rejection of candidate DQ rules.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_quality/" title="Open data_quality module page" aria-label="Open data_quality module page">data_quality</a><span class="reference-chip reference-chip-role reference-chip-optional">Optional</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>review_dq_rules</code></li></ul></details>
+
+  </div>
+</article>
 <article id="select_agreement" class="reference-catalogue-item" data-callable-row="true" data-callable-name="select_agreement" data-callable-module="data_agreement" data-callable-starter-path="—" data-role="essential" data-callable-purpose="Render a widget dropdown and store selected agreement metadata row in module state.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/select_agreement/"><code>select_agreement</code></a></h3>
   <p class="reference-catalogue-item-purpose">Render a widget dropdown and store selected agreement metadata row in module state.</p>
@@ -365,7 +374,7 @@ Use the finder below to look up public callable functions.
   <p class="reference-catalogue-item-purpose">Apply canonical technical/audit enrichment in one notebook-facing wrapper.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/technical_columns/" title="Open technical_columns module page" aria-label="Open technical_columns module page">technical_columns</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">03_pc</span></p>
   <div class="reference-catalogue-item-counts">
-
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 3</span></summary><ul><li><code>_add_audit_columns</code></li><li><code>_add_datetime_features</code></li><li><code>_add_hash_columns</code></li></ul></details>
 
   </div>
 </article>

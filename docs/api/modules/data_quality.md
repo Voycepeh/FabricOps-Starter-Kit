@@ -6,7 +6,7 @@
 
 ## Module dependency summary
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 9</span><span class="reference-chip">Outbound: 3</span><span class="reference-chip">Inbound: 0</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 10</span><span class="reference-chip">Outbound: 3</span><span class="reference-chip">Inbound: 0</span></div>
 
 ## Module purpose
 
@@ -38,7 +38,7 @@ Owns DQ rule drafting, review, enforcement, quarantine, and quality results.
       <td>Essential</td>
       <td>function</td>
       <td>Draft candidate DQ rules from metadata profiles or raw DataFrame fallback.</td>
-      <td><a href="../../reference/internal/data_quality/__prepare_dq_profile_input_rows/"><code>__prepare_dq_profile_input_rows</code></a> (internal), <a href="../../reference/internal/data_quality/_extract_dq_rules/"><code>_extract_dq_rules</code></a> (internal), <a href="../../reference/internal/data_quality/_suggest_dq_rules/"><code>_suggest_dq_rules</code></a> (internal)</td>
+      <td><a href="../../reference/internal/data_quality/_extract_dq_rules/"><code>_extract_dq_rules</code></a> (internal), <a href="../../reference/internal/data_quality/_prepare_dq_profile_input_rows/"><code>_prepare_dq_profile_input_rows</code></a> (internal), <a href="../../reference/internal/data_quality/_suggest_dq_rules/"><code>_suggest_dq_rules</code></a> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/enforce_dq/"><code>enforce_dq</code></a></td>
@@ -83,6 +83,13 @@ Owns DQ rule drafting, review, enforcement, quarantine, and quality results.
       <td><a href="../../reference/internal/data_quality/_require_ipywidgets/"><code>_require_ipywidgets</code></a> (internal)</td>
     </tr>
     <tr>
+      <td><a href="../../reference/run_dq_rule_review_widget/"><code>run_dq_rule_review_widget</code></a></td>
+      <td>Optional</td>
+      <td>function</td>
+      <td>Render the notebook widget for human review and approval/rejection of candidate DQ rules.</td>
+      <td>—</td>
+    </tr>
+    <tr>
       <td><a href="../../reference/validate_dq_rules/"><code>validate_dq_rules</code></a></td>
       <td>Optional</td>
       <td>function</td>
@@ -112,14 +119,6 @@ Split a Spark DataFrame into pass/quarantine outputs for row-level DQ rules.
     </tr>
   </thead>
   <tbody>
-    <tr>
-      <td><a href="../../reference/internal/data_quality/__parse_dq_rules_dict_from_text/"><code>__parse_dq_rules_dict_from_text</code></a></td>
-      <td>—</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/internal/data_quality/__prepare_dq_profile_input_rows/"><code>__prepare_dq_profile_input_rows</code></a></td>
-      <td><a href="../../reference/draft_dq_rules/"><code>draft_dq_rules</code></a></td>
-    </tr>
     <tr>
       <td><a href="../../reference/internal/data_quality/_approved_dq_rules_from_review_rows/"><code>_approved_dq_rules_from_review_rows</code></a></td>
       <td>—</td>
@@ -165,7 +164,15 @@ Split a Spark DataFrame into pass/quarantine outputs for row-level DQ rules.
       <td><a href="../../reference/enforce_dq/"><code>enforce_dq</code></a>, <a href="../../reference/load_dq_rules/"><code>load_dq_rules</code></a></td>
     </tr>
     <tr>
+      <td><a href="../../reference/internal/data_quality/_parse_dq_rules_dict_from_text/"><code>_parse_dq_rules_dict_from_text</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
       <td><a href="../../reference/internal/data_quality/_prepare_dq_profile_input_rows/"><code>_prepare_dq_profile_input_rows</code></a></td>
+      <td><a href="../../reference/draft_dq_rules/"><code>draft_dq_rules</code></a></td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/data_quality/_prepare_dq_profile_rows_with_context/"><code>_prepare_dq_profile_rows_with_context</code></a></td>
       <td>—</td>
     </tr>
     <tr>
@@ -206,16 +213,16 @@ Split a Spark DataFrame into pass/quarantine outputs for row-level DQ rules.
 <div class="module-mermaid-scroll">
 ```mermaid
 flowchart LR
-  n1["data_quality._extract_candidate_rules_from_responses"] --> n1b["data_quality.__parse_dq_rules_dict_from_text"]
-  n2["data_quality._extract_candidate_rules_from_responses"] --> n2b["data_quality._extract_dq_rules"]
-  n3["data_quality._extract_dq_rules"] --> n3b["data_quality.__parse_dq_rules_dict_from_text"]
+  n1["data_quality._extract_candidate_rules_from_responses"] --> n1b["data_quality._extract_dq_rules"]
+  n2["data_quality._extract_candidate_rules_from_responses"] --> n2b["data_quality._parse_dq_rules_dict_from_text"]
+  n3["data_quality._extract_dq_rules"] --> n3b["data_quality._parse_dq_rules_dict_from_text"]
   n4["data_quality._load_active_dq_rule_metadata"] --> n4b["data_quality._latest_dq_rule_versions"]
   n5["data_quality._load_active_dq_rules"] --> n5b["data_quality._latest_dq_rule_versions"]
   n6["data_quality._run_dq_rules"] --> n6b["data_quality._split_dq_rows"]
   n7["data_quality._run_dq_rules"] --> n7b["data_quality.validate_dq_rules"]
   n8["data_quality._split_dq_rows"] --> n8b["data_quality.validate_dq_rules"]
-  n9["data_quality.draft_dq_rules"] --> n9b["data_quality.__prepare_dq_profile_input_rows"]
-  n10["data_quality.draft_dq_rules"] --> n10b["data_quality._extract_dq_rules"]
+  n9["data_quality.draft_dq_rules"] --> n9b["data_quality._extract_dq_rules"]
+  n10["data_quality.draft_dq_rules"] --> n10b["data_quality._prepare_dq_profile_input_rows"]
   n11["data_quality.draft_dq_rules"] --> n11b["data_quality._suggest_dq_rules"]
   n12["data_quality.enforce_dq"] --> n12b["data_quality._load_active_dq_rules"]
   n13["data_quality.enforce_dq"] --> n13b["data_quality._run_dq_rules"]
@@ -241,16 +248,16 @@ flowchart LR
 <div class="module-mermaid-scroll">
 ```mermaid
 flowchart LR
-  c1["data_quality.__prepare_dq_profile_input_rows"] --> d1["data_profiling.profile_dataframe"]
-  c2["data_quality._attach_rule_metadata_keys"] --> d2["metadata.build_dq_rule_key"]
-  c3["data_quality._attach_rule_metadata_keys"] --> d3["metadata.build_metadata_column_key"]
-  c4["data_quality._attach_rule_metadata_keys"] --> d4["metadata.build_metadata_table_key"]
-  c5["data_quality._build_dq_rule_deactivation_metadata_df"] --> d5["metadata._now_utc_iso"]
-  c6["data_quality._build_dq_rule_deactivation_metadata_df"] --> d6["metadata._resolve_action_by"]
-  c7["data_quality._build_dq_rule_deactivations"] --> d7["metadata._resolve_action_by"]
-  c8["data_quality._build_dq_rule_history"] --> d8["metadata._resolve_action_by"]
-  c9["data_quality._build_dq_rules_metadata_df"] --> d9["metadata._now_utc_iso"]
-  c10["data_quality._build_dq_rules_metadata_df"] --> d10["metadata._resolve_action_by"]
+  c1["data_quality._attach_rule_metadata_keys"] --> d1["metadata.build_dq_rule_key"]
+  c2["data_quality._attach_rule_metadata_keys"] --> d2["metadata.build_metadata_column_key"]
+  c3["data_quality._attach_rule_metadata_keys"] --> d3["metadata.build_metadata_table_key"]
+  c4["data_quality._build_dq_rule_deactivation_metadata_df"] --> d4["metadata._now_utc_iso"]
+  c5["data_quality._build_dq_rule_deactivation_metadata_df"] --> d5["metadata._resolve_action_by"]
+  c6["data_quality._build_dq_rule_deactivations"] --> d6["metadata._resolve_action_by"]
+  c7["data_quality._build_dq_rule_history"] --> d7["metadata._resolve_action_by"]
+  c8["data_quality._build_dq_rules_metadata_df"] --> d8["metadata._now_utc_iso"]
+  c9["data_quality._build_dq_rules_metadata_df"] --> d9["metadata._resolve_action_by"]
+  c10["data_quality._prepare_dq_profile_input_rows"] --> d10["data_profiling.profile_dataframe"]
   c11["data_quality.write_dq_rules"] --> d11["fabric_input_output.write_lakehouse_table"]
 ```
 </div>
