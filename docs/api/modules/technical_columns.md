@@ -100,7 +100,7 @@ Owns standard output/audit columns for pipeline outputs.
 
 </details>
 
-### Inside this module, used by, and uses
+### Callable relationships
 
 <div class="module-mermaid-scroll module-diagram-desktop">
 ```mermaid
@@ -140,6 +140,7 @@ flowchart LR
   fabricops_kit_technical_columns_standardize_columns --> fabricops_kit_technical_columns__add_datetime_features
   fabricops_kit_technical_columns_standardize_columns --> fabricops_kit_technical_columns__add_hash_columns
   class m_technical_columns currentModule;
+  class m_data_profiling externalModule;
   class fabricops_kit_technical_columns__add_audit_columns,fabricops_kit_technical_columns__add_datetime_features,fabricops_kit_technical_columns__add_hash_columns,fabricops_kit_technical_columns__assert_columns_exist,fabricops_kit_technical_columns__bucket_values_pandas,fabricops_kit_technical_columns__default_technical_columns,fabricops_kit_technical_columns__get_fabric_runtime_context,fabricops_kit_technical_columns__hash_row,fabricops_kit_technical_columns__non_technical_columns,fabricops_kit_technical_columns__safe_string,fabricops_kit_technical_columns_standardize_columns currentCallable;
   class fabricops_kit_data_profiling__get_profiled_columns externalCallable;
 ```
@@ -163,12 +164,12 @@ flowchart LR
 <a class="reference-chip" href="../../reference/standardize_columns/"><code>standardize_columns</code></a> → <a class="reference-chip" href="../modules/technical_columns/#_add_datetime_features"><code>_add_datetime_features</code></a>
 <a class="reference-chip" href="../../reference/standardize_columns/"><code>standardize_columns</code></a> → <a class="reference-chip" href="../modules/technical_columns/#_add_hash_columns"><code>_add_hash_columns</code></a>
 </div>
-#### Used by
+#### Used by other modules
 
 <div class="callable-chip-group">
 <a class="reference-chip" href="../modules/data_profiling/#_get_profiled_columns"><code>_get_profiled_columns</code></a> → <a class="reference-chip" href="../modules/technical_columns/#_default_technical_columns"><code>_default_technical_columns</code></a>
 </div>
-#### Uses
+#### Uses other modules
 
 None.
 </div>

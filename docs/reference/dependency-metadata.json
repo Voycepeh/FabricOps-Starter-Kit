@@ -1,227 +1,5 @@
 {
   "callables": {
-    "fabricops_kit.data_lineage._build_lineage_record_from_steps": {
-      "module": "data_lineage",
-      "callable": "_build_lineage_record_from_steps",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.data_lineage._validate_lineage_steps"
-      ],
-      "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.data_lineage._build_lineage_records"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [
-        "fabricops_kit.data_lineage._validate_lineage_steps"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.data_lineage._build_lineage_records": {
-      "module": "data_lineage",
-      "callable": "_build_lineage_records",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.data_lineage._build_lineage_record_from_steps"
-      ],
-      "calls_count": 1,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [
-        "fabricops_kit.data_lineage._build_lineage_record_from_steps"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.data_lineage._call_name": {
-      "module": "data_lineage",
-      "callable": "_call_name",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.data_lineage._scan_notebook_lineage"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.data_lineage._enrich_lineage_steps_with_ai": {
-      "module": "data_lineage",
-      "callable": "_enrich_lineage_steps_with_ai",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.data_lineage._fallback_copilot_lineage_prompt"
-      ],
-      "calls_count": 1,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [
-        "fabricops_kit.data_lineage._fallback_copilot_lineage_prompt"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.data_lineage._fallback_copilot_lineage_prompt": {
-      "module": "data_lineage",
-      "callable": "_fallback_copilot_lineage_prompt",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.data_lineage._enrich_lineage_steps_with_ai"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.data_lineage._flatten_chain": {
-      "module": "data_lineage",
-      "callable": "_flatten_chain",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.data_lineage._name"
-      ],
-      "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.data_lineage._scan_notebook_lineage"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [
-        "fabricops_kit.data_lineage._name"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.data_lineage._literal": {
-      "module": "data_lineage",
-      "callable": "_literal",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.data_lineage._resolve_write_target"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.data_lineage._name": {
-      "module": "data_lineage",
-      "callable": "_name",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.data_lineage._flatten_chain",
-        "fabricops_kit.data_lineage._scan_notebook_lineage"
-      ],
-      "used_by_count": 2,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.data_lineage._resolve_write_target": {
-      "module": "data_lineage",
-      "callable": "_resolve_write_target",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.data_lineage._literal"
-      ],
-      "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.data_lineage._scan_notebook_lineage"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [
-        "fabricops_kit.data_lineage._literal"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.data_lineage._scan_notebook_cells": {
-      "module": "data_lineage",
-      "callable": "_scan_notebook_cells",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.data_lineage._scan_notebook_lineage"
-      ],
-      "calls_count": 1,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [
-        "fabricops_kit.data_lineage._scan_notebook_lineage"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.data_lineage._scan_notebook_lineage": {
-      "module": "data_lineage",
-      "callable": "_scan_notebook_lineage",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.data_lineage._call_name",
-        "fabricops_kit.data_lineage._flatten_chain",
-        "fabricops_kit.data_lineage._name",
-        "fabricops_kit.data_lineage._resolve_write_target",
-        "fabricops_kit.data_lineage._step"
-      ],
-      "calls_count": 5,
-      "used_by": [
-        "fabricops_kit.data_lineage._scan_notebook_cells"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [
-        "fabricops_kit.data_lineage._call_name",
-        "fabricops_kit.data_lineage._flatten_chain",
-        "fabricops_kit.data_lineage._name",
-        "fabricops_kit.data_lineage._resolve_write_target",
-        "fabricops_kit.data_lineage._step"
-      ],
-      "internal_helper_count": 5
-    },
-    "fabricops_kit.data_lineage._step": {
-      "module": "data_lineage",
-      "callable": "_step",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.data_lineage._scan_notebook_lineage"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.data_lineage._validate_lineage_steps": {
-      "module": "data_lineage",
-      "callable": "_validate_lineage_steps",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.data_lineage._build_lineage_record_from_steps"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.data_lineage.build_lineage_handover_markdown": {
-      "module": "data_lineage",
-      "callable": "build_lineage_handover_markdown",
-      "classification": "essential",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.data_lineage.build_lineage_records": {
-      "module": "data_lineage",
-      "callable": "build_lineage_records",
-      "classification": "essential",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
     "fabricops_kit.drift.IncrementalSafetyError": {
       "module": "drift",
       "callable": "IncrementalSafetyError",
@@ -795,763 +573,6 @@
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
-    "fabricops_kit.metadata._context_get": {
-      "module": "metadata",
-      "callable": "_context_get",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.metadata._resolve_action_by",
-        "fabricops_kit.metadata._runtime_context",
-        "fabricops_kit.metadata.register_current_notebook"
-      ],
-      "used_by_count": 3,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.metadata._extract_columns_from_profile": {
-      "module": "metadata",
-      "callable": "_extract_columns_from_profile",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.metadata._key_part": {
-      "module": "metadata",
-      "callable": "_key_part",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.metadata._sha256_key"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.metadata._now_utc_iso": {
-      "module": "metadata",
-      "callable": "_now_utc_iso",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.data_governance.review_governance",
-        "fabricops_kit.data_quality._build_dq_rule_deactivation_metadata_df",
-        "fabricops_kit.data_quality._build_dq_rules_metadata_df",
-        "fabricops_kit.metadata.build_evidence_row"
-      ],
-      "used_by_count": 4,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.metadata._resolve_action_by": {
-      "module": "metadata",
-      "callable": "_resolve_action_by",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.metadata._context_get",
-        "fabricops_kit.metadata._runtime_context"
-      ],
-      "calls_count": 2,
-      "used_by": [
-        "fabricops_kit.data_governance._approved_widget_rows",
-        "fabricops_kit.data_quality._build_dq_rule_deactivation_metadata_df",
-        "fabricops_kit.data_quality._build_dq_rule_deactivations",
-        "fabricops_kit.data_quality._build_dq_rule_history",
-        "fabricops_kit.data_quality._build_dq_rules_metadata_df"
-      ],
-      "used_by_count": 5,
-      "internal_helpers_used": [
-        "fabricops_kit.metadata._context_get",
-        "fabricops_kit.metadata._runtime_context"
-      ],
-      "internal_helper_count": 2
-    },
-    "fabricops_kit.metadata._runtime_context": {
-      "module": "metadata",
-      "callable": "_runtime_context",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.metadata._context_get"
-      ],
-      "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.metadata._resolve_action_by",
-        "fabricops_kit.metadata.register_current_notebook"
-      ],
-      "used_by_count": 2,
-      "internal_helpers_used": [
-        "fabricops_kit.metadata._context_get"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.metadata._safe_str": {
-      "module": "metadata",
-      "callable": "_safe_str",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.metadata.register_current_notebook"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.metadata._sha256_key": {
-      "module": "metadata",
-      "callable": "_sha256_key",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.metadata._key_part"
-      ],
-      "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.metadata.build_dq_rule_key",
-        "fabricops_kit.metadata.build_metadata_column_key",
-        "fabricops_kit.metadata.build_metadata_table_key"
-      ],
-      "used_by_count": 3,
-      "internal_helpers_used": [
-        "fabricops_kit.metadata._key_part"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.metadata.build_dq_rule_key": {
-      "module": "metadata",
-      "callable": "build_dq_rule_key",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.metadata._sha256_key"
-      ],
-      "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.data_quality._attach_rule_metadata_keys"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [
-        "fabricops_kit.metadata._sha256_key"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.metadata.build_evidence_row": {
-      "module": "metadata",
-      "callable": "build_evidence_row",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.metadata._now_utc_iso"
-      ],
-      "calls_count": 1,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [
-        "fabricops_kit.metadata._now_utc_iso"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.metadata.build_metadata_column_key": {
-      "module": "metadata",
-      "callable": "build_metadata_column_key",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.metadata._sha256_key"
-      ],
-      "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.business_context.review_business_context",
-        "fabricops_kit.data_governance.review_governance",
-        "fabricops_kit.data_quality._attach_rule_metadata_keys"
-      ],
-      "used_by_count": 3,
-      "internal_helpers_used": [
-        "fabricops_kit.metadata._sha256_key"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.metadata.build_metadata_table_key": {
-      "module": "metadata",
-      "callable": "build_metadata_table_key",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.metadata._sha256_key"
-      ],
-      "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.business_context.review_business_context",
-        "fabricops_kit.data_governance.review_governance",
-        "fabricops_kit.data_quality._attach_rule_metadata_keys"
-      ],
-      "used_by_count": 3,
-      "internal_helpers_used": [
-        "fabricops_kit.metadata._sha256_key"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.metadata.column_context_rows_for_spark": {
-      "module": "metadata",
-      "callable": "column_context_rows_for_spark",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.metadata.write_metadata_rows"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.metadata.default_evidence_types": {
-      "module": "metadata",
-      "callable": "default_evidence_types",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.metadata.load_notebook_registry": {
-      "module": "metadata",
-      "callable": "load_notebook_registry",
-      "classification": "essential",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.metadata.normalise_records_by_column": {
-      "module": "metadata",
-      "callable": "normalise_records_by_column",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.metadata.register_current_notebook": {
-      "module": "metadata",
-      "callable": "register_current_notebook",
-      "classification": "essential",
-      "calls": [
-        "fabricops_kit.metadata._context_get",
-        "fabricops_kit.metadata._runtime_context",
-        "fabricops_kit.metadata._safe_str",
-        "fabricops_kit.metadata.write_metadata_rows"
-      ],
-      "calls_count": 4,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [
-        "fabricops_kit.metadata._context_get",
-        "fabricops_kit.metadata._runtime_context",
-        "fabricops_kit.metadata._safe_str"
-      ],
-      "internal_helper_count": 3
-    },
-    "fabricops_kit.metadata.write_column_business_context": {
-      "module": "metadata",
-      "callable": "write_column_business_context",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.metadata.write_metadata_rows"
-      ],
-      "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.business_context.write_business_context"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.metadata.write_column_governance_context": {
-      "module": "metadata",
-      "callable": "write_column_governance_context",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.metadata.write_metadata_rows"
-      ],
-      "calls_count": 1,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.metadata.write_metadata_rows": {
-      "module": "metadata",
-      "callable": "write_metadata_rows",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.fabric_input_output.write_lakehouse_table",
-        "fabricops_kit.metadata.column_context_rows_for_spark"
-      ],
-      "calls_count": 2,
-      "used_by": [
-        "fabricops_kit.metadata.register_current_notebook",
-        "fabricops_kit.metadata.write_column_business_context",
-        "fabricops_kit.metadata.write_column_governance_context"
-      ],
-      "used_by_count": 3,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.config.AIPromptConfig": {
-      "module": "config",
-      "callable": "AIPromptConfig",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.config.ConfigBootstrapResult": {
-      "module": "config",
-      "callable": "ConfigBootstrapResult",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.config._bootstrap_fabric_env"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.config.ConfigSmokeCheckResult": {
-      "module": "config",
-      "callable": "ConfigSmokeCheckResult",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.config._run_config_smoke_tests"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.config.DatasetContractValidationError": {
-      "module": "config",
-      "callable": "DatasetContractValidationError",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.config.assert_valid_dataset_contract"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.config.FrameworkConfig": {
-      "module": "config",
-      "callable": "FrameworkConfig",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.config._validate_framework_config"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.config.GovernanceConfig": {
-      "module": "config",
-      "callable": "GovernanceConfig",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.config.LineageConfig": {
-      "module": "config",
-      "callable": "LineageConfig",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.config.NotebookRuntimeConfig": {
-      "module": "config",
-      "callable": "NotebookRuntimeConfig",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.config.NotebookSetupContext": {
-      "module": "config",
-      "callable": "NotebookSetupContext",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.config.setup_notebook"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.config.PathConfig": {
-      "module": "config",
-      "callable": "PathConfig",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.config.QualityConfig": {
-      "module": "config",
-      "callable": "QualityConfig",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.config.ReviewWorkflowConfig": {
-      "module": "config",
-      "callable": "ReviewWorkflowConfig",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.config._bootstrap_fabric_env": {
-      "module": "config",
-      "callable": "_bootstrap_fabric_env",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.config.ConfigBootstrapResult",
-        "fabricops_kit.config._get_fabric_runtime_metadata",
-        "fabricops_kit.config._get_store",
-        "fabricops_kit.config._run_config_smoke_tests",
-        "fabricops_kit.config.load_config"
-      ],
-      "calls_count": 5,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [
-        "fabricops_kit.config._get_fabric_runtime_metadata",
-        "fabricops_kit.config._get_store",
-        "fabricops_kit.config._run_config_smoke_tests"
-      ],
-      "internal_helper_count": 3
-    },
-    "fabricops_kit.config._check_fabric_ai_functions_available": {
-      "module": "config",
-      "callable": "_check_fabric_ai_functions_available",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.config._check_spark_session": {
-      "module": "config",
-      "callable": "_check_spark_session",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.config._run_config_smoke_tests"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.config._configure_fabric_ai_functions": {
-      "module": "config",
-      "callable": "_configure_fabric_ai_functions",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.config._default_schema_text": {
-      "module": "config",
-      "callable": "_default_schema_text",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.config._load_schema"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.config._format_error_path": {
-      "module": "config",
-      "callable": "_format_error_path",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.config.validate_dataset_contract"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.config._get_fabric_runtime_metadata": {
-      "module": "config",
-      "callable": "_get_fabric_runtime_metadata",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.config._bootstrap_fabric_env",
-        "fabricops_kit.config._run_config_smoke_tests"
-      ],
-      "used_by_count": 2,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.config._get_store": {
-      "module": "config",
-      "callable": "_get_store",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.config._bootstrap_fabric_env",
-        "fabricops_kit.config._run_config_smoke_tests",
-        "fabricops_kit.config.setup_notebook",
-        "fabricops_kit.fabric_input_output.read_lakehouse_csv",
-        "fabricops_kit.fabric_input_output.read_lakehouse_excel",
-        "fabricops_kit.fabric_input_output.read_lakehouse_parquet",
-        "fabricops_kit.fabric_input_output.read_lakehouse_table",
-        "fabricops_kit.fabric_input_output.read_warehouse_table",
-        "fabricops_kit.fabric_input_output.write_lakehouse_table",
-        "fabricops_kit.fabric_input_output.write_warehouse_table"
-      ],
-      "used_by_count": 10,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.config._load_schema": {
-      "module": "config",
-      "callable": "_load_schema",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.config._default_schema_text"
-      ],
-      "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.config.validate_dataset_contract"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [
-        "fabricops_kit.config._default_schema_text"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.config._normalize_name": {
-      "module": "config",
-      "callable": "_normalize_name",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.config._validate_notebook_name"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.config._run_config_smoke_tests": {
-      "module": "config",
-      "callable": "_run_config_smoke_tests",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.config.ConfigSmokeCheckResult",
-        "fabricops_kit.config._check_spark_session",
-        "fabricops_kit.config._get_fabric_runtime_metadata",
-        "fabricops_kit.config._get_store",
-        "fabricops_kit.config._validate_notebook_name"
-      ],
-      "calls_count": 5,
-      "used_by": [
-        "fabricops_kit.config._bootstrap_fabric_env",
-        "fabricops_kit.config.setup_notebook"
-      ],
-      "used_by_count": 2,
-      "internal_helpers_used": [
-        "fabricops_kit.config._check_spark_session",
-        "fabricops_kit.config._get_fabric_runtime_metadata",
-        "fabricops_kit.config._get_store",
-        "fabricops_kit.config._validate_notebook_name"
-      ],
-      "internal_helper_count": 4
-    },
-    "fabricops_kit.config._validate_framework_config": {
-      "module": "config",
-      "callable": "_validate_framework_config",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.config.FrameworkConfig",
-        "fabricops_kit.config.keys"
-      ],
-      "calls_count": 2,
-      "used_by": [
-        "fabricops_kit.config.load_config"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.config._validate_notebook_name": {
-      "module": "config",
-      "callable": "_validate_notebook_name",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.config._normalize_name"
-      ],
-      "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.config._run_config_smoke_tests"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [
-        "fabricops_kit.config._normalize_name"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.config.assert_valid_dataset_contract": {
-      "module": "config",
-      "callable": "assert_valid_dataset_contract",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.config.DatasetContractValidationError",
-        "fabricops_kit.config.validate_dataset_contract"
-      ],
-      "calls_count": 2,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.config.load_and_validate_dataset_contract": {
-      "module": "config",
-      "callable": "load_and_validate_dataset_contract",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.config.load_dataset_contract",
-        "fabricops_kit.config.validate_dataset_contract"
-      ],
-      "calls_count": 2,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.config.load_config": {
-      "module": "config",
-      "callable": "load_config",
-      "classification": "essential",
-      "calls": [
-        "fabricops_kit.config._validate_framework_config"
-      ],
-      "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.config._bootstrap_fabric_env",
-        "fabricops_kit.config.setup_notebook",
-        "fabricops_kit.fabric_input_output.load_config"
-      ],
-      "used_by_count": 3,
-      "internal_helpers_used": [
-        "fabricops_kit.config._validate_framework_config"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.config.load_dataset_contract": {
-      "module": "config",
-      "callable": "load_dataset_contract",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.config.load_and_validate_dataset_contract"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.config.setup_notebook": {
-      "module": "config",
-      "callable": "setup_notebook",
-      "classification": "essential",
-      "calls": [
-        "fabricops_kit.config.NotebookSetupContext",
-        "fabricops_kit.config._get_store",
-        "fabricops_kit.config._run_config_smoke_tests",
-        "fabricops_kit.config.load_config"
-      ],
-      "calls_count": 4,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [
-        "fabricops_kit.config._get_store",
-        "fabricops_kit.config._run_config_smoke_tests"
-      ],
-      "internal_helper_count": 2
-    },
-    "fabricops_kit.config.validate_dataset_contract": {
-      "module": "config",
-      "callable": "validate_dataset_contract",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.config._format_error_path",
-        "fabricops_kit.config._load_schema"
-      ],
-      "calls_count": 2,
-      "used_by": [
-        "fabricops_kit.config.assert_valid_dataset_contract",
-        "fabricops_kit.config.load_and_validate_dataset_contract"
-      ],
-      "used_by_count": 2,
-      "internal_helpers_used": [
-        "fabricops_kit.config._format_error_path",
-        "fabricops_kit.config._load_schema"
-      ],
-      "internal_helper_count": 2
-    },
     "fabricops_kit.technical_columns._add_audit_columns": {
       "module": "technical_columns",
       "callable": "_add_audit_columns",
@@ -1737,349 +758,6 @@
       ],
       "internal_helper_count": 3
     },
-    "fabricops_kit.fabric_input_output.FabricStore": {
-      "module": "fabric_input_output",
-      "callable": "FabricStore",
-      "classification": "optional",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.fabric_input_output._convert_single_parquet_ns_to_us": {
-      "module": "fabric_input_output",
-      "callable": "_convert_single_parquet_ns_to_us",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.fabric_input_output.read_lakehouse_parquet"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.fabric_input_output._get_fabric_runtime_context": {
-      "module": "fabric_input_output",
-      "callable": "_get_fabric_runtime_context",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.fabric_input_output.check_naming_convention"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.fabric_input_output._get_spark": {
-      "module": "fabric_input_output",
-      "callable": "_get_spark",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.fabric_input_output.read_lakehouse_csv",
-        "fabricops_kit.fabric_input_output.read_lakehouse_excel",
-        "fabricops_kit.fabric_input_output.read_lakehouse_parquet",
-        "fabricops_kit.fabric_input_output.read_lakehouse_table",
-        "fabricops_kit.fabric_input_output.read_warehouse_table",
-        "fabricops_kit.fabric_input_output.seed_minimal_sample_source_table"
-      ],
-      "used_by_count": 6,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.fabric_input_output.check_naming_convention": {
-      "module": "fabric_input_output",
-      "callable": "check_naming_convention",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.fabric_input_output._get_fabric_runtime_context"
-      ],
-      "calls_count": 1,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [
-        "fabricops_kit.fabric_input_output._get_fabric_runtime_context"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.fabric_input_output.load_config": {
-      "module": "fabric_input_output",
-      "callable": "load_config",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.config.load_config"
-      ],
-      "calls_count": 1,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.fabric_input_output.read_lakehouse_csv": {
-      "module": "fabric_input_output",
-      "callable": "read_lakehouse_csv",
-      "classification": "optional",
-      "calls": [
-        "fabricops_kit.config._get_store",
-        "fabricops_kit.fabric_input_output._get_spark"
-      ],
-      "calls_count": 2,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [
-        "fabricops_kit.fabric_input_output._get_spark"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.fabric_input_output.read_lakehouse_excel": {
-      "module": "fabric_input_output",
-      "callable": "read_lakehouse_excel",
-      "classification": "optional",
-      "calls": [
-        "fabricops_kit.config._get_store",
-        "fabricops_kit.fabric_input_output._get_spark"
-      ],
-      "calls_count": 2,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [
-        "fabricops_kit.fabric_input_output._get_spark"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.fabric_input_output.read_lakehouse_parquet": {
-      "module": "fabric_input_output",
-      "callable": "read_lakehouse_parquet",
-      "classification": "optional",
-      "calls": [
-        "fabricops_kit.config._get_store",
-        "fabricops_kit.fabric_input_output._convert_single_parquet_ns_to_us",
-        "fabricops_kit.fabric_input_output._get_spark"
-      ],
-      "calls_count": 3,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [
-        "fabricops_kit.fabric_input_output._convert_single_parquet_ns_to_us",
-        "fabricops_kit.fabric_input_output._get_spark"
-      ],
-      "internal_helper_count": 2
-    },
-    "fabricops_kit.fabric_input_output.read_lakehouse_table": {
-      "module": "fabric_input_output",
-      "callable": "read_lakehouse_table",
-      "classification": "essential",
-      "calls": [
-        "fabricops_kit.config._get_store",
-        "fabricops_kit.fabric_input_output._get_spark"
-      ],
-      "calls_count": 2,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [
-        "fabricops_kit.fabric_input_output._get_spark"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.fabric_input_output.read_warehouse_table": {
-      "module": "fabric_input_output",
-      "callable": "read_warehouse_table",
-      "classification": "essential",
-      "calls": [
-        "fabricops_kit.config._get_store",
-        "fabricops_kit.fabric_input_output._get_spark"
-      ],
-      "calls_count": 2,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [
-        "fabricops_kit.fabric_input_output._get_spark"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.fabric_input_output.seed_minimal_sample_source_table": {
-      "module": "fabric_input_output",
-      "callable": "seed_minimal_sample_source_table",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.fabric_input_output._get_spark",
-        "fabricops_kit.fabric_input_output.write_lakehouse_table"
-      ],
-      "calls_count": 2,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [
-        "fabricops_kit.fabric_input_output._get_spark"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.fabric_input_output.write_lakehouse_table": {
-      "module": "fabric_input_output",
-      "callable": "write_lakehouse_table",
-      "classification": "essential",
-      "calls": [
-        "fabricops_kit.config._get_store"
-      ],
-      "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.data_quality.write_dq_rules",
-        "fabricops_kit.fabric_input_output.seed_minimal_sample_source_table",
-        "fabricops_kit.metadata.write_metadata_rows"
-      ],
-      "used_by_count": 3,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.fabric_input_output.write_warehouse_table": {
-      "module": "fabric_input_output",
-      "callable": "write_warehouse_table",
-      "classification": "essential",
-      "calls": [
-        "fabricops_kit.config._get_store"
-      ],
-      "calls_count": 1,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.data_agreement._agreement_option_label": {
-      "module": "data_agreement",
-      "callable": "_agreement_option_label",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.data_agreement.select_agreement"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.data_agreement._coerce_row_dicts": {
-      "module": "data_agreement",
-      "callable": "_coerce_row_dicts",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.data_agreement.load_agreements",
-        "fabricops_kit.data_agreement.select_agreement"
-      ],
-      "used_by_count": 2,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.data_agreement._latest_distinct_agreements": {
-      "module": "data_agreement",
-      "callable": "_latest_distinct_agreements",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.data_agreement.load_agreements"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.data_agreement.get_selected_agreement": {
-      "module": "data_agreement",
-      "callable": "get_selected_agreement",
-      "classification": "essential",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.data_agreement.load_agreements": {
-      "module": "data_agreement",
-      "callable": "load_agreements",
-      "classification": "essential",
-      "calls": [
-        "fabricops_kit.data_agreement._coerce_row_dicts",
-        "fabricops_kit.data_agreement._latest_distinct_agreements"
-      ],
-      "calls_count": 2,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [
-        "fabricops_kit.data_agreement._coerce_row_dicts",
-        "fabricops_kit.data_agreement._latest_distinct_agreements"
-      ],
-      "internal_helper_count": 2
-    },
-    "fabricops_kit.data_agreement.select_agreement": {
-      "module": "data_agreement",
-      "callable": "select_agreement",
-      "classification": "essential",
-      "calls": [
-        "fabricops_kit.data_agreement._agreement_option_label",
-        "fabricops_kit.data_agreement._coerce_row_dicts"
-      ],
-      "calls_count": 2,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [
-        "fabricops_kit.data_agreement._agreement_option_label",
-        "fabricops_kit.data_agreement._coerce_row_dicts"
-      ],
-      "internal_helper_count": 2
-    },
-    "fabricops_kit.data_profiling._get_profiled_columns": {
-      "module": "data_profiling",
-      "callable": "_get_profiled_columns",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.technical_columns._default_technical_columns"
-      ],
-      "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.data_profiling.profile_dataframe"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.data_profiling._is_min_max_supported_type": {
-      "module": "data_profiling",
-      "callable": "_is_min_max_supported_type",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.data_profiling.profile_dataframe"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.data_profiling.profile_dataframe": {
-      "module": "data_profiling",
-      "callable": "profile_dataframe",
-      "classification": "essential",
-      "calls": [
-        "fabricops_kit.data_profiling._get_profiled_columns",
-        "fabricops_kit.data_profiling._is_min_max_supported_type"
-      ],
-      "calls_count": 2,
-      "used_by": [
-        "fabricops_kit.data_quality._prepare_dq_profile_input_rows"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [
-        "fabricops_kit.data_profiling._get_profiled_columns",
-        "fabricops_kit.data_profiling._is_min_max_supported_type"
-      ],
-      "internal_helper_count": 2
-    },
     "fabricops_kit._utils._to_jsonable": {
       "module": "_utils",
       "callable": "_to_jsonable",
@@ -2102,65 +780,209 @@
       ],
       "internal_helper_count": 1
     },
-    "fabricops_kit.business_context._extract_column_business_context_suggestions": {
-      "module": "business_context",
-      "callable": "_extract_column_business_context_suggestions",
+    "fabricops_kit.data_lineage._build_lineage_record_from_steps": {
+      "module": "data_lineage",
+      "callable": "_build_lineage_record_from_steps",
       "classification": "internal",
       "calls": [
-        "fabricops_kit.business_context._parse_ai_dict_response"
+        "fabricops_kit.data_lineage._validate_lineage_steps"
       ],
       "calls_count": 1,
       "used_by": [
-        "fabricops_kit.business_context.extract_column_business_context_suggestions"
+        "fabricops_kit.data_lineage._build_lineage_records"
       ],
       "used_by_count": 1,
       "internal_helpers_used": [
-        "fabricops_kit.business_context._parse_ai_dict_response"
+        "fabricops_kit.data_lineage._validate_lineage_steps"
       ],
       "internal_helper_count": 1
     },
-    "fabricops_kit.business_context._parse_ai_dict_response": {
-      "module": "business_context",
-      "callable": "_parse_ai_dict_response",
+    "fabricops_kit.data_lineage._build_lineage_records": {
+      "module": "data_lineage",
+      "callable": "_build_lineage_records",
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.data_lineage._build_lineage_record_from_steps"
+      ],
+      "calls_count": 1,
+      "used_by": [],
+      "used_by_count": 0,
+      "internal_helpers_used": [
+        "fabricops_kit.data_lineage._build_lineage_record_from_steps"
+      ],
+      "internal_helper_count": 1
+    },
+    "fabricops_kit.data_lineage._call_name": {
+      "module": "data_lineage",
+      "callable": "_call_name",
       "classification": "internal",
       "calls": [],
       "calls_count": 0,
       "used_by": [
-        "fabricops_kit.business_context._extract_column_business_context_suggestions"
+        "fabricops_kit.data_lineage._scan_notebook_lineage"
       ],
       "used_by_count": 1,
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
-    "fabricops_kit.business_context._prepare_business_context_profile_input": {
-      "module": "business_context",
-      "callable": "_prepare_business_context_profile_input",
+    "fabricops_kit.data_lineage._enrich_lineage_steps_with_ai": {
+      "module": "data_lineage",
+      "callable": "_enrich_lineage_steps_with_ai",
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.data_lineage._fallback_copilot_lineage_prompt"
+      ],
+      "calls_count": 1,
+      "used_by": [],
+      "used_by_count": 0,
+      "internal_helpers_used": [
+        "fabricops_kit.data_lineage._fallback_copilot_lineage_prompt"
+      ],
+      "internal_helper_count": 1
+    },
+    "fabricops_kit.data_lineage._fallback_copilot_lineage_prompt": {
+      "module": "data_lineage",
+      "callable": "_fallback_copilot_lineage_prompt",
       "classification": "internal",
       "calls": [],
       "calls_count": 0,
       "used_by": [
-        "fabricops_kit.business_context.prepare_business_context_profile_input"
+        "fabricops_kit.data_lineage._enrich_lineage_steps_with_ai"
       ],
       "used_by_count": 1,
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
-    "fabricops_kit.business_context._require_ipywidgets": {
-      "module": "business_context",
-      "callable": "_require_ipywidgets",
+    "fabricops_kit.data_lineage._flatten_chain": {
+      "module": "data_lineage",
+      "callable": "_flatten_chain",
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.data_lineage._name"
+      ],
+      "calls_count": 1,
+      "used_by": [
+        "fabricops_kit.data_lineage._scan_notebook_lineage"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [
+        "fabricops_kit.data_lineage._name"
+      ],
+      "internal_helper_count": 1
+    },
+    "fabricops_kit.data_lineage._literal": {
+      "module": "data_lineage",
+      "callable": "_literal",
       "classification": "internal",
       "calls": [],
       "calls_count": 0,
       "used_by": [
-        "fabricops_kit.business_context.review_business_context"
+        "fabricops_kit.data_lineage._resolve_write_target"
       ],
       "used_by_count": 1,
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
-    "fabricops_kit.business_context.draft_business_context": {
-      "module": "business_context",
-      "callable": "draft_business_context",
+    "fabricops_kit.data_lineage._name": {
+      "module": "data_lineage",
+      "callable": "_name",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.data_lineage._flatten_chain",
+        "fabricops_kit.data_lineage._scan_notebook_lineage"
+      ],
+      "used_by_count": 2,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.data_lineage._resolve_write_target": {
+      "module": "data_lineage",
+      "callable": "_resolve_write_target",
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.data_lineage._literal"
+      ],
+      "calls_count": 1,
+      "used_by": [
+        "fabricops_kit.data_lineage._scan_notebook_lineage"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [
+        "fabricops_kit.data_lineage._literal"
+      ],
+      "internal_helper_count": 1
+    },
+    "fabricops_kit.data_lineage._scan_notebook_cells": {
+      "module": "data_lineage",
+      "callable": "_scan_notebook_cells",
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.data_lineage._scan_notebook_lineage"
+      ],
+      "calls_count": 1,
+      "used_by": [],
+      "used_by_count": 0,
+      "internal_helpers_used": [
+        "fabricops_kit.data_lineage._scan_notebook_lineage"
+      ],
+      "internal_helper_count": 1
+    },
+    "fabricops_kit.data_lineage._scan_notebook_lineage": {
+      "module": "data_lineage",
+      "callable": "_scan_notebook_lineage",
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.data_lineage._call_name",
+        "fabricops_kit.data_lineage._flatten_chain",
+        "fabricops_kit.data_lineage._name",
+        "fabricops_kit.data_lineage._resolve_write_target",
+        "fabricops_kit.data_lineage._step"
+      ],
+      "calls_count": 5,
+      "used_by": [
+        "fabricops_kit.data_lineage._scan_notebook_cells"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [
+        "fabricops_kit.data_lineage._call_name",
+        "fabricops_kit.data_lineage._flatten_chain",
+        "fabricops_kit.data_lineage._name",
+        "fabricops_kit.data_lineage._resolve_write_target",
+        "fabricops_kit.data_lineage._step"
+      ],
+      "internal_helper_count": 5
+    },
+    "fabricops_kit.data_lineage._step": {
+      "module": "data_lineage",
+      "callable": "_step",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.data_lineage._scan_notebook_lineage"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.data_lineage._validate_lineage_steps": {
+      "module": "data_lineage",
+      "callable": "_validate_lineage_steps",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.data_lineage._build_lineage_record_from_steps"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.data_lineage.build_lineage_handover_markdown": {
+      "module": "data_lineage",
+      "callable": "build_lineage_handover_markdown",
       "classification": "essential",
       "calls": [],
       "calls_count": 0,
@@ -2169,72 +991,12 @@
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
-    "fabricops_kit.business_context.extract_column_business_context_suggestions": {
-      "module": "business_context",
-      "callable": "extract_column_business_context_suggestions",
-      "classification": "optional",
-      "calls": [
-        "fabricops_kit.business_context._extract_column_business_context_suggestions"
-      ],
-      "calls_count": 1,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [
-        "fabricops_kit.business_context._extract_column_business_context_suggestions"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.business_context.get_reviewed_business_context_rows": {
-      "module": "business_context",
-      "callable": "get_reviewed_business_context_rows",
-      "classification": "optional",
+    "fabricops_kit.data_lineage.build_lineage_records": {
+      "module": "data_lineage",
+      "callable": "build_lineage_records",
+      "classification": "essential",
       "calls": [],
       "calls_count": 0,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.business_context.prepare_business_context_profile_input": {
-      "module": "business_context",
-      "callable": "prepare_business_context_profile_input",
-      "classification": "optional",
-      "calls": [
-        "fabricops_kit.business_context._prepare_business_context_profile_input"
-      ],
-      "calls_count": 1,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [
-        "fabricops_kit.business_context._prepare_business_context_profile_input"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.business_context.review_business_context": {
-      "module": "business_context",
-      "callable": "review_business_context",
-      "classification": "essential",
-      "calls": [
-        "fabricops_kit.business_context._require_ipywidgets",
-        "fabricops_kit.metadata.build_metadata_column_key",
-        "fabricops_kit.metadata.build_metadata_table_key"
-      ],
-      "calls_count": 3,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [
-        "fabricops_kit.business_context._require_ipywidgets"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.business_context.write_business_context": {
-      "module": "business_context",
-      "callable": "write_business_context",
-      "classification": "essential",
-      "calls": [
-        "fabricops_kit.metadata.write_column_business_context"
-      ],
-      "calls_count": 1,
       "used_by": [],
       "used_by_count": 0,
       "internal_helpers_used": [],
@@ -2745,6 +1507,276 @@
       ],
       "internal_helper_count": 1
     },
+    "fabricops_kit.business_context._extract_column_business_context_suggestions": {
+      "module": "business_context",
+      "callable": "_extract_column_business_context_suggestions",
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.business_context._parse_ai_dict_response"
+      ],
+      "calls_count": 1,
+      "used_by": [
+        "fabricops_kit.business_context.extract_column_business_context_suggestions"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [
+        "fabricops_kit.business_context._parse_ai_dict_response"
+      ],
+      "internal_helper_count": 1
+    },
+    "fabricops_kit.business_context._parse_ai_dict_response": {
+      "module": "business_context",
+      "callable": "_parse_ai_dict_response",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.business_context._extract_column_business_context_suggestions"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.business_context._prepare_business_context_profile_input": {
+      "module": "business_context",
+      "callable": "_prepare_business_context_profile_input",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.business_context.prepare_business_context_profile_input"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.business_context._require_ipywidgets": {
+      "module": "business_context",
+      "callable": "_require_ipywidgets",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.business_context.review_business_context"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.business_context.draft_business_context": {
+      "module": "business_context",
+      "callable": "draft_business_context",
+      "classification": "essential",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [],
+      "used_by_count": 0,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.business_context.extract_column_business_context_suggestions": {
+      "module": "business_context",
+      "callable": "extract_column_business_context_suggestions",
+      "classification": "optional",
+      "calls": [
+        "fabricops_kit.business_context._extract_column_business_context_suggestions"
+      ],
+      "calls_count": 1,
+      "used_by": [],
+      "used_by_count": 0,
+      "internal_helpers_used": [
+        "fabricops_kit.business_context._extract_column_business_context_suggestions"
+      ],
+      "internal_helper_count": 1
+    },
+    "fabricops_kit.business_context.get_reviewed_business_context_rows": {
+      "module": "business_context",
+      "callable": "get_reviewed_business_context_rows",
+      "classification": "optional",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [],
+      "used_by_count": 0,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.business_context.prepare_business_context_profile_input": {
+      "module": "business_context",
+      "callable": "prepare_business_context_profile_input",
+      "classification": "optional",
+      "calls": [
+        "fabricops_kit.business_context._prepare_business_context_profile_input"
+      ],
+      "calls_count": 1,
+      "used_by": [],
+      "used_by_count": 0,
+      "internal_helpers_used": [
+        "fabricops_kit.business_context._prepare_business_context_profile_input"
+      ],
+      "internal_helper_count": 1
+    },
+    "fabricops_kit.business_context.review_business_context": {
+      "module": "business_context",
+      "callable": "review_business_context",
+      "classification": "essential",
+      "calls": [
+        "fabricops_kit.business_context._require_ipywidgets",
+        "fabricops_kit.metadata.build_metadata_column_key",
+        "fabricops_kit.metadata.build_metadata_table_key"
+      ],
+      "calls_count": 3,
+      "used_by": [],
+      "used_by_count": 0,
+      "internal_helpers_used": [
+        "fabricops_kit.business_context._require_ipywidgets"
+      ],
+      "internal_helper_count": 1
+    },
+    "fabricops_kit.business_context.write_business_context": {
+      "module": "business_context",
+      "callable": "write_business_context",
+      "classification": "essential",
+      "calls": [
+        "fabricops_kit.metadata.write_column_business_context"
+      ],
+      "calls_count": 1,
+      "used_by": [],
+      "used_by_count": 0,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.data_profiling._get_profiled_columns": {
+      "module": "data_profiling",
+      "callable": "_get_profiled_columns",
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.technical_columns._default_technical_columns"
+      ],
+      "calls_count": 1,
+      "used_by": [
+        "fabricops_kit.data_profiling.profile_dataframe"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.data_profiling._is_min_max_supported_type": {
+      "module": "data_profiling",
+      "callable": "_is_min_max_supported_type",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.data_profiling.profile_dataframe"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.data_profiling.profile_dataframe": {
+      "module": "data_profiling",
+      "callable": "profile_dataframe",
+      "classification": "essential",
+      "calls": [
+        "fabricops_kit.data_profiling._get_profiled_columns",
+        "fabricops_kit.data_profiling._is_min_max_supported_type"
+      ],
+      "calls_count": 2,
+      "used_by": [
+        "fabricops_kit.data_quality._prepare_dq_profile_input_rows"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [
+        "fabricops_kit.data_profiling._get_profiled_columns",
+        "fabricops_kit.data_profiling._is_min_max_supported_type"
+      ],
+      "internal_helper_count": 2
+    },
+    "fabricops_kit.data_agreement._agreement_option_label": {
+      "module": "data_agreement",
+      "callable": "_agreement_option_label",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.data_agreement.select_agreement"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.data_agreement._coerce_row_dicts": {
+      "module": "data_agreement",
+      "callable": "_coerce_row_dicts",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.data_agreement.load_agreements",
+        "fabricops_kit.data_agreement.select_agreement"
+      ],
+      "used_by_count": 2,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.data_agreement._latest_distinct_agreements": {
+      "module": "data_agreement",
+      "callable": "_latest_distinct_agreements",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.data_agreement.load_agreements"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.data_agreement.get_selected_agreement": {
+      "module": "data_agreement",
+      "callable": "get_selected_agreement",
+      "classification": "essential",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [],
+      "used_by_count": 0,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.data_agreement.load_agreements": {
+      "module": "data_agreement",
+      "callable": "load_agreements",
+      "classification": "essential",
+      "calls": [
+        "fabricops_kit.data_agreement._coerce_row_dicts",
+        "fabricops_kit.data_agreement._latest_distinct_agreements"
+      ],
+      "calls_count": 2,
+      "used_by": [],
+      "used_by_count": 0,
+      "internal_helpers_used": [
+        "fabricops_kit.data_agreement._coerce_row_dicts",
+        "fabricops_kit.data_agreement._latest_distinct_agreements"
+      ],
+      "internal_helper_count": 2
+    },
+    "fabricops_kit.data_agreement.select_agreement": {
+      "module": "data_agreement",
+      "callable": "select_agreement",
+      "classification": "essential",
+      "calls": [
+        "fabricops_kit.data_agreement._agreement_option_label",
+        "fabricops_kit.data_agreement._coerce_row_dicts"
+      ],
+      "calls_count": 2,
+      "used_by": [],
+      "used_by_count": 0,
+      "internal_helpers_used": [
+        "fabricops_kit.data_agreement._agreement_option_label",
+        "fabricops_kit.data_agreement._coerce_row_dicts"
+      ],
+      "internal_helper_count": 2
+    },
     "fabricops_kit.data_governance._approved_widget_rows": {
       "module": "data_governance",
       "callable": "_approved_widget_rows",
@@ -2911,6 +1943,974 @@
         "fabricops_kit.data_governance._approved_widget_rows"
       ],
       "internal_helper_count": 1
+    },
+    "fabricops_kit.config.AIPromptConfig": {
+      "module": "config",
+      "callable": "AIPromptConfig",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [],
+      "used_by_count": 0,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.config.ConfigBootstrapResult": {
+      "module": "config",
+      "callable": "ConfigBootstrapResult",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.config._bootstrap_fabric_env"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.config.ConfigSmokeCheckResult": {
+      "module": "config",
+      "callable": "ConfigSmokeCheckResult",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.config._run_config_smoke_tests"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.config.DatasetContractValidationError": {
+      "module": "config",
+      "callable": "DatasetContractValidationError",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.config.assert_valid_dataset_contract"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.config.FrameworkConfig": {
+      "module": "config",
+      "callable": "FrameworkConfig",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.config._validate_framework_config"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.config.GovernanceConfig": {
+      "module": "config",
+      "callable": "GovernanceConfig",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [],
+      "used_by_count": 0,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.config.LineageConfig": {
+      "module": "config",
+      "callable": "LineageConfig",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [],
+      "used_by_count": 0,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.config.NotebookRuntimeConfig": {
+      "module": "config",
+      "callable": "NotebookRuntimeConfig",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [],
+      "used_by_count": 0,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.config.NotebookSetupContext": {
+      "module": "config",
+      "callable": "NotebookSetupContext",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.config.setup_notebook"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.config.PathConfig": {
+      "module": "config",
+      "callable": "PathConfig",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [],
+      "used_by_count": 0,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.config.QualityConfig": {
+      "module": "config",
+      "callable": "QualityConfig",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [],
+      "used_by_count": 0,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.config.ReviewWorkflowConfig": {
+      "module": "config",
+      "callable": "ReviewWorkflowConfig",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [],
+      "used_by_count": 0,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.config._bootstrap_fabric_env": {
+      "module": "config",
+      "callable": "_bootstrap_fabric_env",
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.config.ConfigBootstrapResult",
+        "fabricops_kit.config._get_fabric_runtime_metadata",
+        "fabricops_kit.config._get_store",
+        "fabricops_kit.config._run_config_smoke_tests",
+        "fabricops_kit.config.load_config"
+      ],
+      "calls_count": 5,
+      "used_by": [],
+      "used_by_count": 0,
+      "internal_helpers_used": [
+        "fabricops_kit.config._get_fabric_runtime_metadata",
+        "fabricops_kit.config._get_store",
+        "fabricops_kit.config._run_config_smoke_tests"
+      ],
+      "internal_helper_count": 3
+    },
+    "fabricops_kit.config._check_fabric_ai_functions_available": {
+      "module": "config",
+      "callable": "_check_fabric_ai_functions_available",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [],
+      "used_by_count": 0,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.config._check_spark_session": {
+      "module": "config",
+      "callable": "_check_spark_session",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.config._run_config_smoke_tests"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.config._configure_fabric_ai_functions": {
+      "module": "config",
+      "callable": "_configure_fabric_ai_functions",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [],
+      "used_by_count": 0,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.config._default_schema_text": {
+      "module": "config",
+      "callable": "_default_schema_text",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.config._load_schema"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.config._format_error_path": {
+      "module": "config",
+      "callable": "_format_error_path",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.config.validate_dataset_contract"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.config._get_fabric_runtime_metadata": {
+      "module": "config",
+      "callable": "_get_fabric_runtime_metadata",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.config._bootstrap_fabric_env",
+        "fabricops_kit.config._run_config_smoke_tests"
+      ],
+      "used_by_count": 2,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.config._get_store": {
+      "module": "config",
+      "callable": "_get_store",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.config._bootstrap_fabric_env",
+        "fabricops_kit.config._run_config_smoke_tests",
+        "fabricops_kit.config.setup_notebook",
+        "fabricops_kit.fabric_input_output.read_lakehouse_csv",
+        "fabricops_kit.fabric_input_output.read_lakehouse_excel",
+        "fabricops_kit.fabric_input_output.read_lakehouse_parquet",
+        "fabricops_kit.fabric_input_output.read_lakehouse_table",
+        "fabricops_kit.fabric_input_output.read_warehouse_table",
+        "fabricops_kit.fabric_input_output.write_lakehouse_table",
+        "fabricops_kit.fabric_input_output.write_warehouse_table"
+      ],
+      "used_by_count": 10,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.config._load_schema": {
+      "module": "config",
+      "callable": "_load_schema",
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.config._default_schema_text"
+      ],
+      "calls_count": 1,
+      "used_by": [
+        "fabricops_kit.config.validate_dataset_contract"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [
+        "fabricops_kit.config._default_schema_text"
+      ],
+      "internal_helper_count": 1
+    },
+    "fabricops_kit.config._normalize_name": {
+      "module": "config",
+      "callable": "_normalize_name",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.config._validate_notebook_name"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.config._run_config_smoke_tests": {
+      "module": "config",
+      "callable": "_run_config_smoke_tests",
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.config.ConfigSmokeCheckResult",
+        "fabricops_kit.config._check_spark_session",
+        "fabricops_kit.config._get_fabric_runtime_metadata",
+        "fabricops_kit.config._get_store",
+        "fabricops_kit.config._validate_notebook_name"
+      ],
+      "calls_count": 5,
+      "used_by": [
+        "fabricops_kit.config._bootstrap_fabric_env",
+        "fabricops_kit.config.setup_notebook"
+      ],
+      "used_by_count": 2,
+      "internal_helpers_used": [
+        "fabricops_kit.config._check_spark_session",
+        "fabricops_kit.config._get_fabric_runtime_metadata",
+        "fabricops_kit.config._get_store",
+        "fabricops_kit.config._validate_notebook_name"
+      ],
+      "internal_helper_count": 4
+    },
+    "fabricops_kit.config._validate_framework_config": {
+      "module": "config",
+      "callable": "_validate_framework_config",
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.config.FrameworkConfig",
+        "fabricops_kit.config.keys"
+      ],
+      "calls_count": 2,
+      "used_by": [
+        "fabricops_kit.config.load_config"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.config._validate_notebook_name": {
+      "module": "config",
+      "callable": "_validate_notebook_name",
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.config._normalize_name"
+      ],
+      "calls_count": 1,
+      "used_by": [
+        "fabricops_kit.config._run_config_smoke_tests"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [
+        "fabricops_kit.config._normalize_name"
+      ],
+      "internal_helper_count": 1
+    },
+    "fabricops_kit.config.assert_valid_dataset_contract": {
+      "module": "config",
+      "callable": "assert_valid_dataset_contract",
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.config.DatasetContractValidationError",
+        "fabricops_kit.config.validate_dataset_contract"
+      ],
+      "calls_count": 2,
+      "used_by": [],
+      "used_by_count": 0,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.config.load_and_validate_dataset_contract": {
+      "module": "config",
+      "callable": "load_and_validate_dataset_contract",
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.config.load_dataset_contract",
+        "fabricops_kit.config.validate_dataset_contract"
+      ],
+      "calls_count": 2,
+      "used_by": [],
+      "used_by_count": 0,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.config.load_config": {
+      "module": "config",
+      "callable": "load_config",
+      "classification": "essential",
+      "calls": [
+        "fabricops_kit.config._validate_framework_config"
+      ],
+      "calls_count": 1,
+      "used_by": [
+        "fabricops_kit.config._bootstrap_fabric_env",
+        "fabricops_kit.config.setup_notebook",
+        "fabricops_kit.fabric_input_output.load_config"
+      ],
+      "used_by_count": 3,
+      "internal_helpers_used": [
+        "fabricops_kit.config._validate_framework_config"
+      ],
+      "internal_helper_count": 1
+    },
+    "fabricops_kit.config.load_dataset_contract": {
+      "module": "config",
+      "callable": "load_dataset_contract",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.config.load_and_validate_dataset_contract"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.config.setup_notebook": {
+      "module": "config",
+      "callable": "setup_notebook",
+      "classification": "essential",
+      "calls": [
+        "fabricops_kit.config.NotebookSetupContext",
+        "fabricops_kit.config._get_store",
+        "fabricops_kit.config._run_config_smoke_tests",
+        "fabricops_kit.config.load_config"
+      ],
+      "calls_count": 4,
+      "used_by": [],
+      "used_by_count": 0,
+      "internal_helpers_used": [
+        "fabricops_kit.config._get_store",
+        "fabricops_kit.config._run_config_smoke_tests"
+      ],
+      "internal_helper_count": 2
+    },
+    "fabricops_kit.config.validate_dataset_contract": {
+      "module": "config",
+      "callable": "validate_dataset_contract",
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.config._format_error_path",
+        "fabricops_kit.config._load_schema"
+      ],
+      "calls_count": 2,
+      "used_by": [
+        "fabricops_kit.config.assert_valid_dataset_contract",
+        "fabricops_kit.config.load_and_validate_dataset_contract"
+      ],
+      "used_by_count": 2,
+      "internal_helpers_used": [
+        "fabricops_kit.config._format_error_path",
+        "fabricops_kit.config._load_schema"
+      ],
+      "internal_helper_count": 2
+    },
+    "fabricops_kit.fabric_input_output.FabricStore": {
+      "module": "fabric_input_output",
+      "callable": "FabricStore",
+      "classification": "optional",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [],
+      "used_by_count": 0,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.fabric_input_output._convert_single_parquet_ns_to_us": {
+      "module": "fabric_input_output",
+      "callable": "_convert_single_parquet_ns_to_us",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.fabric_input_output.read_lakehouse_parquet"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.fabric_input_output._get_fabric_runtime_context": {
+      "module": "fabric_input_output",
+      "callable": "_get_fabric_runtime_context",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.fabric_input_output.check_naming_convention"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.fabric_input_output._get_spark": {
+      "module": "fabric_input_output",
+      "callable": "_get_spark",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.fabric_input_output.read_lakehouse_csv",
+        "fabricops_kit.fabric_input_output.read_lakehouse_excel",
+        "fabricops_kit.fabric_input_output.read_lakehouse_parquet",
+        "fabricops_kit.fabric_input_output.read_lakehouse_table",
+        "fabricops_kit.fabric_input_output.read_warehouse_table",
+        "fabricops_kit.fabric_input_output.seed_minimal_sample_source_table"
+      ],
+      "used_by_count": 6,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.fabric_input_output.check_naming_convention": {
+      "module": "fabric_input_output",
+      "callable": "check_naming_convention",
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.fabric_input_output._get_fabric_runtime_context"
+      ],
+      "calls_count": 1,
+      "used_by": [],
+      "used_by_count": 0,
+      "internal_helpers_used": [
+        "fabricops_kit.fabric_input_output._get_fabric_runtime_context"
+      ],
+      "internal_helper_count": 1
+    },
+    "fabricops_kit.fabric_input_output.load_config": {
+      "module": "fabric_input_output",
+      "callable": "load_config",
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.config.load_config"
+      ],
+      "calls_count": 1,
+      "used_by": [],
+      "used_by_count": 0,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.fabric_input_output.read_lakehouse_csv": {
+      "module": "fabric_input_output",
+      "callable": "read_lakehouse_csv",
+      "classification": "optional",
+      "calls": [
+        "fabricops_kit.config._get_store",
+        "fabricops_kit.fabric_input_output._get_spark"
+      ],
+      "calls_count": 2,
+      "used_by": [],
+      "used_by_count": 0,
+      "internal_helpers_used": [
+        "fabricops_kit.fabric_input_output._get_spark"
+      ],
+      "internal_helper_count": 1
+    },
+    "fabricops_kit.fabric_input_output.read_lakehouse_excel": {
+      "module": "fabric_input_output",
+      "callable": "read_lakehouse_excel",
+      "classification": "optional",
+      "calls": [
+        "fabricops_kit.config._get_store",
+        "fabricops_kit.fabric_input_output._get_spark"
+      ],
+      "calls_count": 2,
+      "used_by": [],
+      "used_by_count": 0,
+      "internal_helpers_used": [
+        "fabricops_kit.fabric_input_output._get_spark"
+      ],
+      "internal_helper_count": 1
+    },
+    "fabricops_kit.fabric_input_output.read_lakehouse_parquet": {
+      "module": "fabric_input_output",
+      "callable": "read_lakehouse_parquet",
+      "classification": "optional",
+      "calls": [
+        "fabricops_kit.config._get_store",
+        "fabricops_kit.fabric_input_output._convert_single_parquet_ns_to_us",
+        "fabricops_kit.fabric_input_output._get_spark"
+      ],
+      "calls_count": 3,
+      "used_by": [],
+      "used_by_count": 0,
+      "internal_helpers_used": [
+        "fabricops_kit.fabric_input_output._convert_single_parquet_ns_to_us",
+        "fabricops_kit.fabric_input_output._get_spark"
+      ],
+      "internal_helper_count": 2
+    },
+    "fabricops_kit.fabric_input_output.read_lakehouse_table": {
+      "module": "fabric_input_output",
+      "callable": "read_lakehouse_table",
+      "classification": "essential",
+      "calls": [
+        "fabricops_kit.config._get_store",
+        "fabricops_kit.fabric_input_output._get_spark"
+      ],
+      "calls_count": 2,
+      "used_by": [],
+      "used_by_count": 0,
+      "internal_helpers_used": [
+        "fabricops_kit.fabric_input_output._get_spark"
+      ],
+      "internal_helper_count": 1
+    },
+    "fabricops_kit.fabric_input_output.read_warehouse_table": {
+      "module": "fabric_input_output",
+      "callable": "read_warehouse_table",
+      "classification": "essential",
+      "calls": [
+        "fabricops_kit.config._get_store",
+        "fabricops_kit.fabric_input_output._get_spark"
+      ],
+      "calls_count": 2,
+      "used_by": [],
+      "used_by_count": 0,
+      "internal_helpers_used": [
+        "fabricops_kit.fabric_input_output._get_spark"
+      ],
+      "internal_helper_count": 1
+    },
+    "fabricops_kit.fabric_input_output.seed_minimal_sample_source_table": {
+      "module": "fabric_input_output",
+      "callable": "seed_minimal_sample_source_table",
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.fabric_input_output._get_spark",
+        "fabricops_kit.fabric_input_output.write_lakehouse_table"
+      ],
+      "calls_count": 2,
+      "used_by": [],
+      "used_by_count": 0,
+      "internal_helpers_used": [
+        "fabricops_kit.fabric_input_output._get_spark"
+      ],
+      "internal_helper_count": 1
+    },
+    "fabricops_kit.fabric_input_output.write_lakehouse_table": {
+      "module": "fabric_input_output",
+      "callable": "write_lakehouse_table",
+      "classification": "essential",
+      "calls": [
+        "fabricops_kit.config._get_store"
+      ],
+      "calls_count": 1,
+      "used_by": [
+        "fabricops_kit.data_quality.write_dq_rules",
+        "fabricops_kit.fabric_input_output.seed_minimal_sample_source_table",
+        "fabricops_kit.metadata.write_metadata_rows"
+      ],
+      "used_by_count": 3,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.fabric_input_output.write_warehouse_table": {
+      "module": "fabric_input_output",
+      "callable": "write_warehouse_table",
+      "classification": "essential",
+      "calls": [
+        "fabricops_kit.config._get_store"
+      ],
+      "calls_count": 1,
+      "used_by": [],
+      "used_by_count": 0,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.metadata._context_get": {
+      "module": "metadata",
+      "callable": "_context_get",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.metadata._resolve_action_by",
+        "fabricops_kit.metadata._runtime_context",
+        "fabricops_kit.metadata.register_current_notebook"
+      ],
+      "used_by_count": 3,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.metadata._extract_columns_from_profile": {
+      "module": "metadata",
+      "callable": "_extract_columns_from_profile",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [],
+      "used_by_count": 0,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.metadata._key_part": {
+      "module": "metadata",
+      "callable": "_key_part",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.metadata._sha256_key"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.metadata._now_utc_iso": {
+      "module": "metadata",
+      "callable": "_now_utc_iso",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.data_governance.review_governance",
+        "fabricops_kit.data_quality._build_dq_rule_deactivation_metadata_df",
+        "fabricops_kit.data_quality._build_dq_rules_metadata_df",
+        "fabricops_kit.metadata.build_evidence_row"
+      ],
+      "used_by_count": 4,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.metadata._resolve_action_by": {
+      "module": "metadata",
+      "callable": "_resolve_action_by",
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.metadata._context_get",
+        "fabricops_kit.metadata._runtime_context"
+      ],
+      "calls_count": 2,
+      "used_by": [
+        "fabricops_kit.data_governance._approved_widget_rows",
+        "fabricops_kit.data_quality._build_dq_rule_deactivation_metadata_df",
+        "fabricops_kit.data_quality._build_dq_rule_deactivations",
+        "fabricops_kit.data_quality._build_dq_rule_history",
+        "fabricops_kit.data_quality._build_dq_rules_metadata_df"
+      ],
+      "used_by_count": 5,
+      "internal_helpers_used": [
+        "fabricops_kit.metadata._context_get",
+        "fabricops_kit.metadata._runtime_context"
+      ],
+      "internal_helper_count": 2
+    },
+    "fabricops_kit.metadata._runtime_context": {
+      "module": "metadata",
+      "callable": "_runtime_context",
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.metadata._context_get"
+      ],
+      "calls_count": 1,
+      "used_by": [
+        "fabricops_kit.metadata._resolve_action_by",
+        "fabricops_kit.metadata.register_current_notebook"
+      ],
+      "used_by_count": 2,
+      "internal_helpers_used": [
+        "fabricops_kit.metadata._context_get"
+      ],
+      "internal_helper_count": 1
+    },
+    "fabricops_kit.metadata._safe_str": {
+      "module": "metadata",
+      "callable": "_safe_str",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.metadata.register_current_notebook"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.metadata._sha256_key": {
+      "module": "metadata",
+      "callable": "_sha256_key",
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.metadata._key_part"
+      ],
+      "calls_count": 1,
+      "used_by": [
+        "fabricops_kit.metadata.build_dq_rule_key",
+        "fabricops_kit.metadata.build_metadata_column_key",
+        "fabricops_kit.metadata.build_metadata_table_key"
+      ],
+      "used_by_count": 3,
+      "internal_helpers_used": [
+        "fabricops_kit.metadata._key_part"
+      ],
+      "internal_helper_count": 1
+    },
+    "fabricops_kit.metadata.build_dq_rule_key": {
+      "module": "metadata",
+      "callable": "build_dq_rule_key",
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.metadata._sha256_key"
+      ],
+      "calls_count": 1,
+      "used_by": [
+        "fabricops_kit.data_quality._attach_rule_metadata_keys"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [
+        "fabricops_kit.metadata._sha256_key"
+      ],
+      "internal_helper_count": 1
+    },
+    "fabricops_kit.metadata.build_evidence_row": {
+      "module": "metadata",
+      "callable": "build_evidence_row",
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.metadata._now_utc_iso"
+      ],
+      "calls_count": 1,
+      "used_by": [],
+      "used_by_count": 0,
+      "internal_helpers_used": [
+        "fabricops_kit.metadata._now_utc_iso"
+      ],
+      "internal_helper_count": 1
+    },
+    "fabricops_kit.metadata.build_metadata_column_key": {
+      "module": "metadata",
+      "callable": "build_metadata_column_key",
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.metadata._sha256_key"
+      ],
+      "calls_count": 1,
+      "used_by": [
+        "fabricops_kit.business_context.review_business_context",
+        "fabricops_kit.data_governance.review_governance",
+        "fabricops_kit.data_quality._attach_rule_metadata_keys"
+      ],
+      "used_by_count": 3,
+      "internal_helpers_used": [
+        "fabricops_kit.metadata._sha256_key"
+      ],
+      "internal_helper_count": 1
+    },
+    "fabricops_kit.metadata.build_metadata_table_key": {
+      "module": "metadata",
+      "callable": "build_metadata_table_key",
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.metadata._sha256_key"
+      ],
+      "calls_count": 1,
+      "used_by": [
+        "fabricops_kit.business_context.review_business_context",
+        "fabricops_kit.data_governance.review_governance",
+        "fabricops_kit.data_quality._attach_rule_metadata_keys"
+      ],
+      "used_by_count": 3,
+      "internal_helpers_used": [
+        "fabricops_kit.metadata._sha256_key"
+      ],
+      "internal_helper_count": 1
+    },
+    "fabricops_kit.metadata.column_context_rows_for_spark": {
+      "module": "metadata",
+      "callable": "column_context_rows_for_spark",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.metadata.write_metadata_rows"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.metadata.default_evidence_types": {
+      "module": "metadata",
+      "callable": "default_evidence_types",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [],
+      "used_by_count": 0,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.metadata.load_notebook_registry": {
+      "module": "metadata",
+      "callable": "load_notebook_registry",
+      "classification": "essential",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [],
+      "used_by_count": 0,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.metadata.normalise_records_by_column": {
+      "module": "metadata",
+      "callable": "normalise_records_by_column",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [],
+      "used_by_count": 0,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.metadata.register_current_notebook": {
+      "module": "metadata",
+      "callable": "register_current_notebook",
+      "classification": "essential",
+      "calls": [
+        "fabricops_kit.metadata._context_get",
+        "fabricops_kit.metadata._runtime_context",
+        "fabricops_kit.metadata._safe_str",
+        "fabricops_kit.metadata.write_metadata_rows"
+      ],
+      "calls_count": 4,
+      "used_by": [],
+      "used_by_count": 0,
+      "internal_helpers_used": [
+        "fabricops_kit.metadata._context_get",
+        "fabricops_kit.metadata._runtime_context",
+        "fabricops_kit.metadata._safe_str"
+      ],
+      "internal_helper_count": 3
+    },
+    "fabricops_kit.metadata.write_column_business_context": {
+      "module": "metadata",
+      "callable": "write_column_business_context",
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.metadata.write_metadata_rows"
+      ],
+      "calls_count": 1,
+      "used_by": [
+        "fabricops_kit.business_context.write_business_context"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.metadata.write_column_governance_context": {
+      "module": "metadata",
+      "callable": "write_column_governance_context",
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.metadata.write_metadata_rows"
+      ],
+      "calls_count": 1,
+      "used_by": [],
+      "used_by_count": 0,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.metadata.write_metadata_rows": {
+      "module": "metadata",
+      "callable": "write_metadata_rows",
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.fabric_input_output.write_lakehouse_table",
+        "fabricops_kit.metadata.column_context_rows_for_spark"
+      ],
+      "calls_count": 2,
+      "used_by": [
+        "fabricops_kit.metadata.register_current_notebook",
+        "fabricops_kit.metadata.write_column_business_context",
+        "fabricops_kit.metadata.write_column_governance_context"
+      ],
+      "used_by_count": 3,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
     },
     "fabricops_kit.handover._status_of": {
       "module": "handover",

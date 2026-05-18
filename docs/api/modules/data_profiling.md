@@ -63,7 +63,7 @@ Owns deterministic profiling evidence such as schema, nulls, distincts, min/max,
 </table>
 </div>
 
-### Inside this module, used by, and uses
+### Callable relationships
 
 <div class="module-mermaid-scroll module-diagram-desktop">
 ```mermaid
@@ -88,6 +88,7 @@ flowchart LR
   fabricops_kit_data_profiling_profile_dataframe --> fabricops_kit_data_profiling__is_min_max_supported_type
   fabricops_kit_data_quality__prepare_dq_profile_input_rows --> fabricops_kit_data_profiling_profile_dataframe
   class m_data_profiling currentModule;
+  class m_data_quality,m_technical_columns externalModule;
   class fabricops_kit_data_profiling__get_profiled_columns,fabricops_kit_data_profiling__is_min_max_supported_type,fabricops_kit_data_profiling_profile_dataframe currentCallable;
   class fabricops_kit_data_quality__prepare_dq_profile_input_rows,fabricops_kit_technical_columns__default_technical_columns externalCallable;
 ```
@@ -100,12 +101,12 @@ flowchart LR
 <a class="reference-chip" href="../../reference/profile_dataframe/"><code>profile_dataframe</code></a> → <a class="reference-chip" href="../modules/data_profiling/#_get_profiled_columns"><code>_get_profiled_columns</code></a>
 <a class="reference-chip" href="../../reference/profile_dataframe/"><code>profile_dataframe</code></a> → <a class="reference-chip" href="../modules/data_profiling/#_is_min_max_supported_type"><code>_is_min_max_supported_type</code></a>
 </div>
-#### Used by
+#### Used by other modules
 
 <div class="callable-chip-group">
 <a class="reference-chip" href="../modules/data_quality/#_prepare_dq_profile_input_rows"><code>_prepare_dq_profile_input_rows</code></a> → <a class="reference-chip" href="../../reference/profile_dataframe/"><code>profile_dataframe</code></a>
 </div>
-#### Uses
+#### Uses other modules
 
 <div class="callable-chip-group">
 <a class="reference-chip" href="../modules/data_profiling/#_get_profiled_columns"><code>_get_profiled_columns</code></a> → <a class="reference-chip" href="../modules/technical_columns/#_default_technical_columns"><code>_default_technical_columns</code></a>

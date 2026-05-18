@@ -119,7 +119,7 @@ Owns source-to-target lineage and transformation evidence.
 
 </details>
 
-### Inside this module, used by, and uses
+### Callable relationships
 
 <div class="module-mermaid-scroll module-diagram-desktop">
 ```mermaid
@@ -175,10 +175,10 @@ flowchart LR
 <a class="reference-chip" href="../modules/data_lineage/#_scan_notebook_lineage"><code>_scan_notebook_lineage</code></a> → <a class="reference-chip" href="../modules/data_lineage/#_resolve_write_target"><code>_resolve_write_target</code></a>
 <a class="reference-chip" href="../modules/data_lineage/#_scan_notebook_lineage"><code>_scan_notebook_lineage</code></a> → <a class="reference-chip" href="../modules/data_lineage/#_step"><code>_step</code></a>
 </div>
-#### Used by
+#### Used by other modules
 
 None.
-#### Uses
+#### Uses other modules
 
 None.
 </div>

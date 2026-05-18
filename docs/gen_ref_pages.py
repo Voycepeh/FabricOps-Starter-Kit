@@ -228,13 +228,13 @@ for row in sorted(public_symbol_docs, key=lambda item: item["symbol_name"]):
         if module_neighbors:
             relationship_rows.append(("Inside this module", ', '.join(_link_md(c, current_module=module_name) for c in module_neighbors)))
         if referenced_by:
-            relationship_rows.append(("Used by", ', '.join(_link_md(c, current_module=module_name) for c in referenced_by)))
+            relationship_rows.append(("Used by other modules", ', '.join(_link_md(c, current_module=module_name) for c in referenced_by)))
         if outbound_edges:
-            relationship_rows.append(("Uses", ', '.join(_link_md(c, current_module=module_name) for c in outbound_edges)))
+            relationship_rows.append(("Uses other modules", ', '.join(_link_md(c, current_module=module_name) for c in outbound_edges)))
 
         show_mermaid = bool(inbound_edges or outbound_edges)
         if show_mermaid:
-            fd.write("## Inside this module, used by, and uses\n\n")
+            fd.write("## Callable relationships\n\n")
             fd.write('<div class="module-mermaid-scroll">\n\n')
             fd.write("```mermaid\nflowchart LR\n")
             fd.write("  classDef currentModule fill:#fff3e0,stroke:#ef6c00,stroke-width:3px,color:#3e2723;\n")
@@ -275,7 +275,7 @@ for row in sorted(public_symbol_docs, key=lambda item: item["symbol_name"]):
                 fd.write(f"  class {','.join(outbound_helper_ids)} externalCallable;\n")
             fd.write("```\n\n")
             fd.write("</div>\n\n")
-            fd.write("- **Terms:** Inside this module · Used by · Uses\n\n")
+            fd.write("- **Terms:** Inside this module · Used by other modules · Uses other modules\n\n")
 
         if relationship_rows:
             fd.write("## Callable relationships\n\n")

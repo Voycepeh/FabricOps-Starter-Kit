@@ -94,7 +94,7 @@ Owns metadata/contract store access, evidence persistence, agreement metadata, n
 </table>
 </div>
 
-### Inside this module, used by, and uses
+### Callable relationships
 
 <div class="module-mermaid-scroll module-diagram-desktop">
 ```mermaid
@@ -172,6 +172,7 @@ flowchart LR
   fabricops_kit_metadata_write_metadata_rows --> fabricops_kit_fabric_input_output_write_lakehouse_table
   fabricops_kit_metadata_write_metadata_rows --> fabricops_kit_metadata_column_context_rows_for_spark
   class m_metadata currentModule;
+  class m_business_context,m_data_governance,m_data_quality,m_fabric_input_output externalModule;
   class fabricops_kit_metadata__context_get,fabricops_kit_metadata__key_part,fabricops_kit_metadata__now_utc_iso,fabricops_kit_metadata__resolve_action_by,fabricops_kit_metadata__runtime_context,fabricops_kit_metadata__safe_str,fabricops_kit_metadata__sha256_key,fabricops_kit_metadata_build_dq_rule_key,fabricops_kit_metadata_build_evidence_row,fabricops_kit_metadata_build_metadata_column_key,fabricops_kit_metadata_build_metadata_table_key,fabricops_kit_metadata_column_context_rows_for_spark,fabricops_kit_metadata_register_current_notebook,fabricops_kit_metadata_write_column_business_context,fabricops_kit_metadata_write_column_governance_context,fabricops_kit_metadata_write_metadata_rows currentCallable;
   class fabricops_kit_business_context_review_business_context,fabricops_kit_business_context_write_business_context,fabricops_kit_data_governance__approved_widget_rows,fabricops_kit_data_governance_review_governance,fabricops_kit_data_quality__attach_rule_metadata_keys,fabricops_kit_data_quality__build_dq_rule_deactivation_metadata_df,fabricops_kit_data_quality__build_dq_rule_deactivations,fabricops_kit_data_quality__build_dq_rule_history,fabricops_kit_data_quality__build_dq_rules_metadata_df,fabricops_kit_fabric_input_output_write_lakehouse_table externalCallable;
 ```
@@ -197,7 +198,7 @@ flowchart LR
 <a class="reference-chip" href="../modules/metadata/#write_column_governance_context"><code>write_column_governance_context</code></a> → <a class="reference-chip" href="../modules/metadata/#write_metadata_rows"><code>write_metadata_rows</code></a>
 <a class="reference-chip" href="../modules/metadata/#write_metadata_rows"><code>write_metadata_rows</code></a> → <a class="reference-chip" href="../modules/metadata/#column_context_rows_for_spark"><code>column_context_rows_for_spark</code></a>
 </div>
-#### Used by
+#### Used by other modules
 
 <div class="callable-chip-group">
 <a class="reference-chip" href="../../reference/review_business_context/"><code>review_business_context</code></a> → <a class="reference-chip" href="../modules/metadata/#build_metadata_column_key"><code>build_metadata_column_key</code></a>
@@ -217,7 +218,7 @@ flowchart LR
 <a class="reference-chip" href="../modules/data_quality/#_build_dq_rules_metadata_df"><code>_build_dq_rules_metadata_df</code></a> → <a class="reference-chip" href="../modules/metadata/#_now_utc_iso"><code>_now_utc_iso</code></a>
 <a class="reference-chip" href="../modules/data_quality/#_build_dq_rules_metadata_df"><code>_build_dq_rules_metadata_df</code></a> → <a class="reference-chip" href="../modules/metadata/#_resolve_action_by"><code>_resolve_action_by</code></a>
 </div>
-#### Uses
+#### Uses other modules
 
 <div class="callable-chip-group">
 <a class="reference-chip" href="../modules/metadata/#write_metadata_rows"><code>write_metadata_rows</code></a> → <a class="reference-chip" href="../../reference/write_lakehouse_table/"><code>write_lakehouse_table</code></a>

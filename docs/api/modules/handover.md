@@ -66,7 +66,7 @@ Owns generated maintainer-facing handover and contract narrative output.
 </table>
 </div>
 
-### Inside this module, used by, and uses
+### Callable relationships
 
 <div class="module-mermaid-scroll module-diagram-desktop">
 ```mermaid
@@ -96,10 +96,10 @@ flowchart LR
 <a class="reference-chip" href="../modules/handover/#build_handover_record"><code>build_handover_record</code></a> → <a class="reference-chip" href="../../reference/render_handover_markdown/"><code>render_handover_markdown</code></a>
 <a class="reference-chip" href="../../reference/render_handover_markdown/"><code>render_handover_markdown</code></a> → <a class="reference-chip" href="../modules/handover/#_status_of"><code>_status_of</code></a>
 </div>
-#### Used by
+#### Used by other modules
 
 None.
-#### Uses
+#### Uses other modules
 
 None.
 </div>

@@ -119,7 +119,7 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
 
 </details>
 
-### Inside this module, used by, and uses
+### Callable relationships
 
 <div class="module-mermaid-scroll module-diagram-desktop">
 ```mermaid
@@ -185,6 +185,7 @@ flowchart LR
   fabricops_kit_fabric_input_output_write_lakehouse_table --> fabricops_kit_config__get_store
   fabricops_kit_fabric_input_output_write_warehouse_table --> fabricops_kit_config__get_store
   class m_config currentModule;
+  class m_fabric_input_output externalModule;
   class fabricops_kit_config__bootstrap_fabric_env,fabricops_kit_config__check_spark_session,fabricops_kit_config__default_schema_text,fabricops_kit_config__format_error_path,fabricops_kit_config__get_fabric_runtime_metadata,fabricops_kit_config__get_store,fabricops_kit_config__load_schema,fabricops_kit_config__normalize_name,fabricops_kit_config__run_config_smoke_tests,fabricops_kit_config__validate_framework_config,fabricops_kit_config__validate_notebook_name,fabricops_kit_config_assert_valid_dataset_contract,fabricops_kit_config_load_and_validate_dataset_contract,fabricops_kit_config_load_config,fabricops_kit_config_load_dataset_contract,fabricops_kit_config_setup_notebook,fabricops_kit_config_validate_dataset_contract currentCallable;
   class fabricops_kit_fabric_input_output_load_config,fabricops_kit_fabric_input_output_read_lakehouse_csv,fabricops_kit_fabric_input_output_read_lakehouse_excel,fabricops_kit_fabric_input_output_read_lakehouse_parquet,fabricops_kit_fabric_input_output_read_lakehouse_table,fabricops_kit_fabric_input_output_read_warehouse_table,fabricops_kit_fabric_input_output_write_lakehouse_table,fabricops_kit_fabric_input_output_write_warehouse_table externalCallable;
 ```
@@ -214,7 +215,7 @@ flowchart LR
 <a class="reference-chip" href="../modules/config/#validate_dataset_contract"><code>validate_dataset_contract</code></a> → <a class="reference-chip" href="../modules/config/#_format_error_path"><code>_format_error_path</code></a>
 <a class="reference-chip" href="../modules/config/#validate_dataset_contract"><code>validate_dataset_contract</code></a> → <a class="reference-chip" href="../modules/config/#_load_schema"><code>_load_schema</code></a>
 </div>
-#### Used by
+#### Used by other modules
 
 <div class="callable-chip-group">
 <a class="reference-chip" href="../../reference/load_config/"><code>load_config</code></a> → <a class="reference-chip" href="../../reference/load_config/"><code>load_config</code></a>
@@ -226,7 +227,7 @@ flowchart LR
 <a class="reference-chip" href="../../reference/write_lakehouse_table/"><code>write_lakehouse_table</code></a> → <a class="reference-chip" href="../modules/config/#_get_store"><code>_get_store</code></a>
 <a class="reference-chip" href="../../reference/write_warehouse_table/"><code>write_warehouse_table</code></a> → <a class="reference-chip" href="../modules/config/#_get_store"><code>_get_store</code></a>
 </div>
-#### Uses
+#### Uses other modules
 
 None.
 </div>

@@ -106,7 +106,7 @@ Owns business meaning for tables and columns.
 </table>
 </div>
 
-### Inside this module, used by, and uses
+### Callable relationships
 
 <div class="module-mermaid-scroll module-diagram-desktop">
 ```mermaid
@@ -138,6 +138,7 @@ flowchart LR
   fabricops_kit_business_context_review_business_context --> fabricops_kit_metadata_build_metadata_table_key
   fabricops_kit_business_context_write_business_context --> fabricops_kit_metadata_write_column_business_context
   class m_business_context currentModule;
+  class m_metadata externalModule;
   class fabricops_kit_business_context__extract_column_business_context_suggestions,fabricops_kit_business_context__parse_ai_dict_response,fabricops_kit_business_context__prepare_business_context_profile_input,fabricops_kit_business_context__require_ipywidgets,fabricops_kit_business_context_extract_column_business_context_suggestions,fabricops_kit_business_context_prepare_business_context_profile_input,fabricops_kit_business_context_review_business_context,fabricops_kit_business_context_write_business_context currentCallable;
   class fabricops_kit_metadata_build_metadata_column_key,fabricops_kit_metadata_build_metadata_table_key,fabricops_kit_metadata_write_column_business_context externalCallable;
 ```
@@ -152,10 +153,10 @@ flowchart LR
 <a class="reference-chip" href="../../reference/prepare_business_context_profile_input/"><code>prepare_business_context_profile_input</code></a> → <a class="reference-chip" href="../modules/business_context/#_prepare_business_context_profile_input"><code>_prepare_business_context_profile_input</code></a>
 <a class="reference-chip" href="../../reference/review_business_context/"><code>review_business_context</code></a> → <a class="reference-chip" href="../modules/business_context/#_require_ipywidgets"><code>_require_ipywidgets</code></a>
 </div>
-#### Used by
+#### Used by other modules
 
 None.
-#### Uses
+#### Uses other modules
 
 <div class="callable-chip-group">
 <a class="reference-chip" href="../../reference/review_business_context/"><code>review_business_context</code></a> → <a class="reference-chip" href="../modules/metadata/#build_metadata_column_key"><code>build_metadata_column_key</code></a>

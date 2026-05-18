@@ -205,7 +205,7 @@ Split a Spark DataFrame into pass/quarantine outputs for row-level DQ rules.
 
 </details>
 
-### Inside this module, used by, and uses
+### Callable relationships
 
 <div class="module-mermaid-scroll module-diagram-desktop">
 ```mermaid
@@ -288,6 +288,7 @@ flowchart LR
   fabricops_kit_data_quality_write_dq_rules --> fabricops_kit_data_quality_validate_dq_rules
   fabricops_kit_data_quality_write_dq_rules --> fabricops_kit_fabric_input_output_write_lakehouse_table
   class m_data_quality currentModule;
+  class m_data_profiling,m_fabric_input_output,m_metadata externalModule;
   class fabricops_kit_data_quality__attach_rule_metadata_keys,fabricops_kit_data_quality__build_dq_rule_deactivation_metadata_df,fabricops_kit_data_quality__build_dq_rule_deactivations,fabricops_kit_data_quality__build_dq_rule_history,fabricops_kit_data_quality__build_dq_rules_metadata_df,fabricops_kit_data_quality__extract_candidate_rules_from_responses,fabricops_kit_data_quality__extract_dq_rules,fabricops_kit_data_quality__latest_dq_rule_versions,fabricops_kit_data_quality__load_active_dq_rule_metadata,fabricops_kit_data_quality__load_active_dq_rules,fabricops_kit_data_quality__parse_dq_rules_dict_from_text,fabricops_kit_data_quality__prepare_dq_profile_input_rows,fabricops_kit_data_quality__require_ipywidgets,fabricops_kit_data_quality__run_dq_rules,fabricops_kit_data_quality__split_dq_rows,fabricops_kit_data_quality__suggest_dq_rules,fabricops_kit_data_quality_draft_dq_rules,fabricops_kit_data_quality_enforce_dq,fabricops_kit_data_quality_get_dq_review_results,fabricops_kit_data_quality_load_dq_rules,fabricops_kit_data_quality_review_dq_rule_deactivations,fabricops_kit_data_quality_review_dq_rules,fabricops_kit_data_quality_run_dq_rule_review_widget,fabricops_kit_data_quality_validate_dq_rules,fabricops_kit_data_quality_write_dq_rules currentCallable;
   class fabricops_kit_data_profiling_profile_dataframe,fabricops_kit_fabric_input_output_write_lakehouse_table,fabricops_kit_metadata__now_utc_iso,fabricops_kit_metadata__resolve_action_by,fabricops_kit_metadata_build_dq_rule_key,fabricops_kit_metadata_build_metadata_column_key,fabricops_kit_metadata_build_metadata_table_key externalCallable;
 ```
@@ -320,10 +321,10 @@ flowchart LR
 <a class="reference-chip" href="../../reference/write_dq_rules/"><code>write_dq_rules</code></a> → <a class="reference-chip" href="../modules/data_quality/#_build_dq_rule_history"><code>_build_dq_rule_history</code></a>
 <a class="reference-chip" href="../../reference/write_dq_rules/"><code>write_dq_rules</code></a> → <a class="reference-chip" href="../../reference/validate_dq_rules/"><code>validate_dq_rules</code></a>
 </div>
-#### Used by
+#### Used by other modules
 
 None.
-#### Uses
+#### Uses other modules
 
 <div class="callable-chip-group">
 <a class="reference-chip" href="../modules/data_quality/#_attach_rule_metadata_keys"><code>_attach_rule_metadata_keys</code></a> → <a class="reference-chip" href="../modules/metadata/#build_dq_rule_key"><code>build_dq_rule_key</code></a>

@@ -109,7 +109,7 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
 </table>
 </div>
 
-### Inside this module, used by, and uses
+### Callable relationships
 
 <div class="module-mermaid-scroll module-diagram-desktop">
 ```mermaid
@@ -163,6 +163,7 @@ flowchart LR
   fabricops_kit_fabric_input_output_write_warehouse_table --> fabricops_kit_config__get_store
   fabricops_kit_metadata_write_metadata_rows --> fabricops_kit_fabric_input_output_write_lakehouse_table
   class m_fabric_input_output currentModule;
+  class m_config,m_data_quality,m_metadata externalModule;
   class fabricops_kit_fabric_input_output__convert_single_parquet_ns_to_us,fabricops_kit_fabric_input_output__get_fabric_runtime_context,fabricops_kit_fabric_input_output__get_spark,fabricops_kit_fabric_input_output_check_naming_convention,fabricops_kit_fabric_input_output_load_config,fabricops_kit_fabric_input_output_read_lakehouse_csv,fabricops_kit_fabric_input_output_read_lakehouse_excel,fabricops_kit_fabric_input_output_read_lakehouse_parquet,fabricops_kit_fabric_input_output_read_lakehouse_table,fabricops_kit_fabric_input_output_read_warehouse_table,fabricops_kit_fabric_input_output_seed_minimal_sample_source_table,fabricops_kit_fabric_input_output_write_lakehouse_table,fabricops_kit_fabric_input_output_write_warehouse_table currentCallable;
   class fabricops_kit_config__get_store,fabricops_kit_config_load_config,fabricops_kit_data_quality_write_dq_rules,fabricops_kit_metadata_write_metadata_rows externalCallable;
 ```
@@ -182,13 +183,13 @@ flowchart LR
 <a class="reference-chip" href="../modules/fabric_input_output/#seed_minimal_sample_source_table"><code>seed_minimal_sample_source_table</code></a> → <a class="reference-chip" href="../modules/fabric_input_output/#_get_spark"><code>_get_spark</code></a>
 <a class="reference-chip" href="../modules/fabric_input_output/#seed_minimal_sample_source_table"><code>seed_minimal_sample_source_table</code></a> → <a class="reference-chip" href="../../reference/write_lakehouse_table/"><code>write_lakehouse_table</code></a>
 </div>
-#### Used by
+#### Used by other modules
 
 <div class="callable-chip-group">
 <a class="reference-chip" href="../../reference/write_dq_rules/"><code>write_dq_rules</code></a> → <a class="reference-chip" href="../../reference/write_lakehouse_table/"><code>write_lakehouse_table</code></a>
 <a class="reference-chip" href="../modules/metadata/#write_metadata_rows"><code>write_metadata_rows</code></a> → <a class="reference-chip" href="../../reference/write_lakehouse_table/"><code>write_lakehouse_table</code></a>
 </div>
-#### Uses
+#### Uses other modules
 
 <div class="callable-chip-group">
 <a class="reference-chip" href="../../reference/load_config/"><code>load_config</code></a> → <a class="reference-chip" href="../../reference/load_config/"><code>load_config</code></a>

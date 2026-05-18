@@ -137,7 +137,7 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
 
 </details>
 
-### Inside this module, used by, and uses
+### Callable relationships
 
 <div class="module-mermaid-scroll module-diagram-desktop">
 ```mermaid
@@ -222,6 +222,7 @@ flowchart LR
   fabricops_kit_drift_load_latest_schema_snapshot --> fabricops_kit_drift__is_missing_table_error
   fabricops_kit_drift_load_latest_schema_snapshot --> fabricops_kit_drift__safe_spark_collect
   class m_drift currentModule;
+  class m__utils externalModule;
   class fabricops_kit_drift__build_pandas_partition_snapshot,fabricops_kit_drift__build_pandas_schema_snapshot,fabricops_kit_drift__build_partition_hash,fabricops_kit_drift__build_spark_partition_snapshot,fabricops_kit_drift__build_spark_schema_snapshot,fabricops_kit_drift__column_hash,fabricops_kit_drift__hash,fabricops_kit_drift__is_closed_partition,fabricops_kit_drift__is_missing_table_error,fabricops_kit_drift__json_dumps,fabricops_kit_drift__resolve_change_behavior,fabricops_kit_drift__safe_spark_collect,fabricops_kit_drift__utc_now_iso,fabricops_kit_drift__write_metadata_rows,fabricops_kit_drift_build_and_write_partition_snapshot,fabricops_kit_drift_build_and_write_schema_snapshot,fabricops_kit_drift_build_drift_evidence_record,fabricops_kit_drift_build_incremental_safety_records,fabricops_kit_drift_build_partition_snapshot,fabricops_kit_drift_build_schema_snapshot,fabricops_kit_drift_check_partition_drift,fabricops_kit_drift_check_schema_drift,fabricops_kit_drift_compare_partition_snapshots,fabricops_kit_drift_compare_schema_snapshots,fabricops_kit_drift_default_incremental_safety_policy,fabricops_kit_drift_default_schema_drift_policy,fabricops_kit_drift_detect_dataframe_engine,fabricops_kit_drift_load_latest_partition_snapshot,fabricops_kit_drift_load_latest_schema_snapshot currentCallable;
   class fabricops_kit__utils__to_jsonable externalCallable;
 ```
@@ -268,10 +269,10 @@ flowchart LR
 <a class="reference-chip" href="../modules/drift/#load_latest_schema_snapshot"><code>load_latest_schema_snapshot</code></a> → <a class="reference-chip" href="../modules/drift/#_is_missing_table_error"><code>_is_missing_table_error</code></a>
 <a class="reference-chip" href="../modules/drift/#load_latest_schema_snapshot"><code>load_latest_schema_snapshot</code></a> → <a class="reference-chip" href="../modules/drift/#_safe_spark_collect"><code>_safe_spark_collect</code></a>
 </div>
-#### Used by
+#### Used by other modules
 
 None.
-#### Uses
+#### Uses other modules
 
 <div class="callable-chip-group">
 <a class="reference-chip" href="../modules/drift/#_build_pandas_partition_snapshot"><code>_build_pandas_partition_snapshot</code></a> → <a class="reference-chip" href="../modules/_utils/#_to_jsonable"><code>_to_jsonable</code></a>

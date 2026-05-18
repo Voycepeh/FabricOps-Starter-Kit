@@ -690,7 +690,7 @@ def main() -> None:
             if _is_callable_edge(e) and (_module_name(e["caller_qualified_name"]) == actual_module or _module_name(e["callee_qualified_name"]) == actual_module)
         ]
         module_edge_pairs = sorted(set(module_edges))
-        lines.extend(["", "### Inside this module, used by, and uses", ""])
+        lines.extend(["", "### Callable relationships", ""])
         if module_edge_pairs:
             lines.extend(['<div class="module-mermaid-scroll module-diagram-desktop">', "```mermaid", "flowchart LR"])
             lines.extend([
@@ -709,6 +709,9 @@ def main() -> None:
             for src_qn, dst_qn in module_edge_pairs[:120]:
                 lines.append(f"  {src_qn.replace('.', '_')} --> {dst_qn.replace('.', '_')}")
             lines.append(f"  class m_{actual_module} currentModule;")
+            external_modules = [mod for mod in rendered_modules if mod != actual_module]
+            if external_modules:
+                lines.append(f"  class {','.join(f'm_{mod}' for mod in external_modules)} externalModule;")
             current_nodes = [qn.replace(".", "_") for qn in sorted({x for pair in module_edge_pairs for x in pair if _module_name(x) == actual_module})]
             if current_nodes:
                 lines.append(f"  class {','.join(current_nodes)} currentCallable;")
@@ -720,7 +723,7 @@ def main() -> None:
             inside_rows = [(s, d) for s, d in module_edge_pairs if _module_name(s) == actual_module and _module_name(d) == actual_module]
             used_by_rows = [(s, d) for s, d in module_edge_pairs if _module_name(s) != actual_module and _module_name(d) == actual_module]
             uses_rows = [(s, d) for s, d in module_edge_pairs if _module_name(s) == actual_module and _module_name(d) != actual_module]
-            for heading, rows in [("Inside this module", inside_rows), ("Used by", used_by_rows), ("Uses", uses_rows)]:
+            for heading, rows in [("Inside this module", inside_rows), ("Used by other modules", used_by_rows), ("Uses other modules", uses_rows)]:
                 lines.extend([f"#### {heading}", ""])
                 if not rows:
                     lines.append("None.")

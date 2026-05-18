@@ -114,7 +114,7 @@ Owns sensitivity, PII, confidentiality, policy labels, and governance approval e
 </table>
 </div>
 
-### Inside this module, used by, and uses
+### Callable relationships
 
 <div class="module-mermaid-scroll module-diagram-desktop">
 ```mermaid
@@ -151,6 +151,7 @@ flowchart LR
   fabricops_kit_data_governance_review_governance --> fabricops_kit_metadata_build_metadata_table_key
   fabricops_kit_data_governance_write_governance --> fabricops_kit_data_governance__approved_widget_rows
   class m_data_governance currentModule;
+  class m_metadata externalModule;
   class fabricops_kit_data_governance__approved_widget_rows,fabricops_kit_data_governance__coerce_row_dicts,fabricops_kit_data_governance__extract_pii_suggestions,fabricops_kit_data_governance__prepare_governance_input,fabricops_kit_data_governance__undo_last_action,fabricops_kit_data_governance_extract_governance_suggestions,fabricops_kit_data_governance_load_governance,fabricops_kit_data_governance_prepare_governance_input,fabricops_kit_data_governance_review_governance,fabricops_kit_data_governance_write_governance currentCallable;
   class fabricops_kit_metadata__now_utc_iso,fabricops_kit_metadata__resolve_action_by,fabricops_kit_metadata_build_metadata_column_key,fabricops_kit_metadata_build_metadata_table_key externalCallable;
 ```
@@ -166,10 +167,10 @@ flowchart LR
 <a class="reference-chip" href="../../reference/review_governance/"><code>review_governance</code></a> → <a class="reference-chip" href="../modules/data_governance/#_undo_last_action"><code>_undo_last_action</code></a>
 <a class="reference-chip" href="../../reference/write_governance/"><code>write_governance</code></a> → <a class="reference-chip" href="../modules/data_governance/#_approved_widget_rows"><code>_approved_widget_rows</code></a>
 </div>
-#### Used by
+#### Used by other modules
 
 None.
-#### Uses
+#### Uses other modules
 
 <div class="callable-chip-group">
 <a class="reference-chip" href="../modules/data_governance/#_approved_widget_rows"><code>_approved_widget_rows</code></a> → <a class="reference-chip" href="../modules/metadata/#_resolve_action_by"><code>_resolve_action_by</code></a>

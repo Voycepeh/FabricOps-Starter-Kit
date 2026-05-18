@@ -81,7 +81,7 @@ Owns agreement discovery and selection helpers used to anchor notebook workflows
 </table>
 </div>
 
-### Inside this module, used by, and uses
+### Callable relationships
 
 <div class="module-mermaid-scroll module-diagram-desktop">
 ```mermaid
@@ -115,10 +115,10 @@ flowchart LR
 <a class="reference-chip" href="../../reference/select_agreement/"><code>select_agreement</code></a> → <a class="reference-chip" href="../modules/data_agreement/#_agreement_option_label"><code>_agreement_option_label</code></a>
 <a class="reference-chip" href="../../reference/select_agreement/"><code>select_agreement</code></a> → <a class="reference-chip" href="../modules/data_agreement/#_coerce_row_dicts"><code>_coerce_row_dicts</code></a>
 </div>
-#### Used by
+#### Used by other modules
 
 None.
-#### Uses
+#### Uses other modules
 
 None.
 </div>
