@@ -4,11 +4,56 @@ import types
 
 import fabricops_kit
 from fabricops_kit.config import setup_notebook
+from fabricops_kit.docs_metadata import PUBLIC_SYMBOL_DOCS
 
 
 def test_all_exports_are_importable():
     for name in fabricops_kit.__all__:
         assert hasattr(fabricops_kit, name), f"Missing export: {name}"
+
+
+def test_public_symbol_docs_align_with_all_and_package_root():
+    documented = {row["symbol_name"] for row in PUBLIC_SYMBOL_DOCS}
+    exported = set(fabricops_kit.__all__)
+    allowed_not_documented = {"__version__"}
+
+    missing_from_all = documented - exported
+    assert not missing_from_all, f"PUBLIC_SYMBOL_DOCS symbols missing from __all__: {sorted(missing_from_all)}"
+
+    missing_from_root = {name for name in documented if not hasattr(fabricops_kit, name)}
+    assert not missing_from_root, f"PUBLIC_SYMBOL_DOCS symbols missing from fabricops_kit root: {sorted(missing_from_root)}"
+
+    undocumented_exports = exported - documented - allowed_not_documented
+    assert not undocumented_exports, f"__all__ symbols missing from PUBLIC_SYMBOL_DOCS: {sorted(undocumented_exports)}"
+
+
+def test_package_root_does_not_expose_internal_helpers():
+    allowed_dunders = {"__version__", "__all__", "__doc__", "__file__", "__name__", "__package__", "__path__", "__spec__", "__cached__", "__builtins__"}
+
+    for name in fabricops_kit.__all__:
+        assert not name.startswith("_"), f"__all__ should not contain internal symbol: {name}"
+
+    leaked_internal_callables = []
+    for name, value in vars(fabricops_kit).items():
+        if not name.startswith("_") or name in allowed_dunders:
+            continue
+        if not callable(value):
+            continue
+        module_name = getattr(value, "__module__", "")
+        if module_name.startswith("fabricops_kit"):
+            leaked_internal_callables.append((name, module_name))
+
+    assert not leaked_internal_callables, f"Leaked internal callables at package root: {leaked_internal_callables}"
+
+    explicitly_blocked = {
+        "_parse_dq_rules_dict_from_text",
+        "_prepare_dq_profile_input_rows",
+        "_add_audit_columns",
+        "_add_datetime_features",
+        "_add_hash_columns",
+    }
+    leaked_blocked = [name for name in explicitly_blocked if hasattr(fabricops_kit, name)]
+    assert not leaked_blocked, f"Internal helpers must not be importable from package root: {sorted(leaked_blocked)}"
 
 
 def _sample_config():

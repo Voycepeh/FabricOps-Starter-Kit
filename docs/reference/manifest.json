@@ -507,6 +507,18 @@
       "template_segment": "\u2014"
     },
     {
+      "module_name": "data_quality",
+      "visibility": "public",
+      "module_summary": "Owns DQ rule drafting, review, enforcement, quarantine, and quality results.",
+      "sidebar_group": "2. Analyst / data scientist",
+      "sidebar_include": true,
+      "callable_name": "run_dq_rule_review_widget",
+      "callable_visibility": "public",
+      "callable_role": "optional",
+      "template_notebook": "\u2014",
+      "template_segment": "\u2014"
+    },
+    {
       "module_name": "data_agreement",
       "visibility": "public",
       "module_summary": "Owns agreement discovery and selection helpers used to anchor notebook workflows to approved business agreements.",

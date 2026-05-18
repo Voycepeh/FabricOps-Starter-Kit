@@ -98,7 +98,7 @@ def _bucket_values_pandas(series: pd.Series, bucket_size: int) -> tuple[pd.Serie
     return hashes % bucket_size, hashes % 1_000_000
 
 
-def __add_datetime_features(
+def _add_datetime_features(
     df,
     datetime_column: str,
     *,
@@ -178,7 +178,7 @@ def __add_datetime_features(
     return out
 
 
-def __add_audit_columns(
+def _add_audit_columns(
     df,
     *,
     run_id: str | None = None,
@@ -324,7 +324,7 @@ def __add_audit_columns(
     return out
 
 
-def __add_hash_columns(
+def _add_hash_columns(
     df,
     *,
     business_keys: list[str] | None = None,
