@@ -540,8 +540,10 @@ def main() -> None:
         )
 
     def _label(qn: str) -> str:
-        parts = qn.split(".")
-        return f"{parts[-2]}.{parts[-1]}"
+        return qn.split(".")[-1]
+
+    def _module_name(qn: str) -> str:
+        return qn.split(".")[-2]
     MODULE_DIR.mkdir(parents=True, exist_ok=True)
     module_manifest = {row["module_name"]: row for row in module_docs_metadata}
     discovered_doc_modules = [INTERNAL_ALIAS_MODULES.get(module, module) for module in discovered_modules]
@@ -682,73 +684,54 @@ def main() -> None:
         else:
             lines.append("No module-level internal helpers detected.")
 
-        same_edges = [e for e in edges if _is_callable_edge(e) and e["caller_qualified_name"].split(".")[-2] == actual_module and e["callee_qualified_name"].split(".")[-2] == actual_module]
-        same_edge_pairs = sorted({(e["caller_qualified_name"], e["callee_qualified_name"]) for e in same_edges})
-        same_src_to_dst = {}
-        same_dst_from_src = {}
-        for src_qn, dst_qn in same_edge_pairs:
-            same_src_to_dst.setdefault(src_qn, set()).add(dst_qn)
-            same_dst_from_src.setdefault(dst_qn, set()).add(src_qn)
-        internal_graph_meaningful = any(len(v) >= 2 for v in same_src_to_dst.values()) or any(len(v) >= 2 for v in same_dst_from_src.values())
-
-        lines.extend(["", "### Module internal callable dependencies", ""])
-        if same_edge_pairs and internal_graph_meaningful:
-            if len(same_edge_pairs) > 8:
-                lines.extend(["<details>", "<summary>Expand module internal callable graph</summary>", ""])
-            lines.extend(['<div class="module-mermaid-scroll">', "```mermaid", "flowchart LR"])
-            for idx, (src_qn, dst_qn) in enumerate(same_edge_pairs[:80], start=1):
-                lines.append(f'  n{idx}["{_label(src_qn)}"] --> n{idx}b["{_label(dst_qn)}"]')
-            lines.extend(["```", "</div>"])
-            if len(same_edge_pairs) > 8:
-                lines.extend(["", "</details>"])
-        elif same_edge_pairs:
-            lines.append("Graph omitted because dependencies are simple one-to-one references.")
+        module_edges = [
+            (e["caller_qualified_name"], e["callee_qualified_name"])
+            for e in edges
+            if _is_callable_edge(e) and (_module_name(e["caller_qualified_name"]) == actual_module or _module_name(e["callee_qualified_name"]) == actual_module)
+        ]
+        module_edge_pairs = sorted(set(module_edges))
+        lines.extend(["", "### Inside this module, used by, and uses", ""])
+        if module_edge_pairs:
+            lines.extend(['<div class="module-mermaid-scroll module-diagram-desktop">', "```mermaid", "flowchart LR"])
             lines.extend([
-                '<div class="module-table-scroll">',
-                '| Caller | Callee |',
-                '|---|---|',
+                "  classDef currentModule fill:#fff3e0,stroke:#ef6c00,stroke-width:3px,color:#3e2723;",
+                "  classDef externalModule fill:#f5f5f5,stroke:#9e9e9e,stroke-width:1px,color:#616161;",
+                "  classDef currentCallable fill:#ffe0b2,stroke:#ef6c00,stroke-width:2px;",
+                "  classDef externalCallable fill:#eceff1,stroke:#90a4ae,stroke-width:1px;",
             ])
-            for src_qn, dst_qn in same_edge_pairs:
-                lines.append(f"| `{_label(src_qn)}` | `{_label(dst_qn)}` |")
-            lines.extend(['</div>'])
+            rendered_modules = sorted({_module_name(src) for src, _ in module_edge_pairs} | {_module_name(dst) for _, dst in module_edge_pairs})
+            for mod in rendered_modules:
+                lines.append(f"  subgraph m_{mod}[{mod}]")
+                for qn in sorted({x for pair in module_edge_pairs for x in pair if _module_name(x) == mod}):
+                    node_id = qn.replace(".", "_")
+                    lines.append(f'    {node_id}["{_label(qn)}"]')
+                lines.append("  end")
+            for src_qn, dst_qn in module_edge_pairs[:120]:
+                lines.append(f"  {src_qn.replace('.', '_')} --> {dst_qn.replace('.', '_')}")
+            lines.append(f"  class m_{actual_module} currentModule;")
+            current_nodes = [qn.replace(".", "_") for qn in sorted({x for pair in module_edge_pairs for x in pair if _module_name(x) == actual_module})]
+            if current_nodes:
+                lines.append(f"  class {','.join(current_nodes)} currentCallable;")
+            external_nodes = [qn.replace(".", "_") for qn in sorted({x for pair in module_edge_pairs for x in pair if _module_name(x) != actual_module})]
+            if external_nodes:
+                lines.append(f"  class {','.join(external_nodes)} externalCallable;")
+            lines.extend(["```", "</div>", ""])
+            lines.extend(['<div class="module-relationship-list module-diagram-mobile">'])
+            inside_rows = [(s, d) for s, d in module_edge_pairs if _module_name(s) == actual_module and _module_name(d) == actual_module]
+            used_by_rows = [(s, d) for s, d in module_edge_pairs if _module_name(s) != actual_module and _module_name(d) == actual_module]
+            uses_rows = [(s, d) for s, d in module_edge_pairs if _module_name(s) == actual_module and _module_name(d) != actual_module]
+            for heading, rows in [("Inside this module", inside_rows), ("Used by", used_by_rows), ("Uses", uses_rows)]:
+                lines.extend([f"#### {heading}", ""])
+                if not rows:
+                    lines.append("None.")
+                    continue
+                lines.append('<div class="callable-chip-group">')
+                for src_qn, dst_qn in rows:
+                    lines.append(f'<a class="reference-chip" href="{callable_docs_link(src_qn.split(".")[-1], _module_name(src_qn), docs_metadata)}"><code>{_label(src_qn)}</code></a> → <a class="reference-chip" href="{callable_docs_link(dst_qn.split(".")[-1], _module_name(dst_qn), docs_metadata)}"><code>{_label(dst_qn)}</code></a>')
+                lines.append("</div>")
+            lines.extend(["</div>"])
         else:
-            lines.append("No module-scoped callable dependencies detected.")
-
-        module_cross = [e for e in edges if _is_callable_edge(e) and e["caller_qualified_name"].split(".")[-2] == actual_module and e["callee_qualified_name"].split(".")[-2] != actual_module]
-        cross_pairs = sorted({(e["caller_qualified_name"], e["callee_qualified_name"]) for e in module_cross})
-        cross_src_to_dst = {}
-        cross_dst_from_src = {}
-        for src_qn, dst_qn in cross_pairs:
-            cross_src_to_dst.setdefault(src_qn, set()).add(dst_qn)
-            cross_dst_from_src.setdefault(dst_qn, set()).add(src_qn)
-        cross_graph_meaningful = any(len(v) >= 2 for v in cross_src_to_dst.values()) or any(len(v) >= 2 for v in cross_dst_from_src.values())
-
-        lines.extend(["", "### Outbound", ""])
-        if cross_pairs and cross_graph_meaningful:
-            if len(cross_pairs) > 8:
-                lines.extend(["<details>", "<summary>Expand cross-module callable graph</summary>", ""])
-            lines.extend(['<div class="module-mermaid-scroll">', "```mermaid", "flowchart LR"])
-            for idx, (src_qn, dst_qn) in enumerate(cross_pairs[:80], start=1):
-                lines.append(f'  c{idx}["{_label(src_qn)}"] --> d{idx}["{_label(dst_qn)}"]')
-            lines.extend(["```", "</div>"])
-            if len(cross_pairs) > 8:
-                lines.extend(["", "</details>"])
-        elif cross_pairs:
-            lines.append("Graph omitted because dependencies are simple one-to-one references.")
-            if len(cross_pairs) > 8:
-                lines.extend(["<details>", "<summary>Expand cross-module references</summary>", ""])
-            lines.extend([
-                '<div class="module-table-scroll">',
-                '| Caller | Callee |',
-                '|---|---|',
-            ])
-            for src_qn, dst_qn in cross_pairs:
-                lines.append(f"| `{_label(src_qn)}` | `{_label(dst_qn)}` |")
-            lines.extend(['</div>'])
-            if len(cross_pairs) > 8:
-                lines.extend(["", "</details>"])
-        else:
-            lines.append("No outbound references detected.")
+            lines.append("No callable relationships detected for this module.")
         if public_in_module:
             for s in sorted([x for x in public_in_module if x.role in {"essential", "optional"}], key=lambda x: x.name.lower()):
                 expected_target = callable_docs_link(s.name, module, docs_metadata)

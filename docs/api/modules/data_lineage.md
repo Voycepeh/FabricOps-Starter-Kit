@@ -119,30 +119,66 @@ Owns source-to-target lineage and transformation evidence.
 
 </details>
 
-### Module internal callable dependencies
+### Inside this module, used by, and uses
 
-<details>
-<summary>Expand module internal callable graph</summary>
-
-<div class="module-mermaid-scroll">
+<div class="module-mermaid-scroll module-diagram-desktop">
 ```mermaid
 flowchart LR
-  n1["data_lineage._build_lineage_record_from_steps"] --> n1b["data_lineage._validate_lineage_steps"]
-  n2["data_lineage._build_lineage_records"] --> n2b["data_lineage._build_lineage_record_from_steps"]
-  n3["data_lineage._enrich_lineage_steps_with_ai"] --> n3b["data_lineage._fallback_copilot_lineage_prompt"]
-  n4["data_lineage._flatten_chain"] --> n4b["data_lineage._name"]
-  n5["data_lineage._resolve_write_target"] --> n5b["data_lineage._literal"]
-  n6["data_lineage._scan_notebook_cells"] --> n6b["data_lineage._scan_notebook_lineage"]
-  n7["data_lineage._scan_notebook_lineage"] --> n7b["data_lineage._call_name"]
-  n8["data_lineage._scan_notebook_lineage"] --> n8b["data_lineage._flatten_chain"]
-  n9["data_lineage._scan_notebook_lineage"] --> n9b["data_lineage._name"]
-  n10["data_lineage._scan_notebook_lineage"] --> n10b["data_lineage._resolve_write_target"]
-  n11["data_lineage._scan_notebook_lineage"] --> n11b["data_lineage._step"]
+  classDef currentModule fill:#fff3e0,stroke:#ef6c00,stroke-width:3px,color:#3e2723;
+  classDef externalModule fill:#f5f5f5,stroke:#9e9e9e,stroke-width:1px,color:#616161;
+  classDef currentCallable fill:#ffe0b2,stroke:#ef6c00,stroke-width:2px;
+  classDef externalCallable fill:#eceff1,stroke:#90a4ae,stroke-width:1px;
+  subgraph m_data_lineage[data_lineage]
+    fabricops_kit_data_lineage__build_lineage_record_from_steps["_build_lineage_record_from_steps"]
+    fabricops_kit_data_lineage__build_lineage_records["_build_lineage_records"]
+    fabricops_kit_data_lineage__call_name["_call_name"]
+    fabricops_kit_data_lineage__enrich_lineage_steps_with_ai["_enrich_lineage_steps_with_ai"]
+    fabricops_kit_data_lineage__fallback_copilot_lineage_prompt["_fallback_copilot_lineage_prompt"]
+    fabricops_kit_data_lineage__flatten_chain["_flatten_chain"]
+    fabricops_kit_data_lineage__literal["_literal"]
+    fabricops_kit_data_lineage__name["_name"]
+    fabricops_kit_data_lineage__resolve_write_target["_resolve_write_target"]
+    fabricops_kit_data_lineage__scan_notebook_cells["_scan_notebook_cells"]
+    fabricops_kit_data_lineage__scan_notebook_lineage["_scan_notebook_lineage"]
+    fabricops_kit_data_lineage__step["_step"]
+    fabricops_kit_data_lineage__validate_lineage_steps["_validate_lineage_steps"]
+  end
+  fabricops_kit_data_lineage__build_lineage_record_from_steps --> fabricops_kit_data_lineage__validate_lineage_steps
+  fabricops_kit_data_lineage__build_lineage_records --> fabricops_kit_data_lineage__build_lineage_record_from_steps
+  fabricops_kit_data_lineage__enrich_lineage_steps_with_ai --> fabricops_kit_data_lineage__fallback_copilot_lineage_prompt
+  fabricops_kit_data_lineage__flatten_chain --> fabricops_kit_data_lineage__name
+  fabricops_kit_data_lineage__resolve_write_target --> fabricops_kit_data_lineage__literal
+  fabricops_kit_data_lineage__scan_notebook_cells --> fabricops_kit_data_lineage__scan_notebook_lineage
+  fabricops_kit_data_lineage__scan_notebook_lineage --> fabricops_kit_data_lineage__call_name
+  fabricops_kit_data_lineage__scan_notebook_lineage --> fabricops_kit_data_lineage__flatten_chain
+  fabricops_kit_data_lineage__scan_notebook_lineage --> fabricops_kit_data_lineage__name
+  fabricops_kit_data_lineage__scan_notebook_lineage --> fabricops_kit_data_lineage__resolve_write_target
+  fabricops_kit_data_lineage__scan_notebook_lineage --> fabricops_kit_data_lineage__step
+  class m_data_lineage currentModule;
+  class fabricops_kit_data_lineage__build_lineage_record_from_steps,fabricops_kit_data_lineage__build_lineage_records,fabricops_kit_data_lineage__call_name,fabricops_kit_data_lineage__enrich_lineage_steps_with_ai,fabricops_kit_data_lineage__fallback_copilot_lineage_prompt,fabricops_kit_data_lineage__flatten_chain,fabricops_kit_data_lineage__literal,fabricops_kit_data_lineage__name,fabricops_kit_data_lineage__resolve_write_target,fabricops_kit_data_lineage__scan_notebook_cells,fabricops_kit_data_lineage__scan_notebook_lineage,fabricops_kit_data_lineage__step,fabricops_kit_data_lineage__validate_lineage_steps currentCallable;
 ```
 </div>
 
-</details>
+<div class="module-relationship-list module-diagram-mobile">
+#### Inside this module
 
-### Outbound
+<div class="callable-chip-group">
+<a class="reference-chip" href="../modules/data_lineage/#_build_lineage_record_from_steps"><code>_build_lineage_record_from_steps</code></a> → <a class="reference-chip" href="../modules/data_lineage/#_validate_lineage_steps"><code>_validate_lineage_steps</code></a>
+<a class="reference-chip" href="../modules/data_lineage/#_build_lineage_records"><code>_build_lineage_records</code></a> → <a class="reference-chip" href="../modules/data_lineage/#_build_lineage_record_from_steps"><code>_build_lineage_record_from_steps</code></a>
+<a class="reference-chip" href="../modules/data_lineage/#_enrich_lineage_steps_with_ai"><code>_enrich_lineage_steps_with_ai</code></a> → <a class="reference-chip" href="../modules/data_lineage/#_fallback_copilot_lineage_prompt"><code>_fallback_copilot_lineage_prompt</code></a>
+<a class="reference-chip" href="../modules/data_lineage/#_flatten_chain"><code>_flatten_chain</code></a> → <a class="reference-chip" href="../modules/data_lineage/#_name"><code>_name</code></a>
+<a class="reference-chip" href="../modules/data_lineage/#_resolve_write_target"><code>_resolve_write_target</code></a> → <a class="reference-chip" href="../modules/data_lineage/#_literal"><code>_literal</code></a>
+<a class="reference-chip" href="../modules/data_lineage/#_scan_notebook_cells"><code>_scan_notebook_cells</code></a> → <a class="reference-chip" href="../modules/data_lineage/#_scan_notebook_lineage"><code>_scan_notebook_lineage</code></a>
+<a class="reference-chip" href="../modules/data_lineage/#_scan_notebook_lineage"><code>_scan_notebook_lineage</code></a> → <a class="reference-chip" href="../modules/data_lineage/#_call_name"><code>_call_name</code></a>
+<a class="reference-chip" href="../modules/data_lineage/#_scan_notebook_lineage"><code>_scan_notebook_lineage</code></a> → <a class="reference-chip" href="../modules/data_lineage/#_flatten_chain"><code>_flatten_chain</code></a>
+<a class="reference-chip" href="../modules/data_lineage/#_scan_notebook_lineage"><code>_scan_notebook_lineage</code></a> → <a class="reference-chip" href="../modules/data_lineage/#_name"><code>_name</code></a>
+<a class="reference-chip" href="../modules/data_lineage/#_scan_notebook_lineage"><code>_scan_notebook_lineage</code></a> → <a class="reference-chip" href="../modules/data_lineage/#_resolve_write_target"><code>_resolve_write_target</code></a>
+<a class="reference-chip" href="../modules/data_lineage/#_scan_notebook_lineage"><code>_scan_notebook_lineage</code></a> → <a class="reference-chip" href="../modules/data_lineage/#_step"><code>_step</code></a>
+</div>
+#### Used by
 
-No outbound references detected.
+None.
+#### Uses
+
+None.
+</div>

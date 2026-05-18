@@ -443,7 +443,27 @@
   min-width: 40rem;
 }
 
+.module-diagram-mobile {
+  display: none;
+}
+
+.callable-chip-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+}
+
 @media screen and (max-width: 760px) {
+  .module-diagram-desktop {
+    display: none;
+  }
+  .module-diagram-mobile {
+    display: block;
+  }
+  .module-mermaid-scroll {
+    display: none;
+  }
   .module-mermaid-scroll .mermaid {
     min-width: 48rem;
   }

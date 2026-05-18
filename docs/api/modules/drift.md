@@ -137,64 +137,147 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
 
 </details>
 
-### Module internal callable dependencies
+### Inside this module, used by, and uses
 
-<details>
-<summary>Expand module internal callable graph</summary>
-
-<div class="module-mermaid-scroll">
+<div class="module-mermaid-scroll module-diagram-desktop">
 ```mermaid
 flowchart LR
-  n1["drift._build_pandas_partition_snapshot"] --> n1b["drift._build_partition_hash"]
-  n2["drift._build_pandas_partition_snapshot"] --> n2b["drift._hash"]
-  n3["drift._build_pandas_schema_snapshot"] --> n3b["drift._column_hash"]
-  n4["drift._build_partition_hash"] --> n4b["drift._hash"]
-  n5["drift._build_spark_partition_snapshot"] --> n5b["drift._build_partition_hash"]
-  n6["drift._build_spark_schema_snapshot"] --> n6b["drift._column_hash"]
-  n7["drift.build_and_write_partition_snapshot"] --> n7b["drift._json_dumps"]
-  n8["drift.build_and_write_partition_snapshot"] --> n8b["drift._utc_now_iso"]
-  n9["drift.build_and_write_partition_snapshot"] --> n9b["drift._write_metadata_rows"]
-  n10["drift.build_and_write_partition_snapshot"] --> n10b["drift.build_partition_snapshot"]
-  n11["drift.build_and_write_schema_snapshot"] --> n11b["drift._json_dumps"]
-  n12["drift.build_and_write_schema_snapshot"] --> n12b["drift._utc_now_iso"]
-  n13["drift.build_and_write_schema_snapshot"] --> n13b["drift._write_metadata_rows"]
-  n14["drift.build_and_write_schema_snapshot"] --> n14b["drift.build_schema_snapshot"]
-  n15["drift.build_drift_evidence_record"] --> n15b["drift._json_dumps"]
-  n16["drift.build_drift_evidence_record"] --> n16b["drift._utc_now_iso"]
-  n17["drift.build_partition_snapshot"] --> n17b["drift._build_pandas_partition_snapshot"]
-  n18["drift.build_partition_snapshot"] --> n18b["drift._build_spark_partition_snapshot"]
-  n19["drift.build_partition_snapshot"] --> n19b["drift.detect_dataframe_engine"]
-  n20["drift.build_schema_snapshot"] --> n20b["drift._build_pandas_schema_snapshot"]
-  n21["drift.build_schema_snapshot"] --> n21b["drift._build_spark_schema_snapshot"]
-  n22["drift.build_schema_snapshot"] --> n22b["drift.detect_dataframe_engine"]
-  n23["drift.check_partition_drift"] --> n23b["drift.build_partition_snapshot"]
-  n24["drift.check_partition_drift"] --> n24b["drift.compare_partition_snapshots"]
-  n25["drift.check_partition_drift"] --> n25b["drift.default_incremental_safety_policy"]
-  n26["drift.check_schema_drift"] --> n26b["drift.build_schema_snapshot"]
-  n27["drift.check_schema_drift"] --> n27b["drift.compare_schema_snapshots"]
-  n28["drift.check_schema_drift"] --> n28b["drift.default_schema_drift_policy"]
-  n29["drift.compare_partition_snapshots"] --> n29b["drift._is_closed_partition"]
-  n30["drift.compare_partition_snapshots"] --> n30b["drift.default_incremental_safety_policy"]
-  n31["drift.compare_schema_snapshots"] --> n31b["drift._resolve_change_behavior"]
-  n32["drift.compare_schema_snapshots"] --> n32b["drift.default_schema_drift_policy"]
-  n33["drift.load_latest_partition_snapshot"] --> n33b["drift._is_missing_table_error"]
-  n34["drift.load_latest_partition_snapshot"] --> n34b["drift._safe_spark_collect"]
-  n35["drift.load_latest_schema_snapshot"] --> n35b["drift._is_missing_table_error"]
-  n36["drift.load_latest_schema_snapshot"] --> n36b["drift._safe_spark_collect"]
+  classDef currentModule fill:#fff3e0,stroke:#ef6c00,stroke-width:3px,color:#3e2723;
+  classDef externalModule fill:#f5f5f5,stroke:#9e9e9e,stroke-width:1px,color:#616161;
+  classDef currentCallable fill:#ffe0b2,stroke:#ef6c00,stroke-width:2px;
+  classDef externalCallable fill:#eceff1,stroke:#90a4ae,stroke-width:1px;
+  subgraph m__utils[_utils]
+    fabricops_kit__utils__to_jsonable["_to_jsonable"]
+  end
+  subgraph m_drift[drift]
+    fabricops_kit_drift__build_pandas_partition_snapshot["_build_pandas_partition_snapshot"]
+    fabricops_kit_drift__build_pandas_schema_snapshot["_build_pandas_schema_snapshot"]
+    fabricops_kit_drift__build_partition_hash["_build_partition_hash"]
+    fabricops_kit_drift__build_spark_partition_snapshot["_build_spark_partition_snapshot"]
+    fabricops_kit_drift__build_spark_schema_snapshot["_build_spark_schema_snapshot"]
+    fabricops_kit_drift__column_hash["_column_hash"]
+    fabricops_kit_drift__hash["_hash"]
+    fabricops_kit_drift__is_closed_partition["_is_closed_partition"]
+    fabricops_kit_drift__is_missing_table_error["_is_missing_table_error"]
+    fabricops_kit_drift__json_dumps["_json_dumps"]
+    fabricops_kit_drift__resolve_change_behavior["_resolve_change_behavior"]
+    fabricops_kit_drift__safe_spark_collect["_safe_spark_collect"]
+    fabricops_kit_drift__utc_now_iso["_utc_now_iso"]
+    fabricops_kit_drift__write_metadata_rows["_write_metadata_rows"]
+    fabricops_kit_drift_build_and_write_partition_snapshot["build_and_write_partition_snapshot"]
+    fabricops_kit_drift_build_and_write_schema_snapshot["build_and_write_schema_snapshot"]
+    fabricops_kit_drift_build_drift_evidence_record["build_drift_evidence_record"]
+    fabricops_kit_drift_build_incremental_safety_records["build_incremental_safety_records"]
+    fabricops_kit_drift_build_partition_snapshot["build_partition_snapshot"]
+    fabricops_kit_drift_build_schema_snapshot["build_schema_snapshot"]
+    fabricops_kit_drift_check_partition_drift["check_partition_drift"]
+    fabricops_kit_drift_check_schema_drift["check_schema_drift"]
+    fabricops_kit_drift_compare_partition_snapshots["compare_partition_snapshots"]
+    fabricops_kit_drift_compare_schema_snapshots["compare_schema_snapshots"]
+    fabricops_kit_drift_default_incremental_safety_policy["default_incremental_safety_policy"]
+    fabricops_kit_drift_default_schema_drift_policy["default_schema_drift_policy"]
+    fabricops_kit_drift_detect_dataframe_engine["detect_dataframe_engine"]
+    fabricops_kit_drift_load_latest_partition_snapshot["load_latest_partition_snapshot"]
+    fabricops_kit_drift_load_latest_schema_snapshot["load_latest_schema_snapshot"]
+  end
+  fabricops_kit_drift__build_pandas_partition_snapshot --> fabricops_kit__utils__to_jsonable
+  fabricops_kit_drift__build_pandas_partition_snapshot --> fabricops_kit_drift__build_partition_hash
+  fabricops_kit_drift__build_pandas_partition_snapshot --> fabricops_kit_drift__hash
+  fabricops_kit_drift__build_pandas_schema_snapshot --> fabricops_kit_drift__column_hash
+  fabricops_kit_drift__build_partition_hash --> fabricops_kit_drift__hash
+  fabricops_kit_drift__build_spark_partition_snapshot --> fabricops_kit__utils__to_jsonable
+  fabricops_kit_drift__build_spark_partition_snapshot --> fabricops_kit_drift__build_partition_hash
+  fabricops_kit_drift__build_spark_schema_snapshot --> fabricops_kit_drift__column_hash
+  fabricops_kit_drift__json_dumps --> fabricops_kit__utils__to_jsonable
+  fabricops_kit_drift_build_and_write_partition_snapshot --> fabricops_kit_drift__json_dumps
+  fabricops_kit_drift_build_and_write_partition_snapshot --> fabricops_kit_drift__utc_now_iso
+  fabricops_kit_drift_build_and_write_partition_snapshot --> fabricops_kit_drift__write_metadata_rows
+  fabricops_kit_drift_build_and_write_partition_snapshot --> fabricops_kit_drift_build_partition_snapshot
+  fabricops_kit_drift_build_and_write_schema_snapshot --> fabricops_kit_drift__json_dumps
+  fabricops_kit_drift_build_and_write_schema_snapshot --> fabricops_kit_drift__utc_now_iso
+  fabricops_kit_drift_build_and_write_schema_snapshot --> fabricops_kit_drift__write_metadata_rows
+  fabricops_kit_drift_build_and_write_schema_snapshot --> fabricops_kit_drift_build_schema_snapshot
+  fabricops_kit_drift_build_drift_evidence_record --> fabricops_kit_drift__json_dumps
+  fabricops_kit_drift_build_drift_evidence_record --> fabricops_kit_drift__utc_now_iso
+  fabricops_kit_drift_build_incremental_safety_records --> fabricops_kit__utils__to_jsonable
+  fabricops_kit_drift_build_partition_snapshot --> fabricops_kit_drift__build_pandas_partition_snapshot
+  fabricops_kit_drift_build_partition_snapshot --> fabricops_kit_drift__build_spark_partition_snapshot
+  fabricops_kit_drift_build_partition_snapshot --> fabricops_kit_drift_detect_dataframe_engine
+  fabricops_kit_drift_build_schema_snapshot --> fabricops_kit_drift__build_pandas_schema_snapshot
+  fabricops_kit_drift_build_schema_snapshot --> fabricops_kit_drift__build_spark_schema_snapshot
+  fabricops_kit_drift_build_schema_snapshot --> fabricops_kit_drift_detect_dataframe_engine
+  fabricops_kit_drift_check_partition_drift --> fabricops_kit_drift_build_partition_snapshot
+  fabricops_kit_drift_check_partition_drift --> fabricops_kit_drift_compare_partition_snapshots
+  fabricops_kit_drift_check_partition_drift --> fabricops_kit_drift_default_incremental_safety_policy
+  fabricops_kit_drift_check_schema_drift --> fabricops_kit_drift_build_schema_snapshot
+  fabricops_kit_drift_check_schema_drift --> fabricops_kit_drift_compare_schema_snapshots
+  fabricops_kit_drift_check_schema_drift --> fabricops_kit_drift_default_schema_drift_policy
+  fabricops_kit_drift_compare_partition_snapshots --> fabricops_kit__utils__to_jsonable
+  fabricops_kit_drift_compare_partition_snapshots --> fabricops_kit_drift__is_closed_partition
+  fabricops_kit_drift_compare_partition_snapshots --> fabricops_kit_drift_default_incremental_safety_policy
+  fabricops_kit_drift_compare_schema_snapshots --> fabricops_kit_drift__resolve_change_behavior
+  fabricops_kit_drift_compare_schema_snapshots --> fabricops_kit_drift_default_schema_drift_policy
+  fabricops_kit_drift_load_latest_partition_snapshot --> fabricops_kit_drift__is_missing_table_error
+  fabricops_kit_drift_load_latest_partition_snapshot --> fabricops_kit_drift__safe_spark_collect
+  fabricops_kit_drift_load_latest_schema_snapshot --> fabricops_kit_drift__is_missing_table_error
+  fabricops_kit_drift_load_latest_schema_snapshot --> fabricops_kit_drift__safe_spark_collect
+  class m_drift currentModule;
+  class fabricops_kit_drift__build_pandas_partition_snapshot,fabricops_kit_drift__build_pandas_schema_snapshot,fabricops_kit_drift__build_partition_hash,fabricops_kit_drift__build_spark_partition_snapshot,fabricops_kit_drift__build_spark_schema_snapshot,fabricops_kit_drift__column_hash,fabricops_kit_drift__hash,fabricops_kit_drift__is_closed_partition,fabricops_kit_drift__is_missing_table_error,fabricops_kit_drift__json_dumps,fabricops_kit_drift__resolve_change_behavior,fabricops_kit_drift__safe_spark_collect,fabricops_kit_drift__utc_now_iso,fabricops_kit_drift__write_metadata_rows,fabricops_kit_drift_build_and_write_partition_snapshot,fabricops_kit_drift_build_and_write_schema_snapshot,fabricops_kit_drift_build_drift_evidence_record,fabricops_kit_drift_build_incremental_safety_records,fabricops_kit_drift_build_partition_snapshot,fabricops_kit_drift_build_schema_snapshot,fabricops_kit_drift_check_partition_drift,fabricops_kit_drift_check_schema_drift,fabricops_kit_drift_compare_partition_snapshots,fabricops_kit_drift_compare_schema_snapshots,fabricops_kit_drift_default_incremental_safety_policy,fabricops_kit_drift_default_schema_drift_policy,fabricops_kit_drift_detect_dataframe_engine,fabricops_kit_drift_load_latest_partition_snapshot,fabricops_kit_drift_load_latest_schema_snapshot currentCallable;
+  class fabricops_kit__utils__to_jsonable externalCallable;
 ```
 </div>
 
-</details>
+<div class="module-relationship-list module-diagram-mobile">
+#### Inside this module
 
-### Outbound
+<div class="callable-chip-group">
+<a class="reference-chip" href="../modules/drift/#_build_pandas_partition_snapshot"><code>_build_pandas_partition_snapshot</code></a> → <a class="reference-chip" href="../modules/drift/#_build_partition_hash"><code>_build_partition_hash</code></a>
+<a class="reference-chip" href="../modules/drift/#_build_pandas_partition_snapshot"><code>_build_pandas_partition_snapshot</code></a> → <a class="reference-chip" href="../modules/drift/#_hash"><code>_hash</code></a>
+<a class="reference-chip" href="../modules/drift/#_build_pandas_schema_snapshot"><code>_build_pandas_schema_snapshot</code></a> → <a class="reference-chip" href="../modules/drift/#_column_hash"><code>_column_hash</code></a>
+<a class="reference-chip" href="../modules/drift/#_build_partition_hash"><code>_build_partition_hash</code></a> → <a class="reference-chip" href="../modules/drift/#_hash"><code>_hash</code></a>
+<a class="reference-chip" href="../modules/drift/#_build_spark_partition_snapshot"><code>_build_spark_partition_snapshot</code></a> → <a class="reference-chip" href="../modules/drift/#_build_partition_hash"><code>_build_partition_hash</code></a>
+<a class="reference-chip" href="../modules/drift/#_build_spark_schema_snapshot"><code>_build_spark_schema_snapshot</code></a> → <a class="reference-chip" href="../modules/drift/#_column_hash"><code>_column_hash</code></a>
+<a class="reference-chip" href="../modules/drift/#build_and_write_partition_snapshot"><code>build_and_write_partition_snapshot</code></a> → <a class="reference-chip" href="../modules/drift/#_json_dumps"><code>_json_dumps</code></a>
+<a class="reference-chip" href="../modules/drift/#build_and_write_partition_snapshot"><code>build_and_write_partition_snapshot</code></a> → <a class="reference-chip" href="../modules/drift/#_utc_now_iso"><code>_utc_now_iso</code></a>
+<a class="reference-chip" href="../modules/drift/#build_and_write_partition_snapshot"><code>build_and_write_partition_snapshot</code></a> → <a class="reference-chip" href="../modules/drift/#_write_metadata_rows"><code>_write_metadata_rows</code></a>
+<a class="reference-chip" href="../modules/drift/#build_and_write_partition_snapshot"><code>build_and_write_partition_snapshot</code></a> → <a class="reference-chip" href="../modules/drift/#build_partition_snapshot"><code>build_partition_snapshot</code></a>
+<a class="reference-chip" href="../modules/drift/#build_and_write_schema_snapshot"><code>build_and_write_schema_snapshot</code></a> → <a class="reference-chip" href="../modules/drift/#_json_dumps"><code>_json_dumps</code></a>
+<a class="reference-chip" href="../modules/drift/#build_and_write_schema_snapshot"><code>build_and_write_schema_snapshot</code></a> → <a class="reference-chip" href="../modules/drift/#_utc_now_iso"><code>_utc_now_iso</code></a>
+<a class="reference-chip" href="../modules/drift/#build_and_write_schema_snapshot"><code>build_and_write_schema_snapshot</code></a> → <a class="reference-chip" href="../modules/drift/#_write_metadata_rows"><code>_write_metadata_rows</code></a>
+<a class="reference-chip" href="../modules/drift/#build_and_write_schema_snapshot"><code>build_and_write_schema_snapshot</code></a> → <a class="reference-chip" href="../modules/drift/#build_schema_snapshot"><code>build_schema_snapshot</code></a>
+<a class="reference-chip" href="../modules/drift/#build_drift_evidence_record"><code>build_drift_evidence_record</code></a> → <a class="reference-chip" href="../modules/drift/#_json_dumps"><code>_json_dumps</code></a>
+<a class="reference-chip" href="../modules/drift/#build_drift_evidence_record"><code>build_drift_evidence_record</code></a> → <a class="reference-chip" href="../modules/drift/#_utc_now_iso"><code>_utc_now_iso</code></a>
+<a class="reference-chip" href="../modules/drift/#build_partition_snapshot"><code>build_partition_snapshot</code></a> → <a class="reference-chip" href="../modules/drift/#_build_pandas_partition_snapshot"><code>_build_pandas_partition_snapshot</code></a>
+<a class="reference-chip" href="../modules/drift/#build_partition_snapshot"><code>build_partition_snapshot</code></a> → <a class="reference-chip" href="../modules/drift/#_build_spark_partition_snapshot"><code>_build_spark_partition_snapshot</code></a>
+<a class="reference-chip" href="../modules/drift/#build_partition_snapshot"><code>build_partition_snapshot</code></a> → <a class="reference-chip" href="../modules/drift/#detect_dataframe_engine"><code>detect_dataframe_engine</code></a>
+<a class="reference-chip" href="../modules/drift/#build_schema_snapshot"><code>build_schema_snapshot</code></a> → <a class="reference-chip" href="../modules/drift/#_build_pandas_schema_snapshot"><code>_build_pandas_schema_snapshot</code></a>
+<a class="reference-chip" href="../modules/drift/#build_schema_snapshot"><code>build_schema_snapshot</code></a> → <a class="reference-chip" href="../modules/drift/#_build_spark_schema_snapshot"><code>_build_spark_schema_snapshot</code></a>
+<a class="reference-chip" href="../modules/drift/#build_schema_snapshot"><code>build_schema_snapshot</code></a> → <a class="reference-chip" href="../modules/drift/#detect_dataframe_engine"><code>detect_dataframe_engine</code></a>
+<a class="reference-chip" href="../../reference/check_partition_drift/"><code>check_partition_drift</code></a> → <a class="reference-chip" href="../modules/drift/#build_partition_snapshot"><code>build_partition_snapshot</code></a>
+<a class="reference-chip" href="../../reference/check_partition_drift/"><code>check_partition_drift</code></a> → <a class="reference-chip" href="../modules/drift/#compare_partition_snapshots"><code>compare_partition_snapshots</code></a>
+<a class="reference-chip" href="../../reference/check_partition_drift/"><code>check_partition_drift</code></a> → <a class="reference-chip" href="../modules/drift/#default_incremental_safety_policy"><code>default_incremental_safety_policy</code></a>
+<a class="reference-chip" href="../../reference/check_schema_drift/"><code>check_schema_drift</code></a> → <a class="reference-chip" href="../modules/drift/#build_schema_snapshot"><code>build_schema_snapshot</code></a>
+<a class="reference-chip" href="../../reference/check_schema_drift/"><code>check_schema_drift</code></a> → <a class="reference-chip" href="../modules/drift/#compare_schema_snapshots"><code>compare_schema_snapshots</code></a>
+<a class="reference-chip" href="../../reference/check_schema_drift/"><code>check_schema_drift</code></a> → <a class="reference-chip" href="../modules/drift/#default_schema_drift_policy"><code>default_schema_drift_policy</code></a>
+<a class="reference-chip" href="../modules/drift/#compare_partition_snapshots"><code>compare_partition_snapshots</code></a> → <a class="reference-chip" href="../modules/drift/#_is_closed_partition"><code>_is_closed_partition</code></a>
+<a class="reference-chip" href="../modules/drift/#compare_partition_snapshots"><code>compare_partition_snapshots</code></a> → <a class="reference-chip" href="../modules/drift/#default_incremental_safety_policy"><code>default_incremental_safety_policy</code></a>
+<a class="reference-chip" href="../modules/drift/#compare_schema_snapshots"><code>compare_schema_snapshots</code></a> → <a class="reference-chip" href="../modules/drift/#_resolve_change_behavior"><code>_resolve_change_behavior</code></a>
+<a class="reference-chip" href="../modules/drift/#compare_schema_snapshots"><code>compare_schema_snapshots</code></a> → <a class="reference-chip" href="../modules/drift/#default_schema_drift_policy"><code>default_schema_drift_policy</code></a>
+<a class="reference-chip" href="../modules/drift/#load_latest_partition_snapshot"><code>load_latest_partition_snapshot</code></a> → <a class="reference-chip" href="../modules/drift/#_is_missing_table_error"><code>_is_missing_table_error</code></a>
+<a class="reference-chip" href="../modules/drift/#load_latest_partition_snapshot"><code>load_latest_partition_snapshot</code></a> → <a class="reference-chip" href="../modules/drift/#_safe_spark_collect"><code>_safe_spark_collect</code></a>
+<a class="reference-chip" href="../modules/drift/#load_latest_schema_snapshot"><code>load_latest_schema_snapshot</code></a> → <a class="reference-chip" href="../modules/drift/#_is_missing_table_error"><code>_is_missing_table_error</code></a>
+<a class="reference-chip" href="../modules/drift/#load_latest_schema_snapshot"><code>load_latest_schema_snapshot</code></a> → <a class="reference-chip" href="../modules/drift/#_safe_spark_collect"><code>_safe_spark_collect</code></a>
+</div>
+#### Used by
 
-<div class="module-mermaid-scroll">
-```mermaid
-flowchart LR
-  c1["drift._build_pandas_partition_snapshot"] --> d1["_utils._to_jsonable"]
-  c2["drift._build_spark_partition_snapshot"] --> d2["_utils._to_jsonable"]
-  c3["drift._json_dumps"] --> d3["_utils._to_jsonable"]
-  c4["drift.build_incremental_safety_records"] --> d4["_utils._to_jsonable"]
-  c5["drift.compare_partition_snapshots"] --> d5["_utils._to_jsonable"]
-```
+None.
+#### Uses
+
+<div class="callable-chip-group">
+<a class="reference-chip" href="../modules/drift/#_build_pandas_partition_snapshot"><code>_build_pandas_partition_snapshot</code></a> → <a class="reference-chip" href="../modules/_utils/#_to_jsonable"><code>_to_jsonable</code></a>
+<a class="reference-chip" href="../modules/drift/#_build_spark_partition_snapshot"><code>_build_spark_partition_snapshot</code></a> → <a class="reference-chip" href="../modules/_utils/#_to_jsonable"><code>_to_jsonable</code></a>
+<a class="reference-chip" href="../modules/drift/#_json_dumps"><code>_json_dumps</code></a> → <a class="reference-chip" href="../modules/_utils/#_to_jsonable"><code>_to_jsonable</code></a>
+<a class="reference-chip" href="../modules/drift/#build_incremental_safety_records"><code>build_incremental_safety_records</code></a> → <a class="reference-chip" href="../modules/_utils/#_to_jsonable"><code>_to_jsonable</code></a>
+<a class="reference-chip" href="../modules/drift/#compare_partition_snapshots"><code>compare_partition_snapshots</code></a> → <a class="reference-chip" href="../modules/_utils/#_to_jsonable"><code>_to_jsonable</code></a>
+</div>
 </div>

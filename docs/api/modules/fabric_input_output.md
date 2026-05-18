@@ -109,40 +109,95 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
 </table>
 </div>
 
-### Module internal callable dependencies
+### Inside this module, used by, and uses
 
-<details>
-<summary>Expand module internal callable graph</summary>
-
-<div class="module-mermaid-scroll">
+<div class="module-mermaid-scroll module-diagram-desktop">
 ```mermaid
 flowchart LR
-  n1["fabric_input_output.check_naming_convention"] --> n1b["fabric_input_output._get_fabric_runtime_context"]
-  n2["fabric_input_output.read_lakehouse_csv"] --> n2b["fabric_input_output._get_spark"]
-  n3["fabric_input_output.read_lakehouse_excel"] --> n3b["fabric_input_output._get_spark"]
-  n4["fabric_input_output.read_lakehouse_parquet"] --> n4b["fabric_input_output._convert_single_parquet_ns_to_us"]
-  n5["fabric_input_output.read_lakehouse_parquet"] --> n5b["fabric_input_output._get_spark"]
-  n6["fabric_input_output.read_lakehouse_table"] --> n6b["fabric_input_output._get_spark"]
-  n7["fabric_input_output.read_warehouse_table"] --> n7b["fabric_input_output._get_spark"]
-  n8["fabric_input_output.seed_minimal_sample_source_table"] --> n8b["fabric_input_output._get_spark"]
-  n9["fabric_input_output.seed_minimal_sample_source_table"] --> n9b["fabric_input_output.write_lakehouse_table"]
+  classDef currentModule fill:#fff3e0,stroke:#ef6c00,stroke-width:3px,color:#3e2723;
+  classDef externalModule fill:#f5f5f5,stroke:#9e9e9e,stroke-width:1px,color:#616161;
+  classDef currentCallable fill:#ffe0b2,stroke:#ef6c00,stroke-width:2px;
+  classDef externalCallable fill:#eceff1,stroke:#90a4ae,stroke-width:1px;
+  subgraph m_config[config]
+    fabricops_kit_config__get_store["_get_store"]
+    fabricops_kit_config_load_config["load_config"]
+  end
+  subgraph m_data_quality[data_quality]
+    fabricops_kit_data_quality_write_dq_rules["write_dq_rules"]
+  end
+  subgraph m_fabric_input_output[fabric_input_output]
+    fabricops_kit_fabric_input_output__convert_single_parquet_ns_to_us["_convert_single_parquet_ns_to_us"]
+    fabricops_kit_fabric_input_output__get_fabric_runtime_context["_get_fabric_runtime_context"]
+    fabricops_kit_fabric_input_output__get_spark["_get_spark"]
+    fabricops_kit_fabric_input_output_check_naming_convention["check_naming_convention"]
+    fabricops_kit_fabric_input_output_load_config["load_config"]
+    fabricops_kit_fabric_input_output_read_lakehouse_csv["read_lakehouse_csv"]
+    fabricops_kit_fabric_input_output_read_lakehouse_excel["read_lakehouse_excel"]
+    fabricops_kit_fabric_input_output_read_lakehouse_parquet["read_lakehouse_parquet"]
+    fabricops_kit_fabric_input_output_read_lakehouse_table["read_lakehouse_table"]
+    fabricops_kit_fabric_input_output_read_warehouse_table["read_warehouse_table"]
+    fabricops_kit_fabric_input_output_seed_minimal_sample_source_table["seed_minimal_sample_source_table"]
+    fabricops_kit_fabric_input_output_write_lakehouse_table["write_lakehouse_table"]
+    fabricops_kit_fabric_input_output_write_warehouse_table["write_warehouse_table"]
+  end
+  subgraph m_metadata[metadata]
+    fabricops_kit_metadata_write_metadata_rows["write_metadata_rows"]
+  end
+  fabricops_kit_data_quality_write_dq_rules --> fabricops_kit_fabric_input_output_write_lakehouse_table
+  fabricops_kit_fabric_input_output_check_naming_convention --> fabricops_kit_fabric_input_output__get_fabric_runtime_context
+  fabricops_kit_fabric_input_output_load_config --> fabricops_kit_config_load_config
+  fabricops_kit_fabric_input_output_read_lakehouse_csv --> fabricops_kit_config__get_store
+  fabricops_kit_fabric_input_output_read_lakehouse_csv --> fabricops_kit_fabric_input_output__get_spark
+  fabricops_kit_fabric_input_output_read_lakehouse_excel --> fabricops_kit_config__get_store
+  fabricops_kit_fabric_input_output_read_lakehouse_excel --> fabricops_kit_fabric_input_output__get_spark
+  fabricops_kit_fabric_input_output_read_lakehouse_parquet --> fabricops_kit_config__get_store
+  fabricops_kit_fabric_input_output_read_lakehouse_parquet --> fabricops_kit_fabric_input_output__convert_single_parquet_ns_to_us
+  fabricops_kit_fabric_input_output_read_lakehouse_parquet --> fabricops_kit_fabric_input_output__get_spark
+  fabricops_kit_fabric_input_output_read_lakehouse_table --> fabricops_kit_config__get_store
+  fabricops_kit_fabric_input_output_read_lakehouse_table --> fabricops_kit_fabric_input_output__get_spark
+  fabricops_kit_fabric_input_output_read_warehouse_table --> fabricops_kit_config__get_store
+  fabricops_kit_fabric_input_output_read_warehouse_table --> fabricops_kit_fabric_input_output__get_spark
+  fabricops_kit_fabric_input_output_seed_minimal_sample_source_table --> fabricops_kit_fabric_input_output__get_spark
+  fabricops_kit_fabric_input_output_seed_minimal_sample_source_table --> fabricops_kit_fabric_input_output_write_lakehouse_table
+  fabricops_kit_fabric_input_output_write_lakehouse_table --> fabricops_kit_config__get_store
+  fabricops_kit_fabric_input_output_write_warehouse_table --> fabricops_kit_config__get_store
+  fabricops_kit_metadata_write_metadata_rows --> fabricops_kit_fabric_input_output_write_lakehouse_table
+  class m_fabric_input_output currentModule;
+  class fabricops_kit_fabric_input_output__convert_single_parquet_ns_to_us,fabricops_kit_fabric_input_output__get_fabric_runtime_context,fabricops_kit_fabric_input_output__get_spark,fabricops_kit_fabric_input_output_check_naming_convention,fabricops_kit_fabric_input_output_load_config,fabricops_kit_fabric_input_output_read_lakehouse_csv,fabricops_kit_fabric_input_output_read_lakehouse_excel,fabricops_kit_fabric_input_output_read_lakehouse_parquet,fabricops_kit_fabric_input_output_read_lakehouse_table,fabricops_kit_fabric_input_output_read_warehouse_table,fabricops_kit_fabric_input_output_seed_minimal_sample_source_table,fabricops_kit_fabric_input_output_write_lakehouse_table,fabricops_kit_fabric_input_output_write_warehouse_table currentCallable;
+  class fabricops_kit_config__get_store,fabricops_kit_config_load_config,fabricops_kit_data_quality_write_dq_rules,fabricops_kit_metadata_write_metadata_rows externalCallable;
 ```
 </div>
 
-</details>
+<div class="module-relationship-list module-diagram-mobile">
+#### Inside this module
 
-### Outbound
+<div class="callable-chip-group">
+<a class="reference-chip" href="../modules/fabric_input_output/#check_naming_convention"><code>check_naming_convention</code></a> → <a class="reference-chip" href="../modules/fabric_input_output/#_get_fabric_runtime_context"><code>_get_fabric_runtime_context</code></a>
+<a class="reference-chip" href="../../reference/read_lakehouse_csv/"><code>read_lakehouse_csv</code></a> → <a class="reference-chip" href="../modules/fabric_input_output/#_get_spark"><code>_get_spark</code></a>
+<a class="reference-chip" href="../../reference/read_lakehouse_excel/"><code>read_lakehouse_excel</code></a> → <a class="reference-chip" href="../modules/fabric_input_output/#_get_spark"><code>_get_spark</code></a>
+<a class="reference-chip" href="../../reference/read_lakehouse_parquet/"><code>read_lakehouse_parquet</code></a> → <a class="reference-chip" href="../modules/fabric_input_output/#_convert_single_parquet_ns_to_us"><code>_convert_single_parquet_ns_to_us</code></a>
+<a class="reference-chip" href="../../reference/read_lakehouse_parquet/"><code>read_lakehouse_parquet</code></a> → <a class="reference-chip" href="../modules/fabric_input_output/#_get_spark"><code>_get_spark</code></a>
+<a class="reference-chip" href="../../reference/read_lakehouse_table/"><code>read_lakehouse_table</code></a> → <a class="reference-chip" href="../modules/fabric_input_output/#_get_spark"><code>_get_spark</code></a>
+<a class="reference-chip" href="../../reference/read_warehouse_table/"><code>read_warehouse_table</code></a> → <a class="reference-chip" href="../modules/fabric_input_output/#_get_spark"><code>_get_spark</code></a>
+<a class="reference-chip" href="../modules/fabric_input_output/#seed_minimal_sample_source_table"><code>seed_minimal_sample_source_table</code></a> → <a class="reference-chip" href="../modules/fabric_input_output/#_get_spark"><code>_get_spark</code></a>
+<a class="reference-chip" href="../modules/fabric_input_output/#seed_minimal_sample_source_table"><code>seed_minimal_sample_source_table</code></a> → <a class="reference-chip" href="../../reference/write_lakehouse_table/"><code>write_lakehouse_table</code></a>
+</div>
+#### Used by
 
-<div class="module-mermaid-scroll">
-```mermaid
-flowchart LR
-  c1["fabric_input_output.load_config"] --> d1["config.load_config"]
-  c2["fabric_input_output.read_lakehouse_csv"] --> d2["config._get_store"]
-  c3["fabric_input_output.read_lakehouse_excel"] --> d3["config._get_store"]
-  c4["fabric_input_output.read_lakehouse_parquet"] --> d4["config._get_store"]
-  c5["fabric_input_output.read_lakehouse_table"] --> d5["config._get_store"]
-  c6["fabric_input_output.read_warehouse_table"] --> d6["config._get_store"]
-  c7["fabric_input_output.write_lakehouse_table"] --> d7["config._get_store"]
-  c8["fabric_input_output.write_warehouse_table"] --> d8["config._get_store"]
-```
+<div class="callable-chip-group">
+<a class="reference-chip" href="../../reference/write_dq_rules/"><code>write_dq_rules</code></a> → <a class="reference-chip" href="../../reference/write_lakehouse_table/"><code>write_lakehouse_table</code></a>
+<a class="reference-chip" href="../modules/metadata/#write_metadata_rows"><code>write_metadata_rows</code></a> → <a class="reference-chip" href="../../reference/write_lakehouse_table/"><code>write_lakehouse_table</code></a>
+</div>
+#### Uses
+
+<div class="callable-chip-group">
+<a class="reference-chip" href="../../reference/load_config/"><code>load_config</code></a> → <a class="reference-chip" href="../../reference/load_config/"><code>load_config</code></a>
+<a class="reference-chip" href="../../reference/read_lakehouse_csv/"><code>read_lakehouse_csv</code></a> → <a class="reference-chip" href="../modules/config/#_get_store"><code>_get_store</code></a>
+<a class="reference-chip" href="../../reference/read_lakehouse_excel/"><code>read_lakehouse_excel</code></a> → <a class="reference-chip" href="../modules/config/#_get_store"><code>_get_store</code></a>
+<a class="reference-chip" href="../../reference/read_lakehouse_parquet/"><code>read_lakehouse_parquet</code></a> → <a class="reference-chip" href="../modules/config/#_get_store"><code>_get_store</code></a>
+<a class="reference-chip" href="../../reference/read_lakehouse_table/"><code>read_lakehouse_table</code></a> → <a class="reference-chip" href="../modules/config/#_get_store"><code>_get_store</code></a>
+<a class="reference-chip" href="../../reference/read_warehouse_table/"><code>read_warehouse_table</code></a> → <a class="reference-chip" href="../modules/config/#_get_store"><code>_get_store</code></a>
+<a class="reference-chip" href="../../reference/write_lakehouse_table/"><code>write_lakehouse_table</code></a> → <a class="reference-chip" href="../modules/config/#_get_store"><code>_get_store</code></a>
+<a class="reference-chip" href="../../reference/write_warehouse_table/"><code>write_warehouse_table</code></a> → <a class="reference-chip" href="../modules/config/#_get_store"><code>_get_store</code></a>
+</div>
 </div>

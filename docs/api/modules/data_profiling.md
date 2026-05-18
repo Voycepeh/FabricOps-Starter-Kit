@@ -63,21 +63,51 @@ Owns deterministic profiling evidence such as schema, nulls, distincts, min/max,
 </table>
 </div>
 
-### Module internal callable dependencies
+### Inside this module, used by, and uses
 
-<div class="module-mermaid-scroll">
+<div class="module-mermaid-scroll module-diagram-desktop">
 ```mermaid
 flowchart LR
-  n1["data_profiling.profile_dataframe"] --> n1b["data_profiling._get_profiled_columns"]
-  n2["data_profiling.profile_dataframe"] --> n2b["data_profiling._is_min_max_supported_type"]
+  classDef currentModule fill:#fff3e0,stroke:#ef6c00,stroke-width:3px,color:#3e2723;
+  classDef externalModule fill:#f5f5f5,stroke:#9e9e9e,stroke-width:1px,color:#616161;
+  classDef currentCallable fill:#ffe0b2,stroke:#ef6c00,stroke-width:2px;
+  classDef externalCallable fill:#eceff1,stroke:#90a4ae,stroke-width:1px;
+  subgraph m_data_profiling[data_profiling]
+    fabricops_kit_data_profiling__get_profiled_columns["_get_profiled_columns"]
+    fabricops_kit_data_profiling__is_min_max_supported_type["_is_min_max_supported_type"]
+    fabricops_kit_data_profiling_profile_dataframe["profile_dataframe"]
+  end
+  subgraph m_data_quality[data_quality]
+    fabricops_kit_data_quality__prepare_dq_profile_input_rows["_prepare_dq_profile_input_rows"]
+  end
+  subgraph m_technical_columns[technical_columns]
+    fabricops_kit_technical_columns__default_technical_columns["_default_technical_columns"]
+  end
+  fabricops_kit_data_profiling__get_profiled_columns --> fabricops_kit_technical_columns__default_technical_columns
+  fabricops_kit_data_profiling_profile_dataframe --> fabricops_kit_data_profiling__get_profiled_columns
+  fabricops_kit_data_profiling_profile_dataframe --> fabricops_kit_data_profiling__is_min_max_supported_type
+  fabricops_kit_data_quality__prepare_dq_profile_input_rows --> fabricops_kit_data_profiling_profile_dataframe
+  class m_data_profiling currentModule;
+  class fabricops_kit_data_profiling__get_profiled_columns,fabricops_kit_data_profiling__is_min_max_supported_type,fabricops_kit_data_profiling_profile_dataframe currentCallable;
+  class fabricops_kit_data_quality__prepare_dq_profile_input_rows,fabricops_kit_technical_columns__default_technical_columns externalCallable;
 ```
 </div>
 
-### Outbound
+<div class="module-relationship-list module-diagram-mobile">
+#### Inside this module
 
-Graph omitted because dependencies are simple one-to-one references.
-<div class="module-table-scroll">
-| Caller | Callee |
-|---|---|
-| `data_profiling._get_profiled_columns` | `technical_columns._default_technical_columns` |
+<div class="callable-chip-group">
+<a class="reference-chip" href="../../reference/profile_dataframe/"><code>profile_dataframe</code></a> → <a class="reference-chip" href="../modules/data_profiling/#_get_profiled_columns"><code>_get_profiled_columns</code></a>
+<a class="reference-chip" href="../../reference/profile_dataframe/"><code>profile_dataframe</code></a> → <a class="reference-chip" href="../modules/data_profiling/#_is_min_max_supported_type"><code>_is_min_max_supported_type</code></a>
+</div>
+#### Used by
+
+<div class="callable-chip-group">
+<a class="reference-chip" href="../modules/data_quality/#_prepare_dq_profile_input_rows"><code>_prepare_dq_profile_input_rows</code></a> → <a class="reference-chip" href="../../reference/profile_dataframe/"><code>profile_dataframe</code></a>
+</div>
+#### Uses
+
+<div class="callable-chip-group">
+<a class="reference-chip" href="../modules/data_profiling/#_get_profiled_columns"><code>_get_profiled_columns</code></a> → <a class="reference-chip" href="../modules/technical_columns/#_default_technical_columns"><code>_default_technical_columns</code></a>
+</div>
 </div>

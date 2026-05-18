@@ -205,61 +205,137 @@ Split a Spark DataFrame into pass/quarantine outputs for row-level DQ rules.
 
 </details>
 
-### Module internal callable dependencies
+### Inside this module, used by, and uses
 
-<details>
-<summary>Expand module internal callable graph</summary>
-
-<div class="module-mermaid-scroll">
+<div class="module-mermaid-scroll module-diagram-desktop">
 ```mermaid
 flowchart LR
-  n1["data_quality._extract_candidate_rules_from_responses"] --> n1b["data_quality._extract_dq_rules"]
-  n2["data_quality._extract_candidate_rules_from_responses"] --> n2b["data_quality._parse_dq_rules_dict_from_text"]
-  n3["data_quality._extract_dq_rules"] --> n3b["data_quality._parse_dq_rules_dict_from_text"]
-  n4["data_quality._load_active_dq_rule_metadata"] --> n4b["data_quality._latest_dq_rule_versions"]
-  n5["data_quality._load_active_dq_rules"] --> n5b["data_quality._latest_dq_rule_versions"]
-  n6["data_quality._run_dq_rules"] --> n6b["data_quality._split_dq_rows"]
-  n7["data_quality._run_dq_rules"] --> n7b["data_quality.validate_dq_rules"]
-  n8["data_quality._split_dq_rows"] --> n8b["data_quality.validate_dq_rules"]
-  n9["data_quality.draft_dq_rules"] --> n9b["data_quality._extract_dq_rules"]
-  n10["data_quality.draft_dq_rules"] --> n10b["data_quality._prepare_dq_profile_input_rows"]
-  n11["data_quality.draft_dq_rules"] --> n11b["data_quality._suggest_dq_rules"]
-  n12["data_quality.enforce_dq"] --> n12b["data_quality._load_active_dq_rules"]
-  n13["data_quality.enforce_dq"] --> n13b["data_quality._run_dq_rules"]
-  n14["data_quality.enforce_dq"] --> n14b["data_quality._split_dq_rows"]
-  n15["data_quality.enforce_dq"] --> n15b["data_quality.validate_dq_rules"]
-  n16["data_quality.get_dq_review_results"] --> n16b["data_quality._attach_rule_metadata_keys"]
-  n17["data_quality.load_dq_rules"] --> n17b["data_quality._load_active_dq_rules"]
-  n18["data_quality.review_dq_rule_deactivations"] --> n18b["data_quality._require_ipywidgets"]
-  n19["data_quality.review_dq_rules"] --> n19b["data_quality._require_ipywidgets"]
-  n20["data_quality.run_dq_rule_review_widget"] --> n20b["data_quality.review_dq_rules"]
-  n21["data_quality.write_dq_rules"] --> n21b["data_quality._build_dq_rule_history"]
-  n22["data_quality.write_dq_rules"] --> n22b["data_quality.validate_dq_rules"]
+  classDef currentModule fill:#fff3e0,stroke:#ef6c00,stroke-width:3px,color:#3e2723;
+  classDef externalModule fill:#f5f5f5,stroke:#9e9e9e,stroke-width:1px,color:#616161;
+  classDef currentCallable fill:#ffe0b2,stroke:#ef6c00,stroke-width:2px;
+  classDef externalCallable fill:#eceff1,stroke:#90a4ae,stroke-width:1px;
+  subgraph m_data_profiling[data_profiling]
+    fabricops_kit_data_profiling_profile_dataframe["profile_dataframe"]
+  end
+  subgraph m_data_quality[data_quality]
+    fabricops_kit_data_quality__attach_rule_metadata_keys["_attach_rule_metadata_keys"]
+    fabricops_kit_data_quality__build_dq_rule_deactivation_metadata_df["_build_dq_rule_deactivation_metadata_df"]
+    fabricops_kit_data_quality__build_dq_rule_deactivations["_build_dq_rule_deactivations"]
+    fabricops_kit_data_quality__build_dq_rule_history["_build_dq_rule_history"]
+    fabricops_kit_data_quality__build_dq_rules_metadata_df["_build_dq_rules_metadata_df"]
+    fabricops_kit_data_quality__extract_candidate_rules_from_responses["_extract_candidate_rules_from_responses"]
+    fabricops_kit_data_quality__extract_dq_rules["_extract_dq_rules"]
+    fabricops_kit_data_quality__latest_dq_rule_versions["_latest_dq_rule_versions"]
+    fabricops_kit_data_quality__load_active_dq_rule_metadata["_load_active_dq_rule_metadata"]
+    fabricops_kit_data_quality__load_active_dq_rules["_load_active_dq_rules"]
+    fabricops_kit_data_quality__parse_dq_rules_dict_from_text["_parse_dq_rules_dict_from_text"]
+    fabricops_kit_data_quality__prepare_dq_profile_input_rows["_prepare_dq_profile_input_rows"]
+    fabricops_kit_data_quality__require_ipywidgets["_require_ipywidgets"]
+    fabricops_kit_data_quality__run_dq_rules["_run_dq_rules"]
+    fabricops_kit_data_quality__split_dq_rows["_split_dq_rows"]
+    fabricops_kit_data_quality__suggest_dq_rules["_suggest_dq_rules"]
+    fabricops_kit_data_quality_draft_dq_rules["draft_dq_rules"]
+    fabricops_kit_data_quality_enforce_dq["enforce_dq"]
+    fabricops_kit_data_quality_get_dq_review_results["get_dq_review_results"]
+    fabricops_kit_data_quality_load_dq_rules["load_dq_rules"]
+    fabricops_kit_data_quality_review_dq_rule_deactivations["review_dq_rule_deactivations"]
+    fabricops_kit_data_quality_review_dq_rules["review_dq_rules"]
+    fabricops_kit_data_quality_run_dq_rule_review_widget["run_dq_rule_review_widget"]
+    fabricops_kit_data_quality_validate_dq_rules["validate_dq_rules"]
+    fabricops_kit_data_quality_write_dq_rules["write_dq_rules"]
+  end
+  subgraph m_fabric_input_output[fabric_input_output]
+    fabricops_kit_fabric_input_output_write_lakehouse_table["write_lakehouse_table"]
+  end
+  subgraph m_metadata[metadata]
+    fabricops_kit_metadata__now_utc_iso["_now_utc_iso"]
+    fabricops_kit_metadata__resolve_action_by["_resolve_action_by"]
+    fabricops_kit_metadata_build_dq_rule_key["build_dq_rule_key"]
+    fabricops_kit_metadata_build_metadata_column_key["build_metadata_column_key"]
+    fabricops_kit_metadata_build_metadata_table_key["build_metadata_table_key"]
+  end
+  fabricops_kit_data_quality__attach_rule_metadata_keys --> fabricops_kit_metadata_build_dq_rule_key
+  fabricops_kit_data_quality__attach_rule_metadata_keys --> fabricops_kit_metadata_build_metadata_column_key
+  fabricops_kit_data_quality__attach_rule_metadata_keys --> fabricops_kit_metadata_build_metadata_table_key
+  fabricops_kit_data_quality__build_dq_rule_deactivation_metadata_df --> fabricops_kit_metadata__now_utc_iso
+  fabricops_kit_data_quality__build_dq_rule_deactivation_metadata_df --> fabricops_kit_metadata__resolve_action_by
+  fabricops_kit_data_quality__build_dq_rule_deactivations --> fabricops_kit_metadata__resolve_action_by
+  fabricops_kit_data_quality__build_dq_rule_history --> fabricops_kit_metadata__resolve_action_by
+  fabricops_kit_data_quality__build_dq_rules_metadata_df --> fabricops_kit_metadata__now_utc_iso
+  fabricops_kit_data_quality__build_dq_rules_metadata_df --> fabricops_kit_metadata__resolve_action_by
+  fabricops_kit_data_quality__extract_candidate_rules_from_responses --> fabricops_kit_data_quality__extract_dq_rules
+  fabricops_kit_data_quality__extract_candidate_rules_from_responses --> fabricops_kit_data_quality__parse_dq_rules_dict_from_text
+  fabricops_kit_data_quality__extract_dq_rules --> fabricops_kit_data_quality__parse_dq_rules_dict_from_text
+  fabricops_kit_data_quality__load_active_dq_rule_metadata --> fabricops_kit_data_quality__latest_dq_rule_versions
+  fabricops_kit_data_quality__load_active_dq_rules --> fabricops_kit_data_quality__latest_dq_rule_versions
+  fabricops_kit_data_quality__prepare_dq_profile_input_rows --> fabricops_kit_data_profiling_profile_dataframe
+  fabricops_kit_data_quality__run_dq_rules --> fabricops_kit_data_quality__split_dq_rows
+  fabricops_kit_data_quality__run_dq_rules --> fabricops_kit_data_quality_validate_dq_rules
+  fabricops_kit_data_quality__split_dq_rows --> fabricops_kit_data_quality_validate_dq_rules
+  fabricops_kit_data_quality_draft_dq_rules --> fabricops_kit_data_quality__extract_dq_rules
+  fabricops_kit_data_quality_draft_dq_rules --> fabricops_kit_data_quality__prepare_dq_profile_input_rows
+  fabricops_kit_data_quality_draft_dq_rules --> fabricops_kit_data_quality__suggest_dq_rules
+  fabricops_kit_data_quality_enforce_dq --> fabricops_kit_data_quality__load_active_dq_rules
+  fabricops_kit_data_quality_enforce_dq --> fabricops_kit_data_quality__run_dq_rules
+  fabricops_kit_data_quality_enforce_dq --> fabricops_kit_data_quality__split_dq_rows
+  fabricops_kit_data_quality_enforce_dq --> fabricops_kit_data_quality_validate_dq_rules
+  fabricops_kit_data_quality_get_dq_review_results --> fabricops_kit_data_quality__attach_rule_metadata_keys
+  fabricops_kit_data_quality_load_dq_rules --> fabricops_kit_data_quality__load_active_dq_rules
+  fabricops_kit_data_quality_review_dq_rule_deactivations --> fabricops_kit_data_quality__require_ipywidgets
+  fabricops_kit_data_quality_review_dq_rules --> fabricops_kit_data_quality__require_ipywidgets
+  fabricops_kit_data_quality_run_dq_rule_review_widget --> fabricops_kit_data_quality_review_dq_rules
+  fabricops_kit_data_quality_write_dq_rules --> fabricops_kit_data_quality__build_dq_rule_history
+  fabricops_kit_data_quality_write_dq_rules --> fabricops_kit_data_quality_validate_dq_rules
+  fabricops_kit_data_quality_write_dq_rules --> fabricops_kit_fabric_input_output_write_lakehouse_table
+  class m_data_quality currentModule;
+  class fabricops_kit_data_quality__attach_rule_metadata_keys,fabricops_kit_data_quality__build_dq_rule_deactivation_metadata_df,fabricops_kit_data_quality__build_dq_rule_deactivations,fabricops_kit_data_quality__build_dq_rule_history,fabricops_kit_data_quality__build_dq_rules_metadata_df,fabricops_kit_data_quality__extract_candidate_rules_from_responses,fabricops_kit_data_quality__extract_dq_rules,fabricops_kit_data_quality__latest_dq_rule_versions,fabricops_kit_data_quality__load_active_dq_rule_metadata,fabricops_kit_data_quality__load_active_dq_rules,fabricops_kit_data_quality__parse_dq_rules_dict_from_text,fabricops_kit_data_quality__prepare_dq_profile_input_rows,fabricops_kit_data_quality__require_ipywidgets,fabricops_kit_data_quality__run_dq_rules,fabricops_kit_data_quality__split_dq_rows,fabricops_kit_data_quality__suggest_dq_rules,fabricops_kit_data_quality_draft_dq_rules,fabricops_kit_data_quality_enforce_dq,fabricops_kit_data_quality_get_dq_review_results,fabricops_kit_data_quality_load_dq_rules,fabricops_kit_data_quality_review_dq_rule_deactivations,fabricops_kit_data_quality_review_dq_rules,fabricops_kit_data_quality_run_dq_rule_review_widget,fabricops_kit_data_quality_validate_dq_rules,fabricops_kit_data_quality_write_dq_rules currentCallable;
+  class fabricops_kit_data_profiling_profile_dataframe,fabricops_kit_fabric_input_output_write_lakehouse_table,fabricops_kit_metadata__now_utc_iso,fabricops_kit_metadata__resolve_action_by,fabricops_kit_metadata_build_dq_rule_key,fabricops_kit_metadata_build_metadata_column_key,fabricops_kit_metadata_build_metadata_table_key externalCallable;
 ```
 </div>
 
-</details>
+<div class="module-relationship-list module-diagram-mobile">
+#### Inside this module
 
-### Outbound
-
-<details>
-<summary>Expand cross-module callable graph</summary>
-
-<div class="module-mermaid-scroll">
-```mermaid
-flowchart LR
-  c1["data_quality._attach_rule_metadata_keys"] --> d1["metadata.build_dq_rule_key"]
-  c2["data_quality._attach_rule_metadata_keys"] --> d2["metadata.build_metadata_column_key"]
-  c3["data_quality._attach_rule_metadata_keys"] --> d3["metadata.build_metadata_table_key"]
-  c4["data_quality._build_dq_rule_deactivation_metadata_df"] --> d4["metadata._now_utc_iso"]
-  c5["data_quality._build_dq_rule_deactivation_metadata_df"] --> d5["metadata._resolve_action_by"]
-  c6["data_quality._build_dq_rule_deactivations"] --> d6["metadata._resolve_action_by"]
-  c7["data_quality._build_dq_rule_history"] --> d7["metadata._resolve_action_by"]
-  c8["data_quality._build_dq_rules_metadata_df"] --> d8["metadata._now_utc_iso"]
-  c9["data_quality._build_dq_rules_metadata_df"] --> d9["metadata._resolve_action_by"]
-  c10["data_quality._prepare_dq_profile_input_rows"] --> d10["data_profiling.profile_dataframe"]
-  c11["data_quality.write_dq_rules"] --> d11["fabric_input_output.write_lakehouse_table"]
-```
+<div class="callable-chip-group">
+<a class="reference-chip" href="../modules/data_quality/#_extract_candidate_rules_from_responses"><code>_extract_candidate_rules_from_responses</code></a> → <a class="reference-chip" href="../modules/data_quality/#_extract_dq_rules"><code>_extract_dq_rules</code></a>
+<a class="reference-chip" href="../modules/data_quality/#_extract_candidate_rules_from_responses"><code>_extract_candidate_rules_from_responses</code></a> → <a class="reference-chip" href="../modules/data_quality/#_parse_dq_rules_dict_from_text"><code>_parse_dq_rules_dict_from_text</code></a>
+<a class="reference-chip" href="../modules/data_quality/#_extract_dq_rules"><code>_extract_dq_rules</code></a> → <a class="reference-chip" href="../modules/data_quality/#_parse_dq_rules_dict_from_text"><code>_parse_dq_rules_dict_from_text</code></a>
+<a class="reference-chip" href="../modules/data_quality/#_load_active_dq_rule_metadata"><code>_load_active_dq_rule_metadata</code></a> → <a class="reference-chip" href="../modules/data_quality/#_latest_dq_rule_versions"><code>_latest_dq_rule_versions</code></a>
+<a class="reference-chip" href="../modules/data_quality/#_load_active_dq_rules"><code>_load_active_dq_rules</code></a> → <a class="reference-chip" href="../modules/data_quality/#_latest_dq_rule_versions"><code>_latest_dq_rule_versions</code></a>
+<a class="reference-chip" href="../modules/data_quality/#_run_dq_rules"><code>_run_dq_rules</code></a> → <a class="reference-chip" href="../modules/data_quality/#_split_dq_rows"><code>_split_dq_rows</code></a>
+<a class="reference-chip" href="../modules/data_quality/#_run_dq_rules"><code>_run_dq_rules</code></a> → <a class="reference-chip" href="../../reference/validate_dq_rules/"><code>validate_dq_rules</code></a>
+<a class="reference-chip" href="../modules/data_quality/#_split_dq_rows"><code>_split_dq_rows</code></a> → <a class="reference-chip" href="../../reference/validate_dq_rules/"><code>validate_dq_rules</code></a>
+<a class="reference-chip" href="../../reference/draft_dq_rules/"><code>draft_dq_rules</code></a> → <a class="reference-chip" href="../modules/data_quality/#_extract_dq_rules"><code>_extract_dq_rules</code></a>
+<a class="reference-chip" href="../../reference/draft_dq_rules/"><code>draft_dq_rules</code></a> → <a class="reference-chip" href="../modules/data_quality/#_prepare_dq_profile_input_rows"><code>_prepare_dq_profile_input_rows</code></a>
+<a class="reference-chip" href="../../reference/draft_dq_rules/"><code>draft_dq_rules</code></a> → <a class="reference-chip" href="../modules/data_quality/#_suggest_dq_rules"><code>_suggest_dq_rules</code></a>
+<a class="reference-chip" href="../../reference/enforce_dq/"><code>enforce_dq</code></a> → <a class="reference-chip" href="../modules/data_quality/#_load_active_dq_rules"><code>_load_active_dq_rules</code></a>
+<a class="reference-chip" href="../../reference/enforce_dq/"><code>enforce_dq</code></a> → <a class="reference-chip" href="../modules/data_quality/#_run_dq_rules"><code>_run_dq_rules</code></a>
+<a class="reference-chip" href="../../reference/enforce_dq/"><code>enforce_dq</code></a> → <a class="reference-chip" href="../modules/data_quality/#_split_dq_rows"><code>_split_dq_rows</code></a>
+<a class="reference-chip" href="../../reference/enforce_dq/"><code>enforce_dq</code></a> → <a class="reference-chip" href="../../reference/validate_dq_rules/"><code>validate_dq_rules</code></a>
+<a class="reference-chip" href="../../reference/get_dq_review_results/"><code>get_dq_review_results</code></a> → <a class="reference-chip" href="../modules/data_quality/#_attach_rule_metadata_keys"><code>_attach_rule_metadata_keys</code></a>
+<a class="reference-chip" href="../../reference/load_dq_rules/"><code>load_dq_rules</code></a> → <a class="reference-chip" href="../modules/data_quality/#_load_active_dq_rules"><code>_load_active_dq_rules</code></a>
+<a class="reference-chip" href="../../reference/review_dq_rule_deactivations/"><code>review_dq_rule_deactivations</code></a> → <a class="reference-chip" href="../modules/data_quality/#_require_ipywidgets"><code>_require_ipywidgets</code></a>
+<a class="reference-chip" href="../../reference/review_dq_rules/"><code>review_dq_rules</code></a> → <a class="reference-chip" href="../modules/data_quality/#_require_ipywidgets"><code>_require_ipywidgets</code></a>
+<a class="reference-chip" href="../../reference/run_dq_rule_review_widget/"><code>run_dq_rule_review_widget</code></a> → <a class="reference-chip" href="../../reference/review_dq_rules/"><code>review_dq_rules</code></a>
+<a class="reference-chip" href="../../reference/write_dq_rules/"><code>write_dq_rules</code></a> → <a class="reference-chip" href="../modules/data_quality/#_build_dq_rule_history"><code>_build_dq_rule_history</code></a>
+<a class="reference-chip" href="../../reference/write_dq_rules/"><code>write_dq_rules</code></a> → <a class="reference-chip" href="../../reference/validate_dq_rules/"><code>validate_dq_rules</code></a>
 </div>
+#### Used by
 
-</details>
+None.
+#### Uses
+
+<div class="callable-chip-group">
+<a class="reference-chip" href="../modules/data_quality/#_attach_rule_metadata_keys"><code>_attach_rule_metadata_keys</code></a> → <a class="reference-chip" href="../modules/metadata/#build_dq_rule_key"><code>build_dq_rule_key</code></a>
+<a class="reference-chip" href="../modules/data_quality/#_attach_rule_metadata_keys"><code>_attach_rule_metadata_keys</code></a> → <a class="reference-chip" href="../modules/metadata/#build_metadata_column_key"><code>build_metadata_column_key</code></a>
+<a class="reference-chip" href="../modules/data_quality/#_attach_rule_metadata_keys"><code>_attach_rule_metadata_keys</code></a> → <a class="reference-chip" href="../modules/metadata/#build_metadata_table_key"><code>build_metadata_table_key</code></a>
+<a class="reference-chip" href="../modules/data_quality/#_build_dq_rule_deactivation_metadata_df"><code>_build_dq_rule_deactivation_metadata_df</code></a> → <a class="reference-chip" href="../modules/metadata/#_now_utc_iso"><code>_now_utc_iso</code></a>
+<a class="reference-chip" href="../modules/data_quality/#_build_dq_rule_deactivation_metadata_df"><code>_build_dq_rule_deactivation_metadata_df</code></a> → <a class="reference-chip" href="../modules/metadata/#_resolve_action_by"><code>_resolve_action_by</code></a>
+<a class="reference-chip" href="../modules/data_quality/#_build_dq_rule_deactivations"><code>_build_dq_rule_deactivations</code></a> → <a class="reference-chip" href="../modules/metadata/#_resolve_action_by"><code>_resolve_action_by</code></a>
+<a class="reference-chip" href="../modules/data_quality/#_build_dq_rule_history"><code>_build_dq_rule_history</code></a> → <a class="reference-chip" href="../modules/metadata/#_resolve_action_by"><code>_resolve_action_by</code></a>
+<a class="reference-chip" href="../modules/data_quality/#_build_dq_rules_metadata_df"><code>_build_dq_rules_metadata_df</code></a> → <a class="reference-chip" href="../modules/metadata/#_now_utc_iso"><code>_now_utc_iso</code></a>
+<a class="reference-chip" href="../modules/data_quality/#_build_dq_rules_metadata_df"><code>_build_dq_rules_metadata_df</code></a> → <a class="reference-chip" href="../modules/metadata/#_resolve_action_by"><code>_resolve_action_by</code></a>
+<a class="reference-chip" href="../modules/data_quality/#_prepare_dq_profile_input_rows"><code>_prepare_dq_profile_input_rows</code></a> → <a class="reference-chip" href="../../reference/profile_dataframe/"><code>profile_dataframe</code></a>
+<a class="reference-chip" href="../../reference/write_dq_rules/"><code>write_dq_rules</code></a> → <a class="reference-chip" href="../../reference/write_lakehouse_table/"><code>write_lakehouse_table</code></a>
+</div>
+</div>
