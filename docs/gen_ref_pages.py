@@ -235,12 +235,12 @@ for row in sorted(public_symbol_docs, key=lambda item: item["symbol_name"]):
         show_mermaid = bool(inbound_edges or outbound_edges)
         if show_mermaid:
             fd.write("## Callable relationships\n\n")
-            fd.write('<div class="module-mermaid-scroll">\n\n')
-            fd.write("```mermaid\nflowchart LR\n")
-            fd.write("  classDef currentModule fill:#fff3e0,stroke:#ef6c00,stroke-width:3px,color:#3e2723;\n")
-            fd.write("  classDef externalModule fill:#f5f5f5,stroke:#9e9e9e,stroke-width:1px,color:#616161;\n")
-            fd.write("  classDef focus fill:#ffe082,stroke:#ef6c00,stroke-width:3px,color:#3e2723;\n")
-            fd.write("  classDef neighbor fill:#fff8e1,stroke:#ffb300,stroke-width:1.5px,color:#5d4037;\n")
+            fd.write('<div class="module-mermaid-scroll module-diagram-desktop">\n\n')
+            fd.write("```mermaid\nflowchart TB\n")
+            fd.write("  classDef currentModule fill:#ffe8cc,stroke:#e65100,stroke-width:4px,color:#3e2723;\n")
+            fd.write("  classDef externalModule fill:#f7f7f7,stroke:#b0bec5,stroke-width:1px,color:#607d8b;\n")
+            fd.write("  classDef focus fill:#ffb74d,stroke:#ef6c00,stroke-width:4px,color:#3e2723;\n")
+            fd.write("  classDef neighbor fill:#fff8e1,stroke:#cfd8dc,stroke-width:1px,color:#546e7a;\n")
             fd.write("  classDef externalCallable fill:#eceff1,stroke:#90a4ae,stroke-width:1px,color:#37474f;\n")
             fd.write(f"  subgraph m_{module_name}[{module_name}]\n")
             fd.write(f'    current["{symbol_name}"]\n')
@@ -275,10 +275,33 @@ for row in sorted(public_symbol_docs, key=lambda item: item["symbol_name"]):
                 fd.write(f"  class {','.join(outbound_helper_ids)} externalCallable;\n")
             fd.write("```\n\n")
             fd.write("</div>\n\n")
-            fd.write("- **Terms:** Inside this module · Used by other modules · Uses other modules\n\n")
+            fd.write('<div class="module-relationship-list module-diagram-mobile">\n\n')
+            if module_neighbors:
+                fd.write("### Inside this module\n\n")
+                fd.write('<div class="callable-chip-group">\n')
+                for c in module_neighbors:
+                    fd.write(f'{_link_html(c, current_module=module_name)}\n')
+                fd.write("</div>\n\n")
+            if referenced_by:
+                counts: dict[str, int] = {}
+                for c in referenced_by:
+                    counts[_parts(c)[0]] = counts.get(_parts(c)[0], 0) + 1
+                fd.write("### Used by other modules\n\n<div class=\"callable-chip-group\">\n")
+                for mod, count in sorted(counts.items()):
+                    fd.write(f'<span class="reference-chip"><code>{mod}</code> ({count})</span>\n')
+                fd.write("</div>\n\n")
+            if outbound_edges:
+                counts: dict[str, int] = {}
+                for c in outbound_edges:
+                    counts[_parts(c)[0]] = counts.get(_parts(c)[0], 0) + 1
+                fd.write("### Uses other modules\n\n<div class=\"callable-chip-group\">\n")
+                for mod, count in sorted(counts.items()):
+                    fd.write(f'<span class="reference-chip"><code>{mod}</code> ({count})</span>\n')
+                fd.write("</div>\n\n")
+            fd.write("</div>\n\n")
 
         if relationship_rows:
-            fd.write("## Callable relationships\n\n")
+            fd.write("## Relationship details\n\n")
             for label, values in relationship_rows:
                 fd.write(f"### {label}\n\n{values}\n\n")
 

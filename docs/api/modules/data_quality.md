@@ -209,14 +209,11 @@ Split a Spark DataFrame into pass/quarantine outputs for row-level DQ rules.
 
 <div class="module-mermaid-scroll module-diagram-desktop">
 ```mermaid
-flowchart LR
-  classDef currentModule fill:#fff3e0,stroke:#ef6c00,stroke-width:3px,color:#3e2723;
-  classDef externalModule fill:#f5f5f5,stroke:#9e9e9e,stroke-width:1px,color:#616161;
-  classDef currentCallable fill:#ffe0b2,stroke:#ef6c00,stroke-width:2px;
-  classDef externalCallable fill:#eceff1,stroke:#90a4ae,stroke-width:1px;
-  subgraph m_data_profiling[data_profiling]
-    fabricops_kit_data_profiling_profile_dataframe["profile_dataframe"]
-  end
+flowchart TB
+  classDef currentModule fill:#ffe8cc,stroke:#e65100,stroke-width:4px,color:#3e2723;
+  classDef externalModule fill:#f7f7f7,stroke:#b0bec5,stroke-width:1px,color:#607d8b;
+  classDef currentCallable fill:#ffd180,stroke:#ef6c00,stroke-width:2px;
+  classDef externalCallable fill:#eceff1,stroke:#b0bec5,stroke-width:1px,color:#455a64;
   subgraph m_data_quality[data_quality]
     fabricops_kit_data_quality__attach_rule_metadata_keys["_attach_rule_metadata_keys"]
     fabricops_kit_data_quality__build_dq_rule_deactivation_metadata_df["_build_dq_rule_deactivation_metadata_df"]
@@ -243,6 +240,9 @@ flowchart LR
     fabricops_kit_data_quality_run_dq_rule_review_widget["run_dq_rule_review_widget"]
     fabricops_kit_data_quality_validate_dq_rules["validate_dq_rules"]
     fabricops_kit_data_quality_write_dq_rules["write_dq_rules"]
+  end
+  subgraph m_data_profiling[data_profiling]
+    fabricops_kit_data_profiling_profile_dataframe["profile_dataframe"]
   end
   subgraph m_fabric_input_output[fabric_input_output]
     fabricops_kit_fabric_input_output_write_lakehouse_table["write_lakehouse_table"]
@@ -287,6 +287,8 @@ flowchart LR
   fabricops_kit_data_quality_write_dq_rules --> fabricops_kit_data_quality__build_dq_rule_history
   fabricops_kit_data_quality_write_dq_rules --> fabricops_kit_data_quality_validate_dq_rules
   fabricops_kit_data_quality_write_dq_rules --> fabricops_kit_fabric_input_output_write_lakehouse_table
+  linkStyle 9,10,11,12,13,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31 stroke:#ef6c00,stroke-width:2.2px;
+  linkStyle 0,1,2,3,4,5,6,7,8,14,32 stroke:#90a4ae,stroke-width:1.2px,stroke-dasharray: 4 2;
   class m_data_quality currentModule;
   class m_data_profiling,m_fabric_input_output,m_metadata externalModule;
   class fabricops_kit_data_quality__attach_rule_metadata_keys,fabricops_kit_data_quality__build_dq_rule_deactivation_metadata_df,fabricops_kit_data_quality__build_dq_rule_deactivations,fabricops_kit_data_quality__build_dq_rule_history,fabricops_kit_data_quality__build_dq_rules_metadata_df,fabricops_kit_data_quality__extract_candidate_rules_from_responses,fabricops_kit_data_quality__extract_dq_rules,fabricops_kit_data_quality__latest_dq_rule_versions,fabricops_kit_data_quality__load_active_dq_rule_metadata,fabricops_kit_data_quality__load_active_dq_rules,fabricops_kit_data_quality__parse_dq_rules_dict_from_text,fabricops_kit_data_quality__prepare_dq_profile_input_rows,fabricops_kit_data_quality__require_ipywidgets,fabricops_kit_data_quality__run_dq_rules,fabricops_kit_data_quality__split_dq_rows,fabricops_kit_data_quality__suggest_dq_rules,fabricops_kit_data_quality_draft_dq_rules,fabricops_kit_data_quality_enforce_dq,fabricops_kit_data_quality_get_dq_review_results,fabricops_kit_data_quality_load_dq_rules,fabricops_kit_data_quality_review_dq_rule_deactivations,fabricops_kit_data_quality_review_dq_rules,fabricops_kit_data_quality_run_dq_rule_review_widget,fabricops_kit_data_quality_validate_dq_rules,fabricops_kit_data_quality_write_dq_rules currentCallable;
@@ -327,16 +329,8 @@ None.
 #### Uses other modules
 
 <div class="callable-chip-group">
-<a class="reference-chip" href="../modules/data_quality/#_attach_rule_metadata_keys"><code>_attach_rule_metadata_keys</code></a> → <a class="reference-chip" href="../modules/metadata/#build_dq_rule_key"><code>build_dq_rule_key</code></a>
-<a class="reference-chip" href="../modules/data_quality/#_attach_rule_metadata_keys"><code>_attach_rule_metadata_keys</code></a> → <a class="reference-chip" href="../modules/metadata/#build_metadata_column_key"><code>build_metadata_column_key</code></a>
-<a class="reference-chip" href="../modules/data_quality/#_attach_rule_metadata_keys"><code>_attach_rule_metadata_keys</code></a> → <a class="reference-chip" href="../modules/metadata/#build_metadata_table_key"><code>build_metadata_table_key</code></a>
-<a class="reference-chip" href="../modules/data_quality/#_build_dq_rule_deactivation_metadata_df"><code>_build_dq_rule_deactivation_metadata_df</code></a> → <a class="reference-chip" href="../modules/metadata/#_now_utc_iso"><code>_now_utc_iso</code></a>
-<a class="reference-chip" href="../modules/data_quality/#_build_dq_rule_deactivation_metadata_df"><code>_build_dq_rule_deactivation_metadata_df</code></a> → <a class="reference-chip" href="../modules/metadata/#_resolve_action_by"><code>_resolve_action_by</code></a>
-<a class="reference-chip" href="../modules/data_quality/#_build_dq_rule_deactivations"><code>_build_dq_rule_deactivations</code></a> → <a class="reference-chip" href="../modules/metadata/#_resolve_action_by"><code>_resolve_action_by</code></a>
-<a class="reference-chip" href="../modules/data_quality/#_build_dq_rule_history"><code>_build_dq_rule_history</code></a> → <a class="reference-chip" href="../modules/metadata/#_resolve_action_by"><code>_resolve_action_by</code></a>
-<a class="reference-chip" href="../modules/data_quality/#_build_dq_rules_metadata_df"><code>_build_dq_rules_metadata_df</code></a> → <a class="reference-chip" href="../modules/metadata/#_now_utc_iso"><code>_now_utc_iso</code></a>
-<a class="reference-chip" href="../modules/data_quality/#_build_dq_rules_metadata_df"><code>_build_dq_rules_metadata_df</code></a> → <a class="reference-chip" href="../modules/metadata/#_resolve_action_by"><code>_resolve_action_by</code></a>
-<a class="reference-chip" href="../modules/data_quality/#_prepare_dq_profile_input_rows"><code>_prepare_dq_profile_input_rows</code></a> → <a class="reference-chip" href="../../reference/profile_dataframe/"><code>profile_dataframe</code></a>
-<a class="reference-chip" href="../../reference/write_dq_rules/"><code>write_dq_rules</code></a> → <a class="reference-chip" href="../../reference/write_lakehouse_table/"><code>write_lakehouse_table</code></a>
+<span class="reference-chip"><code>data_profiling</code> (1)</span>
+<span class="reference-chip"><code>fabric_input_output</code> (1)</span>
+<span class="reference-chip"><code>metadata</code> (9)</span>
 </div>
 </div>

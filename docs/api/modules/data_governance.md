@@ -118,11 +118,11 @@ Owns sensitivity, PII, confidentiality, policy labels, and governance approval e
 
 <div class="module-mermaid-scroll module-diagram-desktop">
 ```mermaid
-flowchart LR
-  classDef currentModule fill:#fff3e0,stroke:#ef6c00,stroke-width:3px,color:#3e2723;
-  classDef externalModule fill:#f5f5f5,stroke:#9e9e9e,stroke-width:1px,color:#616161;
-  classDef currentCallable fill:#ffe0b2,stroke:#ef6c00,stroke-width:2px;
-  classDef externalCallable fill:#eceff1,stroke:#90a4ae,stroke-width:1px;
+flowchart TB
+  classDef currentModule fill:#ffe8cc,stroke:#e65100,stroke-width:4px,color:#3e2723;
+  classDef externalModule fill:#f7f7f7,stroke:#b0bec5,stroke-width:1px,color:#607d8b;
+  classDef currentCallable fill:#ffd180,stroke:#ef6c00,stroke-width:2px;
+  classDef externalCallable fill:#eceff1,stroke:#b0bec5,stroke-width:1px,color:#455a64;
   subgraph m_data_governance[data_governance]
     fabricops_kit_data_governance__approved_widget_rows["_approved_widget_rows"]
     fabricops_kit_data_governance__coerce_row_dicts["_coerce_row_dicts"]
@@ -150,6 +150,8 @@ flowchart LR
   fabricops_kit_data_governance_review_governance --> fabricops_kit_metadata_build_metadata_column_key
   fabricops_kit_data_governance_review_governance --> fabricops_kit_metadata_build_metadata_table_key
   fabricops_kit_data_governance_write_governance --> fabricops_kit_data_governance__approved_widget_rows
+  linkStyle 1,2,3,4,8 stroke:#ef6c00,stroke-width:2.2px;
+  linkStyle 0,5,6,7 stroke:#90a4ae,stroke-width:1.2px,stroke-dasharray: 4 2;
   class m_data_governance currentModule;
   class m_metadata externalModule;
   class fabricops_kit_data_governance__approved_widget_rows,fabricops_kit_data_governance__coerce_row_dicts,fabricops_kit_data_governance__extract_pii_suggestions,fabricops_kit_data_governance__prepare_governance_input,fabricops_kit_data_governance__undo_last_action,fabricops_kit_data_governance_extract_governance_suggestions,fabricops_kit_data_governance_load_governance,fabricops_kit_data_governance_prepare_governance_input,fabricops_kit_data_governance_review_governance,fabricops_kit_data_governance_write_governance currentCallable;
@@ -173,9 +175,6 @@ None.
 #### Uses other modules
 
 <div class="callable-chip-group">
-<a class="reference-chip" href="../modules/data_governance/#_approved_widget_rows"><code>_approved_widget_rows</code></a> → <a class="reference-chip" href="../modules/metadata/#_resolve_action_by"><code>_resolve_action_by</code></a>
-<a class="reference-chip" href="../../reference/review_governance/"><code>review_governance</code></a> → <a class="reference-chip" href="../modules/metadata/#_now_utc_iso"><code>_now_utc_iso</code></a>
-<a class="reference-chip" href="../../reference/review_governance/"><code>review_governance</code></a> → <a class="reference-chip" href="../modules/metadata/#build_metadata_column_key"><code>build_metadata_column_key</code></a>
-<a class="reference-chip" href="../../reference/review_governance/"><code>review_governance</code></a> → <a class="reference-chip" href="../modules/metadata/#build_metadata_table_key"><code>build_metadata_table_key</code></a>
+<span class="reference-chip"><code>metadata</code> (4)</span>
 </div>
 </div>

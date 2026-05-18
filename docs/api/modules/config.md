@@ -123,11 +123,11 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
 
 <div class="module-mermaid-scroll module-diagram-desktop">
 ```mermaid
-flowchart LR
-  classDef currentModule fill:#fff3e0,stroke:#ef6c00,stroke-width:3px,color:#3e2723;
-  classDef externalModule fill:#f5f5f5,stroke:#9e9e9e,stroke-width:1px,color:#616161;
-  classDef currentCallable fill:#ffe0b2,stroke:#ef6c00,stroke-width:2px;
-  classDef externalCallable fill:#eceff1,stroke:#90a4ae,stroke-width:1px;
+flowchart TB
+  classDef currentModule fill:#ffe8cc,stroke:#e65100,stroke-width:4px,color:#3e2723;
+  classDef externalModule fill:#f7f7f7,stroke:#b0bec5,stroke-width:1px,color:#607d8b;
+  classDef currentCallable fill:#ffd180,stroke:#ef6c00,stroke-width:2px;
+  classDef externalCallable fill:#eceff1,stroke:#b0bec5,stroke-width:1px,color:#455a64;
   subgraph m_config[config]
     fabricops_kit_config__bootstrap_fabric_env["_bootstrap_fabric_env"]
     fabricops_kit_config__check_spark_session["_check_spark_session"]
@@ -184,6 +184,8 @@ flowchart LR
   fabricops_kit_fabric_input_output_read_warehouse_table --> fabricops_kit_config__get_store
   fabricops_kit_fabric_input_output_write_lakehouse_table --> fabricops_kit_config__get_store
   fabricops_kit_fabric_input_output_write_warehouse_table --> fabricops_kit_config__get_store
+  linkStyle 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18 stroke:#ef6c00,stroke-width:2.2px;
+  linkStyle 19,20,21,22,23,24,25,26 stroke:#90a4ae,stroke-width:1.2px,stroke-dasharray: 4 2;
   class m_config currentModule;
   class m_fabric_input_output externalModule;
   class fabricops_kit_config__bootstrap_fabric_env,fabricops_kit_config__check_spark_session,fabricops_kit_config__default_schema_text,fabricops_kit_config__format_error_path,fabricops_kit_config__get_fabric_runtime_metadata,fabricops_kit_config__get_store,fabricops_kit_config__load_schema,fabricops_kit_config__normalize_name,fabricops_kit_config__run_config_smoke_tests,fabricops_kit_config__validate_framework_config,fabricops_kit_config__validate_notebook_name,fabricops_kit_config_assert_valid_dataset_contract,fabricops_kit_config_load_and_validate_dataset_contract,fabricops_kit_config_load_config,fabricops_kit_config_load_dataset_contract,fabricops_kit_config_setup_notebook,fabricops_kit_config_validate_dataset_contract currentCallable;
@@ -218,14 +220,7 @@ flowchart LR
 #### Used by other modules
 
 <div class="callable-chip-group">
-<a class="reference-chip" href="../../reference/load_config/"><code>load_config</code></a> → <a class="reference-chip" href="../../reference/load_config/"><code>load_config</code></a>
-<a class="reference-chip" href="../../reference/read_lakehouse_csv/"><code>read_lakehouse_csv</code></a> → <a class="reference-chip" href="../modules/config/#_get_store"><code>_get_store</code></a>
-<a class="reference-chip" href="../../reference/read_lakehouse_excel/"><code>read_lakehouse_excel</code></a> → <a class="reference-chip" href="../modules/config/#_get_store"><code>_get_store</code></a>
-<a class="reference-chip" href="../../reference/read_lakehouse_parquet/"><code>read_lakehouse_parquet</code></a> → <a class="reference-chip" href="../modules/config/#_get_store"><code>_get_store</code></a>
-<a class="reference-chip" href="../../reference/read_lakehouse_table/"><code>read_lakehouse_table</code></a> → <a class="reference-chip" href="../modules/config/#_get_store"><code>_get_store</code></a>
-<a class="reference-chip" href="../../reference/read_warehouse_table/"><code>read_warehouse_table</code></a> → <a class="reference-chip" href="../modules/config/#_get_store"><code>_get_store</code></a>
-<a class="reference-chip" href="../../reference/write_lakehouse_table/"><code>write_lakehouse_table</code></a> → <a class="reference-chip" href="../modules/config/#_get_store"><code>_get_store</code></a>
-<a class="reference-chip" href="../../reference/write_warehouse_table/"><code>write_warehouse_table</code></a> → <a class="reference-chip" href="../modules/config/#_get_store"><code>_get_store</code></a>
+<span class="reference-chip"><code>fabric_input_output</code> (8)</span>
 </div>
 #### Uses other modules
 

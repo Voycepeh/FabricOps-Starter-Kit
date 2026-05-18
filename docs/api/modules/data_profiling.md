@@ -67,11 +67,11 @@ Owns deterministic profiling evidence such as schema, nulls, distincts, min/max,
 
 <div class="module-mermaid-scroll module-diagram-desktop">
 ```mermaid
-flowchart LR
-  classDef currentModule fill:#fff3e0,stroke:#ef6c00,stroke-width:3px,color:#3e2723;
-  classDef externalModule fill:#f5f5f5,stroke:#9e9e9e,stroke-width:1px,color:#616161;
-  classDef currentCallable fill:#ffe0b2,stroke:#ef6c00,stroke-width:2px;
-  classDef externalCallable fill:#eceff1,stroke:#90a4ae,stroke-width:1px;
+flowchart TB
+  classDef currentModule fill:#ffe8cc,stroke:#e65100,stroke-width:4px,color:#3e2723;
+  classDef externalModule fill:#f7f7f7,stroke:#b0bec5,stroke-width:1px,color:#607d8b;
+  classDef currentCallable fill:#ffd180,stroke:#ef6c00,stroke-width:2px;
+  classDef externalCallable fill:#eceff1,stroke:#b0bec5,stroke-width:1px,color:#455a64;
   subgraph m_data_profiling[data_profiling]
     fabricops_kit_data_profiling__get_profiled_columns["_get_profiled_columns"]
     fabricops_kit_data_profiling__is_min_max_supported_type["_is_min_max_supported_type"]
@@ -87,6 +87,8 @@ flowchart LR
   fabricops_kit_data_profiling_profile_dataframe --> fabricops_kit_data_profiling__get_profiled_columns
   fabricops_kit_data_profiling_profile_dataframe --> fabricops_kit_data_profiling__is_min_max_supported_type
   fabricops_kit_data_quality__prepare_dq_profile_input_rows --> fabricops_kit_data_profiling_profile_dataframe
+  linkStyle 1,2 stroke:#ef6c00,stroke-width:2.2px;
+  linkStyle 0,3 stroke:#90a4ae,stroke-width:1.2px,stroke-dasharray: 4 2;
   class m_data_profiling currentModule;
   class m_data_quality,m_technical_columns externalModule;
   class fabricops_kit_data_profiling__get_profiled_columns,fabricops_kit_data_profiling__is_min_max_supported_type,fabricops_kit_data_profiling_profile_dataframe currentCallable;
@@ -104,11 +106,11 @@ flowchart LR
 #### Used by other modules
 
 <div class="callable-chip-group">
-<a class="reference-chip" href="../modules/data_quality/#_prepare_dq_profile_input_rows"><code>_prepare_dq_profile_input_rows</code></a> → <a class="reference-chip" href="../../reference/profile_dataframe/"><code>profile_dataframe</code></a>
+<span class="reference-chip"><code>data_quality</code> (1)</span>
 </div>
 #### Uses other modules
 
 <div class="callable-chip-group">
-<a class="reference-chip" href="../modules/data_profiling/#_get_profiled_columns"><code>_get_profiled_columns</code></a> → <a class="reference-chip" href="../modules/technical_columns/#_default_technical_columns"><code>_default_technical_columns</code></a>
+<span class="reference-chip"><code>technical_columns</code> (1)</span>
 </div>
 </div>

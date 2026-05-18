@@ -70,11 +70,11 @@ Owns generated maintainer-facing handover and contract narrative output.
 
 <div class="module-mermaid-scroll module-diagram-desktop">
 ```mermaid
-flowchart LR
-  classDef currentModule fill:#fff3e0,stroke:#ef6c00,stroke-width:3px,color:#3e2723;
-  classDef externalModule fill:#f5f5f5,stroke:#9e9e9e,stroke-width:1px,color:#616161;
-  classDef currentCallable fill:#ffe0b2,stroke:#ef6c00,stroke-width:2px;
-  classDef externalCallable fill:#eceff1,stroke:#90a4ae,stroke-width:1px;
+flowchart TB
+  classDef currentModule fill:#ffe8cc,stroke:#e65100,stroke-width:4px,color:#3e2723;
+  classDef externalModule fill:#f7f7f7,stroke:#b0bec5,stroke-width:1px,color:#607d8b;
+  classDef currentCallable fill:#ffd180,stroke:#ef6c00,stroke-width:2px;
+  classDef externalCallable fill:#eceff1,stroke:#b0bec5,stroke-width:1px,color:#455a64;
   subgraph m_handover[handover]
     fabricops_kit_handover__status_of["_status_of"]
     fabricops_kit_handover_build_handover_record["build_handover_record"]
@@ -83,6 +83,7 @@ flowchart LR
   fabricops_kit_handover_build_handover_record --> fabricops_kit_handover__status_of
   fabricops_kit_handover_build_handover_record --> fabricops_kit_handover_render_handover_markdown
   fabricops_kit_handover_render_handover_markdown --> fabricops_kit_handover__status_of
+  linkStyle 0,1,2 stroke:#ef6c00,stroke-width:2.2px;
   class m_handover currentModule;
   class fabricops_kit_handover__status_of,fabricops_kit_handover_build_handover_record,fabricops_kit_handover_render_handover_markdown currentCallable;
 ```

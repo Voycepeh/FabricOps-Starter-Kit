@@ -141,14 +141,11 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
 
 <div class="module-mermaid-scroll module-diagram-desktop">
 ```mermaid
-flowchart LR
-  classDef currentModule fill:#fff3e0,stroke:#ef6c00,stroke-width:3px,color:#3e2723;
-  classDef externalModule fill:#f5f5f5,stroke:#9e9e9e,stroke-width:1px,color:#616161;
-  classDef currentCallable fill:#ffe0b2,stroke:#ef6c00,stroke-width:2px;
-  classDef externalCallable fill:#eceff1,stroke:#90a4ae,stroke-width:1px;
-  subgraph m__utils[_utils]
-    fabricops_kit__utils__to_jsonable["_to_jsonable"]
-  end
+flowchart TB
+  classDef currentModule fill:#ffe8cc,stroke:#e65100,stroke-width:4px,color:#3e2723;
+  classDef externalModule fill:#f7f7f7,stroke:#b0bec5,stroke-width:1px,color:#607d8b;
+  classDef currentCallable fill:#ffd180,stroke:#ef6c00,stroke-width:2px;
+  classDef externalCallable fill:#eceff1,stroke:#b0bec5,stroke-width:1px,color:#455a64;
   subgraph m_drift[drift]
     fabricops_kit_drift__build_pandas_partition_snapshot["_build_pandas_partition_snapshot"]
     fabricops_kit_drift__build_pandas_schema_snapshot["_build_pandas_schema_snapshot"]
@@ -179,6 +176,9 @@ flowchart LR
     fabricops_kit_drift_detect_dataframe_engine["detect_dataframe_engine"]
     fabricops_kit_drift_load_latest_partition_snapshot["load_latest_partition_snapshot"]
     fabricops_kit_drift_load_latest_schema_snapshot["load_latest_schema_snapshot"]
+  end
+  subgraph m__utils[_utils]
+    fabricops_kit__utils__to_jsonable["_to_jsonable"]
   end
   fabricops_kit_drift__build_pandas_partition_snapshot --> fabricops_kit__utils__to_jsonable
   fabricops_kit_drift__build_pandas_partition_snapshot --> fabricops_kit_drift__build_partition_hash
@@ -221,6 +221,8 @@ flowchart LR
   fabricops_kit_drift_load_latest_partition_snapshot --> fabricops_kit_drift__safe_spark_collect
   fabricops_kit_drift_load_latest_schema_snapshot --> fabricops_kit_drift__is_missing_table_error
   fabricops_kit_drift_load_latest_schema_snapshot --> fabricops_kit_drift__safe_spark_collect
+  linkStyle 1,2,3,4,6,7,9,10,11,12,13,14,15,16,17,18,20,21,22,23,24,25,26,27,28,29,30,31,33,34,35,36,37,38,39,40 stroke:#ef6c00,stroke-width:2.2px;
+  linkStyle 0,5,8,19,32 stroke:#90a4ae,stroke-width:1.2px,stroke-dasharray: 4 2;
   class m_drift currentModule;
   class m__utils externalModule;
   class fabricops_kit_drift__build_pandas_partition_snapshot,fabricops_kit_drift__build_pandas_schema_snapshot,fabricops_kit_drift__build_partition_hash,fabricops_kit_drift__build_spark_partition_snapshot,fabricops_kit_drift__build_spark_schema_snapshot,fabricops_kit_drift__column_hash,fabricops_kit_drift__hash,fabricops_kit_drift__is_closed_partition,fabricops_kit_drift__is_missing_table_error,fabricops_kit_drift__json_dumps,fabricops_kit_drift__resolve_change_behavior,fabricops_kit_drift__safe_spark_collect,fabricops_kit_drift__utc_now_iso,fabricops_kit_drift__write_metadata_rows,fabricops_kit_drift_build_and_write_partition_snapshot,fabricops_kit_drift_build_and_write_schema_snapshot,fabricops_kit_drift_build_drift_evidence_record,fabricops_kit_drift_build_incremental_safety_records,fabricops_kit_drift_build_partition_snapshot,fabricops_kit_drift_build_schema_snapshot,fabricops_kit_drift_check_partition_drift,fabricops_kit_drift_check_schema_drift,fabricops_kit_drift_compare_partition_snapshots,fabricops_kit_drift_compare_schema_snapshots,fabricops_kit_drift_default_incremental_safety_policy,fabricops_kit_drift_default_schema_drift_policy,fabricops_kit_drift_detect_dataframe_engine,fabricops_kit_drift_load_latest_partition_snapshot,fabricops_kit_drift_load_latest_schema_snapshot currentCallable;
@@ -275,10 +277,6 @@ None.
 #### Uses other modules
 
 <div class="callable-chip-group">
-<a class="reference-chip" href="../modules/drift/#_build_pandas_partition_snapshot"><code>_build_pandas_partition_snapshot</code></a> → <a class="reference-chip" href="../modules/_utils/#_to_jsonable"><code>_to_jsonable</code></a>
-<a class="reference-chip" href="../modules/drift/#_build_spark_partition_snapshot"><code>_build_spark_partition_snapshot</code></a> → <a class="reference-chip" href="../modules/_utils/#_to_jsonable"><code>_to_jsonable</code></a>
-<a class="reference-chip" href="../modules/drift/#_json_dumps"><code>_json_dumps</code></a> → <a class="reference-chip" href="../modules/_utils/#_to_jsonable"><code>_to_jsonable</code></a>
-<a class="reference-chip" href="../modules/drift/#build_incremental_safety_records"><code>build_incremental_safety_records</code></a> → <a class="reference-chip" href="../modules/_utils/#_to_jsonable"><code>_to_jsonable</code></a>
-<a class="reference-chip" href="../modules/drift/#compare_partition_snapshots"><code>compare_partition_snapshots</code></a> → <a class="reference-chip" href="../modules/_utils/#_to_jsonable"><code>_to_jsonable</code></a>
+<span class="reference-chip"><code>_utils</code> (5)</span>
 </div>
 </div>

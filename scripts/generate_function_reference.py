@@ -692,14 +692,16 @@ def main() -> None:
         module_edge_pairs = sorted(set(module_edges))
         lines.extend(["", "### Callable relationships", ""])
         if module_edge_pairs:
-            lines.extend(['<div class="module-mermaid-scroll module-diagram-desktop">', "```mermaid", "flowchart LR"])
+            lines.extend(['<div class="module-mermaid-scroll module-diagram-desktop">', "```mermaid", "flowchart TB"])
             lines.extend([
-                "  classDef currentModule fill:#fff3e0,stroke:#ef6c00,stroke-width:3px,color:#3e2723;",
-                "  classDef externalModule fill:#f5f5f5,stroke:#9e9e9e,stroke-width:1px,color:#616161;",
-                "  classDef currentCallable fill:#ffe0b2,stroke:#ef6c00,stroke-width:2px;",
-                "  classDef externalCallable fill:#eceff1,stroke:#90a4ae,stroke-width:1px;",
+                "  classDef currentModule fill:#ffe8cc,stroke:#e65100,stroke-width:4px,color:#3e2723;",
+                "  classDef externalModule fill:#f7f7f7,stroke:#b0bec5,stroke-width:1px,color:#607d8b;",
+                "  classDef currentCallable fill:#ffd180,stroke:#ef6c00,stroke-width:2px;",
+                "  classDef externalCallable fill:#eceff1,stroke:#b0bec5,stroke-width:1px,color:#455a64;",
             ])
             rendered_modules = sorted({_module_name(src) for src, _ in module_edge_pairs} | {_module_name(dst) for _, dst in module_edge_pairs})
+            if actual_module in rendered_modules:
+                rendered_modules = [actual_module] + [m for m in rendered_modules if m != actual_module]
             for mod in rendered_modules:
                 lines.append(f"  subgraph m_{mod}[{mod}]")
                 for qn in sorted({x for pair in module_edge_pairs for x in pair if _module_name(x) == mod}):
@@ -708,6 +710,12 @@ def main() -> None:
                 lines.append("  end")
             for src_qn, dst_qn in module_edge_pairs[:120]:
                 lines.append(f"  {src_qn.replace('.', '_')} --> {dst_qn.replace('.', '_')}")
+            internal_idx = [i for i, (s, d) in enumerate(module_edge_pairs[:120]) if _module_name(s) == actual_module and _module_name(d) == actual_module]
+            cross_idx = [i for i, (s, d) in enumerate(module_edge_pairs[:120]) if not (_module_name(s) == actual_module and _module_name(d) == actual_module)]
+            if internal_idx:
+                lines.append(f"  linkStyle {','.join(str(i) for i in internal_idx)} stroke:#ef6c00,stroke-width:2.2px;")
+            if cross_idx:
+                lines.append(f"  linkStyle {','.join(str(i) for i in cross_idx)} stroke:#90a4ae,stroke-width:1.2px,stroke-dasharray: 4 2;")
             lines.append(f"  class m_{actual_module} currentModule;")
             external_modules = [mod for mod in rendered_modules if mod != actual_module]
             if external_modules:
@@ -729,8 +737,16 @@ def main() -> None:
                     lines.append("None.")
                     continue
                 lines.append('<div class="callable-chip-group">')
-                for src_qn, dst_qn in rows:
-                    lines.append(f'<a class="reference-chip" href="{callable_docs_link(src_qn.split(".")[-1], _module_name(src_qn), docs_metadata)}"><code>{_label(src_qn)}</code></a> → <a class="reference-chip" href="{callable_docs_link(dst_qn.split(".")[-1], _module_name(dst_qn), docs_metadata)}"><code>{_label(dst_qn)}</code></a>')
+                if heading == "Inside this module":
+                    for src_qn, dst_qn in rows:
+                        lines.append(f'<a class="reference-chip" href="{callable_docs_link(src_qn.split(".")[-1], _module_name(src_qn), docs_metadata)}"><code>{_label(src_qn)}</code></a> → <a class="reference-chip" href="{callable_docs_link(dst_qn.split(".")[-1], _module_name(dst_qn), docs_metadata)}"><code>{_label(dst_qn)}</code></a>')
+                else:
+                    module_counts: dict[str, int] = {}
+                    for src_qn, dst_qn in rows:
+                        other_mod = _module_name(src_qn) if heading == "Used by other modules" else _module_name(dst_qn)
+                        module_counts[other_mod] = module_counts.get(other_mod, 0) + 1
+                    for other_mod, count in sorted(module_counts.items()):
+                        lines.append(f'<span class="reference-chip"><code>{other_mod}</code> ({count})</span>')
                 lines.append("</div>")
             lines.extend(["</div>"])
         else:

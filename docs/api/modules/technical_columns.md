@@ -104,14 +104,11 @@ Owns standard output/audit columns for pipeline outputs.
 
 <div class="module-mermaid-scroll module-diagram-desktop">
 ```mermaid
-flowchart LR
-  classDef currentModule fill:#fff3e0,stroke:#ef6c00,stroke-width:3px,color:#3e2723;
-  classDef externalModule fill:#f5f5f5,stroke:#9e9e9e,stroke-width:1px,color:#616161;
-  classDef currentCallable fill:#ffe0b2,stroke:#ef6c00,stroke-width:2px;
-  classDef externalCallable fill:#eceff1,stroke:#90a4ae,stroke-width:1px;
-  subgraph m_data_profiling[data_profiling]
-    fabricops_kit_data_profiling__get_profiled_columns["_get_profiled_columns"]
-  end
+flowchart TB
+  classDef currentModule fill:#ffe8cc,stroke:#e65100,stroke-width:4px,color:#3e2723;
+  classDef externalModule fill:#f7f7f7,stroke:#b0bec5,stroke-width:1px,color:#607d8b;
+  classDef currentCallable fill:#ffd180,stroke:#ef6c00,stroke-width:2px;
+  classDef externalCallable fill:#eceff1,stroke:#b0bec5,stroke-width:1px,color:#455a64;
   subgraph m_technical_columns[technical_columns]
     fabricops_kit_technical_columns__add_audit_columns["_add_audit_columns"]
     fabricops_kit_technical_columns__add_datetime_features["_add_datetime_features"]
@@ -124,6 +121,9 @@ flowchart LR
     fabricops_kit_technical_columns__non_technical_columns["_non_technical_columns"]
     fabricops_kit_technical_columns__safe_string["_safe_string"]
     fabricops_kit_technical_columns_standardize_columns["standardize_columns"]
+  end
+  subgraph m_data_profiling[data_profiling]
+    fabricops_kit_data_profiling__get_profiled_columns["_get_profiled_columns"]
   end
   fabricops_kit_data_profiling__get_profiled_columns --> fabricops_kit_technical_columns__default_technical_columns
   fabricops_kit_technical_columns__add_audit_columns --> fabricops_kit_technical_columns__assert_columns_exist
@@ -139,6 +139,8 @@ flowchart LR
   fabricops_kit_technical_columns_standardize_columns --> fabricops_kit_technical_columns__add_audit_columns
   fabricops_kit_technical_columns_standardize_columns --> fabricops_kit_technical_columns__add_datetime_features
   fabricops_kit_technical_columns_standardize_columns --> fabricops_kit_technical_columns__add_hash_columns
+  linkStyle 1,2,3,4,5,6,7,8,9,10,11,12,13 stroke:#ef6c00,stroke-width:2.2px;
+  linkStyle 0 stroke:#90a4ae,stroke-width:1.2px,stroke-dasharray: 4 2;
   class m_technical_columns currentModule;
   class m_data_profiling externalModule;
   class fabricops_kit_technical_columns__add_audit_columns,fabricops_kit_technical_columns__add_datetime_features,fabricops_kit_technical_columns__add_hash_columns,fabricops_kit_technical_columns__assert_columns_exist,fabricops_kit_technical_columns__bucket_values_pandas,fabricops_kit_technical_columns__default_technical_columns,fabricops_kit_technical_columns__get_fabric_runtime_context,fabricops_kit_technical_columns__hash_row,fabricops_kit_technical_columns__non_technical_columns,fabricops_kit_technical_columns__safe_string,fabricops_kit_technical_columns_standardize_columns currentCallable;
@@ -167,7 +169,7 @@ flowchart LR
 #### Used by other modules
 
 <div class="callable-chip-group">
-<a class="reference-chip" href="../modules/data_profiling/#_get_profiled_columns"><code>_get_profiled_columns</code></a> → <a class="reference-chip" href="../modules/technical_columns/#_default_technical_columns"><code>_default_technical_columns</code></a>
+<span class="reference-chip"><code>data_profiling</code> (1)</span>
 </div>
 #### Uses other modules
 
