@@ -121,7 +121,11 @@ Owns sensitivity, PII, confidentiality, policy labels, and governance approval e
 #### Functions in this module
 
 <div class="callable-chip-group">
-<span class="reference-chip"><code>data_governance</code> (5)</span>
+<a class="reference-chip" href="../../reference/extract_governance_suggestions/"><code>extract_governance_suggestions</code></a> → <a class="reference-chip" href="../modules/data_governance/#_extract_pii_suggestions"><code>_extract_pii_suggestions</code></a>
+<a class="reference-chip" href="../../reference/load_governance/"><code>load_governance</code></a> → <a class="reference-chip" href="../modules/data_governance/#_coerce_row_dicts"><code>_coerce_row_dicts</code></a>
+<a class="reference-chip" href="../../reference/prepare_governance_input/"><code>prepare_governance_input</code></a> → <a class="reference-chip" href="../modules/data_governance/#_prepare_governance_input"><code>_prepare_governance_input</code></a>
+<a class="reference-chip" href="../../reference/review_governance/"><code>review_governance</code></a> → <a class="reference-chip" href="../modules/data_governance/#_undo_last_action"><code>_undo_last_action</code></a>
+<a class="reference-chip" href="../../reference/write_governance/"><code>write_governance</code></a> → <a class="reference-chip" href="../modules/data_governance/#_approved_widget_rows"><code>_approved_widget_rows</code></a>
 </div>
 #### External callers
 
@@ -129,6 +133,9 @@ None.
 #### External callees
 
 <div class="callable-chip-group">
-<span class="reference-chip"><code>metadata</code> (4)</span>
+<a class="reference-chip" href="../modules/metadata/#_resolve_action_by"><code>metadata._resolve_action_by</code></a>
+<a class="reference-chip" href="../modules/metadata/#_now_utc_iso"><code>metadata._now_utc_iso</code></a>
+<a class="reference-chip" href="../modules/metadata/#build_metadata_column_key"><code>metadata.build_metadata_column_key</code></a>
+<a class="reference-chip" href="../modules/metadata/#build_metadata_table_key"><code>metadata.build_metadata_table_key</code></a>
 </div>
 </div>

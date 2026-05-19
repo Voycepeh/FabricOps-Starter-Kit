@@ -241,7 +241,7 @@ for row in sorted(public_symbol_docs, key=lambda item: item["symbol_name"]):
             relationship_rows.append(("Uses other modules", ', '.join(_link_md(c, current_module=module_name) for c in outbound_edges)))
 
         fd.write("## Callable relationships\n\n")
-        fd.write('<p><a href="../call-graph/" class="md-button md-button--primary">Open interactive call graph</a></p>\n\n')
+        fd.write(f'<p><a href="../call-graph/?function={qn}" class="md-button md-button--primary">Open interactive call graph</a></p>\n\n')
         fd.write('<div class="callable-relationship-grid">\n')
         fd.write('  <section><h3>Used by</h3><div class="callable-chip-group">\n')
         if inbound_edges:

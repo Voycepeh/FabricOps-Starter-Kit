@@ -2,7 +2,8 @@
   async function initCallGraph() {
     const canvas = document.getElementById('call-graph-canvas');
     if (!canvas) return;
-    const response = await fetch('/FabricOps-Starter-Kit/reference/dependency-metadata.json');
+    const metadataUrl = new URL('dependency-metadata.json', window.location.href);
+    const response = await fetch(metadataUrl);
     const data = await response.json();
     const callables = data.callables || {};
     const nodes = [];

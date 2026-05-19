@@ -70,16 +70,17 @@ Owns deterministic profiling evidence such as schema, nulls, distincts, min/max,
 #### Functions in this module
 
 <div class="callable-chip-group">
-<span class="reference-chip"><code>data_profiling</code> (2)</span>
+<a class="reference-chip" href="../../reference/profile_dataframe/"><code>profile_dataframe</code></a> → <a class="reference-chip" href="../modules/data_profiling/#_get_profiled_columns"><code>_get_profiled_columns</code></a>
+<a class="reference-chip" href="../../reference/profile_dataframe/"><code>profile_dataframe</code></a> → <a class="reference-chip" href="../modules/data_profiling/#_is_min_max_supported_type"><code>_is_min_max_supported_type</code></a>
 </div>
 #### External callers
 
 <div class="callable-chip-group">
-<span class="reference-chip"><code>data_profiling</code> (1)</span>
+<a class="reference-chip" href="../modules/data_quality/#_prepare_dq_profile_input_rows"><code>data_quality._prepare_dq_profile_input_rows</code></a>
 </div>
 #### External callees
 
 <div class="callable-chip-group">
-<span class="reference-chip"><code>technical_columns</code> (1)</span>
+<a class="reference-chip" href="../modules/technical_columns/#_default_technical_columns"><code>technical_columns._default_technical_columns</code></a>
 </div>
 </div>

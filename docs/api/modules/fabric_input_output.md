@@ -116,16 +116,32 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
 #### Functions in this module
 
 <div class="callable-chip-group">
-<span class="reference-chip"><code>fabric_input_output</code> (9)</span>
+<a class="reference-chip" href="../modules/fabric_input_output/#check_naming_convention"><code>check_naming_convention</code></a> → <a class="reference-chip" href="../modules/fabric_input_output/#_get_fabric_runtime_context"><code>_get_fabric_runtime_context</code></a>
+<a class="reference-chip" href="../../reference/read_lakehouse_csv/"><code>read_lakehouse_csv</code></a> → <a class="reference-chip" href="../modules/fabric_input_output/#_get_spark"><code>_get_spark</code></a>
+<a class="reference-chip" href="../../reference/read_lakehouse_excel/"><code>read_lakehouse_excel</code></a> → <a class="reference-chip" href="../modules/fabric_input_output/#_get_spark"><code>_get_spark</code></a>
+<a class="reference-chip" href="../../reference/read_lakehouse_parquet/"><code>read_lakehouse_parquet</code></a> → <a class="reference-chip" href="../modules/fabric_input_output/#_convert_single_parquet_ns_to_us"><code>_convert_single_parquet_ns_to_us</code></a>
+<a class="reference-chip" href="../../reference/read_lakehouse_parquet/"><code>read_lakehouse_parquet</code></a> → <a class="reference-chip" href="../modules/fabric_input_output/#_get_spark"><code>_get_spark</code></a>
+<a class="reference-chip" href="../../reference/read_lakehouse_table/"><code>read_lakehouse_table</code></a> → <a class="reference-chip" href="../modules/fabric_input_output/#_get_spark"><code>_get_spark</code></a>
+<a class="reference-chip" href="../../reference/read_warehouse_table/"><code>read_warehouse_table</code></a> → <a class="reference-chip" href="../modules/fabric_input_output/#_get_spark"><code>_get_spark</code></a>
+<a class="reference-chip" href="../modules/fabric_input_output/#seed_minimal_sample_source_table"><code>seed_minimal_sample_source_table</code></a> → <a class="reference-chip" href="../modules/fabric_input_output/#_get_spark"><code>_get_spark</code></a>
+<a class="reference-chip" href="../modules/fabric_input_output/#seed_minimal_sample_source_table"><code>seed_minimal_sample_source_table</code></a> → <a class="reference-chip" href="../../reference/write_lakehouse_table/"><code>write_lakehouse_table</code></a>
 </div>
 #### External callers
 
 <div class="callable-chip-group">
-<span class="reference-chip"><code>fabric_input_output</code> (2)</span>
+<a class="reference-chip" href="../../reference/write_dq_rules/"><code>data_quality.write_dq_rules</code></a>
+<a class="reference-chip" href="../modules/metadata/#write_metadata_rows"><code>metadata.write_metadata_rows</code></a>
 </div>
 #### External callees
 
 <div class="callable-chip-group">
-<span class="reference-chip"><code>config</code> (8)</span>
+<a class="reference-chip" href="../../reference/load_config/"><code>config.load_config</code></a>
+<a class="reference-chip" href="../modules/config/#_get_store"><code>config._get_store</code></a>
+<a class="reference-chip" href="../modules/config/#_get_store"><code>config._get_store</code></a>
+<a class="reference-chip" href="../modules/config/#_get_store"><code>config._get_store</code></a>
+<a class="reference-chip" href="../modules/config/#_get_store"><code>config._get_store</code></a>
+<a class="reference-chip" href="../modules/config/#_get_store"><code>config._get_store</code></a>
+<a class="reference-chip" href="../modules/config/#_get_store"><code>config._get_store</code></a>
+<a class="reference-chip" href="../modules/config/#_get_store"><code>config._get_store</code></a>
 </div>
 </div>

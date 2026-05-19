@@ -212,7 +212,28 @@ Split a Spark DataFrame into pass/quarantine outputs for row-level DQ rules.
 #### Functions in this module
 
 <div class="callable-chip-group">
-<span class="reference-chip"><code>data_quality</code> (22)</span>
+<a class="reference-chip" href="../modules/data_quality/#_extract_candidate_rules_from_responses"><code>_extract_candidate_rules_from_responses</code></a> → <a class="reference-chip" href="../modules/data_quality/#_extract_dq_rules"><code>_extract_dq_rules</code></a>
+<a class="reference-chip" href="../modules/data_quality/#_extract_candidate_rules_from_responses"><code>_extract_candidate_rules_from_responses</code></a> → <a class="reference-chip" href="../modules/data_quality/#_parse_dq_rules_dict_from_text"><code>_parse_dq_rules_dict_from_text</code></a>
+<a class="reference-chip" href="../modules/data_quality/#_extract_dq_rules"><code>_extract_dq_rules</code></a> → <a class="reference-chip" href="../modules/data_quality/#_parse_dq_rules_dict_from_text"><code>_parse_dq_rules_dict_from_text</code></a>
+<a class="reference-chip" href="../modules/data_quality/#_load_active_dq_rule_metadata"><code>_load_active_dq_rule_metadata</code></a> → <a class="reference-chip" href="../modules/data_quality/#_latest_dq_rule_versions"><code>_latest_dq_rule_versions</code></a>
+<a class="reference-chip" href="../modules/data_quality/#_load_active_dq_rules"><code>_load_active_dq_rules</code></a> → <a class="reference-chip" href="../modules/data_quality/#_latest_dq_rule_versions"><code>_latest_dq_rule_versions</code></a>
+<a class="reference-chip" href="../modules/data_quality/#_run_dq_rules"><code>_run_dq_rules</code></a> → <a class="reference-chip" href="../modules/data_quality/#_split_dq_rows"><code>_split_dq_rows</code></a>
+<a class="reference-chip" href="../modules/data_quality/#_run_dq_rules"><code>_run_dq_rules</code></a> → <a class="reference-chip" href="../../reference/validate_dq_rules/"><code>validate_dq_rules</code></a>
+<a class="reference-chip" href="../modules/data_quality/#_split_dq_rows"><code>_split_dq_rows</code></a> → <a class="reference-chip" href="../../reference/validate_dq_rules/"><code>validate_dq_rules</code></a>
+<a class="reference-chip" href="../../reference/draft_dq_rules/"><code>draft_dq_rules</code></a> → <a class="reference-chip" href="../modules/data_quality/#_extract_dq_rules"><code>_extract_dq_rules</code></a>
+<a class="reference-chip" href="../../reference/draft_dq_rules/"><code>draft_dq_rules</code></a> → <a class="reference-chip" href="../modules/data_quality/#_prepare_dq_profile_input_rows"><code>_prepare_dq_profile_input_rows</code></a>
+<a class="reference-chip" href="../../reference/draft_dq_rules/"><code>draft_dq_rules</code></a> → <a class="reference-chip" href="../modules/data_quality/#_suggest_dq_rules"><code>_suggest_dq_rules</code></a>
+<a class="reference-chip" href="../../reference/enforce_dq/"><code>enforce_dq</code></a> → <a class="reference-chip" href="../modules/data_quality/#_load_active_dq_rules"><code>_load_active_dq_rules</code></a>
+<a class="reference-chip" href="../../reference/enforce_dq/"><code>enforce_dq</code></a> → <a class="reference-chip" href="../modules/data_quality/#_run_dq_rules"><code>_run_dq_rules</code></a>
+<a class="reference-chip" href="../../reference/enforce_dq/"><code>enforce_dq</code></a> → <a class="reference-chip" href="../modules/data_quality/#_split_dq_rows"><code>_split_dq_rows</code></a>
+<a class="reference-chip" href="../../reference/enforce_dq/"><code>enforce_dq</code></a> → <a class="reference-chip" href="../../reference/validate_dq_rules/"><code>validate_dq_rules</code></a>
+<a class="reference-chip" href="../../reference/get_dq_review_results/"><code>get_dq_review_results</code></a> → <a class="reference-chip" href="../modules/data_quality/#_attach_rule_metadata_keys"><code>_attach_rule_metadata_keys</code></a>
+<a class="reference-chip" href="../../reference/load_dq_rules/"><code>load_dq_rules</code></a> → <a class="reference-chip" href="../modules/data_quality/#_load_active_dq_rules"><code>_load_active_dq_rules</code></a>
+<a class="reference-chip" href="../../reference/review_dq_rule_deactivations/"><code>review_dq_rule_deactivations</code></a> → <a class="reference-chip" href="../modules/data_quality/#_require_ipywidgets"><code>_require_ipywidgets</code></a>
+<a class="reference-chip" href="../../reference/review_dq_rules/"><code>review_dq_rules</code></a> → <a class="reference-chip" href="../modules/data_quality/#_require_ipywidgets"><code>_require_ipywidgets</code></a>
+<a class="reference-chip" href="../../reference/run_dq_rule_review_widget/"><code>run_dq_rule_review_widget</code></a> → <a class="reference-chip" href="../../reference/review_dq_rules/"><code>review_dq_rules</code></a>
+<a class="reference-chip" href="../../reference/write_dq_rules/"><code>write_dq_rules</code></a> → <a class="reference-chip" href="../modules/data_quality/#_build_dq_rule_history"><code>_build_dq_rule_history</code></a>
+<a class="reference-chip" href="../../reference/write_dq_rules/"><code>write_dq_rules</code></a> → <a class="reference-chip" href="../../reference/validate_dq_rules/"><code>validate_dq_rules</code></a>
 </div>
 #### External callers
 
@@ -220,8 +241,16 @@ None.
 #### External callees
 
 <div class="callable-chip-group">
-<span class="reference-chip"><code>data_profiling</code> (1)</span>
-<span class="reference-chip"><code>fabric_input_output</code> (1)</span>
-<span class="reference-chip"><code>metadata</code> (9)</span>
+<a class="reference-chip" href="../modules/metadata/#build_dq_rule_key"><code>metadata.build_dq_rule_key</code></a>
+<a class="reference-chip" href="../modules/metadata/#build_metadata_column_key"><code>metadata.build_metadata_column_key</code></a>
+<a class="reference-chip" href="../modules/metadata/#build_metadata_table_key"><code>metadata.build_metadata_table_key</code></a>
+<a class="reference-chip" href="../modules/metadata/#_now_utc_iso"><code>metadata._now_utc_iso</code></a>
+<a class="reference-chip" href="../modules/metadata/#_resolve_action_by"><code>metadata._resolve_action_by</code></a>
+<a class="reference-chip" href="../modules/metadata/#_resolve_action_by"><code>metadata._resolve_action_by</code></a>
+<a class="reference-chip" href="../modules/metadata/#_resolve_action_by"><code>metadata._resolve_action_by</code></a>
+<a class="reference-chip" href="../modules/metadata/#_now_utc_iso"><code>metadata._now_utc_iso</code></a>
+<a class="reference-chip" href="../modules/metadata/#_resolve_action_by"><code>metadata._resolve_action_by</code></a>
+<a class="reference-chip" href="../../reference/profile_dataframe/"><code>data_profiling.profile_dataframe</code></a>
+<a class="reference-chip" href="../../reference/write_lakehouse_table/"><code>fabric_input_output.write_lakehouse_table</code></a>
 </div>
 </div>

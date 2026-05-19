@@ -113,7 +113,10 @@ Owns business meaning for tables and columns.
 #### Functions in this module
 
 <div class="callable-chip-group">
-<span class="reference-chip"><code>business_context</code> (4)</span>
+<a class="reference-chip" href="../modules/business_context/#_extract_column_business_context_suggestions"><code>_extract_column_business_context_suggestions</code></a> → <a class="reference-chip" href="../modules/business_context/#_parse_ai_dict_response"><code>_parse_ai_dict_response</code></a>
+<a class="reference-chip" href="../../reference/extract_column_business_context_suggestions/"><code>extract_column_business_context_suggestions</code></a> → <a class="reference-chip" href="../modules/business_context/#_extract_column_business_context_suggestions"><code>_extract_column_business_context_suggestions</code></a>
+<a class="reference-chip" href="../../reference/prepare_business_context_profile_input/"><code>prepare_business_context_profile_input</code></a> → <a class="reference-chip" href="../modules/business_context/#_prepare_business_context_profile_input"><code>_prepare_business_context_profile_input</code></a>
+<a class="reference-chip" href="../../reference/review_business_context/"><code>review_business_context</code></a> → <a class="reference-chip" href="../modules/business_context/#_require_ipywidgets"><code>_require_ipywidgets</code></a>
 </div>
 #### External callers
 
@@ -121,6 +124,8 @@ None.
 #### External callees
 
 <div class="callable-chip-group">
-<span class="reference-chip"><code>metadata</code> (3)</span>
+<a class="reference-chip" href="../modules/metadata/#build_metadata_column_key"><code>metadata.build_metadata_column_key</code></a>
+<a class="reference-chip" href="../modules/metadata/#build_metadata_table_key"><code>metadata.build_metadata_table_key</code></a>
+<a class="reference-chip" href="../modules/metadata/#write_column_business_context"><code>metadata.write_column_business_context</code></a>
 </div>
 </div>

@@ -73,7 +73,9 @@ Owns generated maintainer-facing handover and contract narrative output.
 #### Functions in this module
 
 <div class="callable-chip-group">
-<span class="reference-chip"><code>handover</code> (3)</span>
+<a class="reference-chip" href="../modules/handover/#build_handover_record"><code>build_handover_record</code></a> → <a class="reference-chip" href="../modules/handover/#_status_of"><code>_status_of</code></a>
+<a class="reference-chip" href="../modules/handover/#build_handover_record"><code>build_handover_record</code></a> → <a class="reference-chip" href="../../reference/render_handover_markdown/"><code>render_handover_markdown</code></a>
+<a class="reference-chip" href="../../reference/render_handover_markdown/"><code>render_handover_markdown</code></a> → <a class="reference-chip" href="../modules/handover/#_status_of"><code>_status_of</code></a>
 </div>
 #### External callers
 

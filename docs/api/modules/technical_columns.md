@@ -107,12 +107,24 @@ Owns standard output/audit columns for pipeline outputs.
 #### Functions in this module
 
 <div class="callable-chip-group">
-<span class="reference-chip"><code>technical_columns</code> (13)</span>
+<a class="reference-chip" href="../modules/technical_columns/#_add_audit_columns"><code>_add_audit_columns</code></a> → <a class="reference-chip" href="../modules/technical_columns/#_assert_columns_exist"><code>_assert_columns_exist</code></a>
+<a class="reference-chip" href="../modules/technical_columns/#_add_audit_columns"><code>_add_audit_columns</code></a> → <a class="reference-chip" href="../modules/technical_columns/#_bucket_values_pandas"><code>_bucket_values_pandas</code></a>
+<a class="reference-chip" href="../modules/technical_columns/#_add_audit_columns"><code>_add_audit_columns</code></a> → <a class="reference-chip" href="../modules/technical_columns/#_get_fabric_runtime_context"><code>_get_fabric_runtime_context</code></a>
+<a class="reference-chip" href="../modules/technical_columns/#_add_datetime_features"><code>_add_datetime_features</code></a> → <a class="reference-chip" href="../modules/technical_columns/#_assert_columns_exist"><code>_assert_columns_exist</code></a>
+<a class="reference-chip" href="../modules/technical_columns/#_add_hash_columns"><code>_add_hash_columns</code></a> → <a class="reference-chip" href="../modules/technical_columns/#_assert_columns_exist"><code>_assert_columns_exist</code></a>
+<a class="reference-chip" href="../modules/technical_columns/#_add_hash_columns"><code>_add_hash_columns</code></a> → <a class="reference-chip" href="../modules/technical_columns/#_hash_row"><code>_hash_row</code></a>
+<a class="reference-chip" href="../modules/technical_columns/#_add_hash_columns"><code>_add_hash_columns</code></a> → <a class="reference-chip" href="../modules/technical_columns/#_non_technical_columns"><code>_non_technical_columns</code></a>
+<a class="reference-chip" href="../modules/technical_columns/#_bucket_values_pandas"><code>_bucket_values_pandas</code></a> → <a class="reference-chip" href="../modules/technical_columns/#_safe_string"><code>_safe_string</code></a>
+<a class="reference-chip" href="../modules/technical_columns/#_hash_row"><code>_hash_row</code></a> → <a class="reference-chip" href="../modules/technical_columns/#_safe_string"><code>_safe_string</code></a>
+<a class="reference-chip" href="../modules/technical_columns/#_non_technical_columns"><code>_non_technical_columns</code></a> → <a class="reference-chip" href="../modules/technical_columns/#_default_technical_columns"><code>_default_technical_columns</code></a>
+<a class="reference-chip" href="../../reference/standardize_columns/"><code>standardize_columns</code></a> → <a class="reference-chip" href="../modules/technical_columns/#_add_audit_columns"><code>_add_audit_columns</code></a>
+<a class="reference-chip" href="../../reference/standardize_columns/"><code>standardize_columns</code></a> → <a class="reference-chip" href="../modules/technical_columns/#_add_datetime_features"><code>_add_datetime_features</code></a>
+<a class="reference-chip" href="../../reference/standardize_columns/"><code>standardize_columns</code></a> → <a class="reference-chip" href="../modules/technical_columns/#_add_hash_columns"><code>_add_hash_columns</code></a>
 </div>
 #### External callers
 
 <div class="callable-chip-group">
-<span class="reference-chip"><code>technical_columns</code> (1)</span>
+<a class="reference-chip" href="../modules/data_profiling/#_get_profiled_columns"><code>data_profiling._get_profiled_columns</code></a>
 </div>
 #### External callees
 

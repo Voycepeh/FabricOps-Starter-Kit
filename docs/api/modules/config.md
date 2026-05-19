@@ -126,12 +126,37 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
 #### Functions in this module
 
 <div class="callable-chip-group">
-<span class="reference-chip"><code>config</code> (19)</span>
+<a class="reference-chip" href="../modules/config/#_bootstrap_fabric_env"><code>_bootstrap_fabric_env</code></a> → <a class="reference-chip" href="../modules/config/#_get_fabric_runtime_metadata"><code>_get_fabric_runtime_metadata</code></a>
+<a class="reference-chip" href="../modules/config/#_bootstrap_fabric_env"><code>_bootstrap_fabric_env</code></a> → <a class="reference-chip" href="../modules/config/#_get_store"><code>_get_store</code></a>
+<a class="reference-chip" href="../modules/config/#_bootstrap_fabric_env"><code>_bootstrap_fabric_env</code></a> → <a class="reference-chip" href="../modules/config/#_run_config_smoke_tests"><code>_run_config_smoke_tests</code></a>
+<a class="reference-chip" href="../modules/config/#_bootstrap_fabric_env"><code>_bootstrap_fabric_env</code></a> → <a class="reference-chip" href="../../reference/load_config/"><code>load_config</code></a>
+<a class="reference-chip" href="../modules/config/#_load_schema"><code>_load_schema</code></a> → <a class="reference-chip" href="../modules/config/#_default_schema_text"><code>_default_schema_text</code></a>
+<a class="reference-chip" href="../modules/config/#_run_config_smoke_tests"><code>_run_config_smoke_tests</code></a> → <a class="reference-chip" href="../modules/config/#_check_spark_session"><code>_check_spark_session</code></a>
+<a class="reference-chip" href="../modules/config/#_run_config_smoke_tests"><code>_run_config_smoke_tests</code></a> → <a class="reference-chip" href="../modules/config/#_get_fabric_runtime_metadata"><code>_get_fabric_runtime_metadata</code></a>
+<a class="reference-chip" href="../modules/config/#_run_config_smoke_tests"><code>_run_config_smoke_tests</code></a> → <a class="reference-chip" href="../modules/config/#_get_store"><code>_get_store</code></a>
+<a class="reference-chip" href="../modules/config/#_run_config_smoke_tests"><code>_run_config_smoke_tests</code></a> → <a class="reference-chip" href="../modules/config/#_validate_notebook_name"><code>_validate_notebook_name</code></a>
+<a class="reference-chip" href="../modules/config/#_validate_notebook_name"><code>_validate_notebook_name</code></a> → <a class="reference-chip" href="../modules/config/#_normalize_name"><code>_normalize_name</code></a>
+<a class="reference-chip" href="../modules/config/#assert_valid_dataset_contract"><code>assert_valid_dataset_contract</code></a> → <a class="reference-chip" href="../modules/config/#validate_dataset_contract"><code>validate_dataset_contract</code></a>
+<a class="reference-chip" href="../modules/config/#load_and_validate_dataset_contract"><code>load_and_validate_dataset_contract</code></a> → <a class="reference-chip" href="../modules/config/#load_dataset_contract"><code>load_dataset_contract</code></a>
+<a class="reference-chip" href="../modules/config/#load_and_validate_dataset_contract"><code>load_and_validate_dataset_contract</code></a> → <a class="reference-chip" href="../modules/config/#validate_dataset_contract"><code>validate_dataset_contract</code></a>
+<a class="reference-chip" href="../../reference/load_config/"><code>load_config</code></a> → <a class="reference-chip" href="../modules/config/#_validate_framework_config"><code>_validate_framework_config</code></a>
+<a class="reference-chip" href="../../reference/setup_notebook/"><code>setup_notebook</code></a> → <a class="reference-chip" href="../modules/config/#_get_store"><code>_get_store</code></a>
+<a class="reference-chip" href="../../reference/setup_notebook/"><code>setup_notebook</code></a> → <a class="reference-chip" href="../modules/config/#_run_config_smoke_tests"><code>_run_config_smoke_tests</code></a>
+<a class="reference-chip" href="../../reference/setup_notebook/"><code>setup_notebook</code></a> → <a class="reference-chip" href="../../reference/load_config/"><code>load_config</code></a>
+<a class="reference-chip" href="../modules/config/#validate_dataset_contract"><code>validate_dataset_contract</code></a> → <a class="reference-chip" href="../modules/config/#_format_error_path"><code>_format_error_path</code></a>
+<a class="reference-chip" href="../modules/config/#validate_dataset_contract"><code>validate_dataset_contract</code></a> → <a class="reference-chip" href="../modules/config/#_load_schema"><code>_load_schema</code></a>
 </div>
 #### External callers
 
 <div class="callable-chip-group">
-<span class="reference-chip"><code>config</code> (8)</span>
+<a class="reference-chip" href="../../reference/load_config/"><code>fabric_input_output.load_config</code></a>
+<a class="reference-chip" href="../../reference/read_lakehouse_csv/"><code>fabric_input_output.read_lakehouse_csv</code></a>
+<a class="reference-chip" href="../../reference/read_lakehouse_excel/"><code>fabric_input_output.read_lakehouse_excel</code></a>
+<a class="reference-chip" href="../../reference/read_lakehouse_parquet/"><code>fabric_input_output.read_lakehouse_parquet</code></a>
+<a class="reference-chip" href="../../reference/read_lakehouse_table/"><code>fabric_input_output.read_lakehouse_table</code></a>
+<a class="reference-chip" href="../../reference/read_warehouse_table/"><code>fabric_input_output.read_warehouse_table</code></a>
+<a class="reference-chip" href="../../reference/write_lakehouse_table/"><code>fabric_input_output.write_lakehouse_table</code></a>
+<a class="reference-chip" href="../../reference/write_warehouse_table/"><code>fabric_input_output.write_warehouse_table</code></a>
 </div>
 #### External callees
 

@@ -704,16 +704,19 @@ def main() -> None:
                     lines.append("None.")
                     continue
                 lines.append('<div class="callable-chip-group">')
-                if heading == "Inside this module":
+                if heading == "Functions in this module":
                     for src_qn, dst_qn in rows:
                         lines.append(f'<a class="reference-chip" href="{callable_docs_link(src_qn.split(".")[-1], _module_name(src_qn), docs_metadata)}"><code>{_label(src_qn)}</code></a> → <a class="reference-chip" href="{callable_docs_link(dst_qn.split(".")[-1], _module_name(dst_qn), docs_metadata)}"><code>{_label(dst_qn)}</code></a>')
+                elif heading == "External callers":
+                    for src_qn, _ in sorted(rows):
+                        lines.append(
+                            f'<a class="reference-chip" href="{callable_docs_link(src_qn.split(".")[-1], _module_name(src_qn), docs_metadata)}"><code>{_module_name(src_qn)}.{_label(src_qn)}</code></a>'
+                        )
                 else:
-                    module_counts: dict[str, int] = {}
-                    for src_qn, dst_qn in rows:
-                        other_mod = _module_name(src_qn) if heading == "Used by other modules" else _module_name(dst_qn)
-                        module_counts[other_mod] = module_counts.get(other_mod, 0) + 1
-                    for other_mod, count in sorted(module_counts.items()):
-                        lines.append(f'<span class="reference-chip"><code>{other_mod}</code> ({count})</span>')
+                    for _, dst_qn in sorted(rows):
+                        lines.append(
+                            f'<a class="reference-chip" href="{callable_docs_link(dst_qn.split(".")[-1], _module_name(dst_qn), docs_metadata)}"><code>{_module_name(dst_qn)}.{_label(dst_qn)}</code></a>'
+                        )
                 lines.append("</div>")
             lines.extend(["</div>"])
         else:
@@ -822,7 +825,11 @@ def main() -> None:
             "short_name": node["callable_name"],
             "module": node["module_name"],
             "callable": node["callable_name"],
-            "docs_url": f"/FabricOps-Starter-Kit/reference/{node['callable_name']}/",
+            "docs_url": (
+                f"/FabricOps-Starter-Kit/reference/{node['callable_name']}/"
+                if node["exported"]
+                else f"/FabricOps-Starter-Kit/reference/internal/{node['module_name']}/{node['callable_name']}/"
+            ),
             "classification": node["role"],
             "calls": deps,
             "calls_count": len(deps),

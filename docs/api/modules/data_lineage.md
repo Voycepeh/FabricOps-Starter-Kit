@@ -126,7 +126,17 @@ Owns source-to-target lineage and transformation evidence.
 #### Functions in this module
 
 <div class="callable-chip-group">
-<span class="reference-chip"><code>data_lineage</code> (11)</span>
+<a class="reference-chip" href="../modules/data_lineage/#_build_lineage_record_from_steps"><code>_build_lineage_record_from_steps</code></a> → <a class="reference-chip" href="../modules/data_lineage/#_validate_lineage_steps"><code>_validate_lineage_steps</code></a>
+<a class="reference-chip" href="../modules/data_lineage/#_build_lineage_records"><code>_build_lineage_records</code></a> → <a class="reference-chip" href="../modules/data_lineage/#_build_lineage_record_from_steps"><code>_build_lineage_record_from_steps</code></a>
+<a class="reference-chip" href="../modules/data_lineage/#_enrich_lineage_steps_with_ai"><code>_enrich_lineage_steps_with_ai</code></a> → <a class="reference-chip" href="../modules/data_lineage/#_fallback_copilot_lineage_prompt"><code>_fallback_copilot_lineage_prompt</code></a>
+<a class="reference-chip" href="../modules/data_lineage/#_flatten_chain"><code>_flatten_chain</code></a> → <a class="reference-chip" href="../modules/data_lineage/#_name"><code>_name</code></a>
+<a class="reference-chip" href="../modules/data_lineage/#_resolve_write_target"><code>_resolve_write_target</code></a> → <a class="reference-chip" href="../modules/data_lineage/#_literal"><code>_literal</code></a>
+<a class="reference-chip" href="../modules/data_lineage/#_scan_notebook_cells"><code>_scan_notebook_cells</code></a> → <a class="reference-chip" href="../modules/data_lineage/#_scan_notebook_lineage"><code>_scan_notebook_lineage</code></a>
+<a class="reference-chip" href="../modules/data_lineage/#_scan_notebook_lineage"><code>_scan_notebook_lineage</code></a> → <a class="reference-chip" href="../modules/data_lineage/#_call_name"><code>_call_name</code></a>
+<a class="reference-chip" href="../modules/data_lineage/#_scan_notebook_lineage"><code>_scan_notebook_lineage</code></a> → <a class="reference-chip" href="../modules/data_lineage/#_flatten_chain"><code>_flatten_chain</code></a>
+<a class="reference-chip" href="../modules/data_lineage/#_scan_notebook_lineage"><code>_scan_notebook_lineage</code></a> → <a class="reference-chip" href="../modules/data_lineage/#_name"><code>_name</code></a>
+<a class="reference-chip" href="../modules/data_lineage/#_scan_notebook_lineage"><code>_scan_notebook_lineage</code></a> → <a class="reference-chip" href="../modules/data_lineage/#_resolve_write_target"><code>_resolve_write_target</code></a>
+<a class="reference-chip" href="../modules/data_lineage/#_scan_notebook_lineage"><code>_scan_notebook_lineage</code></a> → <a class="reference-chip" href="../modules/data_lineage/#_step"><code>_step</code></a>
 </div>
 #### External callers
 
