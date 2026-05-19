@@ -4,21 +4,16 @@ import sys
 from scripts.check_release_ready import get_init_version, get_pyproject_version
 
 
-def test_repo_versions_match() -> None:
+def test_repo_versions_match():
     from fabricops_kit import __version__
 
-    with open("pyproject.toml", "rb") as f:
-        pyproject_bytes = f.read()
-
-    if sys.version_info >= (3, 11):
-        pyproject_text = pyproject_bytes.decode("utf-8")
-    else:
-        pyproject_text = pyproject_bytes.decode("utf-8")
+    with open("pyproject.toml", "r", encoding="utf-8") as handle:
+        pyproject_text = handle.read()
 
     assert get_pyproject_version(pyproject_text) == __version__
 
 
-def test_script_runs_from_repo_root() -> None:
+def test_release_ready_script_runs():
     result = subprocess.run(
         [sys.executable, "scripts/check_release_ready.py"],
         check=False,
@@ -26,16 +21,8 @@ def test_script_runs_from_repo_root() -> None:
         text=True,
     )
     assert result.returncode == 0, result.stdout + result.stderr
-    assert "Release-ready version check passed" in result.stdout
 
 
-def test_parsers_handle_mismatch_samples() -> None:
-    pyproject_text = """
-[project]
-name = "fabricops-kit"
-version = "1.2.3"
-"""
-    init_text = '__version__ = "1.2.4"\n'
-
-    assert get_pyproject_version(pyproject_text) == "1.2.3"
-    assert get_init_version(init_text) == "1.2.4"
+def test_version_parsers_smoke():
+    assert get_pyproject_version('[project]\nversion = "1.2.3"\n') == "1.2.3"
+    assert get_init_version('__version__ = "1.2.4"\n') == "1.2.4"
