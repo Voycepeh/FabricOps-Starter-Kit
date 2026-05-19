@@ -121,80 +121,9 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
 
 ### Callable relationships
 
-<div class="module-mermaid-scroll module-diagram-desktop">
-```mermaid
-flowchart TB
-  classDef currentModule fill:#ffe8cc,stroke:#e65100,stroke-width:4px,color:#3e2723;
-  classDef externalModule fill:#f7f7f7,stroke:#b0bec5,stroke-width:1px,color:#607d8b;
-  classDef currentCallable fill:#ffd180,stroke:#ef6c00,stroke-width:2px;
-  classDef externalCallable fill:#eceff1,stroke:#b0bec5,stroke-width:1px,color:#455a64;
-  subgraph m_config[config]
-    fabricops_kit_config__bootstrap_fabric_env["_bootstrap_fabric_env"]
-    fabricops_kit_config__check_spark_session["_check_spark_session"]
-    fabricops_kit_config__default_schema_text["_default_schema_text"]
-    fabricops_kit_config__format_error_path["_format_error_path"]
-    fabricops_kit_config__get_fabric_runtime_metadata["_get_fabric_runtime_metadata"]
-    fabricops_kit_config__get_store["_get_store"]
-    fabricops_kit_config__load_schema["_load_schema"]
-    fabricops_kit_config__normalize_name["_normalize_name"]
-    fabricops_kit_config__run_config_smoke_tests["_run_config_smoke_tests"]
-    fabricops_kit_config__validate_framework_config["_validate_framework_config"]
-    fabricops_kit_config__validate_notebook_name["_validate_notebook_name"]
-    fabricops_kit_config_assert_valid_dataset_contract["assert_valid_dataset_contract"]
-    fabricops_kit_config_load_and_validate_dataset_contract["load_and_validate_dataset_contract"]
-    fabricops_kit_config_load_config["load_config"]
-    fabricops_kit_config_load_dataset_contract["load_dataset_contract"]
-    fabricops_kit_config_setup_notebook["setup_notebook"]
-    fabricops_kit_config_validate_dataset_contract["validate_dataset_contract"]
-  end
-  subgraph m_fabric_input_output[fabric_input_output]
-    fabricops_kit_fabric_input_output_load_config["load_config"]
-    fabricops_kit_fabric_input_output_read_lakehouse_csv["read_lakehouse_csv"]
-    fabricops_kit_fabric_input_output_read_lakehouse_excel["read_lakehouse_excel"]
-    fabricops_kit_fabric_input_output_read_lakehouse_parquet["read_lakehouse_parquet"]
-    fabricops_kit_fabric_input_output_read_lakehouse_table["read_lakehouse_table"]
-    fabricops_kit_fabric_input_output_read_warehouse_table["read_warehouse_table"]
-    fabricops_kit_fabric_input_output_write_lakehouse_table["write_lakehouse_table"]
-    fabricops_kit_fabric_input_output_write_warehouse_table["write_warehouse_table"]
-  end
-  fabricops_kit_config__bootstrap_fabric_env --> fabricops_kit_config__get_fabric_runtime_metadata
-  fabricops_kit_config__bootstrap_fabric_env --> fabricops_kit_config__get_store
-  fabricops_kit_config__bootstrap_fabric_env --> fabricops_kit_config__run_config_smoke_tests
-  fabricops_kit_config__bootstrap_fabric_env --> fabricops_kit_config_load_config
-  fabricops_kit_config__load_schema --> fabricops_kit_config__default_schema_text
-  fabricops_kit_config__run_config_smoke_tests --> fabricops_kit_config__check_spark_session
-  fabricops_kit_config__run_config_smoke_tests --> fabricops_kit_config__get_fabric_runtime_metadata
-  fabricops_kit_config__run_config_smoke_tests --> fabricops_kit_config__get_store
-  fabricops_kit_config__run_config_smoke_tests --> fabricops_kit_config__validate_notebook_name
-  fabricops_kit_config__validate_notebook_name --> fabricops_kit_config__normalize_name
-  fabricops_kit_config_assert_valid_dataset_contract --> fabricops_kit_config_validate_dataset_contract
-  fabricops_kit_config_load_and_validate_dataset_contract --> fabricops_kit_config_load_dataset_contract
-  fabricops_kit_config_load_and_validate_dataset_contract --> fabricops_kit_config_validate_dataset_contract
-  fabricops_kit_config_load_config --> fabricops_kit_config__validate_framework_config
-  fabricops_kit_config_setup_notebook --> fabricops_kit_config__get_store
-  fabricops_kit_config_setup_notebook --> fabricops_kit_config__run_config_smoke_tests
-  fabricops_kit_config_setup_notebook --> fabricops_kit_config_load_config
-  fabricops_kit_config_validate_dataset_contract --> fabricops_kit_config__format_error_path
-  fabricops_kit_config_validate_dataset_contract --> fabricops_kit_config__load_schema
-  fabricops_kit_fabric_input_output_load_config --> fabricops_kit_config_load_config
-  fabricops_kit_fabric_input_output_read_lakehouse_csv --> fabricops_kit_config__get_store
-  fabricops_kit_fabric_input_output_read_lakehouse_excel --> fabricops_kit_config__get_store
-  fabricops_kit_fabric_input_output_read_lakehouse_parquet --> fabricops_kit_config__get_store
-  fabricops_kit_fabric_input_output_read_lakehouse_table --> fabricops_kit_config__get_store
-  fabricops_kit_fabric_input_output_read_warehouse_table --> fabricops_kit_config__get_store
-  fabricops_kit_fabric_input_output_write_lakehouse_table --> fabricops_kit_config__get_store
-  fabricops_kit_fabric_input_output_write_warehouse_table --> fabricops_kit_config__get_store
-  linkStyle 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18 stroke:#ef6c00,stroke-width:2.2px;
-  linkStyle 19,20,21,22,23,24,25,26 stroke:#90a4ae,stroke-width:1.2px,stroke-dasharray: 4 2;
-  class m_config currentModule;
-  class m_fabric_input_output externalModule;
-  class fabricops_kit_config__bootstrap_fabric_env,fabricops_kit_config__check_spark_session,fabricops_kit_config__default_schema_text,fabricops_kit_config__format_error_path,fabricops_kit_config__get_fabric_runtime_metadata,fabricops_kit_config__get_store,fabricops_kit_config__load_schema,fabricops_kit_config__normalize_name,fabricops_kit_config__run_config_smoke_tests,fabricops_kit_config__validate_framework_config,fabricops_kit_config__validate_notebook_name,fabricops_kit_config_assert_valid_dataset_contract,fabricops_kit_config_load_and_validate_dataset_contract,fabricops_kit_config_load_config,fabricops_kit_config_load_dataset_contract,fabricops_kit_config_setup_notebook,fabricops_kit_config_validate_dataset_contract currentCallable;
-  class fabricops_kit_fabric_input_output_load_config,fabricops_kit_fabric_input_output_read_lakehouse_csv,fabricops_kit_fabric_input_output_read_lakehouse_excel,fabricops_kit_fabric_input_output_read_lakehouse_parquet,fabricops_kit_fabric_input_output_read_lakehouse_table,fabricops_kit_fabric_input_output_read_warehouse_table,fabricops_kit_fabric_input_output_write_lakehouse_table,fabricops_kit_fabric_input_output_write_warehouse_table externalCallable;
-```
-</div>
-
-<div class="module-relationship-list module-diagram-mobile">
-#### Inside this module
+<div class="module-relationship-list">
+#### Module relationships
+#### Functions in this module
 
 <div class="callable-chip-group">
 <a class="reference-chip" href="../modules/config/#_bootstrap_fabric_env"><code>_bootstrap_fabric_env</code></a> → <a class="reference-chip" href="../modules/config/#_get_fabric_runtime_metadata"><code>_get_fabric_runtime_metadata</code></a>
@@ -217,12 +146,19 @@ flowchart TB
 <a class="reference-chip" href="../modules/config/#validate_dataset_contract"><code>validate_dataset_contract</code></a> → <a class="reference-chip" href="../modules/config/#_format_error_path"><code>_format_error_path</code></a>
 <a class="reference-chip" href="../modules/config/#validate_dataset_contract"><code>validate_dataset_contract</code></a> → <a class="reference-chip" href="../modules/config/#_load_schema"><code>_load_schema</code></a>
 </div>
-#### Used by other modules
+#### External callers
 
 <div class="callable-chip-group">
-<span class="reference-chip"><code>fabric_input_output</code> (8)</span>
+<a class="reference-chip" href="../../reference/load_config/"><code>fabric_input_output.load_config</code></a>
+<a class="reference-chip" href="../../reference/read_lakehouse_csv/"><code>fabric_input_output.read_lakehouse_csv</code></a>
+<a class="reference-chip" href="../../reference/read_lakehouse_excel/"><code>fabric_input_output.read_lakehouse_excel</code></a>
+<a class="reference-chip" href="../../reference/read_lakehouse_parquet/"><code>fabric_input_output.read_lakehouse_parquet</code></a>
+<a class="reference-chip" href="../../reference/read_lakehouse_table/"><code>fabric_input_output.read_lakehouse_table</code></a>
+<a class="reference-chip" href="../../reference/read_warehouse_table/"><code>fabric_input_output.read_warehouse_table</code></a>
+<a class="reference-chip" href="../../reference/write_lakehouse_table/"><code>fabric_input_output.write_lakehouse_table</code></a>
+<a class="reference-chip" href="../../reference/write_warehouse_table/"><code>fabric_input_output.write_warehouse_table</code></a>
 </div>
-#### Uses other modules
+#### External callees
 
 None.
 </div>

@@ -83,32 +83,9 @@ Owns agreement discovery and selection helpers used to anchor notebook workflows
 
 ### Callable relationships
 
-<div class="module-mermaid-scroll module-diagram-desktop">
-```mermaid
-flowchart TB
-  classDef currentModule fill:#ffe8cc,stroke:#e65100,stroke-width:4px,color:#3e2723;
-  classDef externalModule fill:#f7f7f7,stroke:#b0bec5,stroke-width:1px,color:#607d8b;
-  classDef currentCallable fill:#ffd180,stroke:#ef6c00,stroke-width:2px;
-  classDef externalCallable fill:#eceff1,stroke:#b0bec5,stroke-width:1px,color:#455a64;
-  subgraph m_data_agreement[data_agreement]
-    fabricops_kit_data_agreement__agreement_option_label["_agreement_option_label"]
-    fabricops_kit_data_agreement__coerce_row_dicts["_coerce_row_dicts"]
-    fabricops_kit_data_agreement__latest_distinct_agreements["_latest_distinct_agreements"]
-    fabricops_kit_data_agreement_load_agreements["load_agreements"]
-    fabricops_kit_data_agreement_select_agreement["select_agreement"]
-  end
-  fabricops_kit_data_agreement_load_agreements --> fabricops_kit_data_agreement__coerce_row_dicts
-  fabricops_kit_data_agreement_load_agreements --> fabricops_kit_data_agreement__latest_distinct_agreements
-  fabricops_kit_data_agreement_select_agreement --> fabricops_kit_data_agreement__agreement_option_label
-  fabricops_kit_data_agreement_select_agreement --> fabricops_kit_data_agreement__coerce_row_dicts
-  linkStyle 0,1,2,3 stroke:#ef6c00,stroke-width:2.2px;
-  class m_data_agreement currentModule;
-  class fabricops_kit_data_agreement__agreement_option_label,fabricops_kit_data_agreement__coerce_row_dicts,fabricops_kit_data_agreement__latest_distinct_agreements,fabricops_kit_data_agreement_load_agreements,fabricops_kit_data_agreement_select_agreement currentCallable;
-```
-</div>
-
-<div class="module-relationship-list module-diagram-mobile">
-#### Inside this module
+<div class="module-relationship-list">
+#### Module relationships
+#### Functions in this module
 
 <div class="callable-chip-group">
 <a class="reference-chip" href="../../reference/load_agreements/"><code>load_agreements</code></a> → <a class="reference-chip" href="../modules/data_agreement/#_coerce_row_dicts"><code>_coerce_row_dicts</code></a>
@@ -116,10 +93,10 @@ flowchart TB
 <a class="reference-chip" href="../../reference/select_agreement/"><code>select_agreement</code></a> → <a class="reference-chip" href="../modules/data_agreement/#_agreement_option_label"><code>_agreement_option_label</code></a>
 <a class="reference-chip" href="../../reference/select_agreement/"><code>select_agreement</code></a> → <a class="reference-chip" href="../modules/data_agreement/#_coerce_row_dicts"><code>_coerce_row_dicts</code></a>
 </div>
-#### Used by other modules
+#### External callers
 
 None.
-#### Uses other modules
+#### External callees
 
 None.
 </div>
