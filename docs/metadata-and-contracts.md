@@ -28,6 +28,8 @@ A practical data contract should cover:
 - **Change management expectations** (versioning, deprecation, escalation)
 - **Downstream consumer awareness** (known dependencies and impact paths)
 
+A contract should identify downstream consumers and expected impact paths so schema changes become coordinated rollouts instead of surprises.
+
 ```mermaid
 flowchart LR
     P[Producer Domain] --> C[Data Contract]
@@ -40,6 +42,10 @@ flowchart LR
 ```
 
 ## 3. Contracts are assembled from metadata evidence
+
+> [!IMPORTANT]
+> In FabricOps, the contract is assembled from governed metadata and runtime evidence.
+> It is not maintained as one giant manually edited YAML file.
 
 FabricOps does **not** expect teams to manually maintain one giant contract YAML file.
 
@@ -55,6 +61,25 @@ Instead, the operational contract is assembled from governed evidence generated 
 - steward decisions
 - pipeline behavior
 
+```mermaid
+flowchart TB
+    A1[Profiling Evidence]
+    A2[DQ Rules]
+    A3[Schema Snapshots]
+    A4[Lineage]
+    A5[Governance Approvals]
+    A6[Run Summaries]
+
+    A1 --> B[Assembled Operational Contract]
+    A2 --> B
+    A3 --> B
+    A4 --> B
+    A5 --> B
+    A6 --> B
+
+    B --> C[Pipeline Enforcement]
+```
+
 This keeps the contract aligned with how the platform actually runs: contract state reflects approved metadata plus execution evidence, not documentation drift.
 
 ## 4. Where the contract lives in FabricOps
@@ -68,6 +93,8 @@ Contract responsibilities are distributed across notebook stages:
 | 03_pc_* | Executable pipeline contract enforcement |
 
 The **executable contract is enforced in `03_pc_*` notebooks**, where approved metadata is translated into runtime checks and publish decisions.
+
+> The pipeline contract notebook is where approved governance decisions become executable enforcement.
 
 ## 5. How contracts are enforced
 
@@ -100,9 +127,10 @@ FabricOps keeps AI assistance practical and controlled:
 - AI suggests glossary/business-term mappings.
 - AI helps generate metadata descriptions.
 - Humans approve governance and quality decisions before enforcement.
-- Trusted contracts improve the reliability of AI-ready datasets.
 
-This matches the project philosophy: **AI-assisted governance and DQ, with notebook-first execution and human accountability at approval boundaries**.
+AI amplifies bad governance faster, so AI-ready data requires trusted operational contracts.
+
+The FabricOps operating model stays explicit: **AI suggests, humans approve, pipelines enforce**.
 
 ## 7. Data contracts are change management
 
@@ -113,6 +141,10 @@ The hardest part is rarely writing a contract file. The hard part is operating c
 - versioning and compatibility windows
 - deprecation discipline
 - coordination across producer and consumer domains
+
+Example operational sequence:
+
+`customer_id` changes from `INT` to `STRING` → contract version bump required → consumers notified → migration window tracked → pipeline validation updated.
 
 Treating contracts as change-management tooling reduces surprise breakage and shortens recovery time.
 
