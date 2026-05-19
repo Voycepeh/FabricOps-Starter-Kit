@@ -52,11 +52,11 @@ def main() -> int:
     init_version = get_init_version(INIT_PATH.read_text(encoding="utf-8"))
 
     if pyproject_version == init_version:
-        print(f"✅ Release-ready version check passed: {pyproject_version}")
+        print(f"Release-ready version check passed: {pyproject_version}")
         return 0
 
     print(
-        "❌ Release-ready version check failed: "
+        "Release-ready version check failed: "
         f"pyproject.toml [project].version={pyproject_version} "
         f"!= src/fabricops_kit/__init__.py __version__={init_version}"
     )
