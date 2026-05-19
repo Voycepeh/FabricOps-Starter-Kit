@@ -10,7 +10,7 @@ Its operational template remains:
 
 When copied into a project workspace, keep the notebook naming convention as `01_da_<agreement>`.
 
-> <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/01_data_agreement_template.ipynb">Open template notebook</a>
+> <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/01_da_agreement_template.ipynb">Open template notebook</a>
 
 ## What this notebook does
 
