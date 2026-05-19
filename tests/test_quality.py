@@ -1,104 +1,93 @@
-import importlib
-import json
-from datetime import datetime, timedelta, timezone
-
-import pandas as pd
 import pytest
 
 from fabricops_kit.data_quality import (
-    DataQualityError,
-    assert_quality_gate,
-    run_quality_rules,
+    _approved_dq_rules_from_review_rows,
+    _extract_candidate_rules_from_responses,
+    _parse_dq_rules_dict_from_text,
+    _prepare_dq_profile_rows_with_context,
+    validate_dq_rules,
 )
 
 
-def _run(df, rule):
-    return run_quality_rules(df, [rule], dataset_name="synthetic", table_name="orders", engine="pandas")
+def test_parse_dq_rules_dict_from_text_accepts_plain_and_prefixed_payloads():
+    plain = '{"orders": [{"rule_id": "r1"}]}'
+    prefixed = 'DQ_RULES = {"orders": [{"rule_id": "r2"}]}'
+
+    assert _parse_dq_rules_dict_from_text(plain)["orders"][0]["rule_id"] == "r1"
+    assert _parse_dq_rules_dict_from_text(prefixed)["orders"][0]["rule_id"] == "r2"
 
 
-def test_not_null_passes_and_fails():
-    assert _run(pd.DataFrame({"a": [1, 2]}), {"rule_id": "1", "rule_type": "not_null", "column": "a"})["results"][0]["status"] == "passed"
-    assert _run(pd.DataFrame({"a": [1, None]}), {"rule_id": "1", "rule_type": "not_null", "column": "a"})["results"][0]["status"] == "failed"
+def test_prepare_dq_profile_rows_with_context_keeps_only_approved_context_rows():
+    profile_rows = [
+        {"column_name": "id", "data_type": "string"},
+        {"column_name": "status", "data_type": "string"},
+    ]
+    contexts = [
+        {"column_name": "id", "approved_business_context": "Order identifier"},
+        {"column_name": "status", "approved_business_context": ""},
+    ]
+
+    prepared = _prepare_dq_profile_rows_with_context(profile_rows, table_name="orders", column_contexts=contexts)
+
+    assert len(prepared) == 1
+    assert prepared[0]["column_name"] == "id"
+    assert prepared[0]["table_name"] == "orders"
+    assert prepared[0]["approved_business_context"] == "Order identifier"
 
 
-def test_unique_and_unique_combination():
-    r1 = _run(pd.DataFrame({"a": [1, 2, 2]}), {"rule_type": "unique", "column": "a"})
-    assert r1["results"][0]["failed_count"] == 2
-    r2 = _run(pd.DataFrame({"a": [1, 1], "b": [1, 2]}), {"rule_type": "unique_combination", "columns": ["a", "b"]})
-    assert r2["results"][0]["status"] == "passed"
+def test_extract_candidate_rules_from_list_responses_deduplicates_by_rule_id():
+    responses = [
+        {"ai_dq_response": 'DQ_RULES = {"orders": [{"rule_id": "r1", "rule_type": "not_null"}]}'},
+        {"ai_dq_response": 'DQ_RULES = {"orders": [{"rule_id": "r1", "rule_type": "not_null"}, {"rule_id": "r2", "rule_type": "regex_format"}]}'},
+    ]
+
+    rules = _extract_candidate_rules_from_responses(responses, table_name="orders")
+    ids = {r["rule_id"] for r in rules}
+
+    assert ids == {"r1", "r2"}
 
 
-def test_accepted_values_range_regex():
-    df = pd.DataFrame({"status": ["ok", "bad"], "amount": [5, 500], "email": ["a@b.com", "broken"]})
-    assert _run(df, {"rule_type": "accepted_values", "column": "status", "accepted_values": ["ok"]})["results"][0]["failed_count"] == 1
-    assert _run(df, {"rule_type": "range_check", "column": "amount", "min_value": 0, "max_value": 100})["results"][0]["failed_count"] == 1
-    assert _run(df, {"rule_type": "regex_check", "column": "email", "pattern": r"^[^@]+@[^@]+\.[^@]+$"})["results"][0]["failed_count"] == 1
+def test_approved_dq_rules_from_review_rows_returns_only_approved_payloads():
+    rows = [
+        {"approval_status": "approved", "proposed_rule_payload": '{"rule_id": "r1"}'},
+        {"approval_status": "rejected", "proposed_rule_payload": '{"rule_id": "r2"}'},
+    ]
+
+    approved = _approved_dq_rules_from_review_rows(rows)
+
+    assert approved == [{"rule_id": "r1"}]
 
 
-def test_row_count_rules_and_empty_dataframe():
-    empty = pd.DataFrame({"a": []})
-    assert _run(empty, {"rule_type": "row_count_min", "min_count": 1})["results"][0]["status"] == "failed"
-    assert _run(empty, {"rule_type": "row_count_between", "min_count": 0, "max_count": 10})["results"][0]["status"] == "passed"
+def test_validate_dq_rules_accepts_canonical_rules_and_rejects_invalid_ones():
+    valid_rules = [
+        {
+            "rule_id": "r1",
+            "rule_type": "not_null",
+            "columns": ["id"],
+            "severity": "warning",
+            "description": "id must be present",
+        },
+        {
+            "rule_id": "r2",
+            "rule_type": "value_range",
+            "columns": ["amount"],
+            "severity": "error",
+            "description": "amount in range",
+            "lower_bound": 0,
+        },
+    ]
 
+    assert validate_dq_rules(valid_rules) == valid_rules
 
-def test_freshness_passes_and_fails():
-    fresh = pd.DataFrame({"updated_at": [datetime.now(timezone.utc) - timedelta(hours=1)]})
-    stale = pd.DataFrame({"updated_at": [datetime.now(timezone.utc) - timedelta(days=5)]})
-    assert _run(fresh, {"rule_type": "freshness_check", "column": "updated_at", "max_age_days": 2})["results"][0]["status"] == "passed"
-    assert _run(stale, {"rule_type": "freshness_check", "column": "updated_at", "max_age_days": 2})["results"][0]["status"] == "failed"
-
-
-def test_gate_behavior_and_assertion():
-    df = pd.DataFrame({"a": [1, None]})
-    blocking = run_quality_rules(df, [{"rule_type": "not_null", "column": "a", "severity": "critical"}], engine="pandas")
-    assert blocking["status"] == "failed" and not blocking["can_continue"]
-    with pytest.raises(DataQualityError):
-        assert_quality_gate(blocking)
-
-    warning = run_quality_rules(df, [{"rule_type": "not_null", "column": "a", "severity": "warning"}], engine="pandas")
-    assert warning["status"] == "warning" and warning["can_continue"]
-
-
-def test_records_json_safe_and_unsupported_and_missing_column():
-    df = pd.DataFrame({"a": [1]})
-    result = run_quality_rules(
-        df,
-        [
-            {"rule_type": "unknown_type", "severity": "warning"},
-            {"rule_type": "not_null", "column": "missing"},
-        ],
-        engine="pandas",
-    )
-    assert result["results"][0]["status"] == "skipped"
-    assert result["results"][1]["status"] == "failed"
-    rows = (result, run_id="run-1")
-    json.dumps(rows)
-
-
-
-
-def test_range_check_min_only_max_only_and_both():
-    df = pd.DataFrame({"amount": [-1, 0, 5, 12, None]})
-    min_only = _run(df, {"rule_type": "range_check", "column": "amount", "min_value": 0})
-    assert min_only["results"][0]["failed_count"] == 1
-
-    max_only = _run(df, {"rule_type": "range_check", "column": "amount", "max_value": 10})
-    assert max_only["results"][0]["failed_count"] == 1
-
-    both = _run(df, {"rule_type": "range_check", "column": "amount", "min_value": 0, "max_value": 10})
-    assert both["results"][0]["failed_count"] == 2
-
-
-def test_range_check_missing_min_and_max_is_invalid_rule():
-    df = pd.DataFrame({"amount": [1, 2, 3]})
-    result = _run(df, {"rule_type": "range_check", "column": "amount"})
-    assert result["results"][0]["status"] == "failed"
-    assert "requires at least one of min_value or max_value" in result["results"][0]["message"]
-
-def test_import_without_pyspark_and_auto_detection_and_invalid_engine():
-    module = importlib.import_module("fabricops_kit.quality")
-    assert module is not None
-    df = pd.DataFrame({"a": [1]})
-    assert run_quality_rules(df, [], engine="auto")["engine"] == "pandas"
     with pytest.raises(ValueError):
-        run_quality_rules(df, [], engine="duckdb")
+        validate_dq_rules(
+            [
+                {
+                    "rule_id": "bad",
+                    "rule_type": "accepted_values",
+                    "columns": ["status"],
+                    "severity": "warning",
+                    "description": "missing allowed values",
+                }
+            ]
+        )
