@@ -63,9 +63,9 @@ Contract responsibilities are distributed across notebook stages:
 
 | Notebook | Responsibility |
 | --- | --- |
-| `01_data_sharing_agreement` | Business agreement, ownership, access, and SLA expectations |
-| `02_ex_*` | Profiling, discovery, AI-assisted suggestions, and metadata evidence |
-| `03_pc_*` | Executable pipeline contract enforcement |
+| 01_data_sharing_agreement | Business agreement, ownership, access, and SLA expectations |
+| 02_ex_* | Profiling, discovery, AI-assisted suggestions, and metadata evidence |
+| 03_pc_* | Executable pipeline contract enforcement |
 
 The **executable contract is enforced in `03_pc_*` notebooks**, where approved metadata is translated into runtime checks and publish decisions.
 
