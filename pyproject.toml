@@ -20,6 +20,7 @@ dq-review = [
 dev = [
   "pytest~=8.0",
   "ruff~=0.11",
+  "nbformat~=5.0",
 ]
 lineage = [
   "matplotlib~=3.8",
