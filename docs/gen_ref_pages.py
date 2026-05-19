@@ -224,21 +224,27 @@ for row in sorted(public_symbol_docs, key=lambda item: item["symbol_name"]):
         inbound_edges = sorted(set(referenced_by))
         flow_edges = sorted(set(outbound_edges))
         relationship_rows = []
-        if outbound_edges:
-            relationship_rows.append(("Outbound", ', '.join(_link_md(c, current_module=module_name) for c in outbound_edges)))
+        module_neighbors = sorted({c for c in outbound_edges + inbound_edges if _parts(c)[0] == module_name and _parts(c)[1] != symbol_name})
+        if module_neighbors:
+            relationship_rows.append(("Inside this module", ', '.join(_link_md(c, current_module=module_name) for c in module_neighbors)))
         if referenced_by:
-            relationship_rows.append(("Inbound", ', '.join(_link_md(c, current_module=module_name) for c in referenced_by)))
+            relationship_rows.append(("Used by other modules", ', '.join(_link_md(c, current_module=module_name) for c in referenced_by)))
+        if outbound_edges:
+            relationship_rows.append(("Uses other modules", ', '.join(_link_md(c, current_module=module_name) for c in outbound_edges)))
 
         show_mermaid = bool(inbound_edges or outbound_edges)
         if show_mermaid:
-            fd.write("## Callable flow\n\n")
-            fd.write('<div class="module-mermaid-scroll">\n\n')
-            fd.write("```mermaid\nflowchart LR\n")
-            fd.write("  classDef current fill:#ffecb3,stroke:#ef6c00,stroke-width:2px,color:#3e2723;\n")
-            fd.write("  classDef inbound fill:#e3f2fd,stroke:#1565c0,stroke-width:1.5px,color:#0d47a1;\n")
-            fd.write("  classDef outbound fill:#e8f5e9,stroke:#2e7d32,stroke-width:1.5px,color:#1b5e20;\n")
-            fd.write("  classDef helper fill:#f5f5f5,stroke:#616161,stroke-width:1px,color:#424242;\n")
-            fd.write(f'  current["{module_name}.{symbol_name}"]\n')
+            fd.write("## Callable relationships\n\n")
+            fd.write('<div class="module-mermaid-scroll module-diagram-desktop">\n\n')
+            fd.write("```mermaid\nflowchart TB\n")
+            fd.write("  classDef currentModule fill:#ffe8cc,stroke:#e65100,stroke-width:4px,color:#3e2723;\n")
+            fd.write("  classDef externalModule fill:#f7f7f7,stroke:#b0bec5,stroke-width:1px,color:#607d8b;\n")
+            fd.write("  classDef focus fill:#ffb74d,stroke:#ef6c00,stroke-width:4px,color:#3e2723;\n")
+            fd.write("  classDef neighbor fill:#fff8e1,stroke:#cfd8dc,stroke-width:1px,color:#546e7a;\n")
+            fd.write("  classDef externalCallable fill:#eceff1,stroke:#90a4ae,stroke-width:1px,color:#37474f;\n")
+            fd.write(f"  subgraph m_{module_name}[{module_name}]\n")
+            fd.write(f'    current["{symbol_name}"]\n')
+            fd.write("  end\n")
 
             inbound_ids: list[str] = []
             for i, source in enumerate(inbound_edges[:20], start=1):
@@ -259,22 +265,45 @@ for row in sorted(public_symbol_docs, key=lambda item: item["symbol_name"]):
                 else:
                     outbound_helper_ids.append(node_id)
 
-            fd.write("  class current current;\n")
+            fd.write(f"  class m_{module_name} currentModule;\n")
+            fd.write("  class current focus;\n")
             if inbound_ids:
-                fd.write(f"  class {','.join(inbound_ids)} inbound;\n")
+                fd.write(f"  class {','.join(inbound_ids)} externalCallable;\n")
             if outbound_public_ids:
-                fd.write(f"  class {','.join(outbound_public_ids)} outbound;\n")
+                fd.write(f"  class {','.join(outbound_public_ids)} neighbor;\n")
             if outbound_helper_ids:
-                fd.write(f"  class {','.join(outbound_helper_ids)} helper;\n")
+                fd.write(f"  class {','.join(outbound_helper_ids)} externalCallable;\n")
             fd.write("```\n\n")
             fd.write("</div>\n\n")
-            fd.write("- **Legend:** Current function · Inbound · Outbound · Internal outbound\n\n")
+            fd.write('<div class="module-relationship-list module-diagram-mobile">\n\n')
+            if module_neighbors:
+                fd.write("### Inside this module\n\n")
+                fd.write('<div class="callable-chip-group">\n')
+                for c in module_neighbors:
+                    fd.write(f'{_link_html(c, current_module=module_name)}\n')
+                fd.write("</div>\n\n")
+            if referenced_by:
+                counts: dict[str, int] = {}
+                for c in referenced_by:
+                    counts[_parts(c)[0]] = counts.get(_parts(c)[0], 0) + 1
+                fd.write("### Used by other modules\n\n<div class=\"callable-chip-group\">\n")
+                for mod, count in sorted(counts.items()):
+                    fd.write(f'<span class="reference-chip"><code>{mod}</code> ({count})</span>\n')
+                fd.write("</div>\n\n")
+            if outbound_edges:
+                counts: dict[str, int] = {}
+                for c in outbound_edges:
+                    counts[_parts(c)[0]] = counts.get(_parts(c)[0], 0) + 1
+                fd.write("### Uses other modules\n\n<div class=\"callable-chip-group\">\n")
+                for mod, count in sorted(counts.items()):
+                    fd.write(f'<span class="reference-chip"><code>{mod}</code> ({count})</span>\n')
+                fd.write("</div>\n\n")
+            fd.write("</div>\n\n")
 
         if relationship_rows:
-            fd.write("## Callable relationships\n\n| Relationship | Callables |\n|---|---|\n")
+            fd.write("## Relationship details\n\n")
             for label, values in relationship_rows:
-                fd.write(f"| {label} | {values} |\n")
-            fd.write("\n")
+                fd.write(f"### {label}\n\n{values}\n\n")
 
         if flow_edges:
             fd.write("## Function flow details\n\n| Step | Callable | Purpose |\n|---:|---|---|\n")

@@ -106,25 +106,61 @@ Owns business meaning for tables and columns.
 </table>
 </div>
 
-### Module internal callable dependencies
+### Callable relationships
 
-Graph omitted because dependencies are simple one-to-one references.
-<div class="module-table-scroll">
-| Caller | Callee |
-|---|---|
-| `business_context._extract_column_business_context_suggestions` | `business_context._parse_ai_dict_response` |
-| `business_context.extract_column_business_context_suggestions` | `business_context._extract_column_business_context_suggestions` |
-| `business_context.prepare_business_context_profile_input` | `business_context._prepare_business_context_profile_input` |
-| `business_context.review_business_context` | `business_context._require_ipywidgets` |
+<div class="module-mermaid-scroll module-diagram-desktop">
+```mermaid
+flowchart TB
+  classDef currentModule fill:#ffe8cc,stroke:#e65100,stroke-width:4px,color:#3e2723;
+  classDef externalModule fill:#f7f7f7,stroke:#b0bec5,stroke-width:1px,color:#607d8b;
+  classDef currentCallable fill:#ffd180,stroke:#ef6c00,stroke-width:2px;
+  classDef externalCallable fill:#eceff1,stroke:#b0bec5,stroke-width:1px,color:#455a64;
+  subgraph m_business_context[business_context]
+    fabricops_kit_business_context__extract_column_business_context_suggestions["_extract_column_business_context_suggestions"]
+    fabricops_kit_business_context__parse_ai_dict_response["_parse_ai_dict_response"]
+    fabricops_kit_business_context__prepare_business_context_profile_input["_prepare_business_context_profile_input"]
+    fabricops_kit_business_context__require_ipywidgets["_require_ipywidgets"]
+    fabricops_kit_business_context_extract_column_business_context_suggestions["extract_column_business_context_suggestions"]
+    fabricops_kit_business_context_prepare_business_context_profile_input["prepare_business_context_profile_input"]
+    fabricops_kit_business_context_review_business_context["review_business_context"]
+    fabricops_kit_business_context_write_business_context["write_business_context"]
+  end
+  subgraph m_metadata[metadata]
+    fabricops_kit_metadata_build_metadata_column_key["build_metadata_column_key"]
+    fabricops_kit_metadata_build_metadata_table_key["build_metadata_table_key"]
+    fabricops_kit_metadata_write_column_business_context["write_column_business_context"]
+  end
+  fabricops_kit_business_context__extract_column_business_context_suggestions --> fabricops_kit_business_context__parse_ai_dict_response
+  fabricops_kit_business_context_extract_column_business_context_suggestions --> fabricops_kit_business_context__extract_column_business_context_suggestions
+  fabricops_kit_business_context_prepare_business_context_profile_input --> fabricops_kit_business_context__prepare_business_context_profile_input
+  fabricops_kit_business_context_review_business_context --> fabricops_kit_business_context__require_ipywidgets
+  fabricops_kit_business_context_review_business_context --> fabricops_kit_metadata_build_metadata_column_key
+  fabricops_kit_business_context_review_business_context --> fabricops_kit_metadata_build_metadata_table_key
+  fabricops_kit_business_context_write_business_context --> fabricops_kit_metadata_write_column_business_context
+  linkStyle 0,1,2,3 stroke:#ef6c00,stroke-width:2.2px;
+  linkStyle 4,5,6 stroke:#90a4ae,stroke-width:1.2px,stroke-dasharray: 4 2;
+  class m_business_context currentModule;
+  class m_metadata externalModule;
+  class fabricops_kit_business_context__extract_column_business_context_suggestions,fabricops_kit_business_context__parse_ai_dict_response,fabricops_kit_business_context__prepare_business_context_profile_input,fabricops_kit_business_context__require_ipywidgets,fabricops_kit_business_context_extract_column_business_context_suggestions,fabricops_kit_business_context_prepare_business_context_profile_input,fabricops_kit_business_context_review_business_context,fabricops_kit_business_context_write_business_context currentCallable;
+  class fabricops_kit_metadata_build_metadata_column_key,fabricops_kit_metadata_build_metadata_table_key,fabricops_kit_metadata_write_column_business_context externalCallable;
+```
 </div>
 
-### Outbound
+<div class="module-relationship-list module-diagram-mobile">
+#### Inside this module
 
-<div class="module-mermaid-scroll">
-```mermaid
-flowchart LR
-  c1["business_context.review_business_context"] --> d1["metadata.build_metadata_column_key"]
-  c2["business_context.review_business_context"] --> d2["metadata.build_metadata_table_key"]
-  c3["business_context.write_business_context"] --> d3["metadata.write_column_business_context"]
-```
+<div class="callable-chip-group">
+<a class="reference-chip" href="../modules/business_context/#_extract_column_business_context_suggestions"><code>_extract_column_business_context_suggestions</code></a> → <a class="reference-chip" href="../modules/business_context/#_parse_ai_dict_response"><code>_parse_ai_dict_response</code></a>
+<a class="reference-chip" href="../../reference/extract_column_business_context_suggestions/"><code>extract_column_business_context_suggestions</code></a> → <a class="reference-chip" href="../modules/business_context/#_extract_column_business_context_suggestions"><code>_extract_column_business_context_suggestions</code></a>
+<a class="reference-chip" href="../../reference/prepare_business_context_profile_input/"><code>prepare_business_context_profile_input</code></a> → <a class="reference-chip" href="../modules/business_context/#_prepare_business_context_profile_input"><code>_prepare_business_context_profile_input</code></a>
+<a class="reference-chip" href="../../reference/review_business_context/"><code>review_business_context</code></a> → <a class="reference-chip" href="../modules/business_context/#_require_ipywidgets"><code>_require_ipywidgets</code></a>
+</div>
+#### Used by other modules
+
+None.
+#### Uses other modules
+
+<div class="callable-chip-group">
+<span class="reference-chip"><code>metadata</code> (3)</span>
+</div>
 </div>
