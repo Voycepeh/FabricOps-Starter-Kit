@@ -25,12 +25,14 @@ Reusable templates and callable functions for a runnable end-to-end flow: 01 gov
 
 <div align="center">
 
-[![Runtime Config Template](https://img.shields.io/badge/Template-Runtime%20Config-blue?style=for-the-badge)](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks/00_env_config.ipynb)
-[![Governance Template](https://img.shields.io/badge/Template-Governance%20Template-blue?style=for-the-badge)](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks/01_da_agreement_template.ipynb)
+[![Config Template](https://img.shields.io/badge/Template-Env%20Config-blue?style=for-the-badge)](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks/00_env_config.ipynb)
+
+[![Da Template](https://img.shields.io/badge/Template-Agreement%20Template-blue?style=for-the-badge)](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks/01_da_agreement_template.ipynb)
 
 [![Exploration Notebook Template](https://img.shields.io/badge/Template-Exploration%20Template-blue?style=for-the-badge)](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks/02_ex_agreement_topic.ipynb)
 [![Pipeline Contract Template](https://img.shields.io/badge/Template-Pipeline%20Template-blue?style=for-the-badge)](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks/03_pc_agreement_pipeline_template.ipynb)
 
+[![Gov Template](https://img.shields.io/badge/Template-Governance%20Template-blue?style=for-the-badge)](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks/04_gov_agreement_dataset_table.ipynb)
 
 [![Function Reference](https://img.shields.io/badge/Reference-Callable%20Functions-purple?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/reference/)
 </div>
