@@ -59,5 +59,6 @@ select = ["E", "F", "I"]
 
 [dependency-groups]
 dev = [
+    "pyspark>=4.1.1",
     "pytest>=8.4.2",
 ]
