@@ -2,11 +2,11 @@
 
 from pathlib import Path
 
-import nbformat
-
 
 def test_template_notebooks_are_valid_and_cleared() -> None:
     """All template notebooks should parse with nbformat and have cleared outputs."""
+    nbformat = __import__("pytest").importorskip("nbformat")
+
     notebook_paths = sorted(Path("templates/notebooks").glob("*.ipynb"))
     assert notebook_paths, "Expected at least one template notebook under templates/notebooks/."
 
