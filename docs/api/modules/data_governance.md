@@ -116,63 +116,17 @@ Owns sensitivity, PII, confidentiality, policy labels, and governance approval e
 
 ### Callable relationships
 
-<div class="module-mermaid-scroll module-diagram-desktop">
-```mermaid
-flowchart TB
-  classDef currentModule fill:#ffe8cc,stroke:#e65100,stroke-width:4px,color:#3e2723;
-  classDef externalModule fill:#f7f7f7,stroke:#b0bec5,stroke-width:1px,color:#607d8b;
-  classDef currentCallable fill:#ffd180,stroke:#ef6c00,stroke-width:2px;
-  classDef externalCallable fill:#eceff1,stroke:#b0bec5,stroke-width:1px,color:#455a64;
-  subgraph m_data_governance[data_governance]
-    fabricops_kit_data_governance__approved_widget_rows["_approved_widget_rows"]
-    fabricops_kit_data_governance__coerce_row_dicts["_coerce_row_dicts"]
-    fabricops_kit_data_governance__extract_pii_suggestions["_extract_pii_suggestions"]
-    fabricops_kit_data_governance__prepare_governance_input["_prepare_governance_input"]
-    fabricops_kit_data_governance__undo_last_action["_undo_last_action"]
-    fabricops_kit_data_governance_extract_governance_suggestions["extract_governance_suggestions"]
-    fabricops_kit_data_governance_load_governance["load_governance"]
-    fabricops_kit_data_governance_prepare_governance_input["prepare_governance_input"]
-    fabricops_kit_data_governance_review_governance["review_governance"]
-    fabricops_kit_data_governance_write_governance["write_governance"]
-  end
-  subgraph m_metadata[metadata]
-    fabricops_kit_metadata__now_utc_iso["_now_utc_iso"]
-    fabricops_kit_metadata__resolve_action_by["_resolve_action_by"]
-    fabricops_kit_metadata_build_metadata_column_key["build_metadata_column_key"]
-    fabricops_kit_metadata_build_metadata_table_key["build_metadata_table_key"]
-  end
-  fabricops_kit_data_governance__approved_widget_rows --> fabricops_kit_metadata__resolve_action_by
-  fabricops_kit_data_governance_extract_governance_suggestions --> fabricops_kit_data_governance__extract_pii_suggestions
-  fabricops_kit_data_governance_load_governance --> fabricops_kit_data_governance__coerce_row_dicts
-  fabricops_kit_data_governance_prepare_governance_input --> fabricops_kit_data_governance__prepare_governance_input
-  fabricops_kit_data_governance_review_governance --> fabricops_kit_data_governance__undo_last_action
-  fabricops_kit_data_governance_review_governance --> fabricops_kit_metadata__now_utc_iso
-  fabricops_kit_data_governance_review_governance --> fabricops_kit_metadata_build_metadata_column_key
-  fabricops_kit_data_governance_review_governance --> fabricops_kit_metadata_build_metadata_table_key
-  fabricops_kit_data_governance_write_governance --> fabricops_kit_data_governance__approved_widget_rows
-  linkStyle 1,2,3,4,8 stroke:#ef6c00,stroke-width:2.2px;
-  linkStyle 0,5,6,7 stroke:#90a4ae,stroke-width:1.2px,stroke-dasharray: 4 2;
-  class m_data_governance currentModule;
-  class m_metadata externalModule;
-  class fabricops_kit_data_governance__approved_widget_rows,fabricops_kit_data_governance__coerce_row_dicts,fabricops_kit_data_governance__extract_pii_suggestions,fabricops_kit_data_governance__prepare_governance_input,fabricops_kit_data_governance__undo_last_action,fabricops_kit_data_governance_extract_governance_suggestions,fabricops_kit_data_governance_load_governance,fabricops_kit_data_governance_prepare_governance_input,fabricops_kit_data_governance_review_governance,fabricops_kit_data_governance_write_governance currentCallable;
-  class fabricops_kit_metadata__now_utc_iso,fabricops_kit_metadata__resolve_action_by,fabricops_kit_metadata_build_metadata_column_key,fabricops_kit_metadata_build_metadata_table_key externalCallable;
-```
-</div>
-
-<div class="module-relationship-list module-diagram-mobile">
-#### Inside this module
+<div class="module-relationship-list">
+#### Module relationships
+#### Functions in this module
 
 <div class="callable-chip-group">
-<a class="reference-chip" href="../../reference/extract_governance_suggestions/"><code>extract_governance_suggestions</code></a> → <a class="reference-chip" href="../modules/data_governance/#_extract_pii_suggestions"><code>_extract_pii_suggestions</code></a>
-<a class="reference-chip" href="../../reference/load_governance/"><code>load_governance</code></a> → <a class="reference-chip" href="../modules/data_governance/#_coerce_row_dicts"><code>_coerce_row_dicts</code></a>
-<a class="reference-chip" href="../../reference/prepare_governance_input/"><code>prepare_governance_input</code></a> → <a class="reference-chip" href="../modules/data_governance/#_prepare_governance_input"><code>_prepare_governance_input</code></a>
-<a class="reference-chip" href="../../reference/review_governance/"><code>review_governance</code></a> → <a class="reference-chip" href="../modules/data_governance/#_undo_last_action"><code>_undo_last_action</code></a>
-<a class="reference-chip" href="../../reference/write_governance/"><code>write_governance</code></a> → <a class="reference-chip" href="../modules/data_governance/#_approved_widget_rows"><code>_approved_widget_rows</code></a>
+<span class="reference-chip"><code>data_governance</code> (5)</span>
 </div>
-#### Used by other modules
+#### External callers
 
 None.
-#### Uses other modules
+#### External callees
 
 <div class="callable-chip-group">
 <span class="reference-chip"><code>metadata</code> (4)</span>

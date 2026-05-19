@@ -468,3 +468,10 @@
     min-width: 48rem;
   }
 }
+
+.callable-relationship-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.callable-relationship-grid section{border:1px solid var(--md-default-fg-color--lightest);border-radius:8px;padding:10px}
+.callable-relationship-grid .callable-current{border:2px solid var(--md-primary-fg-color)}
+.call-graph-canvas{height:72vh;border:1px solid var(--md-default-fg-color--lightest);border-radius:8px;background:#fff}
+.call-graph-toolbar{margin-bottom:10px}
+@media (max-width: 900px){.callable-relationship-grid{grid-template-columns:1fr}}

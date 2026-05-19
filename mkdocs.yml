@@ -39,6 +39,7 @@ nav:
   - Functions:
       - Function Usage Guide: reference/function-usage-guide.md
       - Function Reference: reference/index.md
+      - Interactive Call Graph: reference/call-graph.md
       - Modules:
       # AUTO-GENERATED-MODULES-START
           - config: api/modules/config.md
@@ -93,8 +94,10 @@ plugins:
 
 extra_javascript:
   - https://unpkg.com/mermaid@10/dist/mermaid.min.js
+  - https://unpkg.com/vis-network@9.1.9/dist/vis-network.min.js
   - javascripts/mermaid-init.js
   - javascripts/callable-finder.js
+  - javascripts/call-graph.js
 
 extra_css:
   - stylesheets/api-chips.css

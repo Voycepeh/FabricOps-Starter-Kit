@@ -174,6 +174,14 @@ def _link_md(qualified_name: str, *, current_module: str | None = None) -> str:
 def _link_html(qualified_name: str, *, current_module: str | None = None) -> str:
     return f'<a href="{_callable_href(qualified_name)}"><code>{_callable_label(qualified_name, current_module=current_module)}</code></a>'
 
+
+def _relationship_chip(qualified_name: str, current_module: str) -> str:
+    module_name, callable_name = _parts(qualified_name)
+    return (
+        f'<a class="reference-chip" href="{_callable_href(qualified_name)}" '
+        f'title="{qualified_name}"><code>{callable_name if module_name == current_module else f"{module_name}.{callable_name}"}</code></a>'
+    )
+
 for row in sorted(public_symbol_docs, key=lambda item: item["symbol_name"]):
     if row.get("kind") not in {"function", "class"}:
         continue
@@ -232,73 +240,25 @@ for row in sorted(public_symbol_docs, key=lambda item: item["symbol_name"]):
         if outbound_edges:
             relationship_rows.append(("Uses other modules", ', '.join(_link_md(c, current_module=module_name) for c in outbound_edges)))
 
-        show_mermaid = bool(inbound_edges or outbound_edges)
-        if show_mermaid:
-            fd.write("## Callable relationships\n\n")
-            fd.write('<div class="module-mermaid-scroll module-diagram-desktop">\n\n')
-            fd.write("```mermaid\nflowchart TB\n")
-            fd.write("  classDef currentModule fill:#ffe8cc,stroke:#e65100,stroke-width:4px,color:#3e2723;\n")
-            fd.write("  classDef externalModule fill:#f7f7f7,stroke:#b0bec5,stroke-width:1px,color:#607d8b;\n")
-            fd.write("  classDef focus fill:#ffb74d,stroke:#ef6c00,stroke-width:4px,color:#3e2723;\n")
-            fd.write("  classDef neighbor fill:#fff8e1,stroke:#cfd8dc,stroke-width:1px,color:#546e7a;\n")
-            fd.write("  classDef externalCallable fill:#eceff1,stroke:#90a4ae,stroke-width:1px,color:#37474f;\n")
-            fd.write(f"  subgraph m_{module_name}[{module_name}]\n")
-            fd.write(f'    current["{symbol_name}"]\n')
-            fd.write("  end\n")
-
-            inbound_ids: list[str] = []
-            for i, source in enumerate(inbound_edges[:20], start=1):
-                node_id = f"in{i}"
-                inbound_ids.append(node_id)
-                fd.write(f'  {node_id}["{_callable_label(source, current_module=module_name)}"] --> current\n')
-
-            outbound_public_ids: list[str] = []
-            outbound_helper_ids: list[str] = []
-            for i, target in enumerate(outbound_edges[:20], start=1):
-                node_id = f"out{i}"
-                fd.write(f'  current --> {node_id}["{_callable_label(target, current_module=module_name)}"]\n')
-                t_module, t_name = _parts(target)
-                if t_name.startswith("_"):
-                    outbound_helper_ids.append(node_id)
-                elif _is_public_callable(t_name):
-                    outbound_public_ids.append(node_id)
-                else:
-                    outbound_helper_ids.append(node_id)
-
-            fd.write(f"  class m_{module_name} currentModule;\n")
-            fd.write("  class current focus;\n")
-            if inbound_ids:
-                fd.write(f"  class {','.join(inbound_ids)} externalCallable;\n")
-            if outbound_public_ids:
-                fd.write(f"  class {','.join(outbound_public_ids)} neighbor;\n")
-            if outbound_helper_ids:
-                fd.write(f"  class {','.join(outbound_helper_ids)} externalCallable;\n")
-            fd.write("```\n\n")
-            fd.write("</div>\n\n")
-            fd.write('<div class="module-relationship-list module-diagram-mobile">\n\n')
-            if module_neighbors:
-                fd.write("### Inside this module\n\n")
-                fd.write('<div class="callable-chip-group">\n')
-                for c in module_neighbors:
-                    fd.write(f'{_link_html(c, current_module=module_name)}\n')
-                fd.write("</div>\n\n")
-            if referenced_by:
-                counts: dict[str, int] = {}
-                for c in referenced_by:
-                    counts[_parts(c)[0]] = counts.get(_parts(c)[0], 0) + 1
-                fd.write("### Used by other modules\n\n<div class=\"callable-chip-group\">\n")
-                for mod, count in sorted(counts.items()):
-                    fd.write(f'<span class="reference-chip"><code>{mod}</code> ({count})</span>\n')
-                fd.write("</div>\n\n")
-            if outbound_edges:
-                counts: dict[str, int] = {}
-                for c in outbound_edges:
-                    counts[_parts(c)[0]] = counts.get(_parts(c)[0], 0) + 1
-                fd.write("### Uses other modules\n\n<div class=\"callable-chip-group\">\n")
-                for mod, count in sorted(counts.items()):
-                    fd.write(f'<span class="reference-chip"><code>{mod}</code> ({count})</span>\n')
-                fd.write("</div>\n\n")
-            fd.write("</div>\n\n")
+        fd.write("## Callable relationships\n\n")
+        fd.write('<p><a href="../call-graph/" class="md-button md-button--primary">Open interactive call graph</a></p>\n\n')
+        fd.write('<div class="callable-relationship-grid">\n')
+        fd.write('  <section><h3>Used by</h3><div class="callable-chip-group">\n')
+        if inbound_edges:
+            for c in inbound_edges[:30]:
+                fd.write(f"{_relationship_chip(c, module_name)}\n")
+        else:
+            fd.write("<span>None.</span>\n")
+        fd.write("  </div></section>\n")
+        fd.write(f'  <section class="callable-current"><h3>Current function</h3><div class="callable-chip-group"><span class="reference-chip reference-chip-role reference-chip-essential"><code>{symbol_name}</code></span></div></section>\n')
+        fd.write('  <section><h3>Uses</h3><div class="callable-chip-group">\n')
+        if outbound_edges:
+            for c in outbound_edges[:30]:
+                fd.write(f"{_relationship_chip(c, module_name)}\n")
+        else:
+            fd.write("<span>None.</span>\n")
+        fd.write("  </div></section>\n")
+        fd.write("</div>\n\n")
 
         if relationship_rows:
             fd.write("## Relationship details\n\n")
