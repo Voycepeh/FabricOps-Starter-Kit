@@ -1,10 +1,13 @@
 # `04_gov_<agreement>_<dataset>_<table>`
 
-`04_gov_<agreement>_<dataset>_<table>` is the governance-workspace stage for table/column governance enrichment.
+It is the governance-workspace stage for table/column governance enrichment.
 It is **not** part of execution workspaces.
 
-This stage is documented as a planned operating stage when a dedicated project template is not yet available.
+Its operational template remains:
 
+- `templates/notebooks/04_gov_<agreement>_<dataset>_<table>`
+
+> <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/04_gov_agreement_dataset_table.ipynb">Open template notebook</a>
 ## Governance scope
 
 - Review and approve per-column business context.
