@@ -2,10 +2,34 @@
   async function initCallGraph() {
     const canvas = document.getElementById('call-graph-canvas');
     if (!canvas) return;
-    const metadataUrl = new URL('dependency-metadata.json', window.location.href);
-    const response = await fetch(metadataUrl);
-    const data = await response.json();
+    const setStatus = (msg) => {
+      canvas.innerHTML = `<div class="call-graph-status">${msg}</div>`;
+    };
+    setStatus('Loading call graph...');
+
+    if (!window.vis || !window.vis.Network || !window.vis.DataSet) {
+      setStatus('Unable to load graph library.');
+      return;
+    }
+
+    const metadataUrl = new URL('../dependency-metadata.json', window.location.href);
+    let data;
+    try {
+      const response = await fetch(metadataUrl);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      data = await response.json();
+    } catch (_err) {
+      setStatus('Unable to load dependency metadata.');
+      return;
+    }
+
     const callables = data.callables || {};
+    if (!Object.keys(callables).length) {
+      setStatus('No callable nodes found.');
+      return;
+    }
+
+    canvas.innerHTML = '';
     const nodes = [];
     const edges = [];
     const modules = [...new Set(Object.values(callables).map((c) => c.module))];
