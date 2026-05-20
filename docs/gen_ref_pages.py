@@ -208,25 +208,11 @@ for row in sorted(public_symbol_docs, key=lambda item: item["symbol_name"]):
         inbound_count = int(dep.get("used_by_count", len(referenced_by)))
         classification = str(dep.get("classification", row.get("role", "optional"))).capitalize()
 
-        fd.write("## Dependency metadata\n\n")
-        fd.write(f"- Module: `{module_name}`\n")
-        fd.write(f"- Classification: {classification}\n")
-        fd.write(f"- Inbound references: {inbound_count}\n")
-        fd.write(f"- Outbound references: {outbound_count}\n\n")
-
-        def _dep_details(title: str, items: list[str]) -> None:
-            fd.write(f"<details>\n<summary>{title}</summary>\n\n")
-            if not items:
-                fd.write("<p>None</p>\n")
-            else:
-                fd.write("<ul>\n")
-                for item in items:
-                    fd.write(f"  <li>{_link_html(item, current_module=module_name)}</li>\n")
-                fd.write("</ul>\n")
-            fd.write("\n</details>\n\n")
-
-        _dep_details("Outbound", calls)
-        _dep_details("Inbound", referenced_by)
+        fd.write('<p class="reference-page-meta">')
+        fd.write(f'Module: {_module_link(module_name)}')
+        fd.write(" · ")
+        fd.write(f'Classification: <span class="reference-chip reference-chip-role reference-chip-{classification.lower()}">{classification}</span>')
+        fd.write("</p>\n\n")
 
         outbound_edges = sorted(set(calls))
         inbound_edges = sorted(set(referenced_by))
@@ -234,7 +220,7 @@ for row in sorted(public_symbol_docs, key=lambda item: item["symbol_name"]):
         fd.write("## Callable relationships\n\n")
         fd.write(f'<p><a href="../call-graph/?function={qn}" class="md-button md-button--primary">Open interactive call graph</a></p>\n\n')
         fd.write('<div class="callable-relationship-grid">\n')
-        fd.write('  <section><h3>Used by</h3><div class="callable-chip-group">\n')
+        fd.write(f'  <section><h3>Used by {inbound_count}</h3><div class="callable-chip-group">\n')
         if inbound_edges:
             for c in inbound_edges[:30]:
                 fd.write(f"{_relationship_chip(c, module_name)}\n")
@@ -242,7 +228,7 @@ for row in sorted(public_symbol_docs, key=lambda item: item["symbol_name"]):
             fd.write("<span>None.</span>\n")
         fd.write("  </div></section>\n")
         fd.write(f'  <section class="callable-current"><h3>Current function</h3><div class="callable-chip-group"><span class="reference-chip reference-chip-role reference-chip-essential"><code>{symbol_name}</code></span></div></section>\n')
-        fd.write('  <section><h3>Uses</h3><div class="callable-chip-group">\n')
+        fd.write(f'  <section><h3>Uses {outbound_count}</h3><div class="callable-chip-group">\n')
         if outbound_edges:
             for c in outbound_edges[:30]:
                 fd.write(f"{_relationship_chip(c, module_name)}\n")
