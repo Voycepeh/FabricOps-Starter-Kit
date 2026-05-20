@@ -89,6 +89,10 @@ def test_call_graph_page_contains_canvas_and_status_text():
         'renderDropdown([])',
         'searchInput.value = selectedRecord.searchLabel',
         "const functionQuery = params.get('function')",
+        "const moduleQuery = params.get('module')",
+        "setMode('module')",
+        "setMode('function')",
+        "focusedLayout.innerHTML = '<p class=\"call-graph-empty\">Select a function to open Focused view.</p>'",
     ]:
         assert script_fragment in js
 

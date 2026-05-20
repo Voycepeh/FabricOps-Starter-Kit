@@ -521,8 +521,8 @@
 .call-graph-view-toggle button.is-active{background:#dceeff;border-color:#0b63ce;font-weight:700}
 .call-graph-module.is-hidden{display:none}
 .call-graph-focused{display:none;grid-template-columns:1fr 1.1fr 1fr;gap:12px;position:relative;z-index:2}
-.call-graph-canvas[data-mode="focused"] .call-graph-focused{display:grid}
-.call-graph-canvas[data-mode="focused"] .call-graph-modules{display:none}
+.call-graph-canvas[data-mode="function"] .call-graph-focused{display:grid}
+.call-graph-canvas[data-mode="function"] .call-graph-modules{display:none}
 .call-graph-focus-column{border:1px solid var(--md-default-fg-color--lightest);border-radius:10px;padding:10px;background:var(--md-default-bg-color)}
 .call-graph-focus-card{border:1px solid #d4d8e4;border-radius:8px;padding:8px;margin-bottom:8px}
 .call-graph-focus-card.is-inbound{border-left:4px solid #0b63ce}
