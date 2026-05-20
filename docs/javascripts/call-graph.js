@@ -192,8 +192,16 @@
     }
 
     window.addEventListener('resize', refreshEdges);
-    const query = new URLSearchParams(window.location.search).get('function');
-    if (query) submitSearch(query);
+    const params = new URLSearchParams(window.location.search);
+    const moduleQuery = params.get('module');
+    if (moduleQuery) {
+      const moduleName = moduleQuery.replace(/^fabricops_kit\./, '');
+      for (const card of modulesGrid.querySelectorAll('.call-graph-module')) {
+        card.classList.toggle('is-muted', card.dataset.module !== moduleName);
+      }
+    }
+    const functionQuery = params.get('function');
+    if (functionQuery) submitSearch(functionQuery);
     else refreshEdges();
   }
 

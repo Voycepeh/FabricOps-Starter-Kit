@@ -65,22 +65,42 @@ Owns deterministic profiling evidence such as schema, nulls, distincts, min/max,
 
 ### Callable relationships
 
-<div class="module-relationship-list">
-#### Module relationships
-#### Functions in this module
+<p><a href="../../reference/call-graph/?module=fabricops_kit.data_profiling" class="md-button md-button--primary">Open interactive module graph</a></p>
 
-<div class="callable-chip-group">
-<a class="reference-chip" href="../../reference/profile_dataframe/"><code>profile_dataframe</code></a> → <a class="reference-chip" href="../modules/data_profiling/#_get_profiled_columns"><code>_get_profiled_columns</code></a>
-<a class="reference-chip" href="../../reference/profile_dataframe/"><code>profile_dataframe</code></a> → <a class="reference-chip" href="../modules/data_profiling/#_is_min_max_supported_type"><code>_is_min_max_supported_type</code></a>
-</div>
+#### Inside this module
+
+<section class="callable-relationship-card">
+<h5>data_profiling</h5>
+<h6>Public callables</h6>
+<ul class="callable-relationship-rows">
+<li>
+<a class="reference-chip" href="../../reference/profile_dataframe/"><code>profile_dataframe</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<a class="reference-chip" href="../modules/data_profiling/#_get_profiled_columns"><code>_get_profiled_columns</code></a>, <a class="reference-chip" href="../modules/data_profiling/#_is_min_max_supported_type"><code>_is_min_max_supported_type</code></a>
+</li>
+</ul>
+<h6>Internal helpers</h6>
+<ul class="callable-relationship-rows">
+<li>
+<a class="reference-chip" href="../modules/data_profiling/#_get_profiled_columns"><code>_get_profiled_columns</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<span>None.</span>
+</li>
+<li>
+<a class="reference-chip" href="../modules/data_profiling/#_is_min_max_supported_type"><code>_is_min_max_supported_type</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<span>None.</span>
+</li>
+</ul>
+</section>
+
 #### External callers
 
-<div class="callable-chip-group">
-<a class="reference-chip" href="../modules/data_quality/#_prepare_dq_profile_input_rows"><code>data_quality._prepare_dq_profile_input_rows</code></a>
-</div>
+**data_quality**
+<a class="reference-chip" href="../modules/data_quality/#_prepare_dq_profile_input_rows"><code>_prepare_dq_profile_input_rows</code></a>
+
 #### External callees
 
-<div class="callable-chip-group">
-<a class="reference-chip" href="../modules/technical_columns/#_default_technical_columns"><code>technical_columns._default_technical_columns</code></a>
-</div>
-</div>
+**technical_columns**
+<a class="reference-chip" href="../modules/technical_columns/#_default_technical_columns"><code>_default_technical_columns</code></a>
+

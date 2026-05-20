@@ -88,7 +88,7 @@ def test_call_graph_page_contains_canvas_and_status_text():
         'window.history.replaceState',
         'renderDropdown([])',
         'searchInput.value = selectedRecord.searchLabel',
-        'new URLSearchParams(window.location.search).get(\'function\')',
+        "const functionQuery = params.get('function')",
     ]:
         assert script_fragment in js
 
@@ -117,6 +117,8 @@ def test_module_callable_chip_links_resolve_to_known_docs_routes():
         for href in re.findall(r'href="([^"]+)"', text):
             if not href.startswith('../../reference/'):
                 continue
+            if href.startswith('../../reference/call-graph/'):
+                continue
             route = href.replace('../../reference', '/FabricOps-Starter-Kit/reference').rstrip('/') + '/'
             if '/FabricOps-Starter-Kit/reference/internal/' in route or route.count('/') == 5:
                 assert route in known_routes, f'{module_page}: broken route {href}'
@@ -126,3 +128,17 @@ def test_generated_callable_call_graph_link_uses_reference_route_not_api_referen
     script = Path('docs/gen_ref_pages.py').read_text(encoding='utf-8')
     assert '../call-graph/?function=' not in script
     assert '../../../reference/call-graph/?function=' in script
+
+
+def test_module_page_relationship_sections_are_readable_and_grouped():
+    text = Path('docs/api/modules/config.md').read_text(encoding='utf-8')
+    assert '### Callable relationships' in text
+    assert '#### Inside this module' in text
+    assert '#### External callers' in text
+    assert '#### External callees' in text
+    assert '<div class="module-relationship-list">' not in text
+    assert '#### Module relationships' not in text
+    assert '../../reference/call-graph/?module=fabricops_kit.config' in text
+    assert '**fabric_input_output**' in text
+    assert '<h6>Public callables</h6>' in text
+    assert '<h6>Internal helpers</h6>' in text

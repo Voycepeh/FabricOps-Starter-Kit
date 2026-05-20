@@ -692,33 +692,70 @@ def main() -> None:
         ]
         module_edge_pairs = sorted(set(module_edges))
         lines.extend(["", "### Callable relationships", ""])
+        lines.append(f'<p><a href="../../reference/call-graph/?module=fabricops_kit.{module}" class="md-button md-button--primary">Open interactive module graph</a></p>')
+        inside_rows = [(s, d) for s, d in module_edge_pairs if _module_name(s) == actual_module and _module_name(d) == actual_module]
+        used_by_rows = [(s, d) for s, d in module_edge_pairs if _module_name(s) != actual_module and _module_name(d) == actual_module]
+        uses_rows = [(s, d) for s, d in module_edge_pairs if _module_name(s) == actual_module and _module_name(d) != actual_module]
         if module_edge_pairs:
-            lines.extend(['<div class="module-relationship-list">'])
-            inside_rows = [(s, d) for s, d in module_edge_pairs if _module_name(s) == actual_module and _module_name(d) == actual_module]
-            used_by_rows = [(s, d) for s, d in module_edge_pairs if _module_name(s) != actual_module and _module_name(d) == actual_module]
-            uses_rows = [(s, d) for s, d in module_edge_pairs if _module_name(s) == actual_module and _module_name(d) != actual_module]
-            lines.append("#### Module relationships")
-            for heading, rows in [("Functions in this module", inside_rows), ("External callers", used_by_rows), ("External callees", uses_rows)]:
-                lines.extend([f"#### {heading}", ""])
-                if not rows:
-                    lines.append("None.")
+            lines.extend(["", "#### Inside this module", ""])
+            lines.append('<section class="callable-relationship-card">')
+            lines.append(f"<h5>{module}</h5>")
+            public_names = sorted([p.name for p in public_in_module])
+            internal_names = sorted([f for f in info["functions"] if f.startswith("_")])
+            for heading, names in [("Public callables", public_names), ("Internal helpers", internal_names)]:
+                lines.append(f"<h6>{heading}</h6>")
+                if not names:
+                    lines.append("<p>None.</p>")
                     continue
-                lines.append('<div class="callable-chip-group">')
-                if heading == "Functions in this module":
-                    for src_qn, dst_qn in rows:
-                        lines.append(f'<a class="reference-chip" href="{callable_docs_link(src_qn.split(".")[-1], _module_name(src_qn), docs_metadata)}"><code>{_label(src_qn)}</code></a> → <a class="reference-chip" href="{callable_docs_link(dst_qn.split(".")[-1], _module_name(dst_qn), docs_metadata)}"><code>{_label(dst_qn)}</code></a>')
-                elif heading == "External callers":
-                    for src_qn, _ in sorted(rows):
-                        lines.append(
-                            f'<a class="reference-chip" href="{callable_docs_link(src_qn.split(".")[-1], _module_name(src_qn), docs_metadata)}"><code>{_module_name(src_qn)}.{_label(src_qn)}</code></a>'
+                lines.append('<ul class="callable-relationship-rows">')
+                for name in names:
+                    src_qn = f"fabricops_kit.{actual_module}.{name}"
+                    callees = sorted([d for s, d in inside_rows if s == src_qn], key=lambda q: _label(q))
+                    src_link = callable_docs_link(name, actual_module, docs_metadata)
+                    lines.append("<li>")
+                    lines.append(f'<a class="reference-chip" href="{src_link}"><code>{name}</code></a>')
+                    lines.append(" <span class=\"callable-relationship-uses\">uses:</span> ")
+                    if callees:
+                        callee_links = ", ".join(
+                            f'<a class="reference-chip" href="{callable_docs_link(dst_qn.split(".")[-1], _module_name(dst_qn), docs_metadata)}"><code>{_label(dst_qn)}</code></a>'
+                            for dst_qn in callees
                         )
-                else:
-                    for _, dst_qn in sorted(rows):
-                        lines.append(
-                            f'<a class="reference-chip" href="{callable_docs_link(dst_qn.split(".")[-1], _module_name(dst_qn), docs_metadata)}"><code>{_module_name(dst_qn)}.{_label(dst_qn)}</code></a>'
-                        )
-                lines.append("</div>")
-            lines.extend(["</div>"])
+                        lines.append(callee_links)
+                    else:
+                        lines.append("<span>None.</span>")
+                    lines.append("</li>")
+                lines.append("</ul>")
+            lines.append("</section>")
+            lines.extend(["", "#### External callers", ""])
+            if not used_by_rows:
+                lines.append("None.")
+            else:
+                callers_by_module: dict[str, list[str]] = {}
+                for src_qn, _ in used_by_rows:
+                    callers_by_module.setdefault(_module_name(src_qn), []).append(src_qn)
+                for src_module in sorted(callers_by_module):
+                    lines.append(f"**{src_module}**")
+                    chips = ", ".join(
+                        f'<a class="reference-chip" href="{callable_docs_link(src_qn.split(".")[-1], _module_name(src_qn), docs_metadata)}"><code>{_label(src_qn)}</code></a>'
+                        for src_qn in sorted(set(callers_by_module[src_module]))
+                    )
+                    lines.append(chips)
+                    lines.append("")
+            lines.extend(["#### External callees", ""])
+            if not uses_rows:
+                lines.append("None.")
+            else:
+                callees_by_module: dict[str, list[str]] = {}
+                for _, dst_qn in uses_rows:
+                    callees_by_module.setdefault(_module_name(dst_qn), []).append(dst_qn)
+                for dst_module in sorted(callees_by_module):
+                    lines.append(f"**{dst_module}**")
+                    chips = ", ".join(
+                        f'<a class="reference-chip" href="{callable_docs_link(dst_qn.split(".")[-1], _module_name(dst_qn), docs_metadata)}"><code>{_label(dst_qn)}</code></a>'
+                        for dst_qn in sorted(set(callees_by_module[dst_module]))
+                    )
+                    lines.append(chips)
+                    lines.append("")
         else:
             lines.append("No callable relationships detected for this module.")
         if public_in_module:

@@ -139,58 +139,115 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
 
 ### Callable relationships
 
-<div class="module-relationship-list">
-#### Module relationships
-#### Functions in this module
+<p><a href="../../reference/call-graph/?module=fabricops_kit.drift" class="md-button md-button--primary">Open interactive module graph</a></p>
 
-<div class="callable-chip-group">
-<a class="reference-chip" href="../modules/drift/#_build_pandas_partition_snapshot"><code>_build_pandas_partition_snapshot</code></a> → <a class="reference-chip" href="../modules/drift/#_build_partition_hash"><code>_build_partition_hash</code></a>
-<a class="reference-chip" href="../modules/drift/#_build_pandas_partition_snapshot"><code>_build_pandas_partition_snapshot</code></a> → <a class="reference-chip" href="../modules/drift/#_hash"><code>_hash</code></a>
-<a class="reference-chip" href="../modules/drift/#_build_pandas_schema_snapshot"><code>_build_pandas_schema_snapshot</code></a> → <a class="reference-chip" href="../modules/drift/#_column_hash"><code>_column_hash</code></a>
-<a class="reference-chip" href="../modules/drift/#_build_partition_hash"><code>_build_partition_hash</code></a> → <a class="reference-chip" href="../modules/drift/#_hash"><code>_hash</code></a>
-<a class="reference-chip" href="../modules/drift/#_build_spark_partition_snapshot"><code>_build_spark_partition_snapshot</code></a> → <a class="reference-chip" href="../modules/drift/#_build_partition_hash"><code>_build_partition_hash</code></a>
-<a class="reference-chip" href="../modules/drift/#_build_spark_schema_snapshot"><code>_build_spark_schema_snapshot</code></a> → <a class="reference-chip" href="../modules/drift/#_column_hash"><code>_column_hash</code></a>
-<a class="reference-chip" href="../modules/drift/#build_and_write_partition_snapshot"><code>build_and_write_partition_snapshot</code></a> → <a class="reference-chip" href="../modules/drift/#_json_dumps"><code>_json_dumps</code></a>
-<a class="reference-chip" href="../modules/drift/#build_and_write_partition_snapshot"><code>build_and_write_partition_snapshot</code></a> → <a class="reference-chip" href="../modules/drift/#_utc_now_iso"><code>_utc_now_iso</code></a>
-<a class="reference-chip" href="../modules/drift/#build_and_write_partition_snapshot"><code>build_and_write_partition_snapshot</code></a> → <a class="reference-chip" href="../modules/drift/#_write_metadata_rows"><code>_write_metadata_rows</code></a>
-<a class="reference-chip" href="../modules/drift/#build_and_write_partition_snapshot"><code>build_and_write_partition_snapshot</code></a> → <a class="reference-chip" href="../modules/drift/#build_partition_snapshot"><code>build_partition_snapshot</code></a>
-<a class="reference-chip" href="../modules/drift/#build_and_write_schema_snapshot"><code>build_and_write_schema_snapshot</code></a> → <a class="reference-chip" href="../modules/drift/#_json_dumps"><code>_json_dumps</code></a>
-<a class="reference-chip" href="../modules/drift/#build_and_write_schema_snapshot"><code>build_and_write_schema_snapshot</code></a> → <a class="reference-chip" href="../modules/drift/#_utc_now_iso"><code>_utc_now_iso</code></a>
-<a class="reference-chip" href="../modules/drift/#build_and_write_schema_snapshot"><code>build_and_write_schema_snapshot</code></a> → <a class="reference-chip" href="../modules/drift/#_write_metadata_rows"><code>_write_metadata_rows</code></a>
-<a class="reference-chip" href="../modules/drift/#build_and_write_schema_snapshot"><code>build_and_write_schema_snapshot</code></a> → <a class="reference-chip" href="../modules/drift/#build_schema_snapshot"><code>build_schema_snapshot</code></a>
-<a class="reference-chip" href="../modules/drift/#build_drift_evidence_record"><code>build_drift_evidence_record</code></a> → <a class="reference-chip" href="../modules/drift/#_json_dumps"><code>_json_dumps</code></a>
-<a class="reference-chip" href="../modules/drift/#build_drift_evidence_record"><code>build_drift_evidence_record</code></a> → <a class="reference-chip" href="../modules/drift/#_utc_now_iso"><code>_utc_now_iso</code></a>
-<a class="reference-chip" href="../modules/drift/#build_partition_snapshot"><code>build_partition_snapshot</code></a> → <a class="reference-chip" href="../modules/drift/#_build_pandas_partition_snapshot"><code>_build_pandas_partition_snapshot</code></a>
-<a class="reference-chip" href="../modules/drift/#build_partition_snapshot"><code>build_partition_snapshot</code></a> → <a class="reference-chip" href="../modules/drift/#_build_spark_partition_snapshot"><code>_build_spark_partition_snapshot</code></a>
-<a class="reference-chip" href="../modules/drift/#build_partition_snapshot"><code>build_partition_snapshot</code></a> → <a class="reference-chip" href="../modules/drift/#detect_dataframe_engine"><code>detect_dataframe_engine</code></a>
-<a class="reference-chip" href="../modules/drift/#build_schema_snapshot"><code>build_schema_snapshot</code></a> → <a class="reference-chip" href="../modules/drift/#_build_pandas_schema_snapshot"><code>_build_pandas_schema_snapshot</code></a>
-<a class="reference-chip" href="../modules/drift/#build_schema_snapshot"><code>build_schema_snapshot</code></a> → <a class="reference-chip" href="../modules/drift/#_build_spark_schema_snapshot"><code>_build_spark_schema_snapshot</code></a>
-<a class="reference-chip" href="../modules/drift/#build_schema_snapshot"><code>build_schema_snapshot</code></a> → <a class="reference-chip" href="../modules/drift/#detect_dataframe_engine"><code>detect_dataframe_engine</code></a>
-<a class="reference-chip" href="../../reference/check_partition_drift/"><code>check_partition_drift</code></a> → <a class="reference-chip" href="../modules/drift/#build_partition_snapshot"><code>build_partition_snapshot</code></a>
-<a class="reference-chip" href="../../reference/check_partition_drift/"><code>check_partition_drift</code></a> → <a class="reference-chip" href="../modules/drift/#compare_partition_snapshots"><code>compare_partition_snapshots</code></a>
-<a class="reference-chip" href="../../reference/check_partition_drift/"><code>check_partition_drift</code></a> → <a class="reference-chip" href="../modules/drift/#default_incremental_safety_policy"><code>default_incremental_safety_policy</code></a>
-<a class="reference-chip" href="../../reference/check_schema_drift/"><code>check_schema_drift</code></a> → <a class="reference-chip" href="../modules/drift/#build_schema_snapshot"><code>build_schema_snapshot</code></a>
-<a class="reference-chip" href="../../reference/check_schema_drift/"><code>check_schema_drift</code></a> → <a class="reference-chip" href="../modules/drift/#compare_schema_snapshots"><code>compare_schema_snapshots</code></a>
-<a class="reference-chip" href="../../reference/check_schema_drift/"><code>check_schema_drift</code></a> → <a class="reference-chip" href="../modules/drift/#default_schema_drift_policy"><code>default_schema_drift_policy</code></a>
-<a class="reference-chip" href="../modules/drift/#compare_partition_snapshots"><code>compare_partition_snapshots</code></a> → <a class="reference-chip" href="../modules/drift/#_is_closed_partition"><code>_is_closed_partition</code></a>
-<a class="reference-chip" href="../modules/drift/#compare_partition_snapshots"><code>compare_partition_snapshots</code></a> → <a class="reference-chip" href="../modules/drift/#default_incremental_safety_policy"><code>default_incremental_safety_policy</code></a>
-<a class="reference-chip" href="../modules/drift/#compare_schema_snapshots"><code>compare_schema_snapshots</code></a> → <a class="reference-chip" href="../modules/drift/#_resolve_change_behavior"><code>_resolve_change_behavior</code></a>
-<a class="reference-chip" href="../modules/drift/#compare_schema_snapshots"><code>compare_schema_snapshots</code></a> → <a class="reference-chip" href="../modules/drift/#default_schema_drift_policy"><code>default_schema_drift_policy</code></a>
-<a class="reference-chip" href="../modules/drift/#load_latest_partition_snapshot"><code>load_latest_partition_snapshot</code></a> → <a class="reference-chip" href="../modules/drift/#_is_missing_table_error"><code>_is_missing_table_error</code></a>
-<a class="reference-chip" href="../modules/drift/#load_latest_partition_snapshot"><code>load_latest_partition_snapshot</code></a> → <a class="reference-chip" href="../modules/drift/#_safe_spark_collect"><code>_safe_spark_collect</code></a>
-<a class="reference-chip" href="../modules/drift/#load_latest_schema_snapshot"><code>load_latest_schema_snapshot</code></a> → <a class="reference-chip" href="../modules/drift/#_is_missing_table_error"><code>_is_missing_table_error</code></a>
-<a class="reference-chip" href="../modules/drift/#load_latest_schema_snapshot"><code>load_latest_schema_snapshot</code></a> → <a class="reference-chip" href="../modules/drift/#_safe_spark_collect"><code>_safe_spark_collect</code></a>
-</div>
+#### Inside this module
+
+<section class="callable-relationship-card">
+<h5>drift</h5>
+<h6>Public callables</h6>
+<ul class="callable-relationship-rows">
+<li>
+<a class="reference-chip" href="../../reference/check_partition_drift/"><code>check_partition_drift</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<a class="reference-chip" href="../modules/drift/#build_partition_snapshot"><code>build_partition_snapshot</code></a>, <a class="reference-chip" href="../modules/drift/#compare_partition_snapshots"><code>compare_partition_snapshots</code></a>, <a class="reference-chip" href="../modules/drift/#default_incremental_safety_policy"><code>default_incremental_safety_policy</code></a>
+</li>
+<li>
+<a class="reference-chip" href="../../reference/check_profile_drift/"><code>check_profile_drift</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<span>None.</span>
+</li>
+<li>
+<a class="reference-chip" href="../../reference/check_schema_drift/"><code>check_schema_drift</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<a class="reference-chip" href="../modules/drift/#build_schema_snapshot"><code>build_schema_snapshot</code></a>, <a class="reference-chip" href="../modules/drift/#compare_schema_snapshots"><code>compare_schema_snapshots</code></a>, <a class="reference-chip" href="../modules/drift/#default_schema_drift_policy"><code>default_schema_drift_policy</code></a>
+</li>
+<li>
+<a class="reference-chip" href="../../reference/summarize_drift_results/"><code>summarize_drift_results</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<span>None.</span>
+</li>
+</ul>
+<h6>Internal helpers</h6>
+<ul class="callable-relationship-rows">
+<li>
+<a class="reference-chip" href="../modules/drift/#_build_pandas_partition_snapshot"><code>_build_pandas_partition_snapshot</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<a class="reference-chip" href="../modules/drift/#_build_partition_hash"><code>_build_partition_hash</code></a>, <a class="reference-chip" href="../modules/drift/#_hash"><code>_hash</code></a>
+</li>
+<li>
+<a class="reference-chip" href="../modules/drift/#_build_pandas_schema_snapshot"><code>_build_pandas_schema_snapshot</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<a class="reference-chip" href="../modules/drift/#_column_hash"><code>_column_hash</code></a>
+</li>
+<li>
+<a class="reference-chip" href="../modules/drift/#_build_partition_hash"><code>_build_partition_hash</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<a class="reference-chip" href="../modules/drift/#_hash"><code>_hash</code></a>
+</li>
+<li>
+<a class="reference-chip" href="../modules/drift/#_build_spark_partition_snapshot"><code>_build_spark_partition_snapshot</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<a class="reference-chip" href="../modules/drift/#_build_partition_hash"><code>_build_partition_hash</code></a>
+</li>
+<li>
+<a class="reference-chip" href="../modules/drift/#_build_spark_schema_snapshot"><code>_build_spark_schema_snapshot</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<a class="reference-chip" href="../modules/drift/#_column_hash"><code>_column_hash</code></a>
+</li>
+<li>
+<a class="reference-chip" href="../modules/drift/#_column_hash"><code>_column_hash</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<span>None.</span>
+</li>
+<li>
+<a class="reference-chip" href="../modules/drift/#_hash"><code>_hash</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<span>None.</span>
+</li>
+<li>
+<a class="reference-chip" href="../modules/drift/#_is_closed_partition"><code>_is_closed_partition</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<span>None.</span>
+</li>
+<li>
+<a class="reference-chip" href="../modules/drift/#_is_missing_table_error"><code>_is_missing_table_error</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<span>None.</span>
+</li>
+<li>
+<a class="reference-chip" href="../modules/drift/#_json_dumps"><code>_json_dumps</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<span>None.</span>
+</li>
+<li>
+<a class="reference-chip" href="../modules/drift/#_resolve_change_behavior"><code>_resolve_change_behavior</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<span>None.</span>
+</li>
+<li>
+<a class="reference-chip" href="../modules/drift/#_safe_spark_collect"><code>_safe_spark_collect</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<span>None.</span>
+</li>
+<li>
+<a class="reference-chip" href="../modules/drift/#_utc_now_iso"><code>_utc_now_iso</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<span>None.</span>
+</li>
+<li>
+<a class="reference-chip" href="../modules/drift/#_write_metadata_rows"><code>_write_metadata_rows</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<span>None.</span>
+</li>
+</ul>
+</section>
+
 #### External callers
 
 None.
 #### External callees
 
-<div class="callable-chip-group">
-<a class="reference-chip" href="../modules/_utils/#_to_jsonable"><code>_utils._to_jsonable</code></a>
-<a class="reference-chip" href="../modules/_utils/#_to_jsonable"><code>_utils._to_jsonable</code></a>
-<a class="reference-chip" href="../modules/_utils/#_to_jsonable"><code>_utils._to_jsonable</code></a>
-<a class="reference-chip" href="../modules/_utils/#_to_jsonable"><code>_utils._to_jsonable</code></a>
-<a class="reference-chip" href="../modules/_utils/#_to_jsonable"><code>_utils._to_jsonable</code></a>
-</div>
-</div>
+**_utils**
+<a class="reference-chip" href="../modules/_utils/#_to_jsonable"><code>_to_jsonable</code></a>
+
