@@ -214,7 +214,7 @@ for row in sorted(public_symbol_docs, key=lambda item: item["symbol_name"]):
         outbound_edges = sorted(set(calls))
         inbound_edges = sorted(set(referenced_by))
         fd.write("## Callable relationships\n\n")
-        fd.write(f'<p><a href="../call-graph/?function={qn}" class="md-button md-button--primary">Open interactive call graph</a></p>\n\n')
+        fd.write(f'<p><a href="../../../reference/call-graph/?function={qn}" class="md-button md-button--primary">Open interactive call graph</a></p>\n\n')
         fd.write('<div class="callable-relationship-grid">\n')
         fd.write(f'  <section><h3>Used by {inbound_count}</h3><div class="callable-chip-group">\n')
         if inbound_edges:
