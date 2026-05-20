@@ -121,27 +121,98 @@ Owns source-to-target lineage and transformation evidence.
 
 ### Callable relationships
 
-<div class="module-relationship-list">
-#### Module relationships
-#### Functions in this module
+<p><a href="../../reference/call-graph/?module=fabricops_kit.data_lineage" class="md-button md-button--primary">Open interactive module graph</a></p>
 
-<div class="callable-chip-group">
-<a class="reference-chip" href="../modules/data_lineage/#_build_lineage_record_from_steps"><code>_build_lineage_record_from_steps</code></a> → <a class="reference-chip" href="../modules/data_lineage/#_validate_lineage_steps"><code>_validate_lineage_steps</code></a>
-<a class="reference-chip" href="../modules/data_lineage/#_build_lineage_records"><code>_build_lineage_records</code></a> → <a class="reference-chip" href="../modules/data_lineage/#_build_lineage_record_from_steps"><code>_build_lineage_record_from_steps</code></a>
-<a class="reference-chip" href="../modules/data_lineage/#_enrich_lineage_steps_with_ai"><code>_enrich_lineage_steps_with_ai</code></a> → <a class="reference-chip" href="../modules/data_lineage/#_fallback_copilot_lineage_prompt"><code>_fallback_copilot_lineage_prompt</code></a>
-<a class="reference-chip" href="../modules/data_lineage/#_flatten_chain"><code>_flatten_chain</code></a> → <a class="reference-chip" href="../modules/data_lineage/#_name"><code>_name</code></a>
-<a class="reference-chip" href="../modules/data_lineage/#_resolve_write_target"><code>_resolve_write_target</code></a> → <a class="reference-chip" href="../modules/data_lineage/#_literal"><code>_literal</code></a>
-<a class="reference-chip" href="../modules/data_lineage/#_scan_notebook_cells"><code>_scan_notebook_cells</code></a> → <a class="reference-chip" href="../modules/data_lineage/#_scan_notebook_lineage"><code>_scan_notebook_lineage</code></a>
-<a class="reference-chip" href="../modules/data_lineage/#_scan_notebook_lineage"><code>_scan_notebook_lineage</code></a> → <a class="reference-chip" href="../modules/data_lineage/#_call_name"><code>_call_name</code></a>
-<a class="reference-chip" href="../modules/data_lineage/#_scan_notebook_lineage"><code>_scan_notebook_lineage</code></a> → <a class="reference-chip" href="../modules/data_lineage/#_flatten_chain"><code>_flatten_chain</code></a>
-<a class="reference-chip" href="../modules/data_lineage/#_scan_notebook_lineage"><code>_scan_notebook_lineage</code></a> → <a class="reference-chip" href="../modules/data_lineage/#_name"><code>_name</code></a>
-<a class="reference-chip" href="../modules/data_lineage/#_scan_notebook_lineage"><code>_scan_notebook_lineage</code></a> → <a class="reference-chip" href="../modules/data_lineage/#_resolve_write_target"><code>_resolve_write_target</code></a>
-<a class="reference-chip" href="../modules/data_lineage/#_scan_notebook_lineage"><code>_scan_notebook_lineage</code></a> → <a class="reference-chip" href="../modules/data_lineage/#_step"><code>_step</code></a>
-</div>
+#### Inside this module
+
+<section class="callable-relationship-card">
+<h5>data_lineage</h5>
+<h6>Public callables</h6>
+<ul class="callable-relationship-rows">
+<li>
+<a class="reference-chip" href="../../reference/build_lineage_handover_markdown/"><code>build_lineage_handover_markdown</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<span>None.</span>
+</li>
+<li>
+<a class="reference-chip" href="../../reference/build_lineage_records/"><code>build_lineage_records</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<span>None.</span>
+</li>
+</ul>
+<h6>Internal helpers</h6>
+<ul class="callable-relationship-rows">
+<li>
+<a class="reference-chip" href="../modules/data_lineage/#_build_lineage_record_from_steps"><code>_build_lineage_record_from_steps</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<a class="reference-chip" href="../modules/data_lineage/#_validate_lineage_steps"><code>_validate_lineage_steps</code></a>
+</li>
+<li>
+<a class="reference-chip" href="../modules/data_lineage/#_build_lineage_records"><code>_build_lineage_records</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<a class="reference-chip" href="../modules/data_lineage/#_build_lineage_record_from_steps"><code>_build_lineage_record_from_steps</code></a>
+</li>
+<li>
+<a class="reference-chip" href="../modules/data_lineage/#_call_name"><code>_call_name</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<span>None.</span>
+</li>
+<li>
+<a class="reference-chip" href="../modules/data_lineage/#_enrich_lineage_steps_with_ai"><code>_enrich_lineage_steps_with_ai</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<a class="reference-chip" href="../modules/data_lineage/#_fallback_copilot_lineage_prompt"><code>_fallback_copilot_lineage_prompt</code></a>
+</li>
+<li>
+<a class="reference-chip" href="../modules/data_lineage/#_fallback_copilot_lineage_prompt"><code>_fallback_copilot_lineage_prompt</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<span>None.</span>
+</li>
+<li>
+<a class="reference-chip" href="../modules/data_lineage/#_flatten_chain"><code>_flatten_chain</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<a class="reference-chip" href="../modules/data_lineage/#_name"><code>_name</code></a>
+</li>
+<li>
+<a class="reference-chip" href="../modules/data_lineage/#_literal"><code>_literal</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<span>None.</span>
+</li>
+<li>
+<a class="reference-chip" href="../modules/data_lineage/#_name"><code>_name</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<span>None.</span>
+</li>
+<li>
+<a class="reference-chip" href="../modules/data_lineage/#_resolve_write_target"><code>_resolve_write_target</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<a class="reference-chip" href="../modules/data_lineage/#_literal"><code>_literal</code></a>
+</li>
+<li>
+<a class="reference-chip" href="../modules/data_lineage/#_scan_notebook_cells"><code>_scan_notebook_cells</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<a class="reference-chip" href="../modules/data_lineage/#_scan_notebook_lineage"><code>_scan_notebook_lineage</code></a>
+</li>
+<li>
+<a class="reference-chip" href="../modules/data_lineage/#_scan_notebook_lineage"><code>_scan_notebook_lineage</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<a class="reference-chip" href="../modules/data_lineage/#_call_name"><code>_call_name</code></a>, <a class="reference-chip" href="../modules/data_lineage/#_flatten_chain"><code>_flatten_chain</code></a>, <a class="reference-chip" href="../modules/data_lineage/#_name"><code>_name</code></a>, <a class="reference-chip" href="../modules/data_lineage/#_resolve_write_target"><code>_resolve_write_target</code></a>, <a class="reference-chip" href="../modules/data_lineage/#_step"><code>_step</code></a>
+</li>
+<li>
+<a class="reference-chip" href="../modules/data_lineage/#_step"><code>_step</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<span>None.</span>
+</li>
+<li>
+<a class="reference-chip" href="../modules/data_lineage/#_validate_lineage_steps"><code>_validate_lineage_steps</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<span>None.</span>
+</li>
+</ul>
+</section>
+
 #### External callers
 
 None.
 #### External callees
 
 None.
-</div>

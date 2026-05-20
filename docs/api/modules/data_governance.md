@@ -116,26 +116,85 @@ Owns sensitivity, PII, confidentiality, policy labels, and governance approval e
 
 ### Callable relationships
 
-<div class="module-relationship-list">
-#### Module relationships
-#### Functions in this module
+<p><a href="../../reference/call-graph/?module=fabricops_kit.data_governance" class="md-button md-button--primary">Open interactive module graph</a></p>
 
-<div class="callable-chip-group">
-<a class="reference-chip" href="../../reference/extract_governance_suggestions/"><code>extract_governance_suggestions</code></a> → <a class="reference-chip" href="../modules/data_governance/#_extract_pii_suggestions"><code>_extract_pii_suggestions</code></a>
-<a class="reference-chip" href="../../reference/load_governance/"><code>load_governance</code></a> → <a class="reference-chip" href="../modules/data_governance/#_coerce_row_dicts"><code>_coerce_row_dicts</code></a>
-<a class="reference-chip" href="../../reference/prepare_governance_input/"><code>prepare_governance_input</code></a> → <a class="reference-chip" href="../modules/data_governance/#_prepare_governance_input"><code>_prepare_governance_input</code></a>
-<a class="reference-chip" href="../../reference/review_governance/"><code>review_governance</code></a> → <a class="reference-chip" href="../modules/data_governance/#_undo_last_action"><code>_undo_last_action</code></a>
-<a class="reference-chip" href="../../reference/write_governance/"><code>write_governance</code></a> → <a class="reference-chip" href="../modules/data_governance/#_approved_widget_rows"><code>_approved_widget_rows</code></a>
-</div>
+#### Inside this module
+
+<section class="callable-relationship-card">
+<h5>data_governance</h5>
+<h6>Public callables</h6>
+<ul class="callable-relationship-rows">
+<li>
+<a class="reference-chip" href="../../reference/draft_governance/"><code>draft_governance</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<span>None.</span>
+</li>
+<li>
+<a class="reference-chip" href="../../reference/extract_governance_suggestions/"><code>extract_governance_suggestions</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<a class="reference-chip" href="../modules/data_governance/#_extract_pii_suggestions"><code>_extract_pii_suggestions</code></a>
+</li>
+<li>
+<a class="reference-chip" href="../../reference/load_governance/"><code>load_governance</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<a class="reference-chip" href="../modules/data_governance/#_coerce_row_dicts"><code>_coerce_row_dicts</code></a>
+</li>
+<li>
+<a class="reference-chip" href="../../reference/prepare_governance_input/"><code>prepare_governance_input</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<a class="reference-chip" href="../modules/data_governance/#_prepare_governance_input"><code>_prepare_governance_input</code></a>
+</li>
+<li>
+<a class="reference-chip" href="../../reference/review_governance/"><code>review_governance</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<a class="reference-chip" href="../modules/data_governance/#_undo_last_action"><code>_undo_last_action</code></a>
+</li>
+<li>
+<a class="reference-chip" href="../../reference/write_governance/"><code>write_governance</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<a class="reference-chip" href="../modules/data_governance/#_approved_widget_rows"><code>_approved_widget_rows</code></a>
+</li>
+</ul>
+<h6>Internal helpers</h6>
+<ul class="callable-relationship-rows">
+<li>
+<a class="reference-chip" href="../modules/data_governance/#_approved_widget_rows"><code>_approved_widget_rows</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<span>None.</span>
+</li>
+<li>
+<a class="reference-chip" href="../modules/data_governance/#_build_governance_context"><code>_build_governance_context</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<span>None.</span>
+</li>
+<li>
+<a class="reference-chip" href="../modules/data_governance/#_coerce_row_dicts"><code>_coerce_row_dicts</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<span>None.</span>
+</li>
+<li>
+<a class="reference-chip" href="../modules/data_governance/#_extract_pii_suggestions"><code>_extract_pii_suggestions</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<span>None.</span>
+</li>
+<li>
+<a class="reference-chip" href="../modules/data_governance/#_prepare_governance_input"><code>_prepare_governance_input</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<span>None.</span>
+</li>
+<li>
+<a class="reference-chip" href="../modules/data_governance/#_undo_last_action"><code>_undo_last_action</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<span>None.</span>
+</li>
+</ul>
+</section>
+
 #### External callers
 
 None.
 #### External callees
 
-<div class="callable-chip-group">
-<a class="reference-chip" href="../modules/metadata/#_resolve_action_by"><code>metadata._resolve_action_by</code></a>
-<a class="reference-chip" href="../modules/metadata/#_now_utc_iso"><code>metadata._now_utc_iso</code></a>
-<a class="reference-chip" href="../modules/metadata/#build_metadata_column_key"><code>metadata.build_metadata_column_key</code></a>
-<a class="reference-chip" href="../modules/metadata/#build_metadata_table_key"><code>metadata.build_metadata_table_key</code></a>
-</div>
-</div>
+**metadata**
+<a class="reference-chip" href="../modules/metadata/#_now_utc_iso"><code>_now_utc_iso</code></a>, <a class="reference-chip" href="../modules/metadata/#_resolve_action_by"><code>_resolve_action_by</code></a>, <a class="reference-chip" href="../modules/metadata/#build_metadata_column_key"><code>build_metadata_column_key</code></a>, <a class="reference-chip" href="../modules/metadata/#build_metadata_table_key"><code>build_metadata_table_key</code></a>
+
