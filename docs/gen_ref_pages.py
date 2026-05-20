@@ -167,12 +167,11 @@ def _callable_label(qualified_name: str, *, current_module: str | None = None) -
     return f"{module_name}.{callable_name}"
 
 
-def _link_md(qualified_name: str, *, current_module: str | None = None) -> str:
-    return f"[`{_callable_label(qualified_name, current_module=current_module)}`]({_callable_href(qualified_name)})"
-
-
-def _link_html(qualified_name: str, *, current_module: str | None = None) -> str:
-    return f'<a href="{_callable_href(qualified_name)}"><code>{_callable_label(qualified_name, current_module=current_module)}</code></a>'
+def _module_link(module_name: str) -> str:
+    """Return a safe module-page link when a module reference page exists."""
+    if module_name in modules:
+        return f'<a class="reference-module-link" href="../../modules/{module_name}/"><code>{module_name}</code></a>'
+    return f"<code>{module_name}</code>"
 
 
 def _relationship_chip(qualified_name: str, current_module: str) -> str:
@@ -196,9 +195,7 @@ for row in sorted(public_symbol_docs, key=lambda item: item["symbol_name"]):
     dep = dependency_metadata.get("callables", {}).get(qn, {})
     dep_calls = sorted(dep.get("calls", []))
     dep_used_by = sorted(dep.get("used_by", []))
-    dep_internal_helpers = sorted(dep.get("internal_helpers_used", []))
     calls = dep_calls or sorted(module_call_map.get(module_name, {}).get(symbol_name, set()))
-    helper_calls = dep_internal_helpers or [c for c in calls if c.startswith(f"{PACKAGE}.{module_name}._")]
     referenced_by = dep_used_by or sorted(reverse_refs.get(qn, set()))
 
     with mkdocs_gen_files.open(doc_path, "w") as fd:
@@ -216,7 +213,6 @@ for row in sorted(public_symbol_docs, key=lambda item: item["symbol_name"]):
 
         outbound_edges = sorted(set(calls))
         inbound_edges = sorted(set(referenced_by))
-        flow_edges = sorted(set(outbound_edges))
         fd.write("## Callable relationships\n\n")
         fd.write(f'<p><a href="../call-graph/?function={qn}" class="md-button md-button--primary">Open interactive call graph</a></p>\n\n')
         fd.write('<div class="callable-relationship-grid">\n')
