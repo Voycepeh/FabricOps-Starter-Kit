@@ -231,15 +231,6 @@ for row in sorted(public_symbol_docs, key=lambda item: item["symbol_name"]):
         outbound_edges = sorted(set(calls))
         inbound_edges = sorted(set(referenced_by))
         flow_edges = sorted(set(outbound_edges))
-        relationship_rows = []
-        module_neighbors = sorted({c for c in outbound_edges + inbound_edges if _parts(c)[0] == module_name and _parts(c)[1] != symbol_name})
-        if module_neighbors:
-            relationship_rows.append(("Inside this module", ', '.join(_link_md(c, current_module=module_name) for c in module_neighbors)))
-        if referenced_by:
-            relationship_rows.append(("Used by other modules", ', '.join(_link_md(c, current_module=module_name) for c in referenced_by)))
-        if outbound_edges:
-            relationship_rows.append(("Uses other modules", ', '.join(_link_md(c, current_module=module_name) for c in outbound_edges)))
-
         fd.write("## Callable relationships\n\n")
         fd.write(f'<p><a href="../call-graph/?function={qn}" class="md-button md-button--primary">Open interactive call graph</a></p>\n\n')
         fd.write('<div class="callable-relationship-grid">\n')
@@ -259,19 +250,6 @@ for row in sorted(public_symbol_docs, key=lambda item: item["symbol_name"]):
             fd.write("<span>None.</span>\n")
         fd.write("  </div></section>\n")
         fd.write("</div>\n\n")
-
-        if relationship_rows:
-            fd.write("## Relationship details\n\n")
-            for label, values in relationship_rows:
-                fd.write(f"### {label}\n\n{values}\n\n")
-
-        if flow_edges:
-            fd.write("## Function flow details\n\n| Step | Callable | Purpose |\n|---:|---|---|\n")
-            for i, c in enumerate(flow_edges[:20], start=1):
-                m, n = c.split(".")[-2], c.split(".")[-1]
-                purpose = modules.get(m, {}).get(n) or n.replace("_", " ").capitalize()
-                fd.write(f"| {i} | {_link_md(c, current_module=module_name)} | {purpose} |\n")
-            fd.write("\n")
 
         fd.write(f"::: {PACKAGE}.{module_name}.{symbol_name}\n")
         fd.write("    options:\n")

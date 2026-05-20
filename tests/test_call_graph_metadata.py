@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+import re
 
 
 def test_call_graph_metadata_integrity():
@@ -55,3 +56,47 @@ def test_module_external_callers_do_not_include_same_module():
             if caller_module == current_module:
                 continue
             assert caller_module != current_module
+
+
+def test_docs_url_points_to_generated_reference_routes():
+    data = json.loads(Path('docs/reference/dependency-metadata.json').read_text(encoding='utf-8'))
+    callables = data['callables']
+    for qn, node in callables.items():
+        short_name = node['short_name']
+        module = node['module']
+        expected = f'/FabricOps-Starter-Kit/reference/{short_name}/' if node.get('classification') in {'essential', 'optional'} else f'/FabricOps-Starter-Kit/reference/internal/{module}/{short_name}/'
+        assert node['docs_url'] == expected, f'{qn} has wrong docs_url'
+
+
+def test_call_graph_page_contains_canvas_and_status_text():
+    page = Path('docs/reference/call-graph.md').read_text(encoding='utf-8')
+    assert 'id="call-graph-canvas"' in page
+
+    js = Path('docs/javascripts/call-graph.js').read_text(encoding='utf-8')
+    for msg in [
+        'Loading call graph...',
+        'Unable to load dependency metadata.',
+        'Unable to load graph library.',
+        'No callable nodes found.',
+    ]:
+        assert msg in js
+
+
+def test_no_duplicate_relationship_sections_in_generated_function_pages_script():
+    script = Path('docs/gen_ref_pages.py').read_text(encoding='utf-8')
+    assert '## Relationship details' not in script
+    assert '## Function flow details' not in script
+
+
+def test_module_callable_chip_links_resolve_to_known_docs_routes():
+    metadata = json.loads(Path('docs/reference/dependency-metadata.json').read_text(encoding='utf-8'))['callables']
+    known_routes = {v['docs_url'] for v in metadata.values()}
+
+    for module_page in Path('docs/api/modules').glob('*.md'):
+        text = module_page.read_text(encoding='utf-8')
+        for href in re.findall(r'href="([^"]+)"', text):
+            if not href.startswith('../../reference/'):
+                continue
+            route = href.replace('../../reference', '/FabricOps-Starter-Kit/reference').rstrip('/') + '/'
+            if '/FabricOps-Starter-Kit/reference/internal/' in route or route.count('/') == 5:
+                assert route in known_routes, f'{module_page}: broken route {href}'
