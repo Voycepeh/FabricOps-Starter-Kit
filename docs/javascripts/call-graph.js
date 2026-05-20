@@ -85,7 +85,6 @@ Outbound: ${Number(c.calls_count || 0)}`,
     const searchInput = document.getElementById('call-graph-search');
     const resultsRoot = document.getElementById('call-graph-search-results');
     const noMatchEl = document.getElementById('call-graph-search-empty');
-    let visibleMatches = [];
     let selectedNodeId = null;
 
     const baseNodeStyles = new Map(nodeRecords.map((n) => [n.id, { color: n.color, font: { color: '#1d1d1d', size: 14 }, hidden: false } ]));
@@ -188,9 +187,9 @@ Outbound: ${Number(c.calls_count || 0)}`,
       network.selectNodes([id]);
       network.focus(id, { scale: 1.2, animation: { duration: 280, easingFunction: 'easeInOutQuad' } });
       updateUrlForSelection(id);
-      if (searchInput) searchInput.value = id;
-      visibleMatches = getMatches(id);
-      renderDropdown(visibleMatches);
+      const selectedRecord = nodeRecords.find((rec) => rec.qn === id);
+      if (searchInput && selectedRecord) searchInput.value = selectedRecord.searchLabel;
+      renderDropdown([]);
       setNoMatchVisibility(false);
     }
 
@@ -198,7 +197,6 @@ Outbound: ${Number(c.calls_count || 0)}`,
       const term = (rawTerm || '').trim();
       if (!term) return;
       const matches = getMatches(term);
-      visibleMatches = matches;
       renderDropdown(matches);
       if (!matches.length) {
         setNoMatchVisibility(true);
@@ -212,7 +210,6 @@ Outbound: ${Number(c.calls_count || 0)}`,
     if (searchInput) {
       searchInput.addEventListener('input', (e) => {
         const matches = getMatches(e.target.value);
-        visibleMatches = matches;
         renderDropdown(matches);
         setNoMatchVisibility(Boolean(e.target.value.trim()) && !matches.length);
       });

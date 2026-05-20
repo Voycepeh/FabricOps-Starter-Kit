@@ -89,6 +89,8 @@ def test_call_graph_page_contains_canvas_and_status_text():
         'network.focus',
         'call-graph-search-option',
         'window.history.replaceState',
+        'renderDropdown([])',
+        'searchInput.value = selectedRecord.searchLabel',
     ]:
         assert script_fragment in js
 
