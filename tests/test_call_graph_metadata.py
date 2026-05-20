@@ -77,22 +77,29 @@ def test_call_graph_page_contains_canvas_and_status_text():
     assert 'No matching function found.' in page
 
     js = Path('docs/javascripts/call-graph.js').read_text(encoding='utf-8')
-    for msg in [
-        'Loading call graph...',
-        'Unable to load dependency metadata.',
-        'Unable to load graph library.',
-        'No callable nodes found.',
-    ]:
+    for msg in ['Loading call graph...', 'Unable to load dependency metadata.', 'No callable nodes found.']:
         assert msg in js
 
     for script_fragment in [
-        'network.focus',
+        'call-graph-module',
+        'call-graph-function-chip',
+        'refreshEdges',
         'call-graph-search-option',
         'window.history.replaceState',
         'renderDropdown([])',
         'searchInput.value = selectedRecord.searchLabel',
+        'new URLSearchParams(window.location.search).get(\'function\')',
     ]:
         assert script_fragment in js
+
+
+def test_dependency_metadata_contains_module_grouping_keys():
+    data = json.loads(Path('docs/reference/dependency-metadata.json').read_text(encoding='utf-8'))
+    assert isinstance(data.get('modules'), dict)
+    assert data['modules']
+    for qn, node in data['callables'].items():
+        assert node.get('module'), f'{qn} missing module'
+        assert node.get('short_name'), f'{qn} missing short_name'
 
 
 def test_no_duplicate_relationship_sections_in_generated_function_pages_script():
