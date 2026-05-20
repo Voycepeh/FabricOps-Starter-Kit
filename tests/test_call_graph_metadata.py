@@ -111,3 +111,9 @@ def test_module_callable_chip_links_resolve_to_known_docs_routes():
             route = href.replace('../../reference', '/FabricOps-Starter-Kit/reference').rstrip('/') + '/'
             if '/FabricOps-Starter-Kit/reference/internal/' in route or route.count('/') == 5:
                 assert route in known_routes, f'{module_page}: broken route {href}'
+
+
+def test_generated_callable_call_graph_link_uses_reference_route_not_api_reference():
+    script = Path('docs/gen_ref_pages.py').read_text(encoding='utf-8')
+    assert '../call-graph/?function=' not in script
+    assert '../../../reference/call-graph/?function=' in script
