@@ -71,6 +71,10 @@ def test_docs_url_points_to_generated_reference_routes():
 def test_call_graph_page_contains_canvas_and_status_text():
     page = Path('docs/reference/call-graph.md').read_text(encoding='utf-8')
     assert 'id="call-graph-canvas"' in page
+    assert 'id="call-graph-search-results"' in page
+    assert 'id="call-graph-search-empty"' in page
+
+    assert 'No matching function found.' in page
 
     js = Path('docs/javascripts/call-graph.js').read_text(encoding='utf-8')
     for msg in [
@@ -80,6 +84,13 @@ def test_call_graph_page_contains_canvas_and_status_text():
         'No callable nodes found.',
     ]:
         assert msg in js
+
+    for script_fragment in [
+        'network.focus',
+        'call-graph-search-option',
+        'window.history.replaceState',
+    ]:
+        assert script_fragment in js
 
 
 def test_no_duplicate_relationship_sections_in_generated_function_pages_script():
