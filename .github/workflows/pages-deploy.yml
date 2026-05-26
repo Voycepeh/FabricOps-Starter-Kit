@@ -34,36 +34,37 @@ jobs:
         run: |
           set -euo pipefail
 
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-          git fetch origin gh-pages || true
-
+          source_dir="$(pwd)/site"
           temp_dir="$(mktemp -d)"
-
-          if git show-ref --verify --quiet refs/remotes/origin/gh-pages; then
-            git worktree add "$temp_dir" origin/gh-pages
-          else
-            git worktree add --detach "$temp_dir"
-            (
-              cd "$temp_dir"
-              git switch --orphan gh-pages
-              git rm -rf . >/dev/null 2>&1 || true
-            )
-          fi
-
-          rsync -a --delete site/ "$temp_dir"/
-          touch "$temp_dir/.nojekyll"
+          cp -a "$source_dir"/. "$temp_dir"/
 
           (
             cd "$temp_dir"
+
+            git init
+            git checkout -b gh-pages
+
+            touch .nojekyll
+
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+            repo_url="https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+            git remote add origin "$repo_url"
+
+            if git fetch --depth=1 origin gh-pages; then
+              git reset --hard FETCH_HEAD
+              cp -a "$source_dir"/. .
+              touch .nojekyll
+            fi
+
             git add -A
             if git diff --cached --quiet; then
               echo "No changes to deploy."
             else
               git commit -m "Deploy docs from ${GITHUB_SHA}"
-              git push origin HEAD:gh-pages
+              git push --force origin gh-pages
             fi
           )
 
-          git worktree remove "$temp_dir" --force
+          rm -rf "$temp_dir"
