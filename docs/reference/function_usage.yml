@@ -1,0 +1,12 @@
+{
+  "draft_dq_rules": {
+    "template_step": "02_exploration",
+    "role": "AI-assisted suggestion function",
+    "purpose": "Drafts candidate data quality rules from business context and profile evidence.",
+    "debug_when": [
+      "AI-generated rules do not match business expectations",
+      "suggested rules are too generic"
+    ],
+    "related_templates": ["02_ex", "data_quality_review"]
+  }
+}

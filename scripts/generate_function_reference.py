@@ -17,6 +17,9 @@ NOTEBOOK_STRUCTURE_DIR = ROOT / "docs" / "notebook-structure"
 MODULE_DIR = ROOT / "docs" / "api" / "modules"
 MKDOCS_PATH = ROOT / "mkdocs.yml"
 MANIFEST_PATH = ROOT / "docs" / "reference" / "manifest.json"
+AGENT_MANIFEST_PATH = ROOT / "docs" / "reference" / "agent-manifest.json"
+FUNCTION_USAGE_OVERRIDES_PATH = ROOT / "docs" / "reference" / "function_usage.yml"
+TEMPLATE_FUNCTION_MAP_PATH = ROOT / "docs" / "reference" / "template-function-map.md"
 DEPENDENCY_METADATA_PATH = ROOT / "docs" / "reference" / "dependency-metadata.json"
 CALL_GRAPH_PAGE_PATH = ROOT / "docs" / "reference" / "call-graph.md"
 
@@ -469,6 +472,7 @@ def main() -> None:
     )
 
     docs_metadata = parse_docs_metadata()
+    usage_overrides = json.loads(FUNCTION_USAGE_OVERRIDES_PATH.read_text(encoding="utf-8")) if FUNCTION_USAGE_OVERRIDES_PATH.exists() else {}
     template_flow_docs = parse_template_flow_docs()
     module_docs_metadata = parse_module_docs_metadata()
 
@@ -929,6 +933,26 @@ def main() -> None:
         "> Tip: add `?function=fabricops_kit.config.load_fabric_config` to preselect a node.",
     ]
     CALL_GRAPH_PAGE_PATH.write_text("\n".join(call_graph_md) + "\n", encoding="utf-8", newline="\n")
+
+    template_function_map = [
+        "# Template Function Map",
+        "",
+        "Template-first view of public callables and their main delegated helpers.",
+        "",
+    ]
+    for flow in template_flow_docs:
+        template_function_map.extend([f"## {flow['notebook_label']}", "", flow.get("segment_intro", ""), ""])
+        for segment in flow["segments"]:
+            template_function_map.extend([f"### {segment['title']}", ""])
+            for symbol_name in segment["symbols"]:
+                s = symbol_map[symbol_name]
+                direct_helpers = sorted([
+                    c for c in module_data[s.actual_module]["calls"].get(s.name, set()) if c.startswith("_")
+                ])
+                helper_text = ", ".join(f"`{h}`" for h in direct_helpers) if direct_helpers else "No direct internal helpers detected."
+                template_function_map.append(f"- `{s.name}`: {s.purpose or s.summary or '—'} Delegates to {helper_text}")
+            template_function_map.append("")
+    TEMPLATE_FUNCTION_MAP_PATH.write_text("\n".join(template_function_map) + "\n", encoding="utf-8", newline="\n")
     starter_symbol_to_notebooks: dict[str, set[str]] = {}
     for flow in template_flow_docs:
         notebook_key = flow["notebook_key"]
@@ -1182,6 +1206,34 @@ def main() -> None:
     ref.append("")
     REFERENCE_PATH.parent.mkdir(parents=True, exist_ok=True)
     REFERENCE_PATH.write_text("\n".join(ref) + "\n", encoding="utf-8", newline="\n")
+
+    agent_manifest: list[dict[str, Any]] = []
+    for qn, node in sorted(node_by_qn.items()):
+        short_name = node["callable_name"]
+        override = usage_overrides.get(short_name, {}) if isinstance(usage_overrides, dict) else {}
+        deps = sorted(set(calls_by_qn.get(qn, [])))
+        callable_deps = [d.split(".")[-1] for d in deps if node_by_qn.get(d, {}).get("exported")]
+        internal_deps = [d.split(".")[-1] for d in deps if not node_by_qn.get(d, {}).get("exported")]
+        used_by = sorted(set(used_by_qn.get(qn, [])))
+        used_by_callable = [u.split(".")[-1] for u in used_by if node_by_qn.get(u, {}).get("exported")]
+        used_by_internal = [u.split(".")[-1] for u in used_by if not node_by_qn.get(u, {}).get("exported")]
+        agent_manifest.append({
+            "name": short_name,
+            "qualified_name": qn,
+            "module": node["module_name"],
+            "type": "callable" if node["exported"] else "internal",
+            "template_step": override.get("template_step") or docs_metadata.get(short_name, {}).get("template_segment") or "unknown",
+            "role": override.get("role") or node.get("role", "internal"),
+            "calls_callable_functions": callable_deps,
+            "uses_internal_helpers": internal_deps,
+            "used_by_callable_functions": used_by_callable,
+            "used_by_internal_helpers": used_by_internal,
+            "related_templates": override.get("related_templates", []),
+            "debug_when": override.get("debug_when", []),
+            "source_file": f"src/fabricops_kit/{node['module_name']}.py",
+            "line_number": None,
+        })
+    AGENT_MANIFEST_PATH.write_text(json.dumps(agent_manifest, indent=2) + "\n", encoding="utf-8")
 
 
 if __name__ == "__main__":

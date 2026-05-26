@@ -1,0 +1,3807 @@
+[
+  {
+    "name": "_to_jsonable",
+    "qualified_name": "fabricops_kit._utils._to_jsonable",
+    "module": "_utils",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_to_jsonable"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [
+      "_to_jsonable",
+      "_build_pandas_partition_snapshot",
+      "_build_spark_partition_snapshot",
+      "_json_dumps",
+      "build_incremental_safety_records",
+      "compare_partition_snapshots"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/_utils.py",
+    "line_number": null
+  },
+  {
+    "name": "_extract_column_business_context_suggestions",
+    "qualified_name": "fabricops_kit.business_context._extract_column_business_context_suggestions",
+    "module": "business_context",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_parse_ai_dict_response"
+    ],
+    "used_by_callable_functions": [
+      "extract_column_business_context_suggestions"
+    ],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/business_context.py",
+    "line_number": null
+  },
+  {
+    "name": "_parse_ai_dict_response",
+    "qualified_name": "fabricops_kit.business_context._parse_ai_dict_response",
+    "module": "business_context",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [
+      "_extract_column_business_context_suggestions"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/business_context.py",
+    "line_number": null
+  },
+  {
+    "name": "_prepare_business_context_profile_input",
+    "qualified_name": "fabricops_kit.business_context._prepare_business_context_profile_input",
+    "module": "business_context",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [
+      "prepare_business_context_profile_input"
+    ],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/business_context.py",
+    "line_number": null
+  },
+  {
+    "name": "_require_ipywidgets",
+    "qualified_name": "fabricops_kit.business_context._require_ipywidgets",
+    "module": "business_context",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [
+      "review_business_context"
+    ],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/business_context.py",
+    "line_number": null
+  },
+  {
+    "name": "draft_business_context",
+    "qualified_name": "fabricops_kit.business_context.draft_business_context",
+    "module": "business_context",
+    "type": "callable",
+    "template_step": "\u2014",
+    "role": "essential",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/business_context.py",
+    "line_number": null
+  },
+  {
+    "name": "extract_column_business_context_suggestions",
+    "qualified_name": "fabricops_kit.business_context.extract_column_business_context_suggestions",
+    "module": "business_context",
+    "type": "callable",
+    "template_step": "\u2014",
+    "role": "optional",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_extract_column_business_context_suggestions"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/business_context.py",
+    "line_number": null
+  },
+  {
+    "name": "get_reviewed_business_context_rows",
+    "qualified_name": "fabricops_kit.business_context.get_reviewed_business_context_rows",
+    "module": "business_context",
+    "type": "callable",
+    "template_step": "\u2014",
+    "role": "optional",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/business_context.py",
+    "line_number": null
+  },
+  {
+    "name": "prepare_business_context_profile_input",
+    "qualified_name": "fabricops_kit.business_context.prepare_business_context_profile_input",
+    "module": "business_context",
+    "type": "callable",
+    "template_step": "\u2014",
+    "role": "optional",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_prepare_business_context_profile_input"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/business_context.py",
+    "line_number": null
+  },
+  {
+    "name": "review_business_context",
+    "qualified_name": "fabricops_kit.business_context.review_business_context",
+    "module": "business_context",
+    "type": "callable",
+    "template_step": "\u2014",
+    "role": "essential",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_require_ipywidgets",
+      "build_metadata_column_key",
+      "build_metadata_table_key"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/business_context.py",
+    "line_number": null
+  },
+  {
+    "name": "write_business_context",
+    "qualified_name": "fabricops_kit.business_context.write_business_context",
+    "module": "business_context",
+    "type": "callable",
+    "template_step": "\u2014",
+    "role": "essential",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "write_column_business_context"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/business_context.py",
+    "line_number": null
+  },
+  {
+    "name": "AIPromptConfig",
+    "qualified_name": "fabricops_kit.config.AIPromptConfig",
+    "module": "config",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/config.py",
+    "line_number": null
+  },
+  {
+    "name": "ConfigBootstrapResult",
+    "qualified_name": "fabricops_kit.config.ConfigBootstrapResult",
+    "module": "config",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [
+      "_bootstrap_fabric_env"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/config.py",
+    "line_number": null
+  },
+  {
+    "name": "ConfigSmokeCheckResult",
+    "qualified_name": "fabricops_kit.config.ConfigSmokeCheckResult",
+    "module": "config",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [
+      "_run_config_smoke_tests"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/config.py",
+    "line_number": null
+  },
+  {
+    "name": "DatasetContractValidationError",
+    "qualified_name": "fabricops_kit.config.DatasetContractValidationError",
+    "module": "config",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [
+      "assert_valid_dataset_contract"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/config.py",
+    "line_number": null
+  },
+  {
+    "name": "FrameworkConfig",
+    "qualified_name": "fabricops_kit.config.FrameworkConfig",
+    "module": "config",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [
+      "_validate_framework_config"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/config.py",
+    "line_number": null
+  },
+  {
+    "name": "GovernanceConfig",
+    "qualified_name": "fabricops_kit.config.GovernanceConfig",
+    "module": "config",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/config.py",
+    "line_number": null
+  },
+  {
+    "name": "LineageConfig",
+    "qualified_name": "fabricops_kit.config.LineageConfig",
+    "module": "config",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/config.py",
+    "line_number": null
+  },
+  {
+    "name": "NotebookRuntimeConfig",
+    "qualified_name": "fabricops_kit.config.NotebookRuntimeConfig",
+    "module": "config",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/config.py",
+    "line_number": null
+  },
+  {
+    "name": "NotebookSetupContext",
+    "qualified_name": "fabricops_kit.config.NotebookSetupContext",
+    "module": "config",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [
+      "setup_notebook"
+    ],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/config.py",
+    "line_number": null
+  },
+  {
+    "name": "PathConfig",
+    "qualified_name": "fabricops_kit.config.PathConfig",
+    "module": "config",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/config.py",
+    "line_number": null
+  },
+  {
+    "name": "QualityConfig",
+    "qualified_name": "fabricops_kit.config.QualityConfig",
+    "module": "config",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/config.py",
+    "line_number": null
+  },
+  {
+    "name": "ReviewWorkflowConfig",
+    "qualified_name": "fabricops_kit.config.ReviewWorkflowConfig",
+    "module": "config",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/config.py",
+    "line_number": null
+  },
+  {
+    "name": "_bootstrap_fabric_env",
+    "qualified_name": "fabricops_kit.config._bootstrap_fabric_env",
+    "module": "config",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [
+      "load_config"
+    ],
+    "uses_internal_helpers": [
+      "ConfigBootstrapResult",
+      "_get_fabric_runtime_metadata",
+      "_get_store",
+      "_run_config_smoke_tests"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/config.py",
+    "line_number": null
+  },
+  {
+    "name": "_check_fabric_ai_functions_available",
+    "qualified_name": "fabricops_kit.config._check_fabric_ai_functions_available",
+    "module": "config",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/config.py",
+    "line_number": null
+  },
+  {
+    "name": "_check_spark_session",
+    "qualified_name": "fabricops_kit.config._check_spark_session",
+    "module": "config",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [
+      "_run_config_smoke_tests"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/config.py",
+    "line_number": null
+  },
+  {
+    "name": "_configure_fabric_ai_functions",
+    "qualified_name": "fabricops_kit.config._configure_fabric_ai_functions",
+    "module": "config",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/config.py",
+    "line_number": null
+  },
+  {
+    "name": "_default_schema_text",
+    "qualified_name": "fabricops_kit.config._default_schema_text",
+    "module": "config",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [
+      "_load_schema"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/config.py",
+    "line_number": null
+  },
+  {
+    "name": "_format_error_path",
+    "qualified_name": "fabricops_kit.config._format_error_path",
+    "module": "config",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [
+      "validate_dataset_contract"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/config.py",
+    "line_number": null
+  },
+  {
+    "name": "_get_fabric_runtime_metadata",
+    "qualified_name": "fabricops_kit.config._get_fabric_runtime_metadata",
+    "module": "config",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [
+      "_bootstrap_fabric_env",
+      "_run_config_smoke_tests"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/config.py",
+    "line_number": null
+  },
+  {
+    "name": "_get_store",
+    "qualified_name": "fabricops_kit.config._get_store",
+    "module": "config",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [
+      "setup_notebook",
+      "read_lakehouse_csv",
+      "read_lakehouse_excel",
+      "read_lakehouse_parquet",
+      "read_lakehouse_table",
+      "read_warehouse_table",
+      "write_lakehouse_table",
+      "write_warehouse_table"
+    ],
+    "used_by_internal_helpers": [
+      "_bootstrap_fabric_env",
+      "_run_config_smoke_tests"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/config.py",
+    "line_number": null
+  },
+  {
+    "name": "_load_schema",
+    "qualified_name": "fabricops_kit.config._load_schema",
+    "module": "config",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_default_schema_text"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [
+      "validate_dataset_contract"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/config.py",
+    "line_number": null
+  },
+  {
+    "name": "_normalize_name",
+    "qualified_name": "fabricops_kit.config._normalize_name",
+    "module": "config",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [
+      "_validate_notebook_name"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/config.py",
+    "line_number": null
+  },
+  {
+    "name": "_run_config_smoke_tests",
+    "qualified_name": "fabricops_kit.config._run_config_smoke_tests",
+    "module": "config",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "ConfigSmokeCheckResult",
+      "_check_spark_session",
+      "_get_fabric_runtime_metadata",
+      "_get_store",
+      "_validate_notebook_name"
+    ],
+    "used_by_callable_functions": [
+      "setup_notebook"
+    ],
+    "used_by_internal_helpers": [
+      "_bootstrap_fabric_env"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/config.py",
+    "line_number": null
+  },
+  {
+    "name": "_validate_framework_config",
+    "qualified_name": "fabricops_kit.config._validate_framework_config",
+    "module": "config",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "FrameworkConfig",
+      "keys"
+    ],
+    "used_by_callable_functions": [
+      "load_config"
+    ],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/config.py",
+    "line_number": null
+  },
+  {
+    "name": "_validate_notebook_name",
+    "qualified_name": "fabricops_kit.config._validate_notebook_name",
+    "module": "config",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_normalize_name"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [
+      "_run_config_smoke_tests"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/config.py",
+    "line_number": null
+  },
+  {
+    "name": "assert_valid_dataset_contract",
+    "qualified_name": "fabricops_kit.config.assert_valid_dataset_contract",
+    "module": "config",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "DatasetContractValidationError",
+      "validate_dataset_contract"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/config.py",
+    "line_number": null
+  },
+  {
+    "name": "load_and_validate_dataset_contract",
+    "qualified_name": "fabricops_kit.config.load_and_validate_dataset_contract",
+    "module": "config",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "load_dataset_contract",
+      "validate_dataset_contract"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/config.py",
+    "line_number": null
+  },
+  {
+    "name": "load_config",
+    "qualified_name": "fabricops_kit.config.load_config",
+    "module": "config",
+    "type": "callable",
+    "template_step": "\u2014",
+    "role": "essential",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_validate_framework_config"
+    ],
+    "used_by_callable_functions": [
+      "setup_notebook"
+    ],
+    "used_by_internal_helpers": [
+      "_bootstrap_fabric_env",
+      "load_config"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/config.py",
+    "line_number": null
+  },
+  {
+    "name": "load_dataset_contract",
+    "qualified_name": "fabricops_kit.config.load_dataset_contract",
+    "module": "config",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [
+      "load_and_validate_dataset_contract"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/config.py",
+    "line_number": null
+  },
+  {
+    "name": "setup_notebook",
+    "qualified_name": "fabricops_kit.config.setup_notebook",
+    "module": "config",
+    "type": "callable",
+    "template_step": "\u2014",
+    "role": "essential",
+    "calls_callable_functions": [
+      "load_config"
+    ],
+    "uses_internal_helpers": [
+      "NotebookSetupContext",
+      "_get_store",
+      "_run_config_smoke_tests"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/config.py",
+    "line_number": null
+  },
+  {
+    "name": "validate_dataset_contract",
+    "qualified_name": "fabricops_kit.config.validate_dataset_contract",
+    "module": "config",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_format_error_path",
+      "_load_schema"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [
+      "assert_valid_dataset_contract",
+      "load_and_validate_dataset_contract"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/config.py",
+    "line_number": null
+  },
+  {
+    "name": "_agreement_option_label",
+    "qualified_name": "fabricops_kit.data_agreement._agreement_option_label",
+    "module": "data_agreement",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [
+      "select_agreement"
+    ],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_agreement.py",
+    "line_number": null
+  },
+  {
+    "name": "_coerce_row_dicts",
+    "qualified_name": "fabricops_kit.data_agreement._coerce_row_dicts",
+    "module": "data_agreement",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [
+      "load_agreements",
+      "select_agreement"
+    ],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_agreement.py",
+    "line_number": null
+  },
+  {
+    "name": "_latest_distinct_agreements",
+    "qualified_name": "fabricops_kit.data_agreement._latest_distinct_agreements",
+    "module": "data_agreement",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [
+      "load_agreements"
+    ],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_agreement.py",
+    "line_number": null
+  },
+  {
+    "name": "get_selected_agreement",
+    "qualified_name": "fabricops_kit.data_agreement.get_selected_agreement",
+    "module": "data_agreement",
+    "type": "callable",
+    "template_step": "\u2014",
+    "role": "essential",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_agreement.py",
+    "line_number": null
+  },
+  {
+    "name": "load_agreements",
+    "qualified_name": "fabricops_kit.data_agreement.load_agreements",
+    "module": "data_agreement",
+    "type": "callable",
+    "template_step": "\u2014",
+    "role": "essential",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_coerce_row_dicts",
+      "_latest_distinct_agreements"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_agreement.py",
+    "line_number": null
+  },
+  {
+    "name": "select_agreement",
+    "qualified_name": "fabricops_kit.data_agreement.select_agreement",
+    "module": "data_agreement",
+    "type": "callable",
+    "template_step": "\u2014",
+    "role": "essential",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_agreement_option_label",
+      "_coerce_row_dicts"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_agreement.py",
+    "line_number": null
+  },
+  {
+    "name": "_approved_widget_rows",
+    "qualified_name": "fabricops_kit.data_governance._approved_widget_rows",
+    "module": "data_governance",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_resolve_action_by"
+    ],
+    "used_by_callable_functions": [
+      "write_governance"
+    ],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_governance.py",
+    "line_number": null
+  },
+  {
+    "name": "_build_governance_context",
+    "qualified_name": "fabricops_kit.data_governance._build_governance_context",
+    "module": "data_governance",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_governance.py",
+    "line_number": null
+  },
+  {
+    "name": "_coerce_row_dicts",
+    "qualified_name": "fabricops_kit.data_governance._coerce_row_dicts",
+    "module": "data_governance",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [
+      "load_governance"
+    ],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_governance.py",
+    "line_number": null
+  },
+  {
+    "name": "_extract_pii_suggestions",
+    "qualified_name": "fabricops_kit.data_governance._extract_pii_suggestions",
+    "module": "data_governance",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [
+      "extract_governance_suggestions"
+    ],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_governance.py",
+    "line_number": null
+  },
+  {
+    "name": "_prepare_governance_input",
+    "qualified_name": "fabricops_kit.data_governance._prepare_governance_input",
+    "module": "data_governance",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [
+      "prepare_governance_input"
+    ],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_governance.py",
+    "line_number": null
+  },
+  {
+    "name": "_undo_last_action",
+    "qualified_name": "fabricops_kit.data_governance._undo_last_action",
+    "module": "data_governance",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [
+      "review_governance"
+    ],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_governance.py",
+    "line_number": null
+  },
+  {
+    "name": "draft_governance",
+    "qualified_name": "fabricops_kit.data_governance.draft_governance",
+    "module": "data_governance",
+    "type": "callable",
+    "template_step": "\u2014",
+    "role": "essential",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_governance.py",
+    "line_number": null
+  },
+  {
+    "name": "extract_governance_suggestions",
+    "qualified_name": "fabricops_kit.data_governance.extract_governance_suggestions",
+    "module": "data_governance",
+    "type": "callable",
+    "template_step": "\u2014",
+    "role": "optional",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_extract_pii_suggestions"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_governance.py",
+    "line_number": null
+  },
+  {
+    "name": "load_governance",
+    "qualified_name": "fabricops_kit.data_governance.load_governance",
+    "module": "data_governance",
+    "type": "callable",
+    "template_step": "\u2014",
+    "role": "essential",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_coerce_row_dicts"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_governance.py",
+    "line_number": null
+  },
+  {
+    "name": "prepare_governance_input",
+    "qualified_name": "fabricops_kit.data_governance.prepare_governance_input",
+    "module": "data_governance",
+    "type": "callable",
+    "template_step": "\u2014",
+    "role": "optional",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_prepare_governance_input"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_governance.py",
+    "line_number": null
+  },
+  {
+    "name": "review_governance",
+    "qualified_name": "fabricops_kit.data_governance.review_governance",
+    "module": "data_governance",
+    "type": "callable",
+    "template_step": "\u2014",
+    "role": "essential",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_undo_last_action",
+      "_now_utc_iso",
+      "build_metadata_column_key",
+      "build_metadata_table_key"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_governance.py",
+    "line_number": null
+  },
+  {
+    "name": "write_governance",
+    "qualified_name": "fabricops_kit.data_governance.write_governance",
+    "module": "data_governance",
+    "type": "callable",
+    "template_step": "\u2014",
+    "role": "essential",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_approved_widget_rows"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_governance.py",
+    "line_number": null
+  },
+  {
+    "name": "_build_lineage_record_from_steps",
+    "qualified_name": "fabricops_kit.data_lineage._build_lineage_record_from_steps",
+    "module": "data_lineage",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_validate_lineage_steps"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [
+      "_build_lineage_records"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_lineage.py",
+    "line_number": null
+  },
+  {
+    "name": "_build_lineage_records",
+    "qualified_name": "fabricops_kit.data_lineage._build_lineage_records",
+    "module": "data_lineage",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_build_lineage_record_from_steps"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_lineage.py",
+    "line_number": null
+  },
+  {
+    "name": "_call_name",
+    "qualified_name": "fabricops_kit.data_lineage._call_name",
+    "module": "data_lineage",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [
+      "_scan_notebook_lineage"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_lineage.py",
+    "line_number": null
+  },
+  {
+    "name": "_enrich_lineage_steps_with_ai",
+    "qualified_name": "fabricops_kit.data_lineage._enrich_lineage_steps_with_ai",
+    "module": "data_lineage",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_fallback_copilot_lineage_prompt"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_lineage.py",
+    "line_number": null
+  },
+  {
+    "name": "_fallback_copilot_lineage_prompt",
+    "qualified_name": "fabricops_kit.data_lineage._fallback_copilot_lineage_prompt",
+    "module": "data_lineage",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [
+      "_enrich_lineage_steps_with_ai"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_lineage.py",
+    "line_number": null
+  },
+  {
+    "name": "_flatten_chain",
+    "qualified_name": "fabricops_kit.data_lineage._flatten_chain",
+    "module": "data_lineage",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_name"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [
+      "_scan_notebook_lineage"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_lineage.py",
+    "line_number": null
+  },
+  {
+    "name": "_literal",
+    "qualified_name": "fabricops_kit.data_lineage._literal",
+    "module": "data_lineage",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [
+      "_resolve_write_target"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_lineage.py",
+    "line_number": null
+  },
+  {
+    "name": "_name",
+    "qualified_name": "fabricops_kit.data_lineage._name",
+    "module": "data_lineage",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [
+      "_flatten_chain",
+      "_scan_notebook_lineage"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_lineage.py",
+    "line_number": null
+  },
+  {
+    "name": "_resolve_write_target",
+    "qualified_name": "fabricops_kit.data_lineage._resolve_write_target",
+    "module": "data_lineage",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_literal"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [
+      "_scan_notebook_lineage"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_lineage.py",
+    "line_number": null
+  },
+  {
+    "name": "_scan_notebook_cells",
+    "qualified_name": "fabricops_kit.data_lineage._scan_notebook_cells",
+    "module": "data_lineage",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_scan_notebook_lineage"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_lineage.py",
+    "line_number": null
+  },
+  {
+    "name": "_scan_notebook_lineage",
+    "qualified_name": "fabricops_kit.data_lineage._scan_notebook_lineage",
+    "module": "data_lineage",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_call_name",
+      "_flatten_chain",
+      "_name",
+      "_resolve_write_target",
+      "_step"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [
+      "_scan_notebook_cells"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_lineage.py",
+    "line_number": null
+  },
+  {
+    "name": "_step",
+    "qualified_name": "fabricops_kit.data_lineage._step",
+    "module": "data_lineage",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [
+      "_scan_notebook_lineage"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_lineage.py",
+    "line_number": null
+  },
+  {
+    "name": "_validate_lineage_steps",
+    "qualified_name": "fabricops_kit.data_lineage._validate_lineage_steps",
+    "module": "data_lineage",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [
+      "_build_lineage_record_from_steps"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_lineage.py",
+    "line_number": null
+  },
+  {
+    "name": "build_lineage_handover_markdown",
+    "qualified_name": "fabricops_kit.data_lineage.build_lineage_handover_markdown",
+    "module": "data_lineage",
+    "type": "callable",
+    "template_step": "\u2014",
+    "role": "essential",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_lineage.py",
+    "line_number": null
+  },
+  {
+    "name": "build_lineage_records",
+    "qualified_name": "fabricops_kit.data_lineage.build_lineage_records",
+    "module": "data_lineage",
+    "type": "callable",
+    "template_step": "\u2014",
+    "role": "essential",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_lineage.py",
+    "line_number": null
+  },
+  {
+    "name": "_get_profiled_columns",
+    "qualified_name": "fabricops_kit.data_profiling._get_profiled_columns",
+    "module": "data_profiling",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_default_technical_columns"
+    ],
+    "used_by_callable_functions": [
+      "profile_dataframe"
+    ],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_profiling.py",
+    "line_number": null
+  },
+  {
+    "name": "_is_min_max_supported_type",
+    "qualified_name": "fabricops_kit.data_profiling._is_min_max_supported_type",
+    "module": "data_profiling",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [
+      "profile_dataframe"
+    ],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_profiling.py",
+    "line_number": null
+  },
+  {
+    "name": "profile_dataframe",
+    "qualified_name": "fabricops_kit.data_profiling.profile_dataframe",
+    "module": "data_profiling",
+    "type": "callable",
+    "template_step": "\u2014",
+    "role": "essential",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_get_profiled_columns",
+      "_is_min_max_supported_type"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [
+      "_prepare_dq_profile_input_rows"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_profiling.py",
+    "line_number": null
+  },
+  {
+    "name": "DQEnforcementResult",
+    "qualified_name": "fabricops_kit.data_quality.DQEnforcementResult",
+    "module": "data_quality",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [
+      "enforce_dq"
+    ],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_quality.py",
+    "line_number": null
+  },
+  {
+    "name": "_approved_dq_rules_from_review_rows",
+    "qualified_name": "fabricops_kit.data_quality._approved_dq_rules_from_review_rows",
+    "module": "data_quality",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_quality.py",
+    "line_number": null
+  },
+  {
+    "name": "_attach_rule_metadata_keys",
+    "qualified_name": "fabricops_kit.data_quality._attach_rule_metadata_keys",
+    "module": "data_quality",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "build_dq_rule_key",
+      "build_metadata_column_key",
+      "build_metadata_table_key"
+    ],
+    "used_by_callable_functions": [
+      "get_dq_review_results"
+    ],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_quality.py",
+    "line_number": null
+  },
+  {
+    "name": "_build_dq_rule_deactivation_metadata_df",
+    "qualified_name": "fabricops_kit.data_quality._build_dq_rule_deactivation_metadata_df",
+    "module": "data_quality",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_now_utc_iso",
+      "_resolve_action_by"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_quality.py",
+    "line_number": null
+  },
+  {
+    "name": "_build_dq_rule_deactivations",
+    "qualified_name": "fabricops_kit.data_quality._build_dq_rule_deactivations",
+    "module": "data_quality",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_resolve_action_by"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_quality.py",
+    "line_number": null
+  },
+  {
+    "name": "_build_dq_rule_history",
+    "qualified_name": "fabricops_kit.data_quality._build_dq_rule_history",
+    "module": "data_quality",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_resolve_action_by"
+    ],
+    "used_by_callable_functions": [
+      "write_dq_rules"
+    ],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_quality.py",
+    "line_number": null
+  },
+  {
+    "name": "_build_dq_rules_metadata_df",
+    "qualified_name": "fabricops_kit.data_quality._build_dq_rules_metadata_df",
+    "module": "data_quality",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_now_utc_iso",
+      "_resolve_action_by"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_quality.py",
+    "line_number": null
+  },
+  {
+    "name": "_extract_candidate_rules_from_responses",
+    "qualified_name": "fabricops_kit.data_quality._extract_candidate_rules_from_responses",
+    "module": "data_quality",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_extract_dq_rules",
+      "_parse_dq_rules_dict_from_text"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_quality.py",
+    "line_number": null
+  },
+  {
+    "name": "_extract_dq_rules",
+    "qualified_name": "fabricops_kit.data_quality._extract_dq_rules",
+    "module": "data_quality",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_parse_dq_rules_dict_from_text"
+    ],
+    "used_by_callable_functions": [
+      "draft_dq_rules"
+    ],
+    "used_by_internal_helpers": [
+      "_extract_candidate_rules_from_responses"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_quality.py",
+    "line_number": null
+  },
+  {
+    "name": "_latest_dq_rule_versions",
+    "qualified_name": "fabricops_kit.data_quality._latest_dq_rule_versions",
+    "module": "data_quality",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [
+      "_load_active_dq_rule_metadata",
+      "_load_active_dq_rules"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_quality.py",
+    "line_number": null
+  },
+  {
+    "name": "_load_active_dq_rule_metadata",
+    "qualified_name": "fabricops_kit.data_quality._load_active_dq_rule_metadata",
+    "module": "data_quality",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_latest_dq_rule_versions"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_quality.py",
+    "line_number": null
+  },
+  {
+    "name": "_load_active_dq_rules",
+    "qualified_name": "fabricops_kit.data_quality._load_active_dq_rules",
+    "module": "data_quality",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_latest_dq_rule_versions"
+    ],
+    "used_by_callable_functions": [
+      "enforce_dq",
+      "load_dq_rules"
+    ],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_quality.py",
+    "line_number": null
+  },
+  {
+    "name": "_parse_dq_rules_dict_from_text",
+    "qualified_name": "fabricops_kit.data_quality._parse_dq_rules_dict_from_text",
+    "module": "data_quality",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [
+      "_extract_candidate_rules_from_responses",
+      "_extract_dq_rules"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_quality.py",
+    "line_number": null
+  },
+  {
+    "name": "_prepare_dq_profile_input_rows",
+    "qualified_name": "fabricops_kit.data_quality._prepare_dq_profile_input_rows",
+    "module": "data_quality",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [
+      "profile_dataframe"
+    ],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [
+      "draft_dq_rules"
+    ],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_quality.py",
+    "line_number": null
+  },
+  {
+    "name": "_prepare_dq_profile_rows_with_context",
+    "qualified_name": "fabricops_kit.data_quality._prepare_dq_profile_rows_with_context",
+    "module": "data_quality",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_quality.py",
+    "line_number": null
+  },
+  {
+    "name": "_profile_for_dq",
+    "qualified_name": "fabricops_kit.data_quality._profile_for_dq",
+    "module": "data_quality",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_quality.py",
+    "line_number": null
+  },
+  {
+    "name": "_require_ipywidgets",
+    "qualified_name": "fabricops_kit.data_quality._require_ipywidgets",
+    "module": "data_quality",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [
+      "review_dq_rule_deactivations",
+      "review_dq_rules"
+    ],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_quality.py",
+    "line_number": null
+  },
+  {
+    "name": "_run_dq_rules",
+    "qualified_name": "fabricops_kit.data_quality._run_dq_rules",
+    "module": "data_quality",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [
+      "validate_dq_rules"
+    ],
+    "uses_internal_helpers": [
+      "_split_dq_rows"
+    ],
+    "used_by_callable_functions": [
+      "enforce_dq"
+    ],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_quality.py",
+    "line_number": null
+  },
+  {
+    "name": "_split_dq_rows",
+    "qualified_name": "fabricops_kit.data_quality._split_dq_rows",
+    "module": "data_quality",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [
+      "validate_dq_rules"
+    ],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [
+      "enforce_dq"
+    ],
+    "used_by_internal_helpers": [
+      "_run_dq_rules"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_quality.py",
+    "line_number": null
+  },
+  {
+    "name": "_suggest_dq_rules",
+    "qualified_name": "fabricops_kit.data_quality._suggest_dq_rules",
+    "module": "data_quality",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [
+      "draft_dq_rules"
+    ],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_quality.py",
+    "line_number": null
+  },
+  {
+    "name": "_suggest_dq_rules_with_fabric_ai",
+    "qualified_name": "fabricops_kit.data_quality._suggest_dq_rules_with_fabric_ai",
+    "module": "data_quality",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_quality.py",
+    "line_number": null
+  },
+  {
+    "name": "assert_dq_passed",
+    "qualified_name": "fabricops_kit.data_quality.assert_dq_passed",
+    "module": "data_quality",
+    "type": "callable",
+    "template_step": "\u2014",
+    "role": "essential",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_quality.py",
+    "line_number": null
+  },
+  {
+    "name": "draft_dq_rules",
+    "qualified_name": "fabricops_kit.data_quality.draft_dq_rules",
+    "module": "data_quality",
+    "type": "callable",
+    "template_step": "02_exploration",
+    "role": "AI-assisted suggestion function",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_extract_dq_rules",
+      "_prepare_dq_profile_input_rows",
+      "_suggest_dq_rules"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [
+      "02_ex",
+      "data_quality_review"
+    ],
+    "debug_when": [
+      "AI-generated rules do not match business expectations",
+      "suggested rules are too generic"
+    ],
+    "source_file": "src/fabricops_kit/data_quality.py",
+    "line_number": null
+  },
+  {
+    "name": "enforce_dq",
+    "qualified_name": "fabricops_kit.data_quality.enforce_dq",
+    "module": "data_quality",
+    "type": "callable",
+    "template_step": "\u2014",
+    "role": "essential",
+    "calls_callable_functions": [
+      "validate_dq_rules"
+    ],
+    "uses_internal_helpers": [
+      "DQEnforcementResult",
+      "_load_active_dq_rules",
+      "_run_dq_rules",
+      "_split_dq_rows"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_quality.py",
+    "line_number": null
+  },
+  {
+    "name": "get_dq_review_results",
+    "qualified_name": "fabricops_kit.data_quality.get_dq_review_results",
+    "module": "data_quality",
+    "type": "callable",
+    "template_step": "\u2014",
+    "role": "essential",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_attach_rule_metadata_keys"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_quality.py",
+    "line_number": null
+  },
+  {
+    "name": "load_dq_rules",
+    "qualified_name": "fabricops_kit.data_quality.load_dq_rules",
+    "module": "data_quality",
+    "type": "callable",
+    "template_step": "\u2014",
+    "role": "essential",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_load_active_dq_rules"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_quality.py",
+    "line_number": null
+  },
+  {
+    "name": "review_dq_rule_deactivations",
+    "qualified_name": "fabricops_kit.data_quality.review_dq_rule_deactivations",
+    "module": "data_quality",
+    "type": "callable",
+    "template_step": "\u2014",
+    "role": "optional",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_require_ipywidgets"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_quality.py",
+    "line_number": null
+  },
+  {
+    "name": "review_dq_rules",
+    "qualified_name": "fabricops_kit.data_quality.review_dq_rules",
+    "module": "data_quality",
+    "type": "callable",
+    "template_step": "\u2014",
+    "role": "essential",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_require_ipywidgets"
+    ],
+    "used_by_callable_functions": [
+      "run_dq_rule_review_widget"
+    ],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_quality.py",
+    "line_number": null
+  },
+  {
+    "name": "run_dq_rule_review_widget",
+    "qualified_name": "fabricops_kit.data_quality.run_dq_rule_review_widget",
+    "module": "data_quality",
+    "type": "callable",
+    "template_step": "\u2014",
+    "role": "optional",
+    "calls_callable_functions": [
+      "review_dq_rules"
+    ],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_quality.py",
+    "line_number": null
+  },
+  {
+    "name": "validate_dq_rules",
+    "qualified_name": "fabricops_kit.data_quality.validate_dq_rules",
+    "module": "data_quality",
+    "type": "callable",
+    "template_step": "\u2014",
+    "role": "optional",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [
+      "enforce_dq",
+      "write_dq_rules"
+    ],
+    "used_by_internal_helpers": [
+      "_run_dq_rules",
+      "_split_dq_rows"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_quality.py",
+    "line_number": null
+  },
+  {
+    "name": "write_dq_rules",
+    "qualified_name": "fabricops_kit.data_quality.write_dq_rules",
+    "module": "data_quality",
+    "type": "callable",
+    "template_step": "\u2014",
+    "role": "essential",
+    "calls_callable_functions": [
+      "validate_dq_rules",
+      "write_lakehouse_table"
+    ],
+    "uses_internal_helpers": [
+      "_build_dq_rule_history"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/data_quality.py",
+    "line_number": null
+  },
+  {
+    "name": "ModuleDocMetadata",
+    "qualified_name": "fabricops_kit.docs_metadata.ModuleDocMetadata",
+    "module": "docs_metadata",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/docs_metadata.py",
+    "line_number": null
+  },
+  {
+    "name": "PublicSymbolDocMetadata",
+    "qualified_name": "fabricops_kit.docs_metadata.PublicSymbolDocMetadata",
+    "module": "docs_metadata",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/docs_metadata.py",
+    "line_number": null
+  },
+  {
+    "name": "TemplateFlowDocMetadata",
+    "qualified_name": "fabricops_kit.docs_metadata.TemplateFlowDocMetadata",
+    "module": "docs_metadata",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/docs_metadata.py",
+    "line_number": null
+  },
+  {
+    "name": "TemplateFlowSegmentMetadata",
+    "qualified_name": "fabricops_kit.docs_metadata.TemplateFlowSegmentMetadata",
+    "module": "docs_metadata",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/docs_metadata.py",
+    "line_number": null
+  },
+  {
+    "name": "IncrementalSafetyError",
+    "qualified_name": "fabricops_kit.drift.IncrementalSafetyError",
+    "module": "drift",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [
+      "assert_incremental_safe"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/drift.py",
+    "line_number": null
+  },
+  {
+    "name": "SchemaDriftError",
+    "qualified_name": "fabricops_kit.drift.SchemaDriftError",
+    "module": "drift",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [
+      "assert_no_blocking_schema_drift"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/drift.py",
+    "line_number": null
+  },
+  {
+    "name": "UnsupportedDataFrameEngineError",
+    "qualified_name": "fabricops_kit.drift.UnsupportedDataFrameEngineError",
+    "module": "drift",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [
+      "detect_dataframe_engine"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/drift.py",
+    "line_number": null
+  },
+  {
+    "name": "_build_pandas_partition_snapshot",
+    "qualified_name": "fabricops_kit.drift._build_pandas_partition_snapshot",
+    "module": "drift",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_to_jsonable",
+      "_build_partition_hash",
+      "_hash"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [
+      "build_partition_snapshot"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/drift.py",
+    "line_number": null
+  },
+  {
+    "name": "_build_pandas_schema_snapshot",
+    "qualified_name": "fabricops_kit.drift._build_pandas_schema_snapshot",
+    "module": "drift",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_column_hash"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [
+      "build_schema_snapshot"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/drift.py",
+    "line_number": null
+  },
+  {
+    "name": "_build_partition_hash",
+    "qualified_name": "fabricops_kit.drift._build_partition_hash",
+    "module": "drift",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_hash"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [
+      "_build_pandas_partition_snapshot",
+      "_build_spark_partition_snapshot"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/drift.py",
+    "line_number": null
+  },
+  {
+    "name": "_build_spark_partition_snapshot",
+    "qualified_name": "fabricops_kit.drift._build_spark_partition_snapshot",
+    "module": "drift",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_to_jsonable",
+      "_build_partition_hash"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [
+      "build_partition_snapshot"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/drift.py",
+    "line_number": null
+  },
+  {
+    "name": "_build_spark_schema_snapshot",
+    "qualified_name": "fabricops_kit.drift._build_spark_schema_snapshot",
+    "module": "drift",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_column_hash"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [
+      "build_schema_snapshot"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/drift.py",
+    "line_number": null
+  },
+  {
+    "name": "_column_hash",
+    "qualified_name": "fabricops_kit.drift._column_hash",
+    "module": "drift",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [
+      "_build_pandas_schema_snapshot",
+      "_build_spark_schema_snapshot"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/drift.py",
+    "line_number": null
+  },
+  {
+    "name": "_hash",
+    "qualified_name": "fabricops_kit.drift._hash",
+    "module": "drift",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [
+      "_build_pandas_partition_snapshot",
+      "_build_partition_hash"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/drift.py",
+    "line_number": null
+  },
+  {
+    "name": "_is_closed_partition",
+    "qualified_name": "fabricops_kit.drift._is_closed_partition",
+    "module": "drift",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [
+      "compare_partition_snapshots"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/drift.py",
+    "line_number": null
+  },
+  {
+    "name": "_is_missing_table_error",
+    "qualified_name": "fabricops_kit.drift._is_missing_table_error",
+    "module": "drift",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [
+      "load_latest_partition_snapshot",
+      "load_latest_schema_snapshot"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/drift.py",
+    "line_number": null
+  },
+  {
+    "name": "_json_dumps",
+    "qualified_name": "fabricops_kit.drift._json_dumps",
+    "module": "drift",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_to_jsonable"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [
+      "build_and_write_partition_snapshot",
+      "build_and_write_schema_snapshot",
+      "build_drift_evidence_record"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/drift.py",
+    "line_number": null
+  },
+  {
+    "name": "_resolve_change_behavior",
+    "qualified_name": "fabricops_kit.drift._resolve_change_behavior",
+    "module": "drift",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [
+      "compare_schema_snapshots"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/drift.py",
+    "line_number": null
+  },
+  {
+    "name": "_safe_spark_collect",
+    "qualified_name": "fabricops_kit.drift._safe_spark_collect",
+    "module": "drift",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [
+      "load_latest_partition_snapshot",
+      "load_latest_schema_snapshot"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/drift.py",
+    "line_number": null
+  },
+  {
+    "name": "_utc_now_iso",
+    "qualified_name": "fabricops_kit.drift._utc_now_iso",
+    "module": "drift",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [
+      "build_and_write_partition_snapshot",
+      "build_and_write_schema_snapshot",
+      "build_drift_evidence_record"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/drift.py",
+    "line_number": null
+  },
+  {
+    "name": "_write_metadata_rows",
+    "qualified_name": "fabricops_kit.drift._write_metadata_rows",
+    "module": "drift",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [
+      "build_and_write_partition_snapshot",
+      "build_and_write_schema_snapshot"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/drift.py",
+    "line_number": null
+  },
+  {
+    "name": "assert_incremental_safe",
+    "qualified_name": "fabricops_kit.drift.assert_incremental_safe",
+    "module": "drift",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "IncrementalSafetyError"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/drift.py",
+    "line_number": null
+  },
+  {
+    "name": "assert_no_blocking_schema_drift",
+    "qualified_name": "fabricops_kit.drift.assert_no_blocking_schema_drift",
+    "module": "drift",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "SchemaDriftError"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/drift.py",
+    "line_number": null
+  },
+  {
+    "name": "build_and_write_partition_snapshot",
+    "qualified_name": "fabricops_kit.drift.build_and_write_partition_snapshot",
+    "module": "drift",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_json_dumps",
+      "_utc_now_iso",
+      "_write_metadata_rows",
+      "build_partition_snapshot"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/drift.py",
+    "line_number": null
+  },
+  {
+    "name": "build_and_write_schema_snapshot",
+    "qualified_name": "fabricops_kit.drift.build_and_write_schema_snapshot",
+    "module": "drift",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_json_dumps",
+      "_utc_now_iso",
+      "_write_metadata_rows",
+      "build_schema_snapshot"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/drift.py",
+    "line_number": null
+  },
+  {
+    "name": "build_drift_evidence_record",
+    "qualified_name": "fabricops_kit.drift.build_drift_evidence_record",
+    "module": "drift",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_json_dumps",
+      "_utc_now_iso"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/drift.py",
+    "line_number": null
+  },
+  {
+    "name": "build_incremental_safety_records",
+    "qualified_name": "fabricops_kit.drift.build_incremental_safety_records",
+    "module": "drift",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_to_jsonable"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/drift.py",
+    "line_number": null
+  },
+  {
+    "name": "build_partition_snapshot",
+    "qualified_name": "fabricops_kit.drift.build_partition_snapshot",
+    "module": "drift",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_build_pandas_partition_snapshot",
+      "_build_spark_partition_snapshot",
+      "detect_dataframe_engine"
+    ],
+    "used_by_callable_functions": [
+      "check_partition_drift"
+    ],
+    "used_by_internal_helpers": [
+      "build_and_write_partition_snapshot"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/drift.py",
+    "line_number": null
+  },
+  {
+    "name": "build_schema_snapshot",
+    "qualified_name": "fabricops_kit.drift.build_schema_snapshot",
+    "module": "drift",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_build_pandas_schema_snapshot",
+      "_build_spark_schema_snapshot",
+      "detect_dataframe_engine"
+    ],
+    "used_by_callable_functions": [
+      "check_schema_drift"
+    ],
+    "used_by_internal_helpers": [
+      "build_and_write_schema_snapshot"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/drift.py",
+    "line_number": null
+  },
+  {
+    "name": "check_partition_drift",
+    "qualified_name": "fabricops_kit.drift.check_partition_drift",
+    "module": "drift",
+    "type": "callable",
+    "template_step": "\u2014",
+    "role": "optional",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "build_partition_snapshot",
+      "compare_partition_snapshots",
+      "default_incremental_safety_policy"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/drift.py",
+    "line_number": null
+  },
+  {
+    "name": "check_profile_drift",
+    "qualified_name": "fabricops_kit.drift.check_profile_drift",
+    "module": "drift",
+    "type": "callable",
+    "template_step": "\u2014",
+    "role": "optional",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/drift.py",
+    "line_number": null
+  },
+  {
+    "name": "check_schema_drift",
+    "qualified_name": "fabricops_kit.drift.check_schema_drift",
+    "module": "drift",
+    "type": "callable",
+    "template_step": "\u2014",
+    "role": "optional",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "build_schema_snapshot",
+      "compare_schema_snapshots",
+      "default_schema_drift_policy"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/drift.py",
+    "line_number": null
+  },
+  {
+    "name": "compare_partition_snapshots",
+    "qualified_name": "fabricops_kit.drift.compare_partition_snapshots",
+    "module": "drift",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_to_jsonable",
+      "_is_closed_partition",
+      "default_incremental_safety_policy"
+    ],
+    "used_by_callable_functions": [
+      "check_partition_drift"
+    ],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/drift.py",
+    "line_number": null
+  },
+  {
+    "name": "compare_schema_snapshots",
+    "qualified_name": "fabricops_kit.drift.compare_schema_snapshots",
+    "module": "drift",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_resolve_change_behavior",
+      "default_schema_drift_policy"
+    ],
+    "used_by_callable_functions": [
+      "check_schema_drift"
+    ],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/drift.py",
+    "line_number": null
+  },
+  {
+    "name": "default_incremental_safety_policy",
+    "qualified_name": "fabricops_kit.drift.default_incremental_safety_policy",
+    "module": "drift",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [
+      "check_partition_drift"
+    ],
+    "used_by_internal_helpers": [
+      "compare_partition_snapshots"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/drift.py",
+    "line_number": null
+  },
+  {
+    "name": "default_schema_drift_policy",
+    "qualified_name": "fabricops_kit.drift.default_schema_drift_policy",
+    "module": "drift",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [
+      "check_schema_drift"
+    ],
+    "used_by_internal_helpers": [
+      "compare_schema_snapshots"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/drift.py",
+    "line_number": null
+  },
+  {
+    "name": "detect_dataframe_engine",
+    "qualified_name": "fabricops_kit.drift.detect_dataframe_engine",
+    "module": "drift",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "UnsupportedDataFrameEngineError"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [
+      "build_partition_snapshot",
+      "build_schema_snapshot"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/drift.py",
+    "line_number": null
+  },
+  {
+    "name": "load_latest_partition_snapshot",
+    "qualified_name": "fabricops_kit.drift.load_latest_partition_snapshot",
+    "module": "drift",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_is_missing_table_error",
+      "_safe_spark_collect"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/drift.py",
+    "line_number": null
+  },
+  {
+    "name": "load_latest_schema_snapshot",
+    "qualified_name": "fabricops_kit.drift.load_latest_schema_snapshot",
+    "module": "drift",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_is_missing_table_error",
+      "_safe_spark_collect"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/drift.py",
+    "line_number": null
+  },
+  {
+    "name": "prepare_drift_baselines",
+    "qualified_name": "fabricops_kit.drift.prepare_drift_baselines",
+    "module": "drift",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/drift.py",
+    "line_number": null
+  },
+  {
+    "name": "summarize_drift_results",
+    "qualified_name": "fabricops_kit.drift.summarize_drift_results",
+    "module": "drift",
+    "type": "callable",
+    "template_step": "\u2014",
+    "role": "optional",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/drift.py",
+    "line_number": null
+  },
+  {
+    "name": "FabricStore",
+    "qualified_name": "fabricops_kit.fabric_input_output.FabricStore",
+    "module": "fabric_input_output",
+    "type": "callable",
+    "template_step": "\u2014",
+    "role": "optional",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/fabric_input_output.py",
+    "line_number": null
+  },
+  {
+    "name": "_convert_single_parquet_ns_to_us",
+    "qualified_name": "fabricops_kit.fabric_input_output._convert_single_parquet_ns_to_us",
+    "module": "fabric_input_output",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [
+      "read_lakehouse_parquet"
+    ],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/fabric_input_output.py",
+    "line_number": null
+  },
+  {
+    "name": "_get_fabric_runtime_context",
+    "qualified_name": "fabricops_kit.fabric_input_output._get_fabric_runtime_context",
+    "module": "fabric_input_output",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [
+      "check_naming_convention"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/fabric_input_output.py",
+    "line_number": null
+  },
+  {
+    "name": "_get_spark",
+    "qualified_name": "fabricops_kit.fabric_input_output._get_spark",
+    "module": "fabric_input_output",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [
+      "read_lakehouse_csv",
+      "read_lakehouse_excel",
+      "read_lakehouse_parquet",
+      "read_lakehouse_table",
+      "read_warehouse_table"
+    ],
+    "used_by_internal_helpers": [
+      "seed_minimal_sample_source_table"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/fabric_input_output.py",
+    "line_number": null
+  },
+  {
+    "name": "check_naming_convention",
+    "qualified_name": "fabricops_kit.fabric_input_output.check_naming_convention",
+    "module": "fabric_input_output",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_get_fabric_runtime_context"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/fabric_input_output.py",
+    "line_number": null
+  },
+  {
+    "name": "load_config",
+    "qualified_name": "fabricops_kit.fabric_input_output.load_config",
+    "module": "fabric_input_output",
+    "type": "internal",
+    "template_step": "\u2014",
+    "role": "internal",
+    "calls_callable_functions": [
+      "load_config"
+    ],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/fabric_input_output.py",
+    "line_number": null
+  },
+  {
+    "name": "read_lakehouse_csv",
+    "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_csv",
+    "module": "fabric_input_output",
+    "type": "callable",
+    "template_step": "\u2014",
+    "role": "optional",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_get_store",
+      "_get_spark"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/fabric_input_output.py",
+    "line_number": null
+  },
+  {
+    "name": "read_lakehouse_excel",
+    "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_excel",
+    "module": "fabric_input_output",
+    "type": "callable",
+    "template_step": "\u2014",
+    "role": "optional",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_get_store",
+      "_get_spark"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/fabric_input_output.py",
+    "line_number": null
+  },
+  {
+    "name": "read_lakehouse_parquet",
+    "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_parquet",
+    "module": "fabric_input_output",
+    "type": "callable",
+    "template_step": "\u2014",
+    "role": "optional",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_get_store",
+      "_convert_single_parquet_ns_to_us",
+      "_get_spark"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/fabric_input_output.py",
+    "line_number": null
+  },
+  {
+    "name": "read_lakehouse_table",
+    "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_table",
+    "module": "fabric_input_output",
+    "type": "callable",
+    "template_step": "\u2014",
+    "role": "essential",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_get_store",
+      "_get_spark"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/fabric_input_output.py",
+    "line_number": null
+  },
+  {
+    "name": "read_warehouse_table",
+    "qualified_name": "fabricops_kit.fabric_input_output.read_warehouse_table",
+    "module": "fabric_input_output",
+    "type": "callable",
+    "template_step": "\u2014",
+    "role": "essential",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_get_store",
+      "_get_spark"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/fabric_input_output.py",
+    "line_number": null
+  },
+  {
+    "name": "seed_minimal_sample_source_table",
+    "qualified_name": "fabricops_kit.fabric_input_output.seed_minimal_sample_source_table",
+    "module": "fabric_input_output",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [
+      "write_lakehouse_table"
+    ],
+    "uses_internal_helpers": [
+      "_get_spark"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/fabric_input_output.py",
+    "line_number": null
+  },
+  {
+    "name": "write_lakehouse_table",
+    "qualified_name": "fabricops_kit.fabric_input_output.write_lakehouse_table",
+    "module": "fabric_input_output",
+    "type": "callable",
+    "template_step": "\u2014",
+    "role": "essential",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_get_store"
+    ],
+    "used_by_callable_functions": [
+      "write_dq_rules"
+    ],
+    "used_by_internal_helpers": [
+      "seed_minimal_sample_source_table",
+      "write_metadata_rows"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/fabric_input_output.py",
+    "line_number": null
+  },
+  {
+    "name": "write_warehouse_table",
+    "qualified_name": "fabricops_kit.fabric_input_output.write_warehouse_table",
+    "module": "fabric_input_output",
+    "type": "callable",
+    "template_step": "\u2014",
+    "role": "essential",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_get_store"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/fabric_input_output.py",
+    "line_number": null
+  },
+  {
+    "name": "_status_of",
+    "qualified_name": "fabricops_kit.handover._status_of",
+    "module": "handover",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [
+      "render_handover_markdown"
+    ],
+    "used_by_internal_helpers": [
+      "build_handover_record"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/handover.py",
+    "line_number": null
+  },
+  {
+    "name": "build_handover",
+    "qualified_name": "fabricops_kit.handover.build_handover",
+    "module": "handover",
+    "type": "callable",
+    "template_step": "\u2014",
+    "role": "essential",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/handover.py",
+    "line_number": null
+  },
+  {
+    "name": "build_handover_record",
+    "qualified_name": "fabricops_kit.handover.build_handover_record",
+    "module": "handover",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [
+      "render_handover_markdown"
+    ],
+    "uses_internal_helpers": [
+      "_status_of"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/handover.py",
+    "line_number": null
+  },
+  {
+    "name": "render_handover_markdown",
+    "qualified_name": "fabricops_kit.handover.render_handover_markdown",
+    "module": "handover",
+    "type": "callable",
+    "template_step": "\u2014",
+    "role": "essential",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_status_of"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [
+      "build_handover_record"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/handover.py",
+    "line_number": null
+  },
+  {
+    "name": "_context_get",
+    "qualified_name": "fabricops_kit.metadata._context_get",
+    "module": "metadata",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [
+      "register_current_notebook"
+    ],
+    "used_by_internal_helpers": [
+      "_resolve_action_by",
+      "_runtime_context"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/metadata.py",
+    "line_number": null
+  },
+  {
+    "name": "_extract_columns_from_profile",
+    "qualified_name": "fabricops_kit.metadata._extract_columns_from_profile",
+    "module": "metadata",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/metadata.py",
+    "line_number": null
+  },
+  {
+    "name": "_key_part",
+    "qualified_name": "fabricops_kit.metadata._key_part",
+    "module": "metadata",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [
+      "_sha256_key"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/metadata.py",
+    "line_number": null
+  },
+  {
+    "name": "_now_utc_iso",
+    "qualified_name": "fabricops_kit.metadata._now_utc_iso",
+    "module": "metadata",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [
+      "review_governance"
+    ],
+    "used_by_internal_helpers": [
+      "_build_dq_rule_deactivation_metadata_df",
+      "_build_dq_rules_metadata_df",
+      "build_evidence_row"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/metadata.py",
+    "line_number": null
+  },
+  {
+    "name": "_resolve_action_by",
+    "qualified_name": "fabricops_kit.metadata._resolve_action_by",
+    "module": "metadata",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_context_get",
+      "_runtime_context"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [
+      "_approved_widget_rows",
+      "_build_dq_rule_deactivation_metadata_df",
+      "_build_dq_rule_deactivations",
+      "_build_dq_rule_history",
+      "_build_dq_rules_metadata_df"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/metadata.py",
+    "line_number": null
+  },
+  {
+    "name": "_runtime_context",
+    "qualified_name": "fabricops_kit.metadata._runtime_context",
+    "module": "metadata",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_context_get"
+    ],
+    "used_by_callable_functions": [
+      "register_current_notebook"
+    ],
+    "used_by_internal_helpers": [
+      "_resolve_action_by"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/metadata.py",
+    "line_number": null
+  },
+  {
+    "name": "_safe_str",
+    "qualified_name": "fabricops_kit.metadata._safe_str",
+    "module": "metadata",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [
+      "register_current_notebook"
+    ],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/metadata.py",
+    "line_number": null
+  },
+  {
+    "name": "_sha256_key",
+    "qualified_name": "fabricops_kit.metadata._sha256_key",
+    "module": "metadata",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_key_part"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [
+      "build_dq_rule_key",
+      "build_metadata_column_key",
+      "build_metadata_table_key"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/metadata.py",
+    "line_number": null
+  },
+  {
+    "name": "build_dq_rule_key",
+    "qualified_name": "fabricops_kit.metadata.build_dq_rule_key",
+    "module": "metadata",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_sha256_key"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [
+      "_attach_rule_metadata_keys"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/metadata.py",
+    "line_number": null
+  },
+  {
+    "name": "build_evidence_row",
+    "qualified_name": "fabricops_kit.metadata.build_evidence_row",
+    "module": "metadata",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_now_utc_iso"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/metadata.py",
+    "line_number": null
+  },
+  {
+    "name": "build_metadata_column_key",
+    "qualified_name": "fabricops_kit.metadata.build_metadata_column_key",
+    "module": "metadata",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_sha256_key"
+    ],
+    "used_by_callable_functions": [
+      "review_business_context",
+      "review_governance"
+    ],
+    "used_by_internal_helpers": [
+      "_attach_rule_metadata_keys"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/metadata.py",
+    "line_number": null
+  },
+  {
+    "name": "build_metadata_table_key",
+    "qualified_name": "fabricops_kit.metadata.build_metadata_table_key",
+    "module": "metadata",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_sha256_key"
+    ],
+    "used_by_callable_functions": [
+      "review_business_context",
+      "review_governance"
+    ],
+    "used_by_internal_helpers": [
+      "_attach_rule_metadata_keys"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/metadata.py",
+    "line_number": null
+  },
+  {
+    "name": "column_context_rows_for_spark",
+    "qualified_name": "fabricops_kit.metadata.column_context_rows_for_spark",
+    "module": "metadata",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [
+      "write_metadata_rows"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/metadata.py",
+    "line_number": null
+  },
+  {
+    "name": "default_evidence_types",
+    "qualified_name": "fabricops_kit.metadata.default_evidence_types",
+    "module": "metadata",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/metadata.py",
+    "line_number": null
+  },
+  {
+    "name": "load_notebook_registry",
+    "qualified_name": "fabricops_kit.metadata.load_notebook_registry",
+    "module": "metadata",
+    "type": "callable",
+    "template_step": "\u2014",
+    "role": "essential",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/metadata.py",
+    "line_number": null
+  },
+  {
+    "name": "normalise_records_by_column",
+    "qualified_name": "fabricops_kit.metadata.normalise_records_by_column",
+    "module": "metadata",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/metadata.py",
+    "line_number": null
+  },
+  {
+    "name": "register_current_notebook",
+    "qualified_name": "fabricops_kit.metadata.register_current_notebook",
+    "module": "metadata",
+    "type": "callable",
+    "template_step": "\u2014",
+    "role": "essential",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_context_get",
+      "_runtime_context",
+      "_safe_str",
+      "write_metadata_rows"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/metadata.py",
+    "line_number": null
+  },
+  {
+    "name": "write_column_business_context",
+    "qualified_name": "fabricops_kit.metadata.write_column_business_context",
+    "module": "metadata",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "write_metadata_rows"
+    ],
+    "used_by_callable_functions": [
+      "write_business_context"
+    ],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/metadata.py",
+    "line_number": null
+  },
+  {
+    "name": "write_column_governance_context",
+    "qualified_name": "fabricops_kit.metadata.write_column_governance_context",
+    "module": "metadata",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "write_metadata_rows"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/metadata.py",
+    "line_number": null
+  },
+  {
+    "name": "write_metadata_rows",
+    "qualified_name": "fabricops_kit.metadata.write_metadata_rows",
+    "module": "metadata",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [
+      "write_lakehouse_table"
+    ],
+    "uses_internal_helpers": [
+      "column_context_rows_for_spark"
+    ],
+    "used_by_callable_functions": [
+      "register_current_notebook"
+    ],
+    "used_by_internal_helpers": [
+      "write_column_business_context",
+      "write_column_governance_context"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/metadata.py",
+    "line_number": null
+  },
+  {
+    "name": "_add_audit_columns",
+    "qualified_name": "fabricops_kit.technical_columns._add_audit_columns",
+    "module": "technical_columns",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_assert_columns_exist",
+      "_bucket_values_pandas",
+      "_get_fabric_runtime_context"
+    ],
+    "used_by_callable_functions": [
+      "standardize_columns"
+    ],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/technical_columns.py",
+    "line_number": null
+  },
+  {
+    "name": "_add_datetime_features",
+    "qualified_name": "fabricops_kit.technical_columns._add_datetime_features",
+    "module": "technical_columns",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_assert_columns_exist"
+    ],
+    "used_by_callable_functions": [
+      "standardize_columns"
+    ],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/technical_columns.py",
+    "line_number": null
+  },
+  {
+    "name": "_add_hash_columns",
+    "qualified_name": "fabricops_kit.technical_columns._add_hash_columns",
+    "module": "technical_columns",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_assert_columns_exist",
+      "_hash_row",
+      "_non_technical_columns"
+    ],
+    "used_by_callable_functions": [
+      "standardize_columns"
+    ],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/technical_columns.py",
+    "line_number": null
+  },
+  {
+    "name": "_assert_columns_exist",
+    "qualified_name": "fabricops_kit.technical_columns._assert_columns_exist",
+    "module": "technical_columns",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [
+      "_add_audit_columns",
+      "_add_datetime_features",
+      "_add_hash_columns"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/technical_columns.py",
+    "line_number": null
+  },
+  {
+    "name": "_bucket_values_pandas",
+    "qualified_name": "fabricops_kit.technical_columns._bucket_values_pandas",
+    "module": "technical_columns",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_safe_string"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [
+      "_add_audit_columns"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/technical_columns.py",
+    "line_number": null
+  },
+  {
+    "name": "_default_technical_columns",
+    "qualified_name": "fabricops_kit.technical_columns._default_technical_columns",
+    "module": "technical_columns",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [
+      "_get_profiled_columns",
+      "_non_technical_columns"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/technical_columns.py",
+    "line_number": null
+  },
+  {
+    "name": "_get_fabric_runtime_context",
+    "qualified_name": "fabricops_kit.technical_columns._get_fabric_runtime_context",
+    "module": "technical_columns",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [
+      "_add_audit_columns"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/technical_columns.py",
+    "line_number": null
+  },
+  {
+    "name": "_hash_row",
+    "qualified_name": "fabricops_kit.technical_columns._hash_row",
+    "module": "technical_columns",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_safe_string"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [
+      "_add_hash_columns"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/technical_columns.py",
+    "line_number": null
+  },
+  {
+    "name": "_non_technical_columns",
+    "qualified_name": "fabricops_kit.technical_columns._non_technical_columns",
+    "module": "technical_columns",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_default_technical_columns"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [
+      "_add_hash_columns"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/technical_columns.py",
+    "line_number": null
+  },
+  {
+    "name": "_safe_string",
+    "qualified_name": "fabricops_kit.technical_columns._safe_string",
+    "module": "technical_columns",
+    "type": "internal",
+    "template_step": "unknown",
+    "role": "internal",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [
+      "_bucket_values_pandas",
+      "_hash_row"
+    ],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/technical_columns.py",
+    "line_number": null
+  },
+  {
+    "name": "standardize_columns",
+    "qualified_name": "fabricops_kit.technical_columns.standardize_columns",
+    "module": "technical_columns",
+    "type": "callable",
+    "template_step": "\u2014",
+    "role": "essential",
+    "calls_callable_functions": [],
+    "uses_internal_helpers": [
+      "_add_audit_columns",
+      "_add_datetime_features",
+      "_add_hash_columns"
+    ],
+    "used_by_callable_functions": [],
+    "used_by_internal_helpers": [],
+    "related_templates": [],
+    "debug_when": [],
+    "source_file": "src/fabricops_kit/technical_columns.py",
+    "line_number": null
+  }
+]

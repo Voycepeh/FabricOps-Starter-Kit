@@ -38,8 +38,10 @@ nav:
       - Run in Fabric: setup/run-in-fabric.md
   - Functions:
       - Function Usage Guide: reference/function-usage-guide.md
-      - Function Reference: reference/index.md
-      - Interactive Call Graph: reference/call-graph.md
+      - Template Function Map: reference/template-function-map.md
+      - Callable Function Reference: reference/index.md
+      - Agent Function Manifest: reference/agent-manifest.json
+      - Experimental Dependency Explorer: reference/call-graph.md
       - Modules:
       # AUTO-GENERATED-MODULES-START
           - config: api/modules/config.md
