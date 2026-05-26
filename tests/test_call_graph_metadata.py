@@ -96,6 +96,9 @@ def test_call_graph_page_contains_canvas_and_status_text():
         "setMode('function')",
         'data-action="clear"',
         'function clearSelection()',
+        'const action = e.target?.dataset?.action;',
+        "if (action === 'clear')",
+        "clearSelection();",
         "url.searchParams.delete('function')",
         'selectedNodeId = null',
         "searchInput.value = ''",
@@ -107,6 +110,8 @@ def test_call_graph_page_contains_canvas_and_status_text():
         "focusedLayout.innerHTML = '<p class=\"call-graph-empty\">Select a function to open Focused view.</p>'",
     ]:
         assert script_fragment in js
+
+    assert js.index('const action = e.target?.dataset?.action;') < js.index('const mode = e.target?.dataset?.mode; if (!mode) return;')
 
 
 def test_call_graph_page_css_has_wide_layout_overrides():

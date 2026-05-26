@@ -143,13 +143,17 @@
     }
 
     toolbar.addEventListener('click', (e) => {
+      const action = e.target?.dataset?.action;
+      if (action === 'clear') {
+        clearSelection();
+        return;
+      }
       const mode = e.target?.dataset?.mode; if (!mode) return;
       if (mode === 'full') { selectedModuleOnly = null; setMode('full'); updateMapVisibility(); applyConnectorVisibility(); focusedLayout.innerHTML=''; }
       if (mode === 'function') {
         if (selectedNodeId) { setMode('function'); renderFocusedFunction(selectedNodeId); }
         else { focusedLayout.innerHTML = '<p class="call-graph-empty">Focused view needs a selected function. Use search or click a function chip.</p>'; setMode(selectedModuleOnly ? 'module' : 'full'); }
       }
-      if (e.target?.dataset?.action === 'clear') clearSelection();
     });
 
     canvas.addEventListener('keydown', (e) => {
