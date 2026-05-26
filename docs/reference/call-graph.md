@@ -20,3 +20,5 @@ Explore callable relationships across modules.
 </div>
 
 > Tip: add `?function=fabricops_kit.config.load_fabric_config` to preselect a node.
+
+<!-- pages-redeploy: trigger after PR #321 -->
