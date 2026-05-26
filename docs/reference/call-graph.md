@@ -9,6 +9,13 @@ Explore callable relationships across modules.
   <div id="call-graph-search-results" class="call-graph-search-results" aria-live="polite"></div>
   <p id="call-graph-search-empty" class="call-graph-search-empty" hidden>No matching function found.</p>
 </div>
+<div class="call-graph-legend" aria-label="Call graph legend">
+<span class="call-graph-legend-item is-selected">selected</span>
+<span class="call-graph-legend-item is-connector">connector</span>
+<span class="call-graph-legend-item is-helper">internal helper</span>
+<span class="call-graph-legend-item is-inbound">inbound</span>
+<span class="call-graph-legend-item is-outbound">outbound</span>
+</div>
 <div id="call-graph-canvas" class="call-graph-canvas" aria-label="Interactive call graph canvas" tabindex="0"></div>
 </div>
 

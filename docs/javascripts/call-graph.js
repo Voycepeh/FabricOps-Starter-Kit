@@ -18,7 +18,7 @@
     const nodeRecords = []; const edgeRecords = []; const moduleEdges = new Map(); const inbound = new Map(); const outbound = new Map(); const byModule = new Map();
     for (const [id, c] of entries) {
       const module = c.module || 'unknown'; const shortName = c.short_name || c.callable || id;
-      const rec = { id, qn: id, label: shortName, module, searchLabel: `${module}.${shortName}` };
+      const rec = { id, qn: id, label: shortName, module, role: c.classification || 'internal', searchLabel: `${module}.${shortName}` };
       nodeRecords.push(rec); if (!byModule.has(module)) byModule.set(module, []); byModule.get(module).push(rec); inbound.set(id, new Set()); outbound.set(id, new Set());
     }
     const knownNodes = new Set(nodeRecords.map((n) => n.id));
@@ -74,9 +74,13 @@
     function applyConnectorVisibility() {
       for (const rec of nodeRecords) {
         const chip = functionToChip.get(rec.qn); if (!chip) continue;
-        const hasCrossModuleRelation = [...(inbound.get(rec.qn) || [])].some((qn) => getRecord(qn)?.module !== rec.module)
-          || [...(outbound.get(rec.qn) || [])].some((qn) => getRecord(qn)?.module !== rec.module);
+        const inboundCross = [...(inbound.get(rec.qn) || [])].some((qn) => getRecord(qn)?.module !== rec.module);
+        const outboundCross = [...(outbound.get(rec.qn) || [])].some((qn) => getRecord(qn)?.module !== rec.module);
+        const hasCrossModuleRelation = inboundCross || outboundCross;
         chip.classList.toggle('is-connector', hasCrossModuleRelation);
+        chip.classList.toggle('is-public', rec.role === 'essential' || rec.role === 'optional');
+        chip.classList.toggle('is-internal', rec.role !== 'essential' && rec.role !== 'optional');
+        chip.dataset.connectorDirection = inboundCross && outboundCross ? 'in-out' : inboundCross ? 'inbound' : outboundCross ? 'outbound' : '';
         const moduleCard = chip.closest('.call-graph-module');
         const show = moduleCard?.classList.contains('is-expanded') || hasCrossModuleRelation || currentMode === 'function' || currentMode === 'module';
         chip.classList.toggle('is-hidden', !show);

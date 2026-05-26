@@ -75,6 +75,7 @@ def test_call_graph_page_contains_canvas_and_status_text():
     assert 'class="call-graph-page"' in page
     assert 'id="call-graph-search-results"' in page
     assert 'id="call-graph-search-empty"' in page
+    assert 'class="call-graph-legend"' in page
 
     assert 'No matching function found.' in page
 
@@ -104,6 +105,9 @@ def test_call_graph_page_contains_canvas_and_status_text():
         "searchInput.value = ''",
         'updateClearButtonVisibility',
         "Relationship view",
+        'connectorDirection',
+        'is-public',
+        'is-internal',
         'moduleEdges',
         'Show all functions',
         "currentMode === 'full'",
@@ -119,6 +123,8 @@ def test_call_graph_page_css_has_wide_layout_overrides():
     assert '.call-graph-page .call-graph-canvas{min-height:calc(100vh - 13rem)' in css
     assert '.md-content:has(.call-graph-page) .md-sidebar--secondary{display:none}' in css
     assert '.call-graph-modules{position:relative;z-index:2;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));' in css
+    assert '.call-graph-legend{' in css
+    assert '.call-graph-function-chip[data-connector-direction="in-out"]::after' in css
 
 
 def test_dependency_metadata_contains_module_grouping_keys():
