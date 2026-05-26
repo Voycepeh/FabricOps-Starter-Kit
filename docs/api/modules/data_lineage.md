@@ -121,7 +121,6 @@ Owns source-to-target lineage and transformation evidence.
 
 ### Callable relationships
 
-<p><a href="../../reference/call-graph/?module=fabricops_kit.data_lineage" class="md-button md-button--primary">Open interactive module graph</a></p>
 
 #### Inside this module
 

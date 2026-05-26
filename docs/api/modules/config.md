@@ -121,7 +121,6 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
 
 ### Callable relationships
 
-<p><a href="../../reference/call-graph/?module=fabricops_kit.config" class="md-button md-button--primary">Open interactive module graph</a></p>
 
 #### Inside this module
 

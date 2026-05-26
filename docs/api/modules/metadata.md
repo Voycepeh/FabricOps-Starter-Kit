@@ -96,7 +96,6 @@ Owns metadata/contract store access, evidence persistence, agreement metadata, n
 
 ### Callable relationships
 
-<p><a href="../../reference/call-graph/?module=fabricops_kit.metadata" class="md-button md-button--primary">Open interactive module graph</a></p>
 
 #### Inside this module
 

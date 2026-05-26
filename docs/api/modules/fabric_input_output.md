@@ -111,7 +111,6 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
 
 ### Callable relationships
 
-<p><a href="../../reference/call-graph/?module=fabricops_kit.fabric_input_output" class="md-button md-button--primary">Open interactive module graph</a></p>
 
 #### Inside this module
 

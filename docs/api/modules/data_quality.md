@@ -207,7 +207,6 @@ Split a Spark DataFrame into pass/quarantine outputs for row-level DQ rules.
 
 ### Callable relationships
 
-<p><a href="../../reference/call-graph/?module=fabricops_kit.data_quality" class="md-button md-button--primary">Open interactive module graph</a></p>
 
 #### Inside this module
 

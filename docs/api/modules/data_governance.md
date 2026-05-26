@@ -116,7 +116,6 @@ Owns sensitivity, PII, confidentiality, policy labels, and governance approval e
 
 ### Callable relationships
 
-<p><a href="../../reference/call-graph/?module=fabricops_kit.data_governance" class="md-button md-button--primary">Open interactive module graph</a></p>
 
 #### Inside this module
 
