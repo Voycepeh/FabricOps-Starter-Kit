@@ -30,8 +30,40 @@ jobs:
         run: python -m mkdocs build
 
       - name: Deploy site to gh-pages branch
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./site
-          publish_branch: gh-pages
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git fetch origin gh-pages || true
+
+          temp_dir="$(mktemp -d)"
+
+          if git show-ref --verify --quiet refs/remotes/origin/gh-pages; then
+            git worktree add "$temp_dir" origin/gh-pages
+          else
+            git worktree add --detach "$temp_dir"
+            (
+              cd "$temp_dir"
+              git switch --orphan gh-pages
+              git rm -rf . >/dev/null 2>&1 || true
+            )
+          fi
+
+          rsync -a --delete site/ "$temp_dir"/
+          touch "$temp_dir/.nojekyll"
+
+          (
+            cd "$temp_dir"
+            git add -A
+            if git diff --cached --quiet; then
+              echo "No changes to deploy."
+            else
+              git commit -m "Deploy docs from ${GITHUB_SHA}"
+              git push origin HEAD:gh-pages
+            fi
+          )
+
+          git worktree remove "$temp_dir" --force
