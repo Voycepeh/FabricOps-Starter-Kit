@@ -31,6 +31,8 @@ jobs:
 
       - name: Deploy site to gh-pages branch
         shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
 
