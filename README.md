@@ -9,6 +9,14 @@ FabricOps Starter Kit helps teams run governed Fabric notebook workflows by turn
 </div>
 
 
+## Documentation deployment configuration
+
+Docs deployment uses a branch-based GitHub Pages flow that publishes the generated MkDocs `site/` output to the `gh-pages` branch. In repository **Settings → Pages**, set:
+
+- **Source**: Deploy from a branch
+- **Branch**: `gh-pages`
+- **Folder**: `/` (root)
+
 ## Why this starter kit exists
 
 ![Before vs after using the starter kit](docs/assets/before-after.png)
