@@ -692,7 +692,6 @@ def main() -> None:
         ]
         module_edge_pairs = sorted(set(module_edges))
         lines.extend(["", "### Callable relationships", ""])
-        lines.append(f'<p><a href="../../reference/call-graph/?module=fabricops_kit.{module}" class="md-button md-button--primary">Open interactive module graph</a></p>')
         inside_rows = [(s, d) for s, d in module_edge_pairs if _module_name(s) == actual_module and _module_name(d) == actual_module]
         used_by_rows = [(s, d) for s, d in module_edge_pairs if _module_name(s) != actual_module and _module_name(d) == actual_module]
         uses_rows = [(s, d) for s, d in module_edge_pairs if _module_name(s) == actual_module and _module_name(d) != actual_module]
@@ -910,13 +909,22 @@ def main() -> None:
         "",
         "Explore callable relationships across modules.",
         "",
+        '<div class="call-graph-page">',
         "<div class=\"call-graph-toolbar\">",
         '  <label for="call-graph-search"><strong>Search function:</strong></label>',
         '  <input id="call-graph-search" type="search" placeholder="e.g. load_fabric_config or fabricops_kit.config.load_fabric_config" />',
         '  <div id="call-graph-search-results" class="call-graph-search-results" aria-live="polite"></div>',
         '  <p id="call-graph-search-empty" class="call-graph-search-empty" hidden>No matching function found.</p>',
         "</div>",
-        '<div id="call-graph-canvas" class="call-graph-canvas" aria-label="Interactive call graph canvas"></div>',
+        '<div class="call-graph-legend" aria-label="Call graph legend">',
+        '<span class="call-graph-legend-item is-selected">selected</span>',
+        '<span class="call-graph-legend-item is-connector">connector</span>',
+        '<span class="call-graph-legend-item is-helper">internal helper</span>',
+        '<span class="call-graph-legend-item is-inbound">inbound</span>',
+        '<span class="call-graph-legend-item is-outbound">outbound</span>',
+        '</div>',
+        '<div id="call-graph-canvas" class="call-graph-canvas" aria-label="Interactive call graph canvas" tabindex="0"></div>',
+        '</div>',
         "",
         "> Tip: add `?function=fabricops_kit.config.load_fabric_config` to preselect a node.",
     ]

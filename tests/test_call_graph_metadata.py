@@ -71,8 +71,11 @@ def test_docs_url_points_to_generated_reference_routes():
 def test_call_graph_page_contains_canvas_and_status_text():
     page = Path('docs/reference/call-graph.md').read_text(encoding='utf-8')
     assert 'id="call-graph-canvas"' in page
+    assert 'tabindex="0"' in page
+    assert 'class="call-graph-page"' in page
     assert 'id="call-graph-search-results"' in page
     assert 'id="call-graph-search-empty"' in page
+    assert 'class="call-graph-legend"' in page
 
     assert 'No matching function found.' in page
 
@@ -92,9 +95,36 @@ def test_call_graph_page_contains_canvas_and_status_text():
         "const moduleQuery = params.get('module')",
         "setMode('module')",
         "setMode('function')",
+        'data-action="clear"',
+        'function clearSelection()',
+        'const action = e.target?.dataset?.action;',
+        "if (action === 'clear')",
+        "clearSelection();",
+        "url.searchParams.delete('function')",
+        'selectedNodeId = null',
+        "searchInput.value = ''",
+        'updateClearButtonVisibility',
+        "Relationship view",
+        'connectorDirection',
+        'is-public',
+        'is-internal',
+        'moduleEdges',
+        'Show all functions',
+        "currentMode === 'full'",
         "focusedLayout.innerHTML = '<p class=\"call-graph-empty\">Select a function to open Focused view.</p>'",
     ]:
         assert script_fragment in js
+
+    assert js.index('const action = e.target?.dataset?.action;') < js.index('const mode = e.target?.dataset?.mode; if (!mode) return;')
+
+
+def test_call_graph_page_css_has_wide_layout_overrides():
+    css = Path('docs/stylesheets/api-chips.css').read_text(encoding='utf-8')
+    assert '.call-graph-page .call-graph-canvas{min-height:calc(100vh - 13rem)' in css
+    assert '.md-content:has(.call-graph-page) .md-sidebar--secondary{display:none}' in css
+    assert '.call-graph-modules{position:relative;z-index:2;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));' in css
+    assert '.call-graph-legend{' in css
+    assert '.call-graph-function-chip[data-connector-direction="in-out"]::after' in css
 
 
 def test_dependency_metadata_contains_module_grouping_keys():
@@ -142,7 +172,15 @@ def test_module_page_relationship_sections_are_readable_and_grouped():
     assert '#### External callees' in text
     assert '<div class="module-relationship-list">' not in text
     assert '#### Module relationships' not in text
-    assert '../../reference/call-graph/?module=fabricops_kit.config' in text
+    assert '../../reference/call-graph/?module=fabricops_kit.config' not in text
+    assert 'Open interactive module graph' not in text
     assert '**fabric_input_output**' in text
     assert '<h6>Public callables</h6>' in text
     assert '<h6>Internal helpers</h6>' in text
+
+
+def test_module_pages_do_not_emit_api_relative_call_graph_links():
+    for module_page in Path('docs/api/modules').glob('*.md'):
+        text = module_page.read_text(encoding='utf-8')
+        assert '../../reference/call-graph/' not in text
+        assert '/api/reference/call-graph/' not in text

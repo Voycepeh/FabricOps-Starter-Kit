@@ -83,7 +83,6 @@ Owns agreement discovery and selection helpers used to anchor notebook workflows
 
 ### Callable relationships
 
-<p><a href="../../reference/call-graph/?module=fabricops_kit.data_agreement" class="md-button md-button--primary">Open interactive module graph</a></p>
 
 #### Inside this module
 

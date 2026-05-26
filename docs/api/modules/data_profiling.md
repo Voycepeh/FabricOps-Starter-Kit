@@ -65,7 +65,6 @@ Owns deterministic profiling evidence such as schema, nulls, distincts, min/max,
 
 ### Callable relationships
 
-<p><a href="../../reference/call-graph/?module=fabricops_kit.data_profiling" class="md-button md-button--primary">Open interactive module graph</a></p>
 
 #### Inside this module
 

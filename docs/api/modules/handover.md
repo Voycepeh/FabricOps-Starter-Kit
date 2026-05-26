@@ -68,7 +68,6 @@ Owns generated maintainer-facing handover and contract narrative output.
 
 ### Callable relationships
 
-<p><a href="../../reference/call-graph/?module=fabricops_kit.handover" class="md-button md-button--primary">Open interactive module graph</a></p>
 
 #### Inside this module
 

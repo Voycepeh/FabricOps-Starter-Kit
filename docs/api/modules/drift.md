@@ -139,7 +139,6 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
 
 ### Callable relationships
 
-<p><a href="../../reference/call-graph/?module=fabricops_kit.drift" class="md-button md-button--primary">Open interactive module graph</a></p>
 
 #### Inside this module
 

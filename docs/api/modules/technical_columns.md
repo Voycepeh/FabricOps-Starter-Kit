@@ -102,7 +102,6 @@ Owns standard output/audit columns for pipeline outputs.
 
 ### Callable relationships
 
-<p><a href="../../reference/call-graph/?module=fabricops_kit.technical_columns" class="md-button md-button--primary">Open interactive module graph</a></p>
 
 #### Inside this module
 
