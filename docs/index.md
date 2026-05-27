@@ -1,19 +1,49 @@
 # FabricOps Starter Kit
 
-A lightweight, Fabric-first notebook package with reusable templates and helper functions.
+Governed, quality-checked, AI-ready notebooks in Microsoft Fabric.
 
-- Start fast with [Quick Start](quick-start.md).
-- Build and publish with [Create Wheel](setup/create-wheel.md).
-- Run in Microsoft Fabric with [Run in Fabric](setup/run-in-fabric.md).
-- Reuse the notebook flow from [Notebook Templates](notebook-structure.md).
-- Look up callable helpers in [Function Reference](reference/index.md).
+[Quick Start](quick-start.md){ .md-button .md-button--primary }
+[Workflow](workflow.md){ .md-button }
+[Functions](reference/index.md){ .md-button }
 
-## What this project is
+## How FabricOps fits into Fabric
 
-FabricOps Starter Kit helps teams ship governed, quality-checked, AI-ready notebooks in Microsoft Fabric without building a heavyweight framework.
+FabricOps Starter Kit is a lightweight framework for running notebook-led delivery inside Microsoft Fabric while keeping governance and handover explicit.
 
-## Core notebook flow
+![FabricOps in Microsoft Fabric architecture](assets/data-platform-architecture.png)
 
-`00_env_config` → `01_da` → `02_ex` → `03_pc` → `04_gov`
+## How FabricOps works
 
-Use template notebooks from `templates/notebooks/` and helper APIs from `src/fabricops_kit/`.
+The delivery workflow moves from agreement to exploration, then into approved metadata, pipeline contract assembly, and handover.
+
+`agreement → exploration → approved metadata → pipeline contract → handover`
+
+![FabricOps lifecycle workflow](assets/mvp-flow.png)
+
+## Data contracts are assembled from evidence
+
+Data contracts are generated from approved metadata and quality evidence so implementation and governance stay aligned.
+
+![Data contract assembly from metadata evidence](assets/data-contract.png)
+
+## Notebook operating model
+
+Use the canonical notebook structure to keep package loading, analysis, implementation, and governance checkpoints consistent.
+
+`00_env_config → 01_da → 02_ex → 03_pc → 04_gov`
+
+![Notebook and workspace structure](assets/notebook-structure.png)
+
+## Choose where to go next
+
+| Need | Go to |
+| --- | --- |
+| Start the framework in a new workspace | [Quick Start](quick-start.md) |
+| Understand the end-to-end delivery lifecycle | [Workflow](workflow.md) |
+| Build and publish the package | [Create Wheel](setup/create-wheel.md) |
+| Run the kit in Fabric | [Run in Fabric](setup/run-in-fabric.md) |
+| Reuse notebook templates and structure | [Notebook Structure](notebook-structure.md) |
+| Explore callable APIs | [Function Reference](reference/index.md) |
+
+!!! note "Compatibility"
+    The package import remains `fabricops_kit`.
