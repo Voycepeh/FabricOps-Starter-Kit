@@ -59,6 +59,31 @@ Guide agent/Codex contributions for this repository so changes stay reusable, pu
 - Update `scripts/generate_function_reference.py` first, then regenerate `docs/reference/index.md`.
 - Keep `/reference/` template-first.
 
+Generated function-reference artifacts:
+- `docs/reference/index.md`
+- `docs/reference/template-function-map.md`
+- `docs/reference/agent-manifest.json`
+- `docs/reference/dependency-metadata.json`
+- `docs/reference/call-graph.md`
+- `docs/reference/callables/*.md`
+- `docs/reference/internal/*.md`
+- `docs/api/modules/*.md`
+- `mkdocs.yml` module navigation block
+
+Source inputs:
+- `src/fabricops_kit/**/*.py`
+- `src/fabricops_kit/__init__.py::__all__`
+- `src/fabricops_kit/docs_metadata.py`
+- `docs/reference/function_usage.yml`
+- `scripts/generate_function_reference.py`
+
+Maintenance rule:
+Do not manually edit generated markdown/json files as the source of truth. When functions, templates, `__all__`, docstrings, `function_usage.yml`, or `docs_metadata.py` change, update the source metadata/generator first, then run:
+
+`PYTHONPATH=src python scripts/generate_function_reference.py`
+
+Then include regenerated outputs in the same PR.
+
 Example (PR-132-style):
 - If you add `bootstrap_fabric_env`, `run_config_smoke_tests`, `check_fabric_ai_functions_available`, or add `get_path` to `config`, also update/regenerate the config API/module page so those callables appear.
 
@@ -143,6 +168,7 @@ def api_name(param1: str, param2: int = 0) -> bool:
 - [ ] No mixed Google-style and NumPy-style section headers.
 - [ ] Examples are generic/public-safe and contain no sensitive/internal identifiers.
 - [ ] Fabric-specific assumptions are documented in `Notes` where applicable.
+- [ ] If public/internal functions or template mappings changed, regenerated function reference artifacts are included.
 
 Recommended duplicate-docstring check:
 
