@@ -68,63 +68,18 @@ def test_docs_url_points_to_generated_reference_routes():
         assert node['docs_url'] == expected, f'{qn} has wrong docs_url'
 
 
-def test_call_graph_page_contains_canvas_and_status_text():
+def test_call_graph_page_is_deferred_with_explicit_note():
     page = Path('docs/reference/call-graph.md').read_text(encoding='utf-8')
-    assert 'id="call-graph-canvas"' in page
-    assert 'tabindex="0"' in page
-    assert 'class="call-graph-page"' in page
-    assert 'id="call-graph-search-results"' in page
-    assert 'id="call-graph-search-empty"' in page
-    assert 'class="call-graph-legend"' in page
-
-    assert 'No matching function found.' in page
-
-    js = Path('docs/javascripts/call-graph.js').read_text(encoding='utf-8')
-    for msg in ['Loading call graph...', 'Unable to load dependency metadata.', 'No callable nodes found.']:
-        assert msg in js
-
-    for script_fragment in [
-        'call-graph-module',
-        'call-graph-function-chip',
-        'refreshEdges',
-        'call-graph-search-option',
-        'window.history.replaceState',
-        'renderDropdown([])',
-        'searchInput.value = selectedRecord.searchLabel',
-        "const functionQuery = params.get('function')",
-        "const moduleQuery = params.get('module')",
-        "setMode('module')",
-        "setMode('function')",
-        'data-action="clear"',
-        'function clearSelection()',
-        'const action = e.target?.dataset?.action;',
-        "if (action === 'clear')",
-        "clearSelection();",
-        "url.searchParams.delete('function')",
-        'selectedNodeId = null',
-        "searchInput.value = ''",
-        'updateClearButtonVisibility',
-        "Relationship view",
-        'connectorDirection',
-        'is-public',
-        'is-internal',
-        'moduleEdges',
-        'Show all functions',
-        "currentMode === 'full'",
-        "focusedLayout.innerHTML = '<p class=\"call-graph-empty\">Select a function to open Focused view.</p>'",
-    ]:
-        assert script_fragment in js
-
-    assert js.index('const action = e.target?.dataset?.action;') < js.index('const mode = e.target?.dataset?.mode; if (!mode) return;')
+    assert 'Graph exploration is intentionally deferred.' in page
+    assert 'Neo4j or a proper graph backend.' in page
+    assert 'id="call-graph-canvas"' not in page
+    assert not Path('docs/javascripts/call-graph.js').exists()
 
 
-def test_call_graph_page_css_has_wide_layout_overrides():
+def test_call_graph_page_css_rules_are_removed():
     css = Path('docs/stylesheets/api-chips.css').read_text(encoding='utf-8')
-    assert '.call-graph-page .call-graph-canvas{min-height:calc(100vh - 13rem)' in css
-    assert '.md-content:has(.call-graph-page) .md-sidebar--secondary{display:none}' in css
-    assert '.call-graph-modules{position:relative;z-index:2;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));' in css
-    assert '.call-graph-legend{' in css
-    assert '.call-graph-function-chip[data-connector-direction="in-out"]::after' in css
+    assert '.call-graph-page' not in css
+    assert '.call-graph-legend' not in css
 
 
 def test_dependency_metadata_contains_module_grouping_keys():
@@ -161,7 +116,7 @@ def test_module_callable_chip_links_resolve_to_known_docs_routes():
 def test_generated_callable_call_graph_link_uses_reference_route_not_api_reference():
     script = Path('docs/gen_ref_pages.py').read_text(encoding='utf-8')
     assert '../call-graph/?function=' not in script
-    assert '../../../reference/call-graph/?function=' in script
+    assert '../../../reference/call-graph/?function=' not in script
 
 
 def test_module_page_relationship_sections_are_readable_and_grouped():

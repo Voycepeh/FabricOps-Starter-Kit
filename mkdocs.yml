@@ -47,7 +47,6 @@ nav:
           - handover: api/modules/handover.md
           - metadata: api/modules/metadata.md
       # AUTO-GENERATED-MODULES-END
-      - Dependency Explorer: reference/call-graph.md
 
 
 markdown_extensions:
@@ -90,7 +89,6 @@ extra_javascript:
   - https://unpkg.com/vis-network@9.1.9/dist/vis-network.min.js
   - javascripts/mermaid-init.js
   - javascripts/callable-finder.js
-  - javascripts/call-graph.js
 
 extra_css:
   - stylesheets/api-chips.css
