@@ -1,19 +1,22 @@
 # FabricOps Starter Kit
 
-FabricOps Starter Kit is a lightweight, Fabric-first, metadata-led, AI-assisted notebook operating model for governed data products.
+## Standardize how teams build, govern, and operationalize Fabric notebooks.
 
-Use this page as the front door into the core FabricOps workflow.
+AI-assisted metadata, data quality, governance, and pipeline workflows for Microsoft Fabric.
 
 <div class="center-cta">
   <a class="md-button md-button--primary" href="quick-start/">Start with Quick Start</a>
   <a class="md-button" href="reference/">Browse Functions</a>
 </div>
 
-## 1. Lifecycle workflow
+## The problem FabricOps solves
 
-FabricOps starts with a clear operating workflow.
+Without a shared notebook operating model:
 
-Governance defines approved usage and business context. Analysts profile source data, validate business meaning, and prepare AI-assisted suggestions. Engineers enforce approved metadata through repeatable pipeline contracts. Handover is generated from approved metadata, lineage, quality results, and runtime evidence.
+- Exploratory notebooks drift into one-off patterns.
+- Governance decisions are split across files and teams.
+- Data quality logic gets duplicated and hard to maintain.
+- Pipelines are harder to operationalize, schedule, and hand over.
 
 ![FabricOps workflow overview](assets/mvp-flow.png)
 
@@ -21,40 +24,46 @@ Governance defines approved usage and business context. Analysts profile source 
   <a class="md-button" href="workflow/">View Workflow</a>
 </div>
 
-## 2. Notebook model
+## The notebook operating model
 
-FabricOps keeps the notebook structure simple so ownership is clear.
+FabricOps uses a predictable notebook sequence so teams can move from exploration to governed operations with clear ownership.
 
 ![FabricOps governance and workspace model](assets/notebook-structure.png)
 
-| Notebook | Purpose |
+| Notebook | Practical role in the workflow |
 |---|---|
-| `00_env_config` | Defines environment paths, workspace settings, and shared reusable configuration once per workspace. |
-| `01_da_<agreement>` | Captures source/agreement-level permission evidence and approval metadata for the agreement. |
-| `02_ex_<agreement>_<topic>` | Supports analyst and data scientist exploration, profiling, business meaning validation, AI-assisted DQ suggestions, and AI-assisted classification suggestions. |
-| `03_pc_<agreement>_<pipeline>` | Acts as the engineer-owned pipeline contract. It is run-all-safe, schedulable, and enforces approved metadata, DQ rules, checks, lineage, and outputs. |
+| `00_env_config` | Shared environment and workspace configuration. |
+| `01_da_<agreement>` | Defines approved business context, permissions, and governance scope. |
+| `02_ex_<agreement>_<topic>` | Used for profiling, exploration, validation, and AI-assisted rule drafting. |
+| `03_pc_<agreement>_<pipeline>` | Production-ready pipeline notebook for enforcing approved rules and outputs. |
+| `04_gov_<agreement>_<dataset>_<table>` | Governance review, classification, and approval evidence workflow. |
 
 <div class="center-cta">
   <a class="md-button" href="notebook-structure/">View Notebook Structure</a>
 </div>
 
-## 3. How the data contract is assembled
+## Why this operating model matters
 
-A FabricOps data contract is assembled from approved metadata evidence. It is not manually written from scratch.
+- Reusable notebook structure across projects and teams.
+- AI-assisted governance workflows with human approval.
+- Clear operational handover from exploration to production.
+- Auditable metadata evidence for decisions and enforcement.
+- Reusable pipeline contracts for repeatable execution.
+- Production-ready notebook workflows that are scheduler-friendly.
 
-The contract combines approved usage, schema and profile evidence, DQ rules and results, governance classification, drift checks, lineage, runtime summaries, ownership, and approvals.
+## Supporting architecture views
+
+These diagrams support the workflow above and show how contracts and quality operations are implemented.
+
+### Metadata and contract assembly
 
 ![Data contract assembly from approved metadata evidence](assets/data-contract.png)
 
 <div class="center-cta">
   <a class="md-button" href="metadata-and-contracts/">View Metadata and Contracts</a>
 </div>
-  
-## 4. AI assisted data quality
 
-FabricOps uses AI to help analysts and stewards move faster, but keeps approval and enforcement explicit.
-
-AI can suggest candidate data quality rules from business context, source profiles, and metadata evidence. Humans validate whether the rules are correct. Engineers then enforce approved rules in pipeline contracts and write the results back as metadata evidence.
+### AI-assisted data quality workflow
 
 ![AI assisted data quality workflow](assets/DQ-with-ai.png)
 
@@ -62,7 +71,7 @@ AI can suggest candidate data quality rules from business context, source profil
   <a class="md-button" href="ai-assisted-data-quality/">View AI Data Quality</a>
 </div>
 
-## 5. Run it in Fabric
+## Run it in Fabric
 
 Install the package, run the notebooks, and promote governed outputs through the lifecycle.
 
