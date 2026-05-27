@@ -1,74 +1,47 @@
 # Function Usage Guide
 
-Use this page when you want to run **real Fabric notebook workflows** with FabricOps Starter Kit.
+Use this page to understand how notebook templates map to the main public callables.
 
-- **Notebook Structure** is the canonical operating model and template-stage source of truth.
-- **Function Usage Guide** explains which FabricOps functions usually support each notebook stage.
-- **Callable Function Reference** provides detailed API signatures, parameters, and return behavior.
+## Start from the templates
 
-For notebook ownership, naming, and stage boundaries, use the [Notebook Structure](../notebook-structure/) section as the source of truth. This guide only explains which FabricOps functions usually support each stage.
+<table class="reference-template-table">
+  <thead>
+    <tr>
+      <th>Notebook</th>
+      <th>Guided usage</th>
+      <th>Full template</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td data-label="Notebook"><code>00_env_config</code></td>
+      <td data-label="Guided usage">Shared environment bootstrap and validation before exploration or pipeline notebooks run.<br><a href="../notebook-structure/00-env-config/">View guided structure</a></td>
+      <td data-label="Full template"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/00_env_config.ipynb">Open notebook</a></td>
+    </tr>
+    <tr>
+      <td data-label="Notebook"><code>01_da_&lt;agreement&gt;</code></td>
+      <td data-label="Guided usage">Captures approved usage, business context, stewardship notes, DQ approvals, governance approvals, and agreement-level controls reused by exploration and pipeline notebooks.<br><a href="../notebook-structure/01-data-sharing-agreement/">View guided structure</a></td>
+      <td data-label="Full template"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/01_da_agreement_template.ipynb">Open notebook</a></td>
+    </tr>
+    <tr>
+      <td data-label="Notebook"><code>02_ex_&lt;agreement&gt;_&lt;topic&gt;</code></td>
+      <td data-label="Guided usage">Exploration notebook flow used to profile source data and draft advisory AI outputs for human review.<br><a href="../notebook-structure/02-exploration/">View guided structure</a></td>
+      <td data-label="Full template"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/02_ex_agreement_topic.ipynb">Open notebook</a></td>
+    </tr>
+    <tr>
+      <td data-label="Notebook"><code>03_pc_&lt;agreement&gt;_&lt;pipeline&gt;</code></td>
+      <td data-label="Guided usage">Pipeline notebook flow for deterministic enforcement and controlled publishing.<br><a href="../notebook-structure/03-pipeline-contract/">View guided structure</a></td>
+      <td data-label="Full template"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/03_pc_agreement_pipeline_template.ipynb">Open notebook</a></td>
+    </tr>
+  </tbody>
+</table>
 
-## Start from the notebook model
+## What runs where
 
-Use notebook stages as your entry point, then select functions that support that stage.
+- `00_env_config` is shared setup.
+- `01_data_sharing_agreement` is the governance source of truth.
+- `02_ex` proposes evidence and AI-assisted suggestions.
+- `03_pc` loads approved metadata and enforces controls.
 
-- `00_env_config` → environment and workspace setup. ([Notebook Structure: 00_env_config](../notebook-structure/00-env-config/))
-- `01_da` → agreement and business context. ([Notebook Structure: 01_da](../notebook-structure/01-data-sharing-agreement/))
-- `02_ex` → exploration, profiling, AI-assisted discovery. ([Notebook Structure: 02_ex](../notebook-structure/02-exploration/))
-- `03_pc` → pipeline contract, enforcement, run summary. ([Notebook Structure: 03_pc](../notebook-structure/03-pipeline-contract/))
-- `04_gov` → governance review and approval evidence. ([Notebook Structure: 04_gov](../notebook-structure/04-governance-enrichment/))
+AI functions are advisory. Approved contracts and pipeline notebooks are the enforcement point.
 
-Need notebook-to-function mapping detail? Use the [Template Function Map](template-function-map.md).
-
-## Workflow story: evidence to governed handover
-
-```mermaid
-flowchart LR
-    A[Template Notebook] --> B[FabricOps Functions]
-    B --> C[Metadata Evidence]
-    C --> D[Human Approval]
-    D --> E[Pipeline Enforcement]
-    E --> F[Contract and Handover]
-```
-
-## Function layers in practice
-
-### Setup and config
-Use this when starting a notebook and validating environment/runtime context.
-
-### Profiling and metadata capture
-Use this when generating structured evidence from source data and writing metadata records.
-
-### AI-assisted suggestions
-Use this when drafting candidate DQ rules or governance/business context suggestions.
-
-### Human approval and review widgets
-Use this when accepting/rejecting/deactivating suggestions before enforcement.
-
-### Data quality enforcement
-Use this when applying approved rules in `03_pc` pipeline execution.
-
-### Drift and schema checks
-Use this when comparing current outputs against contract expectations and prior baselines.
-
-### Run summary and handover evidence
-Use this when publishing auditable run summaries and handover outputs.
-
-For low-level callable behavior and exact signatures, use the [Callable Function Reference](index.md).
-
-## Which function should I use?
-
-- **I want to set up a notebook** → start from `00_env_config` in [Notebook Structure](../notebook-structure/00-env-config/), then apply setup/config helpers.
-- **I want to profile a table** → start from `02_ex` in [Notebook Structure](../notebook-structure/02-exploration/), then apply profiling + metadata capture functions.
-- **I want AI-suggested DQ rules** → in `02_ex`, use AI drafting functions, then route to approval.
-- **I want to approve/reject rules** → use review/approval functions in the governance review stages.
-- **I want to enforce rules in a pipeline** → use `03_pc` contract flow with approved metadata and enforcement functions.
-- **I want to produce a handover summary** → use handover/run-summary functions after pipeline checks.
-
-## Practical guidance
-
-- Functions are **not** intended to be run randomly in isolation.
-- Templates/notebook stages are the recommended entry point.
-- Use this page for practitioner sequence and decision guidance.
-- Use [Callable Function Reference](index.md) for API-level detail.
-- Use [Developer Reference](../developer-reference/) for internal mechanics.
