@@ -2,64 +2,47 @@
 
 ## Purpose
 
-Guide agent/Codex contributions for this repository so changes stay reusable, public-safe, and easy to hand over.
+Canonical operating guide for Codex/agent contributions in this repository. Keep contributions reusable, public-safe, and easy to hand over to junior engineers.
 
-## Repo working rules
+## Core operating rules
 
 - Pull requests must target `main`.
 - Treat GitHub as the source of truth.
-- Treat Microsoft Fabric as the execution environment.
-- Keep an AI-in-the-loop workflow and optimize for junior-friendly handover.
-- Prefer small, focused PRs over large restructures.
-- Prefer updating existing modules over creating new files; only add new `.py`, `.md`, or other repo files when clearly justified by a separate user-facing concept or when extending an existing file would materially hurt readability. Avoid thin wrapper modules and unnecessary feature fragmentation.
+- Treat Microsoft Fabric as the execution runtime.
+- Keep AI in the loop and optimize for junior-friendly handover.
+- Prefer small, focused PRs over broad restructures.
+- Prefer updating existing files/modules; add new files only when clearly justified.
 
-## Public safety rules
+## Public safety and positioning
 
-- Keep the framework generic and public-safe.
-- Do not include real data, NUS-specific secrets, tenant details, workspace identifiers, internal URLs, or production screenshots.
+- Keep all examples and guidance generic and public-safe.
+- Never include real data, secrets, tenant/workspace identifiers, internal URLs, or production screenshots.
+- Public brand name: **FabricOps Starter Kit**.
+- Preferred positioning: **governed, quality-checked, AI-ready notebooks in Microsoft Fabric**.
+- Do not position this project as a full data product platform.
 
-## Documentation placement rules
+## Documentation and API reference rules
 
-- Keep root `README.md` concise as the entry point only.
+- Keep root `README.md` concise and navigation-focused.
 - Put lifecycle/operating behavior in `docs/`.
-- Put callable API reference in `src/README.md`.
-- Update `docs/` when lifecycle or architecture behavior changes.
-- Keep examples in `examples/` runnable and teachable for Python users.
-- Use links to detailed docs instead of duplicating long explanations across multiple files.
-- Docstrings in `src/fabricops_kit/` are the source of truth for generated API docs under `docs/api/`.
-- Do not create or maintain duplicate manual function/member lists in `README.md`, `src/README.md`, or `docs/api/`.
+- Put callable API reference guidance in `src/README.md`.
+- Do not maintain duplicate manual callable/member lists across README/docs pages.
+- Public callable docs are sourced from `src/fabricops_kit/` docstrings plus source metadata.
+- `docs/reference/*`, `docs/api/modules/*`, and related navigation are generated artifacts.
+- Do not manually treat generated docs as source of truth; update generator/source metadata and regenerate.
+
+When public API surface, `__all__`, module ownership, docstrings, or callable mappings change, regenerate reference docs in the same PR:
+
+```bash
+PYTHONPATH=src python scripts/generate_function_reference.py
+```
 
 
-## Public callable catalogue and workflow mapping rules
+## Generated reference symbols and artifacts
 
-- Add a symbol to `src/fabricops_kit/__init__.py::__all__` only when it is intentionally user-facing.
-- Every public callable in `__all__` must have a complete NumPy-style docstring with a meaningful first sentence.
-- Public callables must remain documented and discoverable in the generated `/reference/` callable catalogue.
-- If a public callable depends on important internal helpers, keep those helpers documented enough that generated relationship lists remain useful.
-- Do not maintain manual duplicate function/member lists across docs. Regenerate the callable catalogue instead.
-- PRs that add/remove/rename public callables must run `PYTHONPATH=src python scripts/generate_function_reference.py` and include generated docs updates in the same PR.
-- New public callables must be added to `__all__`, documented with useful non-placeholder docstrings, and surfaced in starter-template flow sections when they are part of the template journey.
-- Internal-only modules should not appear as public modules in the module API catalogue unless clearly labeled as internal-only.
-- Deprecated callables must not be promoted as the recommended path when a replacement callable exists.
-- If `__all__`, module names, public callable mappings, or docstrings change, regenerate the reference and module catalogue docs in the same PR.
-- When public/internal modules, exported functions, or generated reference docs change, do not manually patch sidebar/module navigation; update the generator and source metadata, then regenerate docs.
+Do not manually edit generated reference outputs as source of truth. Update source inputs/generator first, then regenerate.
 
-## Docs and API reference generation
-
-- GitHub Pages may auto-deploy after merge, but deployment only publishes what was built; it does not discover new Python callables unless API/reference pages are regenerated in the docs build workflow.
-- When changing public functions, module boundaries, `__all__`, docstrings, or module ownership, always verify whether generated docs/reference files must be refreshed.
-- For edits under `src/fabricops_kit/*.py`, confirm affected pages in `docs/api/modules/` and `docs/reference/` are updated, or confirm CI regenerates them during `mkdocs build`.
-- If a module page is generated from `__all__`, ensure new public callables are exported in `__all__` and visible in the generated module table.
-- New public functions must be discoverable from the relevant module page and the generated `/reference/` catalogue; starter-path functions should also appear in the template-first flow sections.
-- Run the docs generation command when available. If no explicit generator is documented, inspect `scripts/`, `mkdocs.yml`, and docs tooling before assuming `mkdocs build` alone is enough.
-- Run `mkdocs build` after docs/reference generation changes when possible.
-- Do not assume GitHub Pages will fix stale generated docs on its own.
-- `docs/reference/index.md` is generated output.
-- Do not manually patch `docs/reference/index.md` as the only source of truth.
-- Update `scripts/generate_function_reference.py` first, then regenerate `docs/reference/index.md`.
-- Keep `/reference/` template-first.
-
-Generated function-reference artifacts:
+Generated artifacts:
 - `docs/reference/index.md`
 - `docs/reference/template-function-map.md`
 - `docs/reference/agent-manifest.json`
@@ -68,7 +51,7 @@ Generated function-reference artifacts:
 - `docs/reference/callables/*.md`
 - `docs/reference/internal/*.md`
 - `docs/api/modules/*.md`
-- `mkdocs.yml` module navigation block
+- `mkdocs.yml` reference/module navigation
 
 Source inputs:
 - `src/fabricops_kit/**/*.py`
@@ -77,100 +60,85 @@ Source inputs:
 - `docs/reference/function_usage.yml`
 - `scripts/generate_function_reference.py`
 
-Maintenance rule:
-Do not manually edit generated markdown/json files as the source of truth. When functions, templates, `__all__`, docstrings, `function_usage.yml`, or `docs_metadata.py` change, update the source metadata/generator first, then run:
+## Public API docstring requirements
 
-`PYTHONPATH=src python scripts/generate_function_reference.py`
+For new/modified public APIs in `src/fabricops_kit/` (public functions/classes/dataclasses/important methods):
 
-Then include regenerated outputs in the same PR.
+- Use complete **NumPy-style** docstrings.
+- Include relevant sections (`Parameters`, `Returns`, and when needed `Raises`, `Notes`, `Examples`, `See Also`).
+- Describe actual behavior (no placeholder text).
+- Do not mix Google-style `Args`/`Returns` headers with NumPy-style headers.
+- For Fabric-specific behavior, document runtime assumptions in `Notes`.
+- Internal-only modules should not appear as public modules unless clearly labeled internal-only.
+- Deprecated callables must not be promoted as the recommended path when a replacement exists.
+- New public callables must be added to `__all__`, have useful NumPy-style docstrings, and appear in generated reference docs.
 
-Example (PR-132-style):
-- If you add `bootstrap_fabric_env`, `run_config_smoke_tests`, `check_fabric_ai_functions_available`, or add `get_path` to `config`, also update/regenerate the config API/module page so those callables appear.
 
-## Docstring requirements for public APIs
-
-For every new or modified public API under `src/fabricops_kit/` (public function, class, dataclass, and important public method):
-
-- Include a NumPy-style docstring.
-- Use NumPy-style sections:
-  - `Parameters`
-  - `Returns`
-  - `Raises`, where applicable
-  - `See Also`, where helpful
-  - `Notes`, where helpful
-  - `Examples`, where helpful
-- Docstrings must describe actual behavior, not intended behavior.
-- Do not use placeholder text such as:
-  - `"Description of x"`
-  - `"Returned value"`
-  - `"Documentation for API-reference generation"`
-- Do not leave duplicate adjacent triple-quoted strings.
-- Do not mix Google-style `Args`/`Returns` with NumPy-style `Parameters`/`Returns`.
-- Keep examples generic and safe.
-- Do not include private workspace IDs, lakehouse IDs, NUS-specific paths, or internal dataset names.
-
-For Fabric-specific functions, clearly state runtime assumptions in `Notes`:
-
-- Fabric notebook runtime required
-- PySpark DataFrame expected
-- local Python compatible
-- optional Fabric dependency required
-
-### NumPy-style docstring template
+Compact NumPy-style example:
 
 ```python
-def api_name(param1: str, param2: int = 0) -> bool:
-    """Short summary sentence.
+def api_name(param: str) -> bool:
+    """Return whether `param` is valid.
 
     Parameters
     ----------
-    param1 : str
-        Meaningful description of `param1`.
-    param2 : int, default=0
-        Meaningful description of `param2`.
+    param : str
+        Value to validate.
 
     Returns
     -------
     bool
-        What is returned and under which conditions.
-
-    Raises
-    ------
-    ValueError
-        When inputs fail validation.
-
-    See Also
-    --------
-    related_api : Brief relationship.
-
-    Notes
-    -----
-    Include Fabric/runtime assumptions when relevant.
-
-    Examples
-    --------
-    >>> api_name("example", 1)
-    True
+        True when valid.
     """
 ```
 
-## PR expectations
+## Metadata lakehouse routing (required)
 
-- Keep PRs focused and ensure docs impact is handled in the same PR.
-- When public APIs change, update their NumPy-style docstrings first; only add high-level navigation updates to `README.md`/`src/README.md`/`docs/` where needed.
-- Update root `README.md` only for top-level journey/navigation changes.
+Do not assume attached/default lakehouse for metadata tables.
 
-## Review checklist (required before PR completion)
+Always route metadata reads/writes via the `00_env_config` metadata target:
 
-- [ ] New/modified public APIs in `src/fabricops_kit/` include complete NumPy-style docstrings.
-- [ ] Docstrings describe actual behavior and avoid placeholders.
-- [ ] No duplicate adjacent docstrings exist.
-- [ ] No mixed Google-style and NumPy-style section headers.
-- [ ] Examples are generic/public-safe and contain no sensitive/internal identifiers.
-- [ ] Fabric-specific assumptions are documented in `Notes` where applicable.
-- [ ] If public/internal functions or template mappings changed, regenerated function reference artifacts are included.
+- `read_lakehouse_table(CONFIG, env_name, "metadata", "<metadata_table>")`
+- `write_lakehouse_table(df, CONFIG, env_name, "metadata", "<metadata_table>", mode="append")`
+- `CONFIG.path_config.paths[env_name]["metadata"]` for helpers needing metadata path/store
 
-Recommended duplicate-docstring check:
+Applies to all `METADATA_*` tables (including future additions).
+
+## What to update when changing X
+
+### 1) `src/` public API change
+
+- Update `src/fabricops_kit` public API docstrings (NumPy style).
+- Ensure intentional exports are in `src/fabricops_kit/__init__.py::__all__`.
+- Regenerate reference/module docs with:
+  - `PYTHONPATH=src python scripts/generate_function_reference.py`
+- Include generated docs updates in the same PR.
+
+### 2) Docs-only change
+
+- Keep root `README.md` concise; place detailed lifecycle/operations content in `docs/`.
+- Avoid duplicating manual callable lists that should be generated.
+
+### 3) Notebook template change
+
+- Keep templates public-safe and Fabric-runtime aware.
+- Reuse canonical defaults from `src/fabricops_kit/` instead of duplicating constants inline.
+- Keep examples runnable and teachable.
+
+### 4) Generated reference change
+
+- Update source metadata/generator first (not generated markdown/json directly).
+- Regenerate outputs and commit generated artifacts in the same PR.
+
+### 5) Metadata/lakehouse routing change
+
+- Verify metadata operations use configured metadata target from `00_env_config`.
+- Remove/avoid default-lakehouse references for metadata reads/writes.
+
+
+## Optional validation checks
+
+Duplicate adjacent docstring check:
 
 ```bash
 python - <<'PY'
@@ -194,46 +162,10 @@ print("No duplicate adjacent docstrings found.")
 PY
 ```
 
-## Testing expectations
+## Minimum validation before PR
 
-- Run `uv run python -m compileall src tests`.
-- Run `uv run python -m pytest -q`.
-- Run `uv run mkdocs build`.
+Run relevant checks (at least for repo-wide hygiene PRs):
 
-
-## Branding guidance
-
-- Public brand name is **FabricOps Starter Kit**.
-- Preferred wording: **governed, quality-checked, AI-ready notebooks in Microsoft Fabric**.
-- Avoid reintroducing **FabricOps Starter Kit** as the public-facing brand.
-- Do not position the project as a full data product platform.
-
-## Canonical defaults in templates
-
-- Notebook templates must not duplicate maintained package defaults when a canonical default already exists in `src/fabricops_kit/`.
-- When defaults are intentionally customizable, templates should import the canonical default and optionally override it, instead of retyping default values inline.
-- Apply this rule especially to AI prompt templates, config defaults, and generated docs metadata defaults.
-
-## Fabric metadata lakehouse routing
-
-Notebook templates and framework helpers must not assume the attached/default lakehouse when reading or writing FabricOps metadata tables.
-
-Do not use default-lakehouse references for metadata, such as:
-- `spark.table("METADATA_PROFILE_ROWS")`
-- `spark.table("METADATA_DQ_RULES")`
-- `spark.sql("SELECT ... FROM METADATA_*")`
-
-Instead, always route metadata reads and writes through the metadata target configured by `00_env_config`:
-
-- `read_lakehouse_table(CONFIG, env_name, "metadata", "<metadata_table>")`
-- `write_lakehouse_table(df, CONFIG, env_name, "metadata", "<metadata_table>", mode="append")`
-- `CONFIG.path_config.paths[env_name]["metadata"]` for helpers that require a `metadata_path`/`FabricStore`
-
-This applies to:
-- `METADATA_DATA_AGREEMENT`
-- `METADATA_PROFILE_ROWS`
-- `METADATA_COLUMN_CONTEXT`
-- `METADATA_COLUMN_GOVERNANCE`
-- `METADATA_DQ_RULES`
-- `METADATA_NOTEBOOK_REGISTRY`
-- any future `METADATA_*` table
+- `uv run python -m compileall src tests`
+- `uv run python -m pytest -q`
+- `uv run mkdocs build`
