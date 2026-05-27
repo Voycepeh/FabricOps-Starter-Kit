@@ -1,12 +1,34 @@
 # Quick Start
 
-Build your first governed Fabric data product in 10 minutes.
+Build a governed Fabric data product in 10 minutes.
 
-FabricOps Starter Kit gives you a lightweight, Fabric-first, notebook-native workflow for turning raw data into governed curated outputs. It is metadata-driven, AI-assisted, and operational by design: AI helps profile and suggest, while people approve and enforce.
+FabricOps Starter Kit is a lightweight, Fabric-first, notebook-native onboarding path that turns source data into reliable curated outputs using metadata evidence and operational controls.
+
+```mermaid
+flowchart TD
+    A[Source data] --> B[Explore (02_ex)]
+    B --> C[Operationalize (03_pc)]
+    C --> D[Govern (04_gov)]
+```
+
+**Core principles**
+
+- Fabric-first execution with notebooks, Lakehouse, and Warehouse.
+- AI accelerates metadata generation and governance workflows. Humans remain responsible for approval and enforcement.
+- Contracts are assembled from approved metadata evidence, then enforced and monitored continuously.
 
 For orientation, see the [Homepage](index.md).
 
-## What you will build
+## Notebook layers (primary mental model)
+
+```mermaid
+flowchart LR
+    A[Discovery Layer\n02_ex_*\nProfile, propose, classify] -->
+    B[Operational Layer\n03_pc_*\nExecute and enforce] -->
+    C[Governance Layer\n04_gov_*\nMonitor, review, oversee continuously]
+```
+
+## What you will build (detailed view)
 
 ```mermaid
 flowchart TD
@@ -16,7 +38,7 @@ flowchart TD
     D --> E[Pipeline contract enforcement]
     E --> F[Assembled data contract artifact]
     F --> G[Curated governed table]
-    G --> H[Governance monitoring]
+    G --> H[Operational assurance monitoring]
 ```
 
 Framework lifecycle identity:
@@ -26,34 +48,39 @@ Discover → Approve → Operationalize → Govern
 02_ex_*  → 03_pc_*  → 04_gov_*
 ```
 
+## Running example story (HR employees)
+
+```mermaid
+flowchart TD
+    A[HR employee dataset] --> B[Profile salary column]
+    B --> C[AI suggests rules\n- salary >= 0\n- dept code mapping\n- email not null]
+    C --> D[Steward approves]
+    D --> E[03_pc enforces in pipeline runs]
+    E --> F[04_gov monitors drift + reliability trends]
+```
+
 ## What you will see at the end
 
 - **Profiling output:** row counts, completeness, distributions, type drift signals.
 - **Sensitivity classification:** column-level tags for potentially sensitive fields.
-- **AI-generated DQ suggestions:** draft checks for nulls, ranges, freshness, mappings.
+- **AI-generated DQ suggestions:** draft checks for ranges, null thresholds, freshness, mappings.
 - **Approved metadata evidence:** steward-approved rules and classifications.
 - **Run summary:** pass/fail counts, exceptions, and execution metadata.
 - **Contract artifact:** assembled contract view from approved evidence.
-- **Governance monitoring outputs:** DQ trends, SLA/drift indicators, and review queues.
+- **Monitoring outputs:** DQ trends, SLA/drift indicators, and steward review queues.
 
 ## Step 1 — Install FabricOps in Fabric
-
-Keep setup minimal, then move quickly into notebooks:
 
 - [Create Wheel](setup/create-wheel.md)
 - [Run in Fabric](setup/run-in-fabric.md)
 
 ## Step 2 — Create your environment notebook (`00_env_config`)
 
-`00_env_config` defines reusable, environment-scoped configuration for lakehouses, warehouses, and metadata paths used by downstream notebooks.
+Use `00_env_config` for environment-scoped configuration reused by all notebooks.
 
-Use it to centralize:
-
-- environment names and runtime settings
 - reusable Lakehouse/Warehouse references
-- reusable schemas and paths (including metadata target routing)
-
-Example pattern:
+- reusable schemas and paths
+- metadata target routing
 
 ```python
 from fabricops_kit import load_config
@@ -68,29 +95,23 @@ METADATA_LAKEHOUSE = CONFIG.path_config.paths[ENV_NAME]["metadata"]
 
 ## Step 3 — Define your agreement scope (`01_data_sharing_agreement_*`)
 
-Create a business-and-operations alignment notebook before pipeline implementation.
+Align business and operations before build:
 
-Capture:
-
-- steward and owner approvals
+- steward + owner approvals
 - scope of use
 - retention expectations
 - allowed operational usage boundaries
 
-This step aligns people and responsibilities; it is not legal paperwork.
-
 ## Step 4 — Explore and profile your dataset (`02_ex_*`)
 
-This is the first meaningful operational step. Use exploration notebooks to discover the dataset and generate evidence.
+First meaningful operational step (exploratory, iterative, analyst-driven).
 
-In this layer you typically:
+You typically:
 
-- profile shape, quality, and column behavior
-- discover schema and exploratory validation needs
-- detect potential sensitivity/classification candidates
-- produce initial metadata evidence for review
-
-Example snippets/output style:
+- profile shape and quality
+- discover schema + validation needs
+- detect sensitivity candidates
+- generate proposed metadata evidence
 
 ```python
 profile_df = run_basic_profile(source_df)
@@ -104,13 +125,11 @@ classification: employee_id=InternalIdentifier, email=ContactSensitive
 metadata_evidence: schema_version=2026-05-27T09:00Z, status=proposed
 ```
 
-This layer is exploratory, iterative, and analyst-driven.
-
 ## Step 5 — Generate AI-assisted DQ suggestions
 
-AI is used here to accelerate governance workflows. Humans remain responsible for approval and enforcement.
+**AI accelerates metadata generation and governance workflows. Humans remain responsible for approval and enforcement.**
 
-Typical AI-assisted suggestions include:
+Common suggestion types:
 
 - non-negative values
 - freshness expectations
@@ -119,61 +138,51 @@ Typical AI-assisted suggestions include:
 - null-rate thresholds
 - referential consistency checks
 
-Flow:
-
 ```text
 AI drafts rules → steward/owner reviews → approved rules become enforceable metadata
 ```
 
 ## Step 6 — Approve and store metadata evidence
 
-Promote reviewed evidence into persisted metadata tables in Fabric.
-
-Evidence commonly includes:
+Approved evidence is persisted to metadata tables in Fabric:
 
 - approved DQ rules
 - sensitivity classifications
 - schema evidence
 - steward approvals
 - lineage evidence
-- operational metadata from runs
-
-This metadata evidence is the enforceable input to operational workflows.
+- run operational metadata
 
 ## Step 7 — Operationalize with pipeline contract notebooks (`03_pc_*`)
 
 `03_pc_*` notebooks are executable pipeline contracts and operational handover artifacts.
 
-They translate approved evidence into deployment-ready pipeline logic for:
+They execute and enforce:
 
-- ingestion
-- transformations
-- validations
-- drift enforcement
-- curated writes
-- run summaries
+- ingestion and transformations
+- validation checks and drift enforcement
+- curated writes and run summaries
 
-Separation is intentional:
+**Layer boundary (important):**
 
-```text
-02_ex_* = discover and propose
-03_pc_* = enforce and operationalize
-```
+- `03_pc_*` = execute and enforce
+- `04_gov_*` = monitor, review, and oversee continuously
 
 ## Step 8 — Generate assembled data contracts
 
-Data contracts are assembled from approved metadata evidence, not maintained as one giant manual YAML file.
+### Why this is different
 
-Contract assembly typically combines:
+| Traditional approach | FabricOps approach |
+|---|---|
+| ❌ Static, manually maintained contract files | ✅ Contracts assembled from approved metadata evidence |
+
+Contracts are assembled from:
 
 - schema evidence
 - approved DQ rules
-- lineage
-- sensitivity classifications
-- refresh expectations
-- governance approvals
-- operational run evidence
-- drift expectations
+- lineage and classifications
+- refresh + drift expectations
+- approvals + run evidence
 
 ```mermaid
 flowchart LR
@@ -186,43 +195,42 @@ flowchart LR
 
 ## Step 9 — Govern continuously (`04_gov_*`)
 
-`04_gov_*` notebooks run continuous operational governance, not static documentation.
+`04_gov_*` notebooks provide operational assurance and observability over time.
 
-Typical monitoring outcomes:
+Typical outputs:
 
 - DQ trend monitoring
 - SLA monitoring
 - drift detection
-- stewardship review queues
 - failed validation tracking
 - unlabeled sensitive data monitoring
-- audit/governance reporting views
+- stewardship review queues
+- audit and trust operations reporting
 
 ```mermaid
 flowchart TD
     A[Pipeline runs] --> B[Metadata evidence]
-    B --> C[Governance monitoring]
+    B --> C[Monitoring + observability]
     C --> D[DQ trends / drift / SLA alerts]
-    D --> E[Steward review]
+    D --> E[Steward review + remediation]
 ```
 
 ## Recommended notebook structure
 
-- `00_env_config` — shared environment config and metadata routing.
+- `00_env_config` — shared environment config + metadata routing.
 - `01_data_sharing_agreement_hr` — ownership, approvals, and usage boundaries.
-- `02_ex_hr_employee_profiling` — exploratory profiling and proposed evidence.
-- `03_pc_hr_employee_curated` — executable contract enforcement pipeline.
-- `04_gov_hr_employee_monitoring` — continuous governance monitoring outputs.
+- `02_ex_hr_employee_profiling` — discovery profiling + proposed evidence.
+- `03_pc_hr_employee_curated` — execute and enforce operational contract.
+- `04_gov_hr_employee_monitoring` — monitor reliability, drift, and stewardship.
 
-## Core concepts
+## Core concepts (quick reference)
 
-- **Agreements:** define ownership, stewardship, and scope before implementation.
-- **Metadata evidence:** approved facts (schema, DQ, lineage, classification, run metadata).
-- **Contracts:** assembled operationally from approved metadata evidence.
-- **Drift:** divergence from approved schema/quality/expectations over time.
-- **Governance:** continuous monitoring and action, not one-time documentation.
-- **Lineage:** traceability from source to curated outputs and governance signals.
-- **AI-assisted workflow:** AI profiles/suggests/drafts/classifies; humans approve/enforce/govern.
+- **Agreement:** who owns, approves, and can use data.
+- **Metadata evidence:** approved facts used by operations.
+- **Assembled contract:** enforced view built from approved evidence.
+- **Drift:** deviation from expected schema/quality/freshness.
+- **Lineage:** trace from source to curated outputs and monitors.
+- **AI-assisted workflow:** AI suggests and drafts; humans approve and enforce.
 
 ## Next steps
 
