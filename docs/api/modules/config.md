@@ -94,6 +94,28 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
 
 ### Callable relationships
 
+
+#### Inside this module
+
+<section class="callable-relationship-card">
+<h5>config</h5>
+<h6>Public callables</h6>
+<ul class="callable-relationship-rows">
+<li>
+<a class="reference-chip" href="../../reference/load_config/"><code>load_config</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<a class="reference-chip" href="#_validate_framework_config"><code>_validate_framework_config</code></a>
+</li>
+<li>
+<a class="reference-chip" href="../../reference/setup_notebook/"><code>setup_notebook</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<a class="reference-chip" href="#_get_store"><code>_get_store</code></a>, <a class="reference-chip" href="#_run_config_smoke_tests"><code>_run_config_smoke_tests</code></a>, <a class="reference-chip" href="../../reference/load_config/"><code>load_config</code></a>
+</li>
+</ul>
+</section>
+
+### Related internal helpers
+
 <details>
 <summary>Show internal helpers</summary>
 
@@ -162,31 +184,7 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
 </table>
 </div>
 
-</details>
-
-### Related internal helpers
-
-
-#### Inside this module
-
-<section class="callable-relationship-card">
-<h5>config</h5>
-<h6>Public callables</h6>
-<ul class="callable-relationship-rows">
-<li>
-<a class="reference-chip" href="../../reference/load_config/"><code>load_config</code></a>
- <span class="callable-relationship-uses">uses:</span> 
-<a class="reference-chip" href="#_validate_framework_config"><code>_validate_framework_config</code></a>
-</li>
-<li>
-<a class="reference-chip" href="../../reference/setup_notebook/"><code>setup_notebook</code></a>
- <span class="callable-relationship-uses">uses:</span> 
-<a class="reference-chip" href="#_get_store"><code>_get_store</code></a>, <a class="reference-chip" href="#_run_config_smoke_tests"><code>_run_config_smoke_tests</code></a>, <a class="reference-chip" href="../../reference/load_config/"><code>load_config</code></a>
-</li>
-</ul>
-<details>
-<summary>Internal helpers details</summary>
-<h6>Internal helpers</h6>
+<h6>Internal helpers details</h6>
 <ul class="callable-relationship-rows">
 <li>
 <a class="reference-chip" href="#_bootstrap_fabric_env"><code>_bootstrap_fabric_env</code></a>
@@ -237,7 +235,6 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
 </li>
 </ul>
 </details>
-</section>
 
 ### External callers
 

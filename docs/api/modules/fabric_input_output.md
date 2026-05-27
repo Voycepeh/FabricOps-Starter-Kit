@@ -129,38 +129,6 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
 
 ### Callable relationships
 
-<details>
-<summary>Show internal helpers</summary>
-
-<div class="module-table-scroll">
-<table>
-  <thead>
-    <tr>
-      <th>Helper</th>
-      <th>Related public callables</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><a href="../../reference/internal/fabric_input_output/_convert_single_parquet_ns_to_us/"><code>_convert_single_parquet_ns_to_us</code></a></td>
-      <td><a href="../../reference/read_lakehouse_parquet/"><code>read_lakehouse_parquet</code></a></td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/internal/fabric_input_output/_get_fabric_runtime_context/"><code>_get_fabric_runtime_context</code></a></td>
-      <td>—</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/internal/fabric_input_output/_get_spark/"><code>_get_spark</code></a></td>
-      <td><a href="../../reference/read_lakehouse_csv/"><code>read_lakehouse_csv</code></a>, <a href="../../reference/read_lakehouse_excel/"><code>read_lakehouse_excel</code></a>, <a href="../../reference/read_lakehouse_parquet/"><code>read_lakehouse_parquet</code></a>, <a href="../../reference/read_lakehouse_table/"><code>read_lakehouse_table</code></a>, <a href="../../reference/read_warehouse_table/"><code>read_warehouse_table</code></a></td>
-    </tr>
-  </tbody>
-</table>
-</div>
-
-</details>
-
-### Related internal helpers
-
 
 #### Inside this module
 
@@ -204,9 +172,39 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
 <span>None.</span>
 </li>
 </ul>
+</section>
+
+### Related internal helpers
+
 <details>
-<summary>Internal helpers details</summary>
-<h6>Internal helpers</h6>
+<summary>Show internal helpers</summary>
+
+<div class="module-table-scroll">
+<table>
+  <thead>
+    <tr>
+      <th>Helper</th>
+      <th>Related public callables</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><a href="../../reference/internal/fabric_input_output/_convert_single_parquet_ns_to_us/"><code>_convert_single_parquet_ns_to_us</code></a></td>
+      <td><a href="../../reference/read_lakehouse_parquet/"><code>read_lakehouse_parquet</code></a></td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/fabric_input_output/_get_fabric_runtime_context/"><code>_get_fabric_runtime_context</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/fabric_input_output/_get_spark/"><code>_get_spark</code></a></td>
+      <td><a href="../../reference/read_lakehouse_csv/"><code>read_lakehouse_csv</code></a>, <a href="../../reference/read_lakehouse_excel/"><code>read_lakehouse_excel</code></a>, <a href="../../reference/read_lakehouse_parquet/"><code>read_lakehouse_parquet</code></a>, <a href="../../reference/read_lakehouse_table/"><code>read_lakehouse_table</code></a>, <a href="../../reference/read_warehouse_table/"><code>read_warehouse_table</code></a></td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<h6>Internal helpers details</h6>
 <ul class="callable-relationship-rows">
 <li>
 <a class="reference-chip" href="#_convert_single_parquet_ns_to_us"><code>_convert_single_parquet_ns_to_us</code></a>
@@ -219,7 +217,6 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
 </li>
 </ul>
 </details>
-</section>
 
 ### External callers
 

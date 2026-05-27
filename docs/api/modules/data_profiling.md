@@ -87,6 +87,23 @@ Owns deterministic profiling evidence such as schema, nulls, distincts, min/max,
 
 ### Callable relationships
 
+
+#### Inside this module
+
+<section class="callable-relationship-card">
+<h5>data_profiling</h5>
+<h6>Public callables</h6>
+<ul class="callable-relationship-rows">
+<li>
+<a class="reference-chip" href="../../reference/profile_dataframe/"><code>profile_dataframe</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<a class="reference-chip" href="#_get_profiled_columns"><code>_get_profiled_columns</code></a>, <a class="reference-chip" href="#_is_min_max_supported_type"><code>_is_min_max_supported_type</code></a>
+</li>
+</ul>
+</section>
+
+### Related internal helpers
+
 <details>
 <summary>Show internal helpers</summary>
 
@@ -111,26 +128,7 @@ Owns deterministic profiling evidence such as schema, nulls, distincts, min/max,
 </table>
 </div>
 
-</details>
-
-### Related internal helpers
-
-
-#### Inside this module
-
-<section class="callable-relationship-card">
-<h5>data_profiling</h5>
-<h6>Public callables</h6>
-<ul class="callable-relationship-rows">
-<li>
-<a class="reference-chip" href="../../reference/profile_dataframe/"><code>profile_dataframe</code></a>
- <span class="callable-relationship-uses">uses:</span> 
-<a class="reference-chip" href="#_get_profiled_columns"><code>_get_profiled_columns</code></a>, <a class="reference-chip" href="#_is_min_max_supported_type"><code>_is_min_max_supported_type</code></a>
-</li>
-</ul>
-<details>
-<summary>Internal helpers details</summary>
-<h6>Internal helpers</h6>
+<h6>Internal helpers details</h6>
 <ul class="callable-relationship-rows">
 <li>
 <a class="reference-chip" href="#_get_profiled_columns"><code>_get_profiled_columns</code></a>
@@ -140,7 +138,6 @@ Owns deterministic profiling evidence such as schema, nulls, distincts, min/max,
 </li>
 </ul>
 </details>
-</section>
 
 ### External callers
 

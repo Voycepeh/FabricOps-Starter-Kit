@@ -734,29 +734,12 @@ def main() -> None:
         lines.extend(["", "## Module relationships", ""])
         lines.extend(["", "### Callable relationships", ""])
         internal_fns = sorted([f for f in info["functions"] if f.startswith("_")])
-        if internal_fns:
-            lines.extend(["<details>", "<summary>Show internal helpers</summary>", ""])
-            helper_rows: list[list[str]] = []
-            for helper in internal_fns:
-                users = sorted([u for u in info["used_by"].get(helper, set()) if u in {p.name for p in public_in_module}])
-                users_links = ", ".join(
-                    f'<a href="{callable_docs_link(u, module, docs_metadata, source_module=actual_module)}"><code>{u}</code></a>' for u in users
-                ) or "—"
-                helper_rows.append([f'<a href="{internal_helper_link(actual_module, helper)}"><code>{helper}</code></a>', users_links])
-            lines.extend(['<div class="module-table-scroll">'])
-            lines.extend(render_html_table(["Helper", "Related public callables"], helper_rows))
-            lines.extend(['</div>'])
-            lines.extend(["", "</details>"])
-        else:
-            lines.append("No module-level internal helpers detected.")
-
         module_edges = [
             (e["caller_qualified_name"], e["callee_qualified_name"])
             for e in edges
             if _is_callable_edge(e) and (_module_name(e["caller_qualified_name"]) == actual_module or _module_name(e["callee_qualified_name"]) == actual_module)
         ]
         module_edge_pairs = sorted(set(module_edges))
-        lines.extend(["", "### Related internal helpers", ""])
         inside_rows = [(s, d) for s, d in module_edge_pairs if _module_name(s) == actual_module and _module_name(d) == actual_module]
         used_by_rows = [(s, d) for s, d in module_edge_pairs if _module_name(s) != actual_module and _module_name(d) == actual_module]
         uses_rows = [(s, d) for s, d in module_edge_pairs if _module_name(s) == actual_module and _module_name(d) != actual_module]
@@ -789,11 +772,20 @@ def main() -> None:
                         lines.append("<span>None.</span>")
                     lines.append("</li>")
                 lines.append("</ul>")
-            lines.extend(["<details>", "<summary>Internal helpers details</summary>"])
-            lines.append("<h6>Internal helpers</h6>")
-            if not internal_names:
-                lines.append("<p>None.</p>")
-            else:
+            lines.append("</section>")
+            lines.extend(["", "### Related internal helpers", ""])
+            if internal_fns:
+                lines.extend(["<details>", "<summary>Show internal helpers</summary>", ""])
+                helper_rows: list[list[str]] = []
+                for helper in internal_fns:
+                    users = sorted([u for u in info["used_by"].get(helper, set()) if u in {p.name for p in public_in_module}])
+                    users_links = ", ".join(
+                        f'<a href="{callable_docs_link(u, module, docs_metadata, source_module=actual_module)}"><code>{u}</code></a>' for u in users
+                    ) or "—"
+                    helper_rows.append([f'<a href="{internal_helper_link(actual_module, helper)}"><code>{helper}</code></a>', users_links])
+                lines.extend(['<div class="module-table-scroll">'])
+                lines.extend(render_html_table(["Helper", "Related public callables"], helper_rows))
+                lines.extend(['</div>', "", "<h6>Internal helpers details</h6>"])
                 lines.append('<ul class="callable-relationship-rows">')
                 for name in internal_names:
                     src_qn = f"fabricops_kit.{actual_module}.{name}"
@@ -810,8 +802,9 @@ def main() -> None:
                         lines.append(callee_links)
                     lines.append("</li>")
                 lines.append("</ul>")
-            lines.append("</details>")
-            lines.append("</section>")
+                lines.append("</details>")
+            else:
+                lines.append("No module-level internal helpers detected.")
             lines.extend(["", "### External callers", ""])
             if not used_by_rows:
                 lines.append("None.")

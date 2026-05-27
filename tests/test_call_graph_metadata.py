@@ -124,15 +124,22 @@ def test_module_page_relationship_sections_are_readable_and_grouped():
     assert '## Module relationships' in text
     assert '### Callable relationships' in text
     assert '#### Inside this module' in text
+    assert '### Related internal helpers' in text
+    assert '<summary>Show internal helpers</summary>' in text
     assert '### External callers' in text
     assert '### External callees' in text
+    assert '### Callable relationships' in text and '### Related internal helpers' in text
+    assert text.index('### Callable relationships') < text.index('#### Inside this module')
+    assert text.index('#### Inside this module') < text.index('### Related internal helpers')
+    assert text.index('### Related internal helpers') < text.index('### External callers')
+    assert text.index('### External callers') < text.index('### External callees')
     assert '<div class="module-relationship-list">' not in text
     assert '#### Module relationships' not in text
     assert '../../reference/call-graph/?module=fabricops_kit.config' not in text
     assert 'Open interactive module graph' not in text
     assert '**fabric_input_output**' in text
     assert '<h6>Public callables</h6>' in text
-    assert '<h6>Internal helpers</h6>' in text
+    assert '<h6>Internal helpers details</h6>' in text
 
 
 def test_module_pages_do_not_emit_broken_helper_paths():

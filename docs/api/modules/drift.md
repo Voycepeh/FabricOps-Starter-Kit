@@ -108,6 +108,38 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
 
 ### Callable relationships
 
+
+#### Inside this module
+
+<section class="callable-relationship-card">
+<h5>drift</h5>
+<h6>Public callables</h6>
+<ul class="callable-relationship-rows">
+<li>
+<a class="reference-chip" href="../../reference/check_partition_drift/"><code>check_partition_drift</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<a class="reference-chip" href="#build_partition_snapshot"><code>build_partition_snapshot</code></a>, <a class="reference-chip" href="#compare_partition_snapshots"><code>compare_partition_snapshots</code></a>, <a class="reference-chip" href="#default_incremental_safety_policy"><code>default_incremental_safety_policy</code></a>
+</li>
+<li>
+<a class="reference-chip" href="../../reference/check_profile_drift/"><code>check_profile_drift</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<span>None.</span>
+</li>
+<li>
+<a class="reference-chip" href="../../reference/check_schema_drift/"><code>check_schema_drift</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<a class="reference-chip" href="#build_schema_snapshot"><code>build_schema_snapshot</code></a>, <a class="reference-chip" href="#compare_schema_snapshots"><code>compare_schema_snapshots</code></a>, <a class="reference-chip" href="#default_schema_drift_policy"><code>default_schema_drift_policy</code></a>
+</li>
+<li>
+<a class="reference-chip" href="../../reference/summarize_drift_results/"><code>summarize_drift_results</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<span>None.</span>
+</li>
+</ul>
+</section>
+
+### Related internal helpers
+
 <details>
 <summary>Show internal helpers</summary>
 
@@ -180,41 +212,7 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
 </table>
 </div>
 
-</details>
-
-### Related internal helpers
-
-
-#### Inside this module
-
-<section class="callable-relationship-card">
-<h5>drift</h5>
-<h6>Public callables</h6>
-<ul class="callable-relationship-rows">
-<li>
-<a class="reference-chip" href="../../reference/check_partition_drift/"><code>check_partition_drift</code></a>
- <span class="callable-relationship-uses">uses:</span> 
-<a class="reference-chip" href="#build_partition_snapshot"><code>build_partition_snapshot</code></a>, <a class="reference-chip" href="#compare_partition_snapshots"><code>compare_partition_snapshots</code></a>, <a class="reference-chip" href="#default_incremental_safety_policy"><code>default_incremental_safety_policy</code></a>
-</li>
-<li>
-<a class="reference-chip" href="../../reference/check_profile_drift/"><code>check_profile_drift</code></a>
- <span class="callable-relationship-uses">uses:</span> 
-<span>None.</span>
-</li>
-<li>
-<a class="reference-chip" href="../../reference/check_schema_drift/"><code>check_schema_drift</code></a>
- <span class="callable-relationship-uses">uses:</span> 
-<a class="reference-chip" href="#build_schema_snapshot"><code>build_schema_snapshot</code></a>, <a class="reference-chip" href="#compare_schema_snapshots"><code>compare_schema_snapshots</code></a>, <a class="reference-chip" href="#default_schema_drift_policy"><code>default_schema_drift_policy</code></a>
-</li>
-<li>
-<a class="reference-chip" href="../../reference/summarize_drift_results/"><code>summarize_drift_results</code></a>
- <span class="callable-relationship-uses">uses:</span> 
-<span>None.</span>
-</li>
-</ul>
-<details>
-<summary>Internal helpers details</summary>
-<h6>Internal helpers</h6>
+<h6>Internal helpers details</h6>
 <ul class="callable-relationship-rows">
 <li>
 <a class="reference-chip" href="#_build_pandas_partition_snapshot"><code>_build_pandas_partition_snapshot</code></a>
@@ -270,7 +268,6 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
 </li>
 </ul>
 </details>
-</section>
 
 ### External callers
 

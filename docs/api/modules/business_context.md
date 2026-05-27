@@ -122,42 +122,6 @@ Owns business meaning for tables and columns.
 
 ### Callable relationships
 
-<details>
-<summary>Show internal helpers</summary>
-
-<div class="module-table-scroll">
-<table>
-  <thead>
-    <tr>
-      <th>Helper</th>
-      <th>Related public callables</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><a href="../../reference/internal/business_context/_extract_column_business_context_suggestions/"><code>_extract_column_business_context_suggestions</code></a></td>
-      <td><a href="../../reference/extract_column_business_context_suggestions/"><code>extract_column_business_context_suggestions</code></a></td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/internal/business_context/_parse_ai_dict_response/"><code>_parse_ai_dict_response</code></a></td>
-      <td>—</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/internal/business_context/_prepare_business_context_profile_input/"><code>_prepare_business_context_profile_input</code></a></td>
-      <td><a href="../../reference/prepare_business_context_profile_input/"><code>prepare_business_context_profile_input</code></a></td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/internal/business_context/_require_ipywidgets/"><code>_require_ipywidgets</code></a></td>
-      <td><a href="../../reference/review_business_context/"><code>review_business_context</code></a></td>
-    </tr>
-  </tbody>
-</table>
-</div>
-
-</details>
-
-### Related internal helpers
-
 
 #### Inside this module
 
@@ -196,9 +160,43 @@ Owns business meaning for tables and columns.
 <span>None.</span>
 </li>
 </ul>
+</section>
+
+### Related internal helpers
+
 <details>
-<summary>Internal helpers details</summary>
-<h6>Internal helpers</h6>
+<summary>Show internal helpers</summary>
+
+<div class="module-table-scroll">
+<table>
+  <thead>
+    <tr>
+      <th>Helper</th>
+      <th>Related public callables</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><a href="../../reference/internal/business_context/_extract_column_business_context_suggestions/"><code>_extract_column_business_context_suggestions</code></a></td>
+      <td><a href="../../reference/extract_column_business_context_suggestions/"><code>extract_column_business_context_suggestions</code></a></td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/business_context/_parse_ai_dict_response/"><code>_parse_ai_dict_response</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/business_context/_prepare_business_context_profile_input/"><code>_prepare_business_context_profile_input</code></a></td>
+      <td><a href="../../reference/prepare_business_context_profile_input/"><code>prepare_business_context_profile_input</code></a></td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/business_context/_require_ipywidgets/"><code>_require_ipywidgets</code></a></td>
+      <td><a href="../../reference/review_business_context/"><code>review_business_context</code></a></td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<h6>Internal helpers details</h6>
 <ul class="callable-relationship-rows">
 <li>
 <a class="reference-chip" href="#_extract_column_business_context_suggestions"><code>_extract_column_business_context_suggestions</code></a>
@@ -216,7 +214,6 @@ Owns business meaning for tables and columns.
 </li>
 </ul>
 </details>
-</section>
 
 ### External callers
 

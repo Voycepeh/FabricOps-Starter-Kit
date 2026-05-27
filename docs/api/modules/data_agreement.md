@@ -101,6 +101,33 @@ Owns agreement discovery and selection helpers used to anchor notebook workflows
 
 ### Callable relationships
 
+
+#### Inside this module
+
+<section class="callable-relationship-card">
+<h5>data_agreement</h5>
+<h6>Public callables</h6>
+<ul class="callable-relationship-rows">
+<li>
+<a class="reference-chip" href="../../reference/get_selected_agreement/"><code>get_selected_agreement</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<span>None.</span>
+</li>
+<li>
+<a class="reference-chip" href="../../reference/load_agreements/"><code>load_agreements</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<a class="reference-chip" href="#_coerce_row_dicts"><code>_coerce_row_dicts</code></a>, <a class="reference-chip" href="#_latest_distinct_agreements"><code>_latest_distinct_agreements</code></a>
+</li>
+<li>
+<a class="reference-chip" href="../../reference/select_agreement/"><code>select_agreement</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<a class="reference-chip" href="#_agreement_option_label"><code>_agreement_option_label</code></a>, <a class="reference-chip" href="#_coerce_row_dicts"><code>_coerce_row_dicts</code></a>
+</li>
+</ul>
+</section>
+
+### Related internal helpers
+
 <details>
 <summary>Show internal helpers</summary>
 
@@ -129,36 +156,7 @@ Owns agreement discovery and selection helpers used to anchor notebook workflows
 </table>
 </div>
 
-</details>
-
-### Related internal helpers
-
-
-#### Inside this module
-
-<section class="callable-relationship-card">
-<h5>data_agreement</h5>
-<h6>Public callables</h6>
-<ul class="callable-relationship-rows">
-<li>
-<a class="reference-chip" href="../../reference/get_selected_agreement/"><code>get_selected_agreement</code></a>
- <span class="callable-relationship-uses">uses:</span> 
-<span>None.</span>
-</li>
-<li>
-<a class="reference-chip" href="../../reference/load_agreements/"><code>load_agreements</code></a>
- <span class="callable-relationship-uses">uses:</span> 
-<a class="reference-chip" href="#_coerce_row_dicts"><code>_coerce_row_dicts</code></a>, <a class="reference-chip" href="#_latest_distinct_agreements"><code>_latest_distinct_agreements</code></a>
-</li>
-<li>
-<a class="reference-chip" href="../../reference/select_agreement/"><code>select_agreement</code></a>
- <span class="callable-relationship-uses">uses:</span> 
-<a class="reference-chip" href="#_agreement_option_label"><code>_agreement_option_label</code></a>, <a class="reference-chip" href="#_coerce_row_dicts"><code>_coerce_row_dicts</code></a>
-</li>
-</ul>
-<details>
-<summary>Internal helpers details</summary>
-<h6>Internal helpers</h6>
+<h6>Internal helpers details</h6>
 <ul class="callable-relationship-rows">
 <li>
 <a class="reference-chip" href="#_agreement_option_label"><code>_agreement_option_label</code></a>
@@ -171,7 +169,6 @@ Owns agreement discovery and selection helpers used to anchor notebook workflows
 </li>
 </ul>
 </details>
-</section>
 
 ### External callers
 

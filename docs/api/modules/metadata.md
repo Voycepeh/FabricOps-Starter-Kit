@@ -94,6 +94,28 @@ Owns metadata/contract store access, evidence persistence, agreement metadata, n
 
 ### Callable relationships
 
+
+#### Inside this module
+
+<section class="callable-relationship-card">
+<h5>metadata</h5>
+<h6>Public callables</h6>
+<ul class="callable-relationship-rows">
+<li>
+<a class="reference-chip" href="../../reference/load_notebook_registry/"><code>load_notebook_registry</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<span>None.</span>
+</li>
+<li>
+<a class="reference-chip" href="../../reference/register_current_notebook/"><code>register_current_notebook</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<a class="reference-chip" href="#_context_get"><code>_context_get</code></a>, <a class="reference-chip" href="#_runtime_context"><code>_runtime_context</code></a>, <a class="reference-chip" href="#_safe_str"><code>_safe_str</code></a>, <a class="reference-chip" href="#write_metadata_rows"><code>write_metadata_rows</code></a>
+</li>
+</ul>
+</section>
+
+### Related internal helpers
+
 <details>
 <summary>Show internal helpers</summary>
 
@@ -142,31 +164,7 @@ Owns metadata/contract store access, evidence persistence, agreement metadata, n
 </table>
 </div>
 
-</details>
-
-### Related internal helpers
-
-
-#### Inside this module
-
-<section class="callable-relationship-card">
-<h5>metadata</h5>
-<h6>Public callables</h6>
-<ul class="callable-relationship-rows">
-<li>
-<a class="reference-chip" href="../../reference/load_notebook_registry/"><code>load_notebook_registry</code></a>
- <span class="callable-relationship-uses">uses:</span> 
-<span>None.</span>
-</li>
-<li>
-<a class="reference-chip" href="../../reference/register_current_notebook/"><code>register_current_notebook</code></a>
- <span class="callable-relationship-uses">uses:</span> 
-<a class="reference-chip" href="#_context_get"><code>_context_get</code></a>, <a class="reference-chip" href="#_runtime_context"><code>_runtime_context</code></a>, <a class="reference-chip" href="#_safe_str"><code>_safe_str</code></a>, <a class="reference-chip" href="#write_metadata_rows"><code>write_metadata_rows</code></a>
-</li>
-</ul>
-<details>
-<summary>Internal helpers details</summary>
-<h6>Internal helpers</h6>
+<h6>Internal helpers details</h6>
 <ul class="callable-relationship-rows">
 <li>
 <a class="reference-chip" href="#_context_get"><code>_context_get</code></a>
@@ -200,7 +198,6 @@ Owns metadata/contract store access, evidence persistence, agreement metadata, n
 </li>
 </ul>
 </details>
-</section>
 
 ### External callers
 

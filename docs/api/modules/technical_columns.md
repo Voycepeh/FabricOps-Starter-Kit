@@ -87,6 +87,23 @@ Owns standard output/audit columns for pipeline outputs.
 
 ### Callable relationships
 
+
+#### Inside this module
+
+<section class="callable-relationship-card">
+<h5>technical_columns</h5>
+<h6>Public callables</h6>
+<ul class="callable-relationship-rows">
+<li>
+<a class="reference-chip" href="../../reference/standardize_columns/"><code>standardize_columns</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<a class="reference-chip" href="#_add_audit_columns"><code>_add_audit_columns</code></a>, <a class="reference-chip" href="#_add_datetime_features"><code>_add_datetime_features</code></a>, <a class="reference-chip" href="#_add_hash_columns"><code>_add_hash_columns</code></a>
+</li>
+</ul>
+</section>
+
+### Related internal helpers
+
 <details>
 <summary>Show internal helpers</summary>
 
@@ -143,26 +160,7 @@ Owns standard output/audit columns for pipeline outputs.
 </table>
 </div>
 
-</details>
-
-### Related internal helpers
-
-
-#### Inside this module
-
-<section class="callable-relationship-card">
-<h5>technical_columns</h5>
-<h6>Public callables</h6>
-<ul class="callable-relationship-rows">
-<li>
-<a class="reference-chip" href="../../reference/standardize_columns/"><code>standardize_columns</code></a>
- <span class="callable-relationship-uses">uses:</span> 
-<a class="reference-chip" href="#_add_audit_columns"><code>_add_audit_columns</code></a>, <a class="reference-chip" href="#_add_datetime_features"><code>_add_datetime_features</code></a>, <a class="reference-chip" href="#_add_hash_columns"><code>_add_hash_columns</code></a>
-</li>
-</ul>
-<details>
-<summary>Internal helpers details</summary>
-<h6>Internal helpers</h6>
+<h6>Internal helpers details</h6>
 <ul class="callable-relationship-rows">
 <li>
 <a class="reference-chip" href="#_add_audit_columns"><code>_add_audit_columns</code></a>
@@ -208,7 +206,6 @@ Owns standard output/audit columns for pipeline outputs.
 </li>
 </ul>
 </details>
-</section>
 
 ### External callers
 

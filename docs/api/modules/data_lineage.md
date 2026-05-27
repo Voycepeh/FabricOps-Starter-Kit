@@ -94,6 +94,28 @@ Owns source-to-target lineage and transformation evidence.
 
 ### Callable relationships
 
+
+#### Inside this module
+
+<section class="callable-relationship-card">
+<h5>data_lineage</h5>
+<h6>Public callables</h6>
+<ul class="callable-relationship-rows">
+<li>
+<a class="reference-chip" href="../../reference/build_lineage_handover_markdown/"><code>build_lineage_handover_markdown</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<span>None.</span>
+</li>
+<li>
+<a class="reference-chip" href="../../reference/build_lineage_records/"><code>build_lineage_records</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<span>None.</span>
+</li>
+</ul>
+</section>
+
+### Related internal helpers
+
 <details>
 <summary>Show internal helpers</summary>
 
@@ -162,31 +184,7 @@ Owns source-to-target lineage and transformation evidence.
 </table>
 </div>
 
-</details>
-
-### Related internal helpers
-
-
-#### Inside this module
-
-<section class="callable-relationship-card">
-<h5>data_lineage</h5>
-<h6>Public callables</h6>
-<ul class="callable-relationship-rows">
-<li>
-<a class="reference-chip" href="../../reference/build_lineage_handover_markdown/"><code>build_lineage_handover_markdown</code></a>
- <span class="callable-relationship-uses">uses:</span> 
-<span>None.</span>
-</li>
-<li>
-<a class="reference-chip" href="../../reference/build_lineage_records/"><code>build_lineage_records</code></a>
- <span class="callable-relationship-uses">uses:</span> 
-<span>None.</span>
-</li>
-</ul>
-<details>
-<summary>Internal helpers details</summary>
-<h6>Internal helpers</h6>
+<h6>Internal helpers details</h6>
 <ul class="callable-relationship-rows">
 <li>
 <a class="reference-chip" href="#_build_lineage_record_from_steps"><code>_build_lineage_record_from_steps</code></a>
@@ -243,7 +241,6 @@ Owns source-to-target lineage and transformation evidence.
 </li>
 </ul>
 </details>
-</section>
 
 ### External callers
 
