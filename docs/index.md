@@ -26,17 +26,40 @@ Without a shared notebook operating model:
 
 ## The notebook operating model
 
-FabricOps uses a predictable notebook sequence so teams can move from exploration to governed operations with clear ownership.
+Use this lifecycle as a workflow navigator. Start at `00_env_config`, then move stage-by-stage into governed operations.
 
-![FabricOps governance and workspace model](assets/notebook-structure.png)
+### Step 1 — [`00_env_config`](notebook-structure/00-env-config.md)
+Environment and workspace setup for shared runtime configuration.
 
-| Notebook | Practical role in the workflow |
-|---|---|
-| `00_env_config` | Shared environment and workspace configuration. |
-| `01_da_<agreement>` | Defines approved business context, permissions, and governance scope. |
-| `02_ex_<agreement>_<topic>` | Used for profiling, exploration, validation, and AI-assisted rule drafting. |
-| `03_pc_<agreement>_<pipeline>` | Production-ready pipeline notebook for enforcing approved rules and outputs. |
-| `04_gov_<agreement>_<dataset>_<table>` | Governance review, classification, and approval evidence workflow. |
+[View notebook stage →](notebook-structure/00-env-config.md)
+
+⬇️
+
+### Step 2 — [`01_da_<agreement>`](notebook-structure/01-data-sharing-agreement.md)
+Business context, permissions, and agreement approvals.
+
+[View notebook stage →](notebook-structure/01-data-sharing-agreement.md)
+
+⬇️
+
+### Step 3 — [`02_ex_<agreement>_<topic>`](notebook-structure/02-exploration.md)
+Profiling, exploration, validation, and AI-assisted rule drafting.
+
+[View notebook stage →](notebook-structure/02-exploration.md)
+
+⬇️
+
+### Step 4 — [`03_pc_<agreement>_<pipeline>`](notebook-structure/03-pipeline-contract.md)
+Production-ready pipeline notebook that enforces approved rules and outputs.
+
+[View notebook stage →](notebook-structure/03-pipeline-contract.md)
+
+⬇️
+
+### Step 5 — [`04_gov_<agreement>_<dataset>_<table>`](notebook-structure/04-governance-enrichment.md)
+Governance review, classification, and approval evidence workflow.
+
+[View notebook stage →](notebook-structure/04-governance-enrichment.md)
 
 <div class="center-cta">
   <a class="md-button" href="notebook-structure/">View Notebook Structure</a>
