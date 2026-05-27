@@ -22,6 +22,8 @@ FUNCTION_USAGE_OVERRIDES_PATH = ROOT / "docs" / "reference" / "function_usage.ym
 TEMPLATE_FUNCTION_MAP_PATH = ROOT / "docs" / "reference" / "template-function-map.md"
 DEPENDENCY_METADATA_PATH = ROOT / "docs" / "reference" / "dependency-metadata.json"
 CALL_GRAPH_PAGE_PATH = ROOT / "docs" / "reference" / "call-graph.md"
+CALLABLE_REFERENCE_DIR = ROOT / "docs" / "reference" / "callables"
+INTERNAL_REFERENCE_DIR = ROOT / "docs" / "reference" / "internal"
 
 PUBLIC_MODULE_PREFERRED_NAMES = {
     "config": "config",
@@ -395,6 +397,40 @@ def render_html_table(headers: list[str], rows: list[list[str]], *, table_class:
     lines.extend(["  </tbody>", "</table>"])
     return lines
 
+
+def parse_simple_yaml(path: Path) -> dict[str, dict[str, Any]]:
+    """Parse a small YAML subset used for function usage overrides."""
+    data: dict[str, dict[str, Any]] = {}
+    current_key: str | None = None
+    current_list_key: str | None = None
+    for raw in path.read_text(encoding="utf-8").splitlines():
+        line = raw.rstrip()
+        if not line or line.lstrip().startswith("#"):
+            continue
+        if not line.startswith(" "):
+            if not line.endswith(":"):
+                continue
+            current_key = line[:-1].strip()
+            data[current_key] = {}
+            current_list_key = None
+            continue
+        if current_key is None:
+            continue
+        stripped = line.strip()
+        if stripped.startswith("- "):
+            if current_list_key:
+                data[current_key].setdefault(current_list_key, []).append(stripped[2:].strip())
+            continue
+        if ":" in stripped:
+            key, value = [p.strip() for p in stripped.split(":", 1)]
+            if value == "":
+                data[current_key][key] = []
+                current_list_key = key
+            else:
+                data[current_key][key] = value
+                current_list_key = None
+    return data
+
 def render_callable_map_page(nodes: list[dict[str, Any]], edges: list[dict[str, Any]], module_summary: list[dict[str, Any]]) -> str:
     module_edges = sorted(
         {
@@ -472,7 +508,7 @@ def main() -> None:
     )
 
     docs_metadata = parse_docs_metadata()
-    usage_overrides = json.loads(FUNCTION_USAGE_OVERRIDES_PATH.read_text(encoding="utf-8")) if FUNCTION_USAGE_OVERRIDES_PATH.exists() else {}
+    usage_overrides = parse_simple_yaml(FUNCTION_USAGE_OVERRIDES_PATH) if FUNCTION_USAGE_OVERRIDES_PATH.exists() else {}
     template_flow_docs = parse_template_flow_docs()
     module_docs_metadata = parse_module_docs_metadata()
 
@@ -943,14 +979,26 @@ def main() -> None:
     for flow in template_flow_docs:
         template_function_map.extend([f"## {flow['notebook_label']}", "", flow.get("segment_intro", ""), ""])
         for segment in flow["segments"]:
+            unique_symbols = sorted(set(segment["symbols"]), key=segment["symbols"].index)
+            if not unique_symbols:
+                continue
             template_function_map.extend([f"### {segment['title']}", ""])
-            for symbol_name in segment["symbols"]:
+            rows = []
+            for symbol_name in unique_symbols:
                 s = symbol_map[symbol_name]
                 direct_helpers = sorted([
                     c for c in module_data[s.actual_module]["calls"].get(s.name, set()) if c.startswith("_")
                 ])
-                helper_text = ", ".join(f"`{h}`" for h in direct_helpers) if direct_helpers else "No direct internal helpers detected."
-                template_function_map.append(f"- `{s.name}`: {s.purpose or s.summary or '—'} Delegates to {helper_text}")
+                helper_text = ", ".join(f"`{h}`" for h in direct_helpers) if direct_helpers else "—"
+                override = usage_overrides.get(s.name, {})
+                rows.append([
+                    f"`{s.name}`",
+                    override.get("role", "Callable orchestration wrapper"),
+                    override.get("purpose", s.purpose or s.summary or "—"),
+                    helper_text,
+                    "; ".join(override.get("debug_when", [])) or "Check dependency outputs and metadata writes.",
+                ])
+            template_function_map.extend(render_html_table(["Function", "Role", "What it does", "Delegates to", "Debug when"], rows))
             template_function_map.append("")
     TEMPLATE_FUNCTION_MAP_PATH.write_text("\n".join(template_function_map) + "\n", encoding="utf-8", newline="\n")
     starter_symbol_to_notebooks: dict[str, set[str]] = {}
@@ -1207,16 +1255,81 @@ def main() -> None:
     REFERENCE_PATH.parent.mkdir(parents=True, exist_ok=True)
     REFERENCE_PATH.write_text("\n".join(ref) + "\n", encoding="utf-8", newline="\n")
 
+    CALLABLE_REFERENCE_DIR.mkdir(parents=True, exist_ok=True)
+    INTERNAL_REFERENCE_DIR.mkdir(parents=True, exist_ok=True)
     agent_manifest: list[dict[str, Any]] = []
     for qn, node in sorted(node_by_qn.items()):
         short_name = node["callable_name"]
         override = usage_overrides.get(short_name, {}) if isinstance(usage_overrides, dict) else {}
         deps = sorted(set(calls_by_qn.get(qn, [])))
-        callable_deps = [d.split(".")[-1] for d in deps if node_by_qn.get(d, {}).get("exported")]
-        internal_deps = [d.split(".")[-1] for d in deps if not node_by_qn.get(d, {}).get("exported")]
+        callable_deps = [d for d in deps if node_by_qn.get(d, {}).get("exported")]
+        internal_deps = [d for d in deps if not node_by_qn.get(d, {}).get("exported")]
         used_by = sorted(set(used_by_qn.get(qn, [])))
-        used_by_callable = [u.split(".")[-1] for u in used_by if node_by_qn.get(u, {}).get("exported")]
-        used_by_internal = [u.split(".")[-1] for u in used_by if not node_by_qn.get(u, {}).get("exported")]
+        used_by_callable = [u for u in used_by if node_by_qn.get(u, {}).get("exported")]
+        used_by_internal = [u for u in used_by if not node_by_qn.get(u, {}).get("exported")]
+        summary = docs_metadata.get(short_name, {}).get("summary_override") or ""
+        override_purpose = override.get("purpose", summary)
+        if node["exported"]:
+            callable_lines = [f"- `{d}`" for d in callable_deps] or ["- None"]
+            helper_lines = [f"- `{d}`" for d in internal_deps] or ["- None"]
+            debug_lines = [f"- {d}" for d in override.get("debug_when", [])] or ["- Output shape or metadata evidence is unexpected."]
+            callable_md = [
+                f"# {short_name}",
+                "",
+                "## Template step",
+                override.get("template_step") or docs_metadata.get(short_name, {}).get("template_segment") or "unknown",
+                "",
+                "## Function role",
+                override.get("role") or "Callable orchestration wrapper",
+                "",
+                "## Use this when",
+                override.get("use_when") or f"Use `{short_name}` during template-driven notebook execution.",
+                "",
+                "## What it delegates to",
+                "",
+                "### Callable functions called",
+                *callable_lines,
+                "",
+                "### Internal helpers used",
+                *helper_lines,
+                "",
+                "## Debug this function when",
+                *debug_lines,
+                "",
+                "## Agent repair guide",
+                "1. Preserve public callable signature unless templates are updated.",
+                "2. Inspect delegated helpers before rewriting wrapper logic.",
+                "3. Preserve output shape where downstream notebooks depend on it.",
+                "4. Update tests and templates together if behavior changes.",
+                "",
+            ]
+            (CALLABLE_REFERENCE_DIR / f"{short_name}.md").write_text("\n".join(callable_md), encoding="utf-8")
+        else:
+            used_by_callable_lines = [f"- `{u}`" for u in used_by_callable] or ["- None"]
+            used_by_internal_lines = [f"- `{u}`" for u in used_by_internal] or ["- None"]
+            internal_md = [
+                f"# {short_name}",
+                "",
+                "## Internal helper",
+                "Internal helper. Do not call directly from notebooks unless extending FabricOps.",
+                "",
+                "## Purpose",
+                override_purpose or "Supports callable orchestration internals.",
+                "",
+                "## Used by callable functions",
+                *used_by_callable_lines,
+                "",
+                "## Used by internal helpers",
+                *used_by_internal_lines,
+                "",
+                "## Debug relevance",
+                "Inspect this helper when parent callable outputs are malformed, missing evidence, or failing validation.",
+                "",
+                "## Safe change guidance",
+                "Preserve helper contract, return shape, and side effects expected by parent callables.",
+                "",
+            ]
+            (INTERNAL_REFERENCE_DIR / f"{node['module_name']}_{short_name}.md").write_text("\n".join(internal_md), encoding="utf-8")
         agent_manifest.append({
             "name": short_name,
             "qualified_name": qn,

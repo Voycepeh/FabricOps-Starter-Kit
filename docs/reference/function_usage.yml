@@ -1,12 +1,180 @@
-{
-  "draft_dq_rules": {
-    "template_step": "02_exploration",
-    "role": "AI-assisted suggestion function",
-    "purpose": "Drafts candidate data quality rules from business context and profile evidence.",
-    "debug_when": [
-      "AI-generated rules do not match business expectations",
-      "suggested rules are too generic"
-    ],
-    "related_templates": ["02_ex", "data_quality_review"]
-  }
-}
+setup_notebook:
+  template_step: 00_env_config
+  role: Template entrypoint
+  purpose: Bootstraps notebook runtime checks and shared FabricOps context.
+  debug_when:
+    - notebook startup checks fail
+    - runtime capabilities are missing
+  related_templates:
+    - 00_env_config
+    - 02_ex
+    - 03_pc
+load_config:
+  template_step: 00_env_config
+  role: Callable orchestration wrapper
+  purpose: Loads and validates environment configuration used by downstream notebooks.
+  debug_when:
+    - resolved paths are incorrect
+    - environment mapping is missing
+  related_templates: 
+    - 00_env_config
+    - 02_ex
+    - 03_pc
+read_lakehouse_table:
+  template_step: 02_exploration
+  role: Callable utility
+  purpose: Reads source or metadata tables from configured lakehouse targets.
+  debug_when:
+    - metadata table was not read
+    - table path resolution fails
+  related_templates:
+    - 02_ex
+    - 03_pc
+read_warehouse_table:
+  template_step: 02_exploration
+  role: Callable utility
+  purpose: Reads warehouse tables through configured Fabric workspace routing.
+  debug_when:
+    - warehouse relation not found
+    - warehouse query returns unexpected schema
+  related_templates:
+    - 02_ex
+    - 03_pc
+profile_dataframe:
+  template_step: 02_exploration
+  role: Validation/check function
+  purpose: Profiles dataframe structure and quality indicators for evidence and review.
+  debug_when:
+    - profile metrics look inconsistent
+    - profile output schema changed unexpectedly
+  related_templates:
+    - 02_ex
+    - 03_pc
+draft_dq_rules:
+  template_step: 02_exploration
+  role: AI-assisted suggestion function
+  purpose: Drafts candidate data quality rules from business context and profile evidence.
+  debug_when:
+    - AI-generated rules do not match business expectations
+    - suggested rules are too generic
+  related_templates:
+    - 02_ex
+    - data_quality_review
+review_dq_rules:
+  template_step: Data quality review
+  role: Review/approval function
+  purpose: Supports human review of drafted quality rules before approval.
+  debug_when:
+    - review workflow misses required rule fields
+  related_templates:
+    - 02_ex
+write_dq_rules:
+  template_step: Data quality review
+  role: Evidence writer
+  purpose: Persists approved quality rules to metadata targets.
+  debug_when:
+    - metadata table was not written
+    - rule versioning appears wrong
+  related_templates:
+    - 02_ex
+standardize_columns:
+  template_step: 03_pipeline_contract
+  role: Callable utility
+  purpose: Applies canonical technical column naming and formatting standards.
+  debug_when:
+    - standardized output columns are missing
+  related_templates:
+    - 03_pc
+validate_dq_rules:
+  template_step: 03_pipeline_contract
+  role: Validation/check function
+  purpose: Validates DQ rules before enforcement against pipeline data.
+  debug_when:
+    - rule parsing fails
+    - validation rejects expected rules
+  related_templates:
+    - 03_pc
+enforce_dq:
+  template_step: 03_pipeline_contract
+  role: Callable orchestration wrapper
+  purpose: Executes DQ checks and splits pass/quarantine records.
+  debug_when:
+    - DQ rules look wrong
+    - quarantine split is unexpected
+  related_templates:
+    - 03_pc
+assert_dq_passed:
+  template_step: 03_pipeline_contract
+  role: Validation/check function
+  purpose: Raises enforcement failures after evidence is materialized.
+  debug_when:
+    - pipeline succeeds when DQ should fail
+  related_templates:
+    - 03_pc
+check_schema_drift:
+  template_step: Drift enforcement
+  role: Validation/check function
+  purpose: Detects schema drift against approved baseline evidence.
+  debug_when:
+    - schema drift was not detected
+  related_templates:
+    - 03_pc
+check_partition_drift:
+  template_step: Drift enforcement
+  role: Validation/check function
+  purpose: Detects partition-level drift against expected partition behavior.
+  debug_when:
+    - partition freshness or counts look wrong
+  related_templates:
+    - 03_pc
+check_profile_drift:
+  template_step: Drift enforcement
+  role: Validation/check function
+  purpose: Compares profile metrics with baseline thresholds.
+  debug_when:
+    - profile drift alerts are missing or noisy
+  related_templates:
+    - 03_pc
+summarize_drift_results:
+  template_step: Drift enforcement
+  role: Callable orchestration wrapper
+  purpose: Combines drift checks into one decision and summary output.
+  debug_when:
+    - drift summary decision contradicts check outputs
+  related_templates:
+    - 03_pc
+write_governance:
+  template_step: Governance/classification
+  role: Evidence writer
+  purpose: Writes approved governance or classification evidence.
+  debug_when:
+    - governance evidence was not written
+  related_templates:
+    - 01_data_agreement
+    - 03_pc
+load_governance:
+  template_step: Governance/classification
+  role: Callable utility
+  purpose: Loads approved governance outputs for downstream notebook use.
+  debug_when:
+    - governance metadata fails to load
+  related_templates:
+    - 01_data_agreement
+    - 03_pc
+build_handover:
+  template_step: Handover/run summary
+  role: Callable orchestration wrapper
+  purpose: Builds run handover package from governance, quality, and lineage outputs.
+  debug_when:
+    - handover summary misses required sections
+  related_templates:
+    - 03_pc
+render_handover_markdown:
+  template_step: Handover/run summary
+  role: Callable utility
+  purpose: Renders handover evidence into markdown for maintainers.
+  debug_when:
+    - markdown rendering fails
+    - JSON serialization failed
+  related_templates:
+    - 03_pc
