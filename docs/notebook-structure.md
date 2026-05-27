@@ -1,24 +1,10 @@
-# Notebook Operating Model
+# Notebook Structure
 
-This page defines how FabricOps Starter Kit notebooks operate across governance and execution workspaces, how stages connect, and where each notebook boundary applies.
+Use this page for the **practical implementation conventions**: which notebooks exist, how they are named, and what each notebook owns. For people/process sequencing and AI/human approval flow, start with the [Workflow Operating Model](lifecycle-operating-model.md).
 
 ![Governance-Centered Workspace Model](assets/notebook-structure.png){ .full-width }
 
-## Workspace model
-
-FabricOps uses two workspace zones connected by a shared governance metadata plane:
-
-- **Governance Workspace**
-  - `01_da_<agreement>`
-  - Governance metadata lakehouse
-  - `04_gov_<agreement>_<dataset>_<table>` (planned stage)
-- **Execution Workspace (Dev / Test / Prod)**
-  - `00_env_config`
-  - `02_ex_<agreement>_<topic>`
-  - Lakehouse / Warehouse data store
-  - `03_pc_<agreement>_<pipeline>`
-
-## Stage sequence
+## Canonical notebook sequence
 
 ```text
 00_env_config
@@ -28,21 +14,26 @@ FabricOps uses two workspace zones connected by a shared governance metadata pla
 04_gov_<agreement>_<dataset>_<table>
 ```
 
-## Notebook roles and boundaries
+## Naming and ownership conventions
 
-| Notebook | Workspace | Primary role | Boundary |
+| Notebook | Naming convention | Primary ownership | What it owns |
 |---|---|---|---|
-| `00_env_config` | Execution | Runtime bootstrap and routing config | Does not define agreements or governance outcomes. |
-| `01_da_<agreement>` | Governance | Agreement-level approval evidence | Writes agreement evidence only; no column-level enrichment. |
-| `02_ex_<agreement>_<topic>` | Execution | Exploration and profiling evidence | Uses existing `agreement_id`; does not approve governance policy. |
-| `03_pc_<agreement>_<pipeline>` | Execution | Pipeline contract execution | Enforces approved metadata; does not create agreements. |
-| `04_gov_<agreement>_<dataset>_<table>` | Governance | Column governance enrichment (planned stage) | Reviews business context and classification/PII/confidentiality; not part of execution workspace. |
+| Environment config | `00_env_config` | Platform / delivery engineering | Runtime bootstrap, environment configuration, metadata target routing. |
+| Data-sharing agreement | `01_da_<agreement>` | Governance + business data owners | Agreement context and approval-ready agreement evidence. |
+| Exploration | `02_ex_<agreement>_<topic>` | Delivery / analytics | Profiling, evidence capture, and exploratory quality outputs for a scoped topic. |
+| Pipeline contract | `03_pc_<agreement>_<pipeline>` | Data engineering | Operational pipeline checks and contract enforcement for a pipeline scope. |
+| Governance enrichment | `04_gov_<agreement>_<dataset>_<table>` | Governance stewardship | Governance-side enrichment and handover artifacts for dataset/table scope. |
 
-## Governance flow across stages
+## Workspace placement
 
-- `01_da` defines and approves agreement-level metadata once.
-- `02_ex` and `03_pc` run under that approved `agreement_id` and produce execution evidence.
-- `04_gov` is the documented governance-stage follow-on for table/column enrichment after evidence exists (planned where template support is not yet available).
+- **Governance workspace:** agreement and governance enrichment responsibilities.
+- **Execution workspace (dev/test/prod):** configuration, exploration, and pipeline contract responsibilities.
+
+## Environment versioning (dev/prod)
+
+- Keep notebook logic aligned across environments; promote through controlled dev/test/prod transitions.
+- Keep environment-specific values in configuration inputs rather than hard-coded notebook logic.
+- Use consistent notebook naming across environments so approvals and evidence remain traceable.
 
 ## Required metadata routing rule
 
@@ -59,6 +50,6 @@ Always route metadata through configured targets using `read_lakehouse_table(...
 
 ## Related pages
 
-- [Workflow](workflow.md)
+- [Workflow Operating Model](lifecycle-operating-model.md)
 - [Metadata and Data Contract Assembly](metadata-and-contracts.md)
 - [Data Quality Rules System](data-quality-rules-system.md)

@@ -1,29 +1,51 @@
-# Workflow lifecycle operating model
+# Workflow Operating Model
 
-FabricOps Starter Kit runs as a governed notebook lifecycle in Microsoft Fabric:
+This page explains **who does what, in what sequence, and where AI/human approval fits** in FabricOps Starter Kit. Use it as the people-and-process view, then use [Notebook Structure](notebook-structure.md) for implementation conventions.
 
-`agreement → exploration → approved metadata → pipeline contract → handover`
+![FabricOps docs orientation](assets/docs-orientation.png){ .full-width }
 
-## Lifecycle sequence
+## Operating flow
 
-```mermaid
-flowchart TD
-    A[01_da Agreement] --> B[02_ex Exploration and profiling]
-    B --> C[Approved metadata and DQ evidence]
-    C --> D[03_pc Pipeline contract execution]
-    D --> E[04_gov Governance handover evidence]
-```
+FabricOps Starter Kit follows a governed flow in Microsoft Fabric:
 
-## Notebook mapping
+`agreement → exploration → approved metadata evidence → pipeline enforcement → handover`
 
-- `00_env_config`: shared environment and metadata target routing.
-- `01_da_<agreement>`: agreement scope, ownership, and approval context.
-- `02_ex_<agreement>_<topic>`: exploration, profiling, and evidence preparation.
-- `03_pc_<agreement>_<pipeline>`: approved rules and operational pipeline contract.
-- `04_gov_<agreement>_<dataset>_<table>`: governance outputs and handover package.
+### 1) Agreement and ownership setup
 
-## Go next
+- Governance and data owners define scope, ownership, and approval expectations.
+- Humans approve agreement intent before downstream execution proceeds.
+- AI drafts, humans approve where governance decisions are required.
 
-- [Quick Start](quick-start.md)
+### 2) Exploration and evidence generation
+
+- Delivery teams run exploratory profiling and evidence-building work.
+- AI drafts, humans approve where governance decisions are required.
+- Human reviewers validate evidence quality and business fit before approvals are promoted.
+
+### 3) Metadata approval and contract assembly
+
+- Approved metadata and quality evidence become the basis for contract-ready outputs.
+- AI drafts, humans approve where governance decisions are required.
+- Human governance reviews confirm policy alignment before enforcement.
+
+### 4) Pipeline enforcement and handover
+
+- Execution pipelines enforce approved controls.
+- Delivery and governance teams publish handover evidence for traceability.
+- Human accountability remains explicit for sign-off and operational acceptance.
+
+## Stage checkpoints (high level)
+
+- **Configuration stage:** establish environment and metadata routing baselines.
+- **Agreement stage:** capture and approve business/data-sharing intent.
+- **Exploration stage:** generate profiling and quality evidence.
+- **Pipeline stage:** enforce approved controls operationally.
+- **Governance handover stage:** finalize review artifacts and transfer ownership evidence.
+
+For notebook naming, boundaries, and ownership by notebook, go to [Notebook Structure](notebook-structure.md).
+
+## Related pages
+
 - [Notebook Structure](notebook-structure.md)
-- [Function Reference](reference/index.md)
+- [Metadata and Data Contract Assembly](metadata-and-contracts.md)
+- [Quick Start](quick-start.md)
