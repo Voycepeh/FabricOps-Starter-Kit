@@ -135,7 +135,5 @@ After one full cycle, confirm you have:
 ## Next links
 
 - [Notebook Structure](notebook-structure.md)
-- [Function Usage Guide](function-usage-guide.md)
-- [Workflow](workflow.md)
 - [Metadata and Contracts](metadata-and-contracts.md)
 - [Functions / Reference](reference/index.md)

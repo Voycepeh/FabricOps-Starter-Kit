@@ -7,7 +7,7 @@ Thank you for contributing to **FabricOps Starter Kit**. This guide is for human
 - Keep contributions public-safe, reusable, and notebook-practical for Microsoft Fabric.
 - Keep PRs small and focused; prefer incremental changes over broad rewrites.
 - Prefer updating existing modules/docs over adding new files unless a new user-facing concept is required.
-- Align changes to the current workflow direction: source → unified → product movement, contracts, metadata-driven profiling, quality checks, drift guards, governance/lineage, and AI-in-the-loop operations.
+- Align changes to the current workflow direction: source → unified → product movement, templates, reusable helper functions, and Fabric notebook execution.
 
 ## 2) Branch and PR workflow
 
@@ -22,14 +22,14 @@ Thank you for contributing to **FabricOps Starter Kit**. This guide is for human
 - Do not add duplicate modules for the same concern.
 - Do not introduce backward-compatibility shims unless explicitly requested.
 - Keep examples synthetic and tenant-safe (no private IDs, internal URLs, or production data).
-- For public APIs, expose only intentional user-facing callables and keep mappings aligned to the workflow registry.
+- For public APIs, expose only intentional user-facing callables and keep API docs generated from source metadata.
 
 ## 4) Documentation contribution rules
 
 - Keep root `README.md` concise; update it only when top-level navigation/journey must change.
 - Put lifecycle/operating behavior in `docs/`.
 - Keep callable API reference centered in `src/README.md` + generated docs.
-- If workflow behavior, contracts, templates, or architecture usage changes, update the relevant docs/templates in the same PR.
+- If template behavior or helper APIs change, update docs/templates in the same PR.
 - Do not duplicate long content across files; link to the canonical doc.
 
 ## 5) Function and docstring standards
@@ -67,7 +67,7 @@ For changes that affect runtime behavior in Fabric:
 1. Build the wheel from this repo.
 2. Upload/install the wheel in the Fabric workspace environment.
 3. Import the updated package in a Fabric notebook.
-4. Run the relevant end-to-end workflow path (for example source/unified/product movement, quality checks, contracts, drift checks, lineage outputs).
+4. Run the relevant notebook template path and API checks for your change.
 5. Verify expected outputs (tables/files/metadata artifacts) and document observations in the PR.
 
 ## 8) AI agent / Codex instructions
@@ -93,6 +93,6 @@ For changes that affect runtime behavior in Fabric:
 - [ ] No unnecessary renames/restructures/backward-compat shims.
 - [ ] Public API/docstring standards are met (NumPy-style, accurate, notebook-safe examples).
 - [ ] Generated function reference docs were updated if public API surface or mappings changed.
-- [ ] Docs/templates were updated where workflow behavior changed.
+- [ ] Docs/templates were updated where template or helper behavior changed.
 - [ ] Local checks were run with available repo commands, or skips are explained.
 - [ ] Fabric runtime validation steps were completed or explicitly marked N/A with reason.

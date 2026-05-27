@@ -18,35 +18,18 @@ theme:
 
 nav:
   - Home: index.md
-
-  - Start Here:
-      - Quick Start: quick-start.md
-      - Workflow Overview: workflow.md
-      - Notebook Operating Model: notebook-structure.md
+  - Quick Start: quick-start.md
+  - Setup:
+      - Create Wheel: setup/create-wheel.md
+      - Run in Fabric: setup/run-in-fabric.md
+  - Notebook Templates:
+      - Overview: notebook-structure.md
       - 00_env_config: notebook-structure/00-env-config.md
       - 01_da: notebook-structure/01-data-sharing-agreement.md
       - 02_ex: notebook-structure/02-exploration.md
       - 03_pc: notebook-structure/03-pipeline-contract.md
       - 04_gov: notebook-structure/04-governance-enrichment.md
-      - Deployment & Promotion: deployment-and-promotion.md
-      - Install in Fabric: setup/run-in-fabric.md
-
-  - Build a Data Product:
-      - Overview: build-a-data-product.md
-      - Function Usage Guide: reference/function-usage-guide.md
-      - Template Function Map: reference/template-function-map.md
-      - Notebook Recipes: recipes/index.md
-      - Run Summary & Handover: run-summary-and-handover.md
-
-  - Governance & AI:
-      - Overview: governance-and-ai.md
-      - Metadata & Contracts: metadata-and-contracts.md
-      - Data Quality: data-quality-rules-system.md
-      - Governance Workflow: notebook-structure/04-governance-enrichment.md
-      - Drift & Contracts: drift-and-contracts.md
-
-  - Developer Reference:
-      - Overview: developer-reference.md
+  - Function Reference:
       - Callable Function Reference: reference/index.md
       - Modules:
       # AUTO-GENERATED-MODULES-START
@@ -64,9 +47,8 @@ nav:
           - metadata: api/modules/metadata.md
       # AUTO-GENERATED-MODULES-END
       - Dependency Explorer: reference/call-graph.md
-      - Agent Function Manifest: reference/agent-manifest.json
 
-markdown_extensions:
+
   - admonition
   - attr_list
   - md_in_html

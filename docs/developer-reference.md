@@ -2,7 +2,7 @@
 
 Use this section for implementation-level details, generated references, and internal mechanics.
 
-If you are onboarding or operating workflows, start with **Start Here** and **Build a Data Product** first.
+If you are onboarding or operating notebooks, start with **Home**, **Quick Start**, and **Notebook Templates** first.
 
 ## Includes
 

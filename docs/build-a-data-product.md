@@ -1,17 +1,11 @@
 # Build a Data Product
 
-Use this section when you are turning notebook workflows into an **AI-assisted, governance-aware Fabric data product operation**.
+This page has been simplified.
 
-## What you can do here
+Use these pages to build a lightweight Fabric notebook package:
 
-- Learn which callable functions to use in each workflow step.
-- Map notebook templates to callable APIs.
-- Run recipe-based implementations for common delivery patterns.
-- Produce handover-ready run summaries for junior operators and reviewers.
-
-## Recommended path
-
-1. Start with **Function Usage Guide** for end-to-end flow.
-2. Use **Template Function Map** to align notebook cells with callable APIs.
-3. Apply **Notebook Recipes** for practical implementation sequences.
-4. Finalize with **Run Summary & Handover** outputs for operational continuity.
+1. [Quick Start](quick-start.md)
+2. [Create Wheel](setup/create-wheel.md)
+3. [Run in Fabric](setup/run-in-fabric.md)
+4. [Notebook Templates](notebook-structure.md)
+5. [Function Reference](reference/index.md)
