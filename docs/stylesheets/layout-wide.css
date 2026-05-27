@@ -1,0 +1,101 @@
+/*
+  Wide-screen tuning for MkDocs Material.
+
+  Design goals:
+  - Use more horizontal space on desktop/laptop screens.
+  - Keep prose readable by limiting line length.
+  - Let diagrams/images/tables intentionally expand.
+  - Avoid brittle overrides of internal layout mechanisms.
+*/
+
+:root {
+  --md-main-width: min(96vw, 124rem);
+}
+
+/* Safe global container widening */
+.md-grid {
+  max-width: min(96vw, 124rem);
+}
+
+/* Allow content column to use available room in wider layout */
+.md-content {
+  max-width: none;
+}
+
+.md-content__inner {
+  margin: 0 auto;
+  max-width: min(100%, 108rem);
+}
+
+/* Keep regular text readable even when the page container is wide */
+.md-content__inner .md-typeset {
+  max-width: 78ch;
+}
+
+/* Expand media/diagram/table blocks beyond prose width when possible */
+.md-content__inner .md-typeset > p > img,
+.md-content__inner .md-typeset > p > svg,
+.md-content__inner .md-typeset > .mermaid,
+.md-content__inner .md-typeset > .mermaid svg,
+.md-content__inner .md-typeset > .md-typeset__scrollwrap,
+.md-content__inner .md-typeset > .md-typeset__table,
+.md-content__inner .md-typeset > .wide-img,
+.md-content__inner .md-typeset > .full-width,
+.md-content__inner .md-typeset > figure,
+.md-content__inner .md-typeset > .admonition {
+  max-width: 100%;
+}
+
+.md-content__inner .md-typeset > .mermaid,
+.md-content__inner .md-typeset > .md-typeset__scrollwrap,
+.md-content__inner .md-typeset > .md-typeset__table,
+.md-content__inner .md-typeset > .wide-img,
+.md-content__inner .md-typeset > .full-width,
+.md-content__inner .md-typeset > figure {
+  width: min(100%, 108rem);
+}
+
+.md-content__inner .md-typeset > .mermaid {
+  overflow-x: auto;
+}
+
+/* Optional helper classes for page authors */
+.md-typeset .wide-img,
+.md-typeset .full-width {
+  display: block;
+  width: min(100%, 108rem);
+  max-width: 100%;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+/* Keep sidebars usable without forcing main layout internals */
+@media screen and (min-width: 76.25em) {
+  .md-sidebar--primary {
+    width: 13.5rem;
+  }
+
+  .md-sidebar--secondary {
+    width: 13rem;
+  }
+}
+
+/* Preserve clean stacking on tablet/mobile */
+@media screen and (max-width: 76.1875em) {
+  :root {
+    --md-main-width: 100%;
+  }
+
+  .md-grid,
+  .md-content__inner,
+  .md-content__inner .md-typeset,
+  .md-content__inner .md-typeset > .mermaid,
+  .md-content__inner .md-typeset > .md-typeset__scrollwrap,
+  .md-content__inner .md-typeset > .md-typeset__table,
+  .md-content__inner .md-typeset > .wide-img,
+  .md-content__inner .md-typeset > .full-width,
+  .md-content__inner .md-typeset > figure {
+    max-width: 100%;
+    width: 100%;
+  }
+}
