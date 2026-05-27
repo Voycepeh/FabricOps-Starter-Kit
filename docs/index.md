@@ -1,10 +1,16 @@
 # FabricOps Starter Kit
 
+<div class="home-hero">
 Governed, quality-checked, AI-ready notebooks in Microsoft Fabric.
+</div>
+
+<div class="home-cta">
 
 [Quick Start](quick-start.md){ .md-button .md-button--primary }
 [Workflow Operating Model](lifecycle-operating-model.md){ .md-button }
 [Functions](reference/index.md){ .md-button }
+
+</div>
 
 ## Choose your starting point
 
@@ -14,7 +20,13 @@ Governed, quality-checked, AI-ready notebooks in Microsoft Fabric.
 | Implement consistent notebook naming and ownership | [Notebook Structure](notebook-structure.md) |
 | Understand evidence outputs and contract assembly | [Metadata & Contracts](metadata-and-contracts.md) |
 
-## How FabricOps fits into Fabric
+## How FabricOps works
+
+FabricOps follows a governed notebook flow from agreement to evidence-backed contract outputs and enforcement.
+
+![FabricOps operating flow from agreement to handover](assets/mvp-flow.png){ .full-width }
+
+## Platform orientation inside Microsoft Fabric
 
 FabricOps Starter Kit is a lightweight framework for running notebook-led delivery inside Microsoft Fabric while keeping governance and handover explicit.
 
