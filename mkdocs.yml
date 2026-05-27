@@ -18,30 +18,36 @@ theme:
 
 nav:
   - Home: index.md
-  - Quick Start: quick-start.md
-  - Workflow: workflow.md
-  - Notebook Model:
+
+  - Start Here:
+      - Quick Start: quick-start.md
+      - Workflow Overview: workflow.md
       - Notebook Operating Model: notebook-structure.md
       - 00_env_config: notebook-structure/00-env-config.md
       - 01_da: notebook-structure/01-data-sharing-agreement.md
       - 02_ex: notebook-structure/02-exploration.md
       - 03_pc: notebook-structure/03-pipeline-contract.md
       - 04_gov: notebook-structure/04-governance-enrichment.md
-  - AI Data Quality: data-quality-rules-system.md
-  - Data Contract:
-      - Overview: metadata-and-contracts.md
-      - Contract Model: metadata-and-contracts/contract-model.md
-      - Metadata Tables: metadata-and-contracts/metadata-tables.md
-  - Deployment: deployment-and-promotion.md
-  - Setup:
-      - Create Wheel: setup/create-wheel.md
-      - Run in Fabric: setup/run-in-fabric.md
-  - Functions:
+      - Deployment & Promotion: deployment-and-promotion.md
+      - Install in Fabric: setup/run-in-fabric.md
+
+  - Build a Data Product:
+      - Overview: build-a-data-product.md
       - Function Usage Guide: reference/function-usage-guide.md
       - Template Function Map: reference/template-function-map.md
+      - Notebook Recipes: recipes/index.md
+      - Run Summary & Handover: run-summary-and-handover.md
+
+  - Governance & AI:
+      - Overview: governance-and-ai.md
+      - Metadata & Contracts: metadata-and-contracts.md
+      - Data Quality: data-quality-rules-system.md
+      - Governance Workflow: notebook-structure/04-governance-enrichment.md
+      - Drift & Contracts: drift-and-contracts.md
+
+  - Developer Reference:
+      - Overview: developer-reference.md
       - Callable Function Reference: reference/index.md
-      - Agent Function Manifest: reference/agent-manifest.json
-      - Experimental Dependency Explorer: reference/call-graph.md
       - Modules:
       # AUTO-GENERATED-MODULES-START
           - config: api/modules/config.md
@@ -57,7 +63,8 @@ nav:
           - handover: api/modules/handover.md
           - metadata: api/modules/metadata.md
       # AUTO-GENERATED-MODULES-END
-
+      - Dependency Explorer: reference/call-graph.md
+      - Agent Function Manifest: reference/agent-manifest.json
 
 markdown_extensions:
   - admonition
