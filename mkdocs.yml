@@ -91,3 +91,4 @@ extra_javascript:
 
 extra_css:
   - stylesheets/api-chips.css
+  - stylesheets/layout-wide.css

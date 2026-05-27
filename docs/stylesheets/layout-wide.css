@@ -1,0 +1,75 @@
+/* Wide-screen friendly layout tuning for MkDocs Material */
+
+:root {
+  --md-main-width: min(96vw, 124rem);
+}
+
+.md-grid {
+  max-width: min(96vw, 124rem);
+}
+
+.md-main__inner {
+  margin-top: 0.8rem;
+}
+
+.md-content {
+  max-width: none;
+}
+
+.md-content__inner {
+  margin: 0 auto;
+  max-width: min(100%, 108rem);
+}
+
+/* Let media and diagrams use available width */
+.md-content img,
+.md-content svg,
+.md-content .mermaid,
+.md-content .mermaid svg,
+.md-typeset__scrollwrap,
+.md-typeset__table {
+  max-width: 100%;
+}
+
+.md-content .mermaid {
+  width: 100%;
+  overflow-x: auto;
+}
+
+/* Helper classes for pages that need intentional wider callouts */
+.md-typeset .wide-img,
+.md-typeset .full-width {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+/* Keep sidebars usable and prevent content clipping */
+@media screen and (min-width: 76.25em) {
+  .md-sidebar--primary {
+    width: 13.5rem;
+  }
+
+  .md-sidebar--secondary {
+    width: 13rem;
+  }
+
+  .md-main__inner {
+    gap: 1rem;
+    grid-template-columns: 13.5rem minmax(0, 1fr) 13rem;
+  }
+}
+
+/* Mobile and narrow tablet: keep default responsive stacking */
+@media screen and (max-width: 76.1875em) {
+  :root {
+    --md-main-width: 100%;
+  }
+
+  .md-grid,
+  .md-content__inner {
+    max-width: 100%;
+  }
+}
