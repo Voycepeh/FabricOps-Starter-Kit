@@ -69,6 +69,28 @@ For new/modified public APIs in `src/fabricops_kit/` (public functions/classes/d
 - Describe actual behavior (no placeholder text).
 - Do not mix Google-style `Args`/`Returns` headers with NumPy-style headers.
 - For Fabric-specific behavior, document runtime assumptions in `Notes`.
+- Internal-only modules should not appear as public modules unless clearly labeled internal-only.
+- Deprecated callables must not be promoted as the recommended path when a replacement exists.
+- New public callables must be added to `__all__`, have useful NumPy-style docstrings, and appear in generated reference docs.
+
+
+Compact NumPy-style example:
+
+```python
+def api_name(param: str) -> bool:
+    """Return whether `param` is valid.
+
+    Parameters
+    ----------
+    param : str
+        Value to validate.
+
+    Returns
+    -------
+    bool
+        True when valid.
+    """
+```
 
 ## Metadata lakehouse routing (required)
 
@@ -112,6 +134,33 @@ Applies to all `METADATA_*` tables (including future additions).
 
 - Verify metadata operations use configured metadata target from `00_env_config`.
 - Remove/avoid default-lakehouse references for metadata reads/writes.
+
+
+## Optional validation checks
+
+Duplicate adjacent docstring check:
+
+```bash
+python - <<'PY'
+import ast
+from pathlib import Path
+
+bad = []
+for path in Path("src/fabricops_kit").glob("*.py"):
+    tree = ast.parse(path.read_text(encoding="utf-8"))
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            body = node.body
+            if len(body) >= 2:
+                first = isinstance(body[0], ast.Expr) and isinstance(body[0].value, ast.Constant) and isinstance(body[0].value.value, str)
+                second = isinstance(body[1], ast.Expr) and isinstance(body[1].value, ast.Constant) and isinstance(body[1].value.value, str)
+                if first and second:
+                    bad.append(f"{path}:{node.lineno} {node.name} has duplicate adjacent docstrings")
+if bad:
+    raise SystemExit("\n".join(bad))
+print("No duplicate adjacent docstrings found.")
+PY
+```
 
 ## Minimum validation before PR
 
