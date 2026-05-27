@@ -1,20 +1,24 @@
 # _safe_string
 
-## Internal helper
-Internal helper. Do not call directly from notebooks unless extending FabricOps.
+**Module:** `technical_columns`  
+**Classification:** Internal helper
 
 ## Purpose
-Supports callable orchestration internals.
 
-## Used by callable functions
-- None
+No summary available.
 
-## Used by internal helpers
-- `fabricops_kit.technical_columns._bucket_values_pandas`
-- `fabricops_kit.technical_columns._hash_row`
+## Function manifest
 
-## Debug relevance
-Inspect this helper when parent callable outputs are malformed, missing evidence, or failing validation.
+- Fully qualified function name: `fabricops_kit.technical_columns._safe_string`
+- Short name: `_safe_string`
+- Module: `technical_columns`
+- Classification: Internal helper
+- Related module: `technical_columns`
+- Source file path: `src/fabricops_kit/technical_columns.py`
+- Source reference: <a href="../../api/modules/technical_columns/#_safe_string">Module source anchor</a>
+- Inbound references count: 2
+- Outbound references count: 0
 
-## Safe change guidance
-Preserve helper contract, return shape, and side effects expected by parent callables.
+## Inbound references
+- <a href="../internal/technical_columns/_bucket_values_pandas/"><code>fabricops_kit.technical_columns._bucket_values_pandas</code></a>
+- <a href="../internal/technical_columns/_hash_row/"><code>fabricops_kit.technical_columns._hash_row</code></a>

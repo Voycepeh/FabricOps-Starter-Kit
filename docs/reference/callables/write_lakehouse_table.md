@@ -1,27 +1,28 @@
 # write_lakehouse_table
 
-## Template step
-—
+**Module:** `fabric_input_output`  
+**Classification:** Essential
 
-## Function role
-Callable orchestration wrapper
+## Purpose
 
-## Use this when
-Use `write_lakehouse_table` during template-driven notebook execution.
+No summary available.
 
-## What it delegates to
+## Function manifest
 
-### Callable functions called
-- None
+- Fully qualified function name: `fabricops_kit.fabric_input_output.write_lakehouse_table`
+- Short name: `write_lakehouse_table`
+- Module: `fabric_input_output`
+- Classification: Essential
+- Related module: `fabric_input_output`
+- Source file path: `src/fabricops_kit/fabric_input_output.py`
+- Source reference: <a href="../../api/modules/fabric_input_output/#write_lakehouse_table">Module source anchor</a>
+- Inbound references count: 3
+- Outbound references count: 1
 
-### Internal helpers used
-- `fabricops_kit.config._get_store`
+## Inbound references
+- <a href="../write_dq_rules/"><code>fabricops_kit.data_quality.write_dq_rules</code></a>
+- <a href="../internal/fabric_input_output/seed_minimal_sample_source_table/"><code>fabricops_kit.fabric_input_output.seed_minimal_sample_source_table</code></a>
+- <a href="../internal/metadata/write_metadata_rows/"><code>fabricops_kit.metadata.write_metadata_rows</code></a>
 
-## Debug this function when
-- Output shape or metadata evidence is unexpected.
-
-## Agent repair guide
-1. Preserve public callable signature unless templates are updated.
-2. Inspect delegated helpers before rewriting wrapper logic.
-3. Preserve output shape where downstream notebooks depend on it.
-4. Update tests and templates together if behavior changes.
+## Outbound references
+- <a href="../internal/config/_get_store/"><code>fabricops_kit.config._get_store</code></a>

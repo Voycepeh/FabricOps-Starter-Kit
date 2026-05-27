@@ -1,19 +1,24 @@
 # assert_valid_dataset_contract
 
-## Internal helper
-Internal helper. Do not call directly from notebooks unless extending FabricOps.
+**Module:** `config`  
+**Classification:** Internal helper
 
 ## Purpose
-Supports callable orchestration internals.
 
-## Used by callable functions
-- None
+No summary available.
 
-## Used by internal helpers
-- None
+## Function manifest
 
-## Debug relevance
-Inspect this helper when parent callable outputs are malformed, missing evidence, or failing validation.
+- Fully qualified function name: `fabricops_kit.config.assert_valid_dataset_contract`
+- Short name: `assert_valid_dataset_contract`
+- Module: `config`
+- Classification: Internal helper
+- Related module: `config`
+- Source file path: `src/fabricops_kit/config.py`
+- Source reference: <a href="../../api/modules/config/#assert_valid_dataset_contract">Module source anchor</a>
+- Inbound references count: 0
+- Outbound references count: 2
 
-## Safe change guidance
-Preserve helper contract, return shape, and side effects expected by parent callables.
+## Outbound references
+- <a href="../internal/config/DatasetContractValidationError/"><code>fabricops_kit.config.DatasetContractValidationError</code></a>
+- <a href="../internal/config/validate_dataset_contract/"><code>fabricops_kit.config.validate_dataset_contract</code></a>

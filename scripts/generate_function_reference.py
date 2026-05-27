@@ -19,6 +19,11 @@ DEPENDENCY_METADATA_PATH = ROOT / "docs" / "reference" / "dependency-metadata.js
 CALL_GRAPH_PAGE_PATH = ROOT / "docs" / "reference" / "call-graph.md"
 CALLABLE_REFERENCE_DIR = ROOT / "docs" / "reference" / "callables"
 INTERNAL_REFERENCE_DIR = ROOT / "docs" / "reference" / "internal"
+FUNCTION_USAGE_OVERRIDES_PATH = ROOT / "docs" / "reference" / "function_usage.yml"
+MANIFEST_PATH = ROOT / "docs" / "reference" / "manifest.json"
+AGENT_MANIFEST_PATH = ROOT / "docs" / "reference" / "agent-manifest.json"
+FUNCTION_MANIFEST_PATH = ROOT / "docs" / "reference" / "function-manifest.json"
+TEMPLATE_FUNCTION_MAP_PATH = ROOT / "docs" / "reference" / "template-function-map.md"
 
 PUBLIC_MODULE_PREFERRED_NAMES = {
     "config": "config",
@@ -952,11 +957,11 @@ def main() -> None:
         '  <p id="call-graph-search-empty" class="call-graph-search-empty" hidden>No matching function found.</p>',
         "</div>",
         '<div class="call-graph-legend" aria-label="Call graph legend">',
-        '<span class="call-graph-legend-item is-selected">selected</span>',
-        '<span class="call-graph-legend-item is-connector">connector</span>',
-        '<span class="call-graph-legend-item is-helper">internal helper</span>',
-        '<span class="call-graph-legend-item is-inbound">inbound</span>',
-        '<span class="call-graph-legend-item is-outbound">outbound</span>',
+        '<span class="call-graph-legend-item is-selected">Current</span>',
+        '<span class="call-graph-legend-item is-connector">Current</span>',
+        '<span class="call-graph-legend-item is-helper">Internal helper</span>',
+        '<span class="call-graph-legend-item is-inbound">Inbound</span>',
+        '<span class="call-graph-legend-item is-outbound">Outbound</span>',
         '</div>',
         '<div id="call-graph-canvas" class="call-graph-canvas" aria-label="Interactive call graph canvas" tabindex="0"></div>',
         '</div>',
@@ -1206,95 +1211,50 @@ def main() -> None:
     CALLABLE_REFERENCE_DIR.mkdir(parents=True, exist_ok=True)
     INTERNAL_REFERENCE_DIR.mkdir(parents=True, exist_ok=True)
     agent_manifest: list[dict[str, Any]] = []
+    function_manifest: list[dict[str, Any]] = []
     for qn, node in sorted(node_by_qn.items()):
         short_name = node["callable_name"]
-        override = usage_overrides.get(short_name, {}) if isinstance(usage_overrides, dict) else {}
         deps = sorted(set(calls_by_qn.get(qn, [])))
-        callable_deps = [d for d in deps if node_by_qn.get(d, {}).get("exported")]
-        internal_deps = [d for d in deps if not node_by_qn.get(d, {}).get("exported")]
         used_by = sorted(set(used_by_qn.get(qn, [])))
-        used_by_callable = [u for u in used_by if node_by_qn.get(u, {}).get("exported")]
-        used_by_internal = [u for u in used_by if not node_by_qn.get(u, {}).get("exported")]
         summary = docs_metadata.get(short_name, {}).get("summary_override") or ""
-        override_purpose = override.get("purpose", summary)
+        docs_path = (
+            f"reference/{short_name}.md" if node["exported"] else f"reference/internal/{node['module_name']}_{short_name}.md"
+        )
+        source_path = f"src/fabricops_kit/{node['module_name']}.py"
+        source_ref = f"../../api/modules/{node['module_name']}/#{short_name}"
+        classification = "Essential" if node.get("role") == "essential" else ("Optional" if node.get("role") == "optional" else "Internal helper")
+        purpose = summary or "No summary available."
+        rel_module = canonical_public_module(node['module_name'])
+
+        def _fmt_links(items: list[str]) -> list[str]:
+            out=[]
+            for i in items:
+                n=node_by_qn.get(i,{})
+                if not n: continue
+                if n.get('exported'):
+                    href=f"../{n['callable_name']}/"
+                else:
+                    href=f"../internal/{n['module_name']}/{n['callable_name']}/"
+                out.append(f'- <a href="{href}"><code>{i}</code></a>')
+            return out
+
+        lines=[f"# {short_name}","",f"**Module:** `{node['module_name']}`  ",f"**Classification:** {classification}","","## Purpose","",purpose,"","## Function manifest","",'- Fully qualified function name: '+f'`{qn}`','- Short name: '+f'`{short_name}`','- Module: '+f'`{node["module_name"]}`','- Classification: '+classification,'- Related module: '+f'`{rel_module}`','- Source file path: '+f'`{source_path}`',f'- Source reference: <a href="{source_ref}">Module source anchor</a>',f'- Inbound references count: {len(used_by)}',f'- Outbound references count: {len(deps)}']
+        if used_by:
+            lines.extend(["", "## Inbound references", *(_fmt_links(used_by))])
+        if deps:
+            lines.extend(["", "## Outbound references", *(_fmt_links(deps))])
+        if not used_by and not deps:
+            lines.extend(["", "_No inbound or outbound references detected._"])
+
         if node["exported"]:
-            callable_lines = [f"- `{d}`" for d in callable_deps] or ["- None"]
-            helper_lines = [f"- `{d}`" for d in internal_deps] or ["- None"]
-            debug_lines = [f"- {d}" for d in override.get("debug_when", [])] or ["- Output shape or metadata evidence is unexpected."]
-            callable_md = [
-                f"# {short_name}",
-                "",
-                "## Template step",
-                override.get("template_step") or docs_metadata.get(short_name, {}).get("template_segment") or "unknown",
-                "",
-                "## Function role",
-                override.get("role") or "Callable orchestration wrapper",
-                "",
-                "## Use this when",
-                override.get("use_when") or f"Use `{short_name}` during template-driven notebook execution.",
-                "",
-                "## What it delegates to",
-                "",
-                "### Callable functions called",
-                *callable_lines,
-                "",
-                "### Internal helpers used",
-                *helper_lines,
-                "",
-                "## Debug this function when",
-                *debug_lines,
-                "",
-                "## Agent repair guide",
-                "1. Preserve public callable signature unless templates are updated.",
-                "2. Inspect delegated helpers before rewriting wrapper logic.",
-                "3. Preserve output shape where downstream notebooks depend on it.",
-                "4. Update tests and templates together if behavior changes.",
-                "",
-            ]
-            (CALLABLE_REFERENCE_DIR / f"{short_name}.md").write_text("\n".join(callable_md), encoding="utf-8")
+            (CALLABLE_REFERENCE_DIR / f"{short_name}.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
         else:
-            used_by_callable_lines = [f"- `{u}`" for u in used_by_callable] or ["- None"]
-            used_by_internal_lines = [f"- `{u}`" for u in used_by_internal] or ["- None"]
-            internal_md = [
-                f"# {short_name}",
-                "",
-                "## Internal helper",
-                "Internal helper. Do not call directly from notebooks unless extending FabricOps.",
-                "",
-                "## Purpose",
-                override_purpose or "Supports callable orchestration internals.",
-                "",
-                "## Used by callable functions",
-                *used_by_callable_lines,
-                "",
-                "## Used by internal helpers",
-                *used_by_internal_lines,
-                "",
-                "## Debug relevance",
-                "Inspect this helper when parent callable outputs are malformed, missing evidence, or failing validation.",
-                "",
-                "## Safe change guidance",
-                "Preserve helper contract, return shape, and side effects expected by parent callables.",
-                "",
-            ]
-            (INTERNAL_REFERENCE_DIR / f"{node['module_name']}_{short_name}.md").write_text("\n".join(internal_md), encoding="utf-8")
-        agent_manifest.append({
-            "name": short_name,
-            "qualified_name": qn,
-            "module": node["module_name"],
-            "type": "callable" if node["exported"] else "internal",
-            "template_step": override.get("template_step") or docs_metadata.get(short_name, {}).get("template_segment") or "unknown",
-            "role": override.get("role") or node.get("role", "internal"),
-            "calls_callable_functions": callable_deps,
-            "uses_internal_helpers": internal_deps,
-            "used_by_callable_functions": used_by_callable,
-            "used_by_internal_helpers": used_by_internal,
-            "related_templates": override.get("related_templates", []),
-            "debug_when": override.get("debug_when", []),
-            "source_file": f"src/fabricops_kit/{node['module_name']}.py",
-            "line_number": None,
-        })
+            (INTERNAL_REFERENCE_DIR / f"{node['module_name']}_{short_name}.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+        function_manifest.append({"id": qn, "name": short_name, "qualified_name": qn, "module": node["module_name"], "classification": classification, "inbound": used_by, "outbound": deps, "source_path": source_path, "docs_path": docs_path, "summary": purpose})
+        agent_manifest.append({"name": short_name, "qualified_name": qn, "module": node["module_name"], "type": "callable" if node["exported"] else "internal", "role": node.get("role", "internal"), "inbound": used_by, "outbound": deps, "source_file": source_path, "summary": purpose})
     AGENT_MANIFEST_PATH.write_text(json.dumps(agent_manifest, indent=2) + "\n", encoding="utf-8")
+    FUNCTION_MANIFEST_PATH.write_text(json.dumps(function_manifest, indent=2) + "\n", encoding="utf-8")
 
 
 if __name__ == "__main__":

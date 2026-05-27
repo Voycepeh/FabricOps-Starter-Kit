@@ -1,30 +1,26 @@
 # setup_notebook
 
-## Template step
-00_env_config
+**Module:** `config`  
+**Classification:** Essential
 
-## Function role
-Template entrypoint
+## Purpose
 
-## Use this when
-Use `setup_notebook` during template-driven notebook execution.
+No summary available.
 
-## What it delegates to
+## Function manifest
 
-### Callable functions called
-- `fabricops_kit.config.load_config`
+- Fully qualified function name: `fabricops_kit.config.setup_notebook`
+- Short name: `setup_notebook`
+- Module: `config`
+- Classification: Essential
+- Related module: `config`
+- Source file path: `src/fabricops_kit/config.py`
+- Source reference: <a href="../../api/modules/config/#setup_notebook">Module source anchor</a>
+- Inbound references count: 0
+- Outbound references count: 4
 
-### Internal helpers used
-- `fabricops_kit.config.NotebookSetupContext`
-- `fabricops_kit.config._get_store`
-- `fabricops_kit.config._run_config_smoke_tests`
-
-## Debug this function when
-- notebook startup checks fail
-- runtime capabilities are missing
-
-## Agent repair guide
-1. Preserve public callable signature unless templates are updated.
-2. Inspect delegated helpers before rewriting wrapper logic.
-3. Preserve output shape where downstream notebooks depend on it.
-4. Update tests and templates together if behavior changes.
+## Outbound references
+- <a href="../internal/config/NotebookSetupContext/"><code>fabricops_kit.config.NotebookSetupContext</code></a>
+- <a href="../internal/config/_get_store/"><code>fabricops_kit.config._get_store</code></a>
+- <a href="../internal/config/_run_config_smoke_tests/"><code>fabricops_kit.config._run_config_smoke_tests</code></a>
+- <a href="../load_config/"><code>fabricops_kit.config.load_config</code></a>

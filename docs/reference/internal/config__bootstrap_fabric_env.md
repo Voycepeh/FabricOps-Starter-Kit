@@ -1,19 +1,27 @@
 # _bootstrap_fabric_env
 
-## Internal helper
-Internal helper. Do not call directly from notebooks unless extending FabricOps.
+**Module:** `config`  
+**Classification:** Internal helper
 
 ## Purpose
-Supports callable orchestration internals.
 
-## Used by callable functions
-- None
+No summary available.
 
-## Used by internal helpers
-- None
+## Function manifest
 
-## Debug relevance
-Inspect this helper when parent callable outputs are malformed, missing evidence, or failing validation.
+- Fully qualified function name: `fabricops_kit.config._bootstrap_fabric_env`
+- Short name: `_bootstrap_fabric_env`
+- Module: `config`
+- Classification: Internal helper
+- Related module: `config`
+- Source file path: `src/fabricops_kit/config.py`
+- Source reference: <a href="../../api/modules/config/#_bootstrap_fabric_env">Module source anchor</a>
+- Inbound references count: 0
+- Outbound references count: 5
 
-## Safe change guidance
-Preserve helper contract, return shape, and side effects expected by parent callables.
+## Outbound references
+- <a href="../internal/config/ConfigBootstrapResult/"><code>fabricops_kit.config.ConfigBootstrapResult</code></a>
+- <a href="../internal/config/_get_fabric_runtime_metadata/"><code>fabricops_kit.config._get_fabric_runtime_metadata</code></a>
+- <a href="../internal/config/_get_store/"><code>fabricops_kit.config._get_store</code></a>
+- <a href="../internal/config/_run_config_smoke_tests/"><code>fabricops_kit.config._run_config_smoke_tests</code></a>
+- <a href="../load_config/"><code>fabricops_kit.config.load_config</code></a>

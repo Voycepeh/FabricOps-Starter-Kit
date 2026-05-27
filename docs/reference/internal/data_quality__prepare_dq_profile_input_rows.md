@@ -1,19 +1,26 @@
 # _prepare_dq_profile_input_rows
 
-## Internal helper
-Internal helper. Do not call directly from notebooks unless extending FabricOps.
+**Module:** `data_quality`  
+**Classification:** Internal helper
 
 ## Purpose
-Supports callable orchestration internals.
 
-## Used by callable functions
-- `fabricops_kit.data_quality.draft_dq_rules`
+No summary available.
 
-## Used by internal helpers
-- None
+## Function manifest
 
-## Debug relevance
-Inspect this helper when parent callable outputs are malformed, missing evidence, or failing validation.
+- Fully qualified function name: `fabricops_kit.data_quality._prepare_dq_profile_input_rows`
+- Short name: `_prepare_dq_profile_input_rows`
+- Module: `data_quality`
+- Classification: Internal helper
+- Related module: `data_quality`
+- Source file path: `src/fabricops_kit/data_quality.py`
+- Source reference: <a href="../../api/modules/data_quality/#_prepare_dq_profile_input_rows">Module source anchor</a>
+- Inbound references count: 1
+- Outbound references count: 1
 
-## Safe change guidance
-Preserve helper contract, return shape, and side effects expected by parent callables.
+## Inbound references
+- <a href="../draft_dq_rules/"><code>fabricops_kit.data_quality.draft_dq_rules</code></a>
+
+## Outbound references
+- <a href="../profile_dataframe/"><code>fabricops_kit.data_profiling.profile_dataframe</code></a>

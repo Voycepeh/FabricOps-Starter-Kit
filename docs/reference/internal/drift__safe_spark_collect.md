@@ -1,20 +1,24 @@
 # _safe_spark_collect
 
-## Internal helper
-Internal helper. Do not call directly from notebooks unless extending FabricOps.
+**Module:** `drift`  
+**Classification:** Internal helper
 
 ## Purpose
-Supports callable orchestration internals.
 
-## Used by callable functions
-- None
+No summary available.
 
-## Used by internal helpers
-- `fabricops_kit.drift.load_latest_partition_snapshot`
-- `fabricops_kit.drift.load_latest_schema_snapshot`
+## Function manifest
 
-## Debug relevance
-Inspect this helper when parent callable outputs are malformed, missing evidence, or failing validation.
+- Fully qualified function name: `fabricops_kit.drift._safe_spark_collect`
+- Short name: `_safe_spark_collect`
+- Module: `drift`
+- Classification: Internal helper
+- Related module: `drift`
+- Source file path: `src/fabricops_kit/drift.py`
+- Source reference: <a href="../../api/modules/drift/#_safe_spark_collect">Module source anchor</a>
+- Inbound references count: 2
+- Outbound references count: 0
 
-## Safe change guidance
-Preserve helper contract, return shape, and side effects expected by parent callables.
+## Inbound references
+- <a href="../internal/drift/load_latest_partition_snapshot/"><code>fabricops_kit.drift.load_latest_partition_snapshot</code></a>
+- <a href="../internal/drift/load_latest_schema_snapshot/"><code>fabricops_kit.drift.load_latest_schema_snapshot</code></a>

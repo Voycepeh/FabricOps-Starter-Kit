@@ -1,6 +1,6 @@
 # Function Reference
 
-Use this page as a callable lookup for the lightweight notebook templates and package APIs.
+Use this page as a callable lookup after you understand the notebook flow.
 
 ## Find a callable
 

@@ -1,30 +1,25 @@
 # draft_dq_rules
 
-## Template step
-02_exploration
+**Module:** `data_quality`  
+**Classification:** Essential
 
-## Function role
-AI-assisted suggestion function
+## Purpose
 
-## Use this when
-Use `draft_dq_rules` during template-driven notebook execution.
+No summary available.
 
-## What it delegates to
+## Function manifest
 
-### Callable functions called
-- None
+- Fully qualified function name: `fabricops_kit.data_quality.draft_dq_rules`
+- Short name: `draft_dq_rules`
+- Module: `data_quality`
+- Classification: Essential
+- Related module: `data_quality`
+- Source file path: `src/fabricops_kit/data_quality.py`
+- Source reference: <a href="../../api/modules/data_quality/#draft_dq_rules">Module source anchor</a>
+- Inbound references count: 0
+- Outbound references count: 3
 
-### Internal helpers used
-- `fabricops_kit.data_quality._extract_dq_rules`
-- `fabricops_kit.data_quality._prepare_dq_profile_input_rows`
-- `fabricops_kit.data_quality._suggest_dq_rules`
-
-## Debug this function when
-- AI-generated rules do not match business expectations
-- suggested rules are too generic
-
-## Agent repair guide
-1. Preserve public callable signature unless templates are updated.
-2. Inspect delegated helpers before rewriting wrapper logic.
-3. Preserve output shape where downstream notebooks depend on it.
-4. Update tests and templates together if behavior changes.
+## Outbound references
+- <a href="../internal/data_quality/_extract_dq_rules/"><code>fabricops_kit.data_quality._extract_dq_rules</code></a>
+- <a href="../internal/data_quality/_prepare_dq_profile_input_rows/"><code>fabricops_kit.data_quality._prepare_dq_profile_input_rows</code></a>
+- <a href="../internal/data_quality/_suggest_dq_rules/"><code>fabricops_kit.data_quality._suggest_dq_rules</code></a>

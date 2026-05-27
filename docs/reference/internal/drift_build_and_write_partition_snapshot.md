@@ -1,19 +1,26 @@
 # build_and_write_partition_snapshot
 
-## Internal helper
-Internal helper. Do not call directly from notebooks unless extending FabricOps.
+**Module:** `drift`  
+**Classification:** Internal helper
 
 ## Purpose
-Supports callable orchestration internals.
 
-## Used by callable functions
-- None
+No summary available.
 
-## Used by internal helpers
-- None
+## Function manifest
 
-## Debug relevance
-Inspect this helper when parent callable outputs are malformed, missing evidence, or failing validation.
+- Fully qualified function name: `fabricops_kit.drift.build_and_write_partition_snapshot`
+- Short name: `build_and_write_partition_snapshot`
+- Module: `drift`
+- Classification: Internal helper
+- Related module: `drift`
+- Source file path: `src/fabricops_kit/drift.py`
+- Source reference: <a href="../../api/modules/drift/#build_and_write_partition_snapshot">Module source anchor</a>
+- Inbound references count: 0
+- Outbound references count: 4
 
-## Safe change guidance
-Preserve helper contract, return shape, and side effects expected by parent callables.
+## Outbound references
+- <a href="../internal/drift/_json_dumps/"><code>fabricops_kit.drift._json_dumps</code></a>
+- <a href="../internal/drift/_utc_now_iso/"><code>fabricops_kit.drift._utc_now_iso</code></a>
+- <a href="../internal/drift/_write_metadata_rows/"><code>fabricops_kit.drift._write_metadata_rows</code></a>
+- <a href="../internal/drift/build_partition_snapshot/"><code>fabricops_kit.drift.build_partition_snapshot</code></a>

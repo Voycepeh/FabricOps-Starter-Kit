@@ -1,29 +1,27 @@
 # profile_dataframe
 
-## Template step
-02_exploration
+**Module:** `data_profiling`  
+**Classification:** Essential
 
-## Function role
-Validation/check function
+## Purpose
 
-## Use this when
-Use `profile_dataframe` during template-driven notebook execution.
+No summary available.
 
-## What it delegates to
+## Function manifest
 
-### Callable functions called
-- None
+- Fully qualified function name: `fabricops_kit.data_profiling.profile_dataframe`
+- Short name: `profile_dataframe`
+- Module: `data_profiling`
+- Classification: Essential
+- Related module: `data_profiling`
+- Source file path: `src/fabricops_kit/data_profiling.py`
+- Source reference: <a href="../../api/modules/data_profiling/#profile_dataframe">Module source anchor</a>
+- Inbound references count: 1
+- Outbound references count: 2
 
-### Internal helpers used
-- `fabricops_kit.data_profiling._get_profiled_columns`
-- `fabricops_kit.data_profiling._is_min_max_supported_type`
+## Inbound references
+- <a href="../internal/data_quality/_prepare_dq_profile_input_rows/"><code>fabricops_kit.data_quality._prepare_dq_profile_input_rows</code></a>
 
-## Debug this function when
-- profile metrics look inconsistent
-- profile output schema changed unexpectedly
-
-## Agent repair guide
-1. Preserve public callable signature unless templates are updated.
-2. Inspect delegated helpers before rewriting wrapper logic.
-3. Preserve output shape where downstream notebooks depend on it.
-4. Update tests and templates together if behavior changes.
+## Outbound references
+- <a href="../internal/data_profiling/_get_profiled_columns/"><code>fabricops_kit.data_profiling._get_profiled_columns</code></a>
+- <a href="../internal/data_profiling/_is_min_max_supported_type/"><code>fabricops_kit.data_profiling._is_min_max_supported_type</code></a>

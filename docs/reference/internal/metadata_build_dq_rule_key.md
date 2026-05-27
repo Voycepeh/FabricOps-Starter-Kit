@@ -1,19 +1,26 @@
 # build_dq_rule_key
 
-## Internal helper
-Internal helper. Do not call directly from notebooks unless extending FabricOps.
+**Module:** `metadata`  
+**Classification:** Internal helper
 
 ## Purpose
-Supports callable orchestration internals.
 
-## Used by callable functions
-- None
+No summary available.
 
-## Used by internal helpers
-- `fabricops_kit.data_quality._attach_rule_metadata_keys`
+## Function manifest
 
-## Debug relevance
-Inspect this helper when parent callable outputs are malformed, missing evidence, or failing validation.
+- Fully qualified function name: `fabricops_kit.metadata.build_dq_rule_key`
+- Short name: `build_dq_rule_key`
+- Module: `metadata`
+- Classification: Internal helper
+- Related module: `metadata`
+- Source file path: `src/fabricops_kit/metadata.py`
+- Source reference: <a href="../../api/modules/metadata/#build_dq_rule_key">Module source anchor</a>
+- Inbound references count: 1
+- Outbound references count: 1
 
-## Safe change guidance
-Preserve helper contract, return shape, and side effects expected by parent callables.
+## Inbound references
+- <a href="../internal/data_quality/_attach_rule_metadata_keys/"><code>fabricops_kit.data_quality._attach_rule_metadata_keys</code></a>
+
+## Outbound references
+- <a href="../internal/metadata/_sha256_key/"><code>fabricops_kit.metadata._sha256_key</code></a>

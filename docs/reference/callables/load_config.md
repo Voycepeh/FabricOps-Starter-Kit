@@ -1,28 +1,28 @@
 # load_config
 
-## Template step
-00_env_config
+**Module:** `config`  
+**Classification:** Essential
 
-## Function role
-Callable orchestration wrapper
+## Purpose
 
-## Use this when
-Use `load_config` during template-driven notebook execution.
+No summary available.
 
-## What it delegates to
+## Function manifest
 
-### Callable functions called
-- None
+- Fully qualified function name: `fabricops_kit.config.load_config`
+- Short name: `load_config`
+- Module: `config`
+- Classification: Essential
+- Related module: `config`
+- Source file path: `src/fabricops_kit/config.py`
+- Source reference: <a href="../../api/modules/config/#load_config">Module source anchor</a>
+- Inbound references count: 3
+- Outbound references count: 1
 
-### Internal helpers used
-- `fabricops_kit.config._validate_framework_config`
+## Inbound references
+- <a href="../internal/config/_bootstrap_fabric_env/"><code>fabricops_kit.config._bootstrap_fabric_env</code></a>
+- <a href="../setup_notebook/"><code>fabricops_kit.config.setup_notebook</code></a>
+- <a href="../internal/fabric_input_output/load_config/"><code>fabricops_kit.fabric_input_output.load_config</code></a>
 
-## Debug this function when
-- resolved paths are incorrect
-- environment mapping is missing
-
-## Agent repair guide
-1. Preserve public callable signature unless templates are updated.
-2. Inspect delegated helpers before rewriting wrapper logic.
-3. Preserve output shape where downstream notebooks depend on it.
-4. Update tests and templates together if behavior changes.
+## Outbound references
+- <a href="../internal/config/_validate_framework_config/"><code>fabricops_kit.config._validate_framework_config</code></a>

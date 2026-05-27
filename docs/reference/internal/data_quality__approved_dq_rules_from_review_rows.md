@@ -1,19 +1,22 @@
 # _approved_dq_rules_from_review_rows
 
-## Internal helper
-Internal helper. Do not call directly from notebooks unless extending FabricOps.
+**Module:** `data_quality`  
+**Classification:** Internal helper
 
 ## Purpose
-Supports callable orchestration internals.
 
-## Used by callable functions
-- None
+No summary available.
 
-## Used by internal helpers
-- None
+## Function manifest
 
-## Debug relevance
-Inspect this helper when parent callable outputs are malformed, missing evidence, or failing validation.
+- Fully qualified function name: `fabricops_kit.data_quality._approved_dq_rules_from_review_rows`
+- Short name: `_approved_dq_rules_from_review_rows`
+- Module: `data_quality`
+- Classification: Internal helper
+- Related module: `data_quality`
+- Source file path: `src/fabricops_kit/data_quality.py`
+- Source reference: <a href="../../api/modules/data_quality/#_approved_dq_rules_from_review_rows">Module source anchor</a>
+- Inbound references count: 0
+- Outbound references count: 0
 
-## Safe change guidance
-Preserve helper contract, return shape, and side effects expected by parent callables.
+_No inbound or outbound references detected._

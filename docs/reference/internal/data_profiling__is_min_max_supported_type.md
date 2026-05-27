@@ -1,19 +1,23 @@
 # _is_min_max_supported_type
 
-## Internal helper
-Internal helper. Do not call directly from notebooks unless extending FabricOps.
+**Module:** `data_profiling`  
+**Classification:** Internal helper
 
 ## Purpose
-Supports callable orchestration internals.
 
-## Used by callable functions
-- `fabricops_kit.data_profiling.profile_dataframe`
+No summary available.
 
-## Used by internal helpers
-- None
+## Function manifest
 
-## Debug relevance
-Inspect this helper when parent callable outputs are malformed, missing evidence, or failing validation.
+- Fully qualified function name: `fabricops_kit.data_profiling._is_min_max_supported_type`
+- Short name: `_is_min_max_supported_type`
+- Module: `data_profiling`
+- Classification: Internal helper
+- Related module: `data_profiling`
+- Source file path: `src/fabricops_kit/data_profiling.py`
+- Source reference: <a href="../../api/modules/data_profiling/#_is_min_max_supported_type">Module source anchor</a>
+- Inbound references count: 1
+- Outbound references count: 0
 
-## Safe change guidance
-Preserve helper contract, return shape, and side effects expected by parent callables.
+## Inbound references
+- <a href="../profile_dataframe/"><code>fabricops_kit.data_profiling.profile_dataframe</code></a>

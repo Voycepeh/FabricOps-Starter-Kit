@@ -1,19 +1,23 @@
 # _fallback_copilot_lineage_prompt
 
-## Internal helper
-Internal helper. Do not call directly from notebooks unless extending FabricOps.
+**Module:** `data_lineage`  
+**Classification:** Internal helper
 
 ## Purpose
-Supports callable orchestration internals.
 
-## Used by callable functions
-- None
+No summary available.
 
-## Used by internal helpers
-- `fabricops_kit.data_lineage._enrich_lineage_steps_with_ai`
+## Function manifest
 
-## Debug relevance
-Inspect this helper when parent callable outputs are malformed, missing evidence, or failing validation.
+- Fully qualified function name: `fabricops_kit.data_lineage._fallback_copilot_lineage_prompt`
+- Short name: `_fallback_copilot_lineage_prompt`
+- Module: `data_lineage`
+- Classification: Internal helper
+- Related module: `data_lineage`
+- Source file path: `src/fabricops_kit/data_lineage.py`
+- Source reference: <a href="../../api/modules/data_lineage/#_fallback_copilot_lineage_prompt">Module source anchor</a>
+- Inbound references count: 1
+- Outbound references count: 0
 
-## Safe change guidance
-Preserve helper contract, return shape, and side effects expected by parent callables.
+## Inbound references
+- <a href="../internal/data_lineage/_enrich_lineage_steps_with_ai/"><code>fabricops_kit.data_lineage._enrich_lineage_steps_with_ai</code></a>

@@ -1,27 +1,23 @@
 # load_governance
 
-## Template step
-Governance/classification
+**Module:** `data_governance`  
+**Classification:** Essential
 
-## Function role
-Callable utility
+## Purpose
 
-## Use this when
-Use `load_governance` during template-driven notebook execution.
+No summary available.
 
-## What it delegates to
+## Function manifest
 
-### Callable functions called
-- None
+- Fully qualified function name: `fabricops_kit.data_governance.load_governance`
+- Short name: `load_governance`
+- Module: `data_governance`
+- Classification: Essential
+- Related module: `data_governance`
+- Source file path: `src/fabricops_kit/data_governance.py`
+- Source reference: <a href="../../api/modules/data_governance/#load_governance">Module source anchor</a>
+- Inbound references count: 0
+- Outbound references count: 1
 
-### Internal helpers used
-- `fabricops_kit.data_governance._coerce_row_dicts`
-
-## Debug this function when
-- governance metadata fails to load
-
-## Agent repair guide
-1. Preserve public callable signature unless templates are updated.
-2. Inspect delegated helpers before rewriting wrapper logic.
-3. Preserve output shape where downstream notebooks depend on it.
-4. Update tests and templates together if behavior changes.
+## Outbound references
+- <a href="../internal/data_governance/_coerce_row_dicts/"><code>fabricops_kit.data_governance._coerce_row_dicts</code></a>

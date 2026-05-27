@@ -1,19 +1,23 @@
 # check_naming_convention
 
-## Internal helper
-Internal helper. Do not call directly from notebooks unless extending FabricOps.
+**Module:** `fabric_input_output`  
+**Classification:** Internal helper
 
 ## Purpose
-Supports callable orchestration internals.
 
-## Used by callable functions
-- None
+No summary available.
 
-## Used by internal helpers
-- None
+## Function manifest
 
-## Debug relevance
-Inspect this helper when parent callable outputs are malformed, missing evidence, or failing validation.
+- Fully qualified function name: `fabricops_kit.fabric_input_output.check_naming_convention`
+- Short name: `check_naming_convention`
+- Module: `fabric_input_output`
+- Classification: Internal helper
+- Related module: `fabric_input_output`
+- Source file path: `src/fabricops_kit/fabric_input_output.py`
+- Source reference: <a href="../../api/modules/fabric_input_output/#check_naming_convention">Module source anchor</a>
+- Inbound references count: 0
+- Outbound references count: 1
 
-## Safe change guidance
-Preserve helper contract, return shape, and side effects expected by parent callables.
+## Outbound references
+- <a href="../internal/fabric_input_output/_get_fabric_runtime_context/"><code>fabricops_kit.fabric_input_output._get_fabric_runtime_context</code></a>

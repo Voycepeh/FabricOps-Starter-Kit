@@ -1,23 +1,28 @@
 # _get_spark
 
-## Internal helper
-Internal helper. Do not call directly from notebooks unless extending FabricOps.
+**Module:** `fabric_input_output`  
+**Classification:** Internal helper
 
 ## Purpose
-Supports callable orchestration internals.
 
-## Used by callable functions
-- `fabricops_kit.fabric_input_output.read_lakehouse_csv`
-- `fabricops_kit.fabric_input_output.read_lakehouse_excel`
-- `fabricops_kit.fabric_input_output.read_lakehouse_parquet`
-- `fabricops_kit.fabric_input_output.read_lakehouse_table`
-- `fabricops_kit.fabric_input_output.read_warehouse_table`
+No summary available.
 
-## Used by internal helpers
-- `fabricops_kit.fabric_input_output.seed_minimal_sample_source_table`
+## Function manifest
 
-## Debug relevance
-Inspect this helper when parent callable outputs are malformed, missing evidence, or failing validation.
+- Fully qualified function name: `fabricops_kit.fabric_input_output._get_spark`
+- Short name: `_get_spark`
+- Module: `fabric_input_output`
+- Classification: Internal helper
+- Related module: `fabric_input_output`
+- Source file path: `src/fabricops_kit/fabric_input_output.py`
+- Source reference: <a href="../../api/modules/fabric_input_output/#_get_spark">Module source anchor</a>
+- Inbound references count: 6
+- Outbound references count: 0
 
-## Safe change guidance
-Preserve helper contract, return shape, and side effects expected by parent callables.
+## Inbound references
+- <a href="../read_lakehouse_csv/"><code>fabricops_kit.fabric_input_output.read_lakehouse_csv</code></a>
+- <a href="../read_lakehouse_excel/"><code>fabricops_kit.fabric_input_output.read_lakehouse_excel</code></a>
+- <a href="../read_lakehouse_parquet/"><code>fabricops_kit.fabric_input_output.read_lakehouse_parquet</code></a>
+- <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a>
+- <a href="../read_warehouse_table/"><code>fabricops_kit.fabric_input_output.read_warehouse_table</code></a>
+- <a href="../internal/fabric_input_output/seed_minimal_sample_source_table/"><code>fabricops_kit.fabric_input_output.seed_minimal_sample_source_table</code></a>

@@ -1,29 +1,24 @@
 # read_lakehouse_table
 
-## Template step
-02_exploration
+**Module:** `fabric_input_output`  
+**Classification:** Essential
 
-## Function role
-Callable utility
+## Purpose
 
-## Use this when
-Use `read_lakehouse_table` during template-driven notebook execution.
+No summary available.
 
-## What it delegates to
+## Function manifest
 
-### Callable functions called
-- None
+- Fully qualified function name: `fabricops_kit.fabric_input_output.read_lakehouse_table`
+- Short name: `read_lakehouse_table`
+- Module: `fabric_input_output`
+- Classification: Essential
+- Related module: `fabric_input_output`
+- Source file path: `src/fabricops_kit/fabric_input_output.py`
+- Source reference: <a href="../../api/modules/fabric_input_output/#read_lakehouse_table">Module source anchor</a>
+- Inbound references count: 0
+- Outbound references count: 2
 
-### Internal helpers used
-- `fabricops_kit.config._get_store`
-- `fabricops_kit.fabric_input_output._get_spark`
-
-## Debug this function when
-- metadata table was not read
-- table path resolution fails
-
-## Agent repair guide
-1. Preserve public callable signature unless templates are updated.
-2. Inspect delegated helpers before rewriting wrapper logic.
-3. Preserve output shape where downstream notebooks depend on it.
-4. Update tests and templates together if behavior changes.
+## Outbound references
+- <a href="../internal/config/_get_store/"><code>fabricops_kit.config._get_store</code></a>
+- <a href="../internal/fabric_input_output/_get_spark/"><code>fabricops_kit.fabric_input_output._get_spark</code></a>

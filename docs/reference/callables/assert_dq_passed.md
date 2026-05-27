@@ -1,27 +1,22 @@
 # assert_dq_passed
 
-## Template step
-03_pipeline_contract
+**Module:** `data_quality`  
+**Classification:** Essential
 
-## Function role
-Validation/check function
+## Purpose
 
-## Use this when
-Use `assert_dq_passed` during template-driven notebook execution.
+No summary available.
 
-## What it delegates to
+## Function manifest
 
-### Callable functions called
-- None
+- Fully qualified function name: `fabricops_kit.data_quality.assert_dq_passed`
+- Short name: `assert_dq_passed`
+- Module: `data_quality`
+- Classification: Essential
+- Related module: `data_quality`
+- Source file path: `src/fabricops_kit/data_quality.py`
+- Source reference: <a href="../../api/modules/data_quality/#assert_dq_passed">Module source anchor</a>
+- Inbound references count: 0
+- Outbound references count: 0
 
-### Internal helpers used
-- None
-
-## Debug this function when
-- pipeline succeeds when DQ should fail
-
-## Agent repair guide
-1. Preserve public callable signature unless templates are updated.
-2. Inspect delegated helpers before rewriting wrapper logic.
-3. Preserve output shape where downstream notebooks depend on it.
-4. Update tests and templates together if behavior changes.
+_No inbound or outbound references detected._

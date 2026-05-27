@@ -1,27 +1,23 @@
 # load_dq_rules
 
-## Template step
-—
+**Module:** `data_quality`  
+**Classification:** Essential
 
-## Function role
-Callable orchestration wrapper
+## Purpose
 
-## Use this when
-Use `load_dq_rules` during template-driven notebook execution.
+No summary available.
 
-## What it delegates to
+## Function manifest
 
-### Callable functions called
-- None
+- Fully qualified function name: `fabricops_kit.data_quality.load_dq_rules`
+- Short name: `load_dq_rules`
+- Module: `data_quality`
+- Classification: Essential
+- Related module: `data_quality`
+- Source file path: `src/fabricops_kit/data_quality.py`
+- Source reference: <a href="../../api/modules/data_quality/#load_dq_rules">Module source anchor</a>
+- Inbound references count: 0
+- Outbound references count: 1
 
-### Internal helpers used
-- `fabricops_kit.data_quality._load_active_dq_rules`
-
-## Debug this function when
-- Output shape or metadata evidence is unexpected.
-
-## Agent repair guide
-1. Preserve public callable signature unless templates are updated.
-2. Inspect delegated helpers before rewriting wrapper logic.
-3. Preserve output shape where downstream notebooks depend on it.
-4. Update tests and templates together if behavior changes.
+## Outbound references
+- <a href="../internal/data_quality/_load_active_dq_rules/"><code>fabricops_kit.data_quality._load_active_dq_rules</code></a>

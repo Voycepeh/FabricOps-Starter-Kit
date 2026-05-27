@@ -1,19 +1,26 @@
 # _validate_framework_config
 
-## Internal helper
-Internal helper. Do not call directly from notebooks unless extending FabricOps.
+**Module:** `config`  
+**Classification:** Internal helper
 
 ## Purpose
-Supports callable orchestration internals.
 
-## Used by callable functions
-- `fabricops_kit.config.load_config`
+No summary available.
 
-## Used by internal helpers
-- None
+## Function manifest
 
-## Debug relevance
-Inspect this helper when parent callable outputs are malformed, missing evidence, or failing validation.
+- Fully qualified function name: `fabricops_kit.config._validate_framework_config`
+- Short name: `_validate_framework_config`
+- Module: `config`
+- Classification: Internal helper
+- Related module: `config`
+- Source file path: `src/fabricops_kit/config.py`
+- Source reference: <a href="../../api/modules/config/#_validate_framework_config">Module source anchor</a>
+- Inbound references count: 1
+- Outbound references count: 2
 
-## Safe change guidance
-Preserve helper contract, return shape, and side effects expected by parent callables.
+## Inbound references
+- <a href="../load_config/"><code>fabricops_kit.config.load_config</code></a>
+
+## Outbound references
+- <a href="../internal/config/FrameworkConfig/"><code>fabricops_kit.config.FrameworkConfig</code></a>

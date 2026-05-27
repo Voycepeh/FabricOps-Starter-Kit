@@ -1,19 +1,26 @@
 # _non_technical_columns
 
-## Internal helper
-Internal helper. Do not call directly from notebooks unless extending FabricOps.
+**Module:** `technical_columns`  
+**Classification:** Internal helper
 
 ## Purpose
-Supports callable orchestration internals.
 
-## Used by callable functions
-- None
+No summary available.
 
-## Used by internal helpers
-- `fabricops_kit.technical_columns._add_hash_columns`
+## Function manifest
 
-## Debug relevance
-Inspect this helper when parent callable outputs are malformed, missing evidence, or failing validation.
+- Fully qualified function name: `fabricops_kit.technical_columns._non_technical_columns`
+- Short name: `_non_technical_columns`
+- Module: `technical_columns`
+- Classification: Internal helper
+- Related module: `technical_columns`
+- Source file path: `src/fabricops_kit/technical_columns.py`
+- Source reference: <a href="../../api/modules/technical_columns/#_non_technical_columns">Module source anchor</a>
+- Inbound references count: 1
+- Outbound references count: 1
 
-## Safe change guidance
-Preserve helper contract, return shape, and side effects expected by parent callables.
+## Inbound references
+- <a href="../internal/technical_columns/_add_hash_columns/"><code>fabricops_kit.technical_columns._add_hash_columns</code></a>
+
+## Outbound references
+- <a href="../internal/technical_columns/_default_technical_columns/"><code>fabricops_kit.technical_columns._default_technical_columns</code></a>

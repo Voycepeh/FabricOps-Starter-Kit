@@ -1,27 +1,23 @@
 # prepare_business_context_profile_input
 
-## Template step
-—
+**Module:** `business_context`  
+**Classification:** Optional
 
-## Function role
-Callable orchestration wrapper
+## Purpose
 
-## Use this when
-Use `prepare_business_context_profile_input` during template-driven notebook execution.
+No summary available.
 
-## What it delegates to
+## Function manifest
 
-### Callable functions called
-- None
+- Fully qualified function name: `fabricops_kit.business_context.prepare_business_context_profile_input`
+- Short name: `prepare_business_context_profile_input`
+- Module: `business_context`
+- Classification: Optional
+- Related module: `business_context`
+- Source file path: `src/fabricops_kit/business_context.py`
+- Source reference: <a href="../../api/modules/business_context/#prepare_business_context_profile_input">Module source anchor</a>
+- Inbound references count: 0
+- Outbound references count: 1
 
-### Internal helpers used
-- `fabricops_kit.business_context._prepare_business_context_profile_input`
-
-## Debug this function when
-- Output shape or metadata evidence is unexpected.
-
-## Agent repair guide
-1. Preserve public callable signature unless templates are updated.
-2. Inspect delegated helpers before rewriting wrapper logic.
-3. Preserve output shape where downstream notebooks depend on it.
-4. Update tests and templates together if behavior changes.
+## Outbound references
+- <a href="../internal/business_context/_prepare_business_context_profile_input/"><code>fabricops_kit.business_context._prepare_business_context_profile_input</code></a>

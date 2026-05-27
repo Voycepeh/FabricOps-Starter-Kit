@@ -1,21 +1,28 @@
 # _json_dumps
 
-## Internal helper
-Internal helper. Do not call directly from notebooks unless extending FabricOps.
+**Module:** `drift`  
+**Classification:** Internal helper
 
 ## Purpose
-Supports callable orchestration internals.
 
-## Used by callable functions
-- None
+No summary available.
 
-## Used by internal helpers
-- `fabricops_kit.drift.build_and_write_partition_snapshot`
-- `fabricops_kit.drift.build_and_write_schema_snapshot`
-- `fabricops_kit.drift.build_drift_evidence_record`
+## Function manifest
 
-## Debug relevance
-Inspect this helper when parent callable outputs are malformed, missing evidence, or failing validation.
+- Fully qualified function name: `fabricops_kit.drift._json_dumps`
+- Short name: `_json_dumps`
+- Module: `drift`
+- Classification: Internal helper
+- Related module: `drift`
+- Source file path: `src/fabricops_kit/drift.py`
+- Source reference: <a href="../../api/modules/drift/#_json_dumps">Module source anchor</a>
+- Inbound references count: 3
+- Outbound references count: 1
 
-## Safe change guidance
-Preserve helper contract, return shape, and side effects expected by parent callables.
+## Inbound references
+- <a href="../internal/drift/build_and_write_partition_snapshot/"><code>fabricops_kit.drift.build_and_write_partition_snapshot</code></a>
+- <a href="../internal/drift/build_and_write_schema_snapshot/"><code>fabricops_kit.drift.build_and_write_schema_snapshot</code></a>
+- <a href="../internal/drift/build_drift_evidence_record/"><code>fabricops_kit.drift.build_drift_evidence_record</code></a>
+
+## Outbound references
+- <a href="../internal/_utils/_to_jsonable/"><code>fabricops_kit._utils._to_jsonable</code></a>

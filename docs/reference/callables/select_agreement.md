@@ -1,28 +1,24 @@
 # select_agreement
 
-## Template step
-—
+**Module:** `data_agreement`  
+**Classification:** Essential
 
-## Function role
-Callable orchestration wrapper
+## Purpose
 
-## Use this when
-Use `select_agreement` during template-driven notebook execution.
+Render a widget dropdown and store selected agreement metadata row in module state.
 
-## What it delegates to
+## Function manifest
 
-### Callable functions called
-- None
+- Fully qualified function name: `fabricops_kit.data_agreement.select_agreement`
+- Short name: `select_agreement`
+- Module: `data_agreement`
+- Classification: Essential
+- Related module: `data_agreement`
+- Source file path: `src/fabricops_kit/data_agreement.py`
+- Source reference: <a href="../../api/modules/data_agreement/#select_agreement">Module source anchor</a>
+- Inbound references count: 0
+- Outbound references count: 2
 
-### Internal helpers used
-- `fabricops_kit.data_agreement._agreement_option_label`
-- `fabricops_kit.data_agreement._coerce_row_dicts`
-
-## Debug this function when
-- Output shape or metadata evidence is unexpected.
-
-## Agent repair guide
-1. Preserve public callable signature unless templates are updated.
-2. Inspect delegated helpers before rewriting wrapper logic.
-3. Preserve output shape where downstream notebooks depend on it.
-4. Update tests and templates together if behavior changes.
+## Outbound references
+- <a href="../internal/data_agreement/_agreement_option_label/"><code>fabricops_kit.data_agreement._agreement_option_label</code></a>
+- <a href="../internal/data_agreement/_coerce_row_dicts/"><code>fabricops_kit.data_agreement._coerce_row_dicts</code></a>

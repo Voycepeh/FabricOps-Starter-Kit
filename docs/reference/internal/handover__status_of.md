@@ -1,19 +1,24 @@
 # _status_of
 
-## Internal helper
-Internal helper. Do not call directly from notebooks unless extending FabricOps.
+**Module:** `handover`  
+**Classification:** Internal helper
 
 ## Purpose
-Supports callable orchestration internals.
 
-## Used by callable functions
-- `fabricops_kit.handover.render_handover_markdown`
+No summary available.
 
-## Used by internal helpers
-- `fabricops_kit.handover.build_handover_record`
+## Function manifest
 
-## Debug relevance
-Inspect this helper when parent callable outputs are malformed, missing evidence, or failing validation.
+- Fully qualified function name: `fabricops_kit.handover._status_of`
+- Short name: `_status_of`
+- Module: `handover`
+- Classification: Internal helper
+- Related module: `handover`
+- Source file path: `src/fabricops_kit/handover.py`
+- Source reference: <a href="../../api/modules/handover/#_status_of">Module source anchor</a>
+- Inbound references count: 2
+- Outbound references count: 0
 
-## Safe change guidance
-Preserve helper contract, return shape, and side effects expected by parent callables.
+## Inbound references
+- <a href="../internal/handover/build_handover_record/"><code>fabricops_kit.handover.build_handover_record</code></a>
+- <a href="../render_handover_markdown/"><code>fabricops_kit.handover.render_handover_markdown</code></a>

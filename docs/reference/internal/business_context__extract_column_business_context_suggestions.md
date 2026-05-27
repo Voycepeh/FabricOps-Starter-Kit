@@ -1,19 +1,26 @@
 # _extract_column_business_context_suggestions
 
-## Internal helper
-Internal helper. Do not call directly from notebooks unless extending FabricOps.
+**Module:** `business_context`  
+**Classification:** Internal helper
 
 ## Purpose
-Supports callable orchestration internals.
 
-## Used by callable functions
-- `fabricops_kit.business_context.extract_column_business_context_suggestions`
+No summary available.
 
-## Used by internal helpers
-- None
+## Function manifest
 
-## Debug relevance
-Inspect this helper when parent callable outputs are malformed, missing evidence, or failing validation.
+- Fully qualified function name: `fabricops_kit.business_context._extract_column_business_context_suggestions`
+- Short name: `_extract_column_business_context_suggestions`
+- Module: `business_context`
+- Classification: Internal helper
+- Related module: `business_context`
+- Source file path: `src/fabricops_kit/business_context.py`
+- Source reference: <a href="../../api/modules/business_context/#_extract_column_business_context_suggestions">Module source anchor</a>
+- Inbound references count: 1
+- Outbound references count: 1
 
-## Safe change guidance
-Preserve helper contract, return shape, and side effects expected by parent callables.
+## Inbound references
+- <a href="../extract_column_business_context_suggestions/"><code>fabricops_kit.business_context.extract_column_business_context_suggestions</code></a>
+
+## Outbound references
+- <a href="../internal/business_context/_parse_ai_dict_response/"><code>fabricops_kit.business_context._parse_ai_dict_response</code></a>

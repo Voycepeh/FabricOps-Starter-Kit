@@ -1,20 +1,24 @@
 # _latest_dq_rule_versions
 
-## Internal helper
-Internal helper. Do not call directly from notebooks unless extending FabricOps.
+**Module:** `data_quality`  
+**Classification:** Internal helper
 
 ## Purpose
-Supports callable orchestration internals.
 
-## Used by callable functions
-- None
+No summary available.
 
-## Used by internal helpers
-- `fabricops_kit.data_quality._load_active_dq_rule_metadata`
-- `fabricops_kit.data_quality._load_active_dq_rules`
+## Function manifest
 
-## Debug relevance
-Inspect this helper when parent callable outputs are malformed, missing evidence, or failing validation.
+- Fully qualified function name: `fabricops_kit.data_quality._latest_dq_rule_versions`
+- Short name: `_latest_dq_rule_versions`
+- Module: `data_quality`
+- Classification: Internal helper
+- Related module: `data_quality`
+- Source file path: `src/fabricops_kit/data_quality.py`
+- Source reference: <a href="../../api/modules/data_quality/#_latest_dq_rule_versions">Module source anchor</a>
+- Inbound references count: 2
+- Outbound references count: 0
 
-## Safe change guidance
-Preserve helper contract, return shape, and side effects expected by parent callables.
+## Inbound references
+- <a href="../internal/data_quality/_load_active_dq_rule_metadata/"><code>fabricops_kit.data_quality._load_active_dq_rule_metadata</code></a>
+- <a href="../internal/data_quality/_load_active_dq_rules/"><code>fabricops_kit.data_quality._load_active_dq_rules</code></a>

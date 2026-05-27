@@ -10,11 +10,11 @@ Explore callable relationships across modules.
   <p id="call-graph-search-empty" class="call-graph-search-empty" hidden>No matching function found.</p>
 </div>
 <div class="call-graph-legend" aria-label="Call graph legend">
-<span class="call-graph-legend-item is-selected">selected</span>
-<span class="call-graph-legend-item is-connector">connector</span>
-<span class="call-graph-legend-item is-helper">internal helper</span>
-<span class="call-graph-legend-item is-inbound">inbound</span>
-<span class="call-graph-legend-item is-outbound">outbound</span>
+<span class="call-graph-legend-item is-selected">Current</span>
+<span class="call-graph-legend-item is-connector">Current</span>
+<span class="call-graph-legend-item is-helper">Internal helper</span>
+<span class="call-graph-legend-item is-inbound">Inbound</span>
+<span class="call-graph-legend-item is-outbound">Outbound</span>
 </div>
 <div id="call-graph-canvas" class="call-graph-canvas" aria-label="Interactive call graph canvas" tabindex="0"></div>
 </div>

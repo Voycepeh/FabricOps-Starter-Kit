@@ -1,29 +1,25 @@
 # check_schema_drift
 
-## Template step
-Drift enforcement
+**Module:** `drift`  
+**Classification:** Optional
 
-## Function role
-Validation/check function
+## Purpose
 
-## Use this when
-Use `check_schema_drift` during template-driven notebook execution.
+No summary available.
 
-## What it delegates to
+## Function manifest
 
-### Callable functions called
-- None
+- Fully qualified function name: `fabricops_kit.drift.check_schema_drift`
+- Short name: `check_schema_drift`
+- Module: `drift`
+- Classification: Optional
+- Related module: `drift`
+- Source file path: `src/fabricops_kit/drift.py`
+- Source reference: <a href="../../api/modules/drift/#check_schema_drift">Module source anchor</a>
+- Inbound references count: 0
+- Outbound references count: 3
 
-### Internal helpers used
-- `fabricops_kit.drift.build_schema_snapshot`
-- `fabricops_kit.drift.compare_schema_snapshots`
-- `fabricops_kit.drift.default_schema_drift_policy`
-
-## Debug this function when
-- schema drift was not detected
-
-## Agent repair guide
-1. Preserve public callable signature unless templates are updated.
-2. Inspect delegated helpers before rewriting wrapper logic.
-3. Preserve output shape where downstream notebooks depend on it.
-4. Update tests and templates together if behavior changes.
+## Outbound references
+- <a href="../internal/drift/build_schema_snapshot/"><code>fabricops_kit.drift.build_schema_snapshot</code></a>
+- <a href="../internal/drift/compare_schema_snapshots/"><code>fabricops_kit.drift.compare_schema_snapshots</code></a>
+- <a href="../internal/drift/default_schema_drift_policy/"><code>fabricops_kit.drift.default_schema_drift_policy</code></a>

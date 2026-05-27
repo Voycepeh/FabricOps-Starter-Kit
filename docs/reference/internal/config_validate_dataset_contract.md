@@ -1,20 +1,28 @@
 # validate_dataset_contract
 
-## Internal helper
-Internal helper. Do not call directly from notebooks unless extending FabricOps.
+**Module:** `config`  
+**Classification:** Internal helper
 
 ## Purpose
-Supports callable orchestration internals.
 
-## Used by callable functions
-- None
+No summary available.
 
-## Used by internal helpers
-- `fabricops_kit.config.assert_valid_dataset_contract`
-- `fabricops_kit.config.load_and_validate_dataset_contract`
+## Function manifest
 
-## Debug relevance
-Inspect this helper when parent callable outputs are malformed, missing evidence, or failing validation.
+- Fully qualified function name: `fabricops_kit.config.validate_dataset_contract`
+- Short name: `validate_dataset_contract`
+- Module: `config`
+- Classification: Internal helper
+- Related module: `config`
+- Source file path: `src/fabricops_kit/config.py`
+- Source reference: <a href="../../api/modules/config/#validate_dataset_contract">Module source anchor</a>
+- Inbound references count: 2
+- Outbound references count: 2
 
-## Safe change guidance
-Preserve helper contract, return shape, and side effects expected by parent callables.
+## Inbound references
+- <a href="../internal/config/assert_valid_dataset_contract/"><code>fabricops_kit.config.assert_valid_dataset_contract</code></a>
+- <a href="../internal/config/load_and_validate_dataset_contract/"><code>fabricops_kit.config.load_and_validate_dataset_contract</code></a>
+
+## Outbound references
+- <a href="../internal/config/_format_error_path/"><code>fabricops_kit.config._format_error_path</code></a>
+- <a href="../internal/config/_load_schema/"><code>fabricops_kit.config._load_schema</code></a>
