@@ -26,7 +26,6 @@ Install the wheel in your Fabric environment and confirm runtime dependencies.
 
 - [Run in Fabric](setup/run-in-fabric.md)
 - [Create Wheel](setup/create-wheel.md)
-- [Installation](setup/installation.md)
 
 ## Step 2 — Configure environment (`00_env_config`)
 
@@ -48,7 +47,7 @@ Profile source data, draft metadata context, and prepare evidence for review and
 
 - [Notebook Structure: `02_ex`](notebook-structure/02-exploration.md)
 - [Metadata and contracts](api/modules/data_contract.md)
-- [Quality helpers](api/modules/quality.md)
+- [Quality helpers](api/modules/data_quality.md)
 
 ## Step 5 — Approve metadata and create pipeline contract (`03_pc_<agreement>_<pipeline>`)
 
