@@ -121,10 +121,11 @@ def test_generated_callable_call_graph_link_uses_reference_route_not_api_referen
 
 def test_module_page_relationship_sections_are_readable_and_grouped():
     text = Path('docs/api/modules/config.md').read_text(encoding='utf-8')
+    assert '## Module relationships' in text
     assert '### Callable relationships' in text
     assert '#### Inside this module' in text
-    assert '#### External callers' in text
-    assert '#### External callees' in text
+    assert '### External callers' in text
+    assert '### External callees' in text
     assert '<div class="module-relationship-list">' not in text
     assert '#### Module relationships' not in text
     assert '../../reference/call-graph/?module=fabricops_kit.config' not in text
@@ -132,6 +133,14 @@ def test_module_page_relationship_sections_are_readable_and_grouped():
     assert '**fabric_input_output**' in text
     assert '<h6>Public callables</h6>' in text
     assert '<h6>Internal helpers</h6>' in text
+
+
+def test_module_pages_do_not_emit_broken_helper_paths():
+    for module_page in Path('docs/api/modules').glob('*.md'):
+        text = module_page.read_text(encoding='utf-8')
+        assert 'modules/modules' not in text
+        assert '../../api/modules/' not in text
+        assert '/api/api/modules/' not in text
 
 
 def test_module_pages_do_not_emit_api_relative_call_graph_links():

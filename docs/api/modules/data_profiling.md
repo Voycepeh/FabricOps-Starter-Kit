@@ -82,7 +82,7 @@ Owns deterministic profiling evidence such as schema, nulls, distincts, min/max,
 </table>
 </div>
 
-### Callable relationships
+## Module relationships
 
 
 ### Related internal helpers
@@ -125,7 +125,7 @@ Owns deterministic profiling evidence such as schema, nulls, distincts, min/max,
 <li>
 <a class="reference-chip" href="../../reference/profile_dataframe/"><code>profile_dataframe</code></a>
  <span class="callable-relationship-uses">uses:</span> 
-<a class="reference-chip" href="../../api/modules/data_profiling/#_get_profiled_columns"><code>_get_profiled_columns</code></a>, <a class="reference-chip" href="../../api/modules/data_profiling/#_is_min_max_supported_type"><code>_is_min_max_supported_type</code></a>
+<a class="reference-chip" href="#_get_profiled_columns"><code>_get_profiled_columns</code></a>, <a class="reference-chip" href="#_is_min_max_supported_type"><code>_is_min_max_supported_type</code></a>
 </li>
 </ul>
 <details>
@@ -133,22 +133,22 @@ Owns deterministic profiling evidence such as schema, nulls, distincts, min/max,
 <h6>Internal helpers</h6>
 <ul class="callable-relationship-rows">
 <li>
-<a class="reference-chip" href="../../api/modules/data_profiling/#_get_profiled_columns"><code>_get_profiled_columns</code></a>
+<a class="reference-chip" href="#_get_profiled_columns"><code>_get_profiled_columns</code></a>
 </li>
 <li>
-<a class="reference-chip" href="../../api/modules/data_profiling/#_is_min_max_supported_type"><code>_is_min_max_supported_type</code></a>
+<a class="reference-chip" href="#_is_min_max_supported_type"><code>_is_min_max_supported_type</code></a>
 </li>
 </ul>
 </details>
 </section>
 
-#### External callers
+### External callers
 
 **data_quality**
-<a class="reference-chip" href="../../api/modules/data_quality/#_prepare_dq_profile_input_rows"><code>_prepare_dq_profile_input_rows</code></a>
+<a class="reference-chip" href="../data_quality/#_prepare_dq_profile_input_rows"><code>_prepare_dq_profile_input_rows</code></a>
 
-#### External callees
+### External callees
 
 **technical_columns**
-<a class="reference-chip" href="../../api/modules/technical_columns/#_default_technical_columns"><code>_default_technical_columns</code></a>
+<a class="reference-chip" href="../technical_columns/#_default_technical_columns"><code>_default_technical_columns</code></a>
 

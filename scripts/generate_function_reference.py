@@ -363,13 +363,20 @@ def public_reference_link(
 
 
 def callable_docs_link(
-    symbol_name: str, module: str, docs_metadata: dict[str, dict[str, Any]], *, context: str = "module"
+    symbol_name: str,
+    module: str,
+    docs_metadata: dict[str, dict[str, Any]],
+    *,
+    context: str = "module",
+    source_module: str | None = None,
 ) -> str:
     """Return a safe docs link for a public callable."""
     if symbol_name in docs_metadata:
         return public_reference_link(symbol_name, docs_metadata, context=context)
     if context == "module":
-        return f"../../api/modules/{module}/#{symbol_name}"
+        if source_module and module != source_module:
+            return f"../{module}/#{symbol_name}"
+        return f"#{symbol_name}"
     if context == "reference":
         return f"../../api/modules/{module}/#{symbol_name}"
     if context == "notebook":
@@ -691,7 +698,7 @@ def main() -> None:
             public_rows: list[list[str]] = []
             for s in recommended:
                 related = sorted([c for c in info["calls"].get(s.name, set()) if c in info["functions"] and c.startswith("_")])
-                callable_link = callable_docs_link(s.name, module, docs_metadata)
+                callable_link = callable_docs_link(s.name, module, docs_metadata, source_module=actual_module)
                 public_rows.append([
                     f'<a href="{callable_link}"><code>{s.name}</code></a>',
                     "Essential",
@@ -701,7 +708,7 @@ def main() -> None:
                 ])
             for s in advanced:
                 related = sorted([c for c in info["calls"].get(s.name, set()) if c in info["functions"] and c.startswith("_")])
-                callable_link = callable_docs_link(s.name, module, docs_metadata)
+                callable_link = callable_docs_link(s.name, module, docs_metadata, source_module=actual_module)
                 public_rows.append([
                     f'<a href="{callable_link}"><code>{s.name}</code></a>',
                     "Optional",
@@ -724,7 +731,7 @@ def main() -> None:
         else:
             lines.extend(["## Public callables", "", "No public exports in this module."])
 
-        lines.extend(["", "### Callable relationships", ""])
+        lines.extend(["", "## Module relationships", ""])
         lines.extend(["", "### Related internal helpers", ""])
         internal_fns = sorted([f for f in info["functions"] if f.startswith("_")])
         if internal_fns:
@@ -733,7 +740,7 @@ def main() -> None:
             for helper in internal_fns:
                 users = sorted([u for u in info["used_by"].get(helper, set()) if u in {p.name for p in public_in_module}])
                 users_links = ", ".join(
-                    f'<a href="{callable_docs_link(u, module, docs_metadata)}"><code>{u}</code></a>' for u in users
+                    f'<a href="{callable_docs_link(u, module, docs_metadata, source_module=actual_module)}"><code>{u}</code></a>' for u in users
                 ) or "—"
                 helper_rows.append([f'<a href="{internal_helper_link(actual_module, helper)}"><code>{helper}</code></a>', users_links])
             lines.extend(['<div class="module-table-scroll">'])
@@ -768,13 +775,13 @@ def main() -> None:
                 for name in names:
                     src_qn = f"fabricops_kit.{actual_module}.{name}"
                     callees = sorted([d for s, d in inside_rows if s == src_qn], key=lambda q: _label(q))
-                    src_link = callable_docs_link(name, actual_module, docs_metadata)
+                    src_link = callable_docs_link(name, actual_module, docs_metadata, source_module=actual_module)
                     lines.append("<li>")
                     lines.append(f'<a class="reference-chip" href="{src_link}"><code>{name}</code></a>')
                     lines.append(" <span class=\"callable-relationship-uses\">uses:</span> ")
                     if callees:
                         callee_links = ", ".join(
-                            f'<a class="reference-chip" href="{callable_docs_link(dst_qn.split(".")[-1], _module_name(dst_qn), docs_metadata)}"><code>{_label(dst_qn)}</code></a>'
+                            f'<a class="reference-chip" href="{callable_docs_link(dst_qn.split(".")[-1], _module_name(dst_qn), docs_metadata, source_module=actual_module)}"><code>{_label(dst_qn)}</code></a>'
                             for dst_qn in callees
                         )
                         lines.append(callee_links)
@@ -791,12 +798,12 @@ def main() -> None:
                 for name in internal_names:
                     src_qn = f"fabricops_kit.{actual_module}.{name}"
                     callees = sorted([d for s, d in inside_rows if s == src_qn], key=lambda q: _label(q))
-                    src_link = callable_docs_link(name, actual_module, docs_metadata)
+                    src_link = callable_docs_link(name, actual_module, docs_metadata, source_module=actual_module)
                     lines.append("<li>")
                     lines.append(f'<a class="reference-chip" href="{src_link}"><code>{name}</code></a>')
                     if callees:
                         callee_links = ", ".join(
-                            f'<a class="reference-chip" href="{callable_docs_link(dst_qn.split(".")[-1], _module_name(dst_qn), docs_metadata)}"><code>{_label(dst_qn)}</code></a>'
+                            f'<a class="reference-chip" href="{callable_docs_link(dst_qn.split(".")[-1], _module_name(dst_qn), docs_metadata, source_module=actual_module)}"><code>{_label(dst_qn)}</code></a>'
                             for dst_qn in callees
                         )
                         lines.append(" <span class=\"callable-relationship-uses\">uses:</span> ")
@@ -805,7 +812,7 @@ def main() -> None:
                 lines.append("</ul>")
             lines.append("</details>")
             lines.append("</section>")
-            lines.extend(["", "#### External callers", ""])
+            lines.extend(["", "### External callers", ""])
             if not used_by_rows:
                 lines.append("None.")
             else:
@@ -815,12 +822,12 @@ def main() -> None:
                 for src_module in sorted(callers_by_module):
                     lines.append(f"**{src_module}**")
                     chips = ", ".join(
-                        f'<a class="reference-chip" href="{callable_docs_link(src_qn.split(".")[-1], _module_name(src_qn), docs_metadata)}"><code>{_label(src_qn)}</code></a>'
+                        f'<a class="reference-chip" href="{callable_docs_link(src_qn.split(".")[-1], _module_name(src_qn), docs_metadata, source_module=actual_module)}"><code>{_label(src_qn)}</code></a>'
                         for src_qn in sorted(set(callers_by_module[src_module]))
                     )
                     lines.append(chips)
                     lines.append("")
-            lines.extend(["#### External callees", ""])
+            lines.extend(["### External callees", ""])
             if not uses_rows:
                 lines.append("None.")
             else:
@@ -830,7 +837,7 @@ def main() -> None:
                 for dst_module in sorted(callees_by_module):
                     lines.append(f"**{dst_module}**")
                     chips = ", ".join(
-                        f'<a class="reference-chip" href="{callable_docs_link(dst_qn.split(".")[-1], _module_name(dst_qn), docs_metadata)}"><code>{_label(dst_qn)}</code></a>'
+                        f'<a class="reference-chip" href="{callable_docs_link(dst_qn.split(".")[-1], _module_name(dst_qn), docs_metadata, source_module=actual_module)}"><code>{_label(dst_qn)}</code></a>'
                         for dst_qn in sorted(set(callees_by_module[dst_module]))
                     )
                     lines.append(chips)
@@ -839,7 +846,7 @@ def main() -> None:
             lines.append("No callable relationships detected for this module.")
         if public_in_module:
             for s in sorted([x for x in public_in_module if x.role in {"essential", "optional"}], key=lambda x: x.name.lower()):
-                expected_target = callable_docs_link(s.name, module, docs_metadata)
+                expected_target = callable_docs_link(s.name, module, docs_metadata, source_module=actual_module)
                 expected_href = f'href="{expected_target}"'
                 expected_md_link = f"[`{s.name}`]({expected_target})"
                 if not any((expected_md_link in line) or (expected_href in line) for line in lines):

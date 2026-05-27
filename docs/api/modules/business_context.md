@@ -117,7 +117,7 @@ Owns business meaning for tables and columns.
 </table>
 </div>
 
-### Callable relationships
+## Module relationships
 
 
 ### Related internal helpers
@@ -173,7 +173,7 @@ Owns business meaning for tables and columns.
 <li>
 <a class="reference-chip" href="../../reference/extract_column_business_context_suggestions/"><code>extract_column_business_context_suggestions</code></a>
  <span class="callable-relationship-uses">uses:</span> 
-<a class="reference-chip" href="../../api/modules/business_context/#_extract_column_business_context_suggestions"><code>_extract_column_business_context_suggestions</code></a>
+<a class="reference-chip" href="#_extract_column_business_context_suggestions"><code>_extract_column_business_context_suggestions</code></a>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/get_reviewed_business_context_rows/"><code>get_reviewed_business_context_rows</code></a>
@@ -183,12 +183,12 @@ Owns business meaning for tables and columns.
 <li>
 <a class="reference-chip" href="../../reference/prepare_business_context_profile_input/"><code>prepare_business_context_profile_input</code></a>
  <span class="callable-relationship-uses">uses:</span> 
-<a class="reference-chip" href="../../api/modules/business_context/#_prepare_business_context_profile_input"><code>_prepare_business_context_profile_input</code></a>
+<a class="reference-chip" href="#_prepare_business_context_profile_input"><code>_prepare_business_context_profile_input</code></a>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/review_business_context/"><code>review_business_context</code></a>
  <span class="callable-relationship-uses">uses:</span> 
-<a class="reference-chip" href="../../api/modules/business_context/#_require_ipywidgets"><code>_require_ipywidgets</code></a>
+<a class="reference-chip" href="#_require_ipywidgets"><code>_require_ipywidgets</code></a>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/write_business_context/"><code>write_business_context</code></a>
@@ -201,28 +201,28 @@ Owns business meaning for tables and columns.
 <h6>Internal helpers</h6>
 <ul class="callable-relationship-rows">
 <li>
-<a class="reference-chip" href="../../api/modules/business_context/#_extract_column_business_context_suggestions"><code>_extract_column_business_context_suggestions</code></a>
+<a class="reference-chip" href="#_extract_column_business_context_suggestions"><code>_extract_column_business_context_suggestions</code></a>
  <span class="callable-relationship-uses">uses:</span> 
-<a class="reference-chip" href="../../api/modules/business_context/#_parse_ai_dict_response"><code>_parse_ai_dict_response</code></a>
+<a class="reference-chip" href="#_parse_ai_dict_response"><code>_parse_ai_dict_response</code></a>
 </li>
 <li>
-<a class="reference-chip" href="../../api/modules/business_context/#_parse_ai_dict_response"><code>_parse_ai_dict_response</code></a>
+<a class="reference-chip" href="#_parse_ai_dict_response"><code>_parse_ai_dict_response</code></a>
 </li>
 <li>
-<a class="reference-chip" href="../../api/modules/business_context/#_prepare_business_context_profile_input"><code>_prepare_business_context_profile_input</code></a>
+<a class="reference-chip" href="#_prepare_business_context_profile_input"><code>_prepare_business_context_profile_input</code></a>
 </li>
 <li>
-<a class="reference-chip" href="../../api/modules/business_context/#_require_ipywidgets"><code>_require_ipywidgets</code></a>
+<a class="reference-chip" href="#_require_ipywidgets"><code>_require_ipywidgets</code></a>
 </li>
 </ul>
 </details>
 </section>
 
-#### External callers
+### External callers
 
 None.
-#### External callees
+### External callees
 
 **metadata**
-<a class="reference-chip" href="../../api/modules/metadata/#build_metadata_column_key"><code>build_metadata_column_key</code></a>, <a class="reference-chip" href="../../api/modules/metadata/#build_metadata_table_key"><code>build_metadata_table_key</code></a>, <a class="reference-chip" href="../../api/modules/metadata/#write_column_business_context"><code>write_column_business_context</code></a>
+<a class="reference-chip" href="../metadata/#build_metadata_column_key"><code>build_metadata_column_key</code></a>, <a class="reference-chip" href="../metadata/#build_metadata_table_key"><code>build_metadata_table_key</code></a>, <a class="reference-chip" href="../metadata/#write_column_business_context"><code>write_column_business_context</code></a>
 

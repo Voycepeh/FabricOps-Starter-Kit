@@ -89,7 +89,7 @@ Owns source-to-target lineage and transformation evidence.
 </table>
 </div>
 
-### Callable relationships
+## Module relationships
 
 
 ### Related internal helpers
@@ -189,65 +189,65 @@ Owns source-to-target lineage and transformation evidence.
 <h6>Internal helpers</h6>
 <ul class="callable-relationship-rows">
 <li>
-<a class="reference-chip" href="../../api/modules/data_lineage/#_build_lineage_record_from_steps"><code>_build_lineage_record_from_steps</code></a>
+<a class="reference-chip" href="#_build_lineage_record_from_steps"><code>_build_lineage_record_from_steps</code></a>
  <span class="callable-relationship-uses">uses:</span> 
-<a class="reference-chip" href="../../api/modules/data_lineage/#_validate_lineage_steps"><code>_validate_lineage_steps</code></a>
+<a class="reference-chip" href="#_validate_lineage_steps"><code>_validate_lineage_steps</code></a>
 </li>
 <li>
-<a class="reference-chip" href="../../api/modules/data_lineage/#_build_lineage_records"><code>_build_lineage_records</code></a>
+<a class="reference-chip" href="#_build_lineage_records"><code>_build_lineage_records</code></a>
  <span class="callable-relationship-uses">uses:</span> 
-<a class="reference-chip" href="../../api/modules/data_lineage/#_build_lineage_record_from_steps"><code>_build_lineage_record_from_steps</code></a>
+<a class="reference-chip" href="#_build_lineage_record_from_steps"><code>_build_lineage_record_from_steps</code></a>
 </li>
 <li>
-<a class="reference-chip" href="../../api/modules/data_lineage/#_call_name"><code>_call_name</code></a>
+<a class="reference-chip" href="#_call_name"><code>_call_name</code></a>
 </li>
 <li>
-<a class="reference-chip" href="../../api/modules/data_lineage/#_enrich_lineage_steps_with_ai"><code>_enrich_lineage_steps_with_ai</code></a>
+<a class="reference-chip" href="#_enrich_lineage_steps_with_ai"><code>_enrich_lineage_steps_with_ai</code></a>
  <span class="callable-relationship-uses">uses:</span> 
-<a class="reference-chip" href="../../api/modules/data_lineage/#_fallback_copilot_lineage_prompt"><code>_fallback_copilot_lineage_prompt</code></a>
+<a class="reference-chip" href="#_fallback_copilot_lineage_prompt"><code>_fallback_copilot_lineage_prompt</code></a>
 </li>
 <li>
-<a class="reference-chip" href="../../api/modules/data_lineage/#_fallback_copilot_lineage_prompt"><code>_fallback_copilot_lineage_prompt</code></a>
+<a class="reference-chip" href="#_fallback_copilot_lineage_prompt"><code>_fallback_copilot_lineage_prompt</code></a>
 </li>
 <li>
-<a class="reference-chip" href="../../api/modules/data_lineage/#_flatten_chain"><code>_flatten_chain</code></a>
+<a class="reference-chip" href="#_flatten_chain"><code>_flatten_chain</code></a>
  <span class="callable-relationship-uses">uses:</span> 
-<a class="reference-chip" href="../../api/modules/data_lineage/#_name"><code>_name</code></a>
+<a class="reference-chip" href="#_name"><code>_name</code></a>
 </li>
 <li>
-<a class="reference-chip" href="../../api/modules/data_lineage/#_literal"><code>_literal</code></a>
+<a class="reference-chip" href="#_literal"><code>_literal</code></a>
 </li>
 <li>
-<a class="reference-chip" href="../../api/modules/data_lineage/#_name"><code>_name</code></a>
+<a class="reference-chip" href="#_name"><code>_name</code></a>
 </li>
 <li>
-<a class="reference-chip" href="../../api/modules/data_lineage/#_resolve_write_target"><code>_resolve_write_target</code></a>
+<a class="reference-chip" href="#_resolve_write_target"><code>_resolve_write_target</code></a>
  <span class="callable-relationship-uses">uses:</span> 
-<a class="reference-chip" href="../../api/modules/data_lineage/#_literal"><code>_literal</code></a>
+<a class="reference-chip" href="#_literal"><code>_literal</code></a>
 </li>
 <li>
-<a class="reference-chip" href="../../api/modules/data_lineage/#_scan_notebook_cells"><code>_scan_notebook_cells</code></a>
+<a class="reference-chip" href="#_scan_notebook_cells"><code>_scan_notebook_cells</code></a>
  <span class="callable-relationship-uses">uses:</span> 
-<a class="reference-chip" href="../../api/modules/data_lineage/#_scan_notebook_lineage"><code>_scan_notebook_lineage</code></a>
+<a class="reference-chip" href="#_scan_notebook_lineage"><code>_scan_notebook_lineage</code></a>
 </li>
 <li>
-<a class="reference-chip" href="../../api/modules/data_lineage/#_scan_notebook_lineage"><code>_scan_notebook_lineage</code></a>
+<a class="reference-chip" href="#_scan_notebook_lineage"><code>_scan_notebook_lineage</code></a>
  <span class="callable-relationship-uses">uses:</span> 
-<a class="reference-chip" href="../../api/modules/data_lineage/#_call_name"><code>_call_name</code></a>, <a class="reference-chip" href="../../api/modules/data_lineage/#_flatten_chain"><code>_flatten_chain</code></a>, <a class="reference-chip" href="../../api/modules/data_lineage/#_name"><code>_name</code></a>, <a class="reference-chip" href="../../api/modules/data_lineage/#_resolve_write_target"><code>_resolve_write_target</code></a>, <a class="reference-chip" href="../../api/modules/data_lineage/#_step"><code>_step</code></a>
+<a class="reference-chip" href="#_call_name"><code>_call_name</code></a>, <a class="reference-chip" href="#_flatten_chain"><code>_flatten_chain</code></a>, <a class="reference-chip" href="#_name"><code>_name</code></a>, <a class="reference-chip" href="#_resolve_write_target"><code>_resolve_write_target</code></a>, <a class="reference-chip" href="#_step"><code>_step</code></a>
 </li>
 <li>
-<a class="reference-chip" href="../../api/modules/data_lineage/#_step"><code>_step</code></a>
+<a class="reference-chip" href="#_step"><code>_step</code></a>
 </li>
 <li>
-<a class="reference-chip" href="../../api/modules/data_lineage/#_validate_lineage_steps"><code>_validate_lineage_steps</code></a>
+<a class="reference-chip" href="#_validate_lineage_steps"><code>_validate_lineage_steps</code></a>
 </li>
 </ul>
 </details>
 </section>
 
-#### External callers
+### External callers
 
 None.
-#### External callees
+### External callees
 
 None.

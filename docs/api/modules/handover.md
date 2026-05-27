@@ -89,7 +89,7 @@ Owns generated maintainer-facing handover and contract narrative output.
 </table>
 </div>
 
-### Callable relationships
+## Module relationships
 
 
 ### Related internal helpers
@@ -133,7 +133,7 @@ Owns generated maintainer-facing handover and contract narrative output.
 <li>
 <a class="reference-chip" href="../../reference/render_handover_markdown/"><code>render_handover_markdown</code></a>
  <span class="callable-relationship-uses">uses:</span> 
-<a class="reference-chip" href="../../api/modules/handover/#_status_of"><code>_status_of</code></a>
+<a class="reference-chip" href="#_status_of"><code>_status_of</code></a>
 </li>
 </ul>
 <details>
@@ -141,15 +141,15 @@ Owns generated maintainer-facing handover and contract narrative output.
 <h6>Internal helpers</h6>
 <ul class="callable-relationship-rows">
 <li>
-<a class="reference-chip" href="../../api/modules/handover/#_status_of"><code>_status_of</code></a>
+<a class="reference-chip" href="#_status_of"><code>_status_of</code></a>
 </li>
 </ul>
 </details>
 </section>
 
-#### External callers
+### External callers
 
 None.
-#### External callees
+### External callees
 
 None.
