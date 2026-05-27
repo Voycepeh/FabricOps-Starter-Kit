@@ -18,6 +18,15 @@ By the end, you should have:
 - operational pipeline outputs,
 - governance review artifacts.
 
+## Pre-requisites
+
+Before you begin, confirm:
+
+- you have a Microsoft Fabric workspace with notebook and Lakehouse access,
+- your Fabric environment can install and run the FabricOps wheel,
+- your target workspace has the permissions needed for metadata and output writes,
+- if using AI-assisted suggestions, tenant-level Copilot/Azure OpenAI settings are approved and enabled.
+
 ## Recommended workflow
 
 ```mermaid
@@ -33,7 +42,7 @@ flowchart TD
 
 - Install the package wheel in your Fabric environment.
 - Confirm notebook runtime and dependency availability.
-- Verify you can run notebooks in your target Fabric workspace.
+- Run a quick notebook smoke test in your target workspace.
 
 Use:
 
