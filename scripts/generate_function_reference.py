@@ -12,14 +12,9 @@ PACKAGE_NAME = "fabricops_kit"
 INIT_PATH = PKG_DIR / "__init__.py"
 DOCS_METADATA_PATH = PKG_DIR / "docs_metadata.py"
 REFERENCE_PATH = ROOT / "docs" / "reference" / "index.md"
-FUNCTION_USAGE_GUIDE_PATH = ROOT / "docs" / "reference" / "function-usage-guide.md"
 NOTEBOOK_STRUCTURE_DIR = ROOT / "docs" / "notebook-structure"
 MODULE_DIR = ROOT / "docs" / "api" / "modules"
 MKDOCS_PATH = ROOT / "mkdocs.yml"
-MANIFEST_PATH = ROOT / "docs" / "reference" / "manifest.json"
-AGENT_MANIFEST_PATH = ROOT / "docs" / "reference" / "agent-manifest.json"
-FUNCTION_USAGE_OVERRIDES_PATH = ROOT / "docs" / "reference" / "function_usage.yml"
-TEMPLATE_FUNCTION_MAP_PATH = ROOT / "docs" / "reference" / "template-function-map.md"
 DEPENDENCY_METADATA_PATH = ROOT / "docs" / "reference" / "dependency-metadata.json"
 CALL_GRAPH_PAGE_PATH = ROOT / "docs" / "reference" / "call-graph.md"
 CALLABLE_REFERENCE_DIR = ROOT / "docs" / "reference" / "callables"
@@ -588,7 +583,7 @@ def main() -> None:
     MODULE_DIR.mkdir(parents=True, exist_ok=True)
     module_manifest = {row["module_name"]: row for row in module_docs_metadata}
     discovered_doc_modules = [INTERNAL_ALIAS_MODULES.get(module, module) for module in discovered_modules]
-    module_index_lines = ["# Module API Catalogue", "", "Function Reference/workflow pages are the primary entrypoint. Module pages below are secondary technical references.", "", "Short-form modules remain import-compatible aliases but are intentionally hidden from this user-facing catalogue.", ""]
+    module_index_lines = ["# Module API Catalogue", "", "Function reference pages are the primary entrypoint. Module pages below are secondary technical references.", "", "Short-form modules remain import-compatible aliases but are intentionally hidden from this user-facing catalogue.", ""]
     all_doc_modules = discovered_doc_modules
     for module in all_doc_modules:
         actual_module = next((k for k,v in PUBLIC_MODULE_PREFERRED_NAMES.items() if v==module), module)
@@ -606,7 +601,7 @@ def main() -> None:
             status_banner = (
                 '<div class="api-status-block">\n'
                 '  <span class="api-chip api-chip-internal">Advanced supporting module</span>\n'
-                '  <div class="api-chip-subtitle">Used by workflow references but not promoted as a primary notebook module.</div>\n'
+                '  <div class="api-chip-subtitle">Used by reference docs but not promoted as a primary notebook module.</div>\n'
                 '</div>'
             )
         elif is_internal_only:
@@ -806,7 +801,7 @@ def main() -> None:
                     raise RuntimeError(f"Missing callable table link for {module}.{s.name}")
                 if f"../../api/reference/{module}/{s.name}.md" in "\n".join(lines):
                     raise RuntimeError(
-                        f"Found deprecated module-path public link for {module}.{s.name}; expected workflow-step slug path."
+                        f"Found deprecated module-path public link for {module}.{s.name}; expected public reference slug path."
                     )
         for helper in internal_fns:
             helper_target = internal_helper_link(actual_module, helper)
@@ -825,20 +820,20 @@ def main() -> None:
 
     (MODULE_DIR / "index.md").write_text("\n".join(module_index_lines) + "\n", encoding="utf-8", newline="\n")
     discovered_set = set(discovered_doc_modules)
-    workflow_sidebar_rows = [row for row in module_docs_metadata if row.get("sidebar_include")]
-    workflow_sidebar_groups: dict[str, list[str]] = {}
-    for row in workflow_sidebar_rows:
+    module_sidebar_rows = [row for row in module_docs_metadata if row.get("sidebar_include")]
+    module_sidebar_groups: dict[str, list[str]] = {}
+    for row in module_sidebar_rows:
         module_name = row["module_name"]
         if module_name not in discovered_set:
             raise RuntimeError(f"Workflow sidebar module is missing in src/fabricops_kit: {module_name}")
-        workflow_sidebar_groups.setdefault(row["sidebar_group"], []).append(module_name)
+        module_sidebar_groups.setdefault(row["sidebar_group"], []).append(module_name)
 
     mkdocs_text = MKDOCS_PATH.read_text(encoding="utf-8")
     start_marker = "      # AUTO-GENERATED-MODULES-START"
     end_marker = "      # AUTO-GENERATED-MODULES-END"
     if start_marker in mkdocs_text and end_marker in mkdocs_text:
         generated_lines = []
-        for modules in workflow_sidebar_groups.values():
+        for modules in module_sidebar_groups.values():
             for module in modules:
                 generated_lines.append(f"          - {module}: api/modules/{module}.md")
         generated = "\n".join(generated_lines)
@@ -1116,53 +1111,6 @@ def main() -> None:
                 )
                 notebook_lines.append("")
         (NOTEBOOK_STRUCTURE_DIR / page_name).write_text("\n".join(notebook_lines) + "\n", encoding="utf-8", newline="\n")
-
-    usage_guide = [
-        "# Function Usage Guide",
-        "",
-        "Use this page to understand how notebook templates map to the main public callables.",
-        "",
-        "## Start from the templates",
-        "",
-    ]
-    notebook_structure_links = {
-        "00_env_config": "../notebook-structure/00-env-config/",
-        "01_data_agreement": "../notebook-structure/01-data-sharing-agreement/",
-        "02_ex": "../notebook-structure/02-exploration/",
-        "03_pc": "../notebook-structure/03-pipeline-contract/",
-    }
-
-    template_rows: list[list[str]] = []
-    for row in template_flow_docs:
-        template_path = ROOT / row["template_path"]
-        if template_path.exists():
-            template_link = _anchor(
-                f"https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/{row['template_path']}",
-                "Open notebook",
-            )
-        else:
-            template_link = "—"
-        guided_link = notebook_structure_links.get(row["notebook_key"], "")
-        guided_usage = row["segment_intro"]
-        if guided_link:
-            guided_usage = f"{guided_usage}<br><a href=\"{_esc(guided_link)}\">View guided structure</a>"
-        template_rows.append([f"<code>{_esc(_strip_backticks(row['notebook_label']))}</code>", guided_usage, template_link])
-    usage_guide.extend(_html_table("reference-template-table", ["Notebook", "Guided usage", "Full template"], template_rows))
-
-    usage_guide.extend([
-        "",
-        "## What runs where",
-        "",
-        "- `00_env_config` is shared setup.",
-        "- `01_data_sharing_agreement` is the governance source of truth.",
-        "- `02_ex` proposes evidence and AI-assisted suggestions.",
-        "- `03_pc` loads approved metadata and enforces controls.",
-        "",
-        "AI functions are advisory. Approved contracts and pipeline notebooks are the enforcement point.",
-        "",
-    ])
-    FUNCTION_USAGE_GUIDE_PATH.parent.mkdir(parents=True, exist_ok=True)
-    FUNCTION_USAGE_GUIDE_PATH.write_text("\n".join(usage_guide) + "\n", encoding="utf-8", newline="\n")
 
     ref = [
         "# Function Reference",

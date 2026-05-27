@@ -44,8 +44,6 @@ Do not manually edit generated reference outputs as source of truth. Update sour
 
 Generated artifacts:
 - `docs/reference/index.md`
-- `docs/reference/template-function-map.md`
-- `docs/reference/agent-manifest.json`
 - `docs/reference/dependency-metadata.json`
 - `docs/reference/call-graph.md`
 - `docs/reference/callables/*.md`
@@ -57,7 +55,6 @@ Source inputs:
 - `src/fabricops_kit/**/*.py`
 - `src/fabricops_kit/__init__.py::__all__`
 - `src/fabricops_kit/docs_metadata.py`
-- `docs/reference/function_usage.yml`
 - `scripts/generate_function_reference.py`
 
 ## Public API docstring requirements

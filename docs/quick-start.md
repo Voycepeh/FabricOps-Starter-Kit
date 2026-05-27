@@ -1,12 +1,12 @@
 # Quick Start
 
-Use this page to get a **governed FabricOps notebook workflow** running quickly in Microsoft Fabric.
+Use this page to get the FabricOps notebook templates running quickly in Microsoft Fabric.
 
 For conceptual context, start on the [Homepage](index.md). For notebook definitions, use [Notebook Structure](notebook-structure.md).
 
 ## What you will build
 
-You will run the canonical FabricOps lifecycle:
+You will run the FabricOps notebook template sequence:
 
 `00_env_config` → `01_da_<agreement>` → `02_ex_<agreement>_<topic>` → `03_pc_<agreement>_<pipeline>` → `04_gov_<agreement>_<dataset>_<table>`
 
@@ -116,7 +116,7 @@ Focus on:
 
 - classification and policy review outputs,
 - governance evidence and decision traceability,
-- review/approval handover.
+- review-ready governance evidence for template-driven notebook execution.
 
 Reference:
 
@@ -135,7 +135,4 @@ After one full cycle, confirm you have:
 ## Next links
 
 - [Notebook Structure](notebook-structure.md)
-- [Function Usage Guide](function-usage-guide.md)
-- [Workflow](workflow.md)
-- [Metadata and Contracts](metadata-and-contracts.md)
 - [Functions / Reference](reference/index.md)
