@@ -196,6 +196,6 @@ Deployment does not remove the need to provision and validate target environment
 - schedules / orchestration
 - deployment rules
 
-Contract records and related metadata are operational controls and should be promoted through governed processes. For contract model and metadata table guidance, see [Metadata and Contracts](metadata-and-contracts.md).
+Contract records and related metadata are operational controls and should be promoted through governed processes. For contract model and metadata table guidance, see [Metadata and Contracts](metadata-and-contracts/).
 
 Normal `03_pc` notebooks should remain single-environment. When cross-environment operations are required, use explicit admin notebooks (for example `90_admin_promote_contract_dev_to_prod`, `90_admin_compare_contract_dev_prod`, and `90_admin_validate_prod_setup`) to keep changes intentional and auditable.

@@ -16,7 +16,7 @@ Governed, quality-checked, AI-ready notebooks in Microsoft Fabric.
 | --- | --- |
 | Understand the operating flow, roles, and approvals | [Workflow Operating Model](lifecycle-operating-model.md) |
 | Implement consistent notebook naming and ownership | [Notebook Structure](notebook-structure.md) |
-| Understand evidence outputs and contract assembly | [Metadata & Contracts](metadata-and-contracts.md) |
+| Understand evidence outputs and contract assembly | [Metadata & Contracts](metadata-and-contracts/) |
 | Explore callable APIs in the package | [Function Reference](reference/index.md) |
 
 ## How FabricOps works

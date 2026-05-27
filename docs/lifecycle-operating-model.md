@@ -1,6 +1,6 @@
 # Workflow Operating Model
 
-This page is the people-and-process view of FabricOps Starter Kit. Use [Notebook Structure](notebook-structure.md) for implementation details and [Metadata & Contracts](metadata-and-contracts.md) for evidence and contract assembly.
+This page is the people-and-process view of FabricOps Starter Kit. Use [Notebook Structure](notebook-structure.md) for implementation details and [Metadata & Contracts](metadata-and-contracts/) for evidence and contract assembly.
 
 **Operating principle:** AI drafts and accelerates delivery, while human owners approve governance decisions and sign-off points.
 
@@ -26,6 +26,6 @@ This page is the people-and-process view of FabricOps Starter Kit. Use [Notebook
 ## Implementation and evidence details
 
 - [Notebook Structure](notebook-structure.md) for notebook boundaries, naming, and implementation ownership.
-- [Metadata & Contracts](metadata-and-contracts.md) for evidence outputs and contract assembly model.
+- [Metadata & Contracts](metadata-and-contracts/) for evidence outputs and contract assembly model.
 - [Pipeline Contract Notebook (03_pc)](notebook-structure/03-pipeline-contract.md) for pipeline enforcement implementation details.
 - [Quick Start](quick-start.md) to run the full flow in a new workspace.
