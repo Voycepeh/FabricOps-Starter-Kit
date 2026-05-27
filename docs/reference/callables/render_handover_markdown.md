@@ -1,28 +1,26 @@
 # render_handover_markdown
 
-## Template step
-Handover/run summary
+**Module:** `handover`  
+**Classification:** Essential
 
-## Function role
-Callable utility
+## Purpose
 
-## Use this when
-Use `render_handover_markdown` during template-driven notebook execution.
+No summary available.
 
-## What it delegates to
+## Function manifest
 
-### Callable functions called
-- None
+- Fully qualified function name: `fabricops_kit.handover.render_handover_markdown`
+- Short name: `render_handover_markdown`
+- Module: `handover`
+- Classification: Essential
+- Related module: `handover`
+- Source file path: `src/fabricops_kit/handover.py`
+- Source reference: <a href="../../api/modules/handover/#render_handover_markdown">Module source anchor</a>
+- Inbound references count: 1
+- Outbound references count: 1
 
-### Internal helpers used
-- `fabricops_kit.handover._status_of`
+## Inbound references
+- <a href="../internal/handover/build_handover_record/"><code>fabricops_kit.handover.build_handover_record</code></a>
 
-## Debug this function when
-- markdown rendering fails
-- JSON serialization failed
-
-## Agent repair guide
-1. Preserve public callable signature unless templates are updated.
-2. Inspect delegated helpers before rewriting wrapper logic.
-3. Preserve output shape where downstream notebooks depend on it.
-4. Update tests and templates together if behavior changes.
+## Outbound references
+- <a href="../internal/handover/_status_of/"><code>fabricops_kit.handover._status_of</code></a>

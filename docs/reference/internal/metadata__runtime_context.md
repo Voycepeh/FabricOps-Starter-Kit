@@ -1,19 +1,27 @@
 # _runtime_context
 
-## Internal helper
-Internal helper. Do not call directly from notebooks unless extending FabricOps.
+**Module:** `metadata`  
+**Classification:** Internal helper
 
 ## Purpose
-Supports callable orchestration internals.
 
-## Used by callable functions
-- `fabricops_kit.metadata.register_current_notebook`
+No summary available.
 
-## Used by internal helpers
-- `fabricops_kit.metadata._resolve_action_by`
+## Function manifest
 
-## Debug relevance
-Inspect this helper when parent callable outputs are malformed, missing evidence, or failing validation.
+- Fully qualified function name: `fabricops_kit.metadata._runtime_context`
+- Short name: `_runtime_context`
+- Module: `metadata`
+- Classification: Internal helper
+- Related module: `metadata`
+- Source file path: `src/fabricops_kit/metadata.py`
+- Source reference: <a href="../../api/modules/metadata/#_runtime_context">Module source anchor</a>
+- Inbound references count: 2
+- Outbound references count: 1
 
-## Safe change guidance
-Preserve helper contract, return shape, and side effects expected by parent callables.
+## Inbound references
+- <a href="../internal/metadata/_resolve_action_by/"><code>fabricops_kit.metadata._resolve_action_by</code></a>
+- <a href="../register_current_notebook/"><code>fabricops_kit.metadata.register_current_notebook</code></a>
+
+## Outbound references
+- <a href="../internal/metadata/_context_get/"><code>fabricops_kit.metadata._context_get</code></a>

@@ -1,19 +1,22 @@
 # _extract_columns_from_profile
 
-## Internal helper
-Internal helper. Do not call directly from notebooks unless extending FabricOps.
+**Module:** `metadata`  
+**Classification:** Internal helper
 
 ## Purpose
-Supports callable orchestration internals.
 
-## Used by callable functions
-- None
+No summary available.
 
-## Used by internal helpers
-- None
+## Function manifest
 
-## Debug relevance
-Inspect this helper when parent callable outputs are malformed, missing evidence, or failing validation.
+- Fully qualified function name: `fabricops_kit.metadata._extract_columns_from_profile`
+- Short name: `_extract_columns_from_profile`
+- Module: `metadata`
+- Classification: Internal helper
+- Related module: `metadata`
+- Source file path: `src/fabricops_kit/metadata.py`
+- Source reference: <a href="../../api/modules/metadata/#_extract_columns_from_profile">Module source anchor</a>
+- Inbound references count: 0
+- Outbound references count: 0
 
-## Safe change guidance
-Preserve helper contract, return shape, and side effects expected by parent callables.
+_No inbound or outbound references detected._

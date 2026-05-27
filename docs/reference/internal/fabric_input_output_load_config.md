@@ -1,19 +1,23 @@
 # load_config
 
-## Internal helper
-Internal helper. Do not call directly from notebooks unless extending FabricOps.
+**Module:** `fabric_input_output`  
+**Classification:** Internal helper
 
 ## Purpose
-Loads and validates environment configuration used by downstream notebooks.
 
-## Used by callable functions
-- None
+No summary available.
 
-## Used by internal helpers
-- None
+## Function manifest
 
-## Debug relevance
-Inspect this helper when parent callable outputs are malformed, missing evidence, or failing validation.
+- Fully qualified function name: `fabricops_kit.fabric_input_output.load_config`
+- Short name: `load_config`
+- Module: `fabric_input_output`
+- Classification: Internal helper
+- Related module: `fabric_input_output`
+- Source file path: `src/fabricops_kit/fabric_input_output.py`
+- Source reference: <a href="../../api/modules/fabric_input_output/#load_config">Module source anchor</a>
+- Inbound references count: 0
+- Outbound references count: 1
 
-## Safe change guidance
-Preserve helper contract, return shape, and side effects expected by parent callables.
+## Outbound references
+- <a href="../load_config/"><code>fabricops_kit.config.load_config</code></a>

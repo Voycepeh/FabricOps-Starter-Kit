@@ -1,29 +1,25 @@
 # write_dq_rules
 
-## Template step
-Data quality review
+**Module:** `data_quality`  
+**Classification:** Essential
 
-## Function role
-Evidence writer
+## Purpose
 
-## Use this when
-Use `write_dq_rules` during template-driven notebook execution.
+No summary available.
 
-## What it delegates to
+## Function manifest
 
-### Callable functions called
-- `fabricops_kit.data_quality.validate_dq_rules`
-- `fabricops_kit.fabric_input_output.write_lakehouse_table`
+- Fully qualified function name: `fabricops_kit.data_quality.write_dq_rules`
+- Short name: `write_dq_rules`
+- Module: `data_quality`
+- Classification: Essential
+- Related module: `data_quality`
+- Source file path: `src/fabricops_kit/data_quality.py`
+- Source reference: <a href="../../api/modules/data_quality/#write_dq_rules">Module source anchor</a>
+- Inbound references count: 0
+- Outbound references count: 3
 
-### Internal helpers used
-- `fabricops_kit.data_quality._build_dq_rule_history`
-
-## Debug this function when
-- metadata table was not written
-- rule versioning appears wrong
-
-## Agent repair guide
-1. Preserve public callable signature unless templates are updated.
-2. Inspect delegated helpers before rewriting wrapper logic.
-3. Preserve output shape where downstream notebooks depend on it.
-4. Update tests and templates together if behavior changes.
+## Outbound references
+- <a href="../internal/data_quality/_build_dq_rule_history/"><code>fabricops_kit.data_quality._build_dq_rule_history</code></a>
+- <a href="../validate_dq_rules/"><code>fabricops_kit.data_quality.validate_dq_rules</code></a>
+- <a href="../write_lakehouse_table/"><code>fabricops_kit.fabric_input_output.write_lakehouse_table</code></a>

@@ -1,19 +1,23 @@
 # build_evidence_row
 
-## Internal helper
-Internal helper. Do not call directly from notebooks unless extending FabricOps.
+**Module:** `metadata`  
+**Classification:** Internal helper
 
 ## Purpose
-Supports callable orchestration internals.
 
-## Used by callable functions
-- None
+No summary available.
 
-## Used by internal helpers
-- None
+## Function manifest
 
-## Debug relevance
-Inspect this helper when parent callable outputs are malformed, missing evidence, or failing validation.
+- Fully qualified function name: `fabricops_kit.metadata.build_evidence_row`
+- Short name: `build_evidence_row`
+- Module: `metadata`
+- Classification: Internal helper
+- Related module: `metadata`
+- Source file path: `src/fabricops_kit/metadata.py`
+- Source reference: <a href="../../api/modules/metadata/#build_evidence_row">Module source anchor</a>
+- Inbound references count: 0
+- Outbound references count: 1
 
-## Safe change guidance
-Preserve helper contract, return shape, and side effects expected by parent callables.
+## Outbound references
+- <a href="../internal/metadata/_now_utc_iso/"><code>fabricops_kit.metadata._now_utc_iso</code></a>

@@ -1,19 +1,28 @@
 # _attach_rule_metadata_keys
 
-## Internal helper
-Internal helper. Do not call directly from notebooks unless extending FabricOps.
+**Module:** `data_quality`  
+**Classification:** Internal helper
 
 ## Purpose
-Supports callable orchestration internals.
 
-## Used by callable functions
-- `fabricops_kit.data_quality.get_dq_review_results`
+No summary available.
 
-## Used by internal helpers
-- None
+## Function manifest
 
-## Debug relevance
-Inspect this helper when parent callable outputs are malformed, missing evidence, or failing validation.
+- Fully qualified function name: `fabricops_kit.data_quality._attach_rule_metadata_keys`
+- Short name: `_attach_rule_metadata_keys`
+- Module: `data_quality`
+- Classification: Internal helper
+- Related module: `data_quality`
+- Source file path: `src/fabricops_kit/data_quality.py`
+- Source reference: <a href="../../api/modules/data_quality/#_attach_rule_metadata_keys">Module source anchor</a>
+- Inbound references count: 1
+- Outbound references count: 3
 
-## Safe change guidance
-Preserve helper contract, return shape, and side effects expected by parent callables.
+## Inbound references
+- <a href="../get_dq_review_results/"><code>fabricops_kit.data_quality.get_dq_review_results</code></a>
+
+## Outbound references
+- <a href="../internal/metadata/build_dq_rule_key/"><code>fabricops_kit.metadata.build_dq_rule_key</code></a>
+- <a href="../internal/metadata/build_metadata_column_key/"><code>fabricops_kit.metadata.build_metadata_column_key</code></a>
+- <a href="../internal/metadata/build_metadata_table_key/"><code>fabricops_kit.metadata.build_metadata_table_key</code></a>

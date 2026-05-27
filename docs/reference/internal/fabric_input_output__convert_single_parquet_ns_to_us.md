@@ -1,19 +1,23 @@
 # _convert_single_parquet_ns_to_us
 
-## Internal helper
-Internal helper. Do not call directly from notebooks unless extending FabricOps.
+**Module:** `fabric_input_output`  
+**Classification:** Internal helper
 
 ## Purpose
-Supports callable orchestration internals.
 
-## Used by callable functions
-- `fabricops_kit.fabric_input_output.read_lakehouse_parquet`
+No summary available.
 
-## Used by internal helpers
-- None
+## Function manifest
 
-## Debug relevance
-Inspect this helper when parent callable outputs are malformed, missing evidence, or failing validation.
+- Fully qualified function name: `fabricops_kit.fabric_input_output._convert_single_parquet_ns_to_us`
+- Short name: `_convert_single_parquet_ns_to_us`
+- Module: `fabric_input_output`
+- Classification: Internal helper
+- Related module: `fabric_input_output`
+- Source file path: `src/fabricops_kit/fabric_input_output.py`
+- Source reference: <a href="../../api/modules/fabric_input_output/#_convert_single_parquet_ns_to_us">Module source anchor</a>
+- Inbound references count: 1
+- Outbound references count: 0
 
-## Safe change guidance
-Preserve helper contract, return shape, and side effects expected by parent callables.
+## Inbound references
+- <a href="../read_lakehouse_parquet/"><code>fabricops_kit.fabric_input_output.read_lakehouse_parquet</code></a>

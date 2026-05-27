@@ -1,28 +1,26 @@
 # validate_dq_rules
 
-## Template step
-03_pipeline_contract
+**Module:** `data_quality`  
+**Classification:** Optional
 
-## Function role
-Validation/check function
+## Purpose
 
-## Use this when
-Use `validate_dq_rules` during template-driven notebook execution.
+No summary available.
 
-## What it delegates to
+## Function manifest
 
-### Callable functions called
-- None
+- Fully qualified function name: `fabricops_kit.data_quality.validate_dq_rules`
+- Short name: `validate_dq_rules`
+- Module: `data_quality`
+- Classification: Optional
+- Related module: `data_quality`
+- Source file path: `src/fabricops_kit/data_quality.py`
+- Source reference: <a href="../../api/modules/data_quality/#validate_dq_rules">Module source anchor</a>
+- Inbound references count: 4
+- Outbound references count: 0
 
-### Internal helpers used
-- None
-
-## Debug this function when
-- rule parsing fails
-- validation rejects expected rules
-
-## Agent repair guide
-1. Preserve public callable signature unless templates are updated.
-2. Inspect delegated helpers before rewriting wrapper logic.
-3. Preserve output shape where downstream notebooks depend on it.
-4. Update tests and templates together if behavior changes.
+## Inbound references
+- <a href="../internal/data_quality/_run_dq_rules/"><code>fabricops_kit.data_quality._run_dq_rules</code></a>
+- <a href="../internal/data_quality/_split_dq_rows/"><code>fabricops_kit.data_quality._split_dq_rows</code></a>
+- <a href="../enforce_dq/"><code>fabricops_kit.data_quality.enforce_dq</code></a>
+- <a href="../write_dq_rules/"><code>fabricops_kit.data_quality.write_dq_rules</code></a>

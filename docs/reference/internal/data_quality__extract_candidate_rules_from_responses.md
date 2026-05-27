@@ -1,19 +1,24 @@
 # _extract_candidate_rules_from_responses
 
-## Internal helper
-Internal helper. Do not call directly from notebooks unless extending FabricOps.
+**Module:** `data_quality`  
+**Classification:** Internal helper
 
 ## Purpose
-Supports callable orchestration internals.
 
-## Used by callable functions
-- None
+No summary available.
 
-## Used by internal helpers
-- None
+## Function manifest
 
-## Debug relevance
-Inspect this helper when parent callable outputs are malformed, missing evidence, or failing validation.
+- Fully qualified function name: `fabricops_kit.data_quality._extract_candidate_rules_from_responses`
+- Short name: `_extract_candidate_rules_from_responses`
+- Module: `data_quality`
+- Classification: Internal helper
+- Related module: `data_quality`
+- Source file path: `src/fabricops_kit/data_quality.py`
+- Source reference: <a href="../../api/modules/data_quality/#_extract_candidate_rules_from_responses">Module source anchor</a>
+- Inbound references count: 0
+- Outbound references count: 2
 
-## Safe change guidance
-Preserve helper contract, return shape, and side effects expected by parent callables.
+## Outbound references
+- <a href="../internal/data_quality/_extract_dq_rules/"><code>fabricops_kit.data_quality._extract_dq_rules</code></a>
+- <a href="../internal/data_quality/_parse_dq_rules_dict_from_text/"><code>fabricops_kit.data_quality._parse_dq_rules_dict_from_text</code></a>

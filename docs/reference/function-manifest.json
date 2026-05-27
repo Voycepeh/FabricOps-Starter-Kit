@@ -1,10 +1,10 @@
 [
   {
+    "id": "fabricops_kit._utils._to_jsonable",
     "name": "_to_jsonable",
     "qualified_name": "fabricops_kit._utils._to_jsonable",
     "module": "_utils",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit._utils._to_jsonable",
       "fabricops_kit.drift._build_pandas_partition_snapshot",
@@ -16,287 +16,310 @@
     "outbound": [
       "fabricops_kit._utils._to_jsonable"
     ],
-    "source_file": "src/fabricops_kit/_utils.py",
+    "source_path": "src/fabricops_kit/_utils.py",
+    "docs_path": "reference/internal/_utils__to_jsonable.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.business_context._extract_column_business_context_suggestions",
     "name": "_extract_column_business_context_suggestions",
     "qualified_name": "fabricops_kit.business_context._extract_column_business_context_suggestions",
     "module": "business_context",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.business_context.extract_column_business_context_suggestions"
     ],
     "outbound": [
       "fabricops_kit.business_context._parse_ai_dict_response"
     ],
-    "source_file": "src/fabricops_kit/business_context.py",
+    "source_path": "src/fabricops_kit/business_context.py",
+    "docs_path": "reference/internal/business_context__extract_column_business_context_suggestions.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.business_context._parse_ai_dict_response",
     "name": "_parse_ai_dict_response",
     "qualified_name": "fabricops_kit.business_context._parse_ai_dict_response",
     "module": "business_context",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.business_context._extract_column_business_context_suggestions"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/business_context.py",
+    "source_path": "src/fabricops_kit/business_context.py",
+    "docs_path": "reference/internal/business_context__parse_ai_dict_response.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.business_context._prepare_business_context_profile_input",
     "name": "_prepare_business_context_profile_input",
     "qualified_name": "fabricops_kit.business_context._prepare_business_context_profile_input",
     "module": "business_context",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.business_context.prepare_business_context_profile_input"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/business_context.py",
+    "source_path": "src/fabricops_kit/business_context.py",
+    "docs_path": "reference/internal/business_context__prepare_business_context_profile_input.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.business_context._require_ipywidgets",
     "name": "_require_ipywidgets",
     "qualified_name": "fabricops_kit.business_context._require_ipywidgets",
     "module": "business_context",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.business_context.review_business_context"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/business_context.py",
+    "source_path": "src/fabricops_kit/business_context.py",
+    "docs_path": "reference/internal/business_context__require_ipywidgets.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.business_context.draft_business_context",
     "name": "draft_business_context",
     "qualified_name": "fabricops_kit.business_context.draft_business_context",
     "module": "business_context",
-    "type": "callable",
-    "role": "essential",
+    "classification": "Essential",
     "inbound": [],
     "outbound": [],
-    "source_file": "src/fabricops_kit/business_context.py",
+    "source_path": "src/fabricops_kit/business_context.py",
+    "docs_path": "reference/draft_business_context.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.business_context.extract_column_business_context_suggestions",
     "name": "extract_column_business_context_suggestions",
     "qualified_name": "fabricops_kit.business_context.extract_column_business_context_suggestions",
     "module": "business_context",
-    "type": "callable",
-    "role": "optional",
+    "classification": "Optional",
     "inbound": [],
     "outbound": [
       "fabricops_kit.business_context._extract_column_business_context_suggestions"
     ],
-    "source_file": "src/fabricops_kit/business_context.py",
+    "source_path": "src/fabricops_kit/business_context.py",
+    "docs_path": "reference/extract_column_business_context_suggestions.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.business_context.get_reviewed_business_context_rows",
     "name": "get_reviewed_business_context_rows",
     "qualified_name": "fabricops_kit.business_context.get_reviewed_business_context_rows",
     "module": "business_context",
-    "type": "callable",
-    "role": "optional",
+    "classification": "Optional",
     "inbound": [],
     "outbound": [],
-    "source_file": "src/fabricops_kit/business_context.py",
+    "source_path": "src/fabricops_kit/business_context.py",
+    "docs_path": "reference/get_reviewed_business_context_rows.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.business_context.prepare_business_context_profile_input",
     "name": "prepare_business_context_profile_input",
     "qualified_name": "fabricops_kit.business_context.prepare_business_context_profile_input",
     "module": "business_context",
-    "type": "callable",
-    "role": "optional",
+    "classification": "Optional",
     "inbound": [],
     "outbound": [
       "fabricops_kit.business_context._prepare_business_context_profile_input"
     ],
-    "source_file": "src/fabricops_kit/business_context.py",
+    "source_path": "src/fabricops_kit/business_context.py",
+    "docs_path": "reference/prepare_business_context_profile_input.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.business_context.review_business_context",
     "name": "review_business_context",
     "qualified_name": "fabricops_kit.business_context.review_business_context",
     "module": "business_context",
-    "type": "callable",
-    "role": "essential",
+    "classification": "Essential",
     "inbound": [],
     "outbound": [
       "fabricops_kit.business_context._require_ipywidgets",
       "fabricops_kit.metadata.build_metadata_column_key",
       "fabricops_kit.metadata.build_metadata_table_key"
     ],
-    "source_file": "src/fabricops_kit/business_context.py",
+    "source_path": "src/fabricops_kit/business_context.py",
+    "docs_path": "reference/review_business_context.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.business_context.write_business_context",
     "name": "write_business_context",
     "qualified_name": "fabricops_kit.business_context.write_business_context",
     "module": "business_context",
-    "type": "callable",
-    "role": "essential",
+    "classification": "Essential",
     "inbound": [],
     "outbound": [
       "fabricops_kit.metadata.write_column_business_context"
     ],
-    "source_file": "src/fabricops_kit/business_context.py",
+    "source_path": "src/fabricops_kit/business_context.py",
+    "docs_path": "reference/write_business_context.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.config.AIPromptConfig",
     "name": "AIPromptConfig",
     "qualified_name": "fabricops_kit.config.AIPromptConfig",
     "module": "config",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [],
     "outbound": [],
-    "source_file": "src/fabricops_kit/config.py",
+    "source_path": "src/fabricops_kit/config.py",
+    "docs_path": "reference/internal/config_AIPromptConfig.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.config.ConfigBootstrapResult",
     "name": "ConfigBootstrapResult",
     "qualified_name": "fabricops_kit.config.ConfigBootstrapResult",
     "module": "config",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.config._bootstrap_fabric_env"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/config.py",
+    "source_path": "src/fabricops_kit/config.py",
+    "docs_path": "reference/internal/config_ConfigBootstrapResult.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.config.ConfigSmokeCheckResult",
     "name": "ConfigSmokeCheckResult",
     "qualified_name": "fabricops_kit.config.ConfigSmokeCheckResult",
     "module": "config",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.config._run_config_smoke_tests"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/config.py",
+    "source_path": "src/fabricops_kit/config.py",
+    "docs_path": "reference/internal/config_ConfigSmokeCheckResult.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.config.DatasetContractValidationError",
     "name": "DatasetContractValidationError",
     "qualified_name": "fabricops_kit.config.DatasetContractValidationError",
     "module": "config",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.config.assert_valid_dataset_contract"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/config.py",
+    "source_path": "src/fabricops_kit/config.py",
+    "docs_path": "reference/internal/config_DatasetContractValidationError.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.config.FrameworkConfig",
     "name": "FrameworkConfig",
     "qualified_name": "fabricops_kit.config.FrameworkConfig",
     "module": "config",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.config._validate_framework_config"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/config.py",
+    "source_path": "src/fabricops_kit/config.py",
+    "docs_path": "reference/internal/config_FrameworkConfig.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.config.GovernanceConfig",
     "name": "GovernanceConfig",
     "qualified_name": "fabricops_kit.config.GovernanceConfig",
     "module": "config",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [],
     "outbound": [],
-    "source_file": "src/fabricops_kit/config.py",
+    "source_path": "src/fabricops_kit/config.py",
+    "docs_path": "reference/internal/config_GovernanceConfig.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.config.LineageConfig",
     "name": "LineageConfig",
     "qualified_name": "fabricops_kit.config.LineageConfig",
     "module": "config",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [],
     "outbound": [],
-    "source_file": "src/fabricops_kit/config.py",
+    "source_path": "src/fabricops_kit/config.py",
+    "docs_path": "reference/internal/config_LineageConfig.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.config.NotebookRuntimeConfig",
     "name": "NotebookRuntimeConfig",
     "qualified_name": "fabricops_kit.config.NotebookRuntimeConfig",
     "module": "config",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [],
     "outbound": [],
-    "source_file": "src/fabricops_kit/config.py",
+    "source_path": "src/fabricops_kit/config.py",
+    "docs_path": "reference/internal/config_NotebookRuntimeConfig.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.config.NotebookSetupContext",
     "name": "NotebookSetupContext",
     "qualified_name": "fabricops_kit.config.NotebookSetupContext",
     "module": "config",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.config.setup_notebook"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/config.py",
+    "source_path": "src/fabricops_kit/config.py",
+    "docs_path": "reference/internal/config_NotebookSetupContext.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.config.PathConfig",
     "name": "PathConfig",
     "qualified_name": "fabricops_kit.config.PathConfig",
     "module": "config",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [],
     "outbound": [],
-    "source_file": "src/fabricops_kit/config.py",
+    "source_path": "src/fabricops_kit/config.py",
+    "docs_path": "reference/internal/config_PathConfig.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.config.QualityConfig",
     "name": "QualityConfig",
     "qualified_name": "fabricops_kit.config.QualityConfig",
     "module": "config",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [],
     "outbound": [],
-    "source_file": "src/fabricops_kit/config.py",
+    "source_path": "src/fabricops_kit/config.py",
+    "docs_path": "reference/internal/config_QualityConfig.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.config.ReviewWorkflowConfig",
     "name": "ReviewWorkflowConfig",
     "qualified_name": "fabricops_kit.config.ReviewWorkflowConfig",
     "module": "config",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [],
     "outbound": [],
-    "source_file": "src/fabricops_kit/config.py",
+    "source_path": "src/fabricops_kit/config.py",
+    "docs_path": "reference/internal/config_ReviewWorkflowConfig.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.config._bootstrap_fabric_env",
     "name": "_bootstrap_fabric_env",
     "qualified_name": "fabricops_kit.config._bootstrap_fabric_env",
     "module": "config",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [],
     "outbound": [
       "fabricops_kit.config.ConfigBootstrapResult",
@@ -305,90 +328,97 @@
       "fabricops_kit.config._run_config_smoke_tests",
       "fabricops_kit.config.load_config"
     ],
-    "source_file": "src/fabricops_kit/config.py",
+    "source_path": "src/fabricops_kit/config.py",
+    "docs_path": "reference/internal/config__bootstrap_fabric_env.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.config._check_fabric_ai_functions_available",
     "name": "_check_fabric_ai_functions_available",
     "qualified_name": "fabricops_kit.config._check_fabric_ai_functions_available",
     "module": "config",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [],
     "outbound": [],
-    "source_file": "src/fabricops_kit/config.py",
+    "source_path": "src/fabricops_kit/config.py",
+    "docs_path": "reference/internal/config__check_fabric_ai_functions_available.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.config._check_spark_session",
     "name": "_check_spark_session",
     "qualified_name": "fabricops_kit.config._check_spark_session",
     "module": "config",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.config._run_config_smoke_tests"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/config.py",
+    "source_path": "src/fabricops_kit/config.py",
+    "docs_path": "reference/internal/config__check_spark_session.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.config._configure_fabric_ai_functions",
     "name": "_configure_fabric_ai_functions",
     "qualified_name": "fabricops_kit.config._configure_fabric_ai_functions",
     "module": "config",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [],
     "outbound": [],
-    "source_file": "src/fabricops_kit/config.py",
+    "source_path": "src/fabricops_kit/config.py",
+    "docs_path": "reference/internal/config__configure_fabric_ai_functions.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.config._default_schema_text",
     "name": "_default_schema_text",
     "qualified_name": "fabricops_kit.config._default_schema_text",
     "module": "config",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.config._load_schema"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/config.py",
+    "source_path": "src/fabricops_kit/config.py",
+    "docs_path": "reference/internal/config__default_schema_text.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.config._format_error_path",
     "name": "_format_error_path",
     "qualified_name": "fabricops_kit.config._format_error_path",
     "module": "config",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.config.validate_dataset_contract"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/config.py",
+    "source_path": "src/fabricops_kit/config.py",
+    "docs_path": "reference/internal/config__format_error_path.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.config._get_fabric_runtime_metadata",
     "name": "_get_fabric_runtime_metadata",
     "qualified_name": "fabricops_kit.config._get_fabric_runtime_metadata",
     "module": "config",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.config._bootstrap_fabric_env",
       "fabricops_kit.config._run_config_smoke_tests"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/config.py",
+    "source_path": "src/fabricops_kit/config.py",
+    "docs_path": "reference/internal/config__get_fabric_runtime_metadata.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.config._get_store",
     "name": "_get_store",
     "qualified_name": "fabricops_kit.config._get_store",
     "module": "config",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.config._bootstrap_fabric_env",
       "fabricops_kit.config._run_config_smoke_tests",
@@ -402,43 +432,46 @@
       "fabricops_kit.fabric_input_output.write_warehouse_table"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/config.py",
+    "source_path": "src/fabricops_kit/config.py",
+    "docs_path": "reference/internal/config__get_store.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.config._load_schema",
     "name": "_load_schema",
     "qualified_name": "fabricops_kit.config._load_schema",
     "module": "config",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.config.validate_dataset_contract"
     ],
     "outbound": [
       "fabricops_kit.config._default_schema_text"
     ],
-    "source_file": "src/fabricops_kit/config.py",
+    "source_path": "src/fabricops_kit/config.py",
+    "docs_path": "reference/internal/config__load_schema.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.config._normalize_name",
     "name": "_normalize_name",
     "qualified_name": "fabricops_kit.config._normalize_name",
     "module": "config",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.config._validate_notebook_name"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/config.py",
+    "source_path": "src/fabricops_kit/config.py",
+    "docs_path": "reference/internal/config__normalize_name.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.config._run_config_smoke_tests",
     "name": "_run_config_smoke_tests",
     "qualified_name": "fabricops_kit.config._run_config_smoke_tests",
     "module": "config",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.config._bootstrap_fabric_env",
       "fabricops_kit.config.setup_notebook"
@@ -450,15 +483,16 @@
       "fabricops_kit.config._get_store",
       "fabricops_kit.config._validate_notebook_name"
     ],
-    "source_file": "src/fabricops_kit/config.py",
+    "source_path": "src/fabricops_kit/config.py",
+    "docs_path": "reference/internal/config__run_config_smoke_tests.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.config._validate_framework_config",
     "name": "_validate_framework_config",
     "qualified_name": "fabricops_kit.config._validate_framework_config",
     "module": "config",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.config.load_config"
     ],
@@ -466,58 +500,62 @@
       "fabricops_kit.config.FrameworkConfig",
       "fabricops_kit.config.keys"
     ],
-    "source_file": "src/fabricops_kit/config.py",
+    "source_path": "src/fabricops_kit/config.py",
+    "docs_path": "reference/internal/config__validate_framework_config.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.config._validate_notebook_name",
     "name": "_validate_notebook_name",
     "qualified_name": "fabricops_kit.config._validate_notebook_name",
     "module": "config",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.config._run_config_smoke_tests"
     ],
     "outbound": [
       "fabricops_kit.config._normalize_name"
     ],
-    "source_file": "src/fabricops_kit/config.py",
+    "source_path": "src/fabricops_kit/config.py",
+    "docs_path": "reference/internal/config__validate_notebook_name.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.config.assert_valid_dataset_contract",
     "name": "assert_valid_dataset_contract",
     "qualified_name": "fabricops_kit.config.assert_valid_dataset_contract",
     "module": "config",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [],
     "outbound": [
       "fabricops_kit.config.DatasetContractValidationError",
       "fabricops_kit.config.validate_dataset_contract"
     ],
-    "source_file": "src/fabricops_kit/config.py",
+    "source_path": "src/fabricops_kit/config.py",
+    "docs_path": "reference/internal/config_assert_valid_dataset_contract.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.config.load_and_validate_dataset_contract",
     "name": "load_and_validate_dataset_contract",
     "qualified_name": "fabricops_kit.config.load_and_validate_dataset_contract",
     "module": "config",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [],
     "outbound": [
       "fabricops_kit.config.load_dataset_contract",
       "fabricops_kit.config.validate_dataset_contract"
     ],
-    "source_file": "src/fabricops_kit/config.py",
+    "source_path": "src/fabricops_kit/config.py",
+    "docs_path": "reference/internal/config_load_and_validate_dataset_contract.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.config.load_config",
     "name": "load_config",
     "qualified_name": "fabricops_kit.config.load_config",
     "module": "config",
-    "type": "callable",
-    "role": "essential",
+    "classification": "Essential",
     "inbound": [
       "fabricops_kit.config._bootstrap_fabric_env",
       "fabricops_kit.config.setup_notebook",
@@ -526,28 +564,30 @@
     "outbound": [
       "fabricops_kit.config._validate_framework_config"
     ],
-    "source_file": "src/fabricops_kit/config.py",
+    "source_path": "src/fabricops_kit/config.py",
+    "docs_path": "reference/load_config.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.config.load_dataset_contract",
     "name": "load_dataset_contract",
     "qualified_name": "fabricops_kit.config.load_dataset_contract",
     "module": "config",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.config.load_and_validate_dataset_contract"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/config.py",
+    "source_path": "src/fabricops_kit/config.py",
+    "docs_path": "reference/internal/config_load_dataset_contract.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.config.setup_notebook",
     "name": "setup_notebook",
     "qualified_name": "fabricops_kit.config.setup_notebook",
     "module": "config",
-    "type": "callable",
-    "role": "essential",
+    "classification": "Essential",
     "inbound": [],
     "outbound": [
       "fabricops_kit.config.NotebookSetupContext",
@@ -555,15 +595,16 @@
       "fabricops_kit.config._run_config_smoke_tests",
       "fabricops_kit.config.load_config"
     ],
-    "source_file": "src/fabricops_kit/config.py",
+    "source_path": "src/fabricops_kit/config.py",
+    "docs_path": "reference/setup_notebook.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.config.validate_dataset_contract",
     "name": "validate_dataset_contract",
     "qualified_name": "fabricops_kit.config.validate_dataset_contract",
     "module": "config",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.config.assert_valid_dataset_contract",
       "fabricops_kit.config.load_and_validate_dataset_contract"
@@ -572,222 +613,239 @@
       "fabricops_kit.config._format_error_path",
       "fabricops_kit.config._load_schema"
     ],
-    "source_file": "src/fabricops_kit/config.py",
+    "source_path": "src/fabricops_kit/config.py",
+    "docs_path": "reference/internal/config_validate_dataset_contract.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_agreement._agreement_option_label",
     "name": "_agreement_option_label",
     "qualified_name": "fabricops_kit.data_agreement._agreement_option_label",
     "module": "data_agreement",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.data_agreement.select_agreement"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/data_agreement.py",
+    "source_path": "src/fabricops_kit/data_agreement.py",
+    "docs_path": "reference/internal/data_agreement__agreement_option_label.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_agreement._coerce_row_dicts",
     "name": "_coerce_row_dicts",
     "qualified_name": "fabricops_kit.data_agreement._coerce_row_dicts",
     "module": "data_agreement",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.data_agreement.load_agreements",
       "fabricops_kit.data_agreement.select_agreement"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/data_agreement.py",
+    "source_path": "src/fabricops_kit/data_agreement.py",
+    "docs_path": "reference/internal/data_agreement__coerce_row_dicts.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_agreement._latest_distinct_agreements",
     "name": "_latest_distinct_agreements",
     "qualified_name": "fabricops_kit.data_agreement._latest_distinct_agreements",
     "module": "data_agreement",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.data_agreement.load_agreements"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/data_agreement.py",
+    "source_path": "src/fabricops_kit/data_agreement.py",
+    "docs_path": "reference/internal/data_agreement__latest_distinct_agreements.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_agreement.get_selected_agreement",
     "name": "get_selected_agreement",
     "qualified_name": "fabricops_kit.data_agreement.get_selected_agreement",
     "module": "data_agreement",
-    "type": "callable",
-    "role": "essential",
+    "classification": "Essential",
     "inbound": [],
     "outbound": [],
-    "source_file": "src/fabricops_kit/data_agreement.py",
+    "source_path": "src/fabricops_kit/data_agreement.py",
+    "docs_path": "reference/get_selected_agreement.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_agreement.load_agreements",
     "name": "load_agreements",
     "qualified_name": "fabricops_kit.data_agreement.load_agreements",
     "module": "data_agreement",
-    "type": "callable",
-    "role": "essential",
+    "classification": "Essential",
     "inbound": [],
     "outbound": [
       "fabricops_kit.data_agreement._coerce_row_dicts",
       "fabricops_kit.data_agreement._latest_distinct_agreements"
     ],
-    "source_file": "src/fabricops_kit/data_agreement.py",
+    "source_path": "src/fabricops_kit/data_agreement.py",
+    "docs_path": "reference/load_agreements.md",
     "summary": "Load latest distinct agreement metadata rows for widget selection."
   },
   {
+    "id": "fabricops_kit.data_agreement.select_agreement",
     "name": "select_agreement",
     "qualified_name": "fabricops_kit.data_agreement.select_agreement",
     "module": "data_agreement",
-    "type": "callable",
-    "role": "essential",
+    "classification": "Essential",
     "inbound": [],
     "outbound": [
       "fabricops_kit.data_agreement._agreement_option_label",
       "fabricops_kit.data_agreement._coerce_row_dicts"
     ],
-    "source_file": "src/fabricops_kit/data_agreement.py",
+    "source_path": "src/fabricops_kit/data_agreement.py",
+    "docs_path": "reference/select_agreement.md",
     "summary": "Render a widget dropdown and store selected agreement metadata row in module state."
   },
   {
+    "id": "fabricops_kit.data_governance._approved_widget_rows",
     "name": "_approved_widget_rows",
     "qualified_name": "fabricops_kit.data_governance._approved_widget_rows",
     "module": "data_governance",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.data_governance.write_governance"
     ],
     "outbound": [
       "fabricops_kit.metadata._resolve_action_by"
     ],
-    "source_file": "src/fabricops_kit/data_governance.py",
+    "source_path": "src/fabricops_kit/data_governance.py",
+    "docs_path": "reference/internal/data_governance__approved_widget_rows.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_governance._build_governance_context",
     "name": "_build_governance_context",
     "qualified_name": "fabricops_kit.data_governance._build_governance_context",
     "module": "data_governance",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [],
     "outbound": [],
-    "source_file": "src/fabricops_kit/data_governance.py",
+    "source_path": "src/fabricops_kit/data_governance.py",
+    "docs_path": "reference/internal/data_governance__build_governance_context.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_governance._coerce_row_dicts",
     "name": "_coerce_row_dicts",
     "qualified_name": "fabricops_kit.data_governance._coerce_row_dicts",
     "module": "data_governance",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.data_governance.load_governance"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/data_governance.py",
+    "source_path": "src/fabricops_kit/data_governance.py",
+    "docs_path": "reference/internal/data_governance__coerce_row_dicts.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_governance._extract_pii_suggestions",
     "name": "_extract_pii_suggestions",
     "qualified_name": "fabricops_kit.data_governance._extract_pii_suggestions",
     "module": "data_governance",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.data_governance.extract_governance_suggestions"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/data_governance.py",
+    "source_path": "src/fabricops_kit/data_governance.py",
+    "docs_path": "reference/internal/data_governance__extract_pii_suggestions.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_governance._prepare_governance_input",
     "name": "_prepare_governance_input",
     "qualified_name": "fabricops_kit.data_governance._prepare_governance_input",
     "module": "data_governance",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.data_governance.prepare_governance_input"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/data_governance.py",
+    "source_path": "src/fabricops_kit/data_governance.py",
+    "docs_path": "reference/internal/data_governance__prepare_governance_input.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_governance._undo_last_action",
     "name": "_undo_last_action",
     "qualified_name": "fabricops_kit.data_governance._undo_last_action",
     "module": "data_governance",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.data_governance.review_governance"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/data_governance.py",
+    "source_path": "src/fabricops_kit/data_governance.py",
+    "docs_path": "reference/internal/data_governance__undo_last_action.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_governance.draft_governance",
     "name": "draft_governance",
     "qualified_name": "fabricops_kit.data_governance.draft_governance",
     "module": "data_governance",
-    "type": "callable",
-    "role": "essential",
+    "classification": "Essential",
     "inbound": [],
     "outbound": [],
-    "source_file": "src/fabricops_kit/data_governance.py",
+    "source_path": "src/fabricops_kit/data_governance.py",
+    "docs_path": "reference/draft_governance.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_governance.extract_governance_suggestions",
     "name": "extract_governance_suggestions",
     "qualified_name": "fabricops_kit.data_governance.extract_governance_suggestions",
     "module": "data_governance",
-    "type": "callable",
-    "role": "optional",
+    "classification": "Optional",
     "inbound": [],
     "outbound": [
       "fabricops_kit.data_governance._extract_pii_suggestions"
     ],
-    "source_file": "src/fabricops_kit/data_governance.py",
+    "source_path": "src/fabricops_kit/data_governance.py",
+    "docs_path": "reference/extract_governance_suggestions.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_governance.load_governance",
     "name": "load_governance",
     "qualified_name": "fabricops_kit.data_governance.load_governance",
     "module": "data_governance",
-    "type": "callable",
-    "role": "essential",
+    "classification": "Essential",
     "inbound": [],
     "outbound": [
       "fabricops_kit.data_governance._coerce_row_dicts"
     ],
-    "source_file": "src/fabricops_kit/data_governance.py",
+    "source_path": "src/fabricops_kit/data_governance.py",
+    "docs_path": "reference/load_governance.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_governance.prepare_governance_input",
     "name": "prepare_governance_input",
     "qualified_name": "fabricops_kit.data_governance.prepare_governance_input",
     "module": "data_governance",
-    "type": "callable",
-    "role": "optional",
+    "classification": "Optional",
     "inbound": [],
     "outbound": [
       "fabricops_kit.data_governance._prepare_governance_input"
     ],
-    "source_file": "src/fabricops_kit/data_governance.py",
+    "source_path": "src/fabricops_kit/data_governance.py",
+    "docs_path": "reference/prepare_governance_input.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_governance.review_governance",
     "name": "review_governance",
     "qualified_name": "fabricops_kit.data_governance.review_governance",
     "module": "data_governance",
-    "type": "callable",
-    "role": "essential",
+    "classification": "Essential",
     "inbound": [],
     "outbound": [
       "fabricops_kit.data_governance._undo_last_action",
@@ -795,165 +853,177 @@
       "fabricops_kit.metadata.build_metadata_column_key",
       "fabricops_kit.metadata.build_metadata_table_key"
     ],
-    "source_file": "src/fabricops_kit/data_governance.py",
+    "source_path": "src/fabricops_kit/data_governance.py",
+    "docs_path": "reference/review_governance.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_governance.write_governance",
     "name": "write_governance",
     "qualified_name": "fabricops_kit.data_governance.write_governance",
     "module": "data_governance",
-    "type": "callable",
-    "role": "essential",
+    "classification": "Essential",
     "inbound": [],
     "outbound": [
       "fabricops_kit.data_governance._approved_widget_rows"
     ],
-    "source_file": "src/fabricops_kit/data_governance.py",
+    "source_path": "src/fabricops_kit/data_governance.py",
+    "docs_path": "reference/write_governance.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_lineage._build_lineage_record_from_steps",
     "name": "_build_lineage_record_from_steps",
     "qualified_name": "fabricops_kit.data_lineage._build_lineage_record_from_steps",
     "module": "data_lineage",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.data_lineage._build_lineage_records"
     ],
     "outbound": [
       "fabricops_kit.data_lineage._validate_lineage_steps"
     ],
-    "source_file": "src/fabricops_kit/data_lineage.py",
+    "source_path": "src/fabricops_kit/data_lineage.py",
+    "docs_path": "reference/internal/data_lineage__build_lineage_record_from_steps.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_lineage._build_lineage_records",
     "name": "_build_lineage_records",
     "qualified_name": "fabricops_kit.data_lineage._build_lineage_records",
     "module": "data_lineage",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [],
     "outbound": [
       "fabricops_kit.data_lineage._build_lineage_record_from_steps"
     ],
-    "source_file": "src/fabricops_kit/data_lineage.py",
+    "source_path": "src/fabricops_kit/data_lineage.py",
+    "docs_path": "reference/internal/data_lineage__build_lineage_records.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_lineage._call_name",
     "name": "_call_name",
     "qualified_name": "fabricops_kit.data_lineage._call_name",
     "module": "data_lineage",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.data_lineage._scan_notebook_lineage"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/data_lineage.py",
+    "source_path": "src/fabricops_kit/data_lineage.py",
+    "docs_path": "reference/internal/data_lineage__call_name.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_lineage._enrich_lineage_steps_with_ai",
     "name": "_enrich_lineage_steps_with_ai",
     "qualified_name": "fabricops_kit.data_lineage._enrich_lineage_steps_with_ai",
     "module": "data_lineage",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [],
     "outbound": [
       "fabricops_kit.data_lineage._fallback_copilot_lineage_prompt"
     ],
-    "source_file": "src/fabricops_kit/data_lineage.py",
+    "source_path": "src/fabricops_kit/data_lineage.py",
+    "docs_path": "reference/internal/data_lineage__enrich_lineage_steps_with_ai.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_lineage._fallback_copilot_lineage_prompt",
     "name": "_fallback_copilot_lineage_prompt",
     "qualified_name": "fabricops_kit.data_lineage._fallback_copilot_lineage_prompt",
     "module": "data_lineage",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.data_lineage._enrich_lineage_steps_with_ai"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/data_lineage.py",
+    "source_path": "src/fabricops_kit/data_lineage.py",
+    "docs_path": "reference/internal/data_lineage__fallback_copilot_lineage_prompt.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_lineage._flatten_chain",
     "name": "_flatten_chain",
     "qualified_name": "fabricops_kit.data_lineage._flatten_chain",
     "module": "data_lineage",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.data_lineage._scan_notebook_lineage"
     ],
     "outbound": [
       "fabricops_kit.data_lineage._name"
     ],
-    "source_file": "src/fabricops_kit/data_lineage.py",
+    "source_path": "src/fabricops_kit/data_lineage.py",
+    "docs_path": "reference/internal/data_lineage__flatten_chain.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_lineage._literal",
     "name": "_literal",
     "qualified_name": "fabricops_kit.data_lineage._literal",
     "module": "data_lineage",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.data_lineage._resolve_write_target"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/data_lineage.py",
+    "source_path": "src/fabricops_kit/data_lineage.py",
+    "docs_path": "reference/internal/data_lineage__literal.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_lineage._name",
     "name": "_name",
     "qualified_name": "fabricops_kit.data_lineage._name",
     "module": "data_lineage",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.data_lineage._flatten_chain",
       "fabricops_kit.data_lineage._scan_notebook_lineage"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/data_lineage.py",
+    "source_path": "src/fabricops_kit/data_lineage.py",
+    "docs_path": "reference/internal/data_lineage__name.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_lineage._resolve_write_target",
     "name": "_resolve_write_target",
     "qualified_name": "fabricops_kit.data_lineage._resolve_write_target",
     "module": "data_lineage",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.data_lineage._scan_notebook_lineage"
     ],
     "outbound": [
       "fabricops_kit.data_lineage._literal"
     ],
-    "source_file": "src/fabricops_kit/data_lineage.py",
+    "source_path": "src/fabricops_kit/data_lineage.py",
+    "docs_path": "reference/internal/data_lineage__resolve_write_target.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_lineage._scan_notebook_cells",
     "name": "_scan_notebook_cells",
     "qualified_name": "fabricops_kit.data_lineage._scan_notebook_cells",
     "module": "data_lineage",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [],
     "outbound": [
       "fabricops_kit.data_lineage._scan_notebook_lineage"
     ],
-    "source_file": "src/fabricops_kit/data_lineage.py",
+    "source_path": "src/fabricops_kit/data_lineage.py",
+    "docs_path": "reference/internal/data_lineage__scan_notebook_cells.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_lineage._scan_notebook_lineage",
     "name": "_scan_notebook_lineage",
     "qualified_name": "fabricops_kit.data_lineage._scan_notebook_lineage",
     "module": "data_lineage",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.data_lineage._scan_notebook_cells"
     ],
@@ -964,91 +1034,98 @@
       "fabricops_kit.data_lineage._resolve_write_target",
       "fabricops_kit.data_lineage._step"
     ],
-    "source_file": "src/fabricops_kit/data_lineage.py",
+    "source_path": "src/fabricops_kit/data_lineage.py",
+    "docs_path": "reference/internal/data_lineage__scan_notebook_lineage.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_lineage._step",
     "name": "_step",
     "qualified_name": "fabricops_kit.data_lineage._step",
     "module": "data_lineage",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.data_lineage._scan_notebook_lineage"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/data_lineage.py",
+    "source_path": "src/fabricops_kit/data_lineage.py",
+    "docs_path": "reference/internal/data_lineage__step.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_lineage._validate_lineage_steps",
     "name": "_validate_lineage_steps",
     "qualified_name": "fabricops_kit.data_lineage._validate_lineage_steps",
     "module": "data_lineage",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.data_lineage._build_lineage_record_from_steps"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/data_lineage.py",
+    "source_path": "src/fabricops_kit/data_lineage.py",
+    "docs_path": "reference/internal/data_lineage__validate_lineage_steps.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_lineage.build_lineage_handover_markdown",
     "name": "build_lineage_handover_markdown",
     "qualified_name": "fabricops_kit.data_lineage.build_lineage_handover_markdown",
     "module": "data_lineage",
-    "type": "callable",
-    "role": "essential",
+    "classification": "Essential",
     "inbound": [],
     "outbound": [],
-    "source_file": "src/fabricops_kit/data_lineage.py",
+    "source_path": "src/fabricops_kit/data_lineage.py",
+    "docs_path": "reference/build_lineage_handover_markdown.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_lineage.build_lineage_records",
     "name": "build_lineage_records",
     "qualified_name": "fabricops_kit.data_lineage.build_lineage_records",
     "module": "data_lineage",
-    "type": "callable",
-    "role": "essential",
+    "classification": "Essential",
     "inbound": [],
     "outbound": [],
-    "source_file": "src/fabricops_kit/data_lineage.py",
+    "source_path": "src/fabricops_kit/data_lineage.py",
+    "docs_path": "reference/build_lineage_records.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_profiling._get_profiled_columns",
     "name": "_get_profiled_columns",
     "qualified_name": "fabricops_kit.data_profiling._get_profiled_columns",
     "module": "data_profiling",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.data_profiling.profile_dataframe"
     ],
     "outbound": [
       "fabricops_kit.technical_columns._default_technical_columns"
     ],
-    "source_file": "src/fabricops_kit/data_profiling.py",
+    "source_path": "src/fabricops_kit/data_profiling.py",
+    "docs_path": "reference/internal/data_profiling__get_profiled_columns.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_profiling._is_min_max_supported_type",
     "name": "_is_min_max_supported_type",
     "qualified_name": "fabricops_kit.data_profiling._is_min_max_supported_type",
     "module": "data_profiling",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.data_profiling.profile_dataframe"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/data_profiling.py",
+    "source_path": "src/fabricops_kit/data_profiling.py",
+    "docs_path": "reference/internal/data_profiling__is_min_max_supported_type.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_profiling.profile_dataframe",
     "name": "profile_dataframe",
     "qualified_name": "fabricops_kit.data_profiling.profile_dataframe",
     "module": "data_profiling",
-    "type": "callable",
-    "role": "essential",
+    "classification": "Essential",
     "inbound": [
       "fabricops_kit.data_quality._prepare_dq_profile_input_rows"
     ],
@@ -1056,39 +1133,42 @@
       "fabricops_kit.data_profiling._get_profiled_columns",
       "fabricops_kit.data_profiling._is_min_max_supported_type"
     ],
-    "source_file": "src/fabricops_kit/data_profiling.py",
+    "source_path": "src/fabricops_kit/data_profiling.py",
+    "docs_path": "reference/profile_dataframe.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_quality.DQEnforcementResult",
     "name": "DQEnforcementResult",
     "qualified_name": "fabricops_kit.data_quality.DQEnforcementResult",
     "module": "data_quality",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.data_quality.enforce_dq"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/data_quality.py",
+    "source_path": "src/fabricops_kit/data_quality.py",
+    "docs_path": "reference/internal/data_quality_DQEnforcementResult.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_quality._approved_dq_rules_from_review_rows",
     "name": "_approved_dq_rules_from_review_rows",
     "qualified_name": "fabricops_kit.data_quality._approved_dq_rules_from_review_rows",
     "module": "data_quality",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [],
     "outbound": [],
-    "source_file": "src/fabricops_kit/data_quality.py",
+    "source_path": "src/fabricops_kit/data_quality.py",
+    "docs_path": "reference/internal/data_quality__approved_dq_rules_from_review_rows.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_quality._attach_rule_metadata_keys",
     "name": "_attach_rule_metadata_keys",
     "qualified_name": "fabricops_kit.data_quality._attach_rule_metadata_keys",
     "module": "data_quality",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.data_quality.get_dq_review_results"
     ],
@@ -1097,85 +1177,91 @@
       "fabricops_kit.metadata.build_metadata_column_key",
       "fabricops_kit.metadata.build_metadata_table_key"
     ],
-    "source_file": "src/fabricops_kit/data_quality.py",
+    "source_path": "src/fabricops_kit/data_quality.py",
+    "docs_path": "reference/internal/data_quality__attach_rule_metadata_keys.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_quality._build_dq_rule_deactivation_metadata_df",
     "name": "_build_dq_rule_deactivation_metadata_df",
     "qualified_name": "fabricops_kit.data_quality._build_dq_rule_deactivation_metadata_df",
     "module": "data_quality",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [],
     "outbound": [
       "fabricops_kit.metadata._now_utc_iso",
       "fabricops_kit.metadata._resolve_action_by"
     ],
-    "source_file": "src/fabricops_kit/data_quality.py",
+    "source_path": "src/fabricops_kit/data_quality.py",
+    "docs_path": "reference/internal/data_quality__build_dq_rule_deactivation_metadata_df.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_quality._build_dq_rule_deactivations",
     "name": "_build_dq_rule_deactivations",
     "qualified_name": "fabricops_kit.data_quality._build_dq_rule_deactivations",
     "module": "data_quality",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [],
     "outbound": [
       "fabricops_kit.metadata._resolve_action_by"
     ],
-    "source_file": "src/fabricops_kit/data_quality.py",
+    "source_path": "src/fabricops_kit/data_quality.py",
+    "docs_path": "reference/internal/data_quality__build_dq_rule_deactivations.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_quality._build_dq_rule_history",
     "name": "_build_dq_rule_history",
     "qualified_name": "fabricops_kit.data_quality._build_dq_rule_history",
     "module": "data_quality",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.data_quality.write_dq_rules"
     ],
     "outbound": [
       "fabricops_kit.metadata._resolve_action_by"
     ],
-    "source_file": "src/fabricops_kit/data_quality.py",
+    "source_path": "src/fabricops_kit/data_quality.py",
+    "docs_path": "reference/internal/data_quality__build_dq_rule_history.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_quality._build_dq_rules_metadata_df",
     "name": "_build_dq_rules_metadata_df",
     "qualified_name": "fabricops_kit.data_quality._build_dq_rules_metadata_df",
     "module": "data_quality",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [],
     "outbound": [
       "fabricops_kit.metadata._now_utc_iso",
       "fabricops_kit.metadata._resolve_action_by"
     ],
-    "source_file": "src/fabricops_kit/data_quality.py",
+    "source_path": "src/fabricops_kit/data_quality.py",
+    "docs_path": "reference/internal/data_quality__build_dq_rules_metadata_df.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_quality._extract_candidate_rules_from_responses",
     "name": "_extract_candidate_rules_from_responses",
     "qualified_name": "fabricops_kit.data_quality._extract_candidate_rules_from_responses",
     "module": "data_quality",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [],
     "outbound": [
       "fabricops_kit.data_quality._extract_dq_rules",
       "fabricops_kit.data_quality._parse_dq_rules_dict_from_text"
     ],
-    "source_file": "src/fabricops_kit/data_quality.py",
+    "source_path": "src/fabricops_kit/data_quality.py",
+    "docs_path": "reference/internal/data_quality__extract_candidate_rules_from_responses.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_quality._extract_dq_rules",
     "name": "_extract_dq_rules",
     "qualified_name": "fabricops_kit.data_quality._extract_dq_rules",
     "module": "data_quality",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.data_quality._extract_candidate_rules_from_responses",
       "fabricops_kit.data_quality.draft_dq_rules"
@@ -1183,42 +1269,45 @@
     "outbound": [
       "fabricops_kit.data_quality._parse_dq_rules_dict_from_text"
     ],
-    "source_file": "src/fabricops_kit/data_quality.py",
+    "source_path": "src/fabricops_kit/data_quality.py",
+    "docs_path": "reference/internal/data_quality__extract_dq_rules.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_quality._latest_dq_rule_versions",
     "name": "_latest_dq_rule_versions",
     "qualified_name": "fabricops_kit.data_quality._latest_dq_rule_versions",
     "module": "data_quality",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.data_quality._load_active_dq_rule_metadata",
       "fabricops_kit.data_quality._load_active_dq_rules"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/data_quality.py",
+    "source_path": "src/fabricops_kit/data_quality.py",
+    "docs_path": "reference/internal/data_quality__latest_dq_rule_versions.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_quality._load_active_dq_rule_metadata",
     "name": "_load_active_dq_rule_metadata",
     "qualified_name": "fabricops_kit.data_quality._load_active_dq_rule_metadata",
     "module": "data_quality",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [],
     "outbound": [
       "fabricops_kit.data_quality._latest_dq_rule_versions"
     ],
-    "source_file": "src/fabricops_kit/data_quality.py",
+    "source_path": "src/fabricops_kit/data_quality.py",
+    "docs_path": "reference/internal/data_quality__load_active_dq_rule_metadata.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_quality._load_active_dq_rules",
     "name": "_load_active_dq_rules",
     "qualified_name": "fabricops_kit.data_quality._load_active_dq_rules",
     "module": "data_quality",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.data_quality.enforce_dq",
       "fabricops_kit.data_quality.load_dq_rules"
@@ -1226,80 +1315,86 @@
     "outbound": [
       "fabricops_kit.data_quality._latest_dq_rule_versions"
     ],
-    "source_file": "src/fabricops_kit/data_quality.py",
+    "source_path": "src/fabricops_kit/data_quality.py",
+    "docs_path": "reference/internal/data_quality__load_active_dq_rules.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_quality._parse_dq_rules_dict_from_text",
     "name": "_parse_dq_rules_dict_from_text",
     "qualified_name": "fabricops_kit.data_quality._parse_dq_rules_dict_from_text",
     "module": "data_quality",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.data_quality._extract_candidate_rules_from_responses",
       "fabricops_kit.data_quality._extract_dq_rules"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/data_quality.py",
+    "source_path": "src/fabricops_kit/data_quality.py",
+    "docs_path": "reference/internal/data_quality__parse_dq_rules_dict_from_text.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_quality._prepare_dq_profile_input_rows",
     "name": "_prepare_dq_profile_input_rows",
     "qualified_name": "fabricops_kit.data_quality._prepare_dq_profile_input_rows",
     "module": "data_quality",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.data_quality.draft_dq_rules"
     ],
     "outbound": [
       "fabricops_kit.data_profiling.profile_dataframe"
     ],
-    "source_file": "src/fabricops_kit/data_quality.py",
+    "source_path": "src/fabricops_kit/data_quality.py",
+    "docs_path": "reference/internal/data_quality__prepare_dq_profile_input_rows.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_quality._prepare_dq_profile_rows_with_context",
     "name": "_prepare_dq_profile_rows_with_context",
     "qualified_name": "fabricops_kit.data_quality._prepare_dq_profile_rows_with_context",
     "module": "data_quality",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [],
     "outbound": [],
-    "source_file": "src/fabricops_kit/data_quality.py",
+    "source_path": "src/fabricops_kit/data_quality.py",
+    "docs_path": "reference/internal/data_quality__prepare_dq_profile_rows_with_context.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_quality._profile_for_dq",
     "name": "_profile_for_dq",
     "qualified_name": "fabricops_kit.data_quality._profile_for_dq",
     "module": "data_quality",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [],
     "outbound": [],
-    "source_file": "src/fabricops_kit/data_quality.py",
+    "source_path": "src/fabricops_kit/data_quality.py",
+    "docs_path": "reference/internal/data_quality__profile_for_dq.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_quality._require_ipywidgets",
     "name": "_require_ipywidgets",
     "qualified_name": "fabricops_kit.data_quality._require_ipywidgets",
     "module": "data_quality",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.data_quality.review_dq_rule_deactivations",
       "fabricops_kit.data_quality.review_dq_rules"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/data_quality.py",
+    "source_path": "src/fabricops_kit/data_quality.py",
+    "docs_path": "reference/internal/data_quality__require_ipywidgets.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_quality._run_dq_rules",
     "name": "_run_dq_rules",
     "qualified_name": "fabricops_kit.data_quality._run_dq_rules",
     "module": "data_quality",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.data_quality.enforce_dq"
     ],
@@ -1307,15 +1402,16 @@
       "fabricops_kit.data_quality._split_dq_rows",
       "fabricops_kit.data_quality.validate_dq_rules"
     ],
-    "source_file": "src/fabricops_kit/data_quality.py",
+    "source_path": "src/fabricops_kit/data_quality.py",
+    "docs_path": "reference/internal/data_quality__run_dq_rules.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_quality._split_dq_rows",
     "name": "_split_dq_rows",
     "qualified_name": "fabricops_kit.data_quality._split_dq_rows",
     "module": "data_quality",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.data_quality._run_dq_rules",
       "fabricops_kit.data_quality.enforce_dq"
@@ -1323,65 +1419,70 @@
     "outbound": [
       "fabricops_kit.data_quality.validate_dq_rules"
     ],
-    "source_file": "src/fabricops_kit/data_quality.py",
+    "source_path": "src/fabricops_kit/data_quality.py",
+    "docs_path": "reference/internal/data_quality__split_dq_rows.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_quality._suggest_dq_rules",
     "name": "_suggest_dq_rules",
     "qualified_name": "fabricops_kit.data_quality._suggest_dq_rules",
     "module": "data_quality",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.data_quality.draft_dq_rules"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/data_quality.py",
+    "source_path": "src/fabricops_kit/data_quality.py",
+    "docs_path": "reference/internal/data_quality__suggest_dq_rules.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_quality._suggest_dq_rules_with_fabric_ai",
     "name": "_suggest_dq_rules_with_fabric_ai",
     "qualified_name": "fabricops_kit.data_quality._suggest_dq_rules_with_fabric_ai",
     "module": "data_quality",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [],
     "outbound": [],
-    "source_file": "src/fabricops_kit/data_quality.py",
+    "source_path": "src/fabricops_kit/data_quality.py",
+    "docs_path": "reference/internal/data_quality__suggest_dq_rules_with_fabric_ai.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_quality.assert_dq_passed",
     "name": "assert_dq_passed",
     "qualified_name": "fabricops_kit.data_quality.assert_dq_passed",
     "module": "data_quality",
-    "type": "callable",
-    "role": "essential",
+    "classification": "Essential",
     "inbound": [],
     "outbound": [],
-    "source_file": "src/fabricops_kit/data_quality.py",
+    "source_path": "src/fabricops_kit/data_quality.py",
+    "docs_path": "reference/assert_dq_passed.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_quality.draft_dq_rules",
     "name": "draft_dq_rules",
     "qualified_name": "fabricops_kit.data_quality.draft_dq_rules",
     "module": "data_quality",
-    "type": "callable",
-    "role": "essential",
+    "classification": "Essential",
     "inbound": [],
     "outbound": [
       "fabricops_kit.data_quality._extract_dq_rules",
       "fabricops_kit.data_quality._prepare_dq_profile_input_rows",
       "fabricops_kit.data_quality._suggest_dq_rules"
     ],
-    "source_file": "src/fabricops_kit/data_quality.py",
+    "source_path": "src/fabricops_kit/data_quality.py",
+    "docs_path": "reference/draft_dq_rules.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_quality.enforce_dq",
     "name": "enforce_dq",
     "qualified_name": "fabricops_kit.data_quality.enforce_dq",
     "module": "data_quality",
-    "type": "callable",
-    "role": "essential",
+    "classification": "Essential",
     "inbound": [],
     "outbound": [
       "fabricops_kit.data_quality.DQEnforcementResult",
@@ -1390,82 +1491,88 @@
       "fabricops_kit.data_quality._split_dq_rows",
       "fabricops_kit.data_quality.validate_dq_rules"
     ],
-    "source_file": "src/fabricops_kit/data_quality.py",
+    "source_path": "src/fabricops_kit/data_quality.py",
+    "docs_path": "reference/enforce_dq.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_quality.get_dq_review_results",
     "name": "get_dq_review_results",
     "qualified_name": "fabricops_kit.data_quality.get_dq_review_results",
     "module": "data_quality",
-    "type": "callable",
-    "role": "essential",
+    "classification": "Essential",
     "inbound": [],
     "outbound": [
       "fabricops_kit.data_quality._attach_rule_metadata_keys"
     ],
-    "source_file": "src/fabricops_kit/data_quality.py",
+    "source_path": "src/fabricops_kit/data_quality.py",
+    "docs_path": "reference/get_dq_review_results.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_quality.load_dq_rules",
     "name": "load_dq_rules",
     "qualified_name": "fabricops_kit.data_quality.load_dq_rules",
     "module": "data_quality",
-    "type": "callable",
-    "role": "essential",
+    "classification": "Essential",
     "inbound": [],
     "outbound": [
       "fabricops_kit.data_quality._load_active_dq_rules"
     ],
-    "source_file": "src/fabricops_kit/data_quality.py",
+    "source_path": "src/fabricops_kit/data_quality.py",
+    "docs_path": "reference/load_dq_rules.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_quality.review_dq_rule_deactivations",
     "name": "review_dq_rule_deactivations",
     "qualified_name": "fabricops_kit.data_quality.review_dq_rule_deactivations",
     "module": "data_quality",
-    "type": "callable",
-    "role": "optional",
+    "classification": "Optional",
     "inbound": [],
     "outbound": [
       "fabricops_kit.data_quality._require_ipywidgets"
     ],
-    "source_file": "src/fabricops_kit/data_quality.py",
+    "source_path": "src/fabricops_kit/data_quality.py",
+    "docs_path": "reference/review_dq_rule_deactivations.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_quality.review_dq_rules",
     "name": "review_dq_rules",
     "qualified_name": "fabricops_kit.data_quality.review_dq_rules",
     "module": "data_quality",
-    "type": "callable",
-    "role": "essential",
+    "classification": "Essential",
     "inbound": [
       "fabricops_kit.data_quality.run_dq_rule_review_widget"
     ],
     "outbound": [
       "fabricops_kit.data_quality._require_ipywidgets"
     ],
-    "source_file": "src/fabricops_kit/data_quality.py",
+    "source_path": "src/fabricops_kit/data_quality.py",
+    "docs_path": "reference/review_dq_rules.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_quality.run_dq_rule_review_widget",
     "name": "run_dq_rule_review_widget",
     "qualified_name": "fabricops_kit.data_quality.run_dq_rule_review_widget",
     "module": "data_quality",
-    "type": "callable",
-    "role": "optional",
+    "classification": "Optional",
     "inbound": [],
     "outbound": [
       "fabricops_kit.data_quality.review_dq_rules"
     ],
-    "source_file": "src/fabricops_kit/data_quality.py",
+    "source_path": "src/fabricops_kit/data_quality.py",
+    "docs_path": "reference/run_dq_rule_review_widget.md",
     "summary": "Render the notebook widget for human review and approval/rejection of candidate DQ rules."
   },
   {
+    "id": "fabricops_kit.data_quality.validate_dq_rules",
     "name": "validate_dq_rules",
     "qualified_name": "fabricops_kit.data_quality.validate_dq_rules",
     "module": "data_quality",
-    "type": "callable",
-    "role": "optional",
+    "classification": "Optional",
     "inbound": [
       "fabricops_kit.data_quality._run_dq_rules",
       "fabricops_kit.data_quality._split_dq_rows",
@@ -1473,113 +1580,122 @@
       "fabricops_kit.data_quality.write_dq_rules"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/data_quality.py",
+    "source_path": "src/fabricops_kit/data_quality.py",
+    "docs_path": "reference/validate_dq_rules.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.data_quality.write_dq_rules",
     "name": "write_dq_rules",
     "qualified_name": "fabricops_kit.data_quality.write_dq_rules",
     "module": "data_quality",
-    "type": "callable",
-    "role": "essential",
+    "classification": "Essential",
     "inbound": [],
     "outbound": [
       "fabricops_kit.data_quality._build_dq_rule_history",
       "fabricops_kit.data_quality.validate_dq_rules",
       "fabricops_kit.fabric_input_output.write_lakehouse_table"
     ],
-    "source_file": "src/fabricops_kit/data_quality.py",
+    "source_path": "src/fabricops_kit/data_quality.py",
+    "docs_path": "reference/write_dq_rules.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.docs_metadata.ModuleDocMetadata",
     "name": "ModuleDocMetadata",
     "qualified_name": "fabricops_kit.docs_metadata.ModuleDocMetadata",
     "module": "docs_metadata",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [],
     "outbound": [],
-    "source_file": "src/fabricops_kit/docs_metadata.py",
+    "source_path": "src/fabricops_kit/docs_metadata.py",
+    "docs_path": "reference/internal/docs_metadata_ModuleDocMetadata.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.docs_metadata.PublicSymbolDocMetadata",
     "name": "PublicSymbolDocMetadata",
     "qualified_name": "fabricops_kit.docs_metadata.PublicSymbolDocMetadata",
     "module": "docs_metadata",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [],
     "outbound": [],
-    "source_file": "src/fabricops_kit/docs_metadata.py",
+    "source_path": "src/fabricops_kit/docs_metadata.py",
+    "docs_path": "reference/internal/docs_metadata_PublicSymbolDocMetadata.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.docs_metadata.TemplateFlowDocMetadata",
     "name": "TemplateFlowDocMetadata",
     "qualified_name": "fabricops_kit.docs_metadata.TemplateFlowDocMetadata",
     "module": "docs_metadata",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [],
     "outbound": [],
-    "source_file": "src/fabricops_kit/docs_metadata.py",
+    "source_path": "src/fabricops_kit/docs_metadata.py",
+    "docs_path": "reference/internal/docs_metadata_TemplateFlowDocMetadata.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.docs_metadata.TemplateFlowSegmentMetadata",
     "name": "TemplateFlowSegmentMetadata",
     "qualified_name": "fabricops_kit.docs_metadata.TemplateFlowSegmentMetadata",
     "module": "docs_metadata",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [],
     "outbound": [],
-    "source_file": "src/fabricops_kit/docs_metadata.py",
+    "source_path": "src/fabricops_kit/docs_metadata.py",
+    "docs_path": "reference/internal/docs_metadata_TemplateFlowSegmentMetadata.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.drift.IncrementalSafetyError",
     "name": "IncrementalSafetyError",
     "qualified_name": "fabricops_kit.drift.IncrementalSafetyError",
     "module": "drift",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.drift.assert_incremental_safe"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/drift.py",
+    "source_path": "src/fabricops_kit/drift.py",
+    "docs_path": "reference/internal/drift_IncrementalSafetyError.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.drift.SchemaDriftError",
     "name": "SchemaDriftError",
     "qualified_name": "fabricops_kit.drift.SchemaDriftError",
     "module": "drift",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.drift.assert_no_blocking_schema_drift"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/drift.py",
+    "source_path": "src/fabricops_kit/drift.py",
+    "docs_path": "reference/internal/drift_SchemaDriftError.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.drift.UnsupportedDataFrameEngineError",
     "name": "UnsupportedDataFrameEngineError",
     "qualified_name": "fabricops_kit.drift.UnsupportedDataFrameEngineError",
     "module": "drift",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.drift.detect_dataframe_engine"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/drift.py",
+    "source_path": "src/fabricops_kit/drift.py",
+    "docs_path": "reference/internal/drift_UnsupportedDataFrameEngineError.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.drift._build_pandas_partition_snapshot",
     "name": "_build_pandas_partition_snapshot",
     "qualified_name": "fabricops_kit.drift._build_pandas_partition_snapshot",
     "module": "drift",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.drift.build_partition_snapshot"
     ],
@@ -1588,30 +1704,32 @@
       "fabricops_kit.drift._build_partition_hash",
       "fabricops_kit.drift._hash"
     ],
-    "source_file": "src/fabricops_kit/drift.py",
+    "source_path": "src/fabricops_kit/drift.py",
+    "docs_path": "reference/internal/drift__build_pandas_partition_snapshot.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.drift._build_pandas_schema_snapshot",
     "name": "_build_pandas_schema_snapshot",
     "qualified_name": "fabricops_kit.drift._build_pandas_schema_snapshot",
     "module": "drift",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.drift.build_schema_snapshot"
     ],
     "outbound": [
       "fabricops_kit.drift._column_hash"
     ],
-    "source_file": "src/fabricops_kit/drift.py",
+    "source_path": "src/fabricops_kit/drift.py",
+    "docs_path": "reference/internal/drift__build_pandas_schema_snapshot.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.drift._build_partition_hash",
     "name": "_build_partition_hash",
     "qualified_name": "fabricops_kit.drift._build_partition_hash",
     "module": "drift",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.drift._build_pandas_partition_snapshot",
       "fabricops_kit.drift._build_spark_partition_snapshot"
@@ -1619,15 +1737,16 @@
     "outbound": [
       "fabricops_kit.drift._hash"
     ],
-    "source_file": "src/fabricops_kit/drift.py",
+    "source_path": "src/fabricops_kit/drift.py",
+    "docs_path": "reference/internal/drift__build_partition_hash.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.drift._build_spark_partition_snapshot",
     "name": "_build_spark_partition_snapshot",
     "qualified_name": "fabricops_kit.drift._build_spark_partition_snapshot",
     "module": "drift",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.drift.build_partition_snapshot"
     ],
@@ -1635,85 +1754,91 @@
       "fabricops_kit._utils._to_jsonable",
       "fabricops_kit.drift._build_partition_hash"
     ],
-    "source_file": "src/fabricops_kit/drift.py",
+    "source_path": "src/fabricops_kit/drift.py",
+    "docs_path": "reference/internal/drift__build_spark_partition_snapshot.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.drift._build_spark_schema_snapshot",
     "name": "_build_spark_schema_snapshot",
     "qualified_name": "fabricops_kit.drift._build_spark_schema_snapshot",
     "module": "drift",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.drift.build_schema_snapshot"
     ],
     "outbound": [
       "fabricops_kit.drift._column_hash"
     ],
-    "source_file": "src/fabricops_kit/drift.py",
+    "source_path": "src/fabricops_kit/drift.py",
+    "docs_path": "reference/internal/drift__build_spark_schema_snapshot.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.drift._column_hash",
     "name": "_column_hash",
     "qualified_name": "fabricops_kit.drift._column_hash",
     "module": "drift",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.drift._build_pandas_schema_snapshot",
       "fabricops_kit.drift._build_spark_schema_snapshot"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/drift.py",
+    "source_path": "src/fabricops_kit/drift.py",
+    "docs_path": "reference/internal/drift__column_hash.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.drift._hash",
     "name": "_hash",
     "qualified_name": "fabricops_kit.drift._hash",
     "module": "drift",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.drift._build_pandas_partition_snapshot",
       "fabricops_kit.drift._build_partition_hash"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/drift.py",
+    "source_path": "src/fabricops_kit/drift.py",
+    "docs_path": "reference/internal/drift__hash.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.drift._is_closed_partition",
     "name": "_is_closed_partition",
     "qualified_name": "fabricops_kit.drift._is_closed_partition",
     "module": "drift",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.drift.compare_partition_snapshots"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/drift.py",
+    "source_path": "src/fabricops_kit/drift.py",
+    "docs_path": "reference/internal/drift__is_closed_partition.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.drift._is_missing_table_error",
     "name": "_is_missing_table_error",
     "qualified_name": "fabricops_kit.drift._is_missing_table_error",
     "module": "drift",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.drift.load_latest_partition_snapshot",
       "fabricops_kit.drift.load_latest_schema_snapshot"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/drift.py",
+    "source_path": "src/fabricops_kit/drift.py",
+    "docs_path": "reference/internal/drift__is_missing_table_error.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.drift._json_dumps",
     "name": "_json_dumps",
     "qualified_name": "fabricops_kit.drift._json_dumps",
     "module": "drift",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.drift.build_and_write_partition_snapshot",
       "fabricops_kit.drift.build_and_write_schema_snapshot",
@@ -1722,97 +1847,104 @@
     "outbound": [
       "fabricops_kit._utils._to_jsonable"
     ],
-    "source_file": "src/fabricops_kit/drift.py",
+    "source_path": "src/fabricops_kit/drift.py",
+    "docs_path": "reference/internal/drift__json_dumps.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.drift._resolve_change_behavior",
     "name": "_resolve_change_behavior",
     "qualified_name": "fabricops_kit.drift._resolve_change_behavior",
     "module": "drift",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.drift.compare_schema_snapshots"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/drift.py",
+    "source_path": "src/fabricops_kit/drift.py",
+    "docs_path": "reference/internal/drift__resolve_change_behavior.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.drift._safe_spark_collect",
     "name": "_safe_spark_collect",
     "qualified_name": "fabricops_kit.drift._safe_spark_collect",
     "module": "drift",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.drift.load_latest_partition_snapshot",
       "fabricops_kit.drift.load_latest_schema_snapshot"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/drift.py",
+    "source_path": "src/fabricops_kit/drift.py",
+    "docs_path": "reference/internal/drift__safe_spark_collect.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.drift._utc_now_iso",
     "name": "_utc_now_iso",
     "qualified_name": "fabricops_kit.drift._utc_now_iso",
     "module": "drift",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.drift.build_and_write_partition_snapshot",
       "fabricops_kit.drift.build_and_write_schema_snapshot",
       "fabricops_kit.drift.build_drift_evidence_record"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/drift.py",
+    "source_path": "src/fabricops_kit/drift.py",
+    "docs_path": "reference/internal/drift__utc_now_iso.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.drift._write_metadata_rows",
     "name": "_write_metadata_rows",
     "qualified_name": "fabricops_kit.drift._write_metadata_rows",
     "module": "drift",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.drift.build_and_write_partition_snapshot",
       "fabricops_kit.drift.build_and_write_schema_snapshot"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/drift.py",
+    "source_path": "src/fabricops_kit/drift.py",
+    "docs_path": "reference/internal/drift__write_metadata_rows.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.drift.assert_incremental_safe",
     "name": "assert_incremental_safe",
     "qualified_name": "fabricops_kit.drift.assert_incremental_safe",
     "module": "drift",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [],
     "outbound": [
       "fabricops_kit.drift.IncrementalSafetyError"
     ],
-    "source_file": "src/fabricops_kit/drift.py",
+    "source_path": "src/fabricops_kit/drift.py",
+    "docs_path": "reference/internal/drift_assert_incremental_safe.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.drift.assert_no_blocking_schema_drift",
     "name": "assert_no_blocking_schema_drift",
     "qualified_name": "fabricops_kit.drift.assert_no_blocking_schema_drift",
     "module": "drift",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [],
     "outbound": [
       "fabricops_kit.drift.SchemaDriftError"
     ],
-    "source_file": "src/fabricops_kit/drift.py",
+    "source_path": "src/fabricops_kit/drift.py",
+    "docs_path": "reference/internal/drift_assert_no_blocking_schema_drift.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.drift.build_and_write_partition_snapshot",
     "name": "build_and_write_partition_snapshot",
     "qualified_name": "fabricops_kit.drift.build_and_write_partition_snapshot",
     "module": "drift",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [],
     "outbound": [
       "fabricops_kit.drift._json_dumps",
@@ -1820,15 +1952,16 @@
       "fabricops_kit.drift._write_metadata_rows",
       "fabricops_kit.drift.build_partition_snapshot"
     ],
-    "source_file": "src/fabricops_kit/drift.py",
+    "source_path": "src/fabricops_kit/drift.py",
+    "docs_path": "reference/internal/drift_build_and_write_partition_snapshot.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.drift.build_and_write_schema_snapshot",
     "name": "build_and_write_schema_snapshot",
     "qualified_name": "fabricops_kit.drift.build_and_write_schema_snapshot",
     "module": "drift",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [],
     "outbound": [
       "fabricops_kit.drift._json_dumps",
@@ -1836,42 +1969,45 @@
       "fabricops_kit.drift._write_metadata_rows",
       "fabricops_kit.drift.build_schema_snapshot"
     ],
-    "source_file": "src/fabricops_kit/drift.py",
+    "source_path": "src/fabricops_kit/drift.py",
+    "docs_path": "reference/internal/drift_build_and_write_schema_snapshot.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.drift.build_drift_evidence_record",
     "name": "build_drift_evidence_record",
     "qualified_name": "fabricops_kit.drift.build_drift_evidence_record",
     "module": "drift",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [],
     "outbound": [
       "fabricops_kit.drift._json_dumps",
       "fabricops_kit.drift._utc_now_iso"
     ],
-    "source_file": "src/fabricops_kit/drift.py",
+    "source_path": "src/fabricops_kit/drift.py",
+    "docs_path": "reference/internal/drift_build_drift_evidence_record.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.drift.build_incremental_safety_records",
     "name": "build_incremental_safety_records",
     "qualified_name": "fabricops_kit.drift.build_incremental_safety_records",
     "module": "drift",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [],
     "outbound": [
       "fabricops_kit._utils._to_jsonable"
     ],
-    "source_file": "src/fabricops_kit/drift.py",
+    "source_path": "src/fabricops_kit/drift.py",
+    "docs_path": "reference/internal/drift_build_incremental_safety_records.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.drift.build_partition_snapshot",
     "name": "build_partition_snapshot",
     "qualified_name": "fabricops_kit.drift.build_partition_snapshot",
     "module": "drift",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.drift.build_and_write_partition_snapshot",
       "fabricops_kit.drift.check_partition_drift"
@@ -1881,15 +2017,16 @@
       "fabricops_kit.drift._build_spark_partition_snapshot",
       "fabricops_kit.drift.detect_dataframe_engine"
     ],
-    "source_file": "src/fabricops_kit/drift.py",
+    "source_path": "src/fabricops_kit/drift.py",
+    "docs_path": "reference/internal/drift_build_partition_snapshot.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.drift.build_schema_snapshot",
     "name": "build_schema_snapshot",
     "qualified_name": "fabricops_kit.drift.build_schema_snapshot",
     "module": "drift",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.drift.build_and_write_schema_snapshot",
       "fabricops_kit.drift.check_schema_drift"
@@ -1899,56 +2036,60 @@
       "fabricops_kit.drift._build_spark_schema_snapshot",
       "fabricops_kit.drift.detect_dataframe_engine"
     ],
-    "source_file": "src/fabricops_kit/drift.py",
+    "source_path": "src/fabricops_kit/drift.py",
+    "docs_path": "reference/internal/drift_build_schema_snapshot.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.drift.check_partition_drift",
     "name": "check_partition_drift",
     "qualified_name": "fabricops_kit.drift.check_partition_drift",
     "module": "drift",
-    "type": "callable",
-    "role": "optional",
+    "classification": "Optional",
     "inbound": [],
     "outbound": [
       "fabricops_kit.drift.build_partition_snapshot",
       "fabricops_kit.drift.compare_partition_snapshots",
       "fabricops_kit.drift.default_incremental_safety_policy"
     ],
-    "source_file": "src/fabricops_kit/drift.py",
+    "source_path": "src/fabricops_kit/drift.py",
+    "docs_path": "reference/check_partition_drift.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.drift.check_profile_drift",
     "name": "check_profile_drift",
     "qualified_name": "fabricops_kit.drift.check_profile_drift",
     "module": "drift",
-    "type": "callable",
-    "role": "optional",
+    "classification": "Optional",
     "inbound": [],
     "outbound": [],
-    "source_file": "src/fabricops_kit/drift.py",
+    "source_path": "src/fabricops_kit/drift.py",
+    "docs_path": "reference/check_profile_drift.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.drift.check_schema_drift",
     "name": "check_schema_drift",
     "qualified_name": "fabricops_kit.drift.check_schema_drift",
     "module": "drift",
-    "type": "callable",
-    "role": "optional",
+    "classification": "Optional",
     "inbound": [],
     "outbound": [
       "fabricops_kit.drift.build_schema_snapshot",
       "fabricops_kit.drift.compare_schema_snapshots",
       "fabricops_kit.drift.default_schema_drift_policy"
     ],
-    "source_file": "src/fabricops_kit/drift.py",
+    "source_path": "src/fabricops_kit/drift.py",
+    "docs_path": "reference/check_schema_drift.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.drift.compare_partition_snapshots",
     "name": "compare_partition_snapshots",
     "qualified_name": "fabricops_kit.drift.compare_partition_snapshots",
     "module": "drift",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.drift.check_partition_drift"
     ],
@@ -1957,15 +2098,16 @@
       "fabricops_kit.drift._is_closed_partition",
       "fabricops_kit.drift.default_incremental_safety_policy"
     ],
-    "source_file": "src/fabricops_kit/drift.py",
+    "source_path": "src/fabricops_kit/drift.py",
+    "docs_path": "reference/internal/drift_compare_partition_snapshots.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.drift.compare_schema_snapshots",
     "name": "compare_schema_snapshots",
     "qualified_name": "fabricops_kit.drift.compare_schema_snapshots",
     "module": "drift",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.drift.check_schema_drift"
     ],
@@ -1973,43 +2115,46 @@
       "fabricops_kit.drift._resolve_change_behavior",
       "fabricops_kit.drift.default_schema_drift_policy"
     ],
-    "source_file": "src/fabricops_kit/drift.py",
+    "source_path": "src/fabricops_kit/drift.py",
+    "docs_path": "reference/internal/drift_compare_schema_snapshots.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.drift.default_incremental_safety_policy",
     "name": "default_incremental_safety_policy",
     "qualified_name": "fabricops_kit.drift.default_incremental_safety_policy",
     "module": "drift",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.drift.check_partition_drift",
       "fabricops_kit.drift.compare_partition_snapshots"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/drift.py",
+    "source_path": "src/fabricops_kit/drift.py",
+    "docs_path": "reference/internal/drift_default_incremental_safety_policy.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.drift.default_schema_drift_policy",
     "name": "default_schema_drift_policy",
     "qualified_name": "fabricops_kit.drift.default_schema_drift_policy",
     "module": "drift",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.drift.check_schema_drift",
       "fabricops_kit.drift.compare_schema_snapshots"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/drift.py",
+    "source_path": "src/fabricops_kit/drift.py",
+    "docs_path": "reference/internal/drift_default_schema_drift_policy.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.drift.detect_dataframe_engine",
     "name": "detect_dataframe_engine",
     "qualified_name": "fabricops_kit.drift.detect_dataframe_engine",
     "module": "drift",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.drift.build_partition_snapshot",
       "fabricops_kit.drift.build_schema_snapshot"
@@ -2017,102 +2162,110 @@
     "outbound": [
       "fabricops_kit.drift.UnsupportedDataFrameEngineError"
     ],
-    "source_file": "src/fabricops_kit/drift.py",
+    "source_path": "src/fabricops_kit/drift.py",
+    "docs_path": "reference/internal/drift_detect_dataframe_engine.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.drift.load_latest_partition_snapshot",
     "name": "load_latest_partition_snapshot",
     "qualified_name": "fabricops_kit.drift.load_latest_partition_snapshot",
     "module": "drift",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [],
     "outbound": [
       "fabricops_kit.drift._is_missing_table_error",
       "fabricops_kit.drift._safe_spark_collect"
     ],
-    "source_file": "src/fabricops_kit/drift.py",
+    "source_path": "src/fabricops_kit/drift.py",
+    "docs_path": "reference/internal/drift_load_latest_partition_snapshot.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.drift.load_latest_schema_snapshot",
     "name": "load_latest_schema_snapshot",
     "qualified_name": "fabricops_kit.drift.load_latest_schema_snapshot",
     "module": "drift",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [],
     "outbound": [
       "fabricops_kit.drift._is_missing_table_error",
       "fabricops_kit.drift._safe_spark_collect"
     ],
-    "source_file": "src/fabricops_kit/drift.py",
+    "source_path": "src/fabricops_kit/drift.py",
+    "docs_path": "reference/internal/drift_load_latest_schema_snapshot.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.drift.prepare_drift_baselines",
     "name": "prepare_drift_baselines",
     "qualified_name": "fabricops_kit.drift.prepare_drift_baselines",
     "module": "drift",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [],
     "outbound": [],
-    "source_file": "src/fabricops_kit/drift.py",
+    "source_path": "src/fabricops_kit/drift.py",
+    "docs_path": "reference/internal/drift_prepare_drift_baselines.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.drift.summarize_drift_results",
     "name": "summarize_drift_results",
     "qualified_name": "fabricops_kit.drift.summarize_drift_results",
     "module": "drift",
-    "type": "callable",
-    "role": "optional",
+    "classification": "Optional",
     "inbound": [],
     "outbound": [],
-    "source_file": "src/fabricops_kit/drift.py",
+    "source_path": "src/fabricops_kit/drift.py",
+    "docs_path": "reference/summarize_drift_results.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.fabric_input_output.FabricStore",
     "name": "FabricStore",
     "qualified_name": "fabricops_kit.fabric_input_output.FabricStore",
     "module": "fabric_input_output",
-    "type": "callable",
-    "role": "optional",
+    "classification": "Optional",
     "inbound": [],
     "outbound": [],
-    "source_file": "src/fabricops_kit/fabric_input_output.py",
+    "source_path": "src/fabricops_kit/fabric_input_output.py",
+    "docs_path": "reference/FabricStore.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.fabric_input_output._convert_single_parquet_ns_to_us",
     "name": "_convert_single_parquet_ns_to_us",
     "qualified_name": "fabricops_kit.fabric_input_output._convert_single_parquet_ns_to_us",
     "module": "fabric_input_output",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.fabric_input_output.read_lakehouse_parquet"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/fabric_input_output.py",
+    "source_path": "src/fabricops_kit/fabric_input_output.py",
+    "docs_path": "reference/internal/fabric_input_output__convert_single_parquet_ns_to_us.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.fabric_input_output._get_fabric_runtime_context",
     "name": "_get_fabric_runtime_context",
     "qualified_name": "fabricops_kit.fabric_input_output._get_fabric_runtime_context",
     "module": "fabric_input_output",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.fabric_input_output.check_naming_convention"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/fabric_input_output.py",
+    "source_path": "src/fabricops_kit/fabric_input_output.py",
+    "docs_path": "reference/internal/fabric_input_output__get_fabric_runtime_context.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.fabric_input_output._get_spark",
     "name": "_get_spark",
     "qualified_name": "fabricops_kit.fabric_input_output._get_spark",
     "module": "fabric_input_output",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.fabric_input_output.read_lakehouse_csv",
       "fabricops_kit.fabric_input_output.read_lakehouse_excel",
@@ -2122,126 +2275,135 @@
       "fabricops_kit.fabric_input_output.seed_minimal_sample_source_table"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/fabric_input_output.py",
+    "source_path": "src/fabricops_kit/fabric_input_output.py",
+    "docs_path": "reference/internal/fabric_input_output__get_spark.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.fabric_input_output.check_naming_convention",
     "name": "check_naming_convention",
     "qualified_name": "fabricops_kit.fabric_input_output.check_naming_convention",
     "module": "fabric_input_output",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [],
     "outbound": [
       "fabricops_kit.fabric_input_output._get_fabric_runtime_context"
     ],
-    "source_file": "src/fabricops_kit/fabric_input_output.py",
+    "source_path": "src/fabricops_kit/fabric_input_output.py",
+    "docs_path": "reference/internal/fabric_input_output_check_naming_convention.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.fabric_input_output.load_config",
     "name": "load_config",
     "qualified_name": "fabricops_kit.fabric_input_output.load_config",
     "module": "fabric_input_output",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [],
     "outbound": [
       "fabricops_kit.config.load_config"
     ],
-    "source_file": "src/fabricops_kit/fabric_input_output.py",
+    "source_path": "src/fabricops_kit/fabric_input_output.py",
+    "docs_path": "reference/internal/fabric_input_output_load_config.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.fabric_input_output.read_lakehouse_csv",
     "name": "read_lakehouse_csv",
     "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_csv",
     "module": "fabric_input_output",
-    "type": "callable",
-    "role": "optional",
+    "classification": "Optional",
     "inbound": [],
     "outbound": [
       "fabricops_kit.config._get_store",
       "fabricops_kit.fabric_input_output._get_spark"
     ],
-    "source_file": "src/fabricops_kit/fabric_input_output.py",
+    "source_path": "src/fabricops_kit/fabric_input_output.py",
+    "docs_path": "reference/read_lakehouse_csv.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.fabric_input_output.read_lakehouse_excel",
     "name": "read_lakehouse_excel",
     "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_excel",
     "module": "fabric_input_output",
-    "type": "callable",
-    "role": "optional",
+    "classification": "Optional",
     "inbound": [],
     "outbound": [
       "fabricops_kit.config._get_store",
       "fabricops_kit.fabric_input_output._get_spark"
     ],
-    "source_file": "src/fabricops_kit/fabric_input_output.py",
+    "source_path": "src/fabricops_kit/fabric_input_output.py",
+    "docs_path": "reference/read_lakehouse_excel.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.fabric_input_output.read_lakehouse_parquet",
     "name": "read_lakehouse_parquet",
     "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_parquet",
     "module": "fabric_input_output",
-    "type": "callable",
-    "role": "optional",
+    "classification": "Optional",
     "inbound": [],
     "outbound": [
       "fabricops_kit.config._get_store",
       "fabricops_kit.fabric_input_output._convert_single_parquet_ns_to_us",
       "fabricops_kit.fabric_input_output._get_spark"
     ],
-    "source_file": "src/fabricops_kit/fabric_input_output.py",
+    "source_path": "src/fabricops_kit/fabric_input_output.py",
+    "docs_path": "reference/read_lakehouse_parquet.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.fabric_input_output.read_lakehouse_table",
     "name": "read_lakehouse_table",
     "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_table",
     "module": "fabric_input_output",
-    "type": "callable",
-    "role": "essential",
+    "classification": "Essential",
     "inbound": [],
     "outbound": [
       "fabricops_kit.config._get_store",
       "fabricops_kit.fabric_input_output._get_spark"
     ],
-    "source_file": "src/fabricops_kit/fabric_input_output.py",
+    "source_path": "src/fabricops_kit/fabric_input_output.py",
+    "docs_path": "reference/read_lakehouse_table.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.fabric_input_output.read_warehouse_table",
     "name": "read_warehouse_table",
     "qualified_name": "fabricops_kit.fabric_input_output.read_warehouse_table",
     "module": "fabric_input_output",
-    "type": "callable",
-    "role": "essential",
+    "classification": "Essential",
     "inbound": [],
     "outbound": [
       "fabricops_kit.config._get_store",
       "fabricops_kit.fabric_input_output._get_spark"
     ],
-    "source_file": "src/fabricops_kit/fabric_input_output.py",
+    "source_path": "src/fabricops_kit/fabric_input_output.py",
+    "docs_path": "reference/read_warehouse_table.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.fabric_input_output.seed_minimal_sample_source_table",
     "name": "seed_minimal_sample_source_table",
     "qualified_name": "fabricops_kit.fabric_input_output.seed_minimal_sample_source_table",
     "module": "fabric_input_output",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [],
     "outbound": [
       "fabricops_kit.fabric_input_output._get_spark",
       "fabricops_kit.fabric_input_output.write_lakehouse_table"
     ],
-    "source_file": "src/fabricops_kit/fabric_input_output.py",
+    "source_path": "src/fabricops_kit/fabric_input_output.py",
+    "docs_path": "reference/internal/fabric_input_output_seed_minimal_sample_source_table.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.fabric_input_output.write_lakehouse_table",
     "name": "write_lakehouse_table",
     "qualified_name": "fabricops_kit.fabric_input_output.write_lakehouse_table",
     "module": "fabric_input_output",
-    "type": "callable",
-    "role": "essential",
+    "classification": "Essential",
     "inbound": [
       "fabricops_kit.data_quality.write_dq_rules",
       "fabricops_kit.fabric_input_output.seed_minimal_sample_source_table",
@@ -2250,121 +2412,130 @@
     "outbound": [
       "fabricops_kit.config._get_store"
     ],
-    "source_file": "src/fabricops_kit/fabric_input_output.py",
+    "source_path": "src/fabricops_kit/fabric_input_output.py",
+    "docs_path": "reference/write_lakehouse_table.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.fabric_input_output.write_warehouse_table",
     "name": "write_warehouse_table",
     "qualified_name": "fabricops_kit.fabric_input_output.write_warehouse_table",
     "module": "fabric_input_output",
-    "type": "callable",
-    "role": "essential",
+    "classification": "Essential",
     "inbound": [],
     "outbound": [
       "fabricops_kit.config._get_store"
     ],
-    "source_file": "src/fabricops_kit/fabric_input_output.py",
+    "source_path": "src/fabricops_kit/fabric_input_output.py",
+    "docs_path": "reference/write_warehouse_table.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.handover._status_of",
     "name": "_status_of",
     "qualified_name": "fabricops_kit.handover._status_of",
     "module": "handover",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.handover.build_handover_record",
       "fabricops_kit.handover.render_handover_markdown"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/handover.py",
+    "source_path": "src/fabricops_kit/handover.py",
+    "docs_path": "reference/internal/handover__status_of.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.handover.build_handover",
     "name": "build_handover",
     "qualified_name": "fabricops_kit.handover.build_handover",
     "module": "handover",
-    "type": "callable",
-    "role": "essential",
+    "classification": "Essential",
     "inbound": [],
     "outbound": [],
-    "source_file": "src/fabricops_kit/handover.py",
+    "source_path": "src/fabricops_kit/handover.py",
+    "docs_path": "reference/build_handover.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.handover.build_handover_record",
     "name": "build_handover_record",
     "qualified_name": "fabricops_kit.handover.build_handover_record",
     "module": "handover",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [],
     "outbound": [
       "fabricops_kit.handover._status_of",
       "fabricops_kit.handover.render_handover_markdown"
     ],
-    "source_file": "src/fabricops_kit/handover.py",
+    "source_path": "src/fabricops_kit/handover.py",
+    "docs_path": "reference/internal/handover_build_handover_record.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.handover.render_handover_markdown",
     "name": "render_handover_markdown",
     "qualified_name": "fabricops_kit.handover.render_handover_markdown",
     "module": "handover",
-    "type": "callable",
-    "role": "essential",
+    "classification": "Essential",
     "inbound": [
       "fabricops_kit.handover.build_handover_record"
     ],
     "outbound": [
       "fabricops_kit.handover._status_of"
     ],
-    "source_file": "src/fabricops_kit/handover.py",
+    "source_path": "src/fabricops_kit/handover.py",
+    "docs_path": "reference/render_handover_markdown.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.metadata._context_get",
     "name": "_context_get",
     "qualified_name": "fabricops_kit.metadata._context_get",
     "module": "metadata",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.metadata._resolve_action_by",
       "fabricops_kit.metadata._runtime_context",
       "fabricops_kit.metadata.register_current_notebook"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/metadata.py",
+    "source_path": "src/fabricops_kit/metadata.py",
+    "docs_path": "reference/internal/metadata__context_get.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.metadata._extract_columns_from_profile",
     "name": "_extract_columns_from_profile",
     "qualified_name": "fabricops_kit.metadata._extract_columns_from_profile",
     "module": "metadata",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [],
     "outbound": [],
-    "source_file": "src/fabricops_kit/metadata.py",
+    "source_path": "src/fabricops_kit/metadata.py",
+    "docs_path": "reference/internal/metadata__extract_columns_from_profile.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.metadata._key_part",
     "name": "_key_part",
     "qualified_name": "fabricops_kit.metadata._key_part",
     "module": "metadata",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.metadata._sha256_key"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/metadata.py",
+    "source_path": "src/fabricops_kit/metadata.py",
+    "docs_path": "reference/internal/metadata__key_part.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.metadata._now_utc_iso",
     "name": "_now_utc_iso",
     "qualified_name": "fabricops_kit.metadata._now_utc_iso",
     "module": "metadata",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.data_governance.review_governance",
       "fabricops_kit.data_quality._build_dq_rule_deactivation_metadata_df",
@@ -2372,15 +2543,16 @@
       "fabricops_kit.metadata.build_evidence_row"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/metadata.py",
+    "source_path": "src/fabricops_kit/metadata.py",
+    "docs_path": "reference/internal/metadata__now_utc_iso.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.metadata._resolve_action_by",
     "name": "_resolve_action_by",
     "qualified_name": "fabricops_kit.metadata._resolve_action_by",
     "module": "metadata",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.data_governance._approved_widget_rows",
       "fabricops_kit.data_quality._build_dq_rule_deactivation_metadata_df",
@@ -2392,15 +2564,16 @@
       "fabricops_kit.metadata._context_get",
       "fabricops_kit.metadata._runtime_context"
     ],
-    "source_file": "src/fabricops_kit/metadata.py",
+    "source_path": "src/fabricops_kit/metadata.py",
+    "docs_path": "reference/internal/metadata__resolve_action_by.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.metadata._runtime_context",
     "name": "_runtime_context",
     "qualified_name": "fabricops_kit.metadata._runtime_context",
     "module": "metadata",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.metadata._resolve_action_by",
       "fabricops_kit.metadata.register_current_notebook"
@@ -2408,28 +2581,30 @@
     "outbound": [
       "fabricops_kit.metadata._context_get"
     ],
-    "source_file": "src/fabricops_kit/metadata.py",
+    "source_path": "src/fabricops_kit/metadata.py",
+    "docs_path": "reference/internal/metadata__runtime_context.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.metadata._safe_str",
     "name": "_safe_str",
     "qualified_name": "fabricops_kit.metadata._safe_str",
     "module": "metadata",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.metadata.register_current_notebook"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/metadata.py",
+    "source_path": "src/fabricops_kit/metadata.py",
+    "docs_path": "reference/internal/metadata__safe_str.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.metadata._sha256_key",
     "name": "_sha256_key",
     "qualified_name": "fabricops_kit.metadata._sha256_key",
     "module": "metadata",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.metadata.build_dq_rule_key",
       "fabricops_kit.metadata.build_metadata_column_key",
@@ -2438,43 +2613,46 @@
     "outbound": [
       "fabricops_kit.metadata._key_part"
     ],
-    "source_file": "src/fabricops_kit/metadata.py",
+    "source_path": "src/fabricops_kit/metadata.py",
+    "docs_path": "reference/internal/metadata__sha256_key.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.metadata.build_dq_rule_key",
     "name": "build_dq_rule_key",
     "qualified_name": "fabricops_kit.metadata.build_dq_rule_key",
     "module": "metadata",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.data_quality._attach_rule_metadata_keys"
     ],
     "outbound": [
       "fabricops_kit.metadata._sha256_key"
     ],
-    "source_file": "src/fabricops_kit/metadata.py",
+    "source_path": "src/fabricops_kit/metadata.py",
+    "docs_path": "reference/internal/metadata_build_dq_rule_key.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.metadata.build_evidence_row",
     "name": "build_evidence_row",
     "qualified_name": "fabricops_kit.metadata.build_evidence_row",
     "module": "metadata",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [],
     "outbound": [
       "fabricops_kit.metadata._now_utc_iso"
     ],
-    "source_file": "src/fabricops_kit/metadata.py",
+    "source_path": "src/fabricops_kit/metadata.py",
+    "docs_path": "reference/internal/metadata_build_evidence_row.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.metadata.build_metadata_column_key",
     "name": "build_metadata_column_key",
     "qualified_name": "fabricops_kit.metadata.build_metadata_column_key",
     "module": "metadata",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.business_context.review_business_context",
       "fabricops_kit.data_governance.review_governance",
@@ -2483,15 +2661,16 @@
     "outbound": [
       "fabricops_kit.metadata._sha256_key"
     ],
-    "source_file": "src/fabricops_kit/metadata.py",
+    "source_path": "src/fabricops_kit/metadata.py",
+    "docs_path": "reference/internal/metadata_build_metadata_column_key.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.metadata.build_metadata_table_key",
     "name": "build_metadata_table_key",
     "qualified_name": "fabricops_kit.metadata.build_metadata_table_key",
     "module": "metadata",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.business_context.review_business_context",
       "fabricops_kit.data_governance.review_governance",
@@ -2500,61 +2679,66 @@
     "outbound": [
       "fabricops_kit.metadata._sha256_key"
     ],
-    "source_file": "src/fabricops_kit/metadata.py",
+    "source_path": "src/fabricops_kit/metadata.py",
+    "docs_path": "reference/internal/metadata_build_metadata_table_key.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.metadata.column_context_rows_for_spark",
     "name": "column_context_rows_for_spark",
     "qualified_name": "fabricops_kit.metadata.column_context_rows_for_spark",
     "module": "metadata",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.metadata.write_metadata_rows"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/metadata.py",
+    "source_path": "src/fabricops_kit/metadata.py",
+    "docs_path": "reference/internal/metadata_column_context_rows_for_spark.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.metadata.default_evidence_types",
     "name": "default_evidence_types",
     "qualified_name": "fabricops_kit.metadata.default_evidence_types",
     "module": "metadata",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [],
     "outbound": [],
-    "source_file": "src/fabricops_kit/metadata.py",
+    "source_path": "src/fabricops_kit/metadata.py",
+    "docs_path": "reference/internal/metadata_default_evidence_types.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.metadata.load_notebook_registry",
     "name": "load_notebook_registry",
     "qualified_name": "fabricops_kit.metadata.load_notebook_registry",
     "module": "metadata",
-    "type": "callable",
-    "role": "essential",
+    "classification": "Essential",
     "inbound": [],
     "outbound": [],
-    "source_file": "src/fabricops_kit/metadata.py",
+    "source_path": "src/fabricops_kit/metadata.py",
+    "docs_path": "reference/load_notebook_registry.md",
     "summary": "Load notebook registration metadata rows for agreement notebook traceability."
   },
   {
+    "id": "fabricops_kit.metadata.normalise_records_by_column",
     "name": "normalise_records_by_column",
     "qualified_name": "fabricops_kit.metadata.normalise_records_by_column",
     "module": "metadata",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [],
     "outbound": [],
-    "source_file": "src/fabricops_kit/metadata.py",
+    "source_path": "src/fabricops_kit/metadata.py",
+    "docs_path": "reference/internal/metadata_normalise_records_by_column.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.metadata.register_current_notebook",
     "name": "register_current_notebook",
     "qualified_name": "fabricops_kit.metadata.register_current_notebook",
     "module": "metadata",
-    "type": "callable",
-    "role": "essential",
+    "classification": "Essential",
     "inbound": [],
     "outbound": [
       "fabricops_kit.metadata._context_get",
@@ -2562,43 +2746,46 @@
       "fabricops_kit.metadata._safe_str",
       "fabricops_kit.metadata.write_metadata_rows"
     ],
-    "source_file": "src/fabricops_kit/metadata.py",
+    "source_path": "src/fabricops_kit/metadata.py",
+    "docs_path": "reference/register_current_notebook.md",
     "summary": "Register current notebook metadata evidence for agreement traceability."
   },
   {
+    "id": "fabricops_kit.metadata.write_column_business_context",
     "name": "write_column_business_context",
     "qualified_name": "fabricops_kit.metadata.write_column_business_context",
     "module": "metadata",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.business_context.write_business_context"
     ],
     "outbound": [
       "fabricops_kit.metadata.write_metadata_rows"
     ],
-    "source_file": "src/fabricops_kit/metadata.py",
+    "source_path": "src/fabricops_kit/metadata.py",
+    "docs_path": "reference/internal/metadata_write_column_business_context.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.metadata.write_column_governance_context",
     "name": "write_column_governance_context",
     "qualified_name": "fabricops_kit.metadata.write_column_governance_context",
     "module": "metadata",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [],
     "outbound": [
       "fabricops_kit.metadata.write_metadata_rows"
     ],
-    "source_file": "src/fabricops_kit/metadata.py",
+    "source_path": "src/fabricops_kit/metadata.py",
+    "docs_path": "reference/internal/metadata_write_column_governance_context.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.metadata.write_metadata_rows",
     "name": "write_metadata_rows",
     "qualified_name": "fabricops_kit.metadata.write_metadata_rows",
     "module": "metadata",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.metadata.register_current_notebook",
       "fabricops_kit.metadata.write_column_business_context",
@@ -2608,15 +2795,16 @@
       "fabricops_kit.fabric_input_output.write_lakehouse_table",
       "fabricops_kit.metadata.column_context_rows_for_spark"
     ],
-    "source_file": "src/fabricops_kit/metadata.py",
+    "source_path": "src/fabricops_kit/metadata.py",
+    "docs_path": "reference/internal/metadata_write_metadata_rows.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.technical_columns._add_audit_columns",
     "name": "_add_audit_columns",
     "qualified_name": "fabricops_kit.technical_columns._add_audit_columns",
     "module": "technical_columns",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.technical_columns.standardize_columns"
     ],
@@ -2625,30 +2813,32 @@
       "fabricops_kit.technical_columns._bucket_values_pandas",
       "fabricops_kit.technical_columns._get_fabric_runtime_context"
     ],
-    "source_file": "src/fabricops_kit/technical_columns.py",
+    "source_path": "src/fabricops_kit/technical_columns.py",
+    "docs_path": "reference/internal/technical_columns__add_audit_columns.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.technical_columns._add_datetime_features",
     "name": "_add_datetime_features",
     "qualified_name": "fabricops_kit.technical_columns._add_datetime_features",
     "module": "technical_columns",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.technical_columns.standardize_columns"
     ],
     "outbound": [
       "fabricops_kit.technical_columns._assert_columns_exist"
     ],
-    "source_file": "src/fabricops_kit/technical_columns.py",
+    "source_path": "src/fabricops_kit/technical_columns.py",
+    "docs_path": "reference/internal/technical_columns__add_datetime_features.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.technical_columns._add_hash_columns",
     "name": "_add_hash_columns",
     "qualified_name": "fabricops_kit.technical_columns._add_hash_columns",
     "module": "technical_columns",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.technical_columns.standardize_columns"
     ],
@@ -2657,123 +2847,132 @@
       "fabricops_kit.technical_columns._hash_row",
       "fabricops_kit.technical_columns._non_technical_columns"
     ],
-    "source_file": "src/fabricops_kit/technical_columns.py",
+    "source_path": "src/fabricops_kit/technical_columns.py",
+    "docs_path": "reference/internal/technical_columns__add_hash_columns.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.technical_columns._assert_columns_exist",
     "name": "_assert_columns_exist",
     "qualified_name": "fabricops_kit.technical_columns._assert_columns_exist",
     "module": "technical_columns",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.technical_columns._add_audit_columns",
       "fabricops_kit.technical_columns._add_datetime_features",
       "fabricops_kit.technical_columns._add_hash_columns"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/technical_columns.py",
+    "source_path": "src/fabricops_kit/technical_columns.py",
+    "docs_path": "reference/internal/technical_columns__assert_columns_exist.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.technical_columns._bucket_values_pandas",
     "name": "_bucket_values_pandas",
     "qualified_name": "fabricops_kit.technical_columns._bucket_values_pandas",
     "module": "technical_columns",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.technical_columns._add_audit_columns"
     ],
     "outbound": [
       "fabricops_kit.technical_columns._safe_string"
     ],
-    "source_file": "src/fabricops_kit/technical_columns.py",
+    "source_path": "src/fabricops_kit/technical_columns.py",
+    "docs_path": "reference/internal/technical_columns__bucket_values_pandas.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.technical_columns._default_technical_columns",
     "name": "_default_technical_columns",
     "qualified_name": "fabricops_kit.technical_columns._default_technical_columns",
     "module": "technical_columns",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.data_profiling._get_profiled_columns",
       "fabricops_kit.technical_columns._non_technical_columns"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/technical_columns.py",
+    "source_path": "src/fabricops_kit/technical_columns.py",
+    "docs_path": "reference/internal/technical_columns__default_technical_columns.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.technical_columns._get_fabric_runtime_context",
     "name": "_get_fabric_runtime_context",
     "qualified_name": "fabricops_kit.technical_columns._get_fabric_runtime_context",
     "module": "technical_columns",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.technical_columns._add_audit_columns"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/technical_columns.py",
+    "source_path": "src/fabricops_kit/technical_columns.py",
+    "docs_path": "reference/internal/technical_columns__get_fabric_runtime_context.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.technical_columns._hash_row",
     "name": "_hash_row",
     "qualified_name": "fabricops_kit.technical_columns._hash_row",
     "module": "technical_columns",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.technical_columns._add_hash_columns"
     ],
     "outbound": [
       "fabricops_kit.technical_columns._safe_string"
     ],
-    "source_file": "src/fabricops_kit/technical_columns.py",
+    "source_path": "src/fabricops_kit/technical_columns.py",
+    "docs_path": "reference/internal/technical_columns__hash_row.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.technical_columns._non_technical_columns",
     "name": "_non_technical_columns",
     "qualified_name": "fabricops_kit.technical_columns._non_technical_columns",
     "module": "technical_columns",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.technical_columns._add_hash_columns"
     ],
     "outbound": [
       "fabricops_kit.technical_columns._default_technical_columns"
     ],
-    "source_file": "src/fabricops_kit/technical_columns.py",
+    "source_path": "src/fabricops_kit/technical_columns.py",
+    "docs_path": "reference/internal/technical_columns__non_technical_columns.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.technical_columns._safe_string",
     "name": "_safe_string",
     "qualified_name": "fabricops_kit.technical_columns._safe_string",
     "module": "technical_columns",
-    "type": "internal",
-    "role": "internal",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.technical_columns._bucket_values_pandas",
       "fabricops_kit.technical_columns._hash_row"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/technical_columns.py",
+    "source_path": "src/fabricops_kit/technical_columns.py",
+    "docs_path": "reference/internal/technical_columns__safe_string.md",
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.technical_columns.standardize_columns",
     "name": "standardize_columns",
     "qualified_name": "fabricops_kit.technical_columns.standardize_columns",
     "module": "technical_columns",
-    "type": "callable",
-    "role": "essential",
+    "classification": "Essential",
     "inbound": [],
     "outbound": [
       "fabricops_kit.technical_columns._add_audit_columns",
       "fabricops_kit.technical_columns._add_datetime_features",
       "fabricops_kit.technical_columns._add_hash_columns"
     ],
-    "source_file": "src/fabricops_kit/technical_columns.py",
+    "source_path": "src/fabricops_kit/technical_columns.py",
+    "docs_path": "reference/standardize_columns.md",
     "summary": "No summary available."
   }
 ]

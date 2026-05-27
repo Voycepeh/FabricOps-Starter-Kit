@@ -1,29 +1,25 @@
 # standardize_columns
 
-## Template step
-03_pipeline_contract
+**Module:** `technical_columns`  
+**Classification:** Essential
 
-## Function role
-Callable utility
+## Purpose
 
-## Use this when
-Use `standardize_columns` during template-driven notebook execution.
+No summary available.
 
-## What it delegates to
+## Function manifest
 
-### Callable functions called
-- None
+- Fully qualified function name: `fabricops_kit.technical_columns.standardize_columns`
+- Short name: `standardize_columns`
+- Module: `technical_columns`
+- Classification: Essential
+- Related module: `technical_columns`
+- Source file path: `src/fabricops_kit/technical_columns.py`
+- Source reference: <a href="../../api/modules/technical_columns/#standardize_columns">Module source anchor</a>
+- Inbound references count: 0
+- Outbound references count: 3
 
-### Internal helpers used
-- `fabricops_kit.technical_columns._add_audit_columns`
-- `fabricops_kit.technical_columns._add_datetime_features`
-- `fabricops_kit.technical_columns._add_hash_columns`
-
-## Debug this function when
-- standardized output columns are missing
-
-## Agent repair guide
-1. Preserve public callable signature unless templates are updated.
-2. Inspect delegated helpers before rewriting wrapper logic.
-3. Preserve output shape where downstream notebooks depend on it.
-4. Update tests and templates together if behavior changes.
+## Outbound references
+- <a href="../internal/technical_columns/_add_audit_columns/"><code>fabricops_kit.technical_columns._add_audit_columns</code></a>
+- <a href="../internal/technical_columns/_add_datetime_features/"><code>fabricops_kit.technical_columns._add_datetime_features</code></a>
+- <a href="../internal/technical_columns/_add_hash_columns/"><code>fabricops_kit.technical_columns._add_hash_columns</code></a>

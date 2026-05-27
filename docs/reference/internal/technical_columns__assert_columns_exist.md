@@ -1,21 +1,25 @@
 # _assert_columns_exist
 
-## Internal helper
-Internal helper. Do not call directly from notebooks unless extending FabricOps.
+**Module:** `technical_columns`  
+**Classification:** Internal helper
 
 ## Purpose
-Supports callable orchestration internals.
 
-## Used by callable functions
-- None
+No summary available.
 
-## Used by internal helpers
-- `fabricops_kit.technical_columns._add_audit_columns`
-- `fabricops_kit.technical_columns._add_datetime_features`
-- `fabricops_kit.technical_columns._add_hash_columns`
+## Function manifest
 
-## Debug relevance
-Inspect this helper when parent callable outputs are malformed, missing evidence, or failing validation.
+- Fully qualified function name: `fabricops_kit.technical_columns._assert_columns_exist`
+- Short name: `_assert_columns_exist`
+- Module: `technical_columns`
+- Classification: Internal helper
+- Related module: `technical_columns`
+- Source file path: `src/fabricops_kit/technical_columns.py`
+- Source reference: <a href="../../api/modules/technical_columns/#_assert_columns_exist">Module source anchor</a>
+- Inbound references count: 3
+- Outbound references count: 0
 
-## Safe change guidance
-Preserve helper contract, return shape, and side effects expected by parent callables.
+## Inbound references
+- <a href="../internal/technical_columns/_add_audit_columns/"><code>fabricops_kit.technical_columns._add_audit_columns</code></a>
+- <a href="../internal/technical_columns/_add_datetime_features/"><code>fabricops_kit.technical_columns._add_datetime_features</code></a>
+- <a href="../internal/technical_columns/_add_hash_columns/"><code>fabricops_kit.technical_columns._add_hash_columns</code></a>

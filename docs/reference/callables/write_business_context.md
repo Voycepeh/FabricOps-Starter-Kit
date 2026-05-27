@@ -1,27 +1,23 @@
 # write_business_context
 
-## Template step
-—
+**Module:** `business_context`  
+**Classification:** Essential
 
-## Function role
-Callable orchestration wrapper
+## Purpose
 
-## Use this when
-Use `write_business_context` during template-driven notebook execution.
+No summary available.
 
-## What it delegates to
+## Function manifest
 
-### Callable functions called
-- None
+- Fully qualified function name: `fabricops_kit.business_context.write_business_context`
+- Short name: `write_business_context`
+- Module: `business_context`
+- Classification: Essential
+- Related module: `business_context`
+- Source file path: `src/fabricops_kit/business_context.py`
+- Source reference: <a href="../../api/modules/business_context/#write_business_context">Module source anchor</a>
+- Inbound references count: 0
+- Outbound references count: 1
 
-### Internal helpers used
-- `fabricops_kit.metadata.write_column_business_context`
-
-## Debug this function when
-- Output shape or metadata evidence is unexpected.
-
-## Agent repair guide
-1. Preserve public callable signature unless templates are updated.
-2. Inspect delegated helpers before rewriting wrapper logic.
-3. Preserve output shape where downstream notebooks depend on it.
-4. Update tests and templates together if behavior changes.
+## Outbound references
+- <a href="../internal/metadata/write_column_business_context/"><code>fabricops_kit.metadata.write_column_business_context</code></a>

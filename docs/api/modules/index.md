@@ -1,6 +1,6 @@
 # Module API Catalogue
 
-Function Reference/workflow pages are the primary entrypoint. Module pages below are secondary technical references.
+Function reference pages are the primary entrypoint. Module pages below are secondary technical references.
 
 Short-form modules remain import-compatible aliases but are intentionally hidden from this user-facing catalogue.
 

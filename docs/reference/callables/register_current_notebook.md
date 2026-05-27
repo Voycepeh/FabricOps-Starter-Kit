@@ -1,30 +1,26 @@
 # register_current_notebook
 
-## Template step
-—
+**Module:** `metadata`  
+**Classification:** Essential
 
-## Function role
-Callable orchestration wrapper
+## Purpose
 
-## Use this when
-Use `register_current_notebook` during template-driven notebook execution.
+Register current notebook metadata evidence for agreement traceability.
 
-## What it delegates to
+## Function manifest
 
-### Callable functions called
-- None
+- Fully qualified function name: `fabricops_kit.metadata.register_current_notebook`
+- Short name: `register_current_notebook`
+- Module: `metadata`
+- Classification: Essential
+- Related module: `metadata`
+- Source file path: `src/fabricops_kit/metadata.py`
+- Source reference: <a href="../../api/modules/metadata/#register_current_notebook">Module source anchor</a>
+- Inbound references count: 0
+- Outbound references count: 4
 
-### Internal helpers used
-- `fabricops_kit.metadata._context_get`
-- `fabricops_kit.metadata._runtime_context`
-- `fabricops_kit.metadata._safe_str`
-- `fabricops_kit.metadata.write_metadata_rows`
-
-## Debug this function when
-- Output shape or metadata evidence is unexpected.
-
-## Agent repair guide
-1. Preserve public callable signature unless templates are updated.
-2. Inspect delegated helpers before rewriting wrapper logic.
-3. Preserve output shape where downstream notebooks depend on it.
-4. Update tests and templates together if behavior changes.
+## Outbound references
+- <a href="../internal/metadata/_context_get/"><code>fabricops_kit.metadata._context_get</code></a>
+- <a href="../internal/metadata/_runtime_context/"><code>fabricops_kit.metadata._runtime_context</code></a>
+- <a href="../internal/metadata/_safe_str/"><code>fabricops_kit.metadata._safe_str</code></a>
+- <a href="../internal/metadata/write_metadata_rows/"><code>fabricops_kit.metadata.write_metadata_rows</code></a>

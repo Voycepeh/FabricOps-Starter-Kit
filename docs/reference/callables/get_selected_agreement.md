@@ -1,27 +1,22 @@
 # get_selected_agreement
 
-## Template step
-—
+**Module:** `data_agreement`  
+**Classification:** Essential
 
-## Function role
-Callable orchestration wrapper
+## Purpose
 
-## Use this when
-Use `get_selected_agreement` during template-driven notebook execution.
+No summary available.
 
-## What it delegates to
+## Function manifest
 
-### Callable functions called
-- None
+- Fully qualified function name: `fabricops_kit.data_agreement.get_selected_agreement`
+- Short name: `get_selected_agreement`
+- Module: `data_agreement`
+- Classification: Essential
+- Related module: `data_agreement`
+- Source file path: `src/fabricops_kit/data_agreement.py`
+- Source reference: <a href="../../api/modules/data_agreement/#get_selected_agreement">Module source anchor</a>
+- Inbound references count: 0
+- Outbound references count: 0
 
-### Internal helpers used
-- None
-
-## Debug this function when
-- Output shape or metadata evidence is unexpected.
-
-## Agent repair guide
-1. Preserve public callable signature unless templates are updated.
-2. Inspect delegated helpers before rewriting wrapper logic.
-3. Preserve output shape where downstream notebooks depend on it.
-4. Update tests and templates together if behavior changes.
+_No inbound or outbound references detected._

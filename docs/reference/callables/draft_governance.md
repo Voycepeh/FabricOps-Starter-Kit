@@ -1,27 +1,22 @@
 # draft_governance
 
-## Template step
-—
+**Module:** `data_governance`  
+**Classification:** Essential
 
-## Function role
-Callable orchestration wrapper
+## Purpose
 
-## Use this when
-Use `draft_governance` during template-driven notebook execution.
+No summary available.
 
-## What it delegates to
+## Function manifest
 
-### Callable functions called
-- None
+- Fully qualified function name: `fabricops_kit.data_governance.draft_governance`
+- Short name: `draft_governance`
+- Module: `data_governance`
+- Classification: Essential
+- Related module: `data_governance`
+- Source file path: `src/fabricops_kit/data_governance.py`
+- Source reference: <a href="../../api/modules/data_governance/#draft_governance">Module source anchor</a>
+- Inbound references count: 0
+- Outbound references count: 0
 
-### Internal helpers used
-- None
-
-## Debug this function when
-- Output shape or metadata evidence is unexpected.
-
-## Agent repair guide
-1. Preserve public callable signature unless templates are updated.
-2. Inspect delegated helpers before rewriting wrapper logic.
-3. Preserve output shape where downstream notebooks depend on it.
-4. Update tests and templates together if behavior changes.
+_No inbound or outbound references detected._

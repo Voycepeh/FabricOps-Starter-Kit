@@ -1,20 +1,27 @@
 # _build_partition_hash
 
-## Internal helper
-Internal helper. Do not call directly from notebooks unless extending FabricOps.
+**Module:** `drift`  
+**Classification:** Internal helper
 
 ## Purpose
-Supports callable orchestration internals.
 
-## Used by callable functions
-- None
+No summary available.
 
-## Used by internal helpers
-- `fabricops_kit.drift._build_pandas_partition_snapshot`
-- `fabricops_kit.drift._build_spark_partition_snapshot`
+## Function manifest
 
-## Debug relevance
-Inspect this helper when parent callable outputs are malformed, missing evidence, or failing validation.
+- Fully qualified function name: `fabricops_kit.drift._build_partition_hash`
+- Short name: `_build_partition_hash`
+- Module: `drift`
+- Classification: Internal helper
+- Related module: `drift`
+- Source file path: `src/fabricops_kit/drift.py`
+- Source reference: <a href="../../api/modules/drift/#_build_partition_hash">Module source anchor</a>
+- Inbound references count: 2
+- Outbound references count: 1
 
-## Safe change guidance
-Preserve helper contract, return shape, and side effects expected by parent callables.
+## Inbound references
+- <a href="../internal/drift/_build_pandas_partition_snapshot/"><code>fabricops_kit.drift._build_pandas_partition_snapshot</code></a>
+- <a href="../internal/drift/_build_spark_partition_snapshot/"><code>fabricops_kit.drift._build_spark_partition_snapshot</code></a>
+
+## Outbound references
+- <a href="../internal/drift/_hash/"><code>fabricops_kit.drift._hash</code></a>

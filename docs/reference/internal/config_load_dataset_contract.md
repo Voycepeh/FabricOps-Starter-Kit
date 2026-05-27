@@ -1,19 +1,23 @@
 # load_dataset_contract
 
-## Internal helper
-Internal helper. Do not call directly from notebooks unless extending FabricOps.
+**Module:** `config`  
+**Classification:** Internal helper
 
 ## Purpose
-Supports callable orchestration internals.
 
-## Used by callable functions
-- None
+No summary available.
 
-## Used by internal helpers
-- `fabricops_kit.config.load_and_validate_dataset_contract`
+## Function manifest
 
-## Debug relevance
-Inspect this helper when parent callable outputs are malformed, missing evidence, or failing validation.
+- Fully qualified function name: `fabricops_kit.config.load_dataset_contract`
+- Short name: `load_dataset_contract`
+- Module: `config`
+- Classification: Internal helper
+- Related module: `config`
+- Source file path: `src/fabricops_kit/config.py`
+- Source reference: <a href="../../api/modules/config/#load_dataset_contract">Module source anchor</a>
+- Inbound references count: 1
+- Outbound references count: 0
 
-## Safe change guidance
-Preserve helper contract, return shape, and side effects expected by parent callables.
+## Inbound references
+- <a href="../internal/config/load_and_validate_dataset_contract/"><code>fabricops_kit.config.load_and_validate_dataset_contract</code></a>

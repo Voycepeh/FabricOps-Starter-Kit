@@ -1,27 +1,22 @@
 # build_handover
 
-## Template step
-Handover/run summary
+**Module:** `handover`  
+**Classification:** Essential
 
-## Function role
-Callable orchestration wrapper
+## Purpose
 
-## Use this when
-Use `build_handover` during template-driven notebook execution.
+No summary available.
 
-## What it delegates to
+## Function manifest
 
-### Callable functions called
-- None
+- Fully qualified function name: `fabricops_kit.handover.build_handover`
+- Short name: `build_handover`
+- Module: `handover`
+- Classification: Essential
+- Related module: `handover`
+- Source file path: `src/fabricops_kit/handover.py`
+- Source reference: <a href="../../api/modules/handover/#build_handover">Module source anchor</a>
+- Inbound references count: 0
+- Outbound references count: 0
 
-### Internal helpers used
-- None
-
-## Debug this function when
-- handover summary misses required sections
-
-## Agent repair guide
-1. Preserve public callable signature unless templates are updated.
-2. Inspect delegated helpers before rewriting wrapper logic.
-3. Preserve output shape where downstream notebooks depend on it.
-4. Update tests and templates together if behavior changes.
+_No inbound or outbound references detected._

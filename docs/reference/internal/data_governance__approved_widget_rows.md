@@ -1,19 +1,26 @@
 # _approved_widget_rows
 
-## Internal helper
-Internal helper. Do not call directly from notebooks unless extending FabricOps.
+**Module:** `data_governance`  
+**Classification:** Internal helper
 
 ## Purpose
-Supports callable orchestration internals.
 
-## Used by callable functions
-- `fabricops_kit.data_governance.write_governance`
+No summary available.
 
-## Used by internal helpers
-- None
+## Function manifest
 
-## Debug relevance
-Inspect this helper when parent callable outputs are malformed, missing evidence, or failing validation.
+- Fully qualified function name: `fabricops_kit.data_governance._approved_widget_rows`
+- Short name: `_approved_widget_rows`
+- Module: `data_governance`
+- Classification: Internal helper
+- Related module: `data_governance`
+- Source file path: `src/fabricops_kit/data_governance.py`
+- Source reference: <a href="../../api/modules/data_governance/#_approved_widget_rows">Module source anchor</a>
+- Inbound references count: 1
+- Outbound references count: 1
 
-## Safe change guidance
-Preserve helper contract, return shape, and side effects expected by parent callables.
+## Inbound references
+- <a href="../write_governance/"><code>fabricops_kit.data_governance.write_governance</code></a>
+
+## Outbound references
+- <a href="../internal/metadata/_resolve_action_by/"><code>fabricops_kit.metadata._resolve_action_by</code></a>

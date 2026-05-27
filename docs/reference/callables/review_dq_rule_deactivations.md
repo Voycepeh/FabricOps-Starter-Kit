@@ -1,27 +1,23 @@
 # review_dq_rule_deactivations
 
-## Template step
-—
+**Module:** `data_quality`  
+**Classification:** Optional
 
-## Function role
-Callable orchestration wrapper
+## Purpose
 
-## Use this when
-Use `review_dq_rule_deactivations` during template-driven notebook execution.
+No summary available.
 
-## What it delegates to
+## Function manifest
 
-### Callable functions called
-- None
+- Fully qualified function name: `fabricops_kit.data_quality.review_dq_rule_deactivations`
+- Short name: `review_dq_rule_deactivations`
+- Module: `data_quality`
+- Classification: Optional
+- Related module: `data_quality`
+- Source file path: `src/fabricops_kit/data_quality.py`
+- Source reference: <a href="../../api/modules/data_quality/#review_dq_rule_deactivations">Module source anchor</a>
+- Inbound references count: 0
+- Outbound references count: 1
 
-### Internal helpers used
-- `fabricops_kit.data_quality._require_ipywidgets`
-
-## Debug this function when
-- Output shape or metadata evidence is unexpected.
-
-## Agent repair guide
-1. Preserve public callable signature unless templates are updated.
-2. Inspect delegated helpers before rewriting wrapper logic.
-3. Preserve output shape where downstream notebooks depend on it.
-4. Update tests and templates together if behavior changes.
+## Outbound references
+- <a href="../internal/data_quality/_require_ipywidgets/"><code>fabricops_kit.data_quality._require_ipywidgets</code></a>

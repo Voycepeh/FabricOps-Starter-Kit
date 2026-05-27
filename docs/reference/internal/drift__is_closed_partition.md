@@ -1,19 +1,23 @@
 # _is_closed_partition
 
-## Internal helper
-Internal helper. Do not call directly from notebooks unless extending FabricOps.
+**Module:** `drift`  
+**Classification:** Internal helper
 
 ## Purpose
-Supports callable orchestration internals.
 
-## Used by callable functions
-- None
+No summary available.
 
-## Used by internal helpers
-- `fabricops_kit.drift.compare_partition_snapshots`
+## Function manifest
 
-## Debug relevance
-Inspect this helper when parent callable outputs are malformed, missing evidence, or failing validation.
+- Fully qualified function name: `fabricops_kit.drift._is_closed_partition`
+- Short name: `_is_closed_partition`
+- Module: `drift`
+- Classification: Internal helper
+- Related module: `drift`
+- Source file path: `src/fabricops_kit/drift.py`
+- Source reference: <a href="../../api/modules/drift/#_is_closed_partition">Module source anchor</a>
+- Inbound references count: 1
+- Outbound references count: 0
 
-## Safe change guidance
-Preserve helper contract, return shape, and side effects expected by parent callables.
+## Inbound references
+- <a href="../internal/drift/compare_partition_snapshots/"><code>fabricops_kit.drift.compare_partition_snapshots</code></a>

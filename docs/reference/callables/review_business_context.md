@@ -1,29 +1,25 @@
 # review_business_context
 
-## Template step
-—
+**Module:** `business_context`  
+**Classification:** Essential
 
-## Function role
-Callable orchestration wrapper
+## Purpose
 
-## Use this when
-Use `review_business_context` during template-driven notebook execution.
+No summary available.
 
-## What it delegates to
+## Function manifest
 
-### Callable functions called
-- None
+- Fully qualified function name: `fabricops_kit.business_context.review_business_context`
+- Short name: `review_business_context`
+- Module: `business_context`
+- Classification: Essential
+- Related module: `business_context`
+- Source file path: `src/fabricops_kit/business_context.py`
+- Source reference: <a href="../../api/modules/business_context/#review_business_context">Module source anchor</a>
+- Inbound references count: 0
+- Outbound references count: 3
 
-### Internal helpers used
-- `fabricops_kit.business_context._require_ipywidgets`
-- `fabricops_kit.metadata.build_metadata_column_key`
-- `fabricops_kit.metadata.build_metadata_table_key`
-
-## Debug this function when
-- Output shape or metadata evidence is unexpected.
-
-## Agent repair guide
-1. Preserve public callable signature unless templates are updated.
-2. Inspect delegated helpers before rewriting wrapper logic.
-3. Preserve output shape where downstream notebooks depend on it.
-4. Update tests and templates together if behavior changes.
+## Outbound references
+- <a href="../internal/business_context/_require_ipywidgets/"><code>fabricops_kit.business_context._require_ipywidgets</code></a>
+- <a href="../internal/metadata/build_metadata_column_key/"><code>fabricops_kit.metadata.build_metadata_column_key</code></a>
+- <a href="../internal/metadata/build_metadata_table_key/"><code>fabricops_kit.metadata.build_metadata_table_key</code></a>

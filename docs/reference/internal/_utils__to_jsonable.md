@@ -1,24 +1,31 @@
 # _to_jsonable
 
-## Internal helper
-Internal helper. Do not call directly from notebooks unless extending FabricOps.
+**Module:** `_utils`  
+**Classification:** Internal helper
 
 ## Purpose
-Supports callable orchestration internals.
 
-## Used by callable functions
-- None
+No summary available.
 
-## Used by internal helpers
-- `fabricops_kit._utils._to_jsonable`
-- `fabricops_kit.drift._build_pandas_partition_snapshot`
-- `fabricops_kit.drift._build_spark_partition_snapshot`
-- `fabricops_kit.drift._json_dumps`
-- `fabricops_kit.drift.build_incremental_safety_records`
-- `fabricops_kit.drift.compare_partition_snapshots`
+## Function manifest
 
-## Debug relevance
-Inspect this helper when parent callable outputs are malformed, missing evidence, or failing validation.
+- Fully qualified function name: `fabricops_kit._utils._to_jsonable`
+- Short name: `_to_jsonable`
+- Module: `_utils`
+- Classification: Internal helper
+- Related module: `_utils`
+- Source file path: `src/fabricops_kit/_utils.py`
+- Source reference: <a href="../../api/modules/_utils/#_to_jsonable">Module source anchor</a>
+- Inbound references count: 6
+- Outbound references count: 1
 
-## Safe change guidance
-Preserve helper contract, return shape, and side effects expected by parent callables.
+## Inbound references
+- <a href="../internal/_utils/_to_jsonable/"><code>fabricops_kit._utils._to_jsonable</code></a>
+- <a href="../internal/drift/_build_pandas_partition_snapshot/"><code>fabricops_kit.drift._build_pandas_partition_snapshot</code></a>
+- <a href="../internal/drift/_build_spark_partition_snapshot/"><code>fabricops_kit.drift._build_spark_partition_snapshot</code></a>
+- <a href="../internal/drift/_json_dumps/"><code>fabricops_kit.drift._json_dumps</code></a>
+- <a href="../internal/drift/build_incremental_safety_records/"><code>fabricops_kit.drift.build_incremental_safety_records</code></a>
+- <a href="../internal/drift/compare_partition_snapshots/"><code>fabricops_kit.drift.compare_partition_snapshots</code></a>
+
+## Outbound references
+- <a href="../internal/_utils/_to_jsonable/"><code>fabricops_kit._utils._to_jsonable</code></a>

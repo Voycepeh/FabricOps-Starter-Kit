@@ -1,19 +1,23 @@
 # _key_part
 
-## Internal helper
-Internal helper. Do not call directly from notebooks unless extending FabricOps.
+**Module:** `metadata`  
+**Classification:** Internal helper
 
 ## Purpose
-Supports callable orchestration internals.
 
-## Used by callable functions
-- None
+No summary available.
 
-## Used by internal helpers
-- `fabricops_kit.metadata._sha256_key`
+## Function manifest
 
-## Debug relevance
-Inspect this helper when parent callable outputs are malformed, missing evidence, or failing validation.
+- Fully qualified function name: `fabricops_kit.metadata._key_part`
+- Short name: `_key_part`
+- Module: `metadata`
+- Classification: Internal helper
+- Related module: `metadata`
+- Source file path: `src/fabricops_kit/metadata.py`
+- Source reference: <a href="../../api/modules/metadata/#_key_part">Module source anchor</a>
+- Inbound references count: 1
+- Outbound references count: 0
 
-## Safe change guidance
-Preserve helper contract, return shape, and side effects expected by parent callables.
+## Inbound references
+- <a href="../internal/metadata/_sha256_key/"><code>fabricops_kit.metadata._sha256_key</code></a>

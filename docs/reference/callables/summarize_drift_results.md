@@ -1,27 +1,22 @@
 # summarize_drift_results
 
-## Template step
-Drift enforcement
+**Module:** `drift`  
+**Classification:** Optional
 
-## Function role
-Callable orchestration wrapper
+## Purpose
 
-## Use this when
-Use `summarize_drift_results` during template-driven notebook execution.
+No summary available.
 
-## What it delegates to
+## Function manifest
 
-### Callable functions called
-- None
+- Fully qualified function name: `fabricops_kit.drift.summarize_drift_results`
+- Short name: `summarize_drift_results`
+- Module: `drift`
+- Classification: Optional
+- Related module: `drift`
+- Source file path: `src/fabricops_kit/drift.py`
+- Source reference: <a href="../../api/modules/drift/#summarize_drift_results">Module source anchor</a>
+- Inbound references count: 0
+- Outbound references count: 0
 
-### Internal helpers used
-- None
-
-## Debug this function when
-- drift summary decision contradicts check outputs
-
-## Agent repair guide
-1. Preserve public callable signature unless templates are updated.
-2. Inspect delegated helpers before rewriting wrapper logic.
-3. Preserve output shape where downstream notebooks depend on it.
-4. Update tests and templates together if behavior changes.
+_No inbound or outbound references detected._

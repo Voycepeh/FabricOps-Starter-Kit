@@ -1,27 +1,22 @@
 # build_lineage_handover_markdown
 
-## Template step
-—
+**Module:** `data_lineage`  
+**Classification:** Essential
 
-## Function role
-Callable orchestration wrapper
+## Purpose
 
-## Use this when
-Use `build_lineage_handover_markdown` during template-driven notebook execution.
+No summary available.
 
-## What it delegates to
+## Function manifest
 
-### Callable functions called
-- None
+- Fully qualified function name: `fabricops_kit.data_lineage.build_lineage_handover_markdown`
+- Short name: `build_lineage_handover_markdown`
+- Module: `data_lineage`
+- Classification: Essential
+- Related module: `data_lineage`
+- Source file path: `src/fabricops_kit/data_lineage.py`
+- Source reference: <a href="../../api/modules/data_lineage/#build_lineage_handover_markdown">Module source anchor</a>
+- Inbound references count: 0
+- Outbound references count: 0
 
-### Internal helpers used
-- None
-
-## Debug this function when
-- Output shape or metadata evidence is unexpected.
-
-## Agent repair guide
-1. Preserve public callable signature unless templates are updated.
-2. Inspect delegated helpers before rewriting wrapper logic.
-3. Preserve output shape where downstream notebooks depend on it.
-4. Update tests and templates together if behavior changes.
+_No inbound or outbound references detected._

@@ -1,19 +1,24 @@
 # build_handover_record
 
-## Internal helper
-Internal helper. Do not call directly from notebooks unless extending FabricOps.
+**Module:** `handover`  
+**Classification:** Internal helper
 
 ## Purpose
-Supports callable orchestration internals.
 
-## Used by callable functions
-- None
+No summary available.
 
-## Used by internal helpers
-- None
+## Function manifest
 
-## Debug relevance
-Inspect this helper when parent callable outputs are malformed, missing evidence, or failing validation.
+- Fully qualified function name: `fabricops_kit.handover.build_handover_record`
+- Short name: `build_handover_record`
+- Module: `handover`
+- Classification: Internal helper
+- Related module: `handover`
+- Source file path: `src/fabricops_kit/handover.py`
+- Source reference: <a href="../../api/modules/handover/#build_handover_record">Module source anchor</a>
+- Inbound references count: 0
+- Outbound references count: 2
 
-## Safe change guidance
-Preserve helper contract, return shape, and side effects expected by parent callables.
+## Outbound references
+- <a href="../internal/handover/_status_of/"><code>fabricops_kit.handover._status_of</code></a>
+- <a href="../render_handover_markdown/"><code>fabricops_kit.handover.render_handover_markdown</code></a>

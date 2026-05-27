@@ -1,19 +1,23 @@
 # _coerce_row_dicts
 
-## Internal helper
-Internal helper. Do not call directly from notebooks unless extending FabricOps.
+**Module:** `data_governance`  
+**Classification:** Internal helper
 
 ## Purpose
-Supports callable orchestration internals.
 
-## Used by callable functions
-- `fabricops_kit.data_governance.load_governance`
+No summary available.
 
-## Used by internal helpers
-- None
+## Function manifest
 
-## Debug relevance
-Inspect this helper when parent callable outputs are malformed, missing evidence, or failing validation.
+- Fully qualified function name: `fabricops_kit.data_governance._coerce_row_dicts`
+- Short name: `_coerce_row_dicts`
+- Module: `data_governance`
+- Classification: Internal helper
+- Related module: `data_governance`
+- Source file path: `src/fabricops_kit/data_governance.py`
+- Source reference: <a href="../../api/modules/data_governance/#_coerce_row_dicts">Module source anchor</a>
+- Inbound references count: 1
+- Outbound references count: 0
 
-## Safe change guidance
-Preserve helper contract, return shape, and side effects expected by parent callables.
+## Inbound references
+- <a href="../load_governance/"><code>fabricops_kit.data_governance.load_governance</code></a>

@@ -1,6 +1,8 @@
 # Function Reference
 
-Use this page as a callable lookup for the lightweight notebook templates and package APIs.
+Use this page as a callable lookup after you understand the notebook flow.
+
+> Graph exploration is intentionally deferred. Future PR may use Neo4j or a proper graph backend.
 
 ## Find a callable
 

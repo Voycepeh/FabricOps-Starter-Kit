@@ -1,28 +1,24 @@
 # load_agreements
 
-## Template step
-—
+**Module:** `data_agreement`  
+**Classification:** Essential
 
-## Function role
-Callable orchestration wrapper
+## Purpose
 
-## Use this when
-Use `load_agreements` during template-driven notebook execution.
+Load latest distinct agreement metadata rows for widget selection.
 
-## What it delegates to
+## Function manifest
 
-### Callable functions called
-- None
+- Fully qualified function name: `fabricops_kit.data_agreement.load_agreements`
+- Short name: `load_agreements`
+- Module: `data_agreement`
+- Classification: Essential
+- Related module: `data_agreement`
+- Source file path: `src/fabricops_kit/data_agreement.py`
+- Source reference: <a href="../../api/modules/data_agreement/#load_agreements">Module source anchor</a>
+- Inbound references count: 0
+- Outbound references count: 2
 
-### Internal helpers used
-- `fabricops_kit.data_agreement._coerce_row_dicts`
-- `fabricops_kit.data_agreement._latest_distinct_agreements`
-
-## Debug this function when
-- Output shape or metadata evidence is unexpected.
-
-## Agent repair guide
-1. Preserve public callable signature unless templates are updated.
-2. Inspect delegated helpers before rewriting wrapper logic.
-3. Preserve output shape where downstream notebooks depend on it.
-4. Update tests and templates together if behavior changes.
+## Outbound references
+- <a href="../internal/data_agreement/_coerce_row_dicts/"><code>fabricops_kit.data_agreement._coerce_row_dicts</code></a>
+- <a href="../internal/data_agreement/_latest_distinct_agreements/"><code>fabricops_kit.data_agreement._latest_distinct_agreements</code></a>
