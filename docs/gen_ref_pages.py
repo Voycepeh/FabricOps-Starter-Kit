@@ -181,6 +181,10 @@ def _relationship_chip(qualified_name: str, current_module: str) -> str:
         f'title="{qualified_name}"><code>{callable_name if module_name == current_module else f"{module_name}.{callable_name}"}</code></a>'
     )
 
+
+def _source_anchor(module_name: str, symbol_name: str) -> str:
+    return f'<a href="../../modules/{module_name}/#{symbol_name}">Module source anchor</a>'
+
 for row in sorted(public_symbol_docs, key=lambda item: item["symbol_name"]):
     if row.get("kind") not in {"function", "class"}:
         continue
@@ -213,24 +217,32 @@ for row in sorted(public_symbol_docs, key=lambda item: item["symbol_name"]):
 
         outbound_edges = sorted(set(calls))
         inbound_edges = sorted(set(referenced_by))
-        fd.write("## Function manifest relationships\n\n")
-        fd.write('<div class="callable-relationship-grid">\n')
-        fd.write(f'  <section><h3>Used by {inbound_count}</h3><div class="callable-chip-group">\n')
+        purpose = row.get("purpose") or row.get("summary_override") or modules.get(module_name, {}).get(symbol_name, "") or "No summary available."
+        fd.write("## Purpose\n\n")
+        fd.write(f"{purpose}\n\n")
+        fd.write("## Function manifest\n\n")
+        fd.write(f"- Fully qualified function name: `{qn}`\n")
+        fd.write(f"- Short name: `{symbol_name}`\n")
+        fd.write(f"- Module: `{module_name}`\n")
+        fd.write(f"- Classification: {classification}\n")
+        fd.write(f"- Related module: `{module_name}`\n")
+        fd.write(f"- Source file path: `src/fabricops_kit/{module_name}.py`\n")
+        fd.write(f"- Source reference: {_source_anchor(module_name, symbol_name)}\n")
+        fd.write(f"- Inbound references count: {inbound_count}\n")
+        fd.write(f"- Outbound references count: {outbound_count}\n\n")
+
         if inbound_edges:
+            fd.write("## Inbound references\n")
             for c in inbound_edges[:30]:
-                fd.write(f"{_relationship_chip(c, module_name)}\n")
-        else:
-            fd.write("<span>None.</span>\n")
-        fd.write("  </div></section>\n")
-        fd.write(f'  <section class="callable-current"><h3>Current function</h3><div class="callable-chip-group"><span class="reference-chip reference-chip-role reference-chip-essential"><code>{symbol_name}</code></span></div></section>\n')
-        fd.write(f'  <section><h3>Uses {outbound_count}</h3><div class="callable-chip-group">\n')
+                fd.write(f"- {_relationship_chip(c, module_name)}\n")
+            fd.write("\n")
         if outbound_edges:
+            fd.write("## Outbound references\n")
             for c in outbound_edges[:30]:
-                fd.write(f"{_relationship_chip(c, module_name)}\n")
-        else:
-            fd.write("<span>None.</span>\n")
-        fd.write("  </div></section>\n")
-        fd.write("</div>\n\n")
+                fd.write(f"- {_relationship_chip(c, module_name)}\n")
+            fd.write("\n")
+        if not inbound_edges and not outbound_edges:
+            fd.write("_No inbound or outbound references detected._\n\n")
 
         fd.write(f"::: {PACKAGE}.{module_name}.{symbol_name}\n")
         fd.write("    options:\n")
