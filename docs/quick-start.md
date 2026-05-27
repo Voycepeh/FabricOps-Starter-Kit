@@ -1,69 +1,132 @@
 # Quick Start
 
-Use this page to get FabricOps Starter Kit running quickly in Microsoft Fabric. For deeper operating guidance, use the linked canonical docs.
+Use this page to get a **governed FabricOps notebook workflow** running quickly in Microsoft Fabric.
 
-## What you need
+For conceptual context, start on the [Homepage](index.md). For notebook definitions, use [Notebook Structure](notebook-structure.md).
 
-- A Microsoft Fabric workspace with notebook, Lakehouse/Warehouse, and environment access.
-- Fabric notebook runtime (Fabric Runtime 1.3 / Python 3.11 recommended by this project).
-- A prepared Fabric environment with the project wheel installed (see [Run in Fabric](setup/run-in-fabric.md)).
-- A clear data-sharing agreement context (purpose, ownership, approved usage).
-- If you plan to use AI-assisted functions, your organisation must first enable the relevant **Copilot and Azure OpenAI Service** tenant settings in Fabric:
-  - **Users can use Copilot and other features powered by Azure OpenAI**
-  - **Data sent to Azure OpenAI can be processed outside your capacity's geographic region, compliance boundary, or national cloud instance** when required for your tenant/capacity region
-  - **Data sent to Azure OpenAI can be stored outside your capacity's geographic region, compliance boundary, or national cloud instance** where your organisation permits that setting
-- AI-assisted functions are optional: the core framework can run without them, but AI suggestion features will not work until the required organisation-level settings are approved and enabled.
+## What you will build
 
-## Start from these notebooks
+You will run the canonical FabricOps lifecycle:
 
-Open and copy these real starter templates first:
+`00_env_config` → `01_da_<agreement>` → `02_ex_<agreement>_<topic>` → `03_pc_<agreement>_<pipeline>` → `04_gov_<agreement>_<dataset>_<table>`
 
-| Template notebook | Purpose |
-| --- | --- |
-| [`00_env_config.ipynb`](../templates/notebooks/00_env_config.ipynb) | reusable environment config notebook |
-| [`02_ex_agreement_topic.ipynb`](../templates/notebooks/02_ex_agreement_topic.ipynb) | exploration, profiling, AI-assisted suggestions, contract drafting |
-| [`03_pc_agreement_pipeline_template.ipynb`](../templates/notebooks/03_pc_agreement_pipeline_template.ipynb) | approved pipeline execution, DQ enforcement, quarantine/output/metadata/lineage |
+By the end, you should have:
 
-These are copy-ready starter notebooks. Rename and adapt them for your own agreement and pipeline.
+- reusable environment configuration,
+- agreement and governance scope,
+- profiled source metadata and reviewed suggestions,
+- operational pipeline outputs,
+- governance review artifacts.
 
-For the minimal end-to-end sample sequence, see [`templates/notebooks/README.md`](../templates/notebooks/README.md).
+## Recommended workflow
 
-After copying, use this canonical naming model for your working notebooks:
+```mermaid
+flowchart TD
+    A[00_env_config\nShared runtime + metadata target] -->
+    B[01_da_<agreement>\nAgreement, ownership, approvals]
+    B --> C[02_ex_<agreement>_<topic>\nExplore, profile, AI-assisted suggestions]
+    C --> D[03_pc_<agreement>_<pipeline>\nApproved rules, pipeline execution]
+    D --> E[04_gov_<agreement>_<dataset>_<table>\nGovernance evidence and review]
+```
 
-- `00_env_config`
-- `01_da_<agreement>`
-- `02_ex_<agreement>_<topic>`
-- `03_pc_<agreement>_<pipeline>`
-- `04_gov_<agreement>_<topic>` (future governance enrichment notebooks)
+## Step 1 — Install and configure FabricOps
 
-## Run them in this order
+- Install the package wheel in your Fabric environment.
+- Confirm notebook runtime and dependency availability.
+- Verify you can run notebooks in your target Fabric workspace.
 
-1. Configure the environment in `00_env_config`.
-2. Capture agreement context in `01_da_<agreement>`.
-3. Run exploration/profile work in `02_ex_<agreement>_<topic>`.
-4. Run the approved pipeline contract in `03_pc_<agreement>_<pipeline>`.
+Use:
 
-## What to edit first
+- [Run in Fabric](setup/run-in-fabric.md)
+- [Installation](setup/installation.md)
 
-- Environment paths, connection/runtime values, and shared config in `00_env_config`.
-- Agreement purpose, ownership, and approved usage in `01_da_<agreement>`.
-- Source and output expectations for your dataset/pipeline.
-- Approved DQ and classification decisions before enabling contract enforcement in `03_pc_<agreement>_<pipeline>`.
+## Step 2 — Create `00_env_config`
 
-## What a successful first run should produce
+Create or copy `00_env_config.ipynb` and set shared runtime values first.
 
-- Config loaded.
-- Agreement context captured.
-- Source profile and metadata stored.
-- Approved decisions available.
-- Curated output written.
-- DQ results and target metadata stored.
-- Lineage and handover artifacts generated.
+Focus on:
 
-## Where to go next
+- workspace/lakehouse references,
+- metadata target routing,
+- reusable config used by downstream notebooks.
+
+Reference:
+
+- [Notebook Structure: `00_env_config`](notebook-structure/00-env-config.md)
+- [Template notebook](../templates/notebooks/00_env_config.ipynb)
+
+## Step 3 — Define agreement context with `01_da_<agreement>`
+
+Create `01_da_<agreement>.ipynb` to capture governance scope before technical execution.
+
+Focus on:
+
+- business purpose and approved usage,
+- data ownership and accountability,
+- reviewer/approver context and boundaries.
+
+Reference:
+
+- [Notebook Structure: `01_da`](notebook-structure/01-data-sharing-agreement.md)
+
+## Step 4 — Explore and profile with `02_ex_<agreement>_<topic>`
+
+Create `02_ex_<agreement>_<topic>.ipynb` for exploratory and profiling work.
+
+Focus on:
+
+- source profiling and metadata capture,
+- AI-assisted rule/classification suggestions (optional),
+- preparation for human review and approvals.
+
+Reference:
+
+- [Notebook Structure: `02_ex`](notebook-structure/02-exploration.md)
+- [Template notebook](../templates/notebooks/02_ex_agreement_topic.ipynb)
+
+## Step 5 — Operationalize with `03_pc_<agreement>_<pipeline>`
+
+Create `03_pc_<agreement>_<pipeline>.ipynb` for approved, repeatable pipeline execution.
+
+Focus on:
+
+- enforcing approved rules,
+- running pipeline-ready transformations and checks,
+- producing curated outputs and operational artifacts.
+
+Reference:
+
+- [Notebook Structure: `03_pc`](notebook-structure/03-pipeline-contract.md)
+- [Template notebook](../templates/notebooks/03_pc_agreement_pipeline_template.ipynb)
+
+## Step 6 — Governance review with `04_gov_<agreement>_<dataset>_<table>`
+
+Create `04_gov_<agreement>_<dataset>_<table>.ipynb` for governance review workflows.
+
+Focus on:
+
+- classification and policy review outputs,
+- governance evidence and decision traceability,
+- review/approval handover.
+
+Reference:
+
+- [Notebook Structure: `04_gov`](notebook-structure/04-governance-enrichment.md)
+
+## First-run outcome checklist
+
+After one full cycle, confirm you have:
+
+- `00_env_config` executed successfully,
+- agreement scope documented in `01_da`,
+- profile + metadata outputs from `02_ex`,
+- operational outputs from `03_pc`,
+- governance review artifacts in `04_gov`.
+
+## Next links
 
 - [Notebook Structure](notebook-structure.md)
+- [Function Usage Guide](function-usage-guide.md)
 - [Workflow](workflow.md)
 - [Metadata and Contracts](metadata-and-contracts.md)
 - [Functions / Reference](reference/index.md)
-- [Run in Fabric](setup/run-in-fabric.md)
