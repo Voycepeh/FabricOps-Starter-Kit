@@ -51,5 +51,5 @@ Always route metadata through configured targets using `read_lakehouse_table(...
 ## Related pages
 
 - [Workflow Operating Model](lifecycle-operating-model.md)
-- [Metadata and Data Contract Assembly](metadata-and-contracts.md)
+- [Metadata and Data Contract Assembly](metadata-and-contracts/)
 - [Data Quality Rules System](data-quality-rules-system.md)
