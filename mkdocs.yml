@@ -8,7 +8,6 @@ theme:
   features:
     - navigation.tabs
     - navigation.sections
-    - navigation.expand
     - navigation.top
     - toc.follow
     - content.code.copy
@@ -23,7 +22,13 @@ nav:
   - Start Here:
       - Quick Start: quick-start.md
       - Workflow Overview: workflow.md
-      - Notebook Structure: notebook-structure.md
+      - Notebook Structure:
+          - Notebook Operating Model: notebook-structure.md
+          - 00_env_config: notebook-structure/00-env-config.md
+          - 01_da: notebook-structure/01-data-sharing-agreement.md
+          - 02_ex: notebook-structure/02-exploration.md
+          - 03_pc: notebook-structure/03-pipeline-contract.md
+          - 04_gov: notebook-structure/04-governance-enrichment.md
       - Deployment & Promotion: deployment-and-promotion.md
       - Install in Fabric: setup/run-in-fabric.md
 

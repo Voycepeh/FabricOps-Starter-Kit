@@ -13,10 +13,10 @@ For notebook ownership, naming, and stage boundaries, use the [Notebook Structur
 Use notebook stages as your entry point, then select functions that support that stage.
 
 - `00_env_config` → environment and workspace setup. ([Notebook Structure: 00_env_config](../notebook-structure/00-env-config/))
-- `01_da` → agreement and business context. ([Notebook Structure: 01_da](../notebook-structure/01-da/))
-- `02_ex` → exploration, profiling, AI-assisted discovery. ([Notebook Structure: 02_ex](../notebook-structure/02-ex/))
-- `03_pc` → pipeline contract, enforcement, run summary. ([Notebook Structure: 03_pc](../notebook-structure/03-pc/))
-- `04_gov` → governance review and approval evidence. ([Notebook Structure: 04_gov](../notebook-structure/04-gov/))
+- `01_da` → agreement and business context. ([Notebook Structure: 01_da](../notebook-structure/01-data-sharing-agreement/))
+- `02_ex` → exploration, profiling, AI-assisted discovery. ([Notebook Structure: 02_ex](../notebook-structure/02-exploration/))
+- `03_pc` → pipeline contract, enforcement, run summary. ([Notebook Structure: 03_pc](../notebook-structure/03-pipeline-contract/))
+- `04_gov` → governance review and approval evidence. ([Notebook Structure: 04_gov](../notebook-structure/04-governance-enrichment/))
 
 Need notebook-to-function mapping detail? Use the [Template Function Map](template-function-map.md).
 
@@ -59,7 +59,7 @@ For low-level callable behavior and exact signatures, use the [Callable Function
 ## Which function should I use?
 
 - **I want to set up a notebook** → start from `00_env_config` in [Notebook Structure](../notebook-structure/00-env-config/), then apply setup/config helpers.
-- **I want to profile a table** → start from `02_ex` in [Notebook Structure](../notebook-structure/02-ex/), then apply profiling + metadata capture functions.
+- **I want to profile a table** → start from `02_ex` in [Notebook Structure](../notebook-structure/02-exploration/), then apply profiling + metadata capture functions.
 - **I want AI-suggested DQ rules** → in `02_ex`, use AI drafting functions, then route to approval.
 - **I want to approve/reject rules** → use review/approval functions in the governance review stages.
 - **I want to enforce rules in a pipeline** → use `03_pc` contract flow with approved metadata and enforcement functions.
