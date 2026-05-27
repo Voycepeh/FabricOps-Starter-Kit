@@ -37,6 +37,29 @@ When public API surface, `__all__`, module ownership, docstrings, or callable ma
 PYTHONPATH=src python scripts/generate_function_reference.py
 ```
 
+
+## Generated reference symbols and artifacts
+
+Do not manually edit generated reference outputs as source of truth. Update source inputs/generator first, then regenerate.
+
+Generated artifacts:
+- `docs/reference/index.md`
+- `docs/reference/template-function-map.md`
+- `docs/reference/agent-manifest.json`
+- `docs/reference/dependency-metadata.json`
+- `docs/reference/call-graph.md`
+- `docs/reference/callables/*.md`
+- `docs/reference/internal/*.md`
+- `docs/api/modules/*.md`
+- `mkdocs.yml` reference/module navigation
+
+Source inputs:
+- `src/fabricops_kit/**/*.py`
+- `src/fabricops_kit/__init__.py::__all__`
+- `src/fabricops_kit/docs_metadata.py`
+- `docs/reference/function_usage.yml`
+- `scripts/generate_function_reference.py`
+
 ## Public API docstring requirements
 
 For new/modified public APIs in `src/fabricops_kit/` (public functions/classes/dataclasses/important methods):
