@@ -99,7 +99,7 @@ Owns agreement discovery and selection helpers used to anchor notebook workflows
 ## Module relationships
 
 
-### Related internal helpers
+### Callable relationships
 
 <details>
 <summary>Show internal helpers</summary>
@@ -131,7 +131,7 @@ Owns agreement discovery and selection helpers used to anchor notebook workflows
 
 </details>
 
-### Callable relationships
+### Related internal helpers
 
 
 #### Inside this module

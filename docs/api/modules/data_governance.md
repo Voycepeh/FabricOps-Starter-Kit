@@ -120,7 +120,7 @@ Owns sensitivity, PII, confidentiality, policy labels, and governance approval e
 ## Module relationships
 
 
-### Related internal helpers
+### Callable relationships
 
 <details>
 <summary>Show internal helpers</summary>
@@ -164,7 +164,7 @@ Owns sensitivity, PII, confidentiality, policy labels, and governance approval e
 
 </details>
 
-### Callable relationships
+### Related internal helpers
 
 
 #### Inside this module

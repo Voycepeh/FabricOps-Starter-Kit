@@ -127,7 +127,7 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
 ## Module relationships
 
 
-### Related internal helpers
+### Callable relationships
 
 <details>
 <summary>Show internal helpers</summary>
@@ -159,7 +159,7 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
 
 </details>
 
-### Callable relationships
+### Related internal helpers
 
 
 #### Inside this module

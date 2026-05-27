@@ -85,7 +85,7 @@ Owns standard output/audit columns for pipeline outputs.
 ## Module relationships
 
 
-### Related internal helpers
+### Callable relationships
 
 <details>
 <summary>Show internal helpers</summary>
@@ -145,7 +145,7 @@ Owns standard output/audit columns for pipeline outputs.
 
 </details>
 
-### Callable relationships
+### Related internal helpers
 
 
 #### Inside this module

@@ -92,7 +92,7 @@ Owns metadata/contract store access, evidence persistence, agreement metadata, n
 ## Module relationships
 
 
-### Related internal helpers
+### Callable relationships
 
 <details>
 <summary>Show internal helpers</summary>
@@ -144,7 +144,7 @@ Owns metadata/contract store access, evidence persistence, agreement metadata, n
 
 </details>
 
-### Callable relationships
+### Related internal helpers
 
 
 #### Inside this module

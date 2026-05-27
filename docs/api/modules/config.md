@@ -92,7 +92,7 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
 ## Module relationships
 
 
-### Related internal helpers
+### Callable relationships
 
 <details>
 <summary>Show internal helpers</summary>
@@ -164,7 +164,7 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
 
 </details>
 
-### Callable relationships
+### Related internal helpers
 
 
 #### Inside this module

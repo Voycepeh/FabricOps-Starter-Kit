@@ -150,7 +150,7 @@ Split a Spark DataFrame into pass/quarantine outputs for row-level DQ rules.
 ## Module relationships
 
 
-### Related internal helpers
+### Callable relationships
 
 <details>
 <summary>Show internal helpers</summary>
@@ -250,7 +250,7 @@ Split a Spark DataFrame into pass/quarantine outputs for row-level DQ rules.
 
 </details>
 
-### Callable relationships
+### Related internal helpers
 
 
 #### Inside this module

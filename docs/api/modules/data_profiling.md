@@ -85,7 +85,7 @@ Owns deterministic profiling evidence such as schema, nulls, distincts, min/max,
 ## Module relationships
 
 
-### Related internal helpers
+### Callable relationships
 
 <details>
 <summary>Show internal helpers</summary>
@@ -113,7 +113,7 @@ Owns deterministic profiling evidence such as schema, nulls, distincts, min/max,
 
 </details>
 
-### Callable relationships
+### Related internal helpers
 
 
 #### Inside this module

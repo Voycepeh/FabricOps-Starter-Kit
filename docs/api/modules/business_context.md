@@ -120,7 +120,7 @@ Owns business meaning for tables and columns.
 ## Module relationships
 
 
-### Related internal helpers
+### Callable relationships
 
 <details>
 <summary>Show internal helpers</summary>
@@ -156,7 +156,7 @@ Owns business meaning for tables and columns.
 
 </details>
 
-### Callable relationships
+### Related internal helpers
 
 
 #### Inside this module

@@ -92,7 +92,7 @@ Owns generated maintainer-facing handover and contract narrative output.
 ## Module relationships
 
 
-### Related internal helpers
+### Callable relationships
 
 <details>
 <summary>Show internal helpers</summary>
@@ -116,7 +116,7 @@ Owns generated maintainer-facing handover and contract narrative output.
 
 </details>
 
-### Callable relationships
+### Related internal helpers
 
 
 #### Inside this module

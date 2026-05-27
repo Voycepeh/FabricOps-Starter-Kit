@@ -732,7 +732,7 @@ def main() -> None:
             lines.extend(["## Public callables", "", "No public exports in this module."])
 
         lines.extend(["", "## Module relationships", ""])
-        lines.extend(["", "### Related internal helpers", ""])
+        lines.extend(["", "### Callable relationships", ""])
         internal_fns = sorted([f for f in info["functions"] if f.startswith("_")])
         if internal_fns:
             lines.extend(["<details>", "<summary>Show internal helpers</summary>", ""])
@@ -756,7 +756,7 @@ def main() -> None:
             if _is_callable_edge(e) and (_module_name(e["caller_qualified_name"]) == actual_module or _module_name(e["callee_qualified_name"]) == actual_module)
         ]
         module_edge_pairs = sorted(set(module_edges))
-        lines.extend(["", "### Callable relationships", ""])
+        lines.extend(["", "### Related internal helpers", ""])
         inside_rows = [(s, d) for s, d in module_edge_pairs if _module_name(s) == actual_module and _module_name(d) == actual_module]
         used_by_rows = [(s, d) for s, d in module_edge_pairs if _module_name(s) != actual_module and _module_name(d) == actual_module]
         uses_rows = [(s, d) for s, d in module_edge_pairs if _module_name(s) == actual_module and _module_name(d) != actual_module]
@@ -926,6 +926,8 @@ def main() -> None:
             "sidebar_group": meta.get("sidebar_group", "Modules"),
             "sidebar_include": meta.get("sidebar_include", True),
         })
+    manifest_modules = sorted(manifest_modules, key=lambda row: row["module_name"])
+    manifest_rows = sorted(manifest_rows, key=lambda row: (row["module_name"], row["callable_name"]))
     MANIFEST_PATH.write_text(json.dumps({"modules": manifest_modules, "callables": manifest_rows}, indent=2) + "\n", encoding="utf-8")
     nodes, edges, module_summary = build_callable_graph(module_data, symbol_map, public, docs_metadata)
     node_by_qn = {n["qualified_name"]: n for n in nodes}
@@ -939,7 +941,8 @@ def main() -> None:
         calls_by_qn.setdefault(caller, []).append(callee)
         used_by_qn.setdefault(callee, []).append(caller)
     dependency_callables: dict[str, dict[str, Any]] = {}
-    for qn, node in node_by_qn.items():
+    for qn in sorted(node_by_qn):
+        node = node_by_qn[qn]
         deps = sorted(set(calls_by_qn.get(qn, [])))
         internal_helpers = [d for d in deps if d.startswith(f"{PACKAGE_NAME}.{node['module_name']}._")]
         used_by = sorted(set(used_by_qn.get(qn, [])))
@@ -987,8 +990,10 @@ def main() -> None:
             "outbound_count": len(out_mods),
             "inbound_count": len(in_mods),
         }
+    dependency_callables_sorted = {k: dependency_callables[k] for k in sorted(dependency_callables)}
+    dependency_modules_sorted = {k: dependency_modules[k] for k in sorted(dependency_modules)}
     DEPENDENCY_METADATA_PATH.write_text(
-        json.dumps({"callables": dependency_callables, "modules": dependency_modules}, indent=2) + "\n",
+        json.dumps({"callables": dependency_callables_sorted, "modules": dependency_modules_sorted}, indent=2) + "\n",
         encoding="utf-8",
     )
 

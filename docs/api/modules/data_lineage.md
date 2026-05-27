@@ -92,7 +92,7 @@ Owns source-to-target lineage and transformation evidence.
 ## Module relationships
 
 
-### Related internal helpers
+### Callable relationships
 
 <details>
 <summary>Show internal helpers</summary>
@@ -164,7 +164,7 @@ Owns source-to-target lineage and transformation evidence.
 
 </details>
 
-### Callable relationships
+### Related internal helpers
 
 
 #### Inside this module
