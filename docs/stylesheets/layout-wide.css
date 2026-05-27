@@ -25,6 +25,8 @@
 .md-content__inner {
   margin: 0 auto;
   max-width: min(100%, 108rem);
+  box-sizing: border-box;
+  padding-inline: clamp(0.8rem, 2vw, 2rem);
 }
 
 /* Keep regular text readable even when the page container is wide */
@@ -65,6 +67,7 @@
   display: block;
   width: min(100%, 108rem);
   max-width: 100%;
+  box-sizing: border-box;
   margin-left: 0;
   margin-right: 0;
 }
@@ -97,5 +100,9 @@
   .md-content__inner .md-typeset > figure {
     max-width: 100%;
     width: 100%;
+  }
+
+  .md-content__inner {
+    padding-inline: clamp(0.8rem, 4vw, 1rem);
   }
 }
