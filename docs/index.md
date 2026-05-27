@@ -4,7 +4,7 @@
 Governed, quality-checked, AI-ready notebooks in Microsoft Fabric.
 </div>
 
-<div class="home-cta">
+<div class="home-cta" markdown="1">
 
 [Quick Start](quick-start.md){ .md-button .md-button--primary }
 [Workflow Operating Model](lifecycle-operating-model.md){ .md-button }

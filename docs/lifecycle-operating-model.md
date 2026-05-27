@@ -12,7 +12,7 @@ This page is the people-and-process view of FabricOps Starter Kit. Use [Notebook
 
 ## Stage checkpoints
 
-<div class="lifecycle-stage-table">
+<div class="lifecycle-stage-table" markdown="1">
 
 | Stage | Owner | What happens | Approval point |
 | --- | --- | --- | --- |
