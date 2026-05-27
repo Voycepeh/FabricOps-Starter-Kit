@@ -3,7 +3,7 @@
 Governed, quality-checked, AI-ready notebooks in Microsoft Fabric.
 
 [Quick Start](quick-start.md){ .md-button .md-button--primary }
-[Workflow](workflow.md){ .md-button }
+[Workflow](lifecycle-operating-model.md){ .md-button }
 [Functions](reference/index.md){ .md-button }
 
 ## How FabricOps fits into Fabric
@@ -39,7 +39,7 @@ Use the canonical notebook structure to keep package loading, analysis, implemen
 | Need | Go to |
 | --- | --- |
 | Start the framework in a new workspace | [Quick Start](quick-start.md) |
-| Understand the end-to-end delivery lifecycle | [Workflow](workflow.md) |
+| Understand the end-to-end delivery lifecycle | [Workflow](lifecycle-operating-model.md) |
 | Build and publish the package | [Create Wheel](setup/create-wheel.md) |
 | Run the kit in Fabric | [Run in Fabric](setup/run-in-fabric.md) |
 | Reuse notebook templates and structure | [Notebook Structure](notebook-structure.md) |

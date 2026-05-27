@@ -19,7 +19,7 @@ theme:
 nav:
   - Home: index.md
   - Quick Start: quick-start.md
-  - Workflow: workflow.md
+  - Workflow: lifecycle-operating-model.md
   - Setup:
       - Create Wheel: setup/create-wheel.md
       - Run in Fabric: setup/run-in-fabric.md

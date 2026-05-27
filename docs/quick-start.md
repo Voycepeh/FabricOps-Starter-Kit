@@ -32,14 +32,14 @@ Install the wheel in your Fabric environment and confirm runtime dependencies.
 Set shared runtime configuration, metadata target routing, and reusable paths before downstream notebooks.
 
 - [Notebook Structure: `00_env_config`](notebook-structure/00-env-config.md)
-- [Workflow lifecycle](workflow.md)
+- [Workflow lifecycle](lifecycle-operating-model.md)
 
 ## Step 3 — Define agreement (`01_da_<agreement>`)
 
 Capture business scope, ownership, usage boundaries, and approvals before technical implementation.
 
 - [Notebook Structure: `01_da`](notebook-structure/01-data-sharing-agreement.md)
-- [Workflow lifecycle](workflow.md)
+- [Workflow lifecycle](lifecycle-operating-model.md)
 
 ## Step 4 — Explore and profile (`02_ex_<agreement>_<topic>`)
 
@@ -62,7 +62,7 @@ Promote approved metadata and data quality decisions into repeatable, operationa
 Produce governance outputs and handover-ready evidence for operational ownership.
 
 - [Notebook Structure: `04_gov`](notebook-structure/04-governance-enrichment.md)
-- [Workflow lifecycle](workflow.md)
+- [Workflow lifecycle](lifecycle-operating-model.md)
 - [Function Reference](reference/index.md)
 
 ## Repository starter examples
@@ -71,7 +71,7 @@ Notebook starter examples still exist in the repository under `templates/noteboo
 
 ## Go next
 
-- [Workflow lifecycle operating model](workflow.md)
+- [Workflow lifecycle operating model](lifecycle-operating-model.md)
 - [Notebook Structure](notebook-structure.md)
 - [Run in Fabric](setup/run-in-fabric.md)
 - [Create Wheel](setup/create-wheel.md)
