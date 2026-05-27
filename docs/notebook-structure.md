@@ -2,7 +2,7 @@
 
 This page defines how FabricOps Starter Kit notebooks operate across governance and execution workspaces, how stages connect, and where each notebook boundary applies.
 
-![Governance-Centered Workspace Model](assets/notebook-structure.png)
+![Governance-Centered Workspace Model](assets/notebook-structure.png){ .full-width }
 
 ## Workspace model
 
