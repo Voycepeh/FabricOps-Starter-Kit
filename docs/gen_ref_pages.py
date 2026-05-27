@@ -183,7 +183,7 @@ def _relationship_chip(qualified_name: str, current_module: str) -> str:
 
 
 def _source_anchor(module_name: str, symbol_name: str) -> str:
-    return f'<a href="../../modules/{module_name}/#{symbol_name}">Module source anchor</a>'
+    return f'<a href="../../modules/{module_name}/#{symbol_name}">{module_name} module</a>'
 
 for row in sorted(public_symbol_docs, key=lambda item: item["symbol_name"]):
     if row.get("kind") not in {"function", "class"}:
@@ -220,36 +220,47 @@ for row in sorted(public_symbol_docs, key=lambda item: item["symbol_name"]):
         purpose = row.get("purpose") or row.get("summary_override") or modules.get(module_name, {}).get(symbol_name, "") or "No summary available."
         fd.write("## Purpose\n\n")
         fd.write(f"{purpose}\n\n")
-        fd.write("## Function manifest\n\n")
-        fd.write(f"- Fully qualified function name: `{qn}`\n")
-        fd.write(f"- Short name: `{symbol_name}`\n")
-        fd.write(f"- Module: `{module_name}`\n")
-        fd.write(f"- Classification: {classification}\n")
-        fd.write(f"- Related module: `{module_name}`\n")
-        fd.write(f"- Source file path: `src/fabricops_kit/{module_name}.py`\n")
-        fd.write(f"- Source reference: {_source_anchor(module_name, symbol_name)}\n")
-        fd.write(f"- Inbound references count: {inbound_count}\n")
-        fd.write(f"- Outbound references count: {outbound_count}\n\n")
+        fd.write("## At a glance\n\n")
+        fd.write("| Item | Value |\n")
+        fd.write("| --- | --- |\n")
+        fd.write(f"| Module | {_module_link(module_name)} |\n")
+        fd.write(f"| Classification | <span class=\"reference-chip reference-chip-role reference-chip-{classification.lower()}\">{classification}</span> |\n")
+        fd.write(f"| Source file | <code>src/fabricops_kit/{module_name}.py</code> (<a href=\"../../modules/{module_name}/#{symbol_name}\">{module_name} module source</a>) |\n")
+        fd.write(f"| Used by count | {inbound_count} |\n")
+        fd.write(f"| Calls count | {outbound_count} |\n\n")
+
+        fd.write('??? info "AI manifest"\n\n')
+        fd.write("    ```yaml\n")
+        fd.write(f"    name: {symbol_name}\n")
+        fd.write(f"    qualified_name: {qn}\n")
+        fd.write(f"    module: {module_name}\n")
+        fd.write(f"    classification: {classification}\n")
+        fd.write(f"    source_file: src/fabricops_kit/{module_name}.py\n")
+        fd.write(f"    source_ref: ../../modules/{module_name}/#{symbol_name}\n")
+        fd.write(f"    used_by_count: {inbound_count}\n")
+        fd.write(f"    calls_count: {outbound_count}\n")
+        fd.write("    ```\n\n")
 
         if inbound_edges:
-            fd.write("## Inbound references\n")
+            fd.write("\n## Used by\n")
             for c in inbound_edges[:30]:
                 fd.write(f"- {_relationship_chip(c, module_name)}\n")
             fd.write("\n")
         if outbound_edges:
-            fd.write("## Outbound references\n")
+            fd.write("## Calls\n")
             for c in outbound_edges[:30]:
                 fd.write(f"- {_relationship_chip(c, module_name)}\n")
             fd.write("\n")
         if not inbound_edges and not outbound_edges:
-            fd.write("_No inbound or outbound references detected._\n\n")
+            fd.write("_No related function links detected._\n")
 
-        fd.write(f"::: {PACKAGE}.{module_name}.{symbol_name}\n")
-        fd.write("    options:\n")
-        fd.write("      show_root_heading: false\n")
-        fd.write("      show_source: true\n")
-        fd.write("      docstring_style: numpy\n")
-        fd.write("      docstring_section_style: table\n")
+        fd.write('\n???+ note "Function details and source"\n\n')
+        fd.write(f"    ::: {PACKAGE}.{module_name}.{symbol_name}\n")
+        fd.write("        options:\n")
+        fd.write("          show_root_heading: false\n")
+        fd.write("          show_source: true\n")
+        fd.write("          docstring_style: numpy\n")
+        fd.write("          docstring_section_style: table\n")
 
 for module_name, callable_docs in sorted(modules.items()):
     for helper_name in sorted(name for name in callable_docs if name.startswith("_")):

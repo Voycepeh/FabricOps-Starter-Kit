@@ -454,6 +454,50 @@
   align-items: center;
 }
 
+.md-typeset .ai-manifest {
+  margin: 0.8rem 0 1rem;
+}
+
+.md-typeset .ai-manifest summary,
+.md-typeset .function-source-details summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.md-typeset .function-source-details {
+  margin-top: 1rem;
+}
+
+.md-typeset .function-source-details .highlight pre,
+.md-typeset .function-source-details pre {
+  max-height: 24rem;
+  overflow: auto;
+}
+
+@media screen and (max-width: 760px) {
+  .md-typeset table:not([class]) {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    font-size: 0.82rem;
+  }
+
+  .md-typeset table:not([class]) th,
+  .md-typeset table:not([class]) td {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    min-width: 8rem;
+  }
+
+  .md-typeset .function-source-details .highlight pre,
+  .md-typeset .function-source-details pre {
+    max-height: 16rem;
+    font-size: 0.72rem;
+    line-height: 1.35;
+  }
+}
+
 @media screen and (max-width: 760px) {
   .module-diagram-desktop {
     display: none;
