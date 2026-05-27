@@ -363,12 +363,25 @@ def public_reference_link(
 
 
 def callable_docs_link(
-    symbol_name: str, module: str, docs_metadata: dict[str, dict[str, Any]], *, context: str = "module"
+    symbol_name: str,
+    module: str,
+    docs_metadata: dict[str, dict[str, Any]],
+    *,
+    context: str = "module",
+    source_module: str | None = None,
 ) -> str:
     """Return a safe docs link for a public callable."""
     if symbol_name in docs_metadata:
         return public_reference_link(symbol_name, docs_metadata, context=context)
-    return f"../modules/{module}/#{symbol_name}"
+    if context == "module":
+        if source_module and module != source_module:
+            return f"../{module}/#{symbol_name}"
+        return f"#{symbol_name}"
+    if context == "reference":
+        return f"../../api/modules/{module}/#{symbol_name}"
+    if context == "notebook":
+        return f"../../api/modules/{module}/#{symbol_name}"
+    raise RuntimeError(f"Unknown link context: {context}")
 
 
 def resolve_preferred_actual_module(preferred_module: str) -> str:
@@ -644,11 +657,12 @@ def main() -> None:
         summary_cards = (
             '<div class="module-summary-cards">'
             f'<span class="reference-chip">Callable count: {essential_count + optional_count}</span>'
+            f'<span class="reference-chip">Internal helpers: {internal_count}</span>'
             f'<span class="reference-chip">Outbound: {len(outbound_mods)}</span>'
             f'<span class="reference-chip">Inbound: {len(inbound_mods)}</span>'
             '</div>'
         )
-        lines.extend(["## Module dependency summary", "", summary_cards, ""])
+        lines.extend(["## Module overview badges", "", summary_cards, ""])
 
         module_purpose = module_manifest.get(module, {}).get("module_summary", "").strip()
         if module_purpose:
@@ -663,14 +677,28 @@ def main() -> None:
                     "",
                 ]
             )
+        recommended = sorted([s for s in public_in_module if s.role == "essential"], key=lambda x: x.name.lower())
+        advanced = sorted([s for s in public_in_module if s.role == "optional"], key=lambda x: x.name.lower())
+        lines.extend(["## Module manifest", ""])
+        manifest_rows = [
+            ["Module name", f"<code>{module}</code>"],
+            ["Module purpose", module_purpose or "—"],
+            ["Public callable count", str(essential_count + optional_count)],
+            ["Internal helper count", str(internal_count)],
+            ["Inbound module count", str(len(inbound_mods))],
+            ["Outbound module count", str(len(outbound_mods))],
+            ["External callers", ", ".join(f"<code>{m}</code>" for m in inbound_mods) or "—"],
+            ["External callees", ", ".join(f"<code>{m}</code>" for m in outbound_mods) or "—"],
+        ]
+        lines.extend(render_html_table(["Field", "Value"], manifest_rows))
+        lines.append("")
+
         if public_in_module:
-            recommended = sorted([s for s in public_in_module if s.role == "essential"], key=lambda x: x.name.lower())
-            advanced = sorted([s for s in public_in_module if s.role == "optional"], key=lambda x: x.name.lower())
             lines.extend(["## Public callables", ""])
             public_rows: list[list[str]] = []
             for s in recommended:
                 related = sorted([c for c in info["calls"].get(s.name, set()) if c in info["functions"] and c.startswith("_")])
-                callable_link = callable_docs_link(s.name, module, docs_metadata)
+                callable_link = callable_docs_link(s.name, module, docs_metadata, source_module=actual_module)
                 public_rows.append([
                     f'<a href="{callable_link}"><code>{s.name}</code></a>',
                     "Essential",
@@ -680,7 +708,7 @@ def main() -> None:
                 ])
             for s in advanced:
                 related = sorted([c for c in info["calls"].get(s.name, set()) if c in info["functions"] and c.startswith("_")])
-                callable_link = callable_docs_link(s.name, module, docs_metadata)
+                callable_link = callable_docs_link(s.name, module, docs_metadata, source_module=actual_module)
                 public_rows.append([
                     f'<a href="{callable_link}"><code>{s.name}</code></a>',
                     "Optional",
@@ -703,35 +731,15 @@ def main() -> None:
         else:
             lines.extend(["## Public callables", "", "No public exports in this module."])
 
-        lines.extend(["", "## Advanced dependency sections", ""])
-        lines.extend(["", "### Related internal helpers", ""])
+        lines.extend(["", "## Module relationships", ""])
+        lines.extend(["", "### Callable relationships", ""])
         internal_fns = sorted([f for f in info["functions"] if f.startswith("_")])
-        if internal_fns:
-            helper_details = len(internal_fns) > 8
-            if helper_details:
-                lines.extend(["<details>", "<summary>Expand internal helper table</summary>", ""])
-            helper_rows: list[list[str]] = []
-            for helper in internal_fns:
-                users = sorted([u for u in info["used_by"].get(helper, set()) if u in {p.name for p in public_in_module}])
-                users_links = ", ".join(
-                    f'<a href="{callable_docs_link(u, module, docs_metadata)}"><code>{u}</code></a>' for u in users
-                ) or "—"
-                helper_rows.append([f'<a href="{internal_helper_link(actual_module, helper)}"><code>{helper}</code></a>', users_links])
-            lines.extend(['<div class="module-table-scroll">'])
-            lines.extend(render_html_table(["Helper", "Related public callables"], helper_rows))
-            lines.extend(['</div>'])
-            if helper_details:
-                lines.extend(["", "</details>"])
-        else:
-            lines.append("No module-level internal helpers detected.")
-
         module_edges = [
             (e["caller_qualified_name"], e["callee_qualified_name"])
             for e in edges
             if _is_callable_edge(e) and (_module_name(e["caller_qualified_name"]) == actual_module or _module_name(e["callee_qualified_name"]) == actual_module)
         ]
         module_edge_pairs = sorted(set(module_edges))
-        lines.extend(["", "### Callable relationships", ""])
         inside_rows = [(s, d) for s, d in module_edge_pairs if _module_name(s) == actual_module and _module_name(d) == actual_module]
         used_by_rows = [(s, d) for s, d in module_edge_pairs if _module_name(s) != actual_module and _module_name(d) == actual_module]
         uses_rows = [(s, d) for s, d in module_edge_pairs if _module_name(s) == actual_module and _module_name(d) != actual_module]
@@ -741,7 +749,7 @@ def main() -> None:
             lines.append(f"<h5>{module}</h5>")
             public_names = sorted([p.name for p in public_in_module])
             internal_names = sorted([f for f in info["functions"] if f.startswith("_")])
-            for heading, names in [("Public callables", public_names), ("Internal helpers", internal_names)]:
+            for heading, names in [("Public callables", public_names)]:
                 lines.append(f"<h6>{heading}</h6>")
                 if not names:
                     lines.append("<p>None.</p>")
@@ -750,13 +758,13 @@ def main() -> None:
                 for name in names:
                     src_qn = f"fabricops_kit.{actual_module}.{name}"
                     callees = sorted([d for s, d in inside_rows if s == src_qn], key=lambda q: _label(q))
-                    src_link = callable_docs_link(name, actual_module, docs_metadata)
+                    src_link = callable_docs_link(name, actual_module, docs_metadata, source_module=actual_module)
                     lines.append("<li>")
                     lines.append(f'<a class="reference-chip" href="{src_link}"><code>{name}</code></a>')
                     lines.append(" <span class=\"callable-relationship-uses\">uses:</span> ")
                     if callees:
                         callee_links = ", ".join(
-                            f'<a class="reference-chip" href="{callable_docs_link(dst_qn.split(".")[-1], _module_name(dst_qn), docs_metadata)}"><code>{_label(dst_qn)}</code></a>'
+                            f'<a class="reference-chip" href="{callable_docs_link(dst_qn.split(".")[-1], _module_name(dst_qn), docs_metadata, source_module=actual_module)}"><code>{_label(dst_qn)}</code></a>'
                             for dst_qn in callees
                         )
                         lines.append(callee_links)
@@ -765,7 +773,39 @@ def main() -> None:
                     lines.append("</li>")
                 lines.append("</ul>")
             lines.append("</section>")
-            lines.extend(["", "#### External callers", ""])
+            lines.extend(["", "### Related internal helpers", ""])
+            if internal_fns:
+                lines.extend(["<details>", "<summary>Show internal helpers</summary>", ""])
+                helper_rows: list[list[str]] = []
+                for helper in internal_fns:
+                    users = sorted([u for u in info["used_by"].get(helper, set()) if u in {p.name for p in public_in_module}])
+                    users_links = ", ".join(
+                        f'<a href="{callable_docs_link(u, module, docs_metadata, source_module=actual_module)}"><code>{u}</code></a>' for u in users
+                    ) or "—"
+                    helper_rows.append([f'<a href="{internal_helper_link(actual_module, helper)}"><code>{helper}</code></a>', users_links])
+                lines.extend(['<div class="module-table-scroll">'])
+                lines.extend(render_html_table(["Helper", "Related public callables"], helper_rows))
+                lines.extend(['</div>', "", "<h6>Internal helpers details</h6>"])
+                lines.append('<ul class="callable-relationship-rows">')
+                for name in internal_names:
+                    src_qn = f"fabricops_kit.{actual_module}.{name}"
+                    callees = sorted([d for s, d in inside_rows if s == src_qn], key=lambda q: _label(q))
+                    src_link = callable_docs_link(name, actual_module, docs_metadata, source_module=actual_module)
+                    lines.append("<li>")
+                    lines.append(f'<a class="reference-chip" href="{src_link}"><code>{name}</code></a>')
+                    if callees:
+                        callee_links = ", ".join(
+                            f'<a class="reference-chip" href="{callable_docs_link(dst_qn.split(".")[-1], _module_name(dst_qn), docs_metadata, source_module=actual_module)}"><code>{_label(dst_qn)}</code></a>'
+                            for dst_qn in callees
+                        )
+                        lines.append(" <span class=\"callable-relationship-uses\">uses:</span> ")
+                        lines.append(callee_links)
+                    lines.append("</li>")
+                lines.append("</ul>")
+                lines.append("</details>")
+            else:
+                lines.append("No module-level internal helpers detected.")
+            lines.extend(["", "### External callers", ""])
             if not used_by_rows:
                 lines.append("None.")
             else:
@@ -775,12 +815,12 @@ def main() -> None:
                 for src_module in sorted(callers_by_module):
                     lines.append(f"**{src_module}**")
                     chips = ", ".join(
-                        f'<a class="reference-chip" href="{callable_docs_link(src_qn.split(".")[-1], _module_name(src_qn), docs_metadata)}"><code>{_label(src_qn)}</code></a>'
+                        f'<a class="reference-chip" href="{callable_docs_link(src_qn.split(".")[-1], _module_name(src_qn), docs_metadata, source_module=actual_module)}"><code>{_label(src_qn)}</code></a>'
                         for src_qn in sorted(set(callers_by_module[src_module]))
                     )
                     lines.append(chips)
                     lines.append("")
-            lines.extend(["#### External callees", ""])
+            lines.extend(["### External callees", ""])
             if not uses_rows:
                 lines.append("None.")
             else:
@@ -790,7 +830,7 @@ def main() -> None:
                 for dst_module in sorted(callees_by_module):
                     lines.append(f"**{dst_module}**")
                     chips = ", ".join(
-                        f'<a class="reference-chip" href="{callable_docs_link(dst_qn.split(".")[-1], _module_name(dst_qn), docs_metadata)}"><code>{_label(dst_qn)}</code></a>'
+                        f'<a class="reference-chip" href="{callable_docs_link(dst_qn.split(".")[-1], _module_name(dst_qn), docs_metadata, source_module=actual_module)}"><code>{_label(dst_qn)}</code></a>'
                         for dst_qn in sorted(set(callees_by_module[dst_module]))
                     )
                     lines.append(chips)
@@ -799,7 +839,7 @@ def main() -> None:
             lines.append("No callable relationships detected for this module.")
         if public_in_module:
             for s in sorted([x for x in public_in_module if x.role in {"essential", "optional"}], key=lambda x: x.name.lower()):
-                expected_target = callable_docs_link(s.name, module, docs_metadata)
+                expected_target = callable_docs_link(s.name, module, docs_metadata, source_module=actual_module)
                 expected_href = f'href="{expected_target}"'
                 expected_md_link = f"[`{s.name}`]({expected_target})"
                 if not any((expected_md_link in line) or (expected_href in line) for line in lines):
@@ -879,6 +919,8 @@ def main() -> None:
             "sidebar_group": meta.get("sidebar_group", "Modules"),
             "sidebar_include": meta.get("sidebar_include", True),
         })
+    manifest_modules = sorted(manifest_modules, key=lambda row: row["module_name"])
+    manifest_rows = sorted(manifest_rows, key=lambda row: (row["module_name"], row["callable_name"]))
     MANIFEST_PATH.write_text(json.dumps({"modules": manifest_modules, "callables": manifest_rows}, indent=2) + "\n", encoding="utf-8")
     nodes, edges, module_summary = build_callable_graph(module_data, symbol_map, public, docs_metadata)
     node_by_qn = {n["qualified_name"]: n for n in nodes}
@@ -892,7 +934,8 @@ def main() -> None:
         calls_by_qn.setdefault(caller, []).append(callee)
         used_by_qn.setdefault(callee, []).append(caller)
     dependency_callables: dict[str, dict[str, Any]] = {}
-    for qn, node in node_by_qn.items():
+    for qn in sorted(node_by_qn):
+        node = node_by_qn[qn]
         deps = sorted(set(calls_by_qn.get(qn, [])))
         internal_helpers = [d for d in deps if d.startswith(f"{PACKAGE_NAME}.{node['module_name']}._")]
         used_by = sorted(set(used_by_qn.get(qn, [])))
@@ -940,8 +983,10 @@ def main() -> None:
             "outbound_count": len(out_mods),
             "inbound_count": len(in_mods),
         }
+    dependency_callables_sorted = {k: dependency_callables[k] for k in sorted(dependency_callables)}
+    dependency_modules_sorted = {k: dependency_modules[k] for k in sorted(dependency_modules)}
     DEPENDENCY_METADATA_PATH.write_text(
-        json.dumps({"callables": dependency_callables, "modules": dependency_modules}, indent=2) + "\n",
+        json.dumps({"callables": dependency_callables_sorted, "modules": dependency_modules_sorted}, indent=2) + "\n",
         encoding="utf-8",
     )
 

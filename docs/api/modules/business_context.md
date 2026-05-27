@@ -4,13 +4,58 @@
   <span class="api-chip api-chip-module">Module overview</span>
 </div>
 
-## Module dependency summary
+## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 6</span><span class="reference-chip">Outbound: 1</span><span class="reference-chip">Inbound: 0</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 6</span><span class="reference-chip">Internal helpers: 4</span><span class="reference-chip">Outbound: 1</span><span class="reference-chip">Inbound: 0</span></div>
 
 ## Module purpose
 
 Owns business meaning for tables and columns.
+
+## Module manifest
+
+<table>
+  <thead>
+    <tr>
+      <th>Field</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Module name</td>
+      <td><code>business_context</code></td>
+    </tr>
+    <tr>
+      <td>Module purpose</td>
+      <td>Owns business meaning for tables and columns.</td>
+    </tr>
+    <tr>
+      <td>Public callable count</td>
+      <td>6</td>
+    </tr>
+    <tr>
+      <td>Internal helper count</td>
+      <td>4</td>
+    </tr>
+    <tr>
+      <td>Inbound module count</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>Outbound module count</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>External callers</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td>External callees</td>
+      <td><code>metadata</code></td>
+    </tr>
+  </tbody>
+</table>
 
 ## Public callables
 
@@ -72,10 +117,55 @@ Owns business meaning for tables and columns.
 </table>
 </div>
 
-## Advanced dependency sections
+## Module relationships
 
+
+### Callable relationships
+
+
+#### Inside this module
+
+<section class="callable-relationship-card">
+<h5>business_context</h5>
+<h6>Public callables</h6>
+<ul class="callable-relationship-rows">
+<li>
+<a class="reference-chip" href="../../reference/draft_business_context/"><code>draft_business_context</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<span>None.</span>
+</li>
+<li>
+<a class="reference-chip" href="../../reference/extract_column_business_context_suggestions/"><code>extract_column_business_context_suggestions</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<a class="reference-chip" href="#_extract_column_business_context_suggestions"><code>_extract_column_business_context_suggestions</code></a>
+</li>
+<li>
+<a class="reference-chip" href="../../reference/get_reviewed_business_context_rows/"><code>get_reviewed_business_context_rows</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<span>None.</span>
+</li>
+<li>
+<a class="reference-chip" href="../../reference/prepare_business_context_profile_input/"><code>prepare_business_context_profile_input</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<a class="reference-chip" href="#_prepare_business_context_profile_input"><code>_prepare_business_context_profile_input</code></a>
+</li>
+<li>
+<a class="reference-chip" href="../../reference/review_business_context/"><code>review_business_context</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<a class="reference-chip" href="#_require_ipywidgets"><code>_require_ipywidgets</code></a>
+</li>
+<li>
+<a class="reference-chip" href="../../reference/write_business_context/"><code>write_business_context</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<span>None.</span>
+</li>
+</ul>
+</section>
 
 ### Related internal helpers
+
+<details>
+<summary>Show internal helpers</summary>
 
 <div class="module-table-scroll">
 <table>
@@ -106,76 +196,30 @@ Owns business meaning for tables and columns.
 </table>
 </div>
 
-### Callable relationships
-
-
-#### Inside this module
-
-<section class="callable-relationship-card">
-<h5>business_context</h5>
-<h6>Public callables</h6>
+<h6>Internal helpers details</h6>
 <ul class="callable-relationship-rows">
 <li>
-<a class="reference-chip" href="../../reference/draft_business_context/"><code>draft_business_context</code></a>
+<a class="reference-chip" href="#_extract_column_business_context_suggestions"><code>_extract_column_business_context_suggestions</code></a>
  <span class="callable-relationship-uses">uses:</span> 
-<span>None.</span>
+<a class="reference-chip" href="#_parse_ai_dict_response"><code>_parse_ai_dict_response</code></a>
 </li>
 <li>
-<a class="reference-chip" href="../../reference/extract_column_business_context_suggestions/"><code>extract_column_business_context_suggestions</code></a>
- <span class="callable-relationship-uses">uses:</span> 
-<a class="reference-chip" href="../modules/business_context/#_extract_column_business_context_suggestions"><code>_extract_column_business_context_suggestions</code></a>
+<a class="reference-chip" href="#_parse_ai_dict_response"><code>_parse_ai_dict_response</code></a>
 </li>
 <li>
-<a class="reference-chip" href="../../reference/get_reviewed_business_context_rows/"><code>get_reviewed_business_context_rows</code></a>
- <span class="callable-relationship-uses">uses:</span> 
-<span>None.</span>
+<a class="reference-chip" href="#_prepare_business_context_profile_input"><code>_prepare_business_context_profile_input</code></a>
 </li>
 <li>
-<a class="reference-chip" href="../../reference/prepare_business_context_profile_input/"><code>prepare_business_context_profile_input</code></a>
- <span class="callable-relationship-uses">uses:</span> 
-<a class="reference-chip" href="../modules/business_context/#_prepare_business_context_profile_input"><code>_prepare_business_context_profile_input</code></a>
-</li>
-<li>
-<a class="reference-chip" href="../../reference/review_business_context/"><code>review_business_context</code></a>
- <span class="callable-relationship-uses">uses:</span> 
-<a class="reference-chip" href="../modules/business_context/#_require_ipywidgets"><code>_require_ipywidgets</code></a>
-</li>
-<li>
-<a class="reference-chip" href="../../reference/write_business_context/"><code>write_business_context</code></a>
- <span class="callable-relationship-uses">uses:</span> 
-<span>None.</span>
+<a class="reference-chip" href="#_require_ipywidgets"><code>_require_ipywidgets</code></a>
 </li>
 </ul>
-<h6>Internal helpers</h6>
-<ul class="callable-relationship-rows">
-<li>
-<a class="reference-chip" href="../modules/business_context/#_extract_column_business_context_suggestions"><code>_extract_column_business_context_suggestions</code></a>
- <span class="callable-relationship-uses">uses:</span> 
-<a class="reference-chip" href="../modules/business_context/#_parse_ai_dict_response"><code>_parse_ai_dict_response</code></a>
-</li>
-<li>
-<a class="reference-chip" href="../modules/business_context/#_parse_ai_dict_response"><code>_parse_ai_dict_response</code></a>
- <span class="callable-relationship-uses">uses:</span> 
-<span>None.</span>
-</li>
-<li>
-<a class="reference-chip" href="../modules/business_context/#_prepare_business_context_profile_input"><code>_prepare_business_context_profile_input</code></a>
- <span class="callable-relationship-uses">uses:</span> 
-<span>None.</span>
-</li>
-<li>
-<a class="reference-chip" href="../modules/business_context/#_require_ipywidgets"><code>_require_ipywidgets</code></a>
- <span class="callable-relationship-uses">uses:</span> 
-<span>None.</span>
-</li>
-</ul>
-</section>
+</details>
 
-#### External callers
+### External callers
 
 None.
-#### External callees
+### External callees
 
 **metadata**
-<a class="reference-chip" href="../modules/metadata/#build_metadata_column_key"><code>build_metadata_column_key</code></a>, <a class="reference-chip" href="../modules/metadata/#build_metadata_table_key"><code>build_metadata_table_key</code></a>, <a class="reference-chip" href="../modules/metadata/#write_column_business_context"><code>write_column_business_context</code></a>
+<a class="reference-chip" href="../metadata/#build_metadata_column_key"><code>build_metadata_column_key</code></a>, <a class="reference-chip" href="../metadata/#build_metadata_table_key"><code>build_metadata_table_key</code></a>, <a class="reference-chip" href="../metadata/#write_column_business_context"><code>write_column_business_context</code></a>
 

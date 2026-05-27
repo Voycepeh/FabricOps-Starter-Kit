@@ -522,6 +522,21 @@
 .callable-relationship-rows li{margin:.25rem 0}
 .callable-relationship-uses{color:var(--md-default-fg-color--light)}
 
+@media screen and (max-width: 760px) {
+  .module-table-scroll table {
+    min-width: 100%;
+  }
+  .callable-relationship-card {
+    padding: 0.75rem;
+  }
+  .callable-relationship-rows {
+    padding-left: 0.75rem;
+  }
+  .reference-chip {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+}
 .home-hero {
   margin: 0.35rem 0 0.9rem;
 }

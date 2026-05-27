@@ -4,13 +4,58 @@
   <span class="api-chip api-chip-module">Module overview</span>
 </div>
 
-## Module dependency summary
+## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 2</span><span class="reference-chip">Outbound: 0</span><span class="reference-chip">Inbound: 1</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 2</span><span class="reference-chip">Internal helpers: 13</span><span class="reference-chip">Outbound: 0</span><span class="reference-chip">Inbound: 1</span></div>
 
 ## Module purpose
 
 Owns environment setup, runtime initialization, paths, and notebook-wide configuration.
+
+## Module manifest
+
+<table>
+  <thead>
+    <tr>
+      <th>Field</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Module name</td>
+      <td><code>config</code></td>
+    </tr>
+    <tr>
+      <td>Module purpose</td>
+      <td>Owns environment setup, runtime initialization, paths, and notebook-wide configuration.</td>
+    </tr>
+    <tr>
+      <td>Public callable count</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <td>Internal helper count</td>
+      <td>13</td>
+    </tr>
+    <tr>
+      <td>Inbound module count</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>Outbound module count</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>External callers</td>
+      <td><code>fabric_input_output</code></td>
+    </tr>
+    <tr>
+      <td>External callees</td>
+      <td>—</td>
+    </tr>
+  </tbody>
+</table>
 
 ## Public callables
 
@@ -44,13 +89,35 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
 </table>
 </div>
 
-## Advanced dependency sections
+## Module relationships
 
+
+### Callable relationships
+
+
+#### Inside this module
+
+<section class="callable-relationship-card">
+<h5>config</h5>
+<h6>Public callables</h6>
+<ul class="callable-relationship-rows">
+<li>
+<a class="reference-chip" href="../../reference/load_config/"><code>load_config</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<a class="reference-chip" href="#_validate_framework_config"><code>_validate_framework_config</code></a>
+</li>
+<li>
+<a class="reference-chip" href="../../reference/setup_notebook/"><code>setup_notebook</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<a class="reference-chip" href="#_get_store"><code>_get_store</code></a>, <a class="reference-chip" href="#_run_config_smoke_tests"><code>_run_config_smoke_tests</code></a>, <a class="reference-chip" href="../../reference/load_config/"><code>load_config</code></a>
+</li>
+</ul>
+</section>
 
 ### Related internal helpers
 
 <details>
-<summary>Expand internal helper table</summary>
+<summary>Show internal helpers</summary>
 
 <div class="module-table-scroll">
 <table>
@@ -117,103 +184,63 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
 </table>
 </div>
 
+<h6>Internal helpers details</h6>
+<ul class="callable-relationship-rows">
+<li>
+<a class="reference-chip" href="#_bootstrap_fabric_env"><code>_bootstrap_fabric_env</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<a class="reference-chip" href="#_get_fabric_runtime_metadata"><code>_get_fabric_runtime_metadata</code></a>, <a class="reference-chip" href="#_get_store"><code>_get_store</code></a>, <a class="reference-chip" href="#_run_config_smoke_tests"><code>_run_config_smoke_tests</code></a>, <a class="reference-chip" href="../../reference/load_config/"><code>load_config</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_check_fabric_ai_functions_available"><code>_check_fabric_ai_functions_available</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_check_spark_session"><code>_check_spark_session</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_configure_fabric_ai_functions"><code>_configure_fabric_ai_functions</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_default_schema_text"><code>_default_schema_text</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_format_error_path"><code>_format_error_path</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_get_fabric_runtime_metadata"><code>_get_fabric_runtime_metadata</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_get_store"><code>_get_store</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_load_schema"><code>_load_schema</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<a class="reference-chip" href="#_default_schema_text"><code>_default_schema_text</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_normalize_name"><code>_normalize_name</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_run_config_smoke_tests"><code>_run_config_smoke_tests</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<a class="reference-chip" href="#_check_spark_session"><code>_check_spark_session</code></a>, <a class="reference-chip" href="#_get_fabric_runtime_metadata"><code>_get_fabric_runtime_metadata</code></a>, <a class="reference-chip" href="#_get_store"><code>_get_store</code></a>, <a class="reference-chip" href="#_validate_notebook_name"><code>_validate_notebook_name</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_validate_framework_config"><code>_validate_framework_config</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_validate_notebook_name"><code>_validate_notebook_name</code></a>
+ <span class="callable-relationship-uses">uses:</span> 
+<a class="reference-chip" href="#_normalize_name"><code>_normalize_name</code></a>
+</li>
+</ul>
 </details>
 
-### Callable relationships
-
-
-#### Inside this module
-
-<section class="callable-relationship-card">
-<h5>config</h5>
-<h6>Public callables</h6>
-<ul class="callable-relationship-rows">
-<li>
-<a class="reference-chip" href="../../reference/load_config/"><code>load_config</code></a>
- <span class="callable-relationship-uses">uses:</span> 
-<a class="reference-chip" href="../modules/config/#_validate_framework_config"><code>_validate_framework_config</code></a>
-</li>
-<li>
-<a class="reference-chip" href="../../reference/setup_notebook/"><code>setup_notebook</code></a>
- <span class="callable-relationship-uses">uses:</span> 
-<a class="reference-chip" href="../modules/config/#_get_store"><code>_get_store</code></a>, <a class="reference-chip" href="../modules/config/#_run_config_smoke_tests"><code>_run_config_smoke_tests</code></a>, <a class="reference-chip" href="../../reference/load_config/"><code>load_config</code></a>
-</li>
-</ul>
-<h6>Internal helpers</h6>
-<ul class="callable-relationship-rows">
-<li>
-<a class="reference-chip" href="../modules/config/#_bootstrap_fabric_env"><code>_bootstrap_fabric_env</code></a>
- <span class="callable-relationship-uses">uses:</span> 
-<a class="reference-chip" href="../modules/config/#_get_fabric_runtime_metadata"><code>_get_fabric_runtime_metadata</code></a>, <a class="reference-chip" href="../modules/config/#_get_store"><code>_get_store</code></a>, <a class="reference-chip" href="../modules/config/#_run_config_smoke_tests"><code>_run_config_smoke_tests</code></a>, <a class="reference-chip" href="../../reference/load_config/"><code>load_config</code></a>
-</li>
-<li>
-<a class="reference-chip" href="../modules/config/#_check_fabric_ai_functions_available"><code>_check_fabric_ai_functions_available</code></a>
- <span class="callable-relationship-uses">uses:</span> 
-<span>None.</span>
-</li>
-<li>
-<a class="reference-chip" href="../modules/config/#_check_spark_session"><code>_check_spark_session</code></a>
- <span class="callable-relationship-uses">uses:</span> 
-<span>None.</span>
-</li>
-<li>
-<a class="reference-chip" href="../modules/config/#_configure_fabric_ai_functions"><code>_configure_fabric_ai_functions</code></a>
- <span class="callable-relationship-uses">uses:</span> 
-<span>None.</span>
-</li>
-<li>
-<a class="reference-chip" href="../modules/config/#_default_schema_text"><code>_default_schema_text</code></a>
- <span class="callable-relationship-uses">uses:</span> 
-<span>None.</span>
-</li>
-<li>
-<a class="reference-chip" href="../modules/config/#_format_error_path"><code>_format_error_path</code></a>
- <span class="callable-relationship-uses">uses:</span> 
-<span>None.</span>
-</li>
-<li>
-<a class="reference-chip" href="../modules/config/#_get_fabric_runtime_metadata"><code>_get_fabric_runtime_metadata</code></a>
- <span class="callable-relationship-uses">uses:</span> 
-<span>None.</span>
-</li>
-<li>
-<a class="reference-chip" href="../modules/config/#_get_store"><code>_get_store</code></a>
- <span class="callable-relationship-uses">uses:</span> 
-<span>None.</span>
-</li>
-<li>
-<a class="reference-chip" href="../modules/config/#_load_schema"><code>_load_schema</code></a>
- <span class="callable-relationship-uses">uses:</span> 
-<a class="reference-chip" href="../modules/config/#_default_schema_text"><code>_default_schema_text</code></a>
-</li>
-<li>
-<a class="reference-chip" href="../modules/config/#_normalize_name"><code>_normalize_name</code></a>
- <span class="callable-relationship-uses">uses:</span> 
-<span>None.</span>
-</li>
-<li>
-<a class="reference-chip" href="../modules/config/#_run_config_smoke_tests"><code>_run_config_smoke_tests</code></a>
- <span class="callable-relationship-uses">uses:</span> 
-<a class="reference-chip" href="../modules/config/#_check_spark_session"><code>_check_spark_session</code></a>, <a class="reference-chip" href="../modules/config/#_get_fabric_runtime_metadata"><code>_get_fabric_runtime_metadata</code></a>, <a class="reference-chip" href="../modules/config/#_get_store"><code>_get_store</code></a>, <a class="reference-chip" href="../modules/config/#_validate_notebook_name"><code>_validate_notebook_name</code></a>
-</li>
-<li>
-<a class="reference-chip" href="../modules/config/#_validate_framework_config"><code>_validate_framework_config</code></a>
- <span class="callable-relationship-uses">uses:</span> 
-<span>None.</span>
-</li>
-<li>
-<a class="reference-chip" href="../modules/config/#_validate_notebook_name"><code>_validate_notebook_name</code></a>
- <span class="callable-relationship-uses">uses:</span> 
-<a class="reference-chip" href="../modules/config/#_normalize_name"><code>_normalize_name</code></a>
-</li>
-</ul>
-</section>
-
-#### External callers
+### External callers
 
 **fabric_input_output**
 <a class="reference-chip" href="../../reference/load_config/"><code>load_config</code></a>, <a class="reference-chip" href="../../reference/read_lakehouse_csv/"><code>read_lakehouse_csv</code></a>, <a class="reference-chip" href="../../reference/read_lakehouse_excel/"><code>read_lakehouse_excel</code></a>, <a class="reference-chip" href="../../reference/read_lakehouse_parquet/"><code>read_lakehouse_parquet</code></a>, <a class="reference-chip" href="../../reference/read_lakehouse_table/"><code>read_lakehouse_table</code></a>, <a class="reference-chip" href="../../reference/read_warehouse_table/"><code>read_warehouse_table</code></a>, <a class="reference-chip" href="../../reference/write_lakehouse_table/"><code>write_lakehouse_table</code></a>, <a class="reference-chip" href="../../reference/write_warehouse_table/"><code>write_warehouse_table</code></a>
 
-#### External callees
+### External callees
 
 None.
