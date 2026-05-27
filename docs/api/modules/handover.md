@@ -4,13 +4,58 @@
   <span class="api-chip api-chip-module">Module overview</span>
 </div>
 
-## Module dependency summary
+## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 2</span><span class="reference-chip">Outbound: 0</span><span class="reference-chip">Inbound: 0</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 2</span><span class="reference-chip">Internal helpers: 1</span><span class="reference-chip">Outbound: 0</span><span class="reference-chip">Inbound: 0</span></div>
 
 ## Module purpose
 
 Owns generated maintainer-facing handover and contract narrative output.
+
+## Module manifest
+
+<table>
+  <thead>
+    <tr>
+      <th>Field</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Module name</td>
+      <td><code>handover</code></td>
+    </tr>
+    <tr>
+      <td>Module purpose</td>
+      <td>Owns generated maintainer-facing handover and contract narrative output.</td>
+    </tr>
+    <tr>
+      <td>Public callable count</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <td>Internal helper count</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>Inbound module count</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>Outbound module count</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>External callers</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td>External callees</td>
+      <td>—</td>
+    </tr>
+  </tbody>
+</table>
 
 ## Public callables
 
@@ -44,10 +89,13 @@ Owns generated maintainer-facing handover and contract narrative output.
 </table>
 </div>
 
-## Advanced dependency sections
+### Callable relationships
 
 
 ### Related internal helpers
+
+<details>
+<summary>Show internal helpers</summary>
 
 <div class="module-table-scroll">
 <table>
@@ -66,6 +114,8 @@ Owns generated maintainer-facing handover and contract narrative output.
 </table>
 </div>
 
+</details>
+
 ### Callable relationships
 
 
@@ -83,17 +133,18 @@ Owns generated maintainer-facing handover and contract narrative output.
 <li>
 <a class="reference-chip" href="../../reference/render_handover_markdown/"><code>render_handover_markdown</code></a>
  <span class="callable-relationship-uses">uses:</span> 
-<a class="reference-chip" href="../modules/handover/#_status_of"><code>_status_of</code></a>
+<a class="reference-chip" href="../../api/modules/handover/#_status_of"><code>_status_of</code></a>
 </li>
 </ul>
+<details>
+<summary>Internal helpers details</summary>
 <h6>Internal helpers</h6>
 <ul class="callable-relationship-rows">
 <li>
-<a class="reference-chip" href="../modules/handover/#_status_of"><code>_status_of</code></a>
- <span class="callable-relationship-uses">uses:</span> 
-<span>None.</span>
+<a class="reference-chip" href="../../api/modules/handover/#_status_of"><code>_status_of</code></a>
 </li>
 </ul>
+</details>
 </section>
 
 #### External callers

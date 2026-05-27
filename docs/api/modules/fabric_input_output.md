@@ -4,13 +4,58 @@
   <span class="api-chip api-chip-module">Module overview</span>
 </div>
 
-## Module dependency summary
+## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 8</span><span class="reference-chip">Outbound: 1</span><span class="reference-chip">Inbound: 2</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 8</span><span class="reference-chip">Internal helpers: 3</span><span class="reference-chip">Outbound: 1</span><span class="reference-chip">Inbound: 2</span></div>
 
 ## Module purpose
 
 Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
+
+## Module manifest
+
+<table>
+  <thead>
+    <tr>
+      <th>Field</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Module name</td>
+      <td><code>fabric_input_output</code></td>
+    </tr>
+    <tr>
+      <td>Module purpose</td>
+      <td>Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.</td>
+    </tr>
+    <tr>
+      <td>Public callable count</td>
+      <td>8</td>
+    </tr>
+    <tr>
+      <td>Internal helper count</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <td>Inbound module count</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <td>Outbound module count</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>External callers</td>
+      <td><code>data_quality</code>, <code>metadata</code></td>
+    </tr>
+    <tr>
+      <td>External callees</td>
+      <td><code>config</code></td>
+    </tr>
+  </tbody>
+</table>
 
 ## Public callables
 
@@ -79,10 +124,13 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
 </table>
 </div>
 
-## Advanced dependency sections
+### Callable relationships
 
 
 ### Related internal helpers
+
+<details>
+<summary>Show internal helpers</summary>
 
 <div class="module-table-scroll">
 <table>
@@ -109,6 +157,8 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
 </table>
 </div>
 
+</details>
+
 ### Callable relationships
 
 
@@ -121,27 +171,27 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
 <li>
 <a class="reference-chip" href="../../reference/read_lakehouse_csv/"><code>read_lakehouse_csv</code></a>
  <span class="callable-relationship-uses">uses:</span> 
-<a class="reference-chip" href="../modules/fabric_input_output/#_get_spark"><code>_get_spark</code></a>
+<a class="reference-chip" href="../../api/modules/fabric_input_output/#_get_spark"><code>_get_spark</code></a>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/read_lakehouse_excel/"><code>read_lakehouse_excel</code></a>
  <span class="callable-relationship-uses">uses:</span> 
-<a class="reference-chip" href="../modules/fabric_input_output/#_get_spark"><code>_get_spark</code></a>
+<a class="reference-chip" href="../../api/modules/fabric_input_output/#_get_spark"><code>_get_spark</code></a>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/read_lakehouse_parquet/"><code>read_lakehouse_parquet</code></a>
  <span class="callable-relationship-uses">uses:</span> 
-<a class="reference-chip" href="../modules/fabric_input_output/#_convert_single_parquet_ns_to_us"><code>_convert_single_parquet_ns_to_us</code></a>, <a class="reference-chip" href="../modules/fabric_input_output/#_get_spark"><code>_get_spark</code></a>
+<a class="reference-chip" href="../../api/modules/fabric_input_output/#_convert_single_parquet_ns_to_us"><code>_convert_single_parquet_ns_to_us</code></a>, <a class="reference-chip" href="../../api/modules/fabric_input_output/#_get_spark"><code>_get_spark</code></a>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/read_lakehouse_table/"><code>read_lakehouse_table</code></a>
  <span class="callable-relationship-uses">uses:</span> 
-<a class="reference-chip" href="../modules/fabric_input_output/#_get_spark"><code>_get_spark</code></a>
+<a class="reference-chip" href="../../api/modules/fabric_input_output/#_get_spark"><code>_get_spark</code></a>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/read_warehouse_table/"><code>read_warehouse_table</code></a>
  <span class="callable-relationship-uses">uses:</span> 
-<a class="reference-chip" href="../modules/fabric_input_output/#_get_spark"><code>_get_spark</code></a>
+<a class="reference-chip" href="../../api/modules/fabric_input_output/#_get_spark"><code>_get_spark</code></a>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/write_lakehouse_table/"><code>write_lakehouse_table</code></a>
@@ -154,24 +204,21 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
 <span>None.</span>
 </li>
 </ul>
+<details>
+<summary>Internal helpers details</summary>
 <h6>Internal helpers</h6>
 <ul class="callable-relationship-rows">
 <li>
-<a class="reference-chip" href="../modules/fabric_input_output/#_convert_single_parquet_ns_to_us"><code>_convert_single_parquet_ns_to_us</code></a>
- <span class="callable-relationship-uses">uses:</span> 
-<span>None.</span>
+<a class="reference-chip" href="../../api/modules/fabric_input_output/#_convert_single_parquet_ns_to_us"><code>_convert_single_parquet_ns_to_us</code></a>
 </li>
 <li>
-<a class="reference-chip" href="../modules/fabric_input_output/#_get_fabric_runtime_context"><code>_get_fabric_runtime_context</code></a>
- <span class="callable-relationship-uses">uses:</span> 
-<span>None.</span>
+<a class="reference-chip" href="../../api/modules/fabric_input_output/#_get_fabric_runtime_context"><code>_get_fabric_runtime_context</code></a>
 </li>
 <li>
-<a class="reference-chip" href="../modules/fabric_input_output/#_get_spark"><code>_get_spark</code></a>
- <span class="callable-relationship-uses">uses:</span> 
-<span>None.</span>
+<a class="reference-chip" href="../../api/modules/fabric_input_output/#_get_spark"><code>_get_spark</code></a>
 </li>
 </ul>
+</details>
 </section>
 
 #### External callers
@@ -180,10 +227,10 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
 <a class="reference-chip" href="../../reference/write_dq_rules/"><code>write_dq_rules</code></a>
 
 **metadata**
-<a class="reference-chip" href="../modules/metadata/#write_metadata_rows"><code>write_metadata_rows</code></a>
+<a class="reference-chip" href="../../api/modules/metadata/#write_metadata_rows"><code>write_metadata_rows</code></a>
 
 #### External callees
 
 **config**
-<a class="reference-chip" href="../modules/config/#_get_store"><code>_get_store</code></a>, <a class="reference-chip" href="../../reference/load_config/"><code>load_config</code></a>
+<a class="reference-chip" href="../../api/modules/config/#_get_store"><code>_get_store</code></a>, <a class="reference-chip" href="../../reference/load_config/"><code>load_config</code></a>
 

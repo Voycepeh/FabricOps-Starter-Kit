@@ -4,13 +4,58 @@
   <span class="api-chip api-chip-module">Module overview</span>
 </div>
 
-## Module dependency summary
+## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 3</span><span class="reference-chip">Outbound: 0</span><span class="reference-chip">Inbound: 0</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 3</span><span class="reference-chip">Internal helpers: 3</span><span class="reference-chip">Outbound: 0</span><span class="reference-chip">Inbound: 0</span></div>
 
 ## Module purpose
 
 Owns agreement discovery and selection helpers used to anchor notebook workflows to approved business agreements.
+
+## Module manifest
+
+<table>
+  <thead>
+    <tr>
+      <th>Field</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Module name</td>
+      <td><code>data_agreement</code></td>
+    </tr>
+    <tr>
+      <td>Module purpose</td>
+      <td>Owns agreement discovery and selection helpers used to anchor notebook workflows to approved business agreements.</td>
+    </tr>
+    <tr>
+      <td>Public callable count</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <td>Internal helper count</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <td>Inbound module count</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>Outbound module count</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>External callers</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td>External callees</td>
+      <td>—</td>
+    </tr>
+  </tbody>
+</table>
 
 ## Public callables
 
@@ -51,10 +96,13 @@ Owns agreement discovery and selection helpers used to anchor notebook workflows
 </table>
 </div>
 
-## Advanced dependency sections
+### Callable relationships
 
 
 ### Related internal helpers
+
+<details>
+<summary>Show internal helpers</summary>
 
 <div class="module-table-scroll">
 <table>
@@ -81,6 +129,8 @@ Owns agreement discovery and selection helpers used to anchor notebook workflows
 </table>
 </div>
 
+</details>
+
 ### Callable relationships
 
 
@@ -98,32 +148,29 @@ Owns agreement discovery and selection helpers used to anchor notebook workflows
 <li>
 <a class="reference-chip" href="../../reference/load_agreements/"><code>load_agreements</code></a>
  <span class="callable-relationship-uses">uses:</span> 
-<a class="reference-chip" href="../modules/data_agreement/#_coerce_row_dicts"><code>_coerce_row_dicts</code></a>, <a class="reference-chip" href="../modules/data_agreement/#_latest_distinct_agreements"><code>_latest_distinct_agreements</code></a>
+<a class="reference-chip" href="../../api/modules/data_agreement/#_coerce_row_dicts"><code>_coerce_row_dicts</code></a>, <a class="reference-chip" href="../../api/modules/data_agreement/#_latest_distinct_agreements"><code>_latest_distinct_agreements</code></a>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/select_agreement/"><code>select_agreement</code></a>
  <span class="callable-relationship-uses">uses:</span> 
-<a class="reference-chip" href="../modules/data_agreement/#_agreement_option_label"><code>_agreement_option_label</code></a>, <a class="reference-chip" href="../modules/data_agreement/#_coerce_row_dicts"><code>_coerce_row_dicts</code></a>
+<a class="reference-chip" href="../../api/modules/data_agreement/#_agreement_option_label"><code>_agreement_option_label</code></a>, <a class="reference-chip" href="../../api/modules/data_agreement/#_coerce_row_dicts"><code>_coerce_row_dicts</code></a>
 </li>
 </ul>
+<details>
+<summary>Internal helpers details</summary>
 <h6>Internal helpers</h6>
 <ul class="callable-relationship-rows">
 <li>
-<a class="reference-chip" href="../modules/data_agreement/#_agreement_option_label"><code>_agreement_option_label</code></a>
- <span class="callable-relationship-uses">uses:</span> 
-<span>None.</span>
+<a class="reference-chip" href="../../api/modules/data_agreement/#_agreement_option_label"><code>_agreement_option_label</code></a>
 </li>
 <li>
-<a class="reference-chip" href="../modules/data_agreement/#_coerce_row_dicts"><code>_coerce_row_dicts</code></a>
- <span class="callable-relationship-uses">uses:</span> 
-<span>None.</span>
+<a class="reference-chip" href="../../api/modules/data_agreement/#_coerce_row_dicts"><code>_coerce_row_dicts</code></a>
 </li>
 <li>
-<a class="reference-chip" href="../modules/data_agreement/#_latest_distinct_agreements"><code>_latest_distinct_agreements</code></a>
- <span class="callable-relationship-uses">uses:</span> 
-<span>None.</span>
+<a class="reference-chip" href="../../api/modules/data_agreement/#_latest_distinct_agreements"><code>_latest_distinct_agreements</code></a>
 </li>
 </ul>
+</details>
 </section>
 
 #### External callers

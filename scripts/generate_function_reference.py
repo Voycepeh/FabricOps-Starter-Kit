@@ -368,7 +368,13 @@ def callable_docs_link(
     """Return a safe docs link for a public callable."""
     if symbol_name in docs_metadata:
         return public_reference_link(symbol_name, docs_metadata, context=context)
-    return f"../modules/{module}/#{symbol_name}"
+    if context == "module":
+        return f"../../api/modules/{module}/#{symbol_name}"
+    if context == "reference":
+        return f"../../api/modules/{module}/#{symbol_name}"
+    if context == "notebook":
+        return f"../../api/modules/{module}/#{symbol_name}"
+    raise RuntimeError(f"Unknown link context: {context}")
 
 
 def resolve_preferred_actual_module(preferred_module: str) -> str:
@@ -644,11 +650,12 @@ def main() -> None:
         summary_cards = (
             '<div class="module-summary-cards">'
             f'<span class="reference-chip">Callable count: {essential_count + optional_count}</span>'
+            f'<span class="reference-chip">Internal helpers: {internal_count}</span>'
             f'<span class="reference-chip">Outbound: {len(outbound_mods)}</span>'
             f'<span class="reference-chip">Inbound: {len(inbound_mods)}</span>'
             '</div>'
         )
-        lines.extend(["## Module dependency summary", "", summary_cards, ""])
+        lines.extend(["## Module overview badges", "", summary_cards, ""])
 
         module_purpose = module_manifest.get(module, {}).get("module_summary", "").strip()
         if module_purpose:
@@ -663,9 +670,23 @@ def main() -> None:
                     "",
                 ]
             )
+        recommended = sorted([s for s in public_in_module if s.role == "essential"], key=lambda x: x.name.lower())
+        advanced = sorted([s for s in public_in_module if s.role == "optional"], key=lambda x: x.name.lower())
+        lines.extend(["## Module manifest", ""])
+        manifest_rows = [
+            ["Module name", f"<code>{module}</code>"],
+            ["Module purpose", module_purpose or "—"],
+            ["Public callable count", str(essential_count + optional_count)],
+            ["Internal helper count", str(internal_count)],
+            ["Inbound module count", str(len(inbound_mods))],
+            ["Outbound module count", str(len(outbound_mods))],
+            ["External callers", ", ".join(f"<code>{m}</code>" for m in inbound_mods) or "—"],
+            ["External callees", ", ".join(f"<code>{m}</code>" for m in outbound_mods) or "—"],
+        ]
+        lines.extend(render_html_table(["Field", "Value"], manifest_rows))
+        lines.append("")
+
         if public_in_module:
-            recommended = sorted([s for s in public_in_module if s.role == "essential"], key=lambda x: x.name.lower())
-            advanced = sorted([s for s in public_in_module if s.role == "optional"], key=lambda x: x.name.lower())
             lines.extend(["## Public callables", ""])
             public_rows: list[list[str]] = []
             for s in recommended:
@@ -703,13 +724,11 @@ def main() -> None:
         else:
             lines.extend(["## Public callables", "", "No public exports in this module."])
 
-        lines.extend(["", "## Advanced dependency sections", ""])
+        lines.extend(["", "### Callable relationships", ""])
         lines.extend(["", "### Related internal helpers", ""])
         internal_fns = sorted([f for f in info["functions"] if f.startswith("_")])
         if internal_fns:
-            helper_details = len(internal_fns) > 8
-            if helper_details:
-                lines.extend(["<details>", "<summary>Expand internal helper table</summary>", ""])
+            lines.extend(["<details>", "<summary>Show internal helpers</summary>", ""])
             helper_rows: list[list[str]] = []
             for helper in internal_fns:
                 users = sorted([u for u in info["used_by"].get(helper, set()) if u in {p.name for p in public_in_module}])
@@ -720,8 +739,7 @@ def main() -> None:
             lines.extend(['<div class="module-table-scroll">'])
             lines.extend(render_html_table(["Helper", "Related public callables"], helper_rows))
             lines.extend(['</div>'])
-            if helper_details:
-                lines.extend(["", "</details>"])
+            lines.extend(["", "</details>"])
         else:
             lines.append("No module-level internal helpers detected.")
 
@@ -741,7 +759,7 @@ def main() -> None:
             lines.append(f"<h5>{module}</h5>")
             public_names = sorted([p.name for p in public_in_module])
             internal_names = sorted([f for f in info["functions"] if f.startswith("_")])
-            for heading, names in [("Public callables", public_names), ("Internal helpers", internal_names)]:
+            for heading, names in [("Public callables", public_names)]:
                 lines.append(f"<h6>{heading}</h6>")
                 if not names:
                     lines.append("<p>None.</p>")
@@ -764,6 +782,28 @@ def main() -> None:
                         lines.append("<span>None.</span>")
                     lines.append("</li>")
                 lines.append("</ul>")
+            lines.extend(["<details>", "<summary>Internal helpers details</summary>"])
+            lines.append("<h6>Internal helpers</h6>")
+            if not internal_names:
+                lines.append("<p>None.</p>")
+            else:
+                lines.append('<ul class="callable-relationship-rows">')
+                for name in internal_names:
+                    src_qn = f"fabricops_kit.{actual_module}.{name}"
+                    callees = sorted([d for s, d in inside_rows if s == src_qn], key=lambda q: _label(q))
+                    src_link = callable_docs_link(name, actual_module, docs_metadata)
+                    lines.append("<li>")
+                    lines.append(f'<a class="reference-chip" href="{src_link}"><code>{name}</code></a>')
+                    if callees:
+                        callee_links = ", ".join(
+                            f'<a class="reference-chip" href="{callable_docs_link(dst_qn.split(".")[-1], _module_name(dst_qn), docs_metadata)}"><code>{_label(dst_qn)}</code></a>'
+                            for dst_qn in callees
+                        )
+                        lines.append(" <span class=\"callable-relationship-uses\">uses:</span> ")
+                        lines.append(callee_links)
+                    lines.append("</li>")
+                lines.append("</ul>")
+            lines.append("</details>")
             lines.append("</section>")
             lines.extend(["", "#### External callers", ""])
             if not used_by_rows:

@@ -4,13 +4,58 @@
   <span class="api-chip api-chip-module">Module overview</span>
 </div>
 
-## Module dependency summary
+## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 1</span><span class="reference-chip">Outbound: 1</span><span class="reference-chip">Inbound: 1</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 1</span><span class="reference-chip">Internal helpers: 2</span><span class="reference-chip">Outbound: 1</span><span class="reference-chip">Inbound: 1</span></div>
 
 ## Module purpose
 
 Owns deterministic profiling evidence such as schema, nulls, distincts, min/max, and samples.
+
+## Module manifest
+
+<table>
+  <thead>
+    <tr>
+      <th>Field</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Module name</td>
+      <td><code>data_profiling</code></td>
+    </tr>
+    <tr>
+      <td>Module purpose</td>
+      <td>Owns deterministic profiling evidence such as schema, nulls, distincts, min/max, and samples.</td>
+    </tr>
+    <tr>
+      <td>Public callable count</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>Internal helper count</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <td>Inbound module count</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>Outbound module count</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>External callers</td>
+      <td><code>data_quality</code></td>
+    </tr>
+    <tr>
+      <td>External callees</td>
+      <td><code>technical_columns</code></td>
+    </tr>
+  </tbody>
+</table>
 
 ## Public callables
 
@@ -37,10 +82,13 @@ Owns deterministic profiling evidence such as schema, nulls, distincts, min/max,
 </table>
 </div>
 
-## Advanced dependency sections
+### Callable relationships
 
 
 ### Related internal helpers
+
+<details>
+<summary>Show internal helpers</summary>
 
 <div class="module-table-scroll">
 <table>
@@ -63,6 +111,8 @@ Owns deterministic profiling evidence such as schema, nulls, distincts, min/max,
 </table>
 </div>
 
+</details>
+
 ### Callable relationships
 
 
@@ -75,31 +125,30 @@ Owns deterministic profiling evidence such as schema, nulls, distincts, min/max,
 <li>
 <a class="reference-chip" href="../../reference/profile_dataframe/"><code>profile_dataframe</code></a>
  <span class="callable-relationship-uses">uses:</span> 
-<a class="reference-chip" href="../modules/data_profiling/#_get_profiled_columns"><code>_get_profiled_columns</code></a>, <a class="reference-chip" href="../modules/data_profiling/#_is_min_max_supported_type"><code>_is_min_max_supported_type</code></a>
+<a class="reference-chip" href="../../api/modules/data_profiling/#_get_profiled_columns"><code>_get_profiled_columns</code></a>, <a class="reference-chip" href="../../api/modules/data_profiling/#_is_min_max_supported_type"><code>_is_min_max_supported_type</code></a>
 </li>
 </ul>
+<details>
+<summary>Internal helpers details</summary>
 <h6>Internal helpers</h6>
 <ul class="callable-relationship-rows">
 <li>
-<a class="reference-chip" href="../modules/data_profiling/#_get_profiled_columns"><code>_get_profiled_columns</code></a>
- <span class="callable-relationship-uses">uses:</span> 
-<span>None.</span>
+<a class="reference-chip" href="../../api/modules/data_profiling/#_get_profiled_columns"><code>_get_profiled_columns</code></a>
 </li>
 <li>
-<a class="reference-chip" href="../modules/data_profiling/#_is_min_max_supported_type"><code>_is_min_max_supported_type</code></a>
- <span class="callable-relationship-uses">uses:</span> 
-<span>None.</span>
+<a class="reference-chip" href="../../api/modules/data_profiling/#_is_min_max_supported_type"><code>_is_min_max_supported_type</code></a>
 </li>
 </ul>
+</details>
 </section>
 
 #### External callers
 
 **data_quality**
-<a class="reference-chip" href="../modules/data_quality/#_prepare_dq_profile_input_rows"><code>_prepare_dq_profile_input_rows</code></a>
+<a class="reference-chip" href="../../api/modules/data_quality/#_prepare_dq_profile_input_rows"><code>_prepare_dq_profile_input_rows</code></a>
 
 #### External callees
 
 **technical_columns**
-<a class="reference-chip" href="../modules/technical_columns/#_default_technical_columns"><code>_default_technical_columns</code></a>
+<a class="reference-chip" href="../../api/modules/technical_columns/#_default_technical_columns"><code>_default_technical_columns</code></a>
 
