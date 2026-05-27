@@ -477,3 +477,36 @@
 .callable-relationship-rows{margin:.25rem 0 .7rem;padding-left:1.1rem}
 .callable-relationship-rows li{margin:.25rem 0}
 .callable-relationship-uses{color:var(--md-default-fg-color--light)}
+
+.home-hero {
+  margin: 0.35rem 0 0.9rem;
+}
+
+.home-cta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin: 0.75rem 0 1.4rem;
+}
+
+.home-cta .md-button {
+  width: 100%;
+  margin: 0;
+  text-align: center;
+}
+
+@media screen and (max-width: 760px) {
+  .home-cta {
+    grid-template-columns: 1fr;
+  }
+}
+
+.lifecycle-stage-table {
+  display: block;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.lifecycle-stage-table table {
+  min-width: 44rem;
+}

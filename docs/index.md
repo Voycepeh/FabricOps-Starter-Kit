@@ -1,10 +1,14 @@
 # FabricOps Starter Kit
 
+<div class="home-hero">
 Governed, quality-checked, AI-ready notebooks in Microsoft Fabric.
+</div>
+
+<div class="home-cta">
 
 [Quick Start](quick-start.md){ .md-button .md-button--primary }
 [Workflow Operating Model](lifecycle-operating-model.md){ .md-button }
-[Functions](reference/index.md){ .md-button }
+</div>
 
 ## Choose your starting point
 
@@ -13,8 +17,15 @@ Governed, quality-checked, AI-ready notebooks in Microsoft Fabric.
 | Understand the operating flow, roles, and approvals | [Workflow Operating Model](lifecycle-operating-model.md) |
 | Implement consistent notebook naming and ownership | [Notebook Structure](notebook-structure.md) |
 | Understand evidence outputs and contract assembly | [Metadata & Contracts](metadata-and-contracts.md) |
+| Explore callable APIs in the package | [Function Reference](reference/index.md) |
 
-## How FabricOps fits into Fabric
+## How FabricOps works
+
+FabricOps follows a governed notebook flow from agreement to evidence-backed contract outputs and enforcement.
+
+![FabricOps operating flow from agreement to handover](assets/mvp-flow.png){ .full-width }
+
+## Platform orientation inside Microsoft Fabric
 
 FabricOps Starter Kit is a lightweight framework for running notebook-led delivery inside Microsoft Fabric while keeping governance and handover explicit.
 
@@ -26,16 +37,6 @@ Data contracts are generated from approved metadata and quality evidence so impl
 
 ![Data contract assembly from metadata evidence](assets/data-contract.png){ .full-width }
 
-## Choose where to go next
-
-| Need | Go to |
-| --- | --- |
-| Start the framework in a new workspace | [Quick Start](quick-start.md) |
-| Understand the end-to-end operating flow | [Workflow Operating Model](lifecycle-operating-model.md) |
-| Build and publish the package | [Create Wheel](setup/create-wheel.md) |
-| Run the kit in Fabric | [Run in Fabric](setup/run-in-fabric.md) |
-| Reuse notebook templates and structure | [Notebook Structure](notebook-structure.md) |
-| Explore callable APIs | [Function Reference](reference/index.md) |
 
 !!! note "Compatibility"
     The package import remains `fabricops_kit`.
