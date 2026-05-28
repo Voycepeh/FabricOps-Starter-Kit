@@ -1,10 +1,8 @@
-# Create Wheel
+# Setup: Create Wheel
 
-## Purpose
-
-FabricOps Starter Kit is installed into Microsoft Fabric as a Python wheel.
-Use this page to prepare your local repository, validate locally, and build the wheel
-you will upload to a Fabric Environment.
+This page explains: how to build a FabricOps Starter Kit wheel for Fabric installation.
+Use this when: you need packaging and versioning steps before runtime setup.
+Next read: [Setup / Run in Fabric](run-in-fabric.md), [Start](../quick-start.md), [Deploy](../deployment-and-promotion.md).
 
 ## Prerequisites
 

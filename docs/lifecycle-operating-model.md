@@ -1,39 +1,25 @@
-# Workflow Operating Model
+# Workflow
 
-This page is the people-and-process view of FabricOps Starter Kit. Use [Notebook Structure](notebook-structure.md) for implementation details and [Metadata & Contracts](metadata-and-contracts/) for evidence and contract assembly.
-
-**Operating principle:** AI drafts and accelerates delivery, while human owners approve governance decisions and sign-off points.
+This page explains: the operating model for roles, approvals, and AI-vs-human responsibilities.
+Use this when: you need checkpoint ownership and accountability before implementation details.
+Next read: [Start](quick-start.md), [Govern / Metadata](metadata-and-contracts/index.md), [Deploy](deployment-and-promotion.md).
 
 <figure markdown>
   ![Orientation diagram connecting workflow operating model, notebook implementation boundaries, and metadata contract evidence](assets/docs-orientation.png){ .full-width }
-  <figcaption>This orientation view helps teams separate people/process responsibilities from notebook implementation and evidence outputs.</figcaption>
+  <figcaption>Role lifecycle ownership belongs here: people, process, and approval checkpoints.</figcaption>
 </figure>
 
-<figure markdown>
-  ![Architecture diagram showing FabricOps components across source systems, notebooks, metadata, and governed data products](assets/data-platform-architecture.png){ .full-width }
-  <figcaption>At operating-model level, architecture clarifies where approvals, metadata, and governed outputs fit across the Fabric runtime.</figcaption>
-</figure>
+## Role-based workflow
 
-## Operating flow
-
-`agreement → exploration → approved metadata evidence → pipeline enforcement → handover`
+| Stage | Primary roles | AI responsibility | Human responsibility | Approval checkpoint |
+| --- | --- | --- | --- | --- |
+| Agreement setup | Data owner, governance steward | Draft context suggestions where needed. | Confirm scope, ownership, usage boundaries. | Agreement intent approved. |
+| Exploration and DQ drafting | Analyst, delivery engineer | Suggest candidate DQ rules from profiling evidence. | Review and approve/reject candidate rules. | DQ policy approved for enforcement. |
+| Pipeline enforcement | Delivery engineer, platform operator | Assist with draft diagnostics and summaries. | Execute deterministic controls and validate outcomes. | Operational readiness accepted. |
+| Governance operations | Governance steward, data owner | Suggest governance annotations/classification candidates. | Approve policy metadata and release posture. | Governance sign-off recorded. |
 
 ## Stage checkpoints
 
-<div class="lifecycle-stage-table" markdown="1">
-
-| Stage | Owner | What happens | Approval point |
-| --- | --- | --- | --- |
-| Agreement and ownership setup | Governance + data owners | Define scope, ownership, and decision boundaries. | Humans approve initial agreement intent before downstream execution. |
-| Exploration and evidence generation | Delivery team + reviewers | Run profiling and evidence-building work to validate business and technical fit. | Human reviewers approve evidence quality and readiness. |
-| Metadata approval and contract assembly | Governance + platform stewards | Convert approved metadata and quality evidence into contract-ready outputs. | Human governance review confirms policy alignment before enforcement. |
-| Pipeline enforcement and handover | Delivery + operations + governance | Enforce approved controls in pipelines and publish handover artifacts for traceability. | Human sign-off confirms operational acceptance and ownership transfer. |
-
-</div>
-
-## Implementation and evidence details
-
-- [Notebook Structure](notebook-structure.md) for notebook boundaries, naming, and implementation ownership.
-- [Metadata & Contracts](metadata-and-contracts/) for evidence outputs and contract assembly model.
-- [Pipeline Contract Notebook (03_pc)](notebook-structure/03-pipeline-contract.md) for pipeline enforcement implementation details.
-- [Quick Start](quick-start.md) to run the full flow in a new workspace.
+- **No policy without approval:** AI suggestions never become active controls until humans approve.
+- **No production promotion without evidence:** enforcement and governance evidence must be present.
+- **No ownership gaps:** every stage has named human accountable roles.
