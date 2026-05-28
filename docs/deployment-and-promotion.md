@@ -1,5 +1,9 @@
 # Deployment and promotion
-![Deployment](assets/deployment.png)
+
+<figure markdown>
+  ![Deployment promotion flow from dev workspace to production with release evidence and rollback traceability](assets/deployment.png){ .full-width }
+  <figcaption>Promotion should move approved notebook items forward while preserving governed release evidence.</figcaption>
+</figure>
 
 ## Enterprise-friendly promotion model
 

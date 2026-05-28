@@ -2,6 +2,11 @@
 
 FabricOps Starter Kit uses a Fabric-first notebook workflow where each notebook updates framework metadata tables. The metadata-backed data contract is assembled from approved metadata evidence across the workflow—it is not hand-written first.
 
+<figure markdown>
+  ![Overview diagram of the four-notebook FabricOps delivery flow and metadata-backed contract assembly](assets/mvp-flow.png){ .full-width }
+  <figcaption>Use this as the quick mental model: each notebook stage produces approved evidence that feeds one contract story.</figcaption>
+</figure>
+
 ```mermaid
 flowchart LR
     A[01_agreement_*\nHigh-Level Definition] --> B[02_ex_*\nData Analysis & Profiling]
@@ -65,6 +70,11 @@ Start with `00_env_config` to set reusable environment settings (Lakehouse/Wareh
 > `03_pc_*` enforces operational rules and expectations. `04_gov_*` monitors outcomes and maintains governance continuously.
 
 ## Contract assembly from approved metadata evidence
+
+<figure markdown>
+  ![Diagram showing metadata and data contract assembly from notebook evidence and approvals](assets/notebook-datacontract-flow.png){ .full-width }
+  <figcaption>Approved metadata is assembled into a data contract artifact, keeping governance and engineering aligned.</figcaption>
+</figure>
 
 ```mermaid
 flowchart TD

@@ -2,9 +2,17 @@
 
 Use this page for the **practical implementation conventions**: which notebooks exist, how they are named, and what each notebook owns. For people/process sequencing and AI/human approval flow, start with the [Workflow Operating Model](lifecycle-operating-model.md).
 
-![Governance-Centered Workspace Model](assets/notebook-structure.png){ .full-width }
+<figure markdown>
+  ![Notebook structure diagram showing the 00 to 04 notebook layers and governance-centered responsibilities](assets/notebook-structure.png){ .full-width }
+  <figcaption>This structure anchors ownership: agreement, exploration, pipeline contract, and governance each have clear boundaries.</figcaption>
+</figure>
 
 ## Canonical notebook sequence
+
+<figure markdown>
+  ![Notebook flow diagram showing execution sequence from environment configuration to governance operations](assets/notebook-flow.png){ .full-width }
+  <figcaption>The sequence keeps teams aligned on execution order and handoff points between notebook stages.</figcaption>
+</figure>
 
 ```text
 00_env_config
