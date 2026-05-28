@@ -22,7 +22,10 @@ Governed, quality-checked, AI-ready notebooks in Microsoft Fabric.
 
 FabricOps follows a reusable notebook flow from agreement to exploration to contract-ready handover.
 
-![FabricOps operating flow from agreement to handover](assets/mvp-flow.png){ .full-width }
+<figure markdown>
+  ![Lifecycle workflow showing agreement, exploration, pipeline enforcement, governance, and assembled contract outcomes](assets/mvp-flow.png){ .full-width }
+  <figcaption>FabricOps follows a repeatable lifecycle where each notebook stage contributes evidence to governed delivery.</figcaption>
+</figure>
 
 <div class="home-value-grid" markdown="1">
 

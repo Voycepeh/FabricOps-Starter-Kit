@@ -4,7 +4,15 @@ This page is the people-and-process view of FabricOps Starter Kit. Use [Notebook
 
 **Operating principle:** AI drafts and accelerates delivery, while human owners approve governance decisions and sign-off points.
 
-![FabricOps docs orientation](assets/docs-orientation.png){ .full-width }
+<figure markdown>
+  ![Orientation diagram connecting workflow operating model, notebook implementation boundaries, and metadata contract evidence](assets/docs-orientation.png){ .full-width }
+  <figcaption>This orientation view helps teams separate people/process responsibilities from notebook implementation and evidence outputs.</figcaption>
+</figure>
+
+<figure markdown>
+  ![Architecture diagram showing FabricOps components across source systems, notebooks, metadata, and governed data products](assets/data-platform-architecture.png){ .full-width }
+  <figcaption>At operating-model level, architecture clarifies where approvals, metadata, and governed outputs fit across the Fabric runtime.</figcaption>
+</figure>
 
 ## Operating flow
 

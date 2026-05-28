@@ -4,6 +4,11 @@ A data contract in FabricOps Starter Kit is an **operational agreement** across 
 
 FabricOps assembles the contract from **approved metadata evidence** captured through the notebook lifecycle.
 
+<figure markdown>
+  ![Data contract model showing metadata evidence from agreement, exploration, pipeline, and governance combined into an operational contract](../assets/data-contract.png){ .full-width }
+  <figcaption>The contract is assembled from approved evidence, so policy, quality, and implementation stay synchronized.</figcaption>
+</figure>
+
 ## What contract evidence includes
 
 The assembled contract can include:
@@ -43,6 +48,11 @@ FabricOps follows a practical control model:
 - **AI suggests** candidate rules and insights
 - **Humans approve** what becomes governed policy
 - **Pipelines enforce** approved policy deterministically
+
+<figure markdown>
+  ![Data quality workflow with AI suggestions, human review, approval, and deterministic enforcement in pipelines](../assets/DQ-with-ai.png){ .full-width }
+  <figcaption>AI speeds drafting and triage, but only human-approved rules become enforceable runtime controls.</figcaption>
+</figure>
 
 ## Contracts as change-management artifacts
 
