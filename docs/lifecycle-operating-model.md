@@ -1,25 +1,24 @@
 # Workflow
 
-This page explains: the operating model for roles, approvals, and AI-vs-human responsibilities.
-Use this when: you need checkpoint ownership and accountability before implementation details.
-Next read: [Start](quick-start.md), [Govern / Metadata](metadata-and-contracts/index.md), [Deploy](deployment-and-promotion.md).
+This page explains: who does what, where AI helps, and where human approvals happen.
+Use this when: you need the operating model behind the template execution flow.
+Next read: [Start](quick-start.md), [Templates](notebook-structure.md), [Govern / Metadata](metadata-and-contracts/index.md).
 
 <figure markdown>
   ![Orientation diagram connecting workflow operating model, notebook implementation boundaries, and metadata contract evidence](assets/docs-orientation.png){ .full-width }
-  <figcaption>Role lifecycle ownership belongs here: people, process, and approval checkpoints.</figcaption>
+  <figcaption>Lightweight operating structure: AI assisted drafting, human approved policy, deterministic notebook enforcement.</figcaption>
 </figure>
 
-## Role-based workflow
+## Role checkpoints
 
-| Stage | Primary roles | AI responsibility | Human responsibility | Approval checkpoint |
+| Stage | Owner(s) | AI assisted | Human approved checkpoint | Deterministic enforcement |
 | --- | --- | --- | --- | --- |
-| Agreement setup | Data owner, governance steward | Draft context suggestions where needed. | Confirm scope, ownership, usage boundaries. | Agreement intent approved. |
-| Exploration and DQ drafting | Analyst, delivery engineer | Suggest candidate DQ rules from profiling evidence. | Review and approve/reject candidate rules. | DQ policy approved for enforcement. |
-| Pipeline enforcement | Delivery engineer, platform operator | Assist with draft diagnostics and summaries. | Execute deterministic controls and validate outcomes. | Operational readiness accepted. |
-| Governance operations | Governance steward, data owner | Suggest governance annotations/classification candidates. | Approve policy metadata and release posture. | Governance sign-off recorded. |
+| `01_agreement_*` | Data owner + governance | Draft context support | Agreement scope and ownership | Not yet |
+| `02_ex_*` | Analyst + engineer | Candidate DQ suggestions | Rule approval/rejection | Not yet |
+| `03_pc_*` | Engineer + operator | Diagnostics/summaries | Run readiness and controls | Starts here |
+| `04_gov_*` | Governance steward + owner | Classification suggestions | Governance sign-off | Supports next runs |
 
-## Stage checkpoints
+## CTA
 
-- **No policy without approval:** AI suggestions never become active controls until humans approve.
-- **No production promotion without evidence:** enforcement and governance evidence must be present.
-- **No ownership gaps:** every stage has named human accountable roles.
+- **Primary:** [Start Using Templates](quick-start.md)
+- **Secondary:** [Govern](metadata-and-contracts/index.md) · [Deploy](deployment-and-promotion.md) · [API](reference/index.md)
