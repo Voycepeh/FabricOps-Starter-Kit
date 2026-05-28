@@ -538,14 +538,11 @@
   }
 }
 .home-hero {
-  margin: 0.35rem 0 0.9rem;
+  margin: 0.35rem 0 0.75rem;
 }
 
 .home-cta {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.65rem;
-  margin: 0.75rem 0 1.4rem;
+  margin: 0.7rem 0 1.2rem;
 }
 
 .home-cta .md-button {
@@ -554,9 +551,17 @@
   text-align: center;
 }
 
+.home-value-grid h3 {
+  margin: 0.9rem 0 0.3rem;
+}
+
+.home-value-grid p {
+  margin: 0 0 0.7rem;
+}
+
 @media screen and (max-width: 760px) {
-  .home-cta {
-    grid-template-columns: 1fr;
+  .home-value-grid h3 {
+    margin-top: 0.75rem;
   }
 }
 

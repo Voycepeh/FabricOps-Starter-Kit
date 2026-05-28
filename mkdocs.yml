@@ -29,7 +29,7 @@ nav:
       - 01_da: notebook-structure/01-data-sharing-agreement.md
       - 02_ex: notebook-structure/02-exploration.md
       - 03_pc: notebook-structure/03-pipeline-contract.md
-      - 04_gov: notebook-structure/04-governance-enrichment.md
+      - 04_gov: notebook-structure/04-governance-operations.md
   - Function Reference:
       - Callable Function Reference: reference/index.md
       - Modules:

@@ -7,7 +7,6 @@ Governed, quality-checked, AI-ready notebooks in Microsoft Fabric.
 <div class="home-cta" markdown="1">
 
 [Quick Start](quick-start.md){ .md-button .md-button--primary }
-[Workflow Operating Model](lifecycle-operating-model.md){ .md-button }
 </div>
 
 ## Choose your starting point
@@ -16,27 +15,27 @@ Governed, quality-checked, AI-ready notebooks in Microsoft Fabric.
 | --- | --- |
 | Understand the operating flow, roles, and approvals | [Workflow Operating Model](lifecycle-operating-model.md) |
 | Implement consistent notebook naming and ownership | [Notebook Structure](notebook-structure.md) |
-| Understand evidence outputs and contract assembly | [Metadata & Contracts](metadata-and-contracts/) |
+| Understand metadata outputs and contract assembly | [Metadata & Contracts](metadata-and-contracts/) |
 | Explore callable APIs in the package | [Function Reference](reference/index.md) |
 
 ## How FabricOps works
 
-FabricOps follows a governed notebook flow from agreement to evidence-backed contract outputs and enforcement.
+FabricOps follows a reusable notebook flow from agreement to exploration to contract-ready handover.
 
 ![FabricOps operating flow from agreement to handover](assets/mvp-flow.png){ .full-width }
 
-## Platform orientation inside Microsoft Fabric
+<div class="home-value-grid" markdown="1">
 
-FabricOps Starter Kit is a lightweight framework for running notebook-led delivery inside Microsoft Fabric while keeping governance and handover explicit.
+### Notebook-first delivery
 
-![FabricOps in Microsoft Fabric architecture](assets/data-platform-architecture.png){ .full-width }
+FabricOps is organized around reusable notebooks so teams can move from agreement to exploration, pipeline contract, and handover in a consistent sequence.
 
-## Data contracts are assembled from evidence
+### AI in the loop
 
-Data contracts are generated from approved metadata and quality evidence so implementation and governance stay aligned.
+AI helps draft metadata, data quality, and governance recommendations while people review and approve checkpoints that matter for release.
 
-![Data contract assembly from metadata evidence](assets/data-contract.png){ .full-width }
+### Contracts assembled from approved metadata
 
+Contract-ready outputs are assembled from approved metadata and quality records so delivery and governance stay connected.
 
-!!! note "Compatibility"
-    The package import remains `fabricops_kit`.
+</div>
