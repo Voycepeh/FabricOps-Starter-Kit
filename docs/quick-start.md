@@ -1,115 +1,28 @@
-# Quick Start: From High-Level Definition to Governed Data
+# Start
 
-FabricOps Starter Kit uses a Fabric-first notebook workflow where each notebook updates framework metadata tables. The metadata-backed data contract is assembled from approved metadata evidence across the workflow—it is not hand-written first.
+This page explains: the quickest way to run FabricOps Starter Kit end-to-end.
+Use this when: you want a practical first run with clear outputs at each step.
+Next read: [Install](install.md), [Templates](notebook-structure.md), [Govern / Quality](data-quality-rules-system.md).
 
-<figure markdown>
-  ![Overview diagram of the four-notebook FabricOps delivery flow and metadata-backed contract assembly](assets/mvp-flow.png){ .full-width }
-  <figcaption>Use this as the quick mental model: each notebook stage produces approved evidence that feeds one contract story.</figcaption>
-</figure>
+!!! tip "Dominant onboarding path"
+    **Install Wheel → Copy Notebook Templates → Configure `00_env_config` → Run Notebooks → Review Generated Evidence → Deploy Later**
 
-```mermaid
-flowchart LR
-    A[01_agreement_*\nHigh-Level Definition] --> B[02_ex_*\nData Analysis & Profiling]
-    B --> C[03_pc_*\nTransform & Enforce]
-    C --> D[04_gov_*\nTable/Column Governance]
-    A --> E[Metadata-Backed\nAssembled Data Contract]
-    B --> E
-    C --> E
-    D --> E
-```
+<div class="home-cta" markdown="1">
 
-## Before the four notebooks (`00_env_config`)
+[Copy Notebook Template](notebook-structure.md){ .md-button .md-button--primary }
+[Install Wheel](install.md){ .md-button }
 
-Start with `00_env_config` to set reusable environment settings (Lakehouse/Warehouse references, schemas, and metadata routing) once, then reuse them across all notebook layers.
+</div>
 
-## Four-notebook flow (core model)
+## First run steps
 
-- **`01_agreement_*` = High-Level Definition**
-- **`02_ex_*` = Data Analysis & Profiling**
-- **`03_pc_*` = Transform & Enforce**
-- **`04_gov_*` = Table/Column Governance**
-- **Assembled data contract** = built from all four layers using approved metadata evidence
-
-## What each notebook contributes
-
-### `01_agreement_*` contributes
-
-- agreement/domain metadata
-- purpose and scope
-- owners and stewards
-- usage agreements
-- access restrictions
-- initial classifications
-
-### `02_ex_*` contributes
-
-- schema and column evidence
-- profiling statistics
-- quality observations
-- patterns and anomalies
-- proposed DQ rules
-- AI-assisted insights
-
-### `03_pc_*` contributes
-
-- source-to-target processing
-- transformation summary
-- lineage
-- DQ validation and enforcement results
-- curated output expectations
-- SLA / refresh expectations
-
-### `04_gov_*` contributes
-
-- sensitivity/classification updates
-- access and usage policy maintenance
-- drift and data quality monitoring
-- governance review evidence
-- compliance updates
-
-> `03_pc_*` enforces operational rules and expectations. `04_gov_*` monitors outcomes and maintains governance continuously.
-
-## Contract assembly from approved metadata evidence
-
-<figure markdown>
-  ![Diagram showing metadata and data contract assembly from notebook evidence and approvals](assets/notebook-datacontract-flow.png){ .full-width }
-  <figcaption>Approved metadata is assembled into a data contract artifact, keeping governance and engineering aligned.</figcaption>
-</figure>
-
-```mermaid
-flowchart TD
-    A[Agreement metadata evidence] --> Z[Assembled data contract]
-    B[Analysis & profiling evidence] --> Z
-    C[Pipeline enforcement evidence] --> Z
-    D[Governance monitoring evidence] --> Z
-```
-
-## What the assembled data contract contains
-
-- domain and ownership
-- data assets
-- schema and columns
-- DQ rules and expectations
-- lineage and sources
-- stewards and responsibilities
-- classifications and sensitivity
-- access and usage
-- policies and agreements
-- SLA / refresh expectations
-- monitoring and drift evidence
-
-
-## Framework metadata tables
-
-- **Agreement Metadata** — purpose, scope, ownership, stewards, usage agreements, access constraints.
-- **Analysis Metadata** — schema evidence, profiling stats, quality observations, anomalies, proposed rules.
-- **Lineage & Processing Metadata** — transformations, source-to-target lineage, validation/enforcement outcomes, refresh expectations.
-- **Governance Metadata** — classifications, policy updates, monitoring signals, drift findings, governance review evidence.
-
-## Setup and navigation
-
-- [Create Wheel](setup/create-wheel.md)
-- [Run in Fabric](setup/run-in-fabric.md)
-- [Notebook Structure](notebook-structure.md)
-- [Metadata and Contracts](metadata-and-contracts/)
-- [Function Reference](reference/index.md)
+| Step | Notebook/action | Purpose | Output | Next page |
+| --- | --- | --- | --- | --- |
+| 1 | Install wheel in Fabric Environment | Enable reusable helper functions. | Import-ready `fabricops_kit` runtime. | [Install](install.md) |
+| 2 | Copy notebook templates | Create a working 00/01/02/03/04 notebook set. | Project-specific starter notebooks. | [Templates](notebook-structure.md) |
+| 3 | `00_env_config` | Configure environment-local paths and metadata routing. | Validated runtime configuration. | [Template: 00_env_config](notebook-structure/00-env-config.md) |
+| 4 | `01_agreement_*` | Capture scope, ownership, and intended usage. | Approved agreement metadata evidence. | [Template: 01](notebook-structure/01-data-sharing-agreement.md) |
+| 5 | `02_ex_*` | Profile data and draft/review DQ rules. | Profile evidence + approved DQ rule metadata. | [Govern / Quality](data-quality-rules-system.md) |
+| 6 | `03_pc_*` | Run transforms and deterministic enforcement. | Curated outputs, DQ enforcement results, lineage evidence. | [Template: 03](notebook-structure/03-pipeline-contract.md) |
+| 7 | `04_gov_*` | Review classification/access governance context. | Governance approvals and metadata updates. | [Template: 04](notebook-structure/04-governance-operations.md) |
+| 8 | Review generated evidence | Validate contract-ready evidence package. | Reusable evidence for handover and deployment. | [Deploy](deployment-and-promotion.md) |

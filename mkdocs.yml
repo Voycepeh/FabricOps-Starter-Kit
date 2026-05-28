@@ -18,24 +18,16 @@ theme:
 
 nav:
   - Home: index.md
-  - Quick Start: quick-start.md
-  - Workflow Operating Model: lifecycle-operating-model.md
-  - Governance & Contracts:
-      - Metadata & Contracts: metadata-and-contracts/index.md
-      - Data Quality Rules System: data-quality-rules-system.md
-  - Setup:
-      - Create Wheel: setup/create-wheel.md
-      - Run in Fabric: setup/run-in-fabric.md
-      - Deployment & Promotion: deployment-and-promotion.md
-  - Notebook Templates:
-      - Overview: notebook-structure.md
-      - 00_env_config: notebook-structure/00-env-config.md
-      - 01_da: notebook-structure/01-data-sharing-agreement.md
-      - 02_ex: notebook-structure/02-exploration.md
-      - 03_pc: notebook-structure/03-pipeline-contract.md
-      - 04_gov: notebook-structure/04-governance-operations.md
-  - Function Reference:
-      - Callable Function Reference: reference/index.md
+  - Start: quick-start.md
+  - Install: install.md
+  - Templates: notebook-structure.md
+  - Workflow: lifecycle-operating-model.md
+  - Govern:
+      - Metadata: metadata-and-contracts/index.md
+      - Quality: data-quality-rules-system.md
+  - Deploy: deployment-and-promotion.md
+  - API:
+      - Function Reference: reference/index.md
       - Modules:
       # AUTO-GENERATED-MODULES-START
           - config: api/modules/config.md
@@ -51,7 +43,6 @@ nav:
           - handover: api/modules/handover.md
           - metadata: api/modules/metadata.md
       # AUTO-GENERATED-MODULES-END
-
 
 markdown_extensions:
   - admonition

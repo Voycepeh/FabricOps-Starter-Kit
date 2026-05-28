@@ -1,44 +1,49 @@
 # FabricOps Starter Kit
 
+This page explains: what the starter kit is and how to get productive quickly.
+Use this when: you want the fastest path from first visit to first successful notebook run.
+Next read: [Install](install.md), [Templates](notebook-structure.md), [Start](quick-start.md), [Deploy](deployment-and-promotion.md).
+
 <div class="home-hero">
-Governed, quality-checked, AI-ready notebooks in Microsoft Fabric.
+Lightweight Fabric notebook starter kit for governed, AI assisted data delivery.
 </div>
+
+FabricOps Starter Kit helps teams quickly bootstrap governed Fabric notebook delivery using reusable templates and a lightweight helper wheel.
+
+No heavy orchestration platform required.
+
+It is **lightweight, notebook centric, and plug and play**: install a **reusable helper wheel**, copy **notebook templates**, run stages, and generate **contract ready evidence** with **AI assisted** suggestions and **human approved** controls.
 
 <div class="home-cta" markdown="1">
 
-[Quick Start](quick-start.md){ .md-button .md-button--primary }
+[Start Using Templates](quick-start.md){ .md-button .md-button--primary }
+[Install Wheel](install.md){ .md-button }
+
 </div>
-
-## Choose your starting point
-
-| Start here if you need to... | Go to |
-| --- | --- |
-| Understand the operating flow, roles, and approvals | [Workflow Operating Model](lifecycle-operating-model.md) |
-| Implement consistent notebook naming and ownership | [Notebook Structure](notebook-structure.md) |
-| Understand metadata outputs and contract assembly | [Metadata & Contracts](metadata-and-contracts/) |
-| Explore callable APIs in the package | [Function Reference](reference/index.md) |
-
-## How FabricOps works
-
-FabricOps follows a reusable notebook flow from agreement to exploration to contract-ready handover.
 
 <figure markdown>
-  ![Lifecycle workflow showing agreement, exploration, pipeline enforcement, governance, and assembled contract outcomes](assets/mvp-flow.png){ .full-width }
-  <figcaption>FabricOps follows a repeatable lifecycle where each notebook stage contributes evidence to governed delivery.</figcaption>
+  ![Product overview diagram of FabricOps Starter Kit flow from install to templates, notebook execution, evidence, and deployment readiness](assets/mvp-flow.png){ .full-width }
+  <figcaption>Install wheel → copy templates → run notebooks → review generated evidence → deploy later.</figcaption>
 </figure>
 
-<div class="home-value-grid" markdown="1">
+## Product at a glance
 
-### Notebook-first delivery
+| Feature | Why it matters |
+| --- | --- |
+| Notebook centric | Your team works directly in Fabric notebooks, not a heavy orchestration platform. |
+| Plug and play templates | Copy stage templates and adapt them to your workspace quickly. |
+| Reusable helper wheel | Shared helpers keep notebook logic consistent and easier to maintain. |
+| Contract ready evidence | Metadata, quality, lineage, and governance evidence is produced as execution runs. |
 
-FabricOps is organized around reusable notebooks so teams can move from agreement to exploration, pipeline contract, and handover in a consistent sequence.
+## Next actions
 
-### AI in the loop
+- **Primary:** [Start Using Templates](quick-start.md)
+- **Primary:** [Install Wheel](install.md)
+- **Secondary:** [Workflow](lifecycle-operating-model.md) · [Govern](metadata-and-contracts/index.md) · [API](reference/index.md)
 
-AI helps draft metadata, data quality, and governance recommendations while people review and approve checkpoints that matter for release.
 
-### Contracts assembled from approved metadata
+## Get the kit
 
-Contract-ready outputs are assembled from approved metadata and quality records so delivery and governance stay connected.
-
-</div>
+- [Download/build wheel](install.md)
+- [Copy templates](notebook-structure.md)
+- [Open quick start](quick-start.md)
