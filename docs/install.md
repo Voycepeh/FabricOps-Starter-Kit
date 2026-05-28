@@ -31,13 +31,14 @@ Install or confirm access to the following before you start:
 - Permission to **create or edit a Microsoft Fabric Environment** in that
   workspace.
 
-If `uv` is not installed yet, install it from the official Astral instructions:
+If `uv` is not installed yet, one simple option is:
 
 ```bash
 pip install uv
 ```
 
-Then confirm it is available:
+For other installers, see the official uv documentation. Then confirm it is
+available:
 
 ```bash
 uv --version
@@ -101,9 +102,14 @@ library upload should use the wheel file:
 dist/fabricops_kit-0.1.0-py3-none-any.whl
 ```
 
-The exact version number may differ if the project version has changed. Upload
-only the `.whl` file to Fabric. Do **not** upload the source folder, the whole
-repository, or the `.tar.gz` source distribution.
+The exact version number may differ if the project version has changed.
+
+!!! tip "What file am I uploading?"
+    - **Upload:** `dist/*.whl`
+    - **Do not upload:** the repository folder, a `.zip`, the `.tar.gz` source
+      distribution, or `uv.lock`.
+    - **If multiple wheels exist:** use the latest version/date, or clean `dist/`
+      and rebuild so there is only one wheel to choose from.
 
 For more detail on versioning and rebuilding wheels, see
 [Setup: Create Wheel](setup/create-wheel.md).
