@@ -2,6 +2,10 @@
 
 Lightweight, notebook centric, plug and play starter kit for Microsoft Fabric.
 
+FabricOps Starter Kit helps teams quickly bootstrap governed Fabric notebook delivery using reusable templates and a lightweight helper wheel.
+
+No heavy orchestration platform required.
+
 FabricOps Starter Kit combines a **reusable helper wheel** with **notebook templates** so teams can run AI assisted, human approved delivery flows and generate **contract ready evidence** (metadata, quality, lineage, governance) without adopting a heavy orchestration platform.
 
 <div align="center">

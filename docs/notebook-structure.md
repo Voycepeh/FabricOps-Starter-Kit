@@ -16,6 +16,19 @@ Next read: [Start](quick-start.md), [Install](install.md), [Govern / Metadata](m
   <figcaption>Template-first model: copy stage notebooks, run sequence, and capture contract ready evidence.</figcaption>
 </figure>
 
+
+## Template hero
+
+| Template | Purpose |
+| --- | --- |
+| `00_env_config` | Environment bootstrap |
+| `01_agreement_*` | Usage approval and ownership |
+| `02_ex_*` | Exploration and profiling |
+| `03_pc_*` | Pipeline and enforcement |
+| `04_gov_*` | Governance evidence |
+
+**Copy → Configure → Run**
+
 ## Template cards
 
 | Template | Copy this template when... | Primary owner | Writes/produces |

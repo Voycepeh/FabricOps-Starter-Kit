@@ -8,7 +8,11 @@ Next read: [Install](install.md), [Templates](notebook-structure.md), [Start](qu
 Lightweight Fabric notebook starter kit for governed, AI assisted data delivery.
 </div>
 
-FabricOps Starter Kit is a **lightweight, notebook centric, plug and play** toolkit for Microsoft Fabric: install a **reusable helper wheel**, copy **notebook templates**, run stages, and generate **contract ready evidence** with **AI assisted** suggestions and **human approved** controls.
+FabricOps Starter Kit helps teams quickly bootstrap governed Fabric notebook delivery using reusable templates and a lightweight helper wheel.
+
+No heavy orchestration platform required.
+
+It is **lightweight, notebook centric, and plug and play**: install a **reusable helper wheel**, copy **notebook templates**, run stages, and generate **contract ready evidence** with **AI assisted** suggestions and **human approved** controls.
 
 <div class="home-cta" markdown="1">
 
@@ -36,3 +40,10 @@ FabricOps Starter Kit is a **lightweight, notebook centric, plug and play** tool
 - **Primary:** [Start Using Templates](quick-start.md)
 - **Primary:** [Install Wheel](install.md)
 - **Secondary:** [Workflow](lifecycle-operating-model.md) · [Govern](metadata-and-contracts/index.md) · [API](reference/index.md)
+
+
+## Get the kit
+
+- [Download/build wheel](install.md)
+- [Copy templates](notebook-structure.md)
+- [Open quick start](quick-start.md)
