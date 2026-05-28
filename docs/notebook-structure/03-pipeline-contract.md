@@ -1,5 +1,13 @@
 # `03_pc_<agreement>_<pipeline>`
 
+## Reader quick map
+
+- **Purpose:** `03_pc_<agreement>_<pipeline>` keeps this stage boundary clear and auditable.
+- **Reads:** Approved agreement, DQ, and governance metadata plus source tables.
+- **Writes:** Target datasets plus deterministic run, lineage, drift, and enforcement evidence.
+- **When it runs:** After required approvals from 01/02/04 and on scheduled runtime execution.
+- **Related function groups:** `data_quality`, `data_lineage`, `drift`, `fabric_input_output`
+
 `03_pc_<agreement>_<pipeline>` is the engineering source-to-target pipeline contract notebook.
 It transforms source data to target outputs, enforces approved metadata rules, and writes operational evidence.
 

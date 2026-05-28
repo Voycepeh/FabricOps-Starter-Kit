@@ -26,6 +26,7 @@ nav:
   - Setup:
       - Create Wheel: setup/create-wheel.md
       - Run in Fabric: setup/run-in-fabric.md
+      - Deployment & Promotion: deployment-and-promotion.md
   - Notebook Templates:
       - Overview: notebook-structure.md
       - 00_env_config: notebook-structure/00-env-config.md

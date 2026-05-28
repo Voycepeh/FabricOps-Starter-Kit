@@ -172,3 +172,12 @@ Git-tag-based automated versioning can be considered later.
 ## Next step
 
 [Run in Fabric →](run-in-fabric.md)
+
+
+## Release checklist (merged)
+
+- Verify package version and changelog intent before build.
+- Build wheel in a clean environment and confirm artifacts are produced once.
+- Install the built wheel locally and run import smoke tests.
+- Run project validation (`pytest`, `compileall`, `mkdocs build --strict`) before publishing.
+- Record release notes and promotion intent before Fabric deployment.
