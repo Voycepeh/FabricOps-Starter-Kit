@@ -76,3 +76,12 @@ Run notebooks in this order:
 
 - [Quick Start](../quick-start.md)
 - [Deployment](../deployment-and-promotion.md)
+
+
+## Fabric smoke validation (merged)
+
+- Attach expected lakehouse/warehouse resources for the selected environment.
+- Run `00_env_config` and confirm configuration checks pass.
+- Execute a minimal metadata read/write dry run against the configured `metadata` target.
+- Run a lightweight `02_ex` and `03_pc` flow to confirm approved-rule loading and enforcement wiring.
+- Capture outcome in release evidence before scheduling production runs.

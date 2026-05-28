@@ -55,6 +55,9 @@ Always route metadata reads/writes through configured metadata targets (`read_la
 
 ## Notebook details
 
+Each notebook detail page summarizes purpose, what it reads, what it writes, when it runs, template link, and related function groups.
+
+
 - [`00_env_config`](notebook-structure/00-env-config.md)
 - [`01_da_<agreement>`](notebook-structure/01-data-sharing-agreement.md)
 - [`02_ex_<agreement>_<topic>`](notebook-structure/02-exploration.md)

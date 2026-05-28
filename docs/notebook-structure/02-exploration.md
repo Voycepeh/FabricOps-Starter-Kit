@@ -1,5 +1,13 @@
 # `02_ex_<agreement>_<topic>`
 
+## Reader quick map
+
+- **Purpose:** `02_ex_<agreement>_<topic>` keeps this stage boundary clear and auditable.
+- **Reads:** Agreement context, source data, and prior approved metadata context.
+- **Writes:** Profile evidence and approved DQ metadata used by `03_pc`.
+- **When it runs:** After `01_da` and before `03_pc` for each scoped topic.
+- **Related function groups:** `data_profiling`, `data_quality`, `metadata`
+
 `02_ex_<agreement>_<topic>` is the analyst notebook for profiling, exploration, and analysis.
 It turns observed data behavior into approved, metadata-backed DQ rules for engineering enforcement.
 

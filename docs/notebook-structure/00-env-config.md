@@ -1,5 +1,13 @@
 # `00_env_config`
 
+## Reader quick map
+
+- **Purpose:** `00_env_config` keeps this stage boundary clear and auditable.
+- **Reads:** Environment settings, workspace and storage targets, optional policy defaults.
+- **Writes:** Resolved framework configuration and startup validation evidence for downstream notebooks.
+- **When it runs:** Before 01/02/03/04 in each workspace/environment.
+- **Related function groups:** `config`, `fabric_input_output`
+
 Use this page to understand the purpose and segment flow of this notebook template. Each segment shows the typical callables commonly used there.
 
 Shared environment bootstrap and validation before exploration or pipeline notebooks run.

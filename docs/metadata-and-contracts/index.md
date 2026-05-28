@@ -1,66 +1,80 @@
 # Metadata & Contracts
 
-A data contract in FabricOps Starter Kit is an **operational agreement** across people, notebooks, and controls—not just a YAML file or a schema snapshot.
+FabricOps Starter Kit treats a data contract as an **operational agreement backed by evidence**.
 
-FabricOps assembles the contract from **approved metadata evidence** captured through the notebook lifecycle.
+The contract is assembled from approved metadata generated across the notebook flow, not hand-written once and forgotten.
 
 <figure markdown>
   ![Data contract model showing metadata evidence from agreement, exploration, pipeline, and governance combined into an operational contract](../assets/data-contract.png){ .full-width }
-  <figcaption>The contract is assembled from approved evidence, so policy, quality, and implementation stay synchronized.</figcaption>
+  <figcaption>Contract assembly connects business intent, technical evidence, and governed runtime controls.</figcaption>
 </figure>
 
-## What contract evidence includes
+## What the contract is
 
-The assembled contract can include:
+The contract is the governed answer to five practical questions:
 
-- agreement metadata and business intent
-- profiling evidence and discovery findings
-- approved data quality (DQ) rules
-- schema snapshots
+1. What dataset and scope are approved?
+2. What quality and governance rules are approved?
+3. How is data transformed and enforced at runtime?
+4. What evidence proves compliance and execution outcomes?
+5. Who approved what, and when?
+
+## What evidence feeds the contract
+
+Approved evidence typically includes:
+
+- agreement intent, ownership, and usage constraints
+- profiling and schema evidence
+- approved DQ rules and deactivation history
 - lineage and transformation evidence
-- governance approvals and classifications
-- run summaries and enforcement outcomes
-- drift guardrails and monitoring signals
-- steward decisions and review history
+- governance classifications and access context
+- enforcement outcomes, drift signals, and run summaries
 
-## Ownership across the notebook lifecycle
+## Notebook ownership of evidence
 
-- **`01_da` owns agreement/business intent** (purpose, scope, ownership, allowed use).
-- **`02_ex` owns profiling/discovery and DQ rule proposal + approval flow**.
-- **`03_pc` owns deterministic pipeline enforcement and run evidence**.
-- **`04_gov` owns ongoing governance/classification/access review**.
+| Notebook | Owns | Typical metadata outputs |
+| --- | --- | --- |
+| `01_da` | Agreement intent and accountability | Agreement identity, scope, owners, approved usage |
+| `02_ex` | Profiling evidence and DQ approval loop | Profiles, candidate rules, approved DQ rules |
+| `03_pc` | Deterministic pipeline enforcement | Enforcement results, run evidence, lineage, drift evidence |
+| `04_gov` | Governance review and policy metadata | Classification, sensitivity/PII, governance approvals |
 
-This separation keeps roles clear while preserving a single governed contract story.
+For notebook implementation boundaries, use [Notebook Structure](../notebook-structure.md).
 
 ## Where enforcement happens
 
-Contract enforcement is primarily executed in **`03_pc` notebooks**:
+Deterministic contract enforcement happens in **`03_pc` notebooks**:
 
-- load approved metadata and approved DQ rules
-- run deterministic transformations
-- enforce rules and record results
-- write run evidence for downstream governance and incident response
+- load approved metadata and approved rules
+- run transformations and checks
+- enforce DQ and governance controls
+- persist run evidence for auditability and handover
 
-## AI, human approval, and pipeline enforcement
+## Metadata tables and roles
 
-FabricOps follows a practical control model:
+| Table | Primary owner | What it captures |
+| --- | --- | --- |
+| `contracts` | Governance steward | Agreement scope, usage constraints, accountability context |
+| `contract_columns` | Governance + analysts | Column semantics, classification context, sensitivity context |
+| `contract_rules` | Analysts/stewards (approved), engineering (enforced) | Approved DQ and operational rules |
+| `quality_results` | Engineering | Deterministic enforcement outcomes and quarantine evidence |
+| `lineage_records` | Engineering | Source-to-target and transformation evidence per run |
 
-- **AI suggests** candidate rules and insights
-- **Humans approve** what becomes governed policy
-- **Pipelines enforce** approved policy deterministically
+## AI, human approval, deterministic enforcement
+
+FabricOps follows one control model throughout:
+
+- **AI suggests** rules, context, and draft metadata.
+- **Humans approve** what becomes governed policy.
+- **Pipelines enforce** only approved policy deterministically.
 
 <figure markdown>
   ![Data quality workflow with AI suggestions, human review, approval, and deterministic enforcement in pipelines](../assets/DQ-with-ai.png){ .full-width }
-  <figcaption>AI speeds drafting and triage, but only human-approved rules become enforceable runtime controls.</figcaption>
+  <figcaption>AI accelerates drafting; human approval governs policy; deterministic pipelines enforce it.</figcaption>
 </figure>
 
-## Contracts as change-management artifacts
+## Related pages
 
-Data contracts are also change-management artifacts for:
-
-- schema change planning and drift handling
-- ownership and steward accountability
-- consumer impact assessment
-- incident handling and auditability
-
-Use this page for the evidence and enforcement narrative. For notebook-level implementation boundaries, see [Notebook Structure](../notebook-structure.md). For callable details, see the generated [Function Reference](../reference/index.md).
+- [Workflow Operating Model](../lifecycle-operating-model.md)
+- [Data Quality Rules System](../data-quality-rules-system.md)
+- [Function Reference](../reference/index.md)

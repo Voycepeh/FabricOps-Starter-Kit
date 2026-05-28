@@ -1,5 +1,13 @@
 # `04_gov_<agreement>_<dataset>_<table>`
 
+## Reader quick map
+
+- **Purpose:** `04_gov_<agreement>_<dataset>_<table>` keeps this stage boundary clear and auditable.
+- **Reads:** Governed outputs from `03_pc` and governance review context.
+- **Writes:** Approved governance metadata and review evidence used downstream.
+- **When it runs:** After relevant `03_pc` outputs are available and during governance review cycles.
+- **Related function groups:** `business_context`, `data_governance`, `metadata`
+
 `04_gov_<agreement>_<dataset>_<table>` is the governance operations notebook.
 It reviews tables produced by `03_pc` and writes approved governance metadata for enforcement and downstream use.
 
