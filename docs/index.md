@@ -1,18 +1,8 @@
 # FabricOps Starter Kit
 
-This page explains: what the starter kit is and how to get productive quickly.
-Use this when: you want the fastest path from first visit to first successful notebook run.
-Next read: [Install](install.md), [Templates](notebook-structure.md), [Start](quick-start.md), [Deploy](deployment-and-promotion.md).
+A lightweight Microsoft Fabric notebook starter kit for governed, AI-assisted data delivery.
 
-<div class="home-hero">
-Lightweight Fabric notebook starter kit for governed, AI assisted data delivery.
-</div>
-
-FabricOps Starter Kit helps teams quickly bootstrap governed Fabric notebook delivery using reusable templates and a lightweight helper wheel.
-
-No heavy orchestration platform required.
-
-It is **lightweight, notebook centric, and plug and play**: install a **reusable helper wheel**, copy **notebook templates**, run stages, and generate **contract ready evidence** with **AI assisted** suggestions and **human approved** controls.
+FabricOps Starter Kit helps teams start with notebooks, keep control decisions human-approved, and produce reusable handover evidence without adopting a heavy orchestration platform.
 
 <div class="home-cta" markdown="1">
 
@@ -22,28 +12,31 @@ It is **lightweight, notebook centric, and plug and play**: install a **reusable
 </div>
 
 <figure markdown>
-  ![Product overview diagram of FabricOps Starter Kit flow from install to templates, notebook execution, evidence, and deployment readiness](assets/mvp-flow.png){ .full-width }
-  <figcaption>Install wheel → copy templates → run notebooks → review generated evidence → deploy later.</figcaption>
+  ![How to use FabricOps Starter Kit: install the helper wheel, copy templates, configure the environment, run notebooks, and review metadata, quality, lineage, and contract evidence](assets/how-to-use-starter-kit.png){ .full-width }
+  <figcaption>Install the helper wheel, copy the notebook templates, configure your environment, run the notebooks in sequence, and review the generated evidence.</figcaption>
 </figure>
 
 ## Product at a glance
 
-| Feature | Why it matters |
+| Outcome | What the kit gives you |
 | --- | --- |
-| Notebook centric | Your team works directly in Fabric notebooks, not a heavy orchestration platform. |
-| Plug and play templates | Copy stage templates and adapt them to your workspace quickly. |
-| Reusable helper wheel | Shared helpers keep notebook logic consistent and easier to maintain. |
-| Contract ready evidence | Metadata, quality, lineage, and governance evidence is produced as execution runs. |
+| Start quickly in Fabric | Notebook-first templates you can copy, adapt, and run in sequence. |
+| Keep implementation consistent | A reusable helper wheel for shared setup, metadata, quality, lineage, and handover logic. |
+| Use AI with guardrails | AI-assisted suggestions are captured as inputs for human review, approval, and override. |
+| Hand over with evidence | Runs produce metadata, DQ, lineage, and contract-ready artifacts that support governed delivery. |
 
-## Next actions
+## When to use it
 
-- **Primary:** [Start Using Templates](quick-start.md)
-- **Primary:** [Install Wheel](install.md)
-- **Secondary:** [Workflow](lifecycle-operating-model.md) · [Govern](metadata-and-contracts/index.md) · [API](reference/index.md)
+- You want the fastest path from first visit to first successful Fabric notebook run.
+- You want governed delivery without adopting a heavy orchestration platform.
+- You want reusable evidence for metadata, DQ, lineage, and handover.
 
+## What to do first
 
-## Get the kit
+1. [Install the helper wheel](install.md).
+2. [Copy the notebook templates](quick-start.md).
+3. Configure your environment.
+4. Run the notebooks in order.
+5. Review the generated evidence.
 
-- [Download/build wheel](install.md)
-- [Copy templates](notebook-structure.md)
-- [Open quick start](quick-start.md)
+Read next: [Templates](notebook-structure.md) · [Workflow](lifecycle-operating-model.md) · [Governance evidence](metadata-and-contracts/index.md) · [API](reference/index.md)
