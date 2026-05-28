@@ -1,79 +1,105 @@
-# Quick Start
+# Quick Start: From High-Level Definition to Governed Data
 
-Use this page to run FabricOps Starter Kit in Microsoft Fabric with a clear, governed path from setup through handover.
+FabricOps Starter Kit uses a Fabric-first notebook workflow where each notebook updates framework metadata tables. The metadata-backed data contract is assembled from approved metadata evidence across the workflow—it is not hand-written first.
 
-For the visual front door, start on the [Homepage](index.md).
+```mermaid
+flowchart LR
+    A[01_agreement_*\nHigh-Level Definition] --> B[02_ex_*\nData Analysis & Profiling]
+    B --> C[03_pc_*\nTransform & Enforce]
+    C --> D[04_gov_*\nTable/Column Governance]
+    A --> E[Metadata-Backed\nAssembled Data Contract]
+    B --> E
+    C --> E
+    D --> E
+```
 
-## Path at a glance
+## Before the four notebooks (`00_env_config`)
 
-`install → configure environment → define agreement → explore/profile → approve metadata and DQ → create pipeline contract → handover`
+Start with `00_env_config` to set reusable environment settings (Lakehouse/Warehouse references, schemas, and metadata routing) once, then reuse them across all notebook layers.
 
-## Workflow sequence
+## Four-notebook flow (core model)
+
+- **`01_agreement_*` = High-Level Definition**
+- **`02_ex_*` = Data Analysis & Profiling**
+- **`03_pc_*` = Transform & Enforce**
+- **`04_gov_*` = Table/Column Governance**
+- **Assembled data contract** = built from all four layers using approved metadata evidence
+
+## What each notebook contributes
+
+### `01_agreement_*` contributes
+
+- agreement/domain metadata
+- purpose and scope
+- owners and stewards
+- usage agreements
+- access restrictions
+- initial classifications
+
+### `02_ex_*` contributes
+
+- schema and column evidence
+- profiling statistics
+- quality observations
+- patterns and anomalies
+- proposed DQ rules
+- AI-assisted insights
+
+### `03_pc_*` contributes
+
+- source-to-target processing
+- transformation summary
+- lineage
+- DQ validation and enforcement results
+- curated output expectations
+- SLA / refresh expectations
+
+### `04_gov_*` contributes
+
+- sensitivity/classification updates
+- access and usage policy maintenance
+- drift and data quality monitoring
+- governance review evidence
+- compliance updates
+
+> `03_pc_*` enforces operational rules and expectations. `04_gov_*` monitors outcomes and maintains governance continuously.
+
+## Contract assembly from approved metadata evidence
 
 ```mermaid
 flowchart TD
-    A[Install package in Fabric] -->
-    B[00_env_config\nShared runtime + metadata target]
-    B --> C[01_da_<agreement>\nAgreement, ownership, approvals]
-    C --> D[02_ex_<agreement>_<topic>\nExplore, profile, metadata + DQ evidence]
-    D --> E[03_pc_<agreement>_<pipeline>\nApproved metadata and pipeline contract]
-    E --> F[04_gov_<agreement>_<dataset>_<table>\nHandover and governance evidence]
+    A[Agreement metadata evidence] --> Z[Assembled data contract]
+    B[Analysis & profiling evidence] --> Z
+    C[Pipeline enforcement evidence] --> Z
+    D[Governance monitoring evidence] --> Z
 ```
 
-## Step 1 — Install in Fabric
+## What the assembled data contract contains
 
-Install the wheel in your Fabric environment and confirm runtime dependencies.
+- domain and ownership
+- data assets
+- schema and columns
+- DQ rules and expectations
+- lineage and sources
+- stewards and responsibilities
+- classifications and sensitivity
+- access and usage
+- policies and agreements
+- SLA / refresh expectations
+- monitoring and drift evidence
 
-- [Run in Fabric](setup/run-in-fabric.md)
+
+## Framework metadata tables
+
+- **Agreement Metadata** — purpose, scope, ownership, stewards, usage agreements, access constraints.
+- **Analysis Metadata** — schema evidence, profiling stats, quality observations, anomalies, proposed rules.
+- **Lineage & Processing Metadata** — transformations, source-to-target lineage, validation/enforcement outcomes, refresh expectations.
+- **Governance Metadata** — classifications, policy updates, monitoring signals, drift findings, governance review evidence.
+
+## Setup and navigation
+
 - [Create Wheel](setup/create-wheel.md)
-
-## Step 2 — Configure environment (`00_env_config`)
-
-Set shared runtime configuration, metadata target routing, and reusable paths before downstream notebooks.
-
-- [Notebook Structure: `00_env_config`](notebook-structure/00-env-config.md)
-- [Workflow lifecycle](lifecycle-operating-model.md)
-
-## Step 3 — Define agreement (`01_da_<agreement>`)
-
-Capture business scope, ownership, usage boundaries, and approvals before technical implementation.
-
-- [Notebook Structure: `01_da`](notebook-structure/01-data-sharing-agreement.md)
-- [Workflow lifecycle](lifecycle-operating-model.md)
-
-## Step 4 — Explore and profile (`02_ex_<agreement>_<topic>`)
-
-Profile source data, draft metadata context, and prepare evidence for review and approval.
-
-- [Notebook Structure: `02_ex`](notebook-structure/02-exploration.md)
-- [Metadata and contracts](api/modules/data_contract.md)
-- [Quality helpers](api/modules/data_quality.md)
-
-## Step 5 — Approve metadata and create pipeline contract (`03_pc_<agreement>_<pipeline>`)
-
-Promote approved metadata and data quality decisions into repeatable, operational pipeline logic.
-
-- [Notebook Structure: `03_pc`](notebook-structure/03-pipeline-contract.md)
-- [Metadata and contracts](api/modules/data_contract.md)
-- [Function Reference](reference/index.md)
-
-## Step 6 — Handover and governance evidence (`04_gov_<agreement>_<dataset>_<table>`)
-
-Produce governance outputs and handover-ready evidence for operational ownership.
-
-- [Notebook Structure: `04_gov`](notebook-structure/04-governance-operations.md)
-- [Workflow lifecycle](lifecycle-operating-model.md)
-- [Function Reference](reference/index.md)
-
-## Repository starter examples
-
-Notebook starter examples still exist in the repository under `templates/notebooks/` for local reference, but Quick Start navigation intentionally points to documentation pages under the published site.
-
-## Go next
-
-- [Workflow lifecycle operating model](lifecycle-operating-model.md)
+- [Run in Fabric](setup/run-in-fabric.md)
 - [Notebook Structure](notebook-structure.md)
-- [Run in Fabric](setup/run-in-fabric.md)
-- [Create Wheel](setup/create-wheel.md)
+- [Metadata and Contracts](api/modules/data_contract.md)
 - [Function Reference](reference/index.md)
-- [Metadata and contracts](api/modules/data_contract.md)
