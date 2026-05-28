@@ -25,21 +25,18 @@ FabricOps Starter Kit helps teams start with notebooks, keep control decisions h
 | Use AI with guardrails | AI-assisted suggestions are captured as inputs for human review, approval, and override. |
 | Hand over with evidence | Runs produce metadata, DQ, lineage, and contract-ready artifacts that support governed delivery. |
 
-## Who it is for
+## When to use it
 
-- Fabric teams that want a lightweight, notebook-first operating pattern.
-- Data engineers and analysts who need reusable templates instead of one-off notebooks.
-- Governance reviewers who need visible controls, evidence, and handover context.
-- Junior engineers who benefit from a guided sequence and documented outputs.
+- You want the fastest path from first visit to first successful Fabric notebook run.
+- You want governed delivery without adopting a heavy orchestration platform.
+- You want reusable evidence for metadata, DQ, lineage, and handover.
 
 ## What to do first
 
-1. [Install the helper wheel](install.md) in your Fabric environment.
-2. [Start using templates](quick-start.md) by copying the notebook sequence.
-3. Configure environment paths, then run the notebooks in order.
-4. Review the generated metadata, DQ, lineage, and contract-ready evidence.
+1. [Install the helper wheel](install.md).
+2. [Copy the notebook templates](quick-start.md).
+3. Configure your environment.
+4. Run the notebooks in order.
+5. Review the generated evidence.
 
-## Next actions
-
-- **Primary:** [Start Using Templates](quick-start.md) or [Install Wheel](install.md).
-- **Learn the workflow:** [Templates](notebook-structure.md) · [Workflow](lifecycle-operating-model.md) · [Governance evidence](metadata-and-contracts/index.md).
+Read next: [Templates](notebook-structure.md) · [Workflow](lifecycle-operating-model.md) · [Governance evidence](metadata-and-contracts/index.md) · [API](reference/index.md)
