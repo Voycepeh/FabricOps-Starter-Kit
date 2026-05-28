@@ -7,8 +7,9 @@ Use this page to get from zero to a first FabricOps Starter Kit run in Microsoft
 1. **Install the wheel** in a Fabric Environment.
    - **Expected result:** notebooks can import `fabricops_kit`.
    - **Docs:** [Fabric Wheel Install](install.md)
-2. **Copy the notebook templates** into your Fabric workspace.
-   - **Expected result:** you have a working `00_env_config`, agreement, exploration, pipeline, and governance notebook set.
+2. **Download the notebook templates** from the GitHub templates folder and copy them into your Fabric workspace.
+   - **Expected result:** you have the `00_env_config`, agreement, exploration, pipeline, and governance notebooks ready to edit in Fabric.
+   - **Download:** [Notebook templates](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks)
    - **Docs:** [Notebook Structure](notebook-structure.md)
 3. **Open Microsoft Fabric and attach the Environment** to the copied notebooks.
    - **Expected result:** each notebook runs with the same installed helper wheel and runtime configuration.
