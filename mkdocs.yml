@@ -20,6 +20,9 @@ nav:
   - Home: index.md
   - Quick Start: quick-start.md
   - Workflow Operating Model: lifecycle-operating-model.md
+  - Governance & Contracts:
+      - Metadata & Contracts: metadata-and-contracts/index.md
+      - Data Quality Rules System: data-quality-rules-system.md
   - Setup:
       - Create Wheel: setup/create-wheel.md
       - Run in Fabric: setup/run-in-fabric.md
