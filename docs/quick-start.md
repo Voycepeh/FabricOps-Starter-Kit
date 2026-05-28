@@ -61,7 +61,7 @@ Promote approved metadata and data quality decisions into repeatable, operationa
 
 Produce governance outputs and handover-ready evidence for operational ownership.
 
-- [Notebook Structure: `04_gov`](notebook-structure/04-governance-enrichment.md)
+- [Notebook Structure: `04_gov`](notebook-structure/04-governance-operations.md)
 - [Workflow lifecycle](lifecycle-operating-model.md)
 - [Function Reference](reference/index.md)
 
