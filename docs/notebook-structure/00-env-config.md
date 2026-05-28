@@ -1,86 +1,119 @@
-# `00_env_config`
+# `00_env_config` runbook
 
-## Reader quick map
+## 1. Purpose
 
-- **Purpose:** `00_env_config` keeps this stage boundary clear and auditable.
-- **Reads:** Environment settings, workspace and storage targets, optional policy defaults.
-- **Writes:** Resolved framework configuration and startup validation evidence for downstream notebooks.
-- **When it runs:** Before 01/02/03/04 in each workspace/environment.
-- **Related function groups:** `config`, `fabric_input_output`
+`00_env_config` is the **workspace/environment bootstrap notebook** for FabricOps Starter Kit. It is the first plug-and-play validation checkpoint.
 
-Use this page to understand the purpose and segment flow of this notebook template. Each segment shows the typical callables commonly used there.
-
-Shared environment bootstrap and validation before exploration or pipeline notebooks run.
+Use this notebook only to validate workspace/environment wiring:
+- Fabric environment + wheel availability,
+- environment-level settings,
+- Fabric item mappings,
+- shared `CONFIG` creation and startup checks.
 
 > <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/00_env_config.ipynb">Open template notebook</a>
 
-> `00_env_config` is shared setup.
+## 2. When to run this notebook
 
-## Segment 1: Explain the shared environment role
+Run `00_env_config`:
+- during first-time workspace setup,
+- after changing the attached Fabric environment or uploaded wheel,
+- before running any `01_da_`, `02_ex_`, `03_pc_`, or `04_gov_` notebook,
+- when troubleshooting bootstrap/config issues.
 
-Describe what this shared config notebook sets up and what downstream exploration or pipeline notebooks depend on.
+## 3. Expected Fabric workspace setup
 
-## Segment 2: Define environment targets and notebook policy
+Before execution, confirm your workspace has:
+- the `00_env_config` notebook,
+- a Fabric environment (tested with `FabricOps_V1.0.0`),
+- mapped Fabric items for the target environment (example: `dev_source`, `dev_unified`, `dev_product`, `gov_metadata`).
 
-<table class="reference-function-table notebook-structure-function-table">
-  <thead>
-    <tr>
-      <th>Callable</th>
-      <th>Module</th>
-      <th>Why it is commonly used here</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td data-label="Callable"><a href="../../api/reference/FabricStore/"><code>FabricStore</code></a></td>
-      <td data-label="Module"><a class="reference-module-link" href="../../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a></td>
-      <td data-label="Why it is commonly used here">Fabric lakehouse or warehouse connection details.</td>
-    </tr>
-    <tr>
-      <td data-label="Callable"><a href="../../api/reference/load_config/"><code>load_config</code></a></td>
-      <td data-label="Module"><a class="reference-module-link" href="../../api/modules/config/" title="Open config module page" aria-label="Open config module page">config</a></td>
-      <td data-label="Why it is commonly used here">Validate and return a user-supplied framework configuration.</td>
-    </tr>
-  </tbody>
-</table>
+![Fabric workspace showing notebooks, environment, metadata, source, unified, and product items](../assets/00_config_workspace.png)
+*Caption: Example workspace layout expected before running `00_env_config`.*
 
-## Segment 3: Set AI, quality, governance, and lineage defaults
+## 4. Step 1 — Attach the FabricOps environment
 
-## Segment 4: Assemble and validate framework config
+1. Open `00_env_config` in Microsoft Fabric.
+2. Attach `FabricOps_V1.0.0`.
+3. Restart the notebook session if Fabric prompts for it.
 
-<table class="reference-function-table notebook-structure-function-table">
-  <thead>
-    <tr>
-      <th>Callable</th>
-      <th>Module</th>
-      <th>Why it is commonly used here</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td data-label="Callable"><a href="../../api/reference/load_config/"><code>load_config</code></a></td>
-      <td data-label="Module"><a class="reference-module-link" href="../../api/modules/config/" title="Open config module page" aria-label="Open config module page">config</a></td>
-      <td data-label="Why it is commonly used here">Validate and return a user-supplied framework configuration.</td>
-    </tr>
-  </tbody>
-</table>
+Expected result: notebook kernel runs with the environment that includes the uploaded FabricOps wheel.
 
-## Segment 5: Run startup checks and show resolved paths
+![Notebook attached to FabricOps_V1.0.0 environment](../assets/00_config_setup.png)
+*Caption: Environment attachment and setup context in the notebook.*
 
-<table class="reference-function-table notebook-structure-function-table">
-  <thead>
-    <tr>
-      <th>Callable</th>
-      <th>Module</th>
-      <th>Why it is commonly used here</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td data-label="Callable"><a href="../../api/reference/setup_notebook/"><code>setup_notebook</code></a></td>
-      <td data-label="Module"><a class="reference-module-link" href="../../api/modules/config/" title="Open config module page" aria-label="Open config module page">config</a></td>
-      <td data-label="Why it is commonly used here">Run consolidated FabricOps startup for exploration and pipeline notebooks.</td>
-    </tr>
-  </tbody>
-</table>
+## 5. Step 2 — Confirm package imports
 
+Run the imports cell for `fabricops_kit` modules.
+
+Expected result: imports succeed from the uploaded wheel (no `ModuleNotFoundError`).
+
+## 6. Step 3 — Set environment values
+
+Set the environment-level values:
+- `ENV = "dev"`
+- `VALIDATION_MODE = "warn"`
+- `NOTEBOOK_PREFIXES = ("00_env_config", "01_da_", "02_ex_", "03_pc_", "04_gov_")`
+
+Expected result: runtime values reflect your workspace policy and notebook naming pattern.
+
+## 7. Step 4 — Map Fabric items
+
+Set `ENV_PATHS` to map runtime targets. Tested mapping:
+- `source` target = `dev_source` lakehouse
+- `unified` target = `dev_unified` lakehouse
+- `product` target = `dev_product` warehouse
+- `metadata` target = `gov_metadata` lakehouse
+
+Expected result: all required targets are mapped once and by role.
+
+![ENV_PATHS mapping cell for source, unified, product, and metadata targets](../assets/00_config_paths.png)
+*Caption: Example `ENV_PATHS` mapping used in the validated run.*
+
+## 8. Step 5 — Load framework config
+
+Create `CONFIG` through `FrameworkConfig`, then run `setup_notebook`.
+
+Expected result: shared configuration initializes and startup validation succeeds.
+
+## 9. Step 6 — Validate notebook naming
+
+Run notebook naming validation (for example, `check_naming_convention`) for notebook name `00_env_config`.
+
+Expected result: check returns **comply** with configured prefixes.
+
+## 10. Step 7 — Confirm successful bootstrap
+
+Confirm the final output includes:
+- `FabricOps environment bootstrap ready`
+- `env: dev`
+- `validation mode: warn`
+- `source target: dev_source`
+- `metadata target: gov_metadata`
+
+![Final successful bootstrap output in notebook results](../assets/00_config_output.png)
+*Caption: Successful bootstrap output for the tested `dev` run.*
+
+## 11. Pass criteria
+
+Treat the run as pass only when all checks complete:
+- `FabricOps_V1.0.0` is attached,
+- `fabricops_kit` imports succeed from the uploaded wheel,
+- `ENV = "dev"` and `VALIDATION_MODE = "warn"` are set,
+- `NOTEBOOK_PREFIXES = ("00_env_config", "01_da_", "02_ex_", "03_pc_", "04_gov_")` is applied,
+- target mapping includes `source target = dev_source` and `metadata target = gov_metadata`,
+- naming convention check returns comply,
+- final output prints `FabricOps environment bootstrap ready`.
+
+## 12. What not to put in this notebook
+
+`00_env_config` should contain **only workspace/environment-level settings**.
+
+Do not put domain execution logic here:
+- agreement-specific metadata belongs in `01_da_` notebooks,
+- dataset exploration belongs in `02_ex_` notebooks,
+- executable pipeline contract logic belongs in `03_pc_` notebooks,
+- governance mapping/consolidation belongs in `04_gov_` notebooks.
+
+## 13. Next notebook: `01_da_agreement_template`
+
+After this bootstrap passes, continue to `01_da_agreement_template`.
