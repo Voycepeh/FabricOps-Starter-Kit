@@ -101,5 +101,5 @@ flowchart TD
 - [Create Wheel](setup/create-wheel.md)
 - [Run in Fabric](setup/run-in-fabric.md)
 - [Notebook Structure](notebook-structure.md)
-- [Metadata and Contracts](api/modules/data_contract.md)
+- [Metadata and Contracts](metadata-and-contracts/)
 - [Function Reference](reference/index.md)
