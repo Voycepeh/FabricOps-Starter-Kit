@@ -13,6 +13,10 @@ flowchart LR
     D --> E
 ```
 
+## Before the four notebooks (`00_env_config`)
+
+Start with `00_env_config` to set reusable environment settings (Lakehouse/Warehouse references, schemas, and metadata routing) once, then reuse them across all notebook layers.
+
 ## Four-notebook flow (core model)
 
 - **`01_agreement_*` = High-Level Definition**
@@ -83,6 +87,14 @@ flowchart TD
 - policies and agreements
 - SLA / refresh expectations
 - monitoring and drift evidence
+
+
+## Framework metadata tables
+
+- **Agreement Metadata** — purpose, scope, ownership, stewards, usage agreements, access constraints.
+- **Analysis Metadata** — schema evidence, profiling stats, quality observations, anomalies, proposed rules.
+- **Lineage & Processing Metadata** — transformations, source-to-target lineage, validation/enforcement outcomes, refresh expectations.
+- **Governance Metadata** — classifications, policy updates, monitoring signals, drift findings, governance review evidence.
 
 ## Setup and navigation
 
