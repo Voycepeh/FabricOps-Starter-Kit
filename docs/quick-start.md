@@ -1,8 +1,11 @@
-# Start
+# Quick Start
 
-This page explains the first FabricOps Starter Kit run as a short guided story: install the helper wheel, copy the notebook templates, configure the runtime once, then move from agreement context to profiling, approved enforcement, governance evidence, and a metadata-backed contract assembled from the framework metadata tables.
-Use this when: you want to understand the end-to-end journey in under five minutes.
-Next read: [Notebook Structure](notebook-structure.md), [Metadata and Contracts](metadata-and-contracts/index.md), [Workflow](lifecycle-operating-model.md), [Function Reference](reference/index.md), [Fabric Wheel Install](install.md).
+This page walks through your first FabricOps Starter Kit run.
+Use it when you want the shortest path from setup to contract-ready evidence.
+
+The journey is: install the wheel, copy templates, configure `00_env_config`, run the 01/02/03/04 notebooks, then review the metadata-backed contract assembled from approved evidence.
+
+Next read: [Fabric Wheel Install](install.md), [Notebook Structure](notebook-structure.md).
 
 !!! tip "Dominant onboarding path"
     **Install Wheel → Copy Notebook Templates → Configure `00_env_config` → Run 01/02/03/04 notebooks → Review assembled contract evidence → Deploy later**
