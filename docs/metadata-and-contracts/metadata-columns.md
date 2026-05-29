@@ -1,68 +1,184 @@
-# Metadata columns
+# Assembled views
 
-This page describes the column catalogue slice of FabricOps metadata: the row-per-column view that helps humans and export tools understand fields in a governed asset.
+This page describes the agreement-level, table-level, and column-level views assembled from the nine source metadata tables. These views are not source tables. They are reproducible outputs used for dashboarding, handover JSON, ODCS YAML, and OpenMetadata-compatible payloads.
 
-```text
-Separate notebooks.
-Shared metadata evidence.
-Curated decisions plus run observations.
-Assembled handover contract.
-Standards-compatible export.
+The nine metadata tables are governed source evidence. The assembled views join and summarize that evidence at the grains that dashboards and handover exports need. A project may choose to materialize a view later for audit or performance, but the view itself is not a new source metadata table.
+
+```mermaid
+flowchart LR
+    A["9 metadata tables<br/>source evidence"] --> B["VW_COLUMN_CATALOGUE<br/>column-level view"]
+    A --> C["VW_TABLE_CONTRACT_SUMMARY<br/>table-level view"]
+    A --> D["VW_AGREEMENT_CONTRACT_SUMMARY<br/>agreement-level view"]
+
+    B --> E["Dashboard<br/>column catalogue"]
+    C --> F["Dashboard<br/>table health"]
+    D --> G["Dashboard<br/>agreement status"]
+
+    B --> H["Handover JSON<br/>columns section"]
+    C --> I["Handover JSON<br/>tables section"]
+    D --> J["Handover JSON<br/>summary section"]
+
+    H --> K["ODCS YAML"]
+    I --> K
+    J --> K
+
+    H --> L["OpenMetadata payload"]
+    I --> L
+    J --> L
 ```
 
-!!! note "Column catalogue slice"
-    This page documents the column-level catalogue slice of the broader metadata architecture. It is not the full FabricOps metadata model. The full model separates curated human-owned decisions, machine/run observations, assembled views, and handover exports.
+## View overview
 
-    See [Metadata Architecture](metadata-architecture.md) for the full table design.
+| View                            | Grain                                    | Purpose                                                                 |
+| ------------------------------- | ---------------------------------------- | ----------------------------------------------------------------------- |
+| `VW_AGREEMENT_CONTRACT_SUMMARY` | One row per agreement                    | Agreement-level contract status, handover summary, and export readiness |
+| `VW_TABLE_CONTRACT_SUMMARY`     | One row per agreement and table          | Table-level contract health, dashboarding, and handover table section   |
+| `VW_COLUMN_CATALOGUE`           | One row per agreement, table, and column | Column dictionary and column-level export detail                        |
 
-## Purpose
+## View grain and non-overlap rule
 
-The catalogue view is assembled from approved metadata evidence. It should not become a manually maintained source table or a separate spreadsheet that competes with governed evidence.
+The assembled views are separated by grain so they do not become three copies of the same contract. Agreement-level fields stay in the agreement view. Table-level health and evidence stay in the table view. Column-level definitions and rules stay in the column catalogue. Lower-grain views may include parent keys for joining, but they should not repeat parent-level descriptive fields unless needed for export convenience.
 
-FabricOps follows this rule:
+| View | Grain | Owns | Should not own |
+| --- | --- | --- | --- |
+| `VW_AGREEMENT_CONTRACT_SUMMARY` | One row per agreement | Agreement ownership, usage, readiness, overall status, counts | Per-table row counts, per-column descriptions |
+| `VW_TABLE_CONTRACT_SUMMARY` | One row per agreement and table | Table profile, DQ status, drift status, lineage status, table health | Agreement policy text, per-column business definitions |
+| `VW_COLUMN_CATALOGUE` | One row per agreement, table, and column | Column description, data type, classification, rules, examples, missingness | Agreement-level ownership summary, table-level overall health narrative |
 
-```text
-Standalone curated tables = human-owned decisions.
-Collapsed fact/evidence tables = machine/run observations.
-Views and exports = assembled outputs, not source of truth.
-```
+## `VW_AGREEMENT_CONTRACT_SUMMARY`
 
-Agreement, classification, business meaning, and DQ rules are governed decisions. Profiling, drift, DQ execution, lineage, and run results are evidence observations. The final column catalogue is assembled from both.
+**Grain:** One row per `agreement_id`.
 
-## Column catalogue coverage
+**Purpose:** Agreement-level contract status, handover summary, and export readiness.
 
-The catalogue view is assembled from several metadata sources. Column names and data types come from profiling and column identity. Descriptions and units come from business context review. PII and sensitivity come from governance review. Allowed values and business rules come from DQ rules. Missingness, examples, top values, and low-frequency counts come from profile observations.
+**Sources:** All nine metadata tables.
 
-The table below documents the intended output view coverage for FabricOps JSON, ODCS YAML, and OpenMetadata-compatible payloads. It is not a physical source table definition.
+**Example fields:** `agreement_id`, `agreement_name`, `business_domain`, `data_owner`, `data_steward`, `approved_usage`, `agreement_status`, `table_count`, `column_count`, `classified_column_count`, `pii_column_count`, `dq_rule_count`, `latest_dq_status`, `latest_drift_status`, `lineage_coverage_status`, `notebook_count`, `last_evidence_at`, `overall_contract_status`, `can_generate_handover`.
 
-| Field | Purpose | Example value | Status | Notebook template | Function/module | Metadata source | ODCS mapping | OpenMetadata mapping | Enhancement required |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Column Name | Identifies the field in the governed table. | `customer_id` | Collected | `02_ex_*` | `data_profiling.profile_dataframe`; metadata key helpers | `METADATA_COLUMN` or profile evidence using `COLUMN_NAME`; related business/governance/DQ rows use `metadata_column_key`, `column_name`, or `columns` | Schema property name | Table column name | Standardize final catalogue field name in `handover.build_contract_json`. |
-| Description | Explains approved business meaning. | `Unique customer identifier used for matching records.` | Collected | `02_ex_*` | `business_context.review_business_context`, `business_context.write_business_context` | Latest active `METADATA_COLUMN_BUSINESS_CONTEXT` | Schema property description | Column description | Include in final catalogue assembly. |
-| Data Type | Records observed runtime type. | `string` | Collected | `02_ex_*` | `data_profiling.profile_dataframe` | `METADATA_COLUMN.current_data_type` or latest `METADATA_PROFILE_OBSERVATIONS.DATA_TYPE` | Schema property physical/logical type | Column data type | Map Spark/Fabric types to ODCS/OpenMetadata type vocabularies. |
-| Field Classification | Records semantic/governance classification for the field. | `identifier`, `measure`, `confidential` | Partial | `04_gov_*` and governance review in `02_ex_*` | `data_governance.review_governance`, `data_governance.write_governance` | Latest active `METADATA_COLUMN_GOVERNANCE` plus profiling-derived taxonomy | Classification/custom property | Tags, classification, glossary term | Define canonical taxonomy and map governance labels plus profiling hints into final field classification. |
-| Units | Describes measurement unit for numeric/time fields. | `USD`, `days`, `percent` | Planned | Future `02_ex_*` or `04_gov_*` review field | Planned `business_context` enhancement | Planned `METADATA_COLUMN_BUSINESS_CONTEXT.units` | Custom property or schema property metadata | Column custom property or glossary term | Add `units` to business-context review and catalogue assembly. |
-| Allowed Values | Captures finite accepted values, ranges, or patterns. | `['active', 'inactive']` | Partial | `02_ex_*` and `03_pc_*` | `data_quality.draft_dq_rules`, `data_quality.review_dq_rules`, `data_quality.write_dq_rules` | Active `METADATA_DQ_RULES.rule_json` | Quality rule constraints | Data quality test / custom property | Flatten `accepted_values`, `value_range`, and `regex_pattern` into catalogue fields. |
-| Example Values | Shows safe illustrative values for readers. | `active`, `2026-01-31` | Planned | Future `02_ex_*` profiling/review | Planned `data_profiling.profile_dataframe` enhancement | Planned `METADATA_PROFILE_OBSERVATIONS.example_values_json` | Examples/custom property | Column profile sample/custom property | Add masking-aware example value collection. |
-| Top 5 Values | Shows most frequent low-cardinality values. | `active: 920`, `inactive: 80` | Planned | Future `02_ex_*` profiling | Planned `data_profiling.profile_dataframe` enhancement | Planned `METADATA_PROFILE_OBSERVATIONS.top_values_json` | Profiling/statistics extension | Column profile statistics | Add masking-aware top-value aggregation. |
-| Low Frequency Count | Flags rare values below a threshold. | `3 values occur once` | Planned | Future `02_ex_*` profiling | Planned `data_profiling.profile_dataframe` enhancement | Planned `METADATA_PROFILE_OBSERVATIONS.low_frequency_count` | Profiling/statistics extension | Column profile statistics | Define threshold and aggregate rare-value count. |
-| Missing Data | Records null count and percentage. | `NULL_COUNT=12`, `NULL_PERCENT=1.2` | Collected | `02_ex_*` | `data_profiling.profile_dataframe` | Latest `METADATA_PROFILE_OBSERVATIONS.null_count`, `null_percent` | Quality rule/statistics | Column profile statistics / data quality test | Map nullability and missing-rate rules explicitly. |
-| Source/Derivation | Explains source or transformation logic for the column. | `Derived from source status code.` | Partial | `02_ex_*`, `03_pc_*`, `04_gov_*` | `data_lineage`; notebook registry helpers in `metadata` | Business context source-derivation field or `METADATA_LINEAGE_EVENTS` | Lineage/source/custom property | Lineage edge or column custom property | Add approved per-column `source_derivation` review field. |
-| PII/Sensitive | Indicates personal data and sensitivity handling. | `direct_identifier`, `not_pii`, `confidential` | Collected | `04_gov_*` and governance review in `02_ex_*` | `data_governance.review_governance`, `data_governance.write_governance` | Latest active `METADATA_COLUMN_GOVERNANCE` | Classification/custom property | Tags/classification | Define canonical PII/sensitivity taxonomy mapping. |
-| Business Rules | Lists approved quality and policy expectations. | `not_null`, `regex_format`, `severity=error` | Collected | `02_ex_*`, `03_pc_*` | `data_quality.review_dq_rules`, `data_quality.write_dq_rules`, `data_quality.enforce_dq` | Active `METADATA_DQ_RULES` plus runtime `METADATA_DQ_RESULTS` | Quality rules | Tests/test cases | Normalize active rules into final contract JSON and exporters. |
+This view summarizes whether the agreement has enough approved metadata and runtime evidence to generate a useful handover or standards export.
 
-## Collection status legend
+### Output-column mapping
 
-- **Collected**: FabricOps captures the evidence today in an existing notebook/function flow.
-- **Partial**: FabricOps captures related evidence, but the final catalogue field still needs flattening or standard mapping.
-- **Planned**: The field is a documented backlog item and should be added before claiming full catalogue coverage.
+| Output column | Example value | Source table | Source notebook/function | Purpose |
+| --- | --- | --- | --- | --- |
+| `agreement_id` | `lyra_deid_v1` | `METADATA_AGREEMENT` | `01_agreement_*` | Stable contract scope key |
+| `agreement_version` | `1` | `METADATA_AGREEMENT` | `01_agreement_*` | Identifies the approved agreement version |
+| `agreement_name` | `LYRA De-identified Output Agreement` | `METADATA_AGREEMENT` | `01_agreement_*` | Human-readable agreement name |
+| `business_domain` | `Student analytics` | `METADATA_AGREEMENT` | `01_agreement_*` | Business/domain context |
+| `data_owner` | `Registrar Office` | `METADATA_AGREEMENT` | `01_agreement_*` | Accountable owner |
+| `data_steward` | `Analytics Steward` | `METADATA_AGREEMENT` | `01_agreement_*` | Operational steward |
+| `approved_usage` | `Reporting and governed analytics` | `METADATA_AGREEMENT` | `01_agreement_*` | Allowed usage |
+| `access_boundaries` | `Internal approved users only` | `METADATA_AGREEMENT` | `01_agreement_*` | Access constraint summary |
+| `agreement_status` | `approved` | `METADATA_AGREEMENT` | `01_agreement_*` | Current agreement state |
+| `table_count` | `3` | `METADATA_DATA_CATALOGUE` | assembled view aggregation | Number of governed tables under the agreement |
+| `column_count` | `48` | `METADATA_DATA_CATALOGUE` | assembled view aggregation | Number of governed columns under the agreement |
+| `classified_column_count` | `48` | `METADATA_COLUMN_GOVERNANCE` | `04_gov_*` aggregation | Coverage of column classification |
+| `pii_column_count` | `5` | `METADATA_COLUMN_GOVERNANCE` | `04_gov_*` aggregation | PII exposure summary |
+| `dq_rule_count` | `21` | `METADATA_DQ_RULES` | `03_pc_*` aggregation | Number of approved DQ rules |
+| `latest_dq_status` | `passed` | `METADATA_DQ_RESULTS` | `03_pc_*` aggregation | Latest agreement-level DQ status |
+| `latest_drift_status` | `warning` | `METADATA_DRIFT_RESULTS` | `03_pc_*` or `04_gov_*` aggregation | Latest drift status across tables |
+| `lineage_coverage_status` | `complete` | `METADATA_LINEAGE_EVENTS` | `03_pc_*` aggregation | Whether lineage exists for governed tables |
+| `notebook_count` | `5` | `METADATA_NOTEBOOK_REGISTRY` | `register_current_notebook()` aggregation | Number of linked workflow notebooks |
+| `last_evidence_at` | `2026-05-29T10:30:00Z` | multiple tables | assembled max timestamp | Last metadata/evidence update |
+| `overall_contract_status` | `ready` | assembled logic | handover/metadata view logic | Overall readiness status |
+| `can_generate_handover` | `true` | assembled logic | handover/metadata view logic | Whether enough evidence exists for export |
 
-## Catalogue assembly backlog
+## `VW_TABLE_CONTRACT_SUMMARY`
 
-- Add or standardize `metadata.load_column_catalogue_evidence` as the planned loader for profile, business context, governance, DQ rule, lineage, drift, and notebook registry evidence.
-- Add or standardize `handover.build_contract_json` as the planned assembler for the canonical row-per-column catalogue inside the final FabricOps JSON artifact.
-- Add ODCS YAML and OpenMetadata-compatible mappings for the catalogue fields through `handover` export boundaries.
-- Enhance `profile_dataframe` with safe example values, top values, and low-frequency counts before claiming full catalogue coverage.
-- Enhance business context review with optional `units` and `source_derivation` fields.
+**Grain:** One row per `agreement_id`, `table_name`.
 
-The catalogue remains an assembled output. Curated decision tables and run evidence facts remain the source records.
+**Purpose:** Table-level contract health, dashboarding, and handover table section.
+
+**Sources:** `METADATA_AGREEMENT`, `METADATA_DATA_CATALOGUE`, `METADATA_DQ_RULES`, `METADATA_DQ_RESULTS`, `METADATA_DRIFT_RESULTS`, `METADATA_LINEAGE_EVENTS`, and `METADATA_NOTEBOOK_REGISTRY`.
+
+**Example fields:** `agreement_id`, `table_name`, `dataset_name`, `row_count`, `column_count`, `profile_status`, `dq_rule_count`, `latest_dq_status`, `failed_rule_count`, `latest_drift_status`, `lineage_status`, `source_tables`, `target_table`, `last_profiled_at`, `last_validated_at`, `last_drift_checked_at`, `pipeline_notebook_url`, `overall_table_status`.
+
+This view summarizes whether each table has the expected catalogue evidence, approved rules, runtime validation, drift status, lineage evidence, and notebook traceability.
+
+### Output-column mapping
+
+| Output column | Example value | Source table | Source notebook/function | Purpose |
+| --- | --- | --- | --- | --- |
+| `agreement_id` | `lyra_deid_v1` | `METADATA_AGREEMENT` | `01_agreement_*` | Parent agreement key |
+| `dataset_name` | `lyra` | `METADATA_DATA_CATALOGUE` | `02_ex_*` | Dataset or data product name |
+| `table_name` | `res_output_lyra_deid_all_v1` | `METADATA_DATA_CATALOGUE` | `profile_dataframe()` | Governed table name |
+| `metadata_table_key` | hash value | `METADATA_DATA_CATALOGUE` | metadata helper / profiling writer | Stable table join key |
+| `source_system` | `student_records` | `METADATA_DATA_CATALOGUE` or `METADATA_LINEAGE_EVENTS` | `02_ex_*` / `03_pc_*` | Source system summary |
+| `row_count` | `10000` | `METADATA_DATA_CATALOGUE` | `profile_dataframe()` | Latest profiled row count |
+| `column_count` | `48` | `METADATA_DATA_CATALOGUE` | `profile_dataframe()` | Latest profiled column count |
+| `schema_hash` | `a91f...` | `METADATA_DATA_CATALOGUE` | profiling writer | Detects schema change |
+| `profile_status` | `complete` | `METADATA_DATA_CATALOGUE` | `profile_dataframe()` | Whether table profiling completed |
+| `last_profiled_at` | `2026-05-29T09:10:00Z` | `METADATA_DATA_CATALOGUE` | `profile_dataframe()` | Latest profiling timestamp |
+| `dq_rule_count` | `8` | `METADATA_DQ_RULES` | assembled aggregation | Number of active rules for table |
+| `latest_dq_status` | `passed` | `METADATA_DQ_RESULTS` | `enforce_dq()` aggregation | Latest table-level DQ outcome |
+| `failed_rule_count` | `0` | `METADATA_DQ_RESULTS` | `enforce_dq()` aggregation | Number of failed rules in latest run |
+| `latest_drift_status` | `warning` | `METADATA_DRIFT_RESULTS` | drift check aggregation | Latest table drift result |
+| `drift_summary` | `1 new nullable column detected` | `METADATA_DRIFT_RESULTS` | drift check | Human-readable drift summary |
+| `lineage_status` | `provided` | `METADATA_LINEAGE_EVENTS` | lineage capture | Whether lineage evidence exists |
+| `source_tables` | `raw_lyra_students` | `METADATA_LINEAGE_EVENTS` | lineage capture | Upstream table summary |
+| `target_table` | `res_output_lyra_deid_all_v1` | `METADATA_LINEAGE_EVENTS` | lineage capture | Downstream/output table |
+| `pipeline_notebook_url` | Fabric notebook URL | `METADATA_NOTEBOOK_REGISTRY` | `register_current_notebook()` | Link to producing/enforcing notebook |
+| `overall_table_status` | `ready` | assembled logic | handover/metadata view logic | Table-level readiness |
+
+## `VW_COLUMN_CATALOGUE`
+
+**Grain:** One row per `agreement_id`, `table_name`, `column_name`.
+
+**Purpose:** Column dictionary and column-level export detail.
+
+**Sources:** All relevant source tables, especially `METADATA_DATA_CATALOGUE`, `METADATA_COLUMN_BUSINESS_CONTEXT`, `METADATA_COLUMN_GOVERNANCE`, `METADATA_DQ_RULES`, `METADATA_DQ_RESULTS`, `METADATA_DRIFT_RESULTS`, `METADATA_LINEAGE_EVENTS`, `METADATA_NOTEBOOK_REGISTRY`, and `METADATA_AGREEMENT`.
+
+**Example fields:** `agreement_id`, `table_name`, `column_name`, `data_type`, `description`, `units`, `source_derivation`, `field_classification`, `pii_classification`, `confidentiality_label`, `sensitivity_label`, `allowed_values`, `business_rules`, `latest_dq_status`, `latest_drift_status`, `lineage_summary`, `profiled_at`, `approved_by`, `approved_at`, `evidence_notebook_url`.
+
+This view is the column catalogue used by dashboards, data dictionaries, the handover columns section, ODCS schema detail, and OpenMetadata column detail.
+
+### Output-column mapping
+
+| Output column | Example value | Source table | Source notebook/function | Purpose |
+| --- | --- | --- | --- | --- |
+| `agreement_id` | `lyra_deid_v1` | `METADATA_AGREEMENT` | `01_agreement_*` | Parent agreement key |
+| `table_name` | `res_output_lyra_deid_all_v1` | `METADATA_DATA_CATALOGUE` | `profile_dataframe()` | Parent table |
+| `column_name` | `student_id` | `METADATA_DATA_CATALOGUE` | `profile_dataframe()` | Column name |
+| `metadata_column_key` | hash value | `METADATA_DATA_CATALOGUE` / metadata helper | profiling writer | Stable column join key |
+| `ordinal_position` | `1` | `METADATA_DATA_CATALOGUE` | profile/schema enhancement | Column order |
+| `data_type` | `string` | `METADATA_DATA_CATALOGUE` | `profile_dataframe()` | Observed or declared data type |
+| `description` | `Unique de-identified student identifier` | `METADATA_COLUMN_BUSINESS_CONTEXT` | `review_business_context()` / `write_business_context()` | Approved column description |
+| `units` | `days` | `METADATA_COLUMN_BUSINESS_CONTEXT` | `04_gov_*` business review | Unit of measure |
+| `source_derivation` | `Hashed from source student number` | `METADATA_COLUMN_BUSINESS_CONTEXT` / `METADATA_LINEAGE_EVENTS` | `04_gov_*` / lineage capture | Business derivation |
+| `semantic_domain` | `identity` | `METADATA_COLUMN_BUSINESS_CONTEXT` | `04_gov_*` business review | Business grouping |
+| `glossary_term` | `Student Identifier` | `METADATA_COLUMN_BUSINESS_CONTEXT` | `04_gov_*` business review | Business glossary mapping |
+| `field_classification` | `identifier` | `METADATA_COLUMN_GOVERNANCE` | `review_governance()` / `write_governance()` | Field category |
+| `pii_classification` | `de_identified_identifier` | `METADATA_COLUMN_GOVERNANCE` | `review_governance()` / `write_governance()` | PII classification |
+| `confidentiality_label` | `restricted` | `METADATA_COLUMN_GOVERNANCE` | `review_governance()` / `write_governance()` | Confidentiality level |
+| `sensitivity_label` | `high` | `METADATA_COLUMN_GOVERNANCE` | `04_gov_*` governance review | Sensitivity summary |
+| `handling_requirement` | `Do not export outside approved workspace` | `METADATA_COLUMN_GOVERNANCE` | `04_gov_*` governance review | Handling instruction |
+| `allowed_values` | `["active", "inactive"]` | `METADATA_DQ_RULES` | `write_dq_rules()` | Accepted values rule |
+| `business_rules` | `Must not be null; must be unique` | `METADATA_DQ_RULES` | `write_dq_rules()` | Active rules affecting column |
+| `latest_dq_status` | `passed` | `METADATA_DQ_RESULTS` | `enforce_dq()` | Latest rule outcome for column |
+| `null_count` | `0` | `METADATA_DATA_CATALOGUE` | `profile_dataframe()` | Missing data count |
+| `null_percent` | `0.0` | `METADATA_DATA_CATALOGUE` | `profile_dataframe()` | Missing data percentage |
+| `example_values` | `["S001", "S002"]` | `METADATA_DATA_CATALOGUE` | profile enhancement | Example observed values |
+| `top_values` | `[{"value":"active","count":932}]` | `METADATA_DATA_CATALOGUE` | profile enhancement | Most frequent values |
+| `low_frequency_count` | `3` | `METADATA_DATA_CATALOGUE` | profile enhancement | Count of rare values |
+| `latest_drift_status` | `no_change` | `METADATA_DRIFT_RESULTS` | drift check | Latest drift status affecting column/table |
+| `lineage_summary` | `Derived from raw_lyra_students.student_no` | `METADATA_LINEAGE_EVENTS` | lineage capture | Source-to-target trace |
+| `evidence_notebook_url` | Fabric notebook URL | `METADATA_NOTEBOOK_REGISTRY` | `register_current_notebook()` | Link back to evidence notebook |
+
+Some keys repeat across views because they are required for joining and export. Descriptive ownership fields stay in the agreement view, table health fields stay in the table view, and column definitions stay in the column catalogue.
+
+## Handover assembly
+
+The handover JSON is assembled from the three views. The agreement view provides the summary section, the table view provides the table health section, and the column catalogue provides the schema/column section. ODCS YAML and OpenMetadata-compatible payloads are generated from the same assembled views.
+
+Planned function boundaries include:
+
+| Planned boundary | Module | Purpose |
+| --- | --- | --- |
+| `metadata.load_agreement_contract_summary` | `metadata` | Load agreement-level contract status and export readiness evidence. |
+| `metadata.load_table_contract_summary` | `metadata` | Load table-level contract health and handover table evidence. |
+| `metadata.load_column_catalogue` | `metadata` | Load the row-per-column catalogue assembled from profiling, business context, governance, DQ, drift, lineage, and notebook evidence. |
+| `handover.build_contract_json` | `handover` | Build the final FabricOps handover JSON artifact from the assembled views. |
+| `handover.export_odcs_yaml` | `handover` | Render an ODCS YAML export from the assembled views. |
+| `handover.export_openmetadata_payload` | `handover` | Render OpenMetadata-compatible payloads from the assembled views. |
+
+These names are architecture guidance when they are not already available. Do not rename existing production functions to force this shape.
