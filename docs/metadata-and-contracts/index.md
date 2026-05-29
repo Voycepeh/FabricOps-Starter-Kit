@@ -42,7 +42,7 @@ The `01_data_sharing_agreement` notebook captures human-approved agreement metad
 
 `renewal_required` is a simple Yes/No value. `sensitivity_label` is always dropdown-driven and defaults to Public, Confidential, and Restricted unless a custom list is passed. `department` and `source_system` become dropdowns when option lists are supplied; otherwise they remain free text so the framework stays generic. Every committed agreement header, catalogue, and scope record includes `committed_by` and `committed_at`.
 
-This agreement metadata becomes the anchor for later profiling, DQ rules, lineage, and pipeline contract evidence. This page intentionally does not rewrite the full metadata/data-contract story until the `01`, `02`, and `03` collection layers are all in place.
+Notebook users normally call `create_agreement_widgets(...)`, `collect_agreement_metadata(...)`, and `commit_agreement_metadata(...)` for this flow. This agreement metadata becomes the anchor for later profiling, DQ rules, lineage, and pipeline contract evidence. This page intentionally does not rewrite the full metadata/data-contract story until the `01`, `02`, and `03` collection layers are all in place.
 
 ## Source metadata versus assembled views
 

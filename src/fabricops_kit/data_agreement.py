@@ -374,7 +374,7 @@ def create_agreement_widgets(
             _widget_text(widgets, spec["name"], spec["default"])
 
 
-def read_agreement_widget_values() -> dict[str, str]:
+def _read_agreement_widget_values() -> dict[str, str]:
     """Read agreement metadata values from Fabric notebook widgets.
 
     Returns
@@ -411,7 +411,7 @@ def _normalize_optional_date(value: Any, *, field_name: str) -> str:
     return _parse_date(value, field_name=field_name).isoformat()
 
 
-def derive_agreement_status(
+def _derive_agreement_status(
     expiry_date: str,
     *,
     as_of_date: date | str | None = None,
@@ -518,7 +518,7 @@ def _normalise_widget_values(widget_values: dict[str, str]) -> dict[str, str]:
     )
     values["expiry_date"] = _parse_date(values["expiry_date"], field_name="expiry_date").isoformat()
     values["start_date"] = _normalize_optional_date(values.get("start_date"), field_name="start_date")
-    values.update(derive_agreement_status(values["expiry_date"]))
+    values.update(_derive_agreement_status(values["expiry_date"]))
     return values
 
 
@@ -526,7 +526,7 @@ def _select_record_fields(record: dict[str, Any], fields: list[str]) -> dict[str
     return {field: record.get(field, "") for field in fields}
 
 
-def build_agreement_header_record(
+def _build_agreement_header_record(
     widget_values: dict[str, str],
     *,
     committed_by: str | None = None,
@@ -573,7 +573,7 @@ def build_agreement_header_record(
     return _select_record_fields(record, _HEADER_FIELDS)
 
 
-def build_agreement_catalogue_record(
+def _build_agreement_catalogue_record(
     widget_values: dict[str, str],
     *,
     committed_by: str | None = None,
@@ -617,7 +617,7 @@ def build_agreement_catalogue_record(
     return _select_record_fields(record, _CATALOGUE_FIELDS)
 
 
-def build_agreement_scope_record(
+def _build_agreement_scope_record(
     widget_values: dict[str, str],
     *,
     committed_by: str | None = None,
@@ -660,6 +660,83 @@ def build_agreement_scope_record(
     return _select_record_fields(record, _SCOPE_FIELDS)
 
 
+def collect_agreement_metadata(
+    *,
+    widget_values: dict[str, str] | None = None,
+    committed_by: str | None = None,
+    committed_at: datetime | str | None = None,
+    runtime_context: dict[str, str] | None = None,
+) -> dict[str, Any]:
+    """Collect widget values and build audited agreement metadata records.
+
+    Parameters
+    ----------
+    widget_values : dict[str, str] | None, optional
+        Optional pre-read values for tests or scripted use. When omitted,
+        values are read from Fabric notebook widgets.
+    committed_by : str | None, optional
+        Actor identity. When omitted, the Fabric runtime user is used when
+        available, then ``"unknown"``.
+    committed_at : datetime | str | None, optional
+        Shared commit timestamp for all generated records. Defaults to one
+        current UTC timestamp resolved once for this collection.
+    runtime_context : dict[str, str] | None, optional
+        Optional notebook/workspace/lakehouse/run identifiers to copy into all
+        generated records.
+
+    Returns
+    -------
+    dict[str, Any]
+        Dictionary containing ``header_record``, ``catalogue_record``,
+        ``scope_record``, and ``summary``.
+
+    Raises
+    ------
+    RuntimeError
+        If widget values are not supplied and Fabric notebook widgets are
+        unavailable.
+    ValueError
+        If required fields are missing, dates are invalid, or Yes/No fields use
+        another value.
+    """
+    values = widget_values if widget_values is not None else _read_agreement_widget_values()
+    resolved_committed_at = _resolve_committed_at(committed_at)
+    header_record = _build_agreement_header_record(
+        values,
+        committed_by=committed_by,
+        committed_at=resolved_committed_at,
+        runtime_context=runtime_context,
+    )
+    resolved_committed_by = header_record["committed_by"]
+    catalogue_record = _build_agreement_catalogue_record(
+        values,
+        committed_by=resolved_committed_by,
+        committed_at=resolved_committed_at,
+        runtime_context=runtime_context,
+    )
+    scope_record = _build_agreement_scope_record(
+        values,
+        committed_by=resolved_committed_by,
+        committed_at=resolved_committed_at,
+        runtime_context=runtime_context,
+    )
+    summary = {
+        "agreement_id": header_record.get("agreement_id", ""),
+        "agreement_status": header_record.get("agreement_status", ""),
+        "expiry_date": header_record.get("expiry_date", ""),
+        "status_as_of_date": header_record.get("status_as_of_date", ""),
+        "committed_by": header_record.get("committed_by", ""),
+        "committed_at": header_record.get("committed_at", ""),
+        "tables_updated": [],
+    }
+    return {
+        "header_record": header_record,
+        "catalogue_record": catalogue_record,
+        "scope_record": scope_record,
+        "summary": summary,
+    }
+
+
 def _metadata_root(metadata_lakehouse: Any) -> str | None:
     if metadata_lakehouse is None:
         return None
@@ -688,7 +765,8 @@ def _write_record(spark: Any, record: dict[str, Any], table_name: str, *, metada
 def commit_agreement_metadata(
     *,
     spark,
-    header_record: dict[str, Any],
+    agreement_metadata: dict[str, Any] | None = None,
+    header_record: dict[str, Any] | None = None,
     catalogue_record: dict[str, Any] | None = None,
     scope_record: dict[str, Any] | None = None,
     metadata_lakehouse: str | None = None,
@@ -701,12 +779,15 @@ def commit_agreement_metadata(
     ----------
     spark : object
         Active Spark session used to create and write metadata DataFrames.
-    header_record : dict[str, Any]
-        Agreement header record to write.
+    agreement_metadata : dict[str, Any] | None, optional
+        Result returned by :func:`collect_agreement_metadata`. When supplied,
+        its header, catalogue, and scope records are committed together.
+    header_record : dict[str, Any] | None, optional
+        Explicit agreement header record to write for advanced use or tests.
     catalogue_record : dict[str, Any] | None, optional
-        Optional catalogue record to write.
+        Explicit catalogue record to write for advanced use or tests.
     scope_record : dict[str, Any] | None, optional
-        Optional scope record to write.
+        Explicit scope record to write for advanced use or tests.
     metadata_lakehouse : str | None, optional
         Metadata lakehouse root path or ``FabricStore``. Pass
         ``CONFIG.path_config.paths[env_name]["metadata"]`` in Fabric notebooks
@@ -730,8 +811,12 @@ def commit_agreement_metadata(
     configured lakehouse ``Tables/`` path. If omitted, Spark ``saveAsTable`` is
     used for compatibility with attached-lakehouse development scenarios.
     """
+    if agreement_metadata is not None:
+        header_record = agreement_metadata.get("header_record")
+        catalogue_record = agreement_metadata.get("catalogue_record")
+        scope_record = agreement_metadata.get("scope_record")
     if not header_record:
-        raise ValueError("header_record is required.")
+        raise ValueError("agreement_metadata or header_record is required.")
     prefix = _safe_table_prefix(table_prefix)
     table_names = {
         "header": f"{prefix}_AGREEMENT_HEADER" if prefix else "AGREEMENT_HEADER",

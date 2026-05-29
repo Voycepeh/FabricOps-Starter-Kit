@@ -20,13 +20,13 @@ No summary available.
 - Outbound references count: 5
 
 ## Inbound references
-- <a href="../build_agreement_catalogue_record/"><code>fabricops_kit.data_agreement.build_agreement_catalogue_record</code></a>
-- <a href="../build_agreement_header_record/"><code>fabricops_kit.data_agreement.build_agreement_header_record</code></a>
-- <a href="../build_agreement_scope_record/"><code>fabricops_kit.data_agreement.build_agreement_scope_record</code></a>
+- <a href="../internal/data_agreement/_build_agreement_catalogue_record/"><code>fabricops_kit.data_agreement._build_agreement_catalogue_record</code></a>
+- <a href="../internal/data_agreement/_build_agreement_header_record/"><code>fabricops_kit.data_agreement._build_agreement_header_record</code></a>
+- <a href="../internal/data_agreement/_build_agreement_scope_record/"><code>fabricops_kit.data_agreement._build_agreement_scope_record</code></a>
 
 ## Outbound references
+- <a href="../internal/data_agreement/_derive_agreement_status/"><code>fabricops_kit.data_agreement._derive_agreement_status</code></a>
 - <a href="../internal/data_agreement/_normalize_optional_date/"><code>fabricops_kit.data_agreement._normalize_optional_date</code></a>
 - <a href="../internal/data_agreement/_parse_date/"><code>fabricops_kit.data_agreement._parse_date</code></a>
 - <a href="../internal/data_agreement/_require_fields/"><code>fabricops_kit.data_agreement._require_fields</code></a>
 - <a href="../internal/data_agreement/_validate_yes_no/"><code>fabricops_kit.data_agreement._validate_yes_no</code></a>
-- <a href="../derive_agreement_status/"><code>fabricops_kit.data_agreement.derive_agreement_status</code></a>

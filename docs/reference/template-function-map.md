@@ -106,31 +106,10 @@ Captures human-approved data sharing agreement metadata as audited header, catal
       <td>`_agreement_widget_specs`, `_get_fabric_widgets`, `_widget_dropdown`, `_widget_text`</td>
       <td>Check dependency outputs and metadata writes.</td>
     </tr>
-    <tr>
-      <td>`DEFAULT_SENSITIVITY_LABELS`</td>
-      <td>Callable orchestration wrapper</td>
-      <td>Default sensitivity label options used by agreement metadata widgets.</td>
-      <td>—</td>
-      <td>Check dependency outputs and metadata writes.</td>
-    </tr>
-    <tr>
-      <td>`DEFAULT_REFRESH_FREQUENCIES`</td>
-      <td>Callable orchestration wrapper</td>
-      <td>Default dropdown options for agreement refresh frequency metadata.</td>
-      <td>—</td>
-      <td>Check dependency outputs and metadata writes.</td>
-    </tr>
-    <tr>
-      <td>`YES_NO_OPTIONS`</td>
-      <td>Callable orchestration wrapper</td>
-      <td>Canonical Yes/No dropdown options for agreement metadata controls.</td>
-      <td>—</td>
-      <td>Check dependency outputs and metadata writes.</td>
-    </tr>
   </tbody>
 </table>
 
-### Segment 2: Read widget values
+### Segment 2: Collect and preview agreement metadata
 
 <table>
   <thead>
@@ -144,60 +123,16 @@ Captures human-approved data sharing agreement metadata as audited header, catal
   </thead>
   <tbody>
     <tr>
-      <td>`read_agreement_widget_values`</td>
+      <td>`collect_agreement_metadata`</td>
       <td>Callable orchestration wrapper</td>
-      <td>Read agreement metadata values from Fabric notebook widgets.</td>
-      <td>`_get_fabric_widgets`</td>
+      <td>Collect widget values and build audited agreement metadata records.</td>
+      <td>`_build_agreement_catalogue_record`, `_build_agreement_header_record`, `_build_agreement_scope_record`, `_read_agreement_widget_values`, `_resolve_committed_at`</td>
       <td>Check dependency outputs and metadata writes.</td>
     </tr>
   </tbody>
 </table>
 
-### Segment 3: Build audited records
-
-<table>
-  <thead>
-    <tr>
-      <th>Function</th>
-      <th>Role</th>
-      <th>What it does</th>
-      <th>Delegates to</th>
-      <th>Debug when</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>`derive_agreement_status`</td>
-      <td>Callable orchestration wrapper</td>
-      <td>Derive agreement status from an expiry date.</td>
-      <td>`_parse_date`</td>
-      <td>Check dependency outputs and metadata writes.</td>
-    </tr>
-    <tr>
-      <td>`build_agreement_header_record`</td>
-      <td>Callable orchestration wrapper</td>
-      <td>Build an audited agreement header metadata record.</td>
-      <td>`_normalise_widget_values`, `_record_base`, `_select_record_fields`</td>
-      <td>Check dependency outputs and metadata writes.</td>
-    </tr>
-    <tr>
-      <td>`build_agreement_catalogue_record`</td>
-      <td>Callable orchestration wrapper</td>
-      <td>Build an audited agreement catalogue metadata record.</td>
-      <td>`_normalise_widget_values`, `_record_base`, `_select_record_fields`</td>
-      <td>Check dependency outputs and metadata writes.</td>
-    </tr>
-    <tr>
-      <td>`build_agreement_scope_record`</td>
-      <td>Callable orchestration wrapper</td>
-      <td>Build an audited agreement scope metadata record.</td>
-      <td>`_normalise_widget_values`, `_record_base`, `_select_record_fields`</td>
-      <td>Check dependency outputs and metadata writes.</td>
-    </tr>
-  </tbody>
-</table>
-
-### Segment 4: Commit metadata records
+### Segment 3: Commit metadata records
 
 <table>
   <thead>

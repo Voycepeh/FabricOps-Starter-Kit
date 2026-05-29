@@ -20,5 +20,5 @@ No summary available.
 - Outbound references count: 0
 
 ## Inbound references
+- <a href="../internal/data_agreement/_read_agreement_widget_values/"><code>fabricops_kit.data_agreement._read_agreement_widget_values</code></a>
 - <a href="../create_agreement_widgets/"><code>fabricops_kit.data_agreement.create_agreement_widgets</code></a>
-- <a href="../read_agreement_widget_values/"><code>fabricops_kit.data_agreement.read_agreement_widget_values</code></a>

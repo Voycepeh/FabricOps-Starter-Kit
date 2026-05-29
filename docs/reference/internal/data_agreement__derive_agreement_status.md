@@ -1,7 +1,7 @@
-# derive_agreement_status
+# _derive_agreement_status
 
 **Module:** `data_agreement`  
-**Classification:** Essential
+**Classification:** Internal helper
 
 ## Purpose
 
@@ -9,13 +9,13 @@ No summary available.
 
 ## Function manifest
 
-- Fully qualified function name: `fabricops_kit.data_agreement.derive_agreement_status`
-- Short name: `derive_agreement_status`
+- Fully qualified function name: `fabricops_kit.data_agreement._derive_agreement_status`
+- Short name: `_derive_agreement_status`
 - Module: `data_agreement`
-- Classification: Essential
+- Classification: Internal helper
 - Related module: `data_agreement`
 - Source file path: `src/fabricops_kit/data_agreement.py`
-- Source reference: <a href="../../api/modules/data_agreement/#derive_agreement_status">Module source anchor</a>
+- Source reference: <a href="../../api/modules/data_agreement/#_derive_agreement_status">Module source anchor</a>
 - Inbound references count: 1
 - Outbound references count: 1
 

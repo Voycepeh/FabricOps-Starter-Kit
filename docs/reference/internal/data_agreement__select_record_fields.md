@@ -20,6 +20,6 @@ No summary available.
 - Outbound references count: 0
 
 ## Inbound references
-- <a href="../build_agreement_catalogue_record/"><code>fabricops_kit.data_agreement.build_agreement_catalogue_record</code></a>
-- <a href="../build_agreement_header_record/"><code>fabricops_kit.data_agreement.build_agreement_header_record</code></a>
-- <a href="../build_agreement_scope_record/"><code>fabricops_kit.data_agreement.build_agreement_scope_record</code></a>
+- <a href="../internal/data_agreement/_build_agreement_catalogue_record/"><code>fabricops_kit.data_agreement._build_agreement_catalogue_record</code></a>
+- <a href="../internal/data_agreement/_build_agreement_header_record/"><code>fabricops_kit.data_agreement._build_agreement_header_record</code></a>
+- <a href="../internal/data_agreement/_build_agreement_scope_record/"><code>fabricops_kit.data_agreement._build_agreement_scope_record</code></a>

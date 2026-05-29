@@ -15,7 +15,7 @@ It does **not** perform profiling, DQ authoring, lineage capture, or pipeline co
    - Creates widgets for human-entered agreement fields such as agreement identity, steward, department, purpose, source table, allowed outputs, refresh frequency, and commit notes.
    - Does not expose derived fields as widgets.
 3. **Structured record building**
-   - Builds append-friendly records for:
+   - Uses `collect_agreement_metadata(...)` to read widgets, validate inputs, derive status, apply shared audit fields, and build append-friendly records for:
      - `METADATA_AGREEMENT_HEADER`
      - `METADATA_AGREEMENT_CATALOGUE`
      - `METADATA_AGREEMENT_SCOPE`

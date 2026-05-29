@@ -6,11 +6,12 @@ from fabricops_kit.data_agreement import (
     DEFAULT_SENSITIVITY_LABELS,
     YES_NO_OPTIONS,
     _agreement_widget_specs,
-    build_agreement_catalogue_record,
-    build_agreement_header_record,
-    build_agreement_scope_record,
+    _build_agreement_catalogue_record,
+    _build_agreement_header_record,
+    _build_agreement_scope_record,
+    _derive_agreement_status,
+    collect_agreement_metadata,
     commit_agreement_metadata,
-    derive_agreement_status,
 )
 
 
@@ -53,15 +54,15 @@ def _widget_values(**overrides):
 
 
 def test_derive_agreement_status_returns_active_before_or_on_expiry_date():
-    assert derive_agreement_status("2026-01-02", as_of_date="2026-01-01") == {
+    assert _derive_agreement_status("2026-01-02", as_of_date="2026-01-01") == {
         "agreement_status": "Active",
         "status_as_of_date": "2026-01-01",
     }
-    assert derive_agreement_status("2026-01-01", as_of_date="2026-01-01")["agreement_status"] == "Active"
+    assert _derive_agreement_status("2026-01-01", as_of_date="2026-01-01")["agreement_status"] == "Active"
 
 
 def test_derive_agreement_status_returns_inactive_after_expiry_date():
-    assert derive_agreement_status("2025-12-31", as_of_date="2026-01-01") == {
+    assert _derive_agreement_status("2025-12-31", as_of_date="2026-01-01") == {
         "agreement_status": "Inactive",
         "status_as_of_date": "2026-01-01",
     }
@@ -95,12 +96,12 @@ def test_department_and_source_system_dropdown_only_when_options_are_passed():
 
 def test_missing_required_agreement_fields_raise_clear_error():
     with pytest.raises(ValueError, match=r"Missing required agreement field\(s\): agreement_name"):
-        build_agreement_header_record(_widget_values(agreement_name=""))
+        _build_agreement_header_record(_widget_values(agreement_name=""))
 
 
 def test_record_builders_add_committed_by_and_committed_at():
     committed_at = datetime(2026, 1, 1, tzinfo=timezone.utc)
-    record = build_agreement_header_record(
+    record = _build_agreement_header_record(
         _widget_values(),
         committed_by="steward@example.com",
         committed_at=committed_at,
@@ -118,7 +119,7 @@ def test_record_builders_include_computed_status_and_status_as_of_date(monkeypat
     import fabricops_kit.data_agreement as data_agreement
 
     monkeypatch.setattr(data_agreement, "datetime", FixedDatetime)
-    record = build_agreement_header_record(_widget_values(expiry_date="2026-01-01"))
+    record = _build_agreement_header_record(_widget_values(expiry_date="2026-01-01"))
     assert record["agreement_status"] == "Active"
     assert record["status_as_of_date"] == "2026-01-01"
 
@@ -126,24 +127,52 @@ def test_record_builders_include_computed_status_and_status_as_of_date(monkeypat
 def test_renewal_requirement_only_accepts_yes_or_no():
     assert YES_NO_OPTIONS == ["Yes", "No"]
     with pytest.raises(ValueError, match="renewal_required"):
-        build_agreement_header_record(_widget_values(renewal_required="Maybe"))
+        _build_agreement_header_record(_widget_values(renewal_required="Maybe"))
 
 
 def test_invalid_expiry_date_raises_clear_error():
     with pytest.raises(ValueError, match="expiry_date must be a valid date"):
-        build_agreement_header_record(_widget_values(expiry_date="31/12/2026"))
+        _build_agreement_header_record(_widget_values(expiry_date="31/12/2026"))
 
 
 def test_catalogue_and_scope_records_are_audited():
     values = _widget_values()
-    catalogue = build_agreement_catalogue_record(values, committed_by="reviewer")
-    scope = build_agreement_scope_record(values, committed_by="reviewer")
+    catalogue = _build_agreement_catalogue_record(values, committed_by="reviewer")
+    scope = _build_agreement_scope_record(values, committed_by="reviewer")
     assert catalogue["committed_by"] == "reviewer"
     assert catalogue["committed_at"]
     assert catalogue["catalogue_id"] == "agr-001|Source A|orders"
     assert scope["committed_by"] == "reviewer"
     assert scope["committed_at"]
     assert scope["scope_id"] == "agr-001|Reporting team|Dashboard"
+
+
+def test_collect_agreement_metadata_builds_records_with_shared_audit_fields():
+    metadata = collect_agreement_metadata(
+        widget_values=_widget_values(),
+        committed_by="reviewer",
+        committed_at="2026-01-02T03:04:05+00:00",
+        runtime_context={"notebook_name": "01_da_example"},
+    )
+
+    assert set(metadata) == {"header_record", "catalogue_record", "scope_record", "summary"}
+    assert metadata["summary"] == {
+        "agreement_id": "agr-001",
+        "agreement_status": "Active",
+        "expiry_date": "2026-12-31",
+        "status_as_of_date": metadata["header_record"]["status_as_of_date"],
+        "committed_by": "reviewer",
+        "committed_at": "2026-01-02T03:04:05+00:00",
+        "tables_updated": [],
+    }
+    committed_values = {
+        metadata["header_record"]["committed_at"],
+        metadata["catalogue_record"]["committed_at"],
+        metadata["scope_record"]["committed_at"],
+    }
+    assert committed_values == {"2026-01-02T03:04:05+00:00"}
+    assert metadata["catalogue_record"]["committed_by"] == "reviewer"
+    assert metadata["scope_record"]["committed_by"] == "reviewer"
 
 
 class _DummyWriter:
@@ -183,15 +212,15 @@ class _DummySpark:
 
 def test_commit_agreement_metadata_uses_lakehouse_safe_default_table_names():
     spark = _DummySpark()
-    header = {"agreement_id": "agr-001", "agreement_status": "Active"}
-    catalogue = {"agreement_id": "agr-001"}
-    scope = {"agreement_id": "agr-001"}
+    agreement_metadata = {
+        "header_record": {"agreement_id": "agr-001", "agreement_status": "Active"},
+        "catalogue_record": {"agreement_id": "agr-001"},
+        "scope_record": {"agreement_id": "agr-001"},
+    }
 
     summary = commit_agreement_metadata(
         spark=spark,
-        header_record=header,
-        catalogue_record=catalogue,
-        scope_record=scope,
+        agreement_metadata=agreement_metadata,
     )
 
     assert summary["tables_updated"] == [
