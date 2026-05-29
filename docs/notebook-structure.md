@@ -1,50 +1,57 @@
-# Templates
+# Notebook Structure
 
-This page explains: which notebook templates to copy and what each template produces.
-Use this when: you are setting up a plug and play notebook flow in your workspace.
-Next read: [Start](quick-start.md), [Install](install.md), [Govern / Metadata](metadata-and-contracts/index.md).
+Notebook Structure explains how FabricOps organizes Fabric notebooks across governance and execution workspaces.
+Governance stays separate. Execution notebooks consume approved metadata and write evidence.
 
-<div class="home-cta" markdown="1">
+This structure keeps three concerns from being mixed in the same notebook: agreement approval and business context, exploration and profiling, and production pipeline enforcement.
 
-[Copy Notebook Template](notebook-structure/00-env-config.md){ .md-button .md-button--primary }
-[Start Using Templates](quick-start.md){ .md-button }
+![FabricOps workspace model](assets/workspace_model.png)
 
-</div>
+The workspace model shows how governance-owned agreement metadata is kept separate from execution notebooks. The Governance Workspace owns the Governance Metadata Lakehouse, while Execution Workspaces for sandbox, development, test, and production use `00_env_config` to route metadata access and run `02_ex` and `03_pc` notebooks against the Lakehouse / Warehouse Data Store without redefining governance rules locally.
 
-<figure markdown>
-  ![Notebook structure diagram showing the 00 to 04 notebook layers and governance-centered responsibilities](assets/notebook-structure.png){ .full-width }
-  <figcaption>Template-first model: copy stage notebooks, run sequence, and capture contract ready evidence.</figcaption>
-</figure>
+!!! note
+    The diagram shortens `01_data_sharing_agreement_<agreement>` to `01_agreement_<agreement>` for readability.
 
+## What this model means
 
-## Template hero
+The Governance Workspace is where agreement scope, ownership, classifications, policy decisions, and reviewed governance evidence are approved. Its Governance Metadata Lakehouse is the shared source for approved metadata and rules.
 
-| Template | Purpose |
-| --- | --- |
-| `00_env_config` | Environment bootstrap |
-| `01_agreement_*` | Usage approval and ownership |
-| `02_ex_*` | Exploration and profiling |
-| `03_pc_*` | Pipeline and enforcement |
-| `04_gov_*` | Governance evidence |
+Execution Workspaces are where teams configure runtime paths, explore data, and run deterministic pipelines. Sandbox, development, test, and production notebooks reuse approved metadata from governance instead of copying control logic into each workspace.
 
-**Copy → Configure → Run**
+## Notebook roles
 
-## Template cards
-
-| Template | Copy this template when... | Primary owner | Writes/produces |
+| Notebook | Primary owner | Purpose | What belongs here |
 | --- | --- | --- | --- |
-| [`00_env_config`](notebook-structure/00-env-config.md) | You need environment setup and metadata routing before any execution. | Platform/engineering | Validated runtime config and metadata target context. |
-| [`01_agreement_*`](notebook-structure/01-data-sharing-agreement.md) | You are defining agreement scope and ownership. | Data owner + governance | Agreement metadata evidence. |
-| [`02_ex_*`](notebook-structure/02-exploration.md) | You need profiling and AI assisted DQ drafting. | Analyst | Profile evidence and approved DQ rule metadata. |
-| [`03_pc_*`](notebook-structure/03-pipeline-contract.md) | You are implementing deterministic pipeline enforcement. | Engineer | Curated outputs, enforcement evidence, lineage/run records. |
-| [`04_gov_*`](notebook-structure/04-governance-operations.md) | You need human approved governance metadata updates. | Governance steward | Classification/access governance evidence. |
+| `00_env_config` | Platform or engineering | Configure the execution workspace. | Environment names, metadata targets, storage paths, runtime defaults, and validation that notebooks read and write the intended Fabric locations. |
+| `01_data_sharing_agreement_<agreement>` | Data owner and governance | Define approved agreement context. | Agreement scope, owners, consumers, permitted usage, approval status, and business context that governs downstream work. |
+| `02_ex_<agreement>_<topic>` | Analyst or data engineer | Explore and profile source data. | Profiling evidence, metadata proposals, data quality suggestions, classification suggestions, and notes that require review before enforcement. |
+| `03_pc_<agreement>_<pipeline>` | Data engineer | Run deterministic pipeline enforcement. | Approved metadata consumption, pipeline checks, data quality enforcement, curated writes, lineage, run results, and evidence summaries. |
+| `04_gov_<agreement>_<dataset>_<table>` | Governance steward | Review business context and classifications. | Reviewed classifications, policy updates, governance decisions, and evidence that can update the Governance Metadata Lakehouse after human approval. |
 
-## Naming convention
+## How the notebooks work together
 
-```text
-00_env_config
-01_agreement_<name>
-02_ex_<agreement>_<topic>
-03_pc_<agreement>_<pipeline>
-04_gov_<agreement>_<dataset>_<table>
-```
+1. `01_data_sharing_agreement_<agreement>` defines the approved agreement context for a governed data use case.
+2. `00_env_config` configures the execution workspace so notebooks use the correct metadata, lakehouse, warehouse, and runtime paths.
+3. `02_ex_<agreement>_<topic>` explores source data and proposes profiling evidence, metadata, data quality rules, and classification suggestions.
+4. `04_gov_<agreement>_<dataset>_<table>` reviews business context, classifications, policy updates, and governance evidence before metadata changes are promoted.
+5. `03_pc_<agreement>_<pipeline>` consumes approved metadata and enforces deterministic production pipeline rules.
+6. `03_pc_<agreement>_<pipeline>` writes runtime evidence, quality results, lineage, and run summaries. Evidence can feed back into governance metadata after review.
+
+## AI boundary and human approval
+
+AI can suggest classifications, data quality rules, summaries, and metadata. Humans approve governance controls before they become enforceable rules. Production pipeline contracts enforce approved rules only.
+
+## Start from the templates
+
+Use the starter notebook templates from GitHub instead of creating notebooks from scratch. The templates give you the standard FabricOps structure and can be adapted to your agreement, source tables, and pipeline.
+
+[Download notebook templates from GitHub](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks){ .md-button .md-button--primary }
+
+[Read the Quick Start](quick-start.md){ .md-button }
+
+## Related pages
+
+- [Quick Start](quick-start.md)
+- [Workflow](lifecycle-operating-model.md)
+- [Metadata and Data Contract Assembly](metadata-and-contracts/index.md)
+- [Data Quality Rules System](data-quality-rules-system.md)
