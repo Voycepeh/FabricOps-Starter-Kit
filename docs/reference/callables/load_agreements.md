@@ -20,5 +20,5 @@ Load latest distinct agreement metadata rows for widget selection.
 - Outbound references count: 2
 
 ## Outbound references
-- <code>fabricops_kit.data_agreement._coerce_row_dicts</code>
-- <code>fabricops_kit.data_agreement._latest_distinct_agreements</code>
+- <a href="../internal/data_agreement/_coerce_row_dicts/"><code>fabricops_kit.data_agreement._coerce_row_dicts</code></a>
+- <a href="../internal/data_agreement/_latest_distinct_agreements/"><code>fabricops_kit.data_agreement._latest_distinct_agreements</code></a>

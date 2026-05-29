@@ -20,5 +20,5 @@ No summary available.
 - Outbound references count: 2
 
 ## Outbound references
-- <code>fabricops_kit.data_agreement._safe_table_prefix</code>
-- <code>fabricops_kit.data_agreement._write_record</code>
+- <a href="../internal/data_agreement/_safe_table_prefix/"><code>fabricops_kit.data_agreement._safe_table_prefix</code></a>
+- <a href="../internal/data_agreement/_write_record/"><code>fabricops_kit.data_agreement._write_record</code></a>

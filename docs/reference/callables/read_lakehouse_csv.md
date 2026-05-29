@@ -20,5 +20,5 @@ No summary available.
 - Outbound references count: 2
 
 ## Outbound references
-- <code>fabricops_kit.config._get_store</code>
-- <code>fabricops_kit.fabric_input_output._get_spark</code>
+- <a href="../internal/config/_get_store/"><code>fabricops_kit.config._get_store</code></a>
+- <a href="../internal/fabric_input_output/_get_spark/"><code>fabricops_kit.fabric_input_output._get_spark</code></a>

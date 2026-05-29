@@ -20,4 +20,4 @@ No summary available.
 - Outbound references count: 1
 
 ## Outbound references
-- <code>fabricops_kit.data_governance._prepare_governance_input</code>
+- <a href="../internal/data_governance/_prepare_governance_input/"><code>fabricops_kit.data_governance._prepare_governance_input</code></a>

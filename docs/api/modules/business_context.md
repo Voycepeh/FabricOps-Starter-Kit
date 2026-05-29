@@ -83,7 +83,7 @@ Owns business meaning for tables and columns.
       <td>Essential</td>
       <td>function</td>
       <td>Display interactive approval widget.</td>
-      <td><a href="#_require_ipywidgets"><code>_require_ipywidgets</code></a> (internal)</td>
+      <td><a href="../../reference/internal/business_context/_require_ipywidgets/"><code>_require_ipywidgets</code></a> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/write_business_context/"><code>write_business_context</code></a></td>
@@ -97,7 +97,7 @@ Owns business meaning for tables and columns.
       <td>Optional</td>
       <td>function</td>
       <td>Extract review-ready business context suggestion rows from AI responses.</td>
-      <td><a href="#_extract_column_business_context_suggestions"><code>_extract_column_business_context_suggestions</code></a> (internal)</td>
+      <td><a href="../../reference/internal/business_context/_extract_column_business_context_suggestions/"><code>_extract_column_business_context_suggestions</code></a> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/get_reviewed_business_context_rows/"><code>get_reviewed_business_context_rows</code></a></td>
@@ -111,7 +111,7 @@ Owns business meaning for tables and columns.
       <td>Optional</td>
       <td>function</td>
       <td>Prepare profile rows for business context prompt drafting.</td>
-      <td><a href="#_prepare_business_context_profile_input"><code>_prepare_business_context_profile_input</code></a> (internal)</td>
+      <td><a href="../../reference/internal/business_context/_prepare_business_context_profile_input/"><code>_prepare_business_context_profile_input</code></a> (internal)</td>
     </tr>
   </tbody>
 </table>
@@ -131,32 +131,32 @@ Owns business meaning for tables and columns.
 <ul class="callable-relationship-rows">
 <li>
 <a class="reference-chip" href="../../reference/draft_business_context/"><code>draft_business_context</code></a>
- <span class="callable-relationship-uses">uses:</span>
+ <span class="callable-relationship-uses">uses:</span> 
 <span>None.</span>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/extract_column_business_context_suggestions/"><code>extract_column_business_context_suggestions</code></a>
- <span class="callable-relationship-uses">uses:</span>
+ <span class="callable-relationship-uses">uses:</span> 
 <a class="reference-chip" href="#_extract_column_business_context_suggestions"><code>_extract_column_business_context_suggestions</code></a>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/get_reviewed_business_context_rows/"><code>get_reviewed_business_context_rows</code></a>
- <span class="callable-relationship-uses">uses:</span>
+ <span class="callable-relationship-uses">uses:</span> 
 <span>None.</span>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/prepare_business_context_profile_input/"><code>prepare_business_context_profile_input</code></a>
- <span class="callable-relationship-uses">uses:</span>
+ <span class="callable-relationship-uses">uses:</span> 
 <a class="reference-chip" href="#_prepare_business_context_profile_input"><code>_prepare_business_context_profile_input</code></a>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/review_business_context/"><code>review_business_context</code></a>
- <span class="callable-relationship-uses">uses:</span>
+ <span class="callable-relationship-uses">uses:</span> 
 <a class="reference-chip" href="#_require_ipywidgets"><code>_require_ipywidgets</code></a>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/write_business_context/"><code>write_business_context</code></a>
- <span class="callable-relationship-uses">uses:</span>
+ <span class="callable-relationship-uses">uses:</span> 
 <span>None.</span>
 </li>
 </ul>
@@ -177,19 +177,19 @@ Owns business meaning for tables and columns.
   </thead>
   <tbody>
     <tr>
-      <td><a href="#_extract_column_business_context_suggestions"><code>_extract_column_business_context_suggestions</code></a></td>
+      <td><a href="../../reference/internal/business_context/_extract_column_business_context_suggestions/"><code>_extract_column_business_context_suggestions</code></a></td>
       <td><a href="../../reference/extract_column_business_context_suggestions/"><code>extract_column_business_context_suggestions</code></a></td>
     </tr>
     <tr>
-      <td><a href="#_parse_ai_dict_response"><code>_parse_ai_dict_response</code></a></td>
+      <td><a href="../../reference/internal/business_context/_parse_ai_dict_response/"><code>_parse_ai_dict_response</code></a></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="#_prepare_business_context_profile_input"><code>_prepare_business_context_profile_input</code></a></td>
+      <td><a href="../../reference/internal/business_context/_prepare_business_context_profile_input/"><code>_prepare_business_context_profile_input</code></a></td>
       <td><a href="../../reference/prepare_business_context_profile_input/"><code>prepare_business_context_profile_input</code></a></td>
     </tr>
     <tr>
-      <td><a href="#_require_ipywidgets"><code>_require_ipywidgets</code></a></td>
+      <td><a href="../../reference/internal/business_context/_require_ipywidgets/"><code>_require_ipywidgets</code></a></td>
       <td><a href="../../reference/review_business_context/"><code>review_business_context</code></a></td>
     </tr>
   </tbody>
@@ -200,7 +200,7 @@ Owns business meaning for tables and columns.
 <ul class="callable-relationship-rows">
 <li>
 <a class="reference-chip" href="#_extract_column_business_context_suggestions"><code>_extract_column_business_context_suggestions</code></a>
- <span class="callable-relationship-uses">uses:</span>
+ <span class="callable-relationship-uses">uses:</span> 
 <a class="reference-chip" href="#_parse_ai_dict_response"><code>_parse_ai_dict_response</code></a>
 </li>
 <li>

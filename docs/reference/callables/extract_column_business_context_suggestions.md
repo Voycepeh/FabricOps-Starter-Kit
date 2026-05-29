@@ -20,4 +20,4 @@ No summary available.
 - Outbound references count: 1
 
 ## Outbound references
-- <code>fabricops_kit.business_context._extract_column_business_context_suggestions</code>
+- <a href="../internal/business_context/_extract_column_business_context_suggestions/"><code>fabricops_kit.business_context._extract_column_business_context_suggestions</code></a>

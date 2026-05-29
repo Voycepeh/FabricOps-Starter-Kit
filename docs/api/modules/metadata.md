@@ -83,7 +83,7 @@ Owns metadata evidence persistence, stable keys, notebook registry, and contract
       <td>Essential</td>
       <td>function</td>
       <td>Register current notebook metadata evidence for agreement traceability.</td>
-      <td><a href="#_context_get"><code>_context_get</code></a> (internal), <a href="#_runtime_context"><code>_runtime_context</code></a> (internal), <a href="#_safe_str"><code>_safe_str</code></a> (internal)</td>
+      <td><a href="../../reference/internal/metadata/_context_get/"><code>_context_get</code></a> (internal), <a href="../../reference/internal/metadata/_runtime_context/"><code>_runtime_context</code></a> (internal), <a href="../../reference/internal/metadata/_safe_str/"><code>_safe_str</code></a> (internal)</td>
     </tr>
   </tbody>
 </table>
@@ -129,35 +129,35 @@ Owns metadata evidence persistence, stable keys, notebook registry, and contract
   </thead>
   <tbody>
     <tr>
-      <td><a href="#_context_get"><code>_context_get</code></a></td>
+      <td><a href="../../reference/internal/metadata/_context_get/"><code>_context_get</code></a></td>
       <td><a href="../../reference/register_current_notebook/"><code>register_current_notebook</code></a></td>
     </tr>
     <tr>
-      <td><a href="#_extract_columns_from_profile"><code>_extract_columns_from_profile</code></a></td>
+      <td><a href="../../reference/internal/metadata/_extract_columns_from_profile/"><code>_extract_columns_from_profile</code></a></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="#_key_part"><code>_key_part</code></a></td>
+      <td><a href="../../reference/internal/metadata/_key_part/"><code>_key_part</code></a></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="#_now_utc_iso"><code>_now_utc_iso</code></a></td>
+      <td><a href="../../reference/internal/metadata/_now_utc_iso/"><code>_now_utc_iso</code></a></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="#_resolve_action_by"><code>_resolve_action_by</code></a></td>
+      <td><a href="../../reference/internal/metadata/_resolve_action_by/"><code>_resolve_action_by</code></a></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="#_runtime_context"><code>_runtime_context</code></a></td>
+      <td><a href="../../reference/internal/metadata/_runtime_context/"><code>_runtime_context</code></a></td>
       <td><a href="../../reference/register_current_notebook/"><code>register_current_notebook</code></a></td>
     </tr>
     <tr>
-      <td><a href="#_safe_str"><code>_safe_str</code></a></td>
+      <td><a href="../../reference/internal/metadata/_safe_str/"><code>_safe_str</code></a></td>
       <td><a href="../../reference/register_current_notebook/"><code>register_current_notebook</code></a></td>
     </tr>
     <tr>
-      <td><a href="#_sha256_key"><code>_sha256_key</code></a></td>
+      <td><a href="../../reference/internal/metadata/_sha256_key/"><code>_sha256_key</code></a></td>
       <td>—</td>
     </tr>
   </tbody>

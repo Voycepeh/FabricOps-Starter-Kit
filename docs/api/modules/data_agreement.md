@@ -76,21 +76,21 @@ Owns agreement metadata capture, audited record building, metadata commit helper
       <td>Essential</td>
       <td>function</td>
       <td>Collect widget values and build audited agreement metadata records.</td>
-      <td><a href="#_build_agreement_record"><code>_build_agreement_record</code></a> (internal), <a href="#_normalise_widget_values"><code>_normalise_widget_values</code></a> (internal), <a href="#_read_agreement_widget_values"><code>_read_agreement_widget_values</code></a> (internal), <a href="#_record_base"><code>_record_base</code></a> (internal), <a href="#_resolve_committed_at"><code>_resolve_committed_at</code></a> (internal)</td>
+      <td><a href="../../reference/internal/data_agreement/_build_agreement_record/"><code>_build_agreement_record</code></a> (internal), <a href="../../reference/internal/data_agreement/_normalise_widget_values/"><code>_normalise_widget_values</code></a> (internal), <a href="../../reference/internal/data_agreement/_read_agreement_widget_values/"><code>_read_agreement_widget_values</code></a> (internal), <a href="../../reference/internal/data_agreement/_record_base/"><code>_record_base</code></a> (internal), <a href="../../reference/internal/data_agreement/_resolve_committed_at/"><code>_resolve_committed_at</code></a> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/commit_agreement_metadata/"><code>commit_agreement_metadata</code></a></td>
       <td>Essential</td>
       <td>function</td>
       <td>Commit agreement metadata records to append-friendly Delta tables.</td>
-      <td><a href="#_safe_table_prefix"><code>_safe_table_prefix</code></a> (internal), <a href="#_write_record"><code>_write_record</code></a> (internal)</td>
+      <td><a href="../../reference/internal/data_agreement/_safe_table_prefix/"><code>_safe_table_prefix</code></a> (internal), <a href="../../reference/internal/data_agreement/_write_record/"><code>_write_record</code></a> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/create_agreement_widgets/"><code>create_agreement_widgets</code></a></td>
       <td>Essential</td>
       <td>function</td>
       <td>Create Fabric widgets for data sharing agreement metadata capture.</td>
-      <td><a href="#_agreement_widget_specs"><code>_agreement_widget_specs</code></a> (internal), <a href="#_get_fabric_widgets"><code>_get_fabric_widgets</code></a> (internal), <a href="#_widget_dropdown"><code>_widget_dropdown</code></a> (internal), <a href="#_widget_text"><code>_widget_text</code></a> (internal)</td>
+      <td><a href="../../reference/internal/data_agreement/_agreement_widget_specs/"><code>_agreement_widget_specs</code></a> (internal), <a href="../../reference/internal/data_agreement/_get_fabric_widgets/"><code>_get_fabric_widgets</code></a> (internal), <a href="../../reference/internal/data_agreement/_widget_dropdown/"><code>_widget_dropdown</code></a> (internal), <a href="../../reference/internal/data_agreement/_widget_text/"><code>_widget_text</code></a> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/get_selected_agreement/"><code>get_selected_agreement</code></a></td>
@@ -104,14 +104,14 @@ Owns agreement metadata capture, audited record building, metadata commit helper
       <td>Essential</td>
       <td>function</td>
       <td>Load latest distinct agreement metadata rows for widget selection.</td>
-      <td><a href="#_coerce_row_dicts"><code>_coerce_row_dicts</code></a> (internal), <a href="#_latest_distinct_agreements"><code>_latest_distinct_agreements</code></a> (internal)</td>
+      <td><a href="../../reference/internal/data_agreement/_coerce_row_dicts/"><code>_coerce_row_dicts</code></a> (internal), <a href="../../reference/internal/data_agreement/_latest_distinct_agreements/"><code>_latest_distinct_agreements</code></a> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/select_agreement/"><code>select_agreement</code></a></td>
       <td>Essential</td>
       <td>function</td>
       <td>Render a widget dropdown and store selected agreement metadata row in module state.</td>
-      <td><a href="#_agreement_option_label"><code>_agreement_option_label</code></a> (internal), <a href="#_coerce_row_dicts"><code>_coerce_row_dicts</code></a> (internal)</td>
+      <td><a href="../../reference/internal/data_agreement/_agreement_option_label/"><code>_agreement_option_label</code></a> (internal), <a href="../../reference/internal/data_agreement/_coerce_row_dicts/"><code>_coerce_row_dicts</code></a> (internal)</td>
     </tr>
   </tbody>
 </table>
@@ -177,87 +177,87 @@ Owns agreement metadata capture, audited record building, metadata commit helper
   </thead>
   <tbody>
     <tr>
-      <td><a href="#_agreement_option_label"><code>_agreement_option_label</code></a></td>
+      <td><a href="../../reference/internal/data_agreement/_agreement_option_label/"><code>_agreement_option_label</code></a></td>
       <td><a href="../../reference/select_agreement/"><code>select_agreement</code></a></td>
     </tr>
     <tr>
-      <td><a href="#_agreement_widget_specs"><code>_agreement_widget_specs</code></a></td>
+      <td><a href="../../reference/internal/data_agreement/_agreement_widget_specs/"><code>_agreement_widget_specs</code></a></td>
       <td><a href="../../reference/create_agreement_widgets/"><code>create_agreement_widgets</code></a></td>
     </tr>
     <tr>
-      <td><a href="#_build_agreement_record"><code>_build_agreement_record</code></a></td>
+      <td><a href="../../reference/internal/data_agreement/_build_agreement_record/"><code>_build_agreement_record</code></a></td>
       <td><a href="../../reference/collect_agreement_metadata/"><code>collect_agreement_metadata</code></a></td>
     </tr>
     <tr>
-      <td><a href="#_coerce_row_dicts"><code>_coerce_row_dicts</code></a></td>
+      <td><a href="../../reference/internal/data_agreement/_coerce_row_dicts/"><code>_coerce_row_dicts</code></a></td>
       <td><a href="../../reference/load_agreements/"><code>load_agreements</code></a>, <a href="../../reference/select_agreement/"><code>select_agreement</code></a></td>
     </tr>
     <tr>
-      <td><a href="#_derive_agreement_status"><code>_derive_agreement_status</code></a></td>
+      <td><a href="../../reference/internal/data_agreement/_derive_agreement_status/"><code>_derive_agreement_status</code></a></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="#_get_fabric_widgets"><code>_get_fabric_widgets</code></a></td>
+      <td><a href="../../reference/internal/data_agreement/_get_fabric_widgets/"><code>_get_fabric_widgets</code></a></td>
       <td><a href="../../reference/create_agreement_widgets/"><code>create_agreement_widgets</code></a></td>
     </tr>
     <tr>
-      <td><a href="#_latest_distinct_agreements"><code>_latest_distinct_agreements</code></a></td>
+      <td><a href="../../reference/internal/data_agreement/_latest_distinct_agreements/"><code>_latest_distinct_agreements</code></a></td>
       <td><a href="../../reference/load_agreements/"><code>load_agreements</code></a></td>
     </tr>
     <tr>
-      <td><a href="#_non_empty_options"><code>_non_empty_options</code></a></td>
+      <td><a href="../../reference/internal/data_agreement/_non_empty_options/"><code>_non_empty_options</code></a></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="#_normalise_widget_values"><code>_normalise_widget_values</code></a></td>
+      <td><a href="../../reference/internal/data_agreement/_normalise_widget_values/"><code>_normalise_widget_values</code></a></td>
       <td><a href="../../reference/collect_agreement_metadata/"><code>collect_agreement_metadata</code></a></td>
     </tr>
     <tr>
-      <td><a href="#_normalize_optional_date"><code>_normalize_optional_date</code></a></td>
+      <td><a href="../../reference/internal/data_agreement/_normalize_optional_date/"><code>_normalize_optional_date</code></a></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="#_parse_date"><code>_parse_date</code></a></td>
+      <td><a href="../../reference/internal/data_agreement/_parse_date/"><code>_parse_date</code></a></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="#_read_agreement_widget_values"><code>_read_agreement_widget_values</code></a></td>
+      <td><a href="../../reference/internal/data_agreement/_read_agreement_widget_values/"><code>_read_agreement_widget_values</code></a></td>
       <td><a href="../../reference/collect_agreement_metadata/"><code>collect_agreement_metadata</code></a></td>
     </tr>
     <tr>
-      <td><a href="#_record_base"><code>_record_base</code></a></td>
+      <td><a href="../../reference/internal/data_agreement/_record_base/"><code>_record_base</code></a></td>
       <td><a href="../../reference/collect_agreement_metadata/"><code>collect_agreement_metadata</code></a></td>
     </tr>
     <tr>
-      <td><a href="#_require_fields"><code>_require_fields</code></a></td>
+      <td><a href="../../reference/internal/data_agreement/_require_fields/"><code>_require_fields</code></a></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="#_resolve_committed_at"><code>_resolve_committed_at</code></a></td>
+      <td><a href="../../reference/internal/data_agreement/_resolve_committed_at/"><code>_resolve_committed_at</code></a></td>
       <td><a href="../../reference/collect_agreement_metadata/"><code>collect_agreement_metadata</code></a></td>
     </tr>
     <tr>
-      <td><a href="#_safe_table_prefix"><code>_safe_table_prefix</code></a></td>
+      <td><a href="../../reference/internal/data_agreement/_safe_table_prefix/"><code>_safe_table_prefix</code></a></td>
       <td><a href="../../reference/commit_agreement_metadata/"><code>commit_agreement_metadata</code></a></td>
     </tr>
     <tr>
-      <td><a href="#_select_record_fields"><code>_select_record_fields</code></a></td>
+      <td><a href="../../reference/internal/data_agreement/_select_record_fields/"><code>_select_record_fields</code></a></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="#_validate_yes_no"><code>_validate_yes_no</code></a></td>
+      <td><a href="../../reference/internal/data_agreement/_validate_yes_no/"><code>_validate_yes_no</code></a></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="#_widget_dropdown"><code>_widget_dropdown</code></a></td>
+      <td><a href="../../reference/internal/data_agreement/_widget_dropdown/"><code>_widget_dropdown</code></a></td>
       <td><a href="../../reference/create_agreement_widgets/"><code>create_agreement_widgets</code></a></td>
     </tr>
     <tr>
-      <td><a href="#_widget_text"><code>_widget_text</code></a></td>
+      <td><a href="../../reference/internal/data_agreement/_widget_text/"><code>_widget_text</code></a></td>
       <td><a href="../../reference/create_agreement_widgets/"><code>create_agreement_widgets</code></a></td>
     </tr>
     <tr>
-      <td><a href="#_write_record"><code>_write_record</code></a></td>
+      <td><a href="../../reference/internal/data_agreement/_write_record/"><code>_write_record</code></a></td>
       <td><a href="../../reference/commit_agreement_metadata/"><code>commit_agreement_metadata</code></a></td>
     </tr>
   </tbody>
@@ -353,3 +353,4 @@ None.
 
 **metadata**
 <a class="reference-chip" href="../metadata/#_resolve_action_by"><code>_resolve_action_by</code></a>, <a class="reference-chip" href="../metadata/#_runtime_context"><code>_runtime_context</code></a>
+

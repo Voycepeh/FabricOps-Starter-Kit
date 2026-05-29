@@ -20,4 +20,4 @@ No summary available.
 - Outbound references count: 1
 
 ## Outbound references
-- <code>fabricops_kit.metadata._resolve_action_by</code>
+- <a href="../internal/metadata/_resolve_action_by/"><code>fabricops_kit.metadata._resolve_action_by</code></a>

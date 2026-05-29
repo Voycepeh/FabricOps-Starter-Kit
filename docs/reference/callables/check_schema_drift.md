@@ -20,6 +20,6 @@ No summary available.
 - Outbound references count: 3
 
 ## Outbound references
-- <code>fabricops_kit.drift.build_schema_snapshot</code>
-- <code>fabricops_kit.drift.compare_schema_snapshots</code>
-- <code>fabricops_kit.drift.default_schema_drift_policy</code>
+- <a href="../internal/drift/build_schema_snapshot/"><code>fabricops_kit.drift.build_schema_snapshot</code></a>
+- <a href="../internal/drift/compare_schema_snapshots/"><code>fabricops_kit.drift.compare_schema_snapshots</code></a>
+- <a href="../internal/drift/default_schema_drift_policy/"><code>fabricops_kit.drift.default_schema_drift_policy</code></a>

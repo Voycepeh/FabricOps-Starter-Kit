@@ -20,6 +20,6 @@ No summary available.
 - Outbound references count: 3
 
 ## Outbound references
-- <code>fabricops_kit.data_quality._extract_dq_rules</code>
-- <code>fabricops_kit.data_quality._prepare_dq_profile_input_rows</code>
-- <code>fabricops_kit.data_quality._suggest_dq_rules</code>
+- <a href="../internal/data_quality/_extract_dq_rules/"><code>fabricops_kit.data_quality._extract_dq_rules</code></a>
+- <a href="../internal/data_quality/_prepare_dq_profile_input_rows/"><code>fabricops_kit.data_quality._prepare_dq_profile_input_rows</code></a>
+- <a href="../internal/data_quality/_suggest_dq_rules/"><code>fabricops_kit.data_quality._suggest_dq_rules</code></a>

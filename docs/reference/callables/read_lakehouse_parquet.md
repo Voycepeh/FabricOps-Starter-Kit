@@ -20,6 +20,6 @@ No summary available.
 - Outbound references count: 3
 
 ## Outbound references
-- <code>fabricops_kit.config._get_store</code>
-- <code>fabricops_kit.fabric_input_output._convert_single_parquet_ns_to_us</code>
-- <code>fabricops_kit.fabric_input_output._get_spark</code>
+- <a href="../internal/config/_get_store/"><code>fabricops_kit.config._get_store</code></a>
+- <a href="../internal/fabric_input_output/_convert_single_parquet_ns_to_us/"><code>fabricops_kit.fabric_input_output._convert_single_parquet_ns_to_us</code></a>
+- <a href="../internal/fabric_input_output/_get_spark/"><code>fabricops_kit.fabric_input_output._get_spark</code></a>

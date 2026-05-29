@@ -20,4 +20,4 @@ No summary available.
 - Outbound references count: 1
 
 ## Outbound references
-- <code>fabricops_kit.data_quality._attach_rule_metadata_keys</code>
+- <a href="../internal/data_quality/_attach_rule_metadata_keys/"><code>fabricops_kit.data_quality._attach_rule_metadata_keys</code></a>

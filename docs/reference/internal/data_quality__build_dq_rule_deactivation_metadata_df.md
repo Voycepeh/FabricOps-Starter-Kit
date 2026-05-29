@@ -21,4 +21,4 @@ No summary available.
 
 ## Outbound references
 - <a href="../internal/metadata/_now_utc_iso/"><code>fabricops_kit.metadata._now_utc_iso</code></a>
-- <code>fabricops_kit.metadata._resolve_action_by</code>
+- <a href="../internal/metadata/_resolve_action_by/"><code>fabricops_kit.metadata._resolve_action_by</code></a>

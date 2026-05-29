@@ -26,7 +26,7 @@ def test_docs_url_routes_public_vs_internal():
         module = node['module']
         short_name = node['short_name']
         expected_public = f'/FabricOps-Starter-Kit/reference/{short_name}/'
-        expected_internal = f'/FabricOps-Starter-Kit/api/modules/{module}/#{short_name}'
+        expected_internal = f'/FabricOps-Starter-Kit/reference/internal/{module}/{short_name}/'
         if node.get('classification') in {'essential', 'optional'}:
             assert node['docs_url'] == expected_public
         else:
@@ -64,11 +64,7 @@ def test_docs_url_points_to_generated_reference_routes():
     for qn, node in callables.items():
         short_name = node['short_name']
         module = node['module']
-        expected = (
-            f'/FabricOps-Starter-Kit/reference/{short_name}/'
-            if node.get('classification') in {'essential', 'optional'}
-            else f'/FabricOps-Starter-Kit/api/modules/{module}/#{short_name}'
-        )
+        expected = f'/FabricOps-Starter-Kit/reference/{short_name}/' if node.get('classification') in {'essential', 'optional'} else f'/FabricOps-Starter-Kit/reference/internal/{module}/{short_name}/'
         assert node['docs_url'] == expected, f'{qn} has wrong docs_url'
 
 
@@ -159,10 +155,3 @@ def test_module_pages_do_not_emit_api_relative_call_graph_links():
         text = module_page.read_text(encoding='utf-8')
         assert '../../reference/call-graph/' not in text
         assert '/api/reference/call-graph/' not in text
-
-
-def test_new_internal_helper_pages_are_not_generated():
-    internal_dir = Path("docs/reference/internal")
-    assert not list(internal_dir.glob("data_agreement__*.md"))
-    assert not (internal_dir / "metadata__resolve_action_by.md").exists()
-    assert not (internal_dir / "metadata__runtime_context.md").exists()

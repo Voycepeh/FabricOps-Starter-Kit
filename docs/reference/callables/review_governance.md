@@ -20,7 +20,7 @@ No summary available.
 - Outbound references count: 4
 
 ## Outbound references
-- <code>fabricops_kit.data_governance._undo_last_action</code>
-- <code>fabricops_kit.metadata._now_utc_iso</code>
-- <code>fabricops_kit.metadata.build_metadata_column_key</code>
-- <code>fabricops_kit.metadata.build_metadata_table_key</code>
+- <a href="../internal/data_governance/_undo_last_action/"><code>fabricops_kit.data_governance._undo_last_action</code></a>
+- <a href="../internal/metadata/_now_utc_iso/"><code>fabricops_kit.metadata._now_utc_iso</code></a>
+- <a href="../internal/metadata/build_metadata_column_key/"><code>fabricops_kit.metadata.build_metadata_column_key</code></a>
+- <a href="../internal/metadata/build_metadata_table_key/"><code>fabricops_kit.metadata.build_metadata_table_key</code></a>

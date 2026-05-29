@@ -20,6 +20,6 @@ No summary available.
 - Outbound references count: 3
 
 ## Outbound references
-- <code>fabricops_kit.business_context._require_ipywidgets</code>
-- <code>fabricops_kit.metadata.build_metadata_column_key</code>
-- <code>fabricops_kit.metadata.build_metadata_table_key</code>
+- <a href="../internal/business_context/_require_ipywidgets/"><code>fabricops_kit.business_context._require_ipywidgets</code></a>
+- <a href="../internal/metadata/build_metadata_column_key/"><code>fabricops_kit.metadata.build_metadata_column_key</code></a>
+- <a href="../internal/metadata/build_metadata_table_key/"><code>fabricops_kit.metadata.build_metadata_table_key</code></a>
