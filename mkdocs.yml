@@ -22,9 +22,8 @@ nav:
   - Install: install.md
   - Notebook Structure: notebook-structure.md
   - Workflow: lifecycle-operating-model.md
-  - Govern:
-      - Metadata: metadata-and-contracts/index.md
-      - Quality: data-quality-rules-system.md
+  - Contracts: metadata-and-contracts/index.md
+  - Data Quality: data-quality-rules-system.md
   - Deploy: deployment-and-promotion.md
   - API:
       - Function Reference: reference/index.md
