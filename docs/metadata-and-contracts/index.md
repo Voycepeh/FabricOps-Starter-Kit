@@ -37,6 +37,16 @@ The assembled contract combines approved evidence into a practical handover view
 
 YAML can be exported as an optional machine-readable representation of this assembled evidence. The governed contract remains the approved evidence set, not the YAML file by itself.
 
+## Standards alignment
+
+FabricOps is designed to align with open metadata and data contract patterns without requiring a separate metadata platform.
+
+The assembled contract model is conceptually aligned with [OpenMetadata](https://github.com/open-metadata/OpenMetadata) because it connects ownership, schema, lineage, quality, classifications, policies, and operational context into a governed metadata record.
+
+It is also compatible in concept with the [Open Data Contract Standard (ODCS)](https://bitol-io.github.io/open-data-contract-standard/v3.1.0/). ODCS defines a YAML representation for a data contract, including fundamentals, schema, data quality, roles, SLA, infrastructure, and custom properties. FabricOps can export an ODCS-style YAML contract, but the governed source of truth remains the approved metadata evidence captured in FabricOps notebooks and metadata tables.
+
+This means FabricOps should be treated as ODCS-compatible in concept, not fully ODCS-compliant in output, until an ODCS export is generated and validated against the expected field names and structure.
+
 ## Enforcement model
 
 - `01_agreement_*` defines governance intent, accountability, and approved scope.
