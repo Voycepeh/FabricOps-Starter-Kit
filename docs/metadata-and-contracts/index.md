@@ -8,6 +8,11 @@ FabricOps assembles data contract outputs from notebook-collected metadata evide
 
 ## Notebook-first contract assembly
 
+<figure markdown>
+  ![Notebook workflow showing agreement, exploration, pipeline contract, and governance evidence assembled into a FabricOps data contract](../assets/notebook-datacontract-flow.png){ .full-width }
+  <figcaption>FabricOps data contracts are assembled from approved evidence across the notebook workflow.</figcaption>
+</figure>
+
 The metadata and contract workflow starts with notebooks. The simple story is:
 
 ```text
@@ -60,8 +65,3 @@ ODCS YAML and OpenMetadata-compatible payloads are exports from the assembled vi
 | --- | --- |
 | [Metadata Architecture](metadata-architecture.md) | Explains the 9 source metadata tables, their columns, examples, and how notebook evidence is captured. |
 | [Assembled Views](metadata-columns.md) | Explains the agreement-level, table-level, and column-level views and their output fields. |
-
-<figure markdown>
-  ![Notebook workflow showing agreement, exploration, pipeline contract, and governance evidence assembled into a FabricOps data contract](../assets/notebook-datacontract-flow.png){ .full-width }
-  <figcaption>FabricOps data contracts are assembled from approved evidence across the notebook workflow.</figcaption>
-</figure>
