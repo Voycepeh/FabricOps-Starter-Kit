@@ -20,4 +20,4 @@ No summary available.
 - Outbound references count: 1
 
 ## Outbound references
-- <a href="../internal/business_context/_prepare_business_context_profile_input/"><code>fabricops_kit.business_context._prepare_business_context_profile_input</code></a>
+- <code>fabricops_kit.business_context._prepare_business_context_profile_input</code>

@@ -20,4 +20,4 @@ No summary available.
 - Outbound references count: 1
 
 ## Outbound references
-- <a href="../internal/data_governance/_coerce_row_dicts/"><code>fabricops_kit.data_governance._coerce_row_dicts</code></a>
+- <code>fabricops_kit.data_governance._coerce_row_dicts</code>

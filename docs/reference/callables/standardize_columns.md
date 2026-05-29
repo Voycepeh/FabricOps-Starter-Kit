@@ -20,6 +20,6 @@ No summary available.
 - Outbound references count: 3
 
 ## Outbound references
-- <a href="../internal/technical_columns/_add_audit_columns/"><code>fabricops_kit.technical_columns._add_audit_columns</code></a>
-- <a href="../internal/technical_columns/_add_datetime_features/"><code>fabricops_kit.technical_columns._add_datetime_features</code></a>
-- <a href="../internal/technical_columns/_add_hash_columns/"><code>fabricops_kit.technical_columns._add_hash_columns</code></a>
+- <code>fabricops_kit.technical_columns._add_audit_columns</code>
+- <code>fabricops_kit.technical_columns._add_datetime_features</code>
+- <code>fabricops_kit.technical_columns._add_hash_columns</code>

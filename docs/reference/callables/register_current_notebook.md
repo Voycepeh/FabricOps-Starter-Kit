@@ -20,7 +20,7 @@ Register current notebook metadata evidence for agreement traceability.
 - Outbound references count: 4
 
 ## Outbound references
-- <a href="../internal/metadata/_context_get/"><code>fabricops_kit.metadata._context_get</code></a>
-- <a href="../internal/metadata/_runtime_context/"><code>fabricops_kit.metadata._runtime_context</code></a>
-- <a href="../internal/metadata/_safe_str/"><code>fabricops_kit.metadata._safe_str</code></a>
-- <a href="../internal/metadata/write_metadata_rows/"><code>fabricops_kit.metadata.write_metadata_rows</code></a>
+- <code>fabricops_kit.metadata._context_get</code>
+- <code>fabricops_kit.metadata._runtime_context</code>
+- <code>fabricops_kit.metadata._safe_str</code>
+- <code>fabricops_kit.metadata.write_metadata_rows</code>

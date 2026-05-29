@@ -23,4 +23,4 @@ No summary available.
 - <a href="../write_dq_rules/"><code>fabricops_kit.data_quality.write_dq_rules</code></a>
 
 ## Outbound references
-- <a href="../internal/metadata/_resolve_action_by/"><code>fabricops_kit.metadata._resolve_action_by</code></a>
+- <code>fabricops_kit.metadata._resolve_action_by</code>

@@ -340,8 +340,8 @@ def parse_module_docs_metadata() -> list[dict[str, Any]]:
 
 
 def internal_helper_link(actual_module: str, helper: str) -> str:
-    """Return module-page-relative link target for an internal helper page."""
-    return f"../../reference/internal/{actual_module}/{helper}/"
+    """Return a module-page local anchor for an internal helper."""
+    return f"#{helper}"
 
 
 def public_reference_link(
@@ -761,7 +761,7 @@ def main() -> None:
                     src_link = callable_docs_link(name, actual_module, docs_metadata, source_module=actual_module)
                     lines.append("<li>")
                     lines.append(f'<a class="reference-chip" href="{src_link}"><code>{name}</code></a>')
-                    lines.append(" <span class=\"callable-relationship-uses\">uses:</span> ")
+                    lines.append(" <span class=\"callable-relationship-uses\">uses:</span>")
                     if callees:
                         callee_links = ", ".join(
                             f'<a class="reference-chip" href="{callable_docs_link(dst_qn.split(".")[-1], _module_name(dst_qn), docs_metadata, source_module=actual_module)}"><code>{_label(dst_qn)}</code></a>'
@@ -798,7 +798,7 @@ def main() -> None:
                             f'<a class="reference-chip" href="{callable_docs_link(dst_qn.split(".")[-1], _module_name(dst_qn), docs_metadata, source_module=actual_module)}"><code>{_label(dst_qn)}</code></a>'
                             for dst_qn in callees
                         )
-                        lines.append(" <span class=\"callable-relationship-uses\">uses:</span> ")
+                        lines.append(" <span class=\"callable-relationship-uses\">uses:</span>")
                         lines.append(callee_links)
                     lines.append("</li>")
                 lines.append("</ul>")
@@ -947,7 +947,7 @@ def main() -> None:
             "docs_url": (
                 f"/FabricOps-Starter-Kit/reference/{node['callable_name']}/"
                 if node["exported"]
-                else f"/FabricOps-Starter-Kit/reference/internal/{node['module_name']}/{node['callable_name']}/"
+                else f"/FabricOps-Starter-Kit/api/modules/{node['module_name']}/#{node['callable_name']}"
             ),
             "classification": node["role"],
             "calls": deps,
@@ -1239,9 +1239,7 @@ def main() -> None:
         deps = sorted(set(calls_by_qn.get(qn, [])))
         used_by = sorted(set(used_by_qn.get(qn, [])))
         summary = docs_metadata.get(short_name, {}).get("summary_override") or ""
-        docs_path = (
-            f"reference/{short_name}.md" if node["exported"] else f"reference/internal/{node['module_name']}_{short_name}.md"
-        )
+        docs_path = f"reference/{short_name}.md" if node["exported"] else f"api/modules/{node['module_name']}.md#{short_name}"
         source_path = f"src/fabricops_kit/{node['module_name']}.py"
         source_ref = f"../../api/modules/{node['module_name']}/#{short_name}"
         classification = "Essential" if node.get("role") == "essential" else ("Optional" if node.get("role") == "optional" else "Internal helper")
@@ -1255,9 +1253,9 @@ def main() -> None:
                 if not n: continue
                 if n.get('exported'):
                     href=f"../{n['callable_name']}/"
+                    out.append(f'- <a href="{href}"><code>{i}</code></a>')
                 else:
-                    href=f"../internal/{n['module_name']}/{n['callable_name']}/"
-                out.append(f'- <a href="{href}"><code>{i}</code></a>')
+                    out.append(f'- <code>{i}</code>')
             return out
 
         lines=[f"# {short_name}","",f"**Module:** `{node['module_name']}`  ",f"**Classification:** {classification}","","## Purpose","",purpose,"","## Function manifest","",'- Fully qualified function name: '+f'`{qn}`','- Short name: '+f'`{short_name}`','- Module: '+f'`{node["module_name"]}`','- Classification: '+classification,'- Related module: '+f'`{rel_module}`','- Source file path: '+f'`{source_path}`',f'- Source reference: <a href="{source_ref}">Module source anchor</a>',f'- Inbound references count: {len(used_by)}',f'- Outbound references count: {len(deps)}']
@@ -1270,8 +1268,6 @@ def main() -> None:
 
         if node["exported"]:
             (CALLABLE_REFERENCE_DIR / f"{short_name}.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
-        else:
-            (INTERNAL_REFERENCE_DIR / f"{node['module_name']}_{short_name}.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
         function_manifest.append({"id": qn, "name": short_name, "qualified_name": qn, "module": node["module_name"], "classification": classification, "inbound": used_by, "outbound": deps, "source_path": source_path, "docs_path": docs_path, "summary": purpose})
         agent_manifest.append({"name": short_name, "qualified_name": qn, "module": node["module_name"], "type": "callable" if node["exported"] else "internal", "role": node.get("role", "internal"), "inbound": used_by, "outbound": deps, "source_file": source_path, "summary": purpose})

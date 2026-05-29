@@ -76,7 +76,7 @@ Owns deterministic profiling evidence such as schema, nulls, distincts, min/max,
       <td>Essential</td>
       <td>function</td>
       <td>Build canonical DQ-ready profiling rows from a Spark DataFrame.</td>
-      <td><a href="../../reference/internal/data_profiling/_get_profiled_columns/"><code>_get_profiled_columns</code></a> (internal), <a href="../../reference/internal/data_profiling/_is_min_max_supported_type/"><code>_is_min_max_supported_type</code></a> (internal)</td>
+      <td><a href="#_get_profiled_columns"><code>_get_profiled_columns</code></a> (internal), <a href="#_is_min_max_supported_type"><code>_is_min_max_supported_type</code></a> (internal)</td>
     </tr>
   </tbody>
 </table>
@@ -96,7 +96,7 @@ Owns deterministic profiling evidence such as schema, nulls, distincts, min/max,
 <ul class="callable-relationship-rows">
 <li>
 <a class="reference-chip" href="../../reference/profile_dataframe/"><code>profile_dataframe</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_get_profiled_columns"><code>_get_profiled_columns</code></a>, <a class="reference-chip" href="#_is_min_max_supported_type"><code>_is_min_max_supported_type</code></a>
 </li>
 </ul>
@@ -117,11 +117,11 @@ Owns deterministic profiling evidence such as schema, nulls, distincts, min/max,
   </thead>
   <tbody>
     <tr>
-      <td><a href="../../reference/internal/data_profiling/_get_profiled_columns/"><code>_get_profiled_columns</code></a></td>
+      <td><a href="#_get_profiled_columns"><code>_get_profiled_columns</code></a></td>
       <td><a href="../../reference/profile_dataframe/"><code>profile_dataframe</code></a></td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_profiling/_is_min_max_supported_type/"><code>_is_min_max_supported_type</code></a></td>
+      <td><a href="#_is_min_max_supported_type"><code>_is_min_max_supported_type</code></a></td>
       <td><a href="../../reference/profile_dataframe/"><code>profile_dataframe</code></a></td>
     </tr>
   </tbody>

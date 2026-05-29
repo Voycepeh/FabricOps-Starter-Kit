@@ -23,4 +23,4 @@ No summary available.
 - <a href="../write_governance/"><code>fabricops_kit.data_governance.write_governance</code></a>
 
 ## Outbound references
-- <a href="../internal/metadata/_resolve_action_by/"><code>fabricops_kit.metadata._resolve_action_by</code></a>
+- <code>fabricops_kit.metadata._resolve_action_by</code>

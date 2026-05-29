@@ -20,4 +20,4 @@ No summary available.
 - Outbound references count: 1
 
 ## Outbound references
-- <a href="../internal/config/_get_store/"><code>fabricops_kit.config._get_store</code></a>
+- <code>fabricops_kit.config._get_store</code>

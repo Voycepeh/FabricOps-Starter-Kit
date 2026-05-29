@@ -23,4 +23,4 @@ No summary available.
 - <a href="../run_dq_rule_review_widget/"><code>fabricops_kit.data_quality.run_dq_rule_review_widget</code></a>
 
 ## Outbound references
-- <a href="../internal/data_quality/_require_ipywidgets/"><code>fabricops_kit.data_quality._require_ipywidgets</code></a>
+- <code>fabricops_kit.data_quality._require_ipywidgets</code>

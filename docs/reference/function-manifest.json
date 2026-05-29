@@ -17,7 +17,7 @@
       "fabricops_kit._utils._to_jsonable"
     ],
     "source_path": "src/fabricops_kit/_utils.py",
-    "docs_path": "reference/internal/_utils__to_jsonable.md",
+    "docs_path": "api/modules/_utils.md#_to_jsonable",
     "summary": "No summary available."
   },
   {
@@ -33,7 +33,7 @@
       "fabricops_kit.business_context._parse_ai_dict_response"
     ],
     "source_path": "src/fabricops_kit/business_context.py",
-    "docs_path": "reference/internal/business_context__extract_column_business_context_suggestions.md",
+    "docs_path": "api/modules/business_context.md#_extract_column_business_context_suggestions",
     "summary": "No summary available."
   },
   {
@@ -47,7 +47,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/business_context.py",
-    "docs_path": "reference/internal/business_context__parse_ai_dict_response.md",
+    "docs_path": "api/modules/business_context.md#_parse_ai_dict_response",
     "summary": "No summary available."
   },
   {
@@ -61,7 +61,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/business_context.py",
-    "docs_path": "reference/internal/business_context__prepare_business_context_profile_input.md",
+    "docs_path": "api/modules/business_context.md#_prepare_business_context_profile_input",
     "summary": "No summary available."
   },
   {
@@ -75,7 +75,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/business_context.py",
-    "docs_path": "reference/internal/business_context__require_ipywidgets.md",
+    "docs_path": "api/modules/business_context.md#_require_ipywidgets",
     "summary": "No summary available."
   },
   {
@@ -169,7 +169,7 @@
     "inbound": [],
     "outbound": [],
     "source_path": "src/fabricops_kit/config.py",
-    "docs_path": "reference/internal/config_AIPromptConfig.md",
+    "docs_path": "api/modules/config.md#AIPromptConfig",
     "summary": "No summary available."
   },
   {
@@ -183,7 +183,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/config.py",
-    "docs_path": "reference/internal/config_ConfigBootstrapResult.md",
+    "docs_path": "api/modules/config.md#ConfigBootstrapResult",
     "summary": "No summary available."
   },
   {
@@ -197,7 +197,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/config.py",
-    "docs_path": "reference/internal/config_ConfigSmokeCheckResult.md",
+    "docs_path": "api/modules/config.md#ConfigSmokeCheckResult",
     "summary": "No summary available."
   },
   {
@@ -211,7 +211,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/config.py",
-    "docs_path": "reference/internal/config_DatasetContractValidationError.md",
+    "docs_path": "api/modules/config.md#DatasetContractValidationError",
     "summary": "No summary available."
   },
   {
@@ -225,7 +225,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/config.py",
-    "docs_path": "reference/internal/config_FrameworkConfig.md",
+    "docs_path": "api/modules/config.md#FrameworkConfig",
     "summary": "No summary available."
   },
   {
@@ -237,7 +237,7 @@
     "inbound": [],
     "outbound": [],
     "source_path": "src/fabricops_kit/config.py",
-    "docs_path": "reference/internal/config_GovernanceConfig.md",
+    "docs_path": "api/modules/config.md#GovernanceConfig",
     "summary": "No summary available."
   },
   {
@@ -249,7 +249,7 @@
     "inbound": [],
     "outbound": [],
     "source_path": "src/fabricops_kit/config.py",
-    "docs_path": "reference/internal/config_LineageConfig.md",
+    "docs_path": "api/modules/config.md#LineageConfig",
     "summary": "No summary available."
   },
   {
@@ -261,7 +261,7 @@
     "inbound": [],
     "outbound": [],
     "source_path": "src/fabricops_kit/config.py",
-    "docs_path": "reference/internal/config_NotebookRuntimeConfig.md",
+    "docs_path": "api/modules/config.md#NotebookRuntimeConfig",
     "summary": "No summary available."
   },
   {
@@ -275,7 +275,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/config.py",
-    "docs_path": "reference/internal/config_NotebookSetupContext.md",
+    "docs_path": "api/modules/config.md#NotebookSetupContext",
     "summary": "No summary available."
   },
   {
@@ -287,7 +287,7 @@
     "inbound": [],
     "outbound": [],
     "source_path": "src/fabricops_kit/config.py",
-    "docs_path": "reference/internal/config_PathConfig.md",
+    "docs_path": "api/modules/config.md#PathConfig",
     "summary": "No summary available."
   },
   {
@@ -299,7 +299,7 @@
     "inbound": [],
     "outbound": [],
     "source_path": "src/fabricops_kit/config.py",
-    "docs_path": "reference/internal/config_QualityConfig.md",
+    "docs_path": "api/modules/config.md#QualityConfig",
     "summary": "No summary available."
   },
   {
@@ -311,7 +311,7 @@
     "inbound": [],
     "outbound": [],
     "source_path": "src/fabricops_kit/config.py",
-    "docs_path": "reference/internal/config_ReviewWorkflowConfig.md",
+    "docs_path": "api/modules/config.md#ReviewWorkflowConfig",
     "summary": "No summary available."
   },
   {
@@ -329,7 +329,7 @@
       "fabricops_kit.config.load_config"
     ],
     "source_path": "src/fabricops_kit/config.py",
-    "docs_path": "reference/internal/config__bootstrap_fabric_env.md",
+    "docs_path": "api/modules/config.md#_bootstrap_fabric_env",
     "summary": "No summary available."
   },
   {
@@ -341,7 +341,7 @@
     "inbound": [],
     "outbound": [],
     "source_path": "src/fabricops_kit/config.py",
-    "docs_path": "reference/internal/config__check_fabric_ai_functions_available.md",
+    "docs_path": "api/modules/config.md#_check_fabric_ai_functions_available",
     "summary": "No summary available."
   },
   {
@@ -355,7 +355,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/config.py",
-    "docs_path": "reference/internal/config__check_spark_session.md",
+    "docs_path": "api/modules/config.md#_check_spark_session",
     "summary": "No summary available."
   },
   {
@@ -367,7 +367,7 @@
     "inbound": [],
     "outbound": [],
     "source_path": "src/fabricops_kit/config.py",
-    "docs_path": "reference/internal/config__configure_fabric_ai_functions.md",
+    "docs_path": "api/modules/config.md#_configure_fabric_ai_functions",
     "summary": "No summary available."
   },
   {
@@ -381,7 +381,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/config.py",
-    "docs_path": "reference/internal/config__default_schema_text.md",
+    "docs_path": "api/modules/config.md#_default_schema_text",
     "summary": "No summary available."
   },
   {
@@ -395,7 +395,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/config.py",
-    "docs_path": "reference/internal/config__format_error_path.md",
+    "docs_path": "api/modules/config.md#_format_error_path",
     "summary": "No summary available."
   },
   {
@@ -410,7 +410,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/config.py",
-    "docs_path": "reference/internal/config__get_fabric_runtime_metadata.md",
+    "docs_path": "api/modules/config.md#_get_fabric_runtime_metadata",
     "summary": "No summary available."
   },
   {
@@ -433,7 +433,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/config.py",
-    "docs_path": "reference/internal/config__get_store.md",
+    "docs_path": "api/modules/config.md#_get_store",
     "summary": "No summary available."
   },
   {
@@ -449,7 +449,7 @@
       "fabricops_kit.config._default_schema_text"
     ],
     "source_path": "src/fabricops_kit/config.py",
-    "docs_path": "reference/internal/config__load_schema.md",
+    "docs_path": "api/modules/config.md#_load_schema",
     "summary": "No summary available."
   },
   {
@@ -463,7 +463,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/config.py",
-    "docs_path": "reference/internal/config__normalize_name.md",
+    "docs_path": "api/modules/config.md#_normalize_name",
     "summary": "No summary available."
   },
   {
@@ -484,7 +484,7 @@
       "fabricops_kit.config._validate_notebook_name"
     ],
     "source_path": "src/fabricops_kit/config.py",
-    "docs_path": "reference/internal/config__run_config_smoke_tests.md",
+    "docs_path": "api/modules/config.md#_run_config_smoke_tests",
     "summary": "No summary available."
   },
   {
@@ -501,7 +501,7 @@
       "fabricops_kit.config.keys"
     ],
     "source_path": "src/fabricops_kit/config.py",
-    "docs_path": "reference/internal/config__validate_framework_config.md",
+    "docs_path": "api/modules/config.md#_validate_framework_config",
     "summary": "No summary available."
   },
   {
@@ -517,7 +517,7 @@
       "fabricops_kit.config._normalize_name"
     ],
     "source_path": "src/fabricops_kit/config.py",
-    "docs_path": "reference/internal/config__validate_notebook_name.md",
+    "docs_path": "api/modules/config.md#_validate_notebook_name",
     "summary": "No summary available."
   },
   {
@@ -532,7 +532,7 @@
       "fabricops_kit.config.validate_dataset_contract"
     ],
     "source_path": "src/fabricops_kit/config.py",
-    "docs_path": "reference/internal/config_assert_valid_dataset_contract.md",
+    "docs_path": "api/modules/config.md#assert_valid_dataset_contract",
     "summary": "No summary available."
   },
   {
@@ -547,7 +547,7 @@
       "fabricops_kit.config.validate_dataset_contract"
     ],
     "source_path": "src/fabricops_kit/config.py",
-    "docs_path": "reference/internal/config_load_and_validate_dataset_contract.md",
+    "docs_path": "api/modules/config.md#load_and_validate_dataset_contract",
     "summary": "No summary available."
   },
   {
@@ -579,7 +579,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/config.py",
-    "docs_path": "reference/internal/config_load_dataset_contract.md",
+    "docs_path": "api/modules/config.md#load_dataset_contract",
     "summary": "No summary available."
   },
   {
@@ -614,7 +614,7 @@
       "fabricops_kit.config._load_schema"
     ],
     "source_path": "src/fabricops_kit/config.py",
-    "docs_path": "reference/internal/config_validate_dataset_contract.md",
+    "docs_path": "api/modules/config.md#validate_dataset_contract",
     "summary": "No summary available."
   },
   {
@@ -628,7 +628,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/data_agreement.py",
-    "docs_path": "reference/internal/data_agreement__agreement_option_label.md",
+    "docs_path": "api/modules/data_agreement.md#_agreement_option_label",
     "summary": "No summary available."
   },
   {
@@ -644,7 +644,7 @@
       "fabricops_kit.data_agreement._non_empty_options"
     ],
     "source_path": "src/fabricops_kit/data_agreement.py",
-    "docs_path": "reference/internal/data_agreement__agreement_widget_specs.md",
+    "docs_path": "api/modules/data_agreement.md#_agreement_widget_specs",
     "summary": "No summary available."
   },
   {
@@ -660,7 +660,7 @@
       "fabricops_kit.data_agreement._select_record_fields"
     ],
     "source_path": "src/fabricops_kit/data_agreement.py",
-    "docs_path": "reference/internal/data_agreement__build_agreement_record.md",
+    "docs_path": "api/modules/data_agreement.md#_build_agreement_record",
     "summary": "No summary available."
   },
   {
@@ -675,7 +675,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/data_agreement.py",
-    "docs_path": "reference/internal/data_agreement__coerce_row_dicts.md",
+    "docs_path": "api/modules/data_agreement.md#_coerce_row_dicts",
     "summary": "No summary available."
   },
   {
@@ -691,7 +691,7 @@
       "fabricops_kit.data_agreement._parse_date"
     ],
     "source_path": "src/fabricops_kit/data_agreement.py",
-    "docs_path": "reference/internal/data_agreement__derive_agreement_status.md",
+    "docs_path": "api/modules/data_agreement.md#_derive_agreement_status",
     "summary": "No summary available."
   },
   {
@@ -706,7 +706,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/data_agreement.py",
-    "docs_path": "reference/internal/data_agreement__get_fabric_widgets.md",
+    "docs_path": "api/modules/data_agreement.md#_get_fabric_widgets",
     "summary": "No summary available."
   },
   {
@@ -720,7 +720,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/data_agreement.py",
-    "docs_path": "reference/internal/data_agreement__latest_distinct_agreements.md",
+    "docs_path": "api/modules/data_agreement.md#_latest_distinct_agreements",
     "summary": "No summary available."
   },
   {
@@ -734,7 +734,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/data_agreement.py",
-    "docs_path": "reference/internal/data_agreement__non_empty_options.md",
+    "docs_path": "api/modules/data_agreement.md#_non_empty_options",
     "summary": "No summary available."
   },
   {
@@ -754,7 +754,7 @@
       "fabricops_kit.data_agreement._validate_yes_no"
     ],
     "source_path": "src/fabricops_kit/data_agreement.py",
-    "docs_path": "reference/internal/data_agreement__normalise_widget_values.md",
+    "docs_path": "api/modules/data_agreement.md#_normalise_widget_values",
     "summary": "No summary available."
   },
   {
@@ -770,7 +770,7 @@
       "fabricops_kit.data_agreement._parse_date"
     ],
     "source_path": "src/fabricops_kit/data_agreement.py",
-    "docs_path": "reference/internal/data_agreement__normalize_optional_date.md",
+    "docs_path": "api/modules/data_agreement.md#_normalize_optional_date",
     "summary": "No summary available."
   },
   {
@@ -786,7 +786,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/data_agreement.py",
-    "docs_path": "reference/internal/data_agreement__parse_date.md",
+    "docs_path": "api/modules/data_agreement.md#_parse_date",
     "summary": "No summary available."
   },
   {
@@ -802,7 +802,7 @@
       "fabricops_kit.data_agreement._get_fabric_widgets"
     ],
     "source_path": "src/fabricops_kit/data_agreement.py",
-    "docs_path": "reference/internal/data_agreement__read_agreement_widget_values.md",
+    "docs_path": "api/modules/data_agreement.md#_read_agreement_widget_values",
     "summary": "No summary available."
   },
   {
@@ -820,7 +820,7 @@
       "fabricops_kit.metadata._runtime_context"
     ],
     "source_path": "src/fabricops_kit/data_agreement.py",
-    "docs_path": "reference/internal/data_agreement__record_base.md",
+    "docs_path": "api/modules/data_agreement.md#_record_base",
     "summary": "No summary available."
   },
   {
@@ -834,7 +834,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/data_agreement.py",
-    "docs_path": "reference/internal/data_agreement__require_fields.md",
+    "docs_path": "api/modules/data_agreement.md#_require_fields",
     "summary": "No summary available."
   },
   {
@@ -849,7 +849,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/data_agreement.py",
-    "docs_path": "reference/internal/data_agreement__resolve_committed_at.md",
+    "docs_path": "api/modules/data_agreement.md#_resolve_committed_at",
     "summary": "No summary available."
   },
   {
@@ -863,7 +863,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/data_agreement.py",
-    "docs_path": "reference/internal/data_agreement__safe_table_prefix.md",
+    "docs_path": "api/modules/data_agreement.md#_safe_table_prefix",
     "summary": "No summary available."
   },
   {
@@ -877,7 +877,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/data_agreement.py",
-    "docs_path": "reference/internal/data_agreement__select_record_fields.md",
+    "docs_path": "api/modules/data_agreement.md#_select_record_fields",
     "summary": "No summary available."
   },
   {
@@ -891,7 +891,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/data_agreement.py",
-    "docs_path": "reference/internal/data_agreement__validate_yes_no.md",
+    "docs_path": "api/modules/data_agreement.md#_validate_yes_no",
     "summary": "No summary available."
   },
   {
@@ -905,7 +905,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/data_agreement.py",
-    "docs_path": "reference/internal/data_agreement__widget_dropdown.md",
+    "docs_path": "api/modules/data_agreement.md#_widget_dropdown",
     "summary": "No summary available."
   },
   {
@@ -919,7 +919,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/data_agreement.py",
-    "docs_path": "reference/internal/data_agreement__widget_text.md",
+    "docs_path": "api/modules/data_agreement.md#_widget_text",
     "summary": "No summary available."
   },
   {
@@ -933,7 +933,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/data_agreement.py",
-    "docs_path": "reference/internal/data_agreement__write_record.md",
+    "docs_path": "api/modules/data_agreement.md#_write_record",
     "summary": "No summary available."
   },
   {
@@ -1041,7 +1041,7 @@
       "fabricops_kit.metadata._resolve_action_by"
     ],
     "source_path": "src/fabricops_kit/data_governance.py",
-    "docs_path": "reference/internal/data_governance__approved_widget_rows.md",
+    "docs_path": "api/modules/data_governance.md#_approved_widget_rows",
     "summary": "No summary available."
   },
   {
@@ -1053,7 +1053,7 @@
     "inbound": [],
     "outbound": [],
     "source_path": "src/fabricops_kit/data_governance.py",
-    "docs_path": "reference/internal/data_governance__build_governance_context.md",
+    "docs_path": "api/modules/data_governance.md#_build_governance_context",
     "summary": "No summary available."
   },
   {
@@ -1067,7 +1067,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/data_governance.py",
-    "docs_path": "reference/internal/data_governance__coerce_row_dicts.md",
+    "docs_path": "api/modules/data_governance.md#_coerce_row_dicts",
     "summary": "No summary available."
   },
   {
@@ -1081,7 +1081,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/data_governance.py",
-    "docs_path": "reference/internal/data_governance__extract_pii_suggestions.md",
+    "docs_path": "api/modules/data_governance.md#_extract_pii_suggestions",
     "summary": "No summary available."
   },
   {
@@ -1095,7 +1095,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/data_governance.py",
-    "docs_path": "reference/internal/data_governance__prepare_governance_input.md",
+    "docs_path": "api/modules/data_governance.md#_prepare_governance_input",
     "summary": "No summary available."
   },
   {
@@ -1109,7 +1109,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/data_governance.py",
-    "docs_path": "reference/internal/data_governance__undo_last_action.md",
+    "docs_path": "api/modules/data_governance.md#_undo_last_action",
     "summary": "No summary available."
   },
   {
@@ -1210,7 +1210,7 @@
       "fabricops_kit.data_lineage._validate_lineage_steps"
     ],
     "source_path": "src/fabricops_kit/data_lineage.py",
-    "docs_path": "reference/internal/data_lineage__build_lineage_record_from_steps.md",
+    "docs_path": "api/modules/data_lineage.md#_build_lineage_record_from_steps",
     "summary": "No summary available."
   },
   {
@@ -1224,7 +1224,7 @@
       "fabricops_kit.data_lineage._build_lineage_record_from_steps"
     ],
     "source_path": "src/fabricops_kit/data_lineage.py",
-    "docs_path": "reference/internal/data_lineage__build_lineage_records.md",
+    "docs_path": "api/modules/data_lineage.md#_build_lineage_records",
     "summary": "No summary available."
   },
   {
@@ -1238,7 +1238,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/data_lineage.py",
-    "docs_path": "reference/internal/data_lineage__call_name.md",
+    "docs_path": "api/modules/data_lineage.md#_call_name",
     "summary": "No summary available."
   },
   {
@@ -1252,7 +1252,7 @@
       "fabricops_kit.data_lineage._fallback_copilot_lineage_prompt"
     ],
     "source_path": "src/fabricops_kit/data_lineage.py",
-    "docs_path": "reference/internal/data_lineage__enrich_lineage_steps_with_ai.md",
+    "docs_path": "api/modules/data_lineage.md#_enrich_lineage_steps_with_ai",
     "summary": "No summary available."
   },
   {
@@ -1266,7 +1266,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/data_lineage.py",
-    "docs_path": "reference/internal/data_lineage__fallback_copilot_lineage_prompt.md",
+    "docs_path": "api/modules/data_lineage.md#_fallback_copilot_lineage_prompt",
     "summary": "No summary available."
   },
   {
@@ -1282,7 +1282,7 @@
       "fabricops_kit.data_lineage._name"
     ],
     "source_path": "src/fabricops_kit/data_lineage.py",
-    "docs_path": "reference/internal/data_lineage__flatten_chain.md",
+    "docs_path": "api/modules/data_lineage.md#_flatten_chain",
     "summary": "No summary available."
   },
   {
@@ -1296,7 +1296,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/data_lineage.py",
-    "docs_path": "reference/internal/data_lineage__literal.md",
+    "docs_path": "api/modules/data_lineage.md#_literal",
     "summary": "No summary available."
   },
   {
@@ -1311,7 +1311,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/data_lineage.py",
-    "docs_path": "reference/internal/data_lineage__name.md",
+    "docs_path": "api/modules/data_lineage.md#_name",
     "summary": "No summary available."
   },
   {
@@ -1327,7 +1327,7 @@
       "fabricops_kit.data_lineage._literal"
     ],
     "source_path": "src/fabricops_kit/data_lineage.py",
-    "docs_path": "reference/internal/data_lineage__resolve_write_target.md",
+    "docs_path": "api/modules/data_lineage.md#_resolve_write_target",
     "summary": "No summary available."
   },
   {
@@ -1341,7 +1341,7 @@
       "fabricops_kit.data_lineage._scan_notebook_lineage"
     ],
     "source_path": "src/fabricops_kit/data_lineage.py",
-    "docs_path": "reference/internal/data_lineage__scan_notebook_cells.md",
+    "docs_path": "api/modules/data_lineage.md#_scan_notebook_cells",
     "summary": "No summary available."
   },
   {
@@ -1361,7 +1361,7 @@
       "fabricops_kit.data_lineage._step"
     ],
     "source_path": "src/fabricops_kit/data_lineage.py",
-    "docs_path": "reference/internal/data_lineage__scan_notebook_lineage.md",
+    "docs_path": "api/modules/data_lineage.md#_scan_notebook_lineage",
     "summary": "No summary available."
   },
   {
@@ -1375,7 +1375,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/data_lineage.py",
-    "docs_path": "reference/internal/data_lineage__step.md",
+    "docs_path": "api/modules/data_lineage.md#_step",
     "summary": "No summary available."
   },
   {
@@ -1389,7 +1389,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/data_lineage.py",
-    "docs_path": "reference/internal/data_lineage__validate_lineage_steps.md",
+    "docs_path": "api/modules/data_lineage.md#_validate_lineage_steps",
     "summary": "No summary available."
   },
   {
@@ -1429,7 +1429,7 @@
       "fabricops_kit.technical_columns._default_technical_columns"
     ],
     "source_path": "src/fabricops_kit/data_profiling.py",
-    "docs_path": "reference/internal/data_profiling__get_profiled_columns.md",
+    "docs_path": "api/modules/data_profiling.md#_get_profiled_columns",
     "summary": "No summary available."
   },
   {
@@ -1443,7 +1443,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/data_profiling.py",
-    "docs_path": "reference/internal/data_profiling__is_min_max_supported_type.md",
+    "docs_path": "api/modules/data_profiling.md#_is_min_max_supported_type",
     "summary": "No summary available."
   },
   {
@@ -1474,7 +1474,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/data_quality.py",
-    "docs_path": "reference/internal/data_quality_DQEnforcementResult.md",
+    "docs_path": "api/modules/data_quality.md#DQEnforcementResult",
     "summary": "No summary available."
   },
   {
@@ -1486,7 +1486,7 @@
     "inbound": [],
     "outbound": [],
     "source_path": "src/fabricops_kit/data_quality.py",
-    "docs_path": "reference/internal/data_quality__approved_dq_rules_from_review_rows.md",
+    "docs_path": "api/modules/data_quality.md#_approved_dq_rules_from_review_rows",
     "summary": "No summary available."
   },
   {
@@ -1504,7 +1504,7 @@
       "fabricops_kit.metadata.build_metadata_table_key"
     ],
     "source_path": "src/fabricops_kit/data_quality.py",
-    "docs_path": "reference/internal/data_quality__attach_rule_metadata_keys.md",
+    "docs_path": "api/modules/data_quality.md#_attach_rule_metadata_keys",
     "summary": "No summary available."
   },
   {
@@ -1519,7 +1519,7 @@
       "fabricops_kit.metadata._resolve_action_by"
     ],
     "source_path": "src/fabricops_kit/data_quality.py",
-    "docs_path": "reference/internal/data_quality__build_dq_rule_deactivation_metadata_df.md",
+    "docs_path": "api/modules/data_quality.md#_build_dq_rule_deactivation_metadata_df",
     "summary": "No summary available."
   },
   {
@@ -1533,7 +1533,7 @@
       "fabricops_kit.metadata._resolve_action_by"
     ],
     "source_path": "src/fabricops_kit/data_quality.py",
-    "docs_path": "reference/internal/data_quality__build_dq_rule_deactivations.md",
+    "docs_path": "api/modules/data_quality.md#_build_dq_rule_deactivations",
     "summary": "No summary available."
   },
   {
@@ -1549,7 +1549,7 @@
       "fabricops_kit.metadata._resolve_action_by"
     ],
     "source_path": "src/fabricops_kit/data_quality.py",
-    "docs_path": "reference/internal/data_quality__build_dq_rule_history.md",
+    "docs_path": "api/modules/data_quality.md#_build_dq_rule_history",
     "summary": "No summary available."
   },
   {
@@ -1564,7 +1564,7 @@
       "fabricops_kit.metadata._resolve_action_by"
     ],
     "source_path": "src/fabricops_kit/data_quality.py",
-    "docs_path": "reference/internal/data_quality__build_dq_rules_metadata_df.md",
+    "docs_path": "api/modules/data_quality.md#_build_dq_rules_metadata_df",
     "summary": "No summary available."
   },
   {
@@ -1579,7 +1579,7 @@
       "fabricops_kit.data_quality._parse_dq_rules_dict_from_text"
     ],
     "source_path": "src/fabricops_kit/data_quality.py",
-    "docs_path": "reference/internal/data_quality__extract_candidate_rules_from_responses.md",
+    "docs_path": "api/modules/data_quality.md#_extract_candidate_rules_from_responses",
     "summary": "No summary available."
   },
   {
@@ -1596,7 +1596,7 @@
       "fabricops_kit.data_quality._parse_dq_rules_dict_from_text"
     ],
     "source_path": "src/fabricops_kit/data_quality.py",
-    "docs_path": "reference/internal/data_quality__extract_dq_rules.md",
+    "docs_path": "api/modules/data_quality.md#_extract_dq_rules",
     "summary": "No summary available."
   },
   {
@@ -1611,7 +1611,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/data_quality.py",
-    "docs_path": "reference/internal/data_quality__latest_dq_rule_versions.md",
+    "docs_path": "api/modules/data_quality.md#_latest_dq_rule_versions",
     "summary": "No summary available."
   },
   {
@@ -1625,7 +1625,7 @@
       "fabricops_kit.data_quality._latest_dq_rule_versions"
     ],
     "source_path": "src/fabricops_kit/data_quality.py",
-    "docs_path": "reference/internal/data_quality__load_active_dq_rule_metadata.md",
+    "docs_path": "api/modules/data_quality.md#_load_active_dq_rule_metadata",
     "summary": "No summary available."
   },
   {
@@ -1642,7 +1642,7 @@
       "fabricops_kit.data_quality._latest_dq_rule_versions"
     ],
     "source_path": "src/fabricops_kit/data_quality.py",
-    "docs_path": "reference/internal/data_quality__load_active_dq_rules.md",
+    "docs_path": "api/modules/data_quality.md#_load_active_dq_rules",
     "summary": "No summary available."
   },
   {
@@ -1657,7 +1657,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/data_quality.py",
-    "docs_path": "reference/internal/data_quality__parse_dq_rules_dict_from_text.md",
+    "docs_path": "api/modules/data_quality.md#_parse_dq_rules_dict_from_text",
     "summary": "No summary available."
   },
   {
@@ -1673,7 +1673,7 @@
       "fabricops_kit.data_profiling.profile_dataframe"
     ],
     "source_path": "src/fabricops_kit/data_quality.py",
-    "docs_path": "reference/internal/data_quality__prepare_dq_profile_input_rows.md",
+    "docs_path": "api/modules/data_quality.md#_prepare_dq_profile_input_rows",
     "summary": "No summary available."
   },
   {
@@ -1685,7 +1685,7 @@
     "inbound": [],
     "outbound": [],
     "source_path": "src/fabricops_kit/data_quality.py",
-    "docs_path": "reference/internal/data_quality__prepare_dq_profile_rows_with_context.md",
+    "docs_path": "api/modules/data_quality.md#_prepare_dq_profile_rows_with_context",
     "summary": "No summary available."
   },
   {
@@ -1697,7 +1697,7 @@
     "inbound": [],
     "outbound": [],
     "source_path": "src/fabricops_kit/data_quality.py",
-    "docs_path": "reference/internal/data_quality__profile_for_dq.md",
+    "docs_path": "api/modules/data_quality.md#_profile_for_dq",
     "summary": "No summary available."
   },
   {
@@ -1712,7 +1712,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/data_quality.py",
-    "docs_path": "reference/internal/data_quality__require_ipywidgets.md",
+    "docs_path": "api/modules/data_quality.md#_require_ipywidgets",
     "summary": "No summary available."
   },
   {
@@ -1729,7 +1729,7 @@
       "fabricops_kit.data_quality.validate_dq_rules"
     ],
     "source_path": "src/fabricops_kit/data_quality.py",
-    "docs_path": "reference/internal/data_quality__run_dq_rules.md",
+    "docs_path": "api/modules/data_quality.md#_run_dq_rules",
     "summary": "No summary available."
   },
   {
@@ -1746,7 +1746,7 @@
       "fabricops_kit.data_quality.validate_dq_rules"
     ],
     "source_path": "src/fabricops_kit/data_quality.py",
-    "docs_path": "reference/internal/data_quality__split_dq_rows.md",
+    "docs_path": "api/modules/data_quality.md#_split_dq_rows",
     "summary": "No summary available."
   },
   {
@@ -1760,7 +1760,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/data_quality.py",
-    "docs_path": "reference/internal/data_quality__suggest_dq_rules.md",
+    "docs_path": "api/modules/data_quality.md#_suggest_dq_rules",
     "summary": "No summary available."
   },
   {
@@ -1772,7 +1772,7 @@
     "inbound": [],
     "outbound": [],
     "source_path": "src/fabricops_kit/data_quality.py",
-    "docs_path": "reference/internal/data_quality__suggest_dq_rules_with_fabric_ai.md",
+    "docs_path": "api/modules/data_quality.md#_suggest_dq_rules_with_fabric_ai",
     "summary": "No summary available."
   },
   {
@@ -1935,7 +1935,7 @@
     "inbound": [],
     "outbound": [],
     "source_path": "src/fabricops_kit/docs_metadata.py",
-    "docs_path": "reference/internal/docs_metadata_ModuleDocMetadata.md",
+    "docs_path": "api/modules/docs_metadata.md#ModuleDocMetadata",
     "summary": "No summary available."
   },
   {
@@ -1947,7 +1947,7 @@
     "inbound": [],
     "outbound": [],
     "source_path": "src/fabricops_kit/docs_metadata.py",
-    "docs_path": "reference/internal/docs_metadata_PublicSymbolDocMetadata.md",
+    "docs_path": "api/modules/docs_metadata.md#PublicSymbolDocMetadata",
     "summary": "No summary available."
   },
   {
@@ -1959,7 +1959,7 @@
     "inbound": [],
     "outbound": [],
     "source_path": "src/fabricops_kit/docs_metadata.py",
-    "docs_path": "reference/internal/docs_metadata_TemplateFlowDocMetadata.md",
+    "docs_path": "api/modules/docs_metadata.md#TemplateFlowDocMetadata",
     "summary": "No summary available."
   },
   {
@@ -1971,7 +1971,7 @@
     "inbound": [],
     "outbound": [],
     "source_path": "src/fabricops_kit/docs_metadata.py",
-    "docs_path": "reference/internal/docs_metadata_TemplateFlowSegmentMetadata.md",
+    "docs_path": "api/modules/docs_metadata.md#TemplateFlowSegmentMetadata",
     "summary": "No summary available."
   },
   {
@@ -1985,7 +1985,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/drift.py",
-    "docs_path": "reference/internal/drift_IncrementalSafetyError.md",
+    "docs_path": "api/modules/drift.md#IncrementalSafetyError",
     "summary": "No summary available."
   },
   {
@@ -1999,7 +1999,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/drift.py",
-    "docs_path": "reference/internal/drift_SchemaDriftError.md",
+    "docs_path": "api/modules/drift.md#SchemaDriftError",
     "summary": "No summary available."
   },
   {
@@ -2013,7 +2013,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/drift.py",
-    "docs_path": "reference/internal/drift_UnsupportedDataFrameEngineError.md",
+    "docs_path": "api/modules/drift.md#UnsupportedDataFrameEngineError",
     "summary": "No summary available."
   },
   {
@@ -2031,7 +2031,7 @@
       "fabricops_kit.drift._hash"
     ],
     "source_path": "src/fabricops_kit/drift.py",
-    "docs_path": "reference/internal/drift__build_pandas_partition_snapshot.md",
+    "docs_path": "api/modules/drift.md#_build_pandas_partition_snapshot",
     "summary": "No summary available."
   },
   {
@@ -2047,7 +2047,7 @@
       "fabricops_kit.drift._column_hash"
     ],
     "source_path": "src/fabricops_kit/drift.py",
-    "docs_path": "reference/internal/drift__build_pandas_schema_snapshot.md",
+    "docs_path": "api/modules/drift.md#_build_pandas_schema_snapshot",
     "summary": "No summary available."
   },
   {
@@ -2064,7 +2064,7 @@
       "fabricops_kit.drift._hash"
     ],
     "source_path": "src/fabricops_kit/drift.py",
-    "docs_path": "reference/internal/drift__build_partition_hash.md",
+    "docs_path": "api/modules/drift.md#_build_partition_hash",
     "summary": "No summary available."
   },
   {
@@ -2081,7 +2081,7 @@
       "fabricops_kit.drift._build_partition_hash"
     ],
     "source_path": "src/fabricops_kit/drift.py",
-    "docs_path": "reference/internal/drift__build_spark_partition_snapshot.md",
+    "docs_path": "api/modules/drift.md#_build_spark_partition_snapshot",
     "summary": "No summary available."
   },
   {
@@ -2097,7 +2097,7 @@
       "fabricops_kit.drift._column_hash"
     ],
     "source_path": "src/fabricops_kit/drift.py",
-    "docs_path": "reference/internal/drift__build_spark_schema_snapshot.md",
+    "docs_path": "api/modules/drift.md#_build_spark_schema_snapshot",
     "summary": "No summary available."
   },
   {
@@ -2112,7 +2112,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/drift.py",
-    "docs_path": "reference/internal/drift__column_hash.md",
+    "docs_path": "api/modules/drift.md#_column_hash",
     "summary": "No summary available."
   },
   {
@@ -2127,7 +2127,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/drift.py",
-    "docs_path": "reference/internal/drift__hash.md",
+    "docs_path": "api/modules/drift.md#_hash",
     "summary": "No summary available."
   },
   {
@@ -2141,7 +2141,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/drift.py",
-    "docs_path": "reference/internal/drift__is_closed_partition.md",
+    "docs_path": "api/modules/drift.md#_is_closed_partition",
     "summary": "No summary available."
   },
   {
@@ -2156,7 +2156,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/drift.py",
-    "docs_path": "reference/internal/drift__is_missing_table_error.md",
+    "docs_path": "api/modules/drift.md#_is_missing_table_error",
     "summary": "No summary available."
   },
   {
@@ -2174,7 +2174,7 @@
       "fabricops_kit._utils._to_jsonable"
     ],
     "source_path": "src/fabricops_kit/drift.py",
-    "docs_path": "reference/internal/drift__json_dumps.md",
+    "docs_path": "api/modules/drift.md#_json_dumps",
     "summary": "No summary available."
   },
   {
@@ -2188,7 +2188,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/drift.py",
-    "docs_path": "reference/internal/drift__resolve_change_behavior.md",
+    "docs_path": "api/modules/drift.md#_resolve_change_behavior",
     "summary": "No summary available."
   },
   {
@@ -2203,7 +2203,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/drift.py",
-    "docs_path": "reference/internal/drift__safe_spark_collect.md",
+    "docs_path": "api/modules/drift.md#_safe_spark_collect",
     "summary": "No summary available."
   },
   {
@@ -2219,7 +2219,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/drift.py",
-    "docs_path": "reference/internal/drift__utc_now_iso.md",
+    "docs_path": "api/modules/drift.md#_utc_now_iso",
     "summary": "No summary available."
   },
   {
@@ -2234,7 +2234,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/drift.py",
-    "docs_path": "reference/internal/drift__write_metadata_rows.md",
+    "docs_path": "api/modules/drift.md#_write_metadata_rows",
     "summary": "No summary available."
   },
   {
@@ -2248,7 +2248,7 @@
       "fabricops_kit.drift.IncrementalSafetyError"
     ],
     "source_path": "src/fabricops_kit/drift.py",
-    "docs_path": "reference/internal/drift_assert_incremental_safe.md",
+    "docs_path": "api/modules/drift.md#assert_incremental_safe",
     "summary": "No summary available."
   },
   {
@@ -2262,7 +2262,7 @@
       "fabricops_kit.drift.SchemaDriftError"
     ],
     "source_path": "src/fabricops_kit/drift.py",
-    "docs_path": "reference/internal/drift_assert_no_blocking_schema_drift.md",
+    "docs_path": "api/modules/drift.md#assert_no_blocking_schema_drift",
     "summary": "No summary available."
   },
   {
@@ -2279,7 +2279,7 @@
       "fabricops_kit.drift.build_partition_snapshot"
     ],
     "source_path": "src/fabricops_kit/drift.py",
-    "docs_path": "reference/internal/drift_build_and_write_partition_snapshot.md",
+    "docs_path": "api/modules/drift.md#build_and_write_partition_snapshot",
     "summary": "No summary available."
   },
   {
@@ -2296,7 +2296,7 @@
       "fabricops_kit.drift.build_schema_snapshot"
     ],
     "source_path": "src/fabricops_kit/drift.py",
-    "docs_path": "reference/internal/drift_build_and_write_schema_snapshot.md",
+    "docs_path": "api/modules/drift.md#build_and_write_schema_snapshot",
     "summary": "No summary available."
   },
   {
@@ -2311,7 +2311,7 @@
       "fabricops_kit.drift._utc_now_iso"
     ],
     "source_path": "src/fabricops_kit/drift.py",
-    "docs_path": "reference/internal/drift_build_drift_evidence_record.md",
+    "docs_path": "api/modules/drift.md#build_drift_evidence_record",
     "summary": "No summary available."
   },
   {
@@ -2325,7 +2325,7 @@
       "fabricops_kit._utils._to_jsonable"
     ],
     "source_path": "src/fabricops_kit/drift.py",
-    "docs_path": "reference/internal/drift_build_incremental_safety_records.md",
+    "docs_path": "api/modules/drift.md#build_incremental_safety_records",
     "summary": "No summary available."
   },
   {
@@ -2344,7 +2344,7 @@
       "fabricops_kit.drift.detect_dataframe_engine"
     ],
     "source_path": "src/fabricops_kit/drift.py",
-    "docs_path": "reference/internal/drift_build_partition_snapshot.md",
+    "docs_path": "api/modules/drift.md#build_partition_snapshot",
     "summary": "No summary available."
   },
   {
@@ -2363,7 +2363,7 @@
       "fabricops_kit.drift.detect_dataframe_engine"
     ],
     "source_path": "src/fabricops_kit/drift.py",
-    "docs_path": "reference/internal/drift_build_schema_snapshot.md",
+    "docs_path": "api/modules/drift.md#build_schema_snapshot",
     "summary": "No summary available."
   },
   {
@@ -2425,7 +2425,7 @@
       "fabricops_kit.drift.default_incremental_safety_policy"
     ],
     "source_path": "src/fabricops_kit/drift.py",
-    "docs_path": "reference/internal/drift_compare_partition_snapshots.md",
+    "docs_path": "api/modules/drift.md#compare_partition_snapshots",
     "summary": "No summary available."
   },
   {
@@ -2442,7 +2442,7 @@
       "fabricops_kit.drift.default_schema_drift_policy"
     ],
     "source_path": "src/fabricops_kit/drift.py",
-    "docs_path": "reference/internal/drift_compare_schema_snapshots.md",
+    "docs_path": "api/modules/drift.md#compare_schema_snapshots",
     "summary": "No summary available."
   },
   {
@@ -2457,7 +2457,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/drift.py",
-    "docs_path": "reference/internal/drift_default_incremental_safety_policy.md",
+    "docs_path": "api/modules/drift.md#default_incremental_safety_policy",
     "summary": "No summary available."
   },
   {
@@ -2472,7 +2472,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/drift.py",
-    "docs_path": "reference/internal/drift_default_schema_drift_policy.md",
+    "docs_path": "api/modules/drift.md#default_schema_drift_policy",
     "summary": "No summary available."
   },
   {
@@ -2489,7 +2489,7 @@
       "fabricops_kit.drift.UnsupportedDataFrameEngineError"
     ],
     "source_path": "src/fabricops_kit/drift.py",
-    "docs_path": "reference/internal/drift_detect_dataframe_engine.md",
+    "docs_path": "api/modules/drift.md#detect_dataframe_engine",
     "summary": "No summary available."
   },
   {
@@ -2504,7 +2504,7 @@
       "fabricops_kit.drift._safe_spark_collect"
     ],
     "source_path": "src/fabricops_kit/drift.py",
-    "docs_path": "reference/internal/drift_load_latest_partition_snapshot.md",
+    "docs_path": "api/modules/drift.md#load_latest_partition_snapshot",
     "summary": "No summary available."
   },
   {
@@ -2519,7 +2519,7 @@
       "fabricops_kit.drift._safe_spark_collect"
     ],
     "source_path": "src/fabricops_kit/drift.py",
-    "docs_path": "reference/internal/drift_load_latest_schema_snapshot.md",
+    "docs_path": "api/modules/drift.md#load_latest_schema_snapshot",
     "summary": "No summary available."
   },
   {
@@ -2531,7 +2531,7 @@
     "inbound": [],
     "outbound": [],
     "source_path": "src/fabricops_kit/drift.py",
-    "docs_path": "reference/internal/drift_prepare_drift_baselines.md",
+    "docs_path": "api/modules/drift.md#prepare_drift_baselines",
     "summary": "No summary available."
   },
   {
@@ -2569,7 +2569,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/fabric_input_output.py",
-    "docs_path": "reference/internal/fabric_input_output__convert_single_parquet_ns_to_us.md",
+    "docs_path": "api/modules/fabric_input_output.md#_convert_single_parquet_ns_to_us",
     "summary": "No summary available."
   },
   {
@@ -2583,7 +2583,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/fabric_input_output.py",
-    "docs_path": "reference/internal/fabric_input_output__get_fabric_runtime_context.md",
+    "docs_path": "api/modules/fabric_input_output.md#_get_fabric_runtime_context",
     "summary": "No summary available."
   },
   {
@@ -2602,7 +2602,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/fabric_input_output.py",
-    "docs_path": "reference/internal/fabric_input_output__get_spark.md",
+    "docs_path": "api/modules/fabric_input_output.md#_get_spark",
     "summary": "No summary available."
   },
   {
@@ -2616,7 +2616,7 @@
       "fabricops_kit.fabric_input_output._get_fabric_runtime_context"
     ],
     "source_path": "src/fabricops_kit/fabric_input_output.py",
-    "docs_path": "reference/internal/fabric_input_output_check_naming_convention.md",
+    "docs_path": "api/modules/fabric_input_output.md#check_naming_convention",
     "summary": "No summary available."
   },
   {
@@ -2630,7 +2630,7 @@
       "fabricops_kit.config.load_config"
     ],
     "source_path": "src/fabricops_kit/fabric_input_output.py",
-    "docs_path": "reference/internal/fabric_input_output_load_config.md",
+    "docs_path": "api/modules/fabric_input_output.md#load_config",
     "summary": "No summary available."
   },
   {
@@ -2721,7 +2721,7 @@
       "fabricops_kit.fabric_input_output.write_lakehouse_table"
     ],
     "source_path": "src/fabricops_kit/fabric_input_output.py",
-    "docs_path": "reference/internal/fabric_input_output_seed_minimal_sample_source_table.md",
+    "docs_path": "api/modules/fabric_input_output.md#seed_minimal_sample_source_table",
     "summary": "No summary available."
   },
   {
@@ -2768,7 +2768,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/handover.py",
-    "docs_path": "reference/internal/handover__status_of.md",
+    "docs_path": "api/modules/handover.md#_status_of",
     "summary": "No summary available."
   },
   {
@@ -2795,7 +2795,7 @@
       "fabricops_kit.handover.render_handover_markdown"
     ],
     "source_path": "src/fabricops_kit/handover.py",
-    "docs_path": "reference/internal/handover_build_handover_record.md",
+    "docs_path": "api/modules/handover.md#build_handover_record",
     "summary": "No summary available."
   },
   {
@@ -2827,7 +2827,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/metadata.py",
-    "docs_path": "reference/internal/metadata__context_get.md",
+    "docs_path": "api/modules/metadata.md#_context_get",
     "summary": "No summary available."
   },
   {
@@ -2839,7 +2839,7 @@
     "inbound": [],
     "outbound": [],
     "source_path": "src/fabricops_kit/metadata.py",
-    "docs_path": "reference/internal/metadata__extract_columns_from_profile.md",
+    "docs_path": "api/modules/metadata.md#_extract_columns_from_profile",
     "summary": "No summary available."
   },
   {
@@ -2853,7 +2853,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/metadata.py",
-    "docs_path": "reference/internal/metadata__key_part.md",
+    "docs_path": "api/modules/metadata.md#_key_part",
     "summary": "No summary available."
   },
   {
@@ -2870,7 +2870,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/metadata.py",
-    "docs_path": "reference/internal/metadata__now_utc_iso.md",
+    "docs_path": "api/modules/metadata.md#_now_utc_iso",
     "summary": "No summary available."
   },
   {
@@ -2892,7 +2892,7 @@
       "fabricops_kit.metadata._runtime_context"
     ],
     "source_path": "src/fabricops_kit/metadata.py",
-    "docs_path": "reference/internal/metadata__resolve_action_by.md",
+    "docs_path": "api/modules/metadata.md#_resolve_action_by",
     "summary": "No summary available."
   },
   {
@@ -2910,7 +2910,7 @@
       "fabricops_kit.metadata._context_get"
     ],
     "source_path": "src/fabricops_kit/metadata.py",
-    "docs_path": "reference/internal/metadata__runtime_context.md",
+    "docs_path": "api/modules/metadata.md#_runtime_context",
     "summary": "No summary available."
   },
   {
@@ -2924,7 +2924,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/metadata.py",
-    "docs_path": "reference/internal/metadata__safe_str.md",
+    "docs_path": "api/modules/metadata.md#_safe_str",
     "summary": "No summary available."
   },
   {
@@ -2942,7 +2942,7 @@
       "fabricops_kit.metadata._key_part"
     ],
     "source_path": "src/fabricops_kit/metadata.py",
-    "docs_path": "reference/internal/metadata__sha256_key.md",
+    "docs_path": "api/modules/metadata.md#_sha256_key",
     "summary": "No summary available."
   },
   {
@@ -2958,7 +2958,7 @@
       "fabricops_kit.metadata._sha256_key"
     ],
     "source_path": "src/fabricops_kit/metadata.py",
-    "docs_path": "reference/internal/metadata_build_dq_rule_key.md",
+    "docs_path": "api/modules/metadata.md#build_dq_rule_key",
     "summary": "No summary available."
   },
   {
@@ -2972,7 +2972,7 @@
       "fabricops_kit.metadata._now_utc_iso"
     ],
     "source_path": "src/fabricops_kit/metadata.py",
-    "docs_path": "reference/internal/metadata_build_evidence_row.md",
+    "docs_path": "api/modules/metadata.md#build_evidence_row",
     "summary": "No summary available."
   },
   {
@@ -2990,7 +2990,7 @@
       "fabricops_kit.metadata._sha256_key"
     ],
     "source_path": "src/fabricops_kit/metadata.py",
-    "docs_path": "reference/internal/metadata_build_metadata_column_key.md",
+    "docs_path": "api/modules/metadata.md#build_metadata_column_key",
     "summary": "No summary available."
   },
   {
@@ -3008,7 +3008,7 @@
       "fabricops_kit.metadata._sha256_key"
     ],
     "source_path": "src/fabricops_kit/metadata.py",
-    "docs_path": "reference/internal/metadata_build_metadata_table_key.md",
+    "docs_path": "api/modules/metadata.md#build_metadata_table_key",
     "summary": "No summary available."
   },
   {
@@ -3022,7 +3022,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/metadata.py",
-    "docs_path": "reference/internal/metadata_column_context_rows_for_spark.md",
+    "docs_path": "api/modules/metadata.md#column_context_rows_for_spark",
     "summary": "No summary available."
   },
   {
@@ -3034,7 +3034,7 @@
     "inbound": [],
     "outbound": [],
     "source_path": "src/fabricops_kit/metadata.py",
-    "docs_path": "reference/internal/metadata_default_evidence_types.md",
+    "docs_path": "api/modules/metadata.md#default_evidence_types",
     "summary": "No summary available."
   },
   {
@@ -3058,7 +3058,7 @@
     "inbound": [],
     "outbound": [],
     "source_path": "src/fabricops_kit/metadata.py",
-    "docs_path": "reference/internal/metadata_normalise_records_by_column.md",
+    "docs_path": "api/modules/metadata.md#normalise_records_by_column",
     "summary": "No summary available."
   },
   {
@@ -3091,7 +3091,7 @@
       "fabricops_kit.metadata.write_metadata_rows"
     ],
     "source_path": "src/fabricops_kit/metadata.py",
-    "docs_path": "reference/internal/metadata_write_column_business_context.md",
+    "docs_path": "api/modules/metadata.md#write_column_business_context",
     "summary": "No summary available."
   },
   {
@@ -3105,7 +3105,7 @@
       "fabricops_kit.metadata.write_metadata_rows"
     ],
     "source_path": "src/fabricops_kit/metadata.py",
-    "docs_path": "reference/internal/metadata_write_column_governance_context.md",
+    "docs_path": "api/modules/metadata.md#write_column_governance_context",
     "summary": "No summary available."
   },
   {
@@ -3124,7 +3124,7 @@
       "fabricops_kit.metadata.column_context_rows_for_spark"
     ],
     "source_path": "src/fabricops_kit/metadata.py",
-    "docs_path": "reference/internal/metadata_write_metadata_rows.md",
+    "docs_path": "api/modules/metadata.md#write_metadata_rows",
     "summary": "No summary available."
   },
   {
@@ -3142,7 +3142,7 @@
       "fabricops_kit.technical_columns._get_fabric_runtime_context"
     ],
     "source_path": "src/fabricops_kit/technical_columns.py",
-    "docs_path": "reference/internal/technical_columns__add_audit_columns.md",
+    "docs_path": "api/modules/technical_columns.md#_add_audit_columns",
     "summary": "No summary available."
   },
   {
@@ -3158,7 +3158,7 @@
       "fabricops_kit.technical_columns._assert_columns_exist"
     ],
     "source_path": "src/fabricops_kit/technical_columns.py",
-    "docs_path": "reference/internal/technical_columns__add_datetime_features.md",
+    "docs_path": "api/modules/technical_columns.md#_add_datetime_features",
     "summary": "No summary available."
   },
   {
@@ -3176,7 +3176,7 @@
       "fabricops_kit.technical_columns._non_technical_columns"
     ],
     "source_path": "src/fabricops_kit/technical_columns.py",
-    "docs_path": "reference/internal/technical_columns__add_hash_columns.md",
+    "docs_path": "api/modules/technical_columns.md#_add_hash_columns",
     "summary": "No summary available."
   },
   {
@@ -3192,7 +3192,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/technical_columns.py",
-    "docs_path": "reference/internal/technical_columns__assert_columns_exist.md",
+    "docs_path": "api/modules/technical_columns.md#_assert_columns_exist",
     "summary": "No summary available."
   },
   {
@@ -3208,7 +3208,7 @@
       "fabricops_kit.technical_columns._safe_string"
     ],
     "source_path": "src/fabricops_kit/technical_columns.py",
-    "docs_path": "reference/internal/technical_columns__bucket_values_pandas.md",
+    "docs_path": "api/modules/technical_columns.md#_bucket_values_pandas",
     "summary": "No summary available."
   },
   {
@@ -3223,7 +3223,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/technical_columns.py",
-    "docs_path": "reference/internal/technical_columns__default_technical_columns.md",
+    "docs_path": "api/modules/technical_columns.md#_default_technical_columns",
     "summary": "No summary available."
   },
   {
@@ -3237,7 +3237,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/technical_columns.py",
-    "docs_path": "reference/internal/technical_columns__get_fabric_runtime_context.md",
+    "docs_path": "api/modules/technical_columns.md#_get_fabric_runtime_context",
     "summary": "No summary available."
   },
   {
@@ -3253,7 +3253,7 @@
       "fabricops_kit.technical_columns._safe_string"
     ],
     "source_path": "src/fabricops_kit/technical_columns.py",
-    "docs_path": "reference/internal/technical_columns__hash_row.md",
+    "docs_path": "api/modules/technical_columns.md#_hash_row",
     "summary": "No summary available."
   },
   {
@@ -3269,7 +3269,7 @@
       "fabricops_kit.technical_columns._default_technical_columns"
     ],
     "source_path": "src/fabricops_kit/technical_columns.py",
-    "docs_path": "reference/internal/technical_columns__non_technical_columns.md",
+    "docs_path": "api/modules/technical_columns.md#_non_technical_columns",
     "summary": "No summary available."
   },
   {
@@ -3284,7 +3284,7 @@
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/technical_columns.py",
-    "docs_path": "reference/internal/technical_columns__safe_string.md",
+    "docs_path": "api/modules/technical_columns.md#_safe_string",
     "summary": "No summary available."
   },
   {

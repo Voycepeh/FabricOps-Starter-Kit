@@ -20,6 +20,6 @@ No summary available.
 - Outbound references count: 0
 
 ## Inbound references
-- <a href="../internal/metadata/_resolve_action_by/"><code>fabricops_kit.metadata._resolve_action_by</code></a>
-- <a href="../internal/metadata/_runtime_context/"><code>fabricops_kit.metadata._runtime_context</code></a>
+- <code>fabricops_kit.metadata._resolve_action_by</code>
+- <code>fabricops_kit.metadata._runtime_context</code>
 - <a href="../register_current_notebook/"><code>fabricops_kit.metadata.register_current_notebook</code></a>

@@ -20,8 +20,8 @@ No summary available.
 - Outbound references count: 2
 
 ## Inbound references
-- <a href="../internal/data_quality/_prepare_dq_profile_input_rows/"><code>fabricops_kit.data_quality._prepare_dq_profile_input_rows</code></a>
+- <code>fabricops_kit.data_quality._prepare_dq_profile_input_rows</code>
 
 ## Outbound references
-- <a href="../internal/data_profiling/_get_profiled_columns/"><code>fabricops_kit.data_profiling._get_profiled_columns</code></a>
-- <a href="../internal/data_profiling/_is_min_max_supported_type/"><code>fabricops_kit.data_profiling._is_min_max_supported_type</code></a>
+- <code>fabricops_kit.data_profiling._get_profiled_columns</code>
+- <code>fabricops_kit.data_profiling._is_min_max_supported_type</code>

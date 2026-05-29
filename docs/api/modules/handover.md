@@ -83,7 +83,7 @@ Owns final handover assembly and contract artifact rendering/export.
       <td>Essential</td>
       <td>function</td>
       <td>Render a handover summary dictionary into Markdown for handover notes.</td>
-      <td><a href="../../reference/internal/handover/_status_of/"><code>_status_of</code></a> (internal)</td>
+      <td><a href="#_status_of"><code>_status_of</code></a> (internal)</td>
     </tr>
   </tbody>
 </table>
@@ -103,12 +103,12 @@ Owns final handover assembly and contract artifact rendering/export.
 <ul class="callable-relationship-rows">
 <li>
 <a class="reference-chip" href="../../reference/build_handover/"><code>build_handover</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <span>None.</span>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/render_handover_markdown/"><code>render_handover_markdown</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_status_of"><code>_status_of</code></a>
 </li>
 </ul>
@@ -129,7 +129,7 @@ Owns final handover assembly and contract artifact rendering/export.
   </thead>
   <tbody>
     <tr>
-      <td><a href="../../reference/internal/handover/_status_of/"><code>_status_of</code></a></td>
+      <td><a href="#_status_of"><code>_status_of</code></a></td>
       <td><a href="../../reference/render_handover_markdown/"><code>render_handover_markdown</code></a></td>
     </tr>
   </tbody>

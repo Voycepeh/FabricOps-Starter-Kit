@@ -20,4 +20,4 @@ No summary available.
 - Outbound references count: 1
 
 ## Outbound references
-- <a href="../internal/data_quality/_require_ipywidgets/"><code>fabricops_kit.data_quality._require_ipywidgets</code></a>
+- <code>fabricops_kit.data_quality._require_ipywidgets</code>

@@ -20,7 +20,7 @@ No summary available.
 - Outbound references count: 1
 
 ## Inbound references
-- <a href="../internal/handover/build_handover_record/"><code>fabricops_kit.handover.build_handover_record</code></a>
+- <code>fabricops_kit.handover.build_handover_record</code>
 
 ## Outbound references
-- <a href="../internal/handover/_status_of/"><code>fabricops_kit.handover._status_of</code></a>
+- <code>fabricops_kit.handover._status_of</code>

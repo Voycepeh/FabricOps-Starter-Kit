@@ -83,35 +83,35 @@ Owns sensitivity, PII, confidentiality, policy labels, and governance approval e
       <td>Essential</td>
       <td>function</td>
       <td>Load approved governance metadata as read-only agreement context.</td>
-      <td><a href="../../reference/internal/data_governance/_coerce_row_dicts/"><code>_coerce_row_dicts</code></a> (internal)</td>
+      <td><a href="#_coerce_row_dicts"><code>_coerce_row_dicts</code></a> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/review_governance/"><code>review_governance</code></a></td>
       <td>Essential</td>
       <td>function</td>
       <td>Display governance review widget and capture approve/reject decisions in module state.</td>
-      <td><a href="../../reference/internal/data_governance/_undo_last_action/"><code>_undo_last_action</code></a> (internal)</td>
+      <td><a href="#_undo_last_action"><code>_undo_last_action</code></a> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/write_governance/"><code>write_governance</code></a></td>
       <td>Essential</td>
       <td>function</td>
       <td>Persist approved governance rows to metadata table.</td>
-      <td><a href="../../reference/internal/data_governance/_approved_widget_rows/"><code>_approved_widget_rows</code></a> (internal)</td>
+      <td><a href="#_approved_widget_rows"><code>_approved_widget_rows</code></a> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/extract_governance_suggestions/"><code>extract_governance_suggestions</code></a></td>
       <td>Optional</td>
       <td>function</td>
       <td>Extract review-ready governance suggestions from AI responses.</td>
-      <td><a href="../../reference/internal/data_governance/_extract_pii_suggestions/"><code>_extract_pii_suggestions</code></a> (internal)</td>
+      <td><a href="#_extract_pii_suggestions"><code>_extract_pii_suggestions</code></a> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/prepare_governance_input/"><code>prepare_governance_input</code></a></td>
       <td>Optional</td>
       <td>function</td>
       <td>Prepare governance prompt input rows from profile evidence and approved context.</td>
-      <td><a href="../../reference/internal/data_governance/_prepare_governance_input/"><code>_prepare_governance_input</code></a> (internal)</td>
+      <td><a href="#_prepare_governance_input"><code>_prepare_governance_input</code></a> (internal)</td>
     </tr>
   </tbody>
 </table>
@@ -131,32 +131,32 @@ Owns sensitivity, PII, confidentiality, policy labels, and governance approval e
 <ul class="callable-relationship-rows">
 <li>
 <a class="reference-chip" href="../../reference/draft_governance/"><code>draft_governance</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <span>None.</span>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/extract_governance_suggestions/"><code>extract_governance_suggestions</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_extract_pii_suggestions"><code>_extract_pii_suggestions</code></a>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/load_governance/"><code>load_governance</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_coerce_row_dicts"><code>_coerce_row_dicts</code></a>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/prepare_governance_input/"><code>prepare_governance_input</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_prepare_governance_input"><code>_prepare_governance_input</code></a>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/review_governance/"><code>review_governance</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_undo_last_action"><code>_undo_last_action</code></a>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/write_governance/"><code>write_governance</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_approved_widget_rows"><code>_approved_widget_rows</code></a>
 </li>
 </ul>
@@ -177,27 +177,27 @@ Owns sensitivity, PII, confidentiality, policy labels, and governance approval e
   </thead>
   <tbody>
     <tr>
-      <td><a href="../../reference/internal/data_governance/_approved_widget_rows/"><code>_approved_widget_rows</code></a></td>
+      <td><a href="#_approved_widget_rows"><code>_approved_widget_rows</code></a></td>
       <td><a href="../../reference/write_governance/"><code>write_governance</code></a></td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_governance/_build_governance_context/"><code>_build_governance_context</code></a></td>
+      <td><a href="#_build_governance_context"><code>_build_governance_context</code></a></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_governance/_coerce_row_dicts/"><code>_coerce_row_dicts</code></a></td>
+      <td><a href="#_coerce_row_dicts"><code>_coerce_row_dicts</code></a></td>
       <td><a href="../../reference/load_governance/"><code>load_governance</code></a></td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_governance/_extract_pii_suggestions/"><code>_extract_pii_suggestions</code></a></td>
+      <td><a href="#_extract_pii_suggestions"><code>_extract_pii_suggestions</code></a></td>
       <td><a href="../../reference/extract_governance_suggestions/"><code>extract_governance_suggestions</code></a></td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_governance/_prepare_governance_input/"><code>_prepare_governance_input</code></a></td>
+      <td><a href="#_prepare_governance_input"><code>_prepare_governance_input</code></a></td>
       <td><a href="../../reference/prepare_governance_input/"><code>prepare_governance_input</code></a></td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_governance/_undo_last_action/"><code>_undo_last_action</code></a></td>
+      <td><a href="#_undo_last_action"><code>_undo_last_action</code></a></td>
       <td><a href="../../reference/review_governance/"><code>review_governance</code></a></td>
     </tr>
   </tbody>

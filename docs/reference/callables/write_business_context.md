@@ -20,4 +20,4 @@ No summary available.
 - Outbound references count: 1
 
 ## Outbound references
-- <a href="../internal/metadata/write_column_business_context/"><code>fabricops_kit.metadata.write_column_business_context</code></a>
+- <code>fabricops_kit.metadata.write_column_business_context</code>

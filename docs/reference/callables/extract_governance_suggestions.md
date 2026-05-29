@@ -20,4 +20,4 @@ No summary available.
 - Outbound references count: 1
 
 ## Outbound references
-- <a href="../internal/data_governance/_extract_pii_suggestions/"><code>fabricops_kit.data_governance._extract_pii_suggestions</code></a>
+- <code>fabricops_kit.data_governance._extract_pii_suggestions</code>

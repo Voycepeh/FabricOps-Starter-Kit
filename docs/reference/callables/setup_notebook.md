@@ -20,7 +20,7 @@ No summary available.
 - Outbound references count: 4
 
 ## Outbound references
-- <a href="../internal/config/NotebookSetupContext/"><code>fabricops_kit.config.NotebookSetupContext</code></a>
-- <a href="../internal/config/_get_store/"><code>fabricops_kit.config._get_store</code></a>
-- <a href="../internal/config/_run_config_smoke_tests/"><code>fabricops_kit.config._run_config_smoke_tests</code></a>
+- <code>fabricops_kit.config.NotebookSetupContext</code>
+- <code>fabricops_kit.config._get_store</code>
+- <code>fabricops_kit.config._run_config_smoke_tests</code>
 - <a href="../load_config/"><code>fabricops_kit.config.load_config</code></a>

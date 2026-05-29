@@ -20,9 +20,9 @@ No summary available.
 - Outbound references count: 1
 
 ## Inbound references
-- <a href="../internal/config/_bootstrap_fabric_env/"><code>fabricops_kit.config._bootstrap_fabric_env</code></a>
+- <code>fabricops_kit.config._bootstrap_fabric_env</code>
 - <a href="../setup_notebook/"><code>fabricops_kit.config.setup_notebook</code></a>
-- <a href="../internal/fabric_input_output/load_config/"><code>fabricops_kit.fabric_input_output.load_config</code></a>
+- <code>fabricops_kit.fabric_input_output.load_config</code>
 
 ## Outbound references
-- <a href="../internal/config/_validate_framework_config/"><code>fabricops_kit.config._validate_framework_config</code></a>
+- <code>fabricops_kit.config._validate_framework_config</code>
