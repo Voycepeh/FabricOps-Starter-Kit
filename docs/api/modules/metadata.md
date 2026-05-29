@@ -10,7 +10,7 @@
 
 ## Module purpose
 
-Owns metadata/contract store access, evidence persistence, agreement metadata, notebook evidence, and contract assembly inputs.
+Owns metadata evidence persistence, stable keys, notebook registry, and contract evidence loading.
 
 ## Module manifest
 
@@ -28,7 +28,7 @@ Owns metadata/contract store access, evidence persistence, agreement metadata, n
     </tr>
     <tr>
       <td>Module purpose</td>
-      <td>Owns metadata/contract store access, evidence persistence, agreement metadata, notebook evidence, and contract assembly inputs.</td>
+      <td>Owns metadata evidence persistence, stable keys, notebook registry, and contract evidence loading.</td>
     </tr>
     <tr>
       <td>Public callable count</td>

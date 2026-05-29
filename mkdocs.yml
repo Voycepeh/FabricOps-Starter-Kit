@@ -28,7 +28,10 @@ nav:
       - 03 Pipeline Contract: notebook-structure/03-pipeline-contract.md
       - 04 Governance Operations: notebook-structure/04-governance-operations.md
   - Workflow: lifecycle-operating-model.md
-  - Contracts: metadata-and-contracts/index.md
+  - Contracts:
+      - Overview: metadata-and-contracts/index.md
+      - Evidence to Handover: metadata-and-contracts/evidence-to-handover.md
+      - Metadata Columns: metadata-and-contracts/metadata-columns.md
   - Data Quality: data-quality-rules-system.md
   - Deploy: deployment-and-promotion.md
   - API:
