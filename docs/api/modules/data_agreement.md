@@ -6,7 +6,7 @@
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 6</span><span class="reference-chip">Internal helpers: 25</span><span class="reference-chip">Outbound: 1</span><span class="reference-chip">Inbound: 0</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 6</span><span class="reference-chip">Internal helpers: 21</span><span class="reference-chip">Outbound: 1</span><span class="reference-chip">Inbound: 0</span></div>
 
 ## Module purpose
 
@@ -36,7 +36,7 @@ Owns agreement metadata capture, audited record building, metadata commit helper
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>25</td>
+      <td>21</td>
     </tr>
     <tr>
       <td>Inbound module count</td>
@@ -76,7 +76,7 @@ Owns agreement metadata capture, audited record building, metadata commit helper
       <td>Essential</td>
       <td>function</td>
       <td>Collect widget values and build audited agreement metadata records.</td>
-      <td><a href="../../reference/internal/data_agreement/_build_agreement_catalogue_record/"><code>_build_agreement_catalogue_record</code></a> (internal), <a href="../../reference/internal/data_agreement/_build_agreement_header_record/"><code>_build_agreement_header_record</code></a> (internal), <a href="../../reference/internal/data_agreement/_build_agreement_scope_record/"><code>_build_agreement_scope_record</code></a> (internal), <a href="../../reference/internal/data_agreement/_read_agreement_widget_values/"><code>_read_agreement_widget_values</code></a> (internal), <a href="../../reference/internal/data_agreement/_resolve_committed_at/"><code>_resolve_committed_at</code></a> (internal)</td>
+      <td><a href="../../reference/internal/data_agreement/_build_agreement_record/"><code>_build_agreement_record</code></a> (internal), <a href="../../reference/internal/data_agreement/_normalise_widget_values/"><code>_normalise_widget_values</code></a> (internal), <a href="../../reference/internal/data_agreement/_read_agreement_widget_values/"><code>_read_agreement_widget_values</code></a> (internal), <a href="../../reference/internal/data_agreement/_record_base/"><code>_record_base</code></a> (internal), <a href="../../reference/internal/data_agreement/_resolve_committed_at/"><code>_resolve_committed_at</code></a> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/commit_agreement_metadata/"><code>commit_agreement_metadata</code></a></td>
@@ -132,7 +132,7 @@ Owns agreement metadata capture, audited record building, metadata commit helper
 <li>
 <a class="reference-chip" href="../../reference/collect_agreement_metadata/"><code>collect_agreement_metadata</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_build_agreement_catalogue_record"><code>_build_agreement_catalogue_record</code></a>, <a class="reference-chip" href="#_build_agreement_header_record"><code>_build_agreement_header_record</code></a>, <a class="reference-chip" href="#_build_agreement_scope_record"><code>_build_agreement_scope_record</code></a>, <a class="reference-chip" href="#_read_agreement_widget_values"><code>_read_agreement_widget_values</code></a>, <a class="reference-chip" href="#_resolve_committed_at"><code>_resolve_committed_at</code></a>
+<a class="reference-chip" href="#_build_agreement_record"><code>_build_agreement_record</code></a>, <a class="reference-chip" href="#_normalise_widget_values"><code>_normalise_widget_values</code></a>, <a class="reference-chip" href="#_read_agreement_widget_values"><code>_read_agreement_widget_values</code></a>, <a class="reference-chip" href="#_record_base"><code>_record_base</code></a>, <a class="reference-chip" href="#_resolve_committed_at"><code>_resolve_committed_at</code></a>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/commit_agreement_metadata/"><code>commit_agreement_metadata</code></a>
@@ -185,24 +185,12 @@ Owns agreement metadata capture, audited record building, metadata commit helper
       <td><a href="../../reference/create_agreement_widgets/"><code>create_agreement_widgets</code></a></td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_agreement/_build_agreement_catalogue_record/"><code>_build_agreement_catalogue_record</code></a></td>
-      <td><a href="../../reference/collect_agreement_metadata/"><code>collect_agreement_metadata</code></a></td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/internal/data_agreement/_build_agreement_header_record/"><code>_build_agreement_header_record</code></a></td>
-      <td><a href="../../reference/collect_agreement_metadata/"><code>collect_agreement_metadata</code></a></td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/internal/data_agreement/_build_agreement_scope_record/"><code>_build_agreement_scope_record</code></a></td>
+      <td><a href="../../reference/internal/data_agreement/_build_agreement_record/"><code>_build_agreement_record</code></a></td>
       <td><a href="../../reference/collect_agreement_metadata/"><code>collect_agreement_metadata</code></a></td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/data_agreement/_coerce_row_dicts/"><code>_coerce_row_dicts</code></a></td>
       <td><a href="../../reference/load_agreements/"><code>load_agreements</code></a>, <a href="../../reference/select_agreement/"><code>select_agreement</code></a></td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/internal/data_agreement/_context_value/"><code>_context_value</code></a></td>
-      <td>—</td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/data_agreement/_derive_agreement_status/"><code>_derive_agreement_status</code></a></td>
@@ -217,16 +205,12 @@ Owns agreement metadata capture, audited record building, metadata commit helper
       <td><a href="../../reference/load_agreements/"><code>load_agreements</code></a></td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_agreement/_metadata_root/"><code>_metadata_root</code></a></td>
-      <td>—</td>
-    </tr>
-    <tr>
       <td><a href="../../reference/internal/data_agreement/_non_empty_options/"><code>_non_empty_options</code></a></td>
       <td>—</td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/data_agreement/_normalise_widget_values/"><code>_normalise_widget_values</code></a></td>
-      <td>—</td>
+      <td><a href="../../reference/collect_agreement_metadata/"><code>collect_agreement_metadata</code></a></td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/data_agreement/_normalize_optional_date/"><code>_normalize_optional_date</code></a></td>
@@ -242,7 +226,7 @@ Owns agreement metadata capture, audited record building, metadata commit helper
     </tr>
     <tr>
       <td><a href="../../reference/internal/data_agreement/_record_base/"><code>_record_base</code></a></td>
-      <td>—</td>
+      <td><a href="../../reference/collect_agreement_metadata/"><code>collect_agreement_metadata</code></a></td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/data_agreement/_require_fields/"><code>_require_fields</code></a></td>
@@ -291,25 +275,12 @@ Owns agreement metadata capture, audited record building, metadata commit helper
 <a class="reference-chip" href="#_non_empty_options"><code>_non_empty_options</code></a>
 </li>
 <li>
-<a class="reference-chip" href="#_build_agreement_catalogue_record"><code>_build_agreement_catalogue_record</code></a>
+<a class="reference-chip" href="#_build_agreement_record"><code>_build_agreement_record</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_normalise_widget_values"><code>_normalise_widget_values</code></a>, <a class="reference-chip" href="#_record_base"><code>_record_base</code></a>, <a class="reference-chip" href="#_select_record_fields"><code>_select_record_fields</code></a>
-</li>
-<li>
-<a class="reference-chip" href="#_build_agreement_header_record"><code>_build_agreement_header_record</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_normalise_widget_values"><code>_normalise_widget_values</code></a>, <a class="reference-chip" href="#_record_base"><code>_record_base</code></a>, <a class="reference-chip" href="#_select_record_fields"><code>_select_record_fields</code></a>
-</li>
-<li>
-<a class="reference-chip" href="#_build_agreement_scope_record"><code>_build_agreement_scope_record</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_normalise_widget_values"><code>_normalise_widget_values</code></a>, <a class="reference-chip" href="#_record_base"><code>_record_base</code></a>, <a class="reference-chip" href="#_select_record_fields"><code>_select_record_fields</code></a>
+<a class="reference-chip" href="#_select_record_fields"><code>_select_record_fields</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_coerce_row_dicts"><code>_coerce_row_dicts</code></a>
-</li>
-<li>
-<a class="reference-chip" href="#_context_value"><code>_context_value</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_derive_agreement_status"><code>_derive_agreement_status</code></a>
@@ -321,9 +292,6 @@ Owns agreement metadata capture, audited record building, metadata commit helper
 </li>
 <li>
 <a class="reference-chip" href="#_latest_distinct_agreements"><code>_latest_distinct_agreements</code></a>
-</li>
-<li>
-<a class="reference-chip" href="#_metadata_root"><code>_metadata_root</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_non_empty_options"><code>_non_empty_options</code></a>
@@ -349,7 +317,7 @@ Owns agreement metadata capture, audited record building, metadata commit helper
 <li>
 <a class="reference-chip" href="#_record_base"><code>_record_base</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_context_value"><code>_context_value</code></a>, <a class="reference-chip" href="#_resolve_committed_at"><code>_resolve_committed_at</code></a>
+<a class="reference-chip" href="#_resolve_committed_at"><code>_resolve_committed_at</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_require_fields"><code>_require_fields</code></a>
@@ -374,8 +342,6 @@ Owns agreement metadata capture, audited record building, metadata commit helper
 </li>
 <li>
 <a class="reference-chip" href="#_write_record"><code>_write_record</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_metadata_root"><code>_metadata_root</code></a>
 </li>
 </ul>
 </details>

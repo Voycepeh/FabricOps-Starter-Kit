@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime
 
 import pytest
 
@@ -6,9 +6,6 @@ from fabricops_kit.data_agreement import (
     DEFAULT_SENSITIVITY_LABELS,
     YES_NO_OPTIONS,
     _agreement_widget_specs,
-    _build_agreement_catalogue_record,
-    _build_agreement_header_record,
-    _build_agreement_scope_record,
     _derive_agreement_status,
     collect_agreement_metadata,
     commit_agreement_metadata,
@@ -96,16 +93,16 @@ def test_department_and_source_system_dropdown_only_when_options_are_passed():
 
 def test_missing_required_agreement_fields_raise_clear_error():
     with pytest.raises(ValueError, match=r"Missing required agreement field\(s\): agreement_name"):
-        _build_agreement_header_record(_widget_values(agreement_name=""))
+        collect_agreement_metadata(widget_values=_widget_values(agreement_name=""))
 
 
-def test_record_builders_add_committed_by_and_committed_at():
-    committed_at = datetime(2026, 1, 1, tzinfo=timezone.utc)
-    record = _build_agreement_header_record(
-        _widget_values(),
+def test_collect_agreement_metadata_adds_committed_by_and_committed_at():
+    metadata = collect_agreement_metadata(
+        widget_values=_widget_values(),
         committed_by="steward@example.com",
-        committed_at=committed_at,
+        committed_at="2026-01-01T00:00:00+00:00",
     )
+    record = metadata["header_record"]
     assert record["committed_by"] == "steward@example.com"
     assert record["committed_at"] == "2026-01-01T00:00:00+00:00"
 
@@ -119,26 +116,26 @@ def test_record_builders_include_computed_status_and_status_as_of_date(monkeypat
     import fabricops_kit.data_agreement as data_agreement
 
     monkeypatch.setattr(data_agreement, "datetime", FixedDatetime)
-    record = _build_agreement_header_record(_widget_values(expiry_date="2026-01-01"))
-    assert record["agreement_status"] == "Active"
-    assert record["status_as_of_date"] == "2026-01-01"
+    metadata = collect_agreement_metadata(widget_values=_widget_values(expiry_date="2026-01-01"))
+    assert metadata["header_record"]["agreement_status"] == "Active"
+    assert metadata["header_record"]["status_as_of_date"] == "2026-01-01"
 
 
 def test_renewal_requirement_only_accepts_yes_or_no():
     assert YES_NO_OPTIONS == ["Yes", "No"]
     with pytest.raises(ValueError, match="renewal_required"):
-        _build_agreement_header_record(_widget_values(renewal_required="Maybe"))
+        collect_agreement_metadata(widget_values=_widget_values(renewal_required="Maybe"))
 
 
 def test_invalid_expiry_date_raises_clear_error():
     with pytest.raises(ValueError, match="expiry_date must be a valid date"):
-        _build_agreement_header_record(_widget_values(expiry_date="31/12/2026"))
+        collect_agreement_metadata(widget_values=_widget_values(expiry_date="31/12/2026"))
 
 
 def test_catalogue_and_scope_records_are_audited():
-    values = _widget_values()
-    catalogue = _build_agreement_catalogue_record(values, committed_by="reviewer")
-    scope = _build_agreement_scope_record(values, committed_by="reviewer")
+    metadata = collect_agreement_metadata(widget_values=_widget_values(), committed_by="reviewer")
+    catalogue = metadata["catalogue_record"]
+    scope = metadata["scope_record"]
     assert catalogue["committed_by"] == "reviewer"
     assert catalogue["committed_at"]
     assert catalogue["catalogue_id"] == "agr-001|Source A|orders"

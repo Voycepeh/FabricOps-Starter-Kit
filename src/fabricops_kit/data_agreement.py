@@ -475,14 +475,6 @@ def _resolve_committed_at(committed_at: datetime | str | None = None) -> str:
     return str(committed_at)
 
 
-def _context_value(runtime_context: dict[str, str], *keys: str) -> str:
-    for key in keys:
-        value = runtime_context.get(key)
-        if value is not None and str(value).strip():
-            return str(value).strip()
-    return ""
-
-
 def _record_base(
     widget_values: dict[str, str],
     *,
@@ -491,15 +483,23 @@ def _record_base(
     runtime_context: dict[str, str] | None,
 ) -> dict[str, Any]:
     ctx = {str(k): v for k, v in (_runtime_context() | (runtime_context or {})).items()}
+
+    def context_value(*keys: str) -> str:
+        for key in keys:
+            value = ctx.get(key)
+            if value is not None and str(value).strip():
+                return str(value).strip()
+        return ""
+
     return {
         "agreement_id": str(widget_values.get("agreement_id") or "").strip(),
         "commit_note": str(widget_values.get("commit_note") or "").strip(),
         "committed_by": _resolve_action_by(committed_by),
         "committed_at": _resolve_committed_at(committed_at),
-        "notebook_name": _context_value(ctx, "notebook_name", "currentNotebookName", "notebookName"),
-        "workspace_name": _context_value(ctx, "workspace_name", "currentWorkspaceName", "workspaceName"),
-        "lakehouse_name": _context_value(ctx, "lakehouse_name", "lakehouseName"),
-        "run_id": _context_value(ctx, "run_id", "activityId", "runId"),
+        "notebook_name": context_value("notebook_name", "currentNotebookName", "notebookName"),
+        "workspace_name": context_value("workspace_name", "currentWorkspaceName", "workspaceName"),
+        "lakehouse_name": context_value("lakehouse_name", "lakehouseName"),
+        "run_id": context_value("run_id", "activityId", "runId"),
     }
 
 
@@ -526,138 +526,23 @@ def _select_record_fields(record: dict[str, Any], fields: list[str]) -> dict[str
     return {field: record.get(field, "") for field in fields}
 
 
-def _build_agreement_header_record(
-    widget_values: dict[str, str],
-    *,
-    committed_by: str | None = None,
-    committed_at: datetime | str | None = None,
-    runtime_context: dict[str, str] | None = None,
-) -> dict[str, Any]:
-    """Build an audited agreement header metadata record.
-
-    Parameters
-    ----------
-    widget_values : dict[str, str]
-        Values read from agreement metadata widgets or supplied by tests/scripts.
-    committed_by : str | None, optional
-        Actor identity. When omitted, the Fabric runtime user is used when
-        available, then ``"unknown"``.
-    committed_at : datetime | str | None, optional
-        Commit timestamp. Defaults to the current UTC timestamp.
-    runtime_context : dict[str, str] | None, optional
-        Optional notebook/workspace/lakehouse/run identifiers to copy into the
-        record.
-
-    Returns
-    -------
-    dict[str, Any]
-        Append-friendly agreement header record containing computed status and
-        audit fields.
-
-    Raises
-    ------
-    ValueError
-        If required fields are missing, dates are invalid, or Yes/No fields use
-        another value.
-    """
-    values = _normalise_widget_values(widget_values)
-    record = {
-        **values,
-        **_record_base(
-            values,
-            committed_by=committed_by,
-            committed_at=committed_at,
-            runtime_context=runtime_context,
-        ),
-    }
-    return _select_record_fields(record, _HEADER_FIELDS)
-
-
-def _build_agreement_catalogue_record(
-    widget_values: dict[str, str],
-    *,
-    committed_by: str | None = None,
-    committed_at: datetime | str | None = None,
-    runtime_context: dict[str, str] | None = None,
-) -> dict[str, Any]:
-    """Build an audited agreement catalogue metadata record.
-
-    Parameters
-    ----------
-    widget_values : dict[str, str]
-        Values read from agreement metadata widgets or supplied by tests/scripts.
-    committed_by : str | None, optional
-        Actor identity. When omitted, the Fabric runtime user is used when
-        available, then ``"unknown"``.
-    committed_at : datetime | str | None, optional
-        Commit timestamp. Defaults to the current UTC timestamp.
-    runtime_context : dict[str, str] | None, optional
-        Optional notebook/workspace/lakehouse/run identifiers to copy into the
-        record.
-
-    Returns
-    -------
-    dict[str, Any]
-        Append-friendly catalogue record for the source table covered by the
-        agreement.
-
-    Raises
-    ------
-    ValueError
-        If required header fields are missing, dates are invalid, or Yes/No
-        fields use another value.
-    """
-    values = _normalise_widget_values(widget_values)
-    base = _record_base(values, committed_by=committed_by, committed_at=committed_at, runtime_context=runtime_context)
-    catalogue_id = (
-        values.get("catalogue_id")
-        or f"{values['agreement_id']}|{values.get('source_system', '')}|{values.get('source_table', '')}"
-    )
-    record = {**values, **base, "catalogue_id": catalogue_id}
-    return _select_record_fields(record, _CATALOGUE_FIELDS)
-
-
-def _build_agreement_scope_record(
-    widget_values: dict[str, str],
-    *,
-    committed_by: str | None = None,
-    committed_at: datetime | str | None = None,
-    runtime_context: dict[str, str] | None = None,
-) -> dict[str, Any]:
-    """Build an audited agreement scope metadata record.
-
-    Parameters
-    ----------
-    widget_values : dict[str, str]
-        Values read from agreement metadata widgets or supplied by tests/scripts.
-    committed_by : str | None, optional
-        Actor identity. When omitted, the Fabric runtime user is used when
-        available, then ``"unknown"``.
-    committed_at : datetime | str | None, optional
-        Commit timestamp. Defaults to the current UTC timestamp.
-    runtime_context : dict[str, str] | None, optional
-        Optional notebook/workspace/lakehouse/run identifiers to copy into the
-        record.
-
-    Returns
-    -------
-    dict[str, Any]
-        Append-friendly scope record covering approved consumers and outputs.
-
-    Raises
-    ------
-    ValueError
-        If required header fields are missing, dates are invalid, or Yes/No
-        fields use another value.
-    """
-    values = _normalise_widget_values(widget_values)
-    base = _record_base(values, committed_by=committed_by, committed_at=committed_at, runtime_context=runtime_context)
-    scope_id = (
-        values.get("scope_id")
-        or f"{values['agreement_id']}|{values.get('allowed_consumer', '')}|{values.get('allowed_output_type', '')}"
-    )
-    record = {**values, **base, "scope_id": scope_id}
-    return _select_record_fields(record, _SCOPE_FIELDS)
+def _build_agreement_record(record_type: str, values: dict[str, str], base: dict[str, Any]) -> dict[str, Any]:
+    record = {**values, **base}
+    if record_type == "header":
+        return _select_record_fields(record, _HEADER_FIELDS)
+    if record_type == "catalogue":
+        record["catalogue_id"] = (
+            values.get("catalogue_id")
+            or f"{values['agreement_id']}|{values.get('source_system', '')}|{values.get('source_table', '')}"
+        )
+        return _select_record_fields(record, _CATALOGUE_FIELDS)
+    if record_type == "scope":
+        record["scope_id"] = (
+            values.get("scope_id")
+            or f"{values['agreement_id']}|{values.get('allowed_consumer', '')}|{values.get('allowed_output_type', '')}"
+        )
+        return _select_record_fields(record, _SCOPE_FIELDS)
+    raise ValueError("record_type must be one of: header, catalogue, scope.")
 
 
 def collect_agreement_metadata(
@@ -699,27 +584,17 @@ def collect_agreement_metadata(
         If required fields are missing, dates are invalid, or Yes/No fields use
         another value.
     """
-    values = widget_values if widget_values is not None else _read_agreement_widget_values()
-    resolved_committed_at = _resolve_committed_at(committed_at)
-    header_record = _build_agreement_header_record(
+    raw_values = widget_values if widget_values is not None else _read_agreement_widget_values()
+    values = _normalise_widget_values(raw_values)
+    base = _record_base(
         values,
         committed_by=committed_by,
-        committed_at=resolved_committed_at,
+        committed_at=_resolve_committed_at(committed_at),
         runtime_context=runtime_context,
     )
-    resolved_committed_by = header_record["committed_by"]
-    catalogue_record = _build_agreement_catalogue_record(
-        values,
-        committed_by=resolved_committed_by,
-        committed_at=resolved_committed_at,
-        runtime_context=runtime_context,
-    )
-    scope_record = _build_agreement_scope_record(
-        values,
-        committed_by=resolved_committed_by,
-        committed_at=resolved_committed_at,
-        runtime_context=runtime_context,
-    )
+    header_record = _build_agreement_record("header", values, base)
+    catalogue_record = _build_agreement_record("catalogue", values, base)
+    scope_record = _build_agreement_record("scope", values, base)
     summary = {
         "agreement_id": header_record.get("agreement_id", ""),
         "agreement_status": header_record.get("agreement_status", ""),
@@ -737,15 +612,6 @@ def collect_agreement_metadata(
     }
 
 
-def _metadata_root(metadata_lakehouse: Any) -> str | None:
-    if metadata_lakehouse is None:
-        return None
-    root = getattr(metadata_lakehouse, "root", None)
-    if root is not None:
-        return str(root).rstrip("/")
-    return str(metadata_lakehouse).rstrip("/")
-
-
 def _safe_table_prefix(table_prefix: str | None) -> str:
     prefix = str(table_prefix or "").strip().strip("._")
     if not prefix:
@@ -755,11 +621,13 @@ def _safe_table_prefix(table_prefix: str | None) -> str:
 
 def _write_record(spark: Any, record: dict[str, Any], table_name: str, *, metadata_lakehouse: Any, mode: str) -> None:
     df = spark.createDataFrame([record])
-    root = _metadata_root(metadata_lakehouse)
-    if root:
-        df.write.format("delta").mode(mode).save(f"{root}/Tables/{table_name}")
-    else:
+    if metadata_lakehouse is None:
         df.write.format("delta").mode(mode).saveAsTable(table_name)
+        return
+
+    root = getattr(metadata_lakehouse, "root", None)
+    root = str(root if root is not None else metadata_lakehouse).rstrip("/")
+    df.write.format("delta").mode(mode).save(f"{root}/Tables/{table_name}")
 
 
 def commit_agreement_metadata(

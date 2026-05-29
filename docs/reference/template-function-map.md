@@ -126,7 +126,7 @@ Captures human-approved data sharing agreement metadata as audited header, catal
       <td>`collect_agreement_metadata`</td>
       <td>Callable orchestration wrapper</td>
       <td>Collect widget values and build audited agreement metadata records.</td>
-      <td>`_build_agreement_catalogue_record`, `_build_agreement_header_record`, `_build_agreement_scope_record`, `_read_agreement_widget_values`, `_resolve_committed_at`</td>
+      <td>`_build_agreement_record`, `_normalise_widget_values`, `_read_agreement_widget_values`, `_record_base`, `_resolve_committed_at`</td>
       <td>Check dependency outputs and metadata writes.</td>
     </tr>
   </tbody>
