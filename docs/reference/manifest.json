@@ -66,14 +66,14 @@
     {
       "module_name": "handover",
       "visibility": "public",
-      "module_summary": "Owns generated maintainer-facing handover and contract narrative output.",
+      "module_summary": "Owns final handover assembly and contract artifact rendering/export.",
       "sidebar_group": "4. Handover / data contract",
       "sidebar_include": true
     },
     {
       "module_name": "metadata",
       "visibility": "public",
-      "module_summary": "Owns metadata/contract store access, evidence persistence, agreement metadata, notebook evidence, and contract assembly inputs.",
+      "module_summary": "Owns metadata evidence persistence, stable keys, notebook registry, and contract evidence loading.",
       "sidebar_group": "5. Metadata / contract store",
       "sidebar_include": true
     },
@@ -581,7 +581,7 @@
     {
       "module_name": "handover",
       "visibility": "public",
-      "module_summary": "Owns generated maintainer-facing handover and contract narrative output.",
+      "module_summary": "Owns final handover assembly and contract artifact rendering/export.",
       "sidebar_group": "4. Handover / data contract",
       "sidebar_include": true,
       "callable_name": "build_handover",
@@ -593,7 +593,7 @@
     {
       "module_name": "handover",
       "visibility": "public",
-      "module_summary": "Owns generated maintainer-facing handover and contract narrative output.",
+      "module_summary": "Owns final handover assembly and contract artifact rendering/export.",
       "sidebar_group": "4. Handover / data contract",
       "sidebar_include": true,
       "callable_name": "render_handover_markdown",
@@ -605,7 +605,7 @@
     {
       "module_name": "metadata",
       "visibility": "public",
-      "module_summary": "Owns metadata/contract store access, evidence persistence, agreement metadata, notebook evidence, and contract assembly inputs.",
+      "module_summary": "Owns metadata evidence persistence, stable keys, notebook registry, and contract evidence loading.",
       "sidebar_group": "5. Metadata / contract store",
       "sidebar_include": true,
       "callable_name": "load_notebook_registry",
@@ -617,7 +617,7 @@
     {
       "module_name": "metadata",
       "visibility": "public",
-      "module_summary": "Owns metadata/contract store access, evidence persistence, agreement metadata, notebook evidence, and contract assembly inputs.",
+      "module_summary": "Owns metadata evidence persistence, stable keys, notebook registry, and contract evidence loading.",
       "sidebar_group": "5. Metadata / contract store",
       "sidebar_include": true,
       "callable_name": "register_current_notebook",

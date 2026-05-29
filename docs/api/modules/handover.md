@@ -10,7 +10,7 @@
 
 ## Module purpose
 
-Owns generated maintainer-facing handover and contract narrative output.
+Owns final handover assembly and contract artifact rendering/export.
 
 ## Module manifest
 
@@ -28,7 +28,7 @@ Owns generated maintainer-facing handover and contract narrative output.
     </tr>
     <tr>
       <td>Module purpose</td>
-      <td>Owns generated maintainer-facing handover and contract narrative output.</td>
+      <td>Owns final handover assembly and contract artifact rendering/export.</td>
     </tr>
     <tr>
       <td>Public callable count</td>
