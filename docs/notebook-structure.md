@@ -22,11 +22,11 @@ Execution Workspaces are where teams configure runtime paths, explore data, and 
 
 | Notebook | Primary owner | Purpose | What belongs here |
 | --- | --- | --- | --- |
-| `00_env_config` | Platform or engineering | Configure the execution workspace. | Environment names, metadata targets, storage paths, runtime defaults, and validation that notebooks read and write the intended Fabric locations. |
-| `01_data_sharing_agreement_<agreement>` | Data owner and governance | Define approved agreement context. | Agreement scope, owners, consumers, permitted usage, approval status, and business context that governs downstream work. |
-| `02_ex_<agreement>_<topic>` | Analyst or data engineer | Explore and profile source data. | Profiling evidence, metadata proposals, data quality suggestions, classification suggestions, and notes that require review before enforcement. |
-| `03_pc_<agreement>_<pipeline>` | Data engineer | Run deterministic pipeline enforcement. | Approved metadata consumption, pipeline checks, data quality enforcement, curated writes, lineage, run results, and evidence summaries. |
-| `04_gov_<agreement>_<dataset>_<table>` | Governance steward | Review business context and classifications. | Reviewed classifications, policy updates, governance decisions, and evidence that can update the Governance Metadata Lakehouse after human approval. |
+| [`00_env_config`](notebook-structure/00-env-config.md) | Platform or engineering | Configure the execution workspace. | Environment names, metadata targets, storage paths, runtime defaults, and validation that notebooks read and write the intended Fabric locations. |
+| [`01_data_sharing_agreement_<agreement>`](notebook-structure/01-data-sharing-agreement.md) | Data owner and governance | Define approved agreement context. | Agreement scope, owners, consumers, permitted usage, approval status, and business context that governs downstream work. |
+| [`02_ex_<agreement>_<topic>`](notebook-structure/02-exploration.md) | Analyst or data engineer | Explore and profile source data. | Profiling evidence, metadata proposals, data quality suggestions, classification suggestions, and notes that require review before enforcement. |
+| [`03_pc_<agreement>_<pipeline>`](notebook-structure/03-pipeline-contract.md) | Data engineer | Run deterministic pipeline enforcement. | Approved metadata consumption, pipeline checks, data quality enforcement, curated writes, lineage, run results, and evidence summaries. |
+| [`04_gov_<agreement>_<dataset>_<table>`](notebook-structure/04-governance-operations.md) | Governance steward | Review business context and classifications. | Reviewed classifications, policy updates, governance decisions, and evidence that can update the Governance Metadata Lakehouse after human approval. |
 
 ## How the notebooks work together
 
