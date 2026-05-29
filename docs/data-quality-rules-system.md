@@ -1,174 +1,100 @@
 # AI-Assisted Data Quality Rules System
 
-The data quality rules system is an AI-assisted, human-approved, pipeline-enforced workflow inside Fabric.
+A data analyst profiles source data in a `02_ex_*` notebook. The notebook captures profile evidence such as nulls, distinct values, ranges, patterns, duplicates, and suspicious values.
 
-Data analysts first explore and profile the data in a `02_ex_*` notebook. AI uses that profiling evidence to suggest candidate rules, but those rules are not trusted automatically. A human reviewer must approve them before they become governed metadata. The `03_pc_*` pipeline contract notebook then loads only approved active rules and enforces them deterministically during pipeline execution.
+AI uses that evidence to suggest candidate data quality rules. A human reviewer approves, edits, rejects, or defers each suggestion. Only approved active rules are stored for enforcement.
 
-The operating principle is simple:
-
-**AI suggests. Humans approve. Pipelines enforce. Feedback improves the system over time.**
-
-Use this page when you need to understand how data quality rules move from exploration to governed enforcement.
-
-Next read: [Metadata](metadata-and-contracts/index.md), [Start](quick-start.md), [API](reference/index.md).
+A `03_pc_*` notebook loads approved rules during pipeline runs, applies them to the current dataframe or table, sends passing rows downstream, and quarantines failed rows with reasons.
 
 <figure markdown>
   ![Data quality workflow with AI suggestions, human review, approval, and deterministic enforcement in pipelines](assets/DQ-with-ai.png){ .full-width }
-  <figcaption>AI-assisted data quality in Fabric: analysts profile source data, AI suggests candidate rules, humans approve governed rules, and pipelines enforce only approved active rules.</figcaption>
+  <figcaption>AI suggests candidate rules from profiling evidence. Humans approve rules. Pipelines enforce approved active rules.</figcaption>
 </figure>
 
-## Overview
+Next read: [Metadata](metadata-and-contracts/index.md), [Start](quick-start.md), [API](reference/index.md).
 
-The data quality rules system turns profiling evidence into approved, reusable, enforceable rules.
-
-The workflow starts during exploration. Analysts inspect source data, collect evidence about data shape and quality, and use AI to propose candidate rules. At this stage, the rules are advisory. They are not trusted automatically and are not enforced directly.
-
-A rule becomes enforceable only after a human reviewer approves it. Approved active rules are stored as governed metadata in Fabric tables. During execution, the `03_pc_*` pipeline contract notebook loads that metadata and applies the approved rules deterministically.
-
-## Operating model inside Fabric
-
-The operational flow stays inside Fabric notebooks and Lakehouse metadata tables:
+## Operating flow
 
 1. **Source data**
-   The analyst starts with source data that needs profiling, validation, or onboarding into a governed pipeline.
+   Analyst starts with the raw dataframe or source table.
 
-2. **Profile data in the 02 exploration notebook**
-   The `02_ex_*` notebook profiles the data and captures evidence such as:
-   - null counts and null rates
-   - distinct values and cardinality
-   - numeric ranges
-   - date ranges
-   - observed patterns and formats
-   - duplicate indicators
-   - suspicious or unexpected values
+2. **Profile in `02_ex_*`**
+   Capture nulls, distinct values, ranges, patterns, duplicates, and suspicious values.
 
-3. **AI suggests DQ rules**
-   AI uses the profile evidence to suggest candidate data quality rules. These suggestions are draft recommendations, not governance decisions.
+3. **Suggest rules**
+   AI suggests candidate DQ rules from the profile evidence.
 
-4. **Human review and approval**
-   A reviewer edits, approves, rejects, or defers each candidate rule. The reviewer is the approval gate.
+4. **Review rules**
+   Human reviewer approves, edits, rejects, or defers each suggestion.
 
 5. **Store approved rules**
-   Approved rules are stored as governed metadata. Rejected and deferred suggestions can also be retained as review evidence.
+   Approved active rules are saved as metadata. Rejected and deferred rules are kept as review evidence only.
 
-6. **Enforce approved rules in the 03 pipeline contract notebook**
-   The `03_pc_*` pipeline contract notebook loads only approved active rules from metadata and applies them during pipeline execution.
+6. **Enforce in `03_pc_*`**
+   Pipeline contract notebook loads approved active rules and applies them deterministically.
 
-7. **Split accepted and quarantined rows**
-   Rows that pass approved rules continue downstream. Rows that fail are written to quarantine with failure reasons and run context.
+7. **Split outputs**
+   Passing rows continue downstream. Failed rows go to quarantine with failure reasons.
 
-```mermaid
-flowchart LR
-    source[Source data]
-    profile["02 exploration notebook<br/>Profile evidence"]
-    ai["AI suggests<br/>candidate DQ rules"]
-    review["Human review<br/>approve, reject, defer"]
-    metadata[("Governed metadata<br/>approved active rules")]
-    enforce["03 pipeline contract notebook<br/>deterministic enforcement"]
-    accepted["Accepted rows<br/>continue downstream"]
-    quarantine["Quarantined rows<br/>with failure reasons"]
-    feedback[("Feedback evidence<br/>suggestions, decisions, outcomes")]
+## What happens in the `02_ex_*` notebook
 
-    source --> profile --> ai --> review
-    review --> metadata
-    metadata --> enforce
-    enforce --> accepted
-    enforce --> quarantine
-    ai --> feedback
-    review --> feedback
-    metadata --> feedback
-    enforce --> feedback
-    feedback -. improves future prompts .-> ai
-```
+The analyst:
 
-## Role of the 02 exploration notebook
+1. loads the source data;
+2. profiles columns and candidate keys;
+3. reviews profile output;
+4. asks AI for candidate rules;
+5. checks whether each rule makes business sense;
+6. records the review decision.
 
-The `02_ex_*` notebook is the analyst workspace for understanding source data before enforcement begins.
+The `02_ex_*` notebook is for exploration and review. It does not enforce production rules.
 
-In the 02 exploration notebook, analysts:
+## What happens in the `03_pc_*` notebook
 
-- inspect source data in context;
-- generate profile evidence for columns, tables, and candidate keys;
-- identify nulls, duplicates, unexpected formats, suspicious values, and range issues;
-- ask AI to suggest candidate DQ rules based on the evidence;
-- capture the initial review context for each suggested rule.
+The pipeline:
 
-This notebook is exploratory and advisory. AI can accelerate rule discovery, but it does not approve rules and does not enforce them. Candidate rules must move through human review before they become governed metadata.
+1. loads approved active rules;
+2. applies them to the current dataframe or table;
+3. writes accepted rows to the target layer;
+4. writes failed rows to quarantine;
+5. records rule results, failure reasons, and run context.
 
-## Role of the 03 pipeline contract notebook
+AI is not used during enforcement. The `03_pc_*` notebook enforces the approved rule metadata.
 
-The `03_pc_*` pipeline contract notebook is the production enforcement point.
+## Metadata to capture
 
-During pipeline execution, the 03 pipeline contract notebook:
+| Field | Purpose |
+| --- | --- |
+| `rule_id` | Identifies the rule. |
+| `agreement_id` or `data_product_id` | Links the rule to the agreement or product context. |
+| `table_name` | Identifies the table being checked. |
+| `column_name` | Identifies the column being checked, when applicable. |
+| `rule_type` | Names the check type. |
+| `rule_parameters` | Stores the values or expression used by the check. |
+| `suggested_by_ai` | Shows whether the rule started as an AI suggestion. |
+| `human_decision` | Records approve, edit, reject, or defer. |
+| `approval_status` | Shows whether the rule is approved for enforcement. |
+| `approved_by` | Identifies the reviewer who approved the rule. |
+| `approved_at` | Records when approval happened. |
+| `active_flag` | Controls whether an approved rule is currently enforced. |
+| `severity` | Describes the enforcement level. |
+| `failure_reason` | Explains why a row failed. |
+| `run_id` | Links results to the pipeline run. |
 
-- loads approved active rules from the governed metadata tables;
-- applies those rules to the current dataframe or table;
-- evaluates rules deterministically, without relying on AI at enforcement time;
-- writes passing rows to the intended target layer;
-- writes failed rows to quarantine with failure reasons;
-- records enforcement outcomes with run or execution context.
+## Starter rule types
 
-This separates rule suggestion from rule enforcement. AI helps propose rules during exploration. Humans approve the rule set. Pipelines enforce the approved active rules.
-
-## Metadata tables
-
-The metadata model should capture enough information to connect suggestion, approval, enforcement, and feedback evidence. Keep the schema practical and governed, but avoid overfitting it before implementation needs are clear.
-
-Likely metadata includes:
-
-- rule ID;
-- agreement ID or data product ID;
-- source table and target table;
-- column name;
-- rule type;
-- rule expression or parameters;
-- AI suggestion text;
-- human decision;
-- approval status;
-- approved by;
-- approved timestamp;
-- active flag;
-- enforcement severity;
-- failure reason;
-- run ID or execution ID.
-
-Approved active rules are the rules the `03_pc_*` notebook can enforce. Candidate, rejected, and deferred rules are review evidence and should not be enforced unless they are later approved and active.
+- not null
+- allowed values
+- numeric range
+- date range
+- format or regex
+- uniqueness
+- referential check
+- freshness
+- duplicate detection
 
 ## Feedback loop
 
-The system improves when evidence is retained across the lifecycle.
+Suggestions, review decisions, approved rules, rejected rules, and enforcement outcomes are stored as evidence. Teams can use that evidence to improve future prompts and rule suggestions.
 
-Useful feedback evidence includes:
-
-- AI suggestions generated from profiling evidence;
-- reviewer decisions, edits, approvals, rejections, and deferrals;
-- final approved rules;
-- rule failures and failure reasons;
-- accepted and quarantined row counts;
-- recurring failure patterns by column, table, rule, or run.
-
-Future prompts can use this evidence to produce better suggestions. For example, rejected rules can help AI avoid repeating weak recommendations, approved rules can show preferred patterns, and enforcement outcomes can highlight where new rules may be needed.
-
-The feedback loop does not make AI the governance decision-maker. It gives analysts and reviewers better evidence for the next exploration and approval cycle.
-
-## Expandable rule set
-
-Start with a small set of high-value rules, then expand as the pipeline matures.
-
-Common starting rules include:
-
-- not null;
-- allowed values;
-- numeric range;
-- date range;
-- regex or format;
-- uniqueness;
-- referential check;
-- freshness;
-- duplicate detection.
-
-The rule catalog can grow over time without changing the operating model. New rule types still follow the same path: profile evidence, AI suggestion, human approval, governed metadata, deterministic pipeline enforcement, and feedback.
-
-## Key principle
-
-**AI suggests. Humans approve. Pipelines enforce. Feedback improves the system over time.**
+AI suggests. Humans approve. Pipelines enforce.
