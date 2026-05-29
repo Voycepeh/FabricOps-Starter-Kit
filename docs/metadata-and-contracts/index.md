@@ -1,57 +1,75 @@
 # Metadata and contracts
 
-FabricOps moves from **evidence collection to handover export**. Separate notebooks collect approved evidence into metadata tables, and the `handover` module assembles that evidence into final contract-ready artifacts.
+FabricOps Starter Kit turns notebook evidence into contract-ready handover artifacts for governed, quality-checked, AI-ready notebooks in Microsoft Fabric.
 
-FabricOps does **not** require users to manually maintain a standalone contract YAML. The governed source of truth is the approved metadata evidence captured by the notebook workflow and stored through the `metadata` module. YAML and OpenMetadata payloads are export views over that evidence, not the source record by themselves.
+The section follows one product story:
 
-Next read: [Evidence to Handover](evidence-to-handover.md), [Metadata Columns](metadata-columns.md), [Quality](../data-quality-rules-system.md), [Notebooks](../notebook-structure.md).
+```text
+Separate notebooks.
+Shared metadata evidence.
+Curated decisions plus run observations.
+Assembled handover contract.
+Standards-compatible export.
+```
+
+## What problem does this solve?
+
+Data handover breaks down when each lifecycle stage keeps its own notes, spreadsheet, YAML file, or screenshots. Agreement scope, profiling evidence, governance classifications, DQ rules, run results, drift findings, and lineage notes can quickly become disconnected.
+
+FabricOps solves this by making approved metadata evidence the governed source of truth. Separate notebooks collect evidence at the point where the evidence is created or reviewed. The final contract is assembled later from that shared evidence rather than manually rewritten from memory.
+
+## Why assemble contracts instead of writing them manually?
+
+A manually maintained contract file is easy to drift away from what actually happened in Fabric. FabricOps avoids treating one YAML file, one spreadsheet, or one giant JSON blob as the source of truth. Instead, the contract is reproducible from approved evidence:
+
+- Agreement, classification, business meaning, and DQ rules are governed decisions.
+- Profiling, drift, DQ execution, lineage, and run results are evidence observations.
+- The final contract is assembled from both.
+
+FabricOps separates metadata storage by lifecycle. Human-owned decisions such as agreements, classifications, business context, and DQ rules are stored as curated metadata. Machine-generated observations such as profiling, DQ results, drift checks, lineage, and run summaries are stored as evidence facts. The handover layer assembles both into contract-ready outputs.
+
+The core architecture rule is:
+
+```text
+Standalone curated tables = human-owned decisions.
+Collapsed fact/evidence tables = machine/run observations.
+Views and exports = assembled outputs, not source of truth.
+```
+
+## Role of `metadata`
+
+The `metadata` module is the evidence backbone. It owns metadata evidence persistence, stable keys, notebook registry evidence, and planned evidence-loading boundaries for contract assembly. It is responsible for keeping separate notebook outputs joinable through agreement, table, column, rule, notebook, and run keys.
+
+In the target architecture, `metadata` loads approved evidence by agreement, dataset, table, and optional run. It should not render final handover documents itself. Its job is to make the evidence reliable, traceable, and reusable.
+
+## Role of `handover`
+
+The `handover` module is the final artifact layer. It assembles loaded metadata evidence into human-readable and machine-readable outputs:
+
+1. Markdown handover
+2. FabricOps contract JSON
+3. ODCS YAML
+4. OpenMetadata-compatible payloads
+
+The exported files are views over approved evidence. They are not the governed source of truth by themselves.
+
+## ODCS and OpenMetadata export model
+
+FabricOps is designed so standards-compatible outputs can be generated from the same approved evidence bundle. ODCS YAML and OpenMetadata-compatible payloads should be reproducible export views over curated decisions and run observations:
+
+- ODCS YAML maps agreement, asset, column, and DQ expectation evidence into a data-contract-shaped artifact.
+- OpenMetadata-compatible payloads map asset, column, classification, quality, lineage, and ownership evidence into metadata-platform-friendly records.
+- FabricOps JSON remains the canonical machine-readable FabricOps handover artifact assembled from the same evidence.
+
+## Page guide
+
+| Page | Purpose |
+| --- | --- |
+| [Evidence to Handover](evidence-to-handover.md) | Explains the notebook-to-metadata-to-export workflow. |
+| [Metadata Architecture](metadata-architecture.md) | Explains the source tables, facts, keys, relationships, and assembled views. |
+| [Metadata Columns](metadata-columns.md) | Explains the column catalogue view assembled from the metadata architecture. |
 
 <figure markdown>
   ![Notebook workflow showing agreement, exploration, pipeline contract, and governance evidence assembled into a FabricOps data contract](../assets/notebook-datacontract-flow.png){ .full-width }
   <figcaption>FabricOps data contracts are assembled from approved evidence across the notebook workflow.</figcaption>
 </figure>
-
-## Architecture in one sentence
-
-Notebook templates collect approved agreement, profiling, business, governance, quality, lineage, drift, and runtime evidence into metadata tables; `metadata` loads that shared evidence; `handover` turns it into Markdown, FabricOps JSON, ODCS YAML, and OpenMetadata-compatible payloads.
-
-## Evidence collection flow
-
-| Stage | Notebook family | Evidence written | Owning module focus |
-| --- | --- | --- | --- |
-| Define | `01_agreement_*` | Agreement scope, owners, stewards, usage intent, access boundaries, and handover expectations. | Agreement helpers and metadata persistence. |
-| Discover | `02_ex_*` | Profiles, schema/column evidence, business descriptions, AI-assisted suggestions, and candidate rules. | `data_profiling`, `business_context`, `data_quality`, `metadata`. |
-| Enforce | `03_pc_*` | Pipeline contracts, DQ enforcement, write expectations, run evidence, and failure/quarantine outcomes. | `data_quality`, IO helpers, lineage, drift, metadata. |
-| Monitor | `04_gov_*` | Classification reviews, sensitivity labels, drift checks, governance notes, and approval history. | `data_governance`, `drift`, `metadata`. |
-| Handover | Handover/export step | Contract narrative, FabricOps JSON, ODCS YAML, and OpenMetadata-compatible payloads. | `handover`. |
-
-## What the assembled handover contains
-
-The handover artifact combines approved evidence into practical contract outputs that describe:
-
-- **Domain and ownership**: business domain, accountable owner, steward, and review context.
-- **Data assets**: tables, files, lakehouse objects, or governed assets in scope.
-- **Schema and columns**: approved fields, types, descriptions, requiredness, and profiling evidence.
-- **DQ rules and expectations**: accepted values, thresholds, regex checks, severity, review status, and enforcement outcomes.
-- **Lineage and sources**: upstream inputs, transformations, downstream consumers, and traceability notes.
-- **Classifications and sensitivity**: PII classification, confidentiality labels, reviewer notes, and handling context.
-- **Operational evidence**: run results, drift checks, notebook registry, actor traceability, and handover action items.
-
-## Module boundaries
-
-- `metadata` is the evidence backbone: persistence, stable keys, notebook registry, and contract evidence loading.
-- `handover` is the final artifact layer: assembly, rendering, and export.
-- Domain modules (`data_profiling`, `business_context`, `data_governance`, `data_quality`, `data_lineage`, and `drift`) produce focused evidence that can be reviewed and approved before export.
-
-See [Evidence to Handover](evidence-to-handover.md) for the proposed function boundaries and implementation backlog.
-
-## Standards alignment
-
-FabricOps targets compatibility with open metadata and data contract patterns without forcing a separate manual contract file.
-
-- **FabricOps JSON** is the canonical machine-readable export of assembled approved evidence.
-- **ODCS YAML** is a standards-oriented export view generated from approved evidence.
-- **OpenMetadata-compatible payloads** are integration views for metadata platforms.
-- **Markdown handover** is the junior-friendly human handover view.
-
-FabricOps should be treated as OpenMetadata- and ODCS-compatible in target design until exporters are implemented and validated against the expected field names, schema, and platform behavior.
