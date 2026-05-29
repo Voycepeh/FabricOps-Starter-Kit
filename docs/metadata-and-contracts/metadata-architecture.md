@@ -338,14 +338,14 @@ The following catalogue is implementation guidance, not a migration script. Stat
 
 | Column | Example | Status | Source notebook/function |
 | --- | --- | --- | --- |
-| `notebook_registry_key` | `agr_customer_orders::02_ex::workspace::notebook` | Implemented / partial | `metadata.register_notebook_metadata` |
-| `agreement_id` | `agr_customer_orders` | Implemented / partial | `metadata.register_notebook_metadata` |
-| `notebook_type` | `02_ex` | Implemented | `metadata.register_notebook_metadata` |
+| `notebook_registry_key` | `agr_customer_orders::02_ex::workspace::notebook` | Implemented / partial | `metadata.register_current_notebook` |
+| `agreement_id` | `agr_customer_orders` | Implemented / partial | `metadata.register_current_notebook` |
+| `notebook_type` | `02_ex` | Implemented | `metadata.register_current_notebook` |
 | `workspace_name` | `Fabric workspace` | Implemented / partial | Runtime context / registration helper |
 | `notebook_name` | `02_ex_profile_customer_orders` | Planned / partial | Runtime context / registration helper |
 | `notebook_url` | `https://example.invalid/notebook` | Implemented / partial | Runtime context / registration helper |
-| `registered_by` | `engineer@example.invalid` | Implemented / partial | `metadata.register_notebook_metadata` |
-| `registered_at_utc` | `2026-01-31T12:35:00Z` | Implemented | `metadata.register_notebook_metadata` |
+| `registered_by` | `engineer@example.invalid` | Implemented / partial | `metadata.register_current_notebook` |
+| `registered_at_utc` | `2026-01-31T12:35:00Z` | Implemented | `metadata.register_current_notebook` |
 | `notes` | `Exploration evidence registered.` | Planned / partial | Registration helper |
 
 ### `METADATA_RUN_RESULTS`
