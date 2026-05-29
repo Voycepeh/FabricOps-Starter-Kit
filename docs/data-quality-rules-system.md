@@ -8,7 +8,7 @@ A `03_pc_*` notebook loads approved rules during pipeline runs, applies them to 
 
 <figure markdown>
   ![Data quality workflow with AI suggestions, human review, approval, and deterministic enforcement in pipelines](assets/DQ-with-ai.png){ .full-width }
-  <figcaption>AI suggests candidate rules from profiling evidence. Humans approve rules. Pipelines enforce approved active rules.</figcaption>
+  <figcaption>Data quality workflow from profiling, rule suggestion, review, approval, enforcement, quarantine, and feedback.</figcaption>
 </figure>
 
 Next read: [Metadata](metadata-and-contracts/index.md), [Start](quick-start.md), [API](reference/index.md).
@@ -31,7 +31,7 @@ Next read: [Metadata](metadata-and-contracts/index.md), [Start](quick-start.md),
    Approved active rules are saved as metadata. Rejected and deferred rules are kept as review evidence only.
 
 6. **Enforce in `03_pc_*`**
-   Pipeline contract notebook loads approved active rules and applies them deterministically.
+   Pipeline contract notebook loads approved active rules and applies the same checks on every run.
 
 7. **Split outputs**
    Passing rows continue downstream. Failed rows go to quarantine with failure reasons.
@@ -59,7 +59,7 @@ The pipeline:
 4. writes failed rows to quarantine;
 5. records rule results, failure reasons, and run context.
 
-AI is not used during enforcement. The `03_pc_*` notebook enforces the approved rule metadata.
+AI is not used during enforcement. The `03_pc_*` notebook only runs approved active rules.
 
 ## Metadata to capture
 
@@ -96,5 +96,3 @@ AI is not used during enforcement. The `03_pc_*` notebook enforces the approved 
 ## Feedback loop
 
 Suggestions, review decisions, approved rules, rejected rules, and enforcement outcomes are stored as evidence. Teams can use that evidence to improve future prompts and rule suggestions.
-
-AI suggests. Humans approve. Pipelines enforce.
