@@ -63,23 +63,33 @@ AI is not used during enforcement. The `03_pc_*` notebook only runs approved act
 
 ## Metadata to capture
 
+Rule metadata:
+
 | Field | Purpose |
 | --- | --- |
 | `rule_id` | Identifies the rule. |
-| `agreement_id` or `data_product_id` | Links the rule to the agreement or product context. |
-| `table_name` | Identifies the table being checked. |
-| `column_name` | Identifies the column being checked, when applicable. |
-| `rule_type` | Names the check type. |
-| `rule_parameters` | Stores the values or expression used by the check. |
-| `suggested_by_ai` | Shows whether the rule started as an AI suggestion. |
-| `human_decision` | Records approve, edit, reject, or defer. |
-| `approval_status` | Shows whether the rule is approved for enforcement. |
-| `approved_by` | Identifies the reviewer who approved the rule. |
-| `approved_at` | Records when approval happened. |
-| `active_flag` | Controls whether an approved rule is currently enforced. |
-| `severity` | Describes the enforcement level. |
-| `failure_reason` | Explains why a row failed. |
-| `run_id` | Links results to the pipeline run. |
+| `agreement_id` or `data_product_id` | Links the rule to the agreement or product. |
+| `table_name` | Table being checked. |
+| `column_name` | Column being checked, when applicable. |
+| `rule_type` | Check type. |
+| `rule_parameters` | Values or expression used by the check. |
+| `suggested_by_ai` | Whether the rule started as an AI suggestion. |
+| `human_decision` | Approve, edit, reject, or defer. |
+| `approval_status` | Whether the rule is approved for enforcement. |
+| `approved_by` | Reviewer who approved the rule. |
+| `approved_at` | When approval happened. |
+| `active_flag` | Whether the rule is currently enforced. |
+| `severity` | How failure should be handled. |
+
+Enforcement evidence:
+
+| Field | Purpose |
+| --- | --- |
+| `run_id` | Pipeline run that applied the rule. |
+| `rule_id` | Rule that was applied. |
+| `failure_reason` | Why the row failed. |
+| `failed_row_count` | Number of failed rows. |
+| `accepted_row_count` | Number of accepted rows. |
 
 ## Starter rule types
 
