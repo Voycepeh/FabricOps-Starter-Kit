@@ -20,7 +20,7 @@ nav:
   - Home: index.md
   - Start: quick-start.md
   - Install: install.md
-  - Templates: notebook-structure.md
+  - Notebook Structure: notebook-structure.md
   - Workflow: lifecycle-operating-model.md
   - Govern:
       - Metadata: metadata-and-contracts/index.md
