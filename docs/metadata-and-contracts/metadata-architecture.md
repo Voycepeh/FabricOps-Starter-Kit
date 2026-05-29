@@ -1,5 +1,19 @@
 # Metadata architecture
 
+FabricOps metadata is organized by data contract and data lifecycle dependencies. The goal is to create and maintain the necessary components for data contract assembly and informing the planning and execution of the contract's downstream activities. The aim is to ensure the context needed at every data lifecycle stage supported by FabricOps is registered and accessible.
+
+The FabricsOps metadata architecture supports the following FabricOps product story. It is assumed:
+
+```text
+FabricOps processes live in separate notebooks.
+FabricOps processes create data assets in accordance with the terms of their governing data contract(s).
+FabricOps processes and data assets may live in different workspaces.
+The metadata for FabricOps processes and data assets includes information about their specific contexts of use and the evidence needed to validate compliance with their contexts.
+FabricOps metadata includes the current state and past states of all registered FabricOps processes and data assets.
+FabricOps metadata includes process, data asset, and usage information.
+FabricOps metadata is distilled into handover contracts.
+Evidence of compliance with handover contracts activates the use of new FabricOps processes and data assets.
+FabricOps metadata is recorded for standards-compatible export processes.
 FabricOps metadata is notebook-driven. The notebooks are the source of truth for how agreement, discovery, approval, enforcement, runtime evidence, and handover happen in Microsoft Fabric.
 
 ```text
