@@ -84,9 +84,9 @@ Shared environment bootstrap and validation before exploration or pipeline noteb
 
 ## `01_da_<agreement>`
 
-Captures approved usage, business context, stewardship notes, DQ approvals, governance approvals, and agreement-level controls reused by exploration and pipeline notebooks.
+Captures human-approved data sharing agreement metadata as audited header, catalogue, and scope records that anchor downstream notebooks.
 
-### Segment 4: Human review and approve governance controls
+### Segment 1: Create agreement metadata widgets
 
 <table>
   <thead>
@@ -100,23 +100,16 @@ Captures approved usage, business context, stewardship notes, DQ approvals, gove
   </thead>
   <tbody>
     <tr>
-      <td>`review_governance`</td>
+      <td>`create_agreement_widgets`</td>
       <td>Callable orchestration wrapper</td>
-      <td>Display governance review widget and capture approve/reject decisions in module state.</td>
-      <td>`_now_utc_iso`, `_undo_last_action`</td>
-      <td>Check dependency outputs and metadata writes.</td>
-    </tr>
-    <tr>
-      <td>`write_governance`</td>
-      <td>Callable orchestration wrapper</td>
-      <td>Persist approved governance rows to metadata table.</td>
-      <td>`_approved_widget_rows`</td>
+      <td>Create Fabric widgets for data sharing agreement metadata capture.</td>
+      <td>`_agreement_widget_specs`, `_get_fabric_widgets`, `_widget_dropdown`, `_widget_text`</td>
       <td>Check dependency outputs and metadata writes.</td>
     </tr>
   </tbody>
 </table>
 
-### Segment 5: Load approved governance metadata for downstream notebooks
+### Segment 2: Collect and preview agreement metadata
 
 <table>
   <thead>
@@ -130,10 +123,33 @@ Captures approved usage, business context, stewardship notes, DQ approvals, gove
   </thead>
   <tbody>
     <tr>
-      <td>`load_governance`</td>
+      <td>`collect_agreement_metadata`</td>
       <td>Callable orchestration wrapper</td>
-      <td>Load approved governance metadata as read-only agreement context.</td>
-      <td>`_coerce_row_dicts`</td>
+      <td>Collect widget values and build audited agreement metadata records.</td>
+      <td>`_build_agreement_record`, `_normalise_widget_values`, `_read_agreement_widget_values`, `_record_base`, `_resolve_committed_at`</td>
+      <td>Check dependency outputs and metadata writes.</td>
+    </tr>
+  </tbody>
+</table>
+
+### Segment 3: Commit metadata records
+
+<table>
+  <thead>
+    <tr>
+      <th>Function</th>
+      <th>Role</th>
+      <th>What it does</th>
+      <th>Delegates to</th>
+      <th>Debug when</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>`commit_agreement_metadata`</td>
+      <td>Callable orchestration wrapper</td>
+      <td>Commit agreement metadata records to append-friendly Delta tables.</td>
+      <td>`_safe_table_prefix`, `_write_record`</td>
       <td>Check dependency outputs and metadata writes.</td>
     </tr>
   </tbody>

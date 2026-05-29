@@ -16,10 +16,11 @@ No summary available.
 - Related module: `metadata`
 - Source file path: `src/fabricops_kit/metadata.py`
 - Source reference: <a href="../../api/modules/metadata/#_runtime_context">Module source anchor</a>
-- Inbound references count: 2
+- Inbound references count: 3
 - Outbound references count: 1
 
 ## Inbound references
+- <a href="../internal/data_agreement/_record_base/"><code>fabricops_kit.data_agreement._record_base</code></a>
 - <a href="../internal/metadata/_resolve_action_by/"><code>fabricops_kit.metadata._resolve_action_by</code></a>
 - <a href="../register_current_notebook/"><code>fabricops_kit.metadata.register_current_notebook</code></a>
 

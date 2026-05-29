@@ -6,7 +6,7 @@
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 2</span><span class="reference-chip">Internal helpers: 8</span><span class="reference-chip">Outbound: 1</span><span class="reference-chip">Inbound: 3</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 2</span><span class="reference-chip">Internal helpers: 8</span><span class="reference-chip">Outbound: 1</span><span class="reference-chip">Inbound: 4</span></div>
 
 ## Module purpose
 
@@ -40,7 +40,7 @@ Owns metadata evidence persistence, stable keys, notebook registry, and contract
     </tr>
     <tr>
       <td>Inbound module count</td>
-      <td>3</td>
+      <td>4</td>
     </tr>
     <tr>
       <td>Outbound module count</td>
@@ -48,7 +48,7 @@ Owns metadata evidence persistence, stable keys, notebook registry, and contract
     </tr>
     <tr>
       <td>External callers</td>
-      <td><code>business_context</code>, <code>data_governance</code>, <code>data_quality</code></td>
+      <td><code>business_context</code>, <code>data_agreement</code>, <code>data_governance</code>, <code>data_quality</code></td>
     </tr>
     <tr>
       <td>External callees</td>
@@ -103,12 +103,12 @@ Owns metadata evidence persistence, stable keys, notebook registry, and contract
 <ul class="callable-relationship-rows">
 <li>
 <a class="reference-chip" href="../../reference/load_notebook_registry/"><code>load_notebook_registry</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <span>None.</span>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/register_current_notebook/"><code>register_current_notebook</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_context_get"><code>_context_get</code></a>, <a class="reference-chip" href="#_runtime_context"><code>_runtime_context</code></a>, <a class="reference-chip" href="#_safe_str"><code>_safe_str</code></a>, <a class="reference-chip" href="#write_metadata_rows"><code>write_metadata_rows</code></a>
 </li>
 </ul>
@@ -180,12 +180,12 @@ Owns metadata evidence persistence, stable keys, notebook registry, and contract
 </li>
 <li>
 <a class="reference-chip" href="#_resolve_action_by"><code>_resolve_action_by</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_context_get"><code>_context_get</code></a>, <a class="reference-chip" href="#_runtime_context"><code>_runtime_context</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_runtime_context"><code>_runtime_context</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_context_get"><code>_context_get</code></a>
 </li>
 <li>
@@ -193,7 +193,7 @@ Owns metadata evidence persistence, stable keys, notebook registry, and contract
 </li>
 <li>
 <a class="reference-chip" href="#_sha256_key"><code>_sha256_key</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_key_part"><code>_key_part</code></a>
 </li>
 </ul>
@@ -203,6 +203,9 @@ Owns metadata evidence persistence, stable keys, notebook registry, and contract
 
 **business_context**
 <a class="reference-chip" href="../../reference/review_business_context/"><code>review_business_context</code></a>, <a class="reference-chip" href="../../reference/write_business_context/"><code>write_business_context</code></a>
+
+**data_agreement**
+<a class="reference-chip" href="../data_agreement/#_record_base"><code>_record_base</code></a>
 
 **data_governance**
 <a class="reference-chip" href="../data_governance/#_approved_widget_rows"><code>_approved_widget_rows</code></a>, <a class="reference-chip" href="../../reference/review_governance/"><code>review_governance</code></a>

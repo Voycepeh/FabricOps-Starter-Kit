@@ -36,6 +36,14 @@ This notebook-first flow keeps the contract grounded in reviewed evidence instea
 | 03 | Data quality rules, data quality results, drift evidence, lineage, and handover preparation. |
 | All | Notebook registry entries that preserve traceability across the workflow. |
 
+## `01` agreement metadata capture
+
+The `01_data_sharing_agreement` notebook captures human-approved agreement metadata before downstream evidence is collected. Human inputs are collected through widgets where practical, while derived fields stay out of the form. In particular, `agreement_status` is computed from `expiry_date` and stored with `status_as_of_date`; users do not select status manually.
+
+`renewal_required` is a simple Yes/No value. `sensitivity_label` is always dropdown-driven and defaults to Public, Confidential, and Restricted unless a custom list is passed. `department` and `source_system` become dropdowns when option lists are supplied; otherwise they remain free text so the framework stays generic. Every committed agreement header, catalogue, and scope record includes `committed_by` and `committed_at`.
+
+Notebook users normally call `create_agreement_widgets(...)`, `collect_agreement_metadata(...)`, and `commit_agreement_metadata(...)` for this flow. This agreement metadata becomes the anchor for later profiling, DQ rules, lineage, and pipeline contract evidence. This page intentionally does not rewrite the full metadata/data-contract story until the `01`, `02`, and `03` collection layers are all in place.
+
 ## Source metadata versus assembled views
 
 FabricOps separates source metadata evidence from assembled contract views:
