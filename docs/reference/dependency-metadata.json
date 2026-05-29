@@ -992,6 +992,22 @@
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
+    "fabricops_kit.data_agreement._safe_table_prefix": {
+      "qualified_name": "fabricops_kit.data_agreement._safe_table_prefix",
+      "short_name": "_safe_table_prefix",
+      "module": "data_agreement",
+      "callable": "_safe_table_prefix",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_agreement/_safe_table_prefix/",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.data_agreement.commit_agreement_metadata"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
     "fabricops_kit.data_agreement._select_record_fields": {
       "qualified_name": "fabricops_kit.data_agreement._select_record_fields",
       "short_name": "_select_record_fields",
@@ -1152,15 +1168,17 @@
       "docs_url": "/FabricOps-Starter-Kit/reference/commit_agreement_metadata/",
       "classification": "essential",
       "calls": [
+        "fabricops_kit.data_agreement._safe_table_prefix",
         "fabricops_kit.data_agreement._write_record"
       ],
-      "calls_count": 1,
+      "calls_count": 2,
       "used_by": [],
       "used_by_count": 0,
       "internal_helpers_used": [
+        "fabricops_kit.data_agreement._safe_table_prefix",
         "fabricops_kit.data_agreement._write_record"
       ],
-      "internal_helper_count": 1
+      "internal_helper_count": 2
     },
     "fabricops_kit.data_agreement.create_agreement_widgets": {
       "qualified_name": "fabricops_kit.data_agreement.create_agreement_widgets",
@@ -4049,7 +4067,7 @@
     "data_agreement": {
       "essential_count": 10,
       "optional_count": 0,
-      "internal_count": 19,
+      "internal_count": 20,
       "outbound_modules": [
         "metadata"
       ],

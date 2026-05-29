@@ -16,9 +16,9 @@ It does **not** perform profiling, DQ authoring, lineage capture, or pipeline co
    - Does not expose derived fields as widgets.
 3. **Structured record building**
    - Builds append-friendly records for:
-     - `metadata.agreement_header`
-     - `metadata.agreement_catalogue`
-     - `metadata.agreement_scope`
+     - `METADATA_AGREEMENT_HEADER`
+     - `METADATA_AGREEMENT_CATALOGUE`
+     - `METADATA_AGREEMENT_SCOPE`
 4. **Audit fields**
    - Every committed record includes `committed_by` and `committed_at`.
    - Runtime context fields such as notebook, workspace, lakehouse, and run ID are included when available.

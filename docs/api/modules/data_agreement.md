@@ -6,7 +6,7 @@
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 10</span><span class="reference-chip">Internal helpers: 19</span><span class="reference-chip">Outbound: 1</span><span class="reference-chip">Inbound: 0</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 10</span><span class="reference-chip">Internal helpers: 20</span><span class="reference-chip">Outbound: 1</span><span class="reference-chip">Inbound: 0</span></div>
 
 ## Module purpose
 
@@ -36,7 +36,7 @@ Owns agreement metadata capture, audited record building, metadata commit helper
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>19</td>
+      <td>20</td>
     </tr>
     <tr>
       <td>Inbound module count</td>
@@ -97,7 +97,7 @@ Owns agreement metadata capture, audited record building, metadata commit helper
       <td>Essential</td>
       <td>function</td>
       <td>Commit agreement metadata records to append-friendly Delta tables.</td>
-      <td><a href="../../reference/internal/data_agreement/_write_record/"><code>_write_record</code></a> (internal)</td>
+      <td><a href="../../reference/internal/data_agreement/_safe_table_prefix/"><code>_safe_table_prefix</code></a> (internal), <a href="../../reference/internal/data_agreement/_write_record/"><code>_write_record</code></a> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/create_agreement_widgets/"><code>create_agreement_widgets</code></a></td>
@@ -175,7 +175,7 @@ Owns agreement metadata capture, audited record building, metadata commit helper
 <li>
 <a class="reference-chip" href="../../reference/commit_agreement_metadata/"><code>commit_agreement_metadata</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_write_record"><code>_write_record</code></a>
+<a class="reference-chip" href="#_safe_table_prefix"><code>_safe_table_prefix</code></a>, <a class="reference-chip" href="#_write_record"><code>_write_record</code></a>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/create_agreement_widgets/"><code>create_agreement_widgets</code></a>
@@ -281,6 +281,10 @@ Owns agreement metadata capture, audited record building, metadata commit helper
       <td>—</td>
     </tr>
     <tr>
+      <td><a href="../../reference/internal/data_agreement/_safe_table_prefix/"><code>_safe_table_prefix</code></a></td>
+      <td><a href="../../reference/commit_agreement_metadata/"><code>commit_agreement_metadata</code></a></td>
+    </tr>
+    <tr>
       <td><a href="../../reference/internal/data_agreement/_select_record_fields/"><code>_select_record_fields</code></a></td>
       <td><a href="../../reference/build_agreement_catalogue_record/"><code>build_agreement_catalogue_record</code></a>, <a href="../../reference/build_agreement_header_record/"><code>build_agreement_header_record</code></a>, <a href="../../reference/build_agreement_scope_record/"><code>build_agreement_scope_record</code></a></td>
     </tr>
@@ -355,6 +359,9 @@ Owns agreement metadata capture, audited record building, metadata commit helper
 </li>
 <li>
 <a class="reference-chip" href="#_resolve_committed_at"><code>_resolve_committed_at</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_safe_table_prefix"><code>_safe_table_prefix</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_select_record_fields"><code>_select_record_fields</code></a>

@@ -9,6 +9,7 @@ from fabricops_kit.data_agreement import (
     build_agreement_catalogue_record,
     build_agreement_header_record,
     build_agreement_scope_record,
+    commit_agreement_metadata,
     derive_agreement_status,
 )
 
@@ -143,3 +144,69 @@ def test_catalogue_and_scope_records_are_audited():
     assert scope["committed_by"] == "reviewer"
     assert scope["committed_at"]
     assert scope["scope_id"] == "agr-001|Reporting team|Dashboard"
+
+
+class _DummyWriter:
+    def __init__(self, writes):
+        self._writes = writes
+        self._format = None
+        self._mode = None
+
+    def format(self, value):
+        self._format = value
+        return self
+
+    def mode(self, value):
+        self._mode = value
+        return self
+
+    def saveAsTable(self, table_name):
+        self._writes.append(("table", table_name, self._format, self._mode))
+
+    def save(self, path):
+        self._writes.append(("path", path, self._format, self._mode))
+
+
+class _DummyDataFrame:
+    def __init__(self, writes):
+        self.write = _DummyWriter(writes)
+
+
+class _DummySpark:
+    def __init__(self):
+        self.writes = []
+
+    def createDataFrame(self, rows):
+        assert rows
+        return _DummyDataFrame(self.writes)
+
+
+def test_commit_agreement_metadata_uses_lakehouse_safe_default_table_names():
+    spark = _DummySpark()
+    header = {"agreement_id": "agr-001", "agreement_status": "Active"}
+    catalogue = {"agreement_id": "agr-001"}
+    scope = {"agreement_id": "agr-001"}
+
+    summary = commit_agreement_metadata(
+        spark=spark,
+        header_record=header,
+        catalogue_record=catalogue,
+        scope_record=scope,
+    )
+
+    assert summary["tables_updated"] == [
+        "METADATA_AGREEMENT_HEADER",
+        "METADATA_AGREEMENT_CATALOGUE",
+        "METADATA_AGREEMENT_SCOPE",
+    ]
+    assert [write[1] for write in spark.writes] == summary["tables_updated"]
+
+
+def test_commit_agreement_metadata_normalizes_custom_prefix_to_safe_names():
+    summary = commit_agreement_metadata(
+        spark=_DummySpark(),
+        header_record={"agreement_id": "agr-001"},
+        table_prefix="metadata.custom",
+    )
+
+    assert summary["tables_updated"] == ["METADATA_CUSTOM_AGREEMENT_HEADER"]

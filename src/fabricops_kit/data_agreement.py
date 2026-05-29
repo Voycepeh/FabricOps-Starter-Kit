@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from datetime import date, datetime, timezone
 from typing import Any
 
@@ -668,6 +669,13 @@ def _metadata_root(metadata_lakehouse: Any) -> str | None:
     return str(metadata_lakehouse).rstrip("/")
 
 
+def _safe_table_prefix(table_prefix: str | None) -> str:
+    prefix = str(table_prefix or "").strip().strip("._")
+    if not prefix:
+        return ""
+    return re.sub(r"[^0-9A-Za-z_]+", "_", prefix).strip("_").upper()
+
+
 def _write_record(spark: Any, record: dict[str, Any], table_name: str, *, metadata_lakehouse: Any, mode: str) -> None:
     df = spark.createDataFrame([record])
     root = _metadata_root(metadata_lakehouse)
@@ -684,7 +692,7 @@ def commit_agreement_metadata(
     catalogue_record: dict[str, Any] | None = None,
     scope_record: dict[str, Any] | None = None,
     metadata_lakehouse: str | None = None,
-    table_prefix: str = "metadata",
+    table_prefix: str = "METADATA",
     mode: str = "append",
 ) -> dict[str, Any]:
     """Commit agreement metadata records to append-friendly Delta tables.
@@ -703,9 +711,10 @@ def commit_agreement_metadata(
         Metadata lakehouse root path or ``FabricStore``. Pass
         ``CONFIG.path_config.paths[env_name]["metadata"]`` in Fabric notebooks
         to avoid default-lakehouse assumptions.
-    table_prefix : str, default="metadata"
-        Logical table prefix used to create table names such as
-        ``metadata.agreement_header``.
+    table_prefix : str, default="METADATA"
+        Logical table prefix used to create Lakehouse-safe table names such as
+        ``METADATA_AGREEMENT_HEADER``. Dots and other unsafe characters are
+        normalized to underscores.
     mode : str, default="append"
         Spark write mode.
 
@@ -723,11 +732,11 @@ def commit_agreement_metadata(
     """
     if not header_record:
         raise ValueError("header_record is required.")
-    prefix = str(table_prefix or "").strip().strip(".")
+    prefix = _safe_table_prefix(table_prefix)
     table_names = {
-        "header": f"{prefix}.agreement_header" if prefix else "agreement_header",
-        "catalogue": f"{prefix}.agreement_catalogue" if prefix else "agreement_catalogue",
-        "scope": f"{prefix}.agreement_scope" if prefix else "agreement_scope",
+        "header": f"{prefix}_AGREEMENT_HEADER" if prefix else "AGREEMENT_HEADER",
+        "catalogue": f"{prefix}_AGREEMENT_CATALOGUE" if prefix else "AGREEMENT_CATALOGUE",
+        "scope": f"{prefix}_AGREEMENT_SCOPE" if prefix else "AGREEMENT_SCOPE",
     }
     _write_record(spark, header_record, table_names["header"], metadata_lakehouse=metadata_lakehouse, mode=mode)
     updated = [table_names["header"]]

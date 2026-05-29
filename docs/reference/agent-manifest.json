@@ -781,6 +781,19 @@
     "summary": "No summary available."
   },
   {
+    "name": "_safe_table_prefix",
+    "qualified_name": "fabricops_kit.data_agreement._safe_table_prefix",
+    "module": "data_agreement",
+    "type": "internal",
+    "role": "internal",
+    "inbound": [
+      "fabricops_kit.data_agreement.commit_agreement_metadata"
+    ],
+    "outbound": [],
+    "source_file": "src/fabricops_kit/data_agreement.py",
+    "summary": "No summary available."
+  },
+  {
     "name": "_select_record_fields",
     "qualified_name": "fabricops_kit.data_agreement._select_record_fields",
     "module": "data_agreement",
@@ -902,6 +915,7 @@
     "role": "essential",
     "inbound": [],
     "outbound": [
+      "fabricops_kit.data_agreement._safe_table_prefix",
       "fabricops_kit.data_agreement._write_record"
     ],
     "source_file": "src/fabricops_kit/data_agreement.py",

@@ -214,7 +214,7 @@ Captures human-approved data sharing agreement metadata as audited header, catal
       <td>`commit_agreement_metadata`</td>
       <td>Callable orchestration wrapper</td>
       <td>Commit agreement metadata records to append-friendly Delta tables.</td>
-      <td>`_write_record`</td>
+      <td>`_safe_table_prefix`, `_write_record`</td>
       <td>Check dependency outputs and metadata writes.</td>
     </tr>
   </tbody>
