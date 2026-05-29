@@ -1,36 +1,47 @@
-# Metadata
+# Metadata and contracts
 
-This page explains: how approved metadata evidence becomes a contract-ready artifact.
-Use this when: you need to understand contract contents, metadata tables, and notebook evidence ownership.
+This page explains how approved notebook evidence becomes a contract-ready handover artifact.
+Use this when you need to understand contract contents, metadata ownership, and where enforcement happens.
 Next read: [Quality](../data-quality-rules-system.md), [Notebooks](../notebook-structure.md), [Deploy](../deployment-and-promotion.md).
 
+The data contract is an assembled handover artifact. It is built from approved evidence across agreement, exploration, pipeline contract, and governance notebooks. It is not a standalone YAML file and it is not owned by one notebook; each notebook family contributes evidence that becomes part of the governed contract record.
+
 <figure markdown>
-  ![Data contract model showing metadata evidence from agreement, exploration, pipeline, and governance combined into an operational contract](../assets/data-contract.png){ .full-width }
-  <figcaption>Data contract evidence ownership belongs here: approved evidence feeding contract-ready handover.</figcaption>
+  ![Notebook workflow showing agreement, exploration, pipeline contract, and governance evidence assembled into a FabricOps data contract](../assets/notebook-datacontract-flow.png){ .full-width }
+  <figcaption>FabricOps data contracts are assembled from approved evidence across the notebook workflow.</figcaption>
 </figure>
 
-## What the contract is
+## Where the contract comes from
 
-A governed operational artifact assembled from approved metadata and run evidence across notebook stages.
+| Notebook family | Role | Evidence contributed | Contract action |
+| --- | --- | --- | --- |
+| `01_agreement_*` | Capture governance intent and approved scope before delivery work starts. | Agreement terms, domain ownership, data steward curation, usage intent, access boundaries, and handover expectations. | Defines |
+| `02_ex_*` | Discover what the data actually contains and prepare contract-ready suggestions for review. | Exploration results, profiling summaries, schema and column evidence, lineage notes, AI-assisted suggestions, and data quality observations. | Discovers |
+| `03_pc_*` | Turn approved evidence into operational pipeline behavior. | Pipeline contracts, validation results, DQ checks, write expectations, run evidence, and enforcement outcomes. | Enforces |
+| `04_gov_*` | Keep governance evidence current after the contract is operational. | Governance metadata, drift monitoring, classifications, sensitivity labels, compliance review evidence, and approval history. | Monitors |
 
-## Evidence sources by notebook ownership
+## What the assembled contract contains
 
-| Notebook | Evidence it owns |
-| --- | --- |
-| `01_agreement_*` | Scope, ownership, usage intent, access boundaries |
-| `02_ex_*` | Profiling evidence and approved DQ rule metadata |
-| `03_pc_*` | Lineage, deterministic enforcement results, run evidence |
-| `04_gov_*` | Classification, sensitivity, and governance approval metadata |
+The assembled contract combines approved evidence into a practical handover view that describes:
 
-## Metadata tables and roles
+- **Domain & ownership**: business domain, owning team, accountable owner, and stewardship context.
+- **Data assets**: tables, files, lakehouse objects, or other governed assets in scope.
+- **Schema & columns**: approved fields, types, required columns, descriptions, and expected structure.
+- **DQ rules & expectations**: quality checks, thresholds, acceptable values, and review status.
+- **Lineage & sources**: upstream inputs, transformations, downstream consumers, and traceability notes.
+- **Stewards & responsibilities**: who approves, maintains, operates, and reviews the contract evidence.
+- **Classifications & sensitivity**: classification labels, sensitivity context, and handling requirements.
+- **Access & usage**: intended use, access boundaries, sharing expectations, and consumer obligations.
+- **Policies & agreements**: agreement terms, governance decisions, policy links, and approval evidence.
+- **SLA / refresh expectations**: refresh cadence, timeliness expectations, operational commitments, and drift response.
 
-| Metadata table (logical) | Role owner | Purpose |
-| --- | --- | --- |
-| Agreement metadata | Governance + data owner | Agreement-level intent and accountability |
-| Quality/rules metadata | Analyst + steward (approve), engineering (enforce) | Approved DQ rule policy history |
-| Lineage/run metadata | Engineering | Traceable enforcement and processing evidence |
-| Governance metadata | Governance steward | Classification and access-governance outcomes |
+YAML can be exported as an optional machine-readable representation of this assembled evidence. The governed contract remains the approved evidence set, not the YAML file by itself.
 
-## Enforcement note
+## Enforcement model
 
-Policy enforcement is deterministic in `03_pc_*` and consumes approved metadata routed through the configured `metadata` target from `00_env_config`.
+- `01_agreement_*` defines governance intent, accountability, and approved scope.
+- `02_ex_*` discovers evidence and generates AI-assisted suggestions for steward review.
+- `03_pc_*` is where executable enforcement happens through validation, DQ checks, write expectations, and pipeline logic.
+- `04_gov_*` monitors whether the contract remains valid over time through drift checks, classifications, compliance reviews, and approval updates.
+
+Policy enforcement in `03_pc_*` consumes approved metadata routed through the configured `metadata` target from `00_env_config`, so metadata reads and writes do not depend on an attached/default lakehouse.
