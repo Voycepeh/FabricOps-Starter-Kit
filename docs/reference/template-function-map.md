@@ -4,7 +4,7 @@ Template-first view of public callables and their main delegated helpers.
 
 ## `00_env_config`
 
-Shared environment bootstrap and validation before exploration or pipeline notebooks run.
+Shared environment bootstrap and validation before agreement intake, exploration, or pipeline notebooks run.
 
 ### Segment 2: Define environment targets and notebook policy
 
@@ -84,7 +84,7 @@ Shared environment bootstrap and validation before exploration or pipeline noteb
 
 ## `01_da_<agreement>`
 
-Captures human-approved data sharing agreement metadata as audited header, catalogue, and scope records that anchor downstream notebooks.
+Captures one immutable `METADATA_DATA_AGREEMENT` row per human-approved agreement version and uses manually maintained `METADATA_DATA_STEWARD` profiles for intake dropdowns.
 
 ### Segment 1: Create agreement metadata widgets
 

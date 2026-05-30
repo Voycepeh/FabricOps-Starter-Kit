@@ -1,10 +1,12 @@
 from datetime import datetime
+from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
 
 import fabricops_kit.data_agreement as data_agreement
 from fabricops_kit.data_agreement import (
+    DATA_AGREEMENT_FIELDS,
     DATA_AGREEMENT_TABLE,
     DATA_STEWARD_TABLE,
     agreement_dropdown_options,
@@ -181,4 +183,35 @@ def test_update_form_prefills_latest_selected_row(monkeypatch):
     assert form["agreement_name"].value == "Latest orders"
     assert form["business_purpose"].value == "Latest purpose"
     assert form["data_steward_profile"].value == steward
-    assert "Next: 1.3.0" in form["agreement_identity"].value
+    assert "Latest version: 1.2.0" in form["agreement_identity"].value
+    assert "Next version: 1.3.0" in form["agreement_identity"].value
+    assert "Agreement status:" in form["agreement_identity"].value
+    assert "Review status:" in form["agreement_identity"].value
+    assert "Latest expiry date: 2026-12-31" in form["agreement_identity"].value
+
+
+def test_setup_data_agreement_tables_creates_only_current_metadata_tables(monkeypatch):
+    ensured = []
+    monkeypatch.setattr(data_agreement, "_ensure_delta_table", lambda spark, config, env, table_name, fields: ensured.append(table_name))
+
+    tables = data_agreement.setup_data_agreement_tables(spark=object(), config=_config(), env="dev")
+
+    assert tables == [DATA_AGREEMENT_TABLE, DATA_STEWARD_TABLE]
+    assert ensured == [DATA_AGREEMENT_TABLE, DATA_STEWARD_TABLE]
+
+
+def test_metadata_architecture_documents_implemented_agreement_schema():
+    architecture = Path("docs/metadata-and-contracts/metadata-architecture.md").read_text(encoding="utf-8")
+    section = architecture.split("### `METADATA_DATA_AGREEMENT`", 1)[1].split("### `METADATA_DATA_CATALOGUE`", 1)[0]
+    documented_fields = [
+        line.split("|", 2)[1].strip()
+        for line in section.splitlines()
+        if line.startswith("| ") and "| Implemented |" in line
+    ]
+
+    assert documented_fields == DATA_AGREEMENT_FIELDS
+    assert "One row = one agreement version" in section
+    assert "agreement_id + contract_version" in section
+    assert "LYRA-style workbook or data-dictionary fields" in section
+    assert "exactly nine source metadata tables" in architecture
+    assert "`METADATA_DATA_STEWARD` is a setup/helper table" in architecture

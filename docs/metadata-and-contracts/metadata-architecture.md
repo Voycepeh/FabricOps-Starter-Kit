@@ -42,7 +42,7 @@ The table names below are the physical source metadata tables. The diagram then 
 
 | No. | Table                              | Grain                                                        | Why it exists                                                                                 |
 | --: | ---------------------------------- | ------------------------------------------------------------ | --------------------------------------------------------------------------------------------- |
-|   1 | `METADATA_DATA_AGREEMENT`               | One row per agreement version                                | Defines scope, owner, usage, restrictions, SLA, and contract anchor.                          |
+|   1 | `METADATA_DATA_AGREEMENT`          | One row per agreement version                                | Defines the highest-grain agreement intake and usage boundary anchor.                         |
 |   2 | `METADATA_DATA_CATALOGUE`          | One row per table per profiling run or latest table snapshot | Captures table-level catalogue and profile evidence from exploration or pipeline profiling.   |
 |   3 | `METADATA_COLUMN_BUSINESS_CONTEXT` | One row per table-column per approved version                | Stores approved business meaning, description, units, source/derivation, and glossary terms.  |
 |   4 | `METADATA_COLUMN_GOVERNANCE`       | One row per table-column per approved version                | Stores approved classification, PII, sensitivity, confidentiality, and handling requirements. |
@@ -97,7 +97,7 @@ flowchart LR
 | Notebook         | Responsibility                                                                 | Writes or updates                                                                                                             |
 | ---------------- | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
 | `00_env_config`  | Sets reusable environment context and supports notebook registration           | `METADATA_NOTEBOOK_REGISTRY` through `register_current_notebook()`                                                            |
-| `01_da_*` | Defines agreement scope, owners, usage, restrictions, and SLA expectations     | `METADATA_DATA_AGREEMENT`, `METADATA_DATA_STEWARD`, `METADATA_NOTEBOOK_REGISTRY`                                                                            |
+| `01_da_*`        | Captures the highest-grain agreement intake and usage boundary                 | `METADATA_DATA_AGREEMENT`, `METADATA_DATA_STEWARD`, `METADATA_NOTEBOOK_REGISTRY`                                           |
 | `02_ex_*`        | Profiles data, discovers structure, and suggests context/rules                 | `METADATA_DATA_CATALOGUE`, `METADATA_NOTEBOOK_REGISTRY`                                                                       |
 | `04_gov_*`       | Approves column-level business context and classifications                     | `METADATA_COLUMN_BUSINESS_CONTEXT`, `METADATA_COLUMN_GOVERNANCE`, `METADATA_NOTEBOOK_REGISTRY`                                |
 | `03_pc_*`        | Enforces approved DQ rules, validates pipeline outputs, captures drift/lineage | `METADATA_DQ_RULES`, `METADATA_DQ_RESULTS`, `METADATA_DRIFT_RESULTS`, `METADATA_LINEAGE_EVENTS`, `METADATA_NOTEBOOK_REGISTRY` |
@@ -108,17 +108,19 @@ Each source table owns one kind of metadata. Join keys may repeat across tables 
 
 ### `METADATA_DATA_AGREEMENT`
 
-**Why it exists:** This is the agreement-level contract anchor. It defines what the data product or data-sharing scope is, who owns it, what it can be used for, what restrictions apply, and what downstream metadata belongs to.
+**Why it exists:** This is the highest-grain agreement-level contract anchor written by the `01_da_*` **Data Agreement Intake / Usage Boundary** notebook. It records the captured usage boundary in which downstream notebook work is allowed to operate. It is not a workbook-style data dictionary and does not store detailed table or column metadata.
 
-**Grain:** One row per agreement version.
+**Grain:** One row = one agreement version. Agreement changes are append-only: a new revision adds a row rather than overwriting a previous version.
 
-**Stable key:** `agreement_id`.
+**Stable agreement key:** `agreement_id` identifies the agreement across versions.
 
-**Version key:** `contract_version`.
+**Append-only version key:** `contract_version` identifies one semantic version of that agreement.
 
-**Main foreign keys:** None required. Other tables reference `agreement_id`.
+**Unique agreement-version identity:** `agreement_id + contract_version`.
 
-**Main writer notebook:** `01_da_*`.
+**Main foreign keys:** None required. Downstream metadata tables reference `agreement_id` and, where version-specific traceability is needed, `contract_version`.
+
+**Main writer notebook:** `01_da_*` through `collect_agreement_metadata()` and `commit_agreement_metadata()`.
 
 **Main downstream use:** Scopes every catalogue, context, governance, rule, result, drift, lineage, and handover output.
 
@@ -126,24 +128,39 @@ Each source table owns one kind of metadata. Join keys may repeat across tables 
 
 | Column | Example value | Writer notebook/function | Status | Purpose |
 | --- | --- | --- | --- | --- |
-| agreement_id | DA-20260529-100000 | 01_da_* | Implemented | Stable agreement scope key |
-| contract_version | 1.0.0 | 01_da_* | Implemented | Append-only semantic agreement version |
-| agreement_name | LYRA De-identified Output Agreement | 01_agreement_* | Planned | Human-readable agreement name |
-| business_domain | Student analytics | 01_agreement_* | Planned | Domain or business area |
-| owning_team | ODI | 01_agreement_* | Planned | Team accountable for the agreement |
-| data_owner | Registrar Office | 01_agreement_* | Planned | Accountable business owner |
-| data_steward | Analytics Steward | 01_agreement_* | Planned | Operational data steward |
-| approved_usage | Reporting and governed analytics | 01_agreement_* | Planned / partial | Allowed use of the dataset |
-| access_boundaries | Internal approved users only | 01_agreement_* | Planned | Access constraint summary |
-| restrictions | No re-identification | 01_agreement_* | Planned | Usage restrictions |
-| sla_expectation | Monthly refresh | 01_agreement_* | Planned | Expected delivery or refresh SLA |
-| agreement_status | approved | 01_agreement_* | Planned | Current lifecycle status |
-| approved_by | user@org.com | 01_agreement_* | Planned / partial | Approver |
-| approved_at | 2026-05-29T10:30:00Z | 01_agreement_* | Planned / partial | Approval timestamp |
-| effective_from | 2026-06-01 | 01_agreement_* | Planned | Agreement start date |
-| effective_to | null | 01_agreement_* | Planned | Agreement end date |
-| created_at | 2026-05-29T10:00:00Z | metadata writer | Planned | Row creation timestamp |
-| updated_at | 2026-05-29T10:30:00Z | metadata writer | Planned | Row update timestamp |
+| agreement_id | DA-20260529-100000 | 01_da_* | Implemented | Stable agreement key reused across appended versions |
+| contract_version | 1.0.0 | 01_da_* | Implemented | Append-only semantic agreement version key |
+| agreement_name | Governed Reporting Agreement | 01_da_* | Implemented | Human-readable agreement name |
+| data_steward_name | Configured Steward | 01_da_* | Implemented | Steward selected from the maintained helper table |
+| data_steward_email | steward@example.com | 01_da_* | Implemented | Steward contact email |
+| domain | Operations | 01_da_* | Implemented | Steward or agreement domain |
+| department | Analytics | 01_da_* | Implemented | Steward or agreement department |
+| faculty | Shared Services | 01_da_* | Implemented | Steward or agreement faculty or organizational grouping |
+| business_purpose | Support governed reporting | 01_da_* | Implemented | Business reason for the agreement |
+| approved_usage | Approved reporting only | 01_da_* | Implemented | Allowed use within the agreement boundary |
+| restricted_usage | No redistribution | 01_da_* | Implemented | Restricted or prohibited uses |
+| allowed_consumer_type | Internal Department | 01_da_* | Implemented | Permitted consumer category |
+| expected_output | Dashboard | 01_da_* | Implemented | Expected output type |
+| source_system | ERP | 01_da_* | Implemented | Source-system category |
+| refresh_frequency | Daily | 01_da_* | Implemented | Expected refresh cadence |
+| retention_expectation | Retain approved extracts for 30 days | 01_da_* | Implemented | Retention boundary or expectation |
+| start_date | 2026-06-01 | 01_da_* | Implemented | Agreement start date |
+| expiry_date | 2027-05-31 | 01_da_* | Implemented | Agreement expiry date |
+| agreement_status | Active | 01_da_* | Implemented | Lifecycle status derived from expiry date at commit time |
+| status_as_of_date | 2026-06-01 | 01_da_* | Implemented | Date on which agreement status was evaluated |
+| renewal_required | Yes | 01_da_* | Implemented | Whether renewal is expected |
+| review_status | Pending | 01_da_* | Implemented | Agreement review state |
+| approved_by | reviewer@example.com | 01_da_* | Implemented | Reviewer identity when approval is recorded |
+| approved_at | 2026-06-01T10:30:00+00:00 | 01_da_* | Implemented | Approval timestamp when approval is recorded |
+| committed_by | user@example.com | 01_da_* | Implemented | Fabric runtime user who committed the version |
+| committed_at | 2026-06-01T10:00:00+00:00 | 01_da_* | Implemented | Agreement-version commit timestamp |
+| notebook_name | 01_da_governed_reporting | 01_da_* | Implemented | Fabric notebook that committed the version |
+| workspace_name | Fabric Workspace | 01_da_* | Implemented | Fabric workspace captured from runtime context |
+| lakehouse_name | Metadata Lakehouse | 01_da_* | Implemented | Configured metadata lakehouse captured at commit time |
+| run_id | activity-id | 01_da_* | Implemented | Fabric activity or run identifier |
+
+!!! note "Keep workbook-style dictionary detail downstream"
+    Detailed table and column metadata belongs downstream, not in `METADATA_DATA_AGREEMENT`. LYRA-style workbook or data-dictionary fields such as column description, data type, field classification, allowed values, top values, missing data, PII/sensitive indicators, and business rules belong in `METADATA_DATA_CATALOGUE`, `METADATA_COLUMN_BUSINESS_CONTEXT`, `METADATA_COLUMN_GOVERNANCE`, and `METADATA_DQ_RULES` according to their grain and ownership.
 
 ### `METADATA_DATA_CATALOGUE`
 
