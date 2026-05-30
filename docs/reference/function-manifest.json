@@ -773,7 +773,9 @@
     "qualified_name": "fabricops_kit.data_agreement.collect_agreement_metadata",
     "module": "data_agreement",
     "classification": "Essential",
-    "inbound": [],
+    "inbound": [
+      "fabricops_kit.data_agreement.render_agreement_intake_app"
+    ],
     "outbound": [
       "fabricops_kit.data_agreement._context_get",
       "fabricops_kit.data_agreement._derive_agreement_status",
@@ -791,7 +793,9 @@
     "qualified_name": "fabricops_kit.data_agreement.commit_agreement_metadata",
     "module": "data_agreement",
     "classification": "Essential",
-    "inbound": [],
+    "inbound": [
+      "fabricops_kit.data_agreement.render_agreement_intake_app"
+    ],
     "outbound": [
       "fabricops_kit.data_agreement._ensure_delta_table",
       "fabricops_kit.fabric_input_output.read_lakehouse_table",
@@ -807,7 +811,9 @@
     "qualified_name": "fabricops_kit.data_agreement.create_agreement_form",
     "module": "data_agreement",
     "classification": "Essential",
-    "inbound": [],
+    "inbound": [
+      "fabricops_kit.data_agreement.render_agreement_intake_app"
+    ],
     "outbound": [
       "fabricops_kit.data_agreement.agreement_dropdown_options",
       "fabricops_kit.data_agreement.load_active_data_steward_profiles",
@@ -873,7 +879,8 @@
     "module": "data_agreement",
     "classification": "Essential",
     "inbound": [
-      "fabricops_kit.data_agreement.create_agreement_form"
+      "fabricops_kit.data_agreement.create_agreement_form",
+      "fabricops_kit.data_agreement.render_agreement_intake_app"
     ],
     "outbound": [
       "fabricops_kit.data_agreement.latest_agreement_versions",
@@ -935,11 +942,31 @@
     "qualified_name": "fabricops_kit.data_agreement.read_agreement_form",
     "module": "data_agreement",
     "classification": "Essential",
-    "inbound": [],
+    "inbound": [
+      "fabricops_kit.data_agreement.render_agreement_intake_app"
+    ],
     "outbound": [],
     "source_path": "src/fabricops_kit/data_agreement.py",
     "docs_path": "reference/read_agreement_form.md",
     "summary": "No summary available."
+  },
+  {
+    "id": "fabricops_kit.data_agreement.render_agreement_intake_app",
+    "name": "render_agreement_intake_app",
+    "qualified_name": "fabricops_kit.data_agreement.render_agreement_intake_app",
+    "module": "data_agreement",
+    "classification": "Essential",
+    "inbound": [],
+    "outbound": [
+      "fabricops_kit.data_agreement.collect_agreement_metadata",
+      "fabricops_kit.data_agreement.commit_agreement_metadata",
+      "fabricops_kit.data_agreement.create_agreement_form",
+      "fabricops_kit.data_agreement.load_agreements",
+      "fabricops_kit.data_agreement.read_agreement_form"
+    ],
+    "source_path": "src/fabricops_kit/data_agreement.py",
+    "docs_path": "reference/render_agreement_intake_app.md",
+    "summary": "Render and wire the default agreement-intake form application."
   },
   {
     "id": "fabricops_kit.data_agreement.resolve_agreement_identity",

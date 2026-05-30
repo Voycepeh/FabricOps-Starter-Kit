@@ -138,37 +138,37 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
 <ul class="callable-relationship-rows">
 <li>
 <a class="reference-chip" href="../../reference/read_lakehouse_csv/"><code>read_lakehouse_csv</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_get_spark"><code>_get_spark</code></a>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/read_lakehouse_excel/"><code>read_lakehouse_excel</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_get_spark"><code>_get_spark</code></a>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/read_lakehouse_parquet/"><code>read_lakehouse_parquet</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_convert_single_parquet_ns_to_us"><code>_convert_single_parquet_ns_to_us</code></a>, <a class="reference-chip" href="#_get_spark"><code>_get_spark</code></a>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/read_lakehouse_table/"><code>read_lakehouse_table</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_get_spark"><code>_get_spark</code></a>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/read_warehouse_table/"><code>read_warehouse_table</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_get_spark"><code>_get_spark</code></a>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/write_lakehouse_table/"><code>write_lakehouse_table</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <span>None.</span>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/write_warehouse_table/"><code>write_warehouse_table</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <span>None.</span>
 </li>
 </ul>
@@ -233,4 +233,3 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
 
 **config**
 <a class="reference-chip" href="../config/#_get_store"><code>_get_store</code></a>, <a class="reference-chip" href="../../reference/load_config/"><code>load_config</code></a>
-

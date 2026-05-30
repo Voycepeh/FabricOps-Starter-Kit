@@ -103,12 +103,12 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
 <ul class="callable-relationship-rows">
 <li>
 <a class="reference-chip" href="../../reference/load_config/"><code>load_config</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_validate_framework_config"><code>_validate_framework_config</code></a>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/setup_notebook/"><code>setup_notebook</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_get_store"><code>_get_store</code></a>, <a class="reference-chip" href="#_run_config_smoke_tests"><code>_run_config_smoke_tests</code></a>, <a class="reference-chip" href="../../reference/load_config/"><code>load_config</code></a>
 </li>
 </ul>
@@ -188,7 +188,7 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
 <ul class="callable-relationship-rows">
 <li>
 <a class="reference-chip" href="#_bootstrap_fabric_env"><code>_bootstrap_fabric_env</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_get_fabric_runtime_metadata"><code>_get_fabric_runtime_metadata</code></a>, <a class="reference-chip" href="#_get_store"><code>_get_store</code></a>, <a class="reference-chip" href="#_run_config_smoke_tests"><code>_run_config_smoke_tests</code></a>, <a class="reference-chip" href="../../reference/load_config/"><code>load_config</code></a>
 </li>
 <li>
@@ -214,7 +214,7 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
 </li>
 <li>
 <a class="reference-chip" href="#_load_schema"><code>_load_schema</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_default_schema_text"><code>_default_schema_text</code></a>
 </li>
 <li>
@@ -222,7 +222,7 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
 </li>
 <li>
 <a class="reference-chip" href="#_run_config_smoke_tests"><code>_run_config_smoke_tests</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_check_spark_session"><code>_check_spark_session</code></a>, <a class="reference-chip" href="#_get_fabric_runtime_metadata"><code>_get_fabric_runtime_metadata</code></a>, <a class="reference-chip" href="#_get_store"><code>_get_store</code></a>, <a class="reference-chip" href="#_validate_notebook_name"><code>_validate_notebook_name</code></a>
 </li>
 <li>
@@ -230,7 +230,7 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
 </li>
 <li>
 <a class="reference-chip" href="#_validate_notebook_name"><code>_validate_notebook_name</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_normalize_name"><code>_normalize_name</code></a>
 </li>
 </ul>

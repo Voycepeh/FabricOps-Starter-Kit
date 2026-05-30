@@ -1,5 +1,7 @@
 from datetime import datetime
 from pathlib import Path
+import sys
+import types
 from types import SimpleNamespace
 
 import pytest
@@ -194,6 +196,115 @@ def test_update_form_prefills_latest_selected_row(monkeypatch):
     assert "Review status:" in form["agreement_identity"].value
     assert "Latest expiry date: 2026-12-31" in form["agreement_identity"].value
 
+
+
+def _stub_ipython_display(monkeypatch):
+    display = types.ModuleType("IPython.display")
+    display.clear_output = lambda: None
+    ipython = types.ModuleType("IPython")
+    ipython.display = display
+    monkeypatch.setitem(sys.modules, "IPython", ipython)
+    monkeypatch.setitem(sys.modules, "IPython.display", display)
+
+
+def test_render_agreement_intake_app_wires_commit_button_and_commits(monkeypatch, capsys):
+    _stub_ipython_display(monkeypatch)
+
+    class Output:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            return False
+
+    class Button:
+        callback = None
+
+        def on_click(self, callback):
+            self.callback = callback
+
+    button = Button()
+    form = {
+        "mode": SimpleNamespace(value="Create New Agreement"),
+        "existing_agreement": SimpleNamespace(value=None),
+        "commit_button": button,
+        "output": Output(),
+    }
+    latest = [{"agreement_id": "DA-OLD", "contract_version": "1.0.0"}]
+    values = _values()
+    metadata = {"agreement_row": {"agreement_id": "DA-NEW"}}
+    summary = {
+        "agreement_id": "DA-NEW",
+        "contract_version": "1.0.0",
+        "agreement_status": "Active",
+        "review_status": "Pending",
+        "expiry_date": "2026-12-31",
+        "committed_by": "user@example.com",
+        "committed_at": "2026-01-01T00:00:00+00:00",
+        "table_updated": DATA_AGREEMENT_TABLE,
+    }
+    calls = []
+    monkeypatch.setattr(data_agreement, "create_agreement_form", lambda **kwargs: form)
+    monkeypatch.setattr(data_agreement, "load_agreements", lambda *args, **kwargs: latest)
+    monkeypatch.setattr(data_agreement, "read_agreement_form", lambda actual_form: values)
+    monkeypatch.setattr(data_agreement, "collect_agreement_metadata", lambda **kwargs: calls.append(("collect", kwargs)) or metadata)
+    monkeypatch.setattr(data_agreement, "commit_agreement_metadata", lambda **kwargs: calls.append(("commit", kwargs)) or summary)
+
+    app = data_agreement.render_agreement_intake_app(spark="spark", config="config", env="dev")
+
+    assert app is form
+    assert button.callback is not None
+    button.callback(None)
+    assert calls[0] == ("collect", {
+        "widget_values": values,
+        "mode": "create",
+        "existing_rows": latest,
+        "selected_agreement": None,
+        "config": "config",
+        "env": "dev",
+    })
+    assert calls[1] == ("commit", {
+        "spark": "spark",
+        "config": "config",
+        "env": "dev",
+        "agreement_metadata": metadata,
+    })
+    output = capsys.readouterr().out
+    assert "Data agreement committed successfully." in output
+    assert "- Agreement ID: DA-NEW" in output
+    assert f"- Table Updated: {DATA_AGREEMENT_TABLE}" in output
+
+
+def test_render_agreement_intake_app_prints_clear_failure_for_missing_update_selection(monkeypatch, capsys):
+    _stub_ipython_display(monkeypatch)
+
+    class Output:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            return False
+
+    class Button:
+        callback = None
+
+        def on_click(self, callback):
+            self.callback = callback
+
+    button = Button()
+    form = {
+        "mode": SimpleNamespace(value="Update Existing Agreement"),
+        "existing_agreement": SimpleNamespace(value=None),
+        "commit_button": button,
+        "output": Output(),
+    }
+    monkeypatch.setattr(data_agreement, "create_agreement_form", lambda **kwargs: form)
+    monkeypatch.setattr(data_agreement, "load_agreements", lambda *args, **kwargs: [])
+
+    data_agreement.render_agreement_intake_app(spark="spark", config="config", env="dev")
+    button.callback(None)
+
+    assert "Commit failed: Update mode selected, but no existing agreement was chosen." in capsys.readouterr().out
 
 def test_setup_data_agreement_tables_creates_only_current_metadata_tables(monkeypatch):
     ensured = []

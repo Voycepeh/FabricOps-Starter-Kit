@@ -761,7 +761,7 @@ def main() -> None:
                     src_link = callable_docs_link(name, actual_module, docs_metadata, source_module=actual_module)
                     lines.append("<li>")
                     lines.append(f'<a class="reference-chip" href="{src_link}"><code>{name}</code></a>')
-                    lines.append(" <span class=\"callable-relationship-uses\">uses:</span> ")
+                    lines.append(" <span class=\"callable-relationship-uses\">uses:</span>")
                     if callees:
                         callee_links = ", ".join(
                             f'<a class="reference-chip" href="{callable_docs_link(dst_qn.split(".")[-1], _module_name(dst_qn), docs_metadata, source_module=actual_module)}"><code>{_label(dst_qn)}</code></a>'
@@ -798,7 +798,7 @@ def main() -> None:
                             f'<a class="reference-chip" href="{callable_docs_link(dst_qn.split(".")[-1], _module_name(dst_qn), docs_metadata, source_module=actual_module)}"><code>{_label(dst_qn)}</code></a>'
                             for dst_qn in callees
                         )
-                        lines.append(" <span class=\"callable-relationship-uses\">uses:</span> ")
+                        lines.append(" <span class=\"callable-relationship-uses\">uses:</span>")
                         lines.append(callee_links)
                     lines.append("</li>")
                 lines.append("</ul>")
@@ -860,7 +860,7 @@ def main() -> None:
             raise RuntimeError(f"Full module API section should not be rendered for {module}")
         if any(line.strip().startswith("::: fabricops_kit.") for line in lines):
             raise RuntimeError(f"Mkdocstrings directives should not be rendered on module page for {module}")
-        module_md.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
+        module_md.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8", newline="\n")
         module_index_lines.append(f"- [`{module}`]({module}.md)")
 
     (MODULE_DIR / "index.md").write_text("\n".join(module_index_lines) + "\n", encoding="utf-8", newline="\n")
@@ -1135,7 +1135,7 @@ def main() -> None:
                     )
                 )
                 notebook_lines.append("")
-        (NOTEBOOK_STRUCTURE_DIR / page_name).write_text("\n".join(notebook_lines) + "\n", encoding="utf-8", newline="\n")
+        (NOTEBOOK_STRUCTURE_DIR / page_name).write_text("\n".join(notebook_lines).rstrip() + "\n", encoding="utf-8", newline="\n")
 
     ref = [
         "# Function Reference",

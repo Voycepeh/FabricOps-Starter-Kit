@@ -122,7 +122,7 @@ Each source table owns one kind of metadata. Join keys may repeat across tables 
 
 **Main foreign keys:** None required. Downstream metadata tables reference `agreement_id` and, where version-specific traceability is needed, `contract_version`.
 
-**Main writer notebook:** `01_da_*` through `collect_agreement_metadata()` and `commit_agreement_metadata()`.
+**Main writer notebook:** `01_da_*` through `render_agreement_intake_app()`. Advanced customized flows may call `collect_agreement_metadata()` and `commit_agreement_metadata()` directly.
 
 **Main downstream use:** Scopes every catalogue, context, governance, rule, result, drift, lineage, and handover output.
 

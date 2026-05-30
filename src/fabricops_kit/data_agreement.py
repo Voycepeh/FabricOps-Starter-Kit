@@ -559,6 +559,84 @@ def create_agreement_form(*, spark: Any, config: Any, env: str, default_values: 
     return form
 
 
+def render_agreement_intake_app(
+    *,
+    spark: Any,
+    config: Any,
+    env: str,
+    default_values: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Render and wire the standalone ``01_da`` agreement-intake application.
+
+    Parameters
+    ----------
+    spark : pyspark.sql.SparkSession
+        Active Fabric Spark session.
+    config : FrameworkConfig
+        Framework config containing metadata routing and ``DataAgreementConfig``
+        widget defaults.
+    env : str
+        Environment key configured by ``00_env_config``.
+    default_values : dict[str, Any], optional
+        Per-form overrides merged over the configured ``01_da`` defaults.
+
+    Returns
+    -------
+    dict[str, Any]
+        Named widgets returned by :func:`create_agreement_form`. Advanced users
+        may inspect or customize these widgets after the default callback is
+        registered.
+
+    Notes
+    -----
+    This is the default notebook-friendly entrypoint for agreement intake. It
+    keeps create/update branching, widget reads, metadata collection, and
+    commit-summary rendering inside the framework while preserving lower-level
+    helpers for customized workflows.
+    """
+    from IPython.display import clear_output
+
+    form = create_agreement_form(spark=spark, config=config, env=env, default_values=default_values)
+
+    def on_commit_clicked(_: Any) -> None:
+        with form["output"]:
+            clear_output()
+            try:
+                latest = load_agreements(config, env, spark_session=spark, missing_ok=True)
+                intake_mode = "update" if form["mode"].value == "Update Existing Agreement" else "create"
+                selected = form["existing_agreement"].value if intake_mode == "update" else None
+                if intake_mode == "update" and not selected:
+                    raise ValueError("Update mode selected, but no existing agreement was chosen.")
+                metadata = collect_agreement_metadata(
+                    widget_values=read_agreement_form(form),
+                    mode=intake_mode,
+                    existing_rows=latest,
+                    selected_agreement=selected,
+                    config=config,
+                    env=env,
+                )
+                summary = commit_agreement_metadata(
+                    spark=spark,
+                    config=config,
+                    env=env,
+                    agreement_metadata=metadata,
+                )
+                print("Data agreement committed successfully.")
+                print(f"- Agreement ID: {summary['agreement_id']}")
+                print(f"- Contract Version: {summary['contract_version']}")
+                print(f"- Status: {summary['agreement_status']}")
+                print(f"- Review Status: {summary['review_status']}")
+                print(f"- Expiry Date: {summary['expiry_date']}")
+                print(f"- Committed By: {summary['committed_by']}")
+                print(f"- Committed At: {summary['committed_at']}")
+                print(f"- Table Updated: {summary['table_updated']}")
+            except Exception as exc:
+                print(f"Commit failed: {exc}")
+
+    form["commit_button"].on_click(on_commit_clicked)
+    return form
+
+
 def read_agreement_form(form: dict[str, Any]) -> dict[str, Any]:
     """Return human-entered values from an ``01_da`` intake form.
 

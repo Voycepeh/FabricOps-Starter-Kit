@@ -922,8 +922,10 @@
         "fabricops_kit.metadata._runtime_context"
       ],
       "calls_count": 5,
-      "used_by": [],
-      "used_by_count": 0,
+      "used_by": [
+        "fabricops_kit.data_agreement.render_agreement_intake_app"
+      ],
+      "used_by_count": 1,
       "internal_helpers_used": [
         "fabricops_kit.data_agreement._context_get",
         "fabricops_kit.data_agreement._derive_agreement_status",
@@ -944,8 +946,10 @@
         "fabricops_kit.fabric_input_output.write_lakehouse_table"
       ],
       "calls_count": 3,
-      "used_by": [],
-      "used_by_count": 0,
+      "used_by": [
+        "fabricops_kit.data_agreement.render_agreement_intake_app"
+      ],
+      "used_by_count": 1,
       "internal_helpers_used": [
         "fabricops_kit.data_agreement._ensure_delta_table"
       ],
@@ -965,8 +969,10 @@
         "fabricops_kit.data_agreement.next_minor_version"
       ],
       "calls_count": 4,
-      "used_by": [],
-      "used_by_count": 0,
+      "used_by": [
+        "fabricops_kit.data_agreement.render_agreement_intake_app"
+      ],
+      "used_by_count": 1,
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
@@ -1042,9 +1048,10 @@
       ],
       "calls_count": 2,
       "used_by": [
-        "fabricops_kit.data_agreement.create_agreement_form"
+        "fabricops_kit.data_agreement.create_agreement_form",
+        "fabricops_kit.data_agreement.render_agreement_intake_app"
       ],
-      "used_by_count": 1,
+      "used_by_count": 2,
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
@@ -1109,6 +1116,28 @@
       "classification": "essential",
       "calls": [],
       "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.data_agreement.render_agreement_intake_app"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.data_agreement.render_agreement_intake_app": {
+      "qualified_name": "fabricops_kit.data_agreement.render_agreement_intake_app",
+      "short_name": "render_agreement_intake_app",
+      "module": "data_agreement",
+      "callable": "render_agreement_intake_app",
+      "docs_url": "/FabricOps-Starter-Kit/reference/render_agreement_intake_app/",
+      "classification": "essential",
+      "calls": [
+        "fabricops_kit.data_agreement.collect_agreement_metadata",
+        "fabricops_kit.data_agreement.commit_agreement_metadata",
+        "fabricops_kit.data_agreement.create_agreement_form",
+        "fabricops_kit.data_agreement.load_agreements",
+        "fabricops_kit.data_agreement.read_agreement_form"
+      ],
+      "calls_count": 5,
       "used_by": [],
       "used_by_count": 0,
       "internal_helpers_used": [],
@@ -3942,7 +3971,7 @@
       "inbound_count": 1
     },
     "data_agreement": {
-      "essential_count": 11,
+      "essential_count": 12,
       "optional_count": 0,
       "internal_count": 8,
       "outbound_modules": [

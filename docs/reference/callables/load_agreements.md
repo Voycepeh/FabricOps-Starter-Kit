@@ -16,11 +16,12 @@ Load latest versioned agreement rows from the configured metadata lakehouse.
 - Related module: `data_agreement`
 - Source file path: `src/fabricops_kit/data_agreement.py`
 - Source reference: <a href="../../api/modules/data_agreement/#load_agreements">Module source anchor</a>
-- Inbound references count: 1
+- Inbound references count: 2
 - Outbound references count: 2
 
 ## Inbound references
 - <a href="../create_agreement_form/"><code>fabricops_kit.data_agreement.create_agreement_form</code></a>
+- <a href="../render_agreement_intake_app/"><code>fabricops_kit.data_agreement.render_agreement_intake_app</code></a>
 
 ## Outbound references
 - <a href="../latest_agreement_versions/"><code>fabricops_kit.data_agreement.latest_agreement_versions</code></a>

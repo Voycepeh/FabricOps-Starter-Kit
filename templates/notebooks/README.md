@@ -16,5 +16,5 @@ Local metadata fallback is optional for local-only runs. Set `USE_LOCAL_SAMPLE_M
 
 ## Template notebook purposes
 - `00_env_config.ipynb`: Creates or checks agreement metadata tables, exposes `CONFIG.data_agreement_config` widget defaults, and warns until real active `METADATA_DATA_STEWARD` rows are maintained. It never seeds fake steward profiles.
-- `01_da_agreement_template.ipynb`: Captures standalone data-agreement intake and usage boundaries as append-only `METADATA_DATA_AGREEMENT` versions; its steward dropdown reads active `METADATA_DATA_STEWARD` rows after environment bootstrap.
+- `01_da_agreement_template.ipynb`: Renders the framework-managed agreement-intake form through `render_agreement_intake_app(...)`; its steward dropdown reads active `METADATA_DATA_STEWARD` rows after environment bootstrap, and advanced users can opt into lower-level helpers when customizing the flow.
 - `04_gov_agreement_dataset_table.ipynb`: Enriches table and column governance context from `METADATA_PROFILE_ROWS`, launches review widgets, and writes approved rows to `METADATA_COLUMN_CONTEXT` and `METADATA_COLUMN_GOVERNANCE`.

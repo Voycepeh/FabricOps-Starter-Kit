@@ -161,52 +161,52 @@ Split a Spark DataFrame into pass/quarantine outputs for row-level DQ rules.
 <ul class="callable-relationship-rows">
 <li>
 <a class="reference-chip" href="../../reference/assert_dq_passed/"><code>assert_dq_passed</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <span>None.</span>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/draft_dq_rules/"><code>draft_dq_rules</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_extract_dq_rules"><code>_extract_dq_rules</code></a>, <a class="reference-chip" href="#_prepare_dq_profile_input_rows"><code>_prepare_dq_profile_input_rows</code></a>, <a class="reference-chip" href="#_suggest_dq_rules"><code>_suggest_dq_rules</code></a>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/enforce_dq/"><code>enforce_dq</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_load_active_dq_rules"><code>_load_active_dq_rules</code></a>, <a class="reference-chip" href="#_run_dq_rules"><code>_run_dq_rules</code></a>, <a class="reference-chip" href="#_split_dq_rows"><code>_split_dq_rows</code></a>, <a class="reference-chip" href="../../reference/validate_dq_rules/"><code>validate_dq_rules</code></a>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/get_dq_review_results/"><code>get_dq_review_results</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_attach_rule_metadata_keys"><code>_attach_rule_metadata_keys</code></a>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/load_dq_rules/"><code>load_dq_rules</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_load_active_dq_rules"><code>_load_active_dq_rules</code></a>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/review_dq_rule_deactivations/"><code>review_dq_rule_deactivations</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_require_ipywidgets"><code>_require_ipywidgets</code></a>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/review_dq_rules/"><code>review_dq_rules</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_require_ipywidgets"><code>_require_ipywidgets</code></a>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/run_dq_rule_review_widget/"><code>run_dq_rule_review_widget</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="../../reference/review_dq_rules/"><code>review_dq_rules</code></a>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/validate_dq_rules/"><code>validate_dq_rules</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <span>None.</span>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/write_dq_rules/"><code>write_dq_rules</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_build_dq_rule_history"><code>_build_dq_rule_history</code></a>, <a class="reference-chip" href="../../reference/validate_dq_rules/"><code>validate_dq_rules</code></a>
 </li>
 </ul>
@@ -332,12 +332,12 @@ Split a Spark DataFrame into pass/quarantine outputs for row-level DQ rules.
 </li>
 <li>
 <a class="reference-chip" href="#_extract_candidate_rules_from_responses"><code>_extract_candidate_rules_from_responses</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_extract_dq_rules"><code>_extract_dq_rules</code></a>, <a class="reference-chip" href="#_parse_dq_rules_dict_from_text"><code>_parse_dq_rules_dict_from_text</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_extract_dq_rules"><code>_extract_dq_rules</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_parse_dq_rules_dict_from_text"><code>_parse_dq_rules_dict_from_text</code></a>
 </li>
 <li>
@@ -345,12 +345,12 @@ Split a Spark DataFrame into pass/quarantine outputs for row-level DQ rules.
 </li>
 <li>
 <a class="reference-chip" href="#_load_active_dq_rule_metadata"><code>_load_active_dq_rule_metadata</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_latest_dq_rule_versions"><code>_latest_dq_rule_versions</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_load_active_dq_rules"><code>_load_active_dq_rules</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_latest_dq_rule_versions"><code>_latest_dq_rule_versions</code></a>
 </li>
 <li>
@@ -370,12 +370,12 @@ Split a Spark DataFrame into pass/quarantine outputs for row-level DQ rules.
 </li>
 <li>
 <a class="reference-chip" href="#_run_dq_rules"><code>_run_dq_rules</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_split_dq_rows"><code>_split_dq_rows</code></a>, <a class="reference-chip" href="../../reference/validate_dq_rules/"><code>validate_dq_rules</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_split_dq_rows"><code>_split_dq_rows</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="../../reference/validate_dq_rules/"><code>validate_dq_rules</code></a>
 </li>
 <li>
@@ -400,4 +400,3 @@ None.
 
 **metadata**
 <a class="reference-chip" href="../metadata/#_now_utc_iso"><code>_now_utc_iso</code></a>, <a class="reference-chip" href="../metadata/#_resolve_action_by"><code>_resolve_action_by</code></a>, <a class="reference-chip" href="../metadata/#build_dq_rule_key"><code>build_dq_rule_key</code></a>, <a class="reference-chip" href="../metadata/#build_metadata_column_key"><code>build_metadata_column_key</code></a>, <a class="reference-chip" href="../metadata/#build_metadata_table_key"><code>build_metadata_table_key</code></a>
-

@@ -16,7 +16,8 @@ No summary available.
 - Related module: `data_agreement`
 - Source file path: `src/fabricops_kit/data_agreement.py`
 - Source reference: <a href="../../api/modules/data_agreement/#read_agreement_form">Module source anchor</a>
-- Inbound references count: 0
+- Inbound references count: 1
 - Outbound references count: 0
 
-_No inbound or outbound references detected._
+## Inbound references
+- <a href="../render_agreement_intake_app/"><code>fabricops_kit.data_agreement.render_agreement_intake_app</code></a>

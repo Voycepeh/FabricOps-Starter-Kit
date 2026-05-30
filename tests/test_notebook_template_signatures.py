@@ -126,43 +126,33 @@ def test_00_env_config_bootstraps_agreement_tables_and_reports_steward_readiness
     assert "No fake steward profiles are seeded." in code
 
 
-def test_01_da_imports_only_public_current_agreement_helpers():
+def test_01_da_imports_only_high_level_agreement_app_helper():
     imported = _fabricops_imports("01_da_agreement_template.ipynb")
     assert imported <= set(fabricops_kit.__all__)
-    assert imported == {
-        "collect_agreement_metadata",
-        "commit_agreement_metadata",
-        "create_agreement_form",
-        "load_agreements",
-        "read_agreement_form",
-        "setup_data_agreement_tables",
-    }
+    assert imported == {"render_agreement_intake_app"}
     assert not (imported & REMOVED_AGREEMENT_CALLABLES)
 
 
-def test_01_da_uses_ipywidgets_flow_and_explicit_commit_mode():
+def test_01_da_renders_framework_managed_intake_app_without_notebook_callback():
     code = _code("01_da_agreement_template.ipynb")
     assert "%run 00_env_config" in code
-    assert "setup_data_agreement_tables(spark=spark, config=CONFIG, env=ENV)" in code
-    assert "create_agreement_form(spark=spark, config=CONFIG, env=ENV)" in code
-    assert "00_env_config" in code
-    assert "notebookutils.widgets" not in code
-    assert "display =" not in code
-    assert "from IPython.display import clear_output" in code
-    assert 'intake_mode = "update" if agreement_form["mode"].value == "Update Existing Agreement" else "create"' in code
-    assert "mode=intake_mode" in code
-    assert "print(summary)" not in code
-    for label in (
-        "Agreement ID",
-        "Contract Version",
-        "Status",
-        "Review Status",
-        "Expiry Date",
-        "Committed By",
-        "Committed At",
-        "Table Updated",
+    assert "from fabricops_kit import render_agreement_intake_app" in code
+    assert "agreement_app = render_agreement_intake_app(" in code
+    assert "spark=spark" in code
+    assert "config=CONFIG" in code
+    assert "env=ENV" in code
+    assert "def on_commit_clicked" not in code
+    assert ".on_click(" not in code
+    for lower_level_helper in (
+        "create_agreement_form",
+        "read_agreement_form",
+        "collect_agreement_metadata",
+        "commit_agreement_metadata",
+        "load_agreements",
+        "setup_data_agreement_tables",
     ):
-        assert label in code
+        assert lower_level_helper not in code
+        assert lower_level_helper in fabricops_kit.__all__
 
 
 def test_generated_function_manifest_excludes_removed_agreement_callables():

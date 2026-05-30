@@ -721,7 +721,9 @@
     "module": "data_agreement",
     "type": "callable",
     "role": "essential",
-    "inbound": [],
+    "inbound": [
+      "fabricops_kit.data_agreement.render_agreement_intake_app"
+    ],
     "outbound": [
       "fabricops_kit.data_agreement._context_get",
       "fabricops_kit.data_agreement._derive_agreement_status",
@@ -738,7 +740,9 @@
     "module": "data_agreement",
     "type": "callable",
     "role": "essential",
-    "inbound": [],
+    "inbound": [
+      "fabricops_kit.data_agreement.render_agreement_intake_app"
+    ],
     "outbound": [
       "fabricops_kit.data_agreement._ensure_delta_table",
       "fabricops_kit.fabric_input_output.read_lakehouse_table",
@@ -753,7 +757,9 @@
     "module": "data_agreement",
     "type": "callable",
     "role": "essential",
-    "inbound": [],
+    "inbound": [
+      "fabricops_kit.data_agreement.render_agreement_intake_app"
+    ],
     "outbound": [
       "fabricops_kit.data_agreement.agreement_dropdown_options",
       "fabricops_kit.data_agreement.load_active_data_steward_profiles",
@@ -815,7 +821,8 @@
     "type": "callable",
     "role": "essential",
     "inbound": [
-      "fabricops_kit.data_agreement.create_agreement_form"
+      "fabricops_kit.data_agreement.create_agreement_form",
+      "fabricops_kit.data_agreement.render_agreement_intake_app"
     ],
     "outbound": [
       "fabricops_kit.data_agreement.latest_agreement_versions",
@@ -873,10 +880,29 @@
     "module": "data_agreement",
     "type": "callable",
     "role": "essential",
-    "inbound": [],
+    "inbound": [
+      "fabricops_kit.data_agreement.render_agreement_intake_app"
+    ],
     "outbound": [],
     "source_file": "src/fabricops_kit/data_agreement.py",
     "summary": "No summary available."
+  },
+  {
+    "name": "render_agreement_intake_app",
+    "qualified_name": "fabricops_kit.data_agreement.render_agreement_intake_app",
+    "module": "data_agreement",
+    "type": "callable",
+    "role": "essential",
+    "inbound": [],
+    "outbound": [
+      "fabricops_kit.data_agreement.collect_agreement_metadata",
+      "fabricops_kit.data_agreement.commit_agreement_metadata",
+      "fabricops_kit.data_agreement.create_agreement_form",
+      "fabricops_kit.data_agreement.load_agreements",
+      "fabricops_kit.data_agreement.read_agreement_form"
+    ],
+    "source_file": "src/fabricops_kit/data_agreement.py",
+    "summary": "Render and wire the default agreement-intake form application."
   },
   {
     "name": "resolve_agreement_identity",

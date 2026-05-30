@@ -6,7 +6,7 @@
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 11</span><span class="reference-chip">Internal helpers: 8</span><span class="reference-chip">Outbound: 2</span><span class="reference-chip">Inbound: 0</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 12</span><span class="reference-chip">Internal helpers: 8</span><span class="reference-chip">Outbound: 2</span><span class="reference-chip">Inbound: 0</span></div>
 
 ## Module purpose
 
@@ -32,7 +32,7 @@ Owns agreement metadata capture, audited record building, metadata commit helper
     </tr>
     <tr>
       <td>Public callable count</td>
-      <td>11</td>
+      <td>12</td>
     </tr>
     <tr>
       <td>Internal helper count</td>
@@ -135,6 +135,13 @@ Owns agreement metadata capture, audited record building, metadata commit helper
       <td>—</td>
     </tr>
     <tr>
+      <td><a href="../../reference/render_agreement_intake_app/"><code>render_agreement_intake_app</code></a></td>
+      <td>Essential</td>
+      <td>function</td>
+      <td>Render and wire the default agreement-intake form application.</td>
+      <td>—</td>
+    </tr>
+    <tr>
       <td><a href="../../reference/select_agreement/"><code>select_agreement</code></a></td>
       <td>Essential</td>
       <td>function</td>
@@ -208,6 +215,11 @@ Owns agreement metadata capture, audited record building, metadata commit helper
 <a class="reference-chip" href="../../reference/read_agreement_form/"><code>read_agreement_form</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <span>None.</span>
+</li>
+<li>
+<a class="reference-chip" href="../../reference/render_agreement_intake_app/"><code>render_agreement_intake_app</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="../../reference/collect_agreement_metadata/"><code>collect_agreement_metadata</code></a>, <a class="reference-chip" href="../../reference/commit_agreement_metadata/"><code>commit_agreement_metadata</code></a>, <a class="reference-chip" href="../../reference/create_agreement_form/"><code>create_agreement_form</code></a>, <a class="reference-chip" href="../../reference/load_agreements/"><code>load_agreements</code></a>, <a class="reference-chip" href="../../reference/read_agreement_form/"><code>read_agreement_form</code></a>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/select_agreement/"><code>select_agreement</code></a>

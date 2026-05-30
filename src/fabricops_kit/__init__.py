@@ -19,6 +19,7 @@ from .data_agreement import (
     load_active_data_steward_profiles,
     load_agreements,
     read_agreement_form,
+    render_agreement_intake_app,
     setup_data_agreement_tables,
     select_agreement,
 )
@@ -75,6 +76,7 @@ __all__ = [
     "latest_agreement_versions",
     "load_active_data_steward_profiles",
     "read_agreement_form",
+    "render_agreement_intake_app",
     "setup_data_agreement_tables",
     "FabricStore",
 ]
