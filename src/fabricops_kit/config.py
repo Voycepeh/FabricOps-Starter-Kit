@@ -255,6 +255,28 @@ class GovernanceConfig:
 
 
 @dataclass(frozen=True)
+class DataAgreementConfig:
+    """Widget defaults owned specifically by the standalone ``01_da`` intake notebook.
+
+    Parameters
+    ----------
+    source_systems, refresh_frequencies, allowed_consumer_types, expected_outputs : tuple[str, ...]
+        Dropdown choices shown by the intake form.
+    renewal_options : tuple[str, ...]
+        Renewal dropdown choices, normally ``("Yes", "No")``.
+    default_values : dict[str, Any]
+        Initial values merged into each newly rendered form.
+    """
+
+    source_systems: tuple[str, ...] = ("ERP", "CRM", "SharePoint", "Manual Upload", "Lakehouse")
+    refresh_frequencies: tuple[str, ...] = ("One Time", "Daily", "Weekly", "Monthly", "Quarterly", "Ad Hoc", "Not Applicable")
+    allowed_consumer_types: tuple[str, ...] = ("Internal Department", "Faculty", "Central Unit", "Project Team", "External Partner", "System / Application")
+    expected_outputs: tuple[str, ...] = ("Dashboard", "Report", "Data Extract", "Downstream Table", "API", "ML / AI Use", "Operational Process")
+    renewal_options: tuple[str, ...] = ("Yes", "No")
+    default_values: dict[str, Any] = field(default_factory=lambda: {"agreement_name": "Sample Data Agreement", "renewal_required": "Yes", "refresh_frequency": "Daily"})
+
+
+@dataclass(frozen=True)
 class ReviewWorkflowConfig:
     """Notebook-table review settings for DQ and governance suggestion approval."""
 
@@ -333,6 +355,7 @@ class FrameworkConfig:
     governance_config: GovernanceConfig
     review_workflow_config: ReviewWorkflowConfig
     lineage_config: LineageConfig
+    data_agreement_config: DataAgreementConfig = field(default_factory=DataAgreementConfig)
 
 
 @dataclass(frozen=True)
@@ -456,6 +479,8 @@ def _validate_framework_config(config: FrameworkConfig | dict[str, Any]) -> Fram
         raise ValueError("review_workflow_config must be a ReviewWorkflowConfig object.")
     if not isinstance(normalized.lineage_config, LineageConfig):
         raise ValueError("lineage_config must be a LineageConfig object.")
+    if not isinstance(normalized.data_agreement_config, DataAgreementConfig):
+        raise ValueError("data_agreement_config must be a DataAgreementConfig object.")
 
     for env_name, targets in normalized.path_config.paths.items():
         if not isinstance(targets, dict) or not targets:

@@ -20,7 +20,7 @@ No summary available.
 - Outbound references count: 1
 
 ## Inbound references
-- <a href="../internal/data_agreement/_normalise_widget_values/"><code>fabricops_kit.data_agreement._normalise_widget_values</code></a>
+- <a href="../collect_agreement_metadata/"><code>fabricops_kit.data_agreement.collect_agreement_metadata</code></a>
 
 ## Outbound references
-- <a href="../internal/data_agreement/_parse_date/"><code>fabricops_kit.data_agreement._parse_date</code></a>
+- <a href="../internal/data_agreement/_parse_required_date/"><code>fabricops_kit.data_agreement._parse_required_date</code></a>

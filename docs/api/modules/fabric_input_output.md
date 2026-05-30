@@ -6,7 +6,7 @@
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 8</span><span class="reference-chip">Internal helpers: 3</span><span class="reference-chip">Outbound: 1</span><span class="reference-chip">Inbound: 2</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 8</span><span class="reference-chip">Internal helpers: 3</span><span class="reference-chip">Outbound: 1</span><span class="reference-chip">Inbound: 3</span></div>
 
 ## Module purpose
 
@@ -40,7 +40,7 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
     </tr>
     <tr>
       <td>Inbound module count</td>
-      <td>2</td>
+      <td>3</td>
     </tr>
     <tr>
       <td>Outbound module count</td>
@@ -48,7 +48,7 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
     </tr>
     <tr>
       <td>External callers</td>
-      <td><code>data_quality</code>, <code>metadata</code></td>
+      <td><code>data_agreement</code>, <code>data_quality</code>, <code>metadata</code></td>
     </tr>
     <tr>
       <td>External callees</td>
@@ -219,6 +219,9 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
 </details>
 
 ### External callers
+
+**data_agreement**
+<a class="reference-chip" href="../../reference/commit_agreement_metadata/"><code>commit_agreement_metadata</code></a>, <a class="reference-chip" href="../../reference/load_active_data_steward_profiles/"><code>load_active_data_steward_profiles</code></a>, <a class="reference-chip" href="../../reference/load_agreements/"><code>load_agreements</code></a>
 
 **data_quality**
 <a class="reference-chip" href="../../reference/write_dq_rules/"><code>write_dq_rules</code></a>
