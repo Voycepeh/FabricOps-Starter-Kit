@@ -155,12 +155,12 @@ Each source table owns one kind of metadata. Join keys may repeat across tables 
 | start_date | 2026-06-01 | 01_da_* | Implemented | Agreement start date |
 | expiry_date | 2027-05-31 | 01_da_* | Implemented | Agreement expiry date used to derive current agreement status dynamically |
 | renewal_required | Yes | 01_da_* | Implemented | Whether renewal is expected |
-| _committed_by | user@example.com | 01_da_* | Implemented | Fabric runtime user who committed the version |
-| _committed_at | 2026-06-01T10:00:00+00:00 | 01_da_* | Implemented | Agreement-version commit timestamp |
-| _notebook_name | 01_da_governed_reporting | 01_da_* | Implemented | Fabric notebook that committed the version |
-| _workspace_name | Fabric Workspace | 01_da_* | Implemented | Fabric workspace captured from runtime context |
-| _lakehouse_name | Metadata Lakehouse | 01_da_* | Implemented | Configured metadata lakehouse captured at commit time |
-| _run_id | activity-id | 01_da_* | Implemented | Fabric activity or run identifier |
+| _committed_by | user@example.com | `metadata.build_runtime_audit_fields(...)` | Implemented | Fabric runtime user who committed the version |
+| _committed_at | 2026-06-01T10:00:00+00:00 | `metadata.build_runtime_audit_fields(...)` | Implemented | Agreement-version commit timestamp |
+| _notebook_name | 01_da_governed_reporting | `metadata.build_runtime_audit_fields(...)` | Implemented | Fabric notebook that committed the version |
+| _workspace_name | Fabric Workspace | `metadata.build_runtime_audit_fields(...)` | Implemented | Fabric workspace captured from runtime context |
+| _metadata_lakehouse_name | Metadata Lakehouse | `metadata.build_runtime_audit_fields(...)` | Implemented | Configured metadata lakehouse captured at commit time |
+| _activity_id | activity-id | `metadata.build_runtime_audit_fields(...)` | Implemented | Fabric activity identifier |
 
 Agreement rows persist `steward_id` only. Steward identity and organizational fields resolve from `METADATA_DATA_STEWARD`; they are not copied into each agreement version. Agreement status is also not persisted: consumers derive the current status dynamically from `expiry_date` so it remains correct after the commit date.
 
