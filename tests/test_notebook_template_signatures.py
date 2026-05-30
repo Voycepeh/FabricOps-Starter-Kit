@@ -175,6 +175,8 @@ def test_02_ex_maps_selected_agreement_to_current_versioned_schema():
     assert '"data_steward": {' in code
     assert "display(agreement_context)" in code
     assert 'business_context=f"Business purpose: {business_purpose}\\nApproved usage: {approved_usage}"' in code
+    assert "prompt_template=CONFIG.ai_prompt_config.dq_rule_suggestion_prompt_template" in code
+    assert "CONFIG.ai_prompt_config.dq_rule_candidate_template" not in code
     assert 'business_context = selected_agreement.get("business_context", "")' not in code
     assert 'ownership = selected_agreement.get("ownership", "")' not in code
     assert 'print(f"business_context:' not in code
