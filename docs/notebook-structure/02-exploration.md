@@ -24,11 +24,6 @@ Exploration notebook flow used to profile source data and draft advisory AI outp
       <td data-label="Module"><a class="reference-module-link" href="../../api/modules/config/" title="Open config module page" aria-label="Open config module page">config</a></td>
       <td data-label="Why it is commonly used here">Run consolidated FabricOps startup for exploration and pipeline notebooks.</td>
     </tr>
-    <tr>
-      <td data-label="Callable"><a href="../../api/reference/load_config/"><code>load_config</code></a></td>
-      <td data-label="Module"><a class="reference-module-link" href="../../api/modules/config/" title="Open config module page" aria-label="Open config module page">config</a></td>
-      <td data-label="Why it is commonly used here">Validate and return a user-supplied framework configuration.</td>
-    </tr>
   </tbody>
 </table>
 

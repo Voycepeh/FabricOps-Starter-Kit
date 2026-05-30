@@ -493,39 +493,6 @@ def _validate_framework_config(config: FrameworkConfig | dict[str, Any]) -> Fram
     return normalized
 
 
-def load_config(config: FrameworkConfig | dict[str, Any]) -> FrameworkConfig:
-    """Validate and return a user-supplied framework configuration.
-
-    Parameters
-    ----------
-    config : FrameworkConfig | dict[str, Any]
-        Framework config object or compatible mapping typically assembled in
-        ``00_env_config``.
-
-    Returns
-    -------
-    FrameworkConfig
-        Validated framework configuration ready for bootstrap/runtime helpers.
-
-    Raises
-    ------
-    ValueError
-        Propagated when validation fails for required config sections or path
-        target structure.
-
-    Notes
-    -----
-    This helper validates configuration objects only. It does not create or
-    mutate Fabric resources such as workspaces, lakehouses, or warehouses.
-
-    Examples
-    --------
-    >>> cfg = load_config(framework_config)
-    >>> isinstance(cfg, FrameworkConfig)
-    True
-    """
-    return _validate_framework_config(config)
-
 
 def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any:
     """Resolve a configured Fabric path for an environment and target.
@@ -725,7 +692,7 @@ def _bootstrap_fabric_env(
     >>> result.readiness_status in {"ready", "not_ready"}
     True
     """
-    normalized = load_config(config) if config is not None else None
+    normalized = _validate_framework_config(config) if config is not None else None
     if normalized is None:
         raise ValueError("config is required for bootstrap_fabric_env.")
     required_targets = required_targets or ["Source", "Unified"]
@@ -759,11 +726,50 @@ def setup_notebook(
     configure_ai: bool = False,
     local_fallback_name: str | None = None,
 ) -> NotebookSetupContext:
-    """Run consolidated FabricOps startup for exploration and pipeline notebooks."""
+    """Run consolidated FabricOps startup for exploration and pipeline notebooks.
+
+    Parameters
+    ----------
+    config : FrameworkConfig | dict[str, Any]
+        Framework configuration object or compatible mapping. The setup flow
+        validates required sections and configured Fabric targets before
+        running readiness checks.
+    env : str, default="Sandbox"
+        Environment key used to resolve target paths.
+    required_targets : list[str] | None, optional
+        Target names that must resolve for ``env``. Defaults to
+        ``["Source", "Unified"]``.
+    notebook_name : str | None, optional
+        Explicit notebook name used for runtime metadata and naming checks.
+    run_id_prefix : str, default="run"
+        Prefix used when a Fabric runtime run identifier is unavailable.
+    configure_ai : bool, default=False
+        Reserved notebook setup option retained for caller compatibility.
+    local_fallback_name : str | None, optional
+        Notebook name used when neither ``notebook_name`` nor Fabric runtime
+        context provides one.
+
+    Returns
+    -------
+    NotebookSetupContext
+        Validated runtime context with resolved paths, smoke-check results,
+        runtime metadata, and overall readiness status.
+
+    Raises
+    ------
+    ValueError
+        Raised when config sections are invalid or required targets cannot be
+        resolved for the selected environment.
+
+    Notes
+    -----
+    Validation and smoke checks are local to notebook startup. This helper does
+    not provision Fabric resources or persist metadata.
+    """
     from uuid import uuid4
     from datetime import datetime, timezone
 
-    normalized = load_config(config)
+    normalized = _validate_framework_config(config)
     required_targets = required_targets or ["Source", "Unified"]
     resolved_paths = {target: _get_store(config=normalized, env=env, target=target) for target in required_targets}
 

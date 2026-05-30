@@ -221,7 +221,7 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
 ### External callers
 
 **data_agreement**
-<a class="reference-chip" href="../../reference/commit_agreement_metadata/"><code>commit_agreement_metadata</code></a>, <a class="reference-chip" href="../data_agreement/#load_active_data_steward_profiles"><code>load_active_data_steward_profiles</code></a>, <a class="reference-chip" href="../../reference/load_agreements/"><code>load_agreements</code></a>
+<a class="reference-chip" href="../../reference/commit_agreement_metadata/"><code>commit_agreement_metadata</code></a>, <a class="reference-chip" href="../data_agreement/#load_active_data_steward_profiles"><code>load_active_data_steward_profiles</code></a>, <a class="reference-chip" href="../../reference/load_agreements/"><code>load_agreements</code></a>, <a class="reference-chip" href="../../reference/setup_data_agreement_tables/"><code>setup_data_agreement_tables</code></a>
 
 **data_quality**
 <a class="reference-chip" href="../../reference/write_dq_rules/"><code>write_dq_rules</code></a>
@@ -232,4 +232,4 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
 ### External callees
 
 **config**
-<a class="reference-chip" href="../config/#_get_store"><code>_get_store</code></a>, <a class="reference-chip" href="../../reference/load_config/"><code>load_config</code></a>
+<a class="reference-chip" href="../config/#_get_store"><code>_get_store</code></a>

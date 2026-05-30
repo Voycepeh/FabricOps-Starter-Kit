@@ -17,7 +17,7 @@ import tempfile
 
 import pandas as pd
 
-from .config import FrameworkConfig, PathConfig, _get_store, load_config as load_framework_config
+from .config import FrameworkConfig, PathConfig, _get_store
 
 
 @dataclass(frozen=True)
@@ -28,7 +28,7 @@ class FabricStore:
     a Fabric lakehouse or warehouse using framework helpers.
 
     In normal use, define these values in a separate Fabric config notebook,
-    validate the `CONFIG` mapping with `load_config`, then retrieve the
+    validate the `CONFIG` mapping with `setup_notebook`, then retrieve the
     required environment and target via public IO helpers.
 
     Attributes
@@ -80,44 +80,6 @@ class FabricStore:
 DEFAULT_ENV = "Sandbox"
 DEFAULT_TARGET = "Source"
 
-
-def load_config(config: FrameworkConfig | dict) -> FrameworkConfig:
-    """Validate and return a user-supplied framework configuration.
-
-    This public wrapper is typically called from ``00_env_config`` notebooks
-    before any read/write helper runs, so path/policy defaults are validated
-    early in the workflow.
-
-    Parameters
-    ----------
-    config : FrameworkConfig | dict
-        Framework config object or compatible mapping assembled during
-        notebook bootstrap.
-
-    Returns
-    -------
-    FrameworkConfig
-        Validated framework configuration ready for bootstrap/runtime and IO
-        helper consumption.
-
-    Raises
-    ------
-    ValueError
-        Propagated when validation fails for required config sections or path
-        target structure.
-
-    Notes
-    -----
-    This function validates policy/routing/default configuration only. It does
-    not create Fabric resources, execute data IO, or mutate external state.
-
-    Examples
-    --------
-    >>> cfg = load_config(framework_config)
-    >>> isinstance(cfg, FrameworkConfig)
-    True
-    """
-    return load_framework_config(config)
 
 # NOTE: _get_store is now owned by fabricops_kit.config.
 

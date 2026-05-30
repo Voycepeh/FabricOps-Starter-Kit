@@ -26,36 +26,6 @@ Shared environment bootstrap and validation before agreement intake, exploration
       <td>—</td>
       <td>Check dependency outputs and metadata writes.</td>
     </tr>
-    <tr>
-      <td>`load_config`</td>
-      <td>Callable orchestration wrapper</td>
-      <td>Validate and return a user-supplied framework configuration.</td>
-      <td>`_validate_framework_config`</td>
-      <td>Check dependency outputs and metadata writes.</td>
-    </tr>
-  </tbody>
-</table>
-
-### Segment 4: Assemble and validate framework config
-
-<table>
-  <thead>
-    <tr>
-      <th>Function</th>
-      <th>Role</th>
-      <th>What it does</th>
-      <th>Delegates to</th>
-      <th>Debug when</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>`load_config`</td>
-      <td>Callable orchestration wrapper</td>
-      <td>Validate and return a user-supplied framework configuration.</td>
-      <td>`_validate_framework_config`</td>
-      <td>Check dependency outputs and metadata writes.</td>
-    </tr>
   </tbody>
 </table>
 
@@ -76,7 +46,7 @@ Shared environment bootstrap and validation before agreement intake, exploration
       <td>`setup_notebook`</td>
       <td>Callable orchestration wrapper</td>
       <td>Run consolidated FabricOps startup for exploration and pipeline notebooks.</td>
-      <td>`_get_store`, `_run_config_smoke_tests`</td>
+      <td>`_get_store`, `_run_config_smoke_tests`, `_validate_framework_config`</td>
       <td>Check dependency outputs and metadata writes.</td>
     </tr>
   </tbody>
@@ -130,14 +100,7 @@ Exploration notebook flow used to profile source data and draft advisory AI outp
       <td>`setup_notebook`</td>
       <td>Callable orchestration wrapper</td>
       <td>Run consolidated FabricOps startup for exploration and pipeline notebooks.</td>
-      <td>`_get_store`, `_run_config_smoke_tests`</td>
-      <td>Check dependency outputs and metadata writes.</td>
-    </tr>
-    <tr>
-      <td>`load_config`</td>
-      <td>Callable orchestration wrapper</td>
-      <td>Validate and return a user-supplied framework configuration.</td>
-      <td>`_validate_framework_config`</td>
+      <td>`_get_store`, `_run_config_smoke_tests`, `_validate_framework_config`</td>
       <td>Check dependency outputs and metadata writes.</td>
     </tr>
   </tbody>
@@ -261,14 +224,7 @@ Pipeline notebook flow for deterministic enforcement and controlled publishing.
       <td>`setup_notebook`</td>
       <td>Callable orchestration wrapper</td>
       <td>Run consolidated FabricOps startup for exploration and pipeline notebooks.</td>
-      <td>`_get_store`, `_run_config_smoke_tests`</td>
-      <td>Check dependency outputs and metadata writes.</td>
-    </tr>
-    <tr>
-      <td>`load_config`</td>
-      <td>Callable orchestration wrapper</td>
-      <td>Validate and return a user-supplied framework configuration.</td>
-      <td>`_validate_framework_config`</td>
+      <td>`_get_store`, `_run_config_smoke_tests`, `_validate_framework_config`</td>
       <td>Check dependency outputs and metadata writes.</td>
     </tr>
   </tbody>
