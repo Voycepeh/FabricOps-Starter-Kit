@@ -81,7 +81,7 @@ TEMPLATE_FLOW_DOCS: list[TemplateFlowDocMetadata] = [{'notebook_key': '00_env_co
                 'symbols': []},
                {'title': 'Segment 2: Define environment targets and notebook policy', 'symbols': ['FabricStore', 'load_config']},
                {'title': 'Segment 3: Set AI, agreement-intake, quality, governance, and lineage defaults',
-                'text': 'The single `CONFIG` object exposes `DataAgreementConfig` defaults for `01_da_<agreement>`. Before that notebook can render its form, manually populate `METADATA_DATA_STEWARD` in the configured metadata lakehouse and mark selectable steward rows with `is_active = true`; `00_env_config` does not seed fake steward profiles.',
+                'text': 'The single `CONFIG` object exposes explicit `DataAgreementConfig` defaults for `01_da_<agreement>`. During environment bootstrap, `00_env_config` creates or checks `METADATA_DATA_AGREEMENT` and `METADATA_DATA_STEWARD` in the configured metadata lakehouse, then reports steward readiness. Populate `METADATA_DATA_STEWARD` with real rows and mark selectable stewards with `is_active = true` before rendering `01_da`; no fake steward profiles are seeded.',
                 'symbols': []},
                {'title': 'Segment 4: Assemble and validate framework config', 'symbols': ['load_config']},
                {'title': 'Segment 5: Run startup checks and show resolved paths', 'symbols': ['setup_notebook']}]},

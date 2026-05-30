@@ -54,7 +54,7 @@ The table names below are the physical source metadata tables. The diagram then 
 |   8 | `METADATA_DRIFT_RESULTS`           | One row per table per drift check                            | Stores schema, profile, and data drift evidence over time.                                    |
 |   9 | `METADATA_LINEAGE_EVENTS`          | One row per source-target table event                        | Stores source-to-target lineage and transformation evidence.                                  |
 
-`METADATA_DATA_STEWARD` is a setup/helper table rather than an additional contract-evidence table. It contains maintained steward profiles for the `01_da_*` intake dropdown. Setup creates it empty; teams must populate real rows and set `is_active = true` for selectable stewards.
+`METADATA_DATA_STEWARD` is a setup/helper table rather than an additional contract-evidence table. It contains maintained steward profiles for the `01_da_*` intake dropdown. `00_env_config` creates or checks it during environment bootstrap and reports steward readiness. The table remains empty until teams populate real rows and set `is_active = true` for selectable stewards; no fake steward profiles are seeded.
 
 ## Notebook-driven model
 

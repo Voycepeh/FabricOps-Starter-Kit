@@ -178,6 +178,11 @@ def test_update_form_prefills_latest_selected_row(monkeypatch):
     monkeypatch.setitem(sys.modules, "IPython", ipython)
     monkeypatch.setitem(sys.modules, "IPython.display", display)
     form = data_agreement.create_agreement_form(spark=object(), config=config, env="dev")
+    assert form["source_system"].options == ["ERP"]
+    assert form["refresh_frequency"].options == ["Daily"]
+    assert form["allowed_consumer_type"].options == ["Internal Department"]
+    assert form["expected_output"].options == ["Dashboard"]
+    assert form["renewal_required"].options == ["Yes", "No"]
     form["mode"].value = "Update Existing Agreement"
     form["existing_agreement"].value = latest
     assert form["agreement_name"].value == "Latest orders"

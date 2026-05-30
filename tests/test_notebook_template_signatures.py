@@ -100,9 +100,30 @@ def test_00_env_config_exposes_shared_config_and_data_agreement_defaults():
     code = _code("00_env_config.ipynb")
     assert 'ENV = "dev"' in code
     assert "ENV_NAME = ENV" in code
-    assert "DATA_AGREEMENT_CONFIG = DataAgreementConfig()" in code
+    assert "DATA_AGREEMENT_CONFIG = DataAgreementConfig(" in code
+    for configured_default in (
+        "source_systems=(",
+        "refresh_frequencies=(",
+        "allowed_consumer_types=(",
+        "expected_outputs=(",
+        "renewal_options=(",
+        "default_values={",
+    ):
+        assert configured_default in code
     assert "data_agreement_config=DATA_AGREEMENT_CONFIG" in code
     assert 'CONFIG.path_config.paths[ENV]["metadata"]' in json.loads((TEMPLATES / "00_env_config.ipynb").read_text(encoding="utf-8"))["cells"][1]["source"][2]
+
+
+def test_00_env_config_bootstraps_agreement_tables_and_reports_steward_readiness():
+    code = _code("00_env_config.ipynb")
+    assert "setup_data_agreement_tables(spark=spark, config=CONFIG, env=ENV)" in code
+    assert "load_active_data_steward_profiles(spark=spark, config=CONFIG, env=ENV)" in code
+    assert "CONFIG.path_config.paths[ENV]['unified'].name" in code
+    assert "CONFIG.path_config.paths[ENV]['product'].name" in code
+    assert "agreement metadata tables created/checked" in code
+    assert "01_da cannot render until real steward rows are added with is_active = true" in code
+    assert 'VALIDATION_MODE == "strict" and STEWARD_READINESS_STATUS != "ready"' in code
+    assert "No fake steward profiles are seeded." in code
 
 
 def test_01_da_imports_only_public_current_agreement_helpers():
@@ -124,6 +145,7 @@ def test_01_da_uses_ipywidgets_flow_and_explicit_commit_mode():
     assert "%run 00_env_config" in code
     assert "setup_data_agreement_tables(spark=spark, config=CONFIG, env=ENV)" in code
     assert "create_agreement_form(spark=spark, config=CONFIG, env=ENV)" in code
+    assert "00_env_config" in code
     assert "notebookutils.widgets" not in code
     assert "display =" not in code
     assert "from IPython.display import clear_output" in code

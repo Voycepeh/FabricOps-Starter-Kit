@@ -11,7 +11,7 @@
 | `METADATA_DATA_AGREEMENT` | One row per agreement version | Append-only agreement intake and usage boundary. |
 | `METADATA_DATA_STEWARD` | One row per steward profile | Maintained setup table used to populate the intake dropdown. |
 
-The notebook setup helper creates both Delta tables empty when required. It never seeds fake steward people. Before rendering the form, maintain real steward profiles in `METADATA_DATA_STEWARD` and mark selectable rows with `is_active = true`. If no active rows exist, the intake form raises a clear setup error.
+`00_env_config` owns environment bootstrap: it creates or checks both Delta tables in the configured metadata lakehouse and reports steward readiness. `01_da_*` keeps an idempotent defensive setup call before rendering the intake form, but agreement intake is its responsibility rather than metadata bootstrap. Neither notebook seeds fake steward people. Before rendering the form, maintain real steward profiles in `METADATA_DATA_STEWARD` and mark selectable rows with `is_active = true`. If no active rows exist, `00_env_config` prints a clear readiness warning in warning mode and the intake form raises a clear setup error; strict validation mode makes `00_env_config` fail after printing the warning.
 
 ## Agreement identity and versioning
 
@@ -29,7 +29,7 @@ The notebook setup helper creates both Delta tables empty when required. It neve
 - Display rendering imports `IPython.display as ip_display`, avoiding any shadowing of Fabric display behavior.
 - `committed_by` resolves from `notebookutils.runtime.context`: `userName`, then `userId`, then `unknown`.
 - Metadata setup, steward reads, agreement reads, and agreement writes resolve `CONFIG.path_config.paths[env]["metadata"]` and use that lakehouse's OneLake path. No default attached lakehouse is required.
-- Widget defaults live under the `01_da`-specific `DataAgreementConfig` section assembled by `00_env_config`.
+- Widget defaults are exposed through `CONFIG.data_agreement_config`, the `01_da`-specific `DataAgreementConfig` section explicitly assembled by `00_env_config`.
 
 ## Downstream role
 
