@@ -20,6 +20,11 @@ from .data_agreement import (
     setup_data_agreement_tables,
     select_agreement,
 )
+from .data_agreement_setup import (
+    DATA_STEWARD_REQUIRED_FIELDS,
+    DATA_STEWARD_SYSTEM_FIELDS,
+    validate_data_agreement_prerequisites,
+)
 from .data_governance import (
     draft_governance,
     extract_governance_suggestions,
@@ -72,5 +77,8 @@ __all__ = [
     "read_agreement_form",
     "render_agreement_intake_app",
     "setup_data_agreement_tables",
+    "validate_data_agreement_prerequisites",
+    "DATA_STEWARD_REQUIRED_FIELDS",
+    "DATA_STEWARD_SYSTEM_FIELDS",
     "FabricStore",
 ]
