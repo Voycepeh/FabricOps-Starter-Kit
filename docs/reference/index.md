@@ -29,6 +29,15 @@ Use the finder below to look up public callable functions.
 ## All public functions
 
 <div class="reference-catalogue-list">
+<article id="agreement_dropdown_options" class="reference-catalogue-item" data-callable-row="true" data-callable-name="agreement_dropdown_options" data-callable-module="data_agreement" data-callable-starter-path="—" data-role="essential" data-callable-purpose="Build selector options that preserve stable and version keys.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/agreement_dropdown_options/"><code>agreement_dropdown_options</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Build selector options that preserve stable and version keys.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>latest_agreement_versions</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 2</span></summary><ul><li><code>create_agreement_form</code></li><li><code>select_agreement</code></li></ul></details>
+  </div>
+</article>
 <article id="assert_dq_passed" class="reference-catalogue-item" data-callable-row="true" data-callable-name="assert_dq_passed" data-callable-module="data_quality" data-callable-starter-path="03_pc" data-role="essential" data-callable-purpose="Raise only after evidence materialization when error-severity rules fail.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/assert_dq_passed/"><code>assert_dq_passed</code></a></h3>
   <p class="reference-catalogue-item-purpose">Raise only after evidence materialization when error-severity rules fail.</p>
@@ -92,30 +101,30 @@ Use the finder below to look up public callable functions.
 
   </div>
 </article>
-<article id="collect_agreement_metadata" class="reference-catalogue-item" data-callable-row="true" data-callable-name="collect_agreement_metadata" data-callable-module="data_agreement" data-callable-starter-path="01_data_agreement" data-role="essential" data-callable-purpose="Collect widget values and build audited agreement metadata records.">
+<article id="collect_agreement_metadata" class="reference-catalogue-item" data-callable-row="true" data-callable-name="collect_agreement_metadata" data-callable-module="data_agreement" data-callable-starter-path="01_data_agreement" data-role="essential" data-callable-purpose="Build one validated append-only agreement-version row from intake values.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/collect_agreement_metadata/"><code>collect_agreement_metadata</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Collect widget values and build audited agreement metadata records.</p>
+  <p class="reference-catalogue-item-purpose">Build one validated append-only agreement-version row from intake values.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">01_data_agreement</span></p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 5</span></summary><ul><li><code>_build_agreement_record</code></li><li><code>_normalise_widget_values</code></li><li><code>_read_agreement_widget_values</code></li><li><code>_record_base</code></li><li><code>_resolve_committed_at</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 5</span></summary><ul><li><code>_context_get</code></li><li><code>_derive_agreement_status</code></li><li><code>_to_iso_date</code></li><li><code>resolve_agreement_identity</code></li><li><code>_runtime_context</code></li></ul></details>
 
   </div>
 </article>
-<article id="commit_agreement_metadata" class="reference-catalogue-item" data-callable-row="true" data-callable-name="commit_agreement_metadata" data-callable-module="data_agreement" data-callable-starter-path="01_data_agreement" data-role="essential" data-callable-purpose="Commit agreement metadata records to append-friendly Delta tables.">
+<article id="commit_agreement_metadata" class="reference-catalogue-item" data-callable-row="true" data-callable-name="commit_agreement_metadata" data-callable-module="data_agreement" data-callable-starter-path="01_data_agreement" data-role="essential" data-callable-purpose="Append one agreement-version row by configured OneLake path.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/commit_agreement_metadata/"><code>commit_agreement_metadata</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Commit agreement metadata records to append-friendly Delta tables.</p>
+  <p class="reference-catalogue-item-purpose">Append one agreement-version row by configured OneLake path.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">01_data_agreement</span></p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>_safe_table_prefix</code></li><li><code>_write_record</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 3</span></summary><ul><li><code>_ensure_delta_table</code></li><li><code>read_lakehouse_table</code></li><li><code>write_lakehouse_table</code></li></ul></details>
 
   </div>
 </article>
-<article id="create_agreement_widgets" class="reference-catalogue-item" data-callable-row="true" data-callable-name="create_agreement_widgets" data-callable-module="data_agreement" data-callable-starter-path="01_data_agreement" data-role="essential" data-callable-purpose="Create Fabric widgets for data sharing agreement metadata capture.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/create_agreement_widgets/"><code>create_agreement_widgets</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Create Fabric widgets for data sharing agreement metadata capture.</p>
+<article id="create_agreement_form" class="reference-catalogue-item" data-callable-row="true" data-callable-name="create_agreement_form" data-callable-module="data_agreement" data-callable-starter-path="01_data_agreement" data-role="essential" data-callable-purpose="Render the standalone ``01_da`` intake form with ``ipywidgets``.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/create_agreement_form/"><code>create_agreement_form</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Render the standalone ``01_da`` intake form with ``ipywidgets``.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">01_data_agreement</span></p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 4</span></summary><ul><li><code>_agreement_widget_specs</code></li><li><code>_get_fabric_widgets</code></li><li><code>_widget_dropdown</code></li><li><code>_widget_text</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 4</span></summary><ul><li><code>agreement_dropdown_options</code></li><li><code>load_active_data_steward_profiles</code></li><li><code>load_agreements</code></li><li><code>next_minor_version</code></li></ul></details>
 
   </div>
 </article>
@@ -191,22 +200,40 @@ Use the finder below to look up public callable functions.
 
   </div>
 </article>
-<article id="get_selected_agreement" class="reference-catalogue-item" data-callable-row="true" data-callable-name="get_selected_agreement" data-callable-module="data_agreement" data-callable-starter-path="—" data-role="essential" data-callable-purpose="Return selected agreement from widget flow.">
+<article id="get_selected_agreement" class="reference-catalogue-item" data-callable-row="true" data-callable-name="get_selected_agreement" data-callable-module="data_agreement" data-callable-starter-path="—" data-role="essential" data-callable-purpose="Return the selected agreement row, including its stable and version keys.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/get_selected_agreement/"><code>get_selected_agreement</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Return selected agreement from widget flow.</p>
+  <p class="reference-catalogue-item-purpose">Return the selected agreement row, including its stable and version keys.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
 
 
   </div>
 </article>
-<article id="load_agreements" class="reference-catalogue-item" data-callable-row="true" data-callable-name="load_agreements" data-callable-module="data_agreement" data-callable-starter-path="—" data-role="essential" data-callable-purpose="Load latest distinct agreement metadata rows for widget selection.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/load_agreements/"><code>load_agreements</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Load latest distinct agreement metadata rows for widget selection.</p>
+<article id="latest_agreement_versions" class="reference-catalogue-item" data-callable-row="true" data-callable-name="latest_agreement_versions" data-callable-module="data_agreement" data-callable-starter-path="—" data-role="essential" data-callable-purpose="Return only the latest contract version for each stable agreement ID.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/latest_agreement_versions/"><code>latest_agreement_versions</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Return only the latest contract version for each stable agreement ID.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>_coerce_row_dicts</code></li><li><code>_latest_distinct_agreements</code></li></ul></details>
-
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>_coerce_row_dicts</code></li><li><code>parse_contract_version</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 2</span></summary><ul><li><code>agreement_dropdown_options</code></li><li><code>load_agreements</code></li></ul></details>
+  </div>
+</article>
+<article id="load_active_data_steward_profiles" class="reference-catalogue-item" data-callable-row="true" data-callable-name="load_active_data_steward_profiles" data-callable-module="data_agreement" data-callable-starter-path="—" data-role="essential" data-callable-purpose="Load active steward profiles from the configured metadata lakehouse.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/load_active_data_steward_profiles/"><code>load_active_data_steward_profiles</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Load active steward profiles from the configured metadata lakehouse.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 3</span></summary><ul><li><code>_coerce_row_dicts</code></li><li><code>_ensure_delta_table</code></li><li><code>read_lakehouse_table</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>create_agreement_form</code></li></ul></details>
+  </div>
+</article>
+<article id="load_agreements" class="reference-catalogue-item" data-callable-row="true" data-callable-name="load_agreements" data-callable-module="data_agreement" data-callable-starter-path="—" data-role="essential" data-callable-purpose="Load latest versioned agreement rows from the configured metadata lakehouse.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/load_agreements/"><code>load_agreements</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Load latest versioned agreement rows from the configured metadata lakehouse.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>latest_agreement_versions</code></li><li><code>read_lakehouse_table</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>create_agreement_form</code></li></ul></details>
   </div>
 </article>
 <article id="load_config" class="reference-catalogue-item" data-callable-row="true" data-callable-name="load_config" data-callable-module="config" data-callable-starter-path="00_env_config, 02_ex, 03_pc" data-role="essential" data-callable-purpose="Validate and return a user-supplied framework configuration.">
@@ -272,6 +299,15 @@ Use the finder below to look up public callable functions.
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_prepare_dq_profile_input_rows</code></li></ul></details>
   </div>
 </article>
+<article id="read_agreement_form" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_agreement_form" data-callable-module="data_agreement" data-callable-starter-path="—" data-role="essential" data-callable-purpose="Return human-entered values from an ``01_da`` intake form.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/read_agreement_form/"><code>read_agreement_form</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Return human-entered values from an ``01_da`` intake form.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+
+
+  </div>
+</article>
 <article id="read_lakehouse_csv" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_lakehouse_csv" data-callable-module="fabric_input_output" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Read a CSV file from a Fabric lakehouse Files path.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/read_lakehouse_csv/"><code>read_lakehouse_csv</code></a></h3>
   <p class="reference-catalogue-item-purpose">Read a CSV file from a Fabric lakehouse Files path.</p>
@@ -305,7 +341,7 @@ Use the finder below to look up public callable functions.
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">02_ex, 03_pc</span></p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>_get_store</code></li><li><code>_get_spark</code></li></ul></details>
-
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 3</span></summary><ul><li><code>commit_agreement_metadata</code></li><li><code>load_active_data_steward_profiles</code></li><li><code>load_agreements</code></li></ul></details>
   </div>
 </article>
 <article id="read_warehouse_table" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_warehouse_table" data-callable-module="fabric_input_output" data-callable-starter-path="02_ex, 03_pc" data-role="essential" data-callable-purpose="Read a table from a Microsoft Fabric warehouse.">
@@ -385,7 +421,16 @@ Use the finder below to look up public callable functions.
   <p class="reference-catalogue-item-purpose">Render a widget dropdown and store selected agreement metadata row in module state.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>_agreement_option_label</code></li><li><code>_coerce_row_dicts</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>agreement_dropdown_options</code></li></ul></details>
+
+  </div>
+</article>
+<article id="setup_data_agreement_tables" class="reference-catalogue-item" data-callable-row="true" data-callable-name="setup_data_agreement_tables" data-callable-module="data_agreement" data-callable-starter-path="—" data-role="essential" data-callable-purpose="Create empty agreement and steward Delta tables when they do not exist.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/setup_data_agreement_tables/"><code>setup_data_agreement_tables</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Create empty agreement and steward Delta tables when they do not exist.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_ensure_delta_table</code></li></ul></details>
 
   </div>
 </article>
@@ -458,7 +503,7 @@ Use the finder below to look up public callable functions.
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">03_pc</span></p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_get_store</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 3</span></summary><ul><li><code>write_dq_rules</code></li><li><code>seed_minimal_sample_source_table</code></li><li><code>write_metadata_rows</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 4</span></summary><ul><li><code>commit_agreement_metadata</code></li><li><code>write_dq_rules</code></li><li><code>seed_minimal_sample_source_table</code></li><li><code>write_metadata_rows</code></li></ul></details>
   </div>
 </article>
 <article id="write_warehouse_table" class="reference-catalogue-item" data-callable-row="true" data-callable-name="write_warehouse_table" data-callable-module="fabric_input_output" data-callable-starter-path="03_pc" data-role="essential" data-callable-purpose="Write a Spark DataFrame to a Microsoft Fabric warehouse table.">

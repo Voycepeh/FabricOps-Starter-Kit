@@ -38,11 +38,9 @@ This notebook-first flow keeps the contract grounded in reviewed evidence instea
 
 ## `01` agreement metadata capture
 
-The `01_data_sharing_agreement` notebook captures human-approved agreement metadata before downstream evidence is collected. Human inputs are collected through widgets where practical, while derived fields stay out of the form. In particular, `agreement_status` is computed from `expiry_date` and stored with `status_as_of_date`; users do not select status manually.
+The standalone `01_da_*` notebook captures the intake and usage boundary in one primary append-only table: `METADATA_DATA_AGREEMENT`. Its grain is one row per agreement version. `agreement_id` is stable, while `contract_version` starts at `1.0.0` and increments by minor version for later revisions. Create mode always generates a fresh ID and `1.0.0`, even when entered descriptive identity fields match an older row. Update mode requires an explicit latest-version selection before it reuses an ID and increments its minor version.
 
-`renewal_required` is a simple Yes/No value. `sensitivity_label` is always dropdown-driven and defaults to Public, Confidential, and Restricted unless a custom list is passed. `department` and `source_system` become dropdowns when option lists are supplied; otherwise they remain free text so the framework stays generic. Every committed agreement header, catalogue, and scope record includes `committed_by` and `committed_at`.
-
-Notebook users normally call `create_agreement_widgets(...)`, `collect_agreement_metadata(...)`, and `commit_agreement_metadata(...)` for this flow. This agreement metadata becomes the anchor for later profiling, DQ rules, lineage, and pipeline contract evidence. This page intentionally does not rewrite the full metadata/data-contract story until the `01`, `02`, and `03` collection layers are all in place.
+The steward dropdown reads active rows from `METADATA_DATA_STEWARD`; setup creates the table empty and never seeds fake people. Widget defaults are owned by the `DataAgreementConfig` section from `00_env_config`. Notebook users call `setup_data_agreement_tables(...)`, `create_agreement_form(...)`, `collect_agreement_metadata(...)`, and `commit_agreement_metadata(...)`. Reads and writes route through `CONFIG.path_config.paths[env]["metadata"]`, so no default attached lakehouse is required.
 
 ## Source metadata versus assembled views
 

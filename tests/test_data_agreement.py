@@ -1,238 +1,184 @@
 from datetime import datetime
+from types import SimpleNamespace
 
 import pytest
 
+import fabricops_kit.data_agreement as data_agreement
 from fabricops_kit.data_agreement import (
-    DEFAULT_SENSITIVITY_LABELS,
-    YES_NO_OPTIONS,
-    _agreement_widget_specs,
-    _derive_agreement_status,
+    DATA_AGREEMENT_TABLE,
+    DATA_STEWARD_TABLE,
+    agreement_dropdown_options,
     collect_agreement_metadata,
     commit_agreement_metadata,
+    latest_agreement_versions,
+    load_active_data_steward_profiles,
+    metadata_lakehouse_root,
+    next_minor_version,
+    resolve_agreement_identity,
 )
+from fabricops_kit.fabric_input_output import FabricStore
 
 
-def _widget_values(**overrides):
+def _config():
+    store = FabricStore(env="dev", workspace_id="workspace", item_id="metadata-item", name="metadata", kind="lakehouse")
+    return SimpleNamespace(path_config=SimpleNamespace(paths={"dev": {"metadata": store}}))
+
+
+def _values(**overrides):
     values = {
-        "agreement_id": "agr-001",
-        "agreement_name": "Example sharing agreement",
-        "data_steward_name": "Data Steward",
-        "data_steward_email": "steward@example.com",
-        "department": "Analytics",
-        "business_owner": "Business Owner",
-        "scope_of_use": "Approved analytics use only.",
-        "purpose": "Support approved reporting.",
-        "start_date": "2026-01-01",
-        "expiry_date": "2026-12-31",
-        "renewal_required": "Yes",
-        "sensitivity_label": "Public",
-        "source_system": "Source A",
-        "source_database": "source_db",
-        "source_schema": "dbo",
-        "source_table": "orders",
-        "business_name": "Orders",
-        "business_description": "Order records.",
-        "data_owner": "Owner",
-        "contains_sensitive_data": "No",
-        "intended_use": "Reporting",
-        "allowed_consumer": "Reporting team",
-        "allowed_consumer_type": "Team",
-        "allowed_output_type": "Dashboard",
-        "dashboard_allowed": "Yes",
-        "data_dump_allowed": "No",
-        "self_service_extract_allowed": "No",
-        "refresh_frequency": "Monthly",
-        "retention_expectation": "Retain according to policy.",
-        "special_conditions": "None.",
-        "commit_note": "Approved by steward.",
+        "agreement_name": "Orders agreement",
+        "data_steward_profile": {"data_steward_name": "Configured steward", "data_steward_email": "steward@example.com", "domain": "Operations", "department": "Reporting", "faculty": "Shared Services"},
+        "business_purpose": "Support governed reporting.", "approved_usage": "Approved reporting only.", "restricted_usage": "No redistribution.",
+        "allowed_consumer_type": "Internal Department", "expected_output": "Dashboard", "source_system": "ERP", "refresh_frequency": "Daily",
+        "retention_expectation": "Retain according to policy.", "start_date": "2026-01-01", "expiry_date": "2026-12-31", "renewal_required": "Yes",
     }
     values.update(overrides)
     return values
 
 
-def test_derive_agreement_status_returns_active_before_or_on_expiry_date():
-    assert _derive_agreement_status("2026-01-02", as_of_date="2026-01-01") == {
-        "agreement_status": "Active",
-        "status_as_of_date": "2026-01-01",
-    }
-    assert _derive_agreement_status("2026-01-01", as_of_date="2026-01-01")["agreement_status"] == "Active"
+def test_create_mode_commits_version_1_0_0():
+    result = collect_agreement_metadata(widget_values=_values(), existing_rows=[], committed_by="user@example.com")
+    assert result["agreement_row"]["agreement_id"].startswith("DA-")
+    assert result["agreement_row"]["contract_version"] == "1.0.0"
+    assert result["is_new_agreement"] is True
 
 
-def test_derive_agreement_status_returns_inactive_after_expiry_date():
-    assert _derive_agreement_status("2025-12-31", as_of_date="2026-01-01") == {
-        "agreement_status": "Inactive",
-        "status_as_of_date": "2026-01-01",
-    }
-
-
-def test_sensitivity_labels_default_to_public_confidential_restricted():
-    specs = {spec["name"]: spec for spec in _agreement_widget_specs()}
-    assert specs["sensitivity_label"]["kind"] == "dropdown"
-    assert specs["sensitivity_label"]["options"] == DEFAULT_SENSITIVITY_LABELS
-
-
-def test_custom_sensitivity_labels_are_used():
-    specs = {spec["name"]: spec for spec in _agreement_widget_specs(sensitivity_labels=["Internal", "Secret"])}
-    assert specs["sensitivity_label"]["options"] == ["Internal", "Secret"]
-
-
-def test_department_and_source_system_dropdown_only_when_options_are_passed():
-    free_text_specs = {spec["name"]: spec for spec in _agreement_widget_specs(departments=None, source_systems=None)}
-    assert free_text_specs["department"]["kind"] == "text"
-    assert free_text_specs["source_system"]["kind"] == "text"
-
-    dropdown_specs = {
-        spec["name"]: spec
-        for spec in _agreement_widget_specs(departments=["Finance"], source_systems=["ERP"])
-    }
-    assert dropdown_specs["department"]["kind"] == "dropdown"
-    assert dropdown_specs["department"]["options"] == ["Finance"]
-    assert dropdown_specs["source_system"]["kind"] == "dropdown"
-    assert dropdown_specs["source_system"]["options"] == ["ERP"]
-
-
-def test_missing_required_agreement_fields_raise_clear_error():
-    with pytest.raises(ValueError, match=r"Missing required agreement field\(s\): agreement_name"):
-        collect_agreement_metadata(widget_values=_widget_values(agreement_name=""))
-
-
-def test_collect_agreement_metadata_adds_committed_by_and_committed_at():
-    metadata = collect_agreement_metadata(
-        widget_values=_widget_values(),
-        committed_by="steward@example.com",
-        committed_at="2026-01-01T00:00:00+00:00",
-    )
-    record = metadata["header_record"]
-    assert record["committed_by"] == "steward@example.com"
-    assert record["committed_at"] == "2026-01-01T00:00:00+00:00"
-
-
-def test_record_builders_include_computed_status_and_status_as_of_date(monkeypatch):
-    class FixedDatetime(datetime):
-        @classmethod
-        def now(cls, tz=None):
-            return cls(2026, 1, 1, tzinfo=tz)
-
-    import fabricops_kit.data_agreement as data_agreement
-
-    monkeypatch.setattr(data_agreement, "datetime", FixedDatetime)
-    metadata = collect_agreement_metadata(widget_values=_widget_values(expiry_date="2026-01-01"))
-    assert metadata["header_record"]["agreement_status"] == "Active"
-    assert metadata["header_record"]["status_as_of_date"] == "2026-01-01"
-
-
-def test_renewal_requirement_only_accepts_yes_or_no():
-    assert YES_NO_OPTIONS == ["Yes", "No"]
-    with pytest.raises(ValueError, match="renewal_required"):
-        collect_agreement_metadata(widget_values=_widget_values(renewal_required="Maybe"))
-
-
-def test_invalid_expiry_date_raises_clear_error():
-    with pytest.raises(ValueError, match="expiry_date must be a valid date"):
-        collect_agreement_metadata(widget_values=_widget_values(expiry_date="31/12/2026"))
-
-
-def test_catalogue_and_scope_records_are_audited():
-    metadata = collect_agreement_metadata(widget_values=_widget_values(), committed_by="reviewer")
-    catalogue = metadata["catalogue_record"]
-    scope = metadata["scope_record"]
-    assert catalogue["committed_by"] == "reviewer"
-    assert catalogue["committed_at"]
-    assert catalogue["catalogue_id"] == "agr-001|Source A|orders"
-    assert scope["committed_by"] == "reviewer"
-    assert scope["committed_at"]
-    assert scope["scope_id"] == "agr-001|Reporting team|Dashboard"
-
-
-def test_collect_agreement_metadata_builds_records_with_shared_audit_fields():
-    metadata = collect_agreement_metadata(
-        widget_values=_widget_values(),
-        committed_by="reviewer",
-        committed_at="2026-01-02T03:04:05+00:00",
-        runtime_context={"notebook_name": "01_da_example"},
-    )
-
-    assert set(metadata) == {"header_record", "catalogue_record", "scope_record", "summary"}
-    assert metadata["summary"] == {
-        "agreement_id": "agr-001",
-        "agreement_status": "Active",
-        "expiry_date": "2026-12-31",
-        "status_as_of_date": metadata["header_record"]["status_as_of_date"],
-        "committed_by": "reviewer",
-        "committed_at": "2026-01-02T03:04:05+00:00",
-        "tables_updated": [],
-    }
-    committed_values = {
-        metadata["header_record"]["committed_at"],
-        metadata["catalogue_record"]["committed_at"],
-        metadata["scope_record"]["committed_at"],
-    }
-    assert committed_values == {"2026-01-02T03:04:05+00:00"}
-    assert metadata["catalogue_record"]["committed_by"] == "reviewer"
-    assert metadata["scope_record"]["committed_by"] == "reviewer"
-
-
-class _DummyWriter:
-    def __init__(self, writes):
-        self._writes = writes
-        self._format = None
-        self._mode = None
-
-    def format(self, value):
-        self._format = value
-        return self
-
-    def mode(self, value):
-        self._mode = value
-        return self
-
-    def saveAsTable(self, table_name):
-        self._writes.append(("table", table_name, self._format, self._mode))
-
-    def save(self, path):
-        self._writes.append(("path", path, self._format, self._mode))
-
-
-class _DummyDataFrame:
-    def __init__(self, writes):
-        self.write = _DummyWriter(writes)
-
-
-class _DummySpark:
-    def __init__(self):
-        self.writes = []
-
-    def createDataFrame(self, rows):
-        assert rows
-        return _DummyDataFrame(self.writes)
-
-
-def test_commit_agreement_metadata_uses_lakehouse_safe_default_table_names():
-    spark = _DummySpark()
-    agreement_metadata = {
-        "header_record": {"agreement_id": "agr-001", "agreement_status": "Active"},
-        "catalogue_record": {"agreement_id": "agr-001"},
-        "scope_record": {"agreement_id": "agr-001"},
-    }
-
-    summary = commit_agreement_metadata(
-        spark=spark,
-        agreement_metadata=agreement_metadata,
-    )
-
-    assert summary["tables_updated"] == [
-        "METADATA_AGREEMENT_HEADER",
-        "METADATA_AGREEMENT_CATALOGUE",
-        "METADATA_AGREEMENT_SCOPE",
+def test_update_mode_only_shows_latest_version_per_agreement_id():
+    rows = [
+        {"agreement_id": "DA-1", "contract_version": "1.0.0", "agreement_name": "Orders", "source_system": "ERP", "allowed_consumer_type": "Faculty"},
+        {"agreement_id": "DA-1", "contract_version": "1.2.0", "agreement_name": "Orders", "source_system": "ERP", "allowed_consumer_type": "Faculty"},
+        {"agreement_id": "DA-2", "contract_version": "1.0.0", "agreement_name": "People", "source_system": "CRM", "allowed_consumer_type": "Central Unit"},
     ]
-    assert [write[1] for write in spark.writes] == summary["tables_updated"]
+    latest = latest_agreement_versions(rows)
+    assert {(row["agreement_id"], row["contract_version"]) for row in latest} == {("DA-1", "1.2.0"), ("DA-2", "1.0.0")}
+    options = agreement_dropdown_options(rows, include_prompt=True)
+    assert options[0] == ("Select an agreement to update...", None)
+    assert len(options) == 3
 
 
-def test_commit_agreement_metadata_normalizes_custom_prefix_to_safe_names():
-    summary = commit_agreement_metadata(
-        spark=_DummySpark(),
-        header_record={"agreement_id": "agr-001"},
-        table_prefix="metadata.custom",
+def test_update_mode_reuses_id_and_appends_next_minor_version():
+    selected = {"agreement_id": "DA-1", "contract_version": "1.2.0"}
+    result = collect_agreement_metadata(widget_values=_values(), mode="update", selected_agreement=selected, committed_by="user@example.com")
+    assert result["agreement_row"]["agreement_id"] == "DA-1"
+    assert result["agreement_row"]["contract_version"] == "1.3.0"
+    assert result["is_new_agreement"] is False
+    assert next_minor_version("invalid") == "1.0.0"
+
+
+def test_create_mode_does_not_reuse_matching_existing_agreement_id(monkeypatch):
+    monkeypatch.setattr(data_agreement, "_generate_agreement_id", lambda: "DA-NEW")
+    rows = [{"agreement_id": "DA-1", "contract_version": "1.1.0", "agreement_name": "Orders agreement", "source_system": "ERP", "allowed_consumer_type": "Internal Department"}]
+    identity = resolve_agreement_identity(rows, agreement_name="Orders agreement", source_system="ERP", allowed_consumer_type="Internal Department")
+    assert identity == {"agreement_id": "DA-NEW", "contract_version": "1.0.0", "is_new_agreement": True}
+
+
+def test_update_mode_requires_selected_agreement():
+    with pytest.raises(ValueError, match="Update mode requires selected_agreement"):
+        collect_agreement_metadata(widget_values=_values(), mode="update", committed_by="user@example.com")
+
+
+def test_collect_agreement_metadata_accepts_spark_like_existing_rows_without_truthiness():
+    class SparkLikeDataFrame:
+        def __bool__(self):
+            raise ValueError("Spark DataFrame truthiness is ambiguous")
+
+    result = collect_agreement_metadata(widget_values=_values(), existing_rows=SparkLikeDataFrame(), committed_by="user@example.com")
+    assert result["agreement_row"]["contract_version"] == "1.0.0"
+
+
+def test_committed_by_resolves_fabric_user_name_before_user_id(monkeypatch):
+    monkeypatch.setattr(data_agreement, "_runtime_context", lambda: {"userName": "fabric.user@example.com", "userId": "fabric-user-id"})
+    result = collect_agreement_metadata(widget_values=_values())
+    assert result["agreement_row"]["committed_by"] == "fabric.user@example.com"
+
+
+def test_metadata_root_uses_configured_onelake_store_without_default_lakehouse():
+    assert metadata_lakehouse_root(_config(), "dev") == "abfss://workspace@onelake.dfs.fabric.microsoft.com/metadata-item"
+
+
+def test_steward_profiles_use_active_rows_only_and_never_seed_fake_people(monkeypatch):
+    monkeypatch.setattr(data_agreement, "_ensure_delta_table", lambda *args, **kwargs: None)
+    monkeypatch.setattr(data_agreement, "read_lakehouse_table", lambda *args, **kwargs: [
+        {"steward_id": "1", "data_steward_name": "Configured steward", "data_steward_email": "configured@example.com", "domain": "Ops", "department": "BI", "faculty": "Shared", "is_active": "true"},
+        {"steward_id": "2", "data_steward_name": "Inactive steward", "is_active": "false"},
+    ])
+    profiles = load_active_data_steward_profiles(spark=object(), config=_config(), env="dev")
+    assert [profile["data_steward_name"] for profile in profiles] == ["Configured steward"]
+
+
+def test_no_active_stewards_raise_clear_setup_error(monkeypatch):
+    monkeypatch.setattr(data_agreement, "_ensure_delta_table", lambda *args, **kwargs: None)
+    monkeypatch.setattr(data_agreement, "read_lakehouse_table", lambda *args, **kwargs: [])
+    with pytest.raises(ValueError, match=f"{DATA_STEWARD_TABLE} has no active steward rows"):
+        load_active_data_steward_profiles(spark=object(), config=_config(), env="dev")
+
+
+def test_commit_appends_single_primary_table_by_configured_path(monkeypatch):
+    calls = []
+    class Frame:
+        columns = []
+    class Spark:
+        def createDataFrame(self, rows):
+            calls.append(("rows", rows))
+            return Frame()
+    monkeypatch.setattr(data_agreement, "_ensure_delta_table", lambda *args, **kwargs: None)
+    monkeypatch.setattr(data_agreement, "read_lakehouse_table", lambda *args, **kwargs: Frame())
+    monkeypatch.setattr(data_agreement, "write_lakehouse_table", lambda df, config, env, target, table, mode: calls.append((env, target, table, mode)))
+    metadata = collect_agreement_metadata(widget_values=_values(), committed_by="user@example.com")
+    summary = commit_agreement_metadata(spark=Spark(), config=_config(), env="dev", agreement_metadata=metadata)
+    assert calls[-1] == ("dev", "metadata", DATA_AGREEMENT_TABLE, "append")
+    assert summary["table_updated"] == DATA_AGREEMENT_TABLE
+
+
+def test_required_fields_and_date_validation_are_clear():
+    with pytest.raises(ValueError, match="agreement_name"):
+        collect_agreement_metadata(widget_values=_values(agreement_name=""), committed_by="user")
+    with pytest.raises(ValueError, match="expiry_date must be a valid date"):
+        collect_agreement_metadata(widget_values=_values(expiry_date="31/12/2026"), committed_by="user")
+
+
+def test_update_form_prefills_latest_selected_row(monkeypatch):
+    intake = SimpleNamespace(
+        source_systems=("ERP",), refresh_frequencies=("Daily",),
+        allowed_consumer_types=("Internal Department",), expected_outputs=("Dashboard",),
+        renewal_options=("Yes", "No"), default_values={},
     )
+    config = SimpleNamespace(path_config=_config().path_config, data_agreement_config=intake)
+    steward = {"label": "Configured steward | Ops | BI | Shared", "steward_id": "1", "data_steward_name": "Configured steward", "data_steward_email": "configured@example.com", "domain": "Ops", "department": "BI", "faculty": "Shared"}
+    latest = {"agreement_id": "DA-1", "contract_version": "1.2.0", "agreement_name": "Latest orders", "data_steward_name": "Configured steward", "data_steward_email": "configured@example.com", "domain": "Ops", "department": "BI", "faculty": "Shared", "business_purpose": "Latest purpose", "approved_usage": "Latest usage", "restricted_usage": "Latest restriction", "retention_expectation": "Latest retention", "allowed_consumer_type": "Internal Department", "expected_output": "Dashboard", "source_system": "ERP", "refresh_frequency": "Daily", "renewal_required": "Yes", "start_date": "2026-01-01", "expiry_date": "2026-12-31"}
+    monkeypatch.setattr(data_agreement, "load_active_data_steward_profiles", lambda **kwargs: [steward])
+    monkeypatch.setattr(data_agreement, "load_agreements", lambda *args, **kwargs: [latest])
+    import sys
+    import types
 
-    assert summary["tables_updated"] == ["METADATA_CUSTOM_AGREEMENT_HEADER"]
+    class Widget:
+        def __init__(self, options=(), value=None, **kwargs):
+            self.options = options
+            self._value = value if value is not None else (options[0][1] if options and isinstance(options[0], tuple) else options[0] if options else None)
+            self.layout = SimpleNamespace(display="")
+            self._observers = []
+        @property
+        def value(self): return self._value
+        @value.setter
+        def value(self, value):
+            self._value = value
+            for callback in self._observers: callback({"name": "value", "new": value})
+        def observe(self, callback, names=None): self._observers.append(callback)
+    widgets = types.ModuleType("ipywidgets")
+    for name in ("Dropdown", "Text", "Textarea", "DatePicker", "Button", "Output", "HTML"):
+        setattr(widgets, name, type(name, (Widget,), {}))
+    widgets.VBox = lambda values: values
+    display = types.ModuleType("IPython.display")
+    display.display = lambda *args, **kwargs: None
+    ipython = types.ModuleType("IPython")
+    ipython.display = display
+    monkeypatch.setitem(sys.modules, "ipywidgets", widgets)
+    monkeypatch.setitem(sys.modules, "IPython", ipython)
+    monkeypatch.setitem(sys.modules, "IPython.display", display)
+    form = data_agreement.create_agreement_form(spark=object(), config=config, env="dev")
+    form["mode"].value = "Update Existing Agreement"
+    form["existing_agreement"].value = latest
+    assert form["agreement_name"].value == "Latest orders"
+    assert form["business_purpose"].value == "Latest purpose"
+    assert form["data_steward_profile"].value == steward
+    assert "Next: 1.3.0" in form["agreement_identity"].value

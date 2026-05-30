@@ -1,147 +1,44 @@
+"""Versioned data-agreement intake helpers for Fabric notebook workflows.
+
+The ``01_da`` notebook owns agreement intake and usage boundaries. Later
+notebooks select the latest committed agreement version and bind their evidence
+to both ``agreement_id`` and ``contract_version``.
+"""
+
 from __future__ import annotations
 
-import re
 from datetime import date, datetime, timezone
+from html import escape
 from typing import Any
 
-from .metadata import _resolve_action_by, _runtime_context
+from .fabric_input_output import read_lakehouse_table, write_lakehouse_table
+from .metadata import _runtime_context
 
+DATA_AGREEMENT_TABLE = "METADATA_DATA_AGREEMENT"
+DATA_STEWARD_TABLE = "METADATA_DATA_STEWARD"
 _SELECTED_AGREEMENT: dict[str, Any] | None = None
 
-DEFAULT_SENSITIVITY_LABELS = ["Public", "Confidential", "Restricted"]
 YES_NO_OPTIONS = ["Yes", "No"]
-DEFAULT_REFRESH_FREQUENCIES = [
-    "One Time",
-    "Daily",
-    "Weekly",
-    "Monthly",
-    "Quarterly",
-    "Ad Hoc",
-    "Not Applicable",
+DATA_AGREEMENT_FIELDS = [
+    "agreement_id", "contract_version", "agreement_name", "data_steward_name",
+    "data_steward_email", "domain", "department", "faculty", "business_purpose",
+    "approved_usage", "restricted_usage", "allowed_consumer_type", "expected_output",
+    "source_system", "refresh_frequency", "retention_expectation", "start_date",
+    "expiry_date", "agreement_status", "status_as_of_date", "renewal_required",
+    "review_status", "approved_by", "approved_at", "committed_by", "committed_at",
+    "notebook_name", "workspace_name", "lakehouse_name", "run_id",
 ]
-
-_HEADER_REQUIRED_FIELDS = [
-    "agreement_id",
-    "agreement_name",
-    "data_steward_name",
-    "data_steward_email",
-    "department",
-    "scope_of_use",
-    "purpose",
-    "expiry_date",
-    "renewal_required",
-    "sensitivity_label",
+DATA_STEWARD_FIELDS = [
+    "steward_id", "data_steward_name", "data_steward_email", "domain", "department",
+    "faculty", "is_active", "created_at", "updated_at",
 ]
-
-_HEADER_FIELDS = [
-    "agreement_id",
-    "agreement_name",
-    "data_steward_name",
-    "data_steward_email",
-    "department",
-    "business_owner",
-    "scope_of_use",
-    "purpose",
-    "start_date",
-    "expiry_date",
-    "agreement_status",
-    "status_as_of_date",
-    "renewal_required",
-    "sensitivity_label",
-    "commit_note",
-    "committed_by",
-    "committed_at",
-    "notebook_name",
-    "workspace_name",
-    "lakehouse_name",
-    "run_id",
+_REQUIRED_FIELDS = [
+    "agreement_id", "contract_version", "agreement_name", "data_steward_name",
+    "data_steward_email", "domain", "department", "faculty", "business_purpose",
+    "approved_usage", "allowed_consumer_type", "expected_output", "source_system",
+    "refresh_frequency", "retention_expectation", "expiry_date", "renewal_required",
+    "review_status", "committed_by", "committed_at",
 ]
-
-_CATALOGUE_FIELDS = [
-    "agreement_id",
-    "catalogue_id",
-    "source_system",
-    "source_database",
-    "source_schema",
-    "source_table",
-    "business_name",
-    "business_description",
-    "data_owner",
-    "data_steward_name",
-    "contains_sensitive_data",
-    "sensitivity_label",
-    "intended_use",
-    "commit_note",
-    "committed_by",
-    "committed_at",
-    "notebook_name",
-    "workspace_name",
-    "lakehouse_name",
-    "run_id",
-]
-
-_SCOPE_FIELDS = [
-    "agreement_id",
-    "scope_id",
-    "allowed_consumer",
-    "allowed_consumer_type",
-    "allowed_output_type",
-    "dashboard_allowed",
-    "data_dump_allowed",
-    "self_service_extract_allowed",
-    "refresh_frequency",
-    "retention_expectation",
-    "special_conditions",
-    "commit_note",
-    "committed_by",
-    "committed_at",
-    "notebook_name",
-    "workspace_name",
-    "lakehouse_name",
-    "run_id",
-]
-
-_AGREEMENT_WIDGET_FIELDS = [
-    "agreement_id",
-    "agreement_name",
-    "data_steward_name",
-    "data_steward_email",
-    "department",
-    "scope_of_use",
-    "purpose",
-    "start_date",
-    "expiry_date",
-    "renewal_required",
-    "sensitivity_label",
-    "source_system",
-    "source_table",
-    "contains_sensitive_data",
-    "allowed_output_type",
-    "dashboard_allowed",
-    "data_dump_allowed",
-    "self_service_extract_allowed",
-    "refresh_frequency",
-    "commit_note",
-    "business_owner",
-    "source_database",
-    "source_schema",
-    "business_name",
-    "business_description",
-    "data_owner",
-    "intended_use",
-    "allowed_consumer",
-    "allowed_consumer_type",
-    "retention_expectation",
-    "special_conditions",
-]
-
-_DROPDOWN_DESCRIPTIONS = {
-    "renewal_required": YES_NO_OPTIONS,
-    "contains_sensitive_data": YES_NO_OPTIONS,
-    "dashboard_allowed": YES_NO_OPTIONS,
-    "data_dump_allowed": YES_NO_OPTIONS,
-    "self_service_extract_allowed": YES_NO_OPTIONS,
-}
 
 
 def _coerce_row_dicts(rows: Any) -> list[dict[str, Any]]:
@@ -149,568 +46,523 @@ def _coerce_row_dicts(rows: Any) -> list[dict[str, Any]]:
         return []
     if hasattr(rows, "collect"):
         rows = rows.collect()
-    out = []
-    for row in rows:
-        if hasattr(row, "asDict"):
-            out.append(row.asDict(recursive=True))
-        else:
-            out.append(dict(row))
-    return out
+    return [row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row) for row in rows]
 
 
-def _latest_distinct_agreements(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    latest: dict[str, dict[str, Any]] = {}
-    for row in rows:
-        agreement_id = str(row.get("agreement_id") or "").strip()
-        if not agreement_id:
-            continue
-        cur = latest.get(agreement_id)
-        row_ts = str(row.get("updated_at") or row.get("approved_at") or row.get("committed_at") or "")
-        cur_ts = str(
-            (cur or {}).get("updated_at")
-            or (cur or {}).get("approved_at")
-            or (cur or {}).get("committed_at")
-            or ""
-        )
-        if cur is None or row_ts >= cur_ts:
-            latest[agreement_id] = row
-    return list(latest.values())
+def _context_get(context: Any, *keys: str) -> Any:
+    for key in keys:
+        try:
+            value = context.get(key) if isinstance(context, dict) else context.get(key)
+        except Exception:
+            value = None
+        if value is not None and str(value).strip():
+            return value
+    return None
 
 
-def load_agreements(
-    spark, metadata_table: str = "METADATA_DATA_AGREEMENT", missing_ok: bool = False
-) -> list[dict[str, Any]]:
-    """Load latest distinct agreement metadata rows for widget selection."""
+def metadata_lakehouse_root(config: Any, env: str) -> str:
+    """Return the configured metadata lakehouse OneLake root.
+
+    Parameters
+    ----------
+    config : FrameworkConfig | dict
+        Framework config containing ``path_config.paths[env]["metadata"]``.
+    env : str
+        Environment key configured by ``00_env_config``.
+
+    Returns
+    -------
+    str
+        ABFSS OneLake root for the metadata lakehouse.
+
+    Raises
+    ------
+    ValueError
+        If the metadata target is absent or is not a lakehouse.
+    """
+    paths = config.path_config.paths if hasattr(config, "path_config") else config.paths
     try:
-        rows = _coerce_row_dicts(spark.table(metadata_table))
+        store = paths[env]["metadata"]
+    except (KeyError, TypeError) as exc:
+        raise ValueError(f"Metadata target not found for environment '{env}'.") from exc
+    if store.kind != "lakehouse":
+        raise ValueError(f"Target '{env}/metadata' is not a lakehouse store.")
+    return store.root.rstrip("/")
+
+
+def _table_path(config: Any, env: str, table_name: str) -> str:
+    return f"{metadata_lakehouse_root(config, env)}/Tables/{table_name}"
+
+
+def _ensure_delta_table(spark: Any, config: Any, env: str, table_name: str, fields: list[str]) -> None:
+    path = _table_path(config, env, table_name)
+    try:
+        spark.read.format("delta").load(path).limit(0).collect()
     except Exception:
+        spark.createDataFrame([{field: "" for field in fields}]).limit(0).write.format("delta").mode("overwrite").save(path)
+
+
+def setup_data_agreement_tables(*, spark: Any, config: Any, env: str) -> list[str]:
+    """Create empty agreement and steward Delta tables when they do not exist.
+
+    Parameters
+    ----------
+    spark : pyspark.sql.SparkSession
+        Active Fabric Spark session.
+    config : FrameworkConfig | dict
+        Framework config with the metadata lakehouse target.
+    env : str
+        Environment key configured by ``00_env_config``.
+
+    Returns
+    -------
+    list[str]
+        Metadata table names checked or created.
+
+    Notes
+    -----
+    The steward table is intentionally created empty. Populate it with real,
+    public-safe organization data before using the intake form; this helper
+    never seeds fake people.
+    """
+    _ensure_delta_table(spark, config, env, DATA_AGREEMENT_TABLE, DATA_AGREEMENT_FIELDS)
+    _ensure_delta_table(spark, config, env, DATA_STEWARD_TABLE, DATA_STEWARD_FIELDS)
+    return [DATA_AGREEMENT_TABLE, DATA_STEWARD_TABLE]
+
+
+def parse_contract_version(version: Any) -> tuple[int, int, int]:
+    """Parse a semantic contract version into a comparable tuple."""
+    try:
+        parts = str(version or "").strip().split(".")
+        return tuple(int(parts[index]) if index < len(parts) else 0 for index in range(3))  # type: ignore[return-value]
+    except (TypeError, ValueError):
+        return (0, 0, 0)
+
+
+def next_minor_version(version: Any) -> str:
+    """Return the next minor contract version, defaulting invalid input to ``1.0.0``."""
+    major, minor, _ = parse_contract_version(version)
+    return "1.0.0" if major == 0 else f"{major}.{minor + 1}.0"
+
+
+def latest_agreement_versions(rows: Any) -> list[dict[str, Any]]:
+    """Return only the latest contract version for each stable agreement ID.
+
+    Parameters
+    ----------
+    rows : iterable | pyspark.sql.DataFrame
+        Agreement rows or a Spark DataFrame containing agreement rows.
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Latest row per ``agreement_id``, sorted for deterministic dropdowns.
+    """
+    latest: dict[str, dict[str, Any]] = {}
+    for row in _coerce_row_dicts(rows):
+        agreement_id = str(row.get("agreement_id") or "").strip()
+        if agreement_id and (
+            agreement_id not in latest
+            or parse_contract_version(row.get("contract_version"))
+            > parse_contract_version(latest[agreement_id].get("contract_version"))
+        ):
+            latest[agreement_id] = row
+    return sorted(latest.values(), key=lambda row: (
+        str(row.get("agreement_name") or "").lower(),
+        str(row.get("source_system") or "").lower(),
+        str(row.get("allowed_consumer_type") or "").lower(),
+    ))
+
+
+def load_agreements(config: Any, env: str, *, spark_session: Any = None, missing_ok: bool = False) -> list[dict[str, Any]]:
+    """Load latest versioned agreements from the configured metadata lakehouse.
+
+    Parameters
+    ----------
+    config : FrameworkConfig | dict
+        Framework config with the metadata lakehouse route.
+    env : str
+        Environment key configured by ``00_env_config``.
+    spark_session : pyspark.sql.SparkSession, optional
+        Explicit Spark session. Fabric notebooks may omit it.
+    missing_ok : bool, default=False
+        Return an empty list instead of raising when the table is absent.
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Latest row for each ``agreement_id``.
+    """
+    try:
+        rows = read_lakehouse_table(config, env, "metadata", DATA_AGREEMENT_TABLE, spark_session=spark_session)
+    except Exception as exc:
         if missing_ok:
             return []
-        raise RuntimeError("No agreements found. Run 01_da first.")
-    picked = []
-    for row in _latest_distinct_agreements(rows):
-        picked.append(
-            {
-                "agreement_id": row.get("agreement_id"),
-                "agreement_name": row.get("agreement_name") or row.get("agreement_id"),
-                "approved_usage": row.get("approved_usage") or row.get("scope_of_use") or "",
-                "business_context": row.get("business_context") or row.get("purpose") or "",
-                "ownership": row.get("ownership") or row.get("data_steward_name") or "",
-                "updated_at": row.get("updated_at"),
-                "approved_at": row.get("approved_at"),
-                "committed_at": row.get("committed_at"),
-            }
+        raise RuntimeError("No agreements found. Run 01_da first.") from exc
+    return latest_agreement_versions(rows)
+
+
+def agreement_dropdown_options(rows: Any, *, include_prompt: bool = False) -> list[tuple[str, Any]]:
+    """Build selector options that preserve stable and version keys.
+
+    Parameters
+    ----------
+    rows : iterable | pyspark.sql.DataFrame
+        Agreement rows. Only the latest version per ``agreement_id`` is shown.
+    include_prompt : bool, default=False
+        Add an initial empty selection prompt for update-mode forms.
+
+    Returns
+    -------
+    list[tuple[str, Any]]
+        Display-label and agreement-row pairs suitable for ``ipywidgets``.
+    """
+    options: list[tuple[str, Any]] = []
+    if include_prompt:
+        options.append(("Select an agreement to update...", None))
+    for row in latest_agreement_versions(rows):
+        label = (
+            f"{row.get('agreement_name', '')} (Latest v{row.get('contract_version', '')}) - "
+            f"{row.get('source_system', '')} / {row.get('allowed_consumer_type', '')} - "
+            f"{row.get('data_steward_name', '')}"
         )
-    return picked
+        options.append((label, row))
+    return options
 
 
-def _agreement_option_label(row: dict[str, Any]) -> str:
-    name = row.get("agreement_name") or row.get("agreement_id") or "unknown"
-    agreement_id = row.get("agreement_id") or "unknown"
-    approved_usage = row.get("approved_usage") or ""
-    return f"{name} | {agreement_id} | {approved_usage}"
+def select_agreement(agreement_rows_or_df: Any) -> Any:
+    """Render an ``ipywidgets`` selector and retain the selected agreement version.
 
+    Parameters
+    ----------
+    agreement_rows_or_df : iterable | pyspark.sql.DataFrame
+        Agreement rows, normally returned by :func:`load_agreements`.
 
-def select_agreement(agreement_rows_or_df) -> None:
-    """Render a widget dropdown and store selected agreement metadata row in module state."""
+    Returns
+    -------
+    ipywidgets.Dropdown
+        Rendered selector. The selected row is also retained for
+        :func:`get_selected_agreement`.
+    """
     import ipywidgets as widgets
-    from IPython.display import display
+    import IPython.display as ip_display
 
     global _SELECTED_AGREEMENT
-    rows = _coerce_row_dicts(agreement_rows_or_df)
-    if not rows:
-        raise ValueError("No agreements found. Save a data agreement in notebook 01 first.")
-    options = [(_agreement_option_label(r), r) for r in rows]
+    options = agreement_dropdown_options(agreement_rows_or_df)
+    if not options:
+        raise ValueError("No agreements found. Save a data agreement in notebook 01_da first.")
     dropdown = widgets.Dropdown(options=options, description="Agreement", layout=widgets.Layout(width="1000px"))
 
-    def _on_change(change):
+    def _on_change(change: dict[str, Any]) -> None:
+        global _SELECTED_AGREEMENT
         if change.get("name") == "value" and change.get("new") is not None:
             _SELECTED_AGREEMENT = dict(change["new"])
-            globals()["_SELECTED_AGREEMENT"] = _SELECTED_AGREEMENT
 
-    dropdown.observe(_on_change)
+    dropdown.observe(_on_change, names="value")
     _SELECTED_AGREEMENT = dict(options[0][1])
-    display(dropdown)
+    ip_display.display(dropdown)
+    return dropdown
 
 
 def get_selected_agreement() -> dict[str, Any]:
-    """Return selected agreement from widget flow."""
+    """Return the selected agreement row, including its stable and version keys.
+
+    Returns
+    -------
+    dict[str, Any]
+        Selected latest-version agreement row.
+
+    Raises
+    ------
+    RuntimeError
+        If :func:`select_agreement` has not established a selection.
+    """
     if not _SELECTED_AGREEMENT:
         raise RuntimeError("No agreement selected. Run select_agreement(...) and pick an agreement first.")
     return dict(_SELECTED_AGREEMENT)
 
 
-def _non_empty_options(
-    options: list[str] | None, *, default: list[str] | None = None, field_name: str = "options"
-) -> list[str]:
-    selected = default if options is None else options
-    values = [str(value).strip() for value in selected or [] if str(value).strip()]
-    if not values:
-        raise ValueError(f"{field_name} must include at least one non-empty value.")
-    return values
-
-
-def _agreement_widget_specs(
-    *,
-    sensitivity_labels: list[str] | None = None,
-    departments: list[str] | None = None,
-    source_systems: list[str] | None = None,
-    refresh_frequencies: list[str] | None = None,
-    default_values: dict[str, str] | None = None,
-) -> list[dict[str, Any]]:
-    defaults = {key: str(value) for key, value in (default_values or {}).items()}
-    specs: list[dict[str, Any]] = []
-    dropdowns = {
-        **_DROPDOWN_DESCRIPTIONS,
-        "sensitivity_label": _non_empty_options(
-            sensitivity_labels, default=DEFAULT_SENSITIVITY_LABELS, field_name="sensitivity_labels"
-        ),
-        "refresh_frequency": _non_empty_options(
-            refresh_frequencies, default=DEFAULT_REFRESH_FREQUENCIES, field_name="refresh_frequencies"
-        ),
-    }
-    if departments is not None:
-        dropdowns["department"] = _non_empty_options(departments, field_name="departments")
-    if source_systems is not None:
-        dropdowns["source_system"] = _non_empty_options(source_systems, field_name="source_systems")
-
-    for field_name in _AGREEMENT_WIDGET_FIELDS:
-        default_value = defaults.get(field_name, "")
-        if field_name in dropdowns:
-            options = list(dropdowns[field_name])
-            if not default_value or default_value not in options:
-                default_value = options[0]
-            specs.append({"name": field_name, "kind": "dropdown", "default": default_value, "options": options})
-        else:
-            specs.append({"name": field_name, "kind": "text", "default": default_value})
-    return specs
-
-
-def _get_fabric_widgets() -> Any:
-    for module_name in ("notebookutils", "mssparkutils"):
-        try:
-            module = __import__(module_name)
-        except Exception:
-            continue
-        widgets = getattr(module, "widgets", None)
-        if widgets is not None:
-            return widgets
-    raise RuntimeError(
-        "Fabric notebook widgets are unavailable. Run this inside Fabric or provide widget values directly."
-    )
-
-
-def _widget_dropdown(widgets: Any, name: str, default_value: str, options: list[str]) -> None:
-    for args in ((name, default_value, options), (name, default_value, options, name)):
-        try:
-            widgets.dropdown(*args)
-            return
-        except TypeError:
-            continue
-    widgets.dropdown(name, default_value, options)
-
-
-def _widget_text(widgets: Any, name: str, default_value: str) -> None:
-    for args in ((name, default_value), (name, default_value, name)):
-        try:
-            widgets.text(*args)
-            return
-        except TypeError:
-            continue
-    widgets.text(name, default_value)
-
-
-def create_agreement_widgets(
-    *,
-    sensitivity_labels: list[str] | None = None,
-    departments: list[str] | None = None,
-    source_systems: list[str] | None = None,
-    refresh_frequencies: list[str] | None = None,
-    default_values: dict[str, str] | None = None,
-) -> None:
-    """Create Fabric widgets for data sharing agreement metadata capture.
+def load_active_data_steward_profiles(*, spark: Any, config: Any, env: str) -> list[dict[str, Any]]:
+    """Load active steward profiles from the configured metadata lakehouse.
 
     Parameters
     ----------
-    sensitivity_labels : list[str] | None, optional
-        Dropdown options for ``sensitivity_label``. Defaults to
-        ``["Public", "Confidential", "Restricted"]`` when omitted.
-    departments : list[str] | None, optional
-        Department dropdown options. When omitted, ``department`` is a free-text
-        widget.
-    source_systems : list[str] | None, optional
-        Source-system dropdown options. When omitted, ``source_system`` is a
-        free-text widget.
-    refresh_frequencies : list[str] | None, optional
-        Dropdown options for ``refresh_frequency``. Defaults to the canonical
-        FabricOps refresh-frequency list when omitted.
-    default_values : dict[str, str] | None, optional
-        Optional initial widget values keyed by widget field name.
-
-    Raises
-    ------
-    RuntimeError
-        If Fabric notebook widgets are unavailable.
-    ValueError
-        If a supplied option list is empty after trimming blank values.
-
-    Notes
-    -----
-    This function creates widgets for human-entered agreement metadata only.
-    Derived fields such as ``agreement_status`` and ``status_as_of_date`` are
-    intentionally not exposed as widgets.
-    """
-    widgets = _get_fabric_widgets()
-    for spec in _agreement_widget_specs(
-        sensitivity_labels=sensitivity_labels,
-        departments=departments,
-        source_systems=source_systems,
-        refresh_frequencies=refresh_frequencies,
-        default_values=default_values,
-    ):
-        if spec["kind"] == "dropdown":
-            _widget_dropdown(widgets, spec["name"], spec["default"], spec["options"])
-        else:
-            _widget_text(widgets, spec["name"], spec["default"])
-
-
-def _read_agreement_widget_values() -> dict[str, str]:
-    """Read agreement metadata values from Fabric notebook widgets.
+    spark : pyspark.sql.SparkSession
+        Active Fabric Spark session.
+    config : FrameworkConfig | dict
+        Framework config with a metadata lakehouse target.
+    env : str
+        Environment key configured by ``00_env_config``.
 
     Returns
     -------
-    dict[str, str]
-        Widget values keyed by agreement metadata field name.
+    list[dict[str, Any]]
+        Active steward rows prepared for dropdown rendering.
 
     Raises
     ------
-    RuntimeError
-        If Fabric notebook widgets are unavailable.
+    ValueError
+        If the steward table contains no active rows.
     """
-    widgets = _get_fabric_widgets()
-    return {field_name: str(widgets.get(field_name) or "").strip() for field_name in _AGREEMENT_WIDGET_FIELDS}
+    _ensure_delta_table(spark, config, env, DATA_STEWARD_TABLE, DATA_STEWARD_FIELDS)
+    rows = _coerce_row_dicts(read_lakehouse_table(config, env, "metadata", DATA_STEWARD_TABLE, spark_session=spark))
+    profiles = []
+    for row in rows:
+        if str(row.get("is_active") or "").strip().lower() != "true":
+            continue
+        profile = {field: row.get(field, "") for field in DATA_STEWARD_FIELDS if field not in {"is_active", "created_at", "updated_at"}}
+        profile["label"] = " | ".join(str(profile.get(field) or "") for field in ("data_steward_name", "domain", "department", "faculty"))
+        profiles.append(profile)
+    if not profiles:
+        raise ValueError(
+            f"{DATA_STEWARD_TABLE} has no active steward rows. Populate real steward profiles in the metadata lakehouse before creating a data agreement."
+        )
+    return profiles
 
 
-def _parse_date(value: date | datetime | str, *, field_name: str) -> date:
-    if isinstance(value, datetime):
-        return value.date()
-    if isinstance(value, date):
-        return value
+def _parse_required_date(value: Any, field_name: str) -> date:
     text = str(value or "").strip()
     if not text:
-        raise ValueError(f"{field_name} is required and must use YYYY-MM-DD format.")
+        raise ValueError(f"{field_name} is required.")
     try:
         return date.fromisoformat(text[:10])
     except ValueError as exc:
-        raise ValueError(f"{field_name} must be a valid date in YYYY-MM-DD format.") from exc
+        raise ValueError(f"{field_name} must be a valid date.") from exc
 
 
-def _normalize_optional_date(value: Any, *, field_name: str) -> str:
-    if value is None or str(value).strip() == "":
+def _derive_agreement_status(expiry_date: Any) -> dict[str, str]:
+    today = datetime.now(timezone.utc).date()
+    return {"agreement_status": "Active" if today <= _parse_required_date(expiry_date, "expiry_date") else "Inactive", "status_as_of_date": today.isoformat()}
+
+
+def _generate_agreement_id() -> str:
+    return "DA-" + datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S-%f")
+
+
+def _to_iso_date(value: Any) -> str:
+    if value is None:
         return ""
-    return _parse_date(value, field_name=field_name).isoformat()
+    return value.date().isoformat() if isinstance(value, datetime) else value.isoformat() if isinstance(value, date) else str(value)
 
 
-def _derive_agreement_status(
-    expiry_date: str,
-    *,
-    as_of_date: date | str | None = None,
-) -> dict[str, str]:
-    """Derive agreement status from an expiry date.
+def resolve_agreement_identity(rows: Any, *, agreement_name: str, source_system: str, allowed_consumer_type: str, mode: str = "create", selected_agreement: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Resolve a create-mode or update-mode append-only agreement identity.
 
     Parameters
     ----------
-    expiry_date : str
-        Agreement expiry date in ``YYYY-MM-DD`` format.
-    as_of_date : date | str | None, optional
-        Date used to evaluate the agreement. Defaults to the current UTC date.
+    rows : iterable | pyspark.sql.DataFrame
+        Existing agreement rows. Retained for caller compatibility and future
+        validation, but create mode intentionally does not reuse matching rows.
+    agreement_name, source_system, allowed_consumer_type : str
+        Human-entered identity fields retained on each agreement version.
+    mode : {"create", "update"}, default="create"
+        Intake operation. Create mode always generates a new stable ID and
+        ``1.0.0`` version. Update mode requires ``selected_agreement``.
+    selected_agreement : dict[str, Any], optional
+        Latest agreement row selected by update mode.
 
     Returns
     -------
-    dict[str, str]
-        Mapping with ``agreement_status`` set to ``"Active"`` or
-        ``"Inactive"`` and ``status_as_of_date`` in ISO date format.
+    dict[str, Any]
+        Stable ID, next version, and whether the agreement is new.
 
     Raises
     ------
     ValueError
-        If ``expiry_date`` or ``as_of_date`` cannot be parsed as dates.
+        If ``mode`` is invalid or update mode has no selected agreement.
     """
-    expiry = _parse_date(expiry_date, field_name="expiry_date")
-    as_of = (
-        _parse_date(as_of_date, field_name="as_of_date")
-        if as_of_date is not None
-        else datetime.now(timezone.utc).date()
-    )
-    return {
-        "agreement_status": "Active" if as_of <= expiry else "Inactive",
-        "status_as_of_date": as_of.isoformat(),
+    del rows, agreement_name, source_system, allowed_consumer_type
+    normalized_mode = str(mode or "").strip().lower()
+    if normalized_mode == "create":
+        return {"agreement_id": _generate_agreement_id(), "contract_version": "1.0.0", "is_new_agreement": True}
+    if normalized_mode != "update":
+        raise ValueError("mode must be either 'create' or 'update'.")
+    if not selected_agreement:
+        raise ValueError("Update mode requires selected_agreement.")
+    return {"agreement_id": selected_agreement["agreement_id"], "contract_version": next_minor_version(selected_agreement.get("contract_version")), "is_new_agreement": False}
+
+
+def collect_agreement_metadata(*, widget_values: dict[str, Any], mode: str = "create", existing_rows: Any = None, selected_agreement: dict[str, Any] | None = None, committed_by: str | None = None, committed_at: str | None = None, runtime_context: dict[str, Any] | None = None, config: Any = None, env: str | None = None) -> dict[str, Any]:
+    """Build one validated append-only agreement-version row from intake values.
+
+    Parameters
+    ----------
+    widget_values : dict[str, Any]
+        Human-entered values returned by :func:`read_agreement_form`.
+    mode : {"create", "update"}, default="create"
+        Intake operation. Create mode always creates a fresh agreement ID.
+    existing_rows : iterable | pyspark.sql.DataFrame, optional
+        Existing agreement versions available to the intake workflow.
+    selected_agreement : dict[str, Any], optional
+        Explicit latest row selected in update mode.
+    committed_by, committed_at : str, optional
+        Audit overrides, primarily for deterministic tests.
+    runtime_context : dict[str, Any], optional
+        Runtime context overrides merged over Fabric notebook context.
+    config : FrameworkConfig | dict, optional
+        Framework config used to record the configured metadata lakehouse name.
+    env : str, optional
+        Environment key paired with ``config``.
+
+    Returns
+    -------
+    dict[str, Any]
+        Validated ``agreement_row``, identity flag, and commit summary.
+    """
+    steward = dict(widget_values.get("data_steward_profile") or {})
+    values = {key: (_to_iso_date(value) if key in {"start_date", "expiry_date"} else str(value or "").strip()) for key, value in widget_values.items() if key != "data_steward_profile"}
+    agreement_rows = [] if existing_rows is None else existing_rows
+    identity = resolve_agreement_identity(agreement_rows, agreement_name=values.get("agreement_name", ""), source_system=values.get("source_system", ""), allowed_consumer_type=values.get("allowed_consumer_type", ""), mode=mode, selected_agreement=selected_agreement)
+    context = {**_runtime_context(), **(runtime_context or {})}
+    configured_lakehouse_name = ""
+    if config is not None and env is not None:
+        paths = config.path_config.paths if hasattr(config, "path_config") else config.paths
+        configured_lakehouse_name = str(paths[env]["metadata"].name)
+    row = {
+        **values, **identity,
+        "data_steward_name": str(steward.get("data_steward_name") or "").strip(),
+        "data_steward_email": str(steward.get("data_steward_email") or "").strip(),
+        "domain": str(steward.get("domain") or "").strip(), "department": str(steward.get("department") or "").strip(), "faculty": str(steward.get("faculty") or "").strip(),
+        **_derive_agreement_status(values.get("expiry_date")), "review_status": "Pending", "approved_by": "", "approved_at": "",
+        "committed_by": str(committed_by).strip() if committed_by and str(committed_by).strip() else str(_context_get(context, "userName", "userId") or "unknown"), "committed_at": committed_at or datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
+        "notebook_name": str(_context_get(context, "currentNotebookName", "notebookName") or "01_da_agreement_template"),
+        "workspace_name": str(_context_get(context, "currentWorkspaceName", "workspaceName") or ""), "lakehouse_name": str(_context_get(context, "lakehouseName") or configured_lakehouse_name), "run_id": str(_context_get(context, "activityId") or ""),
     }
-
-
-def _require_fields(values: dict[str, Any], required_fields: list[str]) -> None:
-    missing = [field for field in required_fields if not str(values.get(field) or "").strip()]
+    missing = [field for field in _REQUIRED_FIELDS if row.get(field) is None or (isinstance(row.get(field), str) and not row[field].strip())]
     if missing:
-        raise ValueError(f"Missing required agreement field(s): {', '.join(missing)}.")
+        raise ValueError("Missing required agreement field(s): " + ", ".join(missing))
+    if row["renewal_required"] not in YES_NO_OPTIONS:
+        raise ValueError("renewal_required must be Yes or No.")
+    agreement_row = {field: row.get(field, "") for field in DATA_AGREEMENT_FIELDS}
+    return {"agreement_row": agreement_row, "is_new_agreement": identity["is_new_agreement"], "summary": {**{key: agreement_row[key] for key in ("agreement_id", "contract_version", "agreement_status", "review_status", "expiry_date", "committed_by", "committed_at")}, "table_updated": DATA_AGREEMENT_TABLE}}
 
 
-def _validate_yes_no(values: dict[str, Any], fields: list[str]) -> None:
-    invalid = [
-        field
-        for field in fields
-        if str(values.get(field) or "").strip()
-        and str(values.get(field)).strip() not in YES_NO_OPTIONS
-    ]
-    if invalid:
-        raise ValueError(f"Agreement field(s) must be Yes or No: {', '.join(invalid)}.")
-
-
-def _resolve_committed_at(committed_at: datetime | str | None = None) -> str:
-    if committed_at is None:
-        return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
-    if isinstance(committed_at, datetime):
-        if committed_at.tzinfo is None:
-            committed_at = committed_at.replace(tzinfo=timezone.utc)
-        return committed_at.isoformat()
-    return str(committed_at)
-
-
-def _record_base(
-    widget_values: dict[str, str],
-    *,
-    committed_by: str | None,
-    committed_at: datetime | str | None,
-    runtime_context: dict[str, str] | None,
-) -> dict[str, Any]:
-    ctx = {str(k): v for k, v in (_runtime_context() | (runtime_context or {})).items()}
-
-    def context_value(*keys: str) -> str:
-        for key in keys:
-            value = ctx.get(key)
-            if value is not None and str(value).strip():
-                return str(value).strip()
-        return ""
-
-    return {
-        "agreement_id": str(widget_values.get("agreement_id") or "").strip(),
-        "commit_note": str(widget_values.get("commit_note") or "").strip(),
-        "committed_by": _resolve_action_by(committed_by),
-        "committed_at": _resolve_committed_at(committed_at),
-        "notebook_name": context_value("notebook_name", "currentNotebookName", "notebookName"),
-        "workspace_name": context_value("workspace_name", "currentWorkspaceName", "workspaceName"),
-        "lakehouse_name": context_value("lakehouse_name", "lakehouseName"),
-        "run_id": context_value("run_id", "activityId", "runId"),
-    }
-
-
-def _normalise_widget_values(widget_values: dict[str, str]) -> dict[str, str]:
-    values = {key: str(value or "").strip() for key, value in widget_values.items()}
-    _require_fields(values, _HEADER_REQUIRED_FIELDS)
-    _validate_yes_no(
-        values,
-        [
-            "renewal_required",
-            "contains_sensitive_data",
-            "dashboard_allowed",
-            "data_dump_allowed",
-            "self_service_extract_allowed",
-        ],
-    )
-    values["expiry_date"] = _parse_date(values["expiry_date"], field_name="expiry_date").isoformat()
-    values["start_date"] = _normalize_optional_date(values.get("start_date"), field_name="start_date")
-    values.update(_derive_agreement_status(values["expiry_date"]))
-    return values
-
-
-def _select_record_fields(record: dict[str, Any], fields: list[str]) -> dict[str, Any]:
-    return {field: record.get(field, "") for field in fields}
-
-
-def _build_agreement_record(record_type: str, values: dict[str, str], base: dict[str, Any]) -> dict[str, Any]:
-    record = {**values, **base}
-    if record_type == "header":
-        return _select_record_fields(record, _HEADER_FIELDS)
-    if record_type == "catalogue":
-        record["catalogue_id"] = (
-            values.get("catalogue_id")
-            or f"{values['agreement_id']}|{values.get('source_system', '')}|{values.get('source_table', '')}"
-        )
-        return _select_record_fields(record, _CATALOGUE_FIELDS)
-    if record_type == "scope":
-        record["scope_id"] = (
-            values.get("scope_id")
-            or f"{values['agreement_id']}|{values.get('allowed_consumer', '')}|{values.get('allowed_output_type', '')}"
-        )
-        return _select_record_fields(record, _SCOPE_FIELDS)
-    raise ValueError("record_type must be one of: header, catalogue, scope.")
-
-
-def collect_agreement_metadata(
-    *,
-    widget_values: dict[str, str] | None = None,
-    committed_by: str | None = None,
-    committed_at: datetime | str | None = None,
-    runtime_context: dict[str, str] | None = None,
-) -> dict[str, Any]:
-    """Collect widget values and build audited agreement metadata records.
+def commit_agreement_metadata(*, spark: Any, config: Any, env: str, agreement_metadata: dict[str, Any], mode: str = "append") -> dict[str, Any]:
+    """Append one agreement-version row by configured OneLake path.
 
     Parameters
     ----------
-    widget_values : dict[str, str] | None, optional
-        Optional pre-read values for tests or scripted use. When omitted,
-        values are read from Fabric notebook widgets.
-    committed_by : str | None, optional
-        Actor identity. When omitted, the Fabric runtime user is used when
-        available, then ``"unknown"``.
-    committed_at : datetime | str | None, optional
-        Shared commit timestamp for all generated records. Defaults to one
-        current UTC timestamp resolved once for this collection.
-    runtime_context : dict[str, str] | None, optional
-        Optional notebook/workspace/lakehouse/run identifiers to copy into all
-        generated records.
-
-    Returns
-    -------
-    dict[str, Any]
-        Dictionary containing ``header_record``, ``catalogue_record``,
-        ``scope_record``, and ``summary``.
-
-    Raises
-    ------
-    RuntimeError
-        If widget values are not supplied and Fabric notebook widgets are
-        unavailable.
-    ValueError
-        If required fields are missing, dates are invalid, or Yes/No fields use
-        another value.
-    """
-    raw_values = widget_values if widget_values is not None else _read_agreement_widget_values()
-    values = _normalise_widget_values(raw_values)
-    base = _record_base(
-        values,
-        committed_by=committed_by,
-        committed_at=_resolve_committed_at(committed_at),
-        runtime_context=runtime_context,
-    )
-    header_record = _build_agreement_record("header", values, base)
-    catalogue_record = _build_agreement_record("catalogue", values, base)
-    scope_record = _build_agreement_record("scope", values, base)
-    summary = {
-        "agreement_id": header_record.get("agreement_id", ""),
-        "agreement_status": header_record.get("agreement_status", ""),
-        "expiry_date": header_record.get("expiry_date", ""),
-        "status_as_of_date": header_record.get("status_as_of_date", ""),
-        "committed_by": header_record.get("committed_by", ""),
-        "committed_at": header_record.get("committed_at", ""),
-        "tables_updated": [],
-    }
-    return {
-        "header_record": header_record,
-        "catalogue_record": catalogue_record,
-        "scope_record": scope_record,
-        "summary": summary,
-    }
-
-
-def _safe_table_prefix(table_prefix: str | None) -> str:
-    prefix = str(table_prefix or "").strip().strip("._")
-    if not prefix:
-        return ""
-    return re.sub(r"[^0-9A-Za-z_]+", "_", prefix).strip("_").upper()
-
-
-def _write_record(spark: Any, record: dict[str, Any], table_name: str, *, metadata_lakehouse: Any, mode: str) -> None:
-    df = spark.createDataFrame([record])
-    if metadata_lakehouse is None:
-        df.write.format("delta").mode(mode).saveAsTable(table_name)
-        return
-
-    root = getattr(metadata_lakehouse, "root", None)
-    root = str(root if root is not None else metadata_lakehouse).rstrip("/")
-    df.write.format("delta").mode(mode).save(f"{root}/Tables/{table_name}")
-
-
-def commit_agreement_metadata(
-    *,
-    spark,
-    agreement_metadata: dict[str, Any] | None = None,
-    header_record: dict[str, Any] | None = None,
-    catalogue_record: dict[str, Any] | None = None,
-    scope_record: dict[str, Any] | None = None,
-    metadata_lakehouse: str | None = None,
-    table_prefix: str = "METADATA",
-    mode: str = "append",
-) -> dict[str, Any]:
-    """Commit agreement metadata records to append-friendly Delta tables.
-
-    Parameters
-    ----------
-    spark : object
-        Active Spark session used to create and write metadata DataFrames.
-    agreement_metadata : dict[str, Any] | None, optional
-        Result returned by :func:`collect_agreement_metadata`. When supplied,
-        its header, catalogue, and scope records are committed together.
-    header_record : dict[str, Any] | None, optional
-        Explicit agreement header record to write for advanced use or tests.
-    catalogue_record : dict[str, Any] | None, optional
-        Explicit catalogue record to write for advanced use or tests.
-    scope_record : dict[str, Any] | None, optional
-        Explicit scope record to write for advanced use or tests.
-    metadata_lakehouse : str | None, optional
-        Metadata lakehouse root path or ``FabricStore``. Pass
-        ``CONFIG.path_config.paths[env_name]["metadata"]`` in Fabric notebooks
-        to avoid default-lakehouse assumptions.
-    table_prefix : str, default="METADATA"
-        Logical table prefix used to create Lakehouse-safe table names such as
-        ``METADATA_AGREEMENT_HEADER``. Dots and other unsafe characters are
-        normalized to underscores.
+    spark : pyspark.sql.SparkSession
+        Active Fabric Spark session.
+    config : FrameworkConfig | dict
+        Framework config with the metadata lakehouse target.
+    env : str
+        Environment key configured by ``00_env_config``.
+    agreement_metadata : dict[str, Any]
+        Validated result from :func:`collect_agreement_metadata`.
     mode : str, default="append"
-        Spark write mode.
+        Write mode. Agreement versions intentionally support append only.
 
     Returns
     -------
     dict[str, Any]
-        Commit summary including agreement identity, status, audit values, and
-        the table names updated.
-
-    Notes
-    -----
-    When ``metadata_lakehouse`` is supplied, records are written to the
-    configured lakehouse ``Tables/`` path. If omitted, Spark ``saveAsTable`` is
-    used for compatibility with attached-lakehouse development scenarios.
+        Commit summary for the appended ``METADATA_DATA_AGREEMENT`` row.
     """
-    if agreement_metadata is not None:
-        header_record = agreement_metadata.get("header_record")
-        catalogue_record = agreement_metadata.get("catalogue_record")
-        scope_record = agreement_metadata.get("scope_record")
-    if not header_record:
-        raise ValueError("agreement_metadata or header_record is required.")
-    prefix = _safe_table_prefix(table_prefix)
-    table_names = {
-        "header": f"{prefix}_AGREEMENT_HEADER" if prefix else "AGREEMENT_HEADER",
-        "catalogue": f"{prefix}_AGREEMENT_CATALOGUE" if prefix else "AGREEMENT_CATALOGUE",
-        "scope": f"{prefix}_AGREEMENT_SCOPE" if prefix else "AGREEMENT_SCOPE",
+    if mode != "append":
+        raise ValueError("Agreement versions are append-only; mode must be 'append'.")
+    _ensure_delta_table(spark, config, env, DATA_AGREEMENT_TABLE, DATA_AGREEMENT_FIELDS)
+    row = dict(agreement_metadata["agreement_row"])
+    try:
+        columns = read_lakehouse_table(config, env, "metadata", DATA_AGREEMENT_TABLE, spark_session=spark).columns
+    except Exception:
+        columns = []
+    for column in columns:
+        row.setdefault(column, "")
+    write_lakehouse_table(spark.createDataFrame([row]), config, env, "metadata", DATA_AGREEMENT_TABLE, mode="append")
+    return dict(agreement_metadata["summary"])
+
+
+def create_agreement_form(*, spark: Any, config: Any, env: str, default_values: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Render the standalone ``01_da`` intake form with ``ipywidgets``.
+
+    Parameters
+    ----------
+    spark : pyspark.sql.SparkSession
+        Active Fabric Spark session.
+    config : FrameworkConfig
+        Framework config containing ``DataAgreementConfig`` widget defaults.
+    env : str
+        Environment key configured by ``00_env_config``.
+    default_values : dict[str, Any], optional
+        Per-form overrides merged over the ``01_da`` config defaults.
+
+    Returns
+    -------
+    dict[str, Any]
+        Named widgets, including mode, latest-version selector, and commit button.
+    """
+    import ipywidgets as widgets
+    import IPython.display as ip_display
+
+    intake = getattr(config, "data_agreement_config", None)
+    defaults = {**dict(getattr(intake, "default_values", {}) or {}), **(default_values or {})}
+    get_options = lambda name: list(getattr(intake, name, ()) or ())
+    profiles = load_active_data_steward_profiles(spark=spark, config=config, env=env)
+    latest = load_agreements(config, env, spark_session=spark, missing_ok=True)
+    steward_options = [(profile["label"], profile) for profile in profiles]
+    form: dict[str, Any] = {
+        "mode": widgets.Dropdown(options=["Create New Agreement", "Update Existing Agreement"], description="Mode"),
+        "existing_agreement": widgets.Dropdown(options=agreement_dropdown_options(latest, include_prompt=True), description="Existing"),
+        "agreement_identity": widgets.HTML(),
+        "agreement_name": widgets.Text(value=str(defaults.get("agreement_name", "")), description="Agreement Name"),
+        "data_steward_profile": widgets.Dropdown(options=steward_options, description="Data Steward"),
     }
-    _write_record(spark, header_record, table_names["header"], metadata_lakehouse=metadata_lakehouse, mode=mode)
-    updated = [table_names["header"]]
-    if catalogue_record is not None:
-        _write_record(
-            spark,
-            catalogue_record,
-            table_names["catalogue"],
-            metadata_lakehouse=metadata_lakehouse,
-            mode=mode,
-        )
-        updated.append(table_names["catalogue"])
-    if scope_record is not None:
-        _write_record(spark, scope_record, table_names["scope"], metadata_lakehouse=metadata_lakehouse, mode=mode)
-        updated.append(table_names["scope"])
-    return {
-        "agreement_id": header_record.get("agreement_id", ""),
-        "agreement_status": header_record.get("agreement_status", ""),
-        "expiry_date": header_record.get("expiry_date", ""),
-        "status_as_of_date": header_record.get("status_as_of_date", ""),
-        "committed_by": header_record.get("committed_by", ""),
-        "committed_at": header_record.get("committed_at", ""),
-        "tables_updated": updated,
-    }
+    for name in ("business_purpose", "approved_usage", "restricted_usage", "retention_expectation"):
+        form[name] = widgets.Textarea(value=str(defaults.get(name, "")), description=name.replace("_", " ").title())
+    option_fields = {"allowed_consumer_type": "allowed_consumer_types", "expected_output": "expected_outputs", "source_system": "source_systems", "refresh_frequency": "refresh_frequencies", "renewal_required": "renewal_options"}
+    for name, option_name in option_fields.items():
+        options = get_options(option_name)
+        form[name] = widgets.Dropdown(options=options, value=defaults.get(name) if defaults.get(name) in options else options[0], description=name.replace("_", " ").title())
+    form["start_date"] = widgets.DatePicker(value=defaults.get("start_date"), description="Start Date")
+    form["expiry_date"] = widgets.DatePicker(value=defaults.get("expiry_date"), description="Expiry Date")
+    form["commit_button"] = widgets.Button(description="Commit Agreement", button_style="success", icon="check")
+    form["output"] = widgets.Output()
+
+    def refresh(*_: Any) -> None:
+        selected = form["existing_agreement"].value
+        is_update = form["mode"].value == "Update Existing Agreement"
+        form["existing_agreement"].layout.display = "" if is_update else "none"
+        if not is_update:
+            form["agreement_identity"].value = "<b>Agreement Identity</b><br>New agreement: ID generated on commit; version 1.0.0"
+        elif not selected:
+            form["agreement_identity"].value = "<b>Agreement Identity</b><br>Select an existing agreement to continue."
+        else:
+            form["agreement_identity"].value = f"<b>Agreement Identity</b><br>ID: {escape(str(selected.get('agreement_id', '')))}<br>Latest: {escape(str(selected.get('contract_version', '')))}<br>Next: {next_minor_version(selected.get('contract_version'))}"
+    def prefill(*_: Any) -> None:
+        refresh()
+        selected = form["existing_agreement"].value
+        if form["mode"].value != "Update Existing Agreement" or not selected:
+            return
+        for name in ("agreement_name", "business_purpose", "approved_usage", "restricted_usage", "retention_expectation"):
+            form[name].value = selected.get(name) or ""
+        for name in ("allowed_consumer_type", "expected_output", "source_system", "refresh_frequency", "renewal_required"):
+            if selected.get(name) in list(form[name].options):
+                form[name].value = selected[name]
+        matching = [profile for _, profile in steward_options if all(str(profile.get(key) or "") == str(selected.get(key) or "") for key in ("data_steward_name", "data_steward_email", "domain", "department", "faculty"))]
+        if matching:
+            form["data_steward_profile"].value = matching[0]
+        for name in ("start_date", "expiry_date"):
+            if selected.get(name):
+                form[name].value = date.fromisoformat(str(selected[name])[:10])
+    form["mode"].observe(prefill, names="value")
+    form["existing_agreement"].observe(prefill, names="value")
+    refresh()
+    ip_display.display(widgets.HTML("<h3>Data Agreement Intake / Usage Boundary</h3>"), widgets.VBox(list(form.values())))
+    return form
+
+
+def read_agreement_form(form: dict[str, Any]) -> dict[str, Any]:
+    """Return human-entered values from an ``01_da`` intake form.
+
+    Parameters
+    ----------
+    form : dict[str, Any]
+        Form returned by :func:`create_agreement_form`.
+
+    Returns
+    -------
+    dict[str, Any]
+        Human-entered agreement values ready for collection and validation.
+    """
+    names = ["agreement_name", "data_steward_profile", "business_purpose", "approved_usage", "restricted_usage", "allowed_consumer_type", "expected_output", "source_system", "refresh_frequency", "retention_expectation", "start_date", "expiry_date", "renewal_required"]
+    return {name: form[name].value for name in names}

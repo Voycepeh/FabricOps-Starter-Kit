@@ -100,10 +100,10 @@ Captures human-approved data sharing agreement metadata as audited header, catal
   </thead>
   <tbody>
     <tr>
-      <td>`create_agreement_widgets`</td>
+      <td>`create_agreement_form`</td>
       <td>Callable orchestration wrapper</td>
-      <td>Create Fabric widgets for data sharing agreement metadata capture.</td>
-      <td>`_agreement_widget_specs`, `_get_fabric_widgets`, `_widget_dropdown`, `_widget_text`</td>
+      <td>Render the standalone ``01_da`` intake form with ``ipywidgets``.</td>
+      <td>—</td>
       <td>Check dependency outputs and metadata writes.</td>
     </tr>
   </tbody>
@@ -125,8 +125,8 @@ Captures human-approved data sharing agreement metadata as audited header, catal
     <tr>
       <td>`collect_agreement_metadata`</td>
       <td>Callable orchestration wrapper</td>
-      <td>Collect widget values and build audited agreement metadata records.</td>
-      <td>`_build_agreement_record`, `_normalise_widget_values`, `_read_agreement_widget_values`, `_record_base`, `_resolve_committed_at`</td>
+      <td>Build one validated append-only agreement-version row from intake values.</td>
+      <td>`_context_get`, `_derive_agreement_status`, `_runtime_context`, `_to_iso_date`</td>
       <td>Check dependency outputs and metadata writes.</td>
     </tr>
   </tbody>
@@ -148,8 +148,8 @@ Captures human-approved data sharing agreement metadata as audited header, catal
     <tr>
       <td>`commit_agreement_metadata`</td>
       <td>Callable orchestration wrapper</td>
-      <td>Commit agreement metadata records to append-friendly Delta tables.</td>
-      <td>`_safe_table_prefix`, `_write_record`</td>
+      <td>Append one agreement-version row by configured OneLake path.</td>
+      <td>`_ensure_delta_table`</td>
       <td>Check dependency outputs and metadata writes.</td>
     </tr>
   </tbody>

@@ -42,7 +42,7 @@ The table names below are the physical source metadata tables. The diagram then 
 
 | No. | Table                              | Grain                                                        | Why it exists                                                                                 |
 | --: | ---------------------------------- | ------------------------------------------------------------ | --------------------------------------------------------------------------------------------- |
-|   1 | `METADATA_AGREEMENT`               | One row per agreement version                                | Defines scope, owner, usage, restrictions, SLA, and contract anchor.                          |
+|   1 | `METADATA_DATA_AGREEMENT`               | One row per agreement version                                | Defines scope, owner, usage, restrictions, SLA, and contract anchor.                          |
 |   2 | `METADATA_DATA_CATALOGUE`          | One row per table per profiling run or latest table snapshot | Captures table-level catalogue and profile evidence from exploration or pipeline profiling.   |
 |   3 | `METADATA_COLUMN_BUSINESS_CONTEXT` | One row per table-column per approved version                | Stores approved business meaning, description, units, source/derivation, and glossary terms.  |
 |   4 | `METADATA_COLUMN_GOVERNANCE`       | One row per table-column per approved version                | Stores approved classification, PII, sensitivity, confidentiality, and handling requirements. |
@@ -51,6 +51,8 @@ The table names below are the physical source metadata tables. The diagram then 
 |   7 | `METADATA_DQ_RESULTS`              | One row per rule execution per run                           | Stores runtime result of approved DQ rules.                                                   |
 |   8 | `METADATA_DRIFT_RESULTS`           | One row per table per drift check                            | Stores schema, profile, and data drift evidence over time.                                    |
 |   9 | `METADATA_LINEAGE_EVENTS`          | One row per source-target table event                        | Stores source-to-target lineage and transformation evidence.                                  |
+
+`METADATA_DATA_STEWARD` is a setup/helper table rather than an additional contract-evidence table. It contains maintained steward profiles for the `01_da_*` intake dropdown. Setup creates it empty; teams must populate real rows and set `is_active = true` for selectable stewards.
 
 ## Notebook-driven model
 
@@ -95,26 +97,28 @@ flowchart LR
 | Notebook         | Responsibility                                                                 | Writes or updates                                                                                                             |
 | ---------------- | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
 | `00_env_config`  | Sets reusable environment context and supports notebook registration           | `METADATA_NOTEBOOK_REGISTRY` through `register_current_notebook()`                                                            |
-| `01_agreement_*` | Defines agreement scope, owners, usage, restrictions, and SLA expectations     | `METADATA_AGREEMENT`, `METADATA_NOTEBOOK_REGISTRY`                                                                            |
+| `01_da_*` | Defines agreement scope, owners, usage, restrictions, and SLA expectations     | `METADATA_DATA_AGREEMENT`, `METADATA_DATA_STEWARD`, `METADATA_NOTEBOOK_REGISTRY`                                                                            |
 | `02_ex_*`        | Profiles data, discovers structure, and suggests context/rules                 | `METADATA_DATA_CATALOGUE`, `METADATA_NOTEBOOK_REGISTRY`                                                                       |
 | `04_gov_*`       | Approves column-level business context and classifications                     | `METADATA_COLUMN_BUSINESS_CONTEXT`, `METADATA_COLUMN_GOVERNANCE`, `METADATA_NOTEBOOK_REGISTRY`                                |
 | `03_pc_*`        | Enforces approved DQ rules, validates pipeline outputs, captures drift/lineage | `METADATA_DQ_RULES`, `METADATA_DQ_RESULTS`, `METADATA_DRIFT_RESULTS`, `METADATA_LINEAGE_EVENTS`, `METADATA_NOTEBOOK_REGISTRY` |
 
 ## Table-by-table details
 
-Each source table owns one kind of metadata. Join keys may repeat across tables so the views can assemble evidence later, but descriptive fields should not be duplicated. For example, data_owner belongs to METADATA_AGREEMENT, row_count belongs to METADATA_DATA_CATALOGUE, approved_business_context belongs to METADATA_COLUMN_BUSINESS_CONTEXT, and pii_classification belongs to METADATA_COLUMN_GOVERNANCE.
+Each source table owns one kind of metadata. Join keys may repeat across tables so the views can assemble evidence later, but descriptive fields should not be duplicated. For example, agreement usage boundaries belong to METADATA_DATA_AGREEMENT, row_count belongs to METADATA_DATA_CATALOGUE, approved_business_context belongs to METADATA_COLUMN_BUSINESS_CONTEXT, and pii_classification belongs to METADATA_COLUMN_GOVERNANCE.
 
-### `METADATA_AGREEMENT`
+### `METADATA_DATA_AGREEMENT`
 
 **Why it exists:** This is the agreement-level contract anchor. It defines what the data product or data-sharing scope is, who owns it, what it can be used for, what restrictions apply, and what downstream metadata belongs to.
 
 **Grain:** One row per agreement version.
 
-**Primary key:** `agreement_id`, `agreement_version`.
+**Stable key:** `agreement_id`.
+
+**Version key:** `contract_version`.
 
 **Main foreign keys:** None required. Other tables reference `agreement_id`.
 
-**Main writer notebook:** `01_agreement_*`.
+**Main writer notebook:** `01_da_*`.
 
 **Main downstream use:** Scopes every catalogue, context, governance, rule, result, drift, lineage, and handover output.
 
@@ -122,8 +126,8 @@ Each source table owns one kind of metadata. Join keys may repeat across tables 
 
 | Column | Example value | Writer notebook/function | Status | Purpose |
 | --- | --- | --- | --- | --- |
-| agreement_id | lyra_deid_v1 | 01_agreement_* | Planned / partial | Stable agreement scope key |
-| agreement_version | 1 | 01_agreement_* | Planned | Version of the agreement |
+| agreement_id | DA-20260529-100000 | 01_da_* | Implemented | Stable agreement scope key |
+| contract_version | 1.0.0 | 01_da_* | Implemented | Append-only semantic agreement version |
 | agreement_name | LYRA De-identified Output Agreement | 01_agreement_* | Planned | Human-readable agreement name |
 | business_domain | Student analytics | 01_agreement_* | Planned | Domain or business area |
 | owning_team | ODI | 01_agreement_* | Planned | Team accountable for the agreement |

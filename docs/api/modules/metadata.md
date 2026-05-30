@@ -205,7 +205,7 @@ Owns metadata evidence persistence, stable keys, notebook registry, and contract
 <a class="reference-chip" href="../../reference/review_business_context/"><code>review_business_context</code></a>, <a class="reference-chip" href="../../reference/write_business_context/"><code>write_business_context</code></a>
 
 **data_agreement**
-<a class="reference-chip" href="../data_agreement/#_record_base"><code>_record_base</code></a>
+<a class="reference-chip" href="../../reference/collect_agreement_metadata/"><code>collect_agreement_metadata</code></a>
 
 **data_governance**
 <a class="reference-chip" href="../data_governance/#_approved_widget_rows"><code>_approved_widget_rows</code></a>, <a class="reference-chip" href="../../reference/review_governance/"><code>review_governance</code></a>
@@ -217,4 +217,3 @@ Owns metadata evidence persistence, stable keys, notebook registry, and contract
 
 **fabric_input_output**
 <a class="reference-chip" href="../../reference/write_lakehouse_table/"><code>write_lakehouse_table</code></a>
-

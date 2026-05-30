@@ -61,15 +61,15 @@ This view summarizes whether the agreement has enough approved metadata and runt
 
 | Output column | Example value | Source table | Source notebook/function | Purpose |
 | --- | --- | --- | --- | --- |
-| `agreement_id` | `lyra_deid_v1` | `METADATA_AGREEMENT` | `01_agreement_*` | Stable contract scope key |
-| `agreement_version` | `1` | `METADATA_AGREEMENT` | `01_agreement_*` | Identifies the approved agreement version |
-| `agreement_name` | `LYRA De-identified Output Agreement` | `METADATA_AGREEMENT` | `01_agreement_*` | Human-readable agreement name |
-| `business_domain` | `Student analytics` | `METADATA_AGREEMENT` | `01_agreement_*` | Business/domain context |
-| `data_owner` | `Registrar Office` | `METADATA_AGREEMENT` | `01_agreement_*` | Accountable owner |
-| `data_steward` | `Analytics Steward` | `METADATA_AGREEMENT` | `01_agreement_*` | Operational steward |
-| `approved_usage` | `Reporting and governed analytics` | `METADATA_AGREEMENT` | `01_agreement_*` | Allowed usage |
-| `access_boundaries` | `Internal approved users only` | `METADATA_AGREEMENT` | `01_agreement_*` | Access constraint summary |
-| `agreement_status` | `approved` | `METADATA_AGREEMENT` | `01_agreement_*` | Current agreement state |
+| `agreement_id` | `lyra_deid_v1` | `METADATA_DATA_AGREEMENT` | `01_da_*` | Stable contract scope key |
+| `contract_version` | `1` | `METADATA_DATA_AGREEMENT` | `01_da_*` | Identifies the approved agreement version |
+| `agreement_name` | `LYRA De-identified Output Agreement` | `METADATA_DATA_AGREEMENT` | `01_da_*` | Human-readable agreement name |
+| `business_domain` | `Student analytics` | `METADATA_DATA_AGREEMENT` | `01_da_*` | Business/domain context |
+| `data_owner` | `Registrar Office` | `METADATA_DATA_AGREEMENT` | `01_da_*` | Accountable owner |
+| `data_steward` | `Analytics Steward` | `METADATA_DATA_AGREEMENT` | `01_da_*` | Operational steward |
+| `approved_usage` | `Reporting and governed analytics` | `METADATA_DATA_AGREEMENT` | `01_da_*` | Allowed usage |
+| `access_boundaries` | `Internal approved users only` | `METADATA_DATA_AGREEMENT` | `01_da_*` | Access constraint summary |
+| `agreement_status` | `approved` | `METADATA_DATA_AGREEMENT` | `01_da_*` | Current agreement state |
 | `table_count` | `3` | `METADATA_DATA_CATALOGUE` | assembled view aggregation | Number of governed tables under the agreement |
 | `column_count` | `48` | `METADATA_DATA_CATALOGUE` | assembled view aggregation | Number of governed columns under the agreement |
 | `classified_column_count` | `48` | `METADATA_COLUMN_GOVERNANCE` | `04_gov_*` aggregation | Coverage of column classification |
@@ -89,7 +89,7 @@ This view summarizes whether the agreement has enough approved metadata and runt
 
 **Purpose:** Table-level contract health, dashboarding, and handover table section.
 
-**Sources:** `METADATA_AGREEMENT`, `METADATA_DATA_CATALOGUE`, `METADATA_DQ_RULES`, `METADATA_DQ_RESULTS`, `METADATA_DRIFT_RESULTS`, `METADATA_LINEAGE_EVENTS`, and `METADATA_NOTEBOOK_REGISTRY`.
+**Sources:** `METADATA_DATA_AGREEMENT`, `METADATA_DATA_CATALOGUE`, `METADATA_DQ_RULES`, `METADATA_DQ_RESULTS`, `METADATA_DRIFT_RESULTS`, `METADATA_LINEAGE_EVENTS`, and `METADATA_NOTEBOOK_REGISTRY`.
 
 **Example fields:** `agreement_id`, `table_name`, `dataset_name`, `row_count`, `column_count`, `profile_status`, `dq_rule_count`, `latest_dq_status`, `failed_rule_count`, `latest_drift_status`, `lineage_status`, `source_tables`, `target_table`, `last_profiled_at`, `last_validated_at`, `last_drift_checked_at`, `pipeline_notebook_url`, `overall_table_status`.
 
@@ -99,7 +99,7 @@ This view summarizes whether each table has the expected catalogue evidence, app
 
 | Output column | Example value | Source table | Source notebook/function | Purpose |
 | --- | --- | --- | --- | --- |
-| `agreement_id` | `lyra_deid_v1` | `METADATA_AGREEMENT` | `01_agreement_*` | Parent agreement key |
+| `agreement_id` | `lyra_deid_v1` | `METADATA_DATA_AGREEMENT` | `01_da_*` | Parent agreement key |
 | `dataset_name` | `lyra` | `METADATA_DATA_CATALOGUE` | `02_ex_*` | Dataset or data product name |
 | `table_name` | `res_output_lyra_deid_all_v1` | `METADATA_DATA_CATALOGUE` | `profile_dataframe()` | Governed table name |
 | `metadata_table_key` | hash value | `METADATA_DATA_CATALOGUE` | metadata helper / profiling writer | Stable table join key |
@@ -126,7 +126,7 @@ This view summarizes whether each table has the expected catalogue evidence, app
 
 **Purpose:** Column dictionary and column-level export detail.
 
-**Sources:** All relevant source tables, especially `METADATA_DATA_CATALOGUE`, `METADATA_COLUMN_BUSINESS_CONTEXT`, `METADATA_COLUMN_GOVERNANCE`, `METADATA_DQ_RULES`, `METADATA_DQ_RESULTS`, `METADATA_DRIFT_RESULTS`, `METADATA_LINEAGE_EVENTS`, `METADATA_NOTEBOOK_REGISTRY`, and `METADATA_AGREEMENT`.
+**Sources:** All relevant source tables, especially `METADATA_DATA_CATALOGUE`, `METADATA_COLUMN_BUSINESS_CONTEXT`, `METADATA_COLUMN_GOVERNANCE`, `METADATA_DQ_RULES`, `METADATA_DQ_RESULTS`, `METADATA_DRIFT_RESULTS`, `METADATA_LINEAGE_EVENTS`, `METADATA_NOTEBOOK_REGISTRY`, and `METADATA_DATA_AGREEMENT`.
 
 **Example fields:** `agreement_id`, `table_name`, `column_name`, `data_type`, `description`, `units`, `source_derivation`, `field_classification`, `pii_classification`, `confidentiality_label`, `sensitivity_label`, `allowed_values`, `business_rules`, `latest_dq_status`, `latest_drift_status`, `lineage_summary`, `profiled_at`, `approved_by`, `approved_at`, `evidence_notebook_url`.
 
@@ -136,7 +136,7 @@ This view is the column catalogue used by dashboards, data dictionaries, the han
 
 | Output column | Example value | Source table | Source notebook/function | Purpose |
 | --- | --- | --- | --- | --- |
-| `agreement_id` | `lyra_deid_v1` | `METADATA_AGREEMENT` | `01_agreement_*` | Parent agreement key |
+| `agreement_id` | `lyra_deid_v1` | `METADATA_DATA_AGREEMENT` | `01_da_*` | Parent agreement key |
 | `table_name` | `res_output_lyra_deid_all_v1` | `METADATA_DATA_CATALOGUE` | `profile_dataframe()` | Parent table |
 | `column_name` | `student_id` | `METADATA_DATA_CATALOGUE` | `profile_dataframe()` | Column name |
 | `metadata_column_key` | hash value | `METADATA_DATA_CATALOGUE` / metadata helper | profiling writer | Stable column join key |

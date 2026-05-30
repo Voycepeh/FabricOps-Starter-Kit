@@ -239,6 +239,20 @@
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
+    "fabricops_kit.config.DataAgreementConfig": {
+      "qualified_name": "fabricops_kit.config.DataAgreementConfig",
+      "short_name": "DataAgreementConfig",
+      "module": "config",
+      "callable": "DataAgreementConfig",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/config/DataAgreementConfig/",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [],
+      "used_by_count": 0,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
     "fabricops_kit.config.DatasetContractValidationError": {
       "qualified_name": "fabricops_kit.config.DatasetContractValidationError",
       "short_name": "DatasetContractValidationError",
@@ -733,62 +747,6 @@
       ],
       "internal_helper_count": 2
     },
-    "fabricops_kit.data_agreement._agreement_option_label": {
-      "qualified_name": "fabricops_kit.data_agreement._agreement_option_label",
-      "short_name": "_agreement_option_label",
-      "module": "data_agreement",
-      "callable": "_agreement_option_label",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_agreement/_agreement_option_label/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.data_agreement.select_agreement"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.data_agreement._agreement_widget_specs": {
-      "qualified_name": "fabricops_kit.data_agreement._agreement_widget_specs",
-      "short_name": "_agreement_widget_specs",
-      "module": "data_agreement",
-      "callable": "_agreement_widget_specs",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_agreement/_agreement_widget_specs/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.data_agreement._non_empty_options"
-      ],
-      "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.data_agreement.create_agreement_widgets"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [
-        "fabricops_kit.data_agreement._non_empty_options"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.data_agreement._build_agreement_record": {
-      "qualified_name": "fabricops_kit.data_agreement._build_agreement_record",
-      "short_name": "_build_agreement_record",
-      "module": "data_agreement",
-      "callable": "_build_agreement_record",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_agreement/_build_agreement_record/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.data_agreement._select_record_fields"
-      ],
-      "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.data_agreement.collect_agreement_metadata"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [
-        "fabricops_kit.data_agreement._select_record_fields"
-      ],
-      "internal_helper_count": 1
-    },
     "fabricops_kit.data_agreement._coerce_row_dicts": {
       "qualified_name": "fabricops_kit.data_agreement._coerce_row_dicts",
       "short_name": "_coerce_row_dicts",
@@ -799,10 +757,26 @@
       "calls": [],
       "calls_count": 0,
       "used_by": [
-        "fabricops_kit.data_agreement.load_agreements",
-        "fabricops_kit.data_agreement.select_agreement"
+        "fabricops_kit.data_agreement.latest_agreement_versions",
+        "fabricops_kit.data_agreement.load_active_data_steward_profiles"
       ],
       "used_by_count": 2,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.data_agreement._context_get": {
+      "qualified_name": "fabricops_kit.data_agreement._context_get",
+      "short_name": "_context_get",
+      "module": "data_agreement",
+      "callable": "_context_get",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_agreement/_context_get/",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.data_agreement.collect_agreement_metadata"
+      ],
+      "used_by_count": 1,
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
@@ -814,301 +788,122 @@
       "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_agreement/_derive_agreement_status/",
       "classification": "internal",
       "calls": [
-        "fabricops_kit.data_agreement._parse_date"
+        "fabricops_kit.data_agreement._parse_required_date"
       ],
       "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.data_agreement._normalise_widget_values"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [
-        "fabricops_kit.data_agreement._parse_date"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.data_agreement._get_fabric_widgets": {
-      "qualified_name": "fabricops_kit.data_agreement._get_fabric_widgets",
-      "short_name": "_get_fabric_widgets",
-      "module": "data_agreement",
-      "callable": "_get_fabric_widgets",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_agreement/_get_fabric_widgets/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.data_agreement._read_agreement_widget_values",
-        "fabricops_kit.data_agreement.create_agreement_widgets"
-      ],
-      "used_by_count": 2,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.data_agreement._latest_distinct_agreements": {
-      "qualified_name": "fabricops_kit.data_agreement._latest_distinct_agreements",
-      "short_name": "_latest_distinct_agreements",
-      "module": "data_agreement",
-      "callable": "_latest_distinct_agreements",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_agreement/_latest_distinct_agreements/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.data_agreement.load_agreements"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.data_agreement._non_empty_options": {
-      "qualified_name": "fabricops_kit.data_agreement._non_empty_options",
-      "short_name": "_non_empty_options",
-      "module": "data_agreement",
-      "callable": "_non_empty_options",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_agreement/_non_empty_options/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.data_agreement._agreement_widget_specs"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.data_agreement._normalise_widget_values": {
-      "qualified_name": "fabricops_kit.data_agreement._normalise_widget_values",
-      "short_name": "_normalise_widget_values",
-      "module": "data_agreement",
-      "callable": "_normalise_widget_values",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_agreement/_normalise_widget_values/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.data_agreement._derive_agreement_status",
-        "fabricops_kit.data_agreement._normalize_optional_date",
-        "fabricops_kit.data_agreement._parse_date",
-        "fabricops_kit.data_agreement._require_fields",
-        "fabricops_kit.data_agreement._validate_yes_no"
-      ],
-      "calls_count": 5,
       "used_by": [
         "fabricops_kit.data_agreement.collect_agreement_metadata"
       ],
       "used_by_count": 1,
       "internal_helpers_used": [
-        "fabricops_kit.data_agreement._derive_agreement_status",
-        "fabricops_kit.data_agreement._normalize_optional_date",
-        "fabricops_kit.data_agreement._parse_date",
-        "fabricops_kit.data_agreement._require_fields",
-        "fabricops_kit.data_agreement._validate_yes_no"
-      ],
-      "internal_helper_count": 5
-    },
-    "fabricops_kit.data_agreement._normalize_optional_date": {
-      "qualified_name": "fabricops_kit.data_agreement._normalize_optional_date",
-      "short_name": "_normalize_optional_date",
-      "module": "data_agreement",
-      "callable": "_normalize_optional_date",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_agreement/_normalize_optional_date/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.data_agreement._parse_date"
-      ],
-      "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.data_agreement._normalise_widget_values"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [
-        "fabricops_kit.data_agreement._parse_date"
+        "fabricops_kit.data_agreement._parse_required_date"
       ],
       "internal_helper_count": 1
     },
-    "fabricops_kit.data_agreement._parse_date": {
-      "qualified_name": "fabricops_kit.data_agreement._parse_date",
-      "short_name": "_parse_date",
+    "fabricops_kit.data_agreement._ensure_delta_table": {
+      "qualified_name": "fabricops_kit.data_agreement._ensure_delta_table",
+      "short_name": "_ensure_delta_table",
       "module": "data_agreement",
-      "callable": "_parse_date",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_agreement/_parse_date/",
+      "callable": "_ensure_delta_table",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_agreement/_ensure_delta_table/",
       "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
+      "calls": [
+        "fabricops_kit.data_agreement._table_path"
+      ],
+      "calls_count": 1,
       "used_by": [
-        "fabricops_kit.data_agreement._derive_agreement_status",
-        "fabricops_kit.data_agreement._normalise_widget_values",
-        "fabricops_kit.data_agreement._normalize_optional_date"
+        "fabricops_kit.data_agreement.commit_agreement_metadata",
+        "fabricops_kit.data_agreement.load_active_data_steward_profiles",
+        "fabricops_kit.data_agreement.setup_data_agreement_tables"
       ],
       "used_by_count": 3,
+      "internal_helpers_used": [
+        "fabricops_kit.data_agreement._table_path"
+      ],
+      "internal_helper_count": 1
+    },
+    "fabricops_kit.data_agreement._generate_agreement_id": {
+      "qualified_name": "fabricops_kit.data_agreement._generate_agreement_id",
+      "short_name": "_generate_agreement_id",
+      "module": "data_agreement",
+      "callable": "_generate_agreement_id",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_agreement/_generate_agreement_id/",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.data_agreement.resolve_agreement_identity"
+      ],
+      "used_by_count": 1,
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
-    "fabricops_kit.data_agreement._read_agreement_widget_values": {
-      "qualified_name": "fabricops_kit.data_agreement._read_agreement_widget_values",
-      "short_name": "_read_agreement_widget_values",
+    "fabricops_kit.data_agreement._parse_required_date": {
+      "qualified_name": "fabricops_kit.data_agreement._parse_required_date",
+      "short_name": "_parse_required_date",
       "module": "data_agreement",
-      "callable": "_read_agreement_widget_values",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_agreement/_read_agreement_widget_values/",
+      "callable": "_parse_required_date",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_agreement/_parse_required_date/",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.data_agreement._derive_agreement_status"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.data_agreement._table_path": {
+      "qualified_name": "fabricops_kit.data_agreement._table_path",
+      "short_name": "_table_path",
+      "module": "data_agreement",
+      "callable": "_table_path",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_agreement/_table_path/",
       "classification": "internal",
       "calls": [
-        "fabricops_kit.data_agreement._get_fabric_widgets"
+        "fabricops_kit.data_agreement.metadata_lakehouse_root"
       ],
       "calls_count": 1,
       "used_by": [
-        "fabricops_kit.data_agreement.collect_agreement_metadata"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [
-        "fabricops_kit.data_agreement._get_fabric_widgets"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.data_agreement._record_base": {
-      "qualified_name": "fabricops_kit.data_agreement._record_base",
-      "short_name": "_record_base",
-      "module": "data_agreement",
-      "callable": "_record_base",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_agreement/_record_base/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.data_agreement._resolve_committed_at",
-        "fabricops_kit.metadata._resolve_action_by",
-        "fabricops_kit.metadata._runtime_context"
-      ],
-      "calls_count": 3,
-      "used_by": [
-        "fabricops_kit.data_agreement.collect_agreement_metadata"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [
-        "fabricops_kit.data_agreement._resolve_committed_at"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.data_agreement._require_fields": {
-      "qualified_name": "fabricops_kit.data_agreement._require_fields",
-      "short_name": "_require_fields",
-      "module": "data_agreement",
-      "callable": "_require_fields",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_agreement/_require_fields/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.data_agreement._normalise_widget_values"
+        "fabricops_kit.data_agreement._ensure_delta_table"
       ],
       "used_by_count": 1,
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
-    "fabricops_kit.data_agreement._resolve_committed_at": {
-      "qualified_name": "fabricops_kit.data_agreement._resolve_committed_at",
-      "short_name": "_resolve_committed_at",
+    "fabricops_kit.data_agreement._to_iso_date": {
+      "qualified_name": "fabricops_kit.data_agreement._to_iso_date",
+      "short_name": "_to_iso_date",
       "module": "data_agreement",
-      "callable": "_resolve_committed_at",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_agreement/_resolve_committed_at/",
+      "callable": "_to_iso_date",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_agreement/_to_iso_date/",
       "classification": "internal",
       "calls": [],
       "calls_count": 0,
       "used_by": [
-        "fabricops_kit.data_agreement._record_base",
         "fabricops_kit.data_agreement.collect_agreement_metadata"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.data_agreement.agreement_dropdown_options": {
+      "qualified_name": "fabricops_kit.data_agreement.agreement_dropdown_options",
+      "short_name": "agreement_dropdown_options",
+      "module": "data_agreement",
+      "callable": "agreement_dropdown_options",
+      "docs_url": "/FabricOps-Starter-Kit/reference/agreement_dropdown_options/",
+      "classification": "essential",
+      "calls": [
+        "fabricops_kit.data_agreement.latest_agreement_versions"
+      ],
+      "calls_count": 1,
+      "used_by": [
+        "fabricops_kit.data_agreement.create_agreement_form",
+        "fabricops_kit.data_agreement.select_agreement"
       ],
       "used_by_count": 2,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.data_agreement._safe_table_prefix": {
-      "qualified_name": "fabricops_kit.data_agreement._safe_table_prefix",
-      "short_name": "_safe_table_prefix",
-      "module": "data_agreement",
-      "callable": "_safe_table_prefix",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_agreement/_safe_table_prefix/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.data_agreement.commit_agreement_metadata"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.data_agreement._select_record_fields": {
-      "qualified_name": "fabricops_kit.data_agreement._select_record_fields",
-      "short_name": "_select_record_fields",
-      "module": "data_agreement",
-      "callable": "_select_record_fields",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_agreement/_select_record_fields/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.data_agreement._build_agreement_record"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.data_agreement._validate_yes_no": {
-      "qualified_name": "fabricops_kit.data_agreement._validate_yes_no",
-      "short_name": "_validate_yes_no",
-      "module": "data_agreement",
-      "callable": "_validate_yes_no",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_agreement/_validate_yes_no/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.data_agreement._normalise_widget_values"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.data_agreement._widget_dropdown": {
-      "qualified_name": "fabricops_kit.data_agreement._widget_dropdown",
-      "short_name": "_widget_dropdown",
-      "module": "data_agreement",
-      "callable": "_widget_dropdown",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_agreement/_widget_dropdown/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.data_agreement.create_agreement_widgets"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.data_agreement._widget_text": {
-      "qualified_name": "fabricops_kit.data_agreement._widget_text",
-      "short_name": "_widget_text",
-      "module": "data_agreement",
-      "callable": "_widget_text",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_agreement/_widget_text/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.data_agreement.create_agreement_widgets"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.data_agreement._write_record": {
-      "qualified_name": "fabricops_kit.data_agreement._write_record",
-      "short_name": "_write_record",
-      "module": "data_agreement",
-      "callable": "_write_record",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_agreement/_write_record/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.data_agreement.commit_agreement_metadata"
-      ],
-      "used_by_count": 1,
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
@@ -1120,23 +915,21 @@
       "docs_url": "/FabricOps-Starter-Kit/reference/collect_agreement_metadata/",
       "classification": "essential",
       "calls": [
-        "fabricops_kit.data_agreement._build_agreement_record",
-        "fabricops_kit.data_agreement._normalise_widget_values",
-        "fabricops_kit.data_agreement._read_agreement_widget_values",
-        "fabricops_kit.data_agreement._record_base",
-        "fabricops_kit.data_agreement._resolve_committed_at"
+        "fabricops_kit.data_agreement._context_get",
+        "fabricops_kit.data_agreement._derive_agreement_status",
+        "fabricops_kit.data_agreement._to_iso_date",
+        "fabricops_kit.data_agreement.resolve_agreement_identity",
+        "fabricops_kit.metadata._runtime_context"
       ],
       "calls_count": 5,
       "used_by": [],
       "used_by_count": 0,
       "internal_helpers_used": [
-        "fabricops_kit.data_agreement._build_agreement_record",
-        "fabricops_kit.data_agreement._normalise_widget_values",
-        "fabricops_kit.data_agreement._read_agreement_widget_values",
-        "fabricops_kit.data_agreement._record_base",
-        "fabricops_kit.data_agreement._resolve_committed_at"
+        "fabricops_kit.data_agreement._context_get",
+        "fabricops_kit.data_agreement._derive_agreement_status",
+        "fabricops_kit.data_agreement._to_iso_date"
       ],
-      "internal_helper_count": 5
+      "internal_helper_count": 3
     },
     "fabricops_kit.data_agreement.commit_agreement_metadata": {
       "qualified_name": "fabricops_kit.data_agreement.commit_agreement_metadata",
@@ -1146,41 +939,36 @@
       "docs_url": "/FabricOps-Starter-Kit/reference/commit_agreement_metadata/",
       "classification": "essential",
       "calls": [
-        "fabricops_kit.data_agreement._safe_table_prefix",
-        "fabricops_kit.data_agreement._write_record"
+        "fabricops_kit.data_agreement._ensure_delta_table",
+        "fabricops_kit.fabric_input_output.read_lakehouse_table",
+        "fabricops_kit.fabric_input_output.write_lakehouse_table"
       ],
-      "calls_count": 2,
+      "calls_count": 3,
       "used_by": [],
       "used_by_count": 0,
       "internal_helpers_used": [
-        "fabricops_kit.data_agreement._safe_table_prefix",
-        "fabricops_kit.data_agreement._write_record"
+        "fabricops_kit.data_agreement._ensure_delta_table"
       ],
-      "internal_helper_count": 2
+      "internal_helper_count": 1
     },
-    "fabricops_kit.data_agreement.create_agreement_widgets": {
-      "qualified_name": "fabricops_kit.data_agreement.create_agreement_widgets",
-      "short_name": "create_agreement_widgets",
+    "fabricops_kit.data_agreement.create_agreement_form": {
+      "qualified_name": "fabricops_kit.data_agreement.create_agreement_form",
+      "short_name": "create_agreement_form",
       "module": "data_agreement",
-      "callable": "create_agreement_widgets",
-      "docs_url": "/FabricOps-Starter-Kit/reference/create_agreement_widgets/",
+      "callable": "create_agreement_form",
+      "docs_url": "/FabricOps-Starter-Kit/reference/create_agreement_form/",
       "classification": "essential",
       "calls": [
-        "fabricops_kit.data_agreement._agreement_widget_specs",
-        "fabricops_kit.data_agreement._get_fabric_widgets",
-        "fabricops_kit.data_agreement._widget_dropdown",
-        "fabricops_kit.data_agreement._widget_text"
+        "fabricops_kit.data_agreement.agreement_dropdown_options",
+        "fabricops_kit.data_agreement.load_active_data_steward_profiles",
+        "fabricops_kit.data_agreement.load_agreements",
+        "fabricops_kit.data_agreement.next_minor_version"
       ],
       "calls_count": 4,
       "used_by": [],
       "used_by_count": 0,
-      "internal_helpers_used": [
-        "fabricops_kit.data_agreement._agreement_widget_specs",
-        "fabricops_kit.data_agreement._get_fabric_widgets",
-        "fabricops_kit.data_agreement._widget_dropdown",
-        "fabricops_kit.data_agreement._widget_text"
-      ],
-      "internal_helper_count": 4
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
     },
     "fabricops_kit.data_agreement.get_selected_agreement": {
       "qualified_name": "fabricops_kit.data_agreement.get_selected_agreement",
@@ -1196,6 +984,51 @@
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
+    "fabricops_kit.data_agreement.latest_agreement_versions": {
+      "qualified_name": "fabricops_kit.data_agreement.latest_agreement_versions",
+      "short_name": "latest_agreement_versions",
+      "module": "data_agreement",
+      "callable": "latest_agreement_versions",
+      "docs_url": "/FabricOps-Starter-Kit/reference/latest_agreement_versions/",
+      "classification": "essential",
+      "calls": [
+        "fabricops_kit.data_agreement._coerce_row_dicts",
+        "fabricops_kit.data_agreement.parse_contract_version"
+      ],
+      "calls_count": 2,
+      "used_by": [
+        "fabricops_kit.data_agreement.agreement_dropdown_options",
+        "fabricops_kit.data_agreement.load_agreements"
+      ],
+      "used_by_count": 2,
+      "internal_helpers_used": [
+        "fabricops_kit.data_agreement._coerce_row_dicts"
+      ],
+      "internal_helper_count": 1
+    },
+    "fabricops_kit.data_agreement.load_active_data_steward_profiles": {
+      "qualified_name": "fabricops_kit.data_agreement.load_active_data_steward_profiles",
+      "short_name": "load_active_data_steward_profiles",
+      "module": "data_agreement",
+      "callable": "load_active_data_steward_profiles",
+      "docs_url": "/FabricOps-Starter-Kit/reference/load_active_data_steward_profiles/",
+      "classification": "essential",
+      "calls": [
+        "fabricops_kit.data_agreement._coerce_row_dicts",
+        "fabricops_kit.data_agreement._ensure_delta_table",
+        "fabricops_kit.fabric_input_output.read_lakehouse_table"
+      ],
+      "calls_count": 3,
+      "used_by": [
+        "fabricops_kit.data_agreement.create_agreement_form"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [
+        "fabricops_kit.data_agreement._coerce_row_dicts",
+        "fabricops_kit.data_agreement._ensure_delta_table"
+      ],
+      "internal_helper_count": 2
+    },
     "fabricops_kit.data_agreement.load_agreements": {
       "qualified_name": "fabricops_kit.data_agreement.load_agreements",
       "short_name": "load_agreements",
@@ -1204,17 +1037,103 @@
       "docs_url": "/FabricOps-Starter-Kit/reference/load_agreements/",
       "classification": "essential",
       "calls": [
-        "fabricops_kit.data_agreement._coerce_row_dicts",
-        "fabricops_kit.data_agreement._latest_distinct_agreements"
+        "fabricops_kit.data_agreement.latest_agreement_versions",
+        "fabricops_kit.fabric_input_output.read_lakehouse_table"
       ],
       "calls_count": 2,
+      "used_by": [
+        "fabricops_kit.data_agreement.create_agreement_form"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.data_agreement.metadata_lakehouse_root": {
+      "qualified_name": "fabricops_kit.data_agreement.metadata_lakehouse_root",
+      "short_name": "metadata_lakehouse_root",
+      "module": "data_agreement",
+      "callable": "metadata_lakehouse_root",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_agreement/metadata_lakehouse_root/",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.data_agreement._table_path"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.data_agreement.next_minor_version": {
+      "qualified_name": "fabricops_kit.data_agreement.next_minor_version",
+      "short_name": "next_minor_version",
+      "module": "data_agreement",
+      "callable": "next_minor_version",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_agreement/next_minor_version/",
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.data_agreement.parse_contract_version"
+      ],
+      "calls_count": 1,
+      "used_by": [
+        "fabricops_kit.data_agreement.create_agreement_form",
+        "fabricops_kit.data_agreement.resolve_agreement_identity"
+      ],
+      "used_by_count": 2,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.data_agreement.parse_contract_version": {
+      "qualified_name": "fabricops_kit.data_agreement.parse_contract_version",
+      "short_name": "parse_contract_version",
+      "module": "data_agreement",
+      "callable": "parse_contract_version",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_agreement/parse_contract_version/",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.data_agreement.latest_agreement_versions",
+        "fabricops_kit.data_agreement.next_minor_version"
+      ],
+      "used_by_count": 2,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.data_agreement.read_agreement_form": {
+      "qualified_name": "fabricops_kit.data_agreement.read_agreement_form",
+      "short_name": "read_agreement_form",
+      "module": "data_agreement",
+      "callable": "read_agreement_form",
+      "docs_url": "/FabricOps-Starter-Kit/reference/read_agreement_form/",
+      "classification": "essential",
+      "calls": [],
+      "calls_count": 0,
       "used_by": [],
       "used_by_count": 0,
-      "internal_helpers_used": [
-        "fabricops_kit.data_agreement._coerce_row_dicts",
-        "fabricops_kit.data_agreement._latest_distinct_agreements"
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.data_agreement.resolve_agreement_identity": {
+      "qualified_name": "fabricops_kit.data_agreement.resolve_agreement_identity",
+      "short_name": "resolve_agreement_identity",
+      "module": "data_agreement",
+      "callable": "resolve_agreement_identity",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_agreement/resolve_agreement_identity/",
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.data_agreement._generate_agreement_id",
+        "fabricops_kit.data_agreement.next_minor_version"
       ],
-      "internal_helper_count": 2
+      "calls_count": 2,
+      "used_by": [
+        "fabricops_kit.data_agreement.collect_agreement_metadata"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [
+        "fabricops_kit.data_agreement._generate_agreement_id"
+      ],
+      "internal_helper_count": 1
     },
     "fabricops_kit.data_agreement.select_agreement": {
       "qualified_name": "fabricops_kit.data_agreement.select_agreement",
@@ -1224,17 +1143,31 @@
       "docs_url": "/FabricOps-Starter-Kit/reference/select_agreement/",
       "classification": "essential",
       "calls": [
-        "fabricops_kit.data_agreement._agreement_option_label",
-        "fabricops_kit.data_agreement._coerce_row_dicts"
+        "fabricops_kit.data_agreement.agreement_dropdown_options"
       ],
-      "calls_count": 2,
+      "calls_count": 1,
+      "used_by": [],
+      "used_by_count": 0,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.data_agreement.setup_data_agreement_tables": {
+      "qualified_name": "fabricops_kit.data_agreement.setup_data_agreement_tables",
+      "short_name": "setup_data_agreement_tables",
+      "module": "data_agreement",
+      "callable": "setup_data_agreement_tables",
+      "docs_url": "/FabricOps-Starter-Kit/reference/setup_data_agreement_tables/",
+      "classification": "essential",
+      "calls": [
+        "fabricops_kit.data_agreement._ensure_delta_table"
+      ],
+      "calls_count": 1,
       "used_by": [],
       "used_by_count": 0,
       "internal_helpers_used": [
-        "fabricops_kit.data_agreement._agreement_option_label",
-        "fabricops_kit.data_agreement._coerce_row_dicts"
+        "fabricops_kit.data_agreement._ensure_delta_table"
       ],
-      "internal_helper_count": 2
+      "internal_helper_count": 1
     },
     "fabricops_kit.data_governance._approved_widget_rows": {
       "qualified_name": "fabricops_kit.data_governance._approved_widget_rows",
@@ -3228,8 +3161,12 @@
         "fabricops_kit.fabric_input_output._get_spark"
       ],
       "calls_count": 2,
-      "used_by": [],
-      "used_by_count": 0,
+      "used_by": [
+        "fabricops_kit.data_agreement.commit_agreement_metadata",
+        "fabricops_kit.data_agreement.load_active_data_steward_profiles",
+        "fabricops_kit.data_agreement.load_agreements"
+      ],
+      "used_by_count": 3,
       "internal_helpers_used": [
         "fabricops_kit.fabric_input_output._get_spark"
       ],
@@ -3285,11 +3222,12 @@
       ],
       "calls_count": 1,
       "used_by": [
+        "fabricops_kit.data_agreement.commit_agreement_metadata",
         "fabricops_kit.data_quality.write_dq_rules",
         "fabricops_kit.fabric_input_output.seed_minimal_sample_source_table",
         "fabricops_kit.metadata.write_metadata_rows"
       ],
-      "used_by_count": 3,
+      "used_by_count": 4,
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
@@ -3459,14 +3397,13 @@
       ],
       "calls_count": 2,
       "used_by": [
-        "fabricops_kit.data_agreement._record_base",
         "fabricops_kit.data_governance._approved_widget_rows",
         "fabricops_kit.data_quality._build_dq_rule_deactivation_metadata_df",
         "fabricops_kit.data_quality._build_dq_rule_deactivations",
         "fabricops_kit.data_quality._build_dq_rule_history",
         "fabricops_kit.data_quality._build_dq_rules_metadata_df"
       ],
-      "used_by_count": 6,
+      "used_by_count": 5,
       "internal_helpers_used": [
         "fabricops_kit.metadata._context_get",
         "fabricops_kit.metadata._runtime_context"
@@ -3485,7 +3422,7 @@
       ],
       "calls_count": 1,
       "used_by": [
-        "fabricops_kit.data_agreement._record_base",
+        "fabricops_kit.data_agreement.collect_agreement_metadata",
         "fabricops_kit.metadata._resolve_action_by",
         "fabricops_kit.metadata.register_current_notebook"
       ],
@@ -4005,14 +3942,15 @@
       "inbound_count": 1
     },
     "data_agreement": {
-      "essential_count": 6,
+      "essential_count": 11,
       "optional_count": 0,
-      "internal_count": 21,
+      "internal_count": 8,
       "outbound_modules": [
+        "fabric_input_output",
         "metadata"
       ],
       "inbound_modules": [],
-      "outbound_count": 1,
+      "outbound_count": 2,
       "inbound_count": 0
     },
     "data_governance": {
@@ -4089,11 +4027,12 @@
         "config"
       ],
       "inbound_modules": [
+        "data_agreement",
         "data_quality",
         "metadata"
       ],
       "outbound_count": 1,
-      "inbound_count": 2
+      "inbound_count": 3
     },
     "handover": {
       "essential_count": 2,
