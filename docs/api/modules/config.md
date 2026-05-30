@@ -6,7 +6,7 @@
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 2</span><span class="reference-chip">Internal helpers: 13</span><span class="reference-chip">Outbound: 0</span><span class="reference-chip">Inbound: 1</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 1</span><span class="reference-chip">Internal helpers: 13</span><span class="reference-chip">Outbound: 0</span><span class="reference-chip">Inbound: 1</span></div>
 
 ## Module purpose
 
@@ -32,7 +32,7 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
     </tr>
     <tr>
       <td>Public callable count</td>
-      <td>2</td>
+      <td>1</td>
     </tr>
     <tr>
       <td>Internal helper count</td>
@@ -72,18 +72,11 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
   </thead>
   <tbody>
     <tr>
-      <td><a href="../../reference/load_config/"><code>load_config</code></a></td>
-      <td>Essential</td>
-      <td>function</td>
-      <td>Validate and return a user-supplied framework configuration.</td>
-      <td><a href="../../reference/internal/config/_validate_framework_config/"><code>_validate_framework_config</code></a> (internal)</td>
-    </tr>
-    <tr>
       <td><a href="../../reference/setup_notebook/"><code>setup_notebook</code></a></td>
       <td>Essential</td>
       <td>function</td>
       <td>Run consolidated FabricOps startup for exploration and pipeline notebooks.</td>
-      <td><a href="../../reference/internal/config/_get_store/"><code>_get_store</code></a> (internal), <a href="../../reference/internal/config/_run_config_smoke_tests/"><code>_run_config_smoke_tests</code></a> (internal)</td>
+      <td><a href="../../reference/internal/config/_get_store/"><code>_get_store</code></a> (internal), <a href="../../reference/internal/config/_run_config_smoke_tests/"><code>_run_config_smoke_tests</code></a> (internal), <a href="../../reference/internal/config/_validate_framework_config/"><code>_validate_framework_config</code></a> (internal)</td>
     </tr>
   </tbody>
 </table>
@@ -102,14 +95,9 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
 <h6>Public callables</h6>
 <ul class="callable-relationship-rows">
 <li>
-<a class="reference-chip" href="../../reference/load_config/"><code>load_config</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_validate_framework_config"><code>_validate_framework_config</code></a>
-</li>
-<li>
 <a class="reference-chip" href="../../reference/setup_notebook/"><code>setup_notebook</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_get_store"><code>_get_store</code></a>, <a class="reference-chip" href="#_run_config_smoke_tests"><code>_run_config_smoke_tests</code></a>, <a class="reference-chip" href="../../reference/load_config/"><code>load_config</code></a>
+<a class="reference-chip" href="#_get_store"><code>_get_store</code></a>, <a class="reference-chip" href="#_run_config_smoke_tests"><code>_run_config_smoke_tests</code></a>, <a class="reference-chip" href="#_validate_framework_config"><code>_validate_framework_config</code></a>
 </li>
 </ul>
 </section>
@@ -174,7 +162,7 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
     </tr>
     <tr>
       <td><a href="../../reference/internal/config/_validate_framework_config/"><code>_validate_framework_config</code></a></td>
-      <td><a href="../../reference/load_config/"><code>load_config</code></a></td>
+      <td><a href="../../reference/setup_notebook/"><code>setup_notebook</code></a></td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/config/_validate_notebook_name/"><code>_validate_notebook_name</code></a></td>
@@ -189,7 +177,7 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
 <li>
 <a class="reference-chip" href="#_bootstrap_fabric_env"><code>_bootstrap_fabric_env</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_get_fabric_runtime_metadata"><code>_get_fabric_runtime_metadata</code></a>, <a class="reference-chip" href="#_get_store"><code>_get_store</code></a>, <a class="reference-chip" href="#_run_config_smoke_tests"><code>_run_config_smoke_tests</code></a>, <a class="reference-chip" href="../../reference/load_config/"><code>load_config</code></a>
+<a class="reference-chip" href="#_get_fabric_runtime_metadata"><code>_get_fabric_runtime_metadata</code></a>, <a class="reference-chip" href="#_get_store"><code>_get_store</code></a>, <a class="reference-chip" href="#_run_config_smoke_tests"><code>_run_config_smoke_tests</code></a>, <a class="reference-chip" href="#_validate_framework_config"><code>_validate_framework_config</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_check_fabric_ai_functions_available"><code>_check_fabric_ai_functions_available</code></a>
@@ -239,7 +227,7 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
 ### External callers
 
 **fabric_input_output**
-<a class="reference-chip" href="../../reference/load_config/"><code>load_config</code></a>, <a class="reference-chip" href="../../reference/read_lakehouse_csv/"><code>read_lakehouse_csv</code></a>, <a class="reference-chip" href="../../reference/read_lakehouse_excel/"><code>read_lakehouse_excel</code></a>, <a class="reference-chip" href="../../reference/read_lakehouse_parquet/"><code>read_lakehouse_parquet</code></a>, <a class="reference-chip" href="../../reference/read_lakehouse_table/"><code>read_lakehouse_table</code></a>, <a class="reference-chip" href="../../reference/read_warehouse_table/"><code>read_warehouse_table</code></a>, <a class="reference-chip" href="../../reference/write_lakehouse_table/"><code>write_lakehouse_table</code></a>, <a class="reference-chip" href="../../reference/write_warehouse_table/"><code>write_warehouse_table</code></a>
+<a class="reference-chip" href="../../reference/read_lakehouse_csv/"><code>read_lakehouse_csv</code></a>, <a class="reference-chip" href="../../reference/read_lakehouse_excel/"><code>read_lakehouse_excel</code></a>, <a class="reference-chip" href="../../reference/read_lakehouse_parquet/"><code>read_lakehouse_parquet</code></a>, <a class="reference-chip" href="../../reference/read_lakehouse_table/"><code>read_lakehouse_table</code></a>, <a class="reference-chip" href="../../reference/read_warehouse_table/"><code>read_warehouse_table</code></a>, <a class="reference-chip" href="../../reference/write_lakehouse_table/"><code>write_lakehouse_table</code></a>, <a class="reference-chip" href="../../reference/write_warehouse_table/"><code>write_warehouse_table</code></a>
 
 ### External callees
 

@@ -11,7 +11,7 @@ from fabricops_kit.data_agreement import (
     DATA_AGREEMENT_FIELDS,
     DATA_AGREEMENT_TABLE,
     DATA_STEWARD_TABLE,
-    DATA_STEWARD_FIELDS,
+    _DATA_STEWARD_FIELDS,
     agreement_dropdown_options,
     collect_agreement_metadata,
     commit_agreement_metadata,
@@ -49,7 +49,7 @@ def test_agreement_and_steward_schemas_keep_durable_fields_only():
         "start_date", "expiry_date", "renewal_required", "_committed_by", "_committed_at",
         "_workspace_name", "_notebook_name", "_metadata_lakehouse_name", "_activity_id",
     ]
-    assert DATA_STEWARD_FIELDS == [
+    assert _DATA_STEWARD_FIELDS == [
         "steward_id", "data_steward_name", "data_steward_email", "domain", "department",
         "faculty", "effective_from", "effective_to", "is_active", "created_at", "updated_at",
     ]
@@ -221,6 +221,8 @@ def test_update_form_prefills_latest_selected_row(monkeypatch):
     config = SimpleNamespace(path_config=_config().path_config, data_agreement_config=intake)
     steward = {"label": "Configured steward | Ops | BI | Shared", "steward_id": "1", "data_steward_name": "Configured steward", "data_steward_email": "configured@example.com", "domain": "Ops", "department": "BI", "faculty": "Shared", "effective_from": "2020-01-01", "effective_to": ""}
     latest = {"agreement_id": "DA-1", "contract_version": "1.2.0", "agreement_name": "Latest orders", "steward_id": "1", "business_purpose": "Latest purpose", "approved_usage": "Latest usage", "restricted_usage": "Latest restriction", "retention_expectation": "Latest retention", "allowed_consumer_type": "Internal Department", "expected_output": "Dashboard", "source_system": "ERP", "refresh_frequency": "Daily", "renewal_required": "Yes", "start_date": "2026-01-01", "expiry_date": "2026-12-31"}
+    setup_calls = []
+    monkeypatch.setattr(data_agreement, "setup_data_agreement_tables", lambda **kwargs: setup_calls.append(kwargs) or {"status": "ready"})
     monkeypatch.setattr(data_agreement, "load_active_data_steward_profiles", lambda **kwargs: [steward])
     monkeypatch.setattr(data_agreement, "load_agreements", lambda *args, **kwargs: [latest])
     import sys
@@ -251,6 +253,7 @@ def test_update_form_prefills_latest_selected_row(monkeypatch):
     monkeypatch.setitem(sys.modules, "IPython", ipython)
     monkeypatch.setitem(sys.modules, "IPython.display", display)
     form = data_agreement.create_agreement_form(spark=object(), config=config, env="dev")
+    assert setup_calls[0]["require_active_steward"] is True
     assert form["source_system"].options == ["ERP"]
     assert form["refresh_frequency"].options == ["Daily"]
     assert form["allowed_consumer_type"].options == ["Internal Department"]
@@ -375,14 +378,50 @@ def test_render_agreement_intake_app_prints_clear_failure_for_missing_update_sel
 
     assert "Commit failed: Update mode selected, but no existing agreement was chosen." in capsys.readouterr().out
 
-def test_setup_data_agreement_tables_creates_only_current_metadata_tables(monkeypatch):
+def test_setup_data_agreement_tables_creates_only_current_metadata_tables_and_reports_readiness(monkeypatch):
     ensured = []
     monkeypatch.setattr(data_agreement, "_ensure_delta_table", lambda spark, config, env, table_name, fields: ensured.append((table_name, fields)))
+    monkeypatch.setattr(data_agreement, "read_lakehouse_table", lambda *args, **kwargs: [dict.fromkeys(_DATA_STEWARD_FIELDS, "")])
+    monkeypatch.setattr(data_agreement, "load_active_data_steward_profiles", lambda **kwargs: [{"steward_id": "configured"}])
 
-    tables = data_agreement.setup_data_agreement_tables(spark=object(), config=_config(), env="dev")
+    result = data_agreement.setup_data_agreement_tables(spark=object(), config=_config(), env="dev")
 
-    assert tables == [DATA_AGREEMENT_TABLE, DATA_STEWARD_TABLE]
-    assert ensured == [(DATA_AGREEMENT_TABLE, DATA_AGREEMENT_FIELDS), (DATA_STEWARD_TABLE, DATA_STEWARD_FIELDS)]
+    assert result == {
+        "status": "ready",
+        "message": f"{DATA_STEWARD_TABLE} contains active steward rows. 01_da can render its intake form.",
+        "tables": [DATA_AGREEMENT_TABLE, DATA_STEWARD_TABLE],
+        "active_steward_count": 1,
+    }
+    assert ensured == [(DATA_AGREEMENT_TABLE, DATA_AGREEMENT_FIELDS), (DATA_STEWARD_TABLE, _DATA_STEWARD_FIELDS)]
+
+
+def test_setup_data_agreement_tables_warns_or_fails_when_active_stewards_are_missing(monkeypatch):
+    monkeypatch.setattr(data_agreement, "_ensure_delta_table", lambda *args, **kwargs: None)
+    monkeypatch.setattr(data_agreement, "read_lakehouse_table", lambda *args, **kwargs: [dict.fromkeys(_DATA_STEWARD_FIELDS, "")])
+    monkeypatch.setattr(
+        data_agreement,
+        "load_active_data_steward_profiles",
+        lambda **kwargs: (_ for _ in ()).throw(ValueError(f"{DATA_STEWARD_TABLE} has no active steward rows.")),
+    )
+
+    result = data_agreement.setup_data_agreement_tables(spark=object(), config=_config(), env="dev")
+    assert result["status"] == "not_ready"
+    assert result["tables"] == [DATA_AGREEMENT_TABLE, DATA_STEWARD_TABLE]
+    assert result["active_steward_count"] == 0
+    assert "No fake steward profiles are seeded." in result["message"]
+
+    with pytest.raises(ValueError, match="no active steward rows"):
+        data_agreement.setup_data_agreement_tables(
+            spark=object(), config=_config(), env="dev", require_active_steward=True
+        )
+
+
+def test_setup_data_agreement_tables_validates_steward_schema(monkeypatch):
+    monkeypatch.setattr(data_agreement, "_ensure_delta_table", lambda *args, **kwargs: None)
+    monkeypatch.setattr(data_agreement, "read_lakehouse_table", lambda *args, **kwargs: [{"steward_id": "configured"}])
+
+    with pytest.raises(ValueError, match="missing required column"):
+        data_agreement.setup_data_agreement_tables(spark=object(), config=_config(), env="dev")
 
 
 def test_metadata_architecture_documents_current_agreement_and_steward_model():
@@ -401,7 +440,7 @@ def test_metadata_architecture_documents_current_agreement_and_steward_model():
         "allowed_consumer_type", "expected_output", "source_system",
         "refresh_frequency", "retention_expectation", "start_date",
         "expiry_date", "renewal_required", "_committed_by", "_committed_at",
-        "_notebook_name", "_workspace_name", "_lakehouse_name", "_run_id",
+        "_notebook_name", "_workspace_name", "_metadata_lakehouse_name", "_activity_id",
     ]
     assert "One row = one agreement version" in agreement_section
     assert "agreement_id + contract_version" in agreement_section

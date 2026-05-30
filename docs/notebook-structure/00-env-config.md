@@ -28,11 +28,6 @@ Describe what this shared config notebook sets up and what downstream exploratio
       <td data-label="Module"><a class="reference-module-link" href="../../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a></td>
       <td data-label="Why it is commonly used here">Fabric lakehouse or warehouse connection details.</td>
     </tr>
-    <tr>
-      <td data-label="Callable"><a href="../../api/reference/load_config/"><code>load_config</code></a></td>
-      <td data-label="Module"><a class="reference-module-link" href="../../api/modules/config/" title="Open config module page" aria-label="Open config module page">config</a></td>
-      <td data-label="Why it is commonly used here">Validate and return a user-supplied framework configuration.</td>
-    </tr>
   </tbody>
 </table>
 
@@ -41,23 +36,6 @@ Describe what this shared config notebook sets up and what downstream exploratio
 The single `CONFIG` object exposes explicit `DataAgreementConfig` defaults for `01_da_<agreement>`. During environment bootstrap, `00_env_config` creates or checks `METADATA_DATA_AGREEMENT` and `METADATA_DATA_STEWARD` in the configured metadata lakehouse, then reports steward readiness. Populate `METADATA_DATA_STEWARD` with real rows and mark selectable stewards with `is_active = true` before rendering `01_da`; no fake steward profiles are seeded.
 
 ## Segment 4: Assemble and validate framework config
-
-<table class="reference-function-table notebook-structure-function-table">
-  <thead>
-    <tr>
-      <th>Callable</th>
-      <th>Module</th>
-      <th>Why it is commonly used here</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td data-label="Callable"><a href="../../api/reference/load_config/"><code>load_config</code></a></td>
-      <td data-label="Module"><a class="reference-module-link" href="../../api/modules/config/" title="Open config module page" aria-label="Open config module page">config</a></td>
-      <td data-label="Why it is commonly used here">Validate and return a user-supplied framework configuration.</td>
-    </tr>
-  </tbody>
-</table>
 
 ## Segment 5: Run startup checks and show resolved paths
 

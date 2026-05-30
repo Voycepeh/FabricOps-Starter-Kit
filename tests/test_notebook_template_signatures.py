@@ -111,19 +111,24 @@ def test_00_env_config_exposes_shared_config_and_data_agreement_defaults():
     ):
         assert configured_default in code
     assert "data_agreement_config=DATA_AGREEMENT_CONFIG" in code
-    assert 'CONFIG.path_config.paths[ENV]["metadata"]' in json.loads((TEMPLATES / "00_env_config.ipynb").read_text(encoding="utf-8"))["cells"][1]["source"][2]
+    assert "CONFIG.path_config.paths[ENV]['metadata']" in code
 
 
 def test_00_env_config_bootstraps_agreement_tables_and_reports_steward_readiness():
     code = _code("00_env_config.ipynb")
-    assert "setup_data_agreement_tables(spark=spark, config=CONFIG, env=ENV)" in code
-    assert "load_active_data_steward_profiles(spark=spark, config=CONFIG, env=ENV)" in code
+    assert "AGREEMENT_METADATA_SETUP = setup_data_agreement_tables(" in code
+    assert "spark=spark" in code
+    assert "config=CONFIG" in code
+    assert "env=ENV" in code
+    assert "require_active_steward=False" in code
     assert "CONFIG.path_config.paths[ENV]['unified'].name" in code
     assert "CONFIG.path_config.paths[ENV]['product'].name" in code
     assert "agreement metadata tables created/checked" in code
-    assert "01_da cannot render until real steward rows are added with is_active = true" in code
-    assert 'VALIDATION_MODE == "strict" and STEWARD_READINESS_STATUS != "ready"' in code
-    assert "No fake steward profiles are seeded." in code
+    assert 'AGREEMENT_METADATA_SETUP[\'tables\']' in code
+    assert 'AGREEMENT_METADATA_SETUP[\'status\']' in code
+    assert 'AGREEMENT_METADATA_SETUP[\'message\']' in code
+    assert 'AGREEMENT_METADATA_SETUP[\'active_steward_count\']' in code
+    assert 'VALIDATION_MODE == "strict" and AGREEMENT_METADATA_SETUP["status"] != "ready"' in code
 
 
 def test_01_da_imports_only_high_level_agreement_app_helper():
@@ -241,3 +246,24 @@ def test_02_ex_maps_selected_agreement_to_current_versioned_schema():
     assert 'ownership = selected_agreement.get("ownership", "")' not in code
     assert 'print(f"business_context:' not in code
     assert 'print(f"ownership:' not in code
+
+
+def test_00_env_config_keeps_bootstrap_flow_without_load_config():
+    code = _code("00_env_config.ipynb")
+    assert "load_config" not in code
+    assert "RUN_CONTEXT = setup_notebook(" in code
+    assert 'VALIDATION_MODE = "warn"' in code
+    assert 'REQUIRED_TARGETS = ["source", "unified", "product", "metadata"]' in code
+    assert "DATA_STEWARD_REQUIRED_FIELDS" not in code
+    assert "DATA_STEWARD_SYSTEM_FIELDS" not in code
+    assert "validate_data_agreement_prerequisites" not in code
+    assert "from fabricops_kit import setup_data_agreement_tables" in code
+    assert "AGREEMENT_METADATA_SETUP = setup_data_agreement_tables(" in code
+    assert "spark=spark" in code
+    assert "config=CONFIG" in code
+    assert "env=ENV" in code
+    assert "require_active_steward=False" in code
+
+
+def test_03_pc_pipeline_template_does_not_import_or_call_load_config():
+    assert "load_config" not in _code("03_pc_agreement_pipeline_template.ipynb")

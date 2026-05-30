@@ -24,4 +24,4 @@ No summary available.
 - <a href="../internal/config/_get_fabric_runtime_metadata/"><code>fabricops_kit.config._get_fabric_runtime_metadata</code></a>
 - <a href="../internal/config/_get_store/"><code>fabricops_kit.config._get_store</code></a>
 - <a href="../internal/config/_run_config_smoke_tests/"><code>fabricops_kit.config._run_config_smoke_tests</code></a>
-- <a href="../load_config/"><code>fabricops_kit.config.load_config</code></a>
+- <a href="../internal/config/_validate_framework_config/"><code>fabricops_kit.config._validate_framework_config</code></a>

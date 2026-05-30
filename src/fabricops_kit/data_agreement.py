@@ -26,10 +26,12 @@ DATA_AGREEMENT_FIELDS = [
     "start_date", "expiry_date", "renewal_required", "_committed_by", "_committed_at",
     "_workspace_name", "_notebook_name", "_metadata_lakehouse_name", "_activity_id",
 ]
-DATA_STEWARD_FIELDS = [
+_DATA_STEWARD_REQUIRED_FIELDS = [
     "steward_id", "data_steward_name", "data_steward_email", "domain", "department",
-    "faculty", "effective_from", "effective_to", "is_active", "created_at", "updated_at",
+    "faculty", "effective_from", "effective_to", "is_active",
 ]
+_DATA_STEWARD_SYSTEM_FIELDS = ["created_at", "updated_at"]
+_DATA_STEWARD_FIELDS = _DATA_STEWARD_REQUIRED_FIELDS + _DATA_STEWARD_SYSTEM_FIELDS
 _REQUIRED_FIELDS = [
     "agreement_id", "contract_version", "agreement_name", "steward_id", "business_purpose",
     "approved_usage", "allowed_consumer_type", "expected_output", "source_system",
@@ -88,8 +90,28 @@ def _ensure_delta_table(spark: Any, config: Any, env: str, table_name: str, fiel
         spark.createDataFrame([{field: "" for field in fields}]).limit(0).write.format("delta").mode("overwrite").save(path)
 
 
-def setup_data_agreement_tables(*, spark: Any, config: Any, env: str) -> list[str]:
-    """Create empty agreement and steward Delta tables when they do not exist.
+def _column_names(rows_or_df: Any) -> list[str]:
+    """Return column names from a Spark DataFrame or row collection."""
+    if hasattr(rows_or_df, "columns"):
+        return list(rows_or_df.columns)
+    if rows_or_df is None:
+        return []
+    rows = rows_or_df.collect() if hasattr(rows_or_df, "collect") else rows_or_df
+    rows = list(rows)
+    if not rows:
+        return []
+    first = rows[0].asDict(recursive=True) if hasattr(rows[0], "asDict") else dict(rows[0])
+    return list(first.keys())
+
+
+def setup_data_agreement_tables(
+    *,
+    spark: Any,
+    config: Any,
+    env: str,
+    require_active_steward: bool = False,
+) -> dict[str, Any]:
+    """Create, validate, and report readiness for agreement metadata tables.
 
     Parameters
     ----------
@@ -99,21 +121,61 @@ def setup_data_agreement_tables(*, spark: Any, config: Any, env: str) -> list[st
         Framework config with the metadata lakehouse target.
     env : str
         Environment key configured by ``00_env_config``.
+    require_active_steward : bool, default=False
+        Whether missing active steward rows should raise instead of returning a
+        ``not_ready`` status. Use ``False`` during environment bootstrap and
+        ``True`` before rendering agreement intake.
 
     Returns
     -------
-    list[str]
-        Metadata table names checked or created.
+    dict[str, Any]
+        Readiness summary containing ``status``, ``message``, ``tables``, and
+        ``active_steward_count``.
+
+    Raises
+    ------
+    ValueError
+        If the steward table schema is incomplete, or when active steward rows
+        are required but none are available.
 
     Notes
     -----
     The steward table is intentionally created empty. Populate it with real,
     public-safe organization data before using the intake form; this helper
-    never seeds fake people.
+    never seeds fake people. Metadata tables are routed through the configured
+    metadata lakehouse target for ``env``.
     """
+    tables = [DATA_AGREEMENT_TABLE, DATA_STEWARD_TABLE]
     _ensure_delta_table(spark, config, env, DATA_AGREEMENT_TABLE, DATA_AGREEMENT_FIELDS)
-    _ensure_delta_table(spark, config, env, DATA_STEWARD_TABLE, DATA_STEWARD_FIELDS)
-    return [DATA_AGREEMENT_TABLE, DATA_STEWARD_TABLE]
+    _ensure_delta_table(spark, config, env, DATA_STEWARD_TABLE, _DATA_STEWARD_FIELDS)
+    steward_df = read_lakehouse_table(config, env, "metadata", DATA_STEWARD_TABLE, spark_session=spark)
+    missing = [field for field in _DATA_STEWARD_FIELDS if field not in _column_names(steward_df)]
+    if missing:
+        raise ValueError(
+            f"{DATA_STEWARD_TABLE} is missing required column(s): {', '.join(missing)}. "
+            "Run 00_env_config to recreate/check the metadata schema before rendering 01_da."
+        )
+
+    try:
+        active_profiles = load_active_data_steward_profiles(spark=spark, config=config, env=env)
+    except ValueError as exc:
+        if f"{DATA_STEWARD_TABLE} has no active steward rows" not in str(exc):
+            raise
+        message = (
+            f"WARNING: {DATA_STEWARD_TABLE} has no active steward rows. "
+            "01_da cannot render until real steward rows are maintained with is_active = true. "
+            "No fake steward profiles are seeded."
+        )
+        if require_active_steward:
+            raise ValueError(message) from exc
+        return {"status": "not_ready", "message": message, "tables": tables, "active_steward_count": 0}
+
+    return {
+        "status": "ready",
+        "message": f"{DATA_STEWARD_TABLE} contains active steward rows. 01_da can render its intake form.",
+        "tables": tables,
+        "active_steward_count": len(active_profiles),
+    }
 
 
 def parse_contract_version(version: Any) -> tuple[int, int, int]:
@@ -297,7 +359,7 @@ def load_active_data_steward_profiles(*, spark: Any, config: Any, env: str) -> l
     is blank or not in the future, and ``effective_to`` is blank or not in the
     past.
     """
-    _ensure_delta_table(spark, config, env, DATA_STEWARD_TABLE, DATA_STEWARD_FIELDS)
+    _ensure_delta_table(spark, config, env, DATA_STEWARD_TABLE, _DATA_STEWARD_FIELDS)
     rows = _coerce_row_dicts(read_lakehouse_table(config, env, "metadata", DATA_STEWARD_TABLE, spark_session=spark))
     profiles = []
     today = datetime.now(timezone.utc).date()
@@ -316,7 +378,7 @@ def load_active_data_steward_profiles(*, spark: Any, config: Any, env: str) -> l
                 f"{DATA_STEWARD_TABLE} row '{row.get('steward_id', '')}' has an invalid effective date. "
                 "Use ISO dates for effective_from and effective_to."
             ) from exc
-        profile = {field: row.get(field, "") for field in DATA_STEWARD_FIELDS if field not in {"is_active", "created_at", "updated_at"}}
+        profile = {field: row.get(field, "") for field in _DATA_STEWARD_FIELDS if field not in {"is_active", "created_at", "updated_at"}}
         profile["label"] = " | ".join(str(profile.get(field) or "") for field in ("data_steward_name", "domain", "department", "faculty"))
         profiles.append(profile)
     if not profiles:
@@ -490,6 +552,7 @@ def create_agreement_form(*, spark: Any, config: Any, env: str, default_values: 
     intake = getattr(config, "data_agreement_config", None)
     defaults = {**dict(getattr(intake, "default_values", {}) or {}), **(default_values or {})}
     get_options = lambda name: list(getattr(intake, name, ()) or ())
+    setup_data_agreement_tables(spark=spark, config=config, env=env, require_active_steward=True)
     profiles = load_active_data_steward_profiles(spark=spark, config=config, env=env)
     latest = load_agreements(config, env, spark_session=spark, missing_ok=True)
     steward_options = [(profile["label"], profile) for profile in profiles]

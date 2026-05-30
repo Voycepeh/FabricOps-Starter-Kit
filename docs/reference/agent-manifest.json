@@ -314,7 +314,7 @@
       "fabricops_kit.config._get_fabric_runtime_metadata",
       "fabricops_kit.config._get_store",
       "fabricops_kit.config._run_config_smoke_tests",
-      "fabricops_kit.config.load_config"
+      "fabricops_kit.config._validate_framework_config"
     ],
     "source_file": "src/fabricops_kit/config.py",
     "summary": "No summary available."
@@ -471,7 +471,8 @@
     "type": "internal",
     "role": "internal",
     "inbound": [
-      "fabricops_kit.config.load_config"
+      "fabricops_kit.config._bootstrap_fabric_env",
+      "fabricops_kit.config.setup_notebook"
     ],
     "outbound": [
       "fabricops_kit.config.FrameworkConfig",
@@ -524,23 +525,6 @@
     "summary": "No summary available."
   },
   {
-    "name": "load_config",
-    "qualified_name": "fabricops_kit.config.load_config",
-    "module": "config",
-    "type": "callable",
-    "role": "essential",
-    "inbound": [
-      "fabricops_kit.config._bootstrap_fabric_env",
-      "fabricops_kit.config.setup_notebook",
-      "fabricops_kit.fabric_input_output.load_config"
-    ],
-    "outbound": [
-      "fabricops_kit.config._validate_framework_config"
-    ],
-    "source_file": "src/fabricops_kit/config.py",
-    "summary": "No summary available."
-  },
-  {
     "name": "load_dataset_contract",
     "qualified_name": "fabricops_kit.config.load_dataset_contract",
     "module": "config",
@@ -564,7 +548,7 @@
       "fabricops_kit.config.NotebookSetupContext",
       "fabricops_kit.config._get_store",
       "fabricops_kit.config._run_config_smoke_tests",
-      "fabricops_kit.config.load_config"
+      "fabricops_kit.config._validate_framework_config"
     ],
     "source_file": "src/fabricops_kit/config.py",
     "summary": "No summary available."
@@ -595,6 +579,19 @@
     "inbound": [
       "fabricops_kit.data_agreement.latest_agreement_versions",
       "fabricops_kit.data_agreement.load_active_data_steward_profiles"
+    ],
+    "outbound": [],
+    "source_file": "src/fabricops_kit/data_agreement.py",
+    "summary": "No summary available."
+  },
+  {
+    "name": "_column_names",
+    "qualified_name": "fabricops_kit.data_agreement._column_names",
+    "module": "data_agreement",
+    "type": "internal",
+    "role": "internal",
+    "inbound": [
+      "fabricops_kit.data_agreement.setup_data_agreement_tables"
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/data_agreement.py",
@@ -734,7 +731,8 @@
       "fabricops_kit.data_agreement.agreement_dropdown_options",
       "fabricops_kit.data_agreement.load_active_data_steward_profiles",
       "fabricops_kit.data_agreement.load_agreements",
-      "fabricops_kit.data_agreement.next_minor_version"
+      "fabricops_kit.data_agreement.next_minor_version",
+      "fabricops_kit.data_agreement.setup_data_agreement_tables"
     ],
     "source_file": "src/fabricops_kit/data_agreement.py",
     "summary": "No summary available."
@@ -774,7 +772,8 @@
     "type": "internal",
     "role": "internal",
     "inbound": [
-      "fabricops_kit.data_agreement.create_agreement_form"
+      "fabricops_kit.data_agreement.create_agreement_form",
+      "fabricops_kit.data_agreement.setup_data_agreement_tables"
     ],
     "outbound": [
       "fabricops_kit.data_agreement._coerce_row_dicts",
@@ -909,12 +908,17 @@
     "module": "data_agreement",
     "type": "callable",
     "role": "essential",
-    "inbound": [],
+    "inbound": [
+      "fabricops_kit.data_agreement.create_agreement_form"
+    ],
     "outbound": [
-      "fabricops_kit.data_agreement._ensure_delta_table"
+      "fabricops_kit.data_agreement._column_names",
+      "fabricops_kit.data_agreement._ensure_delta_table",
+      "fabricops_kit.data_agreement.load_active_data_steward_profiles",
+      "fabricops_kit.fabric_input_output.read_lakehouse_table"
     ],
     "source_file": "src/fabricops_kit/data_agreement.py",
-    "summary": "No summary available."
+    "summary": "Create, validate, and report readiness for agreement metadata tables."
   },
   {
     "name": "_approved_widget_rows",
@@ -2401,19 +2405,6 @@
     "summary": "No summary available."
   },
   {
-    "name": "load_config",
-    "qualified_name": "fabricops_kit.fabric_input_output.load_config",
-    "module": "fabric_input_output",
-    "type": "internal",
-    "role": "internal",
-    "inbound": [],
-    "outbound": [
-      "fabricops_kit.config.load_config"
-    ],
-    "source_file": "src/fabricops_kit/fabric_input_output.py",
-    "summary": "No summary available."
-  },
-  {
     "name": "read_lakehouse_csv",
     "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_csv",
     "module": "fabric_input_output",
@@ -2464,7 +2455,8 @@
     "role": "essential",
     "inbound": [
       "fabricops_kit.data_agreement.load_active_data_steward_profiles",
-      "fabricops_kit.data_agreement.load_agreements"
+      "fabricops_kit.data_agreement.load_agreements",
+      "fabricops_kit.data_agreement.setup_data_agreement_tables"
     ],
     "outbound": [
       "fabricops_kit.config._get_store",
