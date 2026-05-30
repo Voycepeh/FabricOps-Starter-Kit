@@ -39,7 +39,7 @@ Execution Workspaces are where teams configure runtime paths, explore data, and 
 
 ## AI boundary and human approval
 
-AI can suggest classifications, data quality rules, summaries, and metadata. Humans approve governance controls before they become enforceable rules. Production pipeline contracts enforce approved rules only.
+AI can suggest classifications, data quality rules, summaries, metadata, and draft contract changes. Humans approve governance controls and contract expectations before they become enforceable rules. Production pipeline contracts enforce approved rules only. See [Metadata and Data Contract Assembly](metadata-and-contracts/index.md) for the shared-promise model and recommended early contract gates.
 
 ## Start from the templates
 

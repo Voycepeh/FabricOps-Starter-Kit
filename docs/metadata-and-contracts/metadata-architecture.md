@@ -1,8 +1,10 @@
 # Metadata architecture
 
-FabricOps metadata is organized by data contract and data lifecycle dependencies. The goal is to create and maintain the necessary components for data contract assembly and informing the planning and execution of the contract's downstream activities. The aim is to ensure the context needed at every data lifecycle stage supported by FabricOps is registered and accessible.
+A data contract is a shared promise between data producers and consumers. FabricOps metadata records the agreement, reviewed context, approved rules, and runtime evidence needed to make that promise visible and reusable across the notebook lifecycle.
 
-The FabricsOps metadata architecture supports the following FabricOps product story. It is assumed:
+This page maps that leader-friendly contract story to the FabricOps metadata tables and assembled views. Start with [Metadata and contracts](index.md) for the plain-language overview, then use this page when you need implementation detail.
+
+The FabricOps metadata architecture supports the following FabricOps product story. It is assumed:
 
 ```text
 FabricOps processes live in separate notebooks.

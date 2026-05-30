@@ -4,7 +4,7 @@ A data analyst profiles source data in a `02_ex_*` notebook. The notebook captur
 
 AI uses that evidence to suggest candidate data quality rules. A human reviewer approves, edits, rejects, or defers each suggestion. Only approved active rules are stored for enforcement.
 
-A `03_pc_*` notebook loads approved rules during pipeline runs, applies them to the current dataframe or table, sends passing rows downstream, and quarantines failed rows with reasons.
+A `03_pc_*` notebook loads approved rules during pipeline runs, applies them to the current dataframe or table, sends passing rows downstream, and quarantines failed rows with reasons. These approved rules are one enforceable part of the wider [data contract](metadata-and-contracts/index.md): the shared promise between producers and consumers.
 
 <figure markdown>
   ![Data quality workflow with AI suggestions, human review, approval, and deterministic enforcement in pipelines](assets/DQ-with-ai.png){ .full-width }
