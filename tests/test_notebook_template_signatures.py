@@ -185,8 +185,11 @@ def test_generated_data_agreement_module_page_separates_supported_api_tiers():
     page = Path("docs/api/modules/data_agreement.md").read_text(encoding="utf-8")
     assert "## Intended notebook call flow" in page
     assert "## Primary notebook API" in page
-    assert "## Advanced customization API" in page
+    assert "## Optional advanced customization API" in page
     assert "## Internal helpers" in page
+    assert "### Internal workflow helpers" in page
+    assert "### Private implementation helpers" in page
+    assert "Normal notebook users should not call these lower-level functions." in page
     assert page.index("## Intended notebook call flow") < page.index("## Module manifest")
     assert "## Module overview badges" not in page
     for helper_name in (

@@ -36,7 +36,7 @@
 - `committed_by` resolves from `notebookutils.runtime.context`: `userName`, then `userId`, then `unknown`.
 - Metadata setup, steward reads, agreement reads, and agreement writes resolve `CONFIG.path_config.paths[env]["metadata"]` and use that lakehouse's OneLake path. No default attached lakehouse is required.
 - Widget defaults are exposed through `CONFIG.data_agreement_config`, the `01_da`-specific `DataAgreementConfig` section explicitly assembled by `00_env_config`.
-- The default notebook calls `render_agreement_intake_app(...)`. Advanced users may call `create_agreement_form(...)`, `read_agreement_form(...)`, `collect_agreement_metadata(...)`, and `commit_agreement_metadata(...)` directly only when customizing the workflow.
+- The default notebook calls `render_agreement_intake_app(...)`. Normal notebook users should not call the lower-level functions directly. Advanced users may optionally call `create_agreement_form(...)`, `read_agreement_form(...)`, `collect_agreement_metadata(...)`, and `commit_agreement_metadata(...)` only when customizing the workflow.
 
 ## Downstream role
 

@@ -192,7 +192,7 @@
       "callable_visibility": "public",
       "callable_role": "optional",
       "template_notebook": "`01_da_<agreement>`",
-      "template_segment": "Advanced customization: collect and preview agreement metadata"
+      "template_segment": "Optional advanced customization: collect and preview agreement metadata"
     },
     {
       "module_name": "data_agreement",
@@ -204,7 +204,7 @@
       "callable_visibility": "public",
       "callable_role": "optional",
       "template_notebook": "`01_da_<agreement>`",
-      "template_segment": "Advanced customization: commit metadata records"
+      "template_segment": "Optional advanced customization: commit metadata records"
     },
     {
       "module_name": "data_agreement",
@@ -216,7 +216,7 @@
       "callable_visibility": "public",
       "callable_role": "optional",
       "template_notebook": "`01_da_<agreement>`",
-      "template_segment": "Advanced customization: create agreement metadata widgets"
+      "template_segment": "Optional advanced customization: create agreement metadata widgets"
     },
     {
       "module_name": "data_agreement",
@@ -252,7 +252,7 @@
       "callable_visibility": "public",
       "callable_role": "optional",
       "template_notebook": "`01_da_<agreement>`",
-      "template_segment": "Advanced customization: collect and preview agreement metadata"
+      "template_segment": "Optional advanced customization: collect and preview agreement metadata"
     },
     {
       "module_name": "data_agreement",

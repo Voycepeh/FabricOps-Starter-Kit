@@ -726,16 +726,19 @@ def main() -> None:
                 lines.extend(["## Primary notebook API", "", "Use these callables in standard FabricOps notebooks.", ""])
                 lines.extend(['<div class="module-table-scroll">'])
                 lines.extend(render_html_table(["Callable", "Tier", "Type", "Summary", "Related helpers"], _public_callable_rows(recommended, "Primary notebook API")))
-                lines.extend(['</div>', "", "## Advanced customization API", "", "Use these lower-level callables only when intentionally customizing the agreement-intake workflow.", ""])
+                lines.extend(['</div>', "", "## Optional advanced customization API", "", "Normal notebook users should not call these lower-level functions. Use them only when intentionally customizing the agreement-intake workflow.", ""])
                 lines.extend(['<div class="module-table-scroll">'])
-                lines.extend(render_html_table(["Callable", "Tier", "Type", "Summary", "Related helpers"], _public_callable_rows(advanced, "Advanced customization")))
-                lines.extend(['</div>', "", "## Internal helpers", "", "These implementation helpers are documented for maintainers but are not exported from `fabricops_kit`.", ""])
-                helper_rows = []
+                lines.extend(render_html_table(["Callable", "Tier", "Type", "Summary", "Related helpers"], _public_callable_rows(advanced, "Optional / advanced customization")))
+                lines.extend(['</div>', "", "## Internal helpers", "", "These non-exported helpers support framework internals and diagnostics. Do not import them from `fabricops_kit`.", ""])
                 public_names = {symbol.name for symbol in public_in_module}
-                for helper_name in sorted(name for name in info["functions"] if name not in public_names):
-                    helper_rows.append([f'<a href="{internal_helper_link(actual_module, helper_name)}"><code>{helper_name}</code></a>', "Internal helper"])
+                internal_names = sorted(name for name in info["functions"] if name not in public_names and not name.startswith("_"))
+                private_names = sorted(name for name in info["functions"] if name not in public_names and name.startswith("_"))
+                lines.extend(["### Internal workflow helpers", ""])
                 lines.extend(['<div class="module-table-scroll">'])
-                lines.extend(render_html_table(["Helper", "Classification"], helper_rows))
+                lines.extend(render_html_table(["Helper", "Classification"], [[f'<a href="{internal_helper_link(actual_module, helper_name)}"><code>{helper_name}</code></a>', "Internal helper"] for helper_name in internal_names]))
+                lines.extend(['</div>', "", "### Private implementation helpers", ""])
+                lines.extend(['<div class="module-table-scroll">'])
+                lines.extend(render_html_table(["Helper", "Classification"], [[f'<a href="{internal_helper_link(actual_module, helper_name)}"><code>{helper_name}</code></a>', "Private implementation helper"] for helper_name in private_names]))
                 lines.extend(['</div>'])
             else:
                 lines.extend(["## Public callables", ""])

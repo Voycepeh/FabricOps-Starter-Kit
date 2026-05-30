@@ -116,9 +116,9 @@ Use these callables in standard FabricOps notebooks.
 </table>
 </div>
 
-## Advanced customization API
+## Optional advanced customization API
 
-Use these lower-level callables only when intentionally customizing the agreement-intake workflow.
+Normal notebook users should not call these lower-level functions. Use them only when intentionally customizing the agreement-intake workflow.
 
 <div class="module-table-scroll">
 <table>
@@ -134,28 +134,28 @@ Use these lower-level callables only when intentionally customizing the agreemen
   <tbody>
     <tr>
       <td><a href="../../reference/collect_agreement_metadata/"><code>collect_agreement_metadata</code></a></td>
-      <td>Advanced customization</td>
+      <td>Optional / advanced customization</td>
       <td>function</td>
       <td>Build one validated append-only agreement-version row from intake values.</td>
       <td><a href="../../reference/internal/data_agreement/_context_get/"><code>_context_get</code></a> (internal), <a href="../../reference/internal/data_agreement/_derive_agreement_status/"><code>_derive_agreement_status</code></a> (internal), <a href="../../reference/internal/data_agreement/_to_iso_date/"><code>_to_iso_date</code></a> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/commit_agreement_metadata/"><code>commit_agreement_metadata</code></a></td>
-      <td>Advanced customization</td>
+      <td>Optional / advanced customization</td>
       <td>function</td>
       <td>Append one agreement-version row by configured OneLake path.</td>
       <td><a href="../../reference/internal/data_agreement/_ensure_delta_table/"><code>_ensure_delta_table</code></a> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/create_agreement_form/"><code>create_agreement_form</code></a></td>
-      <td>Advanced customization</td>
+      <td>Optional / advanced customization</td>
       <td>function</td>
       <td>Render the standalone ``01_da`` intake form with ``ipywidgets``.</td>
       <td>—</td>
     </tr>
     <tr>
       <td><a href="../../reference/read_agreement_form/"><code>read_agreement_form</code></a></td>
-      <td>Advanced customization</td>
+      <td>Optional / advanced customization</td>
       <td>function</td>
       <td>Return human-entered values from an ``01_da`` intake form.</td>
       <td>—</td>
@@ -166,7 +166,9 @@ Use these lower-level callables only when intentionally customizing the agreemen
 
 ## Internal helpers
 
-These implementation helpers are documented for maintainers but are not exported from `fabricops_kit`.
+These non-exported helpers support framework internals and diagnostics. Do not import them from `fabricops_kit`.
+
+### Internal workflow helpers
 
 <div class="module-table-scroll">
 <table>
@@ -177,38 +179,6 @@ These implementation helpers are documented for maintainers but are not exported
     </tr>
   </thead>
   <tbody>
-    <tr>
-      <td><a href="../../reference/internal/data_agreement/_coerce_row_dicts/"><code>_coerce_row_dicts</code></a></td>
-      <td>Internal helper</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/internal/data_agreement/_context_get/"><code>_context_get</code></a></td>
-      <td>Internal helper</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/internal/data_agreement/_derive_agreement_status/"><code>_derive_agreement_status</code></a></td>
-      <td>Internal helper</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/internal/data_agreement/_ensure_delta_table/"><code>_ensure_delta_table</code></a></td>
-      <td>Internal helper</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/internal/data_agreement/_generate_agreement_id/"><code>_generate_agreement_id</code></a></td>
-      <td>Internal helper</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/internal/data_agreement/_parse_required_date/"><code>_parse_required_date</code></a></td>
-      <td>Internal helper</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/internal/data_agreement/_table_path/"><code>_table_path</code></a></td>
-      <td>Internal helper</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/internal/data_agreement/_to_iso_date/"><code>_to_iso_date</code></a></td>
-      <td>Internal helper</td>
-    </tr>
     <tr>
       <td><a href="../../reference/internal/data_agreement/agreement_dropdown_options/"><code>agreement_dropdown_options</code></a></td>
       <td>Internal helper</td>
@@ -236,6 +206,53 @@ These implementation helpers are documented for maintainers but are not exported
     <tr>
       <td><a href="../../reference/internal/data_agreement/resolve_agreement_identity/"><code>resolve_agreement_identity</code></a></td>
       <td>Internal helper</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+### Private implementation helpers
+
+<div class="module-table-scroll">
+<table>
+  <thead>
+    <tr>
+      <th>Helper</th>
+      <th>Classification</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><a href="../../reference/internal/data_agreement/_coerce_row_dicts/"><code>_coerce_row_dicts</code></a></td>
+      <td>Private implementation helper</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/data_agreement/_context_get/"><code>_context_get</code></a></td>
+      <td>Private implementation helper</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/data_agreement/_derive_agreement_status/"><code>_derive_agreement_status</code></a></td>
+      <td>Private implementation helper</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/data_agreement/_ensure_delta_table/"><code>_ensure_delta_table</code></a></td>
+      <td>Private implementation helper</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/data_agreement/_generate_agreement_id/"><code>_generate_agreement_id</code></a></td>
+      <td>Private implementation helper</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/data_agreement/_parse_required_date/"><code>_parse_required_date</code></a></td>
+      <td>Private implementation helper</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/data_agreement/_table_path/"><code>_table_path</code></a></td>
+      <td>Private implementation helper</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/data_agreement/_to_iso_date/"><code>_to_iso_date</code></a></td>
+      <td>Private implementation helper</td>
     </tr>
   </tbody>
 </table>
