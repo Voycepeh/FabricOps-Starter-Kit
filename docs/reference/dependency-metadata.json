@@ -780,26 +780,6 @@
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
-    "fabricops_kit.data_agreement._derive_agreement_status": {
-      "qualified_name": "fabricops_kit.data_agreement._derive_agreement_status",
-      "short_name": "_derive_agreement_status",
-      "module": "data_agreement",
-      "callable": "_derive_agreement_status",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_agreement/_derive_agreement_status/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.data_agreement._parse_required_date"
-      ],
-      "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.data_agreement.collect_agreement_metadata"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [
-        "fabricops_kit.data_agreement._parse_required_date"
-      ],
-      "internal_helper_count": 1
-    },
     "fabricops_kit.data_agreement._ensure_delta_table": {
       "qualified_name": "fabricops_kit.data_agreement._ensure_delta_table",
       "short_name": "_ensure_delta_table",
@@ -848,7 +828,7 @@
       "calls": [],
       "calls_count": 0,
       "used_by": [
-        "fabricops_kit.data_agreement._derive_agreement_status"
+        "fabricops_kit.data_agreement.collect_agreement_metadata"
       ],
       "used_by_count": 1,
       "internal_helpers_used": [],
@@ -916,7 +896,7 @@
       "classification": "optional",
       "calls": [
         "fabricops_kit.data_agreement._context_get",
-        "fabricops_kit.data_agreement._derive_agreement_status",
+        "fabricops_kit.data_agreement._parse_required_date",
         "fabricops_kit.data_agreement._to_iso_date",
         "fabricops_kit.data_agreement.resolve_agreement_identity",
         "fabricops_kit.metadata._runtime_context"
@@ -928,7 +908,7 @@
       "used_by_count": 1,
       "internal_helpers_used": [
         "fabricops_kit.data_agreement._context_get",
-        "fabricops_kit.data_agreement._derive_agreement_status",
+        "fabricops_kit.data_agreement._parse_required_date",
         "fabricops_kit.data_agreement._to_iso_date"
       ],
       "internal_helper_count": 3
@@ -942,10 +922,9 @@
       "classification": "optional",
       "calls": [
         "fabricops_kit.data_agreement._ensure_delta_table",
-        "fabricops_kit.fabric_input_output.read_lakehouse_table",
         "fabricops_kit.fabric_input_output.write_lakehouse_table"
       ],
-      "calls_count": 3,
+      "calls_count": 2,
       "used_by": [
         "fabricops_kit.data_agreement.render_agreement_intake_app"
       ],
@@ -3191,11 +3170,10 @@
       ],
       "calls_count": 2,
       "used_by": [
-        "fabricops_kit.data_agreement.commit_agreement_metadata",
         "fabricops_kit.data_agreement.load_active_data_steward_profiles",
         "fabricops_kit.data_agreement.load_agreements"
       ],
-      "used_by_count": 3,
+      "used_by_count": 2,
       "internal_helpers_used": [
         "fabricops_kit.fabric_input_output._get_spark"
       ],
@@ -3973,7 +3951,7 @@
     "data_agreement": {
       "essential_count": 5,
       "optional_count": 4,
-      "internal_count": 8,
+      "internal_count": 7,
       "outbound_modules": [
         "fabric_input_output",
         "metadata"

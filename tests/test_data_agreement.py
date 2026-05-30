@@ -11,6 +11,7 @@ from fabricops_kit.data_agreement import (
     DATA_AGREEMENT_FIELDS,
     DATA_AGREEMENT_TABLE,
     DATA_STEWARD_TABLE,
+    DATA_STEWARD_FIELDS,
     agreement_dropdown_options,
     collect_agreement_metadata,
     commit_agreement_metadata,
@@ -31,13 +32,39 @@ def _config():
 def _values(**overrides):
     values = {
         "agreement_name": "Orders agreement",
-        "data_steward_profile": {"data_steward_name": "Configured steward", "data_steward_email": "steward@example.com", "domain": "Operations", "department": "Reporting", "faculty": "Shared Services"},
+        "data_steward_profile": {"steward_id": "steward-001", "data_steward_name": "Configured steward", "data_steward_email": "steward@example.com", "domain": "Operations", "department": "Reporting", "faculty": "Shared Services"},
         "business_purpose": "Support governed reporting.", "approved_usage": "Approved reporting only.", "restricted_usage": "No redistribution.",
         "allowed_consumer_type": "Internal Department", "expected_output": "Dashboard", "source_system": "ERP", "refresh_frequency": "Daily",
         "retention_expectation": "Retain according to policy.", "start_date": "2026-01-01", "expiry_date": "2026-12-31", "renewal_required": "Yes",
     }
     values.update(overrides)
     return values
+
+
+def test_agreement_and_steward_schemas_keep_durable_fields_only():
+    assert DATA_AGREEMENT_FIELDS == [
+        "agreement_id", "contract_version", "agreement_name", "steward_id",
+        "business_purpose", "approved_usage", "restricted_usage", "allowed_consumer_type",
+        "expected_output", "source_system", "refresh_frequency", "retention_expectation",
+        "start_date", "expiry_date", "renewal_required", "_committed_by", "_committed_at",
+        "_workspace_name", "_notebook_name", "_metadata_lakehouse_name", "_activity_id",
+    ]
+    assert DATA_STEWARD_FIELDS == [
+        "steward_id", "data_steward_name", "data_steward_email", "domain", "department",
+        "faculty", "effective_from", "effective_to", "is_active", "created_at", "updated_at",
+    ]
+
+
+def test_agreement_row_stores_steward_fk_without_profile_snapshot_or_derived_status():
+    row = collect_agreement_metadata(widget_values=_values(), committed_by="user@example.com")["agreement_row"]
+    assert row["steward_id"] == "steward-001"
+    assert set(row) == set(DATA_AGREEMENT_FIELDS)
+    for removed in (
+        "data_steward_name", "data_steward_email", "domain", "department", "faculty",
+        "agreement_status", "status_as_of_date", "review_status", "approved_by", "approved_at",
+        "committed_by", "committed_at", "workspace_name", "notebook_name", "lakehouse_name", "run_id",
+    ):
+        assert removed not in row
 
 
 def test_create_mode_commits_version_1_0_0():
@@ -58,6 +85,8 @@ def test_update_mode_only_shows_latest_version_per_agreement_id():
     options = agreement_dropdown_options(rows, include_prompt=True)
     assert options[0] == ("Select an agreement to update...", None)
     assert len(options) == 3
+    assert "Steward ID:" in options[1][0]
+    assert "Configured steward" not in options[1][0]
 
 
 def test_update_mode_reuses_id_and_appends_next_minor_version():
@@ -93,7 +122,28 @@ def test_collect_agreement_metadata_accepts_spark_like_existing_rows_without_tru
 def test_committed_by_resolves_fabric_user_name_before_user_id(monkeypatch):
     monkeypatch.setattr(data_agreement, "_runtime_context", lambda: {"userName": "fabric.user@example.com", "userId": "fabric-user-id"})
     result = collect_agreement_metadata(widget_values=_values())
-    assert result["agreement_row"]["committed_by"] == "fabric.user@example.com"
+    assert result["agreement_row"]["_committed_by"] == "fabric.user@example.com"
+
+
+def test_agreement_row_uses_framework_managed_technical_audit_names():
+    row = collect_agreement_metadata(
+        widget_values=_values(),
+        runtime_context={
+            "userName": "fabric.user@example.com",
+            "currentWorkspaceName": "Workspace",
+            "currentNotebookName": "01_da_orders",
+            "activityId": "activity-123",
+        },
+        config=_config(),
+        env="dev",
+        committed_at="2026-01-01T00:00:00+00:00",
+    )["agreement_row"]
+    assert row["_committed_by"] == "fabric.user@example.com"
+    assert row["_committed_at"] == "2026-01-01T00:00:00+00:00"
+    assert row["_workspace_name"] == "Workspace"
+    assert row["_notebook_name"] == "01_da_orders"
+    assert row["_metadata_lakehouse_name"] == "metadata"
+    assert row["_activity_id"] == "activity-123"
 
 
 def test_metadata_root_uses_configured_onelake_store_without_default_lakehouse():
@@ -103,11 +153,22 @@ def test_metadata_root_uses_configured_onelake_store_without_default_lakehouse()
 def test_steward_profiles_use_active_rows_only_and_never_seed_fake_people(monkeypatch):
     monkeypatch.setattr(data_agreement, "_ensure_delta_table", lambda *args, **kwargs: None)
     monkeypatch.setattr(data_agreement, "read_lakehouse_table", lambda *args, **kwargs: [
-        {"steward_id": "1", "data_steward_name": "Configured steward", "data_steward_email": "configured@example.com", "domain": "Ops", "department": "BI", "faculty": "Shared", "is_active": "true"},
-        {"steward_id": "2", "data_steward_name": "Inactive steward", "is_active": "false"},
+        {"steward_id": "1", "data_steward_name": "Configured steward", "data_steward_email": "configured@example.com", "domain": "Ops", "department": "BI", "faculty": "Shared", "effective_from": "2020-01-01", "effective_to": "", "is_active": "true"},
+        {"steward_id": "2", "data_steward_name": "Inactive steward", "effective_from": "2020-01-01", "effective_to": "", "is_active": "false"},
+        {"steward_id": "3", "data_steward_name": "Future steward", "effective_from": "2999-01-01", "effective_to": "", "is_active": "true"},
+        {"steward_id": "4", "data_steward_name": "Expired steward", "effective_from": "2020-01-01", "effective_to": "2020-12-31", "is_active": "true"},
     ])
     profiles = load_active_data_steward_profiles(spark=object(), config=_config(), env="dev")
     assert [profile["data_steward_name"] for profile in profiles] == ["Configured steward"]
+
+
+def test_invalid_steward_effective_date_raises_clear_setup_error(monkeypatch):
+    monkeypatch.setattr(data_agreement, "_ensure_delta_table", lambda *args, **kwargs: None)
+    monkeypatch.setattr(data_agreement, "read_lakehouse_table", lambda *args, **kwargs: [
+        {"steward_id": "bad-date", "data_steward_name": "Configured steward", "effective_from": "not-a-date", "is_active": "true"},
+    ])
+    with pytest.raises(ValueError, match=f"{DATA_STEWARD_TABLE} row 'bad-date' has an invalid effective date"):
+        load_active_data_steward_profiles(spark=object(), config=_config(), env="dev")
 
 
 def test_no_active_stewards_raise_clear_setup_error(monkeypatch):
@@ -148,8 +209,8 @@ def test_update_form_prefills_latest_selected_row(monkeypatch):
         renewal_options=("Yes", "No"), default_values={},
     )
     config = SimpleNamespace(path_config=_config().path_config, data_agreement_config=intake)
-    steward = {"label": "Configured steward | Ops | BI | Shared", "steward_id": "1", "data_steward_name": "Configured steward", "data_steward_email": "configured@example.com", "domain": "Ops", "department": "BI", "faculty": "Shared"}
-    latest = {"agreement_id": "DA-1", "contract_version": "1.2.0", "agreement_name": "Latest orders", "data_steward_name": "Configured steward", "data_steward_email": "configured@example.com", "domain": "Ops", "department": "BI", "faculty": "Shared", "business_purpose": "Latest purpose", "approved_usage": "Latest usage", "restricted_usage": "Latest restriction", "retention_expectation": "Latest retention", "allowed_consumer_type": "Internal Department", "expected_output": "Dashboard", "source_system": "ERP", "refresh_frequency": "Daily", "renewal_required": "Yes", "start_date": "2026-01-01", "expiry_date": "2026-12-31"}
+    steward = {"label": "Configured steward | Ops | BI | Shared", "steward_id": "1", "data_steward_name": "Configured steward", "data_steward_email": "configured@example.com", "domain": "Ops", "department": "BI", "faculty": "Shared", "effective_from": "2020-01-01", "effective_to": ""}
+    latest = {"agreement_id": "DA-1", "contract_version": "1.2.0", "agreement_name": "Latest orders", "steward_id": "1", "business_purpose": "Latest purpose", "approved_usage": "Latest usage", "restricted_usage": "Latest restriction", "retention_expectation": "Latest retention", "allowed_consumer_type": "Internal Department", "expected_output": "Dashboard", "source_system": "ERP", "refresh_frequency": "Daily", "renewal_required": "Yes", "start_date": "2026-01-01", "expiry_date": "2026-12-31"}
     monkeypatch.setattr(data_agreement, "load_active_data_steward_profiles", lambda **kwargs: [steward])
     monkeypatch.setattr(data_agreement, "load_agreements", lambda *args, **kwargs: [latest])
     import sys
@@ -192,8 +253,8 @@ def test_update_form_prefills_latest_selected_row(monkeypatch):
     assert form["data_steward_profile"].value == steward
     assert "Latest version: 1.2.0" in form["agreement_identity"].value
     assert "Next version: 1.3.0" in form["agreement_identity"].value
-    assert "Agreement status:" in form["agreement_identity"].value
-    assert "Review status:" in form["agreement_identity"].value
+    assert "Agreement status:" not in form["agreement_identity"].value
+    assert "Review status:" not in form["agreement_identity"].value
     assert "Latest expiry date: 2026-12-31" in form["agreement_identity"].value
 
 
@@ -236,11 +297,9 @@ def test_render_agreement_intake_app_wires_commit_button_and_commits(monkeypatch
     summary = {
         "agreement_id": "DA-NEW",
         "contract_version": "1.0.0",
-        "agreement_status": "Active",
-        "review_status": "Pending",
         "expiry_date": "2026-12-31",
-        "committed_by": "user@example.com",
-        "committed_at": "2026-01-01T00:00:00+00:00",
+        "_committed_by": "user@example.com",
+        "_committed_at": "2026-01-01T00:00:00+00:00",
         "table_updated": DATA_AGREEMENT_TABLE,
     }
     calls = []
@@ -308,12 +367,12 @@ def test_render_agreement_intake_app_prints_clear_failure_for_missing_update_sel
 
 def test_setup_data_agreement_tables_creates_only_current_metadata_tables(monkeypatch):
     ensured = []
-    monkeypatch.setattr(data_agreement, "_ensure_delta_table", lambda spark, config, env, table_name, fields: ensured.append(table_name))
+    monkeypatch.setattr(data_agreement, "_ensure_delta_table", lambda spark, config, env, table_name, fields: ensured.append((table_name, fields)))
 
     tables = data_agreement.setup_data_agreement_tables(spark=object(), config=_config(), env="dev")
 
     assert tables == [DATA_AGREEMENT_TABLE, DATA_STEWARD_TABLE]
-    assert ensured == [DATA_AGREEMENT_TABLE, DATA_STEWARD_TABLE]
+    assert ensured == [(DATA_AGREEMENT_TABLE, DATA_AGREEMENT_FIELDS), (DATA_STEWARD_TABLE, DATA_STEWARD_FIELDS)]
 
 
 def test_metadata_architecture_documents_implemented_agreement_schema():
@@ -330,4 +389,4 @@ def test_metadata_architecture_documents_implemented_agreement_schema():
     assert "agreement_id + contract_version" in section
     assert "LYRA-style workbook or data-dictionary fields" in section
     assert "exactly nine source metadata tables" in architecture
-    assert "`METADATA_DATA_STEWARD` is a setup/helper table" in architecture
+    assert "`METADATA_DATA_STEWARD` is an effective-dated setup/helper table" in architecture

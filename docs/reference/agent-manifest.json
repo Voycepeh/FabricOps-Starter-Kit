@@ -614,21 +614,6 @@
     "summary": "No summary available."
   },
   {
-    "name": "_derive_agreement_status",
-    "qualified_name": "fabricops_kit.data_agreement._derive_agreement_status",
-    "module": "data_agreement",
-    "type": "internal",
-    "role": "internal",
-    "inbound": [
-      "fabricops_kit.data_agreement.collect_agreement_metadata"
-    ],
-    "outbound": [
-      "fabricops_kit.data_agreement._parse_required_date"
-    ],
-    "source_file": "src/fabricops_kit/data_agreement.py",
-    "summary": "No summary available."
-  },
-  {
     "name": "_ensure_delta_table",
     "qualified_name": "fabricops_kit.data_agreement._ensure_delta_table",
     "module": "data_agreement",
@@ -665,7 +650,7 @@
     "type": "internal",
     "role": "internal",
     "inbound": [
-      "fabricops_kit.data_agreement._derive_agreement_status"
+      "fabricops_kit.data_agreement.collect_agreement_metadata"
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/data_agreement.py",
@@ -726,7 +711,7 @@
     ],
     "outbound": [
       "fabricops_kit.data_agreement._context_get",
-      "fabricops_kit.data_agreement._derive_agreement_status",
+      "fabricops_kit.data_agreement._parse_required_date",
       "fabricops_kit.data_agreement._to_iso_date",
       "fabricops_kit.data_agreement.resolve_agreement_identity",
       "fabricops_kit.metadata._runtime_context"
@@ -745,7 +730,6 @@
     ],
     "outbound": [
       "fabricops_kit.data_agreement._ensure_delta_table",
-      "fabricops_kit.fabric_input_output.read_lakehouse_table",
       "fabricops_kit.fabric_input_output.write_lakehouse_table"
     ],
     "source_file": "src/fabricops_kit/data_agreement.py",
@@ -2493,7 +2477,6 @@
     "type": "callable",
     "role": "essential",
     "inbound": [
-      "fabricops_kit.data_agreement.commit_agreement_metadata",
       "fabricops_kit.data_agreement.load_active_data_steward_profiles",
       "fabricops_kit.data_agreement.load_agreements"
     ],

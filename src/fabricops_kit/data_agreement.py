@@ -20,24 +20,21 @@ _SELECTED_AGREEMENT: dict[str, Any] | None = None
 
 YES_NO_OPTIONS = ["Yes", "No"]
 DATA_AGREEMENT_FIELDS = [
-    "agreement_id", "contract_version", "agreement_name", "data_steward_name",
-    "data_steward_email", "domain", "department", "faculty", "business_purpose",
-    "approved_usage", "restricted_usage", "allowed_consumer_type", "expected_output",
-    "source_system", "refresh_frequency", "retention_expectation", "start_date",
-    "expiry_date", "agreement_status", "status_as_of_date", "renewal_required",
-    "review_status", "approved_by", "approved_at", "committed_by", "committed_at",
-    "notebook_name", "workspace_name", "lakehouse_name", "run_id",
+    "agreement_id", "contract_version", "agreement_name", "steward_id",
+    "business_purpose", "approved_usage", "restricted_usage", "allowed_consumer_type",
+    "expected_output", "source_system", "refresh_frequency", "retention_expectation",
+    "start_date", "expiry_date", "renewal_required", "_committed_by", "_committed_at",
+    "_workspace_name", "_notebook_name", "_metadata_lakehouse_name", "_activity_id",
 ]
 DATA_STEWARD_FIELDS = [
     "steward_id", "data_steward_name", "data_steward_email", "domain", "department",
-    "faculty", "is_active", "created_at", "updated_at",
+    "faculty", "effective_from", "effective_to", "is_active", "created_at", "updated_at",
 ]
 _REQUIRED_FIELDS = [
-    "agreement_id", "contract_version", "agreement_name", "data_steward_name",
-    "data_steward_email", "domain", "department", "faculty", "business_purpose",
+    "agreement_id", "contract_version", "agreement_name", "steward_id", "business_purpose",
     "approved_usage", "allowed_consumer_type", "expected_output", "source_system",
     "refresh_frequency", "retention_expectation", "expiry_date", "renewal_required",
-    "review_status", "committed_by", "committed_at",
+    "_committed_by", "_committed_at",
 ]
 
 
@@ -224,7 +221,7 @@ def agreement_dropdown_options(rows: Any, *, include_prompt: bool = False) -> li
         label = (
             f"{row.get('agreement_name', '')} (Latest v{row.get('contract_version', '')}) - "
             f"{row.get('source_system', '')} / {row.get('allowed_consumer_type', '')} - "
-            f"{row.get('data_steward_name', '')}"
+            f"Steward ID: {row.get('steward_id', '')}"
         )
         options.append((label, row))
     return options
@@ -302,14 +299,34 @@ def load_active_data_steward_profiles(*, spark: Any, config: Any, env: str) -> l
     Raises
     ------
     ValueError
-        If the steward table contains no active rows.
+        If the steward table contains no active rows or an effective-date value
+        is invalid.
+
+    Notes
+    -----
+    A steward is selectable only when ``is_active`` is true, ``effective_from``
+    is blank or not in the future, and ``effective_to`` is blank or not in the
+    past.
     """
     _ensure_delta_table(spark, config, env, DATA_STEWARD_TABLE, DATA_STEWARD_FIELDS)
     rows = _coerce_row_dicts(read_lakehouse_table(config, env, "metadata", DATA_STEWARD_TABLE, spark_session=spark))
     profiles = []
+    today = datetime.now(timezone.utc).date()
     for row in rows:
         if str(row.get("is_active") or "").strip().lower() != "true":
             continue
+        effective_from = str(row.get("effective_from") or "").strip()
+        effective_to = str(row.get("effective_to") or "").strip()
+        try:
+            if effective_from and date.fromisoformat(effective_from[:10]) > today:
+                continue
+            if effective_to and date.fromisoformat(effective_to[:10]) < today:
+                continue
+        except ValueError as exc:
+            raise ValueError(
+                f"{DATA_STEWARD_TABLE} row '{row.get('steward_id', '')}' has an invalid effective date. "
+                "Use ISO dates for effective_from and effective_to."
+            ) from exc
         profile = {field: row.get(field, "") for field in DATA_STEWARD_FIELDS if field not in {"is_active", "created_at", "updated_at"}}
         profile["label"] = " | ".join(str(profile.get(field) or "") for field in ("data_steward_name", "domain", "department", "faculty"))
         profiles.append(profile)
@@ -328,11 +345,6 @@ def _parse_required_date(value: Any, field_name: str) -> date:
         return date.fromisoformat(text[:10])
     except ValueError as exc:
         raise ValueError(f"{field_name} must be a valid date.") from exc
-
-
-def _derive_agreement_status(expiry_date: Any) -> dict[str, str]:
-    today = datetime.now(timezone.utc).date()
-    return {"agreement_status": "Active" if today <= _parse_required_date(expiry_date, "expiry_date") else "Inactive", "status_as_of_date": today.isoformat()}
 
 
 def _generate_agreement_id() -> str:
@@ -420,21 +432,22 @@ def collect_agreement_metadata(*, widget_values: dict[str, Any], mode: str = "cr
         configured_lakehouse_name = str(paths[env]["metadata"].name)
     row = {
         **values, **identity,
-        "data_steward_name": str(steward.get("data_steward_name") or "").strip(),
-        "data_steward_email": str(steward.get("data_steward_email") or "").strip(),
-        "domain": str(steward.get("domain") or "").strip(), "department": str(steward.get("department") or "").strip(), "faculty": str(steward.get("faculty") or "").strip(),
-        **_derive_agreement_status(values.get("expiry_date")), "review_status": "Pending", "approved_by": "", "approved_at": "",
-        "committed_by": str(committed_by).strip() if committed_by and str(committed_by).strip() else str(_context_get(context, "userName", "userId") or "unknown"), "committed_at": committed_at or datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
-        "notebook_name": str(_context_get(context, "currentNotebookName", "notebookName") or "01_da_agreement_template"),
-        "workspace_name": str(_context_get(context, "currentWorkspaceName", "workspaceName") or ""), "lakehouse_name": str(_context_get(context, "lakehouseName") or configured_lakehouse_name), "run_id": str(_context_get(context, "activityId") or ""),
+        "steward_id": str(steward.get("steward_id") or "").strip(),
+        "_committed_by": str(committed_by).strip() if committed_by and str(committed_by).strip() else str(_context_get(context, "userName", "userId") or "unknown"),
+        "_committed_at": committed_at or datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
+        "_workspace_name": str(_context_get(context, "currentWorkspaceName", "workspaceName") or ""),
+        "_notebook_name": str(_context_get(context, "currentNotebookName", "notebookName") or "01_da_agreement_template"),
+        "_metadata_lakehouse_name": configured_lakehouse_name or str(_context_get(context, "lakehouseName") or ""),
+        "_activity_id": str(_context_get(context, "activityId") or ""),
     }
     missing = [field for field in _REQUIRED_FIELDS if row.get(field) is None or (isinstance(row.get(field), str) and not row[field].strip())]
     if missing:
         raise ValueError("Missing required agreement field(s): " + ", ".join(missing))
+    _parse_required_date(row["expiry_date"], "expiry_date")
     if row["renewal_required"] not in YES_NO_OPTIONS:
         raise ValueError("renewal_required must be Yes or No.")
     agreement_row = {field: row.get(field, "") for field in DATA_AGREEMENT_FIELDS}
-    return {"agreement_row": agreement_row, "is_new_agreement": identity["is_new_agreement"], "summary": {**{key: agreement_row[key] for key in ("agreement_id", "contract_version", "agreement_status", "review_status", "expiry_date", "committed_by", "committed_at")}, "table_updated": DATA_AGREEMENT_TABLE}}
+    return {"agreement_row": agreement_row, "is_new_agreement": identity["is_new_agreement"], "summary": {**{key: agreement_row[key] for key in ("agreement_id", "contract_version", "expiry_date", "_committed_by", "_committed_at")}, "table_updated": DATA_AGREEMENT_TABLE}}
 
 
 def commit_agreement_metadata(*, spark: Any, config: Any, env: str, agreement_metadata: dict[str, Any], mode: str = "append") -> dict[str, Any]:
@@ -461,13 +474,7 @@ def commit_agreement_metadata(*, spark: Any, config: Any, env: str, agreement_me
     if mode != "append":
         raise ValueError("Agreement versions are append-only; mode must be 'append'.")
     _ensure_delta_table(spark, config, env, DATA_AGREEMENT_TABLE, DATA_AGREEMENT_FIELDS)
-    row = dict(agreement_metadata["agreement_row"])
-    try:
-        columns = read_lakehouse_table(config, env, "metadata", DATA_AGREEMENT_TABLE, spark_session=spark).columns
-    except Exception:
-        columns = []
-    for column in columns:
-        row.setdefault(column, "")
+    row = {field: agreement_metadata["agreement_row"].get(field, "") for field in DATA_AGREEMENT_FIELDS}
     write_lakehouse_table(spark.createDataFrame([row]), config, env, "metadata", DATA_AGREEMENT_TABLE, mode="append")
     return dict(agreement_metadata["summary"])
 
@@ -532,8 +539,6 @@ def create_agreement_form(*, spark: Any, config: Any, env: str, default_values: 
                 f"ID: {escape(str(selected.get('agreement_id', '')))}<br>"
                 f"Latest version: {escape(str(selected.get('contract_version', '')))}<br>"
                 f"Next version: {escape(next_minor_version(selected.get('contract_version')))}<br>"
-                f"Agreement status: {escape(str(selected.get('agreement_status', '')))}<br>"
-                f"Review status: {escape(str(selected.get('review_status', '')))}<br>"
                 f"Latest expiry date: {escape(str(selected.get('expiry_date', '')))}"
             )
     def prefill(*_: Any) -> None:
@@ -546,7 +551,7 @@ def create_agreement_form(*, spark: Any, config: Any, env: str, default_values: 
         for name in ("allowed_consumer_type", "expected_output", "source_system", "refresh_frequency", "renewal_required"):
             if selected.get(name) in list(form[name].options):
                 form[name].value = selected[name]
-        matching = [profile for _, profile in steward_options if all(str(profile.get(key) or "") == str(selected.get(key) or "") for key in ("data_steward_name", "data_steward_email", "domain", "department", "faculty"))]
+        matching = [profile for _, profile in steward_options if str(profile.get("steward_id") or "") == str(selected.get("steward_id") or "")]
         if matching:
             form["data_steward_profile"].value = matching[0]
         for name in ("start_date", "expiry_date"):
@@ -624,11 +629,9 @@ def render_agreement_intake_app(
                 print("Data agreement committed successfully.")
                 print(f"- Agreement ID: {summary['agreement_id']}")
                 print(f"- Contract Version: {summary['contract_version']}")
-                print(f"- Status: {summary['agreement_status']}")
-                print(f"- Review Status: {summary['review_status']}")
                 print(f"- Expiry Date: {summary['expiry_date']}")
-                print(f"- Committed By: {summary['committed_by']}")
-                print(f"- Committed At: {summary['committed_at']}")
+                print(f"- Committed By: {summary['_committed_by']}")
+                print(f"- Committed At: {summary['_committed_at']}")
                 print(f"- Table Updated: {summary['table_updated']}")
             except Exception as exc:
                 print(f"Commit failed: {exc}")

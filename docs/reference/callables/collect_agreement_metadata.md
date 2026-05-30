@@ -24,7 +24,7 @@ No summary available.
 
 ## Outbound references
 - <a href="../internal/data_agreement/_context_get/"><code>fabricops_kit.data_agreement._context_get</code></a>
-- <a href="../internal/data_agreement/_derive_agreement_status/"><code>fabricops_kit.data_agreement._derive_agreement_status</code></a>
+- <a href="../internal/data_agreement/_parse_required_date/"><code>fabricops_kit.data_agreement._parse_required_date</code></a>
 - <a href="../internal/data_agreement/_to_iso_date/"><code>fabricops_kit.data_agreement._to_iso_date</code></a>
 - <a href="../internal/data_agreement/resolve_agreement_identity/"><code>fabricops_kit.data_agreement.resolve_agreement_identity</code></a>
 - <a href="../internal/metadata/_runtime_context/"><code>fabricops_kit.metadata._runtime_context</code></a>

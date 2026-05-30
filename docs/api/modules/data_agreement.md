@@ -40,7 +40,7 @@ Lower-level form, collection, and commit functions remain supported only for adv
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>15</td>
+      <td>14</td>
     </tr>
     <tr>
       <td>Inbound module count</td>
@@ -137,7 +137,7 @@ Normal notebook users should not call these lower-level functions. Use them only
       <td>Optional / advanced customization</td>
       <td>function</td>
       <td>Build one validated append-only agreement-version row from intake values.</td>
-      <td><a href="../../reference/internal/data_agreement/_context_get/"><code>_context_get</code></a> (internal), <a href="../../reference/internal/data_agreement/_derive_agreement_status/"><code>_derive_agreement_status</code></a> (internal), <a href="../../reference/internal/data_agreement/_to_iso_date/"><code>_to_iso_date</code></a> (internal)</td>
+      <td><a href="../../reference/internal/data_agreement/_context_get/"><code>_context_get</code></a> (internal), <a href="../../reference/internal/data_agreement/_parse_required_date/"><code>_parse_required_date</code></a> (internal), <a href="../../reference/internal/data_agreement/_to_iso_date/"><code>_to_iso_date</code></a> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/commit_agreement_metadata/"><code>commit_agreement_metadata</code></a></td>
@@ -231,10 +231,6 @@ These non-exported helpers support framework internals and diagnostics. Do not i
       <td>Private implementation helper</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_agreement/_derive_agreement_status/"><code>_derive_agreement_status</code></a></td>
-      <td>Private implementation helper</td>
-    </tr>
-    <tr>
       <td><a href="../../reference/internal/data_agreement/_ensure_delta_table/"><code>_ensure_delta_table</code></a></td>
       <td>Private implementation helper</td>
     </tr>
@@ -273,7 +269,7 @@ These non-exported helpers support framework internals and diagnostics. Do not i
 <li>
 <a class="reference-chip" href="../../reference/collect_agreement_metadata/"><code>collect_agreement_metadata</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_context_get"><code>_context_get</code></a>, <a class="reference-chip" href="#_derive_agreement_status"><code>_derive_agreement_status</code></a>, <a class="reference-chip" href="#_to_iso_date"><code>_to_iso_date</code></a>, <a class="reference-chip" href="#resolve_agreement_identity"><code>resolve_agreement_identity</code></a>
+<a class="reference-chip" href="#_context_get"><code>_context_get</code></a>, <a class="reference-chip" href="#_parse_required_date"><code>_parse_required_date</code></a>, <a class="reference-chip" href="#_to_iso_date"><code>_to_iso_date</code></a>, <a class="reference-chip" href="#resolve_agreement_identity"><code>resolve_agreement_identity</code></a>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/commit_agreement_metadata/"><code>commit_agreement_metadata</code></a>
@@ -341,10 +337,6 @@ These non-exported helpers support framework internals and diagnostics. Do not i
       <td><a href="../../reference/collect_agreement_metadata/"><code>collect_agreement_metadata</code></a></td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_agreement/_derive_agreement_status/"><code>_derive_agreement_status</code></a></td>
-      <td><a href="../../reference/collect_agreement_metadata/"><code>collect_agreement_metadata</code></a></td>
-    </tr>
-    <tr>
       <td><a href="../../reference/internal/data_agreement/_ensure_delta_table/"><code>_ensure_delta_table</code></a></td>
       <td><a href="../../reference/commit_agreement_metadata/"><code>commit_agreement_metadata</code></a>, <a href="../../reference/setup_data_agreement_tables/"><code>setup_data_agreement_tables</code></a></td>
     </tr>
@@ -354,7 +346,7 @@ These non-exported helpers support framework internals and diagnostics. Do not i
     </tr>
     <tr>
       <td><a href="../../reference/internal/data_agreement/_parse_required_date/"><code>_parse_required_date</code></a></td>
-      <td>—</td>
+      <td><a href="../../reference/collect_agreement_metadata/"><code>collect_agreement_metadata</code></a></td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/data_agreement/_table_path/"><code>_table_path</code></a></td>
@@ -375,11 +367,6 @@ These non-exported helpers support framework internals and diagnostics. Do not i
 </li>
 <li>
 <a class="reference-chip" href="#_context_get"><code>_context_get</code></a>
-</li>
-<li>
-<a class="reference-chip" href="#_derive_agreement_status"><code>_derive_agreement_status</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_parse_required_date"><code>_parse_required_date</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_ensure_delta_table"><code>_ensure_delta_table</code></a>

@@ -220,11 +220,7 @@ def test_02_ex_maps_selected_agreement_to_current_versioned_schema():
         "business_purpose",
         "approved_usage",
         "restricted_usage",
-        "data_steward_name",
-        "data_steward_email",
-        "domain",
-        "department",
-        "faculty",
+        "steward_id",
         "source_system",
         "refresh_frequency",
         "retention_expectation",
@@ -233,7 +229,10 @@ def test_02_ex_maps_selected_agreement_to_current_versioned_schema():
     ):
         assert f'"{field_name}"' in code
     assert 'business_purpose = selected_agreement.get("business_purpose") or selected_agreement.get("business_context", "")' in code
-    assert '"data_steward": {' in code
+    assert '"steward_id": steward_id' in code
+    assert '"data_steward": {' not in code
+    for removed_snapshot_field in ("data_steward_name", "data_steward_email", "domain", "department", "faculty"):
+        assert f'selected_agreement.get("{removed_snapshot_field}"' not in code
     assert "display(agreement_context)" in code
     assert 'business_context=f"Business purpose: {business_purpose}\\nApproved usage: {approved_usage}"' in code
     assert "prompt_template=CONFIG.ai_prompt_config.dq_rule_suggestion_prompt_template" in code

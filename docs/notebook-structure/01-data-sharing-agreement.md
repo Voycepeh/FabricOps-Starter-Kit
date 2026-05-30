@@ -9,9 +9,9 @@
 | Table | Grain | Purpose |
 | --- | --- | --- |
 | `METADATA_DATA_AGREEMENT` | One row per agreement version | Append-only agreement intake and usage boundary. |
-| `METADATA_DATA_STEWARD` | One row per steward profile | Maintained setup table used to populate the intake dropdown. |
+| `METADATA_DATA_STEWARD` | One row per effective-dated steward profile | Maintained setup table used to populate the intake dropdown; agreement versions store only `steward_id`. |
 
-`00_env_config` owns environment bootstrap: it creates or checks both Delta tables in the configured metadata lakehouse and reports steward readiness. `01_da_*` is a form notebook: it calls `render_agreement_intake_app(...)`, and that framework helper handles commit-button wiring, create/update branching, widget reads, metadata collection, commit execution, and friendly output. Neither notebook seeds fake steward people. Before rendering the form, maintain real steward profiles in `METADATA_DATA_STEWARD` and mark selectable rows with `is_active = true`. If no active rows exist, `00_env_config` prints a clear readiness warning in warning mode and the intake form raises a clear setup error; strict validation mode makes `00_env_config` fail after printing the warning.
+`00_env_config` owns environment bootstrap: it creates or checks both Delta tables in the configured metadata lakehouse and reports steward readiness. `01_da_*` is a form notebook: it calls `render_agreement_intake_app(...)`, and that framework helper handles commit-button wiring, create/update branching, widget reads, metadata collection, commit execution, and friendly output. Neither notebook seeds fake steward people. Before rendering the form, maintain real effective-dated steward profiles in `METADATA_DATA_STEWARD`, maintain `effective_from` / `effective_to`, and mark selectable rows with `is_active = true`. If no active rows exist, `00_env_config` prints a clear readiness warning in warning mode and the intake form raises a clear setup error; strict validation mode makes `00_env_config` fail after printing the warning.
 
 ## Agreement identity and versioning
 
@@ -33,7 +33,7 @@
 
 - The form uses `ipywidgets`, not `notebookutils.widgets`.
 - Display rendering imports `IPython.display as ip_display`, avoiding any shadowing of Fabric display behavior.
-- `committed_by` resolves from `notebookutils.runtime.context`: `userName`, then `userId`, then `unknown`.
+- Framework-managed `_committed_by` resolves from `notebookutils.runtime.context`: `userName`, then `userId`, then `unknown`.
 - Metadata setup, steward reads, agreement reads, and agreement writes resolve `CONFIG.path_config.paths[env]["metadata"]` and use that lakehouse's OneLake path. No default attached lakehouse is required.
 - Widget defaults are exposed through `CONFIG.data_agreement_config`, the `01_da`-specific `DataAgreementConfig` section explicitly assembled by `00_env_config`.
 - The default notebook calls `render_agreement_intake_app(...)`. Normal notebook users should not call the lower-level functions directly. Advanced users may optionally call `create_agreement_form(...)`, `read_agreement_form(...)`, `collect_agreement_metadata(...)`, and `commit_agreement_metadata(...)` only when customizing the workflow.

@@ -659,22 +659,6 @@
     "summary": "No summary available."
   },
   {
-    "id": "fabricops_kit.data_agreement._derive_agreement_status",
-    "name": "_derive_agreement_status",
-    "qualified_name": "fabricops_kit.data_agreement._derive_agreement_status",
-    "module": "data_agreement",
-    "classification": "Internal helper",
-    "inbound": [
-      "fabricops_kit.data_agreement.collect_agreement_metadata"
-    ],
-    "outbound": [
-      "fabricops_kit.data_agreement._parse_required_date"
-    ],
-    "source_path": "src/fabricops_kit/data_agreement.py",
-    "docs_path": "reference/internal/data_agreement__derive_agreement_status.md",
-    "summary": "No summary available."
-  },
-  {
     "id": "fabricops_kit.data_agreement._ensure_delta_table",
     "name": "_ensure_delta_table",
     "qualified_name": "fabricops_kit.data_agreement._ensure_delta_table",
@@ -713,7 +697,7 @@
     "module": "data_agreement",
     "classification": "Internal helper",
     "inbound": [
-      "fabricops_kit.data_agreement._derive_agreement_status"
+      "fabricops_kit.data_agreement.collect_agreement_metadata"
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/data_agreement.py",
@@ -778,7 +762,7 @@
     ],
     "outbound": [
       "fabricops_kit.data_agreement._context_get",
-      "fabricops_kit.data_agreement._derive_agreement_status",
+      "fabricops_kit.data_agreement._parse_required_date",
       "fabricops_kit.data_agreement._to_iso_date",
       "fabricops_kit.data_agreement.resolve_agreement_identity",
       "fabricops_kit.metadata._runtime_context"
@@ -798,7 +782,6 @@
     ],
     "outbound": [
       "fabricops_kit.data_agreement._ensure_delta_table",
-      "fabricops_kit.fabric_input_output.read_lakehouse_table",
       "fabricops_kit.fabric_input_output.write_lakehouse_table"
     ],
     "source_path": "src/fabricops_kit/data_agreement.py",
@@ -2671,7 +2654,6 @@
     "module": "fabric_input_output",
     "classification": "Essential",
     "inbound": [
-      "fabricops_kit.data_agreement.commit_agreement_metadata",
       "fabricops_kit.data_agreement.load_active_data_steward_profiles",
       "fabricops_kit.data_agreement.load_agreements"
     ],
