@@ -100,47 +100,108 @@ def test_00_env_config_exposes_shared_config_and_data_agreement_defaults():
     code = _code("00_env_config.ipynb")
     assert 'ENV = "dev"' in code
     assert "ENV_NAME = ENV" in code
-    assert "DATA_AGREEMENT_CONFIG = DataAgreementConfig()" in code
+    assert "DATA_AGREEMENT_CONFIG = DataAgreementConfig(" in code
+    for configured_default in (
+        "source_systems=(",
+        "refresh_frequencies=(",
+        "allowed_consumer_types=(",
+        "expected_outputs=(",
+        "renewal_options=(",
+        "default_values={",
+    ):
+        assert configured_default in code
     assert "data_agreement_config=DATA_AGREEMENT_CONFIG" in code
     assert 'CONFIG.path_config.paths[ENV]["metadata"]' in json.loads((TEMPLATES / "00_env_config.ipynb").read_text(encoding="utf-8"))["cells"][1]["source"][2]
 
 
-def test_01_da_imports_only_public_current_agreement_helpers():
+def test_00_env_config_bootstraps_agreement_tables_and_reports_steward_readiness():
+    code = _code("00_env_config.ipynb")
+    assert "setup_data_agreement_tables(spark=spark, config=CONFIG, env=ENV)" in code
+    assert "load_active_data_steward_profiles(spark=spark, config=CONFIG, env=ENV)" in code
+    assert "CONFIG.path_config.paths[ENV]['unified'].name" in code
+    assert "CONFIG.path_config.paths[ENV]['product'].name" in code
+    assert "agreement metadata tables created/checked" in code
+    assert "01_da cannot render until real steward rows are added with is_active = true" in code
+    assert 'VALIDATION_MODE == "strict" and STEWARD_READINESS_STATUS != "ready"' in code
+    assert "No fake steward profiles are seeded." in code
+
+
+def test_01_da_imports_only_high_level_agreement_app_helper():
     imported = _fabricops_imports("01_da_agreement_template.ipynb")
     assert imported <= set(fabricops_kit.__all__)
-    assert imported == {
-        "collect_agreement_metadata",
-        "commit_agreement_metadata",
-        "create_agreement_form",
-        "load_agreements",
-        "read_agreement_form",
-        "setup_data_agreement_tables",
-    }
+    assert imported == {"render_agreement_intake_app"}
     assert not (imported & REMOVED_AGREEMENT_CALLABLES)
 
 
-def test_01_da_uses_ipywidgets_flow_and_explicit_commit_mode():
+def test_01_da_renders_framework_managed_intake_app_without_notebook_callback():
     code = _code("01_da_agreement_template.ipynb")
     assert "%run 00_env_config" in code
-    assert "setup_data_agreement_tables(spark=spark, config=CONFIG, env=ENV)" in code
-    assert "create_agreement_form(spark=spark, config=CONFIG, env=ENV)" in code
-    assert "notebookutils.widgets" not in code
-    assert "display =" not in code
-    assert "from IPython.display import clear_output" in code
-    assert 'intake_mode = "update" if agreement_form["mode"].value == "Update Existing Agreement" else "create"' in code
-    assert "mode=intake_mode" in code
-    assert "print(summary)" not in code
-    for label in (
-        "Agreement ID",
-        "Contract Version",
-        "Status",
-        "Review Status",
-        "Expiry Date",
-        "Committed By",
-        "Committed At",
-        "Table Updated",
+    assert "from fabricops_kit import render_agreement_intake_app" in code
+    assert "agreement_app = render_agreement_intake_app(" in code
+    assert "spark=spark" in code
+    assert "config=CONFIG" in code
+    assert "env=ENV" in code
+    assert "def on_commit_clicked" not in code
+    assert ".on_click(" not in code
+    for lower_level_helper in (
+        "create_agreement_form",
+        "read_agreement_form",
+        "collect_agreement_metadata",
+        "commit_agreement_metadata",
+        "load_agreements",
+        "setup_data_agreement_tables",
     ):
-        assert label in code
+        assert lower_level_helper not in code
+        assert lower_level_helper in fabricops_kit.__all__
+
+
+def test_public_all_exposes_supported_agreement_api_but_not_internal_helpers():
+    supported = {
+        "render_agreement_intake_app",
+        "setup_data_agreement_tables",
+        "load_agreements",
+        "select_agreement",
+        "get_selected_agreement",
+        "create_agreement_form",
+        "read_agreement_form",
+        "collect_agreement_metadata",
+        "commit_agreement_metadata",
+    }
+    internal_helpers = {
+        "agreement_dropdown_options",
+        "latest_agreement_versions",
+        "parse_contract_version",
+        "next_minor_version",
+        "resolve_agreement_identity",
+        "load_active_data_steward_profiles",
+        "metadata_lakehouse_root",
+    }
+    exported = set(fabricops_kit.__all__)
+    assert supported <= exported
+    assert not (internal_helpers & exported)
+
+
+def test_generated_data_agreement_module_page_separates_supported_api_tiers():
+    page = Path("docs/api/modules/data_agreement.md").read_text(encoding="utf-8")
+    assert "## Intended notebook call flow" in page
+    assert "## Primary notebook API" in page
+    assert "## Optional advanced customization API" in page
+    assert "## Internal helpers" in page
+    assert "### Internal workflow helpers" in page
+    assert "### Private implementation helpers" in page
+    assert "Normal notebook users should not call these lower-level functions." in page
+    assert page.index("## Intended notebook call flow") < page.index("## Module manifest")
+    assert "## Module overview badges" not in page
+    for helper_name in (
+        "agreement_dropdown_options",
+        "latest_agreement_versions",
+        "load_active_data_steward_profiles",
+        "metadata_lakehouse_root",
+        "next_minor_version",
+        "parse_contract_version",
+        "resolve_agreement_identity",
+    ):
+        assert f"internal/data_agreement/{helper_name}/" in page
 
 
 def test_generated_function_manifest_excludes_removed_agreement_callables():
@@ -159,11 +220,7 @@ def test_02_ex_maps_selected_agreement_to_current_versioned_schema():
         "business_purpose",
         "approved_usage",
         "restricted_usage",
-        "data_steward_name",
-        "data_steward_email",
-        "domain",
-        "department",
-        "faculty",
+        "steward_id",
         "source_system",
         "refresh_frequency",
         "retention_expectation",
@@ -172,7 +229,10 @@ def test_02_ex_maps_selected_agreement_to_current_versioned_schema():
     ):
         assert f'"{field_name}"' in code
     assert 'business_purpose = selected_agreement.get("business_purpose") or selected_agreement.get("business_context", "")' in code
-    assert '"data_steward": {' in code
+    assert '"steward_id": steward_id' in code
+    assert '"data_steward": {' not in code
+    for removed_snapshot_field in ("data_steward_name", "data_steward_email", "domain", "department", "faculty"):
+        assert f'selected_agreement.get("{removed_snapshot_field}"' not in code
     assert "display(agreement_context)" in code
     assert 'business_context=f"Business purpose: {business_purpose}\\nApproved usage: {approved_usage}"' in code
     assert "prompt_template=CONFIG.ai_prompt_config.dq_rule_suggestion_prompt_template" in code

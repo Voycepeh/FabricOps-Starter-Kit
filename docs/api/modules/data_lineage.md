@@ -103,12 +103,12 @@ Owns source-to-target lineage and transformation evidence.
 <ul class="callable-relationship-rows">
 <li>
 <a class="reference-chip" href="../../reference/build_lineage_handover_markdown/"><code>build_lineage_handover_markdown</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <span>None.</span>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/build_lineage_records/"><code>build_lineage_records</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <span>None.</span>
 </li>
 </ul>
@@ -188,12 +188,12 @@ Owns source-to-target lineage and transformation evidence.
 <ul class="callable-relationship-rows">
 <li>
 <a class="reference-chip" href="#_build_lineage_record_from_steps"><code>_build_lineage_record_from_steps</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_validate_lineage_steps"><code>_validate_lineage_steps</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_build_lineage_records"><code>_build_lineage_records</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_build_lineage_record_from_steps"><code>_build_lineage_record_from_steps</code></a>
 </li>
 <li>
@@ -201,7 +201,7 @@ Owns source-to-target lineage and transformation evidence.
 </li>
 <li>
 <a class="reference-chip" href="#_enrich_lineage_steps_with_ai"><code>_enrich_lineage_steps_with_ai</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_fallback_copilot_lineage_prompt"><code>_fallback_copilot_lineage_prompt</code></a>
 </li>
 <li>
@@ -209,7 +209,7 @@ Owns source-to-target lineage and transformation evidence.
 </li>
 <li>
 <a class="reference-chip" href="#_flatten_chain"><code>_flatten_chain</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_name"><code>_name</code></a>
 </li>
 <li>
@@ -220,17 +220,17 @@ Owns source-to-target lineage and transformation evidence.
 </li>
 <li>
 <a class="reference-chip" href="#_resolve_write_target"><code>_resolve_write_target</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_literal"><code>_literal</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_scan_notebook_cells"><code>_scan_notebook_cells</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_scan_notebook_lineage"><code>_scan_notebook_lineage</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_scan_notebook_lineage"><code>_scan_notebook_lineage</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_call_name"><code>_call_name</code></a>, <a class="reference-chip" href="#_flatten_chain"><code>_flatten_chain</code></a>, <a class="reference-chip" href="#_name"><code>_name</code></a>, <a class="reference-chip" href="#_resolve_write_target"><code>_resolve_write_target</code></a>, <a class="reference-chip" href="#_step"><code>_step</code></a>
 </li>
 <li>

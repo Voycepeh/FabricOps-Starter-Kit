@@ -64,12 +64,12 @@ This view summarizes whether the agreement has enough approved metadata and runt
 | `agreement_id` | `lyra_deid_v1` | `METADATA_DATA_AGREEMENT` | `01_da_*` | Stable contract scope key |
 | `contract_version` | `1` | `METADATA_DATA_AGREEMENT` | `01_da_*` | Identifies the approved agreement version |
 | `agreement_name` | `LYRA De-identified Output Agreement` | `METADATA_DATA_AGREEMENT` | `01_da_*` | Human-readable agreement name |
-| `business_domain` | `Student analytics` | `METADATA_DATA_AGREEMENT` | `01_da_*` | Business/domain context |
-| `data_owner` | `Registrar Office` | `METADATA_DATA_AGREEMENT` | `01_da_*` | Accountable owner |
-| `data_steward` | `Analytics Steward` | `METADATA_DATA_AGREEMENT` | `01_da_*` | Operational steward |
+| `business_domain` | `Student analytics` | assembled enrichment | downstream metadata view logic | Business/domain context derived outside the agreement row |
+| `data_owner` | `Registrar Office` | assembled enrichment | downstream metadata view logic | Accountable owner derived outside the agreement row |
+| `data_steward` | `Analytics Steward` | `METADATA_DATA_STEWARD` via `steward_id` | assembled join | Effective-dated operational steward profile |
 | `approved_usage` | `Reporting and governed analytics` | `METADATA_DATA_AGREEMENT` | `01_da_*` | Allowed usage |
 | `access_boundaries` | `Internal approved users only` | `METADATA_DATA_AGREEMENT` | `01_da_*` | Access constraint summary |
-| `agreement_status` | `approved` | `METADATA_DATA_AGREEMENT` | `01_da_*` | Current agreement state |
+| `agreement_status` | `active` | assembled logic | agreement-summary view logic | Current state derived from durable agreement dates and downstream governance evidence |
 | `table_count` | `3` | `METADATA_DATA_CATALOGUE` | assembled view aggregation | Number of governed tables under the agreement |
 | `column_count` | `48` | `METADATA_DATA_CATALOGUE` | assembled view aggregation | Number of governed columns under the agreement |
 | `classified_column_count` | `48` | `METADATA_COLUMN_GOVERNANCE` | `04_gov_*` aggregation | Coverage of column classification |

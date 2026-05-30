@@ -6,11 +6,15 @@
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 2</span><span class="reference-chip">Internal helpers: 8</span><span class="reference-chip">Outbound: 1</span><span class="reference-chip">Inbound: 4</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 3</span><span class="reference-chip">Internal helpers: 8</span><span class="reference-chip">Outbound: 1</span><span class="reference-chip">Inbound: 4</span></div>
 
 ## Module purpose
 
 Owns metadata evidence persistence, stable keys, notebook registry, and contract evidence loading.
+
+## Shared metadata audit fields
+
+Use `build_runtime_audit_fields(...)` when metadata tables need framework-managed underscore-prefixed audit values such as `_committed_by`, `_committed_at`, `_workspace_name`, `_notebook_name`, `_metadata_lakehouse_name`, and `_activity_id`.
 
 ## Module manifest
 
@@ -32,7 +36,7 @@ Owns metadata evidence persistence, stable keys, notebook registry, and contract
     </tr>
     <tr>
       <td>Public callable count</td>
-      <td>2</td>
+      <td>3</td>
     </tr>
     <tr>
       <td>Internal helper count</td>
@@ -72,6 +76,13 @@ Owns metadata evidence persistence, stable keys, notebook registry, and contract
   </thead>
   <tbody>
     <tr>
+      <td><a href="../../reference/build_runtime_audit_fields/"><code>build_runtime_audit_fields</code></a></td>
+      <td>Essential</td>
+      <td>function</td>
+      <td>Build shared underscore-prefixed runtime audit fields for metadata-table rows.</td>
+      <td><a href="../../reference/internal/metadata/_context_get/"><code>_context_get</code></a> (internal), <a href="../../reference/internal/metadata/_runtime_context/"><code>_runtime_context</code></a> (internal), <a href="../../reference/internal/metadata/_safe_str/"><code>_safe_str</code></a> (internal)</td>
+    </tr>
+    <tr>
       <td><a href="../../reference/load_notebook_registry/"><code>load_notebook_registry</code></a></td>
       <td>Essential</td>
       <td>function</td>
@@ -102,6 +113,11 @@ Owns metadata evidence persistence, stable keys, notebook registry, and contract
 <h6>Public callables</h6>
 <ul class="callable-relationship-rows">
 <li>
+<a class="reference-chip" href="../../reference/build_runtime_audit_fields/"><code>build_runtime_audit_fields</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_context_get"><code>_context_get</code></a>, <a class="reference-chip" href="#_runtime_context"><code>_runtime_context</code></a>, <a class="reference-chip" href="#_safe_str"><code>_safe_str</code></a>
+</li>
+<li>
 <a class="reference-chip" href="../../reference/load_notebook_registry/"><code>load_notebook_registry</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <span>None.</span>
@@ -130,7 +146,7 @@ Owns metadata evidence persistence, stable keys, notebook registry, and contract
   <tbody>
     <tr>
       <td><a href="../../reference/internal/metadata/_context_get/"><code>_context_get</code></a></td>
-      <td><a href="../../reference/register_current_notebook/"><code>register_current_notebook</code></a></td>
+      <td><a href="../../reference/build_runtime_audit_fields/"><code>build_runtime_audit_fields</code></a>, <a href="../../reference/register_current_notebook/"><code>register_current_notebook</code></a></td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/metadata/_extract_columns_from_profile/"><code>_extract_columns_from_profile</code></a></td>
@@ -150,11 +166,11 @@ Owns metadata evidence persistence, stable keys, notebook registry, and contract
     </tr>
     <tr>
       <td><a href="../../reference/internal/metadata/_runtime_context/"><code>_runtime_context</code></a></td>
-      <td><a href="../../reference/register_current_notebook/"><code>register_current_notebook</code></a></td>
+      <td><a href="../../reference/build_runtime_audit_fields/"><code>build_runtime_audit_fields</code></a>, <a href="../../reference/register_current_notebook/"><code>register_current_notebook</code></a></td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/metadata/_safe_str/"><code>_safe_str</code></a></td>
-      <td><a href="../../reference/register_current_notebook/"><code>register_current_notebook</code></a></td>
+      <td><a href="../../reference/build_runtime_audit_fields/"><code>build_runtime_audit_fields</code></a>, <a href="../../reference/register_current_notebook/"><code>register_current_notebook</code></a></td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/metadata/_sha256_key/"><code>_sha256_key</code></a></td>

@@ -84,9 +84,9 @@ Shared environment bootstrap and validation before agreement intake, exploration
 
 ## `01_da_<agreement>`
 
-Captures one immutable `METADATA_DATA_AGREEMENT` row per human-approved agreement version and uses manually maintained `METADATA_DATA_STEWARD` profiles for intake dropdowns.
+Form notebook that renders the agreement-intake app through one framework helper. The helper commits immutable `METADATA_DATA_AGREEMENT` versions and reads manually maintained `METADATA_DATA_STEWARD` profiles for intake dropdowns.
 
-### Segment 1: Create agreement metadata widgets
+### Segment 1: Render the agreement-intake app
 
 <table>
   <thead>
@@ -100,56 +100,10 @@ Captures one immutable `METADATA_DATA_AGREEMENT` row per human-approved agreemen
   </thead>
   <tbody>
     <tr>
-      <td>`create_agreement_form`</td>
+      <td>`render_agreement_intake_app`</td>
       <td>Callable orchestration wrapper</td>
-      <td>Render the standalone ``01_da`` intake form with ``ipywidgets``.</td>
+      <td>Render and wire the default agreement-intake form application.</td>
       <td>—</td>
-      <td>Check dependency outputs and metadata writes.</td>
-    </tr>
-  </tbody>
-</table>
-
-### Segment 2: Collect and preview agreement metadata
-
-<table>
-  <thead>
-    <tr>
-      <th>Function</th>
-      <th>Role</th>
-      <th>What it does</th>
-      <th>Delegates to</th>
-      <th>Debug when</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>`collect_agreement_metadata`</td>
-      <td>Callable orchestration wrapper</td>
-      <td>Build one validated append-only agreement-version row from intake values.</td>
-      <td>`_context_get`, `_derive_agreement_status`, `_runtime_context`, `_to_iso_date`</td>
-      <td>Check dependency outputs and metadata writes.</td>
-    </tr>
-  </tbody>
-</table>
-
-### Segment 3: Commit metadata records
-
-<table>
-  <thead>
-    <tr>
-      <th>Function</th>
-      <th>Role</th>
-      <th>What it does</th>
-      <th>Delegates to</th>
-      <th>Debug when</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>`commit_agreement_metadata`</td>
-      <td>Callable orchestration wrapper</td>
-      <td>Append one agreement-version row by configured OneLake path.</td>
-      <td>`_ensure_delta_table`</td>
       <td>Check dependency outputs and metadata writes.</td>
     </tr>
   </tbody>

@@ -9,9 +9,9 @@
 | Table | Grain | Purpose |
 | --- | --- | --- |
 | `METADATA_DATA_AGREEMENT` | One row per agreement version | Append-only agreement intake and usage boundary. |
-| `METADATA_DATA_STEWARD` | One row per steward profile | Maintained setup table used to populate the intake dropdown. |
+| `METADATA_DATA_STEWARD` | One row per effective-dated steward profile | Maintained setup table used to populate the intake dropdown; agreement versions store only `steward_id`. |
 
-The notebook setup helper creates both Delta tables empty when required. It never seeds fake steward people. Before rendering the form, maintain real steward profiles in `METADATA_DATA_STEWARD` and mark selectable rows with `is_active = true`. If no active rows exist, the intake form raises a clear setup error.
+`00_env_config` owns environment bootstrap: it creates or checks both Delta tables in the configured metadata lakehouse and reports steward readiness. `01_da_*` is a form notebook: it calls `render_agreement_intake_app(...)`, and that framework helper handles commit-button wiring, create/update branching, widget reads, metadata collection, commit execution, and friendly output. Neither notebook seeds fake steward people. Before rendering the form, maintain real effective-dated steward profiles in `METADATA_DATA_STEWARD`, maintain `effective_from` / `effective_to`, and mark selectable rows with `is_active = true`. If no active rows exist, `00_env_config` prints a clear readiness warning in warning mode and the intake form raises a clear setup error; strict validation mode makes `00_env_config` fail after printing the warning.
 
 ## Agreement identity and versioning
 
@@ -23,13 +23,20 @@ The notebook setup helper creates both Delta tables empty when required. It neve
 - Existing rows are never overwritten. Each commit appends a new version row.
 - Update mode lists only the latest row per `agreement_id` and pre-fills the latest values for editing.
 
+## Intended notebook call flow
+
+1. `00_env_config` assembles `CONFIG`, creates or checks the agreement metadata tables, and reports steward readiness.
+2. `01_da_*` calls `render_agreement_intake_app(...)` to render the framework-managed intake form.
+3. Downstream notebooks call `load_agreements(...)`, `select_agreement(...)`, and `get_selected_agreement()` to bind work to a committed agreement version.
+
 ## Runtime and routing controls
 
 - The form uses `ipywidgets`, not `notebookutils.widgets`.
 - Display rendering imports `IPython.display as ip_display`, avoiding any shadowing of Fabric display behavior.
-- `committed_by` resolves from `notebookutils.runtime.context`: `userName`, then `userId`, then `unknown`.
+- Agreement technical audit fields are framework-managed through `metadata.build_runtime_audit_fields(...)`. `_committed_by` resolves from `notebookutils.runtime.context`: `userName`, then `userId`, then `unknown`.
 - Metadata setup, steward reads, agreement reads, and agreement writes resolve `CONFIG.path_config.paths[env]["metadata"]` and use that lakehouse's OneLake path. No default attached lakehouse is required.
-- Widget defaults live under the `01_da`-specific `DataAgreementConfig` section assembled by `00_env_config`.
+- Widget defaults are exposed through `CONFIG.data_agreement_config`, the `01_da`-specific `DataAgreementConfig` section explicitly assembled by `00_env_config`.
+- The default notebook calls `render_agreement_intake_app(...)`. Normal notebook users should not call the lower-level functions directly. Advanced users may optionally call `create_agreement_form(...)`, `read_agreement_form(...)`, `collect_agreement_metadata(...)`, and `commit_agreement_metadata(...)` only when customizing the workflow.
 
 ## Downstream role
 
