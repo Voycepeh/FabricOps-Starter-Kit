@@ -17,9 +17,9 @@ The notebook setup helper creates both Delta tables empty when required. It neve
 
 - `agreement_id` is the stable key.
 - `contract_version` is the version key.
-- The same agreement identity means the same `agreement_name + source_system + allowed_consumer_type` combination.
-- A new agreement receives a generated `agreement_id` and `contract_version = "1.0.0"`.
-- An existing agreement reuses its stable `agreement_id` and increments the minor version, for example `1.2.0 → 1.3.0`.
+- **Create New Agreement** always generates a fresh `agreement_id` and `contract_version = "1.0.0"`, even if its entered fields match an older agreement.
+- **Update Existing Agreement** requires an explicit selection from the latest-version dropdown, reuses that selected stable `agreement_id`, and increments the minor version, for example `1.2.0 → 1.3.0`.
+- `agreement_name + source_system + allowed_consumer_type` remains the descriptive identity combination shown to users, but it never silently changes create mode into update mode.
 - Existing rows are never overwritten. Each commit appends a new version row.
 - Update mode lists only the latest row per `agreement_id` and pre-fills the latest values for editing.
 

@@ -58,16 +58,32 @@ def test_update_mode_only_shows_latest_version_per_agreement_id():
 
 def test_update_mode_reuses_id_and_appends_next_minor_version():
     selected = {"agreement_id": "DA-1", "contract_version": "1.2.0"}
-    result = collect_agreement_metadata(widget_values=_values(), selected_agreement=selected, committed_by="user@example.com")
+    result = collect_agreement_metadata(widget_values=_values(), mode="update", selected_agreement=selected, committed_by="user@example.com")
     assert result["agreement_row"]["agreement_id"] == "DA-1"
     assert result["agreement_row"]["contract_version"] == "1.3.0"
     assert result["is_new_agreement"] is False
     assert next_minor_version("invalid") == "1.0.0"
 
 
-def test_create_mode_recognizes_same_agreement_identity():
-    identity = resolve_agreement_identity([{"agreement_id": "DA-1", "contract_version": "1.1.0", "agreement_name": "Orders agreement", "source_system": "ERP", "allowed_consumer_type": "Internal Department"}], agreement_name="Orders agreement", source_system="ERP", allowed_consumer_type="Internal Department")
-    assert identity == {"agreement_id": "DA-1", "contract_version": "1.2.0", "is_new_agreement": False}
+def test_create_mode_does_not_reuse_matching_existing_agreement_id(monkeypatch):
+    monkeypatch.setattr(data_agreement, "_generate_agreement_id", lambda: "DA-NEW")
+    rows = [{"agreement_id": "DA-1", "contract_version": "1.1.0", "agreement_name": "Orders agreement", "source_system": "ERP", "allowed_consumer_type": "Internal Department"}]
+    identity = resolve_agreement_identity(rows, agreement_name="Orders agreement", source_system="ERP", allowed_consumer_type="Internal Department")
+    assert identity == {"agreement_id": "DA-NEW", "contract_version": "1.0.0", "is_new_agreement": True}
+
+
+def test_update_mode_requires_selected_agreement():
+    with pytest.raises(ValueError, match="Update mode requires selected_agreement"):
+        collect_agreement_metadata(widget_values=_values(), mode="update", committed_by="user@example.com")
+
+
+def test_collect_agreement_metadata_accepts_spark_like_existing_rows_without_truthiness():
+    class SparkLikeDataFrame:
+        def __bool__(self):
+            raise ValueError("Spark DataFrame truthiness is ambiguous")
+
+    result = collect_agreement_metadata(widget_values=_values(), existing_rows=SparkLikeDataFrame(), committed_by="user@example.com")
+    assert result["agreement_row"]["contract_version"] == "1.0.0"
 
 
 def test_committed_by_resolves_fabric_user_name_before_user_id(monkeypatch):

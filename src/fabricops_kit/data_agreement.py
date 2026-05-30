@@ -345,26 +345,54 @@ def _to_iso_date(value: Any) -> str:
     return value.date().isoformat() if isinstance(value, datetime) else value.isoformat() if isinstance(value, date) else str(value)
 
 
-def resolve_agreement_identity(rows: Any, *, agreement_name: str, source_system: str, allowed_consumer_type: str, selected_agreement: dict[str, Any] | None = None) -> dict[str, Any]:
-    """Resolve a stable agreement ID and append-only next contract version."""
-    if selected_agreement:
-        return {"agreement_id": selected_agreement["agreement_id"], "contract_version": next_minor_version(selected_agreement.get("contract_version")), "is_new_agreement": False}
-    matches = [row for row in _coerce_row_dicts(rows) if row.get("agreement_name") == agreement_name and row.get("source_system") == source_system and row.get("allowed_consumer_type") == allowed_consumer_type]
-    if not matches:
+def resolve_agreement_identity(rows: Any, *, agreement_name: str, source_system: str, allowed_consumer_type: str, mode: str = "create", selected_agreement: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Resolve a create-mode or update-mode append-only agreement identity.
+
+    Parameters
+    ----------
+    rows : iterable | pyspark.sql.DataFrame
+        Existing agreement rows. Retained for caller compatibility and future
+        validation, but create mode intentionally does not reuse matching rows.
+    agreement_name, source_system, allowed_consumer_type : str
+        Human-entered identity fields retained on each agreement version.
+    mode : {"create", "update"}, default="create"
+        Intake operation. Create mode always generates a new stable ID and
+        ``1.0.0`` version. Update mode requires ``selected_agreement``.
+    selected_agreement : dict[str, Any], optional
+        Latest agreement row selected by update mode.
+
+    Returns
+    -------
+    dict[str, Any]
+        Stable ID, next version, and whether the agreement is new.
+
+    Raises
+    ------
+    ValueError
+        If ``mode`` is invalid or update mode has no selected agreement.
+    """
+    del rows, agreement_name, source_system, allowed_consumer_type
+    normalized_mode = str(mode or "").strip().lower()
+    if normalized_mode == "create":
         return {"agreement_id": _generate_agreement_id(), "contract_version": "1.0.0", "is_new_agreement": True}
-    latest = max(matches, key=lambda row: parse_contract_version(row.get("contract_version")))
-    return {"agreement_id": latest["agreement_id"], "contract_version": next_minor_version(latest.get("contract_version")), "is_new_agreement": False}
+    if normalized_mode != "update":
+        raise ValueError("mode must be either 'create' or 'update'.")
+    if not selected_agreement:
+        raise ValueError("Update mode requires selected_agreement.")
+    return {"agreement_id": selected_agreement["agreement_id"], "contract_version": next_minor_version(selected_agreement.get("contract_version")), "is_new_agreement": False}
 
 
-def collect_agreement_metadata(*, widget_values: dict[str, Any], existing_rows: Any = None, selected_agreement: dict[str, Any] | None = None, committed_by: str | None = None, committed_at: str | None = None, runtime_context: dict[str, Any] | None = None, config: Any = None, env: str | None = None) -> dict[str, Any]:
+def collect_agreement_metadata(*, widget_values: dict[str, Any], mode: str = "create", existing_rows: Any = None, selected_agreement: dict[str, Any] | None = None, committed_by: str | None = None, committed_at: str | None = None, runtime_context: dict[str, Any] | None = None, config: Any = None, env: str | None = None) -> dict[str, Any]:
     """Build one validated append-only agreement-version row from intake values.
 
     Parameters
     ----------
     widget_values : dict[str, Any]
         Human-entered values returned by :func:`read_agreement_form`.
+    mode : {"create", "update"}, default="create"
+        Intake operation. Create mode always creates a fresh agreement ID.
     existing_rows : iterable | pyspark.sql.DataFrame, optional
-        Existing agreement versions used to recognize the same identity.
+        Existing agreement versions available to the intake workflow.
     selected_agreement : dict[str, Any], optional
         Explicit latest row selected in update mode.
     committed_by, committed_at : str, optional
@@ -383,7 +411,8 @@ def collect_agreement_metadata(*, widget_values: dict[str, Any], existing_rows: 
     """
     steward = dict(widget_values.get("data_steward_profile") or {})
     values = {key: (_to_iso_date(value) if key in {"start_date", "expiry_date"} else str(value or "").strip()) for key, value in widget_values.items() if key != "data_steward_profile"}
-    identity = resolve_agreement_identity(existing_rows or [], agreement_name=values.get("agreement_name", ""), source_system=values.get("source_system", ""), allowed_consumer_type=values.get("allowed_consumer_type", ""), selected_agreement=selected_agreement)
+    agreement_rows = [] if existing_rows is None else existing_rows
+    identity = resolve_agreement_identity(agreement_rows, agreement_name=values.get("agreement_name", ""), source_system=values.get("source_system", ""), allowed_consumer_type=values.get("allowed_consumer_type", ""), mode=mode, selected_agreement=selected_agreement)
     context = {**_runtime_context(), **(runtime_context or {})}
     configured_lakehouse_name = ""
     if config is not None and env is not None:

@@ -38,7 +38,7 @@ This notebook-first flow keeps the contract grounded in reviewed evidence instea
 
 ## `01` agreement metadata capture
 
-The standalone `01_da_*` notebook captures the intake and usage boundary in one primary append-only table: `METADATA_DATA_AGREEMENT`. Its grain is one row per agreement version. `agreement_id` is stable, while `contract_version` starts at `1.0.0` and increments by minor version for later revisions. The same agreement identity is `agreement_name + source_system + allowed_consumer_type`.
+The standalone `01_da_*` notebook captures the intake and usage boundary in one primary append-only table: `METADATA_DATA_AGREEMENT`. Its grain is one row per agreement version. `agreement_id` is stable, while `contract_version` starts at `1.0.0` and increments by minor version for later revisions. Create mode always generates a fresh ID and `1.0.0`, even when entered descriptive identity fields match an older row. Update mode requires an explicit latest-version selection before it reuses an ID and increments its minor version.
 
 The steward dropdown reads active rows from `METADATA_DATA_STEWARD`; setup creates the table empty and never seeds fake people. Widget defaults are owned by the `DataAgreementConfig` section from `00_env_config`. Notebook users call `setup_data_agreement_tables(...)`, `create_agreement_form(...)`, `collect_agreement_metadata(...)`, and `commit_agreement_metadata(...)`. Reads and writes route through `CONFIG.path_config.paths[env]["metadata"]`, so no default attached lakehouse is required.
 
