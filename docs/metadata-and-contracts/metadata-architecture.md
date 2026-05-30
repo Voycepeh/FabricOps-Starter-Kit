@@ -34,13 +34,15 @@ FabricOps keeps separate append-only metadata tables for workflow outputs that h
 The final handover is not another source table. It is a generated JSON or YAML artifact assembled from the latest approved metadata and run evidence.
 
 !!! note "Views are not source tables"
-    The agreement, table, and column views are assembled from the nine source metadata tables. They are not bridge tables or competing sources of truth. Projects may materialize them later for performance or audit, but the governed source evidence remains in the nine metadata tables.
+    The agreement, table, and column views are assembled from the nine workflow evidence metadata tables and maintained reference metadata. They are not bridge tables or competing sources of truth. Projects may materialize them later for performance or audit, but the governed source evidence remains in the workflow evidence and reference metadata tables.
 
 ## Source metadata tables
 
-FabricOps uses exactly nine source metadata tables. They are governed source evidence for agreement, catalogue, approval, enforcement, runtime evidence, and traceability.
+FabricOps uses nine workflow evidence metadata tables plus maintained reference metadata tables. Together, they provide governed source evidence for agreement, catalogue, approval, enforcement, runtime evidence, traceability, and reusable reference data.
 
-The table names below are the physical source metadata tables. The diagram then shows which notebook family writes each type of metadata.
+### Workflow evidence metadata tables
+
+The table names below are the physical workflow evidence metadata tables. The diagram then shows which notebook family writes each type of metadata.
 
 | No. | Table                              | Grain                                                        | Why it exists                                                                                 |
 | --: | ---------------------------------- | ------------------------------------------------------------ | --------------------------------------------------------------------------------------------- |
@@ -54,17 +56,23 @@ The table names below are the physical source metadata tables. The diagram then 
 |   8 | `METADATA_DRIFT_RESULTS`           | One row per table per drift check                            | Stores schema, profile, and data drift evidence over time.                                    |
 |   9 | `METADATA_LINEAGE_EVENTS`          | One row per source-target table event                        | Stores source-to-target lineage and transformation evidence.                                  |
 
-`METADATA_DATA_STEWARD` is an effective-dated setup/helper table rather than an additional contract-evidence table. It contains maintained steward profiles for the `01_da_*` intake dropdown. `00_env_config` creates or checks it during environment bootstrap and reports steward readiness. The table remains empty until teams populate real rows, maintain `effective_from` / `effective_to`, and set `is_active = true` for selectable stewards; no fake steward profiles are seeded. Agreement versions store only the selected `steward_id` foreign key rather than duplicating steward profile attributes.
+### Reference metadata tables
 
-Its maintained columns are `steward_id`, `data_steward_name`, `data_steward_email`, `domain`, `department`, `faculty`, `effective_from`, `effective_to`, `is_active`, `created_at`, and `updated_at`. The intake dropdown includes rows only when `is_active = true`, `effective_from` is blank or not in the future, and `effective_to` is blank or not in the past.
+| Table                   | Grain                                           | Why it exists                                                                                                                  |
+| ----------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `METADATA_DATA_STEWARD` | One row per steward assignment/effective period | Maintains the steward source of truth for identity, organizational assignment, effective-date validity, and agreement intake. |
+
+`METADATA_DATA_STEWARD` is maintained reference metadata, not workflow evidence and not part of `METADATA_DATA_CATALOGUE`. Administrators or stewards maintain real rows and set `is_active = true` for selectable stewards. Setup creates or checks the empty table when required; it never seeds fake steward profiles.
 
 ## Notebook-driven model
 
-The notebooks drive the metadata model. Each notebook writes the metadata that matches its workflow responsibility, and FabricOps assembles the nine metadata tables into agreement-level, table-level, and column-level views for dashboarding and export.
+The notebooks drive the metadata model. Each notebook writes the workflow evidence that matches its responsibility, and FabricOps resolves maintained reference metadata where needed. FabricOps assembles the nine workflow evidence tables plus maintained reference metadata into agreement-level, table-level, and column-level views for dashboarding and export.
 
 ```mermaid
 flowchart LR
-    A["01 Agreement<br/>Define what is allowed"] --> T1["Agreement metadata"]
+    R1["Maintained steward reference<br/>METADATA_DATA_STEWARD"] --> A["01 Agreement<br/>Select active/effective steward<br/>Define what is allowed"]
+    A --> T1["Agreement metadata<br/>METADATA_DATA_AGREEMENT<br/>persists steward_id"]
+    R1 --> T1
 
     B["02 Exploration<br/>Profile and discover"] --> T2["Data catalogue metadata"]
 
@@ -100,8 +108,8 @@ flowchart LR
 
 | Notebook         | Responsibility                                                                 | Writes or updates                                                                                                             |
 | ---------------- | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
-| `00_env_config`  | Sets reusable environment context and supports notebook registration           | `METADATA_NOTEBOOK_REGISTRY` through `register_current_notebook()`                                                            |
-| `01_da_*`        | Captures the highest-grain agreement intake and usage boundary                 | `METADATA_DATA_AGREEMENT`, `METADATA_DATA_STEWARD`, `METADATA_NOTEBOOK_REGISTRY`                                           |
+| `00_env_config`  | Sets reusable environment context, creates or checks agreement and steward tables, and supports notebook registration | `METADATA_DATA_AGREEMENT`, `METADATA_DATA_STEWARD`, `METADATA_NOTEBOOK_REGISTRY` through `register_current_notebook()` |
+| `01_da_*`        | Captures the highest-grain agreement intake and usage boundary; reads active/effective steward reference rows | `METADATA_DATA_AGREEMENT`, `METADATA_NOTEBOOK_REGISTRY` |
 | `02_ex_*`        | Profiles data, discovers structure, and suggests context/rules                 | `METADATA_DATA_CATALOGUE`, `METADATA_NOTEBOOK_REGISTRY`                                                                       |
 | `04_gov_*`       | Approves column-level business context and classifications                     | `METADATA_COLUMN_BUSINESS_CONTEXT`, `METADATA_COLUMN_GOVERNANCE`, `METADATA_NOTEBOOK_REGISTRY`                                |
 | `03_pc_*`        | Enforces approved DQ rules, validates pipeline outputs, captures drift/lineage | `METADATA_DQ_RULES`, `METADATA_DQ_RESULTS`, `METADATA_DRIFT_RESULTS`, `METADATA_LINEAGE_EVENTS`, `METADATA_NOTEBOOK_REGISTRY` |
@@ -122,7 +130,7 @@ Each source table owns one kind of metadata. Join keys may repeat across tables 
 
 **Unique agreement-version identity:** `agreement_id + contract_version`.
 
-**Main foreign keys:** `steward_id` references the effective-dated `METADATA_DATA_STEWARD` setup table. Downstream metadata tables reference `agreement_id` and, where version-specific traceability is needed, `contract_version`.
+**Main foreign keys:** `steward_id` references `METADATA_DATA_STEWARD`. Downstream metadata tables reference `agreement_id` and, where version-specific traceability is needed, `contract_version`.
 
 **Main writer notebook:** `01_da_*` through `render_agreement_intake_app()`. Advanced customized flows may call `collect_agreement_metadata()` and `commit_agreement_metadata()` directly.
 
@@ -135,7 +143,7 @@ Each source table owns one kind of metadata. Join keys may repeat across tables 
 | agreement_id | DA-20260529-100000 | 01_da_* | Implemented | Stable agreement key reused across appended versions |
 | contract_version | 1.0.0 | 01_da_* | Implemented | Append-only semantic agreement version key |
 | agreement_name | Governed Reporting Agreement | 01_da_* | Implemented | Human-readable agreement name |
-| steward_id | steward-001 | 01_da_* | Implemented | Effective-dated steward-profile foreign key selected from `METADATA_DATA_STEWARD` |
+| steward_id | steward-001 | 01_da_* | Implemented | Steward reference key resolved from `METADATA_DATA_STEWARD` |
 | business_purpose | Support governed reporting | 01_da_* | Implemented | Business reason for the agreement |
 | approved_usage | Approved reporting only | 01_da_* | Implemented | Allowed use within the agreement boundary |
 | restricted_usage | No redistribution | 01_da_* | Implemented | Restricted or prohibited uses |
@@ -145,17 +153,51 @@ Each source table owns one kind of metadata. Join keys may repeat across tables 
 | refresh_frequency | Daily | 01_da_* | Implemented | Expected refresh cadence |
 | retention_expectation | Retain approved extracts for 30 days | 01_da_* | Implemented | Retention boundary or expectation |
 | start_date | 2026-06-01 | 01_da_* | Implemented | Agreement start date |
-| expiry_date | 2027-05-31 | 01_da_* | Implemented | Agreement expiry date |
+| expiry_date | 2027-05-31 | 01_da_* | Implemented | Agreement expiry date used to derive current agreement status dynamically |
 | renewal_required | Yes | 01_da_* | Implemented | Whether renewal is expected |
 | _committed_by | user@example.com | `metadata.build_runtime_audit_fields(...)` | Implemented | Fabric runtime user who committed the version |
 | _committed_at | 2026-06-01T10:00:00+00:00 | `metadata.build_runtime_audit_fields(...)` | Implemented | Agreement-version commit timestamp |
-| _workspace_name | Fabric Workspace | `metadata.build_runtime_audit_fields(...)` | Implemented | Fabric workspace captured from runtime context |
 | _notebook_name | 01_da_governed_reporting | `metadata.build_runtime_audit_fields(...)` | Implemented | Fabric notebook that committed the version |
+| _workspace_name | Fabric Workspace | `metadata.build_runtime_audit_fields(...)` | Implemented | Fabric workspace captured from runtime context |
 | _metadata_lakehouse_name | Metadata Lakehouse | `metadata.build_runtime_audit_fields(...)` | Implemented | Configured metadata lakehouse captured at commit time |
 | _activity_id | activity-id | `metadata.build_runtime_audit_fields(...)` | Implemented | Fabric activity identifier |
 
+Agreement rows persist `steward_id` only. Steward identity and organizational fields resolve from `METADATA_DATA_STEWARD`; they are not copied into each agreement version. Agreement status is also not persisted: consumers derive the current status dynamically from `expiry_date` so it remains correct after the commit date.
+
 !!! note "Keep workbook-style dictionary detail downstream"
     Detailed table and column metadata belongs downstream, not in `METADATA_DATA_AGREEMENT`. LYRA-style workbook or data-dictionary fields such as column description, data type, field classification, allowed values, top values, missing data, PII/sensitive indicators, and business rules belong in `METADATA_DATA_CATALOGUE`, `METADATA_COLUMN_BUSINESS_CONTEXT`, `METADATA_COLUMN_GOVERNANCE`, and `METADATA_DQ_RULES` according to their grain and ownership.
+
+### `METADATA_DATA_STEWARD`
+
+**Why it exists:** This is the maintained source of truth for data steward identity and organizational assignment used by `01_da_*` agreement intake.
+
+**Grain:** One row per steward assignment/effective period.
+
+**Primary key:** `steward_id + effective_from`, or `steward_id` if each steward row is maintained as the current row only.
+
+**Main foreign keys:** None required. `METADATA_DATA_AGREEMENT.steward_id` references this table.
+
+**Main maintainer:** Administrators or stewards maintain real reference rows. Setup creates or checks the table without seeding fake data.
+
+**Main downstream use:** `01_da_*` uses active/effective rows for the data steward dropdown. Agreement rows persist `steward_id` only. Historical displays resolve steward details by `steward_id` and the agreement start/effective date.
+
+**Columns:**
+
+| Column | Example value | Maintainer | Status | Purpose |
+| --- | --- | --- | --- | --- |
+| steward_id | steward-001 | Admin or steward | Maintained | Stable steward reference key persisted by agreement rows |
+| data_steward_name | Configured Steward | Admin or steward | Maintained | Steward display name |
+| data_steward_email | steward@example.com | Admin or steward | Maintained | Steward contact email |
+| domain | Operations | Admin or steward | Maintained | Steward domain |
+| department | Analytics | Admin or steward | Maintained | Steward department |
+| faculty | Shared Services | Admin or steward | Maintained | Steward faculty or organizational grouping |
+| effective_from | 2026-01-01 | Admin or steward | Maintained | Start date for the steward assignment |
+| effective_to | 2026-12-31 | Admin or steward | Maintained | Optional end date for the steward assignment |
+| is_active | true | Admin or steward | Maintained | Whether the steward assignment is available for active use |
+| created_at | 2026-01-01T09:00:00+00:00 | Metadata runtime | Maintained | Reference-row creation timestamp |
+| updated_at | 2026-05-29T09:00:00+00:00 | Metadata runtime | Maintained | Reference-row latest-update timestamp |
+
+Do not put steward reference rows inside `METADATA_DATA_CATALOGUE`. The catalogue stores table-level profiling and discovery evidence from `02_ex_*`; the steward table is a maintained reference dimension.
 
 ### `METADATA_DATA_CATALOGUE`
 

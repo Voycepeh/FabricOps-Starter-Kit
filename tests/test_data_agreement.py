@@ -385,18 +385,29 @@ def test_setup_data_agreement_tables_creates_only_current_metadata_tables(monkey
     assert ensured == [(DATA_AGREEMENT_TABLE, DATA_AGREEMENT_FIELDS), (DATA_STEWARD_TABLE, DATA_STEWARD_FIELDS)]
 
 
-def test_metadata_architecture_documents_implemented_agreement_schema():
+def test_metadata_architecture_documents_current_agreement_and_steward_model():
     architecture = Path("docs/metadata-and-contracts/metadata-architecture.md").read_text(encoding="utf-8")
-    section = architecture.split("### `METADATA_DATA_AGREEMENT`", 1)[1].split("### `METADATA_DATA_CATALOGUE`", 1)[0]
+    agreement_section = architecture.split("### `METADATA_DATA_AGREEMENT`", 1)[1].split("### `METADATA_DATA_STEWARD`", 1)[0]
+    steward_section = architecture.split("### `METADATA_DATA_STEWARD`", 1)[1].split("### `METADATA_DATA_CATALOGUE`", 1)[0]
     documented_fields = [
         line.split("|", 2)[1].strip()
-        for line in section.splitlines()
+        for line in agreement_section.splitlines()
         if line.startswith("| ") and "| Implemented |" in line
     ]
 
-    assert documented_fields == DATA_AGREEMENT_FIELDS
-    assert "One row = one agreement version" in section
-    assert "agreement_id + contract_version" in section
-    assert "LYRA-style workbook or data-dictionary fields" in section
-    assert "exactly nine source metadata tables" in architecture
-    assert "`METADATA_DATA_STEWARD` is an effective-dated setup/helper table" in architecture
+    assert documented_fields == [
+        "agreement_id", "contract_version", "agreement_name", "steward_id",
+        "business_purpose", "approved_usage", "restricted_usage",
+        "allowed_consumer_type", "expected_output", "source_system",
+        "refresh_frequency", "retention_expectation", "start_date",
+        "expiry_date", "renewal_required", "_committed_by", "_committed_at",
+        "_notebook_name", "_workspace_name", "_lakehouse_name", "_run_id",
+    ]
+    assert "One row = one agreement version" in agreement_section
+    assert "agreement_id + contract_version" in agreement_section
+    assert "LYRA-style workbook or data-dictionary fields" in agreement_section
+    assert "derive the current status dynamically from `expiry_date`" in agreement_section
+    assert "nine workflow evidence metadata tables plus maintained reference metadata tables" in architecture
+    assert "`METADATA_DATA_STEWARD` is maintained reference metadata" in architecture
+    assert "maintained source of truth for data steward identity" in steward_section
+    assert "Do not put steward reference rows inside `METADATA_DATA_CATALOGUE`" in steward_section
