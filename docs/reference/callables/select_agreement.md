@@ -20,4 +20,4 @@ Render a widget dropdown and store selected agreement metadata row in module sta
 - Outbound references count: 1
 
 ## Outbound references
-- <a href="../agreement_dropdown_options/"><code>fabricops_kit.data_agreement.agreement_dropdown_options</code></a>
+- <a href="../internal/data_agreement/agreement_dropdown_options/"><code>fabricops_kit.data_agreement.agreement_dropdown_options</code></a>

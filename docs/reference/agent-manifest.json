@@ -601,34 +601,6 @@
     "summary": "No summary available."
   },
   {
-    "name": "_context_get",
-    "qualified_name": "fabricops_kit.data_agreement._context_get",
-    "module": "data_agreement",
-    "type": "internal",
-    "role": "internal",
-    "inbound": [
-      "fabricops_kit.data_agreement.collect_agreement_metadata"
-    ],
-    "outbound": [],
-    "source_file": "src/fabricops_kit/data_agreement.py",
-    "summary": "No summary available."
-  },
-  {
-    "name": "_derive_agreement_status",
-    "qualified_name": "fabricops_kit.data_agreement._derive_agreement_status",
-    "module": "data_agreement",
-    "type": "internal",
-    "role": "internal",
-    "inbound": [
-      "fabricops_kit.data_agreement.collect_agreement_metadata"
-    ],
-    "outbound": [
-      "fabricops_kit.data_agreement._parse_required_date"
-    ],
-    "source_file": "src/fabricops_kit/data_agreement.py",
-    "summary": "No summary available."
-  },
-  {
     "name": "_ensure_delta_table",
     "qualified_name": "fabricops_kit.data_agreement._ensure_delta_table",
     "module": "data_agreement",
@@ -665,7 +637,7 @@
     "type": "internal",
     "role": "internal",
     "inbound": [
-      "fabricops_kit.data_agreement._derive_agreement_status"
+      "fabricops_kit.data_agreement.collect_agreement_metadata"
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/data_agreement.py",
@@ -703,8 +675,8 @@
     "name": "agreement_dropdown_options",
     "qualified_name": "fabricops_kit.data_agreement.agreement_dropdown_options",
     "module": "data_agreement",
-    "type": "callable",
-    "role": "essential",
+    "type": "internal",
+    "role": "internal",
     "inbound": [
       "fabricops_kit.data_agreement.create_agreement_form",
       "fabricops_kit.data_agreement.select_agreement"
@@ -720,14 +692,15 @@
     "qualified_name": "fabricops_kit.data_agreement.collect_agreement_metadata",
     "module": "data_agreement",
     "type": "callable",
-    "role": "essential",
-    "inbound": [],
+    "role": "optional",
+    "inbound": [
+      "fabricops_kit.data_agreement.render_agreement_intake_app"
+    ],
     "outbound": [
-      "fabricops_kit.data_agreement._context_get",
-      "fabricops_kit.data_agreement._derive_agreement_status",
+      "fabricops_kit.data_agreement._parse_required_date",
       "fabricops_kit.data_agreement._to_iso_date",
       "fabricops_kit.data_agreement.resolve_agreement_identity",
-      "fabricops_kit.metadata._runtime_context"
+      "fabricops_kit.metadata.build_runtime_audit_fields"
     ],
     "source_file": "src/fabricops_kit/data_agreement.py",
     "summary": "No summary available."
@@ -737,11 +710,12 @@
     "qualified_name": "fabricops_kit.data_agreement.commit_agreement_metadata",
     "module": "data_agreement",
     "type": "callable",
-    "role": "essential",
-    "inbound": [],
+    "role": "optional",
+    "inbound": [
+      "fabricops_kit.data_agreement.render_agreement_intake_app"
+    ],
     "outbound": [
       "fabricops_kit.data_agreement._ensure_delta_table",
-      "fabricops_kit.fabric_input_output.read_lakehouse_table",
       "fabricops_kit.fabric_input_output.write_lakehouse_table"
     ],
     "source_file": "src/fabricops_kit/data_agreement.py",
@@ -752,8 +726,10 @@
     "qualified_name": "fabricops_kit.data_agreement.create_agreement_form",
     "module": "data_agreement",
     "type": "callable",
-    "role": "essential",
-    "inbound": [],
+    "role": "optional",
+    "inbound": [
+      "fabricops_kit.data_agreement.render_agreement_intake_app"
+    ],
     "outbound": [
       "fabricops_kit.data_agreement.agreement_dropdown_options",
       "fabricops_kit.data_agreement.load_active_data_steward_profiles",
@@ -778,8 +754,8 @@
     "name": "latest_agreement_versions",
     "qualified_name": "fabricops_kit.data_agreement.latest_agreement_versions",
     "module": "data_agreement",
-    "type": "callable",
-    "role": "essential",
+    "type": "internal",
+    "role": "internal",
     "inbound": [
       "fabricops_kit.data_agreement.agreement_dropdown_options",
       "fabricops_kit.data_agreement.load_agreements"
@@ -795,8 +771,8 @@
     "name": "load_active_data_steward_profiles",
     "qualified_name": "fabricops_kit.data_agreement.load_active_data_steward_profiles",
     "module": "data_agreement",
-    "type": "callable",
-    "role": "essential",
+    "type": "internal",
+    "role": "internal",
     "inbound": [
       "fabricops_kit.data_agreement.create_agreement_form"
     ],
@@ -815,7 +791,8 @@
     "type": "callable",
     "role": "essential",
     "inbound": [
-      "fabricops_kit.data_agreement.create_agreement_form"
+      "fabricops_kit.data_agreement.create_agreement_form",
+      "fabricops_kit.data_agreement.render_agreement_intake_app"
     ],
     "outbound": [
       "fabricops_kit.data_agreement.latest_agreement_versions",
@@ -872,11 +849,30 @@
     "qualified_name": "fabricops_kit.data_agreement.read_agreement_form",
     "module": "data_agreement",
     "type": "callable",
-    "role": "essential",
-    "inbound": [],
+    "role": "optional",
+    "inbound": [
+      "fabricops_kit.data_agreement.render_agreement_intake_app"
+    ],
     "outbound": [],
     "source_file": "src/fabricops_kit/data_agreement.py",
     "summary": "No summary available."
+  },
+  {
+    "name": "render_agreement_intake_app",
+    "qualified_name": "fabricops_kit.data_agreement.render_agreement_intake_app",
+    "module": "data_agreement",
+    "type": "callable",
+    "role": "essential",
+    "inbound": [],
+    "outbound": [
+      "fabricops_kit.data_agreement.collect_agreement_metadata",
+      "fabricops_kit.data_agreement.commit_agreement_metadata",
+      "fabricops_kit.data_agreement.create_agreement_form",
+      "fabricops_kit.data_agreement.load_agreements",
+      "fabricops_kit.data_agreement.read_agreement_form"
+    ],
+    "source_file": "src/fabricops_kit/data_agreement.py",
+    "summary": "Render and wire the default agreement-intake form application."
   },
   {
     "name": "resolve_agreement_identity",
@@ -2467,7 +2463,6 @@
     "type": "callable",
     "role": "essential",
     "inbound": [
-      "fabricops_kit.data_agreement.commit_agreement_metadata",
       "fabricops_kit.data_agreement.load_active_data_steward_profiles",
       "fabricops_kit.data_agreement.load_agreements"
     ],
@@ -2600,6 +2595,7 @@
     "inbound": [
       "fabricops_kit.metadata._resolve_action_by",
       "fabricops_kit.metadata._runtime_context",
+      "fabricops_kit.metadata.build_runtime_audit_fields",
       "fabricops_kit.metadata.register_current_notebook"
     ],
     "outbound": [],
@@ -2673,8 +2669,8 @@
     "type": "internal",
     "role": "internal",
     "inbound": [
-      "fabricops_kit.data_agreement.collect_agreement_metadata",
       "fabricops_kit.metadata._resolve_action_by",
+      "fabricops_kit.metadata.build_runtime_audit_fields",
       "fabricops_kit.metadata.register_current_notebook"
     ],
     "outbound": [
@@ -2690,6 +2686,7 @@
     "type": "internal",
     "role": "internal",
     "inbound": [
+      "fabricops_kit.metadata.build_runtime_audit_fields",
       "fabricops_kit.metadata.register_current_notebook"
     ],
     "outbound": [],
@@ -2774,6 +2771,23 @@
     ],
     "source_file": "src/fabricops_kit/metadata.py",
     "summary": "No summary available."
+  },
+  {
+    "name": "build_runtime_audit_fields",
+    "qualified_name": "fabricops_kit.metadata.build_runtime_audit_fields",
+    "module": "metadata",
+    "type": "callable",
+    "role": "essential",
+    "inbound": [
+      "fabricops_kit.data_agreement.collect_agreement_metadata"
+    ],
+    "outbound": [
+      "fabricops_kit.metadata._context_get",
+      "fabricops_kit.metadata._runtime_context",
+      "fabricops_kit.metadata._safe_str"
+    ],
+    "source_file": "src/fabricops_kit/metadata.py",
+    "summary": "Build shared underscore-prefixed runtime audit fields for metadata-table rows."
   },
   {
     "name": "column_context_rows_for_spark",

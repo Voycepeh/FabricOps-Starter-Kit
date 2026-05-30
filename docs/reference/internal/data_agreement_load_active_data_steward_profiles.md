@@ -1,7 +1,7 @@
 # load_active_data_steward_profiles
 
 **Module:** `data_agreement`  
-**Classification:** Essential
+**Classification:** Internal helper
 
 ## Purpose
 
@@ -12,7 +12,7 @@ No summary available.
 - Fully qualified function name: `fabricops_kit.data_agreement.load_active_data_steward_profiles`
 - Short name: `load_active_data_steward_profiles`
 - Module: `data_agreement`
-- Classification: Essential
+- Classification: Internal helper
 - Related module: `data_agreement`
 - Source file path: `src/fabricops_kit/data_agreement.py`
 - Source reference: <a href="../../api/modules/data_agreement/#load_active_data_steward_profiles">Module source anchor</a>

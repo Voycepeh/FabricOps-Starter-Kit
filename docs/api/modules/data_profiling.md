@@ -96,7 +96,7 @@ Owns deterministic profiling evidence such as schema, nulls, distincts, min/max,
 <ul class="callable-relationship-rows">
 <li>
 <a class="reference-chip" href="../../reference/profile_dataframe/"><code>profile_dataframe</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_get_profiled_columns"><code>_get_profiled_columns</code></a>, <a class="reference-chip" href="#_is_min_max_supported_type"><code>_is_min_max_supported_type</code></a>
 </li>
 </ul>
@@ -148,4 +148,3 @@ Owns deterministic profiling evidence such as schema, nulls, distincts, min/max,
 
 **technical_columns**
 <a class="reference-chip" href="../technical_columns/#_default_technical_columns"><code>_default_technical_columns</code></a>
-

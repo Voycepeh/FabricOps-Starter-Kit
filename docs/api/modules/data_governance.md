@@ -131,32 +131,32 @@ Owns sensitivity, PII, confidentiality, policy labels, and governance approval e
 <ul class="callable-relationship-rows">
 <li>
 <a class="reference-chip" href="../../reference/draft_governance/"><code>draft_governance</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <span>None.</span>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/extract_governance_suggestions/"><code>extract_governance_suggestions</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_extract_pii_suggestions"><code>_extract_pii_suggestions</code></a>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/load_governance/"><code>load_governance</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_coerce_row_dicts"><code>_coerce_row_dicts</code></a>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/prepare_governance_input/"><code>prepare_governance_input</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_prepare_governance_input"><code>_prepare_governance_input</code></a>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/review_governance/"><code>review_governance</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_undo_last_action"><code>_undo_last_action</code></a>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/write_governance/"><code>write_governance</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_approved_widget_rows"><code>_approved_widget_rows</code></a>
 </li>
 </ul>
@@ -234,4 +234,3 @@ None.
 
 **metadata**
 <a class="reference-chip" href="../metadata/#_now_utc_iso"><code>_now_utc_iso</code></a>, <a class="reference-chip" href="../metadata/#_resolve_action_by"><code>_resolve_action_by</code></a>, <a class="reference-chip" href="../metadata/#build_metadata_column_key"><code>build_metadata_column_key</code></a>, <a class="reference-chip" href="../metadata/#build_metadata_table_key"><code>build_metadata_table_key</code></a>
-

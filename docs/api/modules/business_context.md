@@ -131,32 +131,32 @@ Owns business meaning for tables and columns.
 <ul class="callable-relationship-rows">
 <li>
 <a class="reference-chip" href="../../reference/draft_business_context/"><code>draft_business_context</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <span>None.</span>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/extract_column_business_context_suggestions/"><code>extract_column_business_context_suggestions</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_extract_column_business_context_suggestions"><code>_extract_column_business_context_suggestions</code></a>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/get_reviewed_business_context_rows/"><code>get_reviewed_business_context_rows</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <span>None.</span>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/prepare_business_context_profile_input/"><code>prepare_business_context_profile_input</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_prepare_business_context_profile_input"><code>_prepare_business_context_profile_input</code></a>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/review_business_context/"><code>review_business_context</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_require_ipywidgets"><code>_require_ipywidgets</code></a>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/write_business_context/"><code>write_business_context</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <span>None.</span>
 </li>
 </ul>
@@ -200,7 +200,7 @@ Owns business meaning for tables and columns.
 <ul class="callable-relationship-rows">
 <li>
 <a class="reference-chip" href="#_extract_column_business_context_suggestions"><code>_extract_column_business_context_suggestions</code></a>
- <span class="callable-relationship-uses">uses:</span> 
+ <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_parse_ai_dict_response"><code>_parse_ai_dict_response</code></a>
 </li>
 <li>
@@ -222,4 +222,3 @@ None.
 
 **metadata**
 <a class="reference-chip" href="../metadata/#build_metadata_column_key"><code>build_metadata_column_key</code></a>, <a class="reference-chip" href="../metadata/#build_metadata_table_key"><code>build_metadata_table_key</code></a>, <a class="reference-chip" href="../metadata/#write_column_business_context"><code>write_column_business_context</code></a>
-

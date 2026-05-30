@@ -165,6 +165,74 @@ def _runtime_context() -> dict[str, Any]:
     return {key: _context_get(context, key) for key in keys}
 
 
+def build_runtime_audit_fields(
+    *,
+    config: Any = None,
+    env: str | None = None,
+    timestamp_field: str = "_committed_at",
+    user_field: str = "_committed_by",
+    workspace_field: str = "_workspace_name",
+    notebook_field: str = "_notebook_name",
+    metadata_lakehouse_field: str = "_metadata_lakehouse_name",
+    activity_field: str = "_activity_id",
+    committed_by: str | None = None,
+    committed_at: str | None = None,
+    runtime_context: dict[str, Any] | None = None,
+) -> dict[str, str]:
+    """Build reusable framework-managed audit fields for metadata-table rows.
+
+    Parameters
+    ----------
+    config : FrameworkConfig | dict, optional
+        Framework config containing ``path_config.paths[env]["metadata"]``.
+    env : str, optional
+        Environment key paired with ``config``.
+    timestamp_field, user_field, workspace_field, notebook_field : str
+        Output keys for timestamp, user, workspace, and notebook audit values.
+    metadata_lakehouse_field, activity_field : str
+        Output keys for metadata lakehouse and Fabric activity audit values.
+    committed_by, committed_at : str, optional
+        Deterministic audit overrides. When omitted, values resolve from Fabric
+        runtime context and the current UTC timestamp.
+    runtime_context : dict[str, Any], optional
+        Values merged over :func:`_runtime_context`, primarily for tests or
+        controlled notebook overrides.
+
+    Returns
+    -------
+    dict[str, str]
+        Framework-managed metadata audit values keyed by the supplied field
+        names.
+
+    Notes
+    -----
+    DataFrame technical columns and metadata-table audit fields both use
+    underscore-prefixed names. This helper centralizes the metadata-table
+    convention while leaving DataFrame enrichment to ``technical_columns``.
+    """
+    context = {**_runtime_context(), **(runtime_context or {})}
+
+    def _first_non_blank(*keys: str) -> Any:
+        for key in keys:
+            value = _context_get(context, key)
+            if value is not None and str(value).strip():
+                return value
+        return None
+
+    metadata_lakehouse_name = ""
+    if config is not None and env is not None:
+        paths = config.path_config.paths if hasattr(config, "path_config") else config.paths
+        metadata_lakehouse_name = _safe_str(paths[env]["metadata"].name)
+    return {
+        user_field: _safe_str(committed_by).strip() if committed_by and _safe_str(committed_by).strip() else _safe_str(_first_non_blank("userName", "userId") or "unknown"),
+        timestamp_field: _safe_str(committed_at) if committed_at else datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
+        workspace_field: _safe_str(_first_non_blank("currentWorkspaceName", "workspaceName") or ""),
+        notebook_field: _safe_str(_first_non_blank("currentNotebookName", "notebookName") or ""),
+        metadata_lakehouse_field: metadata_lakehouse_name,
+        activity_field: _safe_str(_first_non_blank("activityId") or ""),
+    }
+
+
 def register_current_notebook(spark, metadata_path, agreement_id, notebook_type, environment_name=None, dataset_name=None, table_name=None, topic=None, pipeline_name=None, metadata_table="METADATA_NOTEBOOK_REGISTRY"):
     ctx = _runtime_context()
     workspace_id = _context_get(ctx, "currentWorkspaceId", "workspaceId")

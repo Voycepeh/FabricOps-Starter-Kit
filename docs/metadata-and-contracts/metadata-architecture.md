@@ -54,7 +54,9 @@ The table names below are the physical source metadata tables. The diagram then 
 |   8 | `METADATA_DRIFT_RESULTS`           | One row per table per drift check                            | Stores schema, profile, and data drift evidence over time.                                    |
 |   9 | `METADATA_LINEAGE_EVENTS`          | One row per source-target table event                        | Stores source-to-target lineage and transformation evidence.                                  |
 
-`METADATA_DATA_STEWARD` is a setup/helper table rather than an additional contract-evidence table. It contains maintained steward profiles for the `01_da_*` intake dropdown. Setup creates it empty; teams must populate real rows and set `is_active = true` for selectable stewards.
+`METADATA_DATA_STEWARD` is an effective-dated setup/helper table rather than an additional contract-evidence table. It contains maintained steward profiles for the `01_da_*` intake dropdown. `00_env_config` creates or checks it during environment bootstrap and reports steward readiness. The table remains empty until teams populate real rows, maintain `effective_from` / `effective_to`, and set `is_active = true` for selectable stewards; no fake steward profiles are seeded. Agreement versions store only the selected `steward_id` foreign key rather than duplicating steward profile attributes.
+
+Its maintained columns are `steward_id`, `data_steward_name`, `data_steward_email`, `domain`, `department`, `faculty`, `effective_from`, `effective_to`, `is_active`, `created_at`, and `updated_at`. The intake dropdown includes rows only when `is_active = true`, `effective_from` is blank or not in the future, and `effective_to` is blank or not in the past.
 
 ## Notebook-driven model
 
@@ -120,9 +122,9 @@ Each source table owns one kind of metadata. Join keys may repeat across tables 
 
 **Unique agreement-version identity:** `agreement_id + contract_version`.
 
-**Main foreign keys:** None required. Downstream metadata tables reference `agreement_id` and, where version-specific traceability is needed, `contract_version`.
+**Main foreign keys:** `steward_id` references the effective-dated `METADATA_DATA_STEWARD` setup table. Downstream metadata tables reference `agreement_id` and, where version-specific traceability is needed, `contract_version`.
 
-**Main writer notebook:** `01_da_*` through `collect_agreement_metadata()` and `commit_agreement_metadata()`.
+**Main writer notebook:** `01_da_*` through `render_agreement_intake_app()`. Advanced customized flows may call `collect_agreement_metadata()` and `commit_agreement_metadata()` directly.
 
 **Main downstream use:** Scopes every catalogue, context, governance, rule, result, drift, lineage, and handover output.
 
@@ -133,11 +135,7 @@ Each source table owns one kind of metadata. Join keys may repeat across tables 
 | agreement_id | DA-20260529-100000 | 01_da_* | Implemented | Stable agreement key reused across appended versions |
 | contract_version | 1.0.0 | 01_da_* | Implemented | Append-only semantic agreement version key |
 | agreement_name | Governed Reporting Agreement | 01_da_* | Implemented | Human-readable agreement name |
-| data_steward_name | Configured Steward | 01_da_* | Implemented | Steward selected from the maintained helper table |
-| data_steward_email | steward@example.com | 01_da_* | Implemented | Steward contact email |
-| domain | Operations | 01_da_* | Implemented | Steward or agreement domain |
-| department | Analytics | 01_da_* | Implemented | Steward or agreement department |
-| faculty | Shared Services | 01_da_* | Implemented | Steward or agreement faculty or organizational grouping |
+| steward_id | steward-001 | 01_da_* | Implemented | Effective-dated steward-profile foreign key selected from `METADATA_DATA_STEWARD` |
 | business_purpose | Support governed reporting | 01_da_* | Implemented | Business reason for the agreement |
 | approved_usage | Approved reporting only | 01_da_* | Implemented | Allowed use within the agreement boundary |
 | restricted_usage | No redistribution | 01_da_* | Implemented | Restricted or prohibited uses |
@@ -148,18 +146,13 @@ Each source table owns one kind of metadata. Join keys may repeat across tables 
 | retention_expectation | Retain approved extracts for 30 days | 01_da_* | Implemented | Retention boundary or expectation |
 | start_date | 2026-06-01 | 01_da_* | Implemented | Agreement start date |
 | expiry_date | 2027-05-31 | 01_da_* | Implemented | Agreement expiry date |
-| agreement_status | Active | 01_da_* | Implemented | Lifecycle status derived from expiry date at commit time |
-| status_as_of_date | 2026-06-01 | 01_da_* | Implemented | Date on which agreement status was evaluated |
 | renewal_required | Yes | 01_da_* | Implemented | Whether renewal is expected |
-| review_status | Pending | 01_da_* | Implemented | Agreement review state |
-| approved_by | reviewer@example.com | 01_da_* | Implemented | Reviewer identity when approval is recorded |
-| approved_at | 2026-06-01T10:30:00+00:00 | 01_da_* | Implemented | Approval timestamp when approval is recorded |
-| committed_by | user@example.com | 01_da_* | Implemented | Fabric runtime user who committed the version |
-| committed_at | 2026-06-01T10:00:00+00:00 | 01_da_* | Implemented | Agreement-version commit timestamp |
-| notebook_name | 01_da_governed_reporting | 01_da_* | Implemented | Fabric notebook that committed the version |
-| workspace_name | Fabric Workspace | 01_da_* | Implemented | Fabric workspace captured from runtime context |
-| lakehouse_name | Metadata Lakehouse | 01_da_* | Implemented | Configured metadata lakehouse captured at commit time |
-| run_id | activity-id | 01_da_* | Implemented | Fabric activity or run identifier |
+| _committed_by | user@example.com | `metadata.build_runtime_audit_fields(...)` | Implemented | Fabric runtime user who committed the version |
+| _committed_at | 2026-06-01T10:00:00+00:00 | `metadata.build_runtime_audit_fields(...)` | Implemented | Agreement-version commit timestamp |
+| _workspace_name | Fabric Workspace | `metadata.build_runtime_audit_fields(...)` | Implemented | Fabric workspace captured from runtime context |
+| _notebook_name | 01_da_governed_reporting | `metadata.build_runtime_audit_fields(...)` | Implemented | Fabric notebook that committed the version |
+| _metadata_lakehouse_name | Metadata Lakehouse | `metadata.build_runtime_audit_fields(...)` | Implemented | Configured metadata lakehouse captured at commit time |
+| _activity_id | activity-id | `metadata.build_runtime_audit_fields(...)` | Implemented | Fabric activity identifier |
 
 !!! note "Keep workbook-style dictionary detail downstream"
     Detailed table and column metadata belongs downstream, not in `METADATA_DATA_AGREEMENT`. LYRA-style workbook or data-dictionary fields such as column description, data type, field classification, allowed values, top values, missing data, PII/sensitive indicators, and business rules belong in `METADATA_DATA_CATALOGUE`, `METADATA_COLUMN_BUSINESS_CONTEXT`, `METADATA_COLUMN_GOVERNANCE`, and `METADATA_DQ_RULES` according to their grain and ownership.
