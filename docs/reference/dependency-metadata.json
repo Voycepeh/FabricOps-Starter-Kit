@@ -893,8 +893,8 @@
       "short_name": "agreement_dropdown_options",
       "module": "data_agreement",
       "callable": "agreement_dropdown_options",
-      "docs_url": "/FabricOps-Starter-Kit/reference/agreement_dropdown_options/",
-      "classification": "essential",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_agreement/agreement_dropdown_options/",
+      "classification": "internal",
       "calls": [
         "fabricops_kit.data_agreement.latest_agreement_versions"
       ],
@@ -913,7 +913,7 @@
       "module": "data_agreement",
       "callable": "collect_agreement_metadata",
       "docs_url": "/FabricOps-Starter-Kit/reference/collect_agreement_metadata/",
-      "classification": "essential",
+      "classification": "optional",
       "calls": [
         "fabricops_kit.data_agreement._context_get",
         "fabricops_kit.data_agreement._derive_agreement_status",
@@ -939,7 +939,7 @@
       "module": "data_agreement",
       "callable": "commit_agreement_metadata",
       "docs_url": "/FabricOps-Starter-Kit/reference/commit_agreement_metadata/",
-      "classification": "essential",
+      "classification": "optional",
       "calls": [
         "fabricops_kit.data_agreement._ensure_delta_table",
         "fabricops_kit.fabric_input_output.read_lakehouse_table",
@@ -961,7 +961,7 @@
       "module": "data_agreement",
       "callable": "create_agreement_form",
       "docs_url": "/FabricOps-Starter-Kit/reference/create_agreement_form/",
-      "classification": "essential",
+      "classification": "optional",
       "calls": [
         "fabricops_kit.data_agreement.agreement_dropdown_options",
         "fabricops_kit.data_agreement.load_active_data_steward_profiles",
@@ -995,8 +995,8 @@
       "short_name": "latest_agreement_versions",
       "module": "data_agreement",
       "callable": "latest_agreement_versions",
-      "docs_url": "/FabricOps-Starter-Kit/reference/latest_agreement_versions/",
-      "classification": "essential",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_agreement/latest_agreement_versions/",
+      "classification": "internal",
       "calls": [
         "fabricops_kit.data_agreement._coerce_row_dicts",
         "fabricops_kit.data_agreement.parse_contract_version"
@@ -1017,8 +1017,8 @@
       "short_name": "load_active_data_steward_profiles",
       "module": "data_agreement",
       "callable": "load_active_data_steward_profiles",
-      "docs_url": "/FabricOps-Starter-Kit/reference/load_active_data_steward_profiles/",
-      "classification": "essential",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_agreement/load_active_data_steward_profiles/",
+      "classification": "internal",
       "calls": [
         "fabricops_kit.data_agreement._coerce_row_dicts",
         "fabricops_kit.data_agreement._ensure_delta_table",
@@ -1113,7 +1113,7 @@
       "module": "data_agreement",
       "callable": "read_agreement_form",
       "docs_url": "/FabricOps-Starter-Kit/reference/read_agreement_form/",
-      "classification": "essential",
+      "classification": "optional",
       "calls": [],
       "calls_count": 0,
       "used_by": [
@@ -3971,8 +3971,8 @@
       "inbound_count": 1
     },
     "data_agreement": {
-      "essential_count": 12,
-      "optional_count": 0,
+      "essential_count": 5,
+      "optional_count": 4,
       "internal_count": 8,
       "outbound_modules": [
         "fabric_input_output",

@@ -755,7 +755,7 @@
     "name": "agreement_dropdown_options",
     "qualified_name": "fabricops_kit.data_agreement.agreement_dropdown_options",
     "module": "data_agreement",
-    "classification": "Essential",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.data_agreement.create_agreement_form",
       "fabricops_kit.data_agreement.select_agreement"
@@ -764,7 +764,7 @@
       "fabricops_kit.data_agreement.latest_agreement_versions"
     ],
     "source_path": "src/fabricops_kit/data_agreement.py",
-    "docs_path": "reference/agreement_dropdown_options.md",
+    "docs_path": "reference/internal/data_agreement_agreement_dropdown_options.md",
     "summary": "No summary available."
   },
   {
@@ -772,7 +772,7 @@
     "name": "collect_agreement_metadata",
     "qualified_name": "fabricops_kit.data_agreement.collect_agreement_metadata",
     "module": "data_agreement",
-    "classification": "Essential",
+    "classification": "Optional",
     "inbound": [
       "fabricops_kit.data_agreement.render_agreement_intake_app"
     ],
@@ -792,7 +792,7 @@
     "name": "commit_agreement_metadata",
     "qualified_name": "fabricops_kit.data_agreement.commit_agreement_metadata",
     "module": "data_agreement",
-    "classification": "Essential",
+    "classification": "Optional",
     "inbound": [
       "fabricops_kit.data_agreement.render_agreement_intake_app"
     ],
@@ -810,7 +810,7 @@
     "name": "create_agreement_form",
     "qualified_name": "fabricops_kit.data_agreement.create_agreement_form",
     "module": "data_agreement",
-    "classification": "Essential",
+    "classification": "Optional",
     "inbound": [
       "fabricops_kit.data_agreement.render_agreement_intake_app"
     ],
@@ -841,7 +841,7 @@
     "name": "latest_agreement_versions",
     "qualified_name": "fabricops_kit.data_agreement.latest_agreement_versions",
     "module": "data_agreement",
-    "classification": "Essential",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.data_agreement.agreement_dropdown_options",
       "fabricops_kit.data_agreement.load_agreements"
@@ -851,7 +851,7 @@
       "fabricops_kit.data_agreement.parse_contract_version"
     ],
     "source_path": "src/fabricops_kit/data_agreement.py",
-    "docs_path": "reference/latest_agreement_versions.md",
+    "docs_path": "reference/internal/data_agreement_latest_agreement_versions.md",
     "summary": "No summary available."
   },
   {
@@ -859,7 +859,7 @@
     "name": "load_active_data_steward_profiles",
     "qualified_name": "fabricops_kit.data_agreement.load_active_data_steward_profiles",
     "module": "data_agreement",
-    "classification": "Essential",
+    "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.data_agreement.create_agreement_form"
     ],
@@ -869,7 +869,7 @@
       "fabricops_kit.fabric_input_output.read_lakehouse_table"
     ],
     "source_path": "src/fabricops_kit/data_agreement.py",
-    "docs_path": "reference/load_active_data_steward_profiles.md",
+    "docs_path": "reference/internal/data_agreement_load_active_data_steward_profiles.md",
     "summary": "No summary available."
   },
   {
@@ -941,7 +941,7 @@
     "name": "read_agreement_form",
     "qualified_name": "fabricops_kit.data_agreement.read_agreement_form",
     "module": "data_agreement",
-    "classification": "Essential",
+    "classification": "Optional",
     "inbound": [
       "fabricops_kit.data_agreement.render_agreement_intake_app"
     ],

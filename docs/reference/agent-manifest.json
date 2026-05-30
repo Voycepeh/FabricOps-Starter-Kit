@@ -703,8 +703,8 @@
     "name": "agreement_dropdown_options",
     "qualified_name": "fabricops_kit.data_agreement.agreement_dropdown_options",
     "module": "data_agreement",
-    "type": "callable",
-    "role": "essential",
+    "type": "internal",
+    "role": "internal",
     "inbound": [
       "fabricops_kit.data_agreement.create_agreement_form",
       "fabricops_kit.data_agreement.select_agreement"
@@ -720,7 +720,7 @@
     "qualified_name": "fabricops_kit.data_agreement.collect_agreement_metadata",
     "module": "data_agreement",
     "type": "callable",
-    "role": "essential",
+    "role": "optional",
     "inbound": [
       "fabricops_kit.data_agreement.render_agreement_intake_app"
     ],
@@ -739,7 +739,7 @@
     "qualified_name": "fabricops_kit.data_agreement.commit_agreement_metadata",
     "module": "data_agreement",
     "type": "callable",
-    "role": "essential",
+    "role": "optional",
     "inbound": [
       "fabricops_kit.data_agreement.render_agreement_intake_app"
     ],
@@ -756,7 +756,7 @@
     "qualified_name": "fabricops_kit.data_agreement.create_agreement_form",
     "module": "data_agreement",
     "type": "callable",
-    "role": "essential",
+    "role": "optional",
     "inbound": [
       "fabricops_kit.data_agreement.render_agreement_intake_app"
     ],
@@ -784,8 +784,8 @@
     "name": "latest_agreement_versions",
     "qualified_name": "fabricops_kit.data_agreement.latest_agreement_versions",
     "module": "data_agreement",
-    "type": "callable",
-    "role": "essential",
+    "type": "internal",
+    "role": "internal",
     "inbound": [
       "fabricops_kit.data_agreement.agreement_dropdown_options",
       "fabricops_kit.data_agreement.load_agreements"
@@ -801,8 +801,8 @@
     "name": "load_active_data_steward_profiles",
     "qualified_name": "fabricops_kit.data_agreement.load_active_data_steward_profiles",
     "module": "data_agreement",
-    "type": "callable",
-    "role": "essential",
+    "type": "internal",
+    "role": "internal",
     "inbound": [
       "fabricops_kit.data_agreement.create_agreement_form"
     ],
@@ -879,7 +879,7 @@
     "qualified_name": "fabricops_kit.data_agreement.read_agreement_form",
     "module": "data_agreement",
     "type": "callable",
-    "role": "essential",
+    "role": "optional",
     "inbound": [
       "fabricops_kit.data_agreement.render_agreement_intake_app"
     ],

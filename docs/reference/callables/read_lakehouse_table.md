@@ -21,7 +21,7 @@ No summary available.
 
 ## Inbound references
 - <a href="../commit_agreement_metadata/"><code>fabricops_kit.data_agreement.commit_agreement_metadata</code></a>
-- <a href="../load_active_data_steward_profiles/"><code>fabricops_kit.data_agreement.load_active_data_steward_profiles</code></a>
+- <a href="../internal/data_agreement/load_active_data_steward_profiles/"><code>fabricops_kit.data_agreement.load_active_data_steward_profiles</code></a>
 - <a href="../load_agreements/"><code>fabricops_kit.data_agreement.load_agreements</code></a>
 
 ## Outbound references

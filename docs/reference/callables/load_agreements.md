@@ -24,5 +24,5 @@ Load latest versioned agreement rows from the configured metadata lakehouse.
 - <a href="../render_agreement_intake_app/"><code>fabricops_kit.data_agreement.render_agreement_intake_app</code></a>
 
 ## Outbound references
-- <a href="../latest_agreement_versions/"><code>fabricops_kit.data_agreement.latest_agreement_versions</code></a>
+- <a href="../internal/data_agreement/latest_agreement_versions/"><code>fabricops_kit.data_agreement.latest_agreement_versions</code></a>
 - <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a>

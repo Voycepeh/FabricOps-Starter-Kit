@@ -639,7 +639,7 @@ def main() -> None:
         module_nodes = [n for n in nodes if n["module_name"] == actual_module]
         essential_count = len([n for n in module_nodes if n["role"] == "essential"])
         optional_count = len([n for n in module_nodes if n["role"] == "optional"])
-        internal_count = len([n for n in module_nodes if n["callable_name"].startswith("_")])
+        internal_count = len([n for n in module_nodes if not n["exported"]]) if module == "data_agreement" else len([n for n in module_nodes if n["callable_name"].startswith("_")])
         outbound_mods = sorted({
             e["callee_qualified_name"].split(".")[-2]
             for e in edges
@@ -662,7 +662,8 @@ def main() -> None:
             f'<span class="reference-chip">Inbound: {len(inbound_mods)}</span>'
             '</div>'
         )
-        lines.extend(["## Module overview badges", "", summary_cards, ""])
+        if module != "data_agreement":
+            lines.extend(["## Module overview badges", "", summary_cards, ""])
 
         module_purpose = module_manifest.get(module, {}).get("module_summary", "").strip()
         if module_purpose:
@@ -674,6 +675,19 @@ def main() -> None:
                     "## Module boundary",
                     "",
                     "This module stores and retrieves metadata evidence. It does not own governance approval logic. Agreement approval, classification, sensitivity, and PII review remain in `data_governance.py` and the `01_da_<agreement>` notebook.",
+                    "",
+                ]
+            )
+        if module == "data_agreement":
+            lines.extend(
+                [
+                    "## Intended notebook call flow",
+                    "",
+                    "1. `00_env_config` assembles `CONFIG` and calls `setup_data_agreement_tables(...)` to create or check agreement metadata tables.",
+                    "2. `01_da_<agreement>` calls `render_agreement_intake_app(...)` to render the framework-managed intake form.",
+                    "3. Downstream notebooks call `load_agreements(...)`, `select_agreement(...)`, and `get_selected_agreement()` to bind work to a committed agreement version.",
+                    "",
+                    "Lower-level form, collection, and commit functions remain supported only for advanced custom workflows. Non-exported helpers are implementation details and should not be imported from `fabricops_kit`.",
                     "",
                 ]
             )
@@ -694,40 +708,50 @@ def main() -> None:
         lines.append("")
 
         if public_in_module:
-            lines.extend(["## Public callables", ""])
-            public_rows: list[list[str]] = []
-            for s in recommended:
-                related = sorted([c for c in info["calls"].get(s.name, set()) if c in info["functions"] and c.startswith("_")])
-                callable_link = callable_docs_link(s.name, module, docs_metadata, source_module=actual_module)
-                public_rows.append([
-                    f'<a href="{callable_link}"><code>{s.name}</code></a>',
-                    "Essential",
-                    s.obj_type,
-                    s.summary or "—",
-                    ', '.join(f'<a href="{internal_helper_link(s.actual_module, r)}"><code>{r}</code></a> (internal)' for r in related) or "—",
-                ])
-            for s in advanced:
-                related = sorted([c for c in info["calls"].get(s.name, set()) if c in info["functions"] and c.startswith("_")])
-                callable_link = callable_docs_link(s.name, module, docs_metadata, source_module=actual_module)
-                public_rows.append([
-                    f'<a href="{callable_link}"><code>{s.name}</code></a>',
-                    "Optional",
-                    s.obj_type,
-                    s.summary or "—",
-                    ', '.join(f'<a href="{internal_helper_link(s.actual_module, r)}"><code>{r}</code></a> (internal)' for r in related) or "—",
-                ])
-            if not recommended and not advanced:
-                public_rows.append(["—", "—", "—", "No public exports in this module.", "—"])
-            lines.extend(['<div class="module-table-scroll">'])
-            lines.extend(render_html_table(["Callable", "Tier", "Type", "Summary", "Related helpers"], public_rows))
-            lines.extend(['</div>'])
-            if module == "data_quality":
-                lines.extend(
-                    [
-                        "",
-                        "Split a Spark DataFrame into pass/quarantine outputs for row-level DQ rules.",
-                    ]
-                )
+            def _public_callable_rows(symbols: list[Symbol], tier: str) -> list[list[str]]:
+                rows: list[list[str]] = []
+                for symbol in symbols:
+                    related = sorted([c for c in info["calls"].get(symbol.name, set()) if c in info["functions"] and c.startswith("_")])
+                    callable_link = callable_docs_link(symbol.name, module, docs_metadata, source_module=actual_module)
+                    rows.append([
+                        f'<a href="{callable_link}"><code>{symbol.name}</code></a>',
+                        tier,
+                        symbol.obj_type,
+                        symbol.summary or "—",
+                        ', '.join(f'<a href="{internal_helper_link(symbol.actual_module, r)}"><code>{r}</code></a> (internal)' for r in related) or "—",
+                    ])
+                return rows
+
+            if module == "data_agreement":
+                lines.extend(["## Primary notebook API", "", "Use these callables in standard FabricOps notebooks.", ""])
+                lines.extend(['<div class="module-table-scroll">'])
+                lines.extend(render_html_table(["Callable", "Tier", "Type", "Summary", "Related helpers"], _public_callable_rows(recommended, "Primary notebook API")))
+                lines.extend(['</div>', "", "## Advanced customization API", "", "Use these lower-level callables only when intentionally customizing the agreement-intake workflow.", ""])
+                lines.extend(['<div class="module-table-scroll">'])
+                lines.extend(render_html_table(["Callable", "Tier", "Type", "Summary", "Related helpers"], _public_callable_rows(advanced, "Advanced customization")))
+                lines.extend(['</div>', "", "## Internal helpers", "", "These implementation helpers are documented for maintainers but are not exported from `fabricops_kit`.", ""])
+                helper_rows = []
+                public_names = {symbol.name for symbol in public_in_module}
+                for helper_name in sorted(name for name in info["functions"] if name not in public_names):
+                    helper_rows.append([f'<a href="{internal_helper_link(actual_module, helper_name)}"><code>{helper_name}</code></a>', "Internal helper"])
+                lines.extend(['<div class="module-table-scroll">'])
+                lines.extend(render_html_table(["Helper", "Classification"], helper_rows))
+                lines.extend(['</div>'])
+            else:
+                lines.extend(["## Public callables", ""])
+                public_rows = _public_callable_rows(recommended, "Essential") + _public_callable_rows(advanced, "Optional")
+                if not public_rows:
+                    public_rows.append(["—", "—", "—", "No public exports in this module.", "—"])
+                lines.extend(['<div class="module-table-scroll">'])
+                lines.extend(render_html_table(["Callable", "Tier", "Type", "Summary", "Related helpers"], public_rows))
+                lines.extend(['</div>'])
+                if module == "data_quality":
+                    lines.extend(
+                        [
+                            "",
+                            "Split a Spark DataFrame into pass/quarantine outputs for row-level DQ rules.",
+                        ]
+                    )
         else:
             lines.extend(["## Public callables", "", "No public exports in this module."])
 
@@ -1232,6 +1256,8 @@ def main() -> None:
 
     CALLABLE_REFERENCE_DIR.mkdir(parents=True, exist_ok=True)
     INTERNAL_REFERENCE_DIR.mkdir(parents=True, exist_ok=True)
+    for generated_page in [*CALLABLE_REFERENCE_DIR.glob("*.md"), *INTERNAL_REFERENCE_DIR.glob("*.md")]:
+        generated_page.unlink()
     agent_manifest: list[dict[str, Any]] = []
     function_manifest: list[dict[str, Any]] = []
     for qn, node in sorted(node_by_qn.items()):

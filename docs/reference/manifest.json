@@ -188,21 +188,9 @@
       "module_summary": "Owns agreement metadata capture, audited record building, metadata commit helpers, and agreement selection helpers used to anchor notebook workflows to approved business agreements.",
       "sidebar_group": "1. Governance steward",
       "sidebar_include": true,
-      "callable_name": "agreement_dropdown_options",
-      "callable_visibility": "public",
-      "callable_role": "essential",
-      "template_notebook": "\u2014",
-      "template_segment": "\u2014"
-    },
-    {
-      "module_name": "data_agreement",
-      "visibility": "public",
-      "module_summary": "Owns agreement metadata capture, audited record building, metadata commit helpers, and agreement selection helpers used to anchor notebook workflows to approved business agreements.",
-      "sidebar_group": "1. Governance steward",
-      "sidebar_include": true,
       "callable_name": "collect_agreement_metadata",
       "callable_visibility": "public",
-      "callable_role": "essential",
+      "callable_role": "optional",
       "template_notebook": "`01_da_<agreement>`",
       "template_segment": "Advanced customization: collect and preview agreement metadata"
     },
@@ -214,7 +202,7 @@
       "sidebar_include": true,
       "callable_name": "commit_agreement_metadata",
       "callable_visibility": "public",
-      "callable_role": "essential",
+      "callable_role": "optional",
       "template_notebook": "`01_da_<agreement>`",
       "template_segment": "Advanced customization: commit metadata records"
     },
@@ -226,7 +214,7 @@
       "sidebar_include": true,
       "callable_name": "create_agreement_form",
       "callable_visibility": "public",
-      "callable_role": "essential",
+      "callable_role": "optional",
       "template_notebook": "`01_da_<agreement>`",
       "template_segment": "Advanced customization: create agreement metadata widgets"
     },
@@ -248,30 +236,6 @@
       "module_summary": "Owns agreement metadata capture, audited record building, metadata commit helpers, and agreement selection helpers used to anchor notebook workflows to approved business agreements.",
       "sidebar_group": "1. Governance steward",
       "sidebar_include": true,
-      "callable_name": "latest_agreement_versions",
-      "callable_visibility": "public",
-      "callable_role": "essential",
-      "template_notebook": "\u2014",
-      "template_segment": "\u2014"
-    },
-    {
-      "module_name": "data_agreement",
-      "visibility": "public",
-      "module_summary": "Owns agreement metadata capture, audited record building, metadata commit helpers, and agreement selection helpers used to anchor notebook workflows to approved business agreements.",
-      "sidebar_group": "1. Governance steward",
-      "sidebar_include": true,
-      "callable_name": "load_active_data_steward_profiles",
-      "callable_visibility": "public",
-      "callable_role": "essential",
-      "template_notebook": "`01_da_<agreement>`",
-      "template_segment": "Advanced customization: create agreement metadata widgets"
-    },
-    {
-      "module_name": "data_agreement",
-      "visibility": "public",
-      "module_summary": "Owns agreement metadata capture, audited record building, metadata commit helpers, and agreement selection helpers used to anchor notebook workflows to approved business agreements.",
-      "sidebar_group": "1. Governance steward",
-      "sidebar_include": true,
       "callable_name": "load_agreements",
       "callable_visibility": "public",
       "callable_role": "essential",
@@ -286,7 +250,7 @@
       "sidebar_include": true,
       "callable_name": "read_agreement_form",
       "callable_visibility": "public",
-      "callable_role": "essential",
+      "callable_role": "optional",
       "template_notebook": "`01_da_<agreement>`",
       "template_segment": "Advanced customization: collect and preview agreement metadata"
     },
@@ -323,8 +287,8 @@
       "callable_name": "setup_data_agreement_tables",
       "callable_visibility": "public",
       "callable_role": "essential",
-      "template_notebook": "`01_da_<agreement>`",
-      "template_segment": "Advanced customization: create agreement metadata widgets"
+      "template_notebook": "`00_env_config`",
+      "template_segment": "Environment and metadata bootstrap"
     },
     {
       "module_name": "data_governance",

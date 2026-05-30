@@ -1,7 +1,7 @@
 # collect_agreement_metadata
 
 **Module:** `data_agreement`  
-**Classification:** Essential
+**Classification:** Optional
 
 ## Purpose
 
@@ -12,7 +12,7 @@ No summary available.
 - Fully qualified function name: `fabricops_kit.data_agreement.collect_agreement_metadata`
 - Short name: `collect_agreement_metadata`
 - Module: `data_agreement`
-- Classification: Essential
+- Classification: Optional
 - Related module: `data_agreement`
 - Source file path: `src/fabricops_kit/data_agreement.py`
 - Source reference: <a href="../../api/modules/data_agreement/#collect_agreement_metadata">Module source anchor</a>

@@ -1,7 +1,7 @@
 # latest_agreement_versions
 
 **Module:** `data_agreement`  
-**Classification:** Essential
+**Classification:** Internal helper
 
 ## Purpose
 
@@ -12,7 +12,7 @@ No summary available.
 - Fully qualified function name: `fabricops_kit.data_agreement.latest_agreement_versions`
 - Short name: `latest_agreement_versions`
 - Module: `data_agreement`
-- Classification: Essential
+- Classification: Internal helper
 - Related module: `data_agreement`
 - Source file path: `src/fabricops_kit/data_agreement.py`
 - Source reference: <a href="../../api/modules/data_agreement/#latest_agreement_versions">Module source anchor</a>
@@ -20,7 +20,7 @@ No summary available.
 - Outbound references count: 2
 
 ## Inbound references
-- <a href="../agreement_dropdown_options/"><code>fabricops_kit.data_agreement.agreement_dropdown_options</code></a>
+- <a href="../internal/data_agreement/agreement_dropdown_options/"><code>fabricops_kit.data_agreement.agreement_dropdown_options</code></a>
 - <a href="../load_agreements/"><code>fabricops_kit.data_agreement.load_agreements</code></a>
 
 ## Outbound references

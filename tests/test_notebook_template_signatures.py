@@ -155,6 +155,52 @@ def test_01_da_renders_framework_managed_intake_app_without_notebook_callback():
         assert lower_level_helper in fabricops_kit.__all__
 
 
+def test_public_all_exposes_supported_agreement_api_but_not_internal_helpers():
+    supported = {
+        "render_agreement_intake_app",
+        "setup_data_agreement_tables",
+        "load_agreements",
+        "select_agreement",
+        "get_selected_agreement",
+        "create_agreement_form",
+        "read_agreement_form",
+        "collect_agreement_metadata",
+        "commit_agreement_metadata",
+    }
+    internal_helpers = {
+        "agreement_dropdown_options",
+        "latest_agreement_versions",
+        "parse_contract_version",
+        "next_minor_version",
+        "resolve_agreement_identity",
+        "load_active_data_steward_profiles",
+        "metadata_lakehouse_root",
+    }
+    exported = set(fabricops_kit.__all__)
+    assert supported <= exported
+    assert not (internal_helpers & exported)
+
+
+def test_generated_data_agreement_module_page_separates_supported_api_tiers():
+    page = Path("docs/api/modules/data_agreement.md").read_text(encoding="utf-8")
+    assert "## Intended notebook call flow" in page
+    assert "## Primary notebook API" in page
+    assert "## Advanced customization API" in page
+    assert "## Internal helpers" in page
+    assert page.index("## Intended notebook call flow") < page.index("## Module manifest")
+    assert "## Module overview badges" not in page
+    for helper_name in (
+        "agreement_dropdown_options",
+        "latest_agreement_versions",
+        "load_active_data_steward_profiles",
+        "metadata_lakehouse_root",
+        "next_minor_version",
+        "parse_contract_version",
+        "resolve_agreement_identity",
+    ):
+        assert f"internal/data_agreement/{helper_name}/" in page
+
+
 def test_generated_function_manifest_excludes_removed_agreement_callables():
     manifest = json.loads(Path("docs/reference/function-manifest.json").read_text(encoding="utf-8"))
     manifest_text = json.dumps(manifest)

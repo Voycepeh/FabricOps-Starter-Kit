@@ -23,6 +23,12 @@
 - Existing rows are never overwritten. Each commit appends a new version row.
 - Update mode lists only the latest row per `agreement_id` and pre-fills the latest values for editing.
 
+## Intended notebook call flow
+
+1. `00_env_config` assembles `CONFIG`, creates or checks the agreement metadata tables, and reports steward readiness.
+2. `01_da_*` calls `render_agreement_intake_app(...)` to render the framework-managed intake form.
+3. Downstream notebooks call `load_agreements(...)`, `select_agreement(...)`, and `get_selected_agreement()` to bind work to a committed agreement version.
+
 ## Runtime and routing controls
 
 - The form uses `ipywidgets`, not `notebookutils.widgets`.

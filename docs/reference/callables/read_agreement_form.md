@@ -1,7 +1,7 @@
 # read_agreement_form
 
 **Module:** `data_agreement`  
-**Classification:** Essential
+**Classification:** Optional
 
 ## Purpose
 
@@ -12,7 +12,7 @@ No summary available.
 - Fully qualified function name: `fabricops_kit.data_agreement.read_agreement_form`
 - Short name: `read_agreement_form`
 - Module: `data_agreement`
-- Classification: Essential
+- Classification: Optional
 - Related module: `data_agreement`
 - Source file path: `src/fabricops_kit/data_agreement.py`
 - Source reference: <a href="../../api/modules/data_agreement/#read_agreement_form">Module source anchor</a>
