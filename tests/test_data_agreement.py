@@ -119,9 +119,19 @@ def test_collect_agreement_metadata_accepts_spark_like_existing_rows_without_tru
     assert result["agreement_row"]["contract_version"] == "1.0.0"
 
 
-def test_committed_by_resolves_fabric_user_name_before_user_id(monkeypatch):
-    monkeypatch.setattr(data_agreement, "_runtime_context", lambda: {"userName": "fabric.user@example.com", "userId": "fabric-user-id"})
-    result = collect_agreement_metadata(widget_values=_values())
+def test_collect_agreement_metadata_uses_shared_runtime_audit_helper(monkeypatch):
+    calls = []
+    monkeypatch.setattr(data_agreement, "build_runtime_audit_fields", lambda **kwargs: calls.append(kwargs) or {
+        "_committed_by": "fabric.user@example.com",
+        "_committed_at": "2026-01-01T00:00:00+00:00",
+        "_workspace_name": "Workspace",
+        "_notebook_name": "01_da_orders",
+        "_metadata_lakehouse_name": "metadata",
+        "_activity_id": "activity-123",
+    })
+    config = _config()
+    result = collect_agreement_metadata(widget_values=_values(), config=config, env="dev")
+    assert calls == [{"config": config, "env": "dev", "committed_by": None, "committed_at": None, "runtime_context": None}]
     assert result["agreement_row"]["_committed_by"] == "fabric.user@example.com"
 
 

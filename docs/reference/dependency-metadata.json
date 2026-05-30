@@ -764,22 +764,6 @@
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
-    "fabricops_kit.data_agreement._context_get": {
-      "qualified_name": "fabricops_kit.data_agreement._context_get",
-      "short_name": "_context_get",
-      "module": "data_agreement",
-      "callable": "_context_get",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_agreement/_context_get/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.data_agreement.collect_agreement_metadata"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
     "fabricops_kit.data_agreement._ensure_delta_table": {
       "qualified_name": "fabricops_kit.data_agreement._ensure_delta_table",
       "short_name": "_ensure_delta_table",
@@ -895,23 +879,21 @@
       "docs_url": "/FabricOps-Starter-Kit/reference/collect_agreement_metadata/",
       "classification": "optional",
       "calls": [
-        "fabricops_kit.data_agreement._context_get",
         "fabricops_kit.data_agreement._parse_required_date",
         "fabricops_kit.data_agreement._to_iso_date",
         "fabricops_kit.data_agreement.resolve_agreement_identity",
-        "fabricops_kit.metadata._runtime_context"
+        "fabricops_kit.metadata.build_runtime_audit_fields"
       ],
-      "calls_count": 5,
+      "calls_count": 4,
       "used_by": [
         "fabricops_kit.data_agreement.render_agreement_intake_app"
       ],
       "used_by_count": 1,
       "internal_helpers_used": [
-        "fabricops_kit.data_agreement._context_get",
         "fabricops_kit.data_agreement._parse_required_date",
         "fabricops_kit.data_agreement._to_iso_date"
       ],
-      "internal_helper_count": 3
+      "internal_helper_count": 2
     },
     "fabricops_kit.data_agreement.commit_agreement_metadata": {
       "qualified_name": "fabricops_kit.data_agreement.commit_agreement_metadata",
@@ -3336,9 +3318,10 @@
       "used_by": [
         "fabricops_kit.metadata._resolve_action_by",
         "fabricops_kit.metadata._runtime_context",
+        "fabricops_kit.metadata.build_runtime_audit_fields",
         "fabricops_kit.metadata.register_current_notebook"
       ],
-      "used_by_count": 3,
+      "used_by_count": 4,
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
@@ -3429,8 +3412,8 @@
       ],
       "calls_count": 1,
       "used_by": [
-        "fabricops_kit.data_agreement.collect_agreement_metadata",
         "fabricops_kit.metadata._resolve_action_by",
+        "fabricops_kit.metadata.build_runtime_audit_fields",
         "fabricops_kit.metadata.register_current_notebook"
       ],
       "used_by_count": 3,
@@ -3449,9 +3432,10 @@
       "calls": [],
       "calls_count": 0,
       "used_by": [
+        "fabricops_kit.metadata.build_runtime_audit_fields",
         "fabricops_kit.metadata.register_current_notebook"
       ],
-      "used_by_count": 1,
+      "used_by_count": 2,
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
@@ -3558,6 +3542,30 @@
         "fabricops_kit.metadata._sha256_key"
       ],
       "internal_helper_count": 1
+    },
+    "fabricops_kit.metadata.build_runtime_audit_fields": {
+      "qualified_name": "fabricops_kit.metadata.build_runtime_audit_fields",
+      "short_name": "build_runtime_audit_fields",
+      "module": "metadata",
+      "callable": "build_runtime_audit_fields",
+      "docs_url": "/FabricOps-Starter-Kit/reference/build_runtime_audit_fields/",
+      "classification": "essential",
+      "calls": [
+        "fabricops_kit.metadata._context_get",
+        "fabricops_kit.metadata._runtime_context",
+        "fabricops_kit.metadata._safe_str"
+      ],
+      "calls_count": 3,
+      "used_by": [
+        "fabricops_kit.data_agreement.collect_agreement_metadata"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [
+        "fabricops_kit.metadata._context_get",
+        "fabricops_kit.metadata._runtime_context",
+        "fabricops_kit.metadata._safe_str"
+      ],
+      "internal_helper_count": 3
     },
     "fabricops_kit.metadata.column_context_rows_for_spark": {
       "qualified_name": "fabricops_kit.metadata.column_context_rows_for_spark",
@@ -3951,7 +3959,7 @@
     "data_agreement": {
       "essential_count": 5,
       "optional_count": 4,
-      "internal_count": 7,
+      "internal_count": 6,
       "outbound_modules": [
         "fabric_input_output",
         "metadata"
@@ -4051,7 +4059,7 @@
       "inbound_count": 0
     },
     "metadata": {
-      "essential_count": 2,
+      "essential_count": 3,
       "optional_count": 0,
       "internal_count": 8,
       "outbound_modules": [

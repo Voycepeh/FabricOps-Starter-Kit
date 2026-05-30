@@ -12,7 +12,7 @@ from html import escape
 from typing import Any
 
 from .fabric_input_output import read_lakehouse_table, write_lakehouse_table
-from .metadata import _runtime_context
+from .metadata import build_runtime_audit_fields
 
 DATA_AGREEMENT_TABLE = "METADATA_DATA_AGREEMENT"
 DATA_STEWARD_TABLE = "METADATA_DATA_STEWARD"
@@ -44,17 +44,6 @@ def _coerce_row_dicts(rows: Any) -> list[dict[str, Any]]:
     if hasattr(rows, "collect"):
         rows = rows.collect()
     return [row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row) for row in rows]
-
-
-def _context_get(context: Any, *keys: str) -> Any:
-    for key in keys:
-        try:
-            value = context.get(key) if isinstance(context, dict) else context.get(key)
-        except Exception:
-            value = None
-        if value is not None and str(value).strip():
-            return value
-    return None
 
 
 def metadata_lakehouse_root(config: Any, env: str) -> str:
@@ -425,20 +414,17 @@ def collect_agreement_metadata(*, widget_values: dict[str, Any], mode: str = "cr
     values = {key: (_to_iso_date(value) if key in {"start_date", "expiry_date"} else str(value or "").strip()) for key, value in widget_values.items() if key != "data_steward_profile"}
     agreement_rows = [] if existing_rows is None else existing_rows
     identity = resolve_agreement_identity(agreement_rows, agreement_name=values.get("agreement_name", ""), source_system=values.get("source_system", ""), allowed_consumer_type=values.get("allowed_consumer_type", ""), mode=mode, selected_agreement=selected_agreement)
-    context = {**_runtime_context(), **(runtime_context or {})}
-    configured_lakehouse_name = ""
-    if config is not None and env is not None:
-        paths = config.path_config.paths if hasattr(config, "path_config") else config.paths
-        configured_lakehouse_name = str(paths[env]["metadata"].name)
+    audit_fields = build_runtime_audit_fields(
+        config=config,
+        env=env,
+        committed_by=committed_by,
+        committed_at=committed_at,
+        runtime_context=runtime_context,
+    )
     row = {
         **values, **identity,
         "steward_id": str(steward.get("steward_id") or "").strip(),
-        "_committed_by": str(committed_by).strip() if committed_by and str(committed_by).strip() else str(_context_get(context, "userName", "userId") or "unknown"),
-        "_committed_at": committed_at or datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
-        "_workspace_name": str(_context_get(context, "currentWorkspaceName", "workspaceName") or ""),
-        "_notebook_name": str(_context_get(context, "currentNotebookName", "notebookName") or "01_da_agreement_template"),
-        "_metadata_lakehouse_name": configured_lakehouse_name or str(_context_get(context, "lakehouseName") or ""),
-        "_activity_id": str(_context_get(context, "activityId") or ""),
+        **audit_fields,
     }
     missing = [field for field in _REQUIRED_FIELDS if row.get(field) is None or (isinstance(row.get(field), str) and not row[field].strip())]
     if missing:

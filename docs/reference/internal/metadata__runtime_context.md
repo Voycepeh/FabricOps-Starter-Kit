@@ -20,8 +20,8 @@ No summary available.
 - Outbound references count: 1
 
 ## Inbound references
-- <a href="../collect_agreement_metadata/"><code>fabricops_kit.data_agreement.collect_agreement_metadata</code></a>
 - <a href="../internal/metadata/_resolve_action_by/"><code>fabricops_kit.metadata._resolve_action_by</code></a>
+- <a href="../build_runtime_audit_fields/"><code>fabricops_kit.metadata.build_runtime_audit_fields</code></a>
 - <a href="../register_current_notebook/"><code>fabricops_kit.metadata.register_current_notebook</code></a>
 
 ## Outbound references

@@ -601,19 +601,6 @@
     "summary": "No summary available."
   },
   {
-    "name": "_context_get",
-    "qualified_name": "fabricops_kit.data_agreement._context_get",
-    "module": "data_agreement",
-    "type": "internal",
-    "role": "internal",
-    "inbound": [
-      "fabricops_kit.data_agreement.collect_agreement_metadata"
-    ],
-    "outbound": [],
-    "source_file": "src/fabricops_kit/data_agreement.py",
-    "summary": "No summary available."
-  },
-  {
     "name": "_ensure_delta_table",
     "qualified_name": "fabricops_kit.data_agreement._ensure_delta_table",
     "module": "data_agreement",
@@ -710,11 +697,10 @@
       "fabricops_kit.data_agreement.render_agreement_intake_app"
     ],
     "outbound": [
-      "fabricops_kit.data_agreement._context_get",
       "fabricops_kit.data_agreement._parse_required_date",
       "fabricops_kit.data_agreement._to_iso_date",
       "fabricops_kit.data_agreement.resolve_agreement_identity",
-      "fabricops_kit.metadata._runtime_context"
+      "fabricops_kit.metadata.build_runtime_audit_fields"
     ],
     "source_file": "src/fabricops_kit/data_agreement.py",
     "summary": "No summary available."
@@ -2609,6 +2595,7 @@
     "inbound": [
       "fabricops_kit.metadata._resolve_action_by",
       "fabricops_kit.metadata._runtime_context",
+      "fabricops_kit.metadata.build_runtime_audit_fields",
       "fabricops_kit.metadata.register_current_notebook"
     ],
     "outbound": [],
@@ -2682,8 +2669,8 @@
     "type": "internal",
     "role": "internal",
     "inbound": [
-      "fabricops_kit.data_agreement.collect_agreement_metadata",
       "fabricops_kit.metadata._resolve_action_by",
+      "fabricops_kit.metadata.build_runtime_audit_fields",
       "fabricops_kit.metadata.register_current_notebook"
     ],
     "outbound": [
@@ -2699,6 +2686,7 @@
     "type": "internal",
     "role": "internal",
     "inbound": [
+      "fabricops_kit.metadata.build_runtime_audit_fields",
       "fabricops_kit.metadata.register_current_notebook"
     ],
     "outbound": [],
@@ -2783,6 +2771,23 @@
     ],
     "source_file": "src/fabricops_kit/metadata.py",
     "summary": "No summary available."
+  },
+  {
+    "name": "build_runtime_audit_fields",
+    "qualified_name": "fabricops_kit.metadata.build_runtime_audit_fields",
+    "module": "metadata",
+    "type": "callable",
+    "role": "essential",
+    "inbound": [
+      "fabricops_kit.data_agreement.collect_agreement_metadata"
+    ],
+    "outbound": [
+      "fabricops_kit.metadata._context_get",
+      "fabricops_kit.metadata._runtime_context",
+      "fabricops_kit.metadata._safe_str"
+    ],
+    "source_file": "src/fabricops_kit/metadata.py",
+    "summary": "Build shared underscore-prefixed runtime audit fields for metadata-table rows."
   },
   {
     "name": "column_context_rows_for_spark",

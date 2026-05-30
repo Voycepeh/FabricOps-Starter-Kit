@@ -147,12 +147,12 @@ Each source table owns one kind of metadata. Join keys may repeat across tables 
 | start_date | 2026-06-01 | 01_da_* | Implemented | Agreement start date |
 | expiry_date | 2027-05-31 | 01_da_* | Implemented | Agreement expiry date |
 | renewal_required | Yes | 01_da_* | Implemented | Whether renewal is expected |
-| _committed_by | user@example.com | framework runtime | Implemented | Fabric runtime user who committed the version |
-| _committed_at | 2026-06-01T10:00:00+00:00 | framework runtime | Implemented | Agreement-version commit timestamp |
-| _workspace_name | Fabric Workspace | framework runtime | Implemented | Fabric workspace captured from runtime context |
-| _notebook_name | 01_da_governed_reporting | framework runtime | Implemented | Fabric notebook that committed the version |
-| _metadata_lakehouse_name | Metadata Lakehouse | framework runtime | Implemented | Configured metadata lakehouse captured at commit time |
-| _activity_id | activity-id | framework runtime | Implemented | Fabric activity identifier |
+| _committed_by | user@example.com | `metadata.build_runtime_audit_fields(...)` | Implemented | Fabric runtime user who committed the version |
+| _committed_at | 2026-06-01T10:00:00+00:00 | `metadata.build_runtime_audit_fields(...)` | Implemented | Agreement-version commit timestamp |
+| _workspace_name | Fabric Workspace | `metadata.build_runtime_audit_fields(...)` | Implemented | Fabric workspace captured from runtime context |
+| _notebook_name | 01_da_governed_reporting | `metadata.build_runtime_audit_fields(...)` | Implemented | Fabric notebook that committed the version |
+| _metadata_lakehouse_name | Metadata Lakehouse | `metadata.build_runtime_audit_fields(...)` | Implemented | Configured metadata lakehouse captured at commit time |
+| _activity_id | activity-id | `metadata.build_runtime_audit_fields(...)` | Implemented | Fabric activity identifier |
 
 !!! note "Keep workbook-style dictionary detail downstream"
     Detailed table and column metadata belongs downstream, not in `METADATA_DATA_AGREEMENT`. LYRA-style workbook or data-dictionary fields such as column description, data type, field classification, allowed values, top values, missing data, PII/sensitive indicators, and business rules belong in `METADATA_DATA_CATALOGUE`, `METADATA_COLUMN_BUSINESS_CONTEXT`, `METADATA_COLUMN_GOVERNANCE`, and `METADATA_DQ_RULES` according to their grain and ownership.

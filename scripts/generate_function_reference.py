@@ -669,6 +669,24 @@ def main() -> None:
         if module_purpose:
             lines.extend(["## Module purpose", "", module_purpose, ""])
 
+        if module == "metadata":
+            lines.extend(
+                [
+                    "## Shared metadata audit fields",
+                    "",
+                    "Use `build_runtime_audit_fields(...)` when metadata tables need framework-managed underscore-prefixed audit values such as `_committed_by`, `_committed_at`, `_workspace_name`, `_notebook_name`, `_metadata_lakehouse_name`, and `_activity_id`.",
+                    "",
+                ]
+            )
+        if module == "technical_columns":
+            lines.extend(
+                [
+                    "## Technical-column naming convention",
+                    "",
+                    "DataFrame technical columns use underscore-prefixed names such as `_pipeline_run_id` and `_record_loaded_timestamp`. Metadata-table audit fields also use underscore-prefixed names, but metadata rows should create them through `metadata.build_runtime_audit_fields(...)`.",
+                    "",
+                ]
+            )
         if module == "data_product_metadata":
             lines.extend(
                 [
@@ -688,6 +706,8 @@ def main() -> None:
                     "3. Downstream notebooks call `load_agreements(...)`, `select_agreement(...)`, and `get_selected_agreement()` to bind work to a committed agreement version.",
                     "",
                     "Lower-level form, collection, and commit functions remain supported only for advanced custom workflows. Non-exported helpers are implementation details and should not be imported from `fabricops_kit`.",
+                    "",
+                    "Agreement technical audit fields are framework-managed through `metadata.build_runtime_audit_fields(...)`.",
                     "",
                 ]
             )

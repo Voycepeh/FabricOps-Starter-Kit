@@ -16,6 +16,8 @@ Owns agreement metadata capture, audited record building, metadata commit helper
 
 Lower-level form, collection, and commit functions remain supported only for advanced custom workflows. Non-exported helpers are implementation details and should not be imported from `fabricops_kit`.
 
+Agreement technical audit fields are framework-managed through `metadata.build_runtime_audit_fields(...)`.
+
 ## Module manifest
 
 <table>
@@ -40,7 +42,7 @@ Lower-level form, collection, and commit functions remain supported only for adv
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>14</td>
+      <td>13</td>
     </tr>
     <tr>
       <td>Inbound module count</td>
@@ -137,7 +139,7 @@ Normal notebook users should not call these lower-level functions. Use them only
       <td>Optional / advanced customization</td>
       <td>function</td>
       <td>Build one validated append-only agreement-version row from intake values.</td>
-      <td><a href="../../reference/internal/data_agreement/_context_get/"><code>_context_get</code></a> (internal), <a href="../../reference/internal/data_agreement/_parse_required_date/"><code>_parse_required_date</code></a> (internal), <a href="../../reference/internal/data_agreement/_to_iso_date/"><code>_to_iso_date</code></a> (internal)</td>
+      <td><a href="../../reference/internal/data_agreement/_parse_required_date/"><code>_parse_required_date</code></a> (internal), <a href="../../reference/internal/data_agreement/_to_iso_date/"><code>_to_iso_date</code></a> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/commit_agreement_metadata/"><code>commit_agreement_metadata</code></a></td>
@@ -227,10 +229,6 @@ These non-exported helpers support framework internals and diagnostics. Do not i
       <td>Private implementation helper</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_agreement/_context_get/"><code>_context_get</code></a></td>
-      <td>Private implementation helper</td>
-    </tr>
-    <tr>
       <td><a href="../../reference/internal/data_agreement/_ensure_delta_table/"><code>_ensure_delta_table</code></a></td>
       <td>Private implementation helper</td>
     </tr>
@@ -269,7 +267,7 @@ These non-exported helpers support framework internals and diagnostics. Do not i
 <li>
 <a class="reference-chip" href="../../reference/collect_agreement_metadata/"><code>collect_agreement_metadata</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_context_get"><code>_context_get</code></a>, <a class="reference-chip" href="#_parse_required_date"><code>_parse_required_date</code></a>, <a class="reference-chip" href="#_to_iso_date"><code>_to_iso_date</code></a>, <a class="reference-chip" href="#resolve_agreement_identity"><code>resolve_agreement_identity</code></a>
+<a class="reference-chip" href="#_parse_required_date"><code>_parse_required_date</code></a>, <a class="reference-chip" href="#_to_iso_date"><code>_to_iso_date</code></a>, <a class="reference-chip" href="#resolve_agreement_identity"><code>resolve_agreement_identity</code></a>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/commit_agreement_metadata/"><code>commit_agreement_metadata</code></a>
@@ -333,10 +331,6 @@ These non-exported helpers support framework internals and diagnostics. Do not i
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_agreement/_context_get/"><code>_context_get</code></a></td>
-      <td><a href="../../reference/collect_agreement_metadata/"><code>collect_agreement_metadata</code></a></td>
-    </tr>
-    <tr>
       <td><a href="../../reference/internal/data_agreement/_ensure_delta_table/"><code>_ensure_delta_table</code></a></td>
       <td><a href="../../reference/commit_agreement_metadata/"><code>commit_agreement_metadata</code></a>, <a href="../../reference/setup_data_agreement_tables/"><code>setup_data_agreement_tables</code></a></td>
     </tr>
@@ -364,9 +358,6 @@ These non-exported helpers support framework internals and diagnostics. Do not i
 <ul class="callable-relationship-rows">
 <li>
 <a class="reference-chip" href="#_coerce_row_dicts"><code>_coerce_row_dicts</code></a>
-</li>
-<li>
-<a class="reference-chip" href="#_context_get"><code>_context_get</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_ensure_delta_table"><code>_ensure_delta_table</code></a>
@@ -399,4 +390,4 @@ None.
 <a class="reference-chip" href="../../reference/read_lakehouse_table/"><code>read_lakehouse_table</code></a>, <a class="reference-chip" href="../../reference/write_lakehouse_table/"><code>write_lakehouse_table</code></a>
 
 **metadata**
-<a class="reference-chip" href="../metadata/#_runtime_context"><code>_runtime_context</code></a>
+<a class="reference-chip" href="../../reference/build_runtime_audit_fields/"><code>build_runtime_audit_fields</code></a>
