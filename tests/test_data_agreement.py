@@ -181,4 +181,18 @@ def test_update_form_prefills_latest_selected_row(monkeypatch):
     assert form["agreement_name"].value == "Latest orders"
     assert form["business_purpose"].value == "Latest purpose"
     assert form["data_steward_profile"].value == steward
-    assert "Next: 1.3.0" in form["agreement_identity"].value
+    assert "Latest version: 1.2.0" in form["agreement_identity"].value
+    assert "Next version: 1.3.0" in form["agreement_identity"].value
+    assert "Agreement status:" in form["agreement_identity"].value
+    assert "Review status:" in form["agreement_identity"].value
+    assert "Latest expiry date: 2026-12-31" in form["agreement_identity"].value
+
+
+def test_setup_data_agreement_tables_creates_only_current_metadata_tables(monkeypatch):
+    ensured = []
+    monkeypatch.setattr(data_agreement, "_ensure_delta_table", lambda spark, config, env, table_name, fields: ensured.append(table_name))
+
+    tables = data_agreement.setup_data_agreement_tables(spark=object(), config=_config(), env="dev")
+
+    assert tables == [DATA_AGREEMENT_TABLE, DATA_STEWARD_TABLE]
+    assert ensured == [DATA_AGREEMENT_TABLE, DATA_STEWARD_TABLE]

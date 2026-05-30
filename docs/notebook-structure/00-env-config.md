@@ -2,7 +2,7 @@
 
 Use this page to understand the purpose and segment flow of this notebook template. Each segment shows the typical callables commonly used there.
 
-Shared environment bootstrap and validation before exploration or pipeline notebooks run.
+Shared environment bootstrap and validation before agreement intake, exploration, or pipeline notebooks run.
 
 > <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/00_env_config.ipynb">Open template notebook</a>
 
@@ -36,7 +36,9 @@ Describe what this shared config notebook sets up and what downstream exploratio
   </tbody>
 </table>
 
-## Segment 3: Set AI, quality, governance, and lineage defaults
+## Segment 3: Set AI, agreement-intake, quality, governance, and lineage defaults
+
+The single `CONFIG` object exposes `DataAgreementConfig` defaults for `01_da_<agreement>`. Before that notebook can render its form, manually populate `METADATA_DATA_STEWARD` in the configured metadata lakehouse and mark selectable steward rows with `is_active = true`; `00_env_config` does not seed fake steward profiles.
 
 ## Segment 4: Assemble and validate framework config
 

@@ -527,7 +527,15 @@ def create_agreement_form(*, spark: Any, config: Any, env: str, default_values: 
         elif not selected:
             form["agreement_identity"].value = "<b>Agreement Identity</b><br>Select an existing agreement to continue."
         else:
-            form["agreement_identity"].value = f"<b>Agreement Identity</b><br>ID: {escape(str(selected.get('agreement_id', '')))}<br>Latest: {escape(str(selected.get('contract_version', '')))}<br>Next: {next_minor_version(selected.get('contract_version'))}"
+            form["agreement_identity"].value = (
+                f"<b>Agreement Identity</b><br>"
+                f"ID: {escape(str(selected.get('agreement_id', '')))}<br>"
+                f"Latest version: {escape(str(selected.get('contract_version', '')))}<br>"
+                f"Next version: {escape(next_minor_version(selected.get('contract_version')))}<br>"
+                f"Agreement status: {escape(str(selected.get('agreement_status', '')))}<br>"
+                f"Review status: {escape(str(selected.get('review_status', '')))}<br>"
+                f"Latest expiry date: {escape(str(selected.get('expiry_date', '')))}"
+            )
     def prefill(*_: Any) -> None:
         refresh()
         selected = form["existing_agreement"].value

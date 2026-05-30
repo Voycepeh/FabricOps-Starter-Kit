@@ -66,3 +66,116 @@ def test_03_pc_warehouse_reads_match_public_signature():
             ["CONFIG", "ENV_NAME", "TARGET_LAYER", "dbo", "TARGET_TABLE"],
         )
         assert {_name(keyword.value) for keyword in call.keywords if keyword.arg == "spark_session"} == {"spark"}
+
+
+REMOVED_AGREEMENT_CALLABLES = {
+    "create_agreement_widgets",
+    "_agreement_widget_specs",
+    "_get_fabric_widgets",
+    "_widget_dropdown",
+    "_widget_text",
+    "_build_agreement_record",
+    "_normalise_widget_values",
+    "_normalize_widget_values",
+    "_read_agreement_widget_values",
+    "_record_base",
+    "_resolve_committed_at",
+    "_safe_table_prefix",
+    "_write_record",
+    "_latest_distinct_agreements",
+    "_agreement_option_label",
+}
+
+
+def _fabricops_imports(name: str) -> set[str]:
+    return {
+        alias.name
+        for node in _tree(name).body
+        if isinstance(node, ast.ImportFrom) and node.module == "fabricops_kit"
+        for alias in node.names
+    }
+
+
+def test_00_env_config_exposes_shared_config_and_data_agreement_defaults():
+    code = _code("00_env_config.ipynb")
+    assert 'ENV = "dev"' in code
+    assert "ENV_NAME = ENV" in code
+    assert "DATA_AGREEMENT_CONFIG = DataAgreementConfig()" in code
+    assert "data_agreement_config=DATA_AGREEMENT_CONFIG" in code
+    assert 'CONFIG.path_config.paths[ENV]["metadata"]' in json.loads((TEMPLATES / "00_env_config.ipynb").read_text(encoding="utf-8"))["cells"][1]["source"][2]
+
+
+def test_01_da_imports_only_public_current_agreement_helpers():
+    imported = _fabricops_imports("01_da_agreement_template.ipynb")
+    assert imported <= set(fabricops_kit.__all__)
+    assert imported == {
+        "collect_agreement_metadata",
+        "commit_agreement_metadata",
+        "create_agreement_form",
+        "load_agreements",
+        "read_agreement_form",
+        "setup_data_agreement_tables",
+    }
+    assert not (imported & REMOVED_AGREEMENT_CALLABLES)
+
+
+def test_01_da_uses_ipywidgets_flow_and_explicit_commit_mode():
+    code = _code("01_da_agreement_template.ipynb")
+    assert "%run 00_env_config" in code
+    assert "setup_data_agreement_tables(spark=spark, config=CONFIG, env=ENV)" in code
+    assert "create_agreement_form(spark=spark, config=CONFIG, env=ENV)" in code
+    assert "notebookutils.widgets" not in code
+    assert "display =" not in code
+    assert "from IPython.display import clear_output" in code
+    assert 'intake_mode = "update" if agreement_form["mode"].value == "Update Existing Agreement" else "create"' in code
+    assert "mode=intake_mode" in code
+    assert "print(summary)" not in code
+    for label in (
+        "Agreement ID",
+        "Contract Version",
+        "Status",
+        "Review Status",
+        "Expiry Date",
+        "Committed By",
+        "Committed At",
+        "Table Updated",
+    ):
+        assert label in code
+
+
+def test_generated_function_manifest_excludes_removed_agreement_callables():
+    manifest = json.loads(Path("docs/reference/function-manifest.json").read_text(encoding="utf-8"))
+    manifest_text = json.dumps(manifest)
+    for callable_name in REMOVED_AGREEMENT_CALLABLES:
+        assert callable_name not in manifest_text
+
+
+def test_02_ex_maps_selected_agreement_to_current_versioned_schema():
+    code = _code("02_ex_agreement_topic.ipynb")
+    for field_name in (
+        "agreement_id",
+        "contract_version",
+        "agreement_name",
+        "business_purpose",
+        "approved_usage",
+        "restricted_usage",
+        "data_steward_name",
+        "data_steward_email",
+        "domain",
+        "department",
+        "faculty",
+        "source_system",
+        "refresh_frequency",
+        "retention_expectation",
+        "allowed_consumer_type",
+        "expected_output",
+    ):
+        assert f'"{field_name}"' in code
+    assert 'business_purpose = selected_agreement.get("business_purpose") or selected_agreement.get("business_context", "")' in code
+    assert '"data_steward": {' in code
+    assert "display(agreement_context)" in code
+    assert 'business_context=f"Business purpose: {business_purpose}\\nApproved usage: {approved_usage}"' in code
+    assert 'business_context = selected_agreement.get("business_context", "")' not in code
+    assert 'ownership = selected_agreement.get("ownership", "")' not in code
+    assert 'print(f"business_context:' not in code
+    assert 'print(f"ownership:' not in code
