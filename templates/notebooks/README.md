@@ -1,4 +1,5 @@
 # Notebook templates
+These notebooks are created using ms fabric itself so download it and upload it into fabric for best performance
 
 Run the minimal end-to-end sample in the canonical framework lifecycle:
 1. `00_env_config` = runtime/environment paths, shared runtime configuration, and agreement metadata bootstrap.
