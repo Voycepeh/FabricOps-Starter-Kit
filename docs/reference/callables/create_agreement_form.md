@@ -24,7 +24,7 @@ No summary available.
 
 ## Outbound references
 - <a href="../internal/data_agreement/agreement_dropdown_options/"><code>fabricops_kit.data_agreement.agreement_dropdown_options</code></a>
-- <a href="../check_data_agreement_tables/"><code>fabricops_kit.data_agreement.check_data_agreement_tables</code></a>
 - <a href="../internal/data_agreement/load_active_data_steward_profiles/"><code>fabricops_kit.data_agreement.load_active_data_steward_profiles</code></a>
 - <a href="../load_agreements/"><code>fabricops_kit.data_agreement.load_agreements</code></a>
 - <a href="../internal/data_agreement/next_minor_version/"><code>fabricops_kit.data_agreement.next_minor_version</code></a>
+- <a href="../setup_data_agreement_tables/"><code>fabricops_kit.data_agreement.setup_data_agreement_tables</code></a>

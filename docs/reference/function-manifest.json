@@ -634,7 +634,7 @@
     "module": "data_agreement",
     "classification": "Internal helper",
     "inbound": [
-      "fabricops_kit.data_agreement.check_data_agreement_tables"
+      "fabricops_kit.data_agreement.setup_data_agreement_tables"
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/data_agreement.py",
@@ -676,8 +676,7 @@
     "module": "data_agreement",
     "classification": "Internal helper",
     "inbound": [
-      "fabricops_kit.data_agreement.collect_agreement_metadata",
-      "fabricops_kit.data_agreement.read_data_steward_form"
+      "fabricops_kit.data_agreement.collect_agreement_metadata"
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/data_agreement.py",
@@ -702,24 +701,6 @@
     "summary": "No summary available."
   },
   {
-    "id": "fabricops_kit.data_agreement.check_data_agreement_tables",
-    "name": "check_data_agreement_tables",
-    "qualified_name": "fabricops_kit.data_agreement.check_data_agreement_tables",
-    "module": "data_agreement",
-    "classification": "Optional",
-    "inbound": [
-      "fabricops_kit.data_agreement.create_agreement_form"
-    ],
-    "outbound": [
-      "fabricops_kit.data_agreement._column_names",
-      "fabricops_kit.data_agreement.load_active_data_steward_profiles",
-      "fabricops_kit.fabric_input_output.read_lakehouse_table"
-    ],
-    "source_path": "src/fabricops_kit/data_agreement.py",
-    "docs_path": "reference/check_data_agreement_tables.md",
-    "summary": "Validate agreement metadata tables and report steward readiness without creating tables."
-  },
-  {
     "id": "fabricops_kit.data_agreement.collect_agreement_metadata",
     "name": "collect_agreement_metadata",
     "qualified_name": "fabricops_kit.data_agreement.collect_agreement_metadata",
@@ -739,20 +720,6 @@
     "summary": "No summary available."
   },
   {
-    "id": "fabricops_kit.data_agreement.collect_data_steward_metadata",
-    "name": "collect_data_steward_metadata",
-    "qualified_name": "fabricops_kit.data_agreement.collect_data_steward_metadata",
-    "module": "data_agreement",
-    "classification": "Optional",
-    "inbound": [
-      "fabricops_kit.data_agreement.render_data_steward_maintenance_app"
-    ],
-    "outbound": [],
-    "source_path": "src/fabricops_kit/data_agreement.py",
-    "docs_path": "reference/collect_data_steward_metadata.md",
-    "summary": "No summary available."
-  },
-  {
     "id": "fabricops_kit.data_agreement.commit_agreement_metadata",
     "name": "commit_agreement_metadata",
     "qualified_name": "fabricops_kit.data_agreement.commit_agreement_metadata",
@@ -769,22 +736,6 @@
     "summary": "No summary available."
   },
   {
-    "id": "fabricops_kit.data_agreement.commit_data_steward_metadata",
-    "name": "commit_data_steward_metadata",
-    "qualified_name": "fabricops_kit.data_agreement.commit_data_steward_metadata",
-    "module": "data_agreement",
-    "classification": "Optional",
-    "inbound": [
-      "fabricops_kit.data_agreement.render_data_steward_maintenance_app"
-    ],
-    "outbound": [
-      "fabricops_kit.fabric_input_output.write_lakehouse_table"
-    ],
-    "source_path": "src/fabricops_kit/data_agreement.py",
-    "docs_path": "reference/commit_data_steward_metadata.md",
-    "summary": "No summary available."
-  },
-  {
     "id": "fabricops_kit.data_agreement.create_agreement_form",
     "name": "create_agreement_form",
     "qualified_name": "fabricops_kit.data_agreement.create_agreement_form",
@@ -795,27 +746,13 @@
     ],
     "outbound": [
       "fabricops_kit.data_agreement.agreement_dropdown_options",
-      "fabricops_kit.data_agreement.check_data_agreement_tables",
       "fabricops_kit.data_agreement.load_active_data_steward_profiles",
       "fabricops_kit.data_agreement.load_agreements",
-      "fabricops_kit.data_agreement.next_minor_version"
+      "fabricops_kit.data_agreement.next_minor_version",
+      "fabricops_kit.data_agreement.setup_data_agreement_tables"
     ],
     "source_path": "src/fabricops_kit/data_agreement.py",
     "docs_path": "reference/create_agreement_form.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.data_agreement.create_data_steward_form",
-    "name": "create_data_steward_form",
-    "qualified_name": "fabricops_kit.data_agreement.create_data_steward_form",
-    "module": "data_agreement",
-    "classification": "Optional",
-    "inbound": [
-      "fabricops_kit.data_agreement.render_data_steward_maintenance_app"
-    ],
-    "outbound": [],
-    "source_path": "src/fabricops_kit/data_agreement.py",
-    "docs_path": "reference/create_data_steward_form.md",
     "summary": "No summary available."
   },
   {
@@ -855,8 +792,8 @@
     "module": "data_agreement",
     "classification": "Internal helper",
     "inbound": [
-      "fabricops_kit.data_agreement.check_data_agreement_tables",
-      "fabricops_kit.data_agreement.create_agreement_form"
+      "fabricops_kit.data_agreement.create_agreement_form",
+      "fabricops_kit.data_agreement.setup_data_agreement_tables"
     ],
     "outbound": [
       "fabricops_kit.data_agreement._coerce_row_dicts",
@@ -931,22 +868,6 @@
     "summary": "No summary available."
   },
   {
-    "id": "fabricops_kit.data_agreement.read_data_steward_form",
-    "name": "read_data_steward_form",
-    "qualified_name": "fabricops_kit.data_agreement.read_data_steward_form",
-    "module": "data_agreement",
-    "classification": "Optional",
-    "inbound": [
-      "fabricops_kit.data_agreement.render_data_steward_maintenance_app"
-    ],
-    "outbound": [
-      "fabricops_kit.data_agreement._to_iso_date"
-    ],
-    "source_path": "src/fabricops_kit/data_agreement.py",
-    "docs_path": "reference/read_data_steward_form.md",
-    "summary": "No summary available."
-  },
-  {
     "id": "fabricops_kit.data_agreement.render_agreement_intake_app",
     "name": "render_agreement_intake_app",
     "qualified_name": "fabricops_kit.data_agreement.render_agreement_intake_app",
@@ -963,23 +884,6 @@
     "source_path": "src/fabricops_kit/data_agreement.py",
     "docs_path": "reference/render_agreement_intake_app.md",
     "summary": "Render and wire the default agreement-intake form application."
-  },
-  {
-    "id": "fabricops_kit.data_agreement.render_data_steward_maintenance_app",
-    "name": "render_data_steward_maintenance_app",
-    "qualified_name": "fabricops_kit.data_agreement.render_data_steward_maintenance_app",
-    "module": "data_agreement",
-    "classification": "Essential",
-    "inbound": [],
-    "outbound": [
-      "fabricops_kit.data_agreement.collect_data_steward_metadata",
-      "fabricops_kit.data_agreement.commit_data_steward_metadata",
-      "fabricops_kit.data_agreement.create_data_steward_form",
-      "fabricops_kit.data_agreement.read_data_steward_form"
-    ],
-    "source_path": "src/fabricops_kit/data_agreement.py",
-    "docs_path": "reference/render_data_steward_maintenance_app.md",
-    "summary": "Render and wire the steward reference maintenance form."
   },
   {
     "id": "fabricops_kit.data_agreement.resolve_agreement_identity",
@@ -1011,6 +915,25 @@
     "source_path": "src/fabricops_kit/data_agreement.py",
     "docs_path": "reference/select_agreement.md",
     "summary": "Render a widget dropdown and store selected agreement metadata row in module state."
+  },
+  {
+    "id": "fabricops_kit.data_agreement.setup_data_agreement_tables",
+    "name": "setup_data_agreement_tables",
+    "qualified_name": "fabricops_kit.data_agreement.setup_data_agreement_tables",
+    "module": "data_agreement",
+    "classification": "Essential",
+    "inbound": [
+      "fabricops_kit.data_agreement.create_agreement_form"
+    ],
+    "outbound": [
+      "fabricops_kit.data_agreement._column_names",
+      "fabricops_kit.data_agreement.load_active_data_steward_profiles",
+      "fabricops_kit.fabric_input_output.read_lakehouse_table",
+      "fabricops_kit.fabric_input_output.write_lakehouse_table"
+    ],
+    "source_path": "src/fabricops_kit/data_agreement.py",
+    "docs_path": "reference/setup_data_agreement_tables.md",
+    "summary": "Create, validate, and report readiness for agreement metadata tables."
   },
   {
     "id": "fabricops_kit.data_governance._approved_widget_rows",
@@ -2656,9 +2579,9 @@
     "module": "fabric_input_output",
     "classification": "Essential",
     "inbound": [
-      "fabricops_kit.data_agreement.check_data_agreement_tables",
       "fabricops_kit.data_agreement.load_active_data_steward_profiles",
-      "fabricops_kit.data_agreement.load_agreements"
+      "fabricops_kit.data_agreement.load_agreements",
+      "fabricops_kit.data_agreement.setup_data_agreement_tables"
     ],
     "outbound": [
       "fabricops_kit.config._get_store",
@@ -2706,7 +2629,7 @@
     "classification": "Essential",
     "inbound": [
       "fabricops_kit.data_agreement.commit_agreement_metadata",
-      "fabricops_kit.data_agreement.commit_data_steward_metadata",
+      "fabricops_kit.data_agreement.setup_data_agreement_tables",
       "fabricops_kit.data_quality.write_dq_rules",
       "fabricops_kit.fabric_input_output.seed_minimal_sample_source_table",
       "fabricops_kit.metadata.write_metadata_rows"

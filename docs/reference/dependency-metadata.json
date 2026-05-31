@@ -755,7 +755,7 @@
       "calls": [],
       "calls_count": 0,
       "used_by": [
-        "fabricops_kit.data_agreement.check_data_agreement_tables"
+        "fabricops_kit.data_agreement.setup_data_agreement_tables"
       ],
       "used_by_count": 1,
       "internal_helpers_used": [],
@@ -803,10 +803,9 @@
       "calls": [],
       "calls_count": 0,
       "used_by": [
-        "fabricops_kit.data_agreement.collect_agreement_metadata",
-        "fabricops_kit.data_agreement.read_data_steward_form"
+        "fabricops_kit.data_agreement.collect_agreement_metadata"
       ],
-      "used_by_count": 2,
+      "used_by_count": 1,
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
@@ -828,28 +827,6 @@
       "used_by_count": 2,
       "internal_helpers_used": [],
       "internal_helper_count": 0
-    },
-    "fabricops_kit.data_agreement.check_data_agreement_tables": {
-      "qualified_name": "fabricops_kit.data_agreement.check_data_agreement_tables",
-      "short_name": "check_data_agreement_tables",
-      "module": "data_agreement",
-      "callable": "check_data_agreement_tables",
-      "docs_url": "/FabricOps-Starter-Kit/reference/check_data_agreement_tables/",
-      "classification": "optional",
-      "calls": [
-        "fabricops_kit.data_agreement._column_names",
-        "fabricops_kit.data_agreement.load_active_data_steward_profiles",
-        "fabricops_kit.fabric_input_output.read_lakehouse_table"
-      ],
-      "calls_count": 3,
-      "used_by": [
-        "fabricops_kit.data_agreement.create_agreement_form"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [
-        "fabricops_kit.data_agreement._column_names"
-      ],
-      "internal_helper_count": 1
     },
     "fabricops_kit.data_agreement.collect_agreement_metadata": {
       "qualified_name": "fabricops_kit.data_agreement.collect_agreement_metadata",
@@ -875,22 +852,6 @@
       ],
       "internal_helper_count": 2
     },
-    "fabricops_kit.data_agreement.collect_data_steward_metadata": {
-      "qualified_name": "fabricops_kit.data_agreement.collect_data_steward_metadata",
-      "short_name": "collect_data_steward_metadata",
-      "module": "data_agreement",
-      "callable": "collect_data_steward_metadata",
-      "docs_url": "/FabricOps-Starter-Kit/reference/collect_data_steward_metadata/",
-      "classification": "optional",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.data_agreement.render_data_steward_maintenance_app"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
     "fabricops_kit.data_agreement.commit_agreement_metadata": {
       "qualified_name": "fabricops_kit.data_agreement.commit_agreement_metadata",
       "short_name": "commit_agreement_metadata",
@@ -909,24 +870,6 @@
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
-    "fabricops_kit.data_agreement.commit_data_steward_metadata": {
-      "qualified_name": "fabricops_kit.data_agreement.commit_data_steward_metadata",
-      "short_name": "commit_data_steward_metadata",
-      "module": "data_agreement",
-      "callable": "commit_data_steward_metadata",
-      "docs_url": "/FabricOps-Starter-Kit/reference/commit_data_steward_metadata/",
-      "classification": "optional",
-      "calls": [
-        "fabricops_kit.fabric_input_output.write_lakehouse_table"
-      ],
-      "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.data_agreement.render_data_steward_maintenance_app"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
     "fabricops_kit.data_agreement.create_agreement_form": {
       "qualified_name": "fabricops_kit.data_agreement.create_agreement_form",
       "short_name": "create_agreement_form",
@@ -936,30 +879,14 @@
       "classification": "optional",
       "calls": [
         "fabricops_kit.data_agreement.agreement_dropdown_options",
-        "fabricops_kit.data_agreement.check_data_agreement_tables",
         "fabricops_kit.data_agreement.load_active_data_steward_profiles",
         "fabricops_kit.data_agreement.load_agreements",
-        "fabricops_kit.data_agreement.next_minor_version"
+        "fabricops_kit.data_agreement.next_minor_version",
+        "fabricops_kit.data_agreement.setup_data_agreement_tables"
       ],
       "calls_count": 5,
       "used_by": [
         "fabricops_kit.data_agreement.render_agreement_intake_app"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.data_agreement.create_data_steward_form": {
-      "qualified_name": "fabricops_kit.data_agreement.create_data_steward_form",
-      "short_name": "create_data_steward_form",
-      "module": "data_agreement",
-      "callable": "create_data_steward_form",
-      "docs_url": "/FabricOps-Starter-Kit/reference/create_data_steward_form/",
-      "classification": "optional",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.data_agreement.render_data_steward_maintenance_app"
       ],
       "used_by_count": 1,
       "internal_helpers_used": [],
@@ -1014,8 +941,8 @@
       ],
       "calls_count": 2,
       "used_by": [
-        "fabricops_kit.data_agreement.check_data_agreement_tables",
-        "fabricops_kit.data_agreement.create_agreement_form"
+        "fabricops_kit.data_agreement.create_agreement_form",
+        "fabricops_kit.data_agreement.setup_data_agreement_tables"
       ],
       "used_by_count": 2,
       "internal_helpers_used": [
@@ -1095,26 +1022,6 @@
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
-    "fabricops_kit.data_agreement.read_data_steward_form": {
-      "qualified_name": "fabricops_kit.data_agreement.read_data_steward_form",
-      "short_name": "read_data_steward_form",
-      "module": "data_agreement",
-      "callable": "read_data_steward_form",
-      "docs_url": "/FabricOps-Starter-Kit/reference/read_data_steward_form/",
-      "classification": "optional",
-      "calls": [
-        "fabricops_kit.data_agreement._to_iso_date"
-      ],
-      "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.data_agreement.render_data_steward_maintenance_app"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [
-        "fabricops_kit.data_agreement._to_iso_date"
-      ],
-      "internal_helper_count": 1
-    },
     "fabricops_kit.data_agreement.render_agreement_intake_app": {
       "qualified_name": "fabricops_kit.data_agreement.render_agreement_intake_app",
       "short_name": "render_agreement_intake_app",
@@ -1130,25 +1037,6 @@
         "fabricops_kit.data_agreement.read_agreement_form"
       ],
       "calls_count": 5,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.data_agreement.render_data_steward_maintenance_app": {
-      "qualified_name": "fabricops_kit.data_agreement.render_data_steward_maintenance_app",
-      "short_name": "render_data_steward_maintenance_app",
-      "module": "data_agreement",
-      "callable": "render_data_steward_maintenance_app",
-      "docs_url": "/FabricOps-Starter-Kit/reference/render_data_steward_maintenance_app/",
-      "classification": "essential",
-      "calls": [
-        "fabricops_kit.data_agreement.collect_data_steward_metadata",
-        "fabricops_kit.data_agreement.commit_data_steward_metadata",
-        "fabricops_kit.data_agreement.create_data_steward_form",
-        "fabricops_kit.data_agreement.read_data_steward_form"
-      ],
-      "calls_count": 4,
       "used_by": [],
       "used_by_count": 0,
       "internal_helpers_used": [],
@@ -1190,6 +1078,29 @@
       "used_by_count": 0,
       "internal_helpers_used": [],
       "internal_helper_count": 0
+    },
+    "fabricops_kit.data_agreement.setup_data_agreement_tables": {
+      "qualified_name": "fabricops_kit.data_agreement.setup_data_agreement_tables",
+      "short_name": "setup_data_agreement_tables",
+      "module": "data_agreement",
+      "callable": "setup_data_agreement_tables",
+      "docs_url": "/FabricOps-Starter-Kit/reference/setup_data_agreement_tables/",
+      "classification": "essential",
+      "calls": [
+        "fabricops_kit.data_agreement._column_names",
+        "fabricops_kit.data_agreement.load_active_data_steward_profiles",
+        "fabricops_kit.fabric_input_output.read_lakehouse_table",
+        "fabricops_kit.fabric_input_output.write_lakehouse_table"
+      ],
+      "calls_count": 4,
+      "used_by": [
+        "fabricops_kit.data_agreement.create_agreement_form"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [
+        "fabricops_kit.data_agreement._column_names"
+      ],
+      "internal_helper_count": 1
     },
     "fabricops_kit.data_governance._approved_widget_rows": {
       "qualified_name": "fabricops_kit.data_governance._approved_widget_rows",
@@ -3168,9 +3079,9 @@
       ],
       "calls_count": 2,
       "used_by": [
-        "fabricops_kit.data_agreement.check_data_agreement_tables",
         "fabricops_kit.data_agreement.load_active_data_steward_profiles",
-        "fabricops_kit.data_agreement.load_agreements"
+        "fabricops_kit.data_agreement.load_agreements",
+        "fabricops_kit.data_agreement.setup_data_agreement_tables"
       ],
       "used_by_count": 3,
       "internal_helpers_used": [
@@ -3229,7 +3140,7 @@
       "calls_count": 1,
       "used_by": [
         "fabricops_kit.data_agreement.commit_agreement_metadata",
-        "fabricops_kit.data_agreement.commit_data_steward_metadata",
+        "fabricops_kit.data_agreement.setup_data_agreement_tables",
         "fabricops_kit.data_quality.write_dq_rules",
         "fabricops_kit.fabric_input_output.seed_minimal_sample_source_table",
         "fabricops_kit.metadata.write_metadata_rows"
@@ -3976,7 +3887,7 @@
     },
     "data_agreement": {
       "essential_count": 5,
-      "optional_count": 9,
+      "optional_count": 4,
       "internal_count": 5,
       "outbound_modules": [
         "fabric_input_output",

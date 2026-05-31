@@ -155,12 +155,6 @@ def test_agreement_row_uses_framework_managed_technical_audit_names():
     assert row["_activity_id"] == "activity-123"
 
 
-def test_data_agreement_package_does_not_own_raw_delta_table_setup_helpers():
-    assert not hasattr(data_agreement, "_table_path")
-    assert not hasattr(data_agreement, "_ensure_delta_table")
-    assert not hasattr(data_agreement, "setup_data_agreement_tables")
-
-
 def test_steward_profiles_use_active_rows_only_and_never_seed_fake_people(monkeypatch):
     monkeypatch.setattr(data_agreement, "read_lakehouse_table", lambda *args, **kwargs: [
         {"steward_id": "1", "data_steward_name": "Configured steward", "data_steward_email": "configured@example.com", "domain": "Ops", "department": "BI", "faculty": "Shared", "effective_from": "2020-01-01", "effective_to": "", "is_active": "true"},
@@ -202,65 +196,6 @@ def test_commit_appends_single_primary_table_by_configured_path(monkeypatch):
     assert summary["table_updated"] == DATA_AGREEMENT_TABLE
 
 
-
-def test_collect_and_commit_data_steward_metadata_append_reference_row(monkeypatch):
-    calls = []
-
-    class Spark:
-        def createDataFrame(self, rows):
-            calls.append(("rows", rows))
-            return "steward-df"
-
-    monkeypatch.setattr(
-        data_agreement,
-        "write_lakehouse_table",
-        lambda df, config, env, target, table, mode: calls.append(("write", df, env, target, table, mode)),
-    )
-    metadata = data_agreement.collect_data_steward_metadata(
-        widget_values={
-            "steward_id": "steward-001",
-            "data_steward_name": "Configured steward",
-            "data_steward_email": "configured@example.com",
-            "domain": "Operations",
-            "department": "Reporting",
-            "faculty": "Shared Services",
-            "effective_from": "2026-01-01",
-            "effective_to": "",
-            "is_active": "true",
-        },
-        recorded_at="2026-01-01T00:00:00+00:00",
-    )
-    summary = data_agreement.commit_data_steward_metadata(
-        spark=Spark(), config=_config(), env="dev", steward_metadata=metadata
-    )
-
-    assert metadata["steward_row"]["created_at"] == "2026-01-01T00:00:00+00:00"
-    assert metadata["steward_row"]["updated_at"] == "2026-01-01T00:00:00+00:00"
-    assert summary == {
-        "steward_id": "steward-001",
-        "data_steward_name": "Configured steward",
-        "is_active": "true",
-        "table_updated": DATA_STEWARD_TABLE,
-    }
-    assert calls[-1] == ("write", "steward-df", "dev", "metadata", DATA_STEWARD_TABLE, "append")
-
-
-def test_collect_data_steward_metadata_rejects_invalid_effective_period():
-    values = {
-        "steward_id": "steward-001",
-        "data_steward_name": "Configured steward",
-        "data_steward_email": "configured@example.com",
-        "domain": "Operations",
-        "department": "Reporting",
-        "faculty": "Shared Services",
-        "effective_from": "2026-02-01",
-        "effective_to": "2026-01-01",
-        "is_active": "true",
-    }
-    with pytest.raises(ValueError, match="effective_to must be on or after effective_from"):
-        data_agreement.collect_data_steward_metadata(widget_values=values)
-
-
 def test_required_fields_and_date_validation_are_clear():
     with pytest.raises(ValueError, match="agreement_name"):
         collect_agreement_metadata(widget_values=_values(agreement_name=""), committed_by="user")
@@ -277,8 +212,8 @@ def test_update_form_prefills_latest_selected_row(monkeypatch):
     config = SimpleNamespace(path_config=_config().path_config, data_agreement_config=intake)
     steward = {"label": "Configured steward | Ops | BI | Shared", "steward_id": "1", "data_steward_name": "Configured steward", "data_steward_email": "configured@example.com", "domain": "Ops", "department": "BI", "faculty": "Shared", "effective_from": "2020-01-01", "effective_to": ""}
     latest = {"agreement_id": "DA-1", "contract_version": "1.2.0", "agreement_name": "Latest orders", "steward_id": "1", "business_purpose": "Latest purpose", "approved_usage": "Latest usage", "restricted_usage": "Latest restriction", "retention_expectation": "Latest retention", "allowed_consumer_type": "Internal Department", "expected_output": "Dashboard", "source_system": "ERP", "refresh_frequency": "Daily", "renewal_required": "Yes", "start_date": "2026-01-01", "expiry_date": "2026-12-31"}
-    check_calls = []
-    monkeypatch.setattr(data_agreement, "check_data_agreement_tables", lambda **kwargs: check_calls.append(kwargs) or {"status": "ready"})
+    setup_calls = []
+    monkeypatch.setattr(data_agreement, "setup_data_agreement_tables", lambda **kwargs: setup_calls.append(kwargs) or {"status": "ready"})
     monkeypatch.setattr(data_agreement, "load_active_data_steward_profiles", lambda **kwargs: [steward])
     monkeypatch.setattr(data_agreement, "load_agreements", lambda *args, **kwargs: [latest])
     import sys
@@ -309,7 +244,7 @@ def test_update_form_prefills_latest_selected_row(monkeypatch):
     monkeypatch.setitem(sys.modules, "IPython", ipython)
     monkeypatch.setitem(sys.modules, "IPython.display", display)
     form = data_agreement.create_agreement_form(spark=object(), config=config, env="dev")
-    assert check_calls[0]["require_active_steward"] is True
+    assert setup_calls[0]["require_active_steward"] is True
     assert form["source_system"].options == ["ERP"]
     assert form["refresh_frequency"].options == ["Daily"]
     assert form["allowed_consumer_type"].options == ["Internal Department"]
@@ -434,13 +369,19 @@ def test_render_agreement_intake_app_prints_clear_failure_for_missing_update_sel
 
     assert "Commit failed: Update mode selected, but no existing agreement was chosen." in capsys.readouterr().out
 
-
-def test_check_data_agreement_tables_validates_current_metadata_tables_and_reports_readiness(monkeypatch):
+def test_setup_data_agreement_tables_checks_current_metadata_tables_and_reports_readiness(monkeypatch):
     reads = []
-    monkeypatch.setattr(data_agreement, "read_lakehouse_table", lambda *args, **kwargs: reads.append(args[3]) or [dict.fromkeys(DATA_AGREEMENT_FIELDS if args[3] == DATA_AGREEMENT_TABLE else _DATA_STEWARD_FIELDS, "")])
+
+    def read_table(*args, **kwargs):
+        table = args[3]
+        reads.append(table)
+        fields = DATA_AGREEMENT_FIELDS if table == DATA_AGREEMENT_TABLE else _DATA_STEWARD_FIELDS
+        return [dict.fromkeys(fields, "")]
+
+    monkeypatch.setattr(data_agreement, "read_lakehouse_table", read_table)
     monkeypatch.setattr(data_agreement, "load_active_data_steward_profiles", lambda **kwargs: [{"steward_id": "configured"}])
 
-    result = data_agreement.check_data_agreement_tables(spark=object(), config=_config(), env="dev")
+    result = data_agreement.setup_data_agreement_tables(spark=object(), config=_config(), env="dev")
 
     assert result == {
         "status": "ready",
@@ -451,7 +392,44 @@ def test_check_data_agreement_tables_validates_current_metadata_tables_and_repor
     assert reads == [DATA_AGREEMENT_TABLE, DATA_STEWARD_TABLE]
 
 
-def test_check_data_agreement_tables_warns_or_fails_when_active_stewards_are_missing(monkeypatch):
+def test_setup_data_agreement_tables_creates_missing_table_through_lakehouse_writer(monkeypatch):
+    calls = []
+    read_attempts = {DATA_AGREEMENT_TABLE: 0, DATA_STEWARD_TABLE: 0}
+
+    class EmptyFrame:
+        def limit(self, count):
+            calls.append(("limit", count))
+            return self
+
+    class Spark:
+        def createDataFrame(self, rows):
+            calls.append(("rows", rows))
+            return EmptyFrame()
+
+    def read_table(*args, **kwargs):
+        table = args[3]
+        read_attempts[table] += 1
+        if table == DATA_AGREEMENT_TABLE and read_attempts[table] == 1:
+            raise RuntimeError("missing")
+        fields = DATA_AGREEMENT_FIELDS if table == DATA_AGREEMENT_TABLE else _DATA_STEWARD_FIELDS
+        return [dict.fromkeys(fields, "")]
+
+    monkeypatch.setattr(data_agreement, "read_lakehouse_table", read_table)
+    monkeypatch.setattr(
+        data_agreement,
+        "write_lakehouse_table",
+        lambda df, config, env, target, table, **kwargs: calls.append(("write", env, target, table, kwargs)),
+    )
+    monkeypatch.setattr(data_agreement, "load_active_data_steward_profiles", lambda **kwargs: [{"steward_id": "configured"}])
+
+    data_agreement.setup_data_agreement_tables(spark=Spark(), config=_config(), env="dev")
+
+    assert calls[0] == ("rows", [{field: "" for field in DATA_AGREEMENT_FIELDS}])
+    assert calls[1] == ("limit", 0)
+    assert calls[2] == ("write", "dev", "metadata", DATA_AGREEMENT_TABLE, {"mode": "ignore", "overwrite_schema": True})
+
+
+def test_setup_data_agreement_tables_warns_or_fails_when_active_stewards_are_missing(monkeypatch):
     monkeypatch.setattr(data_agreement, "read_lakehouse_table", lambda *args, **kwargs: [dict.fromkeys(DATA_AGREEMENT_FIELDS if args[3] == DATA_AGREEMENT_TABLE else _DATA_STEWARD_FIELDS, "")])
     monkeypatch.setattr(
         data_agreement,
@@ -459,30 +437,23 @@ def test_check_data_agreement_tables_warns_or_fails_when_active_stewards_are_mis
         lambda **kwargs: (_ for _ in ()).throw(ValueError(f"{DATA_STEWARD_TABLE} has no active steward rows.")),
     )
 
-    result = data_agreement.check_data_agreement_tables(spark=object(), config=_config(), env="dev")
+    result = data_agreement.setup_data_agreement_tables(spark=object(), config=_config(), env="dev")
     assert result["status"] == "not_ready"
     assert result["tables"] == [DATA_AGREEMENT_TABLE, DATA_STEWARD_TABLE]
     assert result["active_steward_count"] == 0
     assert "No fake steward profiles are seeded." in result["message"]
 
     with pytest.raises(ValueError, match="no active steward rows"):
-        data_agreement.check_data_agreement_tables(
+        data_agreement.setup_data_agreement_tables(
             spark=object(), config=_config(), env="dev", require_active_steward=True
         )
 
 
-def test_check_data_agreement_tables_validates_schema_without_creating_tables(monkeypatch):
+def test_setup_data_agreement_tables_validates_each_table_schema(monkeypatch):
     monkeypatch.setattr(data_agreement, "read_lakehouse_table", lambda *args, **kwargs: [{"agreement_id": "configured"}])
 
     with pytest.raises(ValueError, match="missing required column"):
-        data_agreement.check_data_agreement_tables(spark=object(), config=_config(), env="dev")
-
-
-def test_check_data_agreement_tables_requires_00_env_config_when_table_is_missing(monkeypatch):
-    monkeypatch.setattr(data_agreement, "read_lakehouse_table", lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("missing")))
-
-    with pytest.raises(RuntimeError, match="Run 00_env_config to create metadata tables"):
-        data_agreement.check_data_agreement_tables(spark=object(), config=_config(), env="dev")
+        data_agreement.setup_data_agreement_tables(spark=object(), config=_config(), env="dev")
 
 
 def test_metadata_architecture_documents_current_agreement_and_steward_model():

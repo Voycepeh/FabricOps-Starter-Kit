@@ -114,42 +114,34 @@ def test_00_env_config_exposes_shared_config_and_data_agreement_defaults():
     assert "CONFIG.path_config.paths[ENV]['metadata']" in code
 
 
-def test_00_env_config_writes_agreement_table_schemas_directly_and_reports_steward_readiness():
+def test_00_env_config_bootstraps_agreement_tables_and_reports_steward_readiness():
     code = _code("00_env_config.ipynb")
-    assert "METADATA_TABLE_SCHEMAS = {" in code
-    assert '"METADATA_DATA_AGREEMENT": StructType([' in code
-    assert '"METADATA_DATA_STEWARD": StructType([' in code
-    assert "METADATA_LOOKUP_SEED_DATA = {}" in code
-    assert "for table_name, schema in METADATA_TABLE_SCHEMAS.items():" in code
-    assert "empty_df = spark.createDataFrame([], schema=schema)" in code
-    assert "for table_name, rows in METADATA_LOOKUP_SEED_DATA.items():" in code
-    assert "seed_df = spark.createDataFrame(rows)" in code
-    assert code.count("write_lakehouse_table(") == 2
-    assert 'target="metadata"' in code
-    assert 'RECREATE_METADATA_TABLES = False' in code
-    assert 'METADATA_TABLE_WRITE_MODE = "overwrite" if RECREATE_METADATA_TABLES else "ignore"' in code
-    assert 'mode=METADATA_TABLE_WRITE_MODE' in code
-    assert 'mode="overwrite"' in code
-    assert "setup_data_agreement_tables" not in code
+    assert "AGREEMENT_METADATA_SETUP = setup_data_agreement_tables(" in code
+    assert "spark=spark" in code
+    assert "config=CONFIG" in code
+    assert "env=ENV" in code
+    assert "require_active_steward=False" in code
     assert "CONFIG.path_config.paths[ENV]['unified'].name" in code
     assert "CONFIG.path_config.paths[ENV]['product'].name" in code
     assert "agreement metadata tables created/checked" in code
-    assert "add real active METADATA_DATA_STEWARD rows before running 01_da" in code
+    assert 'AGREEMENT_METADATA_SETUP[\'tables\']' in code
+    assert 'AGREEMENT_METADATA_SETUP[\'status\']' in code
+    assert 'AGREEMENT_METADATA_SETUP[\'message\']' in code
+    assert 'AGREEMENT_METADATA_SETUP[\'active_steward_count\']' in code
+    assert 'VALIDATION_MODE == "strict" and AGREEMENT_METADATA_SETUP["status"] != "ready"' in code
 
 
 def test_01_da_imports_only_high_level_agreement_app_helper():
     imported = _fabricops_imports("01_da_agreement_template.ipynb")
     assert imported <= set(fabricops_kit.__all__)
-    assert imported == {"render_agreement_intake_app", "render_data_steward_maintenance_app"}
+    assert imported == {"render_agreement_intake_app"}
     assert not (imported & REMOVED_AGREEMENT_CALLABLES)
 
 
 def test_01_da_renders_framework_managed_intake_app_without_notebook_callback():
     code = _code("01_da_agreement_template.ipynb")
     assert "%run 00_env_config" in code
-    assert "render_agreement_intake_app," in code
-    assert "render_data_steward_maintenance_app," in code
-    assert "steward_app = render_data_steward_maintenance_app(" in code
+    assert "from fabricops_kit import render_agreement_intake_app" in code
     assert "agreement_app = render_agreement_intake_app(" in code
     assert "spark=spark" in code
     assert "config=CONFIG" in code
@@ -162,7 +154,7 @@ def test_01_da_renders_framework_managed_intake_app_without_notebook_callback():
         "collect_agreement_metadata",
         "commit_agreement_metadata",
         "load_agreements",
-        "check_data_agreement_tables",
+        "setup_data_agreement_tables",
     ):
         assert lower_level_helper not in code
         assert lower_level_helper in fabricops_kit.__all__
@@ -171,7 +163,7 @@ def test_01_da_renders_framework_managed_intake_app_without_notebook_callback():
 def test_public_all_exposes_supported_agreement_api_but_not_internal_helpers():
     supported = {
         "render_agreement_intake_app",
-        "check_data_agreement_tables",
+        "setup_data_agreement_tables",
         "load_agreements",
         "select_agreement",
         "get_selected_agreement",
@@ -179,11 +171,6 @@ def test_public_all_exposes_supported_agreement_api_but_not_internal_helpers():
         "read_agreement_form",
         "collect_agreement_metadata",
         "commit_agreement_metadata",
-        "render_data_steward_maintenance_app",
-        "collect_data_steward_metadata",
-        "commit_data_steward_metadata",
-        "create_data_steward_form",
-        "read_data_steward_form",
     }
     internal_helpers = {
         "agreement_dropdown_options",
@@ -268,11 +255,12 @@ def test_00_env_config_keeps_bootstrap_flow_without_load_config():
     assert "DATA_STEWARD_REQUIRED_FIELDS" not in code
     assert "DATA_STEWARD_SYSTEM_FIELDS" not in code
     assert "validate_data_agreement_prerequisites" not in code
-    assert "setup_data_agreement_tables" not in code
-    assert "METADATA_TABLE_SCHEMAS = {" in code
-    assert "for table_name, schema in METADATA_TABLE_SCHEMAS.items():" in code
-    assert "write_lakehouse_table(" in code
-    assert 'target="metadata"' in code
+    assert "from fabricops_kit import setup_data_agreement_tables" in code
+    assert "AGREEMENT_METADATA_SETUP = setup_data_agreement_tables(" in code
+    assert "spark=spark" in code
+    assert "config=CONFIG" in code
+    assert "env=ENV" in code
+    assert "require_active_steward=False" in code
 
 
 def test_03_pc_pipeline_template_does_not_import_or_call_load_config():

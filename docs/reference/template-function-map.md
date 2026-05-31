@@ -54,32 +54,9 @@ Shared environment bootstrap and validation before agreement intake, exploration
 
 ## `01_da_<agreement>`
 
-Form notebook that maintains real `METADATA_DATA_STEWARD` reference rows and commits immutable `METADATA_DATA_AGREEMENT` versions.
+Form notebook that renders the agreement-intake app through one framework helper. The helper commits immutable `METADATA_DATA_AGREEMENT` versions and reads manually maintained `METADATA_DATA_STEWARD` profiles for intake dropdowns.
 
-### Segment 1: Maintain steward reference rows
-
-<table>
-  <thead>
-    <tr>
-      <th>Function</th>
-      <th>Role</th>
-      <th>What it does</th>
-      <th>Delegates to</th>
-      <th>Debug when</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>`render_data_steward_maintenance_app`</td>
-      <td>Callable orchestration wrapper</td>
-      <td>Render and wire the steward reference maintenance form.</td>
-      <td>—</td>
-      <td>Check dependency outputs and metadata writes.</td>
-    </tr>
-  </tbody>
-</table>
-
-### Segment 2: Render the agreement-intake app
+### Segment 1: Render the agreement-intake app
 
 <table>
   <thead>

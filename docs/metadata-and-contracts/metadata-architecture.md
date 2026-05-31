@@ -62,7 +62,7 @@ The table names below are the physical workflow evidence metadata tables. The di
 | ----------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | `METADATA_DATA_STEWARD` | One row per steward assignment/effective period | Maintains the steward source of truth for identity, organizational assignment, effective-date validity, and agreement intake. |
 
-`METADATA_DATA_STEWARD` is maintained reference metadata, not workflow evidence and not part of `METADATA_DATA_CATALOGUE`. Administrators or stewards maintain real rows and set `is_active = true` for selectable stewards. `00_env_config` writes the empty table schema directly through `write_lakehouse_table`; set `RECREATE_METADATA_TABLES = True` only for a clean development reset. `01_da_*` maintains real steward assignment rows and never seeds fake steward profiles.
+`METADATA_DATA_STEWARD` is maintained reference metadata, not workflow evidence and not part of `METADATA_DATA_CATALOGUE`. Administrators or stewards maintain real rows and set `is_active = true` for selectable stewards. Setup creates or checks the empty table when required; it never seeds fake steward profiles.
 
 ## Notebook-driven model
 
@@ -108,8 +108,8 @@ flowchart LR
 
 | Notebook         | Responsibility                                                                 | Writes or updates                                                                                                             |
 | ---------------- | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
-| `00_env_config`  | Sets reusable environment context, writes agreement and steward table schemas directly through `write_lakehouse_table`, and supports notebook registration | `METADATA_DATA_AGREEMENT`, `METADATA_DATA_STEWARD`, `METADATA_NOTEBOOK_REGISTRY` through `register_current_notebook()` |
-| `01_da_*`        | Maintains real steward reference rows, then captures the highest-grain agreement intake and usage boundary | `METADATA_DATA_STEWARD`, `METADATA_DATA_AGREEMENT`, `METADATA_NOTEBOOK_REGISTRY` |
+| `00_env_config`  | Sets reusable environment context, creates or checks agreement and steward tables, and supports notebook registration | `METADATA_DATA_AGREEMENT`, `METADATA_DATA_STEWARD`, `METADATA_NOTEBOOK_REGISTRY` through `register_current_notebook()` |
+| `01_da_*`        | Captures the highest-grain agreement intake and usage boundary; reads active/effective steward reference rows | `METADATA_DATA_AGREEMENT`, `METADATA_NOTEBOOK_REGISTRY` |
 | `02_ex_*`        | Profiles data, discovers structure, and suggests context/rules                 | `METADATA_DATA_CATALOGUE`, `METADATA_NOTEBOOK_REGISTRY`                                                                       |
 | `04_gov_*`       | Approves column-level business context and classifications                     | `METADATA_COLUMN_BUSINESS_CONTEXT`, `METADATA_COLUMN_GOVERNANCE`, `METADATA_NOTEBOOK_REGISTRY`                                |
 | `03_pc_*`        | Enforces approved DQ rules, validates pipeline outputs, captures drift/lineage | `METADATA_DQ_RULES`, `METADATA_DQ_RESULTS`, `METADATA_DRIFT_RESULTS`, `METADATA_LINEAGE_EVENTS`, `METADATA_NOTEBOOK_REGISTRY` |

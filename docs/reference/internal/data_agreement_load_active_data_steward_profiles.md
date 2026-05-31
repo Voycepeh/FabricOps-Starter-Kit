@@ -20,8 +20,8 @@ No summary available.
 - Outbound references count: 2
 
 ## Inbound references
-- <a href="../check_data_agreement_tables/"><code>fabricops_kit.data_agreement.check_data_agreement_tables</code></a>
 - <a href="../create_agreement_form/"><code>fabricops_kit.data_agreement.create_agreement_form</code></a>
+- <a href="../setup_data_agreement_tables/"><code>fabricops_kit.data_agreement.setup_data_agreement_tables</code></a>
 
 ## Outbound references
 - <a href="../internal/data_agreement/_coerce_row_dicts/"><code>fabricops_kit.data_agreement._coerce_row_dicts</code></a>
