@@ -179,7 +179,6 @@ def test_public_all_exposes_supported_agreement_api_but_not_internal_helpers():
         "next_minor_version",
         "resolve_agreement_identity",
         "load_active_data_steward_profiles",
-        "metadata_lakehouse_root",
     }
     exported = set(fabricops_kit.__all__)
     assert supported <= exported
@@ -201,7 +200,6 @@ def test_generated_data_agreement_module_page_separates_supported_api_tiers():
         "agreement_dropdown_options",
         "latest_agreement_versions",
         "load_active_data_steward_profiles",
-        "metadata_lakehouse_root",
         "next_minor_version",
         "parse_contract_version",
         "resolve_agreement_identity",

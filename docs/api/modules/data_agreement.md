@@ -42,7 +42,7 @@ Agreement technical audit fields are framework-managed through `metadata.build_r
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>14</td>
+      <td>11</td>
     </tr>
     <tr>
       <td>Inbound module count</td>
@@ -112,7 +112,7 @@ Use these callables in standard FabricOps notebooks.
       <td>Primary notebook API</td>
       <td>function</td>
       <td>Create, validate, and report readiness for agreement metadata tables.</td>
-      <td><a href="../../reference/internal/data_agreement/_column_names/"><code>_column_names</code></a> (internal), <a href="../../reference/internal/data_agreement/_ensure_delta_table/"><code>_ensure_delta_table</code></a> (internal)</td>
+      <td><a href="../../reference/internal/data_agreement/_column_names/"><code>_column_names</code></a> (internal)</td>
     </tr>
   </tbody>
 </table>
@@ -146,7 +146,7 @@ Normal notebook users should not call these lower-level functions. Use them only
       <td>Optional / advanced customization</td>
       <td>function</td>
       <td>Append one agreement-version row by configured OneLake path.</td>
-      <td><a href="../../reference/internal/data_agreement/_ensure_delta_table/"><code>_ensure_delta_table</code></a> (internal)</td>
+      <td>—</td>
     </tr>
     <tr>
       <td><a href="../../reference/create_agreement_form/"><code>create_agreement_form</code></a></td>
@@ -194,10 +194,6 @@ These non-exported helpers support framework internals and diagnostics. Do not i
       <td>Internal helper</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_agreement/metadata_lakehouse_root/"><code>metadata_lakehouse_root</code></a></td>
-      <td>Internal helper</td>
-    </tr>
-    <tr>
       <td><a href="../../reference/internal/data_agreement/next_minor_version/"><code>next_minor_version</code></a></td>
       <td>Internal helper</td>
     </tr>
@@ -233,19 +229,11 @@ These non-exported helpers support framework internals and diagnostics. Do not i
       <td>Private implementation helper</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_agreement/_ensure_delta_table/"><code>_ensure_delta_table</code></a></td>
-      <td>Private implementation helper</td>
-    </tr>
-    <tr>
       <td><a href="../../reference/internal/data_agreement/_generate_agreement_id/"><code>_generate_agreement_id</code></a></td>
       <td>Private implementation helper</td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/data_agreement/_parse_required_date/"><code>_parse_required_date</code></a></td>
-      <td>Private implementation helper</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/internal/data_agreement/_table_path/"><code>_table_path</code></a></td>
       <td>Private implementation helper</td>
     </tr>
     <tr>
@@ -276,7 +264,7 @@ These non-exported helpers support framework internals and diagnostics. Do not i
 <li>
 <a class="reference-chip" href="../../reference/commit_agreement_metadata/"><code>commit_agreement_metadata</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_ensure_delta_table"><code>_ensure_delta_table</code></a>
+<span>None.</span>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/create_agreement_form/"><code>create_agreement_form</code></a>
@@ -311,7 +299,7 @@ These non-exported helpers support framework internals and diagnostics. Do not i
 <li>
 <a class="reference-chip" href="../../reference/setup_data_agreement_tables/"><code>setup_data_agreement_tables</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_column_names"><code>_column_names</code></a>, <a class="reference-chip" href="#_ensure_delta_table"><code>_ensure_delta_table</code></a>, <a class="reference-chip" href="#load_active_data_steward_profiles"><code>load_active_data_steward_profiles</code></a>
+<a class="reference-chip" href="#_column_names"><code>_column_names</code></a>, <a class="reference-chip" href="#load_active_data_steward_profiles"><code>load_active_data_steward_profiles</code></a>
 </li>
 </ul>
 </section>
@@ -339,20 +327,12 @@ These non-exported helpers support framework internals and diagnostics. Do not i
       <td><a href="../../reference/setup_data_agreement_tables/"><code>setup_data_agreement_tables</code></a></td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_agreement/_ensure_delta_table/"><code>_ensure_delta_table</code></a></td>
-      <td><a href="../../reference/commit_agreement_metadata/"><code>commit_agreement_metadata</code></a>, <a href="../../reference/setup_data_agreement_tables/"><code>setup_data_agreement_tables</code></a></td>
-    </tr>
-    <tr>
       <td><a href="../../reference/internal/data_agreement/_generate_agreement_id/"><code>_generate_agreement_id</code></a></td>
       <td>—</td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/data_agreement/_parse_required_date/"><code>_parse_required_date</code></a></td>
       <td><a href="../../reference/collect_agreement_metadata/"><code>collect_agreement_metadata</code></a></td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/internal/data_agreement/_table_path/"><code>_table_path</code></a></td>
-      <td>—</td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/data_agreement/_to_iso_date/"><code>_to_iso_date</code></a></td>
@@ -371,20 +351,10 @@ These non-exported helpers support framework internals and diagnostics. Do not i
 <a class="reference-chip" href="#_column_names"><code>_column_names</code></a>
 </li>
 <li>
-<a class="reference-chip" href="#_ensure_delta_table"><code>_ensure_delta_table</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_table_path"><code>_table_path</code></a>
-</li>
-<li>
 <a class="reference-chip" href="#_generate_agreement_id"><code>_generate_agreement_id</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_parse_required_date"><code>_parse_required_date</code></a>
-</li>
-<li>
-<a class="reference-chip" href="#_table_path"><code>_table_path</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#metadata_lakehouse_root"><code>metadata_lakehouse_root</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_to_iso_date"><code>_to_iso_date</code></a>

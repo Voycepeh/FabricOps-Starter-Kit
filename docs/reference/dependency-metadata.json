@@ -761,28 +761,6 @@
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
-    "fabricops_kit.data_agreement._ensure_delta_table": {
-      "qualified_name": "fabricops_kit.data_agreement._ensure_delta_table",
-      "short_name": "_ensure_delta_table",
-      "module": "data_agreement",
-      "callable": "_ensure_delta_table",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_agreement/_ensure_delta_table/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.data_agreement._table_path"
-      ],
-      "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.data_agreement.commit_agreement_metadata",
-        "fabricops_kit.data_agreement.load_active_data_steward_profiles",
-        "fabricops_kit.data_agreement.setup_data_agreement_tables"
-      ],
-      "used_by_count": 3,
-      "internal_helpers_used": [
-        "fabricops_kit.data_agreement._table_path"
-      ],
-      "internal_helper_count": 1
-    },
     "fabricops_kit.data_agreement._generate_agreement_id": {
       "qualified_name": "fabricops_kit.data_agreement._generate_agreement_id",
       "short_name": "_generate_agreement_id",
@@ -810,24 +788,6 @@
       "calls_count": 0,
       "used_by": [
         "fabricops_kit.data_agreement.collect_agreement_metadata"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.data_agreement._table_path": {
-      "qualified_name": "fabricops_kit.data_agreement._table_path",
-      "short_name": "_table_path",
-      "module": "data_agreement",
-      "callable": "_table_path",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_agreement/_table_path/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.data_agreement.metadata_lakehouse_root"
-      ],
-      "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.data_agreement._ensure_delta_table"
       ],
       "used_by_count": 1,
       "internal_helpers_used": [],
@@ -900,18 +860,15 @@
       "docs_url": "/FabricOps-Starter-Kit/reference/commit_agreement_metadata/",
       "classification": "optional",
       "calls": [
-        "fabricops_kit.data_agreement._ensure_delta_table",
         "fabricops_kit.fabric_input_output.write_lakehouse_table"
       ],
-      "calls_count": 2,
+      "calls_count": 1,
       "used_by": [
         "fabricops_kit.data_agreement.render_agreement_intake_app"
       ],
       "used_by_count": 1,
-      "internal_helpers_used": [
-        "fabricops_kit.data_agreement._ensure_delta_table"
-      ],
-      "internal_helper_count": 1
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
     },
     "fabricops_kit.data_agreement.create_agreement_form": {
       "qualified_name": "fabricops_kit.data_agreement.create_agreement_form",
@@ -980,20 +937,18 @@
       "classification": "internal",
       "calls": [
         "fabricops_kit.data_agreement._coerce_row_dicts",
-        "fabricops_kit.data_agreement._ensure_delta_table",
         "fabricops_kit.fabric_input_output.read_lakehouse_table"
       ],
-      "calls_count": 3,
+      "calls_count": 2,
       "used_by": [
         "fabricops_kit.data_agreement.create_agreement_form",
         "fabricops_kit.data_agreement.setup_data_agreement_tables"
       ],
       "used_by_count": 2,
       "internal_helpers_used": [
-        "fabricops_kit.data_agreement._coerce_row_dicts",
-        "fabricops_kit.data_agreement._ensure_delta_table"
+        "fabricops_kit.data_agreement._coerce_row_dicts"
       ],
-      "internal_helper_count": 2
+      "internal_helper_count": 1
     },
     "fabricops_kit.data_agreement.load_agreements": {
       "qualified_name": "fabricops_kit.data_agreement.load_agreements",
@@ -1012,22 +967,6 @@
         "fabricops_kit.data_agreement.render_agreement_intake_app"
       ],
       "used_by_count": 2,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.data_agreement.metadata_lakehouse_root": {
-      "qualified_name": "fabricops_kit.data_agreement.metadata_lakehouse_root",
-      "short_name": "metadata_lakehouse_root",
-      "module": "data_agreement",
-      "callable": "metadata_lakehouse_root",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_agreement/metadata_lakehouse_root/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.data_agreement._table_path"
-      ],
-      "used_by_count": 1,
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
@@ -1149,9 +1088,9 @@
       "classification": "essential",
       "calls": [
         "fabricops_kit.data_agreement._column_names",
-        "fabricops_kit.data_agreement._ensure_delta_table",
         "fabricops_kit.data_agreement.load_active_data_steward_profiles",
-        "fabricops_kit.fabric_input_output.read_lakehouse_table"
+        "fabricops_kit.fabric_input_output.read_lakehouse_table",
+        "fabricops_kit.fabric_input_output.write_lakehouse_table"
       ],
       "calls_count": 4,
       "used_by": [
@@ -1159,10 +1098,9 @@
       ],
       "used_by_count": 1,
       "internal_helpers_used": [
-        "fabricops_kit.data_agreement._column_names",
-        "fabricops_kit.data_agreement._ensure_delta_table"
+        "fabricops_kit.data_agreement._column_names"
       ],
-      "internal_helper_count": 2
+      "internal_helper_count": 1
     },
     "fabricops_kit.data_governance._approved_widget_rows": {
       "qualified_name": "fabricops_kit.data_governance._approved_widget_rows",
@@ -3202,11 +3140,12 @@
       "calls_count": 1,
       "used_by": [
         "fabricops_kit.data_agreement.commit_agreement_metadata",
+        "fabricops_kit.data_agreement.setup_data_agreement_tables",
         "fabricops_kit.data_quality.write_dq_rules",
         "fabricops_kit.fabric_input_output.seed_minimal_sample_source_table",
         "fabricops_kit.metadata.write_metadata_rows"
       ],
-      "used_by_count": 4,
+      "used_by_count": 5,
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
@@ -3949,7 +3888,7 @@
     "data_agreement": {
       "essential_count": 5,
       "optional_count": 4,
-      "internal_count": 7,
+      "internal_count": 5,
       "outbound_modules": [
         "fabric_input_output",
         "metadata"

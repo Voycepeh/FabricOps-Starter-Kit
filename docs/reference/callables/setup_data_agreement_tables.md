@@ -24,6 +24,6 @@ Create, validate, and report readiness for agreement metadata tables.
 
 ## Outbound references
 - <a href="../internal/data_agreement/_column_names/"><code>fabricops_kit.data_agreement._column_names</code></a>
-- <a href="../internal/data_agreement/_ensure_delta_table/"><code>fabricops_kit.data_agreement._ensure_delta_table</code></a>
 - <a href="../internal/data_agreement/load_active_data_steward_profiles/"><code>fabricops_kit.data_agreement.load_active_data_steward_profiles</code></a>
 - <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a>
+- <a href="../write_lakehouse_table/"><code>fabricops_kit.fabric_input_output.write_lakehouse_table</code></a>

@@ -642,24 +642,6 @@
     "summary": "No summary available."
   },
   {
-    "id": "fabricops_kit.data_agreement._ensure_delta_table",
-    "name": "_ensure_delta_table",
-    "qualified_name": "fabricops_kit.data_agreement._ensure_delta_table",
-    "module": "data_agreement",
-    "classification": "Internal helper",
-    "inbound": [
-      "fabricops_kit.data_agreement.commit_agreement_metadata",
-      "fabricops_kit.data_agreement.load_active_data_steward_profiles",
-      "fabricops_kit.data_agreement.setup_data_agreement_tables"
-    ],
-    "outbound": [
-      "fabricops_kit.data_agreement._table_path"
-    ],
-    "source_path": "src/fabricops_kit/data_agreement.py",
-    "docs_path": "reference/internal/data_agreement__ensure_delta_table.md",
-    "summary": "No summary available."
-  },
-  {
     "id": "fabricops_kit.data_agreement._generate_agreement_id",
     "name": "_generate_agreement_id",
     "qualified_name": "fabricops_kit.data_agreement._generate_agreement_id",
@@ -685,22 +667,6 @@
     "outbound": [],
     "source_path": "src/fabricops_kit/data_agreement.py",
     "docs_path": "reference/internal/data_agreement__parse_required_date.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.data_agreement._table_path",
-    "name": "_table_path",
-    "qualified_name": "fabricops_kit.data_agreement._table_path",
-    "module": "data_agreement",
-    "classification": "Internal helper",
-    "inbound": [
-      "fabricops_kit.data_agreement._ensure_delta_table"
-    ],
-    "outbound": [
-      "fabricops_kit.data_agreement.metadata_lakehouse_root"
-    ],
-    "source_path": "src/fabricops_kit/data_agreement.py",
-    "docs_path": "reference/internal/data_agreement__table_path.md",
     "summary": "No summary available."
   },
   {
@@ -763,7 +729,6 @@
       "fabricops_kit.data_agreement.render_agreement_intake_app"
     ],
     "outbound": [
-      "fabricops_kit.data_agreement._ensure_delta_table",
       "fabricops_kit.fabric_input_output.write_lakehouse_table"
     ],
     "source_path": "src/fabricops_kit/data_agreement.py",
@@ -832,7 +797,6 @@
     ],
     "outbound": [
       "fabricops_kit.data_agreement._coerce_row_dicts",
-      "fabricops_kit.data_agreement._ensure_delta_table",
       "fabricops_kit.fabric_input_output.read_lakehouse_table"
     ],
     "source_path": "src/fabricops_kit/data_agreement.py",
@@ -856,20 +820,6 @@
     "source_path": "src/fabricops_kit/data_agreement.py",
     "docs_path": "reference/load_agreements.md",
     "summary": "Load latest versioned agreement rows from the configured metadata lakehouse."
-  },
-  {
-    "id": "fabricops_kit.data_agreement.metadata_lakehouse_root",
-    "name": "metadata_lakehouse_root",
-    "qualified_name": "fabricops_kit.data_agreement.metadata_lakehouse_root",
-    "module": "data_agreement",
-    "classification": "Internal helper",
-    "inbound": [
-      "fabricops_kit.data_agreement._table_path"
-    ],
-    "outbound": [],
-    "source_path": "src/fabricops_kit/data_agreement.py",
-    "docs_path": "reference/internal/data_agreement_metadata_lakehouse_root.md",
-    "summary": "No summary available."
   },
   {
     "id": "fabricops_kit.data_agreement.next_minor_version",
@@ -977,9 +927,9 @@
     ],
     "outbound": [
       "fabricops_kit.data_agreement._column_names",
-      "fabricops_kit.data_agreement._ensure_delta_table",
       "fabricops_kit.data_agreement.load_active_data_steward_profiles",
-      "fabricops_kit.fabric_input_output.read_lakehouse_table"
+      "fabricops_kit.fabric_input_output.read_lakehouse_table",
+      "fabricops_kit.fabric_input_output.write_lakehouse_table"
     ],
     "source_path": "src/fabricops_kit/data_agreement.py",
     "docs_path": "reference/setup_data_agreement_tables.md",
@@ -2679,6 +2629,7 @@
     "classification": "Essential",
     "inbound": [
       "fabricops_kit.data_agreement.commit_agreement_metadata",
+      "fabricops_kit.data_agreement.setup_data_agreement_tables",
       "fabricops_kit.data_quality.write_dq_rules",
       "fabricops_kit.fabric_input_output.seed_minimal_sample_source_table",
       "fabricops_kit.metadata.write_metadata_rows"

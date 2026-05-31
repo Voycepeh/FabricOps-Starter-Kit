@@ -48,48 +48,6 @@ def _coerce_row_dicts(rows: Any) -> list[dict[str, Any]]:
     return [row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row) for row in rows]
 
 
-def metadata_lakehouse_root(config: Any, env: str) -> str:
-    """Return the configured metadata lakehouse OneLake root.
-
-    Parameters
-    ----------
-    config : FrameworkConfig | dict
-        Framework config containing ``path_config.paths[env]["metadata"]``.
-    env : str
-        Environment key configured by ``00_env_config``.
-
-    Returns
-    -------
-    str
-        ABFSS OneLake root for the metadata lakehouse.
-
-    Raises
-    ------
-    ValueError
-        If the metadata target is absent or is not a lakehouse.
-    """
-    paths = config.path_config.paths if hasattr(config, "path_config") else config.paths
-    try:
-        store = paths[env]["metadata"]
-    except (KeyError, TypeError) as exc:
-        raise ValueError(f"Metadata target not found for environment '{env}'.") from exc
-    if store.kind != "lakehouse":
-        raise ValueError(f"Target '{env}/metadata' is not a lakehouse store.")
-    return store.root.rstrip("/")
-
-
-def _table_path(config: Any, env: str, table_name: str) -> str:
-    return f"{metadata_lakehouse_root(config, env)}/Tables/{table_name}"
-
-
-def _ensure_delta_table(spark: Any, config: Any, env: str, table_name: str, fields: list[str]) -> None:
-    path = _table_path(config, env, table_name)
-    try:
-        spark.read.format("delta").load(path).limit(0).collect()
-    except Exception:
-        spark.createDataFrame([{field: "" for field in fields}]).limit(0).write.format("delta").mode("overwrite").save(path)
-
-
 def _column_names(rows_or_df: Any) -> list[str]:
     """Return column names from a Spark DataFrame or row collection."""
     if hasattr(rows_or_df, "columns"):
@@ -135,26 +93,43 @@ def setup_data_agreement_tables(
     Raises
     ------
     ValueError
-        If the steward table schema is incomplete, or when active steward rows
-        are required but none are available.
+        If an agreement metadata table schema is incomplete, or when active
+        steward rows are required but none are available.
 
     Notes
     -----
-    The steward table is intentionally created empty. Populate it with real,
-    public-safe organization data before using the intake form; this helper
-    never seeds fake people. Metadata tables are routed through the configured
-    metadata lakehouse target for ``env``.
+    Missing tables are created as empty Delta tables through
+    :func:`~fabricops_kit.fabric_input_output.write_lakehouse_table`. Populate
+    the steward table with real, public-safe organization data before using the
+    intake form; this helper never seeds fake people. Metadata tables are
+    routed through the configured metadata lakehouse target for ``env``.
     """
-    tables = [DATA_AGREEMENT_TABLE, DATA_STEWARD_TABLE]
-    _ensure_delta_table(spark, config, env, DATA_AGREEMENT_TABLE, DATA_AGREEMENT_FIELDS)
-    _ensure_delta_table(spark, config, env, DATA_STEWARD_TABLE, _DATA_STEWARD_FIELDS)
-    steward_df = read_lakehouse_table(config, env, "metadata", DATA_STEWARD_TABLE, spark_session=spark)
-    missing = [field for field in _DATA_STEWARD_FIELDS if field not in _column_names(steward_df)]
-    if missing:
-        raise ValueError(
-            f"{DATA_STEWARD_TABLE} is missing required column(s): {', '.join(missing)}. "
-            "Run 00_env_config to recreate/check the metadata schema before rendering 01_da."
-        )
+    table_schemas = {
+        DATA_AGREEMENT_TABLE: DATA_AGREEMENT_FIELDS,
+        DATA_STEWARD_TABLE: _DATA_STEWARD_FIELDS,
+    }
+    tables = list(table_schemas)
+    for table_name, fields in table_schemas.items():
+        try:
+            table_df = read_lakehouse_table(config, env, "metadata", table_name, spark_session=spark)
+        except Exception:
+            empty_df = spark.createDataFrame([{field: "" for field in fields}]).limit(0)
+            write_lakehouse_table(
+                empty_df,
+                config,
+                env,
+                "metadata",
+                table_name,
+                mode="ignore",
+                overwrite_schema=True,
+            )
+            table_df = read_lakehouse_table(config, env, "metadata", table_name, spark_session=spark)
+        missing = [field for field in fields if field not in _column_names(table_df)]
+        if missing:
+            raise ValueError(
+                f"{table_name} is missing required column(s): {', '.join(missing)}. "
+                "Run 00_env_config to recreate/check the metadata schema before rendering 01_da."
+            )
 
     try:
         active_profiles = load_active_data_steward_profiles(spark=spark, config=config, env=env)
@@ -359,7 +334,6 @@ def load_active_data_steward_profiles(*, spark: Any, config: Any, env: str) -> l
     is blank or not in the future, and ``effective_to`` is blank or not in the
     past.
     """
-    _ensure_delta_table(spark, config, env, DATA_STEWARD_TABLE, _DATA_STEWARD_FIELDS)
     rows = _coerce_row_dicts(read_lakehouse_table(config, env, "metadata", DATA_STEWARD_TABLE, spark_session=spark))
     profiles = []
     today = datetime.now(timezone.utc).date()
@@ -521,7 +495,6 @@ def commit_agreement_metadata(*, spark: Any, config: Any, env: str, agreement_me
     """
     if mode != "append":
         raise ValueError("Agreement versions are append-only; mode must be 'append'.")
-    _ensure_delta_table(spark, config, env, DATA_AGREEMENT_TABLE, DATA_AGREEMENT_FIELDS)
     row = {field: agreement_metadata["agreement_row"].get(field, "") for field in DATA_AGREEMENT_FIELDS}
     write_lakehouse_table(spark.createDataFrame([row]), config, env, "metadata", DATA_AGREEMENT_TABLE, mode="append")
     return dict(agreement_metadata["summary"])
