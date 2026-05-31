@@ -16,11 +16,12 @@ No summary available.
 - Related module: `fabric_input_output`
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
 - Source reference: <a href="../../api/modules/fabric_input_output/#write_lakehouse_table">Module source anchor</a>
-- Inbound references count: 4
+- Inbound references count: 5
 - Outbound references count: 1
 
 ## Inbound references
 - <a href="../commit_agreement_metadata/"><code>fabricops_kit.data_agreement.commit_agreement_metadata</code></a>
+- <a href="../commit_data_steward_metadata/"><code>fabricops_kit.data_agreement.commit_data_steward_metadata</code></a>
 - <a href="../write_dq_rules/"><code>fabricops_kit.data_quality.write_dq_rules</code></a>
 - <a href="../internal/fabric_input_output/seed_minimal_sample_source_table/"><code>fabricops_kit.fabric_input_output.seed_minimal_sample_source_table</code></a>
 - <a href="../internal/metadata/write_metadata_rows/"><code>fabricops_kit.metadata.write_metadata_rows</code></a>

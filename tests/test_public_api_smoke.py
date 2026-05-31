@@ -3,7 +3,7 @@ import fabricops_kit as kit
 
 def test_package_import_and_core_entrypoints_available():
     assert not hasattr(kit, "load_config")
-    assert callable(kit.setup_data_agreement_tables)
+    assert callable(kit.check_data_agreement_tables)
     assert not hasattr(kit, "validate_data_agreement_prerequisites")
     assert not hasattr(kit, "DATA_STEWARD_REQUIRED_FIELDS")
     assert not hasattr(kit, "DATA_STEWARD_SYSTEM_FIELDS")

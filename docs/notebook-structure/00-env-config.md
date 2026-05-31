@@ -33,7 +33,7 @@ Describe what this shared config notebook sets up and what downstream exploratio
 
 ## Segment 3: Set AI, agreement-intake, quality, governance, and lineage defaults
 
-The single `CONFIG` object exposes explicit `DataAgreementConfig` defaults for `01_da_<agreement>`. During environment bootstrap, `00_env_config` creates or checks `METADATA_DATA_AGREEMENT` and `METADATA_DATA_STEWARD` in the configured metadata lakehouse, then reports steward readiness. Populate `METADATA_DATA_STEWARD` with real rows and mark selectable stewards with `is_active = true` before rendering `01_da`; no fake steward profiles are seeded.
+The single `CONFIG` object exposes explicit `DataAgreementConfig` defaults for `01_da_<agreement>`. During environment bootstrap, `00_env_config` writes `METADATA_DATA_AGREEMENT` and `METADATA_DATA_STEWARD` schemas directly to the configured metadata lakehouse. Set `RECREATE_METADATA_TABLES = True` only for a clean development reset. Use `01_da` to maintain real steward rows and mark selectable stewards with `is_active = true` before rendering agreement intake; no fake steward profiles are seeded.
 
 ## Segment 4: Assemble and validate framework config
 

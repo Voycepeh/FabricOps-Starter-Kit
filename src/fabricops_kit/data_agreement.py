@@ -48,48 +48,6 @@ def _coerce_row_dicts(rows: Any) -> list[dict[str, Any]]:
     return [row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row) for row in rows]
 
 
-def metadata_lakehouse_root(config: Any, env: str) -> str:
-    """Return the configured metadata lakehouse OneLake root.
-
-    Parameters
-    ----------
-    config : FrameworkConfig | dict
-        Framework config containing ``path_config.paths[env]["metadata"]``.
-    env : str
-        Environment key configured by ``00_env_config``.
-
-    Returns
-    -------
-    str
-        ABFSS OneLake root for the metadata lakehouse.
-
-    Raises
-    ------
-    ValueError
-        If the metadata target is absent or is not a lakehouse.
-    """
-    paths = config.path_config.paths if hasattr(config, "path_config") else config.paths
-    try:
-        store = paths[env]["metadata"]
-    except (KeyError, TypeError) as exc:
-        raise ValueError(f"Metadata target not found for environment '{env}'.") from exc
-    if store.kind != "lakehouse":
-        raise ValueError(f"Target '{env}/metadata' is not a lakehouse store.")
-    return store.root.rstrip("/")
-
-
-def _table_path(config: Any, env: str, table_name: str) -> str:
-    return f"{metadata_lakehouse_root(config, env)}/Tables/{table_name}"
-
-
-def _ensure_delta_table(spark: Any, config: Any, env: str, table_name: str, fields: list[str]) -> None:
-    path = _table_path(config, env, table_name)
-    try:
-        spark.read.format("delta").load(path).limit(0).collect()
-    except Exception:
-        spark.createDataFrame([{field: "" for field in fields}]).limit(0).write.format("delta").mode("overwrite").save(path)
-
-
 def _column_names(rows_or_df: Any) -> list[str]:
     """Return column names from a Spark DataFrame or row collection."""
     if hasattr(rows_or_df, "columns"):
@@ -104,14 +62,14 @@ def _column_names(rows_or_df: Any) -> list[str]:
     return list(first.keys())
 
 
-def setup_data_agreement_tables(
+def check_data_agreement_tables(
     *,
     spark: Any,
     config: Any,
     env: str,
     require_active_steward: bool = False,
 ) -> dict[str, Any]:
-    """Create, validate, and report readiness for agreement metadata tables.
+    """Validate agreement metadata tables and report steward readiness.
 
     Parameters
     ----------
@@ -123,8 +81,7 @@ def setup_data_agreement_tables(
         Environment key configured by ``00_env_config``.
     require_active_steward : bool, default=False
         Whether missing active steward rows should raise instead of returning a
-        ``not_ready`` status. Use ``False`` during environment bootstrap and
-        ``True`` before rendering agreement intake.
+        ``not_ready`` status.
 
     Returns
     -------
@@ -134,27 +91,35 @@ def setup_data_agreement_tables(
 
     Raises
     ------
+    RuntimeError
+        If an expected metadata table does not exist. Run ``00_env_config`` to
+        create metadata tables before calling this validator.
     ValueError
-        If the steward table schema is incomplete, or when active steward rows
+        If a metadata table schema is incomplete, or when active steward rows
         are required but none are available.
 
     Notes
     -----
-    The steward table is intentionally created empty. Populate it with real,
-    public-safe organization data before using the intake form; this helper
-    never seeds fake people. Metadata tables are routed through the configured
-    metadata lakehouse target for ``env``.
+    This validator never creates tables or seeds rows. ``00_env_config`` owns
+    metadata table setup through direct ``write_lakehouse_table`` calls.
     """
-    tables = [DATA_AGREEMENT_TABLE, DATA_STEWARD_TABLE]
-    _ensure_delta_table(spark, config, env, DATA_AGREEMENT_TABLE, DATA_AGREEMENT_FIELDS)
-    _ensure_delta_table(spark, config, env, DATA_STEWARD_TABLE, _DATA_STEWARD_FIELDS)
-    steward_df = read_lakehouse_table(config, env, "metadata", DATA_STEWARD_TABLE, spark_session=spark)
-    missing = [field for field in _DATA_STEWARD_FIELDS if field not in _column_names(steward_df)]
-    if missing:
-        raise ValueError(
-            f"{DATA_STEWARD_TABLE} is missing required column(s): {', '.join(missing)}. "
-            "Run 00_env_config to recreate/check the metadata schema before rendering 01_da."
-        )
+    expected_schemas = {
+        DATA_AGREEMENT_TABLE: DATA_AGREEMENT_FIELDS,
+        DATA_STEWARD_TABLE: _DATA_STEWARD_FIELDS,
+    }
+    for table_name, fields in expected_schemas.items():
+        try:
+            table_df = read_lakehouse_table(config, env, "metadata", table_name, spark_session=spark)
+        except Exception as exc:
+            raise RuntimeError(
+                f"{table_name} is missing. Run 00_env_config to create metadata tables before rendering 01_da."
+            ) from exc
+        missing = [field for field in fields if field not in _column_names(table_df)]
+        if missing:
+            raise ValueError(
+                f"{table_name} is missing required column(s): {', '.join(missing)}. "
+                "Run 00_env_config with RECREATE_METADATA_TABLES = True in a development environment to rebuild the metadata schema."
+            )
 
     try:
         active_profiles = load_active_data_steward_profiles(spark=spark, config=config, env=env)
@@ -163,20 +128,19 @@ def setup_data_agreement_tables(
             raise
         message = (
             f"WARNING: {DATA_STEWARD_TABLE} has no active steward rows. "
-            "01_da cannot render until real steward rows are maintained with is_active = true. "
+            "Maintain a real active steward row in 01_da before rendering agreement intake. "
             "No fake steward profiles are seeded."
         )
         if require_active_steward:
             raise ValueError(message) from exc
-        return {"status": "not_ready", "message": message, "tables": tables, "active_steward_count": 0}
+        return {"status": "not_ready", "message": message, "tables": list(expected_schemas), "active_steward_count": 0}
 
     return {
         "status": "ready",
         "message": f"{DATA_STEWARD_TABLE} contains active steward rows. 01_da can render its intake form.",
-        "tables": tables,
+        "tables": list(expected_schemas),
         "active_steward_count": len(active_profiles),
     }
-
 
 def parse_contract_version(version: Any) -> tuple[int, int, int]:
     """Parse a semantic contract version into a comparable tuple."""
@@ -359,7 +323,6 @@ def load_active_data_steward_profiles(*, spark: Any, config: Any, env: str) -> l
     is blank or not in the future, and ``effective_to`` is blank or not in the
     past.
     """
-    _ensure_delta_table(spark, config, env, DATA_STEWARD_TABLE, _DATA_STEWARD_FIELDS)
     rows = _coerce_row_dicts(read_lakehouse_table(config, env, "metadata", DATA_STEWARD_TABLE, spark_session=spark))
     profiles = []
     today = datetime.now(timezone.utc).date()
@@ -498,6 +461,186 @@ def collect_agreement_metadata(*, widget_values: dict[str, Any], mode: str = "cr
     return {"agreement_row": agreement_row, "is_new_agreement": identity["is_new_agreement"], "summary": {**{key: agreement_row[key] for key in ("agreement_id", "contract_version", "expiry_date", "_committed_by", "_committed_at")}, "table_updated": DATA_AGREEMENT_TABLE}}
 
 
+def collect_data_steward_metadata(*, widget_values: dict[str, Any], recorded_at: str | None = None) -> dict[str, Any]:
+    """Build one validated steward reference row for append-only maintenance.
+
+    Parameters
+    ----------
+    widget_values : dict[str, Any]
+        Human-entered steward fields from :func:`read_data_steward_form`.
+    recorded_at : str, optional
+        ISO timestamp used for ``created_at`` and ``updated_at``. Defaults to
+        the current UTC timestamp.
+
+    Returns
+    -------
+    dict[str, Any]
+        Steward row and commit summary ready for
+        :func:`commit_data_steward_metadata`.
+
+    Raises
+    ------
+    ValueError
+        If required steward values, ISO effective dates, or ``is_active`` are
+        invalid.
+    """
+    row = {field: str(widget_values.get(field) or "").strip() for field in _DATA_STEWARD_REQUIRED_FIELDS}
+    required = ["steward_id", "data_steward_name", "data_steward_email", "domain", "department", "faculty", "effective_from", "is_active"]
+    missing = [field for field in required if not row[field]]
+    if missing:
+        raise ValueError(f"Missing required steward field(s): {', '.join(missing)}.")
+    if row["is_active"].lower() not in {"true", "false"}:
+        raise ValueError("is_active must be either 'true' or 'false'.")
+    row["is_active"] = row["is_active"].lower()
+    try:
+        effective_from = date.fromisoformat(row["effective_from"][:10])
+        effective_to = date.fromisoformat(row["effective_to"][:10]) if row["effective_to"] else None
+    except ValueError as exc:
+        raise ValueError("effective_from and effective_to must use ISO date format YYYY-MM-DD.") from exc
+    if effective_to and effective_to < effective_from:
+        raise ValueError("effective_to must be on or after effective_from.")
+    timestamp = recorded_at or datetime.now(timezone.utc).isoformat()
+    row.update({"created_at": timestamp, "updated_at": timestamp})
+    return {
+        "steward_row": row,
+        "summary": {
+            "steward_id": row["steward_id"],
+            "data_steward_name": row["data_steward_name"],
+            "is_active": row["is_active"],
+            "table_updated": DATA_STEWARD_TABLE,
+        },
+    }
+
+
+def commit_data_steward_metadata(*, spark: Any, config: Any, env: str, steward_metadata: dict[str, Any], mode: str = "append") -> dict[str, Any]:
+    """Append one maintained steward reference row to the metadata lakehouse.
+
+    Parameters
+    ----------
+    spark : pyspark.sql.SparkSession
+        Active Fabric Spark session.
+    config : FrameworkConfig | dict
+        Framework config with the metadata lakehouse target.
+    env : str
+        Environment key configured by ``00_env_config``.
+    steward_metadata : dict[str, Any]
+        Validated result from :func:`collect_data_steward_metadata`.
+    mode : str, default="append"
+        Write mode. Steward maintenance is intentionally append-only.
+
+    Returns
+    -------
+    dict[str, Any]
+        Commit summary for the appended ``METADATA_DATA_STEWARD`` row.
+
+    Raises
+    ------
+    ValueError
+        If a non-append write mode is requested.
+
+    Notes
+    -----
+    Run ``00_env_config`` before committing rows. This function writes records
+    only; it never creates metadata tables.
+    """
+    if mode != "append":
+        raise ValueError("Steward reference maintenance is append-only; mode must be 'append'.")
+    row = {field: steward_metadata["steward_row"].get(field, "") for field in _DATA_STEWARD_FIELDS}
+    write_lakehouse_table(spark.createDataFrame([row]), config, env, "metadata", DATA_STEWARD_TABLE, mode="append")
+    return dict(steward_metadata["summary"])
+
+
+def create_data_steward_form(*, default_values: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Render the ``01_da`` steward-maintenance form with ``ipywidgets``.
+
+    Parameters
+    ----------
+    default_values : dict[str, Any], optional
+        Initial widget values for a steward assignment row.
+
+    Returns
+    -------
+    dict[str, Any]
+        Named widgets, including the steward fields and commit button.
+    """
+    import ipywidgets as widgets
+    import IPython.display as ip_display
+
+    defaults = dict(default_values or {})
+    form: dict[str, Any] = {}
+    for field in ("steward_id", "data_steward_name", "data_steward_email", "domain", "department", "faculty"):
+        form[field] = widgets.Text(value=str(defaults.get(field, "")), description=field.replace("_", " ").title())
+    form["effective_from"] = widgets.DatePicker(value=defaults.get("effective_from"), description="Effective From")
+    form["effective_to"] = widgets.DatePicker(value=defaults.get("effective_to"), description="Effective To")
+    form["is_active"] = widgets.Dropdown(options=["true", "false"], value=str(defaults.get("is_active", "true")).lower(), description="Is Active")
+    form["commit_button"] = widgets.Button(description="Commit Steward", button_style="success", icon="check")
+    form["output"] = widgets.Output()
+    ip_display.display(widgets.VBox(list(form.values())))
+    return form
+
+
+def read_data_steward_form(form: dict[str, Any]) -> dict[str, Any]:
+    """Return human-entered values from an ``01_da`` steward form.
+
+    Parameters
+    ----------
+    form : dict[str, Any]
+        Form returned by :func:`create_data_steward_form`.
+
+    Returns
+    -------
+    dict[str, Any]
+        Human-entered steward values ready for validation.
+    """
+    return {field: _to_iso_date(form[field].value) for field in _DATA_STEWARD_REQUIRED_FIELDS}
+
+
+def render_data_steward_maintenance_app(*, spark: Any, config: Any, env: str, default_values: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Render and wire the default ``01_da`` steward-maintenance application.
+
+    Parameters
+    ----------
+    spark : pyspark.sql.SparkSession
+        Active Fabric Spark session.
+    config : FrameworkConfig | dict
+        Framework config with the metadata lakehouse target.
+    env : str
+        Environment key configured by ``00_env_config``.
+    default_values : dict[str, Any], optional
+        Initial widget values passed to :func:`create_data_steward_form`.
+
+    Returns
+    -------
+    dict[str, Any]
+        Named widgets returned by :func:`create_data_steward_form`.
+
+    Notes
+    -----
+    This app maintains real reference rows only. It never creates metadata
+    tables and never seeds placeholder steward identities.
+    """
+    from IPython.display import clear_output
+
+    form = create_data_steward_form(default_values=default_values)
+
+    def on_commit_clicked(_: Any) -> None:
+        with form["output"]:
+            clear_output()
+            try:
+                metadata = collect_data_steward_metadata(widget_values=read_data_steward_form(form))
+                summary = commit_data_steward_metadata(spark=spark, config=config, env=env, steward_metadata=metadata)
+                print("Data steward reference row committed successfully.")
+                print(f"- Steward ID: {summary['steward_id']}")
+                print(f"- Steward Name: {summary['data_steward_name']}")
+                print(f"- Is Active: {summary['is_active']}")
+                print(f"- Table Updated: {summary['table_updated']}")
+            except Exception as exc:
+                print(f"Commit failed: {exc}")
+
+    form["commit_button"].on_click(on_commit_clicked)
+    return form
+
+
 def commit_agreement_metadata(*, spark: Any, config: Any, env: str, agreement_metadata: dict[str, Any], mode: str = "append") -> dict[str, Any]:
     """Append one agreement-version row by configured OneLake path.
 
@@ -521,7 +664,6 @@ def commit_agreement_metadata(*, spark: Any, config: Any, env: str, agreement_me
     """
     if mode != "append":
         raise ValueError("Agreement versions are append-only; mode must be 'append'.")
-    _ensure_delta_table(spark, config, env, DATA_AGREEMENT_TABLE, DATA_AGREEMENT_FIELDS)
     row = {field: agreement_metadata["agreement_row"].get(field, "") for field in DATA_AGREEMENT_FIELDS}
     write_lakehouse_table(spark.createDataFrame([row]), config, env, "metadata", DATA_AGREEMENT_TABLE, mode="append")
     return dict(agreement_metadata["summary"])
@@ -552,7 +694,7 @@ def create_agreement_form(*, spark: Any, config: Any, env: str, default_values: 
     intake = getattr(config, "data_agreement_config", None)
     defaults = {**dict(getattr(intake, "default_values", {}) or {}), **(default_values or {})}
     get_options = lambda name: list(getattr(intake, name, ()) or ())
-    setup_data_agreement_tables(spark=spark, config=config, env=env, require_active_steward=True)
+    check_data_agreement_tables(spark=spark, config=config, env=env, require_active_steward=True)
     profiles = load_active_data_steward_profiles(spark=spark, config=config, env=env)
     latest = load_agreements(config, env, spark_session=spark, missing_ok=True)
     steward_options = [(profile["label"], profile) for profile in profiles]

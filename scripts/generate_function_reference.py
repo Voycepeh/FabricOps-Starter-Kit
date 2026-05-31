@@ -701,9 +701,10 @@ def main() -> None:
                 [
                     "## Intended notebook call flow",
                     "",
-                    "1. `00_env_config` assembles `CONFIG` and calls `setup_data_agreement_tables(...)` to create or check agreement metadata tables.",
-                    "2. `01_da_<agreement>` calls `render_agreement_intake_app(...)` to render the framework-managed intake form.",
-                    "3. Downstream notebooks call `load_agreements(...)`, `select_agreement(...)`, and `get_selected_agreement()` to bind work to a committed agreement version.",
+                    "1. `00_env_config` assembles `CONFIG` and writes metadata table schemas directly through `write_lakehouse_table(...)`.",
+                    "2. `01_da_<agreement>` calls `render_data_steward_maintenance_app(...)` to maintain real steward assignments when needed.",
+                    "3. `01_da_<agreement>` calls `render_agreement_intake_app(...)` after an active steward row exists.",
+                    "4. Downstream notebooks call `load_agreements(...)`, `select_agreement(...)`, and `get_selected_agreement()` to bind work to a committed agreement version.",
                     "",
                     "Lower-level form, collection, and commit functions remain supported only for advanced custom workflows. Non-exported helpers are implementation details and should not be imported from `fabricops_kit`.",
                     "",

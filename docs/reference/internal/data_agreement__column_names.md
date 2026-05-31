@@ -20,4 +20,4 @@ No summary available.
 - Outbound references count: 0
 
 ## Inbound references
-- <a href="../setup_data_agreement_tables/"><code>fabricops_kit.data_agreement.setup_data_agreement_tables</code></a>
+- <a href="../check_data_agreement_tables/"><code>fabricops_kit.data_agreement.check_data_agreement_tables</code></a>
