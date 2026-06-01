@@ -13,27 +13,31 @@ theme:
     - content.code.copy
   palette:
     - scheme: default
-      primary: indigo
-      accent: indigo
+      primary: custom
+      accent: custom
 
 nav:
   - Home: index.md
-  - Quick Start: quick-start.md
+
+  - Quick Start:
+      - Overview: quick-start.md
+      - Install: install.md
+      - Create Wheel: setup/create-wheel.md
+      - Run in Fabric: setup/run-in-fabric.md
+
   - How FabricOps Works:
       - Overview: how-fabricops-works/index.md
       - Workspace Operating Model: how-fabricops-works/workspace-operating-model.md
       - Notebook Templates: how-fabricops-works/notebook-templates.md
       - Metadata Tables: how-fabricops-works/metadata-tables.md
       - Metadata Dashboard: how-fabricops-works/metadata-dashboard.md
+
   - Data Quality Rules: data-quality-rules-system.md
-  - Setup:
-      - Install: install.md
-      - Create Wheel: setup/create-wheel.md
-      - Run in Fabric: setup/run-in-fabric.md
+
   - Function Reference:
       - Overview: reference/index.md
       - Modules:
-      # AUTO-GENERATED-MODULES-START
+          # AUTO-GENERATED-MODULES-START
           - config: api/modules/config.md
           - data_agreement: api/modules/data_agreement.md
           - business_context: api/modules/business_context.md
@@ -46,7 +50,7 @@ nav:
           - drift: api/modules/drift.md
           - handover: api/modules/handover.md
           - metadata: api/modules/metadata.md
-      # AUTO-GENERATED-MODULES-END
+          # AUTO-GENERATED-MODULES-END
 
 markdown_extensions:
   - admonition
@@ -91,3 +95,4 @@ extra_javascript:
 extra_css:
   - stylesheets/api-chips.css
   - stylesheets/layout-wide.css
+  - stylesheets/fabric-theme.css
