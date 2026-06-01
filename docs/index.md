@@ -11,7 +11,8 @@ The result is a self-contained Fabric workflow for governing data products witho
 
 <div class="home-cta" markdown="1">
 
-[Start Quickly](quick-start.md){ .md-button .md-button--primary }
+[Quick Start](quick-start.md){ .md-button .md-button--primary }
+
 [How FabricOps Works](how-fabricops-works/index.md){ .md-button }
 
 </div>
