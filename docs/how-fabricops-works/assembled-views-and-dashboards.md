@@ -1,40 +1,40 @@
-# Assembled views
+# Assembled Views and Dashboards
 
-This compatibility reference preserves detailed assembled-view mappings. Start with [How FabricOps Works](../how-fabricops-works/index.md) and [Assembled Views and Dashboards](../how-fabricops-works/assembled-views-and-dashboards.md) for the guided story. The agreement-level, table-level, and column-level views assembled from the nine source metadata tables are reproducible outputs used for dashboarding, handover JSON, ODCS YAML, and OpenMetadata-compatible payloads.
+Raw metadata tables are useful for notebooks. Assembled views are useful for people. FabricOps Starter Kit joins and summarizes source metadata into agreement-level, table-level, and column-level views that can support dashboards, handover, and standards-compatible exports.
 
-The nine metadata tables are governed source evidence. The assembled views join and summarize that evidence at the grains that dashboards and handover exports need. A project may choose to materialize a view later for audit or performance, but the view itself is not a new source metadata table.
-
-```mermaid
-flowchart LR
-    A["9 metadata tables<br/>source evidence"] --> B["VW_COLUMN_CATALOGUE<br/>column-level view"]
-    A --> C["VW_TABLE_CONTRACT_SUMMARY<br/>table-level view"]
-    A --> D["VW_AGREEMENT_CONTRACT_SUMMARY<br/>agreement-level view"]
-
-    B --> E["Dashboard<br/>column catalogue"]
-    C --> F["Dashboard<br/>table health"]
-    D --> G["Dashboard<br/>agreement status"]
-
-    B --> H["Handover JSON<br/>columns section"]
-    C --> I["Handover JSON<br/>tables section"]
-    D --> J["Handover JSON<br/>summary section"]
-
-    H --> K["ODCS YAML"]
-    I --> K
-    J --> K
-
-    H --> L["OpenMetadata payload"]
-    I --> L
-    J --> L
-```
+The views are reproducible outputs, not competing source tables. Projects may materialize them later for performance or audit needs, but the governed source evidence remains in the metadata tables described on the [Metadata Tables](metadata-tables.md) page.
 
 ## View overview
 
-| View                            | Grain                                    | Purpose                                                                 |
-| ------------------------------- | ---------------------------------------- | ----------------------------------------------------------------------- |
-| `VW_AGREEMENT_CONTRACT_SUMMARY` | One row per agreement                    | Agreement-level contract status, handover summary, and export readiness |
-| `VW_TABLE_CONTRACT_SUMMARY`     | One row per agreement and table          | Table-level contract health, dashboarding, and handover table section   |
-| `VW_COLUMN_CATALOGUE`           | One row per agreement, table, and column | Column dictionary and column-level export detail                        |
+| View | Grain | Purpose |
+| --- | --- | --- |
+| `VW_AGREEMENT_CONTRACT_SUMMARY` | One row per agreement | Agreement-level status, handover summary, and export readiness. |
+| `VW_TABLE_CONTRACT_SUMMARY` | One row per agreement and table | Table-level profile, quality, drift, lineage, and health reporting. |
+| `VW_COLUMN_CATALOGUE` | One row per agreement, table, and column | Column dictionary, classifications, rules, and export detail. |
 
+## Dashboard and reporting outputs
+
+The assembled views can be consumed by Power BI to provide a practical dashboard for data owners, data stewards, engineers, analysts, and external stakeholders. A lightweight dashboard can use tabs such as:
+
+- **Data Product Catalogue**
+- **Stewardship View**
+- **Quality View**
+- **Lineage View**
+- **Handover View**
+- **External Sharing View**
+
+The same assembled views can support:
+
+- Power BI dashboards;
+- handover summaries;
+- AI manifests;
+- ODCS YAML;
+- OpenMetadata-compatible payloads; and
+- external stakeholder summaries.
+
+## Detailed assembled-view reference
+
+The sections below preserve the implementation-oriented view mappings.
 ## View grain and non-overlap rule
 
 The assembled views are separated by grain so they do not become three copies of the same contract. Agreement-level fields stay in the agreement view. Table-level health and evidence stay in the table view. Column-level definitions and rules stay in the column catalogue. Lower-grain views may include parent keys for joining, but they should not repeat parent-level descriptive fields unless needed for export convenience.
@@ -182,3 +182,7 @@ Planned function boundaries include:
 | `handover.export_openmetadata_payload` | `handover` | Render OpenMetadata-compatible payloads from the assembled views. |
 
 These names are architecture guidance when they are not already available. Do not rename existing production functions to force this shape.
+
+## Next step
+
+Continue to [Production and Handover](production-and-handover.md) to promote the repeatable notebook and generate support material.
