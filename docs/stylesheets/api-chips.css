@@ -93,17 +93,6 @@
   word-break: normal;
 }
 
-.notebook-structure-function-table {
-  table-layout: fixed;
-}
-
-
-.notebook-structure-function-table .reference-module-link {
-  white-space: nowrap;
-  word-break: normal;
-  overflow-wrap: normal;
-}
-
 .callable-finder {
   margin: 0.7rem 0 1.35rem;
   padding: 1rem 1.05rem;
@@ -319,10 +308,6 @@
     margin-bottom: 0.1rem;
   }
 
-  .notebook-structure-function-table td[data-label="Module"] {
-    display: none;
-  }
-
   .reference-catalogue-item {
     padding: 0.62rem 0.72rem;
     border-radius: 0.6rem;
@@ -389,23 +374,6 @@
   .reference-catalogue-item-purpose {
     font-size: 0.86rem;
     line-height: 1.38;
-  }
-}
-
-@media screen and (min-width: 761px) {
-  .notebook-structure-function-table th:nth-child(1),
-  .notebook-structure-function-table td:nth-child(1) {
-    width: 18rem;
-  }
-
-  .notebook-structure-function-table th:nth-child(2),
-  .notebook-structure-function-table td:nth-child(2) {
-    width: 14rem;
-  }
-
-  .notebook-structure-function-table th:nth-child(3),
-  .notebook-structure-function-table td:nth-child(3) {
-    width: auto;
   }
 }
 
