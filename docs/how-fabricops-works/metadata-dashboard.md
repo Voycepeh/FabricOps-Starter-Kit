@@ -154,6 +154,3 @@ Recommended assets:
 | Dashboard screenshots | Preview of the expected dashboard. |
 | Sample metadata | Optional sample data for testing the dashboard layout. |
 
-## Next step
-
-Continue to [Workspace Operating Model](workspace-operating-model.md) for workspace responsibilities, production promotion, and handover evidence.
