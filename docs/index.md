@@ -47,5 +47,5 @@ The [How FabricOps Works](how-fabricops-works/index.md) section explains the wor
 
 - [Quick Start](quick-start.md): install the helper wheel, copy the templates, and configure Fabric.
 - [How FabricOps Works](how-fabricops-works/index.md): follow the complete lightweight story from workspace setup to handover.
-- [Workspace and Notebook Flow](how-fabricops-works/workspace-and-notebook-flow.md): understand the role-based notebook sequence.
+- [Notebook Templates](how-fabricops-works/notebook-templates.md): understand the role-based notebook sequence.
 - [Data Quality Rules](data-quality-rules-system.md): apply approved checks in pipeline notebooks.

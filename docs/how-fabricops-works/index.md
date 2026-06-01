@@ -10,8 +10,8 @@ The simple idea is:
 - **Engineering owns exploration, transformation, and product outputs.**
 - **Notebook templates connect the roles.**
 - **Metadata tables store evidence.**
-- **Assembled views and dashboards make the metadata useful.**
-- **Production handover is generated from approved metadata and exported notebook evidence.**
+- **The metadata dashboard makes the metadata useful.**
+- **Production handover evidence comes from the approved production notebook.**
 
 ## Workspace setup
 
@@ -36,7 +36,7 @@ The simple idea is:
 
 ## Read More
 
-1. [Workspace and Notebook Flow](workspace-and-notebook-flow.md): configure the three workspaces and run the templates in sequence.
-2. [Metadata Tables](metadata-tables.md): understand the evidence captured by the notebooks.
-3. [Assembled Views and Dashboards](assembled-views-and-dashboards.md): turn raw metadata into useful views for people and tools.
-4. [Production and Handover](production-and-handover.md): promote the production notebook and generate reusable support material.
+1. [Workspace Operating Model](workspace-operating-model.md): understand the three workspaces, production promotion, and handover evidence.
+2. [Notebook Templates](notebook-templates.md): run the Fabric notebook templates in sequence.
+3. [Metadata Tables](metadata-tables.md): understand the evidence captured by the notebooks.
+4. [Metadata Dashboard](metadata-dashboard.md): turn governed metadata into dashboard-ready reporting views.

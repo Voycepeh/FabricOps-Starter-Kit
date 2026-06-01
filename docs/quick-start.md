@@ -22,9 +22,9 @@ Start in the governance and Engineering Dev workspaces. Add production configura
 | Step | Do this | Expected result | Read more |
 | --- | --- | --- | --- |
 | 1 | Install the FabricOps wheel in a Microsoft Fabric Environment. | Fabric notebooks attached to that Environment can import `fabricops_kit`. | [Fabric Wheel Install](install.md) |
-| 2 | Copy the notebook templates from the GitHub templates folder into Fabric. | You have editable copies of `00_env_config`, `01_da`, `02_ex`, `03_pc`, and `04_gov`. | [Notebook templates](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks), [Workspace and Notebook Flow](how-fabricops-works/workspace-and-notebook-flow.md) |
+| 2 | Copy the notebook templates from the GitHub templates folder into Fabric. | You have editable copies of `00_env_config`, `01_da`, `02_ex`, `03_pc`, and `04_gov`. | [Notebook templates](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks), [Notebook Templates](how-fabricops-works/notebook-templates.md) |
 | 3 | Attach the same Fabric Environment to each copied notebook. | Each notebook uses the installed helper wheel and compatible runtime configuration. | [Fabric Wheel Install](install.md) |
-| 4 | Configure and run `00_env_config` for the current environment. | Workspace, lakehouse, warehouse, and governance metadata paths are ready for the downstream notebooks. | [Template: `00_env_config`](how-fabricops-works/workspace-and-notebook-flow.md) |
+| 4 | Configure and run `00_env_config` for the current environment. | Workspace, lakehouse, warehouse, and governance metadata paths are ready for the downstream notebooks. | [Template: `00_env_config`](how-fabricops-works/notebook-templates.md) |
 
 ## Run the role-based notebook workflow
 
@@ -61,6 +61,6 @@ Each template has one main responsibility:
 ## Next reads
 
 - [How FabricOps Works](how-fabricops-works/index.md): workspace ownership, role handoffs, shared metadata, assembled views, and production handover.
-- [Workspace and Notebook Flow](how-fabricops-works/workspace-and-notebook-flow.md): workspace setup and the role-based notebook sequence.
+- [Notebook Templates](how-fabricops-works/notebook-templates.md): template ownership and the role-based notebook sequence.
 - [Data Quality Rules](data-quality-rules-system.md): approved-rule enforcement in `03_pc` notebooks.
 - [Function Reference](reference/index.md): reusable helper APIs.
