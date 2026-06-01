@@ -10,7 +10,10 @@ The governed source evidence remains in the metadata tables described on the [Me
 
 ## Dashboard wireframe
 
+![FabricOps metadata dashboard wireframe](../assets/fabricops-metadata-dashboard.png){ .full-width }
+
 A lightweight Power BI dashboard can be organised into the following pages.
+
 
 | Page | Purpose | Main view |
 | --- | --- | --- |
