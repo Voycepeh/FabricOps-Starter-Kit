@@ -1,8 +1,13 @@
 # FabricOps Starter Kit
+FabricOps Starter Kit is a lightweight Microsoft Fabric notebook starter kit.
 
-FabricOps Starter Kit is a lightweight Microsoft Fabric notebook starter kit for building governed data products.
+We adopt a Fabric notebook-first approach for data exploration, data pipelines, and governance.
 
-It uses a notebook-first workflow to help governance teams, analysts, and engineers capture agreements, profiling results, quality rules, classifications, lineage, drift checks, and production evidence inside their existing Fabric environment.
+It helps governance teams, analysts, and engineers work from a shared structure without adding a large platform around Fabric.
+
+These notebooks capture agreements, profiling results, quality rules, classifications, lineage, drift checks, and production evidence. The evidence is stored in a metadata lakehouse and presented through a Power BI dashboard.
+
+The result is a self-contained Fabric workflow for governing data products without adding a separate platform.
 
 <div class="home-cta" markdown="1">
 
