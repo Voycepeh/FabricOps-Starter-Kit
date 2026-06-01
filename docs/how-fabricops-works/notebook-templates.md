@@ -15,11 +15,11 @@ The notebook templates are available in the [`templates/notebooks`](https://gith
 
 | Notebook | Main owner | Purpose |
 | --- | --- | --- |
-| `00_env_config` | Platform team or engineer | Defines workspace, lakehouse, warehouse, and metadata paths for each environment. |
-| `01_da` | Steward or data owner | Maintains steward and data agreement records. |
+| `00_env_config` | Engineer | Defines workspace, lakehouse, warehouse, and metadata paths for each environment. |
+| `01_da` | Governance | Maintains steward and data agreement records. |
 | `02_ex` | Analyst or data scientist | Profiles data and proposes schema or transformation advice. |
-| `03_pc` | Data engineer | Builds repeatable transformations and enforces approved metadata. |
-| `04_gov` | Governance user | Reviews business context, rules, classifications, and governance decisions. |
+| `03_pc` |Engineer | Builds repeatable transformations and enforces approved metadata. |
+| `04_gov` | Governance | Reviews business context, rules, classifications, and governance decisions. |
 
 ## Role-based notebook flow
 
@@ -27,13 +27,13 @@ The notebook templates are available in the [`templates/notebooks`](https://gith
 
 | Step | Owner | Notebook or action | Result |
 | --- | --- | --- | --- |
-| 0 | Platform team or engineer | Configure `00_env_config`. | Environment-specific workspace, lakehouse, warehouse, and metadata paths are ready. |
-| 1 | Steward or data owner | Use `01_da`. | Steward and data agreement records are stored in the Governance workspace metadata lakehouse. |
+| 0 | Engineer | Configure `00_env_config`. | Environment-specific workspace, lakehouse, warehouse, and metadata paths are ready. |
+| 1 | Governance| Use `01_da`. | Steward and data agreement records are stored in the Governance workspace metadata lakehouse. |
 | 2 | Analyst or data scientist | Use `02_ex` in Engineering Dev. | Exploration profiles, notebook registration, and proposed schema or transformation advice are available. |
-| 3 | Data engineer | Build `03_pc` in Engineering Dev. | Repeatable transformations, technical columns, drift checks, table-level lineage, profiles, and output tables are created. |
-| 4 | Governance user | Use `04_gov`. | Business context, data quality rules, sensitivity classification, and governance context are reviewed and stored. |
-| 5 | Data engineer | Rerun or update `03_pc` with approved metadata. | The pipeline applies approved rules using the correct environment config. |
-| 6 | Engineering and support teams | Use stored production notebook evidence. | Human-readable support material can be generated from approved evidence. |
+| 3 | Engineer | Build `03_pc` in Engineering Dev. | Repeatable transformations, technical columns, drift checks, table-level lineage, profiles, and output tables are created. |
+| 4 | Governance | Use `04_gov`. | Business context, data quality rules, sensitivity classification, and governance context are reviewed and stored. |
+| 5 | Engineer | Rerun or update `03_pc` with approved metadata. | The pipeline applies approved rules using the correct environment config. |
+| 6 | Engineer | Use stored production notebook evidence. | Human-readable support material can be generated from approved evidence. |
 
 ## What each template owns
 
