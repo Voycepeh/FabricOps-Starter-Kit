@@ -1,0 +1,98 @@
+:root {
+  --md-primary-fg-color: #117865;
+  --md-primary-fg-color--light: #20c997;
+  --md-primary-fg-color--dark: #0f5f55;
+
+  --md-accent-fg-color: #00b7c3;
+  --md-accent-fg-color--transparent: rgba(0, 183, 195, 0.12);
+}
+
+/* Fabric inspired header */
+.md-header {
+  background: linear-gradient(90deg, #117865 0%, #00b7c3 55%, #5c2d91 100%);
+}
+
+/* Fabric inspired navigation tabs */
+.md-tabs {
+  background: linear-gradient(90deg, #117865 0%, #00b7c3 55%, #5c2d91 100%);
+}
+
+/* Primary CTA buttons */
+.md-button--primary {
+  background-color: #117865;
+  border-color: #117865;
+  color: #ffffff;
+}
+
+.md-button--primary:hover {
+  background-color: #0f5f55;
+  border-color: #0f5f55;
+  color: #ffffff;
+}
+
+/* Secondary buttons */
+.md-button {
+  border-color: #117865;
+  color: #117865;
+}
+
+.md-button:hover {
+  background-color: rgba(0, 183, 195, 0.08);
+  border-color: #00b7c3;
+  color: #0f5f55;
+}
+
+/* Links */
+.md-typeset a {
+  color: #117865;
+}
+
+.md-typeset a:hover {
+  color: #00b7c3;
+}
+
+/* Active and hovered navigation links */
+.md-nav__link--active,
+.md-nav__link:focus,
+.md-nav__link:hover {
+  color: #117865;
+}
+
+/* Tabs */
+.md-tabs__link--active,
+.md-tabs__link:hover {
+  color: #ffffff;
+  opacity: 1;
+}
+
+/* Search focus */
+.md-search__input {
+  background-color: rgba(255, 255, 255, 0.16);
+}
+
+.md-search__input:hover,
+.md-search__input:focus {
+  background-color: rgba(255, 255, 255, 0.24);
+}
+
+/* Code copy and focus accents */
+.md-clipboard:hover,
+.md-clipboard:focus {
+  color: #00b7c3;
+}
+
+/* Table header touch */
+.md-typeset table:not([class]) th {
+  background-color: rgba(17, 120, 101, 0.08);
+}
+
+/* Admonition accent */
+.md-typeset .admonition,
+.md-typeset details {
+  border-color: #00b7c3;
+}
+
+.md-typeset .admonition-title,
+.md-typeset summary {
+  background-color: rgba(0, 183, 195, 0.08);
+}
