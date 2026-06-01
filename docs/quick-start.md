@@ -7,22 +7,21 @@ FabricOps is designed to stay lightweight. The kit does not ask teams to introdu
 By the end of this quick start, you should have:
 
 1. A Governance workspace that stores shared metadata.
-2. An Engineering Dev workspace that runs the first notebook flow.
+2. An Engineering workspace that runs the first notebook flow.
 3. A configured `00_env_config` notebook.
 4. A working role-based sequence from agreement to exploration, pipeline build, governance enrichment, and rule enforcement.
-5. A clear path for promoting the production-ready `03_pc` notebook later.
 
 For the full operating model, read [How FabricOps Works](how-fabricops-works.md).
 
 ## Recommended minimum setup
 
-Start with one Governance workspace and one Engineering Dev workspace. Add Engineering Prod only when the first pipeline is ready for controlled promotion.
+Start with one Governance workspace and one Engineering workspace. Add Engineering Prod only when the first pipeline is ready for controlled promotion.
 
 | Workspace                  | Required items                                               | Purpose                                                                                                                               |
 | -------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
 | Governance workspace       | `metadata_lakehouse`                                         | Stores shared metadata, notebook registration, agreements, profiles, approved rules, classifications, lineage, and handover evidence. |
 | Engineering Dev workspace  | `source_lakehouse`, `unified_lakehouse`, `product_warehouse` | Used by data analysts, engineers, and pipeline contributors to build and test the governed flow.                                      |
-| Engineering Prod workspace | `source_lakehouse`, `unified_lakehouse`, `product_warehouse` | Used later for production execution of approved `03_pc` notebooks.                                                                    |
+| Engineering Prod workspace (optional) | `source_lakehouse`, `unified_lakehouse`, `product_warehouse` | Used later for production execution of approved `03_pc` notebooks.                                                                    |
 
 Do not start by overbuilding production. The first objective is to prove that the metadata flow works in Dev.
 
@@ -58,23 +57,24 @@ Run the templates in this order:
 
 ## What success looks like
 
-After the first Dev run, you should be able to answer these questions from metadata instead of tribal knowledge:
+After the first full run, the flow should replace tribal knowledge with metadata-backed answers.
 
-| Question                                          | Where the answer should come from                                   |
-| ------------------------------------------------- | ------------------------------------------------------------------- |
-| Who owns the data and what is it used for?        | Agreement and steward metadata from `01_da`.                        |
-| What did the source look like during exploration? | Profiling and exploration metadata from `02_ex`.                    |
-| What transformations created the output?          | Pipeline registration, lineage, and output metadata from `03_pc`.   |
-| Which rules and classifications were approved?    | Governance metadata from `04_gov`.                                  |
-| Were approved rules enforced in the pipeline?     | The rerun of `03_pc` using approved metadata.                       |
-| What should be handed over to production support? | Stored production notebook export, generated summary, and manifest. |
+| Question                                          | Where the answer should come from                                                           |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| Who owns the data and what is it used for?        | Agreement and steward metadata captured in `01_da`.                                         |
+| What did the source look like during exploration? | Profiling, schema, and exploration metadata captured in `02_ex`.                            |
+| What transformations created the output?          | Pipeline registration, lineage, and output metadata captured in `03_pc`.                    |
+| Which rules and classifications were approved?    | Approved governance metadata from `04_gov`.                                                 |
+| Were approved rules enforced in the pipeline?     | Evidence from rerunning `03_pc` using approved governance metadata.                         |
+| What should be handed over to production support? | Stored production notebook export, generated handover summary, manifest, and support notes. |
+
+The goal is that support, review, and handover should no longer depend on memory or side conversations. The metadata should explain who owns the data, how it was explored, how it was transformed, which controls were approved, and what evidence exists from the production run.
 
 
 ## Next reads
 
 | Page                                          | Why read it                                                                                               |
 | --------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| [How FabricOps Works](how-fabricops-works.md) | Understand workspace ownership, role handoffs, shared metadata, assembled views, and production handover. |
-| [Notebook Templates](notebook-templates.md)   | Understand template ownership and the full role-based notebook sequence.                                  |
-| [Data Quality Rules](data-quality-rules.md)   | Learn how approved rules are enforced in `03_pc` notebooks.                                               |
+| [How FabricOps Works](how-fabricops-works.md) | Understand workspace and production deployment, notebook by roles, metadata tables, meatadata dashboard   |
+| [Data Quality Rules](data-quality-rules.md)   | Learn how we utilize AI to sugggest DQ rules in `04_gov`and store thes rules in a metadata table  to be enforced in `03_pc` notebooks.                                               |
 | [Function Reference](function-reference.md)   | Review the reusable helper APIs used by the notebook templates.                                           |
