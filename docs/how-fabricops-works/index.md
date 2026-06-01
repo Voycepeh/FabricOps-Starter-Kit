@@ -2,7 +2,7 @@
 
 FabricOps Starter Kit is a lightweight Microsoft Fabric notebook starter kit.
 
-It helps governance teams, analysts, data scientists, and engineers work from a shared structure without adding a large platform around Fabric.
+It helps governance teams, analysts, and engineers work from a shared structure without adding a large platform around Fabric.
 
 The simple idea is:
 
