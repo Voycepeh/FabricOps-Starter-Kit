@@ -12,7 +12,6 @@ PACKAGE_NAME = "fabricops_kit"
 INIT_PATH = PKG_DIR / "__init__.py"
 DOCS_METADATA_PATH = PKG_DIR / "docs_metadata.py"
 REFERENCE_PATH = ROOT / "docs" / "reference" / "index.md"
-NOTEBOOK_STRUCTURE_DIR = ROOT / "docs" / "notebook-structure"
 MODULE_DIR = ROOT / "docs" / "api" / "modules"
 MKDOCS_PATH = ROOT / "mkdocs.yml"
 DEPENDENCY_METADATA_PATH = ROOT / "docs" / "reference" / "dependency-metadata.json"
@@ -1117,72 +1116,6 @@ def main() -> None:
             f'<a class="reference-module-link" href="{_esc(base_prefix)}api/modules/{_esc(module)}/" '
             f'title="Open {module} module page" aria-label="Open {module} module page">{_esc(module)}</a>'
         )
-
-    def _strip_backticks(label: str) -> str:
-        return label[1:-1] if label.startswith("`") and label.endswith("`") else label
-
-    notebook_page_files = {
-        "00_env_config": "00-env-config.md",
-        "02_ex": "02-exploration.md",
-        "03_pc": "03-pipeline-contract.md",
-    }
-    notebook_boundary_notes = {
-        "00_env_config": "`00_env_config` is shared setup.",
-        "02_ex": "`02_ex` proposes evidence and AI-assisted suggestions.",
-        "03_pc": "`03_pc` loads approved metadata and enforces controls.",
-    }
-
-    NOTEBOOK_STRUCTURE_DIR.mkdir(parents=True, exist_ok=True)
-    for flow in template_flow_docs:
-        notebook_key = flow["notebook_key"]
-        page_name = notebook_page_files.get(notebook_key)
-        if not page_name:
-            continue
-        notebook_path = ROOT / flow["template_path"]
-        notebook_link = (
-            _anchor(f"https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/{flow['template_path']}", "Open template notebook")
-            if notebook_path.exists()
-            else "—"
-        )
-        notebook_lines = [
-            f"# {flow['notebook_label']}",
-            "",
-            "Use this page to understand the purpose and segment flow of this notebook template. Each segment shows the typical callables commonly used there.",
-            "",
-            flow["segment_intro"],
-            "",
-            f"> {notebook_link}",
-            "",
-            f"> {notebook_boundary_notes[notebook_key]}",
-            "",
-        ]
-        for segment in flow["segments"]:
-            notebook_lines.append(f"## {segment['title']}")
-            notebook_lines.append("")
-            segment_text = str(segment.get("text", "")).strip()
-            if segment_text:
-                notebook_lines.append(segment_text)
-                notebook_lines.append("")
-            segment_rows: list[list[str]] = []
-            for symbol_name in segment["symbols"]:
-                s = symbol_map[symbol_name]
-                info = module_data[s.actual_module]
-                symbol_link = public_reference_link(s.name, docs_metadata, context="notebook")
-                segment_rows.append([
-                    _anchor(symbol_link, s.name, code=True),
-                    _module_link(s.public_module, base_prefix="../../"),
-                    s.purpose or "—",
-                ])
-            if segment_rows:
-                notebook_lines.extend(
-                    _html_table(
-                        "reference-function-table notebook-structure-function-table",
-                        ["Callable", "Module", "Why it is commonly used here"],
-                        segment_rows,
-                    )
-                )
-                notebook_lines.append("")
-        (NOTEBOOK_STRUCTURE_DIR / page_name).write_text("\n".join(notebook_lines).rstrip() + "\n", encoding="utf-8", newline="\n")
 
     ref = [
         "# Function Reference",

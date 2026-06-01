@@ -29,7 +29,6 @@ FabricOps Starter Kit combines a **reusable helper wheel** with **notebook templ
   - [Metadata Tables](https://voycepeh.github.io/FabricOps-Starter-Kit/how-fabricops-works/metadata-tables/)
   - [Assembled Views and Dashboards](https://voycepeh.github.io/FabricOps-Starter-Kit/how-fabricops-works/assembled-views-and-dashboards/)
   - [Production and Handover](https://voycepeh.github.io/FabricOps-Starter-Kit/how-fabricops-works/production-and-handover/)
-- [Notebook Templates](https://voycepeh.github.io/FabricOps-Starter-Kit/notebook-structure/)
 - [Data Quality Rules](https://voycepeh.github.io/FabricOps-Starter-Kit/data-quality-rules-system/)
 - [Setup](https://voycepeh.github.io/FabricOps-Starter-Kit/install/)
 - [Function Reference](https://voycepeh.github.io/FabricOps-Starter-Kit/reference/)

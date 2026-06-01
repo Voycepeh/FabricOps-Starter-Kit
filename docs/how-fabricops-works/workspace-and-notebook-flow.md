@@ -36,23 +36,23 @@ FabricOps Starter Kit uses a small Fabric workspace setup and five notebook temp
 
 ### `00_env_config`
 
-Configure this notebook first in each environment. It stores workspace, lakehouse, warehouse, and metadata paths. Every other notebook reuses this configuration, so metadata operations use the configured metadata target rather than an attached or default lakehouse.
+Configure this notebook first in each environment. It stores workspace, lakehouse, warehouse, and metadata paths. Every other notebook reuses this configuration, so metadata operations use the configured metadata target rather than an attached or default lakehouse. It also creates or checks the data agreement and steward metadata tables and reports whether active steward profiles are ready for agreement intake.
 
 ### `01_da`
 
-Run this notebook in the Governance workspace. Data stewards or data owners use its simplified widget UI to maintain steward and data agreement records in `metadata_lakehouse`.
+Run this notebook in the Governance workspace. Data stewards or data owners use its simplified widget UI to maintain steward and data agreement records in `metadata_lakehouse`. Agreement intake appends immutable agreement-version rows: creating an agreement starts a new stable ID, while updating an explicitly selected agreement appends its next version. Governance classification and review remain in `04_gov`.
 
 ### `02_ex`
 
-Run this notebook in Engineering Dev. Analysts or data scientists use it for less-structured exploration of source or unified data. It profiles data, registers the notebook, links the run to a selected agreement, and may propose an output schema or desired outcome table for engineers.
+Run this notebook in Engineering Dev. Analysts or data scientists use it for less-structured exploration of source or unified data. It profiles data, registers the notebook, links the run to a selected agreement, and may propose an output schema or desired outcome table for engineers. Its AI-assisted suggestions remain advisory until a human reviews and approves the relevant metadata.
 
 ### `03_pc`
 
-Run this notebook in Engineering Dev and Engineering Prod. Data engineers use it for repeatable source-to-output transformations. It adds technical columns, applies schema- and data-drift guardrails, registers the notebook, captures table-level lineage, and profiles output tables. After governance review, it consumes approved data quality, sensitivity, and classification metadata.
+Run this notebook in Engineering Dev and Engineering Prod. Data engineers use it for repeatable source-to-output transformations. It adds technical columns, applies schema- and data-drift guardrails, registers the notebook, captures table-level lineage, and profiles output tables. After governance review, it loads approved data quality, sensitivity, and classification metadata and enforces the applicable controls.
 
 ### `04_gov`
 
-Run this notebook in the Governance workspace. Governance users enrich the profiles produced by `02_ex` and `03_pc` with approved business context, data quality rules, sensitivity classification, and other useful metadata.
+Run this notebook in the Governance workspace after relevant `03_pc` outputs are available. Governance users enrich profiles with approved business context, data quality rules, sensitivity and PII classification, access classification, retention or export flags, exceptions, and review notes. These decisions stay in the governance stage and are stored through the configured metadata target for downstream enforcement.
 
 ## Next step
 
