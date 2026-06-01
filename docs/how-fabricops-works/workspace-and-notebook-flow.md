@@ -2,6 +2,9 @@
 
 FabricOps Starter Kit uses a small Fabric workspace setup and five notebook templates. Governance owns the shared metadata. Engineering owns exploration, transformations, and product outputs.
 
+!!! note "Notebook preview"
+    The notebook templates are optimized for Microsoft Fabric execution. GitHub may not always render `.ipynb` previews reliably. If GitHub shows a notebook preview error, open the template in Microsoft Fabric or view it locally in VS Code / Jupyter. The `%run 00_env_config` bootstrap cell is intentionally active so the templates remain plug-and-play in Fabric. Do not manually edit the bootstrap cell unless you are intentionally customizing the template.
+
 ## Recommended workspace setup
 
 <figure markdown>

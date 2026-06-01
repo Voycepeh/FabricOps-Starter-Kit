@@ -2,6 +2,9 @@
 
 Use this page to get FabricOps Starter Kit running in Microsoft Fabric. For the complete role flow and workspace model, read the [How FabricOps Works](how-fabricops-works/index.md).
 
+!!! note "Notebook preview"
+    The notebook templates are optimized for Microsoft Fabric execution. GitHub may not always render `.ipynb` previews reliably. If GitHub shows a notebook preview error, open the template in Microsoft Fabric or view it locally in VS Code / Jupyter. The `%run 00_env_config` bootstrap cell is intentionally active so the templates remain plug-and-play in Fabric. Do not manually edit the bootstrap cell unless you are intentionally customizing the template.
+
 ## Recommended minimum workspaces
 
 Prepare these Fabric workspaces and items before copying the notebooks:
