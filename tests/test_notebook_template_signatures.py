@@ -9,6 +9,12 @@ from pathlib import Path
 import fabricops_kit
 
 TEMPLATES = Path("templates/notebooks")
+DEPENDENT_TEMPLATE_NAMES = (
+    "01_da_agreement_template.ipynb",
+    "02_ex_agreement_topic.ipynb",
+    "03_pc_agreement_pipeline_template.ipynb",
+    "04_gov_agreement_dataset_table.ipynb",
+)
 
 
 def _code(name: str) -> str:
@@ -27,6 +33,27 @@ def _name(node: ast.AST) -> str | None:
 
 def test_00_env_config_defines_env_name_alias():
     assert "ENV_NAME = ENV" in _code("00_env_config.ipynb")
+
+
+def test_dependent_templates_comment_out_fabric_config_magic_and_guard_runtime_config():
+    expected_guard = (
+        "try:\n"
+        "    CONFIG\n"
+        "    ENV\n"
+        "    RUN_CONTEXT\n"
+        "except NameError as exc:\n"
+        "    raise RuntimeError(\n"
+        '        "FabricOps config is not loaded. In Microsoft Fabric, uncomment and run "\n'
+        '        "`%run 00_env_config` before running this notebook."\n'
+        "    ) from exc\n"
+    )
+    for name in DEPENDENT_TEMPLATE_NAMES:
+        notebook = json.loads((TEMPLATES / name).read_text(encoding="utf-8"))
+        code_cells = ["".join(cell.get("source", [])) for cell in notebook["cells"] if cell["cell_type"] == "code"]
+        instruction_index = next(index for index, source in enumerate(code_cells) if "# %run 00_env_config" in source)
+        assert not any(line.strip() == "%run 00_env_config" for source in code_cells for line in source.splitlines())
+        assert "# GitHub preview note:" in code_cells[instruction_index]
+        assert code_cells[instruction_index + 1] == expected_guard
 
 
 def test_02_ex_imports_only_public_fabricops_kit_functions():
@@ -140,7 +167,7 @@ def test_01_da_imports_only_high_level_agreement_app_helper():
 
 def test_01_da_renders_framework_managed_intake_app_without_notebook_callback():
     code = _code("01_da_agreement_template.ipynb")
-    assert "%run 00_env_config" in code
+    assert "# %run 00_env_config" in code
     assert "from fabricops_kit import render_agreement_intake_app" in code
     assert "agreement_app = render_agreement_intake_app(" in code
     assert "spark=spark" in code
