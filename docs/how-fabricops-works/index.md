@@ -26,7 +26,12 @@ The evidence is stored in a metadata lakehouse and presented through a Power BI 
 
 The workspace operating model explains how the Governance, Engineering Dev, and Engineering Prod workspaces work together, including production promotion and storing final notebook evidence.
 
+
+<div class="home-cta" markdown="1">
+
 [Open Workspace Operating Model](workspace-operating-model.md){ .md-button .md-button--primary }
+
+</div>
 
 ## Notebook workflow
 
@@ -36,8 +41,12 @@ The workspace operating model explains how the Governance, Engineering Dev, and 
 </figure>
 
 The notebook templates page explains what each notebook owns, who uses it, and how the notebook flow passes reusable evidence from one role to the next.
+<div class="home-cta" markdown="1">
 
 [Open Notebook Templates](notebook-templates.md){ .md-button .md-button--primary }
+
+</div>
+
 
 ## Metadata architecture
 
@@ -48,7 +57,12 @@ The notebook templates page explains what each notebook owns, who uses it, and h
 
 The metadata tables page explains how the notebooks store reusable evidence for agreements, profiles, quality rules, governance review, lineage, drift, and notebook registration.
 
+<div class="home-cta" markdown="1">
+
 [Open Metadata Tables](metadata-tables.md){ .md-button .md-button--primary }
+
+</div>
+
 
 ## Metadata dashboard
 
@@ -59,4 +73,8 @@ The metadata tables page explains how the notebooks store reusable evidence for 
 
 The metadata dashboard page explains the recommended dashboard wireframe and the assembled views consumed by the dashboard.
 
+<div class="home-cta" markdown="1">
+
 [Open Metadata Dashboard](metadata-dashboard.md){ .md-button .md-button--primary }
+
+</div>
