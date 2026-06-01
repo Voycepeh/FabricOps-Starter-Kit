@@ -28,7 +28,7 @@ Start in the governance and Engineering Dev workspaces. Add production configura
 The role-based notebook workflow shows how each template hands work to the next role without adding a heavy process.
 
 <figure markdown>
-  ![Role-based notebook workflow from environment configuration through AI-assisted handover](assets/mvp-flow.png){ .full-width }
+  ![Role-based notebook workflow from environment configuration through AI-assisted handover](assets/fabricops-role-workflow.png){ .full-width }
   <figcaption>Role-based notebook workflow for configuration, agreements, exploration, pipeline build, governance enrichment, enforcement, and handover.</figcaption>
 </figure>
 

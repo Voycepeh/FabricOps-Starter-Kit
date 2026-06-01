@@ -5,7 +5,7 @@ FabricOps Starter Kit uses a small Fabric workspace setup and five notebook temp
 ## Recommended workspace setup
 
 <figure markdown>
-  ![FabricOps Starter Kit operating model with Governance, Engineering Dev, and Engineering Prod workspaces](../assets/workspace_model.png){ .full-width }
+  ![FabricOps Starter Kit operating model with Governance, Engineering Dev, and Engineering Prod workspaces](../assets/fabricops-operating-model-overview.png){ .full-width }
   <figcaption>The recommended setup separates shared governance metadata from development and production data processing.</figcaption>
 </figure>
 
@@ -18,7 +18,7 @@ FabricOps Starter Kit uses a small Fabric workspace setup and five notebook temp
 ## Role-based flow
 
 <figure markdown>
-  ![Role-based notebook workflow from environment configuration through AI-assisted handover](../assets/mvp-flow.png){ .full-width }
+  ![Role-based notebook workflow from environment configuration through AI-assisted handover](../assets/fabricops-role-workflow.png){ .full-width }
   <figcaption>Each notebook gives the next role reusable evidence instead of adding a heavy process.</figcaption>
 </figure>
 
