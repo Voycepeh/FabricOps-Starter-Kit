@@ -23,14 +23,12 @@ FabricOps Starter Kit combines a **reusable helper wheel** with **notebook templ
 ## Documentation map
 
 - [Home](https://voycepeh.github.io/FabricOps-Starter-Kit/)
-- [Start](https://voycepeh.github.io/FabricOps-Starter-Kit/quick-start/)
-- [Install](https://voycepeh.github.io/FabricOps-Starter-Kit/install/)
-- [Templates](https://voycepeh.github.io/FabricOps-Starter-Kit/notebook-structure/)
-- [Workflow](https://voycepeh.github.io/FabricOps-Starter-Kit/lifecycle-operating-model/)
-- [Govern / Metadata](https://voycepeh.github.io/FabricOps-Starter-Kit/metadata-and-contracts/)
-- [Govern / Quality](https://voycepeh.github.io/FabricOps-Starter-Kit/data-quality-rules-system/)
-- [Deploy](https://voycepeh.github.io/FabricOps-Starter-Kit/deployment-and-promotion/)
-- [API](https://voycepeh.github.io/FabricOps-Starter-Kit/reference/)
+- [Quick Start](https://voycepeh.github.io/FabricOps-Starter-Kit/quick-start/)
+- [Operating Model](https://voycepeh.github.io/FabricOps-Starter-Kit/fabricops-operating-model/)
+- [Notebook Templates](https://voycepeh.github.io/FabricOps-Starter-Kit/notebook-structure/)
+- [Data Quality Rules](https://voycepeh.github.io/FabricOps-Starter-Kit/data-quality-rules-system/)
+- [Function Reference](https://voycepeh.github.io/FabricOps-Starter-Kit/reference/)
+- [Setup](https://voycepeh.github.io/FabricOps-Starter-Kit/install/)
 
 ## Template quick links
 

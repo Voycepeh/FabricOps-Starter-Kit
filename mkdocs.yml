@@ -18,24 +18,18 @@ theme:
 
 nav:
   - Home: index.md
-  - Start: quick-start.md
-  - Install: install.md
-  - Notebook Structure:
+  - Quick Start: quick-start.md
+  - Operating Model: fabricops-operating-model.md
+  - Notebook Templates:
       - Overview: notebook-structure.md
       - 00 Environment Config: notebook-structure/00-env-config.md
-      - 01 Data Sharing Agreement: notebook-structure/01-data-sharing-agreement.md
+      - 01 Data Agreement: notebook-structure/01-data-sharing-agreement.md
       - 02 Exploration: notebook-structure/02-exploration.md
       - 03 Pipeline Contract: notebook-structure/03-pipeline-contract.md
-      - 04 Governance Operations: notebook-structure/04-governance-operations.md
-  - Workflow: lifecycle-operating-model.md
-  - Contracts:
-      - Overview: metadata-and-contracts/index.md
-      - Metadata Architecture: metadata-and-contracts/metadata-architecture.md
-      - Assembled Views: metadata-and-contracts/metadata-columns.md
-  - Data Quality: data-quality-rules-system.md
-  - Deploy: deployment-and-promotion.md
-  - API:
-      - Function Reference: reference/index.md
+      - 04 Governance: notebook-structure/04-governance-operations.md
+  - Data Quality Rules: data-quality-rules-system.md
+  - Function Reference:
+      - Overview: reference/index.md
       - Modules:
       # AUTO-GENERATED-MODULES-START
           - config: api/modules/config.md
@@ -51,6 +45,16 @@ nav:
           - handover: api/modules/handover.md
           - metadata: api/modules/metadata.md
       # AUTO-GENERATED-MODULES-END
+  - Setup:
+      - Install: install.md
+      - Create Wheel: setup/create-wheel.md
+      - Run in Fabric: setup/run-in-fabric.md
+  - Appendix:
+      - Deployment and Promotion: deployment-and-promotion.md
+      - Metadata and Contracts: metadata-and-contracts/index.md
+      - Metadata Architecture: metadata-and-contracts/metadata-architecture.md
+      - Assembled Metadata Views: metadata-and-contracts/metadata-columns.md
+      - Legacy Lifecycle Link: lifecycle-operating-model.md
 
 markdown_extensions:
   - admonition

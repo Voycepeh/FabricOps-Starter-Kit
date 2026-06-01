@@ -1,69 +1,56 @@
-# Quick Start
+# Quick start
 
-Use this page to get from zero to a first FabricOps Starter Kit run in Microsoft Fabric.
+Use this page to get FabricOps Starter Kit running in Microsoft Fabric. For the complete role flow and workspace model, read the [FabricOps Starter Kit Operating Model](fabricops-operating-model.md).
 
-## Get running quickly
+## Recommended minimum workspaces
 
-Start by setting up one Fabric Environment and one shared `00_env_config` runtime path before running the execution notebooks. The first four steps get the helper wheel, copied templates, notebook runtime, and metadata routing ready.
+Prepare these Fabric workspaces and items before copying the notebooks:
 
-### First run setup
+| Workspace | Items |
+| --- | --- |
+| Governance workspace | `metadata_lakehouse` |
+| Engineering Dev workspace | `source_lakehouse`, `unified_lakehouse`, `product_warehouse` |
+| Engineering Prod workspace | `source_lakehouse`, `unified_lakehouse`, `product_warehouse` |
+
+Start in the governance and Engineering Dev workspaces. Add production configuration when the first pipeline is ready to promote.
+
+## First run setup
 
 | Step | Do this | Expected result | Read more |
 | --- | --- | --- | --- |
 | 1 | Install the FabricOps wheel in a Microsoft Fabric Environment. | Fabric notebooks attached to that Environment can import `fabricops_kit`. | [Fabric Wheel Install](install.md) |
-| 2 | Copy the notebook templates from the GitHub templates folder into Fabric. | You have editable copies of `00_env_config`, agreement, exploration, pipeline contract, and governance templates in your Fabric workspace. | [Notebook templates](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks), [Notebook Structure](notebook-structure.md) |
-| 3 | Attach the same Fabric Environment to each copied notebook. | Every notebook uses the same installed helper wheel and compatible runtime configuration. | [Fabric Wheel Install](install.md) |
-| 4 | Configure and run `00_env_config`. | Shared paths, environment settings, and metadata lakehouse routing are available to downstream notebooks. | [Template: `00_env_config`](notebook-structure/00-env-config.md) |
+| 2 | Copy the notebook templates from the GitHub templates folder into Fabric. | You have editable copies of `00_env_config`, `01_da`, `02_ex`, `03_pc`, and `04_gov`. | [Notebook templates](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks), [Notebook Templates](notebook-structure.md) |
+| 3 | Attach the same Fabric Environment to each copied notebook. | Each notebook uses the installed helper wheel and compatible runtime configuration. | [Fabric Wheel Install](install.md) |
+| 4 | Configure and run `00_env_config` for the current environment. | Workspace, lakehouse, warehouse, and governance metadata paths are ready for the downstream notebooks. | [Template: `00_env_config`](notebook-structure/00-env-config.md) |
 
-## Notebook flow at a glance
+## Run the notebook flow
 
-The notebook flow starts after `00_env_config` is ready. Each notebook adds or updates evidence in the framework metadata tables. The data contract is assembled from this approved metadata evidence rather than maintained as a separate notebook.
-
-![Quick Start notebook flow from high-level definition to governed data](assets/quick-start-notebook-flow.png)
-
-## Notebook flow
-
-Use this table as the main navigation surface for the runnable notebooks. The Purpose column describes what each notebook owns; the Expected result column describes what it produces for downstream contract evidence.
-
-| Step | Notebook | Purpose | Expected result | Notebook docs |
-| --- | --- | --- | --- | --- |
-| 4 | `00_env_config` | Owns environment bootstrap, Fabric paths, metadata lakehouse routing, and shared runtime configuration. | Runtime configuration that every downstream notebook reuses. | [Environment configuration notebook](notebook-structure/00-env-config.md) |
-| 5.1 | `01_data_sharing_agreement_<agreement>` | Owns agreement scope, source context, purpose, owners, stewards, usage intent, access boundaries, and agreement boundary. | Agreement metadata and notebook registration evidence are written to metadata so downstream notebooks have business context. | [Data sharing agreement notebook](notebook-structure/01-data-sharing-agreement.md) |
-| 5.2 | `02_ex_<agreement>_<topic>` | Owns source exploration, profiling, analyst observations, schema evidence, and quality rule suggestions. | Analysis/profiling evidence, reviewed candidate rules, and exploration findings are written to metadata. | [Exploration notebook](notebook-structure/02-exploration.md) |
-| 5.3 | `03_pc_<agreement>_<pipeline>` | Owns source-to-target processing, approved rule enforcement, controlled outputs, lineage capture, and run evidence. | Curated outputs, validation results, lineage, transformation summaries, and enforcement evidence are written to metadata. | [Pipeline contract notebook](notebook-structure/03-pipeline-contract.md) |
-| 5.4 | `04_gov_<agreement>_<topic>` optional | Owns governance review, sensitivity classification, stewardship notes, access rules, policy updates, and approvals when these are separated from the pipeline notebook. | Governance and classification evidence is available for audit, handover, and contract assembly. | [Governance notebook](notebook-structure/04-governance-operations.md) |
-
-Recommended notebook order:
+After setup, use the templates in this order:
 
 ```text
 00_env_config
-01_data_sharing_agreement_<agreement>
-02_ex_<agreement>_<topic>
-03_pc_<agreement>_<pipeline>
-04_gov_<agreement>_<topic> optional, if governance evidence is separated
+01_da
+02_ex
+03_pc
+04_gov
+03_pc rerun with approved metadata
+production handover
 ```
 
-Use `02_ex` notebooks for profiling, exploration, and rule suggestions. Use `03_pc` notebooks for approved enforcement and controlled outputs.
+Each template has one main responsibility:
 
-## Review the contract evidence
-
-The notebooks write reusable evidence into framework metadata tables routed by `00_env_config`. Review that evidence after the notebook flow runs to confirm the agreement context, analysis findings, approved controls, runtime results, and governance decisions are ready for contract assembly.
-
-| Evidence type | What to review |
+| Template | Main outcome |
 | --- | --- |
-| Agreement metadata | Agreement identity, scope, owners, stewards, usage intent, access boundaries, and initial classifications. |
-| Analysis evidence | Schema observations, profiling statistics, quality observations, patterns, anomalies, and business understanding. |
-| Data quality evidence | Proposed and approved rules, thresholds, validation outcomes, and enforcement results. |
-| Lineage and processing evidence | Source and target assets, transformation summaries, run context, lineage, and processing evidence. |
-| Governance evidence | Sensitivity, classification, access rules, stewardship notes, approvals, and policy updates. |
-| Monitoring evidence | Drift signals, data quality monitoring context, operational observations, and follow-up evidence for review. |
+| `00_env_config` | Environment-specific paths and metadata routing. |
+| `01_da` | Steward and data agreement records. |
+| `02_ex` | Exploration profiles, notebook registration, and proposed schema or transformation advice. |
+| `03_pc` | Repeatable transformations, technical columns, drift checks, lineage, profiles, and output tables. |
+| `04_gov` | Approved business context, data quality rules, and sensitivity classification. |
+| Production handover | A stored production notebook export that supports an AI-assisted handover summary and manifest. |
 
-The data contract is metadata backed because it is assembled from approved evidence produced by the notebook flow, not manually maintained as a separate fifth notebook.
+## Next reads
 
-## Optional: go deeper
-
-- [Fabric Wheel Install](install.md): install or verify the reusable helper wheel.
-- [Notebook Structure](notebook-structure.md): template boundaries, naming conventions, and per-notebook pages.
-- [Metadata and Contracts](metadata-and-contracts/index.md): contract model and metadata ownership details.
-- [Workflow](lifecycle-operating-model.md): role checkpoints, AI assistance, approvals, and deterministic enforcement.
-- [Function Reference](reference/index.md): callable-level guidance.
+- [Operating Model](fabricops-operating-model.md): workspace ownership, role handoffs, shared metadata, and production handover.
+- [Notebook Templates](notebook-structure.md): template-specific implementation guides.
+- [Data Quality Rules](data-quality-rules-system.md): approved-rule enforcement in `03_pc` notebooks.
+- [Function Reference](reference/index.md): reusable helper APIs.
