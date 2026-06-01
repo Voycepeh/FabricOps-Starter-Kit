@@ -1,123 +1,70 @@
-# Metadata architecture
+# Metadata Tables
 
-A data contract is a shared promise between data producers and consumers. FabricOps metadata records the agreement, reviewed context, approved rules, and runtime evidence needed to make that promise visible and reusable across the notebook lifecycle.
+The governance `metadata_lakehouse` is the shared coordination layer between governance and engineering. Notebook templates write evidence to the configured metadata target, and later notebooks reuse approved evidence for enforcement and handover.
 
-This compatibility reference preserves detailed physical metadata-table documentation. Start with [How FabricOps Works](../how-fabricops-works/index.md) and [Metadata Tables](../how-fabricops-works/metadata-tables.md) for the guided story, then use this page when you need lower-level implementation detail.
+<figure markdown>
+  ![Shared FabricOps metadata model connecting governance and engineering notebooks](../assets/notebook-datacontract-flow.png){ .full-width }
+  <figcaption>Shared metadata keeps agreements, profiles, lineage, approved rules, classifications, context, and handover evidence connected.</figcaption>
+</figure>
 
-The FabricOps metadata architecture supports the following FabricOps product story. It is assumed:
+## Lightweight conceptual model
 
-```text
-FabricOps processes live in separate notebooks.
-FabricOps processes create data assets in accordance with the terms of their governing data contract(s).
-FabricOps processes and data assets may live in different workspaces.
-The metadata for FabricOps processes and data assets includes information about their specific contexts of use and the evidence needed to validate compliance with their contexts.
-FabricOps metadata includes the current state and past states of all registered FabricOps processes and data assets.
-FabricOps metadata includes process, data asset, and usage information.
-FabricOps metadata is distilled into handover contracts.
-Evidence of compliance with handover contracts activates the use of new FabricOps processes and data assets.
-FabricOps metadata is recorded for standards-compatible export processes.
-FabricOps metadata is notebook-driven. The notebooks are the source of truth for how agreement, discovery, approval, enforcement, runtime evidence, and handover happen in Microsoft Fabric.
+Start with this small conceptual model. The physical `METADATA_*` reference later on this page shows how the starter kit stores the detailed evidence.
 
-```text
-01 defines agreement.
-02 profiles and discovers.
-04 approves column business context and classifications.
-03 enforces rules and produces runtime evidence.
-All notebooks register traceability.
-Handover assembles views and exports JSON/YAML payloads.
-```
+| Conceptual table | Main writer | What it is used for |
+| --- | --- | --- |
+| `data_stewards` | `01_da` or steward administration | Keeps steward and owner assignments available for agreement intake. |
+| `data_agreements` | `01_da` | Records purpose, scope, intended use, and agreement context. |
+| `notebook_registry` | All workflow notebooks | Links notebook evidence to agreements, workspaces, tables, and notebook URLs. |
+| `data_profiles` | `02_ex` and `03_pc` | Stores exploration and output-table profile evidence. |
+| `data_lineage` | `03_pc` | Captures table-level source-to-output lineage and transformation evidence. |
+| `data_quality_rules` | `04_gov`, enforced by `03_pc` | Stores reviewed and approved quality expectations. |
+| `sensitivity_classification` | `04_gov` | Stores approved sensitivity, confidentiality, and handling context. |
+| `business_context` | `04_gov` | Stores descriptions, units, derivation notes, and glossary context. |
+| `handover_manifest` | Handover generation | Stores or publishes generated handover and AI-ready manifest records. |
 
-## Design rule
+Metadata reads and writes must use the metadata route from `00_env_config`, for example `read_lakehouse_table(CONFIG, env_name, "metadata", "<metadata_table>")` and `write_lakehouse_table(df, CONFIG, env_name, "metadata", "<metadata_table>", mode="append")`.
 
-FabricOps keeps separate append-only metadata tables for workflow outputs that have different ownership, grain, and lifecycle.
+## Detailed physical table reference
 
-The final handover is not another source table. It is a generated JSON or YAML artifact assembled from the latest approved metadata and run evidence.
+FabricOps keeps separate append-only metadata tables when workflow outputs have different ownership, grain, or lifecycle. The handover is generated from approved metadata and run evidence; it is not another competing source table.
 
-!!! note "Views are not source tables"
-    The agreement, table, and column views are assembled from the nine workflow evidence metadata tables and maintained reference metadata. They are not bridge tables or competing sources of truth. Projects may materialize them later for performance or audit, but the governed source evidence remains in the workflow evidence and reference metadata tables.
+The physical workflow evidence tables are:
 
-## Source metadata tables
+| No. | Table | Grain | Why it exists |
+| --: | --- | --- | --- |
+| 1 | `METADATA_DATA_AGREEMENT` | One row per agreement version | Defines the agreement intake and usage-boundary anchor. |
+| 2 | `METADATA_DATA_CATALOGUE` | One row per table per profiling run or latest table snapshot | Captures table-level catalogue and profile evidence from exploration or pipeline profiling. |
+| 3 | `METADATA_COLUMN_BUSINESS_CONTEXT` | One row per table-column per approved version | Stores approved business meaning, descriptions, units, derivation, and glossary terms. |
+| 4 | `METADATA_COLUMN_GOVERNANCE` | One row per table-column per approved version | Stores approved classification, PII, sensitivity, confidentiality, and handling requirements. |
+| 5 | `METADATA_DQ_RULES` | One row per rule version | Stores approved executable data quality expectations. |
+| 6 | `METADATA_NOTEBOOK_REGISTRY` | One row per notebook tied to an agreement | Links workflow notebooks to agreements, tables, workspaces, and URLs. |
+| 7 | `METADATA_DQ_RESULTS` | One row per rule execution per run | Stores runtime results of approved DQ rules. |
+| 8 | `METADATA_DRIFT_RESULTS` | One row per table per drift check | Stores schema, profile, and data-drift evidence over time. |
+| 9 | `METADATA_LINEAGE_EVENTS` | One row per source-target table event | Stores source-to-target lineage and transformation evidence. |
 
-FabricOps uses nine workflow evidence metadata tables plus maintained reference metadata tables. Together, they provide governed source evidence for agreement, catalogue, approval, enforcement, runtime evidence, traceability, and reusable reference data.
+Maintained reference metadata includes:
 
-### Workflow evidence metadata tables
+| Table | Grain | Why it exists |
+| --- | --- | --- |
+| `METADATA_DATA_STEWARD` | One row per steward assignment or effective period | Maintains the selectable steward source of truth for agreement intake. |
 
-The table names below are the physical workflow evidence metadata tables. The diagram then shows which notebook family writes each type of metadata.
-
-| No. | Table                              | Grain                                                        | Why it exists                                                                                 |
-| --: | ---------------------------------- | ------------------------------------------------------------ | --------------------------------------------------------------------------------------------- |
-|   1 | `METADATA_DATA_AGREEMENT`          | One row per agreement version                                | Defines the highest-grain agreement intake and usage boundary anchor.                         |
-|   2 | `METADATA_DATA_CATALOGUE`          | One row per table per profiling run or latest table snapshot | Captures table-level catalogue and profile evidence from exploration or pipeline profiling.   |
-|   3 | `METADATA_COLUMN_BUSINESS_CONTEXT` | One row per table-column per approved version                | Stores approved business meaning, description, units, source/derivation, and glossary terms.  |
-|   4 | `METADATA_COLUMN_GOVERNANCE`       | One row per table-column per approved version                | Stores approved classification, PII, sensitivity, confidentiality, and handling requirements. |
-|   5 | `METADATA_DQ_RULES`                | One row per rule version                                     | Stores approved executable data quality expectations.                                         |
-|   6 | `METADATA_NOTEBOOK_REGISTRY`       | One row per notebook tied to an agreement                    | Links workflow notebooks to agreement, table, workspace, and URL.                             |
-|   7 | `METADATA_DQ_RESULTS`              | One row per rule execution per run                           | Stores runtime result of approved DQ rules.                                                   |
-|   8 | `METADATA_DRIFT_RESULTS`           | One row per table per drift check                            | Stores schema, profile, and data drift evidence over time.                                    |
-|   9 | `METADATA_LINEAGE_EVENTS`          | One row per source-target table event                        | Stores source-to-target lineage and transformation evidence.                                  |
-
-### Reference metadata tables
-
-| Table                   | Grain                                           | Why it exists                                                                                                                  |
-| ----------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `METADATA_DATA_STEWARD` | One row per steward assignment/effective period | Maintains the steward source of truth for identity, organizational assignment, effective-date validity, and agreement intake. |
-
-`METADATA_DATA_STEWARD` is maintained reference metadata, not workflow evidence and not part of `METADATA_DATA_CATALOGUE`. Administrators or stewards maintain real rows and set `is_active = true` for selectable stewards. Setup creates or checks the empty table when required; it never seeds fake steward profiles.
-
-## Notebook-driven model
-
-The notebooks drive the metadata model. Each notebook writes the workflow evidence that matches its responsibility, and FabricOps resolves maintained reference metadata where needed. FabricOps assembles the nine workflow evidence tables plus maintained reference metadata into agreement-level, table-level, and column-level views for dashboarding and export.
-
-```mermaid
-flowchart LR
-    R1["Maintained steward reference<br/>METADATA_DATA_STEWARD"] --> A["01 Agreement<br/>Select active/effective steward<br/>Define what is allowed"]
-    A --> T1["Agreement metadata<br/>METADATA_DATA_AGREEMENT<br/>persists steward_id"]
-    R1 --> T1
-
-    B["02 Exploration<br/>Profile and discover"] --> T2["Data catalogue metadata"]
-
-    C["04 Governance<br/>Approve column meaning and classification"] --> T3["Business context metadata"]
-    C --> T4["Governance metadata"]
-
-    D["03 Pipeline Contract<br/>Enforce and validate"] --> T5["DQ rules"]
-    D --> T6["DQ results"]
-    D --> T7["Drift results"]
-    D --> T8["Lineage events"]
-
-    E["All notebooks<br/>Register notebook traceability"] --> T9["Notebook registry"]
-
-    T1 --> V["Assembled views"]
-    T2 --> V
-    T3 --> V
-    T4 --> V
-    T5 --> V
-    T6 --> V
-    T7 --> V
-    T8 --> V
-    T9 --> V
-
-    V --> O1["Dashboard / data dictionary"]
-    V --> O2["Handover JSON"]
-    V --> O3["ODCS YAML"]
-    V --> O4["OpenMetadata payload"]
-```
+`METADATA_DATA_STEWARD` is maintained reference metadata rather than workflow evidence. Administrators or stewards maintain real rows and set `is_active = true` for selectable stewards. Setup may create or check the empty table, but it should not seed fake steward profiles.
 
 ## Notebook responsibilities
 
-02 discovers. 04 approves. 03 enforces. Handover assembles.
+| Notebook family | Metadata responsibility |
+| --- | --- |
+| `01_da` | Defines the agreement and selects an active steward. |
+| `02_ex` | Profiles and discovers source or unified data. |
+| `04_gov` | Approves column business context, classifications, and quality rules. |
+| `03_pc` | Enforces approved rules and records DQ results, drift results, and lineage events. |
+| All workflow notebooks | Register notebook traceability. |
+| Handover generation | Assembles views and exports reusable support artifacts. |
 
-| Notebook         | Responsibility                                                                 | Writes or updates                                                                                                             |
-| ---------------- | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
-| `00_env_config`  | Sets reusable environment context, creates or checks agreement and steward tables, and supports notebook registration | `METADATA_DATA_AGREEMENT`, `METADATA_DATA_STEWARD`, `METADATA_NOTEBOOK_REGISTRY` through `register_current_notebook()` |
-| `01_da_*`        | Captures the highest-grain agreement intake and usage boundary; reads active/effective steward reference rows | `METADATA_DATA_AGREEMENT`, `METADATA_NOTEBOOK_REGISTRY` |
-| `02_ex_*`        | Profiles data, discovers structure, and suggests context/rules                 | `METADATA_DATA_CATALOGUE`, `METADATA_NOTEBOOK_REGISTRY`                                                                       |
-| `04_gov_*`       | Approves column-level business context and classifications                     | `METADATA_COLUMN_BUSINESS_CONTEXT`, `METADATA_COLUMN_GOVERNANCE`, `METADATA_NOTEBOOK_REGISTRY`                                |
-| `03_pc_*`        | Enforces approved DQ rules, validates pipeline outputs, captures drift/lineage | `METADATA_DQ_RULES`, `METADATA_DQ_RESULTS`, `METADATA_DRIFT_RESULTS`, `METADATA_LINEAGE_EVENTS`, `METADATA_NOTEBOOK_REGISTRY` |
+## Detailed columns by physical table
 
-## Table-by-table details
-
-Each source table owns one kind of metadata. Join keys may repeat across tables so the views can assemble evidence later, but descriptive fields should not be duplicated. For example, agreement usage boundaries belong to METADATA_DATA_AGREEMENT, row_count belongs to METADATA_DATA_CATALOGUE, approved_business_context belongs to METADATA_COLUMN_BUSINESS_CONTEXT, and pii_classification belongs to METADATA_COLUMN_GOVERNANCE.
-
+The sections below preserve the implementation-oriented table reference. Add columns deliberately when the workflow needs more evidence; keep the conceptual model small for new readers.
 ### `METADATA_DATA_AGREEMENT`
 
 **Why it exists:** This is the highest-grain agreement-level contract anchor written by the `01_da_*` **Data Agreement Intake / Usage Boundary** notebook. It records the captured usage boundary in which downstream notebook work is allowed to operate. It is not a workbook-style data dictionary and does not store detailed table or column metadata.
@@ -509,22 +456,7 @@ Do not put DQ pass or fail counts here. Those belong in METADATA_DQ_RESULTS.
 
 Do not put governance labels, DQ results, or profiling metrics here.
 
-## Assembled views and exports
 
-FabricOps assembles the nine source metadata tables through three views:
+## Next step
 
-| View                            | Grain                                    | Purpose                                                                 |
-| ------------------------------- | ---------------------------------------- | ----------------------------------------------------------------------- |
-| `VW_AGREEMENT_CONTRACT_SUMMARY` | One row per agreement                    | Agreement-level contract status, handover summary, and export readiness |
-| `VW_TABLE_CONTRACT_SUMMARY`     | One row per agreement and table          | Table-level contract health, dashboarding, and handover table section   |
-| `VW_COLUMN_CATALOGUE`           | One row per agreement, table, and column | Column dictionary and column-level export detail                        |
-
-The handover JSON should be assembled from these views:
-
-```text
-VW_AGREEMENT_CONTRACT_SUMMARY -> handover summary section
-VW_TABLE_CONTRACT_SUMMARY -> handover tables section
-VW_COLUMN_CATALOGUE -> handover columns section
-```
-
-ODCS YAML and OpenMetadata-compatible payloads are generated exports from those assembled views. Handover is generated JSON/YAML/payload output, not another metadata source table.
+Continue to [Assembled Views and Dashboards](assembled-views-and-dashboards.md) to see how the source evidence becomes useful to people and tools.

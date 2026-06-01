@@ -23,14 +23,16 @@ FabricOps Starter Kit combines a **reusable helper wheel** with **notebook templ
 ## Documentation map
 
 - [Home](https://voycepeh.github.io/FabricOps-Starter-Kit/)
-- [Start](https://voycepeh.github.io/FabricOps-Starter-Kit/quick-start/)
-- [Install](https://voycepeh.github.io/FabricOps-Starter-Kit/install/)
-- [Templates](https://voycepeh.github.io/FabricOps-Starter-Kit/notebook-structure/)
-- [Workflow](https://voycepeh.github.io/FabricOps-Starter-Kit/lifecycle-operating-model/)
-- [Govern / Metadata](https://voycepeh.github.io/FabricOps-Starter-Kit/metadata-and-contracts/)
-- [Govern / Quality](https://voycepeh.github.io/FabricOps-Starter-Kit/data-quality-rules-system/)
-- [Deploy](https://voycepeh.github.io/FabricOps-Starter-Kit/deployment-and-promotion/)
-- [API](https://voycepeh.github.io/FabricOps-Starter-Kit/reference/)
+- [Quick Start](https://voycepeh.github.io/FabricOps-Starter-Kit/quick-start/)
+- [How FabricOps Works](https://voycepeh.github.io/FabricOps-Starter-Kit/how-fabricops-works/)
+  - [Workspace and Notebook Flow](https://voycepeh.github.io/FabricOps-Starter-Kit/how-fabricops-works/workspace-and-notebook-flow/)
+  - [Metadata Tables](https://voycepeh.github.io/FabricOps-Starter-Kit/how-fabricops-works/metadata-tables/)
+  - [Assembled Views and Dashboards](https://voycepeh.github.io/FabricOps-Starter-Kit/how-fabricops-works/assembled-views-and-dashboards/)
+  - [Production and Handover](https://voycepeh.github.io/FabricOps-Starter-Kit/how-fabricops-works/production-and-handover/)
+- [Notebook Templates](https://voycepeh.github.io/FabricOps-Starter-Kit/notebook-structure/)
+- [Data Quality Rules](https://voycepeh.github.io/FabricOps-Starter-Kit/data-quality-rules-system/)
+- [Setup](https://voycepeh.github.io/FabricOps-Starter-Kit/install/)
+- [Function Reference](https://voycepeh.github.io/FabricOps-Starter-Kit/reference/)
 
 ## Template quick links
 

@@ -1,42 +1,45 @@
 # FabricOps Starter Kit
 
-A lightweight Microsoft Fabric notebook starter kit for governed, AI-assisted data delivery.
+FabricOps Starter Kit is a plug-and-play Fabric notebook starter kit that helps governance, analysts, scientists, and engineers work together using shared metadata, simple notebook templates, and lightweight enforcement.
 
-FabricOps Starter Kit helps teams start with notebooks, keep control decisions human-approved, and produce reusable handover evidence without adopting a heavy orchestration platform.
+It is intentionally small. The kit uses the Microsoft Fabric building blocks teams already know: workspaces, lakehouses, warehouses, notebook templates, and metadata tables. It is a practical starting point for governed, quality-checked, AI-ready notebooks, not a large enterprise platform.
 
 <div class="home-cta" markdown="1">
 
-[Start Using Templates](quick-start.md){ .md-button .md-button--primary }
-[Install Wheel](install.md){ .md-button }
+[Start Quickly](quick-start.md){ .md-button .md-button--primary }
+[How FabricOps Works](how-fabricops-works/index.md){ .md-button }
 
 </div>
 
 <figure markdown>
-  ![How to use FabricOps Starter Kit: install the helper wheel, copy templates, configure the environment, run notebooks, and review metadata, quality, lineage, and contract evidence](assets/how-to-use-starter-kit.png){ .full-width }
-  <figcaption>Install the helper wheel, copy the notebook templates, configure your environment, run the notebooks in sequence, and review the generated evidence.</figcaption>
+  ![FabricOps Starter Kit operating model with Governance, Engineering Dev, and Engineering Prod workspaces](assets/workspace_model.png){ .full-width }
+  <figcaption>FabricOps Starter Kit uses one config notebook, role-based templates, and shared metadata to coordinate governance and engineering delivery.</figcaption>
 </figure>
 
-## Product at a glance
+## What the starter kit adds
 
-| Outcome | What the kit gives you |
+| Building block | How FabricOps Starter Kit uses it |
 | --- | --- |
-| Start quickly in Fabric | Notebook-first templates you can copy, adapt, and run in sequence. |
-| Keep implementation consistent | A reusable helper wheel for shared setup, metadata, quality, lineage, and handover logic. |
-| Use AI with guardrails | AI-assisted suggestions are captured as inputs for human review, approval, and override. |
-| Hand over with evidence | Runs produce metadata, DQ, lineage, and contract-ready artifacts that support governed delivery. |
+| Fabric workspaces | Keep shared governance metadata separate from engineering development and production work. |
+| Lakehouses and warehouses | Store source data, transformed data, product outputs, and shared metadata. |
+| Notebook templates | Give each role a clear place to configure, document, explore, build, and govern. |
+| Metadata tables | Keep agreements, profiles, lineage, rules, classifications, business context, and handover evidence reusable. |
+| Lightweight enforcement | Let production notebooks consume approved metadata and apply repeatable checks without adding a heavy platform. |
 
-## When to use it
+## How it works
 
-- You want the fastest path from first visit to first successful Fabric notebook run.
-- You want governed delivery without adopting a heavy orchestration platform.
-- You want reusable evidence for metadata, DQ, lineage, and handover.
+1. Configure the Fabric environment with `00_env_config`.
+2. Create steward and agreement records with `01_da`.
+3. Explore and profile data with `02_ex`.
+4. Build repeatable transformations with `03_pc`.
+5. Enrich and approve governance metadata with `04_gov`.
+6. Rerun production pipelines with approved metadata and generate handover evidence.
 
-## What to do first
+The [How FabricOps Works](how-fabricops-works/index.md) section explains the workspace setup, notebook templates, metadata tables, assembled views, role handoffs, and production handover as one guided story.
 
-1. [Install the helper wheel](install.md).
-2. [Copy the notebook templates](quick-start.md).
-3. Configure your environment.
-4. Run the notebooks in order.
-5. Review the generated evidence.
+## Start here
 
-Read next: [Templates](notebook-structure.md) · [Workflow](lifecycle-operating-model.md) · [Governance evidence](metadata-and-contracts/index.md) · [API](reference/index.md)
+- [Quick Start](quick-start.md): install the helper wheel, copy the templates, and configure Fabric.
+- [How FabricOps Works](how-fabricops-works/index.md): follow the complete lightweight story from workspace setup to handover.
+- [Notebook Templates](notebook-structure.md): open the template-specific guides.
+- [Data Quality Rules](data-quality-rules-system.md): apply approved checks in pipeline notebooks.

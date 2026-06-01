@@ -4,14 +4,14 @@ A data analyst profiles source data in a `02_ex_*` notebook. The notebook captur
 
 AI uses that evidence to suggest candidate data quality rules. A human reviewer approves, edits, rejects, or defers each suggestion. Only approved active rules are stored for enforcement.
 
-A `03_pc_*` notebook loads approved rules during pipeline runs, applies them to the current dataframe or table, sends passing rows downstream, and quarantines failed rows with reasons. These approved rules are one enforceable part of the wider [data contract](metadata-and-contracts/index.md): the shared promise between producers and consumers.
+A `03_pc_*` notebook loads approved rules during pipeline runs, applies them to the current dataframe or table, sends passing rows downstream, and quarantines failed rows with reasons. These approved rules are one enforceable part of the wider [How FabricOps Works](how-fabricops-works/index.md): the shared metadata flow used by governance and engineering.
 
 <figure markdown>
   ![Data quality workflow with AI suggestions, human review, approval, and deterministic enforcement in pipelines](assets/DQ-with-ai.png){ .full-width }
   <figcaption>Data quality workflow from profiling, rule suggestion, review, approval, enforcement, quarantine, and feedback.</figcaption>
 </figure>
 
-Next read: [Metadata](metadata-and-contracts/index.md), [Start](quick-start.md), [API](reference/index.md).
+Next read: [How FabricOps Works](how-fabricops-works/index.md), [Quick Start](quick-start.md), [Function Reference](reference/index.md).
 
 ## Operating flow
 
