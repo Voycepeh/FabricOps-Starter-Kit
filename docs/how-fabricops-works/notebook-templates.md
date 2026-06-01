@@ -2,6 +2,8 @@
 
 FabricOps Starter Kit uses five notebook templates. Each notebook has a clear role in the workflow.
 
+The notebook templates are available in the [`templates/notebooks`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks) folder.
+
 !!! note "Notebook preview"
     The notebook templates are optimized for Microsoft Fabric execution. GitHub may not always render `.ipynb` previews reliably.
 
