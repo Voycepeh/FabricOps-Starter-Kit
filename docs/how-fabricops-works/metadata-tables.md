@@ -459,4 +459,4 @@ Do not put governance labels, DQ results, or profiling metrics here.
 
 ## Next step
 
-Continue to [Assembled Views and Dashboards](assembled-views-and-dashboards.md) to see how the source evidence becomes useful to people and tools.
+Continue to [Metadata Dashboard](metadata-dashboard.md) to see how the source evidence becomes useful to people and tools.

@@ -1,6 +1,6 @@
 # Assembled views
 
-This compatibility reference preserves detailed assembled-view mappings. Start with [How FabricOps Works](../how-fabricops-works/index.md) and [Assembled Views and Dashboards](../how-fabricops-works/assembled-views-and-dashboards.md) for the guided story. The agreement-level, table-level, and column-level views assembled from the nine source metadata tables are reproducible outputs used for dashboarding, handover JSON, ODCS YAML, and OpenMetadata-compatible payloads.
+This compatibility reference preserves detailed assembled-view mappings. Start with [How FabricOps Works](../how-fabricops-works/index.md) and [Metadata Dashboard](../how-fabricops-works/metadata-dashboard.md) for the guided story. The agreement-level, table-level, and column-level views assembled from the nine source metadata tables are reproducible outputs used for dashboarding, handover JSON, ODCS YAML, and OpenMetadata-compatible payloads.
 
 The nine metadata tables are governed source evidence. The assembled views join and summarize that evidence at the grains that dashboards and handover exports need. A project may choose to materialize a view later for audit or performance, but the view itself is not a new source metadata table.
 

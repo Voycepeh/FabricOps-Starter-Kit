@@ -21,10 +21,10 @@ nav:
   - Quick Start: quick-start.md
   - How FabricOps Works:
       - Overview: how-fabricops-works/index.md
-      - Workspace and Notebook Flow: how-fabricops-works/workspace-and-notebook-flow.md
+      - Workspace Operating Model: how-fabricops-works/workspace-operating-model.md
+      - Notebook Templates: how-fabricops-works/notebook-templates.md
       - Metadata Tables: how-fabricops-works/metadata-tables.md
-      - Assembled Views and Dashboards: how-fabricops-works/assembled-views-and-dashboards.md
-      - Production and Handover: how-fabricops-works/production-and-handover.md
+      - Metadata Dashboard: how-fabricops-works/metadata-dashboard.md
   - Data Quality Rules: data-quality-rules-system.md
   - Setup:
       - Install: install.md
