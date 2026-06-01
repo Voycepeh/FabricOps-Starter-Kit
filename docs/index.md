@@ -12,7 +12,7 @@ It is intentionally small. The kit uses the Microsoft Fabric building blocks tea
 </div>
 
 <figure markdown>
-  ![FabricOps Starter Kit operating model with Governance, Engineering Dev, and Engineering Prod workspaces](assets/workspace_model.png){ .full-width }
+  ![FabricOps Starter Kit operating model with Governance, Engineering Dev, and Engineering Prod workspaces](assets/fabricops-operating-model-overview.png){ .full-width }
   <figcaption>FabricOps Starter Kit uses one config notebook, role-based templates, and shared metadata to coordinate governance and engineering delivery.</figcaption>
 </figure>
 

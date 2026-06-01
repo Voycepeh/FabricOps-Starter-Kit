@@ -3,7 +3,7 @@
 FabricOps Starter Kit uses five small notebook templates. For the complete workspace setup, role handoffs, metadata flow, and production handover, read the [How FabricOps Works](how-fabricops-works/index.md).
 
 <figure markdown>
-  ![Recommended FabricOps Starter Kit workspace setup](assets/workspace_model.png){ .full-width }
+  ![Recommended FabricOps Starter Kit workspace setup](assets/fabricops-operating-model-overview.png){ .full-width }
   <figcaption>The recommended setup keeps shared metadata in the Governance workspace while Engineering Dev and Engineering Prod own data processing and outputs.</figcaption>
 </figure>
 
