@@ -2,10 +2,7 @@
 
 The governance `metadata_lakehouse` is the shared coordination layer between governance and engineering. Notebook templates write evidence to the configured metadata target, and later notebooks reuse approved evidence for enforcement and handover.
 
-<figure markdown>
   ![Shared FabricOps metadata model connecting governance and engineering notebooks](../assets/fabricops-metadata-model.png){ .full-width }
-  <figcaption>Shared metadata keeps agreements, profiles, lineage, approved rules, classifications, context, and handover evidence connected.</figcaption>
-</figure>
 
 ## Lightweight conceptual model
 
