@@ -1,98 +1,75 @@
 :root {
-  --md-primary-fg-color: #117865;
-  --md-primary-fg-color--light: #20c997;
-  --md-primary-fg-color--dark: #0f5f55;
+  --md-primary-fg-color: #0078d4;
+  --md-primary-fg-color--light: #2899f5;
+  --md-primary-fg-color--dark: #005a9e;
 
-  --md-accent-fg-color: #00b7c3;
-  --md-accent-fg-color--transparent: rgba(0, 183, 195, 0.12);
+  --md-accent-fg-color: #00a6b2;
+  --md-accent-fg-color--transparent: rgba(0, 166, 178, 0.12);
 }
 
-/* Fabric inspired header */
+/* Keep the top bar clean and Microsoft-like */
 .md-header {
-  background: linear-gradient(90deg, #117865 0%, #00b7c3 55%, #5c2d91 100%);
+  background-color: #0078d4;
 }
 
-/* Fabric inspired navigation tabs */
+/* Slightly darker tabs, no gradient */
 .md-tabs {
-  background: linear-gradient(90deg, #117865 0%, #00b7c3 55%, #5c2d91 100%);
+  background-color: #005a9e;
 }
 
 /* Primary CTA buttons */
 .md-button--primary {
-  background-color: #117865;
-  border-color: #117865;
+  background-color: #0078d4;
+  border-color: #0078d4;
   color: #ffffff;
 }
 
 .md-button--primary:hover {
-  background-color: #0f5f55;
-  border-color: #0f5f55;
+  background-color: #005a9e;
+  border-color: #005a9e;
   color: #ffffff;
 }
 
 /* Secondary buttons */
 .md-button {
-  border-color: #117865;
-  color: #117865;
+  border-color: #0078d4;
+  color: #0078d4;
 }
 
 .md-button:hover {
-  background-color: rgba(0, 183, 195, 0.08);
-  border-color: #00b7c3;
-  color: #0f5f55;
+  background-color: rgba(0, 120, 212, 0.08);
+  border-color: #005a9e;
+  color: #005a9e;
 }
 
 /* Links */
 .md-typeset a {
-  color: #117865;
+  color: #0078d4;
 }
 
 .md-typeset a:hover {
-  color: #00b7c3;
+  color: #005a9e;
 }
 
 /* Active and hovered navigation links */
 .md-nav__link--active,
 .md-nav__link:focus,
 .md-nav__link:hover {
-  color: #117865;
-}
-
-/* Tabs */
-.md-tabs__link--active,
-.md-tabs__link:hover {
-  color: #ffffff;
-  opacity: 1;
-}
-
-/* Search focus */
-.md-search__input {
-  background-color: rgba(255, 255, 255, 0.16);
-}
-
-.md-search__input:hover,
-.md-search__input:focus {
-  background-color: rgba(255, 255, 255, 0.24);
-}
-
-/* Code copy and focus accents */
-.md-clipboard:hover,
-.md-clipboard:focus {
-  color: #00b7c3;
+  color: #0078d4;
 }
 
 /* Table header touch */
 .md-typeset table:not([class]) th {
-  background-color: rgba(17, 120, 101, 0.08);
+  background-color: rgba(0, 120, 212, 0.08);
 }
 
 /* Admonition accent */
 .md-typeset .admonition,
 .md-typeset details {
-  border-color: #00b7c3;
+  border-color: #00a6b2;
 }
 
 .md-typeset .admonition-title,
 .md-typeset summary {
-  background-color: rgba(0, 183, 195, 0.08);
+  background-color: rgba(0, 166, 178, 0.08);
 }
