@@ -23,7 +23,6 @@ The result is a self-contained Fabric workflow for governing data products witho
 | [Quick Start](quick-start.md)                       | Install the helper wheel, copy the templates, and configure Fabric.                             |
 | [How FabricOps Works](how-fabricops-works/index.md) | Understand the workspace model, notebook flow, metadata layer, dashboard, and handover process. |
 | [Data Quality Rules](data-quality-rules-system.md)  | Learn how approved rules are defined, stored, and applied in pipeline notebooks.                |
-| [Setup](setup/index.md)                             | Configure environments, workspaces, lakehouses, warehouses, and notebook templates.             |
 | [Function Reference](reference/index.md)            | Look up helper functions used by the notebooks.                                                 |
 
 ## Recommended path
