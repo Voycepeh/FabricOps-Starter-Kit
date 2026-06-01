@@ -4,7 +4,7 @@ FabricOps Starter Kit collects metadata through project notebooks and assembles 
 
 This page describes the recommended Power BI dashboard wireframe and the assembled views that the dashboard consumes.
 
-The dashboard is the user-facing layer of the metadata collected by the framework. It helps users review agreement status, table health, column definitions, data quality results, drift checks, lineage evidence, and handover readiness without inspecting raw metadata tables directly.
+The dashboard is the user-facing layer of the metadata collected by the framework. It helps users review agreement status, table health, column definitions, data quality results, drift checks, and lineage evidence without inspecting raw metadata tables directly.
 
 The governed source evidence remains in the metadata tables described on the [Metadata Tables](metadata-tables.md) page.
 
@@ -19,7 +19,7 @@ A lightweight Power BI dashboard can be organised into the following pages.
 | Column Catalogue | Shows column definitions, data types, classifications, profiling evidence, and rule coverage. | `VW_COLUMN_CATALOGUE` |
 | Quality View | Shows rule counts, latest validation status, failed rules, and affected tables or columns. | `VW_TABLE_CONTRACT_SUMMARY`, `VW_COLUMN_CATALOGUE` |
 | Lineage View | Shows source tables, target tables, notebook traceability, and lineage status. | `VW_TABLE_CONTRACT_SUMMARY` |
-| Handover View | Shows what is ready for production support and what evidence is available. | `VW_AGREEMENT_CONTRACT_SUMMARY`, `VW_TABLE_CONTRACT_SUMMARY` |
+| Readiness View | Shows whether agreements and tables have enough metadata coverage for review and operational follow-up. | `VW_AGREEMENT_CONTRACT_SUMMARY`, `VW_TABLE_CONTRACT_SUMMARY` |
 
 ## Dashboard preview
 
@@ -43,8 +43,8 @@ The dashboard should consume assembled reporting views rather than raw metadata 
 
 | View | Grain | Dashboard use |
 | --- | --- | --- |
-| `VW_AGREEMENT_CONTRACT_SUMMARY` | One row per agreement | Overview, stewardship, readiness, and handover pages. |
-| `VW_TABLE_CONTRACT_SUMMARY` | One row per agreement and table | Table health, quality, drift, freshness, lineage, and handover pages. |
+| `VW_AGREEMENT_CONTRACT_SUMMARY` | One row per agreement | Overview, stewardship, and readiness pages. |
+| `VW_TABLE_CONTRACT_SUMMARY` | One row per agreement and table | Table health, quality, drift, freshness, lineage, and readiness pages. |
 | `VW_COLUMN_CATALOGUE` | One row per agreement, table, and column | Column catalogue, classification, profiling, and rule coverage pages. |
 
 These views are derived from the governed metadata tables. They are not separate sources of truth.
