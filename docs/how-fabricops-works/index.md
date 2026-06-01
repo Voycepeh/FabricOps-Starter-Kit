@@ -2,15 +2,20 @@
 
 FabricOps Starter Kit is a lightweight Microsoft Fabric notebook starter kit.
 
+We adopt a Fabric notebook-first approach for data exploration, data pipelines, and governance.
+
 It helps governance teams, analysts, and engineers work from a shared structure without adding a large platform around Fabric.
 
-The simple idea is:
+These notebooks capture agreements, profiling results, quality rules, classifications, lineage, drift checks, and production evidence. 
+The evidence is stored in a metadata lakehouse and presented through a Power BI dashboard.
 
-* **Governance owns shared metadata.**
-* **Engineering owns exploration, transformation, and product outputs.**
-* **Notebook templates connect the roles.**
-* **Metadata tables store reusable evidence.**
-* **The metadata dashboard makes the metadata useful.**
+**The result is a self-contained Fabric workflow for governing data products without adding a separate platform.**
+- Configure the environment so every notebook writes to the right workspace, lakehouse, warehouse, and metadata target.
+- Capture the agreement so ownership, approved usage, and stewardship are recorded before delivery.
+- Explore and build with notebooks so profiling, transformation, lineage, drift, and quality evidence are created as part of the work.
+- Review governance centrally so business context, rules, classifications, and exceptions are approved in one place.
+- Run approved notebooks in production so production outputs are created from production config and approved metadata.
+- Present the evidence in Power BI so users can see coverage, health, lineage, and readiness without reading raw metadata tables.
 
 ## Workspace setup
 
