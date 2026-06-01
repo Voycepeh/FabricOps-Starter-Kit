@@ -1,8 +1,8 @@
 # FabricOps Starter Kit
 
-FabricOps Starter Kit helps teams turn Microsoft Fabric notebooks into governed, quality-checked, AI-ready data products without building a heavy platform.
+FabricOps Starter Kit helps engineering and analytics teams quickly bootstrap governance and engineering practices in Microsoft Fabric.
 
-It is intentionally small. The kit uses the Microsoft Fabric building blocks teams already know: workspaces, lakehouses, warehouses, notebook templates, and metadata tables. It is a practical starting point for governed, quality-checked, AI-ready notebooks, not a large enterprise platform.
+It provides a simple starting point for metadata-driven processing, data lineage, data quality checks, and notebook standardisation within the team’s existing Fabric environment.
 
 <div class="home-cta" markdown="1">
 
@@ -13,7 +13,9 @@ It is intentionally small. The kit uses the Microsoft Fabric building blocks tea
 
 ## The problem it solves
 
-Microsoft Fabric notebooks are flexible, but governance, engineering, quality checks, lineage, and handover evidence can become disconnected as work moves between roles. FabricOps Starter Kit uses role-based notebooks and shared metadata tables to keep that work connected. Evidence is captured while the work is being done instead of being added manually at the end.
+Analysts, engineers, and governance teams often work differently.
+
+FabricOps Starter Kit gives them a shared structure through role-based notebooks and metadata tables, so analysis, engineering standards, data quality checks, lineage, and governance evidence stay connected as the work is done.
 
 <figure markdown>
   ![FabricOps Starter Kit operating model with Governance, Engineering Dev, and Engineering Prod workspaces](assets/fabricops-operating-model-overview.png){ .full-width }
