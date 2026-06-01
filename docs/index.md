@@ -1,6 +1,6 @@
 # FabricOps Starter Kit
 
-FabricOps Starter Kit is a plug-and-play Fabric notebook starter kit that helps governance, analysts, scientists, and engineers work together using shared metadata, simple notebook templates, and lightweight enforcement.
+FabricOps Starter Kit helps teams turn Microsoft Fabric notebooks into governed, quality-checked, AI-ready data products without building a heavy platform.
 
 It is intentionally small. The kit uses the Microsoft Fabric building blocks teams already know: workspaces, lakehouses, warehouses, notebook templates, and metadata tables. It is a practical starting point for governed, quality-checked, AI-ready notebooks, not a large enterprise platform.
 
@@ -11,20 +11,24 @@ It is intentionally small. The kit uses the Microsoft Fabric building blocks tea
 
 </div>
 
+## The problem it solves
+
+Microsoft Fabric notebooks are flexible, but governance, engineering, quality checks, lineage, and handover evidence can become disconnected as work moves between roles. FabricOps Starter Kit uses role-based notebooks and shared metadata tables to keep that work connected. Evidence is captured while the work is being done instead of being added manually at the end.
+
 <figure markdown>
   ![FabricOps Starter Kit operating model with Governance, Engineering Dev, and Engineering Prod workspaces](assets/fabricops-operating-model-overview.png){ .full-width }
   <figcaption>FabricOps Starter Kit uses one config notebook, role-based templates, and shared metadata to coordinate governance and engineering delivery.</figcaption>
 </figure>
 
-## What the starter kit adds
+## What you get
 
-| Building block | How FabricOps Starter Kit uses it |
+| Outcome | What FabricOps provides |
 | --- | --- |
-| Fabric workspaces | Keep shared governance metadata separate from engineering development and production work. |
-| Lakehouses and warehouses | Store source data, transformed data, product outputs, and shared metadata. |
-| Notebook templates | Give each role a clear place to configure, document, explore, build, and govern. |
-| Metadata tables | Keep agreements, profiles, lineage, rules, classifications, business context, and handover evidence reusable. |
-| Lightweight enforcement | Let production notebooks consume approved metadata and apply repeatable checks without adding a heavy platform. |
+| Clear role handoffs | `00_env_config`, `01_da`, `02_ex`, `03_pc`, and `04_gov` give each role a focused notebook. |
+| Reusable metadata | Agreements, profiles, lineage, rules, classifications, and business context are stored as shared evidence. |
+| Lightweight enforcement | Production notebooks consume approved metadata and apply repeatable DQ and drift checks. |
+| AI-ready documentation | Approved metadata and notebook evidence can generate handover summaries, AI manifests, and support notes. |
+| Practical Fabric adoption | Uses normal Fabric workspaces, lakehouses, warehouses, and notebooks instead of adding a large platform. |
 
 ## How it works
 
@@ -41,5 +45,5 @@ The [How FabricOps Works](how-fabricops-works/index.md) section explains the wor
 
 - [Quick Start](quick-start.md): install the helper wheel, copy the templates, and configure Fabric.
 - [How FabricOps Works](how-fabricops-works/index.md): follow the complete lightweight story from workspace setup to handover.
-- [Workspace and Notebook Flow](how-fabricops-works/workspace-and-notebook-flow.md): follow the workspace setup and role-based notebook sequence.
+- [Workspace and Notebook Flow](how-fabricops-works/workspace-and-notebook-flow.md): understand the role-based notebook sequence.
 - [Data Quality Rules](data-quality-rules-system.md): apply approved checks in pipeline notebooks.
