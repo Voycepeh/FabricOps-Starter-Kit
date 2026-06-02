@@ -54,7 +54,7 @@ Shared environment bootstrap and validation before agreement intake, exploration
 
 ## `01_da_<agreement>`
 
-Form notebook that renders the agreement-intake app through one framework helper. The helper commits immutable `METADATA_DATA_AGREEMENT` versions and reads manually maintained `METADATA_DATA_STEWARD` profiles for intake dropdowns.
+Form notebook that renders the agreement-intake app through one framework helper. The helper renders Data Steward maintenance followed by Data Agreement maintenance. Both tables are append-only, and agreement intake selects active steward rows.
 
 ### Segment 1: Render the agreement-intake app
 

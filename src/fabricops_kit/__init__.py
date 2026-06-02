@@ -10,15 +10,12 @@ from .business_context import (
 )
 from .config import setup_notebook
 from .data_agreement import (
-    collect_agreement_metadata,
-    commit_agreement_metadata,
-    create_agreement_form,
     get_selected_agreement,
-    load_agreements,
-    read_agreement_form,
     render_agreement_intake_app,
-    setup_data_agreement_tables,
+    render_data_agreement_widget,
+    render_data_steward_widget,
     select_agreement,
+    setup_data_agreement_tables,
 )
 from .data_governance import (
     draft_governance,
@@ -60,17 +57,15 @@ from .technical_columns import standardize_columns
 __version__ = "0.1.0"
 
 __all__ = [
-    "setup_notebook","load_agreements","select_agreement","get_selected_agreement","register_current_notebook","load_notebook_registry","build_runtime_audit_fields",
+    "setup_notebook","select_agreement","get_selected_agreement","register_current_notebook","load_notebook_registry","build_runtime_audit_fields",
     "read_lakehouse_table","write_lakehouse_table","read_warehouse_table","write_warehouse_table","profile_dataframe",
     "draft_business_context","prepare_business_context_profile_input","extract_column_business_context_suggestions","review_business_context","get_reviewed_business_context_rows","write_business_context",
     "draft_dq_rules","review_dq_rules","run_dq_rule_review_widget","get_dq_review_results","write_dq_rules","load_dq_rules","enforce_dq","assert_dq_passed",
     "draft_governance","prepare_governance_input","extract_governance_suggestions","review_governance","write_governance","load_governance","standardize_columns","build_lineage_records","build_lineage_handover_markdown","build_handover","render_handover_markdown",
     "read_lakehouse_csv","read_lakehouse_parquet","read_lakehouse_excel","validate_dq_rules","review_dq_rule_deactivations","check_schema_drift","check_partition_drift","check_profile_drift","summarize_drift_results",
-    "collect_agreement_metadata",
-    "commit_agreement_metadata",
-    "create_agreement_form",
-    "read_agreement_form",
     "render_agreement_intake_app",
+    "render_data_agreement_widget",
+    "render_data_steward_widget",
     "setup_data_agreement_tables",
     "FabricStore",
 ]

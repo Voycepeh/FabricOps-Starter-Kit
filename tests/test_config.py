@@ -69,3 +69,17 @@ def test_setup_notebook_validates_config_sections_and_required_targets():
     )
     with pytest.raises(ValueError, match="Target 'metadata' was not found"):
         setup_notebook(config=config, env="dev", required_targets=["source", "metadata"])
+
+
+def test_data_agreement_config_defensively_copies_nested_widget_definitions():
+    from fabricops_kit.config import DataAgreementConfig
+
+    steward_widget = {"visible_columns": ["steward_id"], "custom_fields": [{"key": "group", "type": "text"}]}
+    agreement_widget = {"visible_columns": ["agreement_name"], "custom_fields": [{"key": "consumer_group", "type": "select", "options": ["ODI"]}]}
+    config = DataAgreementConfig(data_steward_widget=steward_widget, data_agreement_widget=agreement_widget)
+
+    steward_widget["custom_fields"][0]["key"] = "mutated"
+    agreement_widget["custom_fields"][0]["options"].append("mutated")
+
+    assert config.data_steward_widget["custom_fields"][0]["key"] == "group"
+    assert config.data_agreement_widget["custom_fields"][0]["options"] == ["ODI"]

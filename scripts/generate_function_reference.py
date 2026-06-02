@@ -702,9 +702,9 @@ def main() -> None:
                     "",
                     "1. `00_env_config` assembles `CONFIG` and calls `setup_data_agreement_tables(...)` to create or check agreement metadata tables.",
                     "2. `01_da_<agreement>` calls `render_agreement_intake_app(...)` to render the framework-managed intake form.",
-                    "3. Downstream notebooks call `load_agreements(...)`, `select_agreement(...)`, and `get_selected_agreement()` to bind work to a committed agreement version.",
+                    "3. Downstream notebooks call `select_agreement(CONFIG, ENV, spark_session=spark)` and `get_selected_agreement()` to bind work to a committed agreement version.",
                     "",
-                    "Lower-level form, collection, and commit functions remain supported only for advanced custom workflows. Non-exported helpers are implementation details and should not be imported from `fabricops_kit`.",
+                    "Non-exported schema, persistence, custom-field, and list helpers are implementation details and should not be imported from `fabricops_kit`.",
                     "",
                     "Agreement technical audit fields are framework-managed through `metadata.build_runtime_audit_fields(...)`.",
                     "",
@@ -745,10 +745,13 @@ def main() -> None:
                 lines.extend(["## Primary notebook API", "", "Use these callables in standard FabricOps notebooks.", ""])
                 lines.extend(['<div class="module-table-scroll">'])
                 lines.extend(render_html_table(["Callable", "Tier", "Type", "Summary", "Related helpers"], _public_callable_rows(recommended, "Primary notebook API")))
-                lines.extend(['</div>', "", "## Optional advanced customization API", "", "Normal notebook users should not call these lower-level functions. Use them only when intentionally customizing the agreement-intake workflow.", ""])
-                lines.extend(['<div class="module-table-scroll">'])
-                lines.extend(render_html_table(["Callable", "Tier", "Type", "Summary", "Related helpers"], _public_callable_rows(advanced, "Optional / advanced customization")))
-                lines.extend(['</div>', "", "## Internal helpers", "", "These non-exported helpers support framework internals and diagnostics. Do not import them from `fabricops_kit`.", ""])
+                lines.extend(['</div>'])
+                if advanced:
+                    lines.extend(["", "## Optional advanced customization API", "", "Normal notebook users should not call these lower-level functions. Use them only when intentionally customizing the agreement-intake workflow.", ""])
+                    lines.extend(['<div class="module-table-scroll">'])
+                    lines.extend(render_html_table(["Callable", "Tier", "Type", "Summary", "Related helpers"], _public_callable_rows(advanced, "Optional / advanced customization")))
+                    lines.extend(['</div>'])
+                lines.extend(["", "## Internal helpers", "", "These non-exported helpers support framework internals and diagnostics. Do not import them from `fabricops_kit`.", ""])
                 public_names = {symbol.name for symbol in public_in_module}
                 internal_names = sorted(name for name in info["functions"] if name not in public_names and not name.startswith("_"))
                 private_names = sorted(name for name in info["functions"] if name not in public_names and name.startswith("_"))

@@ -50,7 +50,7 @@ nav:
           - drift: api/modules/drift.md
           - handover: api/modules/handover.md
           - metadata: api/modules/metadata.md
-          # AUTO-GENERATED-MODULES-END
+      # AUTO-GENERATED-MODULES-END
 
 markdown_extensions:
   - admonition

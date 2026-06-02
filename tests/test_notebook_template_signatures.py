@@ -117,12 +117,12 @@ def test_00_env_config_exposes_shared_config_and_data_agreement_defaults():
     assert "ENV_NAME = ENV" in code
     assert "DATA_AGREEMENT_CONFIG = DataAgreementConfig(" in code
     for configured_default in (
-        "source_systems=(",
-        "refresh_frequencies=(",
-        "allowed_consumer_types=(",
-        "expected_outputs=(",
-        "renewal_options=(",
-        "default_values={",
+        "metadata_tables={",
+        "data_steward_widget={",
+        "data_agreement_widget={",
+        '"custom_fields": [',
+        '"key": "group"',
+        '"key": "consumer_group"',
     ):
         assert configured_default in code
     assert "data_agreement_config=DATA_AGREEMENT_CONFIG" in code
@@ -138,7 +138,7 @@ def test_00_env_config_bootstraps_agreement_tables_and_reports_steward_readiness
     assert "require_active_steward=False" in code
     assert "CONFIG.path_config.paths[ENV]['unified'].name" in code
     assert "CONFIG.path_config.paths[ENV]['product'].name" in code
-    assert "agreement metadata tables created/checked" in code
+    assert "01_da metadata tables created/checked" in code
     assert 'AGREEMENT_METADATA_SETUP[\'tables\']' in code
     assert 'AGREEMENT_METADATA_SETUP[\'status\']' in code
     assert 'AGREEMENT_METADATA_SETUP[\'message\']' in code
@@ -163,61 +163,62 @@ def test_01_da_renders_framework_managed_intake_app_without_notebook_callback():
     assert "env=ENV" in code
     assert "def on_commit_clicked" not in code
     assert ".on_click(" not in code
-    for lower_level_helper in (
-        "create_agreement_form",
-        "read_agreement_form",
-        "collect_agreement_metadata",
-        "commit_agreement_metadata",
-        "load_agreements",
-        "setup_data_agreement_tables",
-    ):
-        assert lower_level_helper not in code
-        assert lower_level_helper in fabricops_kit.__all__
 
 
-def test_public_all_exposes_supported_agreement_api_but_not_internal_helpers():
+def test_public_all_exposes_small_supported_agreement_api_only():
     supported = {
         "render_agreement_intake_app",
+        "render_data_steward_widget",
+        "render_data_agreement_widget",
         "setup_data_agreement_tables",
-        "load_agreements",
         "select_agreement",
         "get_selected_agreement",
-        "create_agreement_form",
-        "read_agreement_form",
-        "collect_agreement_metadata",
-        "commit_agreement_metadata",
     }
-    internal_helpers = {
-        "agreement_dropdown_options",
-        "latest_agreement_versions",
-        "parse_contract_version",
-        "next_minor_version",
-        "resolve_agreement_identity",
-        "load_active_data_steward_profiles",
+    helper_style_names = {
+        "load_agreements", "ensure_metadata_tables", "get_data_steward_schema",
+        "get_data_agreement_schema", "get_standard_runtime_audit_columns",
+        "serialize_custom_fields", "deserialize_custom_fields", "render_custom_fields",
+        "collect_custom_fields", "get_widget_visible_fields", "list_data_stewards",
+        "list_data_agreements", "create_or_update_data_steward",
+        "create_or_update_data_agreement", "create_agreement_form",
+        "read_agreement_form", "collect_agreement_metadata", "commit_agreement_metadata",
     }
     exported = set(fabricops_kit.__all__)
     assert supported <= exported
-    assert not (internal_helpers & exported)
+    assert not (helper_style_names & exported)
+
+
+def test_downstream_templates_select_agreements_without_loading_internal_helper():
+    for template, env_name in (
+        ("02_ex_agreement_topic.ipynb", "ENV_NAME"),
+        ("03_pc_agreement_pipeline_template.ipynb", "ENV_NAME"),
+        ("04_gov_agreement_dataset_table.ipynb", "env_name"),
+    ):
+        code = _code(template)
+        assert "load_agreements" not in code
+        assert f"select_agreement(CONFIG, {env_name}, spark_session=spark)" in code
 
 
 def test_generated_data_agreement_module_page_separates_supported_api_tiers():
     page = Path("docs/api/modules/data_agreement.md").read_text(encoding="utf-8")
     assert "## Intended notebook call flow" in page
     assert "## Primary notebook API" in page
-    assert "## Optional advanced customization API" in page
+    assert "## Optional advanced customization API" not in page
     assert "## Internal helpers" in page
     assert "### Internal workflow helpers" in page
     assert "### Private implementation helpers" in page
-    assert "Normal notebook users should not call these lower-level functions." in page
+    assert "These non-exported helpers support framework internals and diagnostics." in page
     assert page.index("## Intended notebook call flow") < page.index("## Module manifest")
     assert "## Module overview badges" not in page
     for helper_name in (
-        "agreement_dropdown_options",
-        "latest_agreement_versions",
-        "load_active_data_steward_profiles",
-        "next_minor_version",
-        "parse_contract_version",
-        "resolve_agreement_identity",
+        "_agreement_dropdown_options",
+        "_latest_agreement_versions",
+        "_load_active_data_steward_profiles",
+        "_next_minor_version",
+        "_parse_contract_version",
+        "_resolve_agreement_identity",
+        "_serialize_custom_fields",
+        "_list_data_stewards",
     ):
         assert f"internal/data_agreement/{helper_name}/" in page
 
@@ -229,36 +230,25 @@ def test_generated_function_manifest_excludes_removed_agreement_callables():
         assert callable_name not in manifest_text
 
 
-def test_02_ex_maps_selected_agreement_to_current_versioned_schema():
+def test_02_ex_maps_selected_agreement_to_lightweight_versioned_schema():
     code = _code("02_ex_agreement_topic.ipynb")
     for field_name in (
-        "agreement_id",
-        "contract_version",
-        "agreement_name",
-        "business_purpose",
-        "approved_usage",
-        "restricted_usage",
-        "steward_id",
-        "source_system",
-        "refresh_frequency",
-        "retention_expectation",
-        "allowed_consumer_type",
-        "expected_output",
+        "agreement_id", "contract_version", "agreement_name", "domain",
+        "business_purpose", "approved_usage", "steward_id", "custom_fields_json",
     ):
         assert f'"{field_name}"' in code
-    assert 'business_purpose = selected_agreement.get("business_purpose") or selected_agreement.get("business_context", "")' in code
-    assert '"steward_id": steward_id' in code
-    assert '"data_steward": {' not in code
-    for removed_snapshot_field in ("data_steward_name", "data_steward_email", "domain", "department", "faculty"):
-        assert f'selected_agreement.get("{removed_snapshot_field}"' not in code
+    assert 'custom_fields = json.loads(selected_agreement.get("custom_fields_json") or "{}")' in code
+    assert '"custom_fields": custom_fields' in code
+    for removed_physical_field in (
+        "restricted_usage", "source_system", "refresh_frequency",
+        "retention_expectation", "allowed_consumer_type", "expected_output",
+        "department", "faculty",
+    ):
+        assert f'selected_agreement.get("{removed_physical_field}"' not in code
     assert "display(agreement_context)" in code
-    assert 'business_context=f"Business purpose: {business_purpose}\\nApproved usage: {approved_usage}"' in code
+    assert r'business_context=f"Business purpose: {business_purpose}\nApproved usage: {approved_usage}"' in code
     assert "prompt_template=CONFIG.ai_prompt_config.dq_rule_suggestion_prompt_template" in code
     assert "CONFIG.ai_prompt_config.dq_rule_candidate_template" not in code
-    assert 'business_context = selected_agreement.get("business_context", "")' not in code
-    assert 'ownership = selected_agreement.get("ownership", "")' not in code
-    assert 'print(f"business_context:' not in code
-    assert 'print(f"ownership:' not in code
 
 
 def test_00_env_config_keeps_bootstrap_flow_without_load_config():

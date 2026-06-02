@@ -9,6 +9,7 @@ steps execute with explicit, validated runtime context.
 
 from __future__ import annotations
 
+from copy import deepcopy
 from dataclasses import dataclass, field
 from importlib.resources import files
 from pathlib import Path
@@ -256,24 +257,42 @@ class GovernanceConfig:
 
 @dataclass(frozen=True)
 class DataAgreementConfig:
-    """Widget defaults owned specifically by the standalone ``01_da`` intake notebook.
+    """Editable ``01_da`` table names and widget definitions.
 
     Parameters
     ----------
-    source_systems, refresh_frequencies, allowed_consumer_types, expected_outputs : tuple[str, ...]
-        Dropdown choices shown by the intake form.
-    renewal_options : tuple[str, ...]
-        Renewal dropdown choices, normally ``("Yes", "No")``.
-    default_values : dict[str, Any]
-        Initial values merged into each newly rendered form.
+    metadata_tables : dict[str, str]
+        Lightweight metadata table names prepared by ``00_env_config``.
+    data_steward_widget, data_agreement_widget : dict[str, Any]
+        Visible standard columns and organization-specific ``custom_fields``.
+        Custom fields are rendered dynamically and persisted in
+        ``custom_fields_json`` instead of becoming physical table columns.
     """
 
-    source_systems: tuple[str, ...] = ("ERP", "CRM", "SharePoint", "Manual Upload", "Lakehouse")
-    refresh_frequencies: tuple[str, ...] = ("One Time", "Daily", "Weekly", "Monthly", "Quarterly", "Ad Hoc", "Not Applicable")
-    allowed_consumer_types: tuple[str, ...] = ("Internal Department", "Faculty", "Central Unit", "Project Team", "External Partner", "System / Application")
-    expected_outputs: tuple[str, ...] = ("Dashboard", "Report", "Data Extract", "Downstream Table", "API", "ML / AI Use", "Operational Process")
-    renewal_options: tuple[str, ...] = ("Yes", "No")
-    default_values: dict[str, Any] = field(default_factory=lambda: {"agreement_name": "Sample Data Agreement", "renewal_required": "Yes", "refresh_frequency": "Daily"})
+    metadata_tables: dict[str, str] = field(default_factory=lambda: {
+        "data_steward": "METADATA_DATA_STEWARD",
+        "data_agreement": "METADATA_DATA_AGREEMENT",
+    })
+    data_steward_widget: dict[str, Any] = field(default_factory=lambda: {
+        "visible_columns": [
+            "steward_id", "steward_name", "steward_role", "contact",
+            "effective_from", "effective_to", "is_active",
+        ],
+        "custom_fields": [],
+    })
+    data_agreement_widget: dict[str, Any] = field(default_factory=lambda: {
+        "visible_columns": [
+            "agreement_name", "domain", "steward_id", "start_date",
+            "expiry_date", "business_purpose",
+            "approved_usage",
+        ],
+        "custom_fields": [],
+    })
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "metadata_tables", deepcopy(dict(self.metadata_tables or {})))
+        object.__setattr__(self, "data_steward_widget", deepcopy(dict(self.data_steward_widget or {})))
+        object.__setattr__(self, "data_agreement_widget", deepcopy(dict(self.data_agreement_widget or {})))
 
 
 @dataclass(frozen=True)

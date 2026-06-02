@@ -17,7 +17,10 @@ No summary available.
 - Source file path: `src/fabricops_kit/data_agreement.py`
 - Source reference: <a href="../../api/modules/data_agreement/#_column_names">Module source anchor</a>
 - Inbound references count: 1
-- Outbound references count: 0
+- Outbound references count: 1
 
 ## Inbound references
-- <a href="../setup_data_agreement_tables/"><code>fabricops_kit.data_agreement.setup_data_agreement_tables</code></a>
+- <a href="../internal/data_agreement/_ensure_metadata_tables/"><code>fabricops_kit.data_agreement._ensure_metadata_tables</code></a>
+
+## Outbound references
+- <a href="../internal/data_agreement/_coerce_row_dicts/"><code>fabricops_kit.data_agreement._coerce_row_dicts</code></a>
