@@ -579,7 +579,9 @@
     "inbound": [
       "fabricops_kit.data_agreement._list_data_stewards"
     ],
-    "outbound": [],
+    "outbound": [
+      "fabricops_kit.data_agreement._to_bool"
+    ],
     "source_file": "src/fabricops_kit/data_agreement.py",
     "summary": "No summary available."
   },
@@ -693,6 +695,7 @@
       "fabricops_kit.data_agreement._parse_iso_date",
       "fabricops_kit.data_agreement._serialize_custom_fields",
       "fabricops_kit.data_agreement._table_name",
+      "fabricops_kit.data_agreement._to_bool",
       "fabricops_kit.data_agreement._write_row",
       "fabricops_kit.metadata.build_runtime_audit_fields"
     ],
@@ -954,7 +957,8 @@
       "fabricops_kit.data_agreement._render_maintenance_widget"
     ],
     "outbound": [
-      "fabricops_kit.config.get"
+      "fabricops_kit.config.get",
+      "fabricops_kit.data_agreement._to_bool"
     ],
     "source_file": "src/fabricops_kit/data_agreement.py",
     "summary": "No summary available."
@@ -978,9 +982,10 @@
       "fabricops_kit.data_agreement._list_data_agreements",
       "fabricops_kit.data_agreement._list_data_stewards",
       "fabricops_kit.data_agreement._render_custom_fields",
+      "fabricops_kit.data_agreement._set_widget_value",
       "fabricops_kit.data_agreement._standard_widget",
-      "fabricops_kit.data_agreement._to_iso_date",
-      "fabricops_kit.data_agreement._widget_config"
+      "fabricops_kit.data_agreement._widget_config",
+      "fabricops_kit.data_agreement._widget_field_value"
     ],
     "source_file": "src/fabricops_kit/data_agreement.py",
     "summary": "No summary available."
@@ -1014,6 +1019,21 @@
     "summary": "No summary available."
   },
   {
+    "name": "_set_widget_value",
+    "qualified_name": "fabricops_kit.data_agreement._set_widget_value",
+    "module": "data_agreement",
+    "type": "internal",
+    "role": "internal",
+    "inbound": [
+      "fabricops_kit.data_agreement._render_maintenance_widget"
+    ],
+    "outbound": [
+      "fabricops_kit.data_agreement._to_bool"
+    ],
+    "source_file": "src/fabricops_kit/data_agreement.py",
+    "summary": "No summary available."
+  },
+  {
     "name": "_standard_widget",
     "qualified_name": "fabricops_kit.data_agreement._standard_widget",
     "module": "data_agreement",
@@ -1022,7 +1042,9 @@
     "inbound": [
       "fabricops_kit.data_agreement._render_maintenance_widget"
     ],
-    "outbound": [],
+    "outbound": [
+      "fabricops_kit.data_agreement._to_bool"
+    ],
     "source_file": "src/fabricops_kit/data_agreement.py",
     "summary": "No summary available."
   },
@@ -1046,6 +1068,23 @@
     "summary": "No summary available."
   },
   {
+    "name": "_to_bool",
+    "qualified_name": "fabricops_kit.data_agreement._to_bool",
+    "module": "data_agreement",
+    "type": "internal",
+    "role": "internal",
+    "inbound": [
+      "fabricops_kit.data_agreement._active_steward",
+      "fabricops_kit.data_agreement._create_or_update_data_steward",
+      "fabricops_kit.data_agreement._render_custom_fields",
+      "fabricops_kit.data_agreement._set_widget_value",
+      "fabricops_kit.data_agreement._standard_widget"
+    ],
+    "outbound": [],
+    "source_file": "src/fabricops_kit/data_agreement.py",
+    "summary": "No summary available."
+  },
+  {
     "name": "_to_iso_date",
     "qualified_name": "fabricops_kit.data_agreement._to_iso_date",
     "module": "data_agreement",
@@ -1053,7 +1092,7 @@
     "role": "internal",
     "inbound": [
       "fabricops_kit.data_agreement._collect_custom_fields",
-      "fabricops_kit.data_agreement._render_maintenance_widget"
+      "fabricops_kit.data_agreement._widget_field_value"
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/data_agreement.py",
@@ -1071,6 +1110,21 @@
     ],
     "outbound": [
       "fabricops_kit.data_agreement._config_value"
+    ],
+    "source_file": "src/fabricops_kit/data_agreement.py",
+    "summary": "No summary available."
+  },
+  {
+    "name": "_widget_field_value",
+    "qualified_name": "fabricops_kit.data_agreement._widget_field_value",
+    "module": "data_agreement",
+    "type": "internal",
+    "role": "internal",
+    "inbound": [
+      "fabricops_kit.data_agreement._render_maintenance_widget"
+    ],
+    "outbound": [
+      "fabricops_kit.data_agreement._to_iso_date"
     ],
     "source_file": "src/fabricops_kit/data_agreement.py",
     "summary": "No summary available."

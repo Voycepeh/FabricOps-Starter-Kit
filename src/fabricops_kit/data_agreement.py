@@ -201,7 +201,7 @@ def _render_custom_fields(config: list[dict[str, Any]] | dict[str, Any], *, valu
         elif field_type == "date":
             widget = widgets.DatePicker(value=date.fromisoformat(str(value)[:10]) if value else None, **common)
         elif field_type == "boolean":
-            widget = widgets.Checkbox(value=bool(value), **common)
+            widget = widgets.Checkbox(value=_to_bool(value), **common)
         elif field_type == "text":
             widget = widgets.Text(value=str(value or ""), **common)
         else:
@@ -345,8 +345,27 @@ def _latest_by_key(rows: Any, key: str) -> list[dict[str, Any]]:
     return sorted(latest.values(), key=lambda row: str(row.get(key) or "").lower())
 
 
+def _to_bool(value: Any) -> bool:
+    """Normalize common notebook and metadata boolean representations.
+
+    Blank values are treated as false. Any non-blank value outside the
+    supported true/false spellings raises a clear validation error instead of
+    relying on Python string truthiness.
+    """
+    if isinstance(value, bool):
+        return value
+    if value is None:
+        return False
+    normalized = str(value).strip().lower()
+    if normalized in {"true", "1", "yes", "y"}:
+        return True
+    if normalized in {"", "false", "0", "no", "n"}:
+        return False
+    raise ValueError(f"Unsupported boolean value: {value!r}. Use true/false, 1/0, yes/no, or y/n.")
+
+
 def _active_steward(row: dict[str, Any]) -> bool:
-    if str(row.get("is_active") or "").strip().lower() not in {"true", "1", "yes"}:
+    if not _to_bool(row.get("is_active")):
         return False
     today = datetime.now(timezone.utc).date()
     try:
@@ -439,7 +458,7 @@ def _create_or_update_data_steward(*, spark: Any, config: Any, env_name: str, va
         Appended steward row.
     """
     row = {field: values.get(field, "") for field in DATA_STEWARD_VISIBLE_FIELDS}
-    row["is_active"] = bool(row["is_active"])
+    row["is_active"] = "true" if _to_bool(row["is_active"]) else "false"
     required = ["steward_id", "steward_name", "steward_role", "contact"]
     missing = [field for field in required if not str(row.get(field) or "").strip()]
     if missing:
@@ -616,6 +635,21 @@ def get_selected_agreement() -> dict[str, Any]:
     return dict(_SELECTED_AGREEMENT)
 
 
+def _set_widget_value(widget: Any, value: Any) -> None:
+    """Assign a stored value using the widget's expected runtime type."""
+    current = getattr(widget, "value", None)
+    if isinstance(current, tuple):
+        value = tuple(value or ())
+    elif isinstance(current, bool):
+        value = _to_bool(value)
+    widget.value = value
+
+
+def _widget_field_value(field: str, value: Any) -> Any:
+    """Convert only date fields before passing widget values to persistence."""
+    return _to_iso_date(value) if field in {"effective_from", "effective_to", "start_date", "expiry_date"} else value
+
+
 def _standard_widget(field: str, value: Any = "", *, options: list[Any] | None = None) -> Any:
     import ipywidgets as widgets
     description = field.replace("_", " ").title()
@@ -624,7 +658,7 @@ def _standard_widget(field: str, value: Any = "", *, options: list[Any] | None =
     if field in {"effective_from", "effective_to", "start_date", "expiry_date"}:
         return widgets.DatePicker(value=date.fromisoformat(str(value)[:10]) if value else None, description=description)
     if field == "is_active":
-        return widgets.Checkbox(value=True if value == "" else bool(value), description=description)
+        return widgets.Checkbox(value=True if value == "" else _to_bool(value), description=description)
     if field in {"business_purpose", "approved_usage"}:
         return widgets.Textarea(value=str(value or ""), description=description)
     return widgets.Text(value=str(value or ""), description=description)
@@ -659,16 +693,16 @@ def _render_maintenance_widget(*, spark: Any, config: Any, env_name: str, kind: 
             value = row.get(field, "")
             if field in {"effective_from", "effective_to", "start_date", "expiry_date"}:
                 value = date.fromisoformat(str(value)[:10]) if value else None
-            widget.value = value
+            _set_widget_value(widget, value)
         stored = _deserialize_custom_fields(row.get("custom_fields_json", ""))
         for key, widget in custom.items():
-            widget.value = stored.get(key, widget.value)
+            _set_widget_value(widget, stored.get(key, widget.value))
         if identity_context is not None:
             identity_context.value = (f"Agreement ID: {row.get('agreement_id', '')} | Current version: {row.get('contract_version', '')}" if row else "Agreement ID and version are generated when saved.")
     selected.observe(_populate, names="value")
     def _save(_: Any) -> None:
         with output:
-            values = {key: _to_iso_date(widget.value) for key, widget in form.items()}
+            values = {key: _widget_field_value(key, widget.value) for key, widget in form.items()}
             extras = _collect_custom_fields(widget_config, custom)
             if is_steward:
                 row = _create_or_update_data_steward(spark=spark, config=config, env_name=env_name, values=values, custom_fields=extras)

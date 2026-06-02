@@ -208,3 +208,82 @@ def test_select_agreement_loads_configured_rows_for_downstream_notebooks(monkeyp
     assert calls == [(config, "dev", "spark")]
     assert dropdown is not None
     assert data_agreement.get_selected_agreement() == {"agreement_id": "DA-001", "contract_version": "1.0.0", "agreement_name": "Orders", "domain": "Operations"}
+
+
+@pytest.mark.parametrize(("value", "expected"), [
+    (True, True), (False, False), ("true", True), ("false", False),
+    (1, True), (0, False), ("yes", True), ("no", False),
+    ("y", True), ("n", False), ("", False), (None, False),
+])
+def test_to_bool_normalizes_supported_notebook_values(value, expected):
+    assert data_agreement._to_bool(value) is expected
+
+
+def test_steward_save_normalizes_false_boolean_and_string_to_inactive(monkeypatch):
+    rows = []
+    monkeypatch.setattr(data_agreement, "_write_row", lambda **kwargs: rows.append(kwargs["row"]))
+    for is_active in (False, "False"):
+        row = data_agreement._create_or_update_data_steward(
+            spark=object(), config=_config(), env_name="dev", values=_steward(is_active=is_active)
+        )
+        assert row["is_active"] == "false"
+        assert data_agreement._active_steward(row) is False
+    assert [row["is_active"] for row in rows] == ["false", "false"]
+
+
+def test_active_steward_filter_excludes_saved_inactive_row(monkeypatch):
+    writes = []
+    monkeypatch.setattr(data_agreement, "_write_row", lambda **kwargs: writes.append(kwargs["row"]))
+    inactive = data_agreement._create_or_update_data_steward(
+        spark=object(), config=_config(), env_name="dev", values=_steward(steward_id="inactive", is_active="False")
+    )
+    monkeypatch.setattr(data_agreement, "read_lakehouse_table", lambda *args, **kwargs: [inactive, _steward(steward_id="active", is_active=True)])
+    assert [row["steward_id"] for row in data_agreement._list_data_stewards(_config(), "dev")] == ["active"]
+
+
+def test_widget_save_path_preserves_checkbox_false(monkeypatch):
+    _install_widget_stubs(monkeypatch)
+    writes = []
+    monkeypatch.setattr(data_agreement, "_list_data_stewards", lambda *args, **kwargs: [])
+    monkeypatch.setattr(data_agreement, "_write_row", lambda **kwargs: writes.append(kwargs["row"]))
+    widget = data_agreement.render_data_steward_widget(_config(), "dev", spark=object())
+    values = _steward(is_active=False)
+    for field, control in widget["fields"].items():
+        control.value = date.fromisoformat(values[field]) if field == "effective_from" else values[field]
+    widget["save_button"].callbacks[0](None)
+    assert writes[0]["is_active"] == "false"
+    assert data_agreement._active_steward(writes[0]) is False
+
+
+def test_multiselect_custom_field_round_trips_json_to_widget_tuple(monkeypatch):
+    _install_widget_stubs(monkeypatch)
+    custom_config = {"custom_fields": [{"key": "groups", "label": "Groups", "type": "multiselect", "options": ["ODI", "Faculty"]}]}
+    stored = data_agreement._deserialize_custom_fields(data_agreement._serialize_custom_fields({"groups": ["ODI", "Faculty"]}))
+    widgets = data_agreement._render_custom_fields(custom_config)
+    data_agreement._set_widget_value(widgets["groups"], stored["groups"])
+    assert widgets["groups"].value == ("ODI", "Faculty")
+
+
+def test_metadata_setup_and_steward_writes_use_string_is_active_schema(monkeypatch):
+    setup_rows, write_rows = [], []
+    schemas = {DATA_STEWARD_TABLE: data_agreement._get_data_steward_schema(), DATA_AGREEMENT_TABLE: data_agreement._get_data_agreement_schema()}
+    attempts = {table: 0 for table in schemas}
+    class Frame:
+        def limit(self, count): return self
+    class Spark:
+        def createDataFrame(self, rows):
+            setup_rows.extend(rows)
+            return Frame()
+    def read_table(config, env, target, table, **kwargs):
+        attempts[table] += 1
+        if attempts[table] == 1:
+            raise RuntimeError("missing")
+        return [dict.fromkeys(schemas[table], "")]
+    monkeypatch.setattr(data_agreement, "read_lakehouse_table", read_table)
+    monkeypatch.setattr(data_agreement, "write_lakehouse_table", lambda *args, **kwargs: None)
+    data_agreement._ensure_metadata_tables(_config(), "dev", spark=Spark())
+    monkeypatch.setattr(data_agreement, "_write_row", lambda **kwargs: write_rows.append(kwargs["row"]))
+    data_agreement._create_or_update_data_steward(spark=object(), config=_config(), env_name="dev", values=_steward(is_active=True))
+    assert next(row for row in setup_rows if "is_active" in row)["is_active"] == ""
+    assert write_rows[0]["is_active"] == "true"
+    assert isinstance(write_rows[0]["is_active"], str)

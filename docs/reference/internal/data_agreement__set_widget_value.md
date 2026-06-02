@@ -1,4 +1,4 @@
-# _standard_widget
+# _set_widget_value
 
 **Module:** `data_agreement`  
 **Classification:** Internal helper
@@ -9,13 +9,13 @@ No summary available.
 
 ## Function manifest
 
-- Fully qualified function name: `fabricops_kit.data_agreement._standard_widget`
-- Short name: `_standard_widget`
+- Fully qualified function name: `fabricops_kit.data_agreement._set_widget_value`
+- Short name: `_set_widget_value`
 - Module: `data_agreement`
 - Classification: Internal helper
 - Related module: `data_agreement`
 - Source file path: `src/fabricops_kit/data_agreement.py`
-- Source reference: <a href="../../api/modules/data_agreement/#_standard_widget">Module source anchor</a>
+- Source reference: <a href="../../api/modules/data_agreement/#_set_widget_value">Module source anchor</a>
 - Inbound references count: 1
 - Outbound references count: 1
 

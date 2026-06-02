@@ -21,4 +21,4 @@ No summary available.
 
 ## Inbound references
 - <a href="../internal/data_agreement/_collect_custom_fields/"><code>fabricops_kit.data_agreement._collect_custom_fields</code></a>
-- <a href="../internal/data_agreement/_render_maintenance_widget/"><code>fabricops_kit.data_agreement._render_maintenance_widget</code></a>
+- <a href="../internal/data_agreement/_widget_field_value/"><code>fabricops_kit.data_agreement._widget_field_value</code></a>

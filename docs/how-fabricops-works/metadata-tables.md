@@ -95,7 +95,7 @@ Add organization-specific concepts such as a faculty, department, division, cons
 | contact | steward@example.com | Maintained | Steward contact details |
 | effective_from | 2026-01-01 | Maintained | Start date for the steward assignment |
 | effective_to | 2026-12-31 | Maintained | Optional end date for the steward assignment |
-| is_active | true | Maintained | Whether the steward assignment is available for active use |
+| is_active | `true` | Maintained | Lowercase `true` or `false` string controlling whether the steward assignment is available for active use. |
 | custom_fields_json | `{"group":"Shared Services"}` | Implemented | Config-driven extra fields collected by the steward widget. |
 
 ### `METADATA_DATA_AGREEMENT`
