@@ -1,75 +1,75 @@
 :root {
-  --md-primary-fg-color: #0078d4;
-  --md-primary-fg-color--light: #2899f5;
-  --md-primary-fg-color--dark: #005a9e;
+  --md-primary-fg-color: #0f8f83;
+  --md-primary-fg-color--light: #5ee6c5;
+  --md-primary-fg-color--dark: #075f59;
 
-  --md-accent-fg-color: #00a6b2;
-  --md-accent-fg-color--transparent: rgba(0, 166, 178, 0.12);
+  --md-accent-fg-color: #47d7ac;
+  --md-accent-fg-color--transparent: rgba(71, 215, 172, 0.14);
 }
 
-/* Keep the top bar clean and Microsoft-like */
+/* Clean Fabric-inspired top bar */
 .md-header {
-  background-color: #0078d4;
+  background-color: #0f8f83;
 }
 
-/* Slightly darker tabs, no gradient */
+/* Slightly deeper navigation tabs */
 .md-tabs {
-  background-color: #005a9e;
+  background-color: #08756f;
 }
 
 /* Primary CTA buttons */
 .md-button--primary {
-  background-color: #0078d4;
-  border-color: #0078d4;
+  background-color: #0f8f83;
+  border-color: #0f8f83;
   color: #ffffff;
 }
 
 .md-button--primary:hover {
-  background-color: #005a9e;
-  border-color: #005a9e;
+  background-color: #075f59;
+  border-color: #075f59;
   color: #ffffff;
 }
 
 /* Secondary buttons */
 .md-button {
-  border-color: #0078d4;
-  color: #0078d4;
+  border-color: #0f8f83;
+  color: #0f8f83;
 }
 
 .md-button:hover {
-  background-color: rgba(0, 120, 212, 0.08);
-  border-color: #005a9e;
-  color: #005a9e;
+  background-color: rgba(71, 215, 172, 0.12);
+  border-color: #47d7ac;
+  color: #075f59;
 }
 
 /* Links */
 .md-typeset a {
-  color: #0078d4;
+  color: #0f8f83;
 }
 
 .md-typeset a:hover {
-  color: #005a9e;
+  color: #075f59;
 }
 
 /* Active and hovered navigation links */
 .md-nav__link--active,
 .md-nav__link:focus,
 .md-nav__link:hover {
-  color: #0078d4;
+  color: #0f8f83;
 }
 
-/* Table header touch */
+/* Table headers */
 .md-typeset table:not([class]) th {
-  background-color: rgba(0, 120, 212, 0.08);
+  background-color: rgba(71, 215, 172, 0.12);
 }
 
-/* Admonition accent */
+/* Admonitions */
 .md-typeset .admonition,
 .md-typeset details {
-  border-color: #00a6b2;
+  border-color: #47d7ac;
 }
 
 .md-typeset .admonition-title,
 .md-typeset summary {
-  background-color: rgba(0, 166, 178, 0.08);
+  background-color: rgba(71, 215, 172, 0.12);
 }
