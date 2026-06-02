@@ -20,5 +20,5 @@ Create, validate, and report readiness for agreement metadata tables.
 - Outbound references count: 2
 
 ## Outbound references
-- <a href="../ensure_metadata_tables/"><code>fabricops_kit.data_agreement.ensure_metadata_tables</code></a>
-- <a href="../list_data_stewards/"><code>fabricops_kit.data_agreement.list_data_stewards</code></a>
+- <a href="../internal/data_agreement/_ensure_metadata_tables/"><code>fabricops_kit.data_agreement._ensure_metadata_tables</code></a>
+- <a href="../internal/data_agreement/_list_data_stewards/"><code>fabricops_kit.data_agreement._list_data_stewards</code></a>

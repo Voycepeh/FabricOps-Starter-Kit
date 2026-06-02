@@ -3,36 +3,25 @@ from pathlib import Path
 from types import ModuleType, SimpleNamespace
 import sys
 
+import pytest
+
 import fabricops_kit.data_agreement as data_agreement
 from fabricops_kit.config import DataAgreementConfig
-from fabricops_kit.data_agreement import (
-    DATA_AGREEMENT_TABLE,
-    DATA_STEWARD_TABLE,
-    create_or_update_data_agreement,
-    create_or_update_data_steward,
-    deserialize_custom_fields,
-    ensure_metadata_tables,
-    get_data_agreement_schema,
-    get_data_steward_schema,
-    get_standard_runtime_audit_columns,
-    get_widget_visible_fields,
-    list_data_stewards,
-    render_custom_fields,
-    serialize_custom_fields,
-)
+from fabricops_kit.data_agreement import DATA_AGREEMENT_TABLE, DATA_STEWARD_TABLE
 from fabricops_kit.fabric_input_output import FabricStore
 
 
-def _config():
+def _config(*, metadata_tables=None):
     store = FabricStore(env="dev", workspace_id="workspace", item_id="metadata-item", name="lh_metadata_dev", kind="lakehouse")
     intake = DataAgreementConfig(
+        metadata_tables=metadata_tables or {"data_steward": DATA_STEWARD_TABLE, "data_agreement": DATA_AGREEMENT_TABLE},
         data_steward_widget={
-            "visible_columns": ["steward_id", "steward_name", "steward_role", "contact", "effective_from", "effective_to", "is_active", "_activity_id"],
+            "visible_columns": ["steward_id", "steward_name", "steward_role", "contact", "effective_from", "effective_to", "is_active", "custom_fields_json", "_activity_id"],
             "custom_fields": [{"key": "group", "label": "Group", "type": "text", "required": False}],
         },
         data_agreement_widget={
-            "visible_columns": ["agreement_id", "contract_version", "agreement_name", "domain", "steward_id", "start_date", "expiry_date", "business_purpose", "approved_usage", "_committed_by"],
-            "custom_fields": [{"key": "expected_output", "label": "Expected output", "type": "select", "options": ["Dashboard", "Report"]}],
+            "visible_columns": ["agreement_id", "contract_version", "agreement_name", "domain", "steward_id", "start_date", "expiry_date", "business_purpose", "approved_usage", "custom_fields_json", "_committed_by"],
+            "custom_fields": [{"key": "consumer_group", "label": "Consumer group", "type": "select", "options": ["ODI", "Faculty"]}],
         },
     )
     return SimpleNamespace(path_config=SimpleNamespace(paths={"dev": {"metadata": store}}), data_agreement_config=intake)
@@ -43,91 +32,179 @@ def _steward(**overrides):
 
 
 def _agreement(**overrides):
-    return {"agreement_id": "DA-001", "contract_version": "1.0.0", "agreement_name": "Orders Agreement", "domain": "Operations", "steward_id": "steward-001", "start_date": "2026-01-01", "expiry_date": "2026-12-31", "business_purpose": "Governed reporting", "approved_usage": "Approved reporting only", **overrides}
+    return {"agreement_name": "Orders Agreement", "domain": "Operations", "steward_id": "steward-001", "start_date": "2026-01-01", "expiry_date": "2026-12-31", "business_purpose": "Governed reporting", "approved_usage": "Approved reporting only", **overrides}
 
 
-def test_schemas_include_lightweight_fields_and_runtime_audit_columns():
-    audit = get_standard_runtime_audit_columns()
-    assert get_data_steward_schema() == ["steward_id", "steward_name", "steward_role", "contact", "effective_from", "effective_to", "is_active", "custom_fields_json", *audit]
-    assert get_data_agreement_schema() == ["agreement_id", "contract_version", "agreement_name", "domain", "steward_id", "start_date", "expiry_date", "business_purpose", "approved_usage", "custom_fields_json", *audit]
-    assert "department" not in get_data_steward_schema()
-    assert "faculty" not in get_data_steward_schema()
-    assert "expected_output" not in get_data_agreement_schema()
-
-
-def test_widget_visible_fields_always_hide_backend_audit_columns():
-    config = _config()
-    assert "_activity_id" not in get_widget_visible_fields(config, "data_steward_widget")
-    assert "_committed_by" not in get_widget_visible_fields(config, "data_agreement_widget")
-
-
-def test_custom_text_and_select_fields_render_and_round_trip_json(monkeypatch):
+def _install_widget_stubs(monkeypatch):
     class Widget:
         def __init__(self, value=None, options=(), **kwargs):
             self.value = value
             self.options = options
+            self.description = kwargs.get("description", "")
+            self.callbacks = []
+        def observe(self, callback, names=None): self.callbacks.append(callback)
+        def on_click(self, callback): self.callbacks.append(callback)
+    class Output(Widget):
+        def __enter__(self): return self
+        def __exit__(self, *args): return False
     widgets = ModuleType("ipywidgets")
-    for name in ("Text", "Textarea", "Dropdown", "SelectMultiple", "DatePicker", "Checkbox"):
+    for name in ("Text", "Textarea", "Dropdown", "SelectMultiple", "DatePicker", "Checkbox", "Button", "HTML"):
         setattr(widgets, name, Widget)
+    widgets.Output = Output
+    widgets.VBox = lambda values: values
+    display = ModuleType("IPython.display")
+    display.display = lambda *args, **kwargs: None
+    ipython = ModuleType("IPython")
+    ipython.display = display
     monkeypatch.setitem(sys.modules, "ipywidgets", widgets)
+    monkeypatch.setitem(sys.modules, "IPython", ipython)
+    monkeypatch.setitem(sys.modules, "IPython.display", display)
+
+
+def test_schemas_remain_lightweight_and_include_runtime_audit_columns():
+    audit = data_agreement._get_standard_runtime_audit_columns()
+    assert data_agreement._get_data_steward_schema() == ["steward_id", "steward_name", "steward_role", "contact", "effective_from", "effective_to", "is_active", "custom_fields_json", *audit]
+    assert data_agreement._get_data_agreement_schema() == ["agreement_id", "contract_version", "agreement_name", "domain", "steward_id", "start_date", "expiry_date", "business_purpose", "approved_usage", "custom_fields_json", *audit]
+    for physical_column in ("department", "faculty", "expected_output", "restricted_usage", "source_system", "refresh_frequency", "renewal_required"):
+        assert physical_column not in data_agreement._get_data_steward_schema()
+        assert physical_column not in data_agreement._get_data_agreement_schema()
+
+
+def test_widget_visible_fields_hide_audit_json_and_generated_agreement_ids():
+    config = _config()
+    steward_fields = data_agreement._get_widget_visible_fields(config, "data_steward_widget")
+    agreement_fields = data_agreement._get_widget_visible_fields(config, "data_agreement_widget")
+    assert "_activity_id" not in steward_fields
+    assert "_committed_by" not in agreement_fields
+    assert "custom_fields_json" not in steward_fields + agreement_fields
+    assert "agreement_id" not in agreement_fields
+    assert "contract_version" not in agreement_fields
+
+
+def test_custom_text_and_select_fields_render_and_round_trip_json(monkeypatch):
+    _install_widget_stubs(monkeypatch)
     config = _config().data_agreement_config
-    steward_widgets = render_custom_fields(config.data_steward_widget, values={"group": "Shared Services"})
-    agreement_widgets = render_custom_fields(config.data_agreement_widget, values={"expected_output": "Report"})
+    steward_widgets = data_agreement._render_custom_fields(config.data_steward_widget, values={"group": "Shared Services"})
+    agreement_widgets = data_agreement._render_custom_fields(config.data_agreement_widget, values={"consumer_group": "Faculty"})
     assert steward_widgets["group"].value == "Shared Services"
-    assert list(agreement_widgets["expected_output"].options) == ["Dashboard", "Report"]
-    encoded = serialize_custom_fields({"expected_output": "Dashboard", "review_date": date(2026, 6, 2)})
-    assert deserialize_custom_fields(encoded) == {"expected_output": "Dashboard", "review_date": "2026-06-02"}
+    assert list(agreement_widgets["consumer_group"].options) == ["ODI", "Faculty"]
+    encoded = data_agreement._serialize_custom_fields({"consumer_group": "ODI", "review_date": date(2026, 6, 2)})
+    assert data_agreement._deserialize_custom_fields(encoded) == {"consumer_group": "ODI", "review_date": "2026-06-02"}
 
 
-def test_ensure_metadata_tables_is_idempotent(monkeypatch):
-    reads = []
-    tables = {DATA_STEWARD_TABLE: get_data_steward_schema(), DATA_AGREEMENT_TABLE: get_data_agreement_schema()}
-    monkeypatch.setattr(data_agreement, "read_lakehouse_table", lambda config, env, target, table, **kwargs: reads.append((env, target, table)) or [dict.fromkeys(tables[table], "")])
+def test_setup_tables_is_idempotent_and_does_not_seed_fake_stewards(monkeypatch):
+    reads, writes, source_rows = [], [], []
+    schemas = {DATA_STEWARD_TABLE: data_agreement._get_data_steward_schema(), DATA_AGREEMENT_TABLE: data_agreement._get_data_agreement_schema()}
+    attempts = {table: 0 for table in schemas}
+    class Frame:
+        def limit(self, count):
+            assert count == 0
+            return self
     class Spark:
-        def createDataFrame(self, rows): raise AssertionError("existing tables must not be recreated")
-    first = ensure_metadata_tables(_config(), "dev", spark=Spark())
-    second = ensure_metadata_tables(_config(), "dev", spark=Spark())
-    assert first == second == {"status": "ready", "tables": [DATA_STEWARD_TABLE, DATA_AGREEMENT_TABLE], "created_tables": []}
-    assert reads == [("dev", "metadata", DATA_STEWARD_TABLE), ("dev", "metadata", DATA_AGREEMENT_TABLE)] * 2
+        def createDataFrame(self, rows):
+            source_rows.append(rows)
+            return Frame()
+    def read_table(config, env, target, table, **kwargs):
+        reads.append((env, target, table))
+        attempts[table] += 1
+        if attempts[table] == 1:
+            raise RuntimeError("missing")
+        return [dict.fromkeys(schemas[table], "")]
+    monkeypatch.setattr(data_agreement, "read_lakehouse_table", read_table)
+    monkeypatch.setattr(data_agreement, "write_lakehouse_table", lambda df, config, env, target, table, **kwargs: writes.append((env, target, table, kwargs)))
+    first = data_agreement._ensure_metadata_tables(_config(), "dev", spark=Spark())
+    second = data_agreement._ensure_metadata_tables(_config(), "dev", spark=Spark())
+    assert first["created_tables"] == [DATA_STEWARD_TABLE, DATA_AGREEMENT_TABLE]
+    assert second["created_tables"] == []
+    assert writes == [("dev", "metadata", DATA_STEWARD_TABLE, {"mode": "ignore", "overwrite_schema": True}), ("dev", "metadata", DATA_AGREEMENT_TABLE, {"mode": "ignore", "overwrite_schema": True})]
+    assert source_rows == [[{field: "" for field in schemas[DATA_STEWARD_TABLE]}], [{field: "" for field in schemas[DATA_AGREEMENT_TABLE]}]]
+    assert all(not any(row.values()) for rows in source_rows for row in rows)
 
 
-def test_list_data_stewards_returns_only_latest_active_rows(monkeypatch):
+def test_active_steward_filter_excludes_inactive_future_and_expired_rows(monkeypatch):
     monkeypatch.setattr(data_agreement, "read_lakehouse_table", lambda *args, **kwargs: [
-        _steward(is_active=True, _committed_at="2026-01-01T00:00:00+00:00"),
-        _steward(is_active=False, _committed_at="2026-02-01T00:00:00+00:00"),
-        _steward(steward_id="steward-002", _committed_at="2026-02-01T00:00:00+00:00"),
+        _steward(steward_id="active"),
+        _steward(steward_id="inactive", is_active=False),
+        _steward(steward_id="future", effective_from="2099-01-01"),
+        _steward(steward_id="expired", effective_to="2000-01-01"),
     ])
-    assert [row["steward_id"] for row in list_data_stewards(_config(), "dev")] == ["steward-002"]
+    assert [row["steward_id"] for row in data_agreement._list_data_stewards(_config(), "dev")] == ["active"]
 
 
-def test_create_and_update_steward_append_audited_rows(monkeypatch):
-    writes = []
+def test_steward_create_update_use_runtime_audit_helper_and_configured_route(monkeypatch):
+    calls, writes = [], []
+    monkeypatch.setattr(data_agreement, "build_runtime_audit_fields", lambda **kwargs: calls.append(kwargs) or {field: f"audit:{field}" for field in data_agreement._get_standard_runtime_audit_columns()})
+    class Spark:
+        def createDataFrame(self, rows): return rows
+    monkeypatch.setattr(data_agreement, "write_lakehouse_table", lambda df, config, env, target, table, **kwargs: writes.append((df, env, target, table, kwargs)))
+    config = _config(metadata_tables={"data_steward": "CUSTOM_STEWARD", "data_agreement": "CUSTOM_AGREEMENT"})
+    row = data_agreement._create_or_update_data_steward(spark=Spark(), config=config, env_name="dev", values=_steward(), custom_fields={"group": "Shared Services"})
+    assert len(calls) == 1
+    assert all(row[field] == f"audit:{field}" for field in data_agreement._get_standard_runtime_audit_columns())
+    assert writes[0][1:] == ("dev", "metadata", "CUSTOM_STEWARD", {"mode": "append"})
+
+
+def test_agreement_create_update_generate_append_only_identity_and_audit(monkeypatch):
+    calls, writes = [], []
+    monkeypatch.setattr(data_agreement, "build_runtime_audit_fields", lambda **kwargs: calls.append(kwargs) or {field: f"audit:{field}" for field in data_agreement._get_standard_runtime_audit_columns()})
+    monkeypatch.setattr(data_agreement, "_list_data_stewards", lambda *args, **kwargs: [_steward()])
     monkeypatch.setattr(data_agreement, "_write_row", lambda **kwargs: writes.append(kwargs))
-    kwargs = {"spark": object(), "config": _config(), "env_name": "dev", "values": _steward(), "custom_fields": {"group": "Shared Services"}, "committed_by": "user@example.com", "committed_at": "2026-06-02T00:00:00+00:00"}
-    created = create_or_update_data_steward(**kwargs)
-    updated = create_or_update_data_steward(**{**kwargs, "values": _steward(steward_name="Updated Steward")})
-    assert len(writes) == 2
-    assert created["_committed_by"] == updated["_committed_by"] == "user@example.com"
-    assert deserialize_custom_fields(updated["custom_fields_json"]) == {"group": "Shared Services"}
+    monkeypatch.setattr(data_agreement, "_generate_agreement_id", lambda: "DA-GENERATED")
+    config = _config(metadata_tables={"data_steward": "CUSTOM_STEWARD", "data_agreement": "CUSTOM_AGREEMENT"})
+    created = data_agreement._create_or_update_data_agreement(spark=object(), config=config, env_name="dev", values=_agreement(), custom_fields={"consumer_group": "ODI"})
+    updated = data_agreement._create_or_update_data_agreement(spark=object(), config=config, env_name="dev", values=_agreement(), selected_agreement=created, custom_fields={"consumer_group": "Faculty"})
+    assert (created["agreement_id"], created["contract_version"]) == ("DA-GENERATED", "1.0.0")
+    assert (updated["agreement_id"], updated["contract_version"]) == ("DA-GENERATED", "1.1.0")
+    assert len(calls) == len(writes) == 2
+    assert all(write["table"] == "CUSTOM_AGREEMENT" for write in writes)
+    assert all(updated[field] == f"audit:{field}" for field in data_agreement._get_standard_runtime_audit_columns())
+    assert data_agreement._deserialize_custom_fields(updated["custom_fields_json"]) == {"consumer_group": "Faculty"}
 
 
-def test_create_and_update_agreement_append_versions_and_require_active_steward(monkeypatch):
-    writes = []
-    monkeypatch.setattr(data_agreement, "_write_row", lambda **kwargs: writes.append(kwargs))
-    monkeypatch.setattr(data_agreement, "list_data_stewards", lambda *args, **kwargs: [_steward()])
-    kwargs = {"spark": object(), "config": _config(), "env_name": "dev", "values": _agreement(), "custom_fields": {"expected_output": "Dashboard"}, "committed_by": "user@example.com", "committed_at": "2026-06-02T00:00:00+00:00"}
-    created = create_or_update_data_agreement(**kwargs)
-    updated = create_or_update_data_agreement(**{**kwargs, "selected_agreement": created})
-    assert len(writes) == 2
-    assert updated["agreement_id"] == created["agreement_id"] == "DA-001"
-    assert updated["contract_version"] == "1.1.0"
-    assert updated["_committed_by"] == "user@example.com"
-    assert deserialize_custom_fields(updated["custom_fields_json"]) == {"expected_output": "Dashboard"}
+@pytest.mark.parametrize(("factory", "values", "message"), [
+    (data_agreement._create_or_update_data_steward, _steward(steward_name=""), "steward_name"),
+    (data_agreement._create_or_update_data_steward, _steward(effective_from="not-a-date"), "effective_from must be a valid ISO date"),
+    (data_agreement._create_or_update_data_agreement, _agreement(domain=""), "domain"),
+    (data_agreement._create_or_update_data_agreement, _agreement(expiry_date="not-a-date"), "expiry_date must be a valid ISO date"),
+])
+def test_create_update_validation_fails_clearly(monkeypatch, factory, values, message):
+    monkeypatch.setattr(data_agreement, "_list_data_stewards", lambda *args, **kwargs: [_steward()])
+    monkeypatch.setattr(data_agreement, "_write_row", lambda **kwargs: None)
+    with pytest.raises(ValueError, match=message):
+        factory(spark=object(), config=_config(), env_name="dev", values=values)
 
 
-def test_metadata_table_documentation_explains_json_extension_and_hidden_audit_fields():
+def test_widget_entrypoints_and_app_render_two_widgets(monkeypatch):
+    monkeypatch.setattr(data_agreement, "_render_maintenance_widget", lambda **kwargs: kwargs["kind"])
+    assert data_agreement.render_data_steward_widget(_config(), "dev", spark="spark") == "data_steward_widget"
+    assert data_agreement.render_data_agreement_widget(_config(), "dev", spark="spark") == "data_agreement_widget"
+    assert data_agreement.render_agreement_intake_app(spark="spark", config=_config(), env="dev") == {"data_steward": "data_steward_widget", "data_agreement": "data_agreement_widget"}
+
+
+def test_metadata_table_documentation_explains_generated_ids_json_extension_and_hidden_audit_fields():
     docs = Path("docs/how-fabricops-works/metadata-tables.md").read_text(encoding="utf-8")
     assert "## Lightweight `01_da` intake" in docs
     assert "stored in backend tables but hidden from normal widget users" in docs
     assert "`custom_fields_json`" in docs
     assert "Do not add a physical column for each local intake concept" in docs
+
+
+def test_agreement_widget_hides_generated_ids_and_shows_read_only_context(monkeypatch):
+    _install_widget_stubs(monkeypatch)
+    monkeypatch.setattr(data_agreement, "_list_data_agreements", lambda *args, **kwargs: [])
+    monkeypatch.setattr(data_agreement, "_list_data_stewards", lambda *args, **kwargs: [_steward()])
+    widget = data_agreement.render_data_agreement_widget(_config(), "dev", spark=object())
+    assert "agreement_id" not in widget["fields"]
+    assert "contract_version" not in widget["fields"]
+    assert widget["identity_context"].value == "Agreement ID and version are generated when saved."
+
+
+def test_select_agreement_loads_configured_rows_for_downstream_notebooks(monkeypatch):
+    _install_widget_stubs(monkeypatch)
+    calls = []
+    monkeypatch.setattr(data_agreement, "_load_agreements", lambda config, env, spark_session=None: calls.append((config, env, spark_session)) or [{"agreement_id": "DA-001", "contract_version": "1.0.0", "agreement_name": "Orders", "domain": "Operations"}])
+    config = _config()
+    dropdown = data_agreement.select_agreement(config, "dev", spark_session="spark")
+    assert calls == [(config, "dev", "spark")]
+    assert dropdown is not None
+    assert data_agreement.get_selected_agreement() == {"agreement_id": "DA-001", "contract_version": "1.0.0", "agreement_name": "Orders", "domain": "Operations"}

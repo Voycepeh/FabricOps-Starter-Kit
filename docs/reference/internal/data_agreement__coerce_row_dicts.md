@@ -21,5 +21,5 @@ No summary available.
 
 ## Inbound references
 - <a href="../internal/data_agreement/_column_names/"><code>fabricops_kit.data_agreement._column_names</code></a>
+- <a href="../internal/data_agreement/_latest_agreement_versions/"><code>fabricops_kit.data_agreement._latest_agreement_versions</code></a>
 - <a href="../internal/data_agreement/_latest_by_key/"><code>fabricops_kit.data_agreement._latest_by_key</code></a>
-- <a href="../internal/data_agreement/latest_agreement_versions/"><code>fabricops_kit.data_agreement.latest_agreement_versions</code></a>

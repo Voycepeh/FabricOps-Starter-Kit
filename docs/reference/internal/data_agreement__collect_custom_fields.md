@@ -1,21 +1,21 @@
-# collect_custom_fields
+# _collect_custom_fields
 
 **Module:** `data_agreement`  
-**Classification:** Optional
+**Classification:** Internal helper
 
 ## Purpose
 
-Collect and validate configured JSON-backed custom-field values.
+No summary available.
 
 ## Function manifest
 
-- Fully qualified function name: `fabricops_kit.data_agreement.collect_custom_fields`
-- Short name: `collect_custom_fields`
+- Fully qualified function name: `fabricops_kit.data_agreement._collect_custom_fields`
+- Short name: `_collect_custom_fields`
 - Module: `data_agreement`
-- Classification: Optional
+- Classification: Internal helper
 - Related module: `data_agreement`
 - Source file path: `src/fabricops_kit/data_agreement.py`
-- Source reference: <a href="../../api/modules/data_agreement/#collect_custom_fields">Module source anchor</a>
+- Source reference: <a href="../../api/modules/data_agreement/#_collect_custom_fields">Module source anchor</a>
 - Inbound references count: 1
 - Outbound references count: 2
 

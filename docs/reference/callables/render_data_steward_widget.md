@@ -1,7 +1,7 @@
 # render_data_steward_widget
 
 **Module:** `data_agreement`  
-**Classification:** Optional
+**Classification:** Essential
 
 ## Purpose
 
@@ -12,7 +12,7 @@ Render append-only data steward maintenance.
 - Fully qualified function name: `fabricops_kit.data_agreement.render_data_steward_widget`
 - Short name: `render_data_steward_widget`
 - Module: `data_agreement`
-- Classification: Optional
+- Classification: Essential
 - Related module: `data_agreement`
 - Source file path: `src/fabricops_kit/data_agreement.py`
 - Source reference: <a href="../../api/modules/data_agreement/#render_data_steward_widget">Module source anchor</a>

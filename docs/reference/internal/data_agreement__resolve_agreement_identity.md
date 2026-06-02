@@ -1,4 +1,4 @@
-# resolve_agreement_identity
+# _resolve_agreement_identity
 
 **Module:** `data_agreement`  
 **Classification:** Internal helper
@@ -9,16 +9,16 @@ No summary available.
 
 ## Function manifest
 
-- Fully qualified function name: `fabricops_kit.data_agreement.resolve_agreement_identity`
-- Short name: `resolve_agreement_identity`
+- Fully qualified function name: `fabricops_kit.data_agreement._resolve_agreement_identity`
+- Short name: `_resolve_agreement_identity`
 - Module: `data_agreement`
 - Classification: Internal helper
 - Related module: `data_agreement`
 - Source file path: `src/fabricops_kit/data_agreement.py`
-- Source reference: <a href="../../api/modules/data_agreement/#resolve_agreement_identity">Module source anchor</a>
+- Source reference: <a href="../../api/modules/data_agreement/#_resolve_agreement_identity">Module source anchor</a>
 - Inbound references count: 0
 - Outbound references count: 2
 
 ## Outbound references
 - <a href="../internal/data_agreement/_generate_agreement_id/"><code>fabricops_kit.data_agreement._generate_agreement_id</code></a>
-- <a href="../internal/data_agreement/next_minor_version/"><code>fabricops_kit.data_agreement.next_minor_version</code></a>
+- <a href="../internal/data_agreement/_next_minor_version/"><code>fabricops_kit.data_agreement._next_minor_version</code></a>

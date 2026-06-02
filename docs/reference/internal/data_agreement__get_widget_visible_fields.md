@@ -1,21 +1,21 @@
-# get_widget_visible_fields
+# _get_widget_visible_fields
 
 **Module:** `data_agreement`  
-**Classification:** Optional
+**Classification:** Internal helper
 
 ## Purpose
 
-Return configured editable widget fields without backend audit columns.
+No summary available.
 
 ## Function manifest
 
-- Fully qualified function name: `fabricops_kit.data_agreement.get_widget_visible_fields`
-- Short name: `get_widget_visible_fields`
+- Fully qualified function name: `fabricops_kit.data_agreement._get_widget_visible_fields`
+- Short name: `_get_widget_visible_fields`
 - Module: `data_agreement`
-- Classification: Optional
+- Classification: Internal helper
 - Related module: `data_agreement`
 - Source file path: `src/fabricops_kit/data_agreement.py`
-- Source reference: <a href="../../api/modules/data_agreement/#get_widget_visible_fields">Module source anchor</a>
+- Source reference: <a href="../../api/modules/data_agreement/#_get_widget_visible_fields">Module source anchor</a>
 - Inbound references count: 1
 - Outbound references count: 2
 
@@ -23,5 +23,5 @@ Return configured editable widget fields without backend audit columns.
 - <a href="../internal/data_agreement/_render_maintenance_widget/"><code>fabricops_kit.data_agreement._render_maintenance_widget</code></a>
 
 ## Outbound references
+- <a href="../internal/data_agreement/_get_standard_runtime_audit_columns/"><code>fabricops_kit.data_agreement._get_standard_runtime_audit_columns</code></a>
 - <a href="../internal/data_agreement/_widget_config/"><code>fabricops_kit.data_agreement._widget_config</code></a>
-- <a href="../get_standard_runtime_audit_columns/"><code>fabricops_kit.data_agreement.get_standard_runtime_audit_columns</code></a>

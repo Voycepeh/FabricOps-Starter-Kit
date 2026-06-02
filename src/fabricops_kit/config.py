@@ -9,6 +9,7 @@ steps execute with explicit, validated runtime context.
 
 from __future__ import annotations
 
+from copy import deepcopy
 from dataclasses import dataclass, field
 from importlib.resources import files
 from pathlib import Path
@@ -281,17 +282,17 @@ class DataAgreementConfig:
     })
     data_agreement_widget: dict[str, Any] = field(default_factory=lambda: {
         "visible_columns": [
-            "agreement_id", "contract_version", "agreement_name", "domain",
-            "steward_id", "start_date", "expiry_date", "business_purpose",
+            "agreement_name", "domain", "steward_id", "start_date",
+            "expiry_date", "business_purpose",
             "approved_usage",
         ],
         "custom_fields": [],
     })
 
     def __post_init__(self) -> None:
-        object.__setattr__(self, "metadata_tables", dict(self.metadata_tables or {}))
-        object.__setattr__(self, "data_steward_widget", dict(self.data_steward_widget or {}))
-        object.__setattr__(self, "data_agreement_widget", dict(self.data_agreement_widget or {}))
+        object.__setattr__(self, "metadata_tables", deepcopy(dict(self.metadata_tables or {})))
+        object.__setattr__(self, "data_steward_widget", deepcopy(dict(self.data_steward_widget or {})))
+        object.__setattr__(self, "data_agreement_widget", deepcopy(dict(self.data_agreement_widget or {})))
 
 
 @dataclass(frozen=True)

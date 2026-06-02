@@ -69,7 +69,9 @@ These fields are populated by runtime audit helpers, for example `metadata.build
 1. **Data Steward** maintenance creates or updates append-only steward assignments.
 2. **Data Agreement** maintenance creates append-only agreement versions and selects from currently active stewards.
 
-Each widget exposes a short standard field list plus configured custom fields. Add organization-specific concepts such as a faculty, department, division, consumer group, or expected output in `00_env_config`; the widget stores those values in `custom_fields_json`. Do not add a physical column for each local intake concept.
+Each widget exposes a short standard field list plus configured custom fields. Agreement identifiers (`agreement_id` and `contract_version`) are backend-generated context: new agreements receive an ID and `1.0.0` version automatically, while updates carry the stable ID forward and increment the version. Normal users should not manually edit these technical identifiers.
+
+Add organization-specific concepts such as a faculty, department, division, consumer group, or expected output in `00_env_config`; the widget stores those values in `custom_fields_json`. Custom field definitions support `text`, `textarea`, `select`, `multiselect`, `date`, and `boolean` controls. Do not add a physical column for each local intake concept.
 
 ## List of Metadata Tables
 
@@ -110,8 +112,8 @@ Each widget exposes a short standard field list plus configured custom fields. A
 
 | Column | Example | Status | Purpose |
 | --- | --- | --- | --- |
-| agreement_id | DA-20260529-100000| Implemented | Stable agreement key reused across appended versions. |
-| contract_version| 1.0.0 | Implemented | Append-only semantic version for the agreement. |
+| agreement_id | DA-20260529-100000| Implemented | Backend-generated stable agreement key reused across appended versions. Normal users do not manually edit it. |
+| contract_version| 1.0.0 | Implemented | Backend-generated append-only semantic version. Updates increment it automatically. |
 | agreement_name| Governed Reporting Agreement | Implemented | Human-readable agreement name. |
 | domain | Operations | Implemented | Business or data domain for the agreement. Can be free text or selected from config. |
 | steward_id | steward-001 | Implemented | Steward reference key resolved from `METADATA_DATA_STEWARD`. |
@@ -119,7 +121,7 @@ Each widget exposes a short standard field list plus configured custom fields. A
 | expiry_date | `2027-05-31` | Implemented | Agreement expiry date. |
 | business_purpose | `Support governed reporting` | Implemented | Business reason for the agreement. |
 | approved_usage | `Approved reporting only` | Implemented | Allowed use within the agreement boundary. |
-| custom_fields_json | `{"consumer_group":"ODI","expected_output":"Dashboard"}` | Implemented | Config-driven extra fields collected by the agreement intake widget. |
+| custom_fields_json | `{"consumer_group":"ODI"}` | Implemented | Config-driven extra fields collected by the agreement intake widget. |
 ### `METADATA_NOTEBOOK_REGISTRY`
 
 | Item | Details |

@@ -16,16 +16,15 @@ No summary available.
 - Related module: `data_agreement`
 - Source file path: `src/fabricops_kit/data_agreement.py`
 - Source reference: <a href="../../api/modules/data_agreement/#_table_name">Module source anchor</a>
-- Inbound references count: 6
+- Inbound references count: 5
 - Outbound references count: 1
 
 ## Inbound references
-- <a href="../commit_agreement_metadata/"><code>fabricops_kit.data_agreement.commit_agreement_metadata</code></a>
-- <a href="../create_or_update_data_agreement/"><code>fabricops_kit.data_agreement.create_or_update_data_agreement</code></a>
-- <a href="../create_or_update_data_steward/"><code>fabricops_kit.data_agreement.create_or_update_data_steward</code></a>
-- <a href="../ensure_metadata_tables/"><code>fabricops_kit.data_agreement.ensure_metadata_tables</code></a>
-- <a href="../list_data_agreements/"><code>fabricops_kit.data_agreement.list_data_agreements</code></a>
-- <a href="../list_data_stewards/"><code>fabricops_kit.data_agreement.list_data_stewards</code></a>
+- <a href="../internal/data_agreement/_create_or_update_data_agreement/"><code>fabricops_kit.data_agreement._create_or_update_data_agreement</code></a>
+- <a href="../internal/data_agreement/_create_or_update_data_steward/"><code>fabricops_kit.data_agreement._create_or_update_data_steward</code></a>
+- <a href="../internal/data_agreement/_ensure_metadata_tables/"><code>fabricops_kit.data_agreement._ensure_metadata_tables</code></a>
+- <a href="../internal/data_agreement/_list_data_agreements/"><code>fabricops_kit.data_agreement._list_data_agreements</code></a>
+- <a href="../internal/data_agreement/_list_data_stewards/"><code>fabricops_kit.data_agreement._list_data_stewards</code></a>
 
 ## Outbound references
 - <a href="../internal/data_agreement/_config_value/"><code>fabricops_kit.data_agreement._config_value</code></a>

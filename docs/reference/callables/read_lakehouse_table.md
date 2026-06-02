@@ -20,9 +20,9 @@ No summary available.
 - Outbound references count: 2
 
 ## Inbound references
-- <a href="../ensure_metadata_tables/"><code>fabricops_kit.data_agreement.ensure_metadata_tables</code></a>
-- <a href="../list_data_agreements/"><code>fabricops_kit.data_agreement.list_data_agreements</code></a>
-- <a href="../list_data_stewards/"><code>fabricops_kit.data_agreement.list_data_stewards</code></a>
+- <a href="../internal/data_agreement/_ensure_metadata_tables/"><code>fabricops_kit.data_agreement._ensure_metadata_tables</code></a>
+- <a href="../internal/data_agreement/_list_data_agreements/"><code>fabricops_kit.data_agreement._list_data_agreements</code></a>
+- <a href="../internal/data_agreement/_list_data_stewards/"><code>fabricops_kit.data_agreement._list_data_stewards</code></a>
 
 ## Outbound references
 - <a href="../internal/config/_get_store/"><code>fabricops_kit.config._get_store</code></a>
