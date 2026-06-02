@@ -71,7 +71,7 @@ Use the finder below to look up public callable functions.
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/metadata/" title="Open metadata module page" aria-label="Open metadata module page">metadata</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 3</span></summary><ul><li><code>_context_get</code></li><li><code>_runtime_context</code></li><li><code>_safe_str</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>collect_agreement_metadata</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 3</span></summary><ul><li><code>collect_agreement_metadata</code></li><li><code>create_or_update_data_agreement</code></li><li><code>create_or_update_data_steward</code></li></ul></details>
   </div>
 </article>
 <article id="check_partition_drift" class="reference-catalogue-item" data-callable-row="true" data-callable-name="check_partition_drift" data-callable-module="drift" data-callable-starter-path="03_pc" data-role="optional" data-callable-purpose="Check partition-level drift using keys, partitions, and optional watermark baselines.">
@@ -101,31 +101,67 @@ Use the finder below to look up public callable functions.
 
   </div>
 </article>
-<article id="collect_agreement_metadata" class="reference-catalogue-item" data-callable-row="true" data-callable-name="collect_agreement_metadata" data-callable-module="data_agreement" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Build one validated append-only agreement-version row from intake values.">
+<article id="collect_agreement_metadata" class="reference-catalogue-item" data-callable-row="true" data-callable-name="collect_agreement_metadata" data-callable-module="data_agreement" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Build a validated append-only agreement row without writing it.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/collect_agreement_metadata/"><code>collect_agreement_metadata</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Build one validated append-only agreement-version row from intake values.</p>
+  <p class="reference-catalogue-item-purpose">Build a validated append-only agreement row without writing it.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-role reference-chip-optional">Optional</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 4</span></summary><ul><li><code>_parse_required_date</code></li><li><code>_to_iso_date</code></li><li><code>resolve_agreement_identity</code></li><li><code>build_runtime_audit_fields</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>render_agreement_intake_app</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 4</span></summary><ul><li><code>_generate_agreement_id</code></li><li><code>next_minor_version</code></li><li><code>serialize_custom_fields</code></li><li><code>build_runtime_audit_fields</code></li></ul></details>
+
   </div>
 </article>
-<article id="commit_agreement_metadata" class="reference-catalogue-item" data-callable-row="true" data-callable-name="commit_agreement_metadata" data-callable-module="data_agreement" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Append one agreement-version row by configured OneLake path.">
+<article id="collect_custom_fields" class="reference-catalogue-item" data-callable-row="true" data-callable-name="collect_custom_fields" data-callable-module="data_agreement" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Collect and validate configured JSON-backed custom-field values.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/collect_custom_fields/"><code>collect_custom_fields</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Collect and validate configured JSON-backed custom-field values.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-role reference-chip-optional">Optional</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>get</code></li><li><code>_to_iso_date</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_render_maintenance_widget</code></li></ul></details>
+  </div>
+</article>
+<article id="commit_agreement_metadata" class="reference-catalogue-item" data-callable-row="true" data-callable-name="commit_agreement_metadata" data-callable-module="data_agreement" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Append a row returned by :func:`collect_agreement_metadata`.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/commit_agreement_metadata/"><code>commit_agreement_metadata</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Append one agreement-version row by configured OneLake path.</p>
+  <p class="reference-catalogue-item-purpose">Append a row returned by :func:`collect_agreement_metadata`.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-role reference-chip-optional">Optional</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>write_lakehouse_table</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>render_agreement_intake_app</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>_table_name</code></li><li><code>_write_row</code></li></ul></details>
+
   </div>
 </article>
-<article id="create_agreement_form" class="reference-catalogue-item" data-callable-row="true" data-callable-name="create_agreement_form" data-callable-module="data_agreement" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Render the standalone ``01_da`` intake form with ``ipywidgets``.">
+<article id="create_agreement_form" class="reference-catalogue-item" data-callable-row="true" data-callable-name="create_agreement_form" data-callable-module="data_agreement" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Render the agreement maintenance widget for advanced custom notebooks.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/create_agreement_form/"><code>create_agreement_form</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Render the standalone ``01_da`` intake form with ``ipywidgets``.</p>
+  <p class="reference-catalogue-item-purpose">Render the agreement maintenance widget for advanced custom notebooks.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-role reference-chip-optional">Optional</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 5</span></summary><ul><li><code>agreement_dropdown_options</code></li><li><code>load_active_data_steward_profiles</code></li><li><code>load_agreements</code></li><li><code>next_minor_version</code></li><li><code>setup_data_agreement_tables</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>render_agreement_intake_app</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>render_data_agreement_widget</code></li></ul></details>
+
+  </div>
+</article>
+<article id="create_or_update_data_agreement" class="reference-catalogue-item" data-callable-row="true" data-callable-name="create_or_update_data_agreement" data-callable-module="data_agreement" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Append a created agreement or a new semantic version with runtime audit fields.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/create_or_update_data_agreement/"><code>create_or_update_data_agreement</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Append a created agreement or a new semantic version with runtime audit fields.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-role reference-chip-optional">Optional</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 7</span></summary><ul><li><code>_generate_agreement_id</code></li><li><code>_table_name</code></li><li><code>_write_row</code></li><li><code>list_data_stewards</code></li><li><code>next_minor_version</code></li><li><code>serialize_custom_fields</code></li><li><code>build_runtime_audit_fields</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_render_maintenance_widget</code></li></ul></details>
+  </div>
+</article>
+<article id="create_or_update_data_steward" class="reference-catalogue-item" data-callable-row="true" data-callable-name="create_or_update_data_steward" data-callable-module="data_agreement" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Append a created or updated steward assignment with runtime audit fields.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/create_or_update_data_steward/"><code>create_or_update_data_steward</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Append a created or updated steward assignment with runtime audit fields.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-role reference-chip-optional">Optional</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 4</span></summary><ul><li><code>_table_name</code></li><li><code>_write_row</code></li><li><code>serialize_custom_fields</code></li><li><code>build_runtime_audit_fields</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_render_maintenance_widget</code></li></ul></details>
+  </div>
+</article>
+<article id="deserialize_custom_fields" class="reference-catalogue-item" data-callable-row="true" data-callable-name="deserialize_custom_fields" data-callable-module="data_agreement" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Deserialize stored custom-field JSON for widget display.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/deserialize_custom_fields/"><code>deserialize_custom_fields</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Deserialize stored custom-field JSON for widget display.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-role reference-chip-optional">Optional</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_render_maintenance_widget</code></li></ul></details>
   </div>
 </article>
 <article id="draft_business_context" class="reference-catalogue-item" data-callable-row="true" data-callable-name="draft_business_context" data-callable-module="business_context" data-callable-starter-path="—" data-role="essential" data-callable-purpose="Run Fabric AI to draft column business context suggestions.">
@@ -164,6 +200,15 @@ Use the finder below to look up public callable functions.
 
   </div>
 </article>
+<article id="ensure_metadata_tables" class="reference-catalogue-item" data-callable-row="true" data-callable-name="ensure_metadata_tables" data-callable-module="data_agreement" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Idempotently create or validate the lightweight 01_da metadata tables.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/ensure_metadata_tables/"><code>ensure_metadata_tables</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Idempotently create or validate the lightweight 01_da metadata tables.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-role reference-chip-optional">Optional</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 6</span></summary><ul><li><code>_column_names</code></li><li><code>_table_name</code></li><li><code>get_data_agreement_schema</code></li><li><code>get_data_steward_schema</code></li><li><code>read_lakehouse_table</code></li><li><code>write_lakehouse_table</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>setup_data_agreement_tables</code></li></ul></details>
+  </div>
+</article>
 <article id="extract_column_business_context_suggestions" class="reference-catalogue-item" data-callable-row="true" data-callable-name="extract_column_business_context_suggestions" data-callable-module="business_context" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Extract review-ready business context suggestion rows from AI responses.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/extract_column_business_context_suggestions/"><code>extract_column_business_context_suggestions</code></a></h3>
   <p class="reference-catalogue-item-purpose">Extract review-ready business context suggestion rows from AI responses.</p>
@@ -180,6 +225,24 @@ Use the finder below to look up public callable functions.
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_extract_pii_suggestions</code></li></ul></details>
 
+  </div>
+</article>
+<article id="get_data_agreement_schema" class="reference-catalogue-item" data-callable-row="true" data-callable-name="get_data_agreement_schema" data-callable-module="data_agreement" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Return the lightweight agreement metadata-table schema.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/get_data_agreement_schema/"><code>get_data_agreement_schema</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Return the lightweight agreement metadata-table schema.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-role reference-chip-optional">Optional</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>ensure_metadata_tables</code></li></ul></details>
+  </div>
+</article>
+<article id="get_data_steward_schema" class="reference-catalogue-item" data-callable-row="true" data-callable-name="get_data_steward_schema" data-callable-module="data_agreement" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Return the lightweight steward metadata-table schema.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/get_data_steward_schema/"><code>get_data_steward_schema</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Return the lightweight steward metadata-table schema.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-role reference-chip-optional">Optional</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>ensure_metadata_tables</code></li></ul></details>
   </div>
 </article>
 <article id="get_dq_review_results" class="reference-catalogue-item" data-callable-row="true" data-callable-name="get_dq_review_results" data-callable-module="data_quality" data-callable-starter-path="—" data-role="essential" data-callable-purpose="Collect current approved/rejected DQ review results from widget state.">
@@ -200,13 +263,49 @@ Use the finder below to look up public callable functions.
 
   </div>
 </article>
-<article id="get_selected_agreement" class="reference-catalogue-item" data-callable-row="true" data-callable-name="get_selected_agreement" data-callable-module="data_agreement" data-callable-starter-path="—" data-role="essential" data-callable-purpose="Return the selected agreement row, including its stable and version keys.">
+<article id="get_selected_agreement" class="reference-catalogue-item" data-callable-row="true" data-callable-name="get_selected_agreement" data-callable-module="data_agreement" data-callable-starter-path="—" data-role="essential" data-callable-purpose="Return the agreement selected by :func:`select_agreement`.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/get_selected_agreement/"><code>get_selected_agreement</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Return the selected agreement row, including its stable and version keys.</p>
+  <p class="reference-catalogue-item-purpose">Return the agreement selected by :func:`select_agreement`.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
 
 
+  </div>
+</article>
+<article id="get_standard_runtime_audit_columns" class="reference-catalogue-item" data-callable-row="true" data-callable-name="get_standard_runtime_audit_columns" data-callable-module="data_agreement" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Return backend-only runtime audit columns shared by intake tables.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/get_standard_runtime_audit_columns/"><code>get_standard_runtime_audit_columns</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Return backend-only runtime audit columns shared by intake tables.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-role reference-chip-optional">Optional</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>get_widget_visible_fields</code></li></ul></details>
+  </div>
+</article>
+<article id="get_widget_visible_fields" class="reference-catalogue-item" data-callable-row="true" data-callable-name="get_widget_visible_fields" data-callable-module="data_agreement" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Return configured editable widget fields without backend audit columns.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/get_widget_visible_fields/"><code>get_widget_visible_fields</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Return configured editable widget fields without backend audit columns.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-role reference-chip-optional">Optional</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>_widget_config</code></li><li><code>get_standard_runtime_audit_columns</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_render_maintenance_widget</code></li></ul></details>
+  </div>
+</article>
+<article id="list_data_agreements" class="reference-catalogue-item" data-callable-row="true" data-callable-name="list_data_agreements" data-callable-module="data_agreement" data-callable-starter-path="—" data-role="optional" data-callable-purpose="List latest agreement versions from the configured metadata lakehouse.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/list_data_agreements/"><code>list_data_agreements</code></a></h3>
+  <p class="reference-catalogue-item-purpose">List latest agreement versions from the configured metadata lakehouse.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-role reference-chip-optional">Optional</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 3</span></summary><ul><li><code>_table_name</code></li><li><code>latest_agreement_versions</code></li><li><code>read_lakehouse_table</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 2</span></summary><ul><li><code>_render_maintenance_widget</code></li><li><code>load_agreements</code></li></ul></details>
+  </div>
+</article>
+<article id="list_data_stewards" class="reference-catalogue-item" data-callable-row="true" data-callable-name="list_data_stewards" data-callable-module="data_agreement" data-callable-starter-path="—" data-role="optional" data-callable-purpose="List latest steward assignments, optionally filtering to active rows.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/list_data_stewards/"><code>list_data_stewards</code></a></h3>
+  <p class="reference-catalogue-item-purpose">List latest steward assignments, optionally filtering to active rows.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-role reference-chip-optional">Optional</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 4</span></summary><ul><li><code>_active_steward</code></li><li><code>_latest_by_key</code></li><li><code>_table_name</code></li><li><code>read_lakehouse_table</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 4</span></summary><ul><li><code>_render_maintenance_widget</code></li><li><code>create_or_update_data_agreement</code></li><li><code>load_active_data_steward_profiles</code></li><li><code>setup_data_agreement_tables</code></li></ul></details>
   </div>
 </article>
 <article id="load_agreements" class="reference-catalogue-item" data-callable-row="true" data-callable-name="load_agreements" data-callable-module="data_agreement" data-callable-starter-path="—" data-role="essential" data-callable-purpose="Load latest versioned agreement rows from the configured metadata lakehouse.">
@@ -214,8 +313,8 @@ Use the finder below to look up public callable functions.
   <p class="reference-catalogue-item-purpose">Load latest versioned agreement rows from the configured metadata lakehouse.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>latest_agreement_versions</code></li><li><code>read_lakehouse_table</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 2</span></summary><ul><li><code>create_agreement_form</code></li><li><code>render_agreement_intake_app</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>list_data_agreements</code></li></ul></details>
+
   </div>
 </article>
 <article id="load_dq_rules" class="reference-catalogue-item" data-callable-row="true" data-callable-name="load_dq_rules" data-callable-module="data_quality" data-callable-starter-path="—" data-role="essential" data-callable-purpose="Load latest active approved DQ rules from append-only metadata history.">
@@ -272,13 +371,13 @@ Use the finder below to look up public callable functions.
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_prepare_dq_profile_input_rows</code></li></ul></details>
   </div>
 </article>
-<article id="read_agreement_form" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_agreement_form" data-callable-module="data_agreement" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Return human-entered values from an ``01_da`` intake form.">
+<article id="read_agreement_form" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_agreement_form" data-callable-module="data_agreement" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Read user-facing and custom values from an agreement widget form.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/read_agreement_form/"><code>read_agreement_form</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Return human-entered values from an ``01_da`` intake form.</p>
+  <p class="reference-catalogue-item-purpose">Read user-facing and custom values from an agreement widget form.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-role reference-chip-optional">Optional</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_to_iso_date</code></li></ul></details>
 
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>render_agreement_intake_app</code></li></ul></details>
   </div>
 </article>
 <article id="read_lakehouse_csv" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_lakehouse_csv" data-callable-module="fabric_input_output" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Read a CSV file from a Fabric lakehouse Files path.">
@@ -314,7 +413,7 @@ Use the finder below to look up public callable functions.
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">02_ex, 03_pc</span></p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>_get_store</code></li><li><code>_get_spark</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 3</span></summary><ul><li><code>load_active_data_steward_profiles</code></li><li><code>load_agreements</code></li><li><code>setup_data_agreement_tables</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 3</span></summary><ul><li><code>ensure_metadata_tables</code></li><li><code>list_data_agreements</code></li><li><code>list_data_stewards</code></li></ul></details>
   </div>
 </article>
 <article id="read_warehouse_table" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_warehouse_table" data-callable-module="fabric_input_output" data-callable-starter-path="02_ex, 03_pc" data-role="essential" data-callable-purpose="Read a table from a Microsoft Fabric warehouse.">
@@ -340,8 +439,35 @@ Use the finder below to look up public callable functions.
   <p class="reference-catalogue-item-purpose">Render and wire the default agreement-intake form application.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">01_data_agreement</span></p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 5</span></summary><ul><li><code>collect_agreement_metadata</code></li><li><code>commit_agreement_metadata</code></li><li><code>create_agreement_form</code></li><li><code>load_agreements</code></li><li><code>read_agreement_form</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>render_data_agreement_widget</code></li><li><code>render_data_steward_widget</code></li></ul></details>
 
+  </div>
+</article>
+<article id="render_custom_fields" class="reference-catalogue-item" data-callable-row="true" data-callable-name="render_custom_fields" data-callable-module="data_agreement" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Render configured JSON-backed custom intake widgets.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/render_custom_fields/"><code>render_custom_fields</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Render configured JSON-backed custom intake widgets.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-role reference-chip-optional">Optional</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>get</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_render_maintenance_widget</code></li></ul></details>
+  </div>
+</article>
+<article id="render_data_agreement_widget" class="reference-catalogue-item" data-callable-row="true" data-callable-name="render_data_agreement_widget" data-callable-module="data_agreement" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Render append-only agreement maintenance using active steward rows.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/render_data_agreement_widget/"><code>render_data_agreement_widget</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Render append-only agreement maintenance using active steward rows.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-role reference-chip-optional">Optional</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_render_maintenance_widget</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 2</span></summary><ul><li><code>create_agreement_form</code></li><li><code>render_agreement_intake_app</code></li></ul></details>
+  </div>
+</article>
+<article id="render_data_steward_widget" class="reference-catalogue-item" data-callable-row="true" data-callable-name="render_data_steward_widget" data-callable-module="data_agreement" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Render append-only data steward maintenance.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/render_data_steward_widget/"><code>render_data_steward_widget</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Render append-only data steward maintenance.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-role reference-chip-optional">Optional</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_render_maintenance_widget</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>render_agreement_intake_app</code></li></ul></details>
   </div>
 </article>
 <article id="render_handover_markdown" class="reference-catalogue-item" data-callable-row="true" data-callable-name="render_handover_markdown" data-callable-module="handover" data-callable-starter-path="03_pc" data-role="essential" data-callable-purpose="Render a handover summary dictionary into Markdown for handover notes.">
@@ -407,13 +533,22 @@ Use the finder below to look up public callable functions.
 
   </div>
 </article>
+<article id="serialize_custom_fields" class="reference-catalogue-item" data-callable-row="true" data-callable-name="serialize_custom_fields" data-callable-module="data_agreement" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Serialize organization-specific intake values to deterministic JSON.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/serialize_custom_fields/"><code>serialize_custom_fields</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Serialize organization-specific intake values to deterministic JSON.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-role reference-chip-optional">Optional</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 3</span></summary><ul><li><code>collect_agreement_metadata</code></li><li><code>create_or_update_data_agreement</code></li><li><code>create_or_update_data_steward</code></li></ul></details>
+  </div>
+</article>
 <article id="setup_data_agreement_tables" class="reference-catalogue-item" data-callable-row="true" data-callable-name="setup_data_agreement_tables" data-callable-module="data_agreement" data-callable-starter-path="—" data-role="essential" data-callable-purpose="Create, validate, and report readiness for agreement metadata tables.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/setup_data_agreement_tables/"><code>setup_data_agreement_tables</code></a></h3>
   <p class="reference-catalogue-item-purpose">Create, validate, and report readiness for agreement metadata tables.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 4</span></summary><ul><li><code>_column_names</code></li><li><code>load_active_data_steward_profiles</code></li><li><code>read_lakehouse_table</code></li><li><code>write_lakehouse_table</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>create_agreement_form</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>ensure_metadata_tables</code></li><li><code>list_data_stewards</code></li></ul></details>
+
   </div>
 </article>
 <article id="setup_notebook" class="reference-catalogue-item" data-callable-row="true" data-callable-name="setup_notebook" data-callable-module="config" data-callable-starter-path="00_env_config, 02_ex, 03_pc" data-role="essential" data-callable-purpose="Run consolidated FabricOps startup for exploration and pipeline notebooks.">
@@ -485,7 +620,7 @@ Use the finder below to look up public callable functions.
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">03_pc</span></p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_get_store</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 5</span></summary><ul><li><code>commit_agreement_metadata</code></li><li><code>setup_data_agreement_tables</code></li><li><code>write_dq_rules</code></li><li><code>seed_minimal_sample_source_table</code></li><li><code>write_metadata_rows</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 5</span></summary><ul><li><code>_write_row</code></li><li><code>ensure_metadata_tables</code></li><li><code>write_dq_rules</code></li><li><code>seed_minimal_sample_source_table</code></li><li><code>write_metadata_rows</code></li></ul></details>
   </div>
 </article>
 <article id="write_warehouse_table" class="reference-catalogue-item" data-callable-row="true" data-callable-name="write_warehouse_table" data-callable-module="fabric_input_output" data-callable-starter-path="03_pc" data-role="essential" data-callable-purpose="Write a Spark DataFrame to a Microsoft Fabric warehouse table.">

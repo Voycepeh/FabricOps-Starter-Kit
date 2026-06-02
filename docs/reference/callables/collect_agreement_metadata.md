@@ -16,14 +16,11 @@ No summary available.
 - Related module: `data_agreement`
 - Source file path: `src/fabricops_kit/data_agreement.py`
 - Source reference: <a href="../../api/modules/data_agreement/#collect_agreement_metadata">Module source anchor</a>
-- Inbound references count: 1
+- Inbound references count: 0
 - Outbound references count: 4
 
-## Inbound references
-- <a href="../render_agreement_intake_app/"><code>fabricops_kit.data_agreement.render_agreement_intake_app</code></a>
-
 ## Outbound references
-- <a href="../internal/data_agreement/_parse_required_date/"><code>fabricops_kit.data_agreement._parse_required_date</code></a>
-- <a href="../internal/data_agreement/_to_iso_date/"><code>fabricops_kit.data_agreement._to_iso_date</code></a>
-- <a href="../internal/data_agreement/resolve_agreement_identity/"><code>fabricops_kit.data_agreement.resolve_agreement_identity</code></a>
+- <a href="../internal/data_agreement/_generate_agreement_id/"><code>fabricops_kit.data_agreement._generate_agreement_id</code></a>
+- <a href="../internal/data_agreement/next_minor_version/"><code>fabricops_kit.data_agreement.next_minor_version</code></a>
+- <a href="../serialize_custom_fields/"><code>fabricops_kit.data_agreement.serialize_custom_fields</code></a>
 - <a href="../build_runtime_audit_fields/"><code>fabricops_kit.metadata.build_runtime_audit_fields</code></a>

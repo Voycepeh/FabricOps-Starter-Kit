@@ -16,11 +16,9 @@ No summary available.
 - Related module: `data_agreement`
 - Source file path: `src/fabricops_kit/data_agreement.py`
 - Source reference: <a href="../../api/modules/data_agreement/#commit_agreement_metadata">Module source anchor</a>
-- Inbound references count: 1
-- Outbound references count: 1
-
-## Inbound references
-- <a href="../render_agreement_intake_app/"><code>fabricops_kit.data_agreement.render_agreement_intake_app</code></a>
+- Inbound references count: 0
+- Outbound references count: 2
 
 ## Outbound references
-- <a href="../write_lakehouse_table/"><code>fabricops_kit.fabric_input_output.write_lakehouse_table</code></a>
+- <a href="../internal/data_agreement/_table_name/"><code>fabricops_kit.data_agreement._table_name</code></a>
+- <a href="../internal/data_agreement/_write_row/"><code>fabricops_kit.data_agreement._write_row</code></a>

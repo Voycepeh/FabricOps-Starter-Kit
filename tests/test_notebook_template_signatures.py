@@ -117,12 +117,12 @@ def test_00_env_config_exposes_shared_config_and_data_agreement_defaults():
     assert "ENV_NAME = ENV" in code
     assert "DATA_AGREEMENT_CONFIG = DataAgreementConfig(" in code
     for configured_default in (
-        "source_systems=(",
-        "refresh_frequencies=(",
-        "allowed_consumer_types=(",
-        "expected_outputs=(",
-        "renewal_options=(",
-        "default_values={",
+        "metadata_tables={",
+        "data_steward_widget={",
+        "data_agreement_widget={",
+        '"custom_fields": [',
+        '"key": "group"',
+        '"key": "expected_output"',
     ):
         assert configured_default in code
     assert "data_agreement_config=DATA_AGREEMENT_CONFIG" in code
@@ -138,7 +138,7 @@ def test_00_env_config_bootstraps_agreement_tables_and_reports_steward_readiness
     assert "require_active_steward=False" in code
     assert "CONFIG.path_config.paths[ENV]['unified'].name" in code
     assert "CONFIG.path_config.paths[ENV]['product'].name" in code
-    assert "agreement metadata tables created/checked" in code
+    assert "01_da metadata tables created/checked" in code
     assert 'AGREEMENT_METADATA_SETUP[\'tables\']' in code
     assert 'AGREEMENT_METADATA_SETUP[\'status\']' in code
     assert 'AGREEMENT_METADATA_SETUP[\'message\']' in code

@@ -21,7 +21,7 @@ No summary available.
 
 ## Inbound references
 - <a href="../internal/data_agreement/agreement_dropdown_options/"><code>fabricops_kit.data_agreement.agreement_dropdown_options</code></a>
-- <a href="../load_agreements/"><code>fabricops_kit.data_agreement.load_agreements</code></a>
+- <a href="../list_data_agreements/"><code>fabricops_kit.data_agreement.list_data_agreements</code></a>
 
 ## Outbound references
 - <a href="../internal/data_agreement/_coerce_row_dicts/"><code>fabricops_kit.data_agreement._coerce_row_dicts</code></a>

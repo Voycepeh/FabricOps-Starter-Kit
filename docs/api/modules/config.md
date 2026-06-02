@@ -6,7 +6,7 @@
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 1</span><span class="reference-chip">Internal helpers: 13</span><span class="reference-chip">Outbound: 0</span><span class="reference-chip">Inbound: 1</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 1</span><span class="reference-chip">Internal helpers: 13</span><span class="reference-chip">Outbound: 0</span><span class="reference-chip">Inbound: 2</span></div>
 
 ## Module purpose
 
@@ -40,7 +40,7 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
     </tr>
     <tr>
       <td>Inbound module count</td>
-      <td>1</td>
+      <td>2</td>
     </tr>
     <tr>
       <td>Outbound module count</td>
@@ -48,7 +48,7 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
     </tr>
     <tr>
       <td>External callers</td>
-      <td><code>fabric_input_output</code></td>
+      <td><code>data_agreement</code>, <code>fabric_input_output</code></td>
     </tr>
     <tr>
       <td>External callees</td>

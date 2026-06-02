@@ -20,8 +20,8 @@ No summary available.
 - Outbound references count: 1
 
 ## Inbound references
-- <a href="../commit_agreement_metadata/"><code>fabricops_kit.data_agreement.commit_agreement_metadata</code></a>
-- <a href="../setup_data_agreement_tables/"><code>fabricops_kit.data_agreement.setup_data_agreement_tables</code></a>
+- <a href="../internal/data_agreement/_write_row/"><code>fabricops_kit.data_agreement._write_row</code></a>
+- <a href="../ensure_metadata_tables/"><code>fabricops_kit.data_agreement.ensure_metadata_tables</code></a>
 - <a href="../write_dq_rules/"><code>fabricops_kit.data_quality.write_dq_rules</code></a>
 - <a href="../internal/fabric_input_output/seed_minimal_sample_source_table/"><code>fabricops_kit.fabric_input_output.seed_minimal_sample_source_table</code></a>
 - <a href="../internal/metadata/write_metadata_rows/"><code>fabricops_kit.metadata.write_metadata_rows</code></a>

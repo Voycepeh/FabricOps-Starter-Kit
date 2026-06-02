@@ -60,7 +60,16 @@ All metadata tables written by Fabric notebooks should include the same runtime 
 | `_metadata_lakehouse_name` | `Metadata Lakehouse` | Configured metadata lakehouse captured at commit time. |
 | `_activity_id` | `activity-id` | Fabric activity identifier for troubleshooting. |
 
-These fields are populated by runtime audit helpers, for example `metadata.build_runtime_audit_fields(...)`. For maintained reference tables, include them when rows are created or maintained through starter kit notebooks.
+These fields are populated by runtime audit helpers, for example `metadata.build_runtime_audit_fields(...)`. They are stored in backend tables but hidden from normal widget users.
+
+## Lightweight `01_da` intake
+
+`00_env_config` defines the two physical metadata tables and the editable configuration for two visible `01_da` widgets:
+
+1. **Data Steward** maintenance creates or updates append-only steward assignments.
+2. **Data Agreement** maintenance creates append-only agreement versions and selects from currently active stewards.
+
+Each widget exposes a short standard field list plus configured custom fields. Add organization-specific concepts such as a faculty, department, division, consumer group, or expected output in `00_env_config`; the widget stores those values in `custom_fields_json`. Do not add a physical column for each local intake concept.
 
 ## List of Metadata Tables
 
@@ -85,6 +94,7 @@ These fields are populated by runtime audit helpers, for example `metadata.build
 | effective_from | 2026-01-01 | Maintained | Start date for the steward assignment |
 | effective_to | 2026-12-31 | Maintained | Optional end date for the steward assignment |
 | is_active | true | Maintained | Whether the steward assignment is available for active use |
+| custom_fields_json | `{"group":"Shared Services"}` | Implemented | Config-driven extra fields collected by the steward widget. |
 
 ### `METADATA_DATA_AGREEMENT`
 
@@ -105,8 +115,6 @@ These fields are populated by runtime audit helpers, for example `metadata.build
 | agreement_name| Governed Reporting Agreement | Implemented | Human-readable agreement name. |
 | domain | Operations | Implemented | Business or data domain for the agreement. Can be free text or selected from config. |
 | steward_id | steward-001 | Implemented | Steward reference key resolved from `METADATA_DATA_STEWARD`. |
-| agreement_counterparty | Business Unit Name| Implemented | Business unit the agreement is signed with |
-| status | active | Implemented / derived | Agreement lifecycle status used by downstream workflows. |
 | start_date | `2026-06-01` | Implemented | Agreement start date. |
 | expiry_date | `2027-05-31` | Implemented | Agreement expiry date. |
 | business_purpose | `Support governed reporting` | Implemented | Business reason for the agreement. |

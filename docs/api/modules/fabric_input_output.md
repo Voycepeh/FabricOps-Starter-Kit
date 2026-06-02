@@ -221,7 +221,7 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
 ### External callers
 
 **data_agreement**
-<a class="reference-chip" href="../../reference/commit_agreement_metadata/"><code>commit_agreement_metadata</code></a>, <a class="reference-chip" href="../data_agreement/#load_active_data_steward_profiles"><code>load_active_data_steward_profiles</code></a>, <a class="reference-chip" href="../../reference/load_agreements/"><code>load_agreements</code></a>, <a class="reference-chip" href="../../reference/setup_data_agreement_tables/"><code>setup_data_agreement_tables</code></a>
+<a class="reference-chip" href="../data_agreement/#_write_row"><code>_write_row</code></a>, <a class="reference-chip" href="../../reference/ensure_metadata_tables/"><code>ensure_metadata_tables</code></a>, <a class="reference-chip" href="../../reference/list_data_agreements/"><code>list_data_agreements</code></a>, <a class="reference-chip" href="../../reference/list_data_stewards/"><code>list_data_stewards</code></a>
 
 **data_quality**
 <a class="reference-chip" href="../../reference/write_dq_rules/"><code>write_dq_rules</code></a>
