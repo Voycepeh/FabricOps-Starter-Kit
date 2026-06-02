@@ -116,6 +116,8 @@ For more detail on versioning and rebuilding wheels, see
 
 ## 6. Install the wheel in a Microsoft Fabric Environment
 
+![Install custom WHL in Fabric](assets/fabric-example-install-custom-whl.png)
+
 In Microsoft Fabric:
 
 1. Open the target **Fabric workspace**.
