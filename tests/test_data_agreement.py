@@ -41,16 +41,23 @@ def _install_widget_stubs(monkeypatch):
             self.value = value
             self.options = options
             self.description = kwargs.get("description", "")
+            self.style = kwargs.get("style", {})
+            self.layout = kwargs.get("layout")
             self.callbacks = []
         def observe(self, callback, names=None): self.callbacks.append(callback)
         def on_click(self, callback): self.callbacks.append(callback)
     class Output(Widget):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            self.clear_calls = []
+        def clear_output(self, **kwargs): self.clear_calls.append(kwargs)
         def __enter__(self): return self
         def __exit__(self, *args): return False
     widgets = ModuleType("ipywidgets")
     for name in ("Text", "Textarea", "Dropdown", "SelectMultiple", "DatePicker", "Checkbox", "Button", "HTML"):
         setattr(widgets, name, Widget)
     widgets.Output = Output
+    widgets.Layout = lambda **kwargs: SimpleNamespace(**kwargs)
     widgets.VBox = lambda values: values
     display = ModuleType("IPython.display")
     display.display = lambda *args, **kwargs: None
@@ -175,10 +182,91 @@ def test_create_update_validation_fails_clearly(monkeypatch, factory, values, me
 
 
 def test_widget_entrypoints_and_app_render_two_widgets(monkeypatch):
+    _install_widget_stubs(monkeypatch)
     monkeypatch.setattr(data_agreement, "_render_maintenance_widget", lambda **kwargs: kwargs["kind"])
     assert data_agreement.render_data_steward_widget(_config(), "dev", spark="spark") == "data_steward_widget"
     assert data_agreement.render_data_agreement_widget(_config(), "dev", spark="spark") == "data_agreement_widget"
     assert data_agreement.render_agreement_intake_app(spark="spark", config=_config(), env="dev") == {"data_steward": "data_steward_widget", "data_agreement": "data_agreement_widget"}
+
+
+def test_standard_dropdown_tuple_options_use_scalar_value_and_preserve_existing_value(monkeypatch):
+    _install_widget_stubs(monkeypatch)
+    options = [("Configured Steward (steward-001)", "steward-001"), ("Second Steward (steward-002)", "steward-002")]
+    assert data_agreement._standard_widget("steward_id", options=options).value == "steward-001"
+    assert data_agreement._standard_widget("steward_id", value="steward-002", options=options).value == "steward-002"
+
+
+def test_widget_record_selector_uses_ids_and_friendly_labels(monkeypatch):
+    _install_widget_stubs(monkeypatch)
+    steward = _steward()
+    monkeypatch.setattr(data_agreement, "_list_data_stewards", lambda *args, **kwargs: [steward])
+    widget = data_agreement.render_data_steward_widget(_config(), "dev", spark=object())
+    assert list(widget["existing_record"].options) == [
+        ("Create new steward", None),
+        ("Configured Steward | Data Steward | steward@example.com", "steward-001"),
+    ]
+    assert widget["record_lookup"] == {"steward-001": steward}
+    assert all(not isinstance(value, dict) for _, value in widget["existing_record"].options)
+    widget["existing_record"].callbacks[0]({"new": "steward-001"})
+    assert widget["fields"]["steward_name"].value == "Configured Steward"
+
+
+def test_agreement_widget_uses_scalar_steward_id_friendly_labels_and_wide_layout(monkeypatch):
+    _install_widget_stubs(monkeypatch)
+    monkeypatch.setattr(data_agreement, "_list_data_agreements", lambda *args, **kwargs: [])
+    monkeypatch.setattr(data_agreement, "_list_data_stewards", lambda *args, **kwargs: [_steward()])
+    widget = data_agreement.render_data_agreement_widget(_config(), "dev", spark=object())
+    assert widget["fields"]["steward_id"].value == "steward-001"
+    assert widget["fields"]["steward_id"].description == "Steward ID"
+    assert widget["fields"]["business_purpose"].description == "Business Purpose"
+    assert widget["fields"]["business_purpose"].style == {"description_width": "150px"}
+    assert widget["fields"]["business_purpose"].layout.width == "600px"
+    assert widget["fields"]["business_purpose"].layout.height == "80px"
+
+
+def test_steward_save_clears_output_and_refreshes_agreement_steward_options(monkeypatch):
+    _install_widget_stubs(monkeypatch)
+    stewards = []
+    monkeypatch.setattr(data_agreement, "_list_data_stewards", lambda *args, **kwargs: list(stewards))
+    monkeypatch.setattr(data_agreement, "_list_data_agreements", lambda *args, **kwargs: [])
+    monkeypatch.setattr(
+        data_agreement,
+        "_create_or_update_data_steward",
+        lambda **kwargs: stewards.append({"steward_id": "steward-001", **kwargs["values"]}) or stewards[-1],
+    )
+    app = data_agreement.render_agreement_intake_app(spark=object(), config=_config(), env="dev")
+    steward_widget = app["data_steward"]
+    agreement_widget = app["data_agreement"]
+    values = _steward()
+    for field, control in steward_widget["fields"].items():
+        control.value = date.fromisoformat(values[field]) if field == "effective_from" else values[field]
+    steward_widget["save_button"].callbacks[0](None)
+    assert steward_widget["output"].clear_calls == [{"wait": True}]
+    assert list(agreement_widget["fields"]["steward_id"].options) == [
+        ("Configured Steward | Data Steward | steward@example.com", "steward-001")
+    ]
+    assert agreement_widget["fields"]["steward_id"].value == "steward-001"
+
+
+def test_agreement_save_selects_saved_id_updates_context_and_clears_output(monkeypatch):
+    _install_widget_stubs(monkeypatch)
+    monkeypatch.setattr(data_agreement, "_list_data_agreements", lambda *args, **kwargs: [])
+    monkeypatch.setattr(data_agreement, "_list_data_stewards", lambda *args, **kwargs: [_steward()])
+    saved = {"agreement_id": "DA-001", "contract_version": "1.0.0", **_agreement()}
+    monkeypatch.setattr(data_agreement, "_create_or_update_data_agreement", lambda **kwargs: saved)
+    widget = data_agreement.render_data_agreement_widget(_config(), "dev", spark=object())
+    values = _agreement()
+    for field, control in widget["fields"].items():
+        control.value = date.fromisoformat(values[field]) if field in {"start_date", "expiry_date"} else values[field]
+    widget["save_button"].callbacks[0](None)
+    assert widget["output"].clear_calls == [{"wait": True}]
+    assert widget["existing_record"].value == "DA-001"
+    assert widget["identity_context"].value == (
+        "Agreement ID: DA-001 | Current version: 1.0.0 | Next version on save: 1.1.0"
+    )
+    assert list(widget["existing_record"].options) == [
+        ("Create new agreement", None), ("Orders Agreement (DA-001 / v1.0.0)", "DA-001")
+    ]
 
 
 def test_metadata_table_documentation_explains_generated_ids_json_extension_and_hidden_audit_fields():
@@ -219,40 +307,43 @@ def test_to_bool_normalizes_supported_notebook_values(value, expected):
     assert data_agreement._to_bool(value) is expected
 
 
-def test_steward_save_normalizes_false_boolean_and_string_to_inactive(monkeypatch):
+def test_steward_save_derives_activity_from_effective_dates(monkeypatch):
     rows = []
     monkeypatch.setattr(data_agreement, "_write_row", lambda **kwargs: rows.append(kwargs["row"]))
-    for is_active in (False, "False"):
-        row = data_agreement._create_or_update_data_steward(
-            spark=object(), config=_config(), env_name="dev", values=_steward(is_active=is_active)
-        )
-        assert row["is_active"] == "false"
-        assert data_agreement._active_steward(row) is False
-    assert [row["is_active"] for row in rows] == ["false", "false"]
-
-
-def test_active_steward_filter_excludes_saved_inactive_row(monkeypatch):
-    writes = []
-    monkeypatch.setattr(data_agreement, "_write_row", lambda **kwargs: writes.append(kwargs["row"]))
-    inactive = data_agreement._create_or_update_data_steward(
-        spark=object(), config=_config(), env_name="dev", values=_steward(steward_id="inactive", is_active="False")
+    active = data_agreement._create_or_update_data_steward(
+        spark=object(), config=_config(), env_name="dev", values=_steward(is_active=False)
     )
-    monkeypatch.setattr(data_agreement, "read_lakehouse_table", lambda *args, **kwargs: [inactive, _steward(steward_id="active", is_active=True)])
+    future = data_agreement._create_or_update_data_steward(
+        spark=object(), config=_config(), env_name="dev", values=_steward(steward_id="future", effective_from="2099-01-01")
+    )
+    assert active["is_active"] == "true"
+    assert future["is_active"] == "false"
+
+
+def test_active_steward_filter_uses_dates_and_optional_backend_override(monkeypatch):
+    monkeypatch.setattr(data_agreement, "read_lakehouse_table", lambda *args, **kwargs: [
+        _steward(steward_id="active", is_active=""),
+        _steward(steward_id="disabled", is_active=False),
+        _steward(steward_id="future", effective_from="2099-01-01"),
+        _steward(steward_id="expired", effective_to="2000-01-01"),
+    ])
     assert [row["steward_id"] for row in data_agreement._list_data_stewards(_config(), "dev")] == ["active"]
 
 
-def test_widget_save_path_preserves_checkbox_false(monkeypatch):
+def test_widget_save_hides_backend_steward_fields_and_generates_id(monkeypatch):
     _install_widget_stubs(monkeypatch)
     writes = []
     monkeypatch.setattr(data_agreement, "_list_data_stewards", lambda *args, **kwargs: [])
     monkeypatch.setattr(data_agreement, "_write_row", lambda **kwargs: writes.append(kwargs["row"]))
     widget = data_agreement.render_data_steward_widget(_config(), "dev", spark=object())
-    values = _steward(is_active=False)
+    assert "steward_id" not in widget["fields"]
+    assert "is_active" not in widget["fields"]
+    values = _steward()
     for field, control in widget["fields"].items():
         control.value = date.fromisoformat(values[field]) if field == "effective_from" else values[field]
     widget["save_button"].callbacks[0](None)
-    assert writes[0]["is_active"] == "false"
-    assert data_agreement._active_steward(writes[0]) is False
+    assert writes[0]["steward_id"].startswith("STEW-")
+    assert writes[0]["is_active"] == "true"
 
 
 def test_multiselect_custom_field_round_trips_json_to_widget_tuple(monkeypatch):
@@ -287,3 +378,133 @@ def test_metadata_setup_and_steward_writes_use_string_is_active_schema(monkeypat
     assert next(row for row in setup_rows if "is_active" in row)["is_active"] == ""
     assert write_rows[0]["is_active"] == "true"
     assert isinstance(write_rows[0]["is_active"], str)
+
+
+def test_new_steward_save_generates_stable_id_and_existing_update_reuses_it(monkeypatch):
+    writes = []
+    monkeypatch.setattr(data_agreement, "_write_row", lambda **kwargs: writes.append(kwargs["row"]))
+    values = _steward()
+    values.pop("steward_id")
+    created = data_agreement._create_or_update_data_steward(
+        spark=object(), config=_config(), env_name="dev", values=values
+    )
+    updated = data_agreement._create_or_update_data_steward(
+        spark=object(),
+        config=_config(),
+        env_name="dev",
+        values={**values, "steward_id": created["steward_id"], "contact": "new@example.com"},
+    )
+    assert created["steward_id"].startswith("STEW-")
+    assert updated["steward_id"] == created["steward_id"]
+    assert len(writes) == 2
+
+
+def test_build_steward_dropdown_options_uses_friendly_scalar_values_and_fallback():
+    assert data_agreement._build_steward_dropdown_options([_steward(), {"steward_id": "fallback"}]) == [
+        ("Configured Steward | Data Steward | steward@example.com", "steward-001"),
+        ("fallback", "fallback"),
+    ]
+
+
+def test_selecting_existing_steward_populates_standard_and_custom_fields(monkeypatch):
+    _install_widget_stubs(monkeypatch)
+    steward = _steward(custom_fields_json='{"group":"Shared Services"}')
+    monkeypatch.setattr(data_agreement, "_list_data_stewards", lambda *args, **kwargs: [steward])
+    widget = data_agreement.render_data_steward_widget(_config(), "dev", spark=object())
+    widget["existing_record"].callbacks[0]({"new": "steward-001"})
+    assert widget["fields"]["steward_name"].value == "Configured Steward"
+    assert widget["fields"]["steward_role"].value == "Data Steward"
+    assert widget["fields"]["contact"].value == "steward@example.com"
+    assert widget["fields"]["effective_from"].value == date(2026, 1, 1)
+    assert widget["fields"]["effective_to"].value is None
+    assert widget["custom_fields"]["group"].value == "Shared Services"
+
+
+def test_agreement_selector_lists_latest_version_and_populates_latest_fields(monkeypatch):
+    _install_widget_stubs(monkeypatch)
+    rows = [
+        {
+            "agreement_id": "DA-001", "contract_version": "1.0.0",
+            "custom_fields_json": '{"consumer_group":"ODI"}', **_agreement(),
+        },
+        {
+            "agreement_id": "DA-001", "contract_version": "1.1.0",
+            "custom_fields_json": '{"consumer_group":"Faculty"}', **_agreement(business_purpose="Updated purpose"),
+        },
+    ]
+    monkeypatch.setattr(
+        data_agreement, "_list_data_agreements", lambda *args, **kwargs: data_agreement._latest_agreement_versions(rows)
+    )
+    monkeypatch.setattr(data_agreement, "_list_data_stewards", lambda *args, **kwargs: [_steward()])
+    widget = data_agreement.render_data_agreement_widget(_config(), "dev", spark=object())
+    assert list(widget["existing_record"].options) == [
+        ("Create new agreement", None), ("Orders Agreement (DA-001 / v1.1.0)", "DA-001")
+    ]
+    widget["existing_record"].callbacks[0]({"new": "DA-001"})
+    assert widget["fields"]["business_purpose"].value == "Updated purpose"
+    assert widget["custom_fields"]["consumer_group"].value == "Faculty"
+    assert widget["identity_context"].value.endswith("Next version on save: 1.2.0")
+
+
+def test_agreement_update_uses_latest_persisted_version_not_stale_selection(monkeypatch):
+    writes = []
+    existing = [
+        {"agreement_id": "DA-001", "contract_version": "1.0.0", "custom_fields_json": "{}", **_agreement()},
+        {
+            "agreement_id": "DA-001", "contract_version": "1.1.0", "custom_fields_json": "{}",
+            **_agreement(business_purpose="Prior change"),
+        },
+    ]
+    monkeypatch.setattr(data_agreement, "read_lakehouse_table", lambda *args, **kwargs: existing)
+    monkeypatch.setattr(data_agreement, "_list_data_stewards", lambda *args, **kwargs: [_steward()])
+    monkeypatch.setattr(data_agreement, "_write_row", lambda **kwargs: writes.append(kwargs["row"]))
+    saved = data_agreement._create_or_update_data_agreement(
+        spark=object(), config=_config(), env_name="dev",
+        values=_agreement(approved_usage="Expanded"), selected_agreement=existing[0],
+    )
+    assert saved["contract_version"] == "1.2.0"
+    assert len(writes) == 1
+
+
+def test_duplicate_agreement_version_is_blocked(monkeypatch):
+    existing = [{"agreement_id": "DA-DUP", "contract_version": "1.0.0", "custom_fields_json": "{}", **_agreement()}]
+    monkeypatch.setattr(data_agreement, "read_lakehouse_table", lambda *args, **kwargs: existing)
+    monkeypatch.setattr(data_agreement, "_generate_agreement_id", lambda: "DA-DUP")
+    monkeypatch.setattr(data_agreement, "_list_data_stewards", lambda *args, **kwargs: [_steward()])
+    monkeypatch.setattr(
+        data_agreement, "_write_row", lambda **kwargs: pytest.fail("duplicate row must not be appended")
+    )
+    with pytest.raises(ValueError, match=r"Agreement DA-DUP version 1\.0\.0 already exists"):
+        data_agreement._create_or_update_data_agreement(
+            spark=object(), config=_config(), env_name="dev", values=_agreement()
+        )
+
+
+def test_repeated_agreement_save_with_no_changes_does_not_append(monkeypatch):
+    existing = {"agreement_id": "DA-001", "contract_version": "1.1.0", "custom_fields_json": "{}", **_agreement()}
+    monkeypatch.setattr(data_agreement, "read_lakehouse_table", lambda *args, **kwargs: [existing])
+    monkeypatch.setattr(
+        data_agreement, "_write_row", lambda **kwargs: pytest.fail("unchanged row must not be appended")
+    )
+    saved = data_agreement._create_or_update_data_agreement(
+        spark=object(), config=_config(), env_name="dev", values=_agreement(), selected_agreement=existing
+    )
+    assert saved["agreement_id"] == "DA-001"
+    assert saved["contract_version"] == "1.1.0"
+    assert saved["_was_appended"] is False
+
+
+def test_widget_save_button_is_reenabled_after_success_and_failure(monkeypatch):
+    _install_widget_stubs(monkeypatch)
+    monkeypatch.setattr(data_agreement, "_list_data_stewards", lambda *args, **kwargs: [])
+    monkeypatch.setattr(data_agreement, "_write_row", lambda **kwargs: None)
+    widget = data_agreement.render_data_steward_widget(_config(), "dev", spark=object())
+    values = _steward()
+    for field, control in widget["fields"].items():
+        control.value = date.fromisoformat(values[field]) if field == "effective_from" else values[field]
+    widget["save_button"].callbacks[0](None)
+    assert widget["save_button"].disabled is False
+    widget["fields"]["contact"].value = ""
+    with pytest.raises(ValueError, match="contact"):
+        widget["save_button"].callbacks[0](None)
+    assert widget["save_button"].disabled is False

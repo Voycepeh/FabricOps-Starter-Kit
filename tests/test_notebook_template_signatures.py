@@ -126,6 +126,8 @@ def test_00_env_config_exposes_shared_config_and_data_agreement_defaults():
     ):
         assert configured_default in code
     assert "data_agreement_config=DATA_AGREEMENT_CONFIG" in code
+    assert '"steward_id", "steward_name"' not in code
+    assert '"effective_to", "is_active"' not in code
     assert "CONFIG.path_config.paths[ENV]['metadata']" in code
 
 

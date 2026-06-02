@@ -580,7 +580,23 @@
       "fabricops_kit.data_agreement._list_data_stewards"
     ],
     "outbound": [
-      "fabricops_kit.data_agreement._to_bool"
+      "fabricops_kit.data_agreement._is_explicit_false"
+    ],
+    "source_file": "src/fabricops_kit/data_agreement.py",
+    "summary": "No summary available."
+  },
+  {
+    "name": "_agreement_business_values",
+    "qualified_name": "fabricops_kit.data_agreement._agreement_business_values",
+    "module": "data_agreement",
+    "type": "internal",
+    "role": "internal",
+    "inbound": [
+      "fabricops_kit.data_agreement._create_or_update_data_agreement"
+    ],
+    "outbound": [
+      "fabricops_kit.data_agreement._deserialize_custom_fields",
+      "fabricops_kit.data_agreement._serialize_custom_fields"
     ],
     "source_file": "src/fabricops_kit/data_agreement.py",
     "summary": "No summary available."
@@ -601,15 +617,33 @@
     "summary": "No summary available."
   },
   {
+    "name": "_build_steward_dropdown_options",
+    "qualified_name": "fabricops_kit.data_agreement._build_steward_dropdown_options",
+    "module": "data_agreement",
+    "type": "internal",
+    "role": "internal",
+    "inbound": [
+      "fabricops_kit.data_agreement._load_active_data_steward_profiles",
+      "fabricops_kit.data_agreement._render_maintenance_widget"
+    ],
+    "outbound": [
+      "fabricops_kit.data_agreement._coerce_row_dicts"
+    ],
+    "source_file": "src/fabricops_kit/data_agreement.py",
+    "summary": "No summary available."
+  },
+  {
     "name": "_coerce_row_dicts",
     "qualified_name": "fabricops_kit.data_agreement._coerce_row_dicts",
     "module": "data_agreement",
     "type": "internal",
     "role": "internal",
     "inbound": [
+      "fabricops_kit.data_agreement._build_steward_dropdown_options",
       "fabricops_kit.data_agreement._column_names",
       "fabricops_kit.data_agreement._latest_agreement_versions",
-      "fabricops_kit.data_agreement._latest_by_key"
+      "fabricops_kit.data_agreement._latest_by_key",
+      "fabricops_kit.data_agreement._load_data_agreement_rows"
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/data_agreement.py",
@@ -670,9 +704,12 @@
       "fabricops_kit.data_agreement._render_maintenance_widget"
     ],
     "outbound": [
+      "fabricops_kit.data_agreement._agreement_business_values",
       "fabricops_kit.data_agreement._generate_agreement_id",
       "fabricops_kit.data_agreement._list_data_stewards",
+      "fabricops_kit.data_agreement._load_data_agreement_rows",
       "fabricops_kit.data_agreement._next_minor_version",
+      "fabricops_kit.data_agreement._parse_contract_version",
       "fabricops_kit.data_agreement._parse_iso_date",
       "fabricops_kit.data_agreement._serialize_custom_fields",
       "fabricops_kit.data_agreement._table_name",
@@ -692,13 +729,43 @@
       "fabricops_kit.data_agreement._render_maintenance_widget"
     ],
     "outbound": [
+      "fabricops_kit.data_agreement._derive_steward_activity",
+      "fabricops_kit.data_agreement._generate_steward_id",
       "fabricops_kit.data_agreement._parse_iso_date",
       "fabricops_kit.data_agreement._serialize_custom_fields",
       "fabricops_kit.data_agreement._table_name",
-      "fabricops_kit.data_agreement._to_bool",
       "fabricops_kit.data_agreement._write_row",
       "fabricops_kit.metadata.build_runtime_audit_fields"
     ],
+    "source_file": "src/fabricops_kit/data_agreement.py",
+    "summary": "No summary available."
+  },
+  {
+    "name": "_default_dropdown_value",
+    "qualified_name": "fabricops_kit.data_agreement._default_dropdown_value",
+    "module": "data_agreement",
+    "type": "internal",
+    "role": "internal",
+    "inbound": [
+      "fabricops_kit.data_agreement._set_dropdown_options",
+      "fabricops_kit.data_agreement._standard_widget"
+    ],
+    "outbound": [
+      "fabricops_kit.data_agreement._dropdown_values"
+    ],
+    "source_file": "src/fabricops_kit/data_agreement.py",
+    "summary": "No summary available."
+  },
+  {
+    "name": "_derive_steward_activity",
+    "qualified_name": "fabricops_kit.data_agreement._derive_steward_activity",
+    "module": "data_agreement",
+    "type": "internal",
+    "role": "internal",
+    "inbound": [
+      "fabricops_kit.data_agreement._create_or_update_data_steward"
+    ],
+    "outbound": [],
     "source_file": "src/fabricops_kit/data_agreement.py",
     "summary": "No summary available."
   },
@@ -709,7 +776,23 @@
     "type": "internal",
     "role": "internal",
     "inbound": [
+      "fabricops_kit.data_agreement._agreement_business_values",
       "fabricops_kit.data_agreement._render_maintenance_widget"
+    ],
+    "outbound": [],
+    "source_file": "src/fabricops_kit/data_agreement.py",
+    "summary": "No summary available."
+  },
+  {
+    "name": "_dropdown_values",
+    "qualified_name": "fabricops_kit.data_agreement._dropdown_values",
+    "module": "data_agreement",
+    "type": "internal",
+    "role": "internal",
+    "inbound": [
+      "fabricops_kit.data_agreement._default_dropdown_value",
+      "fabricops_kit.data_agreement._set_dropdown_options",
+      "fabricops_kit.data_agreement._standard_widget"
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/data_agreement.py",
@@ -736,6 +819,19 @@
     "summary": "No summary available."
   },
   {
+    "name": "_field_label",
+    "qualified_name": "fabricops_kit.data_agreement._field_label",
+    "module": "data_agreement",
+    "type": "internal",
+    "role": "internal",
+    "inbound": [
+      "fabricops_kit.data_agreement._standard_widget"
+    ],
+    "outbound": [],
+    "source_file": "src/fabricops_kit/data_agreement.py",
+    "summary": "No summary available."
+  },
+  {
     "name": "_generate_agreement_id",
     "qualified_name": "fabricops_kit.data_agreement._generate_agreement_id",
     "module": "data_agreement",
@@ -744,6 +840,19 @@
     "inbound": [
       "fabricops_kit.data_agreement._create_or_update_data_agreement",
       "fabricops_kit.data_agreement._resolve_agreement_identity"
+    ],
+    "outbound": [],
+    "source_file": "src/fabricops_kit/data_agreement.py",
+    "summary": "No summary available."
+  },
+  {
+    "name": "_generate_steward_id",
+    "qualified_name": "fabricops_kit.data_agreement._generate_steward_id",
+    "module": "data_agreement",
+    "type": "internal",
+    "role": "internal",
+    "inbound": [
+      "fabricops_kit.data_agreement._create_or_update_data_steward"
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/data_agreement.py",
@@ -800,6 +909,21 @@
     "outbound": [
       "fabricops_kit.data_agreement._get_standard_runtime_audit_columns",
       "fabricops_kit.data_agreement._widget_config"
+    ],
+    "source_file": "src/fabricops_kit/data_agreement.py",
+    "summary": "No summary available."
+  },
+  {
+    "name": "_is_explicit_false",
+    "qualified_name": "fabricops_kit.data_agreement._is_explicit_false",
+    "module": "data_agreement",
+    "type": "internal",
+    "role": "internal",
+    "inbound": [
+      "fabricops_kit.data_agreement._active_steward"
+    ],
+    "outbound": [
+      "fabricops_kit.data_agreement._to_bool"
     ],
     "source_file": "src/fabricops_kit/data_agreement.py",
     "summary": "No summary available."
@@ -883,6 +1007,7 @@
     "role": "internal",
     "inbound": [],
     "outbound": [
+      "fabricops_kit.data_agreement._build_steward_dropdown_options",
       "fabricops_kit.data_agreement._list_data_stewards"
     ],
     "source_file": "src/fabricops_kit/data_agreement.py",
@@ -904,6 +1029,23 @@
     "summary": "No summary available."
   },
   {
+    "name": "_load_data_agreement_rows",
+    "qualified_name": "fabricops_kit.data_agreement._load_data_agreement_rows",
+    "module": "data_agreement",
+    "type": "internal",
+    "role": "internal",
+    "inbound": [
+      "fabricops_kit.data_agreement._create_or_update_data_agreement"
+    ],
+    "outbound": [
+      "fabricops_kit.data_agreement._coerce_row_dicts",
+      "fabricops_kit.data_agreement._table_name",
+      "fabricops_kit.fabric_input_output.read_lakehouse_table"
+    ],
+    "source_file": "src/fabricops_kit/data_agreement.py",
+    "summary": "No summary available."
+  },
+  {
     "name": "_next_minor_version",
     "qualified_name": "fabricops_kit.data_agreement._next_minor_version",
     "module": "data_agreement",
@@ -911,6 +1053,7 @@
     "role": "internal",
     "inbound": [
       "fabricops_kit.data_agreement._create_or_update_data_agreement",
+      "fabricops_kit.data_agreement._render_maintenance_widget",
       "fabricops_kit.data_agreement._resolve_agreement_identity"
     ],
     "outbound": [
@@ -926,6 +1069,7 @@
     "type": "internal",
     "role": "internal",
     "inbound": [
+      "fabricops_kit.data_agreement._create_or_update_data_agreement",
       "fabricops_kit.data_agreement._latest_agreement_versions",
       "fabricops_kit.data_agreement._next_minor_version"
     ],
@@ -958,7 +1102,8 @@
     ],
     "outbound": [
       "fabricops_kit.config.get",
-      "fabricops_kit.data_agreement._to_bool"
+      "fabricops_kit.data_agreement._to_bool",
+      "fabricops_kit.data_agreement._widget_layout"
     ],
     "source_file": "src/fabricops_kit/data_agreement.py",
     "summary": "No summary available."
@@ -974,6 +1119,7 @@
       "fabricops_kit.data_agreement.render_data_steward_widget"
     ],
     "outbound": [
+      "fabricops_kit.data_agreement._build_steward_dropdown_options",
       "fabricops_kit.data_agreement._collect_custom_fields",
       "fabricops_kit.data_agreement._create_or_update_data_agreement",
       "fabricops_kit.data_agreement._create_or_update_data_steward",
@@ -981,11 +1127,14 @@
       "fabricops_kit.data_agreement._get_widget_visible_fields",
       "fabricops_kit.data_agreement._list_data_agreements",
       "fabricops_kit.data_agreement._list_data_stewards",
+      "fabricops_kit.data_agreement._next_minor_version",
       "fabricops_kit.data_agreement._render_custom_fields",
+      "fabricops_kit.data_agreement._set_dropdown_options",
       "fabricops_kit.data_agreement._set_widget_value",
       "fabricops_kit.data_agreement._standard_widget",
       "fabricops_kit.data_agreement._widget_config",
-      "fabricops_kit.data_agreement._widget_field_value"
+      "fabricops_kit.data_agreement._widget_field_value",
+      "fabricops_kit.data_agreement._widget_layout"
     ],
     "source_file": "src/fabricops_kit/data_agreement.py",
     "summary": "No summary available."
@@ -1011,10 +1160,27 @@
     "type": "internal",
     "role": "internal",
     "inbound": [
+      "fabricops_kit.data_agreement._agreement_business_values",
       "fabricops_kit.data_agreement._create_or_update_data_agreement",
       "fabricops_kit.data_agreement._create_or_update_data_steward"
     ],
     "outbound": [],
+    "source_file": "src/fabricops_kit/data_agreement.py",
+    "summary": "No summary available."
+  },
+  {
+    "name": "_set_dropdown_options",
+    "qualified_name": "fabricops_kit.data_agreement._set_dropdown_options",
+    "module": "data_agreement",
+    "type": "internal",
+    "role": "internal",
+    "inbound": [
+      "fabricops_kit.data_agreement._render_maintenance_widget"
+    ],
+    "outbound": [
+      "fabricops_kit.data_agreement._default_dropdown_value",
+      "fabricops_kit.data_agreement._dropdown_values"
+    ],
     "source_file": "src/fabricops_kit/data_agreement.py",
     "summary": "No summary available."
   },
@@ -1043,7 +1209,11 @@
       "fabricops_kit.data_agreement._render_maintenance_widget"
     ],
     "outbound": [
-      "fabricops_kit.data_agreement._to_bool"
+      "fabricops_kit.data_agreement._default_dropdown_value",
+      "fabricops_kit.data_agreement._dropdown_values",
+      "fabricops_kit.data_agreement._field_label",
+      "fabricops_kit.data_agreement._to_bool",
+      "fabricops_kit.data_agreement._widget_layout"
     ],
     "source_file": "src/fabricops_kit/data_agreement.py",
     "summary": "No summary available."
@@ -1059,7 +1229,8 @@
       "fabricops_kit.data_agreement._create_or_update_data_steward",
       "fabricops_kit.data_agreement._ensure_metadata_tables",
       "fabricops_kit.data_agreement._list_data_agreements",
-      "fabricops_kit.data_agreement._list_data_stewards"
+      "fabricops_kit.data_agreement._list_data_stewards",
+      "fabricops_kit.data_agreement._load_data_agreement_rows"
     ],
     "outbound": [
       "fabricops_kit.data_agreement._config_value"
@@ -1074,8 +1245,7 @@
     "type": "internal",
     "role": "internal",
     "inbound": [
-      "fabricops_kit.data_agreement._active_steward",
-      "fabricops_kit.data_agreement._create_or_update_data_steward",
+      "fabricops_kit.data_agreement._is_explicit_false",
       "fabricops_kit.data_agreement._render_custom_fields",
       "fabricops_kit.data_agreement._set_widget_value",
       "fabricops_kit.data_agreement._standard_widget"
@@ -1126,6 +1296,21 @@
     "outbound": [
       "fabricops_kit.data_agreement._to_iso_date"
     ],
+    "source_file": "src/fabricops_kit/data_agreement.py",
+    "summary": "No summary available."
+  },
+  {
+    "name": "_widget_layout",
+    "qualified_name": "fabricops_kit.data_agreement._widget_layout",
+    "module": "data_agreement",
+    "type": "internal",
+    "role": "internal",
+    "inbound": [
+      "fabricops_kit.data_agreement._render_custom_fields",
+      "fabricops_kit.data_agreement._render_maintenance_widget",
+      "fabricops_kit.data_agreement._standard_widget"
+    ],
+    "outbound": [],
     "source_file": "src/fabricops_kit/data_agreement.py",
     "summary": "No summary available."
   },
@@ -2764,7 +2949,8 @@
     "inbound": [
       "fabricops_kit.data_agreement._ensure_metadata_tables",
       "fabricops_kit.data_agreement._list_data_agreements",
-      "fabricops_kit.data_agreement._list_data_stewards"
+      "fabricops_kit.data_agreement._list_data_stewards",
+      "fabricops_kit.data_agreement._load_data_agreement_rows"
     ],
     "outbound": [
       "fabricops_kit.config._get_store",

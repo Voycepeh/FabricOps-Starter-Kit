@@ -89,13 +89,13 @@ Add organization-specific concepts such as a faculty, department, division, cons
 
 | Column | Example | Status | Purpose |
 | --- | --- | --- | --- |
-| steward_id | steward-001 | Maintained | Stable steward reference key persisted by agreement rows |
+| steward_id | STEW-034559E2066C | Implemented | Backend-generated stable steward reference key persisted by agreement rows. Normal users do not manually edit it. |
 | steward_name | Configured Steward | Maintained | Steward display name |
 | steward_role | Data Owner | Maintained | Steward role or responsibility |
 | contact | steward@example.com | Maintained | Steward contact details |
-| effective_from | 2026-01-01 | Maintained | Start date for the steward assignment |
+| effective_from | 2026-01-01 | Maintained | Optional start date for the steward assignment. Blank means immediately effective. |
 | effective_to | 2026-12-31 | Maintained | Optional end date for the steward assignment |
-| is_active | `true` | Maintained | Lowercase `true` or `false` string controlling whether the steward assignment is available for active use. |
+| is_active | `true` | Implemented | Backend-derived lowercase `true` or `false` string based on the effective date range. It is hidden from normal users; an explicitly false stored value also excludes a row from active-steward selection. |
 | custom_fields_json | `{"group":"Shared Services"}` | Implemented | Config-driven extra fields collected by the steward widget. |
 
 ### `METADATA_DATA_AGREEMENT`

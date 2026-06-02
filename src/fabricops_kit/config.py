@@ -265,7 +265,9 @@ class DataAgreementConfig:
         Lightweight metadata table names prepared by ``00_env_config``.
     data_steward_widget, data_agreement_widget : dict[str, Any]
         Visible standard columns and organization-specific ``custom_fields``.
-        Custom fields are rendered dynamically and persisted in
+        Steward IDs and steward activity flags are framework-managed backend
+        fields, so they are intentionally excluded from the default visible
+        steward columns. Custom fields are rendered dynamically and persisted in
         ``custom_fields_json`` instead of becoming physical table columns.
     """
 
@@ -275,8 +277,7 @@ class DataAgreementConfig:
     })
     data_steward_widget: dict[str, Any] = field(default_factory=lambda: {
         "visible_columns": [
-            "steward_id", "steward_name", "steward_role", "contact",
-            "effective_from", "effective_to", "is_active",
+            "steward_name", "steward_role", "contact", "effective_from", "effective_to",
         ],
         "custom_fields": [],
     })

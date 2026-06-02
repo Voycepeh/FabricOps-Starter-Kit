@@ -83,3 +83,12 @@ def test_data_agreement_config_defensively_copies_nested_widget_definitions():
 
     assert config.data_steward_widget["custom_fields"][0]["key"] == "group"
     assert config.data_agreement_widget["custom_fields"][0]["options"] == ["ODI"]
+
+
+def test_data_agreement_config_hides_framework_managed_steward_fields_by_default():
+    from fabricops_kit.config import DataAgreementConfig
+
+    visible = DataAgreementConfig().data_steward_widget["visible_columns"]
+    assert "steward_id" not in visible
+    assert "is_active" not in visible
+    assert visible == ["steward_name", "steward_role", "contact", "effective_from", "effective_to"]

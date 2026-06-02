@@ -1,4 +1,4 @@
-# _to_bool
+# _widget_layout
 
 **Module:** `data_agreement`  
 **Classification:** Internal helper
@@ -9,18 +9,17 @@ No summary available.
 
 ## Function manifest
 
-- Fully qualified function name: `fabricops_kit.data_agreement._to_bool`
-- Short name: `_to_bool`
+- Fully qualified function name: `fabricops_kit.data_agreement._widget_layout`
+- Short name: `_widget_layout`
 - Module: `data_agreement`
 - Classification: Internal helper
 - Related module: `data_agreement`
 - Source file path: `src/fabricops_kit/data_agreement.py`
-- Source reference: <a href="../../api/modules/data_agreement/#_to_bool">Module source anchor</a>
-- Inbound references count: 4
+- Source reference: <a href="../../api/modules/data_agreement/#_widget_layout">Module source anchor</a>
+- Inbound references count: 3
 - Outbound references count: 0
 
 ## Inbound references
-- <a href="../internal/data_agreement/_is_explicit_false/"><code>fabricops_kit.data_agreement._is_explicit_false</code></a>
 - <a href="../internal/data_agreement/_render_custom_fields/"><code>fabricops_kit.data_agreement._render_custom_fields</code></a>
-- <a href="../internal/data_agreement/_set_widget_value/"><code>fabricops_kit.data_agreement._set_widget_value</code></a>
+- <a href="../internal/data_agreement/_render_maintenance_widget/"><code>fabricops_kit.data_agreement._render_maintenance_widget</code></a>
 - <a href="../internal/data_agreement/_standard_widget/"><code>fabricops_kit.data_agreement._standard_widget</code></a>

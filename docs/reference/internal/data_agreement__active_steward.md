@@ -23,4 +23,4 @@ No summary available.
 - <a href="../internal/data_agreement/_list_data_stewards/"><code>fabricops_kit.data_agreement._list_data_stewards</code></a>
 
 ## Outbound references
-- <a href="../internal/data_agreement/_to_bool/"><code>fabricops_kit.data_agreement._to_bool</code></a>
+- <a href="../internal/data_agreement/_is_explicit_false/"><code>fabricops_kit.data_agreement._is_explicit_false</code></a>
