@@ -4,11 +4,12 @@ The governance `metadata_lakehouse` is the shared coordination layer between gov
 
   ![Shared FabricOps metadata model connecting governance and engineering notebooks](../assets/fabricops-metadata-model.png){ .full-width }
 
-## Lightweight conceptual model
 
-Use the architecture diagram as the source of truth for the starter kit metadata model. The diagram is conceptual: it shows the key metadata domains and relationships. The detailed `METADATA_*` reference later on this page preserves the wider implementation columns used by the starter kit.
+## Architecture
 
-| Conceptual table | Level | Main writer | What it is used for |
+Use the architecture diagram as the source of truth for the starter kit metadata model. It shows the key metadata domains and relationships. The detailed `METADATA_*` reference later on this page preserves the wider implementation columns used by the starter kit.
+
+| Metadata tables | Level | Main writer | What it is used for |
 | --- | --- | --- | --- |
 | `data_stewards` | Agreement setup | `01_da` or steward administration | Maintains steward identities used during agreement intake. |
 | `data_agreements` | Agreement setup | `01_da` | Anchors the agreement name, domain, steward, and status. |
@@ -22,6 +23,8 @@ Use the architecture diagram as the source of truth for the starter kit metadata
 | `data_quality_rules` | Column level | `04_gov`, enforced by `03_pc` | Stores approved column-level quality expectations. |
 | `sensitivity_classification` | Column level | `04_gov` | Stores approved column sensitivity labels and handling context. |
 | `business_context` | Column level | `04_gov` | Stores approved business definitions, ownership, and usage notes. |
+| `metadata_group` | Optional grouping setup | Steward administration or setup process | Defines user-configurable grouping values such as faculty, department, division, domain, product area, or business unit. |
+| `metadata_group_assignment` | Optional grouping setup | Steward administration, `01_da`, or governance review | Attaches parent and child groups to stewards, agreements, tables, or other metadata entities without hardcoding organization-specific columns. |
 
 Metadata reads and writes must use the metadata route from `00_env_config`, for example:
 
@@ -30,21 +33,16 @@ read_lakehouse_table(CONFIG, env_name, "metadata", "<metadata_table>")
 write_lakehouse_table(df, CONFIG, env_name, "metadata", "<metadata_table>", mode="append")
 ```
 
-## Metadata flow
+## Standard runtime audit columns
 
-`00_env_config` defines the metadata lakehouse route. Notebooks should not hard-code metadata paths because the same workflow needs to run cleanly across development and production workspaces.
+All metadata tables written by Fabric notebooks should include the same runtime audit fields. They are defined once here and not repeated in every table reference below to keep the page lightweight.
 
-`01_da` creates the agreement boundary. It creates or references `data_stewards`, then writes `data_agreements`. Every downstream notebook should be traceable to one agreement.
+| Column | Example | Purpose |
+| --- | --- | --- |
 
-`02_ex` profiles source or unified data and writes table-level and column-level catalogue evidence. It helps the team understand what exists before governance review or productionization.
+These fields are populated by runtime audit helpers, for example `metadata.build_runtime_audit_fields(...)`. For maintained reference tables, include them when rows are created or maintained through starter kit notebooks.
 
-`03_pc` registers production pipeline notebooks, updates table catalogue evidence, captures table-level lineage during runtime, captures column-level lineage with AI assistance where needed, and enforces approved contracts and rules.
-
-`04_gov` augments profiled data with governance metadata and guardrails. AI can suggest business context, sensitivity classification, quality rules, and contracts, but humans approve the records before they become enforceable metadata.
-
-Approved rules, classifications, business context, and contracts are stored in the metadata lakehouse and reused by later `03_pc` pipeline runs.
-
-## Relationships
+## Table Relationships
 
 | Relationship | Meaning |
 | --- | --- |
@@ -59,591 +57,524 @@ Approved rules, classifications, business context, and contracts are stored in t
 | Column-level `data_catalogue` 1 → many `data_quality_rules` | Rules are column-level expectations, except where a rule is table-wide. |
 | Column-level `data_catalogue` 1 → many `sensitivity_classification` | Classification decisions are column-level governance records. |
 | Column-level `data_catalogue` 1 → many `business_context` | Business meaning and usage notes are column-level governance records. |
+| `metadata_group` 1 → many `metadata_group_assignment` | Optional parent and child groups can be attached to metadata records for flexible filtering. |
+| Any grouped metadata entity 1 → many `metadata_group_assignment` | Stewards, agreements, tables, columns, notebooks, or data products can carry user-defined group assignments without adding custom columns to each table. |
 
-## Detailed physical table reference
+## List of Metadata Tables
 
-The diagram uses friendly conceptual names. The starter kit may store them with the `METADATA_*` naming convention. The diagram fields are the minimum shape, not a replacement for the richer implementation columns already documented below.
+The sections below use the standard physical table names from the architecture model. Each table starts with a short summary table, followed by implementation columns. The column reference tables use four columns so GitHub preview can wrap cleanly without horizontal scrolling.
 
-| Diagram concept | Standard physical table | Grain | Notes |
-| --- | --- | --- | --- |
-| `data_stewards` | `METADATA_DATA_STEWARD` | One row per steward assignment or effective period | Maintained reference metadata used by `01_da`. |
-| `data_agreements` | `METADATA_DATA_AGREEMENT` | One row per agreement version | Agreement intake table written by `01_da`. |
-| `notebook_registry` | `METADATA_NOTEBOOK_REGISTRY` | One row per notebook registration | Notebook traceability table used by all workflow notebooks. |
-| `data_access` | `METADATA_DATA_ACCESS` | One row per table access assignment | Table access metadata for users or groups, including access level and effective period. |
-| `data_catalogue` table level | `METADATA_DATA_CATALOGUE_TABLE` | One row per table per profiling run or latest table snapshot | Table level catalogue and profiling evidence written by `02_ex` and `03_pc`. |
-| `data_catalogue` column level | `METADATA_DATA_CATALOGUE_COLUMN` | One row per table column per profiling run or latest snapshot | Column level catalogue and profiling evidence written by `02_ex` and `03_pc`. |
-| `data_lineage` table level | `METADATA_DATA_LINEAGE_TABLE` | One row per source table to target table lineage event | Table level lineage captured by `03_pc`. |
-| `data_lineage` column level | `METADATA_DATA_LINEAGE_COLUMN` | One row per source column to target column mapping | Column level lineage captured by `03_pc`, with AI assistance where needed. |
-| `data_contracts` | `METADATA_DATA_CONTRACTS` | One row per table contract version | Table level guardrail used by `03_pc` for schema, required rules, drift policy, and enforcement mode. |
-| `data_quality_rules` | `METADATA_DATA_QUALITY_RULES` | One row per rule version | Approved executable data quality rules used by `03_pc`. |
-| `sensitivity_classification` | `METADATA_SENSITIVITY_CLASSIFICATION` | One row per column classification version | Approved column level sensitivity and classification metadata from `04_gov`. |
-| `business_context` | `METADATA_BUSINESS_CONTEXT` | One row per column business context version | Approved column level business definitions, ownership, and usage notes from `04_gov`. |
-Runtime evidence tables can still exist, but they are not shown as first-class boxes in the conceptual architecture diagram.
+The two grouping tables are optional. They let each organisation define labels such as faculty, department, division, product area, or domain without adding custom columns to every metadata table.
 
-| Runtime evidence table | Grain | Why it still exists |
-| --- | --- | --- |
-| `METADATA_DQ_RESULTS` | One row per rule execution per run | Stores runtime results of approved DQ rules. |
-| `METADATA_DRIFT_RESULTS` | One row per table per drift check | Stores schema, profile, and data-drift evidence over time. |
+### `METADATA_GROUP`
 
-## Notebook responsibilities
-
-| Notebook family | Metadata responsibility |
+| Item | Details |
 | --- | --- |
-| `01_da` | Creates data agreement records and links them to active data stewards. |
-| `02_ex` | Profiles source or unified data and writes table and column catalogue evidence. |
-| `03_pc` | Registers production pipeline notebooks, updates table catalogue evidence, captures table and column lineage, enforces contracts and approved rules, and records runtime evidence. |
-| `04_gov` | Uses AI-assisted review to approve business context, sensitivity classification, data quality rules, and data contracts. |
-| All workflow notebooks | Register notebook traceability against the agreement. |
-| Handover generation | Assembles approved metadata, runtime evidence, and notebook links into reusable support artifacts. |
+| Concept | Optional grouping reference |
+| Purpose | Defines user-configurable grouping values such as faculty, department, division, domain, product area, or business unit without hardcoding those fields into every metadata table. |
+| Grain | One row per group value. |
+| Key relationships | `METADATA_GROUP_ASSIGNMENT.parent_group_id` and `METADATA_GROUP_ASSIGNMENT.child_group_id` reference this table. |
+| Main writer | Steward administrator, setup process, or `01_da_*` if grouping is configured inside the starter kit. |
+| Main downstream use | Supports configurable filters and widgets while keeping the core metadata schema lightweight. |
+| Runtime audit | Includes the standard runtime audit columns defined above. |
 
-## Detailed columns by physical table
+| Column | Example | Status | Purpose |
+| --- | --- | --- | --- |
+| group_id | grp-faculty-science | Optional | Stable group key used by group assignments. |
+| group_type | faculty | Optional | User-defined grouping type, such as faculty, department, division, domain, business_unit, product, or school. |
+| group_name | Faculty of Science | Optional | Human-readable group value shown in widgets and filters. |
+| group_description | Science academic cluster | Optional | Short explanation of the group value where needed. |
+| is_active | true | Optional | Controls whether the group appears in configurable widgets and new metadata records. |
 
-The sections below preserve the implementation-oriented table reference. Add columns deliberately when the workflow needs more evidence; keep the conceptual model small for new readers.
-### `METADATA_DATA_AGREEMENT`
+### `METADATA_GROUP_ASSIGNMENT`
 
-**Why it exists:** This is the highest-grain agreement-level contract anchor written by the `01_da_*` **Data Agreement Intake / Usage Boundary** notebook. It records the captured usage boundary in which downstream notebook work is allowed to operate. It is not a workbook-style data dictionary and does not store detailed table or column metadata.
+| Item | Details |
+| --- | --- |
+| Concept | Optional grouping assignment |
+| Purpose | Attaches parent and child groups to a metadata record without adding fields such as faculty or department to every table. |
+| Grain | One row per entity and parent-child group assignment. |
+| Key relationships | `parent_group_id` and `child_group_id` reference `METADATA_GROUP`. `entity_type` and `entity_id` identify the metadata record being grouped. |
+| Main writer | Steward administrator, setup process, `01_da_*`, or governance review notebook. |
+| Main downstream use | Lets widgets remain plug-and-play while allowing each organisation to define its own grouping hierarchy. |
+| Runtime audit | Includes the standard runtime audit columns defined above. |
 
-**Grain:** One row = one agreement version. Agreement changes are append-only: a new revision adds a row rather than overwriting a previous version.
-
-**Stable agreement key:** `agreement_id` identifies the agreement across versions.
-
-**Append-only version key:** `contract_version` identifies one semantic version of that agreement.
-
-**Unique agreement-version identity:** `agreement_id + contract_version`.
-
-**Main foreign keys:** `steward_id` references `METADATA_DATA_STEWARD`. Downstream metadata tables reference `agreement_id` and, where version-specific traceability is needed, `contract_version`.
-
-**Main writer notebook:** `01_da_*` through `render_agreement_intake_app()`. Advanced customized flows may call `collect_agreement_metadata()` and `commit_agreement_metadata()` directly.
-
-**Main downstream use:** Scopes every catalogue, context, governance, rule, result, drift, lineage, and handover output.
-
-**Columns:**
-
-| Column | Example value | Writer notebook/function | Status | Purpose |
-| --- | --- | --- | --- | --- |
-| agreement_id | DA-20260529-100000 | 01_da_* | Implemented | Stable agreement key reused across appended versions |
-| contract_version | 1.0.0 | 01_da_* | Implemented | Append-only semantic agreement version key |
-| agreement_name | Governed Reporting Agreement | 01_da_* | Implemented | Human-readable agreement name |
-| steward_id | steward-001 | 01_da_* | Implemented | Steward reference key resolved from `METADATA_DATA_STEWARD` |
-| business_purpose | Support governed reporting | 01_da_* | Implemented | Business reason for the agreement |
-| approved_usage | Approved reporting only | 01_da_* | Implemented | Allowed use within the agreement boundary |
-| restricted_usage | No redistribution | 01_da_* | Implemented | Restricted or prohibited uses |
-| allowed_consumer_type | Internal Department | 01_da_* | Implemented | Permitted consumer category |
-| expected_output | Dashboard | 01_da_* | Implemented | Expected output type |
-| source_system | ERP | 01_da_* | Implemented | Source-system category |
-| refresh_frequency | Daily | 01_da_* | Implemented | Expected refresh cadence |
-| retention_expectation | Retain approved extracts for 30 days | 01_da_* | Implemented | Retention boundary or expectation |
-| start_date | 2026-06-01 | 01_da_* | Implemented | Agreement start date |
-| expiry_date | 2027-05-31 | 01_da_* | Implemented | Agreement expiry date used to derive current agreement status dynamically |
-| renewal_required | Yes | 01_da_* | Implemented | Whether renewal is expected |
-| _committed_by | user@example.com | `metadata.build_runtime_audit_fields(...)` | Implemented | Fabric runtime user who committed the version |
-| _committed_at | 2026-06-01T10:00:00+00:00 | `metadata.build_runtime_audit_fields(...)` | Implemented | Agreement-version commit timestamp |
-| _notebook_name | 01_da_governed_reporting | `metadata.build_runtime_audit_fields(...)` | Implemented | Fabric notebook that committed the version |
-| _workspace_name | Fabric Workspace | `metadata.build_runtime_audit_fields(...)` | Implemented | Fabric workspace captured from runtime context |
-| _metadata_lakehouse_name | Metadata Lakehouse | `metadata.build_runtime_audit_fields(...)` | Implemented | Configured metadata lakehouse captured at commit time |
-| _activity_id | activity-id | `metadata.build_runtime_audit_fields(...)` | Implemented | Fabric activity identifier |
-
-Agreement rows persist `steward_id` only. Steward identity and organizational fields resolve from `METADATA_DATA_STEWARD`; they are not copied into each agreement version. Agreement status is also not persisted: consumers derive the current status dynamically from `expiry_date` so it remains correct after the commit date.
-
-!!! note "Keep workbook-style dictionary detail downstream"
-    Detailed table and column metadata belongs downstream, not in `METADATA_DATA_AGREEMENT`. LYRA-style workbook or data-dictionary fields such as column description, data type, field classification, allowed values, top values, missing data, PII/sensitive indicators, and business rules belong in `METADATA_DATA_CATALOGUE`, `METADATA_DATA_CATALOGUE_COLUMN`, `METADATA_COLUMN_BUSINESS_CONTEXT`, `METADATA_COLUMN_GOVERNANCE`, and `METADATA_DQ_RULES` according to their grain and ownership.
+| Column | Example | Status | Purpose |
+| --- | --- | --- | --- |
+| assignment_id | ga-da-100000-fos-stats | Optional | Stable assignment row key. |
+| entity_type | data_agreement | Optional | Metadata entity being grouped, such as data_steward, data_agreement, table, column, notebook, or data_product. |
+| entity_id | DA-20260529-100000 | Optional | ID of the metadata entity being grouped. |
+| parent_group_id | grp-faculty-science | Optional | Parent group, such as faculty, division, business unit, or domain. |
+| child_group_id | grp-dept-statistics | Optional | Child group, such as department, team, product area, or subdomain. Leave blank when there is no child group. |
+| is_primary | true | Optional | Marks the main grouping when an entity has multiple assignments. |
+| effective_from | 2026-06-01 | Optional | Start date for the assignment. |
+| effective_to | 2027-05-31 | Optional | Optional end date for the assignment. |
+| is_active | true | Optional | Controls whether the assignment is current. |
 
 ### `METADATA_DATA_STEWARD`
 
-**Why it exists:** This is the maintained source of truth for data steward identity and organizational assignment used by `01_da_*` agreement intake.
+| Item | Details |
+| --- | --- |
+| Concept | `data_stewards` |
+| Purpose | Maintained source of truth for data steward identity used during agreement intake. Use optional group assignments for organisation-specific labels such as faculty or department. |
+| Grain | One row per steward assignment or effective period. |
+| Key relationships | `METADATA_DATA_AGREEMENT.steward_id` references this table. |
+| Main writer | Steward administrator, setup process, or `01_da_*` if steward administration is handled inside the starter kit. |
+| Main downstream use | Used by `01_da_*` to select an active steward for each data agreement. |
+| Runtime audit | Includes the standard runtime audit columns defined above. |
 
-**Grain:** One row per steward assignment/effective period.
-
-**Primary key:** `steward_id + effective_from`, or `steward_id` if each steward row is maintained as the current row only.
-
-**Main foreign keys:** None required. `METADATA_DATA_AGREEMENT.steward_id` references this table.
-
-**Main maintainer:** Administrators or stewards maintain real reference rows. Setup creates or checks the table without seeding fake data.
-
-**Main downstream use:** `01_da_*` uses active/effective rows for the data steward dropdown. Agreement rows persist `steward_id` only. Historical displays resolve steward details by `steward_id` and the agreement start/effective date.
-
-**Columns:**
-
-| Column | Example value | Maintainer | Status | Purpose |
-| --- | --- | --- | --- | --- |
-| steward_id | steward-001 | Admin or steward | Maintained | Stable steward reference key persisted by agreement rows |
-| data_steward_name | Configured Steward | Admin or steward | Maintained | Steward display name |
-| data_steward_email | steward@example.com | Admin or steward | Maintained | Steward contact email |
-| domain | Operations | Admin or steward | Maintained | Steward domain |
-| department | Analytics | Admin or steward | Maintained | Steward department |
-| faculty | Shared Services | Admin or steward | Maintained | Steward faculty or organizational grouping |
-| effective_from | 2026-01-01 | Admin or steward | Maintained | Start date for the steward assignment |
-| effective_to | 2026-12-31 | Admin or steward | Maintained | Optional end date for the steward assignment |
-| is_active | true | Admin or steward | Maintained | Whether the steward assignment is available for active use |
-| created_at | 2026-01-01T09:00:00+00:00 | Metadata runtime | Maintained | Reference-row creation timestamp |
-| updated_at | 2026-05-29T09:00:00+00:00 | Metadata runtime | Maintained | Reference-row latest-update timestamp |
-
-Do not put steward reference rows inside `METADATA_DATA_CATALOGUE`. The catalogue stores table-level profiling and discovery evidence from `02_ex_*`; the steward table is a maintained reference dimension.
-
-### `METADATA_DATA_CATALOGUE`
-
-**Diagram concept:** table-level `data_catalogue`. This existing table keeps the richer table-profile columns; column-level catalogue can be split into `METADATA_DATA_CATALOGUE_COLUMN` when the implementation needs separate column-grain records.
+| Column | Example | Status | Purpose |
+| --- | --- | --- | --- |
+| steward_id | steward-001 | Maintained | Stable steward reference key persisted by agreement rows |
+| steward_name | Configured Steward | Maintained | Steward display name |
+| steward_role | Data Owner | Maintained | Steward role or responsibility |
+| contact | steward@example.com | Maintained | Steward contact details |
+| effective_from | 2026-01-01 | Maintained | Start date for the steward assignment |
+| effective_to | 2026-12-31 | Maintained | Optional end date for the steward assignment |
+| is_active | true | Maintained | Whether the steward assignment is available for active use |
 
 
-**Why it exists:** This is the table-level catalogue created from profiling and discovery. It records what table was profiled, basic table health, schema summary, row count, column count, and when the table was observed.
+### `METADATA_DATA_AGREEMENT`
 
-**Grain:** One row per agreement, table, and profiling run. A latest view can expose one current row per table.
+| Item | Details |
+| --- | --- |
+| Concept | `data_agreements` |
+| Purpose | Agreement-level usage boundary created by `01_da_*`. It defines what the data work is approved for and links the agreement to an active steward. |
+| Grain | One row per agreement version. New agreement revisions are appended instead of overwriting previous versions. |
+| Key relationships | `steward_id` references `METADATA_DATA_STEWARD`. Downstream metadata tables use `agreement_id` to link catalogue, governance, rules, contracts, lineage, and handover evidence back to the approved agreement. |
+| Main writer | `01_da_*` |
+| Main downstream use | Scopes what `02_ex`, `03_pc`, and `04_gov` are allowed to profile, govern, enforce, and hand over. |
+| Runtime audit | Includes the standard runtime audit columns defined above. |
 
-**Primary key:** `catalogue_id` or `metadata_table_key` plus `profile_run_id`.
-
-**Main foreign keys:** `agreement_id`.
-
-**Main writer notebook:** `02_ex_*` through `profile_dataframe()` or profiling writer.
-
-**Main downstream use:** Feeds table-level contract summary, column catalogue, dashboard, and handover JSON.
-
-**Columns:**
-
-| Column | Example value | Writer notebook/function | Status | Purpose |
-| --- | --- | --- | --- | --- |
-| catalogue_id | cat_lyra_output_20260529 | profiling writer | Planned | Unique catalogue observation row |
-| agreement_id | lyra_deid_v1 | 02_ex_* | Planned / partial | Parent agreement key |
-| profile_run_id | run_20260529_091000 | profile_dataframe() | Planned | Profiling run identifier |
-| metadata_table_key | hash value | metadata helper / profiling writer | Planned / partial | Stable table join key |
-| environment_name | prod | 00_env_config / runtime context | Partial | Environment context |
-| dataset_name | lyra | 02_ex_* | Partial | Dataset or data product name |
-| table_name | res_output_lyra_deid_all_v1 | profile_dataframe() | Collected | Governed table name |
-| source_system | student_records | 02_ex_* | Planned | Source system name |
-| table_type | lakehouse_table | 02_ex_* | Planned | Asset type |
-| row_count | 10000 | profile_dataframe() | Collected | Profiled row count |
-| column_count | 48 | profile_dataframe() | Planned / derivable | Profiled column count |
-| schema_hash | a91f... | profiling writer | Planned | Detect schema changes |
-| profile_status | complete | profiling writer | Planned | Profiling completion status |
-| profiled_at | 2026-05-29T09:10:00Z | profile_dataframe() | Collected as run timestamp | Profiling timestamp |
-| profile_payload_json | {"columns":[...]} | profiling writer | Planned | Extended table and column profile payload |
-
-Do not put approved descriptions, PII labels, or DQ rule definitions here. This table owns observed catalogue and profiling evidence only.
-
-### `METADATA_COLUMN_BUSINESS_CONTEXT`
-
-**Diagram concept:** `business_context`. This existing table keeps the richer implementation columns for approved column business meaning.
-
-
-**Why it exists:** This stores approved column-level business meaning. It is separate because descriptions, units, derivation, semantic meaning, and glossary mapping are human-reviewed context, not raw profiling output.
-
-**Grain:** One row per agreement, table, column, and approved business-context version.
-
-**Primary key:** `business_context_id`.
-
-**Main foreign keys:** `agreement_id`, `metadata_table_key`, `metadata_column_key`.
-
-**Main writer notebook:** `04_gov_*` through `review_business_context()` and `write_business_context()`.
-
-**Main downstream use:** Feeds the column catalogue, handover JSON, ODCS schema descriptions, and OpenMetadata column descriptions.
-
-**Columns:**
-
-| Column | Example value | Writer notebook/function | Status | Purpose |
-| --- | --- | --- | --- | --- |
-| business_context_id | bc_student_id_v1 | write_business_context() | Planned | Unique business context row |
-| agreement_id | lyra_deid_v1 | 04_gov_* | Planned / partial | Parent agreement key |
-| metadata_table_key | hash value | metadata helper | Implemented helper | Stable table join key |
-| metadata_column_key | hash value | metadata helper | Implemented helper | Stable column join key |
-| table_name | res_output_lyra_deid_all_v1 | review_business_context() | Collected | Parent table |
-| column_name | student_id | review_business_context() | Collected | Column being described |
-| ai_suggested_business_context | Identifier for student record | review_business_context() | Collected | AI suggested meaning |
-| approved_business_context | Unique de-identified student identifier | write_business_context() | Collected | Human approved meaning |
-| approved_description | Unique de-identified student identifier | write_business_context() | Planned / partial | Export friendly description |
-| units | days | 04_gov_* business review | Planned | Unit of measure |
-| source_derivation | Hashed from source student number | 04_gov_* business review | Planned | Business derivation note |
-| semantic_domain | identity | 04_gov_* business review | Planned | Business grouping |
-| glossary_term | Student Identifier | 04_gov_* business review | Planned | Glossary mapping |
-| business_context_notes | Use only for matching | review_business_context() | Collected | Reviewer notes |
-| approval_status | approved | write_business_context() | Collected | Review state |
-| reviewer_notes | Approved with wording change | review_business_context() | Collected | Review comment |
-| approved_by | user@org.com | review context / metadata runtime | Partial | Approver |
-| approved_at | 2026-05-29T10:30:00Z | write_business_context() | Collected | Approval timestamp |
-| version | 1 | metadata writer | Planned | Version of approved context |
-| is_active | true | metadata writer | Planned | Current active context |
-
-Do not put PII, sensitivity, confidentiality, row count, or DQ result fields here.
-
-### `METADATA_COLUMN_GOVERNANCE`
-
-**Diagram concept:** `sensitivity_classification`. This existing table keeps the richer implementation columns for classification, PII, confidentiality, and handling requirements.
-
-
-**Why it exists:** This stores approved column-level classification and sensitivity decisions. It is separate from business context because governance has a different review purpose, risk profile, and audit requirement.
-
-**Grain:** One row per agreement, table, column, and approved governance version.
-
-**Primary key:** `governance_context_id`.
-
-**Main foreign keys:** `agreement_id`, `metadata_table_key`, `metadata_column_key`.
-
-**Main writer notebook:** `04_gov_*` through `review_governance()` and `write_governance()`.
-
-**Main downstream use:** Feeds sensitivity labels, PII flags, confidentiality metadata, dashboard filters, ODCS custom properties, and OpenMetadata tags/classifications.
-
-**Columns:**
-
-| Column | Example value | Writer notebook/function | Status | Purpose |
-| --- | --- | --- | --- | --- |
-| governance_context_id | gov_student_id_v1 | write_governance() | Planned | Unique governance row |
-| agreement_id | lyra_deid_v1 | 04_gov_* | Planned / partial | Parent agreement key |
-| metadata_table_key | hash value | metadata helper | Implemented helper | Stable table join key |
-| metadata_column_key | hash value | metadata helper | Implemented helper | Stable column join key |
-| table_name | res_output_lyra_deid_all_v1 | review_governance() | Collected | Parent table |
-| column_name | student_id | review_governance() | Collected | Column being classified |
-| ai_suggested_personal_identifier_classification | direct_identifier | review_governance() | Collected | AI suggested classification |
-| approved_personal_identifier_classification | de_identified_identifier | write_governance() | Collected | Human approved PII classification |
-| field_classification | identifier | 04_gov_* governance review | Planned / partial | Field category |
-| confidentiality_label | restricted | write_governance() | Collected | Confidentiality level |
-| sensitivity_label | high | 04_gov_* governance review | Planned | Sensitivity summary |
-| handling_requirement | Do not export outside approved workspace | 04_gov_* governance review | Planned | Handling instruction |
-| masking_requirement | hash before sharing | 04_gov_* governance review | Planned | Masking instruction |
-| retention_requirement | 7 years | 04_gov_* governance review | Planned | Retention requirement |
-| reviewer_notes | Treat as restricted | review_governance() | Collected | Governance reviewer notes |
-| approval_status | approved | write_governance() | Collected | Review state |
-| approved_by | user@org.com | write_governance() | Collected | Approver |
-| approved_at | 2026-05-29T10:30:00Z | write_governance() | Collected | Approval timestamp |
-| version | 1 | metadata writer | Planned | Version of governance decision |
-| is_active | true | metadata writer | Planned | Current active classification |
-
-Do not put business description, units, source derivation, row count, or DQ execution results here.
-
-### `METADATA_DQ_RULES`
-
-**Diagram concept:** `data_quality_rules`. This existing table keeps approved executable rule definitions.
-
-
-**Why it exists:** This stores approved executable data quality expectations. It must be separate from DQ results because the rule is the contract expectation, while the result is evidence from one run.
-
-**Grain:** One row per rule version.
-
-**Primary key:** `rule_key`.
-
-**Main foreign keys:** `agreement_id`, `metadata_table_key`, `metadata_column_key`.
-
-**Main writer notebook:** `03_pc_*` through `write_dq_rules()`, with candidates possibly suggested by `02_ex_*`.
-
-**Main downstream use:** Used by `03_pc_*` to enforce quality and by assembled views to describe business rules and allowed values.
-
-**Columns:**
-
-| Column | Example value | Writer notebook/function | Status | Purpose |
-| --- | --- | --- | --- | --- |
-| rule_key | hash value | metadata.build_dq_rule_key | Implemented helper | Stable DQ rule key |
-| rule_id | student_id_not_null | write_dq_rules() | Collected | Human readable rule ID |
-| agreement_id | lyra_deid_v1 | 03_pc_* | Planned | Parent agreement key |
-| metadata_table_key | hash value | _attach_rule_metadata_keys() | Partial | Table affected by rule |
-| metadata_column_key | hash value | _attach_rule_metadata_keys() | Partial | Column affected by rule when applicable |
-| table_name | res_output_lyra_deid_all_v1 | write_dq_rules() | Collected | Table affected by rule |
-| column_name | student_id | write_dq_rules() | Collected / conditional | Column affected by rule |
-| rule_type | not_null | write_dq_rules() | Collected | Rule type |
-| severity | error | write_dq_rules() | Collected | Enforcement severity |
-| description | Student ID must not be null | write_dq_rules() | Collected | Rule description |
-| allowed_values | ["active","inactive"] | accepted_values rule payload | Conditional | Accepted value list |
-| lower_bound | 0 | value_range rule payload | Conditional | Minimum accepted value |
-| upper_bound | 100 | value_range rule payload | Conditional | Maximum accepted value |
-| regex_pattern | ^[A-Z0-9]+$ | regex_format rule payload | Conditional | Required pattern |
-| rule_json | {"type":"not_null","columns":["student_id"]} | write_dq_rules() | Collected | Full executable rule payload |
-| is_active | true | write_dq_rules() | Collected | Active rule flag |
-| action_type | approved | write_dq_rules() | Collected | Rule lifecycle action |
-| action_by | user@org.com | write_dq_rules() | Collected | User who approved or changed rule |
-| action_ts | 2026-05-29T10:40:00Z | write_dq_rules() | Collected | Rule action timestamp |
-| action_reason | Approved after governance review | write_dq_rules() | Collected | Approval/change reason |
-| rule_source | ai_widget_approval | write_dq_rules() | Collected | How rule was created |
-| version | 1 | metadata writer | Planned / derivable | Rule version |
-
-Do not put pass or fail counts here. Those belong in METADATA_DQ_RESULTS.
+| Column | Example | Status | Purpose |
+| --- | --- | --- | --- |
+| agreement_id | DA-20260529-100000 | Implemented | Stable agreement key reused across appended versions |
+| contract_version | 1.0.0 | Implemented | Append-only semantic agreement version key |
+| agreement_name | Governed Reporting Agreement | Implemented | Human-readable agreement name |
+| domain | Operations | Implemented | Business or data domain for the agreement |
+| steward_id | steward-001 | Implemented | Steward reference key resolved from `METADATA_DATA_STEWARD` |
+| status | active | Implemented / derived | Agreement status used by downstream workflows |
+| business_purpose | Support governed reporting | Implemented | Business reason for the agreement |
+| approved_usage | Approved reporting only | Implemented | Allowed use within the agreement boundary |
+| restricted_usage | No redistribution | Implemented | Restricted or prohibited uses |
+| allowed_consumer_type | Internal Department | Implemented | Permitted consumer category |
+| expected_output | Dashboard | Implemented | Expected output type |
+| source_system | ERP | Implemented | Source-system category |
+| refresh_frequency | Daily | Implemented | Expected refresh cadence |
+| retention_expectation | Retain approved extracts for 30 days | Implemented | Retention boundary or expectation |
+| start_date | 2026-06-01 | Implemented | Agreement start date |
+| expiry_date | 2027-05-31 | Implemented | Agreement expiry date |
+| renewal_required | Yes | Implemented | Whether renewal is expected |
 
 ### `METADATA_NOTEBOOK_REGISTRY`
 
-**Why it exists:** This ties notebooks to the agreement. It records which notebook plays which role, where it lives in Fabric, which workspace it belongs to, and who registered it.
-
-**Grain:** One row per agreement and notebook registration.
-
-**Primary key:** `notebook_registry_key` or composite notebook identity plus `registered_at`.
-
-**Main foreign keys:** `agreement_id`.
-
-**Main writer notebook:** All notebooks through `register_current_notebook()`.
-
-**Main downstream use:** Lets the handover point back to the notebooks that produced or approved the evidence.
+| Item | Details |
+| --- | --- |
+| Concept | `notebook_registry` |
+| Purpose | Records which notebooks support an agreement, where they live, and what role they play in the workflow. |
+| Grain | One row per notebook registration. |
+| Key relationships | `agreement_id` links the notebook to `METADATA_DATA_AGREEMENT`. Table fields can optionally link a notebook to catalogue records. |
+| Main writer | All workflow notebooks through `register_current_notebook()`. |
+| Main downstream use | Lets handover and audit views point back to the notebooks that produced or approved metadata evidence. |
+| Runtime audit | Includes the standard runtime audit columns defined above. |
 
 !!! important "Notebook registry function"
     Use `register_current_notebook()`, not `register_notebook_metadata()`.
 
-**Columns:**
+| Column | Example | Status | Purpose |
+| --- | --- | --- | --- |
+| notebook_registry_key | hash value | Planned | Stable notebook registry key |
+| agreement_id | lyra_deid_v1 | Collected | Agreement this notebook supports |
+| environment_name | prod | Collected | Environment context |
+| dataset_name | lyra | Collected | Dataset or data product |
+| table_name | res_output_lyra_deid_all_v1 | Collected | Table context if applicable |
+| topic | profiling | Collected | Notebook topic |
+| pipeline_name | lyra_pipeline | Collected | Pipeline or workflow name |
+| notebook_type | 04_gov | Collected | Notebook family |
+| workspace_id | Fabric workspace ID | Collected | Fabric workspace ID |
+| workspace | ODI Dev | Collected | Fabric workspace name |
+| notebook_id | Fabric notebook ID | Collected | Fabric notebook ID |
+| notebook_name | 04_gov_lyra_column_review | Collected | Fabric notebook name |
+| notebook_url | https://fabric.microsoft.com/... | Collected | Link to notebook |
+| user_name | Voyce | Collected | Registering user |
+| user_id | user-guid | Collected | Registering user ID |
+| registered_at | 2026-05-29T10:30:00Z | Collected | Registration timestamp |
 
-| Column | Example value | Writer notebook/function | Status | Purpose |
-| --- | --- | --- | --- | --- |
-| notebook_registry_key | hash value | register_current_notebook() enhancement | Planned | Stable notebook registry key |
-| agreement_id | lyra_deid_v1 | register_current_notebook() | Collected | Agreement this notebook supports |
-| environment_name | prod | register_current_notebook() | Collected | Environment context |
-| dataset_name | lyra | register_current_notebook() | Collected | Dataset or data product |
-| table_name | res_output_lyra_deid_all_v1 | register_current_notebook() | Collected | Table context if applicable |
-| topic | profiling | register_current_notebook() | Collected | Notebook topic |
-| pipeline_name | lyra_pipeline | register_current_notebook() | Collected | Pipeline or workflow name |
-| notebook_type | 04_gov | register_current_notebook() | Collected | Notebook family |
-| workspace_id | Fabric workspace ID | register_current_notebook() | Collected | Fabric workspace ID |
-| workspace_name | ODI Dev | register_current_notebook() | Collected | Fabric workspace name |
-| notebook_id | Fabric notebook ID | register_current_notebook() | Collected | Fabric notebook ID |
-| notebook_name | 04_gov_lyra_column_review | register_current_notebook() | Collected | Fabric notebook name |
-| notebook_url | https://fabric.microsoft.com/... | register_current_notebook() | Collected | Link to notebook |
-| user_name | Voyce | register_current_notebook() | Collected | Registering user |
-| user_id | user-guid | register_current_notebook() | Collected | Registering user ID |
-| registered_at | 2026-05-29T10:30:00Z | register_current_notebook() | Collected | Registration timestamp |
-
-Do not put profiling metrics, business context, classification, or DQ results here. This table owns traceability only.
-
-### `METADATA_DQ_RESULTS`
-
-**Why it exists:** This stores runtime evidence from executing approved DQ rules. It shows whether each rule passed, failed, or quarantined rows for a specific run.
-
-**Grain:** One row per rule execution per run.
-
-**Primary key:** `dq_result_id`.
-
-**Main foreign keys:** `agreement_id`, `rule_key`, `metadata_table_key`, `metadata_column_key`, `run_id`.
-
-**Main writer notebook:** `03_pc_*` through `enforce_dq()` and DQ result writer.
-
-**Main downstream use:** Feeds the quality section of dashboards, assembled views, and handover exports.
-
-**Columns:**
-
-| Column | Example value | Writer notebook/function | Status | Purpose |
-| --- | --- | --- | --- | --- |
-| dq_result_id | dqres_20260529_student_id_not_null | DQ result writer | Planned | Unique DQ result row |
-| run_id | run_20260529_110000 | 03_pc_* runtime context | Partial | Execution run key |
-| agreement_id | lyra_deid_v1 | 03_pc_* | Planned | Parent agreement key |
-| rule_key | hash value | enforce_dq() | Partial | Rule that was executed |
-| rule_id | student_id_not_null | enforce_dq() | Partial | Human readable rule ID |
-| metadata_table_key | hash value | metadata helper | Planned | Affected table |
-| metadata_column_key | hash value | metadata helper | Planned | Affected column when applicable |
-| table_name | res_output_lyra_deid_all_v1 | enforce_dq() | Partial | Table checked |
-| column_name | student_id | enforce_dq() | Partial | Column checked when applicable |
-| status | passed | enforce_dq() | Partial | Rule result status |
-| passed_count | 9997 | DQ result enhancement | Planned | Passing row count |
-| failed_count | 3 | DQ result enhancement | Planned | Failing row count |
-| quarantine_count | 3 | enforce_dq() / DQ writer | Partial | Quarantined row count |
-| failure_sample_path | Tables/dq_failures/student_id_not_null | DQ result enhancement | Planned | Pointer to failed sample |
-| evaluated_at | 2026-05-29T11:00:00Z | DQ result writer | Planned | Evaluation timestamp |
-| result_payload_json | {"failed_count":3,"quarantine_count":3} | DQ result writer | Planned | Extended DQ result payload |
-
-Do not put rule definition details here except IDs needed to join back to METADATA_DQ_RULES.
-
-### `METADATA_DRIFT_RESULTS`
-
-**Why it exists:** This stores drift evidence over time. It records whether the current table differs from the approved or previous baseline in schema, profile, or expected structure.
-
-**Grain:** One row per agreement, table, and drift check run.
-
-**Primary key:** `drift_result_id`.
-
-**Main foreign keys:** `agreement_id`, `metadata_table_key`, `run_id`, `baseline_run_id`.
-
-**Main writer notebook:** `03_pc_*` or `04_gov_*` drift monitoring step.
-
-**Main downstream use:** Feeds contract validity checks, dashboard warnings, and handover action items.
-
-**Columns:**
-
-| Column | Example value | Writer notebook/function | Status | Purpose |
-| --- | --- | --- | --- | --- |
-| drift_result_id | drift_lyra_20260529 | drift writer | Planned | Unique drift result row |
-| run_id | run_20260529_110000 | runtime context | Planned | Execution run key |
-| agreement_id | lyra_deid_v1 | 03_pc_* or 04_gov_* | Planned | Parent agreement key |
-| metadata_table_key | hash value | metadata helper | Planned | Table checked for drift |
-| table_name | res_output_lyra_deid_all_v1 | drift check | Partial | Table checked |
-| baseline_run_id | run_20260429_110000 | drift check | Planned | Baseline run |
-| current_run_id | run_20260529_110000 | drift check | Planned | Current comparison run |
-| drift_type | schema | drift check | Partial | Drift category |
-| status | warning | drift check | Partial | Drift outcome |
-| can_continue | true | drift check | Partial | Whether pipeline can continue |
-| added_columns_json | ["new_status"] | drift enhancement | Planned | Added columns |
-| removed_columns_json | [] | drift enhancement | Planned | Removed columns |
-| changed_columns_json | ["status_code"] | drift enhancement | Planned | Changed columns |
-| metric_changes_json | {"row_count_delta_pct":4.2} | drift enhancement | Planned | Profile metric changes |
-| drift_summary | 1 new nullable column detected | drift check | Planned | Human readable summary |
-| checked_at | 2026-05-29T11:05:00Z | drift writer | Planned | Drift check timestamp |
-
-Do not put DQ pass or fail counts here. Those belong in METADATA_DQ_RESULTS.
-
-### `METADATA_LINEAGE_EVENTS`
-
-**Diagram concept:** table-level `data_lineage`. This existing table maps to table-level source-target lineage. Column lineage can be stored separately in `METADATA_DATA_LINEAGE_COLUMN`.
-
-
-**Why it exists:** This stores source-to-target movement and transformation evidence. It explains where the table came from and how it was produced.
-
-**Grain:** One row per source-target table relationship or transformation event.
-
-**Primary key:** `lineage_event_id`.
-
-**Main foreign keys:** `agreement_id`, `source_metadata_table_key`, `target_metadata_table_key`, `run_id`, `notebook_registry_key`.
-
-**Main writer notebook:** `03_pc_*` lineage capture or transformation summary step.
-
-**Main downstream use:** Feeds handover, OpenMetadata lineage payloads, and operational traceability.
-
-**Columns:**
-
-| Column | Example value | Writer notebook/function | Status | Purpose |
-| --- | --- | --- | --- | --- |
-| lineage_event_id | lin_lyra_raw_to_output_20260529 | lineage writer | Planned | Unique lineage event |
-| run_id | run_20260529_110000 | runtime context | Planned | Execution run key |
-| agreement_id | lyra_deid_v1 | 03_pc_* | Planned | Parent agreement key |
-| source_metadata_table_key | hash value | metadata helper | Planned | Upstream table key |
-| target_metadata_table_key | hash value | metadata helper | Planned | Downstream table key |
-| source_table | raw_lyra_students | lineage capture | Partial | Upstream table |
-| target_table | res_output_lyra_deid_all_v1 | lineage capture | Partial | Downstream table |
-| transformation_type | hash, filter, aggregate | lineage enhancement | Planned | Transformation category |
-| transformation_summary | De-identified student records and filtered active population | lineage capture | Partial | Human readable transformation note |
-| columns_used_json | ["student_no","status_code"] | lineage enhancement | Planned | Source columns used |
-| columns_created_json | ["student_id","active_flag"] | lineage enhancement | Planned | Output columns created |
-| notebook_registry_key | hash value | register_current_notebook() | Planned | Producing notebook link |
-| captured_at | 2026-05-29T11:10:00Z | lineage writer | Planned | Capture timestamp |
-| lineage_payload_json | {"source":"raw_lyra_students","target":"res_output_..."} | lineage writer | Planned | Extended lineage payload |
-
-Do not put governance labels, DQ results, or profiling metrics here.
-
+Do not store profiling metrics, business context, classification, or DQ results here. This table owns notebook traceability only.
 
 ### `METADATA_DATA_ACCESS`
 
-**Diagram concept:** `data_access` at table level.
+| Item | Details |
+| --- | --- |
+| Concept | `data_access` |
+| Purpose | Records table-level access assignments, access level, and expiry windows. |
+| Grain | One row per table access assignment. |
+| Key relationships | `table_id` or `metadata_table_key` links access evidence to `METADATA_DATA_CATALOGUE_TABLE`. |
+| Main writer | Lakehouse or warehouse access export process, access review notebook, or administrator-maintained metadata process. |
+| Main downstream use | Supports access review, handover, and governance visibility. |
+| Runtime audit | Includes the standard runtime audit columns defined above. |
 
-**Why it exists:** This table records table-level access assignments and expiry windows. It can be populated from lakehouse or warehouse access logs, or maintained as approved access metadata where the platform API is not available.
+| Column | Example | Status | Purpose |
+| --- | --- | --- | --- |
+| access_id | acc_res_output_analyst_20260601 | Planned | Unique access record |
+| table_id | tbl_res_output_lyra_deid_all_v1 | Planned | Table reference from the catalogue |
+| metadata_table_key | hash value | Planned | Stable table join key. Generated by metadata helper. |
+| user_id | user@example.com | Planned | User granted access, when access is user-based |
+| group_id | governance-analysts | Planned | Group granted access, when access is group-based |
+| access_level | read | Planned | Access level, such as read, write, owner, or admin |
+| effective_date | 2026-06-01 | Planned | Access start date |
+| expiry_date | 2026-12-31 | Planned | Access expiry date |
+| source_system | Fabric Lakehouse | Planned | System where the access assignment was observed |
+| captured_at | 2026-06-01T10:00:00Z | Planned | Metadata capture timestamp |
 
-**Grain:** One row per table access assignment.
+### `METADATA_DATA_CATALOGUE_TABLE`
 
-**Primary key:** `access_id`.
+| Item | Details |
+| --- | --- |
+| Concept | Table-level `data_catalogue` |
+| Purpose | Stores table-level catalogue and profiling evidence from exploration or production pipeline runs. |
+| Grain | One row per agreement, table, and profiling run. A latest view can expose one current row per table. |
+| Key relationships | `agreement_id` links to `METADATA_DATA_AGREEMENT`. `notebook_id` or `notebook_registry_key` links to `METADATA_NOTEBOOK_REGISTRY`. |
+| Main writer | `02_ex_*` and `03_pc_*` profiling steps. |
+| Main downstream use | Feeds contracts, access review, lineage, dashboards, and handover. |
+| Runtime audit | Includes the standard runtime audit columns defined above. |
 
-**Main foreign keys:** `table_id` or `metadata_table_key` references the table-level catalogue.
+| Column | Example | Status | Purpose |
+| --- | --- | --- | --- |
+| table_id | tbl_res_output_lyra_deid_all_v1 | Planned | Unique table catalogue row |
+| catalogue_id | cat_lyra_output_20260529 | Planned | Unique catalogue observation row |
+| agreement_id | lyra_deid_v1 | Planned / partial | Parent agreement key |
+| notebook_id | Fabric notebook ID | Planned | Notebook that produced or profiled the table |
+| notebook_registry_key | hash value | Planned | Producing notebook registry key |
+| profile_run_id | run_20260529_091000 | Planned | Profiling run identifier |
+| metadata_table_key | hash value | Planned / partial | Stable table join key. Generated by metadata helper. |
+| environment_name | prod | Partial | Environment context |
+| dataset_name | lyra | Partial | Dataset or data product name |
+| table_name | res_output_lyra_deid_all_v1 | Collected | Governed table name |
+| lakehouse | unified_lakehouse | Planned | Lakehouse where the table lives |
+| schema | dbo | Planned | Schema name where relevant |
+| layer | unified | Planned | Source, unified, product, or output layer |
+| status | active | Planned | Table status |
+| source_system | student_records | Planned | Source system name |
+| table_type | lakehouse_table | Planned | Asset type |
+| row_count | 10000 | Collected | Profiled row count |
+| column_count | 48 | Planned / derivable | Profiled column count |
+| schema_hash | a91f... | Planned | Detect schema changes |
+| profile_status | complete | Planned | Profiling completion status |
+| profiled_at | 2026-05-29T09:10:00Z | Collected as run timestamp | Profiling timestamp |
+| profile_payload_json | {"columns":[...]} | Planned | Extended table profile payload |
 
-**Main writer:** Lakehouse or warehouse access export process, access review notebook, or administrator-maintained metadata process.
-
-**Columns:**
-
-| Column | Example value | Writer notebook/function | Status | Purpose |
-| --- | --- | --- | --- | --- |
-| access_id | acc_res_output_analyst_20260601 | Access export or review process | Planned | Unique access record |
-| table_id | tbl_res_output_lyra_deid_all_v1 | Access export or review process | Planned | Table reference from the catalogue |
-| metadata_table_key | hash value | metadata helper | Planned | Stable table join key where physical implementation uses hashed keys |
-| user_id | user@example.com | Access export or review process | Planned | User granted access, when access is user-based |
-| group_id | governance-analysts | Access export or review process | Planned | Group granted access, when access is group-based |
-| access_level | read | Access export or review process | Planned | Access level, such as read, write, owner, or admin |
-| effective_date | 2026-06-01 | Access export or review process | Planned | Access start date |
-| expiry_date | 2026-12-31 | Access export or review process | Planned | Access expiry date |
-| source_system | Fabric Lakehouse | Access export or review process | Planned | System where the access assignment was observed |
-| captured_at | 2026-06-01T10:00:00Z | Access export or review process | Planned | Metadata capture timestamp |
 
 ### `METADATA_DATA_CATALOGUE_COLUMN`
 
-**Diagram concept:** `data_catalogue` at column level.
+| Item | Details |
+| --- | --- |
+| Concept | Column-level `data_catalogue` |
+| Purpose | Stores column-level catalogue and profiling evidence separately from the table-level catalogue. |
+| Grain | One row per table column per profiling run or latest column snapshot. |
+| Key relationships | `table_id` or `metadata_table_key` links to `METADATA_DATA_CATALOGUE_TABLE`. |
+| Main writer | `02_ex_*` and `03_pc_*` profiling steps. |
+| Main downstream use | Feeds quality rules, sensitivity classification, business context, column lineage, contracts, and handover. |
+| Runtime audit | Includes the standard runtime audit columns defined above. |
 
-**Why it exists:** This table stores column-level catalogue evidence separately from the table-level catalogue. Existing implementations may temporarily keep column details in `METADATA_DATA_CATALOGUE.profile_payload_json`, but the diagram treats column catalogue as its own grain.
+| Column | Example | Status | Purpose |
+| --- | --- | --- | --- |
+| column_id | col_student_id | Planned | Unique column catalogue row |
+| table_id | tbl_res_output_lyra_deid_all_v1 | Planned | Parent table reference |
+| agreement_id | lyra_deid_v1 | Planned | Parent agreement key |
+| profile_run_id | run_20260529_091000 | Planned | Profiling run identifier |
+| metadata_table_key | hash value | Implemented helper | Stable table join key. Generated by metadata helper. |
+| metadata_column_key | hash value | Implemented helper | Stable column join key. Generated by metadata helper. |
+| table_name | res_output_lyra_deid_all_v1 | Collected | Parent table name |
+| column_name | student_id | Collected | Column name |
+| data_type | string | Collected | Observed data type |
+| ordinal_position | 1 | Planned | Column order in the table |
+| nullable | false | Planned | Whether the column allows nulls |
+| null_count | 0 | Planned / derivable | Observed null count |
+| distinct_count | 9997 | Planned / derivable | Observed distinct value count |
+| min_value | 1 | Conditional | Minimum value where relevant |
+| max_value | 9999 | Conditional | Maximum value where relevant |
+| top_values_json | {"A":100,"B":90} | Planned | Optional frequent values summary |
+| profiled_at | 2026-05-29T09:10:00Z | Collected as run timestamp | Profiling timestamp |
 
-**Grain:** One row per table-column per profiling run or latest column snapshot.
+### `METADATA_DATA_LINEAGE_TABLE`
 
-**Primary key:** `column_id` or `metadata_column_key` plus `profile_run_id`.
+| Item | Details |
+| --- | --- |
+| Concept | Table-level `data_lineage` |
+| Purpose | Stores source-to-target table movement and transformation evidence. |
+| Grain | One row per source table to target table lineage event. |
+| Key relationships | Source and target table keys link to `METADATA_DATA_CATALOGUE_TABLE`. `notebook_registry_key` links to the producing notebook. |
+| Main writer | `03_pc_*` lineage capture or transformation summary step. |
+| Main downstream use | Feeds handover, metadata dashboard, OpenMetadata lineage payloads, and operational traceability. |
+| Runtime audit | Includes the standard runtime audit columns defined above. |
 
-**Main foreign keys:** `table_id` or `metadata_table_key` references the table-level catalogue.
+| Column | Example | Status | Purpose |
+| --- | --- | --- | --- |
+| lineage_id | lin_lyra_raw_to_output_20260529 | Planned | Unique table lineage row |
+| run_id | run_20260529_110000 | Planned | Execution run key |
+| agreement_id | lyra_deid_v1 | Planned | Parent agreement key |
+| source_table_id | tbl_raw_lyra_students | Planned | Upstream table reference |
+| target_table_id | tbl_res_output_lyra_deid_all_v1 | Planned | Downstream table reference |
+| source_metadata_table_key | hash value | Planned | Upstream table stable join key. Generated by metadata helper. |
+| target_metadata_table_key | hash value | Planned | Downstream table stable join key. Generated by metadata helper. |
+| source_table | raw_lyra_students | Partial | Upstream table |
+| target_table | res_output_lyra_deid_all_v1 | Partial | Downstream table |
+| notebook_id | Fabric notebook ID | Planned | Producing notebook reference |
+| notebook_registry_key | hash value | Planned | Producing notebook registry key |
+| lineage_level | table | Planned | Indicates table-level lineage |
+| transformation_type | hash, filter, aggregate | Planned | Transformation category |
+| transformation_summary | De-identified student records and filtered active population | Partial | Human readable transformation note |
+| columns_used_json | ["student_no","status_code"] | Planned | Source columns used |
+| columns_created_json | ["student_id","active_flag"] | Planned | Output columns created |
+| captured_at | 2026-05-29T11:10:00Z | Planned | Capture timestamp |
+| lineage_payload_json | {"source":"raw_lyra_students","target":"res_output_..."} | Planned | Extended lineage payload |
 
-**Main writer notebook:** `02_ex_*` and `03_pc_*` profiling steps.
-
-**Columns:**
-
-| Column | Example value | Writer notebook/function | Status | Purpose |
-| --- | --- | --- | --- | --- |
-| column_id | col_student_id | Profiling writer | Planned | Unique column catalogue row |
-| table_id | tbl_res_output_lyra_deid_all_v1 | Profiling writer | Planned | Parent table reference |
-| agreement_id | lyra_deid_v1 | 02_ex_* or 03_pc_* | Planned | Parent agreement key |
-| profile_run_id | run_20260529_091000 | profile_dataframe() | Planned | Profiling run identifier |
-| metadata_table_key | hash value | metadata helper | Implemented helper | Stable table join key |
-| metadata_column_key | hash value | metadata helper | Implemented helper | Stable column join key |
-| table_name | res_output_lyra_deid_all_v1 | profile_dataframe() | Collected | Parent table name |
-| column_name | student_id | profile_dataframe() | Collected | Column name |
-| data_type | string | profile_dataframe() | Collected | Observed data type |
-| ordinal_position | 1 | profile_dataframe() | Planned | Column order in the table |
-| nullable | false | profile_dataframe() | Planned | Whether the column allows nulls |
-| null_count | 0 | profile_dataframe() | Planned / derivable | Observed null count |
-| distinct_count | 9997 | profile_dataframe() | Planned / derivable | Observed distinct value count |
-| min_value | 1 | profile_dataframe() | Conditional | Minimum value where relevant |
-| max_value | 9999 | profile_dataframe() | Conditional | Maximum value where relevant |
-| top_values_json | {"A":100,"B":90} | profile_dataframe() | Planned | Optional frequent values summary |
-| profiled_at | 2026-05-29T09:10:00Z | profile_dataframe() | Collected as run timestamp | Profiling timestamp |
 
 ### `METADATA_DATA_LINEAGE_COLUMN`
 
-**Diagram concept:** `data_lineage` at column level.
+| Item | Details |
+| --- | --- |
+| Concept | Column-level `data_lineage` |
+| Purpose | Stores source-to-target column mappings. |
+| Grain | One row per source column to target column mapping. |
+| Key relationships | Source and target column keys link to `METADATA_DATA_CATALOGUE_COLUMN`. `notebook_registry_key` links to the producing notebook. |
+| Main writer | `03_pc_*` lineage capture step, with AI assistance where mappings are not obvious. |
+| Main downstream use | Feeds impact analysis, explainability, handover, and AI-ready metadata exports. |
+| Runtime audit | Includes the standard runtime audit columns defined above. |
 
-**Why it exists:** This table stores source-to-target column mappings. `03_pc` can capture simple mappings directly and use AI assistance to suggest mappings when transformations are not obvious from code or profile evidence.
-
-**Grain:** One row per source-target column mapping.
-
-**Primary key:** `column_lineage_id`.
-
-**Main foreign keys:** `source_column_id`, `target_column_id`, `notebook_id`, and optional `run_id`.
-
-**Main writer notebook:** `03_pc_*` lineage capture step.
-
-**Columns:**
-
-| Column | Example value | Writer notebook/function | Status | Purpose |
-| --- | --- | --- | --- | --- |
-| column_lineage_id | clin_student_no_to_student_id_20260529 | 03_pc_* lineage capture | Planned | Unique column lineage row |
-| run_id | run_20260529_110000 | runtime context | Planned | Execution run key |
-| agreement_id | lyra_deid_v1 | 03_pc_* | Planned | Parent agreement key |
-| source_column_id | col_raw_student_no | 03_pc_* lineage capture | Planned | Source column reference |
-| target_column_id | col_output_student_id | 03_pc_* lineage capture | Planned | Target column reference |
-| source_metadata_column_key | hash value | metadata helper | Planned | Source column stable join key |
-| target_metadata_column_key | hash value | metadata helper | Planned | Target column stable join key |
-| source_table | raw_lyra_students | 03_pc_* lineage capture | Planned | Source table name |
-| source_column | student_no | 03_pc_* lineage capture | Planned | Source column name |
-| target_table | res_output_lyra_deid_all_v1 | 03_pc_* lineage capture | Planned | Target table name |
-| target_column | student_id | 03_pc_* lineage capture | Planned | Target column name |
-| notebook_id | Fabric notebook ID | register_current_notebook() | Planned | Producing notebook reference |
-| notebook_registry_key | hash value | register_current_notebook() | Planned | Producing notebook registry key |
-| lineage_level | column | 03_pc_* lineage capture | Planned | Indicates column-level lineage |
-| transformation_summary | Hashed source student number | 03_pc_* lineage capture or AI suggestion | Planned | Human-readable transformation note |
-| confidence_score | 0.92 | AI-assisted lineage review | Planned | Optional confidence for AI-suggested mapping |
-| approval_status | approved | Human review | Planned | Review state when AI assisted |
-| captured_at | 2026-05-29T11:10:00Z | lineage writer | Planned | Capture timestamp |
+| Column | Example | Status | Purpose |
+| --- | --- | --- | --- |
+| column_lineage_id | clin_student_no_to_student_id_20260529 | Planned | Unique column lineage row |
+| run_id | run_20260529_110000 | Planned | Execution run key |
+| agreement_id | lyra_deid_v1 | Planned | Parent agreement key |
+| source_column_id | col_raw_student_no | Planned | Source column reference |
+| target_column_id | col_output_student_id | Planned | Target column reference |
+| source_metadata_column_key | hash value | Planned | Source column stable join key. Generated by metadata helper. |
+| target_metadata_column_key | hash value | Planned | Target column stable join key. Generated by metadata helper. |
+| source_table | raw_lyra_students | Planned | Source table name |
+| source_column | student_no | Planned | Source column name |
+| target_table | res_output_lyra_deid_all_v1 | Planned | Target table name |
+| target_column | student_id | Planned | Target column name |
+| notebook_id | Fabric notebook ID | Planned | Producing notebook reference |
+| notebook_registry_key | hash value | Planned | Producing notebook registry key |
+| lineage_level | column | Planned | Indicates column-level lineage |
+| transformation_summary | Hashed source student number | Planned | Human-readable transformation note |
+| confidence_score | 0.92 | Planned | Optional confidence for AI-suggested mapping |
+| approval_status | approved | Planned | Review state when AI assisted |
+| captured_at | 2026-05-29T11:10:00Z | Planned | Capture timestamp |
 
 ### `METADATA_DATA_CONTRACTS`
 
-**Diagram concept:** `data_contracts` at table level.
+| Item | Details |
+| --- | --- |
+| Concept | `data_contracts` |
+| Purpose | Stores table-level guardrails used by `03_pc` pipeline runs. |
+| Grain | One row per table contract version. |
+| Key relationships | `table_id` or `metadata_table_key` links to `METADATA_DATA_CATALOGUE_TABLE`. Required rules link to `METADATA_DATA_QUALITY_RULES`. |
+| Main writer | `04_gov_*` after AI-assisted and human-approved governance review. |
+| Main downstream use | `03_pc_*` reads approved contracts to decide whether to continue, warn, quarantine, or fail. |
+| Runtime audit | Includes the standard runtime audit columns defined above. |
 
-**Why it exists:** This table stores table-level guardrails used by `03_pc` pipeline runs. It is separate from `METADATA_DQ_RULES` because a contract defines expected schema, required rules, drift policy, and enforcement mode for the table as a whole.
+| Column | Example | Status | Purpose |
+| --- | --- | --- | --- |
+| contract_id | contract_res_output_lyra_deid_all_v1 | Planned | Unique contract row |
+| contract_version | 1.0.0 | Planned | Append-only contract version |
+| table_id | tbl_res_output_lyra_deid_all_v1 | Planned | Table reference from the catalogue |
+| agreement_id | lyra_deid_v1 | Planned | Parent agreement key |
+| metadata_table_key | hash value | Planned | Stable table join key. Generated by metadata helper. |
+| table_name | res_output_lyra_deid_all_v1 | Planned | Table covered by the contract |
+| expected_schema | [{"name":"student_id","type":"string"}] | Planned | Expected schema definition |
+| required_rules | ["student_id_not_null"] | Planned | Rules that must be active for this table |
+| drift_policy | allow_add_nullable_columns | Planned | Drift policy for schema or profile changes |
+| enforcement_mode | fail_on_error | Planned | How `03_pc` should enforce the contract |
+| approval_status | approved | Planned | Review state |
+| approved_by | user@org.com | Planned | Approver |
+| approved_at | 2026-05-29T10:45:00Z | Planned | Approval timestamp |
+| is_active | true | Planned | Current active contract flag |
+| contract_payload_json | {"schema":[],"rules":[]} | Planned | Full executable contract payload |
 
-**Grain:** One row per table contract version.
+### `METADATA_DATA_QUALITY_RULES`
 
-**Primary key:** `contract_id` plus optional `contract_version`.
+| Item | Details |
+| --- | --- |
+| Concept | `data_quality_rules` |
+| Purpose | Stores approved executable data quality expectations. |
+| Grain | One row per rule version. |
+| Key relationships | `column_id` or `metadata_column_key` links to `METADATA_DATA_CATALOGUE_COLUMN`. Table-wide rules can link to `table_id` or `metadata_table_key`. |
+| Main writer | `04_gov_*` for approval and rule governance. `03_pc_*` reads the active rules for enforcement. |
+| Main downstream use | Used by `03_pc_*` to enforce quality and by dashboards or handover outputs to explain approved rules. |
+| Runtime audit | Includes the standard runtime audit columns defined above. |
 
-**Main foreign keys:** `table_id` or `metadata_table_key` references the table-level catalogue.
+| Column | Example | Status | Purpose |
+| --- | --- | --- | --- |
+| rule_key | hash value | Implemented helper | Stable DQ rule key. Generated by metadata helper. |
+| rule_id | student_id_not_null | Collected | Human readable rule ID |
+| agreement_id | lyra_deid_v1 | Planned | Parent agreement key |
+| table_id | tbl_res_output_lyra_deid_all_v1 | Planned | Table affected by the rule |
+| column_id | col_student_id | Planned | Column affected by the rule, where applicable |
+| metadata_table_key | hash value | Partial | Table affected by rule. Generated by metadata helper. |
+| metadata_column_key | hash value | Partial | Column affected by rule when applicable. Generated by metadata helper. |
+| table_name | res_output_lyra_deid_all_v1 | Collected | Table affected by rule |
+| column_name | student_id | Collected / conditional | Column affected by rule |
+| rule_type | not_null | Collected | Rule type |
+| threshold | 0 | Planned | Allowed threshold for warning or failure |
+| severity | error | Collected | Enforcement severity |
+| description | Student ID must not be null | Collected | Rule description |
+| allowed_values | ["active","inactive"] | Conditional | Accepted value list |
+| lower_bound | 0 | Conditional | Minimum accepted value |
+| upper_bound | 100 | Conditional | Maximum accepted value |
+| regex_pattern | ^[A-Z0-9]+$ | Conditional | Required pattern |
+| rule_json | {"type":"not_null","columns":["student_id"]} | Collected | Full executable rule payload |
+| status | approved | Planned | Rule review status |
+| is_active | true | Collected | Active rule flag |
+| action_type | approved | Collected | Rule lifecycle action |
+| action_by | user@org.com | Collected | User who approved or changed rule |
+| action_ts | 2026-05-29T10:40:00Z | Collected | Rule action timestamp |
+| action_reason | Approved after governance review | Collected | Approval or change reason |
+| rule_source | ai_widget_approval | Collected | How rule was created |
+| version | 1 | Planned / derivable | Rule version |
 
-**Main writer notebook:** `04_gov_*` after AI-assisted and human-approved governance review.
 
-**Main downstream use:** `03_pc_*` reads approved contracts before or during pipeline execution to decide whether to continue, warn, quarantine, or fail.
+### `METADATA_SENSITIVITY_CLASSIFICATION`
 
-**Columns:**
+| Item | Details |
+| --- | --- |
+| Concept | `sensitivity_classification` |
+| Purpose | Stores approved column-level sensitivity, PII, confidentiality, and handling decisions. |
+| Grain | One row per column classification version. |
+| Key relationships | `column_id` or `metadata_column_key` links to `METADATA_DATA_CATALOGUE_COLUMN`. |
+| Main writer | `04_gov_*` through AI-assisted and human-approved governance review. |
+| Main downstream use | Feeds sensitivity labels, PII flags, confidentiality metadata, dashboard filters, and handover exports. |
+| Runtime audit | Includes the standard runtime audit columns defined above. |
 
-| Column | Example value | Writer notebook/function | Status | Purpose |
-| --- | --- | --- | --- | --- |
-| contract_id | contract_res_output_lyra_deid_all_v1 | 04_gov_* contract review | Planned | Unique contract row |
-| contract_version | 1.0.0 | 04_gov_* contract review | Planned | Append-only contract version |
-| table_id | tbl_res_output_lyra_deid_all_v1 | 04_gov_* contract review | Planned | Table reference from the catalogue |
-| agreement_id | lyra_deid_v1 | 04_gov_* contract review | Planned | Parent agreement key |
-| metadata_table_key | hash value | metadata helper | Planned | Stable table join key |
-| table_name | res_output_lyra_deid_all_v1 | 04_gov_* contract review | Planned | Table covered by the contract |
-| expected_schema | [{"name":"student_id","type":"string"}] | 04_gov_* contract review | Planned | Expected schema definition |
-| required_rules | ["student_id_not_null"] | 04_gov_* contract review | Planned | Rules that must be active for this table |
-| drift_policy | allow_add_nullable_columns | 04_gov_* contract review | Planned | Drift policy for schema or profile changes |
-| enforcement_mode | fail_on_error | 04_gov_* contract review | Planned | How `03_pc` should enforce the contract |
-| approval_status | approved | Human review | Planned | Review state |
-| approved_by | user@org.com | 04_gov_* contract review | Planned | Approver |
-| approved_at | 2026-05-29T10:45:00Z | 04_gov_* contract review | Planned | Approval timestamp |
-| is_active | true | metadata writer | Planned | Current active contract flag |
-| contract_payload_json | {"schema":[],"rules":[]} | metadata writer | Planned | Full executable contract payload |
+| Column | Example | Status | Purpose |
+| --- | --- | --- | --- |
+| classification_id | cls_student_id_v1 | Planned | Unique classification row |
+| agreement_id | lyra_deid_v1 | Planned / partial | Parent agreement key |
+| table_id | tbl_res_output_lyra_deid_all_v1 | Planned | Parent table reference |
+| column_id | col_student_id | Planned | Column being classified |
+| metadata_table_key | hash value | Implemented helper | Stable table join key. Generated by metadata helper. |
+| metadata_column_key | hash value | Implemented helper | Stable column join key. Generated by metadata helper. |
+| table_name | res_output_lyra_deid_all_v1 | Collected | Parent table |
+| column_name | student_id | Collected | Column being classified |
+| ai_suggested_personal_identifier_classification | direct_identifier | Collected | AI suggested classification |
+| approved_personal_identifier_classification | de_identified_identifier | Collected | Human approved PII classification |
+| field_classification | identifier | Planned / partial | Field category |
+| sensitivity_level | high | Planned | Sensitivity level from the architecture model |
+| confidentiality_label | restricted | Collected | Confidentiality level |
+| handling_requirement | Do not export outside approved workspace | Planned | Handling instruction |
+| masking_requirement | hash before sharing | Planned | Masking instruction |
+| retention_requirement | 7 years | Planned | Retention requirement |
+| reviewer_notes | Treat as restricted | Collected | Governance reviewer notes |
+| approval_status | approved | Collected | Review state |
+| approved_by | user@org.com | Collected | Approver |
+| approved_at | 2026-05-29T10:30:00Z | Collected | Approval timestamp |
+| version | 1 | Planned | Version of governance decision |
+| is_active | true | Planned | Current active classification |
 
+
+### `METADATA_BUSINESS_CONTEXT`
+
+| Item | Details |
+| --- | --- |
+| Concept | `business_context` |
+| Purpose | Stores approved column-level business meaning, ownership, and usage notes. |
+| Grain | One row per column business-context version. |
+| Key relationships | `column_id` or `metadata_column_key` links to `METADATA_DATA_CATALOGUE_COLUMN`. |
+| Main writer | `04_gov_*` through AI-assisted and human-approved business review. |
+| Main downstream use | Feeds column catalogue views, handover JSON, ODCS schema descriptions, and OpenMetadata column descriptions. |
+| Runtime audit | Includes the standard runtime audit columns defined above. |
+
+| Column | Example | Status | Purpose |
+| --- | --- | --- | --- |
+| context_id | bc_student_id_v1 | Planned | Unique business context row |
+| agreement_id | lyra_deid_v1 | Planned / partial | Parent agreement key |
+| table_id | tbl_res_output_lyra_deid_all_v1 | Planned | Parent table reference |
+| column_id | col_student_id | Planned | Column being described |
+| metadata_table_key | hash value | Implemented helper | Stable table join key. Generated by metadata helper. |
+| metadata_column_key | hash value | Implemented helper | Stable column join key. Generated by metadata helper. |
+| table_name | res_output_lyra_deid_all_v1 | Collected | Parent table |
+| column_name | student_id | Collected | Column being described |
+| ai_suggested_business_context | Identifier for student record | Collected | AI suggested meaning |
+| business_definition | Unique de-identified student identifier | Planned | Approved business definition from the architecture model |
+| approved_business_context | Unique de-identified student identifier | Collected | Human approved meaning |
+| approved_description | Unique de-identified student identifier | Planned / partial | Export friendly description |
+| owner | Data Steward | Planned | Business owner or accountable role |
+| usage_notes | Use only for matching | Planned | Usage guidance from the architecture model |
+| units | days | Planned | Unit of measure |
+| source_derivation | Hashed from source student number | Planned | Business derivation note |
+| semantic_domain | identity | Planned | Business grouping |
+| glossary_term | Student Identifier | Planned | Glossary mapping |
+| business_context_notes | Use only for matching | Collected | Reviewer notes |
+| approval_status | approved | Collected | Review state |
+| reviewer_notes | Approved with wording change | Collected | Review comment |
+| approved_by | user@org.com | Partial | Approver |
+| approved_at | 2026-05-29T10:30:00Z | Collected | Approval timestamp |
+| version | 1 | Planned | Version of approved context |
+| is_active | true | Planned | Current active context |
+
+### `METADATA_DQ_RESULTS`
+
+| Item | Details |
+| --- | --- |
+| Concept | Runtime evidence for `data_quality_rules` |
+| Purpose | Stores runtime evidence from executing approved DQ rules. |
+| Grain | One row per rule execution per run. |
+| Key relationships | `rule_key` links to `METADATA_DATA_QUALITY_RULES`. Table and column keys link to catalogue tables. |
+| Main writer | `03_pc_*` through DQ enforcement. |
+| Main downstream use | Feeds quality dashboards, handover, audit checks, and run evidence. |
+| Runtime audit | Includes the standard runtime audit columns defined above. |
+
+| Column | Example | Status | Purpose |
+| --- | --- | --- | --- |
+| dq_result_id | dqres_20260529_student_id_not_null | Planned | Unique DQ result row |
+| run_id | run_20260529_110000 | Partial | Execution run key |
+| agreement_id | lyra_deid_v1 | Planned | Parent agreement key |
+| rule_key | hash value | Partial | Rule that was executed |
+| rule_id | student_id_not_null | Partial | Human readable rule ID |
+| metadata_table_key | hash value | Planned | Affected table. Generated by metadata helper. |
+| metadata_column_key | hash value | Planned | Affected column when applicable. Generated by metadata helper. |
+| table_name | res_output_lyra_deid_all_v1 | Partial | Table checked |
+| column_name | student_id | Partial | Column checked when applicable |
+| status | passed | Partial | Rule result status |
+| passed_count | 9997 | Planned | Passing row count |
+| failed_count | 3 | Planned | Failing row count |
+| quarantine_count | 3 | Partial | Quarantined row count |
+| failure_sample_path | Tables/dq_failures/student_id_not_null | Planned | Pointer to failed sample |
+| evaluated_at | 2026-05-29T11:00:00Z | Planned | Evaluation timestamp |
+| result_payload_json | {"failed_count":3,"quarantine_count":3} | Planned | Extended DQ result payload |
+
+
+### `METADATA_DRIFT_RESULTS`
+
+| Item | Details |
+| --- | --- |
+| Concept | Runtime evidence for `data_contracts` |
+| Purpose | Stores schema, profile, and data-drift evidence over time. |
+| Grain | One row per agreement, table, and drift check run. |
+| Key relationships | `metadata_table_key` links to `METADATA_DATA_CATALOGUE_TABLE`. Contract checks link to `METADATA_DATA_CONTRACTS` where relevant. |
+| Main writer | `03_pc_*` drift monitoring step. |
+| Main downstream use | Feeds contract validity checks, dashboard warnings, handover action items, and run evidence. |
+| Runtime audit | Includes the standard runtime audit columns defined above. |
+
+| Column | Example | Status | Purpose |
+| --- | --- | --- | --- |
+| drift_result_id | drift_lyra_20260529 | Planned | Unique drift result row |
+| run_id | run_20260529_110000 | Planned | Execution run key |
+| agreement_id | lyra_deid_v1 | Planned | Parent agreement key |
+| metadata_table_key | hash value | Planned | Table checked for drift. Generated by metadata helper. |
+| table_name | res_output_lyra_deid_all_v1 | Partial | Table checked |
+| baseline_run_id | run_20260429_110000 | Planned | Baseline run |
+| current_run_id | run_20260529_110000 | Planned | Current comparison run |
+| drift_type | schema | Partial | Drift category |
+| status | warning | Partial | Drift outcome |
+| can_continue | true | Partial | Whether pipeline can continue |
+| added_columns_json | ["new_status"] | Planned | Added columns |
+| removed_columns_json | [] | Planned | Removed columns |
+| changed_columns_json | ["status_code"] | Planned | Changed columns |
+| metric_changes_json | {"row_count_delta_pct":4.2} | Planned | Profile metric changes |
+| drift_summary | 1 new nullable column detected | Planned | Human readable summary |
+| checked_at | 2026-05-29T11:05:00Z | Planned | Drift check timestamp |
 
 
 ## Next step
