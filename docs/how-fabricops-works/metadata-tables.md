@@ -23,8 +23,6 @@ Use the architecture diagram as the source of truth for the starter kit metadata
 | `data_quality_rules` | Column level | `04_gov`, enforced by `03_pc` | Stores approved column-level quality expectations. |
 | `sensitivity_classification` | Column level | `04_gov` | Stores approved column sensitivity labels and handling context. |
 | `business_context` | Column level | `04_gov` | Stores approved business definitions, ownership, and usage notes. |
-| `metadata_group` | Optional grouping setup | Steward administration or setup process | Defines user-configurable grouping values such as faculty, department, division, domain, product area, or business unit. |
-| `metadata_group_assignment` | Optional grouping setup | Steward administration, `01_da`, or governance review | Attaches parent and child groups to stewards, agreements, tables, or other metadata entities without hardcoding organization-specific columns. |
 
 Metadata reads and writes must use the metadata route from `00_env_config`, for example:
 
@@ -32,15 +30,6 @@ Metadata reads and writes must use the metadata route from `00_env_config`, for 
 read_lakehouse_table(CONFIG, env_name, "metadata", "<metadata_table>")
 write_lakehouse_table(df, CONFIG, env_name, "metadata", "<metadata_table>", mode="append")
 ```
-
-## Standard runtime audit columns
-
-All metadata tables written by Fabric notebooks should include the same runtime audit fields. They are defined once here and not repeated in every table reference below to keep the page lightweight.
-
-| Column | Example | Purpose |
-| --- | --- | --- |
-
-These fields are populated by runtime audit helpers, for example `metadata.build_runtime_audit_fields(...)`. For maintained reference tables, include them when rows are created or maintained through starter kit notebooks.
 
 ## Table Relationships
 
@@ -57,58 +46,23 @@ These fields are populated by runtime audit helpers, for example `metadata.build
 | Column-level `data_catalogue` 1 → many `data_quality_rules` | Rules are column-level expectations, except where a rule is table-wide. |
 | Column-level `data_catalogue` 1 → many `sensitivity_classification` | Classification decisions are column-level governance records. |
 | Column-level `data_catalogue` 1 → many `business_context` | Business meaning and usage notes are column-level governance records. |
-| `metadata_group` 1 → many `metadata_group_assignment` | Optional parent and child groups can be attached to metadata records for flexible filtering. |
-| Any grouped metadata entity 1 → many `metadata_group_assignment` | Stewards, agreements, tables, columns, notebooks, or data products can carry user-defined group assignments without adding custom columns to each table. |
+
+## Standard runtime audit columns
+
+All metadata tables written by Fabric notebooks should include the same runtime audit fields. They are defined once here and not repeated in every table reference below to keep the page lightweight.
+
+| Column | Example | Purpose |
+| --- | --- | --- |
+| `_committed_by` | `user@example.com` | Fabric runtime user who committed the row. |
+| `_committed_at` | `2026-06-01T10:00:00+00:00` | Row commit timestamp, used for traceability and latest-row selection. |
+| `_notebook_name` | `01_da_governed_reporting` | Fabric notebook that committed the row. |
+| `_workspace_name` | `Fabric Workspace` | Fabric workspace captured from runtime context. |
+| `_metadata_lakehouse_name` | `Metadata Lakehouse` | Configured metadata lakehouse captured at commit time. |
+| `_activity_id` | `activity-id` | Fabric activity identifier for troubleshooting. |
+
+These fields are populated by runtime audit helpers, for example `metadata.build_runtime_audit_fields(...)`. For maintained reference tables, include them when rows are created or maintained through starter kit notebooks.
 
 ## List of Metadata Tables
-
-The sections below use the standard physical table names from the architecture model. Each table starts with a short summary table, followed by implementation columns. The column reference tables use four columns so GitHub preview can wrap cleanly without horizontal scrolling.
-
-The two grouping tables are optional. They let each organisation define labels such as faculty, department, division, product area, or domain without adding custom columns to every metadata table.
-
-### `METADATA_GROUP`
-
-| Item | Details |
-| --- | --- |
-| Concept | Optional grouping reference |
-| Purpose | Defines user-configurable grouping values such as faculty, department, division, domain, product area, or business unit without hardcoding those fields into every metadata table. |
-| Grain | One row per group value. |
-| Key relationships | `METADATA_GROUP_ASSIGNMENT.parent_group_id` and `METADATA_GROUP_ASSIGNMENT.child_group_id` reference this table. |
-| Main writer | Steward administrator, setup process, or `01_da_*` if grouping is configured inside the starter kit. |
-| Main downstream use | Supports configurable filters and widgets while keeping the core metadata schema lightweight. |
-| Runtime audit | Includes the standard runtime audit columns defined above. |
-
-| Column | Example | Status | Purpose |
-| --- | --- | --- | --- |
-| group_id | grp-faculty-science | Optional | Stable group key used by group assignments. |
-| group_type | faculty | Optional | User-defined grouping type, such as faculty, department, division, domain, business_unit, product, or school. |
-| group_name | Faculty of Science | Optional | Human-readable group value shown in widgets and filters. |
-| group_description | Science academic cluster | Optional | Short explanation of the group value where needed. |
-| is_active | true | Optional | Controls whether the group appears in configurable widgets and new metadata records. |
-
-### `METADATA_GROUP_ASSIGNMENT`
-
-| Item | Details |
-| --- | --- |
-| Concept | Optional grouping assignment |
-| Purpose | Attaches parent and child groups to a metadata record without adding fields such as faculty or department to every table. |
-| Grain | One row per entity and parent-child group assignment. |
-| Key relationships | `parent_group_id` and `child_group_id` reference `METADATA_GROUP`. `entity_type` and `entity_id` identify the metadata record being grouped. |
-| Main writer | Steward administrator, setup process, `01_da_*`, or governance review notebook. |
-| Main downstream use | Lets widgets remain plug-and-play while allowing each organisation to define its own grouping hierarchy. |
-| Runtime audit | Includes the standard runtime audit columns defined above. |
-
-| Column | Example | Status | Purpose |
-| --- | --- | --- | --- |
-| assignment_id | ga-da-100000-fos-stats | Optional | Stable assignment row key. |
-| entity_type | data_agreement | Optional | Metadata entity being grouped, such as data_steward, data_agreement, table, column, notebook, or data_product. |
-| entity_id | DA-20260529-100000 | Optional | ID of the metadata entity being grouped. |
-| parent_group_id | grp-faculty-science | Optional | Parent group, such as faculty, division, business unit, or domain. |
-| child_group_id | grp-dept-statistics | Optional | Child group, such as department, team, product area, or subdomain. Leave blank when there is no child group. |
-| is_primary | true | Optional | Marks the main grouping when an entity has multiple assignments. |
-| effective_from | 2026-06-01 | Optional | Start date for the assignment. |
-| effective_to | 2027-05-31 | Optional | Optional end date for the assignment. |
-| is_active | true | Optional | Controls whether the assignment is current. |
 
 ### `METADATA_DATA_STEWARD`
 
@@ -132,7 +86,6 @@ The two grouping tables are optional. They let each organisation define labels s
 | effective_to | 2026-12-31 | Maintained | Optional end date for the steward assignment |
 | is_active | true | Maintained | Whether the steward assignment is available for active use |
 
-
 ### `METADATA_DATA_AGREEMENT`
 
 | Item | Details |
@@ -147,24 +100,18 @@ The two grouping tables are optional. They let each organisation define labels s
 
 | Column | Example | Status | Purpose |
 | --- | --- | --- | --- |
-| agreement_id | DA-20260529-100000 | Implemented | Stable agreement key reused across appended versions |
-| contract_version | 1.0.0 | Implemented | Append-only semantic agreement version key |
-| agreement_name | Governed Reporting Agreement | Implemented | Human-readable agreement name |
-| domain | Operations | Implemented | Business or data domain for the agreement |
-| steward_id | steward-001 | Implemented | Steward reference key resolved from `METADATA_DATA_STEWARD` |
-| status | active | Implemented / derived | Agreement status used by downstream workflows |
-| business_purpose | Support governed reporting | Implemented | Business reason for the agreement |
-| approved_usage | Approved reporting only | Implemented | Allowed use within the agreement boundary |
-| restricted_usage | No redistribution | Implemented | Restricted or prohibited uses |
-| allowed_consumer_type | Internal Department | Implemented | Permitted consumer category |
-| expected_output | Dashboard | Implemented | Expected output type |
-| source_system | ERP | Implemented | Source-system category |
-| refresh_frequency | Daily | Implemented | Expected refresh cadence |
-| retention_expectation | Retain approved extracts for 30 days | Implemented | Retention boundary or expectation |
-| start_date | 2026-06-01 | Implemented | Agreement start date |
-| expiry_date | 2027-05-31 | Implemented | Agreement expiry date |
-| renewal_required | Yes | Implemented | Whether renewal is expected |
-
+| agreement_id | DA-20260529-100000| Implemented | Stable agreement key reused across appended versions. |
+| contract_version| 1.0.0 | Implemented | Append-only semantic version for the agreement. |
+| agreement_name| Governed Reporting Agreement | Implemented | Human-readable agreement name. |
+| domain | Operations | Implemented | Business or data domain for the agreement. Can be free text or selected from config. |
+| steward_id | steward-001 | Implemented | Steward reference key resolved from `METADATA_DATA_STEWARD`. |
+| agreement_counterparty | Business Unit Name| Implemented | Business unit the agreement is signed with |
+| status | active | Implemented / derived | Agreement lifecycle status used by downstream workflows. |
+| start_date | `2026-06-01` | Implemented | Agreement start date. |
+| expiry_date | `2027-05-31` | Implemented | Agreement expiry date. |
+| business_purpose | `Support governed reporting` | Implemented | Business reason for the agreement. |
+| approved_usage | `Approved reporting only` | Implemented | Allowed use within the agreement boundary. |
+| custom_fields_json | `{"consumer_group":"ODI","expected_output":"Dashboard"}` | Implemented | Config-driven extra fields collected by the agreement intake widget. |
 ### `METADATA_NOTEBOOK_REGISTRY`
 
 | Item | Details |
