@@ -13,29 +13,45 @@ By the end of this quick start, you should have:
 
 For the full operating model, read [How FabricOps Works](how-fabricops-works.md).
 
-## Recommended minimum setup
+## First run setup
 
-Start with one Governance workspace and one Engineering workspace. Add Engineering Prod only when the first pipeline is ready for controlled promotion.
+Start with one Governance workspace and one Engineering workspace. **Alternatively,** you can even simply put them a singular workspace for simplicity sake
 
 | Workspace                  | Required items                                               | Purpose                                                                                                                               |
 | -------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
 | Governance workspace       | `metadata_lakehouse`                                         | Stores shared metadata, notebook registration, agreements, profiles, approved rules, classifications, lineage, and handover evidence. |
-| Engineering Dev workspace  | `source_lakehouse`, `unified_lakehouse`, `product_warehouse` | Used by data analysts, engineers, and pipeline contributors to build and test the governed flow.                                      |
-| Engineering Prod workspace (optional) | `source_lakehouse`, `unified_lakehouse`, `product_warehouse` | Used later for production execution of approved `03_pc` notebooks.                                                                    |
+| Engineering workspace  | `source_lakehouse`, `unified_lakehouse`, `product_warehouse` | Used by data analysts, engineers, and pipeline contributors to build and test the governed flow.                                      |
 
-Do not start by overbuilding production. The first objective is to prove that the metadata flow works in Dev.
+## Once you have the workspace and lakehouses & warehouses set up follow these 5 steps
 
-## First run setup
 
-| Step | Do this                                                                     | Expected result                                                                                           | Read more                                            |
-| ---- | --------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| Step | Do this | Expected result | Read more |
+| ---- | ------- | --------------- |---------- |
 | 1    | Install the FabricOps wheel in a Microsoft Fabric Environment.              | Fabric notebooks attached to that Environment can import `fabricops_kit`.                                 | [Fabric Wheel Install](fabric-wheel-install.md)      |
-| 2    | Copy the notebook templates from the GitHub `templates` folder into Fabric. | You have editable copies of `00_env_config`, `01_da`, `02_ex`, `03_pc`, and `04_gov`.                     | [Notebook Templates](notebook-templates.md)          |
-| 3    | Attach the same Fabric Environment to each copied notebook.                 | Each notebook uses the installed helper wheel and compatible runtime configuration.                       | [Fabric Wheel Install](fabric-wheel-install.md)      |
-| 4    | Configure and run `00_env_config` for the Dev environment.                  | Workspace, lakehouse, warehouse, and governance metadata paths are available to the downstream notebooks. |[Notebook Templates](notebook-templates.md)  |
-| 5    | Run the first Dev notebook sequence.                                        | The starter metadata loop is created and can be reviewed before production promotion.                     | [Notebook Templates](notebook-templates.md)          |
 
-## Run the role-based notebook workflow
+![IMG](assets/fabric-example-install-custom-whl.png)
+
+| Step | Do this | Expected result | Read more |
+| ---- | ------- | --------------- |---------- |
+| 2    | Copy the notebook templates from the GitHub `templates` folder and upload into Fabric. | You have editable copies of `00_env_config`, `01_da`, `02_ex`, `03_pc`, and `04_gov`.                     | [Notebook Templates](notebook-templates.md)          |
+
+![IMG](assets/fabric-example-workspace-setup.png)
+
+| Step | Do this | Expected result | Read more |
+| ---- | ------- | --------------- |---------- |
+| 3    | Attach the same Fabric Environment to each copied notebook.                 | Each notebook uses the installed helper wheel and compatible runtime configuration.                       | [Fabric Wheel Install](fabric-wheel-install.md)      |
+
+![IMG](assets/fabric-example-set-notebook-environment.png)
+
+| Step | Do this | Expected result | Read more |
+| ---- | ------- | --------------- |---------- |
+| 4    | Configure `00_env_config` and update the path via the lakehouse/warehouse urls   | Workspace, lakehouse, warehouse, and governance metadata paths are available to the downstream notebooks. |[Notebook Templates](notebook-templates.md)  |
+
+![IMG](assets/fabric-example-00_config_paths.png)
+
+| Step | Do this | Expected result | Read more |
+| ---- | ------- | --------------- |---------- |
+| 5    | Run the notebook in sequence. | The starter metadata loop is created and can be reviewed before production promotion. | [Notebook Templates](notebook-templates.md)    |
 
 The notebooks are intentionally separated by role. Each template produces metadata or outputs that the next role can reuse.
 
