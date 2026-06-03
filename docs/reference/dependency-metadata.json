@@ -4098,8 +4098,8 @@
         "fabricops_kit.data_agreement._write_row",
         "fabricops_kit.data_quality.write_dq_rules",
         "fabricops_kit.fabric_input_output.seed_minimal_sample_source_table",
-        "fabricops_kit.metadata.setup_notebook_registry_table",
-        "fabricops_kit.metadata.write_metadata_rows"
+        "fabricops_kit.metadata.register_current_notebook",
+        "fabricops_kit.metadata.setup_notebook_registry_table"
       ],
       "used_by_count": 6,
       "internal_helpers_used": [],
@@ -4383,6 +4383,23 @@
       ],
       "internal_helper_count": 1
     },
+    "fabricops_kit.metadata._write_metadata_rows_legacy": {
+      "qualified_name": "fabricops_kit.metadata._write_metadata_rows_legacy",
+      "short_name": "_write_metadata_rows_legacy",
+      "module": "metadata",
+      "callable": "_write_metadata_rows_legacy",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/metadata/_write_metadata_rows_legacy/",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.metadata.register_current_notebook",
+        "fabricops_kit.metadata.write_metadata_rows"
+      ],
+      "used_by_count": 2,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
     "fabricops_kit.metadata.build_dq_rule_key": {
       "qualified_name": "fabricops_kit.metadata.build_dq_rule_key",
       "short_name": "build_dq_rule_key",
@@ -4501,9 +4518,10 @@
       "calls": [],
       "calls_count": 0,
       "used_by": [
+        "fabricops_kit.metadata.register_current_notebook",
         "fabricops_kit.metadata.write_metadata_rows"
       ],
-      "used_by_count": 1,
+      "used_by_count": 2,
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
@@ -4577,20 +4595,23 @@
       "docs_url": "/FabricOps-Starter-Kit/reference/register_current_notebook/",
       "classification": "essential",
       "calls": [
+        "fabricops_kit.fabric_input_output.write_lakehouse_table",
         "fabricops_kit.metadata._context_get",
         "fabricops_kit.metadata._runtime_context",
         "fabricops_kit.metadata._safe_str",
-        "fabricops_kit.metadata.write_metadata_rows"
+        "fabricops_kit.metadata._write_metadata_rows_legacy",
+        "fabricops_kit.metadata.column_context_rows_for_spark"
       ],
-      "calls_count": 4,
+      "calls_count": 6,
       "used_by": [],
       "used_by_count": 0,
       "internal_helpers_used": [
         "fabricops_kit.metadata._context_get",
         "fabricops_kit.metadata._runtime_context",
-        "fabricops_kit.metadata._safe_str"
+        "fabricops_kit.metadata._safe_str",
+        "fabricops_kit.metadata._write_metadata_rows_legacy"
       ],
-      "internal_helper_count": 3
+      "internal_helper_count": 4
     },
     "fabricops_kit.metadata.setup_notebook_registry_table": {
       "qualified_name": "fabricops_kit.metadata.setup_notebook_registry_table",
@@ -4655,18 +4676,19 @@
       "docs_url": "/FabricOps-Starter-Kit/reference/internal/metadata/write_metadata_rows/",
       "classification": "internal",
       "calls": [
-        "fabricops_kit.fabric_input_output.write_lakehouse_table",
+        "fabricops_kit.metadata._write_metadata_rows_legacy",
         "fabricops_kit.metadata.column_context_rows_for_spark"
       ],
       "calls_count": 2,
       "used_by": [
-        "fabricops_kit.metadata.register_current_notebook",
         "fabricops_kit.metadata.write_column_business_context",
         "fabricops_kit.metadata.write_column_governance_context"
       ],
-      "used_by_count": 3,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
+      "used_by_count": 2,
+      "internal_helpers_used": [
+        "fabricops_kit.metadata._write_metadata_rows_legacy"
+      ],
+      "internal_helper_count": 1
     },
     "fabricops_kit.technical_columns._add_audit_columns": {
       "qualified_name": "fabricops_kit.technical_columns._add_audit_columns",
@@ -5028,7 +5050,7 @@
     "metadata": {
       "essential_count": 4,
       "optional_count": 1,
-      "internal_count": 10,
+      "internal_count": 11,
       "outbound_modules": [
         "fabric_input_output"
       ],

@@ -96,8 +96,9 @@ def test_setup_notebook_registry_table_rejects_existing_table_with_missing_colum
         metadata.setup_notebook_registry_table(spark=_Spark(), config=_config(), env="dev")
 
 
-def test_register_current_notebook_row_columns_match_registry_schema(monkeypatch):
+def test_register_current_notebook_row_columns_match_registry_schema_and_uses_metadata_route(monkeypatch):
     writes = []
+    spark = _Spark()
     monkeypatch.setattr(metadata, "_runtime_context", lambda: {
         "currentWorkspaceId": "workspace-id",
         "currentWorkspaceName": "Workspace Name",
@@ -106,11 +107,13 @@ def test_register_current_notebook_row_columns_match_registry_schema(monkeypatch
         "userName": "user@example.com",
         "userId": "user-id",
     })
-    monkeypatch.setattr(metadata, "write_metadata_rows", lambda spark, rows, metadata_path, table_name, mode="append": writes.append((rows, metadata_path, table_name, mode)))
+    monkeypatch.setattr(metadata, "write_lakehouse_table", lambda df, config, env, target, table, **kwargs: writes.append((df, config, env, target, table, kwargs)))
 
+    config = _config()
     row = metadata.register_current_notebook(
-        spark=object(),
-        metadata_path="metadata-path",
+        spark=spark,
+        config=config,
+        env="dev",
         agreement_id="DA-1",
         notebook_type="03_pc",
         environment_name="dev",
@@ -124,4 +127,8 @@ def test_register_current_notebook_row_columns_match_registry_schema(monkeypatch
     assert set(row) == set(EXPECTED_NOTEBOOK_REGISTRY_COLUMNS)
     assert row["workspace_name"] == "Workspace Name"
     assert row["notebook_url"] == "https://app.fabric.microsoft.com/groups/workspace-id/notebooks/notebook-id"
-    assert writes == [([row], "metadata-path", metadata.NOTEBOOK_REGISTRY_TABLE, "append")]
+    assert spark.source_rows == [[row]]
+    assert len(writes) == 1
+    written_df, written_config, env, target, table, kwargs = writes[0]
+    assert written_df.columns == EXPECTED_NOTEBOOK_REGISTRY_COLUMNS
+    assert (written_config, env, target, table, kwargs) == (config, "dev", "metadata", metadata.NOTEBOOK_REGISTRY_TABLE, {"mode": "append"})

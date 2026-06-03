@@ -206,10 +206,20 @@ def column_context_rows_for_spark(rows: list[dict]) -> list[dict]:
 
 
 def write_metadata_rows(spark, rows: list[dict], metadata_path, table_name: str, mode: str = "append"):
-    """Write metadata rows to a lakehouse metadata table."""
+    """Write metadata rows to a legacy lakehouse metadata path."""
     df = spark.createDataFrame(column_context_rows_for_spark(rows))
-    write_lakehouse_table(df, metadata_path, table_name, mode=mode)
+    _write_metadata_rows_legacy(df, metadata_path=metadata_path, table_name=table_name, mode=mode)
     return df
+
+
+def _write_metadata_rows_legacy(df: Any, metadata_path: Any, table_name: str, mode: str = "append") -> None:
+    """Write metadata rows using the pre-route lakehouse path convention."""
+    root = getattr(metadata_path, "root", None) or str(metadata_path or "").strip()
+    if not root:
+        raise ValueError("metadata_path must be a FabricStore-like object or lakehouse root path.")
+    path = f"{root.rstrip('/')}/Tables/{table_name}"
+    writer = df.write.format("delta").mode(mode).option("overwriteSchema", "true")
+    writer.save(path)
 
 
 def write_column_business_context(spark, rows: list[dict], metadata_path, table_name: str = "METADATA_COLUMN_CONTEXT", mode: str = "append"):
@@ -334,15 +344,36 @@ def build_runtime_audit_fields(
     }
 
 
-def register_current_notebook(spark, metadata_path, agreement_id, notebook_type, environment_name=None, dataset_name=None, table_name=None, topic=None, pipeline_name=None, metadata_table=NOTEBOOK_REGISTRY_TABLE):
+def register_current_notebook(
+    spark,
+    metadata_path=None,
+    agreement_id=None,
+    notebook_type=None,
+    environment_name=None,
+    dataset_name=None,
+    table_name=None,
+    topic=None,
+    pipeline_name=None,
+    metadata_table=NOTEBOOK_REGISTRY_TABLE,
+    *,
+    config: Any = None,
+    env: str | None = None,
+):
     """Append a runtime notebook registration row.
 
     Parameters
     ----------
     spark : pyspark.sql.SparkSession
         Fabric Spark session used to append the registration row.
-    metadata_path : Any
-        Metadata lakehouse path or store accepted by ``write_lakehouse_table``.
+    config : FrameworkConfig or dict, optional
+        Recommended metadata route configuration from ``00_env_config``. When
+        paired with ``env``, the row is written through
+        ``write_lakehouse_table(df, config, env, "metadata", metadata_table)``.
+    env : str, optional
+        Environment key paired with ``config`` for metadata lakehouse routing.
+    metadata_path : Any, optional
+        Backward-compatible lakehouse store or root path. Prefer ``config`` and
+        ``env`` for new notebooks.
     agreement_id : str
         Agreement identifier this notebook supports.
     notebook_type : str
@@ -358,11 +389,18 @@ def register_current_notebook(spark, metadata_path, agreement_id, notebook_type,
     dict[str, str]
         Registration row matching :func:`get_notebook_registry_schema`.
 
+    Raises
+    ------
+    ValueError
+        If neither the recommended ``config``/``env`` route nor a legacy
+        ``metadata_path`` is provided.
+
     Notes
     -----
     Prepare the registry with :func:`setup_notebook_registry_table` before
-    workflow notebooks register themselves. The registry row uses Fabric runtime
-    context when available and blanks unavailable values.
+    workflow notebooks register themselves. New notebooks should pass
+    ``config=CONFIG`` and ``env=ENV`` so metadata writes use the configured
+    ``metadata`` target from ``00_env_config``.
     """
     ctx = _runtime_context()
     workspace_id = _context_get(ctx, "currentWorkspaceId", "workspaceId")
@@ -389,7 +427,13 @@ def register_current_notebook(spark, metadata_path, agreement_id, notebook_type,
         "user_id": _safe_str(user_id),
         "registered_at": datetime.now(timezone.utc).isoformat(),
     }
-    write_metadata_rows(spark, [row], metadata_path=metadata_path, table_name=metadata_table, mode="append")
+    df = spark.createDataFrame(column_context_rows_for_spark([row]))
+    if config is not None and env is not None:
+        write_lakehouse_table(df, config, env, "metadata", metadata_table, mode="append")
+    elif metadata_path is not None:
+        _write_metadata_rows_legacy(df, metadata_path=metadata_path, table_name=metadata_table, mode="append")
+    else:
+        raise ValueError("register_current_notebook requires config and env for metadata routing. Pass metadata_path only for legacy notebooks.")
     return row
 
 

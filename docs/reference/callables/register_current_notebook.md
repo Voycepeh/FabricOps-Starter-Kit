@@ -17,10 +17,12 @@ Register current notebook metadata evidence for agreement traceability.
 - Source file path: `src/fabricops_kit/metadata.py`
 - Source reference: <a href="../../api/modules/metadata/#register_current_notebook">Module source anchor</a>
 - Inbound references count: 0
-- Outbound references count: 4
+- Outbound references count: 6
 
 ## Outbound references
+- <a href="../write_lakehouse_table/"><code>fabricops_kit.fabric_input_output.write_lakehouse_table</code></a>
 - <a href="../internal/metadata/_context_get/"><code>fabricops_kit.metadata._context_get</code></a>
 - <a href="../internal/metadata/_runtime_context/"><code>fabricops_kit.metadata._runtime_context</code></a>
 - <a href="../internal/metadata/_safe_str/"><code>fabricops_kit.metadata._safe_str</code></a>
-- <a href="../internal/metadata/write_metadata_rows/"><code>fabricops_kit.metadata.write_metadata_rows</code></a>
+- <a href="../internal/metadata/_write_metadata_rows_legacy/"><code>fabricops_kit.metadata._write_metadata_rows_legacy</code></a>
+- <a href="../internal/metadata/column_context_rows_for_spark/"><code>fabricops_kit.metadata.column_context_rows_for_spark</code></a>

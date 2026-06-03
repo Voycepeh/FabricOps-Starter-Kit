@@ -172,6 +172,23 @@ Evidence upload is optional. Users can save steward and agreement records withou
 
 `METADATA_NOTEBOOK_REGISTRY` is not created or written by the `01_da` widgets. `setup_data_agreement_tables()` remains scoped to agreement intake only: `METADATA_DATA_STEWARD`, `METADATA_DATA_AGREEMENT`, and `METADATA_DATA_AGREEMENT_EVIDENCE`. Prepare this registry separately with `setup_notebook_registry_table()` before workflow notebooks register themselves, then let each workflow notebook append its own row through `register_current_notebook()`.
 
+Recommended route-based usage:
+
+```python
+setup_notebook_registry_table(spark=spark, config=CONFIG, env=ENV)
+
+register_current_notebook(
+    spark=spark,
+    config=CONFIG,
+    env=ENV,
+    agreement_id=agreement_id,
+    notebook_type="03_pc",
+    environment_name=ENV,
+    dataset_name=dataset_name,
+    table_name=table_name,
+)
+```
+
 !!! important "Notebook registry function"
     Use `register_current_notebook()`, not `register_notebook_metadata()`.
 

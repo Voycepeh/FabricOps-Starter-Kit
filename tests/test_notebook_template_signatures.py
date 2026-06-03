@@ -58,8 +58,11 @@ def test_02_ex_imports_only_public_fabricops_kit_functions():
 def test_02_ex_register_and_source_read_calls_match_public_signatures():
     calls = [node for node in ast.walk(_tree("02_ex_agreement_topic.ipynb")) if isinstance(node, ast.Call)]
     register = next(node for node in calls if _name(node.func) == "register_current_notebook")
-    assert "metadata_path" in {keyword.arg for keyword in register.keywords}
-    assert "metadata_store" not in {keyword.arg for keyword in register.keywords}
+    keyword_names = {keyword.arg for keyword in register.keywords}
+    assert "config" in keyword_names
+    assert "env" in keyword_names
+    assert "metadata_path" not in keyword_names
+    assert "metadata_store" not in keyword_names
 
     source_read = next(
         node for node in calls
@@ -269,8 +272,9 @@ def test_00_env_config_keeps_bootstrap_flow_without_load_config():
     assert "DATA_STEWARD_REQUIRED_FIELDS" not in code
     assert "DATA_STEWARD_SYSTEM_FIELDS" not in code
     assert "validate_data_agreement_prerequisites" not in code
-    assert "from fabricops_kit import setup_data_agreement_tables" in code
+    assert "from fabricops_kit import setup_data_agreement_tables, setup_notebook_registry_table" in code
     assert "AGREEMENT_METADATA_SETUP = setup_data_agreement_tables(" in code
+    assert "NOTEBOOK_REGISTRY_SETUP = setup_notebook_registry_table(" in code
     assert "spark=spark" in code
     assert "config=CONFIG" in code
     assert "env=ENV" in code

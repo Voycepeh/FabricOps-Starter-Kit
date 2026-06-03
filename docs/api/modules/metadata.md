@@ -6,7 +6,7 @@
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 5</span><span class="reference-chip">Internal helpers: 10</span><span class="reference-chip">Outbound: 1</span><span class="reference-chip">Inbound: 4</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 5</span><span class="reference-chip">Internal helpers: 11</span><span class="reference-chip">Outbound: 1</span><span class="reference-chip">Inbound: 4</span></div>
 
 ## Module purpose
 
@@ -40,7 +40,7 @@ Use `build_runtime_audit_fields(...)` when metadata tables need framework-manage
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>10</td>
+      <td>11</td>
     </tr>
     <tr>
       <td>Inbound module count</td>
@@ -94,7 +94,7 @@ Use `build_runtime_audit_fields(...)` when metadata tables need framework-manage
       <td>Essential</td>
       <td>function</td>
       <td>Register current notebook metadata evidence for agreement traceability.</td>
-      <td><a href="../../reference/internal/metadata/_context_get/"><code>_context_get</code></a> (internal), <a href="../../reference/internal/metadata/_runtime_context/"><code>_runtime_context</code></a> (internal), <a href="../../reference/internal/metadata/_safe_str/"><code>_safe_str</code></a> (internal)</td>
+      <td><a href="../../reference/internal/metadata/_context_get/"><code>_context_get</code></a> (internal), <a href="../../reference/internal/metadata/_runtime_context/"><code>_runtime_context</code></a> (internal), <a href="../../reference/internal/metadata/_safe_str/"><code>_safe_str</code></a> (internal), <a href="../../reference/internal/metadata/_write_metadata_rows_legacy/"><code>_write_metadata_rows_legacy</code></a> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/setup_notebook_registry_table/"><code>setup_notebook_registry_table</code></a></td>
@@ -144,7 +144,7 @@ Use `build_runtime_audit_fields(...)` when metadata tables need framework-manage
 <li>
 <a class="reference-chip" href="../../reference/register_current_notebook/"><code>register_current_notebook</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_context_get"><code>_context_get</code></a>, <a class="reference-chip" href="#_runtime_context"><code>_runtime_context</code></a>, <a class="reference-chip" href="#_safe_str"><code>_safe_str</code></a>, <a class="reference-chip" href="#write_metadata_rows"><code>write_metadata_rows</code></a>
+<a class="reference-chip" href="#_context_get"><code>_context_get</code></a>, <a class="reference-chip" href="#_runtime_context"><code>_runtime_context</code></a>, <a class="reference-chip" href="#_safe_str"><code>_safe_str</code></a>, <a class="reference-chip" href="#_write_metadata_rows_legacy"><code>_write_metadata_rows_legacy</code></a>, <a class="reference-chip" href="#column_context_rows_for_spark"><code>column_context_rows_for_spark</code></a>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/setup_notebook_registry_table/"><code>setup_notebook_registry_table</code></a>
@@ -208,6 +208,10 @@ Use `build_runtime_audit_fields(...)` when metadata tables need framework-manage
       <td><a href="../../reference/internal/metadata/_sha256_key/"><code>_sha256_key</code></a></td>
       <td>—</td>
     </tr>
+    <tr>
+      <td><a href="../../reference/internal/metadata/_write_metadata_rows_legacy/"><code>_write_metadata_rows_legacy</code></a></td>
+      <td><a href="../../reference/register_current_notebook/"><code>register_current_notebook</code></a></td>
+    </tr>
   </tbody>
 </table>
 </div>
@@ -251,6 +255,9 @@ Use `build_runtime_audit_fields(...)` when metadata tables need framework-manage
 <a class="reference-chip" href="#_sha256_key"><code>_sha256_key</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_key_part"><code>_key_part</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_write_metadata_rows_legacy"><code>_write_metadata_rows_legacy</code></a>
 </li>
 </ul>
 </details>

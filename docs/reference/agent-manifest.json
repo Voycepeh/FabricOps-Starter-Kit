@@ -3152,8 +3152,8 @@
       "fabricops_kit.data_agreement._write_row",
       "fabricops_kit.data_quality.write_dq_rules",
       "fabricops_kit.fabric_input_output.seed_minimal_sample_source_table",
-      "fabricops_kit.metadata.setup_notebook_registry_table",
-      "fabricops_kit.metadata.write_metadata_rows"
+      "fabricops_kit.metadata.register_current_notebook",
+      "fabricops_kit.metadata.setup_notebook_registry_table"
     ],
     "outbound": [
       "fabricops_kit.config._get_store"
@@ -3382,6 +3382,20 @@
     "summary": "No summary available."
   },
   {
+    "name": "_write_metadata_rows_legacy",
+    "qualified_name": "fabricops_kit.metadata._write_metadata_rows_legacy",
+    "module": "metadata",
+    "type": "internal",
+    "role": "internal",
+    "inbound": [
+      "fabricops_kit.metadata.register_current_notebook",
+      "fabricops_kit.metadata.write_metadata_rows"
+    ],
+    "outbound": [],
+    "source_file": "src/fabricops_kit/metadata.py",
+    "summary": "No summary available."
+  },
+  {
     "name": "build_dq_rule_key",
     "qualified_name": "fabricops_kit.metadata.build_dq_rule_key",
     "module": "metadata",
@@ -3469,6 +3483,7 @@
     "type": "internal",
     "role": "internal",
     "inbound": [
+      "fabricops_kit.metadata.register_current_notebook",
       "fabricops_kit.metadata.write_metadata_rows"
     ],
     "outbound": [],
@@ -3531,10 +3546,12 @@
     "role": "essential",
     "inbound": [],
     "outbound": [
+      "fabricops_kit.fabric_input_output.write_lakehouse_table",
       "fabricops_kit.metadata._context_get",
       "fabricops_kit.metadata._runtime_context",
       "fabricops_kit.metadata._safe_str",
-      "fabricops_kit.metadata.write_metadata_rows"
+      "fabricops_kit.metadata._write_metadata_rows_legacy",
+      "fabricops_kit.metadata.column_context_rows_for_spark"
     ],
     "source_file": "src/fabricops_kit/metadata.py",
     "summary": "Register current notebook metadata evidence for agreement traceability."
@@ -3590,12 +3607,11 @@
     "type": "internal",
     "role": "internal",
     "inbound": [
-      "fabricops_kit.metadata.register_current_notebook",
       "fabricops_kit.metadata.write_column_business_context",
       "fabricops_kit.metadata.write_column_governance_context"
     ],
     "outbound": [
-      "fabricops_kit.fabric_input_output.write_lakehouse_table",
+      "fabricops_kit.metadata._write_metadata_rows_legacy",
       "fabricops_kit.metadata.column_context_rows_for_spark"
     ],
     "source_file": "src/fabricops_kit/metadata.py",
