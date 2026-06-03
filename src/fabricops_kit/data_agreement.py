@@ -1,9 +1,10 @@
 """Lightweight, config-driven steward and data-agreement intake for Fabric notebooks.
 
-The ``00_env_config`` notebook prepares the two metadata tables and widget
-configuration. The ``01_da`` notebook then renders steward maintenance before
-agreement maintenance. Both tables are append-only and use framework-managed
-runtime audit columns.
+The ``00_env_config`` notebook prepares steward, agreement, and evidence
+metadata tables plus widget configuration. The ``01_da`` notebook renders a
+tabbed intake app for steward maintenance, agreement maintenance, and optional
+agreement evidence upload. Intake tables are append-only and use
+framework-managed runtime audit columns.
 """
 
 from __future__ import annotations
@@ -18,6 +19,7 @@ from .fabric_input_output import read_lakehouse_table, write_lakehouse_table
 from .metadata import build_runtime_audit_fields
 
 DATA_AGREEMENT_TABLE = "METADATA_DATA_AGREEMENT"
+DATA_AGREEMENT_EVIDENCE_TABLE = "METADATA_DATA_AGREEMENT_EVIDENCE"
 DATA_STEWARD_TABLE = "METADATA_DATA_STEWARD"
 _SELECTED_AGREEMENT: dict[str, Any] | None = None
 STANDARD_RUNTIME_AUDIT_COLUMNS = [
@@ -36,6 +38,17 @@ DATA_AGREEMENT_VISIBLE_FIELDS = [
 DATA_AGREEMENT_GENERATED_FIELDS = ["agreement_id", "contract_version"]
 DATA_STEWARD_FIELDS = DATA_STEWARD_BACKEND_FIELDS + ["custom_fields_json"] + STANDARD_RUNTIME_AUDIT_COLUMNS
 DATA_AGREEMENT_FIELDS = DATA_AGREEMENT_GENERATED_FIELDS + DATA_AGREEMENT_VISIBLE_FIELDS + ["custom_fields_json"] + STANDARD_RUNTIME_AUDIT_COLUMNS
+DATA_AGREEMENT_EVIDENCE_FIELDS = [
+    "agreement_id", "contract_version", "evidence_type", "file_name", "file_path",
+    "mime_type", "file_size", "uploaded_at", "uploaded_by",
+    *STANDARD_RUNTIME_AUDIT_COLUMNS,
+]
+AGREEMENT_EVIDENCE_ALLOWED_EXTENSIONS = (".pdf", ".doc", ".docx", ".png", ".jpg", ".jpeg")
+AGREEMENT_EVIDENCE_ACCEPT = ",".join(AGREEMENT_EVIDENCE_ALLOWED_EXTENSIONS)
+AGREEMENT_EVIDENCE_TYPES = [
+    "Signed Agreement", "Email Approval", "Policy Document",
+    "Supporting Screenshot", "Other",
+]
 
 FIELD_LABELS = {
     "steward_id": "Steward ID",
@@ -54,6 +67,7 @@ FIELD_LABELS = {
     "approved_usage_internal": "Approved Usage - Internal",
     "approved_usage_external": "Approved Usage - External",
     "approved_usage_research": "Approved Usage - Research",
+    "evidence_type": "Evidence Type",
 }
 _WIDGET_STYLE = {"description_width": "150px"}
 _WIDGET_LAYOUT_WIDTH = "600px"
@@ -93,6 +107,17 @@ def _get_data_agreement_schema() -> list[str]:
         User-facing, JSON extension, and backend-only audit columns.
     """
     return list(DATA_AGREEMENT_FIELDS)
+
+
+def _get_data_agreement_evidence_schema() -> list[str]:
+    """Return the agreement evidence metadata-table schema.
+
+    Returns
+    -------
+    list[str]
+        Agreement/version identity, file reference metadata, and audit columns.
+    """
+    return list(DATA_AGREEMENT_EVIDENCE_FIELDS)
 
 
 def _serialize_custom_fields(values: dict[str, Any] | None) -> str:
@@ -354,7 +379,11 @@ def _ensure_metadata_tables(config: Any, env_name: str, *, spark: Any) -> dict[s
     Existing tables with older schemas require a deliberate migration; this
     helper does not destructively overwrite metadata.
     """
-    table_schemas = {_table_name(config, "data_steward", DATA_STEWARD_TABLE): _get_data_steward_schema(), _table_name(config, "data_agreement", DATA_AGREEMENT_TABLE): _get_data_agreement_schema()}
+    table_schemas = {
+        _table_name(config, "data_steward", DATA_STEWARD_TABLE): _get_data_steward_schema(),
+        _table_name(config, "data_agreement", DATA_AGREEMENT_TABLE): _get_data_agreement_schema(),
+        _table_name(config, "data_agreement_evidence", DATA_AGREEMENT_EVIDENCE_TABLE): _get_data_agreement_evidence_schema(),
+    }
     created = []
     for table_name, fields in table_schemas.items():
         try:
@@ -720,6 +749,145 @@ def _create_or_update_data_agreement(*, spark: Any, config: Any, env_name: str, 
     return row
 
 
+
+
+def _metadata_lakehouse_file_path(config: Any, env_name: str, relative_path: str) -> str:
+    """Resolve a metadata lakehouse ``Files/`` relative path to ABFSS."""
+    paths = config.path_config.paths if hasattr(config, "path_config") else config.paths
+    store = paths[env_name]["metadata"]
+    if getattr(store, "kind", "lakehouse") != "lakehouse":
+        raise ValueError("The configured metadata target must be a lakehouse to store agreement evidence files.")
+    normalized = str(relative_path or "").lstrip("/")
+    if normalized.startswith("Files/"):
+        normalized = normalized[len("Files/"):]
+    return f"{store.root.rstrip('/')}/Files/{normalized}"
+
+
+def _safe_evidence_file_name(file_name: Any) -> str:
+    """Return a folder-safe uploaded evidence file name with an allowed suffix."""
+    name = str(file_name or "").replace("\\", "/").split("/")[-1].strip()
+    if not name:
+        raise ValueError("Uploaded evidence file is missing a file name.")
+    safe = "".join(char if char.isalnum() or char in {".", "-", "_", " "} else "_" for char in name).strip()
+    if not safe:
+        raise ValueError("Uploaded evidence file is missing a file name.")
+    suffix = "." + safe.rsplit(".", 1)[-1].lower() if "." in safe else ""
+    if suffix not in AGREEMENT_EVIDENCE_ALLOWED_EXTENSIONS:
+        allowed = ", ".join(AGREEMENT_EVIDENCE_ALLOWED_EXTENSIONS)
+        raise ValueError(f"Unsupported evidence file type. Allowed types: {allowed}.")
+    return safe
+
+
+def _write_evidence_file(*, spark: Any, config: Any, env_name: str, relative_path: str, content: bytes) -> str:
+    """Write uploaded evidence bytes to the metadata lakehouse Files area."""
+    absolute_path = _metadata_lakehouse_file_path(config, env_name, relative_path)
+    jvm = getattr(spark, "_jvm", None)
+    jsc = getattr(spark, "_jsc", None)
+    if jvm is not None and jsc is not None:
+        path = jvm.org.apache.hadoop.fs.Path(absolute_path)
+        fs = path.getFileSystem(jsc.hadoopConfiguration())
+        parent = path.getParent()
+        if parent is not None:
+            fs.mkdirs(parent)
+        stream = fs.create(path, True)
+        try:
+            stream.write(bytearray(content))
+        finally:
+            stream.close()
+        return absolute_path
+
+    from pathlib import Path
+    local_path = Path(absolute_path)
+    local_path.parent.mkdir(parents=True, exist_ok=True)
+    local_path.write_bytes(content)
+    return absolute_path
+
+
+def _uploaded_file_items(uploaded_value: Any) -> list[dict[str, Any]]:
+    """Normalize ipywidgets FileUpload values across widget versions."""
+    if not uploaded_value:
+        return []
+    if isinstance(uploaded_value, dict):
+        raw_items = list(uploaded_value.values())
+    else:
+        raw_items = list(uploaded_value)
+    items = []
+    for item in raw_items:
+        data = dict(item)
+        content = data.get("content", b"")
+        if isinstance(content, memoryview):
+            content = content.tobytes()
+        elif isinstance(content, bytearray):
+            content = bytes(content)
+        elif isinstance(content, str):
+            content = content.encode("utf-8")
+        data["content"] = bytes(content or b"")
+        items.append(data)
+    return items
+
+
+def _agreement_version_options(rows: Any, *, include_prompt: bool = True) -> list[tuple[str, str | None]]:
+    """Build agreement-version dropdown options keyed by agreement/version."""
+    options: list[tuple[str, str | None]] = [("Select an agreement version...", None)] if include_prompt else []
+    sorted_rows = sorted(_coerce_row_dicts(rows), key=lambda row: (str(row.get("agreement_name") or "").lower(), str(row.get("agreement_id") or ""), _parse_contract_version(row.get("contract_version"))))
+    for row in sorted_rows:
+        agreement_id = str(row.get("agreement_id") or "").strip()
+        contract_version = str(row.get("contract_version") or "").strip()
+        if agreement_id and contract_version:
+            key = f"{agreement_id}||{contract_version}"
+            options.append((f"{row.get('agreement_name', '') or agreement_id} ({agreement_id} / v{contract_version})", key))
+    return options
+
+
+def _save_agreement_evidence_records(*, spark: Any, config: Any, env_name: str, agreement_id: str, contract_version: str, evidence_type: str, uploaded_files: Any, committed_by: str | None = None, committed_at: str | None = None, runtime_context: dict[str, Any] | None = None) -> list[dict[str, Any]]:
+    """Persist uploaded evidence files and append file-reference metadata rows."""
+    agreement_id = str(agreement_id or "").strip()
+    contract_version = str(contract_version or "").strip()
+    if not agreement_id:
+        raise ValueError("agreement_id is required before saving agreement evidence.")
+    if not contract_version:
+        raise ValueError("contract_version is required before saving agreement evidence.")
+    files = _uploaded_file_items(uploaded_files)
+    if not files:
+        raise ValueError("Upload at least one evidence file before saving.")
+    evidence_type = str(evidence_type or "Other").strip() or "Other"
+    audit = build_runtime_audit_fields(config=config, env=env_name, committed_by=committed_by, committed_at=committed_at, runtime_context=runtime_context)
+    uploaded_at = audit.get("_committed_at") or datetime.now(timezone.utc).isoformat()
+    uploaded_by = audit.get("_committed_by") or ""
+    prepared_files = []
+    for index, uploaded in enumerate(files):
+        file_name = _safe_evidence_file_name(uploaded.get("name"))
+        content = uploaded.get("content", b"")
+        if "." in file_name:
+            stem, suffix = file_name.rsplit(".", 1)
+            suffix = f".{suffix}"
+        else:
+            stem, suffix = file_name, ""
+        token_basis = f"{uploaded_at}|{index}|{file_name}|".encode("utf-8") + content
+        storage_token = hashlib.sha256(token_basis).hexdigest()[:8]
+        storage_file_name = f"{stem}__{storage_token}{suffix}"
+        prepared_files.append((uploaded, file_name, storage_file_name, content))
+
+    rows: list[dict[str, Any]] = []
+    for uploaded, file_name, storage_file_name, content in prepared_files:
+        relative_path = f"Files/fabricops/agreement_evidence/{agreement_id}/{contract_version}/{storage_file_name}"
+        _write_evidence_file(spark=spark, config=config, env_name=env_name, relative_path=relative_path, content=content)
+        row = {
+            "agreement_id": agreement_id,
+            "contract_version": contract_version,
+            "evidence_type": evidence_type,
+            "file_name": file_name,
+            "file_path": relative_path,
+            "mime_type": str(uploaded.get("type") or ""),
+            "file_size": str(uploaded.get("size") if uploaded.get("size") is not None else len(content)),
+            "uploaded_at": uploaded_at,
+            "uploaded_by": uploaded_by,
+            **audit,
+        }
+        _write_row(spark=spark, config=config, env_name=env_name, table=_table_name(config, "data_agreement_evidence", DATA_AGREEMENT_EVIDENCE_TABLE), row=row)
+        rows.append(row)
+    return rows
+
 def _agreement_dropdown_options(rows: Any, *, include_prompt: bool = False) -> list[tuple[str, Any]]:
     """Build latest-version agreement dropdown options keyed by agreement ID."""
     options = [("Select an agreement to update...", None)] if include_prompt else []
@@ -829,7 +997,7 @@ def _agreement_identity_text(row: dict[str, Any] | None) -> str:
     )
 
 
-def _render_maintenance_widget(*, spark: Any, config: Any, env_name: str, kind: str) -> dict[str, Any]:
+def _render_maintenance_widget(*, spark: Any, config: Any, env_name: str, kind: str, display_widget: bool = True) -> dict[str, Any]:
     import ipywidgets as widgets
     from IPython.display import display
     is_steward = kind == "data_steward_widget"
@@ -946,6 +1114,9 @@ def _render_maintenance_widget(*, spark: Any, config: Any, env_name: str, kind: 
                     else:
                         print(f"Saved data agreement: {row.get('agreement_name', '')} ({row['agreement_id']} v{row['contract_version']})")
                     _refresh_existing_options(row["agreement_id"])
+                    if not row.get("_fabricops_no_change"):
+                        for callback in after_save_callbacks:
+                            callback(row)
                     if identity_context is not None:
                         identity_context.value = _agreement_identity_text(row)
             except Exception as exc:
@@ -960,8 +1131,11 @@ def _render_maintenance_widget(*, spark: Any, config: Any, env_name: str, kind: 
     controls.extend([*form.values(), *custom.values()])
     if refresh_stewards is not None:
         controls.append(refresh_stewards)
-    display(widgets.VBox([*controls, save, output]))
+    container = widgets.VBox([*controls, save, output])
+    if display_widget:
+        display(container)
     return {
+        "container": container,
         "existing_record": selected,
         "existing_records_by_id": row_lookup,
         "identity_context": identity_context,
@@ -975,6 +1149,98 @@ def _render_maintenance_widget(*, spark: Any, config: Any, env_name: str, kind: 
         "output": output,
     }
 
+
+
+
+def _render_agreement_evidence_widget(*, spark: Any, config: Any, env_name: str, display_widget: bool = True) -> dict[str, Any]:
+    """Render optional agreement evidence upload controls."""
+    import ipywidgets as widgets
+    from IPython.display import display
+
+    row_lookup: dict[str, dict[str, Any]] = {}
+
+    def _agreement_rows() -> list[dict[str, Any]]:
+        return _list_all_data_agreement_rows(config, env_name, spark_session=spark, missing_ok=True)
+
+    def _options() -> list[tuple[str, str | None]]:
+        row_lookup.clear()
+        rows = _agreement_rows()
+        options = _agreement_version_options(rows, include_prompt=True)
+        for row in rows:
+            agreement_id = str(row.get("agreement_id") or "").strip()
+            contract_version = str(row.get("contract_version") or "").strip()
+            if agreement_id and contract_version:
+                row_lookup[f"{agreement_id}||{contract_version}"] = row
+        return options
+
+    message = widgets.HTML(value="")
+    selected = widgets.Dropdown(options=_options(), **_widget_common(widgets, "Agreement Version"))
+    evidence_type = widgets.Dropdown(options=[(item, item) for item in AGREEMENT_EVIDENCE_TYPES], **_widget_common(widgets, "Evidence Type"))
+    upload = widgets.FileUpload(accept=AGREEMENT_EVIDENCE_ACCEPT, multiple=True, description="Upload evidence")
+    refresh = widgets.Button(description="Refresh agreements")
+    save = widgets.Button(description="Save evidence")
+    output = widgets.Output()
+
+    def _set_empty_state() -> None:
+        has_agreement = any(value is not None for _, value in selected.options)
+        message.value = "" if has_agreement else "<b>No data agreements found.</b> Save a Data Agreement first, then return here to upload optional evidence."
+        upload.disabled = not has_agreement
+        save.disabled = not has_agreement
+
+    def _refresh(_: Any = None) -> None:
+        current = selected.value
+        selected.options = _options()
+        selected.value = current if current in row_lookup else None
+        _set_empty_state()
+
+    def _clear_output() -> None:
+        clear = getattr(output, "clear_output", None)
+        if clear is not None:
+            clear(wait=True)
+
+    def _save(_: Any) -> None:
+        save.disabled = True
+        _clear_output()
+        with output:
+            try:
+                selected_row = row_lookup.get(selected.value or "")
+                if not selected_row:
+                    raise ValueError("Select an agreement version before saving evidence.")
+                rows = _save_agreement_evidence_records(
+                    spark=spark,
+                    config=config,
+                    env_name=env_name,
+                    agreement_id=str(selected_row.get("agreement_id") or ""),
+                    contract_version=str(selected_row.get("contract_version") or ""),
+                    evidence_type=str(evidence_type.value or "Other"),
+                    uploaded_files=upload.value,
+                )
+                print(f"Saved {len(rows)} agreement evidence file record(s).")
+            except Exception as exc:
+                print(f"Error: {exc}")
+            finally:
+                _set_empty_state()
+                if any(value is not None for _, value in selected.options):
+                    save.disabled = False
+
+    refresh.on_click(_refresh)
+    save.on_click(_save)
+    _set_empty_state()
+    container = widgets.VBox([message, selected, evidence_type, upload, refresh, save, output])
+    if display_widget:
+        display(container)
+    return {
+        "container": container,
+        "message": message,
+        "agreement_version": selected,
+        "agreement_versions_by_key": row_lookup,
+        "evidence_type": evidence_type,
+        "file_upload": upload,
+        "refresh_agreements_button": refresh,
+        "refresh_agreements": _refresh,
+        "save_button": save,
+        "output": output,
+    }
 
 def render_data_steward_widget(config: Any, env_name: str, *, spark: Any) -> dict[str, Any]:
     """Render append-only data steward create/update maintenance.
@@ -1017,7 +1283,7 @@ def render_data_agreement_widget(config: Any, env_name: str, *, spark: Any) -> d
 
 
 def render_agreement_intake_app(*, spark: Any, config: Any, env: str) -> dict[str, Any]:
-    """Render the two plug-and-play ``01_da`` metadata intake widgets.
+    """Render the tabbed ``01_da`` metadata intake application.
 
     Parameters
     ----------
@@ -1031,29 +1297,37 @@ def render_agreement_intake_app(*, spark: Any, config: Any, env: str) -> dict[st
     Returns
     -------
     dict[str, Any]
-        Data Steward and dependent Data Agreement widget applications.
+        Data Steward, Data Agreement, Agreement Evidence, and tab controls.
 
     Notes
     -----
-    The Data Steward widget is shown first so users can maintain active steward
-    assignments before rendering or refreshing the dependent Data Agreement
-    widget.
+    The app uses ``ipywidgets.Tab`` so only one intake section is visible at a
+    time. The Evidence tab is optional and stores uploaded files in the
+    configured metadata lakehouse ``Files`` area while appending file-reference
+    rows to ``METADATA_DATA_AGREEMENT_EVIDENCE``.
     """
-    try:
-        import ipywidgets as widgets
-        from IPython.display import display
-    except ModuleNotFoundError:
-        widgets = None
-        display = None
+    import ipywidgets as widgets
+    from IPython.display import display
 
-    if widgets is not None and display is not None:
-        display(widgets.HTML(value="<h3>Data Steward</h3><p>Create or update steward records used by agreements.</p>"))
-    steward_app = render_data_steward_widget(config, env, spark=spark)
-    if widgets is not None and display is not None:
-        display(widgets.HTML(value="<h3>Data Agreement</h3><p>Create or update agreement records linked to active stewards.</p>"))
-    agreement_app = render_data_agreement_widget(config, env, spark=spark)
+    steward_app = _render_maintenance_widget(spark=spark, config=config, env_name=env, kind="data_steward_widget", display_widget=False)
+    agreement_app = _render_maintenance_widget(spark=spark, config=config, env_name=env, kind="data_agreement_widget", display_widget=False)
+    evidence_app = _render_agreement_evidence_widget(spark=spark, config=config, env_name=env, display_widget=False)
     callbacks = steward_app.get("after_save_callbacks") if isinstance(steward_app, dict) else None
     agreement_refresh = agreement_app.get("refresh_steward_options") if isinstance(agreement_app, dict) else None
     if isinstance(callbacks, list) and callable(agreement_refresh):
         callbacks.append(lambda row: agreement_refresh(row.get("steward_id") if isinstance(row, dict) else None))
-    return {"data_steward": steward_app, "data_agreement": agreement_app}
+    evidence_refresh = evidence_app.get("refresh_agreements") if isinstance(evidence_app, dict) else None
+    agreement_callbacks = agreement_app.get("after_save_callbacks") if isinstance(agreement_app, dict) else None
+    if isinstance(agreement_callbacks, list) and callable(evidence_refresh):
+        agreement_callbacks.append(lambda row: evidence_refresh())
+
+    sections = [
+        widgets.VBox([widgets.HTML(value="<h3>Data Steward</h3><p>Create or update steward records used by agreements.</p>"), steward_app["container"]]),
+        widgets.VBox([widgets.HTML(value="<h3>Data Agreement</h3><p>Create or update agreement records linked to active stewards.</p>"), agreement_app["container"]]),
+        widgets.VBox([widgets.HTML(value="<h3>Agreement Evidence</h3><p>Optionally upload agreement evidence files for a saved agreement version.</p>"), evidence_app["container"]]),
+    ]
+    tab = widgets.Tab(children=sections)
+    for index, title in enumerate(["Data Steward", "Data Agreement", "Agreement Evidence"]):
+        tab.set_title(index, title)
+    display(tab)
+    return {"data_steward": steward_app, "data_agreement": agreement_app, "agreement_evidence": evidence_app, "tab": tab}

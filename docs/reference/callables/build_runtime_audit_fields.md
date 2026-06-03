@@ -16,12 +16,13 @@ Build shared underscore-prefixed runtime audit fields for metadata-table rows.
 - Related module: `metadata`
 - Source file path: `src/fabricops_kit/metadata.py`
 - Source reference: <a href="../../api/modules/metadata/#build_runtime_audit_fields">Module source anchor</a>
-- Inbound references count: 2
+- Inbound references count: 3
 - Outbound references count: 3
 
 ## Inbound references
 - <a href="../internal/data_agreement/_create_or_update_data_agreement/"><code>fabricops_kit.data_agreement._create_or_update_data_agreement</code></a>
 - <a href="../internal/data_agreement/_create_or_update_data_steward/"><code>fabricops_kit.data_agreement._create_or_update_data_steward</code></a>
+- <a href="../internal/data_agreement/_save_agreement_evidence_records/"><code>fabricops_kit.data_agreement._save_agreement_evidence_records</code></a>
 
 ## Outbound references
 - <a href="../internal/metadata/_context_get/"><code>fabricops_kit.metadata._context_get</code></a>

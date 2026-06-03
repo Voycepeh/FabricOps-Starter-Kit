@@ -122,6 +122,8 @@ def test_00_env_config_exposes_shared_config_and_data_agreement_defaults():
         '"Data Owner"',
         '"Governance Reviewer"',
         "data_steward_widget={",
+        "data_agreement_evidence",
+        "METADATA_DATA_AGREEMENT_EVIDENCE",
         "data_agreement_widget={",
         '"custom_fields": [',
         '"key": "group"',
@@ -142,6 +144,7 @@ def test_00_env_config_bootstraps_agreement_tables_and_reports_steward_readiness
     assert "CONFIG.path_config.paths[ENV]['unified'].name" in code
     assert "CONFIG.path_config.paths[ENV]['product'].name" in code
     assert "01_da metadata tables created/checked" in code
+    assert "METADATA_DATA_AGREEMENT_EVIDENCE" in code
     assert 'AGREEMENT_METADATA_SETUP[\'tables\']' in code
     assert 'AGREEMENT_METADATA_SETUP[\'status\']' in code
     assert 'AGREEMENT_METADATA_SETUP[\'message\']' in code

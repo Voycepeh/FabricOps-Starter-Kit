@@ -64,12 +64,13 @@ These fields are populated by runtime audit helpers, for example `metadata.build
 
 ## Lightweight `01_da` intake
 
-`00_env_config` defines the two physical metadata tables and the editable configuration for two visible `01_da` widgets:
+`00_env_config` defines the physical steward, agreement, and evidence metadata tables plus the editable configuration for the visible `01_da` intake widgets:
 
 1. **Data Steward** maintenance creates or updates append-only steward assignments.
 2. **Data Agreement** maintenance creates append-only agreement versions and selects from currently active stewards.
+3. **Agreement Evidence** optionally uploads supporting documents or screenshots for an existing agreement version.
 
-Each widget exposes a short standard field list plus configured custom fields. Agreement identifiers (`agreement_id` and `contract_version`) are backend-generated context: new agreements receive an ID and `1.0.0` version automatically, while updates carry the stable ID forward and increment the version. Normal users should not manually edit these technical identifiers.
+Each intake widget exposes a short standard field list plus configured custom fields. Agreement identifiers (`agreement_id` and `contract_version`) are backend-generated context: new agreements receive an ID and `1.0.0` version automatically, while updates carry the stable ID forward and increment the version. Normal users should not manually edit these technical identifiers.
 
 Add organization-specific concepts such as a faculty, department, division, consumer group, or expected output in `00_env_config`; the widget stores those values in `custom_fields_json`. Custom field definitions support `text`, `textarea`, `select`, `multiselect`, `date`, and `boolean` controls. Do not add a physical column for each local intake concept.
 
@@ -129,6 +130,33 @@ The steward maintenance form hides backend-managed `steward_id` and `is_active` 
 | custom_fields_json | `{"consumer_group":"ODI"}` | Implemented | Config-driven extra fields collected by the agreement intake widget. |
 
 One agreement may populate one, two, or all three approved usage fields. Splitting internal, external, and research usage lets later governance workflows apply different review expectations, restrictions, and evidence requirements by purpose. Existing metadata tables that still contain only the old `approved_usage` column need a deliberate schema update before rendering the updated `01_da` form; the framework does not silently map old usage text into a new purpose field because that would change its meaning.
+
+
+### `METADATA_DATA_AGREEMENT_EVIDENCE`
+
+| Item | Details |
+| --- | --- |
+| Concept | `data_agreement_evidence` |
+| Purpose | Optional file-reference ledger for documents or screenshots that support a saved agreement version. The uploaded binary files are stored in the metadata lakehouse `Files` area, not in the agreement table. |
+| Grain | One row per uploaded evidence file for an agreement version. |
+| Key relationships | `agreement_id` and `contract_version` reference `METADATA_DATA_AGREEMENT`. |
+| Main writer | `01_da_*` Agreement Evidence tab |
+| Main downstream use | Lets governance or audit users find supporting agreement files without bloating agreement/version metadata rows. |
+| Runtime audit | Includes the standard runtime audit columns defined above. |
+
+Evidence upload is optional. Users can save steward and agreement records without uploading evidence, then return later to attach supporting documents. Files are written under a deterministic metadata lakehouse Files folder such as `Files/fabricops/agreement_evidence/<agreement_id>/<contract_version>/`, with unique stored filenames to avoid replacing same-name uploads. The metadata table stores only file references and descriptive metadata; it does not store uploaded binary content. `METADATA_DATA_AGREEMENT` stays focused on agreement identity, versioning, steward, recipient, purpose, approved usage, dates, and config-driven extension fields.
+
+| Column | Example | Status | Purpose |
+| --- | --- | --- | --- |
+| agreement_id | DA-20260529-100000 | Implemented | Agreement key for the supported agreement version. |
+| contract_version | 1.0.0 | Implemented | Agreement version supported by the evidence file. |
+| evidence_type | Signed Agreement | Implemented | Simple evidence category selected in the upload tab. |
+| file_name | signed-agreement.pdf | Implemented | Original uploaded file name after safe path normalization. |
+| file_path | Files/fabricops/agreement_evidence/DA-20260529-100000/1.0.0/signed-agreement__a1b2c3d4.pdf | Implemented | Metadata lakehouse Files path for the uploaded file. |
+| mime_type | application/pdf | Implemented | Browser-provided MIME type when available. |
+| file_size | 24576 | Implemented | Uploaded file size in bytes. |
+| uploaded_at | 2026-06-01T10:30:00Z | Implemented | Upload timestamp aligned to runtime audit context when available. |
+| uploaded_by | user@example.com | Implemented | Uploading user aligned to runtime audit context when available. |
 
 ### `METADATA_NOTEBOOK_REGISTRY`
 
