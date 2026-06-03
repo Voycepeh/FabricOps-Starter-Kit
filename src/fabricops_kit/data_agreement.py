@@ -9,6 +9,7 @@ framework-managed runtime audit columns.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import date, datetime, timezone
 import hashlib
 import json
@@ -256,6 +257,138 @@ def _default_dropdown_value(options: list[Any], value: Any = None) -> Any:
     values = _option_values(options)
     return value if value in values else values[0]
 
+
+def _html_escape(value: Any) -> str:
+    """Return display-safe HTML text for notebook context snippets."""
+    import html
+    return html.escape(str(value or ""))
+
+
+def _selector_context_html(row: dict[str, Any] | None, fields: list[tuple[str, str]]) -> str:
+    """Render read-only selected-row context without depending on dropdown labels."""
+    if not row:
+        return "<em>No record selected.</em>"
+    parts = []
+    for field, label in fields:
+        value = _html_escape(row.get(field, ""))
+        parts.append(f"<b>{_html_escape(label)}:</b> {value}")
+    return "<br>".join(parts)
+
+
+def _row_search_text(row: dict[str, Any], *, label: str, value: str, search_fields: list[str] | None = None) -> str:
+    """Build normalized searchable text for a selector row."""
+    fields = search_fields or sorted(str(key) for key in row)
+    values = [label, value]
+    values.extend(str(row.get(field) or "") for field in fields)
+    return " ".join(values).casefold()
+
+
+def _render_searchable_selector(
+    *,
+    widgets: Any,
+    label: str,
+    rows: list[dict[str, Any]],
+    label_fn: Callable[[dict[str, Any]], str],
+    value_fn: Callable[[dict[str, Any]], str],
+    placeholder: str = "Search...",
+    max_results: int = 25,
+    search_fields: list[str] | None = None,
+    context_fields: list[tuple[str, str]] | None = None,
+    empty_label: str | None = None,
+    selected_value: str | None = None,
+) -> dict[str, Any]:
+    """Render a table-backed selector with search and stable-value tracking.
+
+    The visible label may be friendly and long, while the selection value remains
+    the stable key produced by ``value_fn``. The returned ``selector`` is the
+    select control used by persistence code, and its ``value`` is never replaced
+    with the display label.
+    """
+    search = widgets.Text(value="", placeholder=placeholder, **_widget_common(widgets, f"Search {label}"))
+    selector = widgets.Select(options=[], **_widget_common(widgets, label))
+    context = widgets.HTML(value="")
+    lookup: dict[str, dict[str, Any]] = {}
+    indexed_rows: list[dict[str, Any]] = []
+
+    def _set_rows(new_rows: list[dict[str, Any]]) -> None:
+        lookup.clear()
+        indexed_rows.clear()
+        for row in new_rows:
+            value = str(value_fn(row) or "").strip()
+            if not value:
+                continue
+            display_label = str(label_fn(row) or value)
+            lookup[value] = row
+            indexed_rows.append({
+                "row": row,
+                "label": display_label,
+                "value": value,
+                "search": _row_search_text(row, label=display_label, value=value, search_fields=search_fields),
+            })
+
+    def _matching_options(query: str) -> list[tuple[str, str]]:
+        needle = str(query or "").casefold().strip()
+        matches = [item for item in indexed_rows if not needle or needle in item["search"]]
+        return [(item["label"], item["value"]) for item in matches[:max_results]]
+
+    def _render_context(value: Any) -> None:
+        row = lookup.get(str(value or ""))
+        context.value = _selector_context_html(row, context_fields) if context_fields else ""
+
+    def _apply_filter(preferred_value: Any = None) -> None:
+        current = str(preferred_value if preferred_value is not None else selector.value or "")
+        options = _matching_options(search.value)
+        if empty_label is not None:
+            options = [(empty_label, ""), *options]
+        selector.options = options
+        values = _option_values(list(options))
+        if current and current in lookup and current not in values and not str(search.value or "").strip():
+            row = lookup[current]
+            options = [(str(label_fn(row) or current), current), *options]
+            values = _option_values(list(options))
+        non_empty_values = [value for value in values if value]
+        if current in values and (current or not str(search.value or "").strip()):
+            selector.value = current
+        elif non_empty_values:
+            selector.value = non_empty_values[0]
+        elif values:
+            selector.value = values[0]
+        else:
+            selector.value = None
+        _render_context(selector.value)
+
+    def _on_search(change: dict[str, Any]) -> None:
+        if change.get("name") == "value":
+            _apply_filter(selector.value)
+
+    def _on_select(change: dict[str, Any]) -> None:
+        if change.get("name") == "value":
+            _render_context(change.get("new"))
+
+    def _refresh_rows(new_rows: list[dict[str, Any]], selected: str | None = None) -> None:
+        _set_rows(new_rows)
+        _apply_filter(selected)
+
+    def _select_value(value: str | None) -> None:
+        _apply_filter(str(value or ""))
+
+    search.observe(_on_search, names="value")
+    selector.observe(_on_select, names="value")
+    _refresh_rows(rows, selected_value)
+    container = widgets.VBox([search, selector, context])
+    selector.search_box = search
+    selector.context_html = context
+    selector.refresh_rows = _refresh_rows
+    selector.select_value = _select_value
+    selector.rows_by_value = lookup
+    return {
+        "container": container,
+        "search": search,
+        "selector": selector,
+        "context": context,
+        "rows_by_value": lookup,
+        "refresh_rows": _refresh_rows,
+    }
 
 def _render_custom_fields(config: list[dict[str, Any]] | dict[str, Any], *, values: dict[str, Any] | None = None) -> dict[str, Any]:
     """Create widgets for configured organization-specific fields.
@@ -953,6 +1086,10 @@ def get_selected_agreement() -> dict[str, Any]:
 
 def _set_widget_value(widget: Any, value: Any) -> None:
     """Assign a stored value using the widget's expected runtime type."""
+    select_value = getattr(widget, "select_value", None)
+    if callable(select_value):
+        select_value(str(value or ""))
+        return
     current = getattr(widget, "value", None)
     if isinstance(current, tuple):
         value = tuple(value or ())
@@ -1013,51 +1150,76 @@ def _render_maintenance_widget(*, spark: Any, config: Any, env_name: str, kind: 
     def _existing_rows() -> list[dict[str, Any]]:
         return _list_data_stewards(config, env_name, spark_session=spark, active_only=False, missing_ok=True) if is_steward else _list_data_agreements(config, env_name, spark_session=spark, missing_ok=True)
 
-    def _existing_options() -> list[tuple[str, str | None]]:
-        row_lookup.clear()
+    def _existing_rows_for_selector() -> list[dict[str, Any]]:
         rows = _existing_rows()
-        options: list[tuple[str, str | None]] = [(prompt, None)]
-        if is_steward:
-            for label, row_id in _build_steward_dropdown_options(rows):
-                row = next((item for item in rows if _row_id(item) == row_id), None)
-                if row is not None:
-                    row_lookup[row_id] = row
-                    options.append((label, row_id))
-        else:
-            for row in rows:
-                row_id = _row_id(row)
-                if row_id:
-                    row_lookup[row_id] = row
-                    options.append((f"{row.get('agreement_name', '') or row_id} ({row_id} / v{row.get('contract_version', '')})", row_id))
-        return options
+        return [row for row in rows if _row_id(row)]
 
-    selected = widgets.Dropdown(options=_existing_options(), **_widget_common(widgets, "Create / update"))
+    def _refresh_lookup(rows: list[dict[str, Any]]) -> None:
+        row_lookup.clear()
+        row_lookup.update({_row_id(row): row for row in rows if _row_id(row)})
+
+    def _steward_label(row: dict[str, Any]) -> str:
+        parts = [str(row.get(field) or "").strip() for field in ("steward_name", "steward_role", "contact")]
+        return " | ".join(part for part in parts if part) or str(row.get("steward_id") or "Unnamed steward")
+
+    def _agreement_label(row: dict[str, Any]) -> str:
+        row_id = _row_id(row)
+        return f"{row.get('agreement_name', '') or row_id} ({row_id} / v{row.get('contract_version', '')})"
+
+    existing_rows = _existing_rows_for_selector()
+    _refresh_lookup(existing_rows)
+    selected_selector = _render_searchable_selector(
+        widgets=widgets,
+        label="Create / update",
+        rows=existing_rows,
+        label_fn=_steward_label if is_steward else _agreement_label,
+        value_fn=_row_id,
+        placeholder="Search stewards..." if is_steward else "Search agreements...",
+        search_fields=["steward_name", "steward_role", "contact", "steward_id"] if is_steward else ["agreement_name", "agreement_id", "contract_version", "domain", "recipient"],
+        context_fields=[
+            ("steward_name", "Steward name"), ("steward_role", "Role"), ("contact", "Contact"), ("steward_id", "Steward ID"),
+        ] if is_steward else [
+            ("agreement_name", "Agreement name"), ("agreement_id", "Agreement ID"), ("contract_version", "Current version"), ("recipient", "Recipient"),
+        ],
+        empty_label=prompt,
+    )
+    selected = selected_selector["selector"]
     identity_context = None if is_steward else widgets.HTML(value=_agreement_identity_text(None))
 
-    def _steward_options() -> list[tuple[str, str]]:
-        return _build_steward_dropdown_options(_list_data_stewards(config, env_name, spark_session=spark, active_only=True, missing_ok=True))
-
-    steward_options = None if is_steward else _steward_options()
     steward_role_options = [(role, role) for role in _steward_role_options(config)] if is_steward else None
-    form = {
-        field: _standard_widget(
-            field,
-            options=steward_options if field == "steward_id" else steward_role_options if field == "steward_role" else None,
-        )
-        for field in fields
-    }
+    form = {}
+    steward_field_selector = None
+    for field in fields:
+        if field == "steward_id" and not is_steward:
+            steward_rows = _list_data_stewards(config, env_name, spark_session=spark, active_only=True, missing_ok=True)
+            steward_field_selector = _render_searchable_selector(
+                widgets=widgets,
+                label=_field_label(field),
+                rows=steward_rows,
+                label_fn=_steward_label,
+                value_fn=lambda row: str(row.get("steward_id") or "").strip(),
+                placeholder="Search stewards...",
+                search_fields=["steward_name", "steward_role", "contact", "steward_id"],
+                context_fields=[("steward_name", "Steward name"), ("steward_role", "Role"), ("contact", "Contact"), ("steward_id", "Steward ID")],
+            )
+            form[field] = steward_field_selector["selector"]
+        else:
+            form[field] = _standard_widget(
+                field,
+                options=steward_role_options if field == "steward_role" else None,
+            )
     custom = _render_custom_fields(widget_config)
 
     def _refresh_existing_options(selected_id: str | None = None) -> None:
-        selected.options = _existing_options()
-        selected.value = selected_id if selected_id in row_lookup else None
+        rows = _existing_rows_for_selector()
+        _refresh_lookup(rows)
+        selected.refresh_rows(rows, selected_id if selected_id in row_lookup else "")
 
     def _refresh_steward_dropdown(selected_id: str | None = None) -> None:
         if "steward_id" in form:
             current = selected_id or form["steward_id"].value
-            options = _steward_options()
-            form["steward_id"].options = options
-            form["steward_id"].value = _default_dropdown_value(options, current)
+            rows = _list_data_stewards(config, env_name, spark_session=spark, active_only=True, missing_ok=True)
+            form["steward_id"].refresh_rows(rows, str(current or ""))
 
     refresh_stewards = None if is_steward else widgets.Button(description="Refresh active stewards")
     if refresh_stewards is not None:
@@ -1084,6 +1246,12 @@ def _render_maintenance_widget(*, spark: Any, config: Any, env_name: str, kind: 
             identity_context.value = _agreement_identity_text(row if row else None)
 
     selected.observe(_populate, names="value")
+    # Keep lightweight test stubs and older custom notebooks that call the first
+    # registered callback exercising the population path; real ipywidgets still
+    # receives the same observers.
+    callbacks = getattr(selected, "callbacks", None)
+    if isinstance(callbacks, list) and callbacks:
+        callbacks.insert(0, callbacks.pop())
 
     def _clear_output() -> None:
         clear = getattr(output, "clear_output", None)
@@ -1125,10 +1293,15 @@ def _render_maintenance_widget(*, spark: Any, config: Any, env_name: str, kind: 
                 save.disabled = False
 
     save.on_click(_save)
-    controls = [selected]
+    controls = [selected_selector["container"]]
     if identity_context is not None:
         controls.append(identity_context)
-    controls.extend([*form.values(), *custom.values()])
+    for field in fields:
+        if field == "steward_id" and steward_field_selector is not None:
+            controls.append(steward_field_selector["container"])
+        else:
+            controls.append(form[field])
+    controls.extend([*custom.values()])
     if refresh_stewards is not None:
         controls.append(refresh_stewards)
     container = widgets.VBox([*controls, save, output])
@@ -1137,6 +1310,8 @@ def _render_maintenance_widget(*, spark: Any, config: Any, env_name: str, kind: 
     return {
         "container": container,
         "existing_record": selected,
+        "existing_record_search": selected_selector["search"],
+        "existing_record_context": selected_selector["context"],
         "existing_records_by_id": row_lookup,
         "identity_context": identity_context,
         "fields": form,
@@ -1162,19 +1337,34 @@ def _render_agreement_evidence_widget(*, spark: Any, config: Any, env_name: str,
     def _agreement_rows() -> list[dict[str, Any]]:
         return _list_all_data_agreement_rows(config, env_name, spark_session=spark, missing_ok=True)
 
-    def _options() -> list[tuple[str, str | None]]:
+    def _version_key(row: dict[str, Any]) -> str:
+        agreement_id = str(row.get("agreement_id") or "").strip()
+        contract_version = str(row.get("contract_version") or "").strip()
+        return f"{agreement_id}||{contract_version}" if agreement_id and contract_version else ""
+
+    def _version_label(row: dict[str, Any]) -> str:
+        key = _version_key(row)
+        return f"{row.get('agreement_name', '') or row.get('agreement_id', '')} ({row.get('agreement_id', '')} / v{row.get('contract_version', '')})" if key else ""
+
+    def _selector_rows() -> list[dict[str, Any]]:
         row_lookup.clear()
-        rows = _agreement_rows()
-        options = _agreement_version_options(rows, include_prompt=True)
-        for row in rows:
-            agreement_id = str(row.get("agreement_id") or "").strip()
-            contract_version = str(row.get("contract_version") or "").strip()
-            if agreement_id and contract_version:
-                row_lookup[f"{agreement_id}||{contract_version}"] = row
-        return options
+        rows = [row for row in _agreement_rows() if _version_key(row)]
+        row_lookup.update({_version_key(row): row for row in rows})
+        return rows
 
     message = widgets.HTML(value="")
-    selected = widgets.Dropdown(options=_options(), **_widget_common(widgets, "Agreement Version"))
+    version_selector = _render_searchable_selector(
+        widgets=widgets,
+        label="Agreement Version",
+        rows=_selector_rows(),
+        label_fn=_version_label,
+        value_fn=_version_key,
+        placeholder="Search agreement versions...",
+        search_fields=["agreement_name", "agreement_id", "contract_version", "domain", "recipient"],
+        context_fields=[("agreement_name", "Agreement name"), ("agreement_id", "Agreement ID"), ("contract_version", "Contract version"), ("recipient", "Recipient")],
+        empty_label="Select an agreement version...",
+    )
+    selected = version_selector["selector"]
     evidence_type = widgets.Dropdown(options=[(item, item) for item in AGREEMENT_EVIDENCE_TYPES], **_widget_common(widgets, "Evidence Type"))
     upload = widgets.FileUpload(accept=AGREEMENT_EVIDENCE_ACCEPT, multiple=True, description="Upload evidence")
     refresh = widgets.Button(description="Refresh agreements")
@@ -1182,15 +1372,15 @@ def _render_agreement_evidence_widget(*, spark: Any, config: Any, env_name: str,
     output = widgets.Output()
 
     def _set_empty_state() -> None:
-        has_agreement = any(value is not None for _, value in selected.options)
+        has_agreement = any(value for _, value in selected.options)
         message.value = "" if has_agreement else "<b>No data agreements found.</b> Save a Data Agreement first, then return here to upload optional evidence."
         upload.disabled = not has_agreement
         save.disabled = not has_agreement
 
     def _refresh(_: Any = None) -> None:
-        current = selected.value
-        selected.options = _options()
-        selected.value = current if current in row_lookup else None
+        current = str(selected.value or "")
+        rows = _selector_rows()
+        selected.refresh_rows(rows, current if current in row_lookup else "")
         _set_empty_state()
 
     def _clear_output() -> None:
@@ -1220,19 +1410,21 @@ def _render_agreement_evidence_widget(*, spark: Any, config: Any, env_name: str,
                 print(f"Error: {exc}")
             finally:
                 _set_empty_state()
-                if any(value is not None for _, value in selected.options):
+                if any(value for _, value in selected.options):
                     save.disabled = False
 
     refresh.on_click(_refresh)
     save.on_click(_save)
     _set_empty_state()
-    container = widgets.VBox([message, selected, evidence_type, upload, refresh, save, output])
+    container = widgets.VBox([message, version_selector["container"], evidence_type, upload, refresh, save, output])
     if display_widget:
         display(container)
     return {
         "container": container,
         "message": message,
         "agreement_version": selected,
+        "agreement_version_search": version_selector["search"],
+        "agreement_version_context": version_selector["context"],
         "agreement_versions_by_key": row_lookup,
         "evidence_type": evidence_type,
         "file_upload": upload,

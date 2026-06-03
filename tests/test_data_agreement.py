@@ -78,8 +78,8 @@ def _install_widget_stubs(monkeypatch):
             for key, value in kwargs.items():
                 setattr(self, key, value)
     widgets = ModuleType("ipywidgets")
-    for name in ("Text", "Textarea", "Dropdown", "SelectMultiple", "DatePicker", "Checkbox", "Button", "HTML", "FileUpload", "Tab"):
-        setattr(widgets, name, Widget)
+    for name in ("Text", "Textarea", "Dropdown", "Select", "SelectMultiple", "DatePicker", "Checkbox", "Button", "HTML", "FileUpload", "Tab"):
+        setattr(widgets, name, type(name, (Widget,), {}))
     widgets.Output = Output
     widgets.Layout = Layout
     widgets.VBox = lambda values: Widget(children=tuple(values))
@@ -825,3 +825,127 @@ def test_evidence_save_uses_unique_storage_names_for_duplicate_upload_names(monk
     assert all("/approval__" in row["file_path"] and row["file_path"].endswith(".pdf") for row in rows)
     assert len({row["file_path"] for row in rows}) == 2
     assert [file["relative_path"] for file in files] == [row["file_path"] for row in rows]
+
+
+def test_searchable_selector_filters_rows_case_insensitively_and_preserves_stable_value(monkeypatch):
+    _install_widget_stubs(monkeypatch)
+    import ipywidgets as widgets
+
+    rows = [
+        {"id": "ROW-001", "name": "Alpha Friendly Long Label", "domain": "Finance"},
+        {"id": "ROW-002", "name": "Beta Friendly Long Label", "domain": "Operations"},
+    ]
+    selector = data_agreement._render_searchable_selector(
+        widgets=widgets,
+        label="Rows",
+        rows=rows,
+        label_fn=lambda row: row["name"],
+        value_fn=lambda row: row["id"],
+        search_fields=["name", "domain", "id"],
+        context_fields=[("name", "Name"), ("id", "Stable ID")],
+    )
+
+    selector["search"].value = "operations"
+    selector["search"].callbacks[0]({"name": "value", "new": "operations"})
+
+    assert selector["selector"].options == [("Beta Friendly Long Label", "ROW-002")]
+    assert selector["selector"].value == "ROW-002"
+    assert selector["selector"].value != "Beta Friendly Long Label"
+
+
+def test_steward_selector_searches_name_role_contact_and_steward_id(monkeypatch):
+    _install_widget_stubs(monkeypatch)
+    rows = [
+        _steward(steward_id="STEW-OWNER", steward_name="Alice Owner", steward_role="Data Owner", contact="owner@example.com"),
+        _steward(steward_id="STEW-REVIEW", steward_name="Bob Reviewer", steward_role="Governance Reviewer", contact="review@example.com"),
+    ]
+    monkeypatch.setattr(data_agreement, "_list_data_stewards", lambda *args, **kwargs: rows)
+    widget = data_agreement.render_data_steward_widget(_config(), "dev", spark=object())
+
+    for term, expected in [("alice", "STEW-OWNER"), ("governance", "STEW-REVIEW"), ("review@example", "STEW-REVIEW"), ("stew-owner", "STEW-OWNER")]:
+        widget["existing_record_search"].value = term
+        widget["existing_record_search"].callbacks[0]({"name": "value", "new": term})
+        assert widget["existing_record"].value == expected
+
+
+def test_agreement_selectors_search_agreement_fields_and_preserve_keys(monkeypatch):
+    _install_widget_stubs(monkeypatch)
+    rows = [
+        {**_agreement(agreement_name="Finance Sharing", domain="Finance", recipient="Budget team"), "agreement_id": "DA-FIN", "contract_version": "1.0.0"},
+        {**_agreement(agreement_name="Operations Sharing", domain="Operations", recipient="Dispatch team"), "agreement_id": "DA-OPS", "contract_version": "2.0.0"},
+    ]
+    monkeypatch.setattr(data_agreement, "_list_data_agreements", lambda *args, **kwargs: rows)
+    monkeypatch.setattr(data_agreement, "_list_data_stewards", lambda *args, **kwargs: [_steward()])
+    agreement_widget = data_agreement.render_data_agreement_widget(_config(), "dev", spark=object())
+
+    for term, expected in [("finance", "DA-FIN"), ("da-ops", "DA-OPS"), ("dispatch", "DA-OPS")]:
+        agreement_widget["existing_record_search"].value = term
+        agreement_widget["existing_record_search"].callbacks[0]({"name": "value", "new": term})
+        assert agreement_widget["existing_record"].value == expected
+
+    monkeypatch.setattr(data_agreement, "_list_all_data_agreement_rows", lambda *args, **kwargs: rows)
+    evidence_widget = data_agreement._render_agreement_evidence_widget(spark=object(), config=_config(), env_name="dev")
+    evidence_widget["agreement_version_search"].value = "dispatch"
+    evidence_widget["agreement_version_search"].callbacks[0]({"name": "value", "new": "dispatch"})
+    assert evidence_widget["agreement_version"].value == "DA-OPS||2.0.0"
+
+
+def test_selected_record_context_renders_key_fields_without_truncation(monkeypatch):
+    _install_widget_stubs(monkeypatch)
+    long_name = "Very Long Steward Name That Should Remain Visible In Context"
+    steward = _steward(steward_id="STEW-LONG-KEY", steward_name=long_name, steward_role="Data Owner", contact="long@example.com")
+    monkeypatch.setattr(data_agreement, "_list_data_stewards", lambda *args, **kwargs: [steward])
+    steward_widget = data_agreement.render_data_steward_widget(_config(), "dev", spark=object())
+    steward_widget["existing_record"].callbacks[1]({"name": "value", "new": "STEW-LONG-KEY"})
+    html = steward_widget["existing_record_context"].value
+    assert long_name in html
+    assert "Data Owner" in html
+    assert "long@example.com" in html
+    assert "STEW-LONG-KEY" in html
+
+    agreement = {**_agreement(agreement_name="Very Long Agreement Name That Should Remain Visible", recipient="Analytics recipients"), "agreement_id": "DA-LONG-KEY", "contract_version": "3.4.0"}
+    monkeypatch.setattr(data_agreement, "_list_data_agreements", lambda *args, **kwargs: [agreement])
+    agreement_widget = data_agreement.render_data_agreement_widget(_config(), "dev", spark=object())
+    agreement_widget["existing_record"].callbacks[1]({"name": "value", "new": "DA-LONG-KEY"})
+    agreement_html = agreement_widget["existing_record_context"].value
+    assert "Very Long Agreement Name" in agreement_html
+    assert "DA-LONG-KEY" in agreement_html
+    assert "3.4.0" in agreement_html
+    assert "Analytics recipients" in agreement_html
+
+
+def test_refresh_callbacks_keep_searchable_selectors_usable(monkeypatch):
+    _install_widget_stubs(monkeypatch)
+    stewards = [_steward(steward_id="STEW-OLD")]
+    monkeypatch.setattr(data_agreement, "_list_data_stewards", lambda *args, **kwargs: stewards)
+    monkeypatch.setattr(data_agreement, "_list_data_agreements", lambda *args, **kwargs: [])
+    agreement_widget = data_agreement.render_data_agreement_widget(_config(), "dev", spark=object())
+    stewards.append(_steward(steward_id="STEW-NEW", steward_name="New Searchable Steward", contact="new@example.com"))
+
+    agreement_widget["refresh_steward_options"]("STEW-NEW")
+
+    assert agreement_widget["fields"]["steward_id"].value == "STEW-NEW"
+    assert agreement_widget["fields"]["steward_id"].search_box is not None
+
+    agreements = []
+    monkeypatch.setattr(data_agreement, "_list_all_data_agreement_rows", lambda *args, **kwargs: agreements)
+    evidence_widget = data_agreement._render_agreement_evidence_widget(spark=object(), config=_config(), env_name="dev")
+    agreements.append({**_agreement(agreement_name="New Evidence Agreement"), "agreement_id": "DA-NEW", "contract_version": "1.0.0"})
+    evidence_widget["refresh_agreements"]()
+    evidence_widget["agreement_version_search"].value = "new evidence"
+    evidence_widget["agreement_version_search"].callbacks[0]({"name": "value", "new": "new evidence"})
+    assert evidence_widget["agreement_version"].value == "DA-NEW||1.0.0"
+
+
+def test_config_driven_small_dropdowns_remain_normal_dropdown_controls(monkeypatch):
+    _install_widget_stubs(monkeypatch)
+    import ipywidgets as widgets
+    monkeypatch.setattr(data_agreement, "_list_data_stewards", lambda *args, **kwargs: [])
+    steward_widget = data_agreement.render_data_steward_widget(_config(), "dev", spark=object())
+    assert isinstance(steward_widget["fields"]["steward_role"], widgets.Dropdown)
+    assert not isinstance(steward_widget["fields"]["steward_role"], widgets.Select)
+
+    monkeypatch.setattr(data_agreement, "_list_all_data_agreement_rows", lambda *args, **kwargs: [])
+    evidence_widget = data_agreement._render_agreement_evidence_widget(spark=object(), config=_config(), env_name="dev")
+    assert isinstance(evidence_widget["evidence_type"], widgets.Dropdown)
+    assert not isinstance(evidence_widget["evidence_type"], widgets.Select)

@@ -801,10 +801,8 @@
         "fabricops_kit.data_agreement._parse_contract_version"
       ],
       "calls_count": 2,
-      "used_by": [
-        "fabricops_kit.data_agreement._render_agreement_evidence_widget"
-      ],
-      "used_by_count": 1,
+      "used_by": [],
+      "used_by_count": 0,
       "internal_helpers_used": [
         "fabricops_kit.data_agreement._coerce_row_dicts",
         "fabricops_kit.data_agreement._parse_contract_version"
@@ -823,10 +821,9 @@
       ],
       "calls_count": 1,
       "used_by": [
-        "fabricops_kit.data_agreement._load_active_data_steward_profiles",
-        "fabricops_kit.data_agreement._render_maintenance_widget"
+        "fabricops_kit.data_agreement._load_active_data_steward_profiles"
       ],
-      "used_by_count": 2,
+      "used_by_count": 1,
       "internal_helpers_used": [
         "fabricops_kit.data_agreement._coerce_row_dicts"
       ],
@@ -1021,11 +1018,10 @@
       "calls_count": 1,
       "used_by": [
         "fabricops_kit.data_agreement._render_custom_fields",
-        "fabricops_kit.data_agreement._render_maintenance_widget",
         "fabricops_kit.data_agreement._set_widget_value",
         "fabricops_kit.data_agreement._standard_widget"
       ],
-      "used_by_count": 4,
+      "used_by_count": 3,
       "internal_helpers_used": [
         "fabricops_kit.data_agreement._option_values"
       ],
@@ -1089,9 +1085,10 @@
       "calls_count": 0,
       "used_by": [
         "fabricops_kit.data_agreement._render_custom_fields",
+        "fabricops_kit.data_agreement._render_maintenance_widget",
         "fabricops_kit.data_agreement._standard_widget"
       ],
-      "used_by_count": 2,
+      "used_by_count": 3,
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
@@ -1213,6 +1210,22 @@
         "fabricops_kit.data_agreement._widget_config"
       ],
       "internal_helper_count": 2
+    },
+    "fabricops_kit.data_agreement._html_escape": {
+      "qualified_name": "fabricops_kit.data_agreement._html_escape",
+      "short_name": "_html_escape",
+      "module": "data_agreement",
+      "callable": "_html_escape",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_agreement/_html_escape/",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.data_agreement._selector_context_html"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
     },
     "fabricops_kit.data_agreement._latest_agreement_versions": {
       "qualified_name": "fabricops_kit.data_agreement._latest_agreement_versions",
@@ -1423,9 +1436,10 @@
       "calls_count": 0,
       "used_by": [
         "fabricops_kit.data_agreement._default_dropdown_value",
-        "fabricops_kit.data_agreement._render_maintenance_widget"
+        "fabricops_kit.data_agreement._render_maintenance_widget",
+        "fabricops_kit.data_agreement._render_searchable_selector"
       ],
-      "used_by_count": 2,
+      "used_by_count": 3,
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
@@ -1473,8 +1487,8 @@
       "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_agreement/_render_agreement_evidence_widget/",
       "classification": "internal",
       "calls": [
-        "fabricops_kit.data_agreement._agreement_version_options",
         "fabricops_kit.data_agreement._list_all_data_agreement_rows",
+        "fabricops_kit.data_agreement._render_searchable_selector",
         "fabricops_kit.data_agreement._save_agreement_evidence_records",
         "fabricops_kit.data_agreement._widget_common"
       ],
@@ -1484,8 +1498,8 @@
       ],
       "used_by_count": 1,
       "internal_helpers_used": [
-        "fabricops_kit.data_agreement._agreement_version_options",
         "fabricops_kit.data_agreement._list_all_data_agreement_rows",
+        "fabricops_kit.data_agreement._render_searchable_selector",
         "fabricops_kit.data_agreement._save_agreement_evidence_records",
         "fabricops_kit.data_agreement._widget_common"
       ],
@@ -1527,25 +1541,24 @@
       "classification": "internal",
       "calls": [
         "fabricops_kit.data_agreement._agreement_identity_text",
-        "fabricops_kit.data_agreement._build_steward_dropdown_options",
         "fabricops_kit.data_agreement._collect_custom_fields",
         "fabricops_kit.data_agreement._create_or_update_data_agreement",
         "fabricops_kit.data_agreement._create_or_update_data_steward",
-        "fabricops_kit.data_agreement._default_dropdown_value",
         "fabricops_kit.data_agreement._deserialize_custom_fields",
+        "fabricops_kit.data_agreement._field_label",
         "fabricops_kit.data_agreement._get_widget_visible_fields",
         "fabricops_kit.data_agreement._list_data_agreements",
         "fabricops_kit.data_agreement._list_data_stewards",
         "fabricops_kit.data_agreement._option_values",
         "fabricops_kit.data_agreement._render_custom_fields",
+        "fabricops_kit.data_agreement._render_searchable_selector",
         "fabricops_kit.data_agreement._set_widget_value",
         "fabricops_kit.data_agreement._standard_widget",
         "fabricops_kit.data_agreement._steward_role_options",
-        "fabricops_kit.data_agreement._widget_common",
         "fabricops_kit.data_agreement._widget_config",
         "fabricops_kit.data_agreement._widget_field_value"
       ],
-      "calls_count": 18,
+      "calls_count": 17,
       "used_by": [
         "fabricops_kit.data_agreement.render_agreement_intake_app",
         "fabricops_kit.data_agreement.render_data_agreement_widget",
@@ -1554,25 +1567,51 @@
       "used_by_count": 3,
       "internal_helpers_used": [
         "fabricops_kit.data_agreement._agreement_identity_text",
-        "fabricops_kit.data_agreement._build_steward_dropdown_options",
         "fabricops_kit.data_agreement._collect_custom_fields",
         "fabricops_kit.data_agreement._create_or_update_data_agreement",
         "fabricops_kit.data_agreement._create_or_update_data_steward",
-        "fabricops_kit.data_agreement._default_dropdown_value",
         "fabricops_kit.data_agreement._deserialize_custom_fields",
+        "fabricops_kit.data_agreement._field_label",
         "fabricops_kit.data_agreement._get_widget_visible_fields",
         "fabricops_kit.data_agreement._list_data_agreements",
         "fabricops_kit.data_agreement._list_data_stewards",
         "fabricops_kit.data_agreement._option_values",
         "fabricops_kit.data_agreement._render_custom_fields",
+        "fabricops_kit.data_agreement._render_searchable_selector",
         "fabricops_kit.data_agreement._set_widget_value",
         "fabricops_kit.data_agreement._standard_widget",
         "fabricops_kit.data_agreement._steward_role_options",
-        "fabricops_kit.data_agreement._widget_common",
         "fabricops_kit.data_agreement._widget_config",
         "fabricops_kit.data_agreement._widget_field_value"
       ],
-      "internal_helper_count": 18
+      "internal_helper_count": 17
+    },
+    "fabricops_kit.data_agreement._render_searchable_selector": {
+      "qualified_name": "fabricops_kit.data_agreement._render_searchable_selector",
+      "short_name": "_render_searchable_selector",
+      "module": "data_agreement",
+      "callable": "_render_searchable_selector",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_agreement/_render_searchable_selector/",
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.data_agreement._option_values",
+        "fabricops_kit.data_agreement._row_search_text",
+        "fabricops_kit.data_agreement._selector_context_html",
+        "fabricops_kit.data_agreement._widget_common"
+      ],
+      "calls_count": 4,
+      "used_by": [
+        "fabricops_kit.data_agreement._render_agreement_evidence_widget",
+        "fabricops_kit.data_agreement._render_maintenance_widget"
+      ],
+      "used_by_count": 2,
+      "internal_helpers_used": [
+        "fabricops_kit.data_agreement._option_values",
+        "fabricops_kit.data_agreement._row_search_text",
+        "fabricops_kit.data_agreement._selector_context_html",
+        "fabricops_kit.data_agreement._widget_common"
+      ],
+      "internal_helper_count": 4
     },
     "fabricops_kit.data_agreement._resolve_agreement_identity": {
       "qualified_name": "fabricops_kit.data_agreement._resolve_agreement_identity",
@@ -1593,6 +1632,22 @@
         "fabricops_kit.data_agreement._next_minor_version"
       ],
       "internal_helper_count": 2
+    },
+    "fabricops_kit.data_agreement._row_search_text": {
+      "qualified_name": "fabricops_kit.data_agreement._row_search_text",
+      "short_name": "_row_search_text",
+      "module": "data_agreement",
+      "callable": "_row_search_text",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_agreement/_row_search_text/",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.data_agreement._render_searchable_selector"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
     },
     "fabricops_kit.data_agreement._safe_evidence_file_name": {
       "qualified_name": "fabricops_kit.data_agreement._safe_evidence_file_name",
@@ -1638,6 +1693,26 @@
         "fabricops_kit.data_agreement._write_row"
       ],
       "internal_helper_count": 5
+    },
+    "fabricops_kit.data_agreement._selector_context_html": {
+      "qualified_name": "fabricops_kit.data_agreement._selector_context_html",
+      "short_name": "_selector_context_html",
+      "module": "data_agreement",
+      "callable": "_selector_context_html",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_agreement/_selector_context_html/",
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.data_agreement._html_escape"
+      ],
+      "calls_count": 1,
+      "used_by": [
+        "fabricops_kit.data_agreement._render_searchable_selector"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [
+        "fabricops_kit.data_agreement._html_escape"
+      ],
+      "internal_helper_count": 1
     },
     "fabricops_kit.data_agreement._serialize_custom_fields": {
       "qualified_name": "fabricops_kit.data_agreement._serialize_custom_fields",
@@ -1838,7 +1913,7 @@
       "used_by": [
         "fabricops_kit.data_agreement._render_agreement_evidence_widget",
         "fabricops_kit.data_agreement._render_custom_fields",
-        "fabricops_kit.data_agreement._render_maintenance_widget",
+        "fabricops_kit.data_agreement._render_searchable_selector",
         "fabricops_kit.data_agreement._standard_widget"
       ],
       "used_by_count": 4,
@@ -4947,7 +5022,7 @@
     "data_agreement": {
       "essential_count": 6,
       "optional_count": 0,
-      "internal_count": 56,
+      "internal_count": 60,
       "outbound_modules": [
         "config",
         "fabric_input_output",
