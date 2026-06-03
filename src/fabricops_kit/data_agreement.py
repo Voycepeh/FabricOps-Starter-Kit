@@ -33,6 +33,25 @@ DATA_AGREEMENT_VISIBLE_FIELDS = [
 DATA_AGREEMENT_GENERATED_FIELDS = ["agreement_id", "contract_version"]
 DATA_STEWARD_FIELDS = DATA_STEWARD_VISIBLE_FIELDS + ["custom_fields_json"] + STANDARD_RUNTIME_AUDIT_COLUMNS
 DATA_AGREEMENT_FIELDS = DATA_AGREEMENT_GENERATED_FIELDS + DATA_AGREEMENT_VISIBLE_FIELDS + ["custom_fields_json"] + STANDARD_RUNTIME_AUDIT_COLUMNS
+
+FIELD_LABELS = {
+    "steward_id": "Steward ID",
+    "steward_name": "Steward Name",
+    "steward_role": "Steward Role",
+    "contact": "Contact",
+    "effective_from": "Effective From",
+    "effective_to": "Effective To",
+    "is_active": "Is Active",
+    "agreement_name": "Agreement Name",
+    "domain": "Domain",
+    "start_date": "Start Date",
+    "expiry_date": "Expiry Date",
+    "business_purpose": "Business Purpose",
+    "approved_usage": "Approved Usage",
+}
+_WIDGET_STYLE = {"description_width": "150px"}
+_WIDGET_LAYOUT_WIDTH = "600px"
+_TEXTAREA_HEIGHT = "80px"
 # Backward-compatible internal name retained for existing notebook customizations.
 _DATA_STEWARD_FIELDS = DATA_STEWARD_FIELDS
 
@@ -161,6 +180,44 @@ def _get_widget_visible_fields(config: Any, kind: str) -> list[str]:
     return [field for field in configured if field not in hidden]
 
 
+def _field_label(field: str) -> str:
+    """Return a notebook-friendly label for a configured intake field."""
+    return FIELD_LABELS.get(field, field.replace("_", " ").title())
+
+
+def _widget_layout(widgets_module: Any, *, textarea: bool = False) -> Any:
+    """Return a wide control layout when running with ipywidgets."""
+    layout = getattr(widgets_module, "Layout", None)
+    if layout is None:
+        return None
+    kwargs = {"width": _WIDGET_LAYOUT_WIDTH}
+    if textarea:
+        kwargs["height"] = _TEXTAREA_HEIGHT
+    return layout(**kwargs)
+
+
+def _widget_common(widgets_module: Any, description: str, *, textarea: bool = False) -> dict[str, Any]:
+    """Return common style and layout keyword arguments for form controls."""
+    common: dict[str, Any] = {"description": description, "style": dict(_WIDGET_STYLE)}
+    layout = _widget_layout(widgets_module, textarea=textarea)
+    if layout is not None:
+        common["layout"] = layout
+    return common
+
+
+def _option_values(options: list[Any]) -> list[Any]:
+    """Return actual values from plain or ``(label, value)`` dropdown options."""
+    return [option[1] if isinstance(option, tuple) and len(option) == 2 else option for option in options]
+
+
+def _default_dropdown_value(options: list[Any], value: Any = None) -> Any:
+    """Return a valid dropdown value for plain or labeled tuple options."""
+    if not options:
+        return None
+    values = _option_values(options)
+    return value if value in values else values[0]
+
+
 def _render_custom_fields(config: list[dict[str, Any]] | dict[str, Any], *, values: dict[str, Any] | None = None) -> dict[str, Any]:
     """Create widgets for configured organization-specific fields.
 
@@ -189,13 +246,13 @@ def _render_custom_fields(config: list[dict[str, Any]] | dict[str, Any], *, valu
     for definition in definitions:
         key = str(definition["key"])
         field_type = str(definition.get("type", "text")).lower()
-        common = {"description": str(definition.get("label", key))}
+        common = _widget_common(widgets, str(definition.get("label", _field_label(key))), textarea=field_type == "textarea")
         value = current.get(key)
         if field_type == "textarea":
             widget = widgets.Textarea(value=str(value or ""), **common)
         elif field_type == "select":
             options = list(definition.get("options", []))
-            widget = widgets.Dropdown(options=options, value=value if value in options else (options[0] if options else None), **common)
+            widget = widgets.Dropdown(options=options, value=_default_dropdown_value(options, value), **common)
         elif field_type == "multiselect":
             widget = widgets.SelectMultiple(options=list(definition.get("options", [])), value=tuple(value or ()), **common)
         elif field_type == "date":
@@ -642,6 +699,10 @@ def _set_widget_value(widget: Any, value: Any) -> None:
         value = tuple(value or ())
     elif isinstance(current, bool):
         value = _to_bool(value)
+    else:
+        options = getattr(widget, "options", None)
+        if options not in (None, ()):
+            value = _default_dropdown_value(list(options), value)
     widget.value = value
 
 
@@ -652,43 +713,82 @@ def _widget_field_value(field: str, value: Any) -> Any:
 
 def _standard_widget(field: str, value: Any = "", *, options: list[Any] | None = None) -> Any:
     import ipywidgets as widgets
-    description = field.replace("_", " ").title()
+    description = _field_label(field)
     if options is not None:
-        return widgets.Dropdown(options=options, value=value if value in options else (options[0] if options else None), description=description)
+        return widgets.Dropdown(options=options, value=_default_dropdown_value(options, value), **_widget_common(widgets, description))
     if field in {"effective_from", "effective_to", "start_date", "expiry_date"}:
-        return widgets.DatePicker(value=date.fromisoformat(str(value)[:10]) if value else None, description=description)
+        return widgets.DatePicker(value=date.fromisoformat(str(value)[:10]) if value else None, **_widget_common(widgets, description))
     if field == "is_active":
-        return widgets.Checkbox(value=True if value == "" else _to_bool(value), description=description)
+        return widgets.Checkbox(value=True if value == "" else _to_bool(value), **_widget_common(widgets, description))
     if field in {"business_purpose", "approved_usage"}:
-        return widgets.Textarea(value=str(value or ""), description=description)
-    return widgets.Text(value=str(value or ""), description=description)
+        return widgets.Textarea(value=str(value or ""), **_widget_common(widgets, description, textarea=True))
+    return widgets.Text(value=str(value or ""), **_widget_common(widgets, description))
 
 
 def _render_maintenance_widget(*, spark: Any, config: Any, env_name: str, kind: str) -> dict[str, Any]:
     import ipywidgets as widgets
     from IPython.display import display
     is_steward = kind == "data_steward_widget"
-    existing = _list_data_stewards(config, env_name, spark_session=spark, active_only=False, missing_ok=True) if is_steward else _list_data_agreements(config, env_name, spark_session=spark, missing_ok=True)
     prompt = "Create new steward" if is_steward else "Create new agreement"
-    labels = [(prompt, None)] + [((row.get("steward_name") if is_steward else row.get("agreement_name")) or row.get("steward_id") or row.get("agreement_id"), row) for row in existing]
-    selected = widgets.Dropdown(options=labels, description="Create / update")
-    identity_context = None if is_steward else widgets.HTML(value="Agreement ID and version are generated when saved.")
     widget_config = _widget_config(config, kind)
     fields = _get_widget_visible_fields(config, kind)
+    after_save_callbacks: list[Any] = []
+    row_lookup: dict[str, dict[str, Any]] = {}
+
+    def _row_id(row: dict[str, Any]) -> str:
+        return str(row.get("steward_id" if is_steward else "agreement_id") or "").strip()
+
+    def _row_label(row: dict[str, Any]) -> str:
+        if is_steward:
+            return f"{row.get('steward_name', '') or _row_id(row)} ({_row_id(row)})"
+        return f"{row.get('agreement_name', '') or _row_id(row)} ({_row_id(row)} / v{row.get('contract_version', '')})"
+
+    def _existing_rows() -> list[dict[str, Any]]:
+        return _list_data_stewards(config, env_name, spark_session=spark, active_only=False, missing_ok=True) if is_steward else _list_data_agreements(config, env_name, spark_session=spark, missing_ok=True)
+
+    def _existing_options() -> list[tuple[str, str | None]]:
+        row_lookup.clear()
+        options: list[tuple[str, str | None]] = [(prompt, None)]
+        for row in _existing_rows():
+            row_id = _row_id(row)
+            if row_id:
+                row_lookup[row_id] = row
+                options.append((_row_label(row), row_id))
+        return options
+
+    selected = widgets.Dropdown(options=_existing_options(), **_widget_common(widgets, "Create / update"))
+    identity_context = None if is_steward else widgets.HTML(value="Agreement ID and version are generated when saved.")
+
     def _steward_options() -> list[tuple[str, str]]:
-        return [(f"{row.get('steward_name', '')} | {row.get('steward_role', '')}", row["steward_id"]) for row in _list_data_stewards(config, env_name, spark_session=spark, active_only=True, missing_ok=True)]
+        return [
+            (f"{row.get('steward_name', '')} ({row.get('steward_id', '')})", row["steward_id"])
+            for row in _list_data_stewards(config, env_name, spark_session=spark, active_only=True, missing_ok=True)
+        ]
+
     steward_options = None if is_steward else _steward_options()
     form = {field: _standard_widget(field, options=steward_options if field == "steward_id" else None) for field in fields}
     custom = _render_custom_fields(widget_config)
+
+    def _refresh_existing_options(selected_id: str | None = None) -> None:
+        selected.options = _existing_options()
+        selected.value = selected_id if selected_id in row_lookup else None
+
+    def _refresh_steward_dropdown() -> None:
+        if "steward_id" in form:
+            current = form["steward_id"].value
+            options = _steward_options()
+            form["steward_id"].options = options
+            form["steward_id"].value = _default_dropdown_value(options, current)
+
     refresh_stewards = None if is_steward else widgets.Button(description="Refresh active stewards")
     if refresh_stewards is not None:
-        def _refresh_stewards(_: Any) -> None:
-            form["steward_id"].options = _steward_options()
-        refresh_stewards.on_click(_refresh_stewards)
+        refresh_stewards.on_click(lambda _: _refresh_steward_dropdown())
     save = widgets.Button(description="Save")
     output = widgets.Output()
+
     def _populate(change: dict[str, Any]) -> None:
-        row = change.get("new") or {}
+        row_id = change.get("new")
+        row = row_lookup.get(row_id, {}) if row_id else {}
         for field, widget in form.items():
             value = row.get(field, "")
             if field in {"effective_from", "effective_to", "start_date", "expiry_date"}:
@@ -699,17 +799,36 @@ def _render_maintenance_widget(*, spark: Any, config: Any, env_name: str, kind: 
             _set_widget_value(widget, stored.get(key, widget.value))
         if identity_context is not None:
             identity_context.value = (f"Agreement ID: {row.get('agreement_id', '')} | Current version: {row.get('contract_version', '')}" if row else "Agreement ID and version are generated when saved.")
+
     selected.observe(_populate, names="value")
+
+    def _clear_output() -> None:
+        clear = getattr(output, "clear_output", None)
+        if clear is not None:
+            clear(wait=True)
+
     def _save(_: Any) -> None:
+        _clear_output()
         with output:
-            values = {key: _widget_field_value(key, widget.value) for key, widget in form.items()}
-            extras = _collect_custom_fields(widget_config, custom)
-            if is_steward:
-                row = _create_or_update_data_steward(spark=spark, config=config, env_name=env_name, values=values, custom_fields=extras)
-                print(f"Saved data steward {row['steward_id']}.")
-            else:
-                row = _create_or_update_data_agreement(spark=spark, config=config, env_name=env_name, values=values, selected_agreement=selected.value, custom_fields=extras)
-                print(f"Saved data agreement {row['agreement_id']} version {row['contract_version']}.")
+            try:
+                values = {key: _widget_field_value(key, widget.value) for key, widget in form.items()}
+                extras = _collect_custom_fields(widget_config, custom)
+                if is_steward:
+                    row = _create_or_update_data_steward(spark=spark, config=config, env_name=env_name, values=values, custom_fields=extras)
+                    _refresh_existing_options(row["steward_id"])
+                    for callback in after_save_callbacks:
+                        callback(row)
+                    print(f"Saved data steward: {row.get('steward_name', '')} ({row['steward_id']})")
+                else:
+                    selected_row = row_lookup.get(selected.value) if selected.value else None
+                    row = _create_or_update_data_agreement(spark=spark, config=config, env_name=env_name, values=values, selected_agreement=selected_row, custom_fields=extras)
+                    _refresh_existing_options(row["agreement_id"])
+                    if identity_context is not None:
+                        identity_context.value = f"Agreement ID: {row['agreement_id']} | Current version: {row['contract_version']}"
+                    print(f"Saved data agreement: {row.get('agreement_name', '')} ({row['agreement_id']} v{row['contract_version']})")
+            except Exception as exc:
+                print(f"Error: {exc}")
+
     save.on_click(_save)
     controls = [selected]
     if identity_context is not None:
@@ -718,7 +837,19 @@ def _render_maintenance_widget(*, spark: Any, config: Any, env_name: str, kind: 
     if refresh_stewards is not None:
         controls.append(refresh_stewards)
     display(widgets.VBox([*controls, save, output]))
-    return {"existing_record": selected, "identity_context": identity_context, "fields": form, "custom_fields": custom, "refresh_stewards_button": refresh_stewards, "save_button": save, "output": output}
+    return {
+        "existing_record": selected,
+        "existing_records_by_id": row_lookup,
+        "identity_context": identity_context,
+        "fields": form,
+        "custom_fields": custom,
+        "refresh_stewards_button": refresh_stewards,
+        "refresh_existing_options": _refresh_existing_options,
+        "refresh_steward_options": _refresh_steward_dropdown,
+        "after_save_callbacks": after_save_callbacks,
+        "save_button": save,
+        "output": output,
+    }
 
 
 def render_data_steward_widget(config: Any, env_name: str, *, spark: Any) -> dict[str, Any]:
@@ -784,7 +915,21 @@ def render_agreement_intake_app(*, spark: Any, config: Any, env: str) -> dict[st
     assignments before rendering or refreshing the dependent Data Agreement
     widget.
     """
-    return {
-        "data_steward": render_data_steward_widget(config, env, spark=spark),
-        "data_agreement": render_data_agreement_widget(config, env, spark=spark),
-    }
+    try:
+        import ipywidgets as widgets
+        from IPython.display import display
+    except ModuleNotFoundError:
+        widgets = None
+        display = None
+
+    if widgets is not None and display is not None:
+        display(widgets.HTML(value="<h3>Data Steward</h3><p>Create or update steward records used by agreements.</p>"))
+    steward_app = render_data_steward_widget(config, env, spark=spark)
+    if widgets is not None and display is not None:
+        display(widgets.HTML(value="<h3>Data Agreement</h3><p>Create or update agreement records linked to active stewards.</p>"))
+    agreement_app = render_data_agreement_widget(config, env, spark=spark)
+    callbacks = steward_app.get("after_save_callbacks") if isinstance(steward_app, dict) else None
+    agreement_refresh = agreement_app.get("refresh_steward_options") if isinstance(agreement_app, dict) else None
+    if isinstance(callbacks, list) and callable(agreement_refresh):
+        callbacks.append(lambda _row: agreement_refresh())
+    return {"data_steward": steward_app, "data_agreement": agreement_app}
