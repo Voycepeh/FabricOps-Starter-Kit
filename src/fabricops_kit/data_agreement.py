@@ -43,7 +43,8 @@ DATA_AGREEMENT_EVIDENCE_FIELDS = [
     "mime_type", "file_size", "uploaded_at", "uploaded_by",
     *STANDARD_RUNTIME_AUDIT_COLUMNS,
 ]
-AGREEMENT_EVIDENCE_ACCEPT = ".pdf,.doc,.docx,.png,.jpg,.jpeg"
+AGREEMENT_EVIDENCE_ALLOWED_EXTENSIONS = (".pdf", ".doc", ".docx", ".png", ".jpg", ".jpeg")
+AGREEMENT_EVIDENCE_ACCEPT = ",".join(AGREEMENT_EVIDENCE_ALLOWED_EXTENSIONS)
 AGREEMENT_EVIDENCE_TYPES = [
     "Signed Agreement", "Email Approval", "Policy Document",
     "Supporting Screenshot", "Other",
@@ -763,12 +764,18 @@ def _metadata_lakehouse_file_path(config: Any, env_name: str, relative_path: str
 
 
 def _safe_evidence_file_name(file_name: Any) -> str:
-    """Return a folder-safe uploaded evidence file name."""
+    """Return a folder-safe uploaded evidence file name with an allowed suffix."""
     name = str(file_name or "").replace("\\", "/").split("/")[-1].strip()
     if not name:
         raise ValueError("Uploaded evidence file is missing a file name.")
     safe = "".join(char if char.isalnum() or char in {".", "-", "_", " "} else "_" for char in name).strip()
-    return safe or "agreement-evidence"
+    if not safe:
+        raise ValueError("Uploaded evidence file is missing a file name.")
+    suffix = "." + safe.rsplit(".", 1)[-1].lower() if "." in safe else ""
+    if suffix not in AGREEMENT_EVIDENCE_ALLOWED_EXTENSIONS:
+        allowed = ", ".join(AGREEMENT_EVIDENCE_ALLOWED_EXTENSIONS)
+        raise ValueError(f"Unsupported evidence file type. Allowed types: {allowed}.")
+    return safe
 
 
 def _write_evidence_file(*, spark: Any, config: Any, env_name: str, relative_path: str, content: bytes) -> str:
@@ -847,11 +854,23 @@ def _save_agreement_evidence_records(*, spark: Any, config: Any, env_name: str, 
     audit = build_runtime_audit_fields(config=config, env=env_name, committed_by=committed_by, committed_at=committed_at, runtime_context=runtime_context)
     uploaded_at = audit.get("_committed_at") or datetime.now(timezone.utc).isoformat()
     uploaded_by = audit.get("_committed_by") or ""
-    rows: list[dict[str, Any]] = []
-    for uploaded in files:
+    prepared_files = []
+    for index, uploaded in enumerate(files):
         file_name = _safe_evidence_file_name(uploaded.get("name"))
         content = uploaded.get("content", b"")
-        relative_path = f"Files/fabricops/agreement_evidence/{agreement_id}/{contract_version}/{file_name}"
+        if "." in file_name:
+            stem, suffix = file_name.rsplit(".", 1)
+            suffix = f".{suffix}"
+        else:
+            stem, suffix = file_name, ""
+        token_basis = f"{uploaded_at}|{index}|{file_name}|".encode("utf-8") + content
+        storage_token = hashlib.sha256(token_basis).hexdigest()[:8]
+        storage_file_name = f"{stem}__{storage_token}{suffix}"
+        prepared_files.append((uploaded, file_name, storage_file_name, content))
+
+    rows: list[dict[str, Any]] = []
+    for uploaded, file_name, storage_file_name, content in prepared_files:
+        relative_path = f"Files/fabricops/agreement_evidence/{agreement_id}/{contract_version}/{storage_file_name}"
         _write_evidence_file(spark=spark, config=config, env_name=env_name, relative_path=relative_path, content=content)
         row = {
             "agreement_id": agreement_id,

@@ -144,7 +144,7 @@ One agreement may populate one, two, or all three approved usage fields. Splitti
 | Main downstream use | Lets governance or audit users find supporting agreement files without bloating agreement/version metadata rows. |
 | Runtime audit | Includes the standard runtime audit columns defined above. |
 
-Evidence upload is optional. Users can save steward and agreement records without uploading evidence, then return later to attach supporting documents. Files are written under a deterministic metadata lakehouse Files folder such as `Files/fabricops/agreement_evidence/<agreement_id>/<contract_version>/`. The metadata table stores only file references and descriptive metadata; it does not store uploaded binary content. `METADATA_DATA_AGREEMENT` stays focused on agreement identity, versioning, steward, recipient, purpose, approved usage, dates, and config-driven extension fields.
+Evidence upload is optional. Users can save steward and agreement records without uploading evidence, then return later to attach supporting documents. Files are written under a deterministic metadata lakehouse Files folder such as `Files/fabricops/agreement_evidence/<agreement_id>/<contract_version>/`, with unique stored filenames to avoid replacing same-name uploads. The metadata table stores only file references and descriptive metadata; it does not store uploaded binary content. `METADATA_DATA_AGREEMENT` stays focused on agreement identity, versioning, steward, recipient, purpose, approved usage, dates, and config-driven extension fields.
 
 | Column | Example | Status | Purpose |
 | --- | --- | --- | --- |
@@ -152,7 +152,7 @@ Evidence upload is optional. Users can save steward and agreement records withou
 | contract_version | 1.0.0 | Implemented | Agreement version supported by the evidence file. |
 | evidence_type | Signed Agreement | Implemented | Simple evidence category selected in the upload tab. |
 | file_name | signed-agreement.pdf | Implemented | Original uploaded file name after safe path normalization. |
-| file_path | Files/fabricops/agreement_evidence/DA-20260529-100000/1.0.0/signed-agreement.pdf | Implemented | Metadata lakehouse Files path for the uploaded file. |
+| file_path | Files/fabricops/agreement_evidence/DA-20260529-100000/1.0.0/signed-agreement__a1b2c3d4.pdf | Implemented | Metadata lakehouse Files path for the uploaded file. |
 | mime_type | application/pdf | Implemented | Browser-provided MIME type when available. |
 | file_size | 24576 | Implemented | Uploaded file size in bytes. |
 | uploaded_at | 2026-06-01T10:30:00Z | Implemented | Upload timestamp aligned to runtime audit context when available. |

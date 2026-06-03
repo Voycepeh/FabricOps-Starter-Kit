@@ -733,10 +733,12 @@ def test_evidence_records_save_file_metadata_not_binary_content(monkeypatch):
         uploaded_files=({"name": "signed.pdf", "type": "application/pdf", "size": 7, "content": b"PDFDATA"},),
     )
     assert len(rows) == 1
-    assert files[0]["relative_path"] == "Files/fabricops/agreement_evidence/DA-001/1.0.0/signed.pdf"
+    assert files[0]["relative_path"].startswith("Files/fabricops/agreement_evidence/DA-001/1.0.0/signed__")
+    assert files[0]["relative_path"].endswith(".pdf")
     assert files[0]["content"] == b"PDFDATA"
     assert writes[0]["table"] == DATA_AGREEMENT_EVIDENCE_TABLE
-    assert writes[0]["row"]["file_path"] == "Files/fabricops/agreement_evidence/DA-001/1.0.0/signed.pdf"
+    assert writes[0]["row"]["file_name"] == "signed.pdf"
+    assert writes[0]["row"]["file_path"] == files[0]["relative_path"]
     assert writes[0]["row"]["mime_type"] == "application/pdf"
     assert writes[0]["row"]["file_size"] == "7"
     assert "content" not in writes[0]["row"]
@@ -779,8 +781,47 @@ def test_evidence_save_supports_multiple_uploaded_files(monkeypatch):
         },
     )
     assert [row["file_name"] for row in rows] == ["approval.msg.pdf", "screen.png"]
-    assert [file["relative_path"] for file in files] == [
-        "Files/fabricops/agreement_evidence/DA-001/1.0.0/approval.msg.pdf",
-        "Files/fabricops/agreement_evidence/DA-001/1.0.0/screen.png",
-    ]
+    assert files[0]["relative_path"].startswith("Files/fabricops/agreement_evidence/DA-001/1.0.0/approval.msg__")
+    assert files[0]["relative_path"].endswith(".pdf")
+    assert files[1]["relative_path"].startswith("Files/fabricops/agreement_evidence/DA-001/1.0.0/screen__")
+    assert files[1]["relative_path"].endswith(".png")
+    assert len({file["relative_path"] for file in files}) == 2
     assert len(writes) == 2
+
+
+def test_evidence_save_rejects_unsupported_file_extension_before_writing(monkeypatch):
+    monkeypatch.setattr(data_agreement, "_write_evidence_file", lambda **kwargs: pytest.fail("unsupported file should not be written"))
+    monkeypatch.setattr(data_agreement, "_write_row", lambda **kwargs: pytest.fail("unsupported file should not append metadata"))
+    with pytest.raises(ValueError, match=r"Unsupported evidence file type\. Allowed types: \.pdf, \.doc, \.docx, \.png, \.jpg, \.jpeg\."):
+        data_agreement._save_agreement_evidence_records(
+            spark=object(),
+            config=_config(),
+            env_name="dev",
+            agreement_id="DA-001",
+            contract_version="1.0.0",
+            evidence_type="Other",
+            uploaded_files=({"name": "script.exe", "content": b"data"},),
+        )
+
+
+def test_evidence_save_uses_unique_storage_names_for_duplicate_upload_names(monkeypatch):
+    files = []
+    monkeypatch.setattr(data_agreement, "build_runtime_audit_fields", lambda **kwargs: {field: "2026-06-01T10:30:00+00:00" if field == "_committed_at" else "" for field in data_agreement._get_standard_runtime_audit_columns()})
+    monkeypatch.setattr(data_agreement, "_write_evidence_file", lambda **kwargs: files.append(kwargs))
+    monkeypatch.setattr(data_agreement, "_write_row", lambda **kwargs: None)
+    rows = data_agreement._save_agreement_evidence_records(
+        spark=object(),
+        config=_config(),
+        env_name="dev",
+        agreement_id="DA-001",
+        contract_version="1.0.0",
+        evidence_type="Signed Agreement",
+        uploaded_files=(
+            {"name": "approval.pdf", "content": b"first"},
+            {"name": "approval.pdf", "content": b"second"},
+        ),
+    )
+    assert [row["file_name"] for row in rows] == ["approval.pdf", "approval.pdf"]
+    assert all("/approval__" in row["file_path"] and row["file_path"].endswith(".pdf") for row in rows)
+    assert len({row["file_path"] for row in rows}) == 2
+    assert [file["relative_path"] for file in files] == [row["file_path"] for row in rows]
