@@ -20,7 +20,7 @@ def _config(*, metadata_tables=None, steward_role_options=None):
             "custom_fields": [{"key": "group", "label": "Group", "type": "text", "required": False}],
         },
         data_agreement_widget={
-            "visible_columns": ["agreement_id", "contract_version", "agreement_name", "domain", "steward_id", "start_date", "expiry_date", "business_purpose", "approved_usage", "custom_fields_json", "_committed_by"],
+            "visible_columns": ["agreement_id", "contract_version", "agreement_name", "domain", "steward_id", "recipient", "start_date", "expiry_date", "business_purpose", "approved_usage_internal", "approved_usage_external", "approved_usage_research", "custom_fields_json", "_committed_by"],
             "custom_fields": [{"key": "consumer_group", "label": "Consumer group", "type": "select", "options": ["ODI", "Faculty"]}],
         },
         steward_role_options=steward_role_options or ["Data Owner", "Data Steward", "Governance Reviewer"],
@@ -33,7 +33,19 @@ def _steward(**overrides):
 
 
 def _agreement(**overrides):
-    return {"agreement_name": "Orders Agreement", "domain": "Operations", "steward_id": "steward-001", "start_date": "2026-01-01", "expiry_date": "2026-12-31", "business_purpose": "Governed reporting", "approved_usage": "Approved reporting only", **overrides}
+    return {
+        "agreement_name": "Orders Agreement",
+        "domain": "Operations",
+        "steward_id": "steward-001",
+        "recipient": "Internal analytics team",
+        "start_date": "2026-01-01",
+        "expiry_date": "2026-12-31",
+        "business_purpose": "Governed reporting",
+        "approved_usage_internal": "Approved internal reporting only",
+        "approved_usage_external": "",
+        "approved_usage_research": "",
+        **overrides,
+    }
 
 
 def _install_widget_stubs(monkeypatch):
@@ -77,7 +89,7 @@ def _install_widget_stubs(monkeypatch):
 def test_schemas_remain_lightweight_and_include_runtime_audit_columns():
     audit = data_agreement._get_standard_runtime_audit_columns()
     assert data_agreement._get_data_steward_schema() == ["steward_id", "steward_name", "steward_role", "contact", "effective_from", "effective_to", "is_active", "custom_fields_json", *audit]
-    assert data_agreement._get_data_agreement_schema() == ["agreement_id", "contract_version", "agreement_name", "domain", "steward_id", "start_date", "expiry_date", "business_purpose", "approved_usage", "custom_fields_json", *audit]
+    assert data_agreement._get_data_agreement_schema() == ["agreement_id", "contract_version", "agreement_name", "domain", "steward_id", "recipient", "start_date", "expiry_date", "business_purpose", "approved_usage_internal", "approved_usage_external", "approved_usage_research", "custom_fields_json", *audit]
     for physical_column in ("department", "faculty", "expected_output", "restricted_usage", "source_system", "refresh_frequency", "renewal_required"):
         assert physical_column not in data_agreement._get_data_steward_schema()
         assert physical_column not in data_agreement._get_data_agreement_schema()
@@ -92,6 +104,11 @@ def test_widget_visible_fields_hide_audit_json_and_generated_agreement_ids():
     assert "custom_fields_json" not in steward_fields + agreement_fields
     assert "agreement_id" not in agreement_fields
     assert "contract_version" not in agreement_fields
+    assert "recipient" in data_agreement.DATA_AGREEMENT_VISIBLE_FIELDS
+    assert "approved_usage_internal" in data_agreement.DATA_AGREEMENT_VISIBLE_FIELDS
+    assert "approved_usage_external" in data_agreement.DATA_AGREEMENT_VISIBLE_FIELDS
+    assert "approved_usage_research" in data_agreement.DATA_AGREEMENT_VISIBLE_FIELDS
+    assert "approved_usage" not in data_agreement.DATA_AGREEMENT_VISIBLE_FIELDS
     assert "steward_id" not in steward_fields
     assert "is_active" not in steward_fields
 
@@ -432,7 +449,7 @@ def test_saving_existing_steward_reuses_selected_steward_id(monkeypatch):
 def test_agreement_dropdown_options_show_latest_version_and_id_value():
     rows = [
         {**_agreement(), "agreement_id": "DA-001", "contract_version": "1.0.0"},
-        {**_agreement(approved_usage="Updated"), "agreement_id": "DA-001", "contract_version": "1.1.0"},
+        {**_agreement(approved_usage_internal="Updated"), "agreement_id": "DA-001", "contract_version": "1.1.0"},
     ]
     options = data_agreement._agreement_dropdown_options(rows)
     assert options == [("Orders Agreement (DA-001 / v1.1.0)", "DA-001")]
@@ -452,7 +469,10 @@ def test_selecting_existing_agreement_populates_standard_and_custom_fields(monke
     assert widget["fields"]["start_date"].value == date(2026, 1, 1)
     assert widget["fields"]["expiry_date"].value == date(2026, 12, 31)
     assert widget["fields"]["business_purpose"].value == "Governed reporting"
-    assert widget["fields"]["approved_usage"].value == "Approved reporting only"
+    assert widget["fields"]["recipient"].value == "Internal analytics team"
+    assert widget["fields"]["approved_usage_internal"].value == "Approved internal reporting only"
+    assert widget["fields"]["approved_usage_external"].value == ""
+    assert widget["fields"]["approved_usage_research"].value == ""
     assert widget["custom_fields"]["consumer_group"].value == "Faculty"
     assert "Next version on save: 1.2.0" in widget["identity_context"].value
 
@@ -461,13 +481,13 @@ def test_agreement_update_uses_latest_existing_version_for_next_version(monkeypa
     writes = []
     rows = [
         {**_agreement(), "agreement_id": "DA-001", "contract_version": "1.0.0", "custom_fields_json": "{}"},
-        {**_agreement(approved_usage="Changed once"), "agreement_id": "DA-001", "contract_version": "1.1.0", "custom_fields_json": "{}"},
+        {**_agreement(approved_usage_internal="Changed once"), "agreement_id": "DA-001", "contract_version": "1.1.0", "custom_fields_json": "{}"},
     ]
     monkeypatch.setattr(data_agreement, "_list_all_data_agreement_rows", lambda *args, **kwargs: rows)
     monkeypatch.setattr(data_agreement, "_list_data_stewards", lambda *args, **kwargs: [_steward()])
     monkeypatch.setattr(data_agreement, "_write_row", lambda **kwargs: writes.append(kwargs["row"]))
     row = data_agreement._create_or_update_data_agreement(
-        spark=object(), config=_config(), env_name="dev", values=_agreement(approved_usage="Changed twice"), selected_agreement=rows[0]
+        spark=object(), config=_config(), env_name="dev", values=_agreement(approved_usage_internal="Changed twice"), selected_agreement=rows[0]
     )
     assert row["agreement_id"] == "DA-001"
     assert row["contract_version"] == "1.2.0"
@@ -564,3 +584,66 @@ def test_existing_legacy_steward_role_can_be_saved_when_loaded_from_selected_row
     )
     assert row["steward_role"] == "Legacy Approver"
     assert writes[0]["steward_role"] == "Legacy Approver"
+
+
+def test_agreement_widget_renders_recipient_text_and_split_usage_textareas(monkeypatch):
+    _install_widget_stubs(monkeypatch)
+    monkeypatch.setattr(data_agreement, "_list_data_agreements", lambda *args, **kwargs: [])
+    monkeypatch.setattr(data_agreement, "_list_data_stewards", lambda *args, **kwargs: [_steward()])
+    widget = data_agreement.render_data_agreement_widget(_config(), "dev", spark=object())
+    assert widget["fields"]["recipient"].description == "Recipient / Consumer"
+    assert widget["fields"]["recipient"].options == ()
+    for field, label in {
+        "approved_usage_internal": "Approved Usage - Internal",
+        "approved_usage_external": "Approved Usage - External",
+        "approved_usage_research": "Approved Usage - Research",
+    }.items():
+        assert widget["fields"][field].description == label
+        assert widget["fields"][field].layout.height == "80px"
+
+
+def test_agreement_save_requires_recipient_and_at_least_one_usage(monkeypatch):
+    monkeypatch.setattr(data_agreement, "_list_all_data_agreement_rows", lambda *args, **kwargs: [])
+    monkeypatch.setattr(data_agreement, "_list_data_stewards", lambda *args, **kwargs: [_steward()])
+    monkeypatch.setattr(data_agreement, "_write_row", lambda **kwargs: pytest.fail("invalid agreement should not append"))
+    with pytest.raises(ValueError, match="recipient"):
+        data_agreement._create_or_update_data_agreement(spark=object(), config=_config(), env_name="dev", values=_agreement(recipient=""))
+    with pytest.raises(ValueError, match="At least one approved usage field is required: internal, external, or research"):
+        data_agreement._create_or_update_data_agreement(
+            spark=object(),
+            config=_config(),
+            env_name="dev",
+            values=_agreement(approved_usage_internal="", approved_usage_external="", approved_usage_research=""),
+        )
+
+
+@pytest.mark.parametrize("usage_field", ["approved_usage_internal", "approved_usage_external", "approved_usage_research"])
+def test_agreement_save_succeeds_with_any_one_split_usage_field(monkeypatch, usage_field):
+    writes = []
+    monkeypatch.setattr(data_agreement, "_list_all_data_agreement_rows", lambda *args, **kwargs: [])
+    monkeypatch.setattr(data_agreement, "_list_data_stewards", lambda *args, **kwargs: [_steward()])
+    monkeypatch.setattr(data_agreement, "_write_row", lambda **kwargs: writes.append(kwargs["row"]))
+    values = _agreement(approved_usage_internal="", approved_usage_external="", approved_usage_research="")
+    values[usage_field] = "Approved for this purpose"
+    row = data_agreement._create_or_update_data_agreement(spark=object(), config=_config(), env_name="dev", values=values)
+    assert row["recipient"] == "Internal analytics team"
+    assert row[usage_field] == "Approved for this purpose"
+    assert writes[0][usage_field] == "Approved for this purpose"
+    assert "approved_usage" not in writes[0]
+
+
+def test_no_change_detection_includes_recipient_and_split_usage(monkeypatch):
+    existing = [{**_agreement(), "agreement_id": "DA-001", "contract_version": "1.1.0", "custom_fields_json": "{}"}]
+    writes = []
+    monkeypatch.setattr(data_agreement, "_list_all_data_agreement_rows", lambda *args, **kwargs: existing)
+    monkeypatch.setattr(data_agreement, "_list_data_stewards", lambda *args, **kwargs: [_steward()])
+    monkeypatch.setattr(data_agreement, "_write_row", lambda **kwargs: writes.append(kwargs["row"]))
+    unchanged = data_agreement._create_or_update_data_agreement(
+        spark=object(), config=_config(), env_name="dev", values=_agreement(), selected_agreement=existing[0]
+    )
+    changed = data_agreement._create_or_update_data_agreement(
+        spark=object(), config=_config(), env_name="dev", values=_agreement(recipient="Research team"), selected_agreement=existing[0]
+    )
+    assert unchanged["_fabricops_no_change"] is True
+    assert changed["recipient"] == "Research team"
+    assert writes[0]["contract_version"] == "1.2.0"

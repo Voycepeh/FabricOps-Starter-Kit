@@ -105,11 +105,11 @@ The steward maintenance form hides backend-managed `steward_id` and `is_active` 
 | Item | Details |
 | --- | --- |
 | Concept | `data_agreements` |
-| Purpose | Agreement-level usage boundary created by `01_da_*`. It defines what the data work is approved for and links the agreement to an active steward. |
+| Purpose | Agreement-level usage boundary created by `01_da_*`. It defines what the data work is approved for, captures both the steward/provider and recipient/consumer sides, and links the agreement to an active steward. |
 | Grain | One row per agreement version. New agreement revisions are appended instead of overwriting previous versions. |
 | Key relationships | `steward_id` references `METADATA_DATA_STEWARD`. Downstream metadata tables use `agreement_id` to link catalogue, governance, rules, contracts, lineage, and handover evidence back to the approved agreement. |
 | Main writer | `01_da_*` |
-| Main downstream use | Scopes what `02_ex`, `03_pc`, and `04_gov` are allowed to profile, govern, enforce, and hand over. |
+| Main downstream use | Scopes what `02_ex`, `03_pc`, and `04_gov` are allowed to profile, govern, enforce, and hand over, including different treatment for internal, external, and research usage purposes. |
 | Runtime audit | Includes the standard runtime audit columns defined above. |
 
 | Column | Example | Status | Purpose |
@@ -118,12 +118,18 @@ The steward maintenance form hides backend-managed `steward_id` and `is_active` 
 | contract_version| 1.0.0 | Implemented | Backend-generated append-only semantic version. Updates increment it automatically. |
 | agreement_name| Governed Reporting Agreement | Implemented | Human-readable agreement name. |
 | domain | Operations | Implemented | Business or data domain for the agreement. Can be free text or selected from config. |
-| steward_id | steward-001 | Implemented | Steward reference key resolved from `METADATA_DATA_STEWARD`. |
+| steward_id | steward-001 | Implemented | Steward/provider reference key resolved from `METADATA_DATA_STEWARD`. |
+| recipient | Internal analytics team | Implemented | Free-text recipient or consumer side of the agreement. |
 | start_date | `2026-06-01` | Implemented | Agreement start date. |
 | expiry_date | `2027-05-31` | Implemented | Agreement expiry date. |
 | business_purpose | `Support governed reporting` | Implemented | Business reason for the agreement. |
-| approved_usage | `Approved reporting only` | Implemented | Allowed use within the agreement boundary. |
+| approved_usage_internal | `Internal performance reporting` | Implemented | Approved internal-use purpose, restrictions, or expectations. |
+| approved_usage_external | `External partner reporting` | Implemented | Approved external-use purpose, restrictions, or expectations. |
+| approved_usage_research | `Approved research analysis` | Implemented | Approved research-use purpose, restrictions, or expectations. |
 | custom_fields_json | `{"consumer_group":"ODI"}` | Implemented | Config-driven extra fields collected by the agreement intake widget. |
+
+One agreement may populate one, two, or all three approved usage fields. Splitting internal, external, and research usage lets later governance workflows apply different review expectations, restrictions, and evidence requirements by purpose. Existing metadata tables that still contain only the old `approved_usage` column need a deliberate schema update before rendering the updated `01_da` form; the framework does not silently map old usage text into a new purpose field because that would change its meaning.
+
 ### `METADATA_NOTEBOOK_REGISTRY`
 
 | Item | Details |

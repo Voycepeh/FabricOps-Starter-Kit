@@ -293,9 +293,9 @@ class DataAgreementConfig:
     })
     data_agreement_widget: dict[str, Any] = field(default_factory=lambda: {
         "visible_columns": [
-            "agreement_name", "domain", "steward_id", "start_date",
-            "expiry_date", "business_purpose",
-            "approved_usage",
+            "agreement_name", "domain", "steward_id", "recipient", "start_date",
+            "expiry_date", "business_purpose", "approved_usage_internal",
+            "approved_usage_external", "approved_usage_research",
         ],
         "custom_fields": [],
     })

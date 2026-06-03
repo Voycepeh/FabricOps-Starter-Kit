@@ -29,8 +29,9 @@ DATA_STEWARD_VISIBLE_FIELDS = [
 ]
 DATA_STEWARD_BACKEND_FIELDS = ["steward_id", *DATA_STEWARD_VISIBLE_FIELDS, "is_active"]
 DATA_AGREEMENT_VISIBLE_FIELDS = [
-    "agreement_name", "domain", "steward_id", "start_date", "expiry_date",
-    "business_purpose", "approved_usage",
+    "agreement_name", "domain", "steward_id", "recipient", "start_date", "expiry_date",
+    "business_purpose", "approved_usage_internal", "approved_usage_external",
+    "approved_usage_research",
 ]
 DATA_AGREEMENT_GENERATED_FIELDS = ["agreement_id", "contract_version"]
 DATA_STEWARD_FIELDS = DATA_STEWARD_BACKEND_FIELDS + ["custom_fields_json"] + STANDARD_RUNTIME_AUDIT_COLUMNS
@@ -49,7 +50,10 @@ FIELD_LABELS = {
     "start_date": "Start Date",
     "expiry_date": "Expiry Date",
     "business_purpose": "Business Purpose",
-    "approved_usage": "Approved Usage",
+    "recipient": "Recipient / Consumer",
+    "approved_usage_internal": "Approved Usage - Internal",
+    "approved_usage_external": "Approved Usage - External",
+    "approved_usage_research": "Approved Usage - Research",
 }
 _WIDGET_STYLE = {"description_width": "150px"}
 _WIDGET_LAYOUT_WIDTH = "600px"
@@ -689,10 +693,13 @@ def _create_or_update_data_agreement(*, spark: Any, config: Any, env_name: str, 
         latest = None
         row["agreement_id"] = str(row.get("agreement_id") or "").strip() or _generate_agreement_id()
         row["contract_version"] = str(row.get("contract_version") or "1.0.0").strip()
-    required = ["agreement_id", "contract_version", "agreement_name", "domain", "steward_id", "start_date", "expiry_date", "business_purpose", "approved_usage"]
+    required = ["agreement_id", "contract_version", "agreement_name", "domain", "steward_id", "recipient", "start_date", "expiry_date", "business_purpose"]
     missing = [field for field in required if not str(row.get(field) or "").strip()]
     if missing:
         raise ValueError("Missing required agreement field(s): " + ", ".join(missing))
+    usage_fields = ["approved_usage_internal", "approved_usage_external", "approved_usage_research"]
+    if not any(str(row.get(field) or "").strip() for field in usage_fields):
+        raise ValueError("At least one approved usage field is required: internal, external, or research.")
     row["start_date"] = _parse_iso_date(row.get("start_date"), "start_date", required=True)
     row["expiry_date"] = _parse_iso_date(row.get("expiry_date"), "expiry_date", required=True)
     if row["expiry_date"] < row["start_date"]:
@@ -804,7 +811,7 @@ def _standard_widget(field: str, value: Any = "", *, options: list[Any] | None =
         return widgets.DatePicker(value=date.fromisoformat(str(value)[:10]) if value else None, **_widget_common(widgets, description))
     if field == "is_active":
         return widgets.Checkbox(value=True if value == "" else _to_bool(value), **_widget_common(widgets, description))
-    if field in {"business_purpose", "approved_usage"}:
+    if field in {"business_purpose", "approved_usage_internal", "approved_usage_external", "approved_usage_research"}:
         return widgets.Textarea(value=str(value or ""), **_widget_common(widgets, description, textarea=True))
     return widgets.Text(value=str(value or ""), **_widget_common(widgets, description))
 
