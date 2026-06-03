@@ -1,4 +1,4 @@
-# column_context_rows_for_spark
+# _write_metadata_rows_legacy
 
 **Module:** `metadata`  
 **Classification:** Internal helper
@@ -9,13 +9,13 @@ No summary available.
 
 ## Function manifest
 
-- Fully qualified function name: `fabricops_kit.metadata.column_context_rows_for_spark`
-- Short name: `column_context_rows_for_spark`
+- Fully qualified function name: `fabricops_kit.metadata._write_metadata_rows_legacy`
+- Short name: `_write_metadata_rows_legacy`
 - Module: `metadata`
 - Classification: Internal helper
 - Related module: `metadata`
 - Source file path: `src/fabricops_kit/metadata.py`
-- Source reference: <a href="../../api/modules/metadata/#column_context_rows_for_spark">Module source anchor</a>
+- Source reference: <a href="../../api/modules/metadata/#_write_metadata_rows_legacy">Module source anchor</a>
 - Inbound references count: 2
 - Outbound references count: 0
 
