@@ -380,12 +380,12 @@ Use the finder below to look up public callable functions.
 
   </div>
 </article>
-<article id="select_agreement" class="reference-catalogue-item" data-callable-row="true" data-callable-name="select_agreement" data-callable-module="data_agreement" data-callable-starter-path="—" data-role="essential" data-callable-purpose="Render a widget dropdown and store selected agreement metadata row in module state.">
+<article id="select_agreement" class="reference-catalogue-item" data-callable-row="true" data-callable-name="select_agreement" data-callable-module="data_agreement" data-callable-starter-path="—" data-role="essential" data-callable-purpose="Render a searchable agreement selector and store selected agreement metadata row in module state.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/select_agreement/"><code>select_agreement</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Render a widget dropdown and store selected agreement metadata row in module state.</p>
+  <p class="reference-catalogue-item-purpose">Render a searchable agreement selector and store selected agreement metadata row in module state.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 3</span></summary><ul><li><code>_agreement_dropdown_options</code></li><li><code>_latest_agreement_versions</code></li><li><code>_load_agreements</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 3</span></summary><ul><li><code>_latest_agreement_versions</code></li><li><code>_load_agreements</code></li><li><code>_render_searchable_selector</code></li></ul></details>
 
   </div>
 </article>

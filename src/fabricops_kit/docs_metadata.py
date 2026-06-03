@@ -156,7 +156,7 @@ PUBLIC_SYMBOL_DOCS: list[PublicSymbolDocMetadata] = [{'symbol_name': 'setup_note
   'template_notebook': '—',
   'template_segment': '—',
   'role': 'essential',
-  'summary_override': 'Render a widget dropdown and store selected agreement metadata row in module state.'},
+  'summary_override': 'Render a searchable agreement selector and store selected agreement metadata row in module state.'},
  {'symbol_name': 'get_selected_agreement',
   'module': 'data_agreement',
   'kind': 'function',

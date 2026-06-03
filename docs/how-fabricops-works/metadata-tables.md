@@ -70,7 +70,9 @@ These fields are populated by runtime audit helpers, for example `metadata.build
 2. **Data Agreement** maintenance creates append-only agreement versions and selects from currently active stewards.
 3. **Agreement Evidence** optionally uploads supporting documents or screenshots for an existing agreement version.
 
-Each intake widget exposes a short standard field list plus configured custom fields. Agreement identifiers (`agreement_id` and `contract_version`) are backend-generated context: new agreements receive an ID and `1.0.0` version automatically, while updates carry the stable ID forward and increment the version. Normal users should not manually edit these technical identifiers.
+Each intake widget exposes a short standard field list plus configured custom fields. Table-backed selectors in `01_da` are searchable so long steward, agreement, and agreement-version lists can be filtered without rerunning the notebook cell. The search matches friendly labels plus stable IDs and key metadata fields, while the value saved to metadata remains the stable key: `steward_id` for steward selections, `agreement_id` for agreement selections, and `agreement_id||contract_version` for agreement evidence version selections. The selector also renders read-only selected-record context below the search controls so long steward names, agreement names, IDs, versions, roles, contacts, and recipients remain visible even when option labels are too long for the control.
+
+Agreement identifiers (`agreement_id` and `contract_version`) are backend-generated context: new agreements receive an ID and `1.0.0` version automatically, while updates carry the stable ID forward and increment the version. Normal users should not manually edit these technical identifiers.
 
 Add organization-specific concepts such as a faculty, department, division, consumer group, or expected output in `00_env_config`; the widget stores those values in `custom_fields_json`. Custom field definitions support `text`, `textarea`, `select`, `multiselect`, `date`, and `boolean` controls. Do not add a physical column for each local intake concept.
 
