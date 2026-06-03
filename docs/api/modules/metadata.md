@@ -6,7 +6,7 @@
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 3</span><span class="reference-chip">Internal helpers: 8</span><span class="reference-chip">Outbound: 1</span><span class="reference-chip">Inbound: 4</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 5</span><span class="reference-chip">Internal helpers: 10</span><span class="reference-chip">Outbound: 1</span><span class="reference-chip">Inbound: 4</span></div>
 
 ## Module purpose
 
@@ -36,11 +36,11 @@ Use `build_runtime_audit_fields(...)` when metadata tables need framework-manage
     </tr>
     <tr>
       <td>Public callable count</td>
-      <td>3</td>
+      <td>5</td>
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>8</td>
+      <td>10</td>
     </tr>
     <tr>
       <td>Inbound module count</td>
@@ -87,7 +87,7 @@ Use `build_runtime_audit_fields(...)` when metadata tables need framework-manage
       <td>Essential</td>
       <td>function</td>
       <td>Load notebook registration metadata rows for agreement notebook traceability.</td>
-      <td>—</td>
+      <td><a href="../../reference/internal/metadata/_coerce_row_dicts/"><code>_coerce_row_dicts</code></a> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/register_current_notebook/"><code>register_current_notebook</code></a></td>
@@ -95,6 +95,20 @@ Use `build_runtime_audit_fields(...)` when metadata tables need framework-manage
       <td>function</td>
       <td>Register current notebook metadata evidence for agreement traceability.</td>
       <td><a href="../../reference/internal/metadata/_context_get/"><code>_context_get</code></a> (internal), <a href="../../reference/internal/metadata/_runtime_context/"><code>_runtime_context</code></a> (internal), <a href="../../reference/internal/metadata/_safe_str/"><code>_safe_str</code></a> (internal)</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/setup_notebook_registry_table/"><code>setup_notebook_registry_table</code></a></td>
+      <td>Essential</td>
+      <td>function</td>
+      <td>Create or validate notebook registry metadata before workflow notebooks register themselves.</td>
+      <td><a href="../../reference/internal/metadata/_column_names/"><code>_column_names</code></a> (internal)</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/get_notebook_registry_schema/"><code>get_notebook_registry_schema</code></a></td>
+      <td>Optional</td>
+      <td>function</td>
+      <td>Return the required notebook registry metadata columns.</td>
+      <td>—</td>
     </tr>
   </tbody>
 </table>
@@ -118,14 +132,24 @@ Use `build_runtime_audit_fields(...)` when metadata tables need framework-manage
 <a class="reference-chip" href="#_context_get"><code>_context_get</code></a>, <a class="reference-chip" href="#_runtime_context"><code>_runtime_context</code></a>, <a class="reference-chip" href="#_safe_str"><code>_safe_str</code></a>
 </li>
 <li>
-<a class="reference-chip" href="../../reference/load_notebook_registry/"><code>load_notebook_registry</code></a>
+<a class="reference-chip" href="../../reference/get_notebook_registry_schema/"><code>get_notebook_registry_schema</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <span>None.</span>
+</li>
+<li>
+<a class="reference-chip" href="../../reference/load_notebook_registry/"><code>load_notebook_registry</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_coerce_row_dicts"><code>_coerce_row_dicts</code></a>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/register_current_notebook/"><code>register_current_notebook</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_context_get"><code>_context_get</code></a>, <a class="reference-chip" href="#_runtime_context"><code>_runtime_context</code></a>, <a class="reference-chip" href="#_safe_str"><code>_safe_str</code></a>, <a class="reference-chip" href="#write_metadata_rows"><code>write_metadata_rows</code></a>
+</li>
+<li>
+<a class="reference-chip" href="../../reference/setup_notebook_registry_table/"><code>setup_notebook_registry_table</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_column_names"><code>_column_names</code></a>, <a class="reference-chip" href="../../reference/get_notebook_registry_schema/"><code>get_notebook_registry_schema</code></a>
 </li>
 </ul>
 </section>
@@ -144,6 +168,14 @@ Use `build_runtime_audit_fields(...)` when metadata tables need framework-manage
     </tr>
   </thead>
   <tbody>
+    <tr>
+      <td><a href="../../reference/internal/metadata/_coerce_row_dicts/"><code>_coerce_row_dicts</code></a></td>
+      <td><a href="../../reference/load_notebook_registry/"><code>load_notebook_registry</code></a></td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/metadata/_column_names/"><code>_column_names</code></a></td>
+      <td><a href="../../reference/setup_notebook_registry_table/"><code>setup_notebook_registry_table</code></a></td>
+    </tr>
     <tr>
       <td><a href="../../reference/internal/metadata/_context_get/"><code>_context_get</code></a></td>
       <td><a href="../../reference/build_runtime_audit_fields/"><code>build_runtime_audit_fields</code></a>, <a href="../../reference/register_current_notebook/"><code>register_current_notebook</code></a></td>
@@ -182,6 +214,14 @@ Use `build_runtime_audit_fields(...)` when metadata tables need framework-manage
 
 <h6>Internal helpers details</h6>
 <ul class="callable-relationship-rows">
+<li>
+<a class="reference-chip" href="#_coerce_row_dicts"><code>_coerce_row_dicts</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_column_names"><code>_column_names</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_coerce_row_dicts"><code>_coerce_row_dicts</code></a>
+</li>
 <li>
 <a class="reference-chip" href="#_context_get"><code>_context_get</code></a>
 </li>
@@ -232,4 +272,4 @@ Use `build_runtime_audit_fields(...)` when metadata tables need framework-manage
 ### External callees
 
 **fabric_input_output**
-<a class="reference-chip" href="../../reference/write_lakehouse_table/"><code>write_lakehouse_table</code></a>
+<a class="reference-chip" href="../../reference/read_lakehouse_table/"><code>read_lakehouse_table</code></a>, <a class="reference-chip" href="../../reference/write_lakehouse_table/"><code>write_lakehouse_table</code></a>

@@ -3103,7 +3103,8 @@
     "inbound": [
       "fabricops_kit.data_agreement._ensure_metadata_tables",
       "fabricops_kit.data_agreement._list_all_data_agreement_rows",
-      "fabricops_kit.data_agreement._list_data_stewards"
+      "fabricops_kit.data_agreement._list_data_stewards",
+      "fabricops_kit.metadata.setup_notebook_registry_table"
     ],
     "outbound": [
       "fabricops_kit.config._get_store",
@@ -3151,6 +3152,7 @@
       "fabricops_kit.data_agreement._write_row",
       "fabricops_kit.data_quality.write_dq_rules",
       "fabricops_kit.fabric_input_output.seed_minimal_sample_source_table",
+      "fabricops_kit.metadata.setup_notebook_registry_table",
       "fabricops_kit.metadata.write_metadata_rows"
     ],
     "outbound": [
@@ -3224,6 +3226,35 @@
       "fabricops_kit.handover._status_of"
     ],
     "source_file": "src/fabricops_kit/handover.py",
+    "summary": "No summary available."
+  },
+  {
+    "name": "_coerce_row_dicts",
+    "qualified_name": "fabricops_kit.metadata._coerce_row_dicts",
+    "module": "metadata",
+    "type": "internal",
+    "role": "internal",
+    "inbound": [
+      "fabricops_kit.metadata._column_names",
+      "fabricops_kit.metadata.load_notebook_registry"
+    ],
+    "outbound": [],
+    "source_file": "src/fabricops_kit/metadata.py",
+    "summary": "No summary available."
+  },
+  {
+    "name": "_column_names",
+    "qualified_name": "fabricops_kit.metadata._column_names",
+    "module": "metadata",
+    "type": "internal",
+    "role": "internal",
+    "inbound": [
+      "fabricops_kit.metadata.setup_notebook_registry_table"
+    ],
+    "outbound": [
+      "fabricops_kit.metadata._coerce_row_dicts"
+    ],
+    "source_file": "src/fabricops_kit/metadata.py",
     "summary": "No summary available."
   },
   {
@@ -3456,13 +3487,28 @@
     "summary": "No summary available."
   },
   {
+    "name": "get_notebook_registry_schema",
+    "qualified_name": "fabricops_kit.metadata.get_notebook_registry_schema",
+    "module": "metadata",
+    "type": "callable",
+    "role": "optional",
+    "inbound": [
+      "fabricops_kit.metadata.setup_notebook_registry_table"
+    ],
+    "outbound": [],
+    "source_file": "src/fabricops_kit/metadata.py",
+    "summary": "Return the required notebook registry metadata columns."
+  },
+  {
     "name": "load_notebook_registry",
     "qualified_name": "fabricops_kit.metadata.load_notebook_registry",
     "module": "metadata",
     "type": "callable",
     "role": "essential",
     "inbound": [],
-    "outbound": [],
+    "outbound": [
+      "fabricops_kit.metadata._coerce_row_dicts"
+    ],
     "source_file": "src/fabricops_kit/metadata.py",
     "summary": "Load notebook registration metadata rows for agreement notebook traceability."
   },
@@ -3492,6 +3538,22 @@
     ],
     "source_file": "src/fabricops_kit/metadata.py",
     "summary": "Register current notebook metadata evidence for agreement traceability."
+  },
+  {
+    "name": "setup_notebook_registry_table",
+    "qualified_name": "fabricops_kit.metadata.setup_notebook_registry_table",
+    "module": "metadata",
+    "type": "callable",
+    "role": "essential",
+    "inbound": [],
+    "outbound": [
+      "fabricops_kit.fabric_input_output.read_lakehouse_table",
+      "fabricops_kit.fabric_input_output.write_lakehouse_table",
+      "fabricops_kit.metadata._column_names",
+      "fabricops_kit.metadata.get_notebook_registry_schema"
+    ],
+    "source_file": "src/fabricops_kit/metadata.py",
+    "summary": "Create or validate notebook registry metadata before workflow notebooks register themselves."
   },
   {
     "name": "write_column_business_context",

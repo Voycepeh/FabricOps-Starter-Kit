@@ -168,14 +168,15 @@ Evidence upload is optional. Users can save steward and agreement records withou
 | Key relationships | `agreement_id` links the notebook to `METADATA_DATA_AGREEMENT`. Table fields can optionally link a notebook to catalogue records. |
 | Main writer | All workflow notebooks through `register_current_notebook()`. |
 | Main downstream use | Lets handover and audit views point back to the notebooks that produced or approved metadata evidence. |
-| Runtime audit | Includes the standard runtime audit columns defined above. |
+| Runtime audit | The row uses explicit runtime columns listed below rather than the shared underscore-prefixed `01_da` audit-column block. |
+
+`METADATA_NOTEBOOK_REGISTRY` is not created or written by the `01_da` widgets. `setup_data_agreement_tables()` remains scoped to agreement intake only: `METADATA_DATA_STEWARD`, `METADATA_DATA_AGREEMENT`, and `METADATA_DATA_AGREEMENT_EVIDENCE`. Prepare this registry separately with `setup_notebook_registry_table()` before workflow notebooks register themselves, then let each workflow notebook append its own row through `register_current_notebook()`.
 
 !!! important "Notebook registry function"
     Use `register_current_notebook()`, not `register_notebook_metadata()`.
 
 | Column | Example | Status | Purpose |
 | --- | --- | --- | --- |
-| notebook_registry_key | hash value | Planned | Stable notebook registry key |
 | agreement_id | lyra_deid_v1 | Collected | Agreement this notebook supports |
 | environment_name | prod | Collected | Environment context |
 | dataset_name | lyra | Collected | Dataset or data product |
@@ -184,11 +185,11 @@ Evidence upload is optional. Users can save steward and agreement records withou
 | pipeline_name | lyra_pipeline | Collected | Pipeline or workflow name |
 | notebook_type | 04_gov | Collected | Notebook family |
 | workspace_id | Fabric workspace ID | Collected | Fabric workspace ID |
-| workspace | ODI Dev | Collected | Fabric workspace name |
+| workspace_name | ODI Dev | Collected | Fabric workspace name |
 | notebook_id | Fabric notebook ID | Collected | Fabric notebook ID |
 | notebook_name | 04_gov_lyra_column_review | Collected | Fabric notebook name |
 | notebook_url | https://fabric.microsoft.com/... | Collected | Link to notebook |
-| user_name | Voyce | Collected | Registering user |
+| user_name | user@example.com | Collected | Registering user name or email from Fabric runtime context |
 | user_id | user-guid | Collected | Registering user ID |
 | registered_at | 2026-05-29T10:30:00Z | Collected | Registration timestamp |
 

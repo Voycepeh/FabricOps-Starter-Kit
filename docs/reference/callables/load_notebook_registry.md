@@ -17,6 +17,7 @@ Load notebook registration metadata rows for agreement notebook traceability.
 - Source file path: `src/fabricops_kit/metadata.py`
 - Source reference: <a href="../../api/modules/metadata/#load_notebook_registry">Module source anchor</a>
 - Inbound references count: 0
-- Outbound references count: 0
+- Outbound references count: 1
 
-_No inbound or outbound references detected._
+## Outbound references
+- <a href="../internal/metadata/_coerce_row_dicts/"><code>fabricops_kit.metadata._coerce_row_dicts</code></a>
