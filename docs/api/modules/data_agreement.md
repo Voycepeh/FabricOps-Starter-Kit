@@ -111,8 +111,8 @@ Use these callables in standard FabricOps notebooks.
       <td><a href="../../reference/select_agreement/"><code>select_agreement</code></a></td>
       <td>Primary notebook API</td>
       <td>function</td>
-      <td>Render a widget dropdown and store selected agreement metadata row in module state.</td>
-      <td><a href="../../reference/internal/data_agreement/_agreement_dropdown_options/"><code>_agreement_dropdown_options</code></a> (internal), <a href="../../reference/internal/data_agreement/_latest_agreement_versions/"><code>_latest_agreement_versions</code></a> (internal), <a href="../../reference/internal/data_agreement/_load_agreements/"><code>_load_agreements</code></a> (internal)</td>
+      <td>Render a searchable agreement selector and store selected agreement metadata row in module state.</td>
+      <td><a href="../../reference/internal/data_agreement/_latest_agreement_versions/"><code>_latest_agreement_versions</code></a> (internal), <a href="../../reference/internal/data_agreement/_load_agreements/"><code>_load_agreements</code></a> (internal), <a href="../../reference/internal/data_agreement/_render_searchable_selector/"><code>_render_searchable_selector</code></a> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/setup_data_agreement_tables/"><code>setup_data_agreement_tables</code></a></td>
@@ -434,7 +434,7 @@ These non-exported helpers support framework internals and diagnostics. Do not i
 <li>
 <a class="reference-chip" href="../../reference/select_agreement/"><code>select_agreement</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_agreement_dropdown_options"><code>_agreement_dropdown_options</code></a>, <a class="reference-chip" href="#_latest_agreement_versions"><code>_latest_agreement_versions</code></a>, <a class="reference-chip" href="#_load_agreements"><code>_load_agreements</code></a>
+<a class="reference-chip" href="#_latest_agreement_versions"><code>_latest_agreement_versions</code></a>, <a class="reference-chip" href="#_load_agreements"><code>_load_agreements</code></a>, <a class="reference-chip" href="#_render_searchable_selector"><code>_render_searchable_selector</code></a>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/setup_data_agreement_tables/"><code>setup_data_agreement_tables</code></a>
@@ -464,7 +464,7 @@ These non-exported helpers support framework internals and diagnostics. Do not i
     </tr>
     <tr>
       <td><a href="../../reference/internal/data_agreement/_agreement_dropdown_options/"><code>_agreement_dropdown_options</code></a></td>
-      <td><a href="../../reference/select_agreement/"><code>select_agreement</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/data_agreement/_agreement_identity_text/"><code>_agreement_identity_text</code></a></td>
@@ -616,7 +616,7 @@ These non-exported helpers support framework internals and diagnostics. Do not i
     </tr>
     <tr>
       <td><a href="../../reference/internal/data_agreement/_render_searchable_selector/"><code>_render_searchable_selector</code></a></td>
-      <td>—</td>
+      <td><a href="../../reference/select_agreement/"><code>select_agreement</code></a></td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/data_agreement/_resolve_agreement_identity/"><code>_resolve_agreement_identity</code></a></td>

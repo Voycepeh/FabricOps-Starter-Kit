@@ -1043,27 +1043,50 @@ def select_agreement(agreement_rows_or_config: Any, env_name: str | None = None,
 
     Returns
     -------
-    ipywidgets.Dropdown
-        Displayed latest-version agreement selector.
+    ipywidgets.Select
+        Displayed searchable latest-version agreement selector control. Its
+        ``value`` remains the stable ``agreement_id`` for existing callers.
     """
     import ipywidgets as widgets
     from IPython.display import display
     global _SELECTED_AGREEMENT
     rows = _load_agreements(agreement_rows_or_config, env_name, spark_session=spark_session) if env_name is not None else agreement_rows_or_config
     latest_rows = _latest_agreement_versions(rows)
-    options = _agreement_dropdown_options(latest_rows)
-    if not options:
+    if not latest_rows:
         raise ValueError("No agreements found. Save a data agreement in notebook 01_da first.")
-    rows_by_id = {str(row.get("agreement_id") or ""): row for row in latest_rows}
-    dropdown = widgets.Dropdown(options=options, description="Agreement")
+    rows_by_id = {str(row.get("agreement_id") or "").strip(): row for row in latest_rows if str(row.get("agreement_id") or "").strip()}
+
+    def _agreement_label(row: dict[str, Any]) -> str:
+        agreement_id = str(row.get("agreement_id") or "").strip()
+        return f"{row.get('agreement_name', '') or agreement_id} ({agreement_id} / v{row.get('contract_version', '')})"
+
+    selector_parts = _render_searchable_selector(
+        widgets=widgets,
+        label="Agreement",
+        rows=latest_rows,
+        label_fn=_agreement_label,
+        value_fn=lambda row: str(row.get("agreement_id") or "").strip(),
+        placeholder="Search agreements...",
+        search_fields=["agreement_name", "agreement_id", "contract_version", "domain", "recipient"],
+        context_fields=[("agreement_name", "Agreement name"), ("agreement_id", "Agreement ID"), ("contract_version", "Current version"), ("recipient", "Recipient")],
+    )
+    selector = selector_parts["selector"]
+
     def _on_change(change: dict[str, Any]) -> None:
         global _SELECTED_AGREEMENT
         if change.get("name") == "value" and change.get("new") is not None:
-            _SELECTED_AGREEMENT = dict(rows_by_id[str(change["new"])])
-    dropdown.observe(_on_change, names="value")
-    _SELECTED_AGREEMENT = dict(rows_by_id[str(options[0][1])])
-    display(dropdown)
-    return dropdown
+            selected_row = rows_by_id.get(str(change["new"]))
+            if selected_row is not None:
+                _SELECTED_AGREEMENT = dict(selected_row)
+
+    selector.observe(_on_change, names="value")
+    if selector.value in rows_by_id:
+        _SELECTED_AGREEMENT = dict(rows_by_id[str(selector.value)])
+    selector.search_box = selector_parts["search"]
+    selector.context_html = selector_parts["context"]
+    selector.container = selector_parts["container"]
+    display(selector_parts["container"])
+    return selector
 
 
 def get_selected_agreement() -> dict[str, Any]:

@@ -5,7 +5,7 @@
 
 ## Purpose
 
-Render a widget dropdown and store selected agreement metadata row in module state.
+Render a searchable agreement selector and store selected agreement metadata row in module state.
 
 ## Function manifest
 
@@ -20,6 +20,6 @@ Render a widget dropdown and store selected agreement metadata row in module sta
 - Outbound references count: 3
 
 ## Outbound references
-- <a href="../internal/data_agreement/_agreement_dropdown_options/"><code>fabricops_kit.data_agreement._agreement_dropdown_options</code></a>
 - <a href="../internal/data_agreement/_latest_agreement_versions/"><code>fabricops_kit.data_agreement._latest_agreement_versions</code></a>
 - <a href="../internal/data_agreement/_load_agreements/"><code>fabricops_kit.data_agreement._load_agreements</code></a>
+- <a href="../internal/data_agreement/_render_searchable_selector/"><code>fabricops_kit.data_agreement._render_searchable_selector</code></a>

@@ -949,3 +949,66 @@ def test_config_driven_small_dropdowns_remain_normal_dropdown_controls(monkeypat
     evidence_widget = data_agreement._render_agreement_evidence_widget(spark=object(), config=_config(), env_name="dev")
     assert isinstance(evidence_widget["evidence_type"], widgets.Dropdown)
     assert not isinstance(evidence_widget["evidence_type"], widgets.Select)
+
+
+def _downstream_agreements():
+    return [
+        {**_agreement(agreement_name="Finance Sharing", domain="Finance", recipient="Budget analytics team"), "agreement_id": "DA-FIN", "contract_version": "1.0.0"},
+        {**_agreement(agreement_name="Operations Dispatch Agreement", domain="Operations", recipient="Dispatch operations team"), "agreement_id": "DA-OPS", "contract_version": "2.0.0"},
+    ]
+
+
+def _search_downstream_selector(selector, term):
+    selector.search_box.value = term
+    selector.search_box.callbacks[0]({"name": "value", "new": term})
+    selector.callbacks[-1]({"name": "value", "new": selector.value})
+
+
+def test_select_agreement_searches_by_agreement_name(monkeypatch):
+    _install_widget_stubs(monkeypatch)
+    selector = data_agreement.select_agreement(_downstream_agreements())
+    _search_downstream_selector(selector, "dispatch agreement")
+    assert selector.value == "DA-OPS"
+
+
+def test_select_agreement_searches_by_agreement_id(monkeypatch):
+    _install_widget_stubs(monkeypatch)
+    selector = data_agreement.select_agreement(_downstream_agreements())
+    _search_downstream_selector(selector, "da-fin")
+    assert selector.value == "DA-FIN"
+
+
+def test_select_agreement_searches_by_recipient(monkeypatch):
+    _install_widget_stubs(monkeypatch)
+    selector = data_agreement.select_agreement(_downstream_agreements())
+    _search_downstream_selector(selector, "dispatch operations")
+    assert selector.value == "DA-OPS"
+
+
+def test_select_agreement_keeps_value_as_agreement_id(monkeypatch):
+    _install_widget_stubs(monkeypatch)
+    selector = data_agreement.select_agreement(_downstream_agreements())
+    _search_downstream_selector(selector, "finance sharing")
+    assert selector.value == "DA-FIN"
+    assert selector.value != "Finance Sharing"
+
+
+def test_get_selected_agreement_returns_row_after_searchable_change(monkeypatch):
+    _install_widget_stubs(monkeypatch)
+    selector = data_agreement.select_agreement(_downstream_agreements())
+    _search_downstream_selector(selector, "dispatch operations")
+    selected = data_agreement.get_selected_agreement()
+    assert selected["agreement_id"] == "DA-OPS"
+    assert selected["agreement_name"] == "Operations Dispatch Agreement"
+    assert selected["recipient"] == "Dispatch operations team"
+
+
+def test_select_agreement_context_shows_selected_agreement_fields(monkeypatch):
+    _install_widget_stubs(monkeypatch)
+    selector = data_agreement.select_agreement(_downstream_agreements())
+    _search_downstream_selector(selector, "dispatch operations")
+    html = selector.context_html.value
+    assert "Operations Dispatch Agreement" in html
+    assert "DA-OPS" in html
+    assert "2.0.0" in html
+    assert "Dispatch operations team" in html

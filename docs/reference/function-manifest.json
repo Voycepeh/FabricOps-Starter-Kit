@@ -635,9 +635,7 @@
     "qualified_name": "fabricops_kit.data_agreement._agreement_dropdown_options",
     "module": "data_agreement",
     "classification": "Internal helper",
-    "inbound": [
-      "fabricops_kit.data_agreement.select_agreement"
-    ],
+    "inbound": [],
     "outbound": [
       "fabricops_kit.data_agreement._latest_agreement_versions"
     ],
@@ -1301,7 +1299,8 @@
     "classification": "Internal helper",
     "inbound": [
       "fabricops_kit.data_agreement._render_agreement_evidence_widget",
-      "fabricops_kit.data_agreement._render_maintenance_widget"
+      "fabricops_kit.data_agreement._render_maintenance_widget",
+      "fabricops_kit.data_agreement.select_agreement"
     ],
     "outbound": [
       "fabricops_kit.data_agreement._option_values",
@@ -1709,13 +1708,13 @@
     "classification": "Essential",
     "inbound": [],
     "outbound": [
-      "fabricops_kit.data_agreement._agreement_dropdown_options",
       "fabricops_kit.data_agreement._latest_agreement_versions",
-      "fabricops_kit.data_agreement._load_agreements"
+      "fabricops_kit.data_agreement._load_agreements",
+      "fabricops_kit.data_agreement._render_searchable_selector"
     ],
     "source_path": "src/fabricops_kit/data_agreement.py",
     "docs_path": "reference/select_agreement.md",
-    "summary": "Render a widget dropdown and store selected agreement metadata row in module state."
+    "summary": "Render a searchable agreement selector and store selected agreement metadata row in module state."
   },
   {
     "id": "fabricops_kit.data_agreement.setup_data_agreement_tables",
