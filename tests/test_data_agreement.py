@@ -11,7 +11,7 @@ from fabricops_kit.data_agreement import DATA_AGREEMENT_TABLE, DATA_STEWARD_TABL
 from fabricops_kit.fabric_input_output import FabricStore
 
 
-def _config(*, metadata_tables=None):
+def _config(*, metadata_tables=None, steward_role_options=None):
     store = FabricStore(env="dev", workspace_id="workspace", item_id="metadata-item", name="lh_metadata_dev", kind="lakehouse")
     intake = DataAgreementConfig(
         metadata_tables=metadata_tables or {"data_steward": DATA_STEWARD_TABLE, "data_agreement": DATA_AGREEMENT_TABLE},
@@ -23,6 +23,7 @@ def _config(*, metadata_tables=None):
             "visible_columns": ["agreement_id", "contract_version", "agreement_name", "domain", "steward_id", "start_date", "expiry_date", "business_purpose", "approved_usage", "custom_fields_json", "_committed_by"],
             "custom_fields": [{"key": "consumer_group", "label": "Consumer group", "type": "select", "options": ["ODI", "Faculty"]}],
         },
+        steward_role_options=steward_role_options or ["Data Owner", "Data Steward", "Governance Reviewer"],
     )
     return SimpleNamespace(path_config=SimpleNamespace(paths={"dev": {"metadata": store}}), data_agreement_config=intake)
 
@@ -203,6 +204,8 @@ def test_metadata_table_documentation_explains_generated_ids_json_extension_and_
     assert "Do not add a physical column for each local intake concept" in docs
     assert "steward_id | STEW-8d889875dd | Backend-generated" in docs
     assert "is_active | `true` | Backend-derived" in docs
+    assert "DataAgreementConfig.steward_role_options" in docs
+    assert "add organization-specific role extensions to that config list" in docs
 
 
 def test_agreement_widget_hides_generated_ids_and_shows_read_only_context(monkeypatch):
@@ -512,3 +515,52 @@ def test_save_button_reenabled_after_success_and_failure(monkeypatch):
         control.value = date.fromisoformat(values[field]) if field == "effective_from" else values[field]
     failure_widget["save_button"].callbacks[0](None)
     assert failure_widget["save_button"].disabled is False
+
+
+def test_steward_role_renders_as_dropdown_from_config(monkeypatch):
+    _install_widget_stubs(monkeypatch)
+    monkeypatch.setattr(data_agreement, "_list_data_stewards", lambda *args, **kwargs: [])
+    widget = data_agreement.render_data_steward_widget(
+        _config(steward_role_options=["Data Owner", "Business Approver"]), "dev", spark=object()
+    )
+    role = widget["fields"]["steward_role"]
+    assert role.description == "Steward Role"
+    assert role.options == [("Data Owner", "Data Owner"), ("Business Approver", "Business Approver")]
+    assert role.value == "Data Owner"
+
+
+def test_selecting_existing_legacy_steward_role_preserves_dropdown_option(monkeypatch):
+    _install_widget_stubs(monkeypatch)
+    legacy = _steward(steward_role="Legacy Approver")
+    monkeypatch.setattr(data_agreement, "_list_data_stewards", lambda *args, **kwargs: [legacy])
+    widget = data_agreement.render_data_steward_widget(
+        _config(steward_role_options=["Data Owner", "Data Steward"]), "dev", spark=object()
+    )
+    widget["existing_record"].callbacks[0]({"new": "steward-001"})
+    assert ("Legacy Approver", "Legacy Approver") in widget["fields"]["steward_role"].options
+    assert widget["fields"]["steward_role"].value == "Legacy Approver"
+
+
+def test_new_steward_save_rejects_blank_or_invalid_role(monkeypatch):
+    monkeypatch.setattr(data_agreement, "_write_row", lambda **kwargs: pytest.fail("invalid steward role should not append"))
+    with pytest.raises(ValueError, match="steward_role"):
+        data_agreement._create_or_update_data_steward(
+            spark=object(), config=_config(steward_role_options=["Data Owner"]), env_name="dev", values=_steward(steward_role="")
+        )
+    with pytest.raises(ValueError, match="configured steward role options"):
+        data_agreement._create_or_update_data_steward(
+            spark=object(), config=_config(steward_role_options=["Data Owner"]), env_name="dev", values=_steward(steward_role="Legacy Approver")
+        )
+
+
+def test_existing_legacy_steward_role_can_be_saved_when_loaded_from_selected_row(monkeypatch):
+    writes = []
+    monkeypatch.setattr(data_agreement, "_write_row", lambda **kwargs: writes.append(kwargs["row"]))
+    row = data_agreement._create_or_update_data_steward(
+        spark=object(),
+        config=_config(steward_role_options=["Data Owner"]),
+        env_name="dev",
+        values={**_steward(steward_role="Legacy Approver"), "_legacy_steward_role": "Legacy Approver"},
+    )
+    assert row["steward_role"] == "Legacy Approver"
+    assert writes[0]["steward_role"] == "Legacy Approver"

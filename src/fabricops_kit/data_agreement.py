@@ -13,6 +13,7 @@ import hashlib
 import json
 from typing import Any
 
+from .config import DEFAULT_STEWARD_ROLE_OPTIONS
 from .fabric_input_output import read_lakehouse_table, write_lakehouse_table
 from .metadata import build_runtime_audit_fields
 
@@ -148,6 +149,12 @@ def _table_name(config: Any, key: str, default: str) -> str:
     """Return a configured metadata table name or its lightweight default."""
     tables = _config_value(config, "metadata_tables", {}) or {}
     return str(tables.get(key, default))
+
+
+def _steward_role_options(config: Any) -> list[str]:
+    """Return configured Data Steward role dropdown values."""
+    options = _config_value(config, "steward_role_options", DEFAULT_STEWARD_ROLE_OPTIONS)
+    return [str(option).strip() for option in (options or []) if str(option).strip()]
 
 
 def _widget_config(config: Any, kind: str) -> dict[str, Any]:
@@ -561,6 +568,11 @@ def _create_or_update_data_steward(*, spark: Any, config: Any, env_name: str, va
     missing = [field for field in required if not str(row.get(field) or "").strip()]
     if missing:
         raise ValueError("Missing required steward field(s): " + ", ".join(missing))
+    configured_roles = set(_steward_role_options(config))
+    legacy_role = str(values.get("_legacy_steward_role") or "").strip()
+    selected_steward_id = str(values.get("steward_id") or "").strip()
+    if str(row["steward_role"]).strip() not in configured_roles and not (selected_steward_id and legacy_role and str(row["steward_role"]).strip() == legacy_role):
+        raise ValueError("steward_role must be one of the configured steward role options.")
     row["effective_from"] = _parse_iso_date(row.get("effective_from"), "effective_from")
     row["effective_to"] = _parse_iso_date(row.get("effective_to"), "effective_to")
     if row["effective_to"] and row["effective_from"] and row["effective_to"] < row["effective_from"]:
@@ -851,7 +863,14 @@ def _render_maintenance_widget(*, spark: Any, config: Any, env_name: str, kind: 
         return _build_steward_dropdown_options(_list_data_stewards(config, env_name, spark_session=spark, active_only=True, missing_ok=True))
 
     steward_options = None if is_steward else _steward_options()
-    form = {field: _standard_widget(field, options=steward_options if field == "steward_id" else None) for field in fields}
+    steward_role_options = [(role, role) for role in _steward_role_options(config)] if is_steward else None
+    form = {
+        field: _standard_widget(
+            field,
+            options=steward_options if field == "steward_id" else steward_role_options if field == "steward_role" else None,
+        )
+        for field in fields
+    }
     custom = _render_custom_fields(widget_config)
 
     def _refresh_existing_options(selected_id: str | None = None) -> None:
@@ -876,6 +895,10 @@ def _render_maintenance_widget(*, spark: Any, config: Any, env_name: str, kind: 
         row = row_lookup.get(row_id, {}) if row_id else {}
         for field, widget in form.items():
             value = row.get(field, "")
+            if field == "steward_role" and value:
+                option_values = _option_values(list(getattr(widget, "options", [])))
+                if value not in option_values:
+                    widget.options = [*list(getattr(widget, "options", [])), (str(value), str(value))]
             if field in {"effective_from", "effective_to", "start_date", "expiry_date"}:
                 value = date.fromisoformat(str(value)[:10]) if value else None
             _set_widget_value(widget, value)
@@ -902,6 +925,7 @@ def _render_maintenance_widget(*, spark: Any, config: Any, env_name: str, kind: 
                 if is_steward:
                     if selected.value:
                         values["steward_id"] = selected.value
+                        values["_legacy_steward_role"] = row_lookup.get(selected.value, {}).get("steward_role", "")
                     row = _create_or_update_data_steward(spark=spark, config=config, env_name=env_name, values=values, custom_fields=extras)
                     _refresh_existing_options(row["steward_id"])
                     for callback in after_save_callbacks:

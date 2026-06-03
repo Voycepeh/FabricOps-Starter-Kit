@@ -83,3 +83,17 @@ def test_data_agreement_config_defensively_copies_nested_widget_definitions():
 
     assert config.data_steward_widget["custom_fields"][0]["key"] == "group"
     assert config.data_agreement_widget["custom_fields"][0]["options"] == ["ODI"]
+
+
+def test_data_agreement_config_exposes_default_steward_role_options():
+    from fabricops_kit.config import DataAgreementConfig
+
+    config = DataAgreementConfig()
+
+    assert config.steward_role_options == [
+        "Data Owner",
+        "Data Steward",
+        "Data Custodian",
+        "Governance Reviewer",
+        "Business Approver",
+    ]

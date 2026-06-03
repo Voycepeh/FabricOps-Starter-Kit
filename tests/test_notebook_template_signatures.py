@@ -118,6 +118,9 @@ def test_00_env_config_exposes_shared_config_and_data_agreement_defaults():
     assert "DATA_AGREEMENT_CONFIG = DataAgreementConfig(" in code
     for configured_default in (
         "metadata_tables={",
+        "steward_role_options=[",
+        '"Data Owner"',
+        '"Governance Reviewer"',
         "data_steward_widget={",
         "data_agreement_widget={",
         '"custom_fields": [',

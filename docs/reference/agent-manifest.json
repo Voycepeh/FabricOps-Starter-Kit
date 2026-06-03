@@ -703,6 +703,7 @@
     "type": "internal",
     "role": "internal",
     "inbound": [
+      "fabricops_kit.data_agreement._steward_role_options",
       "fabricops_kit.data_agreement._table_name",
       "fabricops_kit.data_agreement._widget_config"
     ],
@@ -749,6 +750,7 @@
       "fabricops_kit.data_agreement._parse_iso_date",
       "fabricops_kit.data_agreement._serialize_custom_fields",
       "fabricops_kit.data_agreement._steward_active_value",
+      "fabricops_kit.data_agreement._steward_role_options",
       "fabricops_kit.data_agreement._table_name",
       "fabricops_kit.data_agreement._to_bool",
       "fabricops_kit.data_agreement._write_row",
@@ -1047,7 +1049,8 @@
     "type": "internal",
     "role": "internal",
     "inbound": [
-      "fabricops_kit.data_agreement._default_dropdown_value"
+      "fabricops_kit.data_agreement._default_dropdown_value",
+      "fabricops_kit.data_agreement._render_maintenance_widget"
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/data_agreement.py",
@@ -1122,9 +1125,11 @@
       "fabricops_kit.data_agreement._get_widget_visible_fields",
       "fabricops_kit.data_agreement._list_data_agreements",
       "fabricops_kit.data_agreement._list_data_stewards",
+      "fabricops_kit.data_agreement._option_values",
       "fabricops_kit.data_agreement._render_custom_fields",
       "fabricops_kit.data_agreement._set_widget_value",
       "fabricops_kit.data_agreement._standard_widget",
+      "fabricops_kit.data_agreement._steward_role_options",
       "fabricops_kit.data_agreement._widget_common",
       "fabricops_kit.data_agreement._widget_config",
       "fabricops_kit.data_agreement._widget_field_value"
@@ -1206,6 +1211,22 @@
     ],
     "outbound": [
       "fabricops_kit.data_agreement._active_steward"
+    ],
+    "source_file": "src/fabricops_kit/data_agreement.py",
+    "summary": "No summary available."
+  },
+  {
+    "name": "_steward_role_options",
+    "qualified_name": "fabricops_kit.data_agreement._steward_role_options",
+    "module": "data_agreement",
+    "type": "internal",
+    "role": "internal",
+    "inbound": [
+      "fabricops_kit.data_agreement._create_or_update_data_steward",
+      "fabricops_kit.data_agreement._render_maintenance_widget"
+    ],
+    "outbound": [
+      "fabricops_kit.data_agreement._config_value"
     ],
     "source_file": "src/fabricops_kit/data_agreement.py",
     "summary": "No summary available."

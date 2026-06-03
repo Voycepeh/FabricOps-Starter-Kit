@@ -42,7 +42,7 @@ Agreement technical audit fields are framework-managed through `metadata.build_r
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>47</td>
+      <td>48</td>
     </tr>
     <tr>
       <td>Inbound module count</td>
@@ -312,6 +312,10 @@ These non-exported helpers support framework internals and diagnostics. Do not i
       <td>Private implementation helper</td>
     </tr>
     <tr>
+      <td><a href="../../reference/internal/data_agreement/_steward_role_options/"><code>_steward_role_options</code></a></td>
+      <td>Private implementation helper</td>
+    </tr>
+    <tr>
       <td><a href="../../reference/internal/data_agreement/_table_name/"><code>_table_name</code></a></td>
       <td>Private implementation helper</td>
     </tr>
@@ -563,6 +567,10 @@ These non-exported helpers support framework internals and diagnostics. Do not i
       <td>—</td>
     </tr>
     <tr>
+      <td><a href="../../reference/internal/data_agreement/_steward_role_options/"><code>_steward_role_options</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
       <td><a href="../../reference/internal/data_agreement/_table_name/"><code>_table_name</code></a></td>
       <td>—</td>
     </tr>
@@ -649,7 +657,7 @@ These non-exported helpers support framework internals and diagnostics. Do not i
 <li>
 <a class="reference-chip" href="#_create_or_update_data_steward"><code>_create_or_update_data_steward</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_generate_steward_id"><code>_generate_steward_id</code></a>, <a class="reference-chip" href="#_parse_iso_date"><code>_parse_iso_date</code></a>, <a class="reference-chip" href="#_serialize_custom_fields"><code>_serialize_custom_fields</code></a>, <a class="reference-chip" href="#_steward_active_value"><code>_steward_active_value</code></a>, <a class="reference-chip" href="#_table_name"><code>_table_name</code></a>, <a class="reference-chip" href="#_to_bool"><code>_to_bool</code></a>, <a class="reference-chip" href="#_write_row"><code>_write_row</code></a>
+<a class="reference-chip" href="#_generate_steward_id"><code>_generate_steward_id</code></a>, <a class="reference-chip" href="#_parse_iso_date"><code>_parse_iso_date</code></a>, <a class="reference-chip" href="#_serialize_custom_fields"><code>_serialize_custom_fields</code></a>, <a class="reference-chip" href="#_steward_active_value"><code>_steward_active_value</code></a>, <a class="reference-chip" href="#_steward_role_options"><code>_steward_role_options</code></a>, <a class="reference-chip" href="#_table_name"><code>_table_name</code></a>, <a class="reference-chip" href="#_to_bool"><code>_to_bool</code></a>, <a class="reference-chip" href="#_write_row"><code>_write_row</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_default_dropdown_value"><code>_default_dropdown_value</code></a>
@@ -744,7 +752,7 @@ These non-exported helpers support framework internals and diagnostics. Do not i
 <li>
 <a class="reference-chip" href="#_render_maintenance_widget"><code>_render_maintenance_widget</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_agreement_identity_text"><code>_agreement_identity_text</code></a>, <a class="reference-chip" href="#_build_steward_dropdown_options"><code>_build_steward_dropdown_options</code></a>, <a class="reference-chip" href="#_collect_custom_fields"><code>_collect_custom_fields</code></a>, <a class="reference-chip" href="#_create_or_update_data_agreement"><code>_create_or_update_data_agreement</code></a>, <a class="reference-chip" href="#_create_or_update_data_steward"><code>_create_or_update_data_steward</code></a>, <a class="reference-chip" href="#_default_dropdown_value"><code>_default_dropdown_value</code></a>, <a class="reference-chip" href="#_deserialize_custom_fields"><code>_deserialize_custom_fields</code></a>, <a class="reference-chip" href="#_get_widget_visible_fields"><code>_get_widget_visible_fields</code></a>, <a class="reference-chip" href="#_list_data_agreements"><code>_list_data_agreements</code></a>, <a class="reference-chip" href="#_list_data_stewards"><code>_list_data_stewards</code></a>, <a class="reference-chip" href="#_render_custom_fields"><code>_render_custom_fields</code></a>, <a class="reference-chip" href="#_set_widget_value"><code>_set_widget_value</code></a>, <a class="reference-chip" href="#_standard_widget"><code>_standard_widget</code></a>, <a class="reference-chip" href="#_widget_common"><code>_widget_common</code></a>, <a class="reference-chip" href="#_widget_config"><code>_widget_config</code></a>, <a class="reference-chip" href="#_widget_field_value"><code>_widget_field_value</code></a>
+<a class="reference-chip" href="#_agreement_identity_text"><code>_agreement_identity_text</code></a>, <a class="reference-chip" href="#_build_steward_dropdown_options"><code>_build_steward_dropdown_options</code></a>, <a class="reference-chip" href="#_collect_custom_fields"><code>_collect_custom_fields</code></a>, <a class="reference-chip" href="#_create_or_update_data_agreement"><code>_create_or_update_data_agreement</code></a>, <a class="reference-chip" href="#_create_or_update_data_steward"><code>_create_or_update_data_steward</code></a>, <a class="reference-chip" href="#_default_dropdown_value"><code>_default_dropdown_value</code></a>, <a class="reference-chip" href="#_deserialize_custom_fields"><code>_deserialize_custom_fields</code></a>, <a class="reference-chip" href="#_get_widget_visible_fields"><code>_get_widget_visible_fields</code></a>, <a class="reference-chip" href="#_list_data_agreements"><code>_list_data_agreements</code></a>, <a class="reference-chip" href="#_list_data_stewards"><code>_list_data_stewards</code></a>, <a class="reference-chip" href="#_option_values"><code>_option_values</code></a>, <a class="reference-chip" href="#_render_custom_fields"><code>_render_custom_fields</code></a>, <a class="reference-chip" href="#_set_widget_value"><code>_set_widget_value</code></a>, <a class="reference-chip" href="#_standard_widget"><code>_standard_widget</code></a>, <a class="reference-chip" href="#_steward_role_options"><code>_steward_role_options</code></a>, <a class="reference-chip" href="#_widget_common"><code>_widget_common</code></a>, <a class="reference-chip" href="#_widget_config"><code>_widget_config</code></a>, <a class="reference-chip" href="#_widget_field_value"><code>_widget_field_value</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_resolve_agreement_identity"><code>_resolve_agreement_identity</code></a>
@@ -768,6 +776,11 @@ These non-exported helpers support framework internals and diagnostics. Do not i
 <a class="reference-chip" href="#_steward_active_value"><code>_steward_active_value</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_active_steward"><code>_active_steward</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_steward_role_options"><code>_steward_role_options</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_config_value"><code>_config_value</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_table_name"><code>_table_name</code></a>
