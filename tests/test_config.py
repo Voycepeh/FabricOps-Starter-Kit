@@ -85,11 +85,13 @@ def test_data_agreement_config_defensively_copies_nested_widget_definitions():
     assert config.data_agreement_widget["custom_fields"][0]["options"] == ["ODI"]
 
 
-def test_data_agreement_config_defaults_include_split_agreement_usage_fields():
+def test_data_agreement_config_defaults_include_evidence_table_and_split_agreement_usage_fields():
     from fabricops_kit.config import DataAgreementConfig
 
-    visible = DataAgreementConfig().data_agreement_widget["visible_columns"]
+    config = DataAgreementConfig()
+    visible = config.data_agreement_widget["visible_columns"]
 
+    assert config.metadata_tables["data_agreement_evidence"] == "METADATA_DATA_AGREEMENT_EVIDENCE"
     assert "recipient" in visible
     assert "approved_usage_internal" in visible
     assert "approved_usage_external" in visible

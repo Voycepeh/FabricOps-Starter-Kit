@@ -7,14 +7,14 @@ import pytest
 
 import fabricops_kit.data_agreement as data_agreement
 from fabricops_kit.config import DataAgreementConfig
-from fabricops_kit.data_agreement import DATA_AGREEMENT_TABLE, DATA_STEWARD_TABLE
+from fabricops_kit.data_agreement import DATA_AGREEMENT_EVIDENCE_TABLE, DATA_AGREEMENT_TABLE, DATA_STEWARD_TABLE
 from fabricops_kit.fabric_input_output import FabricStore
 
 
 def _config(*, metadata_tables=None, steward_role_options=None):
     store = FabricStore(env="dev", workspace_id="workspace", item_id="metadata-item", name="lh_metadata_dev", kind="lakehouse")
     intake = DataAgreementConfig(
-        metadata_tables=metadata_tables or {"data_steward": DATA_STEWARD_TABLE, "data_agreement": DATA_AGREEMENT_TABLE},
+        metadata_tables=metadata_tables or {"data_steward": DATA_STEWARD_TABLE, "data_agreement": DATA_AGREEMENT_TABLE, "data_agreement_evidence": DATA_AGREEMENT_EVIDENCE_TABLE},
         data_steward_widget={
             "visible_columns": ["steward_id", "steward_name", "steward_role", "contact", "effective_from", "effective_to", "is_active", "custom_fields_json", "_activity_id"],
             "custom_fields": [{"key": "group", "label": "Group", "type": "text", "required": False}],
@@ -56,9 +56,15 @@ def _install_widget_stubs(monkeypatch):
             self.description = kwargs.get("description", "")
             self.style = kwargs.get("style", {})
             self.layout = kwargs.get("layout")
+            self.accept = kwargs.get("accept", "")
+            self.multiple = kwargs.get("multiple", False)
+            self.children = kwargs.get("children", ())
+            self.disabled = kwargs.get("disabled", False)
+            self.titles = {}
             self.callbacks = []
         def observe(self, callback, names=None): self.callbacks.append(callback)
         def on_click(self, callback): self.callbacks.append(callback)
+        def set_title(self, index, title): self.titles[index] = title
     class Output(Widget):
         def __init__(self, *args, **kwargs):
             super().__init__(*args, **kwargs)
@@ -72,11 +78,11 @@ def _install_widget_stubs(monkeypatch):
             for key, value in kwargs.items():
                 setattr(self, key, value)
     widgets = ModuleType("ipywidgets")
-    for name in ("Text", "Textarea", "Dropdown", "SelectMultiple", "DatePicker", "Checkbox", "Button", "HTML"):
+    for name in ("Text", "Textarea", "Dropdown", "SelectMultiple", "DatePicker", "Checkbox", "Button", "HTML", "FileUpload", "Tab"):
         setattr(widgets, name, Widget)
     widgets.Output = Output
     widgets.Layout = Layout
-    widgets.VBox = lambda values: values
+    widgets.VBox = lambda values: Widget(children=tuple(values))
     display = ModuleType("IPython.display")
     display.display = lambda *args, **kwargs: None
     ipython = ModuleType("IPython")
@@ -126,7 +132,11 @@ def test_custom_text_and_select_fields_render_and_round_trip_json(monkeypatch):
 
 def test_setup_tables_is_idempotent_and_does_not_seed_fake_stewards(monkeypatch):
     reads, writes, source_rows = [], [], []
-    schemas = {DATA_STEWARD_TABLE: data_agreement._get_data_steward_schema(), DATA_AGREEMENT_TABLE: data_agreement._get_data_agreement_schema()}
+    schemas = {
+        DATA_STEWARD_TABLE: data_agreement._get_data_steward_schema(),
+        DATA_AGREEMENT_TABLE: data_agreement._get_data_agreement_schema(),
+        DATA_AGREEMENT_EVIDENCE_TABLE: data_agreement._get_data_agreement_evidence_schema(),
+    }
     attempts = {table: 0 for table in schemas}
     class Frame:
         def limit(self, count):
@@ -146,10 +156,18 @@ def test_setup_tables_is_idempotent_and_does_not_seed_fake_stewards(monkeypatch)
     monkeypatch.setattr(data_agreement, "write_lakehouse_table", lambda df, config, env, target, table, **kwargs: writes.append((env, target, table, kwargs)))
     first = data_agreement._ensure_metadata_tables(_config(), "dev", spark=Spark())
     second = data_agreement._ensure_metadata_tables(_config(), "dev", spark=Spark())
-    assert first["created_tables"] == [DATA_STEWARD_TABLE, DATA_AGREEMENT_TABLE]
+    assert first["created_tables"] == [DATA_STEWARD_TABLE, DATA_AGREEMENT_TABLE, DATA_AGREEMENT_EVIDENCE_TABLE]
     assert second["created_tables"] == []
-    assert writes == [("dev", "metadata", DATA_STEWARD_TABLE, {"mode": "ignore", "overwrite_schema": True}), ("dev", "metadata", DATA_AGREEMENT_TABLE, {"mode": "ignore", "overwrite_schema": True})]
-    assert source_rows == [[{field: "" for field in schemas[DATA_STEWARD_TABLE]}], [{field: "" for field in schemas[DATA_AGREEMENT_TABLE]}]]
+    assert writes == [
+        ("dev", "metadata", DATA_STEWARD_TABLE, {"mode": "ignore", "overwrite_schema": True}),
+        ("dev", "metadata", DATA_AGREEMENT_TABLE, {"mode": "ignore", "overwrite_schema": True}),
+        ("dev", "metadata", DATA_AGREEMENT_EVIDENCE_TABLE, {"mode": "ignore", "overwrite_schema": True}),
+    ]
+    assert source_rows == [
+        [{field: "" for field in schemas[DATA_STEWARD_TABLE]}],
+        [{field: "" for field in schemas[DATA_AGREEMENT_TABLE]}],
+        [{field: "" for field in schemas[DATA_AGREEMENT_EVIDENCE_TABLE]}],
+    ]
     assert all(not any(row.values()) for rows in source_rows for row in rows)
 
 
@@ -206,11 +224,20 @@ def test_create_update_validation_fails_clearly(monkeypatch, factory, values, me
         factory(spark=object(), config=_config(), env_name="dev", values=values)
 
 
-def test_widget_entrypoints_and_app_render_two_widgets(monkeypatch):
-    monkeypatch.setattr(data_agreement, "_render_maintenance_widget", lambda **kwargs: kwargs["kind"])
-    assert data_agreement.render_data_steward_widget(_config(), "dev", spark="spark") == "data_steward_widget"
-    assert data_agreement.render_data_agreement_widget(_config(), "dev", spark="spark") == "data_agreement_widget"
-    assert data_agreement.render_agreement_intake_app(spark="spark", config=_config(), env="dev") == {"data_steward": "data_steward_widget", "data_agreement": "data_agreement_widget"}
+def test_widget_entrypoints_and_app_render_tabbed_widgets(monkeypatch):
+    _install_widget_stubs(monkeypatch)
+    monkeypatch.setattr(data_agreement, "_list_data_stewards", lambda *args, **kwargs: [_steward()])
+    monkeypatch.setattr(data_agreement, "_list_data_agreements", lambda *args, **kwargs: [])
+    monkeypatch.setattr(data_agreement, "_list_all_data_agreement_rows", lambda *args, **kwargs: [])
+    assert data_agreement.render_data_steward_widget(_config(), "dev", spark="spark")["container"] is not None
+    assert data_agreement.render_data_agreement_widget(_config(), "dev", spark="spark")["container"] is not None
+    app = data_agreement.render_agreement_intake_app(spark="spark", config=_config(), env="dev")
+    assert set(app) == {"data_steward", "data_agreement", "agreement_evidence", "tab"}
+    assert app["data_steward"]["container"] is not None
+    assert app["data_agreement"]["container"] is not None
+    assert app["agreement_evidence"]["container"] is not None
+    assert app["tab"].titles == {0: "Data Steward", 1: "Data Agreement", 2: "Agreement Evidence"}
+    assert len(app["tab"].children) == 3
 
 
 def test_metadata_table_documentation_explains_generated_ids_json_extension_and_hidden_audit_fields():
@@ -223,6 +250,10 @@ def test_metadata_table_documentation_explains_generated_ids_json_extension_and_
     assert "is_active | `true` | Backend-derived" in docs
     assert "DataAgreementConfig.steward_role_options" in docs
     assert "add organization-specific role extensions to that config list" in docs
+    assert "METADATA_DATA_AGREEMENT_EVIDENCE" in docs
+    assert "metadata lakehouse `Files` area" in docs
+    assert "does not store uploaded binary content" in docs
+    assert "Evidence upload is optional" in docs
 
 
 def test_agreement_widget_hides_generated_ids_and_shows_read_only_context(monkeypatch):
@@ -305,7 +336,11 @@ def test_multiselect_custom_field_round_trips_json_to_widget_tuple(monkeypatch):
 
 def test_metadata_setup_and_steward_writes_use_string_is_active_schema(monkeypatch):
     setup_rows, write_rows = [], []
-    schemas = {DATA_STEWARD_TABLE: data_agreement._get_data_steward_schema(), DATA_AGREEMENT_TABLE: data_agreement._get_data_agreement_schema()}
+    schemas = {
+        DATA_STEWARD_TABLE: data_agreement._get_data_steward_schema(),
+        DATA_AGREEMENT_TABLE: data_agreement._get_data_agreement_schema(),
+        DATA_AGREEMENT_EVIDENCE_TABLE: data_agreement._get_data_agreement_evidence_schema(),
+    }
     attempts = {table: 0 for table in schemas}
     class Frame:
         def limit(self, count): return self
@@ -647,3 +682,105 @@ def test_no_change_detection_includes_recipient_and_split_usage(monkeypatch):
     assert unchanged["_fabricops_no_change"] is True
     assert changed["recipient"] == "Research team"
     assert writes[0]["contract_version"] == "1.2.0"
+
+
+def test_evidence_table_schema_includes_expected_columns():
+    assert data_agreement._get_data_agreement_evidence_schema() == [
+        "agreement_id",
+        "contract_version",
+        "evidence_type",
+        "file_name",
+        "file_path",
+        "mime_type",
+        "file_size",
+        "uploaded_at",
+        "uploaded_by",
+        *data_agreement._get_standard_runtime_audit_columns(),
+    ]
+
+
+def test_evidence_file_upload_accepts_expected_file_types(monkeypatch):
+    _install_widget_stubs(monkeypatch)
+    row = {**_agreement(), "agreement_id": "DA-001", "contract_version": "1.0.0"}
+    monkeypatch.setattr(data_agreement, "_list_all_data_agreement_rows", lambda *args, **kwargs: [row])
+    widget = data_agreement._render_agreement_evidence_widget(spark=object(), config=_config(), env_name="dev")
+    assert widget["file_upload"].accept == ".pdf,.doc,.docx,.png,.jpg,.jpeg"
+    assert widget["file_upload"].multiple is True
+    assert widget["evidence_type"].options == [(item, item) for item in data_agreement.AGREEMENT_EVIDENCE_TYPES]
+
+
+def test_evidence_widget_tells_user_to_save_agreement_first(monkeypatch):
+    _install_widget_stubs(monkeypatch)
+    monkeypatch.setattr(data_agreement, "_list_all_data_agreement_rows", lambda *args, **kwargs: [])
+    widget = data_agreement._render_agreement_evidence_widget(spark=object(), config=_config(), env_name="dev")
+    assert "Save a Data Agreement first" in widget["message"].value
+    assert widget["file_upload"].disabled is True
+    assert widget["save_button"].disabled is True
+
+
+def test_evidence_records_save_file_metadata_not_binary_content(monkeypatch):
+    writes, files = [], []
+    monkeypatch.setattr(data_agreement, "build_runtime_audit_fields", lambda **kwargs: {field: f"audit:{field}" for field in data_agreement._get_standard_runtime_audit_columns()})
+    monkeypatch.setattr(data_agreement, "_write_evidence_file", lambda **kwargs: files.append(kwargs))
+    monkeypatch.setattr(data_agreement, "_write_row", lambda **kwargs: writes.append(kwargs))
+    rows = data_agreement._save_agreement_evidence_records(
+        spark=object(),
+        config=_config(),
+        env_name="dev",
+        agreement_id="DA-001",
+        contract_version="1.0.0",
+        evidence_type="Signed Agreement",
+        uploaded_files=({"name": "signed.pdf", "type": "application/pdf", "size": 7, "content": b"PDFDATA"},),
+    )
+    assert len(rows) == 1
+    assert files[0]["relative_path"] == "Files/fabricops/agreement_evidence/DA-001/1.0.0/signed.pdf"
+    assert files[0]["content"] == b"PDFDATA"
+    assert writes[0]["table"] == DATA_AGREEMENT_EVIDENCE_TABLE
+    assert writes[0]["row"]["file_path"] == "Files/fabricops/agreement_evidence/DA-001/1.0.0/signed.pdf"
+    assert writes[0]["row"]["mime_type"] == "application/pdf"
+    assert writes[0]["row"]["file_size"] == "7"
+    assert "content" not in writes[0]["row"]
+
+
+@pytest.mark.parametrize(("agreement_id", "contract_version", "message"), [
+    ("", "1.0.0", "agreement_id is required"),
+    ("DA-001", "", "contract_version is required"),
+])
+def test_evidence_save_requires_agreement_id_and_contract_version(monkeypatch, agreement_id, contract_version, message):
+    monkeypatch.setattr(data_agreement, "_write_evidence_file", lambda **kwargs: pytest.fail("file write should not run"))
+    monkeypatch.setattr(data_agreement, "_write_row", lambda **kwargs: pytest.fail("metadata write should not run"))
+    with pytest.raises(ValueError, match=message):
+        data_agreement._save_agreement_evidence_records(
+            spark=object(),
+            config=_config(),
+            env_name="dev",
+            agreement_id=agreement_id,
+            contract_version=contract_version,
+            evidence_type="Other",
+            uploaded_files=({"name": "evidence.pdf", "content": b"data"},),
+        )
+
+
+def test_evidence_save_supports_multiple_uploaded_files(monkeypatch):
+    writes, files = [], []
+    monkeypatch.setattr(data_agreement, "build_runtime_audit_fields", lambda **kwargs: {field: "" for field in data_agreement._get_standard_runtime_audit_columns()})
+    monkeypatch.setattr(data_agreement, "_write_evidence_file", lambda **kwargs: files.append(kwargs))
+    monkeypatch.setattr(data_agreement, "_write_row", lambda **kwargs: writes.append(kwargs))
+    rows = data_agreement._save_agreement_evidence_records(
+        spark=object(),
+        config=_config(),
+        env_name="dev",
+        agreement_id="DA-001",
+        contract_version="1.0.0",
+        evidence_type="Email Approval",
+        uploaded_files={
+            "first": {"name": "approval.msg.pdf", "type": "application/pdf", "content": b"one"},
+            "second": {"name": "screen.png", "type": "image/png", "content": memoryview(b"two")},
+        },
+    )
+    assert [row["file_name"] for row in rows] == ["approval.msg.pdf", "screen.png"]
+    assert [file["relative_path"] for file in files] == [
+        "Files/fabricops/agreement_evidence/DA-001/1.0.0/approval.msg.pdf",
+        "Files/fabricops/agreement_evidence/DA-001/1.0.0/screen.png",
+    ]
+    assert len(writes) == 2

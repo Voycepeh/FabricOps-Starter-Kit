@@ -54,7 +54,7 @@ Shared environment bootstrap and validation before agreement intake, exploration
 
 ## `01_da_<agreement>`
 
-Form notebook that renders the agreement-intake app through one framework helper. The helper renders Data Steward maintenance followed by Data Agreement maintenance. Both tables are append-only, and agreement intake selects active steward rows.
+Form notebook that renders the agreement-intake app through one framework helper. The helper renders a tabbed app for Data Steward maintenance, Data Agreement maintenance, and optional Agreement Evidence upload. Both tables are append-only, and agreement intake selects active steward rows.
 
 ### Segment 1: Render the agreement-intake app
 
@@ -73,7 +73,7 @@ Form notebook that renders the agreement-intake app through one framework helper
       <td>`render_agreement_intake_app`</td>
       <td>Callable orchestration wrapper</td>
       <td>Render and wire the default agreement-intake form application.</td>
-      <td>—</td>
+      <td>`_render_agreement_evidence_widget`, `_render_maintenance_widget`</td>
       <td>Check dependency outputs and metadata writes.</td>
     </tr>
   </tbody>

@@ -284,6 +284,7 @@ class DataAgreementConfig:
     metadata_tables: dict[str, str] = field(default_factory=lambda: {
         "data_steward": "METADATA_DATA_STEWARD",
         "data_agreement": "METADATA_DATA_AGREEMENT",
+        "data_agreement_evidence": "METADATA_DATA_AGREEMENT_EVIDENCE",
     })
     data_steward_widget: dict[str, Any] = field(default_factory=lambda: {
         "visible_columns": [

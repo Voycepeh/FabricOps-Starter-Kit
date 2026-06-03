@@ -20,5 +20,5 @@ Render and wire the default agreement-intake form application.
 - Outbound references count: 2
 
 ## Outbound references
-- <a href="../render_data_agreement_widget/"><code>fabricops_kit.data_agreement.render_data_agreement_widget</code></a>
-- <a href="../render_data_steward_widget/"><code>fabricops_kit.data_agreement.render_data_steward_widget</code></a>
+- <a href="../internal/data_agreement/_render_agreement_evidence_widget/"><code>fabricops_kit.data_agreement._render_agreement_evidence_widget</code></a>
+- <a href="../internal/data_agreement/_render_maintenance_widget/"><code>fabricops_kit.data_agreement._render_maintenance_widget</code></a>
