@@ -17,13 +17,15 @@ No summary available.
 - Source file path: `src/fabricops_kit/data_agreement.py`
 - Source reference: <a href="../../api/modules/data_agreement/#_render_maintenance_widget">Module source anchor</a>
 - Inbound references count: 2
-- Outbound references count: 14
+- Outbound references count: 16
 
 ## Inbound references
 - <a href="../render_data_agreement_widget/"><code>fabricops_kit.data_agreement.render_data_agreement_widget</code></a>
 - <a href="../render_data_steward_widget/"><code>fabricops_kit.data_agreement.render_data_steward_widget</code></a>
 
 ## Outbound references
+- <a href="../internal/data_agreement/_agreement_identity_text/"><code>fabricops_kit.data_agreement._agreement_identity_text</code></a>
+- <a href="../internal/data_agreement/_build_steward_dropdown_options/"><code>fabricops_kit.data_agreement._build_steward_dropdown_options</code></a>
 - <a href="../internal/data_agreement/_collect_custom_fields/"><code>fabricops_kit.data_agreement._collect_custom_fields</code></a>
 - <a href="../internal/data_agreement/_create_or_update_data_agreement/"><code>fabricops_kit.data_agreement._create_or_update_data_agreement</code></a>
 - <a href="../internal/data_agreement/_create_or_update_data_steward/"><code>fabricops_kit.data_agreement._create_or_update_data_steward</code></a>

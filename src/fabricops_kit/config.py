@@ -275,8 +275,7 @@ class DataAgreementConfig:
     })
     data_steward_widget: dict[str, Any] = field(default_factory=lambda: {
         "visible_columns": [
-            "steward_id", "steward_name", "steward_role", "contact",
-            "effective_from", "effective_to", "is_active",
+            "steward_name", "steward_role", "contact", "effective_from", "effective_to",
         ],
         "custom_fields": [],
     })

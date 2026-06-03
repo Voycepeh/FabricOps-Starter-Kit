@@ -9,6 +9,7 @@ runtime audit columns.
 from __future__ import annotations
 
 from datetime import date, datetime, timezone
+import hashlib
 import json
 from typing import Any
 
@@ -23,15 +24,15 @@ STANDARD_RUNTIME_AUDIT_COLUMNS = [
     "_metadata_lakehouse_name", "_activity_id",
 ]
 DATA_STEWARD_VISIBLE_FIELDS = [
-    "steward_id", "steward_name", "steward_role", "contact",
-    "effective_from", "effective_to", "is_active",
+    "steward_name", "steward_role", "contact", "effective_from", "effective_to",
 ]
+DATA_STEWARD_BACKEND_FIELDS = ["steward_id", *DATA_STEWARD_VISIBLE_FIELDS, "is_active"]
 DATA_AGREEMENT_VISIBLE_FIELDS = [
     "agreement_name", "domain", "steward_id", "start_date", "expiry_date",
     "business_purpose", "approved_usage",
 ]
 DATA_AGREEMENT_GENERATED_FIELDS = ["agreement_id", "contract_version"]
-DATA_STEWARD_FIELDS = DATA_STEWARD_VISIBLE_FIELDS + ["custom_fields_json"] + STANDARD_RUNTIME_AUDIT_COLUMNS
+DATA_STEWARD_FIELDS = DATA_STEWARD_BACKEND_FIELDS + ["custom_fields_json"] + STANDARD_RUNTIME_AUDIT_COLUMNS
 DATA_AGREEMENT_FIELDS = DATA_AGREEMENT_GENERATED_FIELDS + DATA_AGREEMENT_VISIBLE_FIELDS + ["custom_fields_json"] + STANDARD_RUNTIME_AUDIT_COLUMNS
 
 FIELD_LABELS = {
@@ -175,6 +176,8 @@ def _get_widget_visible_fields(config: Any, kind: str) -> list[str]:
     """
     configured = _widget_config(config, kind).get("visible_columns", [])
     hidden = set(_get_standard_runtime_audit_columns()) | {"custom_fields_json"}
+    if kind == "data_steward_widget":
+        hidden.update({"steward_id", "is_active"})
     if kind == "data_agreement_widget":
         hidden.update(DATA_AGREEMENT_GENERATED_FIELDS)
     return [field for field in configured if field not in hidden]
@@ -422,13 +425,50 @@ def _to_bool(value: Any) -> bool:
 
 
 def _active_steward(row: dict[str, Any]) -> bool:
-    if not _to_bool(row.get("is_active")):
+    is_active = row.get("is_active")
+    if is_active not in (None, "") and not _to_bool(is_active):
         return False
     today = datetime.now(timezone.utc).date()
     try:
-        return (not row.get("effective_from") or date.fromisoformat(str(row["effective_from"])[:10]) <= today) and (not row.get("effective_to") or date.fromisoformat(str(row["effective_to"])[:10]) >= today)
+        starts_before_today = not row.get("effective_from") or date.fromisoformat(str(row["effective_from"])[:10]) <= today
+        ends_after_today = not row.get("effective_to") or date.fromisoformat(str(row["effective_to"])[:10]) >= today
+        return starts_before_today and ends_after_today
     except ValueError as exc:
         raise ValueError(f"{DATA_STEWARD_TABLE} row '{row.get('steward_id', '')}' has an invalid effective date. Use ISO dates.") from exc
+
+
+def _steward_active_value(row: dict[str, Any]) -> str:
+    """Derive backend active status from effective dates for saved rows."""
+    return "true" if _active_steward({**row, "is_active": row.get("is_active", "")}) else "false"
+
+
+def _generate_steward_id(values: dict[str, Any]) -> str:
+    """Generate a stable public-safe steward identifier from business fields."""
+    basis = "|".join(str(values.get(field, "")).strip().lower() for field in ("steward_name", "contact", "effective_from"))
+    digest = hashlib.sha1(basis.encode("utf-8")).hexdigest()[:10]
+    return f"STEW-{digest}"
+
+
+def _build_steward_dropdown_options(active_stewards: Any) -> list[tuple[str, str]]:
+    """Build friendly steward dropdown options keyed by ``steward_id``."""
+    rows = [row for row in _coerce_row_dicts(active_stewards) if str(row.get("steward_id") or "").strip()]
+    base_labels: dict[str, str] = {}
+    counts: dict[str, int] = {}
+    for row in rows:
+        row_id = str(row.get("steward_id") or "").strip()
+        parts = [str(row.get(field) or "").strip() for field in ("steward_name", "steward_role", "contact")]
+        label = " | ".join(part for part in parts if part) or "Unnamed steward"
+        base_labels[row_id] = label
+        counts[label] = counts.get(label, 0) + 1
+
+    options = []
+    for row in rows:
+        row_id = str(row["steward_id"]).strip()
+        label = base_labels[row_id]
+        if counts[label] > 1 or label == "Unnamed steward":
+            label = f"{label} ({row_id})"
+        options.append((label, row_id))
+    return options
 
 
 def _list_data_stewards(config: Any, env_name: str, *, spark_session: Any = None, active_only: bool = True, missing_ok: bool = False) -> list[dict[str, Any]]:
@@ -473,7 +513,8 @@ def _load_active_data_steward_profiles(*, spark: Any, config: Any, env: str) -> 
     profiles = _list_data_stewards(config, env, spark_session=spark, active_only=True)
     if not profiles:
         raise ValueError(f"{DATA_STEWARD_TABLE} has no active steward rows. Use the Data Steward widget first.")
-    return [{**row, "label": f"{row.get('steward_name', '')} | {row.get('steward_role', '')} | {row.get('contact', '')}"} for row in profiles]
+    labels = dict((value, label) for label, value in _build_steward_dropdown_options(profiles))
+    return [{**row, "label": labels.get(str(row.get("steward_id") or ""), "Unnamed steward")} for row in profiles]
 
 
 def _write_row(*, spark: Any, config: Any, env_name: str, table: str, row: dict[str, Any]) -> None:
@@ -505,7 +546,8 @@ def _create_or_update_data_steward(*, spark: Any, config: Any, env_name: str, va
     env_name : str
         Configured environment key.
     values : dict[str, Any]
-        User-facing steward values. Reusing ``steward_id`` appends an update.
+        User-facing steward values. Reusing ``steward_id`` appends an update;
+        omitting it creates a backend-generated stable steward identifier.
     custom_fields : dict[str, Any], optional
         Organization-specific configured values.
 
@@ -515,15 +557,17 @@ def _create_or_update_data_steward(*, spark: Any, config: Any, env_name: str, va
         Appended steward row.
     """
     row = {field: values.get(field, "") for field in DATA_STEWARD_VISIBLE_FIELDS}
-    row["is_active"] = "true" if _to_bool(row["is_active"]) else "false"
-    required = ["steward_id", "steward_name", "steward_role", "contact"]
+    required = ["steward_name", "steward_role", "contact"]
     missing = [field for field in required if not str(row.get(field) or "").strip()]
     if missing:
         raise ValueError("Missing required steward field(s): " + ", ".join(missing))
-    row["effective_from"] = _parse_iso_date(row.get("effective_from"), "effective_from", required=True)
+    row["effective_from"] = _parse_iso_date(row.get("effective_from"), "effective_from")
     row["effective_to"] = _parse_iso_date(row.get("effective_to"), "effective_to")
-    if row["effective_to"] and row["effective_to"] < row["effective_from"]:
+    if row["effective_to"] and row["effective_from"] and row["effective_to"] < row["effective_from"]:
         raise ValueError("effective_to must be on or after effective_from.")
+    row["steward_id"] = str(values.get("steward_id") or "").strip() or _generate_steward_id(row)
+    explicit_active = values.get("is_active")
+    row["is_active"] = "false" if explicit_active not in (None, "") and not _to_bool(explicit_active) else _steward_active_value(row)
     row["custom_fields_json"] = _serialize_custom_fields(custom_fields)
     row.update(build_runtime_audit_fields(config=config, env=env_name, committed_by=committed_by, committed_at=committed_at, runtime_context=runtime_context))
     _write_row(spark=spark, config=config, env_name=env_name, table=_table_name(config, "data_steward", DATA_STEWARD_TABLE), row=row)
@@ -555,14 +599,20 @@ def _latest_agreement_versions(rows: Any) -> list[dict[str, Any]]:
     return sorted(latest.values(), key=lambda row: str(row.get("agreement_name") or "").lower())
 
 
-def _list_data_agreements(config: Any, env_name: str, *, spark_session: Any = None, active_only: bool = False, missing_ok: bool = False) -> list[dict[str, Any]]:
-    """List latest versioned agreements from the configured metadata lakehouse."""
+def _list_all_data_agreement_rows(config: Any, env_name: str, *, spark_session: Any = None, missing_ok: bool = False) -> list[dict[str, Any]]:
+    """List all append-only agreement rows from the metadata lakehouse."""
     try:
         rows = read_lakehouse_table(config, env_name, "metadata", _table_name(config, "data_agreement", DATA_AGREEMENT_TABLE), spark_session=spark_session)
     except Exception:
         if missing_ok:
             return []
         raise
+    return _coerce_row_dicts(rows)
+
+
+def _list_data_agreements(config: Any, env_name: str, *, spark_session: Any = None, active_only: bool = False, missing_ok: bool = False) -> list[dict[str, Any]]:
+    """List latest versioned agreements from the configured metadata lakehouse."""
+    rows = _list_all_data_agreement_rows(config, env_name, spark_session=spark_session, missing_ok=missing_ok)
     agreements = _latest_agreement_versions(rows)
     if not active_only:
         return agreements
@@ -601,17 +651,30 @@ def _resolve_agreement_identity(rows: Any, *, agreement_name: str = "", source_s
     return {"agreement_id": selected_agreement["agreement_id"], "contract_version": _next_minor_version(selected_agreement.get("contract_version")), "is_new_agreement": False}
 
 
+def _business_agreement_snapshot(row: dict[str, Any]) -> dict[str, Any]:
+    """Return user-facing agreement values used to detect business changes."""
+    snapshot = {field: row.get(field, "") for field in DATA_AGREEMENT_VISIBLE_FIELDS}
+    snapshot["custom_fields_json"] = _serialize_custom_fields(_deserialize_custom_fields(row.get("custom_fields_json", "")))
+    return snapshot
+
+
 def _create_or_update_data_agreement(*, spark: Any, config: Any, env_name: str, values: dict[str, Any], selected_agreement: dict[str, Any] | None = None, custom_fields: dict[str, Any] | None = None, committed_by: str | None = None, committed_at: str | None = None, runtime_context: dict[str, Any] | None = None) -> dict[str, Any]:
     """Append a new agreement or a new semantic version of an existing one.
 
     Reusing ``selected_agreement`` preserves its stable ``agreement_id`` and
-    increments the minor version. Runtime audit fields remain backend-managed.
+    increments from the latest stored version. Runtime audit fields remain
+    backend-managed.
     """
     row = {field: values.get(field, "") for field in DATA_AGREEMENT_VISIBLE_FIELDS}
-    if selected_agreement:
-        row["agreement_id"] = selected_agreement["agreement_id"]
-        row["contract_version"] = _next_minor_version(selected_agreement.get("contract_version"))
+    existing_rows = _list_all_data_agreement_rows(config, env_name, spark_session=spark, missing_ok=True)
+    selected_id = str((selected_agreement or {}).get("agreement_id") or "").strip()
+    if selected_id:
+        same_agreement = [item for item in existing_rows if str(item.get("agreement_id") or "").strip() == selected_id]
+        latest = max(same_agreement, key=lambda item: _parse_contract_version(item.get("contract_version")), default=selected_agreement)
+        row["agreement_id"] = selected_id
+        row["contract_version"] = _next_minor_version(latest.get("contract_version"))
     else:
+        latest = None
         row["agreement_id"] = str(row.get("agreement_id") or "").strip() or _generate_agreement_id()
         row["contract_version"] = str(row.get("contract_version") or "1.0.0").strip()
     required = ["agreement_id", "contract_version", "agreement_name", "domain", "steward_id", "start_date", "expiry_date", "business_purpose", "approved_usage"]
@@ -626,15 +689,22 @@ def _create_or_update_data_agreement(*, spark: Any, config: Any, env_name: str, 
     if str(row["steward_id"]) not in active_steward_ids:
         raise ValueError("steward_id must reference an active data steward.")
     row["custom_fields_json"] = _serialize_custom_fields(custom_fields)
+    if latest is not None:
+        new_snapshot = _business_agreement_snapshot(row)
+        latest_snapshot = _business_agreement_snapshot(latest)
+        if new_snapshot == latest_snapshot:
+            return {**latest, "_fabricops_no_change": True, "_fabricops_message": "No changes detected. Nothing was appended."}
+    if any(str(item.get("agreement_id") or "").strip() == row["agreement_id"] and str(item.get("contract_version") or "").strip() == row["contract_version"] for item in existing_rows):
+        raise ValueError(f"Agreement {row['agreement_id']} version {row['contract_version']} already exists. Select the existing agreement to create the next version, or create a new agreement.")
     row.update(build_runtime_audit_fields(config=config, env=env_name, committed_by=committed_by, committed_at=committed_at, runtime_context=runtime_context))
     _write_row(spark=spark, config=config, env_name=env_name, table=_table_name(config, "data_agreement", DATA_AGREEMENT_TABLE), row=row)
     return row
 
 
 def _agreement_dropdown_options(rows: Any, *, include_prompt: bool = False) -> list[tuple[str, Any]]:
-    """Build latest-version agreement dropdown options."""
+    """Build latest-version agreement dropdown options keyed by agreement ID."""
     options = [("Select an agreement to update...", None)] if include_prompt else []
-    options.extend((f"{row.get('agreement_name', '')} (Latest v{row.get('contract_version', '')}) - {row.get('domain', '')}", row) for row in _latest_agreement_versions(rows))
+    options.extend((f"{row.get('agreement_name', '')} ({row.get('agreement_id', '')} / v{row.get('contract_version', '')})", row.get("agreement_id")) for row in _latest_agreement_versions(rows))
     return options
 
 
@@ -660,16 +730,18 @@ def select_agreement(agreement_rows_or_config: Any, env_name: str | None = None,
     from IPython.display import display
     global _SELECTED_AGREEMENT
     rows = _load_agreements(agreement_rows_or_config, env_name, spark_session=spark_session) if env_name is not None else agreement_rows_or_config
-    options = _agreement_dropdown_options(rows)
+    latest_rows = _latest_agreement_versions(rows)
+    options = _agreement_dropdown_options(latest_rows)
     if not options:
         raise ValueError("No agreements found. Save a data agreement in notebook 01_da first.")
+    rows_by_id = {str(row.get("agreement_id") or ""): row for row in latest_rows}
     dropdown = widgets.Dropdown(options=options, description="Agreement")
     def _on_change(change: dict[str, Any]) -> None:
         global _SELECTED_AGREEMENT
         if change.get("name") == "value" and change.get("new") is not None:
-            _SELECTED_AGREEMENT = dict(change["new"])
+            _SELECTED_AGREEMENT = dict(rows_by_id[str(change["new"])])
     dropdown.observe(_on_change, names="value")
-    _SELECTED_AGREEMENT = dict(options[0][1])
+    _SELECTED_AGREEMENT = dict(rows_by_id[str(options[0][1])])
     display(dropdown)
     return dropdown
 
@@ -725,6 +797,19 @@ def _standard_widget(field: str, value: Any = "", *, options: list[Any] | None =
     return widgets.Text(value=str(value or ""), **_widget_common(widgets, description))
 
 
+def _agreement_identity_text(row: dict[str, Any] | None) -> str:
+    """Return read-only agreement version context for the notebook form."""
+    if not row:
+        return "Agreement ID and version are generated when saved."
+    current_version = str(row.get("contract_version") or "")
+    return (
+        f"Agreement ID: {row.get('agreement_id', '')}<br>"
+        f"Current version: {current_version}<br>"
+        f"Next version on save: {_next_minor_version(current_version)}<br>"
+        "Saving this change will append a new version. Existing rows will not be overwritten."
+    )
+
+
 def _render_maintenance_widget(*, spark: Any, config: Any, env_name: str, kind: str) -> dict[str, Any]:
     import ipywidgets as widgets
     from IPython.display import display
@@ -738,32 +823,32 @@ def _render_maintenance_widget(*, spark: Any, config: Any, env_name: str, kind: 
     def _row_id(row: dict[str, Any]) -> str:
         return str(row.get("steward_id" if is_steward else "agreement_id") or "").strip()
 
-    def _row_label(row: dict[str, Any]) -> str:
-        if is_steward:
-            return f"{row.get('steward_name', '') or _row_id(row)} ({_row_id(row)})"
-        return f"{row.get('agreement_name', '') or _row_id(row)} ({_row_id(row)} / v{row.get('contract_version', '')})"
-
     def _existing_rows() -> list[dict[str, Any]]:
         return _list_data_stewards(config, env_name, spark_session=spark, active_only=False, missing_ok=True) if is_steward else _list_data_agreements(config, env_name, spark_session=spark, missing_ok=True)
 
     def _existing_options() -> list[tuple[str, str | None]]:
         row_lookup.clear()
+        rows = _existing_rows()
         options: list[tuple[str, str | None]] = [(prompt, None)]
-        for row in _existing_rows():
-            row_id = _row_id(row)
-            if row_id:
-                row_lookup[row_id] = row
-                options.append((_row_label(row), row_id))
+        if is_steward:
+            for label, row_id in _build_steward_dropdown_options(rows):
+                row = next((item for item in rows if _row_id(item) == row_id), None)
+                if row is not None:
+                    row_lookup[row_id] = row
+                    options.append((label, row_id))
+        else:
+            for row in rows:
+                row_id = _row_id(row)
+                if row_id:
+                    row_lookup[row_id] = row
+                    options.append((f"{row.get('agreement_name', '') or row_id} ({row_id} / v{row.get('contract_version', '')})", row_id))
         return options
 
     selected = widgets.Dropdown(options=_existing_options(), **_widget_common(widgets, "Create / update"))
-    identity_context = None if is_steward else widgets.HTML(value="Agreement ID and version are generated when saved.")
+    identity_context = None if is_steward else widgets.HTML(value=_agreement_identity_text(None))
 
     def _steward_options() -> list[tuple[str, str]]:
-        return [
-            (f"{row.get('steward_name', '')} ({row.get('steward_id', '')})", row["steward_id"])
-            for row in _list_data_stewards(config, env_name, spark_session=spark, active_only=True, missing_ok=True)
-        ]
+        return _build_steward_dropdown_options(_list_data_stewards(config, env_name, spark_session=spark, active_only=True, missing_ok=True))
 
     steward_options = None if is_steward else _steward_options()
     form = {field: _standard_widget(field, options=steward_options if field == "steward_id" else None) for field in fields}
@@ -773,9 +858,9 @@ def _render_maintenance_widget(*, spark: Any, config: Any, env_name: str, kind: 
         selected.options = _existing_options()
         selected.value = selected_id if selected_id in row_lookup else None
 
-    def _refresh_steward_dropdown() -> None:
+    def _refresh_steward_dropdown(selected_id: str | None = None) -> None:
         if "steward_id" in form:
-            current = form["steward_id"].value
+            current = selected_id or form["steward_id"].value
             options = _steward_options()
             form["steward_id"].options = options
             form["steward_id"].value = _default_dropdown_value(options, current)
@@ -798,7 +883,7 @@ def _render_maintenance_widget(*, spark: Any, config: Any, env_name: str, kind: 
         for key, widget in custom.items():
             _set_widget_value(widget, stored.get(key, widget.value))
         if identity_context is not None:
-            identity_context.value = (f"Agreement ID: {row.get('agreement_id', '')} | Current version: {row.get('contract_version', '')}" if row else "Agreement ID and version are generated when saved.")
+            identity_context.value = _agreement_identity_text(row if row else None)
 
     selected.observe(_populate, names="value")
 
@@ -808,12 +893,15 @@ def _render_maintenance_widget(*, spark: Any, config: Any, env_name: str, kind: 
             clear(wait=True)
 
     def _save(_: Any) -> None:
+        save.disabled = True
         _clear_output()
         with output:
             try:
                 values = {key: _widget_field_value(key, widget.value) for key, widget in form.items()}
                 extras = _collect_custom_fields(widget_config, custom)
                 if is_steward:
+                    if selected.value:
+                        values["steward_id"] = selected.value
                     row = _create_or_update_data_steward(spark=spark, config=config, env_name=env_name, values=values, custom_fields=extras)
                     _refresh_existing_options(row["steward_id"])
                     for callback in after_save_callbacks:
@@ -822,12 +910,17 @@ def _render_maintenance_widget(*, spark: Any, config: Any, env_name: str, kind: 
                 else:
                     selected_row = row_lookup.get(selected.value) if selected.value else None
                     row = _create_or_update_data_agreement(spark=spark, config=config, env_name=env_name, values=values, selected_agreement=selected_row, custom_fields=extras)
+                    if row.get("_fabricops_no_change"):
+                        print(row.get("_fabricops_message", "No changes detected. Nothing was appended."))
+                    else:
+                        print(f"Saved data agreement: {row.get('agreement_name', '')} ({row['agreement_id']} v{row['contract_version']})")
                     _refresh_existing_options(row["agreement_id"])
                     if identity_context is not None:
-                        identity_context.value = f"Agreement ID: {row['agreement_id']} | Current version: {row['contract_version']}"
-                    print(f"Saved data agreement: {row.get('agreement_name', '')} ({row['agreement_id']} v{row['contract_version']})")
+                        identity_context.value = _agreement_identity_text(row)
             except Exception as exc:
                 print(f"Error: {exc}")
+            finally:
+                save.disabled = False
 
     save.on_click(_save)
     controls = [selected]
@@ -931,5 +1024,5 @@ def render_agreement_intake_app(*, spark: Any, config: Any, env: str) -> dict[st
     callbacks = steward_app.get("after_save_callbacks") if isinstance(steward_app, dict) else None
     agreement_refresh = agreement_app.get("refresh_steward_options") if isinstance(agreement_app, dict) else None
     if isinstance(callbacks, list) and callable(agreement_refresh):
-        callbacks.append(lambda _row: agreement_refresh())
+        callbacks.append(lambda row: agreement_refresh(row.get("steward_id") if isinstance(row, dict) else None))
     return {"data_steward": steward_app, "data_agreement": agreement_app}
