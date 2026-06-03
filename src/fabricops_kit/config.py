@@ -255,6 +255,15 @@ class GovernanceConfig:
         object.__setattr__(self, "sensitivity_rules", dict(self.sensitivity_rules or {}))
 
 
+
+DEFAULT_STEWARD_ROLE_OPTIONS = [
+    "Data Owner",
+    "Data Steward",
+    "Data Custodian",
+    "Governance Reviewer",
+    "Business Approver",
+]
+
 @dataclass(frozen=True)
 class DataAgreementConfig:
     """Editable ``01_da`` table names and widget definitions.
@@ -267,6 +276,9 @@ class DataAgreementConfig:
         Visible standard columns and organization-specific ``custom_fields``.
         Custom fields are rendered dynamically and persisted in
         ``custom_fields_json`` instead of becoming physical table columns.
+    steward_role_options : list[str]
+        Controlled Data Steward role labels rendered by ``01_da`` as the
+        ``steward_role`` dropdown.
     """
 
     metadata_tables: dict[str, str] = field(default_factory=lambda: {
@@ -275,24 +287,26 @@ class DataAgreementConfig:
     })
     data_steward_widget: dict[str, Any] = field(default_factory=lambda: {
         "visible_columns": [
-            "steward_id", "steward_name", "steward_role", "contact",
-            "effective_from", "effective_to", "is_active",
+            "steward_name", "steward_role", "contact", "effective_from", "effective_to",
         ],
         "custom_fields": [],
     })
     data_agreement_widget: dict[str, Any] = field(default_factory=lambda: {
         "visible_columns": [
-            "agreement_name", "domain", "steward_id", "start_date",
-            "expiry_date", "business_purpose",
-            "approved_usage",
+            "agreement_name", "domain", "steward_id", "recipient", "start_date",
+            "expiry_date", "business_purpose", "approved_usage_internal",
+            "approved_usage_external", "approved_usage_research",
         ],
         "custom_fields": [],
     })
+    steward_role_options: list[str] = field(default_factory=lambda: list(DEFAULT_STEWARD_ROLE_OPTIONS))
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "metadata_tables", deepcopy(dict(self.metadata_tables or {})))
         object.__setattr__(self, "data_steward_widget", deepcopy(dict(self.data_steward_widget or {})))
         object.__setattr__(self, "data_agreement_widget", deepcopy(dict(self.data_agreement_widget or {})))
+        options = [str(option).strip() for option in (self.steward_role_options or []) if str(option).strip()]
+        object.__setattr__(self, "steward_role_options", options or list(DEFAULT_STEWARD_ROLE_OPTIONS))
 
 
 @dataclass(frozen=True)

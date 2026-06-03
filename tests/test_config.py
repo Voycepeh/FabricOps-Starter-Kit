@@ -83,3 +83,29 @@ def test_data_agreement_config_defensively_copies_nested_widget_definitions():
 
     assert config.data_steward_widget["custom_fields"][0]["key"] == "group"
     assert config.data_agreement_widget["custom_fields"][0]["options"] == ["ODI"]
+
+
+def test_data_agreement_config_defaults_include_split_agreement_usage_fields():
+    from fabricops_kit.config import DataAgreementConfig
+
+    visible = DataAgreementConfig().data_agreement_widget["visible_columns"]
+
+    assert "recipient" in visible
+    assert "approved_usage_internal" in visible
+    assert "approved_usage_external" in visible
+    assert "approved_usage_research" in visible
+    assert "approved_usage" not in visible
+
+
+def test_data_agreement_config_exposes_default_steward_role_options():
+    from fabricops_kit.config import DataAgreementConfig
+
+    config = DataAgreementConfig()
+
+    assert config.steward_role_options == [
+        "Data Owner",
+        "Data Steward",
+        "Data Custodian",
+        "Governance Reviewer",
+        "Business Approver",
+    ]

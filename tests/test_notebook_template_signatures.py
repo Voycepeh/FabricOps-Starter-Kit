@@ -118,6 +118,9 @@ def test_00_env_config_exposes_shared_config_and_data_agreement_defaults():
     assert "DATA_AGREEMENT_CONFIG = DataAgreementConfig(" in code
     for configured_default in (
         "metadata_tables={",
+        "steward_role_options=[",
+        '"Data Owner"',
+        '"Governance Reviewer"',
         "data_steward_widget={",
         "data_agreement_widget={",
         '"custom_fields": [',
@@ -234,10 +237,13 @@ def test_02_ex_maps_selected_agreement_to_lightweight_versioned_schema():
     code = _code("02_ex_agreement_topic.ipynb")
     for field_name in (
         "agreement_id", "contract_version", "agreement_name", "domain",
-        "business_purpose", "approved_usage", "steward_id", "custom_fields_json",
+        "business_purpose", "recipient", "approved_usage_internal",
+        "approved_usage_external", "approved_usage_research", "steward_id",
+        "custom_fields_json",
     ):
         assert f'"{field_name}"' in code
     assert 'custom_fields = json.loads(selected_agreement.get("custom_fields_json") or "{}")' in code
+    assert 'selected_agreement.get("approved_usage",' not in code
     assert '"custom_fields": custom_fields' in code
     for removed_physical_field in (
         "restricted_usage", "source_system", "refresh_frequency",
