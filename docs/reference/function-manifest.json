@@ -2199,9 +2199,7 @@
     "inbound": [
       "fabricops_kit.data_profiling.profile_dataframe"
     ],
-    "outbound": [
-      "fabricops_kit.technical_columns._default_technical_columns"
-    ],
+    "outbound": [],
     "source_path": "src/fabricops_kit/data_profiling.py",
     "docs_path": "reference/internal/data_profiling__get_profiled_columns.md",
     "summary": "No summary available."
@@ -3916,7 +3914,7 @@
     ],
     "source_path": "src/fabricops_kit/metadata.py",
     "docs_path": "reference/build_runtime_audit_fields.md",
-    "summary": "Build shared underscore-prefixed runtime audit fields for metadata-table rows."
+    "summary": "Build shared runtime audit values; 03_pc uses notebook and committed-by context while adding dataframe audit columns inline."
   },
   {
     "id": "fabricops_kit.metadata.column_context_rows_for_spark",
@@ -4099,79 +4097,6 @@
     "source_path": "src/fabricops_kit/metadata.py",
     "docs_path": "reference/internal/metadata_write_metadata_rows.md",
     "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.technical_columns._context_value",
-    "name": "_context_value",
-    "qualified_name": "fabricops_kit.technical_columns._context_value",
-    "module": "technical_columns",
-    "classification": "Internal helper",
-    "inbound": [
-      "fabricops_kit.technical_columns.add_runtime_audit_columns"
-    ],
-    "outbound": [],
-    "source_path": "src/fabricops_kit/technical_columns.py",
-    "docs_path": "reference/internal/technical_columns__context_value.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.technical_columns._default_technical_columns",
-    "name": "_default_technical_columns",
-    "qualified_name": "fabricops_kit.technical_columns._default_technical_columns",
-    "module": "technical_columns",
-    "classification": "Internal helper",
-    "inbound": [
-      "fabricops_kit.data_profiling._get_profiled_columns"
-    ],
-    "outbound": [],
-    "source_path": "src/fabricops_kit/technical_columns.py",
-    "docs_path": "reference/internal/technical_columns__default_technical_columns.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.technical_columns._get_fabric_runtime_context",
-    "name": "_get_fabric_runtime_context",
-    "qualified_name": "fabricops_kit.technical_columns._get_fabric_runtime_context",
-    "module": "technical_columns",
-    "classification": "Internal helper",
-    "inbound": [
-      "fabricops_kit.technical_columns.add_runtime_audit_columns"
-    ],
-    "outbound": [],
-    "source_path": "src/fabricops_kit/technical_columns.py",
-    "docs_path": "reference/internal/technical_columns__get_fabric_runtime_context.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.technical_columns.add_runtime_audit_columns",
-    "name": "add_runtime_audit_columns",
-    "qualified_name": "fabricops_kit.technical_columns.add_runtime_audit_columns",
-    "module": "technical_columns",
-    "classification": "Essential",
-    "inbound": [
-      "fabricops_kit.technical_columns.standardize_columns"
-    ],
-    "outbound": [
-      "fabricops_kit.technical_columns._context_value",
-      "fabricops_kit.technical_columns._get_fabric_runtime_context"
-    ],
-    "source_path": "src/fabricops_kit/technical_columns.py",
-    "docs_path": "reference/add_runtime_audit_columns.md",
-    "summary": "Add lightweight runtime audit columns before writing pipeline output tables."
-  },
-  {
-    "id": "fabricops_kit.technical_columns.standardize_columns",
-    "name": "standardize_columns",
-    "qualified_name": "fabricops_kit.technical_columns.standardize_columns",
-    "module": "technical_columns",
-    "classification": "Optional",
-    "inbound": [],
-    "outbound": [
-      "fabricops_kit.technical_columns.add_runtime_audit_columns"
-    ],
-    "source_path": "src/fabricops_kit/technical_columns.py",
-    "docs_path": "reference/standardize_columns.md",
-    "summary": "Deprecated compatibility wrapper; use add_runtime_audit_columns for the standard runtime audit path."
   },
   {
     "id": "fabricops_kit.versioning.get_docs_url",

@@ -2060,9 +2060,7 @@
     "inbound": [
       "fabricops_kit.data_profiling.profile_dataframe"
     ],
-    "outbound": [
-      "fabricops_kit.technical_columns._default_technical_columns"
-    ],
+    "outbound": [],
     "source_file": "src/fabricops_kit/data_profiling.py",
     "summary": "No summary available."
   },
@@ -3665,7 +3663,7 @@
       "fabricops_kit.metadata._safe_str"
     ],
     "source_file": "src/fabricops_kit/metadata.py",
-    "summary": "Build shared underscore-prefixed runtime audit fields for metadata-table rows."
+    "summary": "Build shared runtime audit values; 03_pc uses notebook and committed-by context while adding dataframe audit columns inline."
   },
   {
     "name": "column_context_rows_for_spark",
@@ -3837,74 +3835,6 @@
     ],
     "source_file": "src/fabricops_kit/metadata.py",
     "summary": "No summary available."
-  },
-  {
-    "name": "_context_value",
-    "qualified_name": "fabricops_kit.technical_columns._context_value",
-    "module": "technical_columns",
-    "type": "internal",
-    "role": "internal",
-    "inbound": [
-      "fabricops_kit.technical_columns.add_runtime_audit_columns"
-    ],
-    "outbound": [],
-    "source_file": "src/fabricops_kit/technical_columns.py",
-    "summary": "No summary available."
-  },
-  {
-    "name": "_default_technical_columns",
-    "qualified_name": "fabricops_kit.technical_columns._default_technical_columns",
-    "module": "technical_columns",
-    "type": "internal",
-    "role": "internal",
-    "inbound": [
-      "fabricops_kit.data_profiling._get_profiled_columns"
-    ],
-    "outbound": [],
-    "source_file": "src/fabricops_kit/technical_columns.py",
-    "summary": "No summary available."
-  },
-  {
-    "name": "_get_fabric_runtime_context",
-    "qualified_name": "fabricops_kit.technical_columns._get_fabric_runtime_context",
-    "module": "technical_columns",
-    "type": "internal",
-    "role": "internal",
-    "inbound": [
-      "fabricops_kit.technical_columns.add_runtime_audit_columns"
-    ],
-    "outbound": [],
-    "source_file": "src/fabricops_kit/technical_columns.py",
-    "summary": "No summary available."
-  },
-  {
-    "name": "add_runtime_audit_columns",
-    "qualified_name": "fabricops_kit.technical_columns.add_runtime_audit_columns",
-    "module": "technical_columns",
-    "type": "callable",
-    "role": "essential",
-    "inbound": [
-      "fabricops_kit.technical_columns.standardize_columns"
-    ],
-    "outbound": [
-      "fabricops_kit.technical_columns._context_value",
-      "fabricops_kit.technical_columns._get_fabric_runtime_context"
-    ],
-    "source_file": "src/fabricops_kit/technical_columns.py",
-    "summary": "Add lightweight runtime audit columns before writing pipeline output tables."
-  },
-  {
-    "name": "standardize_columns",
-    "qualified_name": "fabricops_kit.technical_columns.standardize_columns",
-    "module": "technical_columns",
-    "type": "callable",
-    "role": "optional",
-    "inbound": [],
-    "outbound": [
-      "fabricops_kit.technical_columns.add_runtime_audit_columns"
-    ],
-    "source_file": "src/fabricops_kit/technical_columns.py",
-    "summary": "Deprecated compatibility wrapper; use add_runtime_audit_columns for the standard runtime audit path."
   },
   {
     "name": "get_docs_url",

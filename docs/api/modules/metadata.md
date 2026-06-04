@@ -75,7 +75,7 @@ Owns metadata evidence persistence, stable keys, notebook registry, and contract
       <td><a href="../../reference/build_runtime_audit_fields/"><code>build_runtime_audit_fields</code></a></td>
       <td>Essential</td>
       <td>function</td>
-      <td>Build shared underscore-prefixed runtime audit fields for metadata-table rows.</td>
+      <td>Build shared runtime audit values; 03_pc uses notebook and committed-by context while adding dataframe audit columns inline.</td>
       <td><a href="../../reference/internal/metadata/_context_get/"><code>_context_get</code></a> (internal), <a href="../../reference/internal/metadata/_runtime_context/"><code>_runtime_context</code></a> (internal), <a href="../../reference/internal/metadata/_safe_str/"><code>_safe_str</code></a> (internal)</td>
     </tr>
     <tr>

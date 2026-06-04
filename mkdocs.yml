@@ -50,7 +50,6 @@ nav:
           - data_profiling: api/modules/data_profiling.md
           - data_quality: api/modules/data_quality.md
           - fabric_input_output: api/modules/fabric_input_output.md
-          - technical_columns: api/modules/technical_columns.md
           - data_lineage: api/modules/data_lineage.md
           - drift: api/modules/drift.md
           - handover: api/modules/handover.md

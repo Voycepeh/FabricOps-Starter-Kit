@@ -17,10 +17,7 @@ No summary available.
 - Source file path: `src/fabricops_kit/data_profiling.py`
 - Source reference: <a href="../../api/modules/data_profiling/#_get_profiled_columns">Module source anchor</a>
 - Inbound references count: 1
-- Outbound references count: 1
+- Outbound references count: 0
 
 ## Inbound references
 - <a href="../profile_dataframe/"><code>fabricops_kit.data_profiling.profile_dataframe</code></a>
-
-## Outbound references
-- <a href="../internal/technical_columns/_default_technical_columns/"><code>fabricops_kit.technical_columns._default_technical_columns</code></a>

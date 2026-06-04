@@ -13,11 +13,39 @@ import re
 from typing import Any
 
 
-from fabricops_kit.technical_columns import _default_technical_columns
-
 
 EMAIL_RE = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
 PHONE_RE = re.compile(r"^[+()\-\s0-9]{7,}$")
+
+
+_DEFAULT_PROFILE_EXCLUDE_COLUMNS = {
+    "_pipeline_run_id",
+    "_pipeline_name",
+    "_pipeline_environment",
+    "_source_table",
+    "_record_loaded_timestamp",
+    "_notebook_name",
+    "_loaded_by",
+    # Legacy technical columns retained so profiles exclude outputs from older templates.
+    "_source_system",
+    "_source_extract_timestamp",
+    "_watermark_value",
+    "_partition_bucket",
+    "_sample_bucket",
+    "_row_ingest_id",
+    "_business_key_hash",
+    "_row_hash",
+    "pipeline_ts",
+    "notebook_name",
+    "loaded_by",
+    "p_bucket",
+    "sample_bucket",
+    "row_ingest_id",
+    "ingest_run_id",
+    "pipeline_run_id",
+    "loaded_at",
+    "run_ingest_id",
+}
 
 
 
@@ -36,7 +64,7 @@ def _get_profiled_columns(df, exclude_columns: list[str] | set[str] | None = Non
     list[str]
         Eligible business columns to profile.
     """
-    excluded = set(_default_technical_columns())
+    excluded = set(_DEFAULT_PROFILE_EXCLUDE_COLUMNS)
     if exclude_columns:
         excluded.update(exclude_columns)
     return [name for name, _dtype in df.dtypes if name not in excluded]

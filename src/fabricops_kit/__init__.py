@@ -64,7 +64,6 @@ from .metadata import (
     register_current_notebook,
     setup_notebook_registry_table,
 )
-from .technical_columns import add_runtime_audit_columns, standardize_columns
 from .versioning import get_docs_url, get_docs_version, get_package_version, get_release_notes_url, print_runtime_banner
 
 
@@ -118,8 +117,6 @@ __all__ = [
     "review_governance",
     "write_governance",
     "load_governance",
-    "add_runtime_audit_columns",
-    "standardize_columns",
     "build_lineage_records",
     "build_lineage_handover_markdown",
     "build_handover",

@@ -29,15 +29,6 @@ Use the finder below to look up public callable functions.
 ## All public functions
 
 <div class="reference-catalogue-list">
-<article id="add_runtime_audit_columns" class="reference-catalogue-item" data-callable-row="true" data-callable-name="add_runtime_audit_columns" data-callable-module="technical_columns" data-callable-starter-path="03_pc" data-role="essential" data-callable-purpose="Add lightweight runtime audit columns before writing pipeline output tables.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/add_runtime_audit_columns/"><code>add_runtime_audit_columns</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Add lightweight runtime audit columns before writing pipeline output tables.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/technical_columns/" title="Open technical_columns module page" aria-label="Open technical_columns module page">technical_columns</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">03_pc</span></p>
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>_context_value</code></li><li><code>_get_fabric_runtime_context</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>standardize_columns</code></li></ul></details>
-  </div>
-</article>
 <article id="assert_dq_passed" class="reference-catalogue-item" data-callable-row="true" data-callable-name="assert_dq_passed" data-callable-module="data_quality" data-callable-starter-path="—" data-role="essential" data-callable-purpose="Raise only after evidence materialization when error-severity rules fail.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/assert_dq_passed/"><code>assert_dq_passed</code></a></h3>
   <p class="reference-catalogue-item-purpose">Raise only after evidence materialization when error-severity rules fail.</p>
@@ -74,10 +65,10 @@ Use the finder below to look up public callable functions.
 
   </div>
 </article>
-<article id="build_runtime_audit_fields" class="reference-catalogue-item" data-callable-row="true" data-callable-name="build_runtime_audit_fields" data-callable-module="metadata" data-callable-starter-path="—" data-role="essential" data-callable-purpose="Build shared underscore-prefixed runtime audit fields for metadata-table rows.">
+<article id="build_runtime_audit_fields" class="reference-catalogue-item" data-callable-row="true" data-callable-name="build_runtime_audit_fields" data-callable-module="metadata" data-callable-starter-path="03_pc" data-role="essential" data-callable-purpose="Build shared runtime audit values; 03_pc uses notebook and committed-by context while adding dataframe audit columns inline.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/build_runtime_audit_fields/"><code>build_runtime_audit_fields</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Build shared underscore-prefixed runtime audit fields for metadata-table rows.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/metadata/" title="Open metadata module page" aria-label="Open metadata module page">metadata</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">—</span></p>
+  <p class="reference-catalogue-item-purpose">Build shared runtime audit values; 03_pc uses notebook and committed-by context while adding dataframe audit columns inline.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/metadata/" title="Open metadata module page" aria-label="Open metadata module page">metadata</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">03_pc</span></p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 3</span></summary><ul><li><code>_context_get</code></li><li><code>_runtime_context</code></li><li><code>_safe_str</code></li></ul></details>
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 3</span></summary><ul><li><code>_create_or_update_data_agreement</code></li><li><code>_create_or_update_data_steward</code></li><li><code>_save_agreement_evidence_records</code></li></ul></details>
@@ -485,15 +476,6 @@ Use the finder below to look up public callable functions.
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/metadata/" title="Open metadata module page" aria-label="Open metadata module page">metadata</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 8</span></summary><ul><li><code>read_lakehouse_table</code></li><li><code>write_lakehouse_table</code></li><li><code>_coerce_row_dicts</code></li><li><code>_column_names</code></li><li><code>_notebook_registration_key</code></li><li><code>_safe_str</code></li><li><code>column_context_rows_for_spark</code></li><li><code>get_notebook_registry_schema</code></li></ul></details>
-
-  </div>
-</article>
-<article id="standardize_columns" class="reference-catalogue-item" data-callable-row="true" data-callable-name="standardize_columns" data-callable-module="technical_columns" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Deprecated compatibility wrapper; use add_runtime_audit_columns for the standard runtime audit path.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/standardize_columns/"><code>standardize_columns</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Deprecated compatibility wrapper; use add_runtime_audit_columns for the standard runtime audit path.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/technical_columns/" title="Open technical_columns module page" aria-label="Open technical_columns module page">technical_columns</a><span class="reference-chip reference-chip-role reference-chip-optional">Optional</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>add_runtime_audit_columns</code></li></ul></details>
 
   </div>
 </article>
