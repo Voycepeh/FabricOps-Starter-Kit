@@ -17,7 +17,7 @@
     {
       "module_name": "data_agreement",
       "visibility": "public",
-      "module_summary": "Owns agreement metadata capture, audited record building, metadata commit helpers, and agreement selection helpers used to anchor notebook workflows to approved business agreements.",
+      "module_summary": "Owns agreement metadata capture, audited record building, metadata commit helpers, and agreement selection helpers used to anchor notebook workflows to approved business agreements. Standard notebooks create or check agreement metadata tables in `00_env_config`, render agreement intake in `01_da_<agreement>`, and bind downstream work with `select_agreement(...)` and `get_selected_agreement()`.",
       "sidebar_group": "1. Governance steward",
       "sidebar_include": true
     },
@@ -173,7 +173,7 @@
     {
       "module_name": "data_agreement",
       "visibility": "public",
-      "module_summary": "Owns agreement metadata capture, audited record building, metadata commit helpers, and agreement selection helpers used to anchor notebook workflows to approved business agreements.",
+      "module_summary": "Owns agreement metadata capture, audited record building, metadata commit helpers, and agreement selection helpers used to anchor notebook workflows to approved business agreements. Standard notebooks create or check agreement metadata tables in `00_env_config`, render agreement intake in `01_da_<agreement>`, and bind downstream work with `select_agreement(...)` and `get_selected_agreement()`.",
       "sidebar_group": "1. Governance steward",
       "sidebar_include": true,
       "callable_name": "get_selected_agreement",
@@ -185,7 +185,7 @@
     {
       "module_name": "data_agreement",
       "visibility": "public",
-      "module_summary": "Owns agreement metadata capture, audited record building, metadata commit helpers, and agreement selection helpers used to anchor notebook workflows to approved business agreements.",
+      "module_summary": "Owns agreement metadata capture, audited record building, metadata commit helpers, and agreement selection helpers used to anchor notebook workflows to approved business agreements. Standard notebooks create or check agreement metadata tables in `00_env_config`, render agreement intake in `01_da_<agreement>`, and bind downstream work with `select_agreement(...)` and `get_selected_agreement()`.",
       "sidebar_group": "1. Governance steward",
       "sidebar_include": true,
       "callable_name": "render_agreement_intake_app",
@@ -197,7 +197,7 @@
     {
       "module_name": "data_agreement",
       "visibility": "public",
-      "module_summary": "Owns agreement metadata capture, audited record building, metadata commit helpers, and agreement selection helpers used to anchor notebook workflows to approved business agreements.",
+      "module_summary": "Owns agreement metadata capture, audited record building, metadata commit helpers, and agreement selection helpers used to anchor notebook workflows to approved business agreements. Standard notebooks create or check agreement metadata tables in `00_env_config`, render agreement intake in `01_da_<agreement>`, and bind downstream work with `select_agreement(...)` and `get_selected_agreement()`.",
       "sidebar_group": "1. Governance steward",
       "sidebar_include": true,
       "callable_name": "render_data_agreement_widget",
@@ -209,7 +209,7 @@
     {
       "module_name": "data_agreement",
       "visibility": "public",
-      "module_summary": "Owns agreement metadata capture, audited record building, metadata commit helpers, and agreement selection helpers used to anchor notebook workflows to approved business agreements.",
+      "module_summary": "Owns agreement metadata capture, audited record building, metadata commit helpers, and agreement selection helpers used to anchor notebook workflows to approved business agreements. Standard notebooks create or check agreement metadata tables in `00_env_config`, render agreement intake in `01_da_<agreement>`, and bind downstream work with `select_agreement(...)` and `get_selected_agreement()`.",
       "sidebar_group": "1. Governance steward",
       "sidebar_include": true,
       "callable_name": "render_data_steward_widget",
@@ -221,7 +221,7 @@
     {
       "module_name": "data_agreement",
       "visibility": "public",
-      "module_summary": "Owns agreement metadata capture, audited record building, metadata commit helpers, and agreement selection helpers used to anchor notebook workflows to approved business agreements.",
+      "module_summary": "Owns agreement metadata capture, audited record building, metadata commit helpers, and agreement selection helpers used to anchor notebook workflows to approved business agreements. Standard notebooks create or check agreement metadata tables in `00_env_config`, render agreement intake in `01_da_<agreement>`, and bind downstream work with `select_agreement(...)` and `get_selected_agreement()`.",
       "sidebar_group": "1. Governance steward",
       "sidebar_include": true,
       "callable_name": "select_agreement",
@@ -233,7 +233,7 @@
     {
       "module_name": "data_agreement",
       "visibility": "public",
-      "module_summary": "Owns agreement metadata capture, audited record building, metadata commit helpers, and agreement selection helpers used to anchor notebook workflows to approved business agreements.",
+      "module_summary": "Owns agreement metadata capture, audited record building, metadata commit helpers, and agreement selection helpers used to anchor notebook workflows to approved business agreements. Standard notebooks create or check agreement metadata tables in `00_env_config`, render agreement intake in `01_da_<agreement>`, and bind downstream work with `select_agreement(...)` and `get_selected_agreement()`.",
       "sidebar_group": "1. Governance steward",
       "sidebar_include": true,
       "callable_name": "setup_data_agreement_tables",

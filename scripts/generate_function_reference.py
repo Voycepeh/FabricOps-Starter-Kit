@@ -638,7 +638,7 @@ def main() -> None:
         module_nodes = [n for n in nodes if n["module_name"] == actual_module]
         essential_count = len([n for n in module_nodes if n["role"] == "essential"])
         optional_count = len([n for n in module_nodes if n["role"] == "optional"])
-        internal_count = len([n for n in module_nodes if not n["exported"]]) if module == "data_agreement" else len([n for n in module_nodes if n["callable_name"].startswith("_")])
+        internal_count = len([n for n in module_nodes if n["callable_name"].startswith("_")])
         outbound_mods = sorted({
             e["callee_qualified_name"].split(".")[-2]
             for e in edges
@@ -661,55 +661,12 @@ def main() -> None:
             f'<span class="reference-chip">Inbound: {len(inbound_mods)}</span>'
             '</div>'
         )
-        if module != "data_agreement":
-            lines.extend(["## Module overview badges", "", summary_cards, ""])
+        lines.extend(["## Module overview badges", "", summary_cards, ""])
 
         module_purpose = module_manifest.get(module, {}).get("module_summary", "").strip()
         if module_purpose:
             lines.extend(["## Module purpose", "", module_purpose, ""])
 
-        if module == "metadata":
-            lines.extend(
-                [
-                    "## Shared metadata audit fields",
-                    "",
-                    "Use `build_runtime_audit_fields(...)` when metadata tables need framework-managed underscore-prefixed audit values such as `_committed_by`, `_committed_at`, `_workspace_name`, `_notebook_name`, `_metadata_lakehouse_name`, and `_activity_id`.",
-                    "",
-                ]
-            )
-        if module == "technical_columns":
-            lines.extend(
-                [
-                    "## Technical-column naming convention",
-                    "",
-                    "DataFrame technical columns use underscore-prefixed names such as `_pipeline_run_id` and `_record_loaded_timestamp`. Metadata-table audit fields also use underscore-prefixed names, but metadata rows should create them through `metadata.build_runtime_audit_fields(...)`.",
-                    "",
-                ]
-            )
-        if module == "data_product_metadata":
-            lines.extend(
-                [
-                    "## Module boundary",
-                    "",
-                    "This module stores and retrieves metadata evidence. It does not own governance approval logic. Agreement approval, classification, sensitivity, and PII review remain in `data_governance.py` and the `01_da_<agreement>` notebook.",
-                    "",
-                ]
-            )
-        if module == "data_agreement":
-            lines.extend(
-                [
-                    "## Intended notebook call flow",
-                    "",
-                    "1. `00_env_config` assembles `CONFIG` and calls `setup_data_agreement_tables(...)` to create or check agreement metadata tables.",
-                    "2. `01_da_<agreement>` calls `render_agreement_intake_app(...)` to render the framework-managed intake form.",
-                    "3. Downstream notebooks call `select_agreement(CONFIG, ENV, spark_session=spark)` and `get_selected_agreement()` to bind work to a committed agreement version.",
-                    "",
-                    "Non-exported schema, persistence, custom-field, and list helpers are implementation details and should not be imported from `fabricops_kit`.",
-                    "",
-                    "Agreement technical audit fields are framework-managed through `metadata.build_runtime_audit_fields(...)`.",
-                    "",
-                ]
-            )
         recommended = sorted([s for s in public_in_module if s.role == "essential"], key=lambda x: x.name.lower())
         advanced = sorted([s for s in public_in_module if s.role == "optional"], key=lambda x: x.name.lower())
         lines.extend(["## Module manifest", ""])
@@ -741,42 +698,13 @@ def main() -> None:
                     ])
                 return rows
 
-            if module == "data_agreement":
-                lines.extend(["## Primary notebook API", "", "Use these callables in standard FabricOps notebooks.", ""])
-                lines.extend(['<div class="module-table-scroll">'])
-                lines.extend(render_html_table(["Callable", "Tier", "Type", "Summary", "Related helpers"], _public_callable_rows(recommended, "Primary notebook API")))
-                lines.extend(['</div>'])
-                if advanced:
-                    lines.extend(["", "## Optional advanced customization API", "", "Normal notebook users should not call these lower-level functions. Use them only when intentionally customizing the agreement-intake workflow.", ""])
-                    lines.extend(['<div class="module-table-scroll">'])
-                    lines.extend(render_html_table(["Callable", "Tier", "Type", "Summary", "Related helpers"], _public_callable_rows(advanced, "Optional / advanced customization")))
-                    lines.extend(['</div>'])
-                lines.extend(["", "## Internal helpers", "", "These non-exported helpers support framework internals and diagnostics. Do not import them from `fabricops_kit`.", ""])
-                public_names = {symbol.name for symbol in public_in_module}
-                internal_names = sorted(name for name in info["functions"] if name not in public_names and not name.startswith("_"))
-                private_names = sorted(name for name in info["functions"] if name not in public_names and name.startswith("_"))
-                lines.extend(["### Internal workflow helpers", ""])
-                lines.extend(['<div class="module-table-scroll">'])
-                lines.extend(render_html_table(["Helper", "Classification"], [[f'<a href="{internal_helper_link(actual_module, helper_name)}"><code>{helper_name}</code></a>', "Internal helper"] for helper_name in internal_names]))
-                lines.extend(['</div>', "", "### Private implementation helpers", ""])
-                lines.extend(['<div class="module-table-scroll">'])
-                lines.extend(render_html_table(["Helper", "Classification"], [[f'<a href="{internal_helper_link(actual_module, helper_name)}"><code>{helper_name}</code></a>', "Private implementation helper"] for helper_name in private_names]))
-                lines.extend(['</div>'])
-            else:
-                lines.extend(["## Public callables", ""])
-                public_rows = _public_callable_rows(recommended, "Essential") + _public_callable_rows(advanced, "Optional")
-                if not public_rows:
-                    public_rows.append(["—", "—", "—", "No public exports in this module.", "—"])
-                lines.extend(['<div class="module-table-scroll">'])
-                lines.extend(render_html_table(["Callable", "Tier", "Type", "Summary", "Related helpers"], public_rows))
-                lines.extend(['</div>'])
-                if module == "data_quality":
-                    lines.extend(
-                        [
-                            "",
-                            "Split a Spark DataFrame into pass/quarantine outputs for row-level DQ rules.",
-                        ]
-                    )
+            lines.extend(["## Public callables", ""])
+            public_rows = _public_callable_rows(recommended, "Essential") + _public_callable_rows(advanced, "Optional")
+            if not public_rows:
+                public_rows.append(["—", "—", "—", "No public exports in this module.", "—"])
+            lines.extend(['<div class="module-table-scroll">'])
+            lines.extend(render_html_table(["Callable", "Tier", "Type", "Summary", "Related helpers"], public_rows))
+            lines.extend(['</div>'])
         else:
             lines.extend(["## Public callables", "", "No public exports in this module."])
 

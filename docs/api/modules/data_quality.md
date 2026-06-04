@@ -145,8 +145,6 @@ Owns DQ rule drafting, review, enforcement, quarantine, and quality results.
 </table>
 </div>
 
-Split a Spark DataFrame into pass/quarantine outputs for row-level DQ rules.
-
 ## Module relationships
 
 
