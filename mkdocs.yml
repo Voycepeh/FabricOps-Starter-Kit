@@ -34,6 +34,16 @@ nav:
 
   - Data Quality Rules: data-quality-rules-system.md
 
+  - Release Readiness:
+      - Feature List: feature-list.md
+      - Compatibility: compatibility.md
+      - Test Matrix: test-matrix.md
+      - Breaking Changes: breaking-changes.md
+      - Release Management: development/release-management.md
+      - Releases:
+          - Overview: releases/index.md
+          - v1.0.0: releases/v1.0.0.md
+
   - Function Reference:
       - Overview: reference/index.md
       - Modules:

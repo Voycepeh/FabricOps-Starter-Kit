@@ -54,7 +54,7 @@ from .handover import build_handover, render_handover_markdown
 from .metadata import build_runtime_audit_fields, get_notebook_registry_schema, load_notebook_registry, register_current_notebook, setup_notebook_registry_table
 from .technical_columns import standardize_columns
 
-__version__ = "0.1.0"
+__version__ = "1.0.0"
 
 __all__ = [
     "setup_notebook","select_agreement","get_selected_agreement","register_current_notebook","load_notebook_registry","setup_notebook_registry_table","get_notebook_registry_schema","build_runtime_audit_fields",
