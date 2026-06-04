@@ -225,7 +225,7 @@ register_current_notebook(
 | superseded_at | 2026-06-04T12:00:00Z | Runtime collected | Timestamp populated on superseded events. |
 | superseded_by_registration_id | 24-character hash | Runtime collected | Replacement registration that superseded the prior primary link. |
 
-The backend supports many agreement links per notebook by appending one event per link. The `02_ex` template defaults to one active primary agreement at a time: replacing an agreement appends a superseded event for the prior primary link and appends or activates the new primary registration, while the additional-link option keeps the primary link active and appends a clearly marked `additional` link.
+The backend supports many agreement links per notebook by appending one event per link. This keeps the registry many-to-many: a notebook can have one primary active agreement for its main purpose plus additional active agreement links for supporting datasets it joins or references. The `02_ex` template defaults to one active primary agreement at a time: replacing an agreement appends a superseded event for the prior primary link and appends or activates the new primary registration, while the additional-link option keeps the primary link active and appends a clearly marked `additional` link. Superseded agreement links remain as audit history for wrong or outdated primary registrations.
 
 Do not store profiling metrics, business context, classification, or DQ results here. This table owns notebook traceability only.
 

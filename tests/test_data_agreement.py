@@ -1226,3 +1226,22 @@ def test_select_agreement_adds_additional_link_without_replacing(monkeypatch):
     assert writes[0]["registration_role"] == "additional"
     assert writes[0]["registration_status"] == "active"
     assert "Existing primary registration was retained" in selector.registration_status.value
+
+
+def test_select_agreement_does_not_duplicate_existing_additional_link(monkeypatch):
+    _install_widget_stubs(monkeypatch)
+    writes = []
+    active_rows = [
+        {"agreement_id": "DA-FIN", "agreement_contract_version": "1.0.0", "registration_id": "primary", "registration_role": "primary"},
+        {"agreement_id": "DA-OPS", "agreement_contract_version": "2.0.0", "registration_id": "additional", "registration_role": "additional"},
+    ]
+    monkeypatch.setattr(data_agreement, "current_notebook_active_registrations", lambda *args, **kwargs: active_rows)
+    monkeypatch.setattr(data_agreement, "register_current_notebook", lambda *args, **kwargs: writes.append(kwargs) or kwargs)
+    monkeypatch.setattr(data_agreement, "_load_agreements", lambda *args, **kwargs: _downstream_agreements())
+
+    selector = data_agreement.select_agreement(_config(), "dev", spark_session="spark", register_notebook=True)
+    _search_downstream_selector(selector, "dispatch operations")
+    selector.register_button.callbacks[0](None)
+
+    assert writes == []
+    assert "already registered to DA-OPS version 2.0.0 as an active additional agreement link" in selector.registration_status.value

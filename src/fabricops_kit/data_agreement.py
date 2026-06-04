@@ -1115,6 +1115,7 @@ def select_agreement(agreement_rows_or_config: Any, env_name: str | None = None,
     registration_action = None
     register_button = None
     registration_output = None
+    active_rows: list[dict[str, Any]] = []
     active_primary_rows: list[dict[str, Any]] = []
 
     def _selected_row() -> dict[str, Any] | None:
@@ -1126,10 +1127,14 @@ def select_agreement(agreement_rows_or_config: Any, env_name: str | None = None,
             return "Select an agreement before registering this notebook."
         selected_id = str(selected.get("agreement_id") or "")
         selected_version = str(selected.get("contract_version") or "")
-        same = [row for row in active_primary_rows if str(row.get("agreement_id") or "") == selected_id and str(row.get("agreement_contract_version") or "") == selected_version]
-        other = [row for row in active_primary_rows if row not in same]
-        if same:
-            return f"Registration status: already registered to {selected_id} version {selected_version}."
+        same_active = [row for row in active_rows if str(row.get("agreement_id") or "") == selected_id and str(row.get("agreement_contract_version") or "") == selected_version]
+        same_primary = [row for row in same_active if str(row.get("registration_role") or "primary") == "primary"]
+        other = [row for row in active_primary_rows if row not in same_primary]
+        if same_primary:
+            return f"Registration status: already registered to {selected_id} version {selected_version} as the primary active agreement."
+        if same_active:
+            role = str(same_active[0].get("registration_role") or "additional")
+            return f"Registration status: already registered to {selected_id} version {selected_version} as an active {role} agreement link."
         if other:
             current = other[0]
             current_version = str(current.get("agreement_contract_version") or "unknown version")
@@ -1145,14 +1150,14 @@ def select_agreement(agreement_rows_or_config: Any, env_name: str | None = None,
         if env_name is None or spark_session is None:
             raise ValueError("select_agreement(..., register_notebook=True) requires CONFIG, env_name, and spark_session.")
         config = agreement_rows_or_config
-        active_primary_rows = current_notebook_active_registrations(
+        active_rows = current_notebook_active_registrations(
             spark_session,
             config=config,
             env=env_name,
             notebook_type=notebook_type,
             environment_name=environment_name or env_name,
-            registration_role="primary",
         )
+        active_primary_rows = [row for row in active_rows if str(row.get("registration_role") or "primary") == "primary"]
         registration_status = widgets.HTML(value="")
         registration_action = widgets.ToggleButtons(
             options=["Cancel", "Replace active registration", "Add another agreement link"],
@@ -1172,11 +1177,13 @@ def select_agreement(agreement_rows_or_config: Any, env_name: str | None = None,
                 return
             selected_id = str(selected.get("agreement_id") or "")
             selected_version = str(selected.get("contract_version") or "")
-            same = [row for row in active_primary_rows if str(row.get("agreement_id") or "") == selected_id and str(row.get("agreement_contract_version") or "") == selected_version]
-            other = [row for row in active_primary_rows if row not in same]
-            if same:
+            same_active = [row for row in active_rows if str(row.get("agreement_id") or "") == selected_id and str(row.get("agreement_contract_version") or "") == selected_version]
+            same_primary = [row for row in same_active if str(row.get("registration_role") or "primary") == "primary"]
+            other = [row for row in active_primary_rows if row not in same_primary]
+            if same_active:
+                role = str(same_active[0].get("registration_role") or "primary")
                 if registration_status is not None:
-                    registration_status.value = _html_escape(f"Notebook is already registered to {selected_id} version {selected_version}; no duplicate was created.")
+                    registration_status.value = _html_escape(f"Notebook is already registered to {selected_id} version {selected_version} as an active {role} agreement link; no duplicate was created.")
                 return
 
             role = "primary"
@@ -1229,11 +1236,17 @@ def select_agreement(agreement_rows_or_config: Any, env_name: str | None = None,
                         topic=previous.get("topic") or topic,
                         pipeline_name=previous.get("pipeline_name") or pipeline_name,
                     )
+                for previous in other:
+                    if previous in active_rows:
+                        active_rows.remove(previous)
+                active_rows.append(new_row)
                 active_primary_rows[:] = [new_row]
                 message = f"Replaced active registration with {selected_id} version {selected_version}. Previous registration history was retained."
             elif role == "additional":
+                active_rows.append(new_row)
                 message = f"Added additional agreement link to {selected_id} version {selected_version}. Existing primary registration was retained."
             else:
+                active_rows.append(new_row)
                 active_primary_rows[:] = [new_row]
                 message = f"Registered notebook to {selected_id} version {selected_version}."
             if registration_status is not None:
