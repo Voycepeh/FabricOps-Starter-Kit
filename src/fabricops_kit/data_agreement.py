@@ -2,8 +2,8 @@
 
 The ``00_env_config`` notebook prepares steward, agreement, and evidence
 metadata tables plus widget configuration. The ``01_da`` notebook renders a
-tabbed intake app for steward maintenance, agreement maintenance, and optional
-agreement evidence upload. Intake tables are append-only and use
+section-switcher intake app for steward maintenance, agreement maintenance,
+and optional agreement evidence upload. Intake tables are append-only and use
 framework-managed runtime audit columns.
 """
 
@@ -1497,8 +1497,8 @@ def render_data_agreement_widget(config: Any, env_name: str, *, spark: Any) -> d
     return _render_maintenance_widget(spark=spark, config=config, env_name=env_name, kind="data_agreement_widget")
 
 
-def render_agreement_intake_app(*, spark: Any, config: Any, env: str) -> dict[str, Any]:
-    """Render the tabbed ``01_da`` metadata intake application.
+def render_agreement_intake_app(*, spark: Any, config: Any, env: str, display_widget: bool = True) -> dict[str, Any]:
+    """Render the ``01_da`` metadata intake application.
 
     Parameters
     ----------
@@ -1508,18 +1508,23 @@ def render_agreement_intake_app(*, spark: Any, config: Any, env: str) -> dict[st
         Configuration created by ``00_env_config``.
     env : str
         Environment key configured by ``00_env_config``.
+    display_widget : bool, default=True
+        When True, display the assembled intake application container.
 
     Returns
     -------
     dict[str, Any]
-        Data Steward, Data Agreement, Agreement Evidence, and tab controls.
+        Data Steward, Data Agreement, Agreement Evidence, section selector,
+        body, and container controls.
 
     Notes
     -----
-    The app uses ``ipywidgets.Tab`` so only one intake section is visible at a
-    time. The Evidence tab is optional and stores uploaded files in the
-    configured metadata lakehouse ``Files`` area while appending file-reference
-    rows to ``METADATA_DATA_AGREEMENT_EVIDENCE``.
+    The ``01_da`` intake app uses a section switcher so only one workflow
+    section is visible at a time in Fabric notebooks. Switching sections
+    replaces the mounted body container rather than displaying child widgets
+    separately. The Evidence section is optional and stores uploaded files in
+    the configured metadata lakehouse ``Files`` area while appending
+    file-reference rows to ``METADATA_DATA_AGREEMENT_EVIDENCE``.
     """
     import ipywidgets as widgets
     from IPython.display import display
@@ -1536,13 +1541,36 @@ def render_agreement_intake_app(*, spark: Any, config: Any, env: str) -> dict[st
     if isinstance(agreement_callbacks, list) and callable(evidence_refresh):
         agreement_callbacks.append(lambda row: evidence_refresh())
 
-    sections = [
-        widgets.VBox([widgets.HTML(value="<h3>Data Steward</h3><p>Create or update steward records used by agreements.</p>"), steward_app["container"]]),
-        widgets.VBox([widgets.HTML(value="<h3>Data Agreement</h3><p>Create or update agreement records linked to active stewards.</p>"), agreement_app["container"]]),
-        widgets.VBox([widgets.HTML(value="<h3>Agreement Evidence</h3><p>Optionally upload agreement evidence files for a saved agreement version.</p>"), evidence_app["container"]]),
-    ]
-    tab = widgets.Tab(children=sections)
-    for index, title in enumerate(["Data Steward", "Data Agreement", "Agreement Evidence"]):
-        tab.set_title(index, title)
-    display(tab)
-    return {"data_steward": steward_app, "data_agreement": agreement_app, "agreement_evidence": evidence_app, "tab": tab}
+    section_selector = widgets.ToggleButtons(
+        options=[
+            ("Data Steward", "data_steward"),
+            ("Data Agreement", "data_agreement"),
+            ("Agreement Evidence", "agreement_evidence"),
+        ],
+        value="data_steward",
+        description="Section",
+    )
+    body = widgets.VBox([steward_app["container"]])
+
+    def _show_section(change: dict[str, Any]) -> None:
+        selected = change.get("new") if isinstance(change, dict) else getattr(section_selector, "value", "data_steward")
+        if selected == "data_steward":
+            body.children = (steward_app["container"],)
+        elif selected == "data_agreement":
+            body.children = (agreement_app["container"],)
+        elif selected == "agreement_evidence":
+            body.children = (evidence_app["container"],)
+
+    section_selector.observe(_show_section, names="value")
+    container = widgets.VBox([section_selector, body])
+    if display_widget:
+        display(container)
+    return {
+        "container": container,
+        "section_selector": section_selector,
+        "body": body,
+        "data_steward": steward_app,
+        "data_agreement": agreement_app,
+        "agreement_evidence": evidence_app,
+        "tab": section_selector,
+    }
