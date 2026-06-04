@@ -630,7 +630,7 @@ def read_lakehouse_parquet(config, env, target, relative_path, verbose=True, spa
     raise RuntimeError("Failed to read from both original and _tsus Parquet paths.")
 
 
-def read_lakehouse_excel(config, env, target, relative_path, sheet_name=0, spark_session=None):
+def read_lakehouse_excel(config, env, target, relative_path, sheet_name=0, spark_session=None, **read_excel_kwargs):
     """Read an Excel file from a Fabric lakehouse Files path.
 
     Spark does not natively read Excel files. This helper reads the Excel file
@@ -650,13 +650,20 @@ def read_lakehouse_excel(config, env, target, relative_path, sheet_name=0, spark
     target : str
         Logical target name such as `"source"` or `"unified"`.
     relative_path : str
-        Path to the Excel file under the lakehouse root, for example
-        `"Files/reference/faculty_mapping.xlsx"`.
+        Path to the Excel file relative to the lakehouse ``Files`` area, for
+        example ``"reference/faculty_mapping.xlsx"``. Do not prefix this
+        value with ``"Files/"``.
     sheet_name : str or int, default 0
         Worksheet name or index to read. Defaults to the first worksheet.
     spark_session : object, optional
         Spark session to use. If omitted, the helper uses the notebook global
         `spark`.
+    **read_excel_kwargs
+        Additional keyword arguments passed directly to
+        :func:`pandas.read_excel`. Common options include ``skiprows`` for
+        title rows above the real header, ``header`` for custom header-row
+        selection, ``usecols`` for column filtering, ``dtype`` for mixed-type
+        columns, and ``nrows`` for sampling or bounded reads.
 
     Returns
     -------
@@ -675,6 +682,14 @@ def read_lakehouse_excel(config, env, target, relative_path, sheet_name=0, spark
     Examples
     --------
     >>> df_mapping = read_lakehouse_excel(CONFIG, ENV, "source", "reference/mapping.xlsx")
+    >>> df_publications = read_lakehouse_excel(
+    ...     CONFIG,
+    ...     ENV,
+    ...     "source",
+    ...     "Publications_at_the_National_University_of_Singapore_2020_-_2026.xlsx",
+    ...     sheet_name=0,
+    ...     skiprows=1,
+    ... )
     Notes
     -----
     Side effects:
@@ -705,7 +720,7 @@ def read_lakehouse_excel(config, env, target, relative_path, sheet_name=0, spark
         temp_file.write(bytearray(content))
         temp_file_path = temp_file.name
 
-    pandas_df = pd.read_excel(temp_file_path, sheet_name=sheet_name)
+    pandas_df = pd.read_excel(temp_file_path, sheet_name=sheet_name, **read_excel_kwargs)
     return spark_obj.createDataFrame(pandas_df)
 
 

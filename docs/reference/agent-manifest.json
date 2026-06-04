@@ -3200,7 +3200,7 @@
       "fabricops_kit.fabric_input_output._get_spark"
     ],
     "source_file": "src/fabricops_kit/fabric_input_output.py",
-    "summary": "No summary available."
+    "summary": "Read an Excel file from a Fabric lakehouse Files path and pass options such as skiprows, header, usecols, dtype, and nrows through to pandas.read_excel."
   },
   {
     "name": "read_lakehouse_parquet",

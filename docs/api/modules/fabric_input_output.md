@@ -110,7 +110,7 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
       <td><a href="../../reference/read_lakehouse_excel/"><code>read_lakehouse_excel</code></a></td>
       <td>Optional</td>
       <td>function</td>
-      <td>Read an Excel file from a Fabric lakehouse Files path.</td>
+      <td>Read an Excel file from a Fabric lakehouse Files path and pass options such as skiprows, header, usecols, dtype, and nrows through to pandas.read_excel.</td>
       <td><a href="../../reference/internal/fabric_input_output/_get_spark/"><code>_get_spark</code></a> (internal)</td>
     </tr>
     <tr>
