@@ -2,36 +2,36 @@
 
 from __future__ import annotations
 
-import importlib.metadata
 import re
 
-_PACKAGE_DISTRIBUTION_NAME = "fabricops-kit"
 _DOCS_BASE_URL = "https://voycepeh.github.io/FabricOps-Starter-Kit"
 _UNKNOWN_VERSION = "unknown"
 _LATEST_DOCS_VERSION = "latest"
 
 
 def get_package_version() -> str:
-    """Return the installed FabricOps Starter Kit package version.
+    """Return the FabricOps Starter Kit runtime package version.
 
     Returns
     -------
     str
-        Installed ``fabricops-kit`` distribution version, or ``"unknown"``
-        when the package metadata cannot be found in the current runtime.
+        Value exposed by ``fabricops_kit.__version__``. Installed wheels read
+        this from package metadata, while local source checkouts fall back to
+        ``pyproject.toml``. Returns ``"unknown"`` only if the shared package
+        version cannot be imported or resolved.
 
     Notes
     -----
-    Fabric notebooks often run code from an attached custom wheel. This helper
-    reads Python package metadata so the displayed version reflects the wheel
-    installed in the active Fabric environment rather than a hard-coded source
-    constant.
+    Fabric notebooks often run code from an attached custom wheel. Delegating to
+    ``fabricops_kit.__version__`` keeps notebook banners, direct package version
+    checks, and documentation URL helpers on the same version-detection path.
     """
 
     try:
-        return importlib.metadata.version(_PACKAGE_DISTRIBUTION_NAME)
-    except importlib.metadata.PackageNotFoundError:
+        from fabricops_kit import __version__
+    except Exception:
         return _UNKNOWN_VERSION
+    return __version__ or _UNKNOWN_VERSION
 
 
 def get_docs_version(package_version: str | None = None) -> str:

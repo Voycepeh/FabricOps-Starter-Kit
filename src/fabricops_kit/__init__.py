@@ -1,5 +1,9 @@
 """Public notebook-friendly entrypoints for the FabricOps Starter Kit."""
 
+import pathlib
+import tomllib
+from importlib.metadata import PackageNotFoundError, version
+
 from .business_context import (
     draft_business_context,
     extract_column_business_context_suggestions,
@@ -61,7 +65,21 @@ from .metadata import (
 from .technical_columns import standardize_columns
 from .versioning import get_docs_url, get_docs_version, get_package_version, get_release_notes_url, print_runtime_banner
 
-__version__ = "0.1.0"
+
+def _load_package_version() -> str:
+    try:
+        return version(__name__)
+    except PackageNotFoundError:
+        pyproject_path = pathlib.Path(__file__).resolve().parents[2] / "pyproject.toml"
+        try:
+            with open(pyproject_path, "rb") as f:
+                pyproject_data = tomllib.load(f)
+            return pyproject_data["project"]["version"]
+        except (OSError, KeyError, tomllib.TOMLDecodeError):
+            return "unknown"
+
+
+__version__ = _load_package_version()
 
 __all__ = [
     "setup_notebook",
