@@ -253,6 +253,21 @@ def test_generated_function_manifest_excludes_removed_agreement_callables():
         assert callable_name not in manifest_text
 
 
+def test_02_ex_includes_excel_option_without_claiming_csv_skiprows_support():
+    code = _code("02_ex_agreement_topic.ipynb")
+    template_text = _template_text("02_ex_agreement_topic.ipynb")
+    assert "read_lakehouse_excel" in code
+    assert "# Option E: Lakehouse Excel file" in template_text
+    assert "#     skiprows=2," in template_text
+    assert "#     header=0," in template_text
+    assert "skiprows=2 skips the first two rows" in template_text
+    assert "header=0 means the first remaining row becomes the column header" in template_text
+    assert "Excel reads are intended for small reference files, mapping files, and manually maintained inputs" in template_text
+    assert "read_lakehouse_csv does not currently support" in template_text
+    csv_section = template_text.split("# Option C: Lakehouse CSV file", 1)[1].split("# Option D: Lakehouse Parquet file", 1)[0]
+    assert "skiprows=" not in csv_section
+
+
 def test_02_ex_uses_widget_registration_without_advanced_metadata_sections():
     code = _code("02_ex_agreement_topic.ipynb")
     template_text = _template_text("02_ex_agreement_topic.ipynb")

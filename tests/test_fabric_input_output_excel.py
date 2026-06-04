@@ -65,7 +65,7 @@ def test_read_lakehouse_excel_passes_pandas_read_excel_kwargs(monkeypatch):
         _config(),
         "dev",
         "source",
-        "Publications_at_the_National_University_of_Singapore_2020_-_2026.xlsx",
+        "Files/Publications_at_the_National_University_of_Singapore_2020_-_2026.xlsx",
         sheet_name=0,
         spark_session=spark,
         skiprows=1,

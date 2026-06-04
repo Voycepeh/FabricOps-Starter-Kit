@@ -9,6 +9,7 @@ def test_package_import_and_core_entrypoints_available():
     assert not hasattr(kit, "DATA_STEWARD_SYSTEM_FIELDS")
     assert callable(kit.setup_notebook)
     assert callable(kit.profile_dataframe)
+    assert callable(kit.read_lakehouse_excel)
     assert callable(kit.validate_dq_rules)
     assert callable(kit.build_handover)
 

@@ -651,8 +651,9 @@ def read_lakehouse_excel(config, env, target, relative_path, sheet_name=0, spark
         Logical target name such as `"source"` or `"unified"`.
     relative_path : str
         Path to the Excel file relative to the lakehouse ``Files`` area, for
-        example ``"reference/faculty_mapping.xlsx"``. Do not prefix this
-        value with ``"Files/"``.
+        example ``"reference/faculty_mapping.xlsx"``. A leading ``"Files/"``
+        prefix is accepted for consistency with notebook examples and is
+        normalized away before the lakehouse path is resolved.
     sheet_name : str or int, default 0
         Worksheet name or index to read. Defaults to the first worksheet.
     spark_session : object, optional
@@ -703,7 +704,10 @@ def read_lakehouse_excel(config, env, target, relative_path, sheet_name=0, spark
         raise ValueError("relative_path is required.")
 
     spark_obj = _get_spark(spark_session)
-    lakehouse_file_path = f"{store.root.rstrip('/')}/Files/{relative_path.lstrip('/')}"
+    normalized_relative_path = relative_path.lstrip("/")
+    if normalized_relative_path.startswith("Files/"):
+        normalized_relative_path = normalized_relative_path[len("Files/"):]
+    lakehouse_file_path = f"{store.root.rstrip('/')}/Files/{normalized_relative_path}"
 
     bin_df = (
         spark_obj.read.format("binaryFile")
