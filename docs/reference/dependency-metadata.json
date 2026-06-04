@@ -1253,9 +1253,10 @@
       "calls": [],
       "calls_count": 0,
       "used_by": [
-        "fabricops_kit.data_agreement._selector_context_html"
+        "fabricops_kit.data_agreement._selector_context_html",
+        "fabricops_kit.data_agreement.select_agreement"
       ],
-      "used_by_count": 1,
+      "used_by_count": 2,
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
@@ -2181,19 +2182,23 @@
       "docs_url": "/FabricOps-Starter-Kit/reference/select_agreement/",
       "classification": "essential",
       "calls": [
+        "fabricops_kit.data_agreement._html_escape",
         "fabricops_kit.data_agreement._latest_agreement_versions",
         "fabricops_kit.data_agreement._load_agreements",
-        "fabricops_kit.data_agreement._render_searchable_selector"
+        "fabricops_kit.data_agreement._render_searchable_selector",
+        "fabricops_kit.metadata.current_notebook_active_registrations",
+        "fabricops_kit.metadata.register_current_notebook"
       ],
-      "calls_count": 3,
+      "calls_count": 6,
       "used_by": [],
       "used_by_count": 0,
       "internal_helpers_used": [
+        "fabricops_kit.data_agreement._html_escape",
         "fabricops_kit.data_agreement._latest_agreement_versions",
         "fabricops_kit.data_agreement._load_agreements",
         "fabricops_kit.data_agreement._render_searchable_selector"
       ],
-      "internal_helper_count": 3
+      "internal_helper_count": 4
     },
     "fabricops_kit.data_agreement.setup_data_agreement_tables": {
       "qualified_name": "fabricops_kit.data_agreement.setup_data_agreement_tables",
@@ -4195,9 +4200,10 @@
         "fabricops_kit.data_agreement._ensure_metadata_tables",
         "fabricops_kit.data_agreement._list_all_data_agreement_rows",
         "fabricops_kit.data_agreement._list_data_stewards",
+        "fabricops_kit.metadata.load_notebook_registry",
         "fabricops_kit.metadata.setup_notebook_registry_table"
       ],
-      "used_by_count": 4,
+      "used_by_count": 5,
       "internal_helpers_used": [
         "fabricops_kit.fabric_input_output._get_spark"
       ],
@@ -4361,9 +4367,10 @@
       "calls_count": 0,
       "used_by": [
         "fabricops_kit.metadata._column_names",
-        "fabricops_kit.metadata.load_notebook_registry"
+        "fabricops_kit.metadata._registry_rows_with_defaults",
+        "fabricops_kit.metadata.setup_notebook_registry_table"
       ],
-      "used_by_count": 2,
+      "used_by_count": 3,
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
@@ -4400,9 +4407,10 @@
         "fabricops_kit.metadata._resolve_action_by",
         "fabricops_kit.metadata._runtime_context",
         "fabricops_kit.metadata.build_runtime_audit_fields",
+        "fabricops_kit.metadata.current_notebook_active_registrations",
         "fabricops_kit.metadata.register_current_notebook"
       ],
-      "used_by_count": 4,
+      "used_by_count": 5,
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
@@ -4436,6 +4444,61 @@
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
+    "fabricops_kit.metadata._latest_registration_events": {
+      "qualified_name": "fabricops_kit.metadata._latest_registration_events",
+      "short_name": "_latest_registration_events",
+      "module": "metadata",
+      "callable": "_latest_registration_events",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/metadata/_latest_registration_events/",
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.metadata._notebook_registration_key",
+        "fabricops_kit.metadata._registry_rows_with_defaults"
+      ],
+      "calls_count": 2,
+      "used_by": [
+        "fabricops_kit.metadata.load_notebook_registry"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [
+        "fabricops_kit.metadata._notebook_registration_key",
+        "fabricops_kit.metadata._registry_rows_with_defaults"
+      ],
+      "internal_helper_count": 2
+    },
+    "fabricops_kit.metadata._notebook_registration_key": {
+      "qualified_name": "fabricops_kit.metadata._notebook_registration_key",
+      "short_name": "_notebook_registration_key",
+      "module": "metadata",
+      "callable": "_notebook_registration_key",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/metadata/_notebook_registration_key/",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.metadata._latest_registration_events",
+        "fabricops_kit.metadata._registry_rows_with_defaults",
+        "fabricops_kit.metadata.register_current_notebook",
+        "fabricops_kit.metadata.setup_notebook_registry_table"
+      ],
+      "used_by_count": 4,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.metadata._notebook_registry_base_schema": {
+      "qualified_name": "fabricops_kit.metadata._notebook_registry_base_schema",
+      "short_name": "_notebook_registry_base_schema",
+      "module": "metadata",
+      "callable": "_notebook_registry_base_schema",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/metadata/_notebook_registry_base_schema/",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [],
+      "used_by_count": 0,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
     "fabricops_kit.metadata._now_utc_iso": {
       "qualified_name": "fabricops_kit.metadata._now_utc_iso",
       "short_name": "_now_utc_iso",
@@ -4454,6 +4517,31 @@
       "used_by_count": 4,
       "internal_helpers_used": [],
       "internal_helper_count": 0
+    },
+    "fabricops_kit.metadata._registry_rows_with_defaults": {
+      "qualified_name": "fabricops_kit.metadata._registry_rows_with_defaults",
+      "short_name": "_registry_rows_with_defaults",
+      "module": "metadata",
+      "callable": "_registry_rows_with_defaults",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/metadata/_registry_rows_with_defaults/",
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.metadata._coerce_row_dicts",
+        "fabricops_kit.metadata._notebook_registration_key",
+        "fabricops_kit.metadata._safe_str"
+      ],
+      "calls_count": 3,
+      "used_by": [
+        "fabricops_kit.metadata._latest_registration_events",
+        "fabricops_kit.metadata.load_notebook_registry"
+      ],
+      "used_by_count": 2,
+      "internal_helpers_used": [
+        "fabricops_kit.metadata._coerce_row_dicts",
+        "fabricops_kit.metadata._notebook_registration_key",
+        "fabricops_kit.metadata._safe_str"
+      ],
+      "internal_helper_count": 3
     },
     "fabricops_kit.metadata._resolve_action_by": {
       "qualified_name": "fabricops_kit.metadata._resolve_action_by",
@@ -4495,9 +4583,10 @@
       "used_by": [
         "fabricops_kit.metadata._resolve_action_by",
         "fabricops_kit.metadata.build_runtime_audit_fields",
+        "fabricops_kit.metadata.current_notebook_active_registrations",
         "fabricops_kit.metadata.register_current_notebook"
       ],
-      "used_by_count": 3,
+      "used_by_count": 4,
       "internal_helpers_used": [
         "fabricops_kit.metadata._context_get"
       ],
@@ -4513,10 +4602,13 @@
       "calls": [],
       "calls_count": 0,
       "used_by": [
+        "fabricops_kit.metadata._registry_rows_with_defaults",
         "fabricops_kit.metadata.build_runtime_audit_fields",
-        "fabricops_kit.metadata.register_current_notebook"
+        "fabricops_kit.metadata.current_notebook_active_registrations",
+        "fabricops_kit.metadata.register_current_notebook",
+        "fabricops_kit.metadata.setup_notebook_registry_table"
       ],
-      "used_by_count": 2,
+      "used_by_count": 5,
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
@@ -4678,11 +4770,37 @@
       "calls_count": 0,
       "used_by": [
         "fabricops_kit.metadata.register_current_notebook",
+        "fabricops_kit.metadata.setup_notebook_registry_table",
         "fabricops_kit.metadata.write_metadata_rows"
       ],
-      "used_by_count": 2,
+      "used_by_count": 3,
       "internal_helpers_used": [],
       "internal_helper_count": 0
+    },
+    "fabricops_kit.metadata.current_notebook_active_registrations": {
+      "qualified_name": "fabricops_kit.metadata.current_notebook_active_registrations",
+      "short_name": "current_notebook_active_registrations",
+      "module": "metadata",
+      "callable": "current_notebook_active_registrations",
+      "docs_url": "/FabricOps-Starter-Kit/reference/current_notebook_active_registrations/",
+      "classification": "optional",
+      "calls": [
+        "fabricops_kit.metadata._context_get",
+        "fabricops_kit.metadata._runtime_context",
+        "fabricops_kit.metadata._safe_str",
+        "fabricops_kit.metadata.load_notebook_registry"
+      ],
+      "calls_count": 4,
+      "used_by": [
+        "fabricops_kit.data_agreement.select_agreement"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [
+        "fabricops_kit.metadata._context_get",
+        "fabricops_kit.metadata._runtime_context",
+        "fabricops_kit.metadata._safe_str"
+      ],
+      "internal_helper_count": 3
     },
     "fabricops_kit.metadata.default_evidence_types": {
       "qualified_name": "fabricops_kit.metadata.default_evidence_types",
@@ -4722,15 +4840,20 @@
       "docs_url": "/FabricOps-Starter-Kit/reference/load_notebook_registry/",
       "classification": "essential",
       "calls": [
-        "fabricops_kit.metadata._coerce_row_dicts"
+        "fabricops_kit.fabric_input_output.read_lakehouse_table",
+        "fabricops_kit.metadata._latest_registration_events",
+        "fabricops_kit.metadata._registry_rows_with_defaults"
       ],
-      "calls_count": 1,
-      "used_by": [],
-      "used_by_count": 0,
+      "calls_count": 3,
+      "used_by": [
+        "fabricops_kit.metadata.current_notebook_active_registrations"
+      ],
+      "used_by_count": 1,
       "internal_helpers_used": [
-        "fabricops_kit.metadata._coerce_row_dicts"
+        "fabricops_kit.metadata._latest_registration_events",
+        "fabricops_kit.metadata._registry_rows_with_defaults"
       ],
-      "internal_helper_count": 1
+      "internal_helper_count": 2
     },
     "fabricops_kit.metadata.normalise_records_by_column": {
       "qualified_name": "fabricops_kit.metadata.normalise_records_by_column",
@@ -4756,21 +4879,25 @@
       "calls": [
         "fabricops_kit.fabric_input_output.write_lakehouse_table",
         "fabricops_kit.metadata._context_get",
+        "fabricops_kit.metadata._notebook_registration_key",
         "fabricops_kit.metadata._runtime_context",
         "fabricops_kit.metadata._safe_str",
         "fabricops_kit.metadata._write_metadata_rows_legacy",
         "fabricops_kit.metadata.column_context_rows_for_spark"
       ],
-      "calls_count": 6,
-      "used_by": [],
-      "used_by_count": 0,
+      "calls_count": 7,
+      "used_by": [
+        "fabricops_kit.data_agreement.select_agreement"
+      ],
+      "used_by_count": 1,
       "internal_helpers_used": [
         "fabricops_kit.metadata._context_get",
+        "fabricops_kit.metadata._notebook_registration_key",
         "fabricops_kit.metadata._runtime_context",
         "fabricops_kit.metadata._safe_str",
         "fabricops_kit.metadata._write_metadata_rows_legacy"
       ],
-      "internal_helper_count": 4
+      "internal_helper_count": 5
     },
     "fabricops_kit.metadata.setup_notebook_registry_table": {
       "qualified_name": "fabricops_kit.metadata.setup_notebook_registry_table",
@@ -4782,16 +4909,23 @@
       "calls": [
         "fabricops_kit.fabric_input_output.read_lakehouse_table",
         "fabricops_kit.fabric_input_output.write_lakehouse_table",
+        "fabricops_kit.metadata._coerce_row_dicts",
         "fabricops_kit.metadata._column_names",
+        "fabricops_kit.metadata._notebook_registration_key",
+        "fabricops_kit.metadata._safe_str",
+        "fabricops_kit.metadata.column_context_rows_for_spark",
         "fabricops_kit.metadata.get_notebook_registry_schema"
       ],
-      "calls_count": 4,
+      "calls_count": 8,
       "used_by": [],
       "used_by_count": 0,
       "internal_helpers_used": [
-        "fabricops_kit.metadata._column_names"
+        "fabricops_kit.metadata._coerce_row_dicts",
+        "fabricops_kit.metadata._column_names",
+        "fabricops_kit.metadata._notebook_registration_key",
+        "fabricops_kit.metadata._safe_str"
       ],
-      "internal_helper_count": 1
+      "internal_helper_count": 4
     },
     "fabricops_kit.metadata.write_column_business_context": {
       "qualified_name": "fabricops_kit.metadata.write_column_business_context",
@@ -5298,8 +5432,8 @@
     },
     "metadata": {
       "essential_count": 4,
-      "optional_count": 1,
-      "internal_count": 11,
+      "optional_count": 2,
+      "internal_count": 15,
       "outbound_modules": [
         "fabric_input_output"
       ],

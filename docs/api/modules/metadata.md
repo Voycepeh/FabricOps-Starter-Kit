@@ -6,7 +6,7 @@
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 5</span><span class="reference-chip">Internal helpers: 11</span><span class="reference-chip">Outbound: 1</span><span class="reference-chip">Inbound: 4</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 6</span><span class="reference-chip">Internal helpers: 15</span><span class="reference-chip">Outbound: 1</span><span class="reference-chip">Inbound: 4</span></div>
 
 ## Module purpose
 
@@ -32,11 +32,11 @@ Owns metadata evidence persistence, stable keys, notebook registry, and contract
     </tr>
     <tr>
       <td>Public callable count</td>
-      <td>5</td>
+      <td>6</td>
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>11</td>
+      <td>15</td>
     </tr>
     <tr>
       <td>Inbound module count</td>
@@ -83,21 +83,28 @@ Owns metadata evidence persistence, stable keys, notebook registry, and contract
       <td>Essential</td>
       <td>function</td>
       <td>Load notebook registration metadata rows for agreement notebook traceability.</td>
-      <td><a href="../../reference/internal/metadata/_coerce_row_dicts/"><code>_coerce_row_dicts</code></a> (internal)</td>
+      <td><a href="../../reference/internal/metadata/_latest_registration_events/"><code>_latest_registration_events</code></a> (internal), <a href="../../reference/internal/metadata/_registry_rows_with_defaults/"><code>_registry_rows_with_defaults</code></a> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/register_current_notebook/"><code>register_current_notebook</code></a></td>
       <td>Essential</td>
       <td>function</td>
       <td>Register current notebook metadata evidence for agreement traceability.</td>
-      <td><a href="../../reference/internal/metadata/_context_get/"><code>_context_get</code></a> (internal), <a href="../../reference/internal/metadata/_runtime_context/"><code>_runtime_context</code></a> (internal), <a href="../../reference/internal/metadata/_safe_str/"><code>_safe_str</code></a> (internal), <a href="../../reference/internal/metadata/_write_metadata_rows_legacy/"><code>_write_metadata_rows_legacy</code></a> (internal)</td>
+      <td><a href="../../reference/internal/metadata/_context_get/"><code>_context_get</code></a> (internal), <a href="../../reference/internal/metadata/_notebook_registration_key/"><code>_notebook_registration_key</code></a> (internal), <a href="../../reference/internal/metadata/_runtime_context/"><code>_runtime_context</code></a> (internal), <a href="../../reference/internal/metadata/_safe_str/"><code>_safe_str</code></a> (internal), <a href="../../reference/internal/metadata/_write_metadata_rows_legacy/"><code>_write_metadata_rows_legacy</code></a> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/setup_notebook_registry_table/"><code>setup_notebook_registry_table</code></a></td>
       <td>Essential</td>
       <td>function</td>
       <td>Create or validate notebook registry metadata before workflow notebooks register themselves.</td>
-      <td><a href="../../reference/internal/metadata/_column_names/"><code>_column_names</code></a> (internal)</td>
+      <td><a href="../../reference/internal/metadata/_coerce_row_dicts/"><code>_coerce_row_dicts</code></a> (internal), <a href="../../reference/internal/metadata/_column_names/"><code>_column_names</code></a> (internal), <a href="../../reference/internal/metadata/_notebook_registration_key/"><code>_notebook_registration_key</code></a> (internal), <a href="../../reference/internal/metadata/_safe_str/"><code>_safe_str</code></a> (internal)</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/current_notebook_active_registrations/"><code>current_notebook_active_registrations</code></a></td>
+      <td>Optional</td>
+      <td>function</td>
+      <td>Return active latest agreement registrations for the running notebook.</td>
+      <td><a href="../../reference/internal/metadata/_context_get/"><code>_context_get</code></a> (internal), <a href="../../reference/internal/metadata/_runtime_context/"><code>_runtime_context</code></a> (internal), <a href="../../reference/internal/metadata/_safe_str/"><code>_safe_str</code></a> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/get_notebook_registry_schema/"><code>get_notebook_registry_schema</code></a></td>
@@ -128,6 +135,11 @@ Owns metadata evidence persistence, stable keys, notebook registry, and contract
 <a class="reference-chip" href="#_context_get"><code>_context_get</code></a>, <a class="reference-chip" href="#_runtime_context"><code>_runtime_context</code></a>, <a class="reference-chip" href="#_safe_str"><code>_safe_str</code></a>
 </li>
 <li>
+<a class="reference-chip" href="../../reference/current_notebook_active_registrations/"><code>current_notebook_active_registrations</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_context_get"><code>_context_get</code></a>, <a class="reference-chip" href="#_runtime_context"><code>_runtime_context</code></a>, <a class="reference-chip" href="#_safe_str"><code>_safe_str</code></a>, <a class="reference-chip" href="../../reference/load_notebook_registry/"><code>load_notebook_registry</code></a>
+</li>
+<li>
 <a class="reference-chip" href="../../reference/get_notebook_registry_schema/"><code>get_notebook_registry_schema</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <span>None.</span>
@@ -135,17 +147,17 @@ Owns metadata evidence persistence, stable keys, notebook registry, and contract
 <li>
 <a class="reference-chip" href="../../reference/load_notebook_registry/"><code>load_notebook_registry</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_coerce_row_dicts"><code>_coerce_row_dicts</code></a>
+<a class="reference-chip" href="#_latest_registration_events"><code>_latest_registration_events</code></a>, <a class="reference-chip" href="#_registry_rows_with_defaults"><code>_registry_rows_with_defaults</code></a>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/register_current_notebook/"><code>register_current_notebook</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_context_get"><code>_context_get</code></a>, <a class="reference-chip" href="#_runtime_context"><code>_runtime_context</code></a>, <a class="reference-chip" href="#_safe_str"><code>_safe_str</code></a>, <a class="reference-chip" href="#_write_metadata_rows_legacy"><code>_write_metadata_rows_legacy</code></a>, <a class="reference-chip" href="#column_context_rows_for_spark"><code>column_context_rows_for_spark</code></a>
+<a class="reference-chip" href="#_context_get"><code>_context_get</code></a>, <a class="reference-chip" href="#_notebook_registration_key"><code>_notebook_registration_key</code></a>, <a class="reference-chip" href="#_runtime_context"><code>_runtime_context</code></a>, <a class="reference-chip" href="#_safe_str"><code>_safe_str</code></a>, <a class="reference-chip" href="#_write_metadata_rows_legacy"><code>_write_metadata_rows_legacy</code></a>, <a class="reference-chip" href="#column_context_rows_for_spark"><code>column_context_rows_for_spark</code></a>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/setup_notebook_registry_table/"><code>setup_notebook_registry_table</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_column_names"><code>_column_names</code></a>, <a class="reference-chip" href="../../reference/get_notebook_registry_schema/"><code>get_notebook_registry_schema</code></a>
+<a class="reference-chip" href="#_coerce_row_dicts"><code>_coerce_row_dicts</code></a>, <a class="reference-chip" href="#_column_names"><code>_column_names</code></a>, <a class="reference-chip" href="#_notebook_registration_key"><code>_notebook_registration_key</code></a>, <a class="reference-chip" href="#_safe_str"><code>_safe_str</code></a>, <a class="reference-chip" href="#column_context_rows_for_spark"><code>column_context_rows_for_spark</code></a>, <a class="reference-chip" href="../../reference/get_notebook_registry_schema/"><code>get_notebook_registry_schema</code></a>
 </li>
 </ul>
 </section>
@@ -166,7 +178,7 @@ Owns metadata evidence persistence, stable keys, notebook registry, and contract
   <tbody>
     <tr>
       <td><a href="../../reference/internal/metadata/_coerce_row_dicts/"><code>_coerce_row_dicts</code></a></td>
-      <td><a href="../../reference/load_notebook_registry/"><code>load_notebook_registry</code></a></td>
+      <td><a href="../../reference/setup_notebook_registry_table/"><code>setup_notebook_registry_table</code></a></td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/metadata/_column_names/"><code>_column_names</code></a></td>
@@ -174,7 +186,7 @@ Owns metadata evidence persistence, stable keys, notebook registry, and contract
     </tr>
     <tr>
       <td><a href="../../reference/internal/metadata/_context_get/"><code>_context_get</code></a></td>
-      <td><a href="../../reference/build_runtime_audit_fields/"><code>build_runtime_audit_fields</code></a>, <a href="../../reference/register_current_notebook/"><code>register_current_notebook</code></a></td>
+      <td><a href="../../reference/build_runtime_audit_fields/"><code>build_runtime_audit_fields</code></a>, <a href="../../reference/current_notebook_active_registrations/"><code>current_notebook_active_registrations</code></a>, <a href="../../reference/register_current_notebook/"><code>register_current_notebook</code></a></td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/metadata/_extract_columns_from_profile/"><code>_extract_columns_from_profile</code></a></td>
@@ -185,8 +197,24 @@ Owns metadata evidence persistence, stable keys, notebook registry, and contract
       <td>—</td>
     </tr>
     <tr>
+      <td><a href="../../reference/internal/metadata/_latest_registration_events/"><code>_latest_registration_events</code></a></td>
+      <td><a href="../../reference/load_notebook_registry/"><code>load_notebook_registry</code></a></td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/metadata/_notebook_registration_key/"><code>_notebook_registration_key</code></a></td>
+      <td><a href="../../reference/register_current_notebook/"><code>register_current_notebook</code></a>, <a href="../../reference/setup_notebook_registry_table/"><code>setup_notebook_registry_table</code></a></td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/metadata/_notebook_registry_base_schema/"><code>_notebook_registry_base_schema</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
       <td><a href="../../reference/internal/metadata/_now_utc_iso/"><code>_now_utc_iso</code></a></td>
       <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/metadata/_registry_rows_with_defaults/"><code>_registry_rows_with_defaults</code></a></td>
+      <td><a href="../../reference/load_notebook_registry/"><code>load_notebook_registry</code></a></td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/metadata/_resolve_action_by/"><code>_resolve_action_by</code></a></td>
@@ -194,11 +222,11 @@ Owns metadata evidence persistence, stable keys, notebook registry, and contract
     </tr>
     <tr>
       <td><a href="../../reference/internal/metadata/_runtime_context/"><code>_runtime_context</code></a></td>
-      <td><a href="../../reference/build_runtime_audit_fields/"><code>build_runtime_audit_fields</code></a>, <a href="../../reference/register_current_notebook/"><code>register_current_notebook</code></a></td>
+      <td><a href="../../reference/build_runtime_audit_fields/"><code>build_runtime_audit_fields</code></a>, <a href="../../reference/current_notebook_active_registrations/"><code>current_notebook_active_registrations</code></a>, <a href="../../reference/register_current_notebook/"><code>register_current_notebook</code></a></td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/metadata/_safe_str/"><code>_safe_str</code></a></td>
-      <td><a href="../../reference/build_runtime_audit_fields/"><code>build_runtime_audit_fields</code></a>, <a href="../../reference/register_current_notebook/"><code>register_current_notebook</code></a></td>
+      <td><a href="../../reference/build_runtime_audit_fields/"><code>build_runtime_audit_fields</code></a>, <a href="../../reference/current_notebook_active_registrations/"><code>current_notebook_active_registrations</code></a>, <a href="../../reference/register_current_notebook/"><code>register_current_notebook</code></a>, <a href="../../reference/setup_notebook_registry_table/"><code>setup_notebook_registry_table</code></a></td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/metadata/_sha256_key/"><code>_sha256_key</code></a></td>
@@ -232,7 +260,23 @@ Owns metadata evidence persistence, stable keys, notebook registry, and contract
 <a class="reference-chip" href="#_key_part"><code>_key_part</code></a>
 </li>
 <li>
+<a class="reference-chip" href="#_latest_registration_events"><code>_latest_registration_events</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_notebook_registration_key"><code>_notebook_registration_key</code></a>, <a class="reference-chip" href="#_registry_rows_with_defaults"><code>_registry_rows_with_defaults</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_notebook_registration_key"><code>_notebook_registration_key</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_notebook_registry_base_schema"><code>_notebook_registry_base_schema</code></a>
+</li>
+<li>
 <a class="reference-chip" href="#_now_utc_iso"><code>_now_utc_iso</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_registry_rows_with_defaults"><code>_registry_rows_with_defaults</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_coerce_row_dicts"><code>_coerce_row_dicts</code></a>, <a class="reference-chip" href="#_notebook_registration_key"><code>_notebook_registration_key</code></a>, <a class="reference-chip" href="#_safe_str"><code>_safe_str</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_resolve_action_by"><code>_resolve_action_by</code></a>
@@ -264,7 +308,7 @@ Owns metadata evidence persistence, stable keys, notebook registry, and contract
 <a class="reference-chip" href="../../reference/review_business_context/"><code>review_business_context</code></a>, <a class="reference-chip" href="../../reference/write_business_context/"><code>write_business_context</code></a>
 
 **data_agreement**
-<a class="reference-chip" href="../data_agreement/#_create_or_update_data_agreement"><code>_create_or_update_data_agreement</code></a>, <a class="reference-chip" href="../data_agreement/#_create_or_update_data_steward"><code>_create_or_update_data_steward</code></a>, <a class="reference-chip" href="../data_agreement/#_save_agreement_evidence_records"><code>_save_agreement_evidence_records</code></a>
+<a class="reference-chip" href="../data_agreement/#_create_or_update_data_agreement"><code>_create_or_update_data_agreement</code></a>, <a class="reference-chip" href="../data_agreement/#_create_or_update_data_steward"><code>_create_or_update_data_steward</code></a>, <a class="reference-chip" href="../data_agreement/#_save_agreement_evidence_records"><code>_save_agreement_evidence_records</code></a>, <a class="reference-chip" href="../../reference/select_agreement/"><code>select_agreement</code></a>
 
 **data_governance**
 <a class="reference-chip" href="../data_governance/#_approved_widget_rows"><code>_approved_widget_rows</code></a>, <a class="reference-chip" href="../../reference/review_governance/"><code>review_governance</code></a>

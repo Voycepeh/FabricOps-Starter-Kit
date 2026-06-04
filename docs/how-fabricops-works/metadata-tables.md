@@ -173,13 +173,13 @@ Evidence upload is optional. Users can save steward and agreement records withou
 | --- | --- |
 | Concept | `notebook_registry` |
 | Purpose | Records which notebooks support an agreement, where they live, and what role they play in the workflow. |
-| Grain | One row per notebook registration. |
+| Grain | Append-only registration events. The latest event per `registration_id` determines whether a notebook/agreement link is active or superseded. |
 | Key relationships | `agreement_id` links the notebook to `METADATA_DATA_AGREEMENT`. Table fields can optionally link a notebook to catalogue records. |
 | Main writer | All workflow notebooks through `register_current_notebook()`. |
 | Main downstream use | Lets handover and audit views point back to the notebooks that produced or approved metadata evidence. |
 | Runtime audit | The row uses explicit runtime columns listed below rather than the shared underscore-prefixed `01_da` audit-column block. |
 
-`METADATA_NOTEBOOK_REGISTRY` is not created or written by the `01_da` widgets. `setup_data_agreement_tables()` remains scoped to agreement intake only: `METADATA_DATA_STEWARD`, `METADATA_DATA_AGREEMENT`, and `METADATA_DATA_AGREEMENT_EVIDENCE`. Prepare this registry separately with `setup_notebook_registry_table()` before workflow notebooks register themselves, then let each workflow notebook append its own row through `register_current_notebook()`.
+`METADATA_NOTEBOOK_REGISTRY` is not created or written by the `01_da` widgets. `setup_data_agreement_tables()` remains scoped to agreement intake only: `METADATA_DATA_STEWARD`, `METADATA_DATA_AGREEMENT`, and `METADATA_DATA_AGREEMENT_EVIDENCE`. Prepare this registry separately with `setup_notebook_registry_table()` before workflow notebooks register themselves, then let each workflow notebook append its own row through `register_current_notebook()`. Existing registry tables with the original lightweight columns remain compatible; setup adds the minimal registration-state columns so replacements can preserve audit history instead of deleting earlier rows.
 
 Recommended route-based usage:
 
@@ -217,7 +217,15 @@ register_current_notebook(
 | notebook_url | https://fabric.microsoft.com/... | Runtime collected | Link to notebook |
 | user_name | user@example.com | Runtime collected | Registering user name or email from Fabric runtime context |
 | user_id | user-guid | Runtime collected | Registering user ID |
-| registered_at | 2026-05-29T10:30:00Z | Runtime collected | Registration timestamp |
+| registered_at | 2026-05-29T10:30:00Z | Runtime collected | Registration event timestamp |
+| registration_id | 24-character hash | System derived | Stable notebook/agreement/version/role link identifier used to collapse append-only events into current state. |
+| agreement_contract_version | 1.0.0 | Runtime collected | Agreement contract version selected at registration time. |
+| registration_role | primary | Runtime collected | `primary` for the default user-facing agreement, or `additional` for an advanced audit link. |
+| registration_status | active | Runtime collected | `active` for current links, or `superseded` when a primary link was replaced. |
+| superseded_at | 2026-06-04T12:00:00Z | Runtime collected | Timestamp populated on superseded events. |
+| superseded_by_registration_id | 24-character hash | Runtime collected | Replacement registration that superseded the prior primary link. |
+
+The backend supports many agreement links per notebook by appending one event per link. The `02_ex` template defaults to one active primary agreement at a time: replacing an agreement appends a superseded event for the prior primary link and appends or activates the new primary registration, while the additional-link option keeps the primary link active and appends a clearly marked `additional` link.
 
 Do not store profiling metrics, business context, classification, or DQ results here. This table owns notebook traceability only.
 

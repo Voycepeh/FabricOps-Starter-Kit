@@ -14,7 +14,7 @@ EVIDENCE_BUSINESS_CONTEXT = "business_context"
 EVIDENCE_GOVERNANCE_CONTEXT = "governance_context"
 
 NOTEBOOK_REGISTRY_TABLE = "METADATA_NOTEBOOK_REGISTRY"
-NOTEBOOK_REGISTRY_FIELDS = [
+NOTEBOOK_REGISTRY_BASE_FIELDS = [
     "agreement_id",
     "environment_name",
     "dataset_name",
@@ -31,6 +31,17 @@ NOTEBOOK_REGISTRY_FIELDS = [
     "user_id",
     "registered_at",
 ]
+
+NOTEBOOK_REGISTRY_STATE_FIELDS = [
+    "registration_id",
+    "agreement_contract_version",
+    "registration_role",
+    "registration_status",
+    "superseded_at",
+    "superseded_by_registration_id",
+]
+
+NOTEBOOK_REGISTRY_FIELDS = [*NOTEBOOK_REGISTRY_BASE_FIELDS, *NOTEBOOK_REGISTRY_STATE_FIELDS]
 
 
 def get_notebook_registry_schema() -> list[str]:
@@ -49,6 +60,23 @@ def get_notebook_registry_schema() -> list[str]:
     evidence rows keyed by agreement and runtime notebook context.
     """
     return list(NOTEBOOK_REGISTRY_FIELDS)
+
+
+def _notebook_registry_base_schema() -> list[str]:
+    """Return columns required by legacy notebook registry tables."""
+    return list(NOTEBOOK_REGISTRY_BASE_FIELDS)
+
+
+def _notebook_registration_key(row: dict[str, Any]) -> str:
+    parts = [
+        str(row.get("workspace_id") or ""),
+        str(row.get("notebook_id") or ""),
+        str(row.get("notebook_name") or ""),
+        str(row.get("agreement_id") or ""),
+        str(row.get("agreement_contract_version") or ""),
+        str(row.get("registration_role") or ""),
+    ]
+    return hashlib.sha256("||".join(parts).encode("utf-8")).hexdigest()[:24]
 
 
 def _coerce_row_dicts(rows: Any) -> list[dict[str, Any]]:
@@ -109,10 +137,29 @@ def setup_notebook_registry_table(*, spark: Any, config: Any, env: str, metadata
         table = read_lakehouse_table(config, env, "metadata", metadata_table, spark_session=spark)
         created = True
 
-    missing = [field for field in fields if field not in _column_names(table)]
-    if missing:
-        raise ValueError(f"{metadata_table} is missing required column(s): {', '.join(missing)}. Migrate or recreate the notebook registry table before workflow notebooks register themselves.")
-    return {"status": "ready", "table": metadata_table, "schema": fields, "created": created, "created_tables": [metadata_table] if created else []}
+    columns = _column_names(table)
+    missing_base = [field for field in NOTEBOOK_REGISTRY_BASE_FIELDS if field not in columns]
+    if missing_base:
+        raise ValueError(f"{metadata_table} is missing required column(s): {', '.join(missing_base)}. Migrate or recreate the notebook registry table before workflow notebooks register themselves.")
+
+    migrated = False
+    missing_state = [field for field in NOTEBOOK_REGISTRY_STATE_FIELDS if field not in columns]
+    if missing_state:
+        existing_rows = _coerce_row_dicts(table)
+        migrated_rows = []
+        for row in existing_rows:
+            migrated_row = {field: _safe_str(row.get(field)) for field in NOTEBOOK_REGISTRY_BASE_FIELDS}
+            migrated_row["agreement_contract_version"] = _safe_str(row.get("agreement_contract_version"))
+            migrated_row["registration_role"] = _safe_str(row.get("registration_role") or "primary")
+            migrated_row["registration_status"] = _safe_str(row.get("registration_status") or "active")
+            migrated_row["superseded_at"] = _safe_str(row.get("superseded_at"))
+            migrated_row["superseded_by_registration_id"] = _safe_str(row.get("superseded_by_registration_id"))
+            migrated_row["registration_id"] = _safe_str(row.get("registration_id") or _notebook_registration_key(migrated_row))
+            migrated_rows.append({field: migrated_row.get(field, "") for field in fields})
+        df = spark.createDataFrame(column_context_rows_for_spark(migrated_rows or [{field: "" for field in fields}])).limit(0 if not migrated_rows else len(migrated_rows))
+        write_lakehouse_table(df, config, env, "metadata", metadata_table, mode="overwrite", overwrite_schema=True)
+        migrated = True
+    return {"status": "ready", "table": metadata_table, "schema": fields, "created": created, "migrated": migrated, "created_tables": [metadata_table] if created else []}
 
 
 def default_evidence_types() -> dict[str, str]:
@@ -354,6 +401,12 @@ def register_current_notebook(
     table_name=None,
     topic=None,
     pipeline_name=None,
+    contract_version=None,
+    registration_role="primary",
+    registration_status="active",
+    registration_id=None,
+    superseded_at=None,
+    superseded_by_registration_id=None,
     metadata_table=NOTEBOOK_REGISTRY_TABLE,
     *,
     config: Any = None,
@@ -381,6 +434,19 @@ def register_current_notebook(
         from the current notebook name prefix.
     environment_name, dataset_name, table_name, topic, pipeline_name : str, optional
         Optional workflow context recorded with the notebook registration.
+    contract_version : str, optional
+        Agreement contract version selected when the notebook was registered.
+    registration_role : {"primary", "additional"}, default="primary"
+        Whether the row represents the notebook's user-facing active agreement
+        or an additional audit link.
+    registration_status : {"active", "superseded"}, default="active"
+        Current registration event state. Superseded rows are retained for audit
+        and ignored by active-registration helpers.
+    registration_id : str, optional
+        Stable registration identifier. When omitted, a deterministic identifier
+        is generated from the notebook and agreement identity.
+    superseded_at, superseded_by_registration_id : str, optional
+        Audit values populated when a prior registration is superseded.
     metadata_table : str, default=NOTEBOOK_REGISTRY_TABLE
         Physical notebook registry table name.
 
@@ -426,7 +492,14 @@ def register_current_notebook(
         "user_name": _safe_str(user_name),
         "user_id": _safe_str(user_id),
         "registered_at": datetime.now(timezone.utc).isoformat(),
+        "agreement_contract_version": _safe_str(contract_version),
+        "registration_role": _safe_str(registration_role or "primary"),
+        "registration_status": _safe_str(registration_status or "active"),
+        "superseded_at": _safe_str(superseded_at),
+        "superseded_by_registration_id": _safe_str(superseded_by_registration_id),
     }
+    row["registration_id"] = _safe_str(registration_id or _notebook_registration_key(row))
+    row = {field: row.get(field, "") for field in NOTEBOOK_REGISTRY_FIELDS}
     df = spark.createDataFrame(column_context_rows_for_spark([row]))
     if config is not None and env is not None:
         write_lakehouse_table(df, config, env, "metadata", metadata_table, mode="append")
@@ -437,20 +510,85 @@ def register_current_notebook(
     return row
 
 
-def load_notebook_registry(spark, agreement_id, metadata_table=NOTEBOOK_REGISTRY_TABLE, notebook_type=None, environment_name=None, missing_ok: bool = True) -> list[dict[str, Any]]:
+def _registry_rows_with_defaults(rows: Any) -> list[dict[str, Any]]:
+    out = []
+    for source in _coerce_row_dicts(rows):
+        row = {field: _safe_str(source.get(field)) for field in NOTEBOOK_REGISTRY_BASE_FIELDS}
+        row["agreement_contract_version"] = _safe_str(source.get("agreement_contract_version"))
+        row["registration_role"] = _safe_str(source.get("registration_role") or "primary")
+        row["registration_status"] = _safe_str(source.get("registration_status") or "active")
+        row["superseded_at"] = _safe_str(source.get("superseded_at"))
+        row["superseded_by_registration_id"] = _safe_str(source.get("superseded_by_registration_id"))
+        row["registration_id"] = _safe_str(source.get("registration_id") or _notebook_registration_key(row))
+        out.append({field: row.get(field, "") for field in NOTEBOOK_REGISTRY_FIELDS})
+    return out
+
+
+def _latest_registration_events(rows: Any) -> list[dict[str, Any]]:
+    latest: dict[str, dict[str, Any]] = {}
+    for row in _registry_rows_with_defaults(rows):
+        key = row.get("registration_id") or _notebook_registration_key(row)
+        previous = latest.get(key)
+        if previous is None or str(row.get("registered_at") or "") >= str(previous.get("registered_at") or ""):
+            latest[key] = row
+    return list(latest.values())
+
+
+def load_notebook_registry(spark, agreement_id=None, metadata_table=NOTEBOOK_REGISTRY_TABLE, notebook_type=None, environment_name=None, missing_ok: bool = True, *, config: Any = None, env: str | None = None, active_only: bool = False, notebook_id: str | None = None, notebook_name: str | None = None, registration_role: str | None = None) -> list[dict[str, Any]]:
     try:
-        rows = _coerce_row_dicts(spark.table(metadata_table))
+        table = read_lakehouse_table(config, env, "metadata", metadata_table, spark_session=spark) if config is not None and env is not None else spark.table(metadata_table)
+        rows = _registry_rows_with_defaults(table)
     except Exception:
         if missing_ok:
             return []
         raise
+    rows = _latest_registration_events(rows) if active_only else rows
     out = []
     for row in rows:
-        if str(row.get("agreement_id") or "") != str(agreement_id):
+        if agreement_id is not None and str(row.get("agreement_id") or "") != str(agreement_id):
             continue
         if notebook_type and str(row.get("notebook_type") or "") != str(notebook_type):
             continue
         if environment_name and str(row.get("environment_name") or "") != str(environment_name):
             continue
+        if notebook_id and str(row.get("notebook_id") or "") != str(notebook_id):
+            continue
+        if notebook_name and str(row.get("notebook_name") or "") != str(notebook_name):
+            continue
+        if registration_role and str(row.get("registration_role") or "") != str(registration_role):
+            continue
+        if active_only and str(row.get("registration_status") or "active") != "active":
+            continue
         out.append(row)
     return out
+
+
+def current_notebook_active_registrations(spark, *, config: Any, env: str, metadata_table: str = NOTEBOOK_REGISTRY_TABLE, notebook_type: str | None = None, environment_name: str | None = None, registration_role: str | None = None, missing_ok: bool = True) -> list[dict[str, Any]]:
+    """Return active agreement registrations for the running notebook.
+
+    Parameters
+    ----------
+    spark : pyspark.sql.SparkSession
+        Fabric Spark session used to read the metadata table.
+    config : FrameworkConfig or dict
+        Metadata route configuration from ``00_env_config``.
+    env : str
+        Environment key paired with ``config``.
+    metadata_table : str, default=NOTEBOOK_REGISTRY_TABLE
+        Physical notebook registry table name.
+    notebook_type, environment_name, registration_role : str, optional
+        Optional filters for notebook phase, environment, and primary versus
+        additional registration role.
+    missing_ok : bool, default=True
+        Return an empty list when the registry cannot be read.
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Active latest registration rows for the current notebook runtime.
+    """
+    ctx = _runtime_context()
+    notebook_id = _safe_str(_context_get(ctx, "currentNotebookId", "notebookId"))
+    notebook_name = _safe_str(_context_get(ctx, "currentNotebookName", "notebookName") or "unknown_notebook")
+    rows = load_notebook_registry(spark, metadata_table=metadata_table, notebook_type=notebook_type, environment_name=environment_name, missing_ok=missing_ok, config=config, env=env, active_only=True, notebook_id=notebook_id or None, notebook_name=None if notebook_id else notebook_name, registration_role=registration_role)
+    return rows

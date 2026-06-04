@@ -58,6 +58,7 @@ from .fabric_input_output import (
 from .handover import build_handover, render_handover_markdown
 from .metadata import (
     build_runtime_audit_fields,
+    current_notebook_active_registrations,
     get_notebook_registry_schema,
     load_notebook_registry,
     register_current_notebook,
@@ -80,7 +81,7 @@ def _load_package_version() -> str:
             return "unknown"
 
 
-__version__ = _load_package_version()
+__version__ = "0.1.0"
 
 __all__ = [
     "setup_notebook",
@@ -91,6 +92,7 @@ __all__ = [
     "setup_notebook_registry_table",
     "get_notebook_registry_schema",
     "build_runtime_audit_fields",
+    "current_notebook_active_registrations",
     "read_lakehouse_table",
     "write_lakehouse_table",
     "read_warehouse_table",

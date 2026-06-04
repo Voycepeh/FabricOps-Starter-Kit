@@ -227,7 +227,7 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
 <a class="reference-chip" href="../../reference/write_dq_rules/"><code>write_dq_rules</code></a>
 
 **metadata**
-<a class="reference-chip" href="../../reference/register_current_notebook/"><code>register_current_notebook</code></a>, <a class="reference-chip" href="../../reference/setup_notebook_registry_table/"><code>setup_notebook_registry_table</code></a>
+<a class="reference-chip" href="../../reference/load_notebook_registry/"><code>load_notebook_registry</code></a>, <a class="reference-chip" href="../../reference/register_current_notebook/"><code>register_current_notebook</code></a>, <a class="reference-chip" href="../../reference/setup_notebook_registry_table/"><code>setup_notebook_registry_table</code></a>
 
 ### External callees
 
