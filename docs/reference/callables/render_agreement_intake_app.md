@@ -5,7 +5,7 @@
 
 ## Purpose
 
-Render and wire the default agreement-intake form application.
+Render and wire the compact agreement-intake section switcher application.
 
 ## Function manifest
 

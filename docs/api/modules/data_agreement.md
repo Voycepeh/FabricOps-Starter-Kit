@@ -6,7 +6,7 @@
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 6</span><span class="reference-chip">Internal helpers: 60</span><span class="reference-chip">Outbound: 3</span><span class="reference-chip">Inbound: 0</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 7</span><span class="reference-chip">Internal helpers: 63</span><span class="reference-chip">Outbound: 3</span><span class="reference-chip">Inbound: 0</span></div>
 
 ## Module purpose
 
@@ -32,11 +32,11 @@ Owns agreement metadata capture, audited record building, metadata commit helper
     </tr>
     <tr>
       <td>Public callable count</td>
-      <td>6</td>
+      <td>7</td>
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>60</td>
+      <td>63</td>
     </tr>
     <tr>
       <td>Inbound module count</td>
@@ -79,10 +79,17 @@ Owns agreement metadata capture, audited record building, metadata commit helper
       <td>—</td>
     </tr>
     <tr>
+      <td><a href="../../reference/render_agreement_evidence_widget/"><code>render_agreement_evidence_widget</code></a></td>
+      <td>Essential</td>
+      <td>function</td>
+      <td>Render standalone agreement evidence upload controls for an existing agreement version.</td>
+      <td><a href="../../reference/internal/data_agreement/_render_agreement_evidence_widget/"><code>_render_agreement_evidence_widget</code></a> (internal)</td>
+    </tr>
+    <tr>
       <td><a href="../../reference/render_agreement_intake_app/"><code>render_agreement_intake_app</code></a></td>
       <td>Essential</td>
       <td>function</td>
-      <td>Render and wire the default agreement-intake form application.</td>
+      <td>Render and wire the compact agreement-intake section switcher application.</td>
       <td><a href="../../reference/internal/data_agreement/_render_agreement_evidence_widget/"><code>_render_agreement_evidence_widget</code></a> (internal), <a href="../../reference/internal/data_agreement/_render_maintenance_widget/"><code>_render_maintenance_widget</code></a> (internal)</td>
     </tr>
     <tr>
@@ -133,6 +140,11 @@ Owns agreement metadata capture, audited record building, metadata commit helper
 <a class="reference-chip" href="../../reference/get_selected_agreement/"><code>get_selected_agreement</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <span>None.</span>
+</li>
+<li>
+<a class="reference-chip" href="../../reference/render_agreement_evidence_widget/"><code>render_agreement_evidence_widget</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_render_agreement_evidence_widget"><code>_render_agreement_evidence_widget</code></a>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/render_agreement_intake_app/"><code>render_agreement_intake_app</code></a>
@@ -237,6 +249,10 @@ Owns agreement metadata capture, audited record building, metadata commit helper
       <td><a href="../../reference/setup_data_agreement_tables/"><code>setup_data_agreement_tables</code></a></td>
     </tr>
     <tr>
+      <td><a href="../../reference/internal/data_agreement/_evidence_file_name_from_path/"><code>_evidence_file_name_from_path</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
       <td><a href="../../reference/internal/data_agreement/_field_label/"><code>_field_label</code></a></td>
       <td>—</td>
     </tr>
@@ -258,6 +274,10 @@ Owns agreement metadata capture, audited record building, metadata commit helper
     </tr>
     <tr>
       <td><a href="../../reference/internal/data_agreement/_get_data_steward_schema/"><code>_get_data_steward_schema</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/data_agreement/_get_notebookutils/"><code>_get_notebookutils</code></a></td>
       <td>—</td>
     </tr>
     <tr>
@@ -301,11 +321,15 @@ Owns agreement metadata capture, audited record building, metadata commit helper
       <td><a href="../../reference/select_agreement/"><code>select_agreement</code></a></td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_agreement/_metadata_lakehouse_file_path/"><code>_metadata_lakehouse_file_path</code></a></td>
+      <td><a href="../../reference/internal/data_agreement/_next_minor_version/"><code>_next_minor_version</code></a></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_agreement/_next_minor_version/"><code>_next_minor_version</code></a></td>
+      <td><a href="../../reference/internal/data_agreement/_notebookutils_file_size/"><code>_notebookutils_file_size</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/data_agreement/_notebookutils_fs_exists/"><code>_notebookutils_fs_exists</code></a></td>
       <td>—</td>
     </tr>
     <tr>
@@ -317,12 +341,20 @@ Owns agreement metadata capture, audited record building, metadata commit helper
       <td>—</td>
     </tr>
     <tr>
+      <td><a href="../../reference/internal/data_agreement/_parse_evidence_file_paths/"><code>_parse_evidence_file_paths</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
       <td><a href="../../reference/internal/data_agreement/_parse_iso_date/"><code>_parse_iso_date</code></a></td>
       <td>—</td>
     </tr>
     <tr>
+      <td><a href="../../reference/internal/data_agreement/_prepare_evidence_file_references/"><code>_prepare_evidence_file_references</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
       <td><a href="../../reference/internal/data_agreement/_render_agreement_evidence_widget/"><code>_render_agreement_evidence_widget</code></a></td>
-      <td><a href="../../reference/render_agreement_intake_app/"><code>render_agreement_intake_app</code></a></td>
+      <td><a href="../../reference/render_agreement_evidence_widget/"><code>render_agreement_evidence_widget</code></a>, <a href="../../reference/render_agreement_intake_app/"><code>render_agreement_intake_app</code></a></td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/data_agreement/_render_custom_fields/"><code>_render_custom_fields</code></a></td>
@@ -342,10 +374,6 @@ Owns agreement metadata capture, audited record building, metadata commit helper
     </tr>
     <tr>
       <td><a href="../../reference/internal/data_agreement/_row_search_text/"><code>_row_search_text</code></a></td>
-      <td>—</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/internal/data_agreement/_safe_evidence_file_name/"><code>_safe_evidence_file_name</code></a></td>
       <td>—</td>
     </tr>
     <tr>
@@ -389,7 +417,7 @@ Owns agreement metadata capture, audited record building, metadata commit helper
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_agreement/_uploaded_file_items/"><code>_uploaded_file_items</code></a></td>
+      <td><a href="../../reference/internal/data_agreement/_validate_evidence_file_path/"><code>_validate_evidence_file_path</code></a></td>
       <td>—</td>
     </tr>
     <tr>
@@ -406,10 +434,6 @@ Owns agreement metadata capture, audited record building, metadata commit helper
     </tr>
     <tr>
       <td><a href="../../reference/internal/data_agreement/_widget_layout/"><code>_widget_layout</code></a></td>
-      <td>—</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/internal/data_agreement/_write_evidence_file/"><code>_write_evidence_file</code></a></td>
       <td>—</td>
     </tr>
     <tr>
@@ -492,6 +516,9 @@ Owns agreement metadata capture, audited record building, metadata commit helper
 <a class="reference-chip" href="#_column_names"><code>_column_names</code></a>, <a class="reference-chip" href="#_get_data_agreement_evidence_schema"><code>_get_data_agreement_evidence_schema</code></a>, <a class="reference-chip" href="#_get_data_agreement_schema"><code>_get_data_agreement_schema</code></a>, <a class="reference-chip" href="#_get_data_steward_schema"><code>_get_data_steward_schema</code></a>, <a class="reference-chip" href="#_table_name"><code>_table_name</code></a>
 </li>
 <li>
+<a class="reference-chip" href="#_evidence_file_name_from_path"><code>_evidence_file_name_from_path</code></a>
+</li>
+<li>
 <a class="reference-chip" href="#_field_label"><code>_field_label</code></a>
 </li>
 <li>
@@ -508,6 +535,9 @@ Owns agreement metadata capture, audited record building, metadata commit helper
 </li>
 <li>
 <a class="reference-chip" href="#_get_data_steward_schema"><code>_get_data_steward_schema</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_get_notebookutils"><code>_get_notebookutils</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_get_standard_runtime_audit_columns"><code>_get_standard_runtime_audit_columns</code></a>
@@ -556,12 +586,19 @@ Owns agreement metadata capture, audited record building, metadata commit helper
 <a class="reference-chip" href="#_list_data_agreements"><code>_list_data_agreements</code></a>
 </li>
 <li>
-<a class="reference-chip" href="#_metadata_lakehouse_file_path"><code>_metadata_lakehouse_file_path</code></a>
-</li>
-<li>
 <a class="reference-chip" href="#_next_minor_version"><code>_next_minor_version</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_parse_contract_version"><code>_parse_contract_version</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_notebookutils_file_size"><code>_notebookutils_file_size</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_evidence_file_name_from_path"><code>_evidence_file_name_from_path</code></a>, <a class="reference-chip" href="#_get_notebookutils"><code>_get_notebookutils</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_notebookutils_fs_exists"><code>_notebookutils_fs_exists</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_get_notebookutils"><code>_get_notebookutils</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_option_values"><code>_option_values</code></a>
@@ -570,7 +607,15 @@ Owns agreement metadata capture, audited record building, metadata commit helper
 <a class="reference-chip" href="#_parse_contract_version"><code>_parse_contract_version</code></a>
 </li>
 <li>
+<a class="reference-chip" href="#_parse_evidence_file_paths"><code>_parse_evidence_file_paths</code></a>
+</li>
+<li>
 <a class="reference-chip" href="#_parse_iso_date"><code>_parse_iso_date</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_prepare_evidence_file_references"><code>_prepare_evidence_file_references</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_notebookutils_file_size"><code>_notebookutils_file_size</code></a>, <a class="reference-chip" href="#_notebookutils_fs_exists"><code>_notebookutils_fs_exists</code></a>, <a class="reference-chip" href="#_parse_evidence_file_paths"><code>_parse_evidence_file_paths</code></a>, <a class="reference-chip" href="#_validate_evidence_file_path"><code>_validate_evidence_file_path</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_render_agreement_evidence_widget"><code>_render_agreement_evidence_widget</code></a>
@@ -601,12 +646,9 @@ Owns agreement metadata capture, audited record building, metadata commit helper
 <a class="reference-chip" href="#_row_search_text"><code>_row_search_text</code></a>
 </li>
 <li>
-<a class="reference-chip" href="#_safe_evidence_file_name"><code>_safe_evidence_file_name</code></a>
-</li>
-<li>
 <a class="reference-chip" href="#_save_agreement_evidence_records"><code>_save_agreement_evidence_records</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_safe_evidence_file_name"><code>_safe_evidence_file_name</code></a>, <a class="reference-chip" href="#_table_name"><code>_table_name</code></a>, <a class="reference-chip" href="#_uploaded_file_items"><code>_uploaded_file_items</code></a>, <a class="reference-chip" href="#_write_evidence_file"><code>_write_evidence_file</code></a>, <a class="reference-chip" href="#_write_row"><code>_write_row</code></a>
+<a class="reference-chip" href="#_prepare_evidence_file_references"><code>_prepare_evidence_file_references</code></a>, <a class="reference-chip" href="#_table_name"><code>_table_name</code></a>, <a class="reference-chip" href="#_write_row"><code>_write_row</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_selector_context_html"><code>_selector_context_html</code></a>
@@ -648,7 +690,9 @@ Owns agreement metadata capture, audited record building, metadata commit helper
 <a class="reference-chip" href="#_to_iso_date"><code>_to_iso_date</code></a>
 </li>
 <li>
-<a class="reference-chip" href="#_uploaded_file_items"><code>_uploaded_file_items</code></a>
+<a class="reference-chip" href="#_validate_evidence_file_path"><code>_validate_evidence_file_path</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_evidence_file_name_from_path"><code>_evidence_file_name_from_path</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_widget_common"><code>_widget_common</code></a>
@@ -667,11 +711,6 @@ Owns agreement metadata capture, audited record building, metadata commit helper
 </li>
 <li>
 <a class="reference-chip" href="#_widget_layout"><code>_widget_layout</code></a>
-</li>
-<li>
-<a class="reference-chip" href="#_write_evidence_file"><code>_write_evidence_file</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_metadata_lakehouse_file_path"><code>_metadata_lakehouse_file_path</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_write_row"><code>_write_row</code></a>

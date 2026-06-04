@@ -64,7 +64,12 @@ These fields are populated by runtime audit helpers, for example `metadata.build
 
 ## Lightweight `01_da` intake
 
-`00_env_config` defines the physical steward, agreement, and evidence metadata tables plus the editable configuration for the visible `01_da` intake widgets:
+`00_env_config` defines the physical steward, agreement, and evidence metadata tables plus the editable configuration for the visible `01_da` intake widgets. FabricOps currently supports two `01_da` layouts:
+
+- **Option A** is a compact section switcher via `render_agreement_intake_app(...)`.
+- **Option B** is separate widget cells for Data Steward, Data Agreement, and Agreement Evidence via `render_data_steward_widget(...)`, `render_data_agreement_widget(...)`, and `render_agreement_evidence_widget(...)`. Use Option B if Fabric output scrolling feels jumpy or if users prefer rerunning one section at a time.
+
+Both layouts expose the same workflow sections:
 
 1. **Data Steward** maintenance creates or updates append-only steward assignments.
 2. **Data Agreement** maintenance creates append-only agreement versions and selects from currently active stewards.
@@ -141,24 +146,24 @@ One agreement may populate one, two, or all three approved usage fields. Splitti
 | Item | Details |
 | --- | --- |
 | Concept | `data_agreement_evidence` |
-| Purpose | Optional file-reference ledger for documents or screenshots that support a saved agreement version. The uploaded binary files are stored in the metadata lakehouse `Files` area, not in the agreement table. |
-| Grain | One row per uploaded evidence file for an agreement version. |
+| Purpose | Supporting file-reference ledger for documents or screenshots that support a saved agreement version. Evidence files are uploaded manually to the metadata lakehouse `Files` area first; the table stores links and descriptive metadata, not binary content or JSON embedded in `METADATA_DATA_AGREEMENT`. |
+| Grain | One row per evidence file link per agreement version. |
 | Key relationships | `agreement_id` and `contract_version` reference `METADATA_DATA_AGREEMENT`. |
 | Main writer | `01_da_*` Agreement Evidence section |
 | Main downstream use | Lets governance or audit users find supporting agreement files without bloating agreement/version metadata rows. |
 | Runtime audit | Includes the standard runtime audit columns defined above. |
 
-Evidence upload is optional. Users can save steward and agreement records without uploading evidence, then return later to attach supporting documents. Files are written under a deterministic metadata lakehouse Files folder such as `Files/fabricops/agreement_evidence/<agreement_id>/<contract_version>/`, with unique stored filenames to avoid replacing same-name uploads. The metadata table stores only file references and descriptive metadata; it does not store uploaded binary content. `METADATA_DATA_AGREEMENT` stays focused on agreement identity, versioning, steward, recipient, purpose, approved usage, dates, and config-driven extension fields.
+Evidence upload is optional. Users can save steward and agreement records without evidence, then return later to attach supporting documents. Upload evidence files manually to the metadata lakehouse `Files` area first, then paste one `Files/...` path per line in the Agreement Evidence widget, for example `Files/fabricops/agreement_evidence/<agreement_id>/<contract_version>/signed_agreement.pdf`. The widget validates each path and appends one `METADATA_DATA_AGREEMENT_EVIDENCE` row per valid evidence file link. The metadata table stores only file references and descriptive metadata; it does not store uploaded binary content. `METADATA_DATA_AGREEMENT` stays focused on agreement identity, versioning, steward, recipient, purpose, approved usage, dates, and config-driven extension fields.
 
 | Column | Example | Input type | Purpose |
 | --- | --- | --- | --- |
 | agreement_id | DA-20260529-100000 | System derived | Agreement key for the supported agreement version. |
 | contract_version | 1.0.0 | System derived | Agreement version supported by the evidence file. |
-| evidence_type | Signed Agreement | User input | Simple evidence category selected in the upload tab. |
-| file_name | signed-agreement.pdf | User input | Original uploaded file name after safe path normalization. |
-| file_path | Files/fabricops/agreement_evidence/DA-20260529-100000/1.0.0/signed-agreement__a1b2c3d4.pdf | System generated | Metadata lakehouse Files path for the uploaded file. |
-| mime_type | application/pdf | Runtime collected | Browser-provided MIME type when available. |
-| file_size | 24576 | Runtime collected | Uploaded file size in bytes. |
+| evidence_type | Signed Agreement | User input | Simple evidence category selected in the Agreement Evidence widget. |
+| file_name | signed_agreement.pdf | Runtime derived | Final file name segment derived from the pasted `Files/...` path. |
+| file_path | Files/fabricops/agreement_evidence/DA-20260529-100000/1.0.0/signed_agreement.pdf | User input | Metadata lakehouse `Files/...` path pasted by the user after manually uploading the evidence file. |
+| mime_type | application/pdf | Runtime derived | Best-effort MIME type derived from the file extension, or blank. |
+| file_size | 24576 | Runtime collected | Best-effort file size from `notebookutils.fs.ls(parent)`, or blank. |
 | uploaded_at | 2026-06-01T10:30:00Z | Runtime collected | Upload timestamp aligned to runtime audit context when available. |
 | uploaded_by | user@example.com | Runtime collected | Uploading user aligned to runtime audit context when available. |
 
