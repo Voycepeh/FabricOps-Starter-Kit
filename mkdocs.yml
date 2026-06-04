@@ -34,6 +34,10 @@ nav:
 
   - Data Quality Rules: data-quality-rules-system.md
 
+  - Development:
+      - Documentation Versioning: development/docs-versioning.md
+      - Release Management: development/release-management.md
+
   - Function Reference:
       - Overview: reference/index.md
       - Modules:
@@ -51,6 +55,10 @@ nav:
           - handover: api/modules/handover.md
           - metadata: api/modules/metadata.md
       # AUTO-GENERATED-MODULES-END
+
+extra:
+  version:
+    provider: mike
 
 markdown_extensions:
   - admonition
