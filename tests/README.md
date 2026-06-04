@@ -8,7 +8,7 @@ This test suite validates the current **FabricOps Starter Kit** lifecycle implem
 - Data contract normalization and rule execution behavior.
 - Data quality workflows, rule compilation, and quarantine record behavior.
 - Drift checks (schema/partition/profile) and orchestration summaries.
-- Metadata, profiling, technical columns, lineage, governance classification, and handover summary helpers.
+- Metadata, profiling, runtime audit columns, lineage, governance classification, and handover summary helpers.
 - Docs/reference generation and consistency checks.
 
 ## What should not be tested locally

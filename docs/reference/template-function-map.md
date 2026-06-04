@@ -265,7 +265,7 @@ Exploration notebook flow used to profile source data and draft advisory AI outp
 
 ## `03_pc_<agreement>_<pipeline>`
 
-Core production pipeline template for clean evidence creation and controlled publishing. The base flow intentionally avoids governance enforcement until `04_gov` has approved the metadata that a later enhanced production pipeline should enforce.
+Core production pipeline flow for clean evidence creation, runtime audit columns, large-table write tuning, and controlled publishing. Audit columns are always useful; hashes, datetime features, and bucket columns are specialized patterns outside the default path.
 
 ### Segment 1: Runtime setup, parameters, agreement selection, and registration
 
@@ -283,30 +283,30 @@ Core production pipeline template for clean evidence creation and controlled pub
     <tr>
       <td>`setup_notebook`</td>
       <td>Callable orchestration wrapper</td>
-      <td>Run consolidated FabricOps startup for non-sample pipeline notebooks.</td>
+      <td>Run consolidated FabricOps startup for exploration and pipeline notebooks.</td>
       <td>`_get_store`, `_run_config_smoke_tests`, `_validate_framework_config`</td>
-      <td>Check environment target names and metadata routing.</td>
+      <td>Check dependency outputs and metadata writes.</td>
     </tr>
     <tr>
       <td>`select_agreement`</td>
       <td>Callable orchestration wrapper</td>
-      <td>Select the agreement and render notebook-registration controls for `03_pc`.</td>
-      <td>`_load_agreements`, `current_notebook_active_registrations`, `register_current_notebook`</td>
-      <td>No active agreement appears or registration status is unexpected.</td>
+      <td>Render a searchable agreement selector and store selected agreement metadata row in module state.</td>
+      <td>`_html_escape`, `_latest_agreement_versions`, `_load_agreements`, `_refresh_registration_status`, `_render_searchable_selector`, `_selected_row`, `_status_message`</td>
+      <td>Check dependency outputs and metadata writes.</td>
     </tr>
     <tr>
       <td>`get_selected_agreement`</td>
-      <td>Callable context accessor</td>
-      <td>Expose the selected agreement row for catalogue and lineage evidence.</td>
+      <td>Callable orchestration wrapper</td>
+      <td>Return the agreement selected by :func:`select_agreement`.</td>
       <td>—</td>
-      <td>The selected agreement context is missing.</td>
+      <td>Check dependency outputs and metadata writes.</td>
     </tr>
     <tr>
       <td>`current_notebook_active_registrations`</td>
-      <td>Callable metadata lookup</td>
-      <td>Read active notebook-registration rows and expose `registration_id` when available.</td>
-      <td>`load_notebook_registry`</td>
-      <td>Lineage or catalogue rows need notebook registry traceability.</td>
+      <td>Callable orchestration wrapper</td>
+      <td>Return active latest agreement registrations for the running notebook.</td>
+      <td>`_context_get`, `_runtime_context`, `_safe_str`</td>
+      <td>Check dependency outputs and metadata writes.</td>
     </tr>
   </tbody>
 </table>
@@ -329,28 +329,28 @@ Core production pipeline template for clean evidence creation and controlled pub
       <td>Callable orchestration wrapper</td>
       <td>Read a Delta table from a Fabric lakehouse.</td>
       <td>`_get_spark`, `_get_store`</td>
-      <td>The source or target lakehouse table cannot be read.</td>
+      <td>Check dependency outputs and metadata writes.</td>
     </tr>
     <tr>
       <td>`read_warehouse_table`</td>
       <td>Callable orchestration wrapper</td>
       <td>Read a table from a Microsoft Fabric warehouse.</td>
       <td>`_get_spark`, `_get_store`</td>
-      <td>The source or target warehouse table cannot be read.</td>
+      <td>Check dependency outputs and metadata writes.</td>
     </tr>
     <tr>
       <td>`read_lakehouse_csv`</td>
-      <td>Callable file reader</td>
-      <td>Read a CSV file from a Fabric lakehouse `Files/...` path.</td>
-      <td>`_get_spark`, `_resolve_lakehouse_files_path`</td>
-      <td>Landing-zone or reference-file inputs are stored as CSV.</td>
+      <td>Callable orchestration wrapper</td>
+      <td>Read a CSV file from a Fabric lakehouse Files path.</td>
+      <td>`_get_spark`, `_get_store`</td>
+      <td>Check dependency outputs and metadata writes.</td>
     </tr>
     <tr>
       <td>`read_lakehouse_parquet`</td>
-      <td>Callable file reader</td>
-      <td>Read a Parquet file or folder from a Fabric lakehouse `Files/...` path.</td>
-      <td>`_get_spark`, `_resolve_lakehouse_files_path`</td>
-      <td>Landing-zone inputs are stored as Parquet.</td>
+      <td>Callable orchestration wrapper</td>
+      <td>Read a Parquet file from a Fabric lakehouse Files path.</td>
+      <td>`_convert_single_parquet_ns_to_us`, `_get_spark`, `_get_store`</td>
+      <td>Check dependency outputs and metadata writes.</td>
     </tr>
   </tbody>
 </table>
@@ -371,21 +371,21 @@ Core production pipeline template for clean evidence creation and controlled pub
     <tr>
       <td>`profile_dataframe`</td>
       <td>Callable orchestration wrapper</td>
-      <td>Build source and output profiling rows for reusable catalogue evidence.</td>
+      <td>Build canonical DQ-ready profiling rows from a Spark DataFrame.</td>
       <td>`_get_profiled_columns`, `_is_min_max_supported_type`</td>
-      <td>Profile rows are empty or include unexpected columns.</td>
+      <td>Check dependency outputs and metadata writes.</td>
     </tr>
     <tr>
       <td>`write_lakehouse_table`</td>
       <td>Callable orchestration wrapper</td>
-      <td>Write catalogue and lineage metadata through the configured metadata target.</td>
+      <td>Write a Spark DataFrame to a Fabric lakehouse Delta table.</td>
       <td>`_get_store`</td>
-      <td>Metadata writes do not land in the metadata lakehouse route from `00_env_config`.</td>
+      <td>Check dependency outputs and metadata writes.</td>
     </tr>
   </tbody>
 </table>
 
-### Segment 4: Transform, add technical columns, and publish
+### Segment 4: Transform, add runtime audit columns, and publish outputs
 
 <table>
   <thead>
@@ -399,30 +399,30 @@ Core production pipeline template for clean evidence creation and controlled pub
   </thead>
   <tbody>
     <tr>
-      <td>`standardize_columns`</td>
+      <td>`add_runtime_audit_columns`</td>
       <td>Callable orchestration wrapper</td>
-      <td>Apply lightweight technical columns such as run id, pipeline name, environment, source table, processed timestamp, record hash, and business-key hash.</td>
-      <td>`_add_audit_columns`, `_add_hash_columns`</td>
-      <td>Technical columns or hash fields are missing from the published target.</td>
+      <td>Add lightweight runtime audit columns before writing pipeline output tables.</td>
+      <td>`_context_value`, `_get_fabric_runtime_context`</td>
+      <td>Check dependency outputs and metadata writes.</td>
     </tr>
     <tr>
       <td>`write_lakehouse_table`</td>
       <td>Callable orchestration wrapper</td>
       <td>Write a Spark DataFrame to a Fabric lakehouse Delta table.</td>
       <td>`_get_store`</td>
-      <td>Lakehouse publishing fails.</td>
+      <td>Check dependency outputs and metadata writes.</td>
     </tr>
     <tr>
       <td>`write_warehouse_table`</td>
       <td>Callable orchestration wrapper</td>
       <td>Write a Spark DataFrame to a Microsoft Fabric warehouse table.</td>
       <td>`_get_store`</td>
-      <td>Warehouse publishing fails.</td>
+      <td>Check dependency outputs and metadata writes.</td>
     </tr>
   </tbody>
 </table>
 
-### Segment 5: Read back output and write lineage
+### Segment 5: Read back output, profile output, and write lineage
 
 <table>
   <thead>
@@ -438,25 +438,37 @@ Core production pipeline template for clean evidence creation and controlled pub
     <tr>
       <td>`read_lakehouse_table`</td>
       <td>Callable orchestration wrapper</td>
-      <td>Read the published lakehouse table back for output profiling.</td>
+      <td>Read a Delta table from a Fabric lakehouse.</td>
       <td>`_get_spark`, `_get_store`</td>
-      <td>The written output cannot be read back.</td>
+      <td>Check dependency outputs and metadata writes.</td>
     </tr>
     <tr>
       <td>`read_warehouse_table`</td>
       <td>Callable orchestration wrapper</td>
-      <td>Read the published warehouse table back for output profiling.</td>
+      <td>Read a table from a Microsoft Fabric warehouse.</td>
       <td>`_get_spark`, `_get_store`</td>
-      <td>The written output cannot be read back.</td>
+      <td>Check dependency outputs and metadata writes.</td>
+    </tr>
+    <tr>
+      <td>`profile_dataframe`</td>
+      <td>Callable orchestration wrapper</td>
+      <td>Build canonical DQ-ready profiling rows from a Spark DataFrame.</td>
+      <td>`_get_profiled_columns`, `_is_min_max_supported_type`</td>
+      <td>Check dependency outputs and metadata writes.</td>
     </tr>
     <tr>
       <td>`build_lineage_records`</td>
       <td>Callable orchestration wrapper</td>
-      <td>Build compact source-to-target lineage rows before metadata persistence.</td>
+      <td>Build compact lineage records for downstream metadata sinks.</td>
       <td>—</td>
-      <td>Lineage payloads need source, target, agreement, run, pipeline, environment, and notebook registration context.</td>
+      <td>Check dependency outputs and metadata writes.</td>
+    </tr>
+    <tr>
+      <td>`write_lakehouse_table`</td>
+      <td>Callable orchestration wrapper</td>
+      <td>Write a Spark DataFrame to a Fabric lakehouse Delta table.</td>
+      <td>`_get_store`</td>
+      <td>Check dependency outputs and metadata writes.</td>
     </tr>
   </tbody>
 </table>
-
-Governance-only helpers such as `enforce_dq`, `assert_dq_passed`, `write_governance`, `load_governance`, sensitivity enforcement, classification enforcement, quarantine publishing, and fail-fast guardrail execution are not part of the base `03_pc` flow. Use them only in an enhanced production pipeline after `04_gov` has approved the governing metadata.

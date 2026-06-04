@@ -180,7 +180,7 @@ def write_lakehouse_table(
 
     This writes to the lakehouse `Tables/` area using the ABFSS root stored in
     a `FabricStore`. Use this in the Unified/Product stage after transformations,
-    DQ checks, and technical-column enrichment are complete.
+    DQ checks, and runtime audit-column enrichment are complete.
 
     Parameters
     ----------

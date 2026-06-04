@@ -364,7 +364,7 @@ def build_runtime_audit_fields(
 
     Notes
     -----
-    DataFrame technical columns and metadata-table audit fields both use
+    DataFrame runtime audit columns and metadata-table audit fields both use
     underscore-prefixed names. This helper centralizes the metadata-table
     convention while leaving DataFrame enrichment to ``technical_columns``.
     """

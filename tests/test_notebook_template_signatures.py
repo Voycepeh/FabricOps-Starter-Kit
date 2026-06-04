@@ -335,6 +335,8 @@ def test_03_pc_uses_agreement_widget_registration_without_manual_registration():
     assert "select_agreement" in imported
     assert "get_selected_agreement" in imported
     assert "current_notebook_active_registrations" in imported
+    assert "add_runtime_audit_columns" in imported
+    assert "standardize_columns" not in imported
     assert "register_current_notebook" not in imported
     assert "register_current_notebook(" not in code
     assert "get_selected_agreement(" in code
@@ -384,4 +386,21 @@ def test_03_pc_base_pipeline_defers_governance_enforcement():
     assert 'write_lakehouse_table(lineage_df, CONFIG, ENV_NAME, "metadata", LINEAGE_TABLE' in code
     assert "read_lakehouse_csv" in code
     assert "read_lakehouse_parquet" in code
+    assert "add_runtime_audit_columns(" in code
+    assert "standardize_columns" not in code
+    assert "df_output = add_runtime_audit_columns" in code
+    for specialized in (
+        "_business_key_hash",
+        "_row_hash",
+        "_partition_bucket",
+        "_sample_bucket",
+        "_watermark_value",
+        "_row_ingest_id",
+        "bucket_column=",
+    ):
+        assert specialized not in code
+    assert "Optional large table write pattern" in template_text
+    assert "partition_by=LARGE_TABLE_PARTITION_COLUMNS" in code
+    assert "repartition_by=LARGE_TABLE_REPARTITION_BY" in code
+    assert "# LARGE_TABLE_REPARTITION_BY = 2000" in code
     assert "does not read DQ rules" in template_text

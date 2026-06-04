@@ -80,7 +80,7 @@
     {
       "module_name": "technical_columns",
       "visibility": "public",
-      "module_summary": "Owns standard output/audit columns for pipeline outputs.",
+      "module_summary": "Owns lightweight runtime audit columns for pipeline outputs.",
       "sidebar_group": "3. Data engineer",
       "sidebar_include": true
     },
@@ -720,12 +720,24 @@
     {
       "module_name": "technical_columns",
       "visibility": "public",
-      "module_summary": "Owns standard output/audit columns for pipeline outputs.",
+      "module_summary": "Owns lightweight runtime audit columns for pipeline outputs.",
+      "sidebar_group": "3. Data engineer",
+      "sidebar_include": true,
+      "callable_name": "add_runtime_audit_columns",
+      "callable_visibility": "public",
+      "callable_role": "essential",
+      "template_notebook": "\u2014",
+      "template_segment": "\u2014"
+    },
+    {
+      "module_name": "technical_columns",
+      "visibility": "public",
+      "module_summary": "Owns lightweight runtime audit columns for pipeline outputs.",
       "sidebar_group": "3. Data engineer",
       "sidebar_include": true,
       "callable_name": "standardize_columns",
       "callable_visibility": "public",
-      "callable_role": "essential",
+      "callable_role": "optional",
       "template_notebook": "\u2014",
       "template_segment": "\u2014"
     },

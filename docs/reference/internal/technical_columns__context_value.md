@@ -1,4 +1,4 @@
-# _get_fabric_runtime_context
+# _context_value
 
 **Module:** `technical_columns`  
 **Classification:** Internal helper
@@ -9,13 +9,13 @@ No summary available.
 
 ## Function manifest
 
-- Fully qualified function name: `fabricops_kit.technical_columns._get_fabric_runtime_context`
-- Short name: `_get_fabric_runtime_context`
+- Fully qualified function name: `fabricops_kit.technical_columns._context_value`
+- Short name: `_context_value`
 - Module: `technical_columns`
 - Classification: Internal helper
 - Related module: `technical_columns`
 - Source file path: `src/fabricops_kit/technical_columns.py`
-- Source reference: <a href="../../api/modules/technical_columns/#_get_fabric_runtime_context">Module source anchor</a>
+- Source reference: <a href="../../api/modules/technical_columns/#_context_value">Module source anchor</a>
 - Inbound references count: 1
 - Outbound references count: 0
 

@@ -16,9 +16,8 @@ No summary available.
 - Related module: `technical_columns`
 - Source file path: `src/fabricops_kit/technical_columns.py`
 - Source reference: <a href="../../api/modules/technical_columns/#_default_technical_columns">Module source anchor</a>
-- Inbound references count: 2
+- Inbound references count: 1
 - Outbound references count: 0
 
 ## Inbound references
 - <a href="../internal/data_profiling/_get_profiled_columns/"><code>fabricops_kit.data_profiling._get_profiled_columns</code></a>
-- <a href="../internal/technical_columns/_non_technical_columns/"><code>fabricops_kit.technical_columns._non_technical_columns</code></a>
