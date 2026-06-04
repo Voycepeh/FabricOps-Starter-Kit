@@ -219,7 +219,7 @@ def test_downstream_templates_select_agreements_without_loading_internal_helper(
     ):
         code = _code(template)
         assert "load_agreements" not in code
-        if template == "02_ex_agreement_topic.ipynb":
+        if template in {"02_ex_agreement_topic.ipynb", "03_pc_agreement_pipeline_template.ipynb"}:
             assert "select_agreement(" in code
             assert "register_notebook=True" in code
         else:
@@ -320,6 +320,40 @@ def test_00_env_config_keeps_bootstrap_flow_without_load_config():
     assert "config=CONFIG" in code
     assert "env=ENV" in code
     assert "require_active_steward=False" in code
+
+
+
+def test_03_pc_uses_agreement_widget_registration_without_manual_registration():
+    code = _code("03_pc_agreement_pipeline_template.ipynb")
+    tree = _tree("03_pc_agreement_pipeline_template.ipynb")
+    imported = {
+        alias.name
+        for node in tree.body
+        if isinstance(node, ast.ImportFrom) and node.module == "fabricops_kit"
+        for alias in node.names
+    }
+    assert "select_agreement" in imported
+    assert "register_current_notebook" not in imported
+    assert "get_selected_agreement" not in imported
+    assert "register_current_notebook(" not in code
+    assert "get_selected_agreement(" not in code
+    assert "agreement_context" not in code
+    assert "custom_fields_json" not in code
+
+    calls = [node for node in ast.walk(tree) if isinstance(node, ast.Call) and _name(node.func) == "select_agreement"]
+    assert len(calls) == 1
+    selector = calls[0]
+    keyword_values = {keyword.arg: _name(keyword.value) for keyword in selector.keywords}
+    assert [_name(argument) for argument in selector.args[:2]] == ["CONFIG", "ENV_NAME"]
+    raw_keywords = {keyword.arg: keyword.value for keyword in selector.keywords}
+    assert keyword_values["spark_session"] == "spark"
+    assert isinstance(raw_keywords["register_notebook"], ast.Constant)
+    assert raw_keywords["register_notebook"].value is True
+    assert keyword_values["notebook_type"] == "03_pc"
+    assert keyword_values["environment_name"] == "ENV_NAME"
+    assert keyword_values["dataset_name"] == "dataset_name"
+    assert keyword_values["table_name"] == "table_name"
+    assert keyword_values["topic"] == "topic"
 
 
 def test_03_pc_pipeline_template_does_not_import_or_call_load_config():
