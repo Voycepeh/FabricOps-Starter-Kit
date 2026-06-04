@@ -22,6 +22,10 @@ def _code(name: str) -> str:
     return "\n".join("".join(cell.get("source", [])) for cell in notebook["cells"] if cell["cell_type"] == "code")
 
 
+def _template_text(name: str) -> str:
+    return (TEMPLATES / name).read_text(encoding="utf-8")
+
+
 def _tree(name: str) -> ast.Module:
     source = "\n".join(line for line in _code(name).splitlines() if not line.lstrip().startswith("%"))
     return ast.parse(source)
@@ -249,25 +253,39 @@ def test_generated_function_manifest_excludes_removed_agreement_callables():
         assert callable_name not in manifest_text
 
 
-def test_02_ex_uses_widget_registration_without_exposing_raw_agreement_context():
+def test_02_ex_uses_widget_registration_without_advanced_metadata_sections():
     code = _code("02_ex_agreement_topic.ipynb")
+    template_text = _template_text("02_ex_agreement_topic.ipynb")
     assert "register_notebook=True" in code
     assert "Register notebook" not in code  # button label is owned by the package widget, not the template
     assert "register_current_notebook(" not in code
     assert "agreement_context =" not in code
     assert "display(agreement_context)" not in code
     assert "custom_fields_json" not in code
-    for field_name in ("agreement_id", "contract_version", "agreement_name", "business_purpose", "approved_usage_internal", "approved_usage_external", "approved_usage_research"):
-        assert f'"{field_name}"' in code
-    assert 'selected_agreement.get("approved_usage",' not in code
-    for removed_physical_field in (
-        "restricted_usage", "source_system", "refresh_frequency",
-        "retention_expectation", "allowed_consumer_type", "expected_output",
-        "department", "faculty",
+    assert "get_selected_agreement" not in code
+    assert "selected_agreement" not in code
+    for advanced_section in (
+        "Agreement-aware read-only metadata",
+        "Existing approved DQ rules",
+        "Existing governance/classification metadata",
+        "Existing notebook registry / prior evidence",
+        "AI-assisted DQ flow",
+        "Findings",
+        "Handoff notes",
     ):
-        assert f'selected_agreement.get("{removed_physical_field}"' not in code
-    assert r'business_context=f"Business purpose: {business_purpose}\nApproved usage: {approved_usage}"' in code
-    assert "prompt_template=CONFIG.ai_prompt_config.dq_rule_suggestion_prompt_template" in code
+        assert advanced_section not in template_text
+    for removed_callable in (
+        "load_dq_rules",
+        "draft_dq_rules",
+        "run_dq_rule_review_widget",
+        "get_dq_review_results",
+        "write_dq_rules",
+        "review_dq_rule_deactivations",
+        "load_governance",
+        "load_notebook_registry",
+    ):
+        assert removed_callable not in code
+    assert "prompt_template=CONFIG.ai_prompt_config.dq_rule_suggestion_prompt_template" not in code
     assert "CONFIG.ai_prompt_config.dq_rule_candidate_template" not in code
 
 
