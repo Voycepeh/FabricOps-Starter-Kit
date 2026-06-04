@@ -333,11 +333,12 @@ def test_03_pc_uses_agreement_widget_registration_without_manual_registration():
         for alias in node.names
     }
     assert "select_agreement" in imported
+    assert "get_selected_agreement" in imported
+    assert "current_notebook_active_registrations" in imported
     assert "register_current_notebook" not in imported
-    assert "get_selected_agreement" not in imported
     assert "register_current_notebook(" not in code
-    assert "get_selected_agreement(" not in code
-    assert "agreement_context" not in code
+    assert "get_selected_agreement(" in code
+    assert "current_notebook_active_registrations(" in code
     assert "custom_fields_json" not in code
 
     calls = [node for node in ast.walk(tree) if isinstance(node, ast.Call) and _name(node.func) == "select_agreement"]
@@ -351,10 +352,36 @@ def test_03_pc_uses_agreement_widget_registration_without_manual_registration():
     assert raw_keywords["register_notebook"].value is True
     assert keyword_values["notebook_type"] == "03_pc"
     assert keyword_values["environment_name"] == "ENV_NAME"
-    assert keyword_values["dataset_name"] == "dataset_name"
-    assert keyword_values["table_name"] == "table_name"
-    assert keyword_values["topic"] == "topic"
+    assert keyword_values["dataset_name"] == "DATASET_NAME"
+    assert keyword_values["table_name"] == "TABLE_NAME"
+    assert keyword_values["topic"] == "TOPIC"
+    assert keyword_values["pipeline_name"] == "PIPELINE_NAME"
 
 
 def test_03_pc_pipeline_template_does_not_import_or_call_load_config():
     assert "load_config" not in _code("03_pc_agreement_pipeline_template.ipynb")
+
+
+def test_03_pc_base_pipeline_defers_governance_enforcement():
+    code = _code("03_pc_agreement_pipeline_template.ipynb")
+    template_text = _template_text("03_pc_agreement_pipeline_template.ipynb")
+    for removed in (
+        "METADATA_DQ_RULES",
+        "enforce_dq",
+        "DQ_PUBLISH_MODE",
+        "same_table_with_flags",
+        "split_valid_quarantine",
+        "fail_on_invalid",
+        "QUARANTINE",
+        "build_handover",
+        "render_handover_markdown",
+        "build_lineage_handover_markdown",
+        "PUBLISHED_PROFILE",
+    ):
+        assert removed not in code
+    assert "METADATA_DATA_CATALOGUE_COLUMN" in code
+    assert "METADATA_DATA_LINEAGE_TABLE" in code
+    assert 'write_lakehouse_table(lineage_df, CONFIG, ENV_NAME, "metadata", LINEAGE_TABLE' in code
+    assert "read_lakehouse_csv" in code
+    assert "read_lakehouse_parquet" in code
+    assert "does not read DQ rules" in template_text
