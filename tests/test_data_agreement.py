@@ -78,13 +78,14 @@ def _install_widget_stubs(monkeypatch):
             for key, value in kwargs.items():
                 setattr(self, key, value)
     widgets = ModuleType("ipywidgets")
-    for name in ("Text", "Textarea", "Dropdown", "Select", "SelectMultiple", "DatePicker", "Checkbox", "Button", "HTML", "FileUpload", "Tab"):
+    for name in ("Text", "Textarea", "Dropdown", "Select", "SelectMultiple", "DatePicker", "Checkbox", "Button", "HTML", "FileUpload", "Tab", "ToggleButtons"):
         setattr(widgets, name, type(name, (Widget,), {}))
     widgets.Output = Output
     widgets.Layout = Layout
     widgets.VBox = lambda values: Widget(children=tuple(values))
     display = ModuleType("IPython.display")
-    display.display = lambda *args, **kwargs: None
+    display.calls = []
+    display.display = lambda *args, **kwargs: display.calls.append((args, kwargs))
     ipython = ModuleType("IPython")
     ipython.display = display
     monkeypatch.setitem(sys.modules, "ipywidgets", widgets)
@@ -224,20 +225,56 @@ def test_create_update_validation_fails_clearly(monkeypatch, factory, values, me
         factory(spark=object(), config=_config(), env_name="dev", values=values)
 
 
-def test_widget_entrypoints_and_app_render_tabbed_widgets(monkeypatch):
+def test_widget_entrypoints_display_individually_when_called_directly(monkeypatch):
     _install_widget_stubs(monkeypatch)
     monkeypatch.setattr(data_agreement, "_list_data_stewards", lambda *args, **kwargs: [_steward()])
     monkeypatch.setattr(data_agreement, "_list_data_agreements", lambda *args, **kwargs: [])
     monkeypatch.setattr(data_agreement, "_list_all_data_agreement_rows", lambda *args, **kwargs: [])
-    assert data_agreement.render_data_steward_widget(_config(), "dev", spark="spark")["container"] is not None
-    assert data_agreement.render_data_agreement_widget(_config(), "dev", spark="spark")["container"] is not None
+    display = sys.modules["IPython.display"]
+
+    steward = data_agreement.render_data_steward_widget(_config(), "dev", spark="spark")
+    agreement = data_agreement.render_data_agreement_widget(_config(), "dev", spark="spark")
+    evidence = data_agreement._render_agreement_evidence_widget(spark="spark", config=_config(), env_name="dev")
+
+    assert [call[0][0] for call in display.calls] == [steward["container"], agreement["container"], evidence["container"]]
+
+
+def test_agreement_intake_app_uses_single_section_switcher(monkeypatch):
+    _install_widget_stubs(monkeypatch)
+    monkeypatch.setattr(data_agreement, "_list_data_stewards", lambda *args, **kwargs: [_steward()])
+    monkeypatch.setattr(data_agreement, "_list_data_agreements", lambda *args, **kwargs: [])
+    monkeypatch.setattr(data_agreement, "_list_all_data_agreement_rows", lambda *args, **kwargs: [])
+    display = sys.modules["IPython.display"]
+
     app = data_agreement.render_agreement_intake_app(spark="spark", config=_config(), env="dev")
-    assert set(app) == {"data_steward", "data_agreement", "agreement_evidence", "tab"}
-    assert app["data_steward"]["container"] is not None
-    assert app["data_agreement"]["container"] is not None
-    assert app["agreement_evidence"]["container"] is not None
-    assert app["tab"].titles == {0: "Data Steward", 1: "Data Agreement", 2: "Agreement Evidence"}
-    assert len(app["tab"].children) == 3
+
+    assert set(app) == {"container", "section_selector", "body", "data_steward", "data_agreement", "agreement_evidence", "tab"}
+    assert type(app["section_selector"]).__name__ == "ToggleButtons"
+    assert type(app["section_selector"]).__name__ != "Tab"
+    assert app["tab"] is app["section_selector"]
+    assert app["section_selector"].options == [
+        ("Data Steward", "data_steward"),
+        ("Data Agreement", "data_agreement"),
+        ("Agreement Evidence", "agreement_evidence"),
+    ]
+    assert app["container"].children == (app["section_selector"], app["body"])
+    assert app["body"].children == (app["data_steward"]["container"],)
+    assert [call[0][0] for call in display.calls] == [app["container"]]
+
+    all_containers = {
+        app["data_steward"]["container"],
+        app["data_agreement"]["container"],
+        app["agreement_evidence"]["container"],
+    }
+    assert set(app["body"].children) != all_containers
+
+    app["section_selector"].callbacks[0]({"new": "data_agreement"})
+    assert app["body"].children == (app["data_agreement"]["container"],)
+    assert set(app["body"].children) != all_containers
+
+    app["section_selector"].callbacks[0]({"new": "agreement_evidence"})
+    assert app["body"].children == (app["agreement_evidence"]["container"],)
+    assert set(app["body"].children) != all_containers
 
 
 def test_metadata_table_documentation_explains_generated_ids_json_extension_and_hidden_audit_fields():
