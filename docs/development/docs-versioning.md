@@ -2,11 +2,27 @@
 
 FabricOps Starter Kit documentation is maintained from the same source tree as the package. The `main` branch represents the latest documentation source and should stay ready for the next release.
 
-## Release notes and source snapshots
+This page prepares documentation versioning infrastructure. It does **not** declare FabricOps Starter Kit as officially `v1.0.0` stable.
 
-Release notes are kept as individual files under `docs/releases/` using the `vX.Y.Z.md` naming pattern. For example, release notes for version `1.0.0` should live in `docs/releases/v1.0.0.md`.
+## Version policy
 
-Git tags represent release documentation snapshots. When maintainers tag a release, the tag captures the package source, generated reference documentation, and release notes for that exact version.
+Package versions use full semantic versions, for example `1.0.2`. Published documentation versions use major/minor versions, for example `1.0`.
+
+Patch releases normally reuse the same major/minor documentation site. Release notes may still be patch-specific, using files such as `docs/releases/v1.0.2.md`.
+
+Use this mapping when publishing documentation:
+
+| Package version | Documentation version |
+| --- | --- |
+| `1.0.0` | `1.0` |
+| `1.0.1` | `1.0` |
+| `1.1.0` | `1.1` |
+
+## Source snapshots and release notes
+
+Release notes are kept as individual files under `docs/releases/` using the `vX.Y.Z.md` naming pattern. For example, release notes for package version `1.0.2` should live in `docs/releases/v1.0.2.md`.
+
+Git tags represent release source snapshots. When maintainers tag a release, the tag captures the package source, generated reference documentation, and release notes for that exact version.
 
 ## Published documentation versions
 

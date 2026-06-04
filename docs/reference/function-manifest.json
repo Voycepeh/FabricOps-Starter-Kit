@@ -4101,5 +4101,85 @@
     "source_path": "src/fabricops_kit/technical_columns.py",
     "docs_path": "reference/standardize_columns.md",
     "summary": "No summary available."
+  },
+  {
+    "id": "fabricops_kit.versioning.get_docs_url",
+    "name": "get_docs_url",
+    "qualified_name": "fabricops_kit.versioning.get_docs_url",
+    "module": "versioning",
+    "classification": "Optional",
+    "inbound": [
+      "fabricops_kit.versioning.print_runtime_banner"
+    ],
+    "outbound": [
+      "fabricops_kit.versioning.get_docs_version"
+    ],
+    "source_path": "src/fabricops_kit/versioning.py",
+    "docs_path": "reference/get_docs_url.md",
+    "summary": "Return the published documentation URL for a package version."
+  },
+  {
+    "id": "fabricops_kit.versioning.get_docs_version",
+    "name": "get_docs_version",
+    "qualified_name": "fabricops_kit.versioning.get_docs_version",
+    "module": "versioning",
+    "classification": "Optional",
+    "inbound": [
+      "fabricops_kit.versioning.get_docs_url"
+    ],
+    "outbound": [
+      "fabricops_kit.versioning.get_package_version"
+    ],
+    "source_path": "src/fabricops_kit/versioning.py",
+    "docs_path": "reference/get_docs_version.md",
+    "summary": "Map a full package version to the matching major.minor documentation version."
+  },
+  {
+    "id": "fabricops_kit.versioning.get_package_version",
+    "name": "get_package_version",
+    "qualified_name": "fabricops_kit.versioning.get_package_version",
+    "module": "versioning",
+    "classification": "Optional",
+    "inbound": [
+      "fabricops_kit.versioning.get_docs_version",
+      "fabricops_kit.versioning.get_release_notes_url",
+      "fabricops_kit.versioning.print_runtime_banner"
+    ],
+    "outbound": [],
+    "source_path": "src/fabricops_kit/versioning.py",
+    "docs_path": "reference/get_package_version.md",
+    "summary": "Return the installed FabricOps Starter Kit package version for the active notebook runtime."
+  },
+  {
+    "id": "fabricops_kit.versioning.get_release_notes_url",
+    "name": "get_release_notes_url",
+    "qualified_name": "fabricops_kit.versioning.get_release_notes_url",
+    "module": "versioning",
+    "classification": "Optional",
+    "inbound": [
+      "fabricops_kit.versioning.print_runtime_banner"
+    ],
+    "outbound": [
+      "fabricops_kit.versioning.get_package_version"
+    ],
+    "source_path": "src/fabricops_kit/versioning.py",
+    "docs_path": "reference/get_release_notes_url.md",
+    "summary": "Return the patch-specific release notes URL for a package version."
+  },
+  {
+    "id": "fabricops_kit.versioning.print_runtime_banner",
+    "name": "print_runtime_banner",
+    "qualified_name": "fabricops_kit.versioning.print_runtime_banner",
+    "module": "versioning",
+    "classification": "Essential",
+    "inbound": [],
+    "outbound": [
+      "fabricops_kit.versioning.get_docs_url",
+      "fabricops_kit.versioning.get_package_version",
+      "fabricops_kit.versioning.get_release_notes_url"
+    ],
+    "source_path": "src/fabricops_kit/versioning.py",
+    "docs_path": "reference/print_runtime_banner.md",
+    "summary": "Print the installed package version and matching documentation links in a notebook-friendly banner."
   }
 ]

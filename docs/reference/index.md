@@ -155,6 +155,24 @@ Use the finder below to look up public callable functions.
 
   </div>
 </article>
+<article id="get_docs_url" class="reference-catalogue-item" data-callable-row="true" data-callable-name="get_docs_url" data-callable-module="versioning" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Return the published documentation URL for a package version.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/get_docs_url/"><code>get_docs_url</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Return the published documentation URL for a package version.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/versioning/" title="Open versioning module page" aria-label="Open versioning module page">versioning</a><span class="reference-chip reference-chip-role reference-chip-optional">Optional</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>get_docs_version</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>print_runtime_banner</code></li></ul></details>
+  </div>
+</article>
+<article id="get_docs_version" class="reference-catalogue-item" data-callable-row="true" data-callable-name="get_docs_version" data-callable-module="versioning" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Map a full package version to the matching major.minor documentation version.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/get_docs_version/"><code>get_docs_version</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Map a full package version to the matching major.minor documentation version.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/versioning/" title="Open versioning module page" aria-label="Open versioning module page">versioning</a><span class="reference-chip reference-chip-role reference-chip-optional">Optional</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>get_package_version</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>get_docs_url</code></li></ul></details>
+  </div>
+</article>
 <article id="get_dq_review_results" class="reference-catalogue-item" data-callable-row="true" data-callable-name="get_dq_review_results" data-callable-module="data_quality" data-callable-starter-path="—" data-role="essential" data-callable-purpose="Collect current approved/rejected DQ review results from widget state.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/get_dq_review_results/"><code>get_dq_review_results</code></a></h3>
   <p class="reference-catalogue-item-purpose">Collect current approved/rejected DQ review results from widget state.</p>
@@ -171,6 +189,24 @@ Use the finder below to look up public callable functions.
   <div class="reference-catalogue-item-counts">
 
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>setup_notebook_registry_table</code></li></ul></details>
+  </div>
+</article>
+<article id="get_package_version" class="reference-catalogue-item" data-callable-row="true" data-callable-name="get_package_version" data-callable-module="versioning" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Return the installed FabricOps Starter Kit package version for the active notebook runtime.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/get_package_version/"><code>get_package_version</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Return the installed FabricOps Starter Kit package version for the active notebook runtime.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/versioning/" title="Open versioning module page" aria-label="Open versioning module page">versioning</a><span class="reference-chip reference-chip-role reference-chip-optional">Optional</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 3</span></summary><ul><li><code>get_docs_version</code></li><li><code>get_release_notes_url</code></li><li><code>print_runtime_banner</code></li></ul></details>
+  </div>
+</article>
+<article id="get_release_notes_url" class="reference-catalogue-item" data-callable-row="true" data-callable-name="get_release_notes_url" data-callable-module="versioning" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Return the patch-specific release notes URL for a package version.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/get_release_notes_url/"><code>get_release_notes_url</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Return the patch-specific release notes URL for a package version.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/versioning/" title="Open versioning module page" aria-label="Open versioning module page">versioning</a><span class="reference-chip reference-chip-role reference-chip-optional">Optional</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>get_package_version</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>print_runtime_banner</code></li></ul></details>
   </div>
 </article>
 <article id="get_reviewed_business_context_rows" class="reference-catalogue-item" data-callable-row="true" data-callable-name="get_reviewed_business_context_rows" data-callable-module="business_context" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Return reviewed business context rows from widget state.">
@@ -233,6 +269,15 @@ Use the finder below to look up public callable functions.
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_governance/" title="Open data_governance module page" aria-label="Open data_governance module page">data_governance</a><span class="reference-chip reference-chip-role reference-chip-optional">Optional</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_prepare_governance_input</code></li></ul></details>
+
+  </div>
+</article>
+<article id="print_runtime_banner" class="reference-catalogue-item" data-callable-row="true" data-callable-name="print_runtime_banner" data-callable-module="versioning" data-callable-starter-path="00_env_config" data-role="essential" data-callable-purpose="Print the installed package version and matching documentation links in a notebook-friendly banner.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/print_runtime_banner/"><code>print_runtime_banner</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Print the installed package version and matching documentation links in a notebook-friendly banner.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/versioning/" title="Open versioning module page" aria-label="Open versioning module page">versioning</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">00_env_config</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 3</span></summary><ul><li><code>get_docs_url</code></li><li><code>get_package_version</code></li><li><code>get_release_notes_url</code></li></ul></details>
 
   </div>
 </article>
