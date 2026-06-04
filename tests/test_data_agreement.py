@@ -78,7 +78,7 @@ def _install_widget_stubs(monkeypatch):
             for key, value in kwargs.items():
                 setattr(self, key, value)
     widgets = ModuleType("ipywidgets")
-    for name in ("Text", "Textarea", "Dropdown", "Select", "SelectMultiple", "DatePicker", "Checkbox", "Button", "HTML", "FileUpload", "Tab", "ToggleButtons"):
+    for name in ("Text", "Textarea", "Dropdown", "Select", "SelectMultiple", "DatePicker", "Checkbox", "Button", "HTML", "Tab", "ToggleButtons"):
         setattr(widgets, name, type(name, (Widget,), {}))
     widgets.Output = Output
     widgets.Layout = Layout
@@ -780,13 +780,15 @@ def test_evidence_table_schema_includes_expected_columns():
     ]
 
 
-def test_evidence_file_upload_accepts_expected_file_types(monkeypatch):
+def test_evidence_widget_renders_textarea_for_file_paths_not_file_upload(monkeypatch):
     _install_widget_stubs(monkeypatch)
     row = {**_agreement(), "agreement_id": "DA-001", "contract_version": "1.0.0"}
     monkeypatch.setattr(data_agreement, "_list_all_data_agreement_rows", lambda *args, **kwargs: [row])
     widget = data_agreement._render_agreement_evidence_widget(spark=object(), config=_config(), env_name="dev")
-    assert widget["file_upload"].accept == ".pdf,.doc,.docx,.png,.jpg,.jpeg"
-    assert widget["file_upload"].multiple is True
+    assert "file_upload" not in widget
+    assert type(widget["evidence_file_paths"]).__name__ == "Textarea"
+    assert widget["evidence_file_paths"].description == "Evidence File Paths"
+    assert "one Files/... path per line" in widget["instructions"].value
     assert widget["evidence_type"].options == [(item, item) for item in data_agreement.AGREEMENT_EVIDENCE_TYPES]
 
 
@@ -795,14 +797,13 @@ def test_evidence_widget_tells_user_to_save_agreement_first(monkeypatch):
     monkeypatch.setattr(data_agreement, "_list_all_data_agreement_rows", lambda *args, **kwargs: [])
     widget = data_agreement._render_agreement_evidence_widget(spark=object(), config=_config(), env_name="dev")
     assert "Save a Data Agreement first" in widget["message"].value
-    assert widget["file_upload"].disabled is True
+    assert widget["evidence_file_paths"].disabled is True
     assert widget["save_button"].disabled is True
 
 
-def test_evidence_records_save_file_metadata_not_binary_content(monkeypatch):
-    writes, files = [], []
+def test_evidence_records_save_newline_paths_as_multiple_rows_without_binary_content(monkeypatch):
+    writes = []
     monkeypatch.setattr(data_agreement, "build_runtime_audit_fields", lambda **kwargs: {field: f"audit:{field}" for field in data_agreement._get_standard_runtime_audit_columns()})
-    monkeypatch.setattr(data_agreement, "_write_evidence_file", lambda **kwargs: files.append(kwargs))
     monkeypatch.setattr(data_agreement, "_write_row", lambda **kwargs: writes.append(kwargs))
     rows = data_agreement._save_agreement_evidence_records(
         spark=object(),
@@ -811,18 +812,46 @@ def test_evidence_records_save_file_metadata_not_binary_content(monkeypatch):
         agreement_id="DA-001",
         contract_version="1.0.0",
         evidence_type="Signed Agreement",
-        uploaded_files=({"name": "signed.pdf", "type": "application/pdf", "size": 7, "content": b"PDFDATA"},),
+        evidence_file_paths="""Files/fabricops/agreement_evidence/DA-001/1.0.0/signed.pdf
+
+Files/fabricops/agreement_evidence/DA-001/1.0.0/email_approval.pdf""",
     )
-    assert len(rows) == 1
-    assert files[0]["relative_path"].startswith("Files/fabricops/agreement_evidence/DA-001/1.0.0/signed__")
-    assert files[0]["relative_path"].endswith(".pdf")
-    assert files[0]["content"] == b"PDFDATA"
-    assert writes[0]["table"] == DATA_AGREEMENT_EVIDENCE_TABLE
-    assert writes[0]["row"]["file_name"] == "signed.pdf"
-    assert writes[0]["row"]["file_path"] == files[0]["relative_path"]
-    assert writes[0]["row"]["mime_type"] == "application/pdf"
-    assert writes[0]["row"]["file_size"] == "7"
-    assert "content" not in writes[0]["row"]
+    assert len(rows) == 2
+    assert len(writes) == 2
+    assert [row["file_name"] for row in rows] == ["signed.pdf", "email_approval.pdf"]
+    assert [row["file_path"] for row in rows] == [
+        "Files/fabricops/agreement_evidence/DA-001/1.0.0/signed.pdf",
+        "Files/fabricops/agreement_evidence/DA-001/1.0.0/email_approval.pdf",
+    ]
+    assert all(row["evidence_type"] == "Signed Agreement" for row in rows)
+    assert all(row["mime_type"] == "application/pdf" for row in rows)
+    assert all(row["file_size"] == "" for row in rows)
+    assert all("content" not in row for row in rows)
+    assert all(write["table"] == DATA_AGREEMENT_EVIDENCE_TABLE for write in writes)
+
+
+def test_evidence_path_parser_ignores_blank_lines_and_tolerates_bullets():
+    parsed = data_agreement._parse_evidence_file_paths(
+        """
+        - Files/fabricops/agreement_evidence/DA-001/1.0.0/signed.pdf
+        * Files/fabricops/agreement_evidence/DA-001/1.0.0/email_approval.pdf
+        1. Files/fabricops/agreement_evidence/DA-001/1.0.0/screenshot.png
+        """
+    )
+    assert parsed == [
+        "Files/fabricops/agreement_evidence/DA-001/1.0.0/signed.pdf",
+        "Files/fabricops/agreement_evidence/DA-001/1.0.0/email_approval.pdf",
+        "Files/fabricops/agreement_evidence/DA-001/1.0.0/screenshot.png",
+    ]
+
+
+def test_evidence_path_parser_does_not_treat_comma_as_separator():
+    parsed = data_agreement._parse_evidence_file_paths(
+        "Files/fabricops/agreement_evidence/DA-001/1.0.0/one.pdf, Files/fabricops/agreement_evidence/DA-001/1.0.0/two.pdf"
+    )
+    assert parsed == [
+        "Files/fabricops/agreement_evidence/DA-001/1.0.0/one.pdf, Files/fabricops/agreement_evidence/DA-001/1.0.0/two.pdf"
+    ]
 
 
 @pytest.mark.parametrize(("agreement_id", "contract_version", "message"), [
@@ -830,7 +859,6 @@ def test_evidence_records_save_file_metadata_not_binary_content(monkeypatch):
     ("DA-001", "", "contract_version is required"),
 ])
 def test_evidence_save_requires_agreement_id_and_contract_version(monkeypatch, agreement_id, contract_version, message):
-    monkeypatch.setattr(data_agreement, "_write_evidence_file", lambda **kwargs: pytest.fail("file write should not run"))
     monkeypatch.setattr(data_agreement, "_write_row", lambda **kwargs: pytest.fail("metadata write should not run"))
     with pytest.raises(ValueError, match=message):
         data_agreement._save_agreement_evidence_records(
@@ -840,14 +868,71 @@ def test_evidence_save_requires_agreement_id_and_contract_version(monkeypatch, a
             agreement_id=agreement_id,
             contract_version=contract_version,
             evidence_type="Other",
-            uploaded_files=({"name": "evidence.pdf", "content": b"data"},),
+            evidence_file_paths="Files/fabricops/agreement_evidence/DA-001/1.0.0/evidence.pdf",
         )
 
 
-def test_evidence_save_supports_multiple_uploaded_files(monkeypatch):
-    writes, files = [], []
-    monkeypatch.setattr(data_agreement, "build_runtime_audit_fields", lambda **kwargs: {field: "" for field in data_agreement._get_standard_runtime_audit_columns()})
-    monkeypatch.setattr(data_agreement, "_write_evidence_file", lambda **kwargs: files.append(kwargs))
+@pytest.mark.parametrize(("paths", "message"), [
+    ("Files/fabricops/agreement_evidence/DA-001/1.0.0/valid.pdf\n/tmp/local.pdf", "must start with Files/"),
+    ("Files/fabricops/agreement_evidence/DA-001/1.0.0/", "must include a file name"),
+])
+def test_evidence_save_invalid_path_rejects_all_rows_before_writing(monkeypatch, paths, message):
+    monkeypatch.setattr(data_agreement, "_write_row", lambda **kwargs: pytest.fail("invalid path should not append metadata"))
+    with pytest.raises(ValueError, match=message):
+        data_agreement._save_agreement_evidence_records(
+            spark=object(),
+            config=_config(),
+            env_name="dev",
+            agreement_id="DA-001",
+            contract_version="1.0.0",
+            evidence_type="Other",
+            evidence_file_paths=paths,
+        )
+
+
+def test_evidence_save_rejects_unsupported_extension_before_writing(monkeypatch):
+    monkeypatch.setattr(data_agreement, "_write_row", lambda **kwargs: pytest.fail("unsupported file should not append metadata"))
+    with pytest.raises(ValueError, match=r"Unsupported evidence file type.*Allowed types: \.pdf, \.doc, \.docx, \.png, \.jpg, \.jpeg\."):
+        data_agreement._save_agreement_evidence_records(
+            spark=object(),
+            config=_config(),
+            env_name="dev",
+            agreement_id="DA-001",
+            contract_version="1.0.0",
+            evidence_type="Other",
+            evidence_file_paths="Files/fabricops/agreement_evidence/DA-001/1.0.0/script.exe",
+        )
+
+
+def test_evidence_save_checks_file_exists_when_notebookutils_exists_available(monkeypatch):
+    class Fs:
+        def exists(self, path):
+            return path.endswith("existing.pdf")
+    monkeypatch.setattr(data_agreement, "notebookutils", SimpleNamespace(fs=Fs()), raising=False)
+    monkeypatch.setattr(data_agreement, "_write_row", lambda **kwargs: pytest.fail("missing file should not append metadata"))
+    with pytest.raises(ValueError, match="does not exist"):
+        data_agreement._save_agreement_evidence_records(
+            spark=object(),
+            config=_config(),
+            env_name="dev",
+            agreement_id="DA-001",
+            contract_version="1.0.0",
+            evidence_type="Other",
+            evidence_file_paths="Files/fabricops/agreement_evidence/DA-001/1.0.0/missing.pdf",
+        )
+
+
+def test_evidence_save_uses_notebookutils_ls_for_best_effort_file_size(monkeypatch):
+    writes = []
+    class Item:
+        path = "Files/fabricops/agreement_evidence/DA-001/1.0.0/existing.pdf"
+        size = 123
+    class Fs:
+        def exists(self, path):
+            return True
+        def ls(self, path):
+            return [Item()]
+    monkeypatch.setattr(data_agreement, "notebookutils", SimpleNamespace(fs=Fs()), raising=False)
     monkeypatch.setattr(data_agreement, "_write_row", lambda **kwargs: writes.append(kwargs))
     rows = data_agreement._save_agreement_evidence_records(
         spark=object(),
@@ -856,56 +941,13 @@ def test_evidence_save_supports_multiple_uploaded_files(monkeypatch):
         agreement_id="DA-001",
         contract_version="1.0.0",
         evidence_type="Email Approval",
-        uploaded_files={
-            "first": {"name": "approval.msg.pdf", "type": "application/pdf", "content": b"one"},
-            "second": {"name": "screen.png", "type": "image/png", "content": memoryview(b"two")},
-        },
+        evidence_file_paths="Files/fabricops/agreement_evidence/DA-001/1.0.0/existing.pdf",
     )
-    assert [row["file_name"] for row in rows] == ["approval.msg.pdf", "screen.png"]
-    assert files[0]["relative_path"].startswith("Files/fabricops/agreement_evidence/DA-001/1.0.0/approval.msg__")
-    assert files[0]["relative_path"].endswith(".pdf")
-    assert files[1]["relative_path"].startswith("Files/fabricops/agreement_evidence/DA-001/1.0.0/screen__")
-    assert files[1]["relative_path"].endswith(".png")
-    assert len({file["relative_path"] for file in files}) == 2
-    assert len(writes) == 2
+    assert rows[0]["file_size"] == "123"
+    assert rows[0]["file_name"] == "existing.pdf"
+    assert rows[0]["evidence_type"] == "Email Approval"
+    assert writes[0]["row"]["file_size"] == "123"
 
-
-def test_evidence_save_rejects_unsupported_file_extension_before_writing(monkeypatch):
-    monkeypatch.setattr(data_agreement, "_write_evidence_file", lambda **kwargs: pytest.fail("unsupported file should not be written"))
-    monkeypatch.setattr(data_agreement, "_write_row", lambda **kwargs: pytest.fail("unsupported file should not append metadata"))
-    with pytest.raises(ValueError, match=r"Unsupported evidence file type\. Allowed types: \.pdf, \.doc, \.docx, \.png, \.jpg, \.jpeg\."):
-        data_agreement._save_agreement_evidence_records(
-            spark=object(),
-            config=_config(),
-            env_name="dev",
-            agreement_id="DA-001",
-            contract_version="1.0.0",
-            evidence_type="Other",
-            uploaded_files=({"name": "script.exe", "content": b"data"},),
-        )
-
-
-def test_evidence_save_uses_unique_storage_names_for_duplicate_upload_names(monkeypatch):
-    files = []
-    monkeypatch.setattr(data_agreement, "build_runtime_audit_fields", lambda **kwargs: {field: "2026-06-01T10:30:00+00:00" if field == "_committed_at" else "" for field in data_agreement._get_standard_runtime_audit_columns()})
-    monkeypatch.setattr(data_agreement, "_write_evidence_file", lambda **kwargs: files.append(kwargs))
-    monkeypatch.setattr(data_agreement, "_write_row", lambda **kwargs: None)
-    rows = data_agreement._save_agreement_evidence_records(
-        spark=object(),
-        config=_config(),
-        env_name="dev",
-        agreement_id="DA-001",
-        contract_version="1.0.0",
-        evidence_type="Signed Agreement",
-        uploaded_files=(
-            {"name": "approval.pdf", "content": b"first"},
-            {"name": "approval.pdf", "content": b"second"},
-        ),
-    )
-    assert [row["file_name"] for row in rows] == ["approval.pdf", "approval.pdf"]
-    assert all("/approval__" in row["file_path"] and row["file_path"].endswith(".pdf") for row in rows)
-    assert len({row["file_path"] for row in rows}) == 2
-    assert [file["relative_path"] for file in files] == [row["file_path"] for row in rows]
 
 
 def test_searchable_selector_filters_rows_case_insensitively_and_preserves_stable_value(monkeypatch):

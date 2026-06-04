@@ -13,6 +13,8 @@ from collections.abc import Callable
 from datetime import date, datetime, timezone
 import hashlib
 import json
+import re
+import sys
 from typing import Any
 
 from .config import DEFAULT_STEWARD_ROLE_OPTIONS
@@ -45,7 +47,14 @@ DATA_AGREEMENT_EVIDENCE_FIELDS = [
     *STANDARD_RUNTIME_AUDIT_COLUMNS,
 ]
 AGREEMENT_EVIDENCE_ALLOWED_EXTENSIONS = (".pdf", ".doc", ".docx", ".png", ".jpg", ".jpeg")
-AGREEMENT_EVIDENCE_ACCEPT = ",".join(AGREEMENT_EVIDENCE_ALLOWED_EXTENSIONS)
+AGREEMENT_EVIDENCE_MIME_TYPES = {
+    ".pdf": "application/pdf",
+    ".doc": "application/msword",
+    ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ".png": "image/png",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+}
 AGREEMENT_EVIDENCE_TYPES = [
     "Signed Agreement", "Email Approval", "Policy Document",
     "Supporting Screenshot", "Other",
@@ -884,79 +893,104 @@ def _create_or_update_data_agreement(*, spark: Any, config: Any, env_name: str, 
 
 
 
-def _metadata_lakehouse_file_path(config: Any, env_name: str, relative_path: str) -> str:
-    """Resolve a metadata lakehouse ``Files/`` relative path to ABFSS."""
-    paths = config.path_config.paths if hasattr(config, "path_config") else config.paths
-    store = paths[env_name]["metadata"]
-    if getattr(store, "kind", "lakehouse") != "lakehouse":
-        raise ValueError("The configured metadata target must be a lakehouse to store agreement evidence files.")
-    normalized = str(relative_path or "").lstrip("/")
-    if normalized.startswith("Files/"):
-        normalized = normalized[len("Files/"):]
-    return f"{store.root.rstrip('/')}/Files/{normalized}"
+def _parse_evidence_file_paths(value: Any) -> list[str]:
+    """Parse newline-separated lakehouse ``Files/`` evidence paths."""
+    paths: list[str] = []
+    for raw_line in str(value or "").splitlines():
+        line = raw_line.strip()
+        if not line:
+            continue
+        line = re.sub(r"^(?:[-*]\s*|\d+\.\s*)", "", line).strip()
+        if line:
+            paths.append(line)
+    return paths
 
 
-def _safe_evidence_file_name(file_name: Any) -> str:
-    """Return a folder-safe uploaded evidence file name with an allowed suffix."""
-    name = str(file_name or "").replace("\\", "/").split("/")[-1].strip()
-    if not name:
-        raise ValueError("Uploaded evidence file is missing a file name.")
-    safe = "".join(char if char.isalnum() or char in {".", "-", "_", " "} else "_" for char in name).strip()
-    if not safe:
-        raise ValueError("Uploaded evidence file is missing a file name.")
-    suffix = "." + safe.rsplit(".", 1)[-1].lower() if "." in safe else ""
+def _evidence_file_name_from_path(path: str) -> str:
+    """Return the final file name segment from a manually supplied path."""
+    return path.replace("\\", "/").rsplit("/", 1)[-1].strip()
+
+
+def _validate_evidence_file_path(path: str) -> str:
+    """Validate one manually supplied evidence file path and return its file name."""
+    if not path:
+        raise ValueError("Evidence file path is required.")
+    if not path.startswith("Files/"):
+        raise ValueError(f"Evidence file path must start with Files/: {path}")
+    file_name = _evidence_file_name_from_path(path)
+    if not file_name:
+        raise ValueError(f"Evidence file path must include a file name: {path}")
+    suffix = "." + file_name.rsplit(".", 1)[-1].lower() if "." in file_name else ""
     if suffix not in AGREEMENT_EVIDENCE_ALLOWED_EXTENSIONS:
         allowed = ", ".join(AGREEMENT_EVIDENCE_ALLOWED_EXTENSIONS)
-        raise ValueError(f"Unsupported evidence file type. Allowed types: {allowed}.")
-    return safe
+        raise ValueError(f"Unsupported evidence file type for {path}. Allowed types: {allowed}.")
+    return file_name
 
 
-def _write_evidence_file(*, spark: Any, config: Any, env_name: str, relative_path: str, content: bytes) -> str:
-    """Write uploaded evidence bytes to the metadata lakehouse Files area."""
-    absolute_path = _metadata_lakehouse_file_path(config, env_name, relative_path)
-    jvm = getattr(spark, "_jvm", None)
-    jsc = getattr(spark, "_jsc", None)
-    if jvm is not None and jsc is not None:
-        path = jvm.org.apache.hadoop.fs.Path(absolute_path)
-        fs = path.getFileSystem(jsc.hadoopConfiguration())
-        parent = path.getParent()
-        if parent is not None:
-            fs.mkdirs(parent)
-        stream = fs.create(path, True)
-        try:
-            stream.write(bytearray(content))
-        finally:
-            stream.close()
-        return absolute_path
-
-    from pathlib import Path
-    local_path = Path(absolute_path)
-    local_path.parent.mkdir(parents=True, exist_ok=True)
-    local_path.write_bytes(content)
-    return absolute_path
+def _get_notebookutils() -> Any:
+    """Return a notebookutils-like object when the Fabric runtime exposes one."""
+    candidate = globals().get("notebookutils")
+    if candidate is not None:
+        return candidate
+    for module_name in ("notebookutils", "mssparkutils"):
+        candidate = sys.modules.get(module_name)
+        if candidate is not None:
+            return candidate
+    return None
 
 
-def _uploaded_file_items(uploaded_value: Any) -> list[dict[str, Any]]:
-    """Normalize ipywidgets FileUpload values across widget versions."""
-    if not uploaded_value:
-        return []
-    if isinstance(uploaded_value, dict):
-        raw_items = list(uploaded_value.values())
-    else:
-        raw_items = list(uploaded_value)
-    items = []
-    for item in raw_items:
-        data = dict(item)
-        content = data.get("content", b"")
-        if isinstance(content, memoryview):
-            content = content.tobytes()
-        elif isinstance(content, bytearray):
-            content = bytes(content)
-        elif isinstance(content, str):
-            content = content.encode("utf-8")
-        data["content"] = bytes(content or b"")
-        items.append(data)
-    return items
+def _notebookutils_fs_exists(path: str) -> bool | None:
+    """Return file existence when notebookutils.fs.exists is available."""
+    utils = _get_notebookutils()
+    fs = getattr(utils, "fs", None) if utils is not None else None
+    exists = getattr(fs, "exists", None) if fs is not None else None
+    if not callable(exists):
+        return None
+    return bool(exists(path))
+
+
+def _notebookutils_file_size(path: str) -> str:
+    """Return file size from notebookutils.fs.ls(parent) when available."""
+    utils = _get_notebookutils()
+    fs = getattr(utils, "fs", None) if utils is not None else None
+    ls = getattr(fs, "ls", None) if fs is not None else None
+    if not callable(ls):
+        return ""
+    normalized = path.rstrip("/")
+    parent = normalized.rsplit("/", 1)[0] if "/" in normalized else ""
+    target_name = _evidence_file_name_from_path(normalized)
+    try:
+        items = ls(parent)
+    except Exception:
+        return ""
+    for item in items:
+        item_path = str(getattr(item, "path", "") or getattr(item, "name", "") or "")
+        item_name = item_path.rstrip("/").rsplit("/", 1)[-1]
+        if item_path.rstrip("/") == normalized or item_name == target_name:
+            size = getattr(item, "size", "")
+            return "" if size is None else str(size)
+    return ""
+
+
+def _prepare_evidence_file_references(paths_value: Any) -> list[dict[str, str]]:
+    """Validate manually supplied evidence file paths before metadata writes."""
+    paths = _parse_evidence_file_paths(paths_value)
+    if not paths:
+        raise ValueError("Paste at least one evidence file path before saving.")
+    references: list[dict[str, str]] = []
+    for path in paths:
+        file_name = _validate_evidence_file_path(path)
+        exists = _notebookutils_fs_exists(path)
+        if exists is False:
+            raise ValueError(f"Evidence file path does not exist: {path}")
+        suffix = "." + file_name.rsplit(".", 1)[-1].lower()
+        references.append({
+            "file_name": file_name,
+            "file_path": path,
+            "mime_type": AGREEMENT_EVIDENCE_MIME_TYPES.get(suffix, ""),
+            "file_size": _notebookutils_file_size(path),
+        })
+    return references
 
 
 def _agreement_version_options(rows: Any, *, include_prompt: bool = True) -> list[tuple[str, str | None]]:
@@ -972,47 +1006,30 @@ def _agreement_version_options(rows: Any, *, include_prompt: bool = True) -> lis
     return options
 
 
-def _save_agreement_evidence_records(*, spark: Any, config: Any, env_name: str, agreement_id: str, contract_version: str, evidence_type: str, uploaded_files: Any, committed_by: str | None = None, committed_at: str | None = None, runtime_context: dict[str, Any] | None = None) -> list[dict[str, Any]]:
-    """Persist uploaded evidence files and append file-reference metadata rows."""
+def _save_agreement_evidence_records(*, spark: Any, config: Any, env_name: str, agreement_id: str, contract_version: str, evidence_type: str, evidence_file_paths: Any, committed_by: str | None = None, committed_at: str | None = None, runtime_context: dict[str, Any] | None = None) -> list[dict[str, Any]]:
+    """Append manually uploaded evidence file-reference metadata rows."""
     agreement_id = str(agreement_id or "").strip()
     contract_version = str(contract_version or "").strip()
     if not agreement_id:
         raise ValueError("agreement_id is required before saving agreement evidence.")
     if not contract_version:
         raise ValueError("contract_version is required before saving agreement evidence.")
-    files = _uploaded_file_items(uploaded_files)
-    if not files:
-        raise ValueError("Upload at least one evidence file before saving.")
     evidence_type = str(evidence_type or "Other").strip() or "Other"
+    file_references = _prepare_evidence_file_references(evidence_file_paths)
     audit = build_runtime_audit_fields(config=config, env=env_name, committed_by=committed_by, committed_at=committed_at, runtime_context=runtime_context)
     uploaded_at = audit.get("_committed_at") or datetime.now(timezone.utc).isoformat()
     uploaded_by = audit.get("_committed_by") or ""
-    prepared_files = []
-    for index, uploaded in enumerate(files):
-        file_name = _safe_evidence_file_name(uploaded.get("name"))
-        content = uploaded.get("content", b"")
-        if "." in file_name:
-            stem, suffix = file_name.rsplit(".", 1)
-            suffix = f".{suffix}"
-        else:
-            stem, suffix = file_name, ""
-        token_basis = f"{uploaded_at}|{index}|{file_name}|".encode("utf-8") + content
-        storage_token = hashlib.sha256(token_basis).hexdigest()[:8]
-        storage_file_name = f"{stem}__{storage_token}{suffix}"
-        prepared_files.append((uploaded, file_name, storage_file_name, content))
 
     rows: list[dict[str, Any]] = []
-    for uploaded, file_name, storage_file_name, content in prepared_files:
-        relative_path = f"Files/fabricops/agreement_evidence/{agreement_id}/{contract_version}/{storage_file_name}"
-        _write_evidence_file(spark=spark, config=config, env_name=env_name, relative_path=relative_path, content=content)
+    for reference in file_references:
         row = {
             "agreement_id": agreement_id,
             "contract_version": contract_version,
             "evidence_type": evidence_type,
-            "file_name": file_name,
-            "file_path": relative_path,
-            "mime_type": str(uploaded.get("type") or ""),
-            "file_size": str(uploaded.get("size") if uploaded.get("size") is not None else len(content)),
+            "file_name": reference["file_name"],
+            "file_path": reference["file_path"],
+            "mime_type": reference["mime_type"],
+            "file_size": reference["file_size"],
             "uploaded_at": uploaded_at,
             "uploaded_by": uploaded_by,
             **audit,
@@ -1020,6 +1037,7 @@ def _save_agreement_evidence_records(*, spark: Any, config: Any, env_name: str, 
         _write_row(spark=spark, config=config, env_name=env_name, table=_table_name(config, "data_agreement_evidence", DATA_AGREEMENT_EVIDENCE_TABLE), row=row)
         rows.append(row)
     return rows
+
 
 def _agreement_dropdown_options(rows: Any, *, include_prompt: bool = False) -> list[tuple[str, Any]]:
     """Build latest-version agreement dropdown options keyed by agreement ID."""
@@ -1389,7 +1407,19 @@ def _render_agreement_evidence_widget(*, spark: Any, config: Any, env_name: str,
     )
     selected = version_selector["selector"]
     evidence_type = widgets.Dropdown(options=[(item, item) for item in AGREEMENT_EVIDENCE_TYPES], **_widget_common(widgets, "Evidence Type"))
-    upload = widgets.FileUpload(accept=AGREEMENT_EVIDENCE_ACCEPT, multiple=True, description="Upload evidence")
+    evidence_file_paths = widgets.Textarea(
+        placeholder=(
+            "Files/fabricops/agreement_evidence/<agreement_id>/<contract_version>/signed_agreement.pdf\n"
+            "Files/fabricops/agreement_evidence/<agreement_id>/<contract_version>/email_approval.pdf"
+        ),
+        **_widget_common(widgets, "Evidence File Paths"),
+    )
+    instructions = widgets.HTML(
+        value=(
+            "Upload evidence files manually to the metadata lakehouse Files area, "
+            "then paste one Files/... path per line."
+        )
+    )
     refresh = widgets.Button(description="Refresh agreements")
     save = widgets.Button(description="Save evidence")
     output = widgets.Output()
@@ -1397,7 +1427,7 @@ def _render_agreement_evidence_widget(*, spark: Any, config: Any, env_name: str,
     def _set_empty_state() -> None:
         has_agreement = any(value for _, value in selected.options)
         message.value = "" if has_agreement else "<b>No data agreements found.</b> Save a Data Agreement first, then return here to upload optional evidence."
-        upload.disabled = not has_agreement
+        evidence_file_paths.disabled = not has_agreement
         save.disabled = not has_agreement
 
     def _refresh(_: Any = None) -> None:
@@ -1426,9 +1456,9 @@ def _render_agreement_evidence_widget(*, spark: Any, config: Any, env_name: str,
                     agreement_id=str(selected_row.get("agreement_id") or ""),
                     contract_version=str(selected_row.get("contract_version") or ""),
                     evidence_type=str(evidence_type.value or "Other"),
-                    uploaded_files=upload.value,
+                    evidence_file_paths=evidence_file_paths.value,
                 )
-                print(f"Saved {len(rows)} agreement evidence file record(s).")
+                print(f"Saved {len(rows)} agreement evidence file reference row(s).")
             except Exception as exc:
                 print(f"Error: {exc}")
             finally:
@@ -1439,7 +1469,7 @@ def _render_agreement_evidence_widget(*, spark: Any, config: Any, env_name: str,
     refresh.on_click(_refresh)
     save.on_click(_save)
     _set_empty_state()
-    container = widgets.VBox([message, version_selector["container"], evidence_type, upload, refresh, save, output])
+    container = widgets.VBox([message, version_selector["container"], evidence_type, instructions, evidence_file_paths, refresh, save, output])
     if display_widget:
         display(container)
     return {
@@ -1450,7 +1480,8 @@ def _render_agreement_evidence_widget(*, spark: Any, config: Any, env_name: str,
         "agreement_version_context": version_selector["context"],
         "agreement_versions_by_key": row_lookup,
         "evidence_type": evidence_type,
-        "file_upload": upload,
+        "evidence_file_paths": evidence_file_paths,
+        "instructions": instructions,
         "refresh_agreements_button": refresh,
         "refresh_agreements": _refresh,
         "save_button": save,
@@ -1475,16 +1506,17 @@ def render_agreement_evidence_widget(config: Any, env_name: str, *, spark: Any) 
     Returns
     -------
     dict[str, Any]
-        Rendered controls for selecting an agreement version, uploading
-        evidence files, refreshing agreement options, and saving evidence
-        metadata rows.
+        Rendered controls for selecting an agreement version, pasting
+        metadata lakehouse evidence file paths, refreshing agreement options,
+        and saving evidence metadata rows.
 
     Notes
     -----
     This public wrapper is intended for the separate-widget ``01_da`` layout.
-    Uploaded file bytes are written to the configured metadata lakehouse
-    ``Files`` area, and file-reference rows are appended to
-    ``METADATA_DATA_AGREEMENT_EVIDENCE``.
+    Evidence files must be uploaded manually to the metadata lakehouse
+    ``Files`` area first. The widget appends one file-reference row per
+    pasted ``Files/...`` path to ``METADATA_DATA_AGREEMENT_EVIDENCE`` and
+    does not read or write binary file content.
     """
     return _render_agreement_evidence_widget(
         spark=spark,
@@ -1558,9 +1590,10 @@ def render_agreement_intake_app(*, spark: Any, config: Any, env: str, display_wi
     The ``01_da`` intake app uses a section switcher so only one workflow
     section is visible at a time in Fabric notebooks. Switching sections
     replaces the mounted body container rather than displaying child widgets
-    separately. The Evidence section is optional and stores uploaded files in
-    the configured metadata lakehouse ``Files`` area while appending
-    file-reference rows to ``METADATA_DATA_AGREEMENT_EVIDENCE``.
+    separately. The Evidence section is optional and stores one
+    file-reference row per pasted metadata lakehouse ``Files/...`` path in
+    ``METADATA_DATA_AGREEMENT_EVIDENCE`` without reading or writing binary
+    file content.
     """
     import ipywidgets as widgets
     from IPython.display import display
