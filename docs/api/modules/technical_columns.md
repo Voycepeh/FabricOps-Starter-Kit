@@ -12,10 +12,6 @@
 
 Owns standard output/audit columns for pipeline outputs.
 
-## Technical-column naming convention
-
-DataFrame technical columns use underscore-prefixed names such as `_pipeline_run_id` and `_record_loaded_timestamp`. Metadata-table audit fields also use underscore-prefixed names, but metadata rows should create them through `metadata.build_runtime_audit_fields(...)`.
-
 ## Module manifest
 
 <table>

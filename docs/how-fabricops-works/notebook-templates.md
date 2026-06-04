@@ -49,7 +49,10 @@ It also creates or checks the data agreement and steward metadata tables and rep
 
 Run this notebook in the Governance workspace.
 
-Data stewards or data owners use its simplified widget UI to maintain steward and data agreement records in `metadata_lakehouse`.
+Data stewards or data owners use its simplified widget UI to maintain steward and data agreement records in `metadata_lakehouse`. FabricOps currently supports two `01_da` layouts:
+
+- **Option A** is a compact section switcher via `render_agreement_intake_app(...)`.
+- **Option B** is separate widget cells for Data Steward, Data Agreement, and Agreement Evidence. Use Option B if Fabric output scrolling feels jumpy or if users prefer rerunning one section at a time.
 
 Agreement intake appends immutable agreement-version rows. Creating an agreement starts a new stable ID, while updating an explicitly selected agreement appends its next version.
 

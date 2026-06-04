@@ -344,28 +344,37 @@ Use the finder below to look up public callable functions.
 
   </div>
 </article>
-<article id="render_agreement_intake_app" class="reference-catalogue-item" data-callable-row="true" data-callable-name="render_agreement_intake_app" data-callable-module="data_agreement" data-callable-starter-path="01_data_agreement" data-role="essential" data-callable-purpose="Render and wire the default agreement-intake form application.">
+<article id="render_agreement_evidence_widget" class="reference-catalogue-item" data-callable-row="true" data-callable-name="render_agreement_evidence_widget" data-callable-module="data_agreement" data-callable-starter-path="01_data_agreement" data-role="essential" data-callable-purpose="Render standalone agreement evidence upload controls for an existing agreement version.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/render_agreement_evidence_widget/"><code>render_agreement_evidence_widget</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Render standalone agreement evidence upload controls for an existing agreement version.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">01_data_agreement</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_render_agreement_evidence_widget</code></li></ul></details>
+
+  </div>
+</article>
+<article id="render_agreement_intake_app" class="reference-catalogue-item" data-callable-row="true" data-callable-name="render_agreement_intake_app" data-callable-module="data_agreement" data-callable-starter-path="01_data_agreement" data-role="essential" data-callable-purpose="Render and wire the compact agreement-intake section switcher application.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/render_agreement_intake_app/"><code>render_agreement_intake_app</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Render and wire the default agreement-intake form application.</p>
+  <p class="reference-catalogue-item-purpose">Render and wire the compact agreement-intake section switcher application.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">01_data_agreement</span></p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>_render_agreement_evidence_widget</code></li><li><code>_render_maintenance_widget</code></li></ul></details>
 
   </div>
 </article>
-<article id="render_data_agreement_widget" class="reference-catalogue-item" data-callable-row="true" data-callable-name="render_data_agreement_widget" data-callable-module="data_agreement" data-callable-starter-path="—" data-role="essential" data-callable-purpose="Render append-only agreement maintenance using active steward rows.">
+<article id="render_data_agreement_widget" class="reference-catalogue-item" data-callable-row="true" data-callable-name="render_data_agreement_widget" data-callable-module="data_agreement" data-callable-starter-path="01_data_agreement" data-role="essential" data-callable-purpose="Render append-only agreement maintenance using active steward rows.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/render_data_agreement_widget/"><code>render_data_agreement_widget</code></a></h3>
   <p class="reference-catalogue-item-purpose">Render append-only agreement maintenance using active steward rows.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">—</span></p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">01_data_agreement</span></p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_render_maintenance_widget</code></li></ul></details>
 
   </div>
 </article>
-<article id="render_data_steward_widget" class="reference-catalogue-item" data-callable-row="true" data-callable-name="render_data_steward_widget" data-callable-module="data_agreement" data-callable-starter-path="—" data-role="essential" data-callable-purpose="Render append-only data steward maintenance.">
+<article id="render_data_steward_widget" class="reference-catalogue-item" data-callable-row="true" data-callable-name="render_data_steward_widget" data-callable-module="data_agreement" data-callable-starter-path="01_data_agreement" data-role="essential" data-callable-purpose="Render append-only data steward maintenance.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/render_data_steward_widget/"><code>render_data_steward_widget</code></a></h3>
   <p class="reference-catalogue-item-purpose">Render append-only data steward maintenance.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">—</span></p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">01_data_agreement</span></p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_render_maintenance_widget</code></li></ul></details>
 

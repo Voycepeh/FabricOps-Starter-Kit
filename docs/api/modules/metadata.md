@@ -12,10 +12,6 @@
 
 Owns metadata evidence persistence, stable keys, notebook registry, and contract evidence loading.
 
-## Shared metadata audit fields
-
-Use `build_runtime_audit_fields(...)` when metadata tables need framework-managed underscore-prefixed audit values such as `_committed_by`, `_committed_at`, `_workspace_name`, `_notebook_name`, `_metadata_lakehouse_name`, and `_activity_id`.
-
 ## Module manifest
 
 <table>
