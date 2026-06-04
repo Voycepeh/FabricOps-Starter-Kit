@@ -11,6 +11,7 @@ from .business_context import (
 from .config import setup_notebook
 from .data_agreement import (
     get_selected_agreement,
+    render_agreement_evidence_widget,
     render_agreement_intake_app,
     render_data_agreement_widget,
     render_data_steward_widget,
@@ -63,6 +64,7 @@ __all__ = [
     "draft_dq_rules","review_dq_rules","run_dq_rule_review_widget","get_dq_review_results","write_dq_rules","load_dq_rules","enforce_dq","assert_dq_passed",
     "draft_governance","prepare_governance_input","extract_governance_suggestions","review_governance","write_governance","load_governance","standardize_columns","build_lineage_records","build_lineage_handover_markdown","build_handover","render_handover_markdown",
     "read_lakehouse_csv","read_lakehouse_parquet","read_lakehouse_excel","validate_dq_rules","review_dq_rule_deactivations","check_schema_drift","check_partition_drift","check_profile_drift","summarize_drift_results",
+    "render_agreement_evidence_widget",
     "render_agreement_intake_app",
     "render_data_agreement_widget",
     "render_data_steward_widget",

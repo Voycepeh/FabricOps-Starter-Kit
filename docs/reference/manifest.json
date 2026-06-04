@@ -188,11 +188,23 @@
       "module_summary": "Owns agreement metadata capture, audited record building, metadata commit helpers, and agreement selection helpers used to anchor notebook workflows to approved business agreements. Standard notebooks create or check agreement metadata tables in `00_env_config`, render agreement intake in `01_da_<agreement>`, and bind downstream work with `select_agreement(...)` and `get_selected_agreement()`.",
       "sidebar_group": "1. Governance steward",
       "sidebar_include": true,
+      "callable_name": "render_agreement_evidence_widget",
+      "callable_visibility": "public",
+      "callable_role": "essential",
+      "template_notebook": "`01_da_<agreement>`",
+      "template_segment": "Segment 2: Option B separate widgets"
+    },
+    {
+      "module_name": "data_agreement",
+      "visibility": "public",
+      "module_summary": "Owns agreement metadata capture, audited record building, metadata commit helpers, and agreement selection helpers used to anchor notebook workflows to approved business agreements. Standard notebooks create or check agreement metadata tables in `00_env_config`, render agreement intake in `01_da_<agreement>`, and bind downstream work with `select_agreement(...)` and `get_selected_agreement()`.",
+      "sidebar_group": "1. Governance steward",
+      "sidebar_include": true,
       "callable_name": "render_agreement_intake_app",
       "callable_visibility": "public",
       "callable_role": "essential",
       "template_notebook": "`01_da_<agreement>`",
-      "template_segment": "Segment 1: Render the agreement-intake app"
+      "template_segment": "Segment 1: Option A compact app"
     },
     {
       "module_name": "data_agreement",
@@ -204,7 +216,7 @@
       "callable_visibility": "public",
       "callable_role": "essential",
       "template_notebook": "`01_da_<agreement>`",
-      "template_segment": "Config-driven metadata intake"
+      "template_segment": "Segment 2: Option B separate widgets"
     },
     {
       "module_name": "data_agreement",
@@ -216,7 +228,7 @@
       "callable_visibility": "public",
       "callable_role": "essential",
       "template_notebook": "`01_da_<agreement>`",
-      "template_segment": "Config-driven metadata intake"
+      "template_segment": "Segment 2: Option B separate widgets"
     },
     {
       "module_name": "data_agreement",

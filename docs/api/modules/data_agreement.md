@@ -6,7 +6,7 @@
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 6</span><span class="reference-chip">Internal helpers: 60</span><span class="reference-chip">Outbound: 3</span><span class="reference-chip">Inbound: 0</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 7</span><span class="reference-chip">Internal helpers: 60</span><span class="reference-chip">Outbound: 3</span><span class="reference-chip">Inbound: 0</span></div>
 
 ## Module purpose
 
@@ -32,7 +32,7 @@ Owns agreement metadata capture, audited record building, metadata commit helper
     </tr>
     <tr>
       <td>Public callable count</td>
-      <td>6</td>
+      <td>7</td>
     </tr>
     <tr>
       <td>Internal helper count</td>
@@ -79,10 +79,17 @@ Owns agreement metadata capture, audited record building, metadata commit helper
       <td>—</td>
     </tr>
     <tr>
+      <td><a href="../../reference/render_agreement_evidence_widget/"><code>render_agreement_evidence_widget</code></a></td>
+      <td>Essential</td>
+      <td>function</td>
+      <td>Render standalone agreement evidence upload controls for an existing agreement version.</td>
+      <td><a href="../../reference/internal/data_agreement/_render_agreement_evidence_widget/"><code>_render_agreement_evidence_widget</code></a> (internal)</td>
+    </tr>
+    <tr>
       <td><a href="../../reference/render_agreement_intake_app/"><code>render_agreement_intake_app</code></a></td>
       <td>Essential</td>
       <td>function</td>
-      <td>Render and wire the default agreement-intake form application.</td>
+      <td>Render and wire the compact agreement-intake section switcher application.</td>
       <td><a href="../../reference/internal/data_agreement/_render_agreement_evidence_widget/"><code>_render_agreement_evidence_widget</code></a> (internal), <a href="../../reference/internal/data_agreement/_render_maintenance_widget/"><code>_render_maintenance_widget</code></a> (internal)</td>
     </tr>
     <tr>
@@ -133,6 +140,11 @@ Owns agreement metadata capture, audited record building, metadata commit helper
 <a class="reference-chip" href="../../reference/get_selected_agreement/"><code>get_selected_agreement</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <span>None.</span>
+</li>
+<li>
+<a class="reference-chip" href="../../reference/render_agreement_evidence_widget/"><code>render_agreement_evidence_widget</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_render_agreement_evidence_widget"><code>_render_agreement_evidence_widget</code></a>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/render_agreement_intake_app/"><code>render_agreement_intake_app</code></a>
@@ -322,7 +334,7 @@ Owns agreement metadata capture, audited record building, metadata commit helper
     </tr>
     <tr>
       <td><a href="../../reference/internal/data_agreement/_render_agreement_evidence_widget/"><code>_render_agreement_evidence_widget</code></a></td>
-      <td><a href="../../reference/render_agreement_intake_app/"><code>render_agreement_intake_app</code></a></td>
+      <td><a href="../../reference/render_agreement_evidence_widget/"><code>render_agreement_evidence_widget</code></a>, <a href="../../reference/render_agreement_intake_app/"><code>render_agreement_intake_app</code></a></td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/data_agreement/_render_custom_fields/"><code>_render_custom_fields</code></a></td>

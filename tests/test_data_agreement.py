@@ -225,6 +225,36 @@ def test_create_update_validation_fails_clearly(monkeypatch, factory, values, me
         factory(spark=object(), config=_config(), env_name="dev", values=values)
 
 
+def test_public_package_import_exposes_agreement_evidence_widget():
+    from fabricops_kit import (
+        render_agreement_evidence_widget,
+        render_agreement_intake_app,
+        render_data_agreement_widget,
+        render_data_steward_widget,
+    )
+    import fabricops_kit
+
+    assert render_agreement_evidence_widget is data_agreement.render_agreement_evidence_widget
+    assert fabricops_kit.render_agreement_evidence_widget is data_agreement.render_agreement_evidence_widget
+    assert render_agreement_intake_app is data_agreement.render_agreement_intake_app
+    assert render_data_agreement_widget is data_agreement.render_data_agreement_widget
+    assert render_data_steward_widget is data_agreement.render_data_steward_widget
+
+
+def test_public_evidence_widget_wrapper_delegates_to_internal_helper(monkeypatch):
+    calls = []
+
+    def fake_helper(**kwargs):
+        calls.append(kwargs)
+        return {"container": "evidence"}
+
+    monkeypatch.setattr(data_agreement, "_render_agreement_evidence_widget", fake_helper)
+    config = _config()
+
+    assert data_agreement.render_agreement_evidence_widget(config, "dev", spark="spark") == {"container": "evidence"}
+    assert calls == [{"spark": "spark", "config": config, "env_name": "dev"}]
+
+
 def test_widget_entrypoints_display_individually_when_called_directly(monkeypatch):
     _install_widget_stubs(monkeypatch)
     monkeypatch.setattr(data_agreement, "_list_data_stewards", lambda *args, **kwargs: [_steward()])
@@ -234,7 +264,7 @@ def test_widget_entrypoints_display_individually_when_called_directly(monkeypatc
 
     steward = data_agreement.render_data_steward_widget(_config(), "dev", spark="spark")
     agreement = data_agreement.render_data_agreement_widget(_config(), "dev", spark="spark")
-    evidence = data_agreement._render_agreement_evidence_widget(spark="spark", config=_config(), env_name="dev")
+    evidence = data_agreement.render_agreement_evidence_widget(_config(), "dev", spark="spark")
 
     assert [call[0][0] for call in display.calls] == [steward["container"], agreement["container"], evidence["container"]]
 
@@ -291,6 +321,20 @@ def test_metadata_table_documentation_explains_generated_ids_json_extension_and_
     assert "metadata lakehouse `Files` area" in docs
     assert "does not store uploaded binary content" in docs
     assert "Evidence upload is optional" in docs
+
+
+def test_01_da_template_and_docs_describe_option_a_and_option_b():
+    template = Path("templates/notebooks/01_da_agreement_template.ipynb").read_text(encoding="utf-8")
+    metadata_docs = Path("docs/how-fabricops-works/metadata-tables.md").read_text(encoding="utf-8")
+    notebook_docs = Path("docs/how-fabricops-works/notebook-templates.md").read_text(encoding="utf-8")
+
+    for text in (template, metadata_docs, notebook_docs):
+        assert "Option A" in text
+        assert "Option B" in text
+        assert "render_agreement_intake_app" in text
+        assert "render_agreement_evidence_widget" in text
+    assert "Do not run both options in the same notebook execution unless testing UX" in template
+    assert "Use Option B if Fabric output scrolling feels jumpy" in metadata_docs
 
 
 def test_agreement_widget_hides_generated_ids_and_shows_read_only_context(monkeypatch):

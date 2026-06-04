@@ -54,9 +54,9 @@ Shared environment bootstrap and validation before agreement intake, exploration
 
 ## `01_da_<agreement>`
 
-Form notebook that renders the agreement-intake app through one framework helper. The helper uses a section switcher so only one workflow section is visible at a time in Fabric notebooks for Data Steward maintenance, Data Agreement maintenance, and optional Agreement Evidence upload. Both tables are append-only, and agreement intake selects active steward rows.
+Form notebook that supports two agreement-intake layouts for A/B testing. Option A renders a compact section switcher through `render_agreement_intake_app(...)`. Option B renders separate widget cells for Data Steward, Data Agreement, and Agreement Evidence through `render_data_steward_widget(...)`, `render_data_agreement_widget(...)`, and `render_agreement_evidence_widget(...)`. Both layouts write append-only metadata and agreement intake selects active steward rows.
 
-### Segment 1: Render the agreement-intake app
+### Segment 1: Option A compact app
 
 <table>
   <thead>
@@ -72,8 +72,45 @@ Form notebook that renders the agreement-intake app through one framework helper
     <tr>
       <td>`render_agreement_intake_app`</td>
       <td>Callable orchestration wrapper</td>
-      <td>Render and wire the default agreement-intake form application.</td>
+      <td>Render and wire the compact agreement-intake section switcher application.</td>
       <td>`_render_agreement_evidence_widget`, `_render_maintenance_widget`</td>
+      <td>Check dependency outputs and metadata writes.</td>
+    </tr>
+  </tbody>
+</table>
+
+### Segment 2: Option B separate widgets
+
+<table>
+  <thead>
+    <tr>
+      <th>Function</th>
+      <th>Role</th>
+      <th>What it does</th>
+      <th>Delegates to</th>
+      <th>Debug when</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>`render_data_steward_widget`</td>
+      <td>Callable orchestration wrapper</td>
+      <td>Render append-only data steward maintenance.</td>
+      <td>`_render_maintenance_widget`</td>
+      <td>Check dependency outputs and metadata writes.</td>
+    </tr>
+    <tr>
+      <td>`render_data_agreement_widget`</td>
+      <td>Callable orchestration wrapper</td>
+      <td>Render append-only agreement maintenance using active steward rows.</td>
+      <td>`_render_maintenance_widget`</td>
+      <td>Check dependency outputs and metadata writes.</td>
+    </tr>
+    <tr>
+      <td>`render_agreement_evidence_widget`</td>
+      <td>Callable orchestration wrapper</td>
+      <td>Render standalone agreement evidence upload controls for an existing agreement version.</td>
+      <td>`_render_agreement_evidence_widget`</td>
       <td>Check dependency outputs and metadata writes.</td>
     </tr>
   </tbody>

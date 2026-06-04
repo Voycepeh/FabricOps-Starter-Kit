@@ -1147,6 +1147,7 @@
     "type": "internal",
     "role": "internal",
     "inbound": [
+      "fabricops_kit.data_agreement.render_agreement_evidence_widget",
       "fabricops_kit.data_agreement.render_agreement_intake_app"
     ],
     "outbound": [
@@ -1555,6 +1556,19 @@
     "summary": "No summary available."
   },
   {
+    "name": "render_agreement_evidence_widget",
+    "qualified_name": "fabricops_kit.data_agreement.render_agreement_evidence_widget",
+    "module": "data_agreement",
+    "type": "callable",
+    "role": "essential",
+    "inbound": [],
+    "outbound": [
+      "fabricops_kit.data_agreement._render_agreement_evidence_widget"
+    ],
+    "source_file": "src/fabricops_kit/data_agreement.py",
+    "summary": "Render standalone agreement evidence upload controls for an existing agreement version."
+  },
+  {
     "name": "render_agreement_intake_app",
     "qualified_name": "fabricops_kit.data_agreement.render_agreement_intake_app",
     "module": "data_agreement",
@@ -1566,7 +1580,7 @@
       "fabricops_kit.data_agreement._render_maintenance_widget"
     ],
     "source_file": "src/fabricops_kit/data_agreement.py",
-    "summary": "Render and wire the default agreement-intake form application."
+    "summary": "Render and wire the compact agreement-intake section switcher application."
   },
   {
     "name": "render_data_agreement_widget",

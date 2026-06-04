@@ -1457,6 +1457,42 @@ def _render_agreement_evidence_widget(*, spark: Any, config: Any, env_name: str,
         "output": output,
     }
 
+
+def render_agreement_evidence_widget(config: Any, env_name: str, *, spark: Any) -> dict[str, Any]:
+    """Render standalone agreement evidence upload controls.
+
+    Parameters
+    ----------
+    config : FrameworkConfig or dict
+        Configuration containing agreement metadata routing and evidence table
+        settings.
+    env_name : str
+        Environment key configured by ``00_env_config``.
+    spark : pyspark.sql.SparkSession
+        Fabric Spark session used for metadata reads, file writes, and
+        append-only evidence metadata writes.
+
+    Returns
+    -------
+    dict[str, Any]
+        Rendered controls for selecting an agreement version, uploading
+        evidence files, refreshing agreement options, and saving evidence
+        metadata rows.
+
+    Notes
+    -----
+    This public wrapper is intended for the separate-widget ``01_da`` layout.
+    Uploaded file bytes are written to the configured metadata lakehouse
+    ``Files`` area, and file-reference rows are appended to
+    ``METADATA_DATA_AGREEMENT_EVIDENCE``.
+    """
+    return _render_agreement_evidence_widget(
+        spark=spark,
+        config=config,
+        env_name=env_name,
+    )
+
+
 def render_data_steward_widget(config: Any, env_name: str, *, spark: Any) -> dict[str, Any]:
     """Render append-only data steward create/update maintenance.
 

@@ -155,21 +155,30 @@ def test_00_env_config_bootstraps_agreement_tables_and_reports_steward_readiness
     assert 'VALIDATION_MODE == "strict" and AGREEMENT_METADATA_SETUP["status"] != "ready"' in code
 
 
-def test_01_da_imports_only_high_level_agreement_app_helper():
+def test_01_da_imports_only_public_agreement_layout_helpers():
     imported = _fabricops_imports("01_da_agreement_template.ipynb")
     assert imported <= set(fabricops_kit.__all__)
-    assert imported == {"render_agreement_intake_app"}
+    assert imported == {
+        "render_agreement_evidence_widget",
+        "render_agreement_intake_app",
+        "render_data_agreement_widget",
+        "render_data_steward_widget",
+    }
     assert not (imported & REMOVED_AGREEMENT_CALLABLES)
 
 
-def test_01_da_renders_framework_managed_intake_app_without_notebook_callback():
+def test_01_da_renders_framework_managed_ab_layouts_without_notebook_callback():
     code = _code("01_da_agreement_template.ipynb")
     assert "%run 00_env_config" in code
-    assert "from fabricops_kit import render_agreement_intake_app" in code
+    assert "render_agreement_intake_app" in code
     assert "agreement_app = render_agreement_intake_app(" in code
+    assert "steward_widget = render_data_steward_widget(" in code
+    assert "agreement_widget = render_data_agreement_widget(" in code
+    assert "evidence_widget = render_agreement_evidence_widget(" in code
     assert "spark=spark" in code
     assert "config=CONFIG" in code
     assert "env=ENV" in code
+    assert "env_name=ENV" in code
     assert "def on_commit_clicked" not in code
     assert ".on_click(" not in code
 
@@ -179,6 +188,7 @@ def test_public_all_exposes_small_supported_agreement_api_only():
         "render_agreement_intake_app",
         "render_data_steward_widget",
         "render_data_agreement_widget",
+        "render_agreement_evidence_widget",
         "setup_data_agreement_tables",
         "select_agreement",
         "get_selected_agreement",
