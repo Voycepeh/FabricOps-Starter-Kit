@@ -22,6 +22,10 @@ def _code(name: str) -> str:
     return "\n".join("".join(cell.get("source", [])) for cell in notebook["cells"] if cell["cell_type"] == "code")
 
 
+def _template_text(name: str) -> str:
+    return (TEMPLATES / name).read_text(encoding="utf-8")
+
+
 def _tree(name: str) -> ast.Module:
     source = "\n".join(line for line in _code(name).splitlines() if not line.lstrip().startswith("%"))
     return ast.parse(source)
@@ -57,10 +61,10 @@ def test_02_ex_imports_only_public_fabricops_kit_functions():
 
 def test_02_ex_register_and_source_read_calls_match_public_signatures():
     calls = [node for node in ast.walk(_tree("02_ex_agreement_topic.ipynb")) if isinstance(node, ast.Call)]
-    register = next(node for node in calls if _name(node.func) == "register_current_notebook")
-    keyword_names = {keyword.arg for keyword in register.keywords}
-    assert "config" in keyword_names
-    assert "env" in keyword_names
+    selector = next(node for node in calls if _name(node.func) == "select_agreement")
+    keyword_names = {keyword.arg for keyword in selector.keywords}
+    assert "register_notebook" in keyword_names
+    assert "spark_session" in keyword_names
     assert "metadata_path" not in keyword_names
     assert "metadata_store" not in keyword_names
 
@@ -71,7 +75,7 @@ def test_02_ex_register_and_source_read_calls_match_public_signatures():
         and _name(node.args[2]) == "source"
         and _name(node.args[3]) == "table_name"
     )
-    assert [_name(argument) for argument in source_read.args[:4]] == ["CONFIG", "ENV", "source", "table_name"]
+    assert [_name(argument) for argument in source_read.args[:4]] == ["CONFIG", "ENV_NAME", "source", "table_name"]
     assert {_name(keyword.value) for keyword in source_read.keywords if keyword.arg == "spark_session"} == {"spark"}
 
 
@@ -215,20 +219,20 @@ def test_downstream_templates_select_agreements_without_loading_internal_helper(
     ):
         code = _code(template)
         assert "load_agreements" not in code
-        assert f"select_agreement(CONFIG, {env_name}, spark_session=spark)" in code
+        if template in {"02_ex_agreement_topic.ipynb", "03_pc_agreement_pipeline_template.ipynb"}:
+            assert "select_agreement(" in code
+            assert "register_notebook=True" in code
+        else:
+            assert f"select_agreement(CONFIG, {env_name}, spark_session=spark)" in code
 
 
 def test_generated_data_agreement_module_page_separates_supported_api_tiers():
     page = Path("docs/api/modules/data_agreement.md").read_text(encoding="utf-8")
-    assert "## Intended notebook call flow" in page
-    assert "## Primary notebook API" in page
-    assert "## Optional advanced customization API" not in page
-    assert "## Internal helpers" in page
-    assert "### Internal workflow helpers" in page
-    assert "### Private implementation helpers" in page
-    assert "These non-exported helpers support framework internals and diagnostics." in page
-    assert page.index("## Intended notebook call flow") < page.index("## Module manifest")
-    assert "## Module overview badges" not in page
+    assert "## Module purpose" in page
+    assert "## Public callables" in page
+    assert "## Module overview badges" in page
+    assert "## Module manifest" in page
+    assert page.index("## Module purpose") < page.index("## Module manifest")
     for helper_name in (
         "_agreement_dropdown_options",
         "_latest_agreement_versions",
@@ -249,27 +253,54 @@ def test_generated_function_manifest_excludes_removed_agreement_callables():
         assert callable_name not in manifest_text
 
 
-def test_02_ex_maps_selected_agreement_to_lightweight_versioned_schema():
+def test_02_ex_includes_excel_option_without_claiming_csv_skiprows_support():
     code = _code("02_ex_agreement_topic.ipynb")
-    for field_name in (
-        "agreement_id", "contract_version", "agreement_name", "domain",
-        "business_purpose", "recipient", "approved_usage_internal",
-        "approved_usage_external", "approved_usage_research", "steward_id",
-        "custom_fields_json",
+    template_text = _template_text("02_ex_agreement_topic.ipynb")
+    assert "read_lakehouse_excel" in code
+    assert "# Option E: Lakehouse Excel file" in template_text
+    assert "#     skiprows=2," in template_text
+    assert "#     header=0," in template_text
+    assert "skiprows=2 skips the first two rows" in template_text
+    assert "header=0 means the first remaining row becomes the column header" in template_text
+    assert "Excel reads are intended for small reference files, mapping files, and manually maintained inputs" in template_text
+    assert "read_lakehouse_csv does not currently support" in template_text
+    csv_section = template_text.split("# Option C: Lakehouse CSV file", 1)[1].split("# Option D: Lakehouse Parquet file", 1)[0]
+    assert "skiprows=" not in csv_section
+
+
+def test_02_ex_uses_widget_registration_without_advanced_metadata_sections():
+    code = _code("02_ex_agreement_topic.ipynb")
+    template_text = _template_text("02_ex_agreement_topic.ipynb")
+    assert "register_notebook=True" in code
+    assert "Register notebook" not in code  # button label is owned by the package widget, not the template
+    assert "register_current_notebook(" not in code
+    assert "agreement_context =" not in code
+    assert "display(agreement_context)" not in code
+    assert "custom_fields_json" not in code
+    assert "get_selected_agreement" not in code
+    assert "selected_agreement" not in code
+    for advanced_section in (
+        "Agreement-aware read-only metadata",
+        "Existing approved DQ rules",
+        "Existing governance/classification metadata",
+        "Existing notebook registry / prior evidence",
+        "AI-assisted DQ flow",
+        "Findings",
+        "Handoff notes",
     ):
-        assert f'"{field_name}"' in code
-    assert 'custom_fields = json.loads(selected_agreement.get("custom_fields_json") or "{}")' in code
-    assert 'selected_agreement.get("approved_usage",' not in code
-    assert '"custom_fields": custom_fields' in code
-    for removed_physical_field in (
-        "restricted_usage", "source_system", "refresh_frequency",
-        "retention_expectation", "allowed_consumer_type", "expected_output",
-        "department", "faculty",
+        assert advanced_section not in template_text
+    for removed_callable in (
+        "load_dq_rules",
+        "draft_dq_rules",
+        "run_dq_rule_review_widget",
+        "get_dq_review_results",
+        "write_dq_rules",
+        "review_dq_rule_deactivations",
+        "load_governance",
+        "load_notebook_registry",
     ):
-        assert f'selected_agreement.get("{removed_physical_field}"' not in code
-    assert "display(agreement_context)" in code
-    assert r'business_context=f"Business purpose: {business_purpose}\nApproved usage: {approved_usage}"' in code
-    assert "prompt_template=CONFIG.ai_prompt_config.dq_rule_suggestion_prompt_template" in code
+        assert removed_callable not in code
+    assert "prompt_template=CONFIG.ai_prompt_config.dq_rule_suggestion_prompt_template" not in code
     assert "CONFIG.ai_prompt_config.dq_rule_candidate_template" not in code
 
 
@@ -289,6 +320,40 @@ def test_00_env_config_keeps_bootstrap_flow_without_load_config():
     assert "config=CONFIG" in code
     assert "env=ENV" in code
     assert "require_active_steward=False" in code
+
+
+
+def test_03_pc_uses_agreement_widget_registration_without_manual_registration():
+    code = _code("03_pc_agreement_pipeline_template.ipynb")
+    tree = _tree("03_pc_agreement_pipeline_template.ipynb")
+    imported = {
+        alias.name
+        for node in tree.body
+        if isinstance(node, ast.ImportFrom) and node.module == "fabricops_kit"
+        for alias in node.names
+    }
+    assert "select_agreement" in imported
+    assert "register_current_notebook" not in imported
+    assert "get_selected_agreement" not in imported
+    assert "register_current_notebook(" not in code
+    assert "get_selected_agreement(" not in code
+    assert "agreement_context" not in code
+    assert "custom_fields_json" not in code
+
+    calls = [node for node in ast.walk(tree) if isinstance(node, ast.Call) and _name(node.func) == "select_agreement"]
+    assert len(calls) == 1
+    selector = calls[0]
+    keyword_values = {keyword.arg: _name(keyword.value) for keyword in selector.keywords}
+    assert [_name(argument) for argument in selector.args[:2]] == ["CONFIG", "ENV_NAME"]
+    raw_keywords = {keyword.arg: keyword.value for keyword in selector.keywords}
+    assert keyword_values["spark_session"] == "spark"
+    assert isinstance(raw_keywords["register_notebook"], ast.Constant)
+    assert raw_keywords["register_notebook"].value is True
+    assert keyword_values["notebook_type"] == "03_pc"
+    assert keyword_values["environment_name"] == "ENV_NAME"
+    assert keyword_values["dataset_name"] == "dataset_name"
+    assert keyword_values["table_name"] == "table_name"
+    assert keyword_values["topic"] == "topic"
 
 
 def test_03_pc_pipeline_template_does_not_import_or_call_load_config():

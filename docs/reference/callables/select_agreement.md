@@ -17,9 +17,12 @@ Render a searchable agreement selector and store selected agreement metadata row
 - Source file path: `src/fabricops_kit/data_agreement.py`
 - Source reference: <a href="../../api/modules/data_agreement/#select_agreement">Module source anchor</a>
 - Inbound references count: 0
-- Outbound references count: 3
+- Outbound references count: 6
 
 ## Outbound references
+- <a href="../internal/data_agreement/_html_escape/"><code>fabricops_kit.data_agreement._html_escape</code></a>
 - <a href="../internal/data_agreement/_latest_agreement_versions/"><code>fabricops_kit.data_agreement._latest_agreement_versions</code></a>
 - <a href="../internal/data_agreement/_load_agreements/"><code>fabricops_kit.data_agreement._load_agreements</code></a>
 - <a href="../internal/data_agreement/_render_searchable_selector/"><code>fabricops_kit.data_agreement._render_searchable_selector</code></a>
+- <a href="../current_notebook_active_registrations/"><code>fabricops_kit.metadata.current_notebook_active_registrations</code></a>
+- <a href="../register_current_notebook/"><code>fabricops_kit.metadata.register_current_notebook</code></a>

@@ -663,6 +663,18 @@
       "module_summary": "Owns metadata evidence persistence, stable keys, notebook registry, and contract evidence loading.",
       "sidebar_group": "5. Metadata / contract store",
       "sidebar_include": true,
+      "callable_name": "current_notebook_active_registrations",
+      "callable_visibility": "public",
+      "callable_role": "optional",
+      "template_notebook": "\u2014",
+      "template_segment": "\u2014"
+    },
+    {
+      "module_name": "metadata",
+      "visibility": "public",
+      "module_summary": "Owns metadata evidence persistence, stable keys, notebook registry, and contract evidence loading.",
+      "sidebar_group": "5. Metadata / contract store",
+      "sidebar_include": true,
       "callable_name": "get_notebook_registry_schema",
       "callable_visibility": "public",
       "callable_role": "optional",

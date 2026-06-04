@@ -5,7 +5,7 @@
 
 ## Purpose
 
-No summary available.
+Read an Excel file from a Fabric lakehouse Files path and pass options such as skiprows, header, usecols, dtype, and nrows through to pandas.read_excel.
 
 ## Function manifest
 
