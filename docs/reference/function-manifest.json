@@ -2199,9 +2199,7 @@
     "inbound": [
       "fabricops_kit.data_profiling.profile_dataframe"
     ],
-    "outbound": [
-      "fabricops_kit.technical_columns._default_technical_columns"
-    ],
+    "outbound": [],
     "source_path": "src/fabricops_kit/data_profiling.py",
     "docs_path": "reference/internal/data_profiling__get_profiled_columns.md",
     "summary": "No summary available."
@@ -3916,7 +3914,7 @@
     ],
     "source_path": "src/fabricops_kit/metadata.py",
     "docs_path": "reference/build_runtime_audit_fields.md",
-    "summary": "Build shared underscore-prefixed runtime audit fields for metadata-table rows."
+    "summary": "Build shared runtime audit values; 03_pc uses notebook and committed-by context while adding dataframe audit columns inline."
   },
   {
     "id": "fabricops_kit.metadata.column_context_rows_for_spark",
@@ -4098,182 +4096,6 @@
     ],
     "source_path": "src/fabricops_kit/metadata.py",
     "docs_path": "reference/internal/metadata_write_metadata_rows.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.technical_columns._add_audit_columns",
-    "name": "_add_audit_columns",
-    "qualified_name": "fabricops_kit.technical_columns._add_audit_columns",
-    "module": "technical_columns",
-    "classification": "Internal helper",
-    "inbound": [
-      "fabricops_kit.technical_columns.standardize_columns"
-    ],
-    "outbound": [
-      "fabricops_kit.technical_columns._assert_columns_exist",
-      "fabricops_kit.technical_columns._bucket_values_pandas",
-      "fabricops_kit.technical_columns._get_fabric_runtime_context"
-    ],
-    "source_path": "src/fabricops_kit/technical_columns.py",
-    "docs_path": "reference/internal/technical_columns__add_audit_columns.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.technical_columns._add_datetime_features",
-    "name": "_add_datetime_features",
-    "qualified_name": "fabricops_kit.technical_columns._add_datetime_features",
-    "module": "technical_columns",
-    "classification": "Internal helper",
-    "inbound": [
-      "fabricops_kit.technical_columns.standardize_columns"
-    ],
-    "outbound": [
-      "fabricops_kit.technical_columns._assert_columns_exist"
-    ],
-    "source_path": "src/fabricops_kit/technical_columns.py",
-    "docs_path": "reference/internal/technical_columns__add_datetime_features.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.technical_columns._add_hash_columns",
-    "name": "_add_hash_columns",
-    "qualified_name": "fabricops_kit.technical_columns._add_hash_columns",
-    "module": "technical_columns",
-    "classification": "Internal helper",
-    "inbound": [
-      "fabricops_kit.technical_columns.standardize_columns"
-    ],
-    "outbound": [
-      "fabricops_kit.technical_columns._assert_columns_exist",
-      "fabricops_kit.technical_columns._hash_row",
-      "fabricops_kit.technical_columns._non_technical_columns"
-    ],
-    "source_path": "src/fabricops_kit/technical_columns.py",
-    "docs_path": "reference/internal/technical_columns__add_hash_columns.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.technical_columns._assert_columns_exist",
-    "name": "_assert_columns_exist",
-    "qualified_name": "fabricops_kit.technical_columns._assert_columns_exist",
-    "module": "technical_columns",
-    "classification": "Internal helper",
-    "inbound": [
-      "fabricops_kit.technical_columns._add_audit_columns",
-      "fabricops_kit.technical_columns._add_datetime_features",
-      "fabricops_kit.technical_columns._add_hash_columns"
-    ],
-    "outbound": [],
-    "source_path": "src/fabricops_kit/technical_columns.py",
-    "docs_path": "reference/internal/technical_columns__assert_columns_exist.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.technical_columns._bucket_values_pandas",
-    "name": "_bucket_values_pandas",
-    "qualified_name": "fabricops_kit.technical_columns._bucket_values_pandas",
-    "module": "technical_columns",
-    "classification": "Internal helper",
-    "inbound": [
-      "fabricops_kit.technical_columns._add_audit_columns"
-    ],
-    "outbound": [
-      "fabricops_kit.technical_columns._safe_string"
-    ],
-    "source_path": "src/fabricops_kit/technical_columns.py",
-    "docs_path": "reference/internal/technical_columns__bucket_values_pandas.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.technical_columns._default_technical_columns",
-    "name": "_default_technical_columns",
-    "qualified_name": "fabricops_kit.technical_columns._default_technical_columns",
-    "module": "technical_columns",
-    "classification": "Internal helper",
-    "inbound": [
-      "fabricops_kit.data_profiling._get_profiled_columns",
-      "fabricops_kit.technical_columns._non_technical_columns"
-    ],
-    "outbound": [],
-    "source_path": "src/fabricops_kit/technical_columns.py",
-    "docs_path": "reference/internal/technical_columns__default_technical_columns.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.technical_columns._get_fabric_runtime_context",
-    "name": "_get_fabric_runtime_context",
-    "qualified_name": "fabricops_kit.technical_columns._get_fabric_runtime_context",
-    "module": "technical_columns",
-    "classification": "Internal helper",
-    "inbound": [
-      "fabricops_kit.technical_columns._add_audit_columns"
-    ],
-    "outbound": [],
-    "source_path": "src/fabricops_kit/technical_columns.py",
-    "docs_path": "reference/internal/technical_columns__get_fabric_runtime_context.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.technical_columns._hash_row",
-    "name": "_hash_row",
-    "qualified_name": "fabricops_kit.technical_columns._hash_row",
-    "module": "technical_columns",
-    "classification": "Internal helper",
-    "inbound": [
-      "fabricops_kit.technical_columns._add_hash_columns"
-    ],
-    "outbound": [
-      "fabricops_kit.technical_columns._safe_string"
-    ],
-    "source_path": "src/fabricops_kit/technical_columns.py",
-    "docs_path": "reference/internal/technical_columns__hash_row.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.technical_columns._non_technical_columns",
-    "name": "_non_technical_columns",
-    "qualified_name": "fabricops_kit.technical_columns._non_technical_columns",
-    "module": "technical_columns",
-    "classification": "Internal helper",
-    "inbound": [
-      "fabricops_kit.technical_columns._add_hash_columns"
-    ],
-    "outbound": [
-      "fabricops_kit.technical_columns._default_technical_columns"
-    ],
-    "source_path": "src/fabricops_kit/technical_columns.py",
-    "docs_path": "reference/internal/technical_columns__non_technical_columns.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.technical_columns._safe_string",
-    "name": "_safe_string",
-    "qualified_name": "fabricops_kit.technical_columns._safe_string",
-    "module": "technical_columns",
-    "classification": "Internal helper",
-    "inbound": [
-      "fabricops_kit.technical_columns._bucket_values_pandas",
-      "fabricops_kit.technical_columns._hash_row"
-    ],
-    "outbound": [],
-    "source_path": "src/fabricops_kit/technical_columns.py",
-    "docs_path": "reference/internal/technical_columns__safe_string.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.technical_columns.standardize_columns",
-    "name": "standardize_columns",
-    "qualified_name": "fabricops_kit.technical_columns.standardize_columns",
-    "module": "technical_columns",
-    "classification": "Essential",
-    "inbound": [],
-    "outbound": [
-      "fabricops_kit.technical_columns._add_audit_columns",
-      "fabricops_kit.technical_columns._add_datetime_features",
-      "fabricops_kit.technical_columns._add_hash_columns"
-    ],
-    "source_path": "src/fabricops_kit/technical_columns.py",
-    "docs_path": "reference/standardize_columns.md",
     "summary": "No summary available."
   },
   {

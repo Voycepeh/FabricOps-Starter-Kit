@@ -66,7 +66,7 @@ Run the templates in this order:
 |     1 | `00_env_config`                      | Defines environment-specific paths, lakehouses, warehouse targets, and governance metadata routing.                                      |
 |     2 | `01_da`                              | Captures steward input, data agreement records, source intent, ownership, and expected use.                                              |
 |     3 | `02_ex`                              | Profiles the source data, registers exploration evidence, and proposes schema or transformation advice.                                  |
-|     4 | `03_pc`                              | Builds repeatable transformations, writes output tables, records technical columns, checks drift, captures lineage, and writes profiles. |
+|     4 | `03_pc`                              | Builds repeatable transformations, writes output tables, records runtime audit columns, captures lineage, and writes profiles. |
 |     5 | `04_gov`                             | Reviews and approves business context, data quality rules, sensitivity classification, and governance metadata.                          |
 |     6 | Rerun `03_pc` with approved metadata | Enforces approved rules and classifications during the pipeline run.                                                                     |
 |     7 | Production handover                  | Stores the production notebook export and generates handover evidence for support and review.                                            |

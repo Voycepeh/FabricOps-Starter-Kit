@@ -6,7 +6,7 @@
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 1</span><span class="reference-chip">Internal helpers: 2</span><span class="reference-chip">Outbound: 1</span><span class="reference-chip">Inbound: 1</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 1</span><span class="reference-chip">Internal helpers: 2</span><span class="reference-chip">Outbound: 0</span><span class="reference-chip">Inbound: 1</span></div>
 
 ## Module purpose
 
@@ -44,7 +44,7 @@ Owns deterministic profiling evidence such as schema, nulls, distincts, min/max,
     </tr>
     <tr>
       <td>Outbound module count</td>
-      <td>1</td>
+      <td>0</td>
     </tr>
     <tr>
       <td>External callers</td>
@@ -52,7 +52,7 @@ Owns deterministic profiling evidence such as schema, nulls, distincts, min/max,
     </tr>
     <tr>
       <td>External callees</td>
-      <td><code>technical_columns</code></td>
+      <td>—</td>
     </tr>
   </tbody>
 </table>
@@ -146,5 +146,4 @@ Owns deterministic profiling evidence such as schema, nulls, distincts, min/max,
 
 ### External callees
 
-**technical_columns**
-<a class="reference-chip" href="../technical_columns/#_default_technical_columns"><code>_default_technical_columns</code></a>
+None.

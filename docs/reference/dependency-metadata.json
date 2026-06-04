@@ -2697,10 +2697,8 @@
       "callable": "_get_profiled_columns",
       "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_profiling/_get_profiled_columns/",
       "classification": "internal",
-      "calls": [
-        "fabricops_kit.technical_columns._default_technical_columns"
-      ],
-      "calls_count": 1,
+      "calls": [],
+      "calls_count": 0,
       "used_by": [
         "fabricops_kit.data_profiling.profile_dataframe"
       ],
@@ -4983,224 +4981,6 @@
       ],
       "internal_helper_count": 1
     },
-    "fabricops_kit.technical_columns._add_audit_columns": {
-      "qualified_name": "fabricops_kit.technical_columns._add_audit_columns",
-      "short_name": "_add_audit_columns",
-      "module": "technical_columns",
-      "callable": "_add_audit_columns",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/technical_columns/_add_audit_columns/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.technical_columns._assert_columns_exist",
-        "fabricops_kit.technical_columns._bucket_values_pandas",
-        "fabricops_kit.technical_columns._get_fabric_runtime_context"
-      ],
-      "calls_count": 3,
-      "used_by": [
-        "fabricops_kit.technical_columns.standardize_columns"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [
-        "fabricops_kit.technical_columns._assert_columns_exist",
-        "fabricops_kit.technical_columns._bucket_values_pandas",
-        "fabricops_kit.technical_columns._get_fabric_runtime_context"
-      ],
-      "internal_helper_count": 3
-    },
-    "fabricops_kit.technical_columns._add_datetime_features": {
-      "qualified_name": "fabricops_kit.technical_columns._add_datetime_features",
-      "short_name": "_add_datetime_features",
-      "module": "technical_columns",
-      "callable": "_add_datetime_features",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/technical_columns/_add_datetime_features/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.technical_columns._assert_columns_exist"
-      ],
-      "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.technical_columns.standardize_columns"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [
-        "fabricops_kit.technical_columns._assert_columns_exist"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.technical_columns._add_hash_columns": {
-      "qualified_name": "fabricops_kit.technical_columns._add_hash_columns",
-      "short_name": "_add_hash_columns",
-      "module": "technical_columns",
-      "callable": "_add_hash_columns",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/technical_columns/_add_hash_columns/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.technical_columns._assert_columns_exist",
-        "fabricops_kit.technical_columns._hash_row",
-        "fabricops_kit.technical_columns._non_technical_columns"
-      ],
-      "calls_count": 3,
-      "used_by": [
-        "fabricops_kit.technical_columns.standardize_columns"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [
-        "fabricops_kit.technical_columns._assert_columns_exist",
-        "fabricops_kit.technical_columns._hash_row",
-        "fabricops_kit.technical_columns._non_technical_columns"
-      ],
-      "internal_helper_count": 3
-    },
-    "fabricops_kit.technical_columns._assert_columns_exist": {
-      "qualified_name": "fabricops_kit.technical_columns._assert_columns_exist",
-      "short_name": "_assert_columns_exist",
-      "module": "technical_columns",
-      "callable": "_assert_columns_exist",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/technical_columns/_assert_columns_exist/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.technical_columns._add_audit_columns",
-        "fabricops_kit.technical_columns._add_datetime_features",
-        "fabricops_kit.technical_columns._add_hash_columns"
-      ],
-      "used_by_count": 3,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.technical_columns._bucket_values_pandas": {
-      "qualified_name": "fabricops_kit.technical_columns._bucket_values_pandas",
-      "short_name": "_bucket_values_pandas",
-      "module": "technical_columns",
-      "callable": "_bucket_values_pandas",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/technical_columns/_bucket_values_pandas/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.technical_columns._safe_string"
-      ],
-      "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.technical_columns._add_audit_columns"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [
-        "fabricops_kit.technical_columns._safe_string"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.technical_columns._default_technical_columns": {
-      "qualified_name": "fabricops_kit.technical_columns._default_technical_columns",
-      "short_name": "_default_technical_columns",
-      "module": "technical_columns",
-      "callable": "_default_technical_columns",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/technical_columns/_default_technical_columns/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.data_profiling._get_profiled_columns",
-        "fabricops_kit.technical_columns._non_technical_columns"
-      ],
-      "used_by_count": 2,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.technical_columns._get_fabric_runtime_context": {
-      "qualified_name": "fabricops_kit.technical_columns._get_fabric_runtime_context",
-      "short_name": "_get_fabric_runtime_context",
-      "module": "technical_columns",
-      "callable": "_get_fabric_runtime_context",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/technical_columns/_get_fabric_runtime_context/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.technical_columns._add_audit_columns"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.technical_columns._hash_row": {
-      "qualified_name": "fabricops_kit.technical_columns._hash_row",
-      "short_name": "_hash_row",
-      "module": "technical_columns",
-      "callable": "_hash_row",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/technical_columns/_hash_row/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.technical_columns._safe_string"
-      ],
-      "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.technical_columns._add_hash_columns"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [
-        "fabricops_kit.technical_columns._safe_string"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.technical_columns._non_technical_columns": {
-      "qualified_name": "fabricops_kit.technical_columns._non_technical_columns",
-      "short_name": "_non_technical_columns",
-      "module": "technical_columns",
-      "callable": "_non_technical_columns",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/technical_columns/_non_technical_columns/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.technical_columns._default_technical_columns"
-      ],
-      "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.technical_columns._add_hash_columns"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [
-        "fabricops_kit.technical_columns._default_technical_columns"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.technical_columns._safe_string": {
-      "qualified_name": "fabricops_kit.technical_columns._safe_string",
-      "short_name": "_safe_string",
-      "module": "technical_columns",
-      "callable": "_safe_string",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/technical_columns/_safe_string/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.technical_columns._bucket_values_pandas",
-        "fabricops_kit.technical_columns._hash_row"
-      ],
-      "used_by_count": 2,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.technical_columns.standardize_columns": {
-      "qualified_name": "fabricops_kit.technical_columns.standardize_columns",
-      "short_name": "standardize_columns",
-      "module": "technical_columns",
-      "callable": "standardize_columns",
-      "docs_url": "/FabricOps-Starter-Kit/reference/standardize_columns/",
-      "classification": "essential",
-      "calls": [
-        "fabricops_kit.technical_columns._add_audit_columns",
-        "fabricops_kit.technical_columns._add_datetime_features",
-        "fabricops_kit.technical_columns._add_hash_columns"
-      ],
-      "calls_count": 3,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [
-        "fabricops_kit.technical_columns._add_audit_columns",
-        "fabricops_kit.technical_columns._add_datetime_features",
-        "fabricops_kit.technical_columns._add_hash_columns"
-      ],
-      "internal_helper_count": 3
-    },
     "fabricops_kit.versioning.get_docs_url": {
       "qualified_name": "fabricops_kit.versioning.get_docs_url",
       "short_name": "get_docs_url",
@@ -5364,13 +5144,11 @@
       "essential_count": 1,
       "optional_count": 0,
       "internal_count": 2,
-      "outbound_modules": [
-        "technical_columns"
-      ],
+      "outbound_modules": [],
       "inbound_modules": [
         "data_quality"
       ],
-      "outbound_count": 1,
+      "outbound_count": 0,
       "inbound_count": 1
     },
     "data_quality": {
@@ -5445,17 +5223,6 @@
       ],
       "outbound_count": 1,
       "inbound_count": 4
-    },
-    "technical_columns": {
-      "essential_count": 1,
-      "optional_count": 0,
-      "internal_count": 10,
-      "outbound_modules": [],
-      "inbound_modules": [
-        "data_profiling"
-      ],
-      "outbound_count": 0,
-      "inbound_count": 1
     },
     "versioning": {
       "essential_count": 1,

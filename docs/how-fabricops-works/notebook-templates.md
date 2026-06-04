@@ -18,7 +18,7 @@ The notebook templates are available in the [`templates/notebooks`](https://gith
 | `00_env_config` | Engineer | Defines workspace, lakehouse, warehouse, and metadata paths for each environment. |
 | `01_da` | Governance | Maintains steward and data agreement records. |
 | `02_ex` | Analyst or data scientist | Profiles data and proposes schema or transformation advice. |
-| `03_pc` |Engineer | Builds repeatable transformations and enforces approved metadata. |
+| `03_pc` | Engineer | Builds repeatable transformations, runtime audit columns, catalogue evidence, output profiles, and lineage. |
 | `04_gov` | Governance | Reviews business context, rules, classifications, and governance decisions. |
 
 ## Role-based notebook flow
@@ -30,9 +30,9 @@ The notebook templates are available in the [`templates/notebooks`](https://gith
 | 0 | Engineer | Configure `00_env_config`. | Environment-specific workspace, lakehouse, warehouse, and metadata paths are ready. |
 | 1 | Governance| Use `01_da`. | Steward and data agreement records are stored in the Governance workspace metadata lakehouse. |
 | 2 | Analyst or data scientist | Use `02_ex` in Engineering Dev. | Exploration profiles, notebook registration, and proposed schema or transformation advice are available. |
-| 3 | Engineer | Build `03_pc` in Engineering Dev. | Repeatable transformations, technical columns, drift checks, table-level lineage, profiles, and output tables are created. |
-| 4 | Governance | Use `04_gov`. | Business context, data quality rules, sensitivity classification, and governance context are reviewed and stored. |
-| 5 | Engineer | Rerun or update `03_pc` with approved metadata. | The pipeline applies approved rules using the correct environment config. |
+| 3 | Engineer | Build `03_pc` in Engineering Dev. | Repeatable transformations, runtime audit columns, source/output catalogue evidence, table-level lineage, profiles, and output tables are created without governance enforcement. |
+| 4 | Governance | Use `04_gov`. | Business context, schema expectations, data quality rules, sensitivity rules, classification rules, and enforcement decisions are reviewed and stored. |
+| 5 | Engineer | Rerun or enhance `03_pc` with approved metadata after `04_gov`. | The enhanced production pipeline can apply approved rules using actions such as warn, split, quarantine, or stop. |
 | 6 | Engineer | Use stored production notebook evidence. | Human-readable support material can be generated from approved evidence. |
 
 ## What each template owns
@@ -70,9 +70,11 @@ AI-assisted suggestions remain advisory until a human reviews and approves the r
 
 Run this notebook in Engineering Dev and Engineering Prod.
 
-Data engineers use it for repeatable source-to-output transformations. It adds technical columns, applies schema and data drift guardrails, registers the notebook, captures table-level lineage, and profiles output tables.
+Data engineers use it for repeatable source-to-output transformations. The base template registers the notebook, reads supported source types, profiles source data, writes reusable catalogue evidence, applies deterministic transformation logic, adds lightweight runtime audit columns inline before writing outputs, writes and reads back the target, profiles the output, writes output catalogue evidence, and records table-level lineage.
 
-After governance review, it loads approved data quality, sensitivity, and classification metadata and enforces the applicable controls.
+Audit columns are always useful: they identify the run, pipeline, environment, source, load time, notebook, and user or process that produced each row. Hash columns are only for deduplication, masked key comparison, slowly changing dimensions, or change detection. Datetime feature columns are analytics features, not audit fields. Bucket columns are only for advanced large-table layout or skew handling. For simple parallel data loading, use `repartition_by`; for physical Delta pruning, use `partition_by` with a natural column.
+
+The base `03_pc` does not read DQ rules, quarantine records, fail fast on governance rules, or enforce sensitivity/classification/business decisions before governance has enhanced the metadata. `04_gov` remains the place where governance users approve business context, schema expectations, data quality rules, sensitivity rules, classification rules, and enforcement decisions. After `04_gov`, teams can create an enhanced production `03_pc` variant that loads approved metadata and applies standard enforcement actions such as warn, split, quarantine, or stop.
 
 ### `04_gov`
 
@@ -80,7 +82,7 @@ Run this notebook in the Governance workspace after relevant `03_pc` outputs are
 
 Governance users enrich profiles with approved business context, data quality rules, sensitivity and PII classification, access classification, retention or export flags, exceptions, and review notes.
 
-These decisions stay in the governance stage and are stored through the configured metadata target for downstream enforcement.
+These decisions stay in the governance stage and are stored through the configured metadata target for downstream enforcement by an enhanced production pipeline after approval.
 
 ## Next step
 

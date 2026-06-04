@@ -17,10 +17,10 @@ Use the architecture diagram as the source of truth for the starter kit metadata
 | `data_access` | Table level | Lakehouse or warehouse access logs | Records table access assignments, access levels, and expiry windows. |
 | `data_catalogue` | Table level | `02_ex` and `03_pc` | Stores the central table registry for profiled sources and pipeline outputs. |
 | `data_lineage` | Table level | `03_pc` | Captures source-to-target table lineage during pipeline runtime. |
-| `data_contracts` | Table level | `04_gov`, enforced by `03_pc` | Stores table-level schema, required-rule, drift, and enforcement guardrails. |
+| `data_contracts` | Table level | `04_gov`, enforced by enhanced `03_pc` after approval | Stores table-level schema, required-rule, drift, and enforcement guardrails. |
 | `data_catalogue` | Column level | `02_ex` and `03_pc` | Stores column names, data types, positions, and nullability. |
 | `data_lineage` | Column level | `03_pc`, assisted by AI where needed | Captures source-to-target column lineage. |
-| `data_quality_rules` | Column level | `04_gov`, enforced by `03_pc` | Stores approved column-level quality expectations. |
+| `data_quality_rules` | Column level | `04_gov`, enforced by enhanced `03_pc` after approval | Stores approved column-level quality expectations. |
 | `sensitivity_classification` | Column level | `04_gov` | Stores approved column sensitivity labels and handling context. |
 | `business_context` | Column level | `04_gov` | Stores approved business definitions, ownership, and usage notes. |
 
@@ -119,7 +119,7 @@ The steward maintenance form hides backend-managed `steward_id` and `is_active` 
 | Grain | One row per agreement version. New agreement revisions are appended instead of overwriting previous versions. |
 | Key relationships | `steward_id` references `METADATA_DATA_STEWARD`. Downstream metadata tables use `agreement_id` to link catalogue, governance, rules, contracts, lineage, and handover evidence back to the approved agreement. |
 | Main writer | `01_da_*` |
-| Main downstream use | Scopes what `02_ex`, `03_pc`, and `04_gov` are allowed to profile, govern, enforce, and hand over, including different treatment for internal, external, and research usage purposes. |
+| Main downstream use | Scopes what `02_ex`, base `03_pc`, and `04_gov` are allowed to profile, govern, and hand over; enhanced `03_pc` variants can enforce approved metadata after governance review, including different treatment for internal, external, and research usage purposes. |
 | Runtime audit | Includes the standard runtime audit columns defined above. |
 
 | Column | Example | Input type | Purpose |
@@ -261,7 +261,7 @@ Do not store profiling metrics, business context, classification, or DQ results 
 | Concept | Table-level `data_catalogue` |
 | Purpose | Stores table-level catalogue and profiling evidence from exploration or production pipeline runs. |
 | Grain | One row per agreement, table, and profiling run. A latest view can expose one current row per table. |
-| Key relationships | `agreement_id` links to `METADATA_DATA_AGREEMENT`. `notebook_id` or `notebook_registry_key` links to `METADATA_NOTEBOOK_REGISTRY`. |
+| Key relationships | `agreement_id` links to `METADATA_DATA_AGREEMENT`. `notebook_id`, `notebook_registry_key`, or `notebook_registry_id` links to `METADATA_NOTEBOOK_REGISTRY`. |
 | Main writer | `02_ex_*` and `03_pc_*` profiling steps. |
 | Main downstream use | Feeds contracts, access review, lineage, dashboards, and handover. |
 | Runtime audit | Includes the standard runtime audit columns defined above. |
@@ -331,7 +331,7 @@ Do not store profiling metrics, business context, classification, or DQ results 
 | Concept | Table-level `data_lineage` |
 | Purpose | Stores source-to-target table movement and transformation evidence. |
 | Grain | One row per source table to target table lineage event. |
-| Key relationships | Source and target table keys link to `METADATA_DATA_CATALOGUE_TABLE`. `notebook_registry_key` links to the producing notebook. |
+| Key relationships | Source and target table keys link to `METADATA_DATA_CATALOGUE_TABLE`. `notebook_registry_key` or `notebook_registry_id` links to the producing notebook. |
 | Main writer | `03_pc_*` lineage capture or transformation summary step. |
 | Main downstream use | Feeds handover, metadata dashboard, OpenMetadata lineage payloads, and operational traceability. |
 | Runtime audit | Includes the standard runtime audit columns defined above. |
@@ -396,11 +396,11 @@ Do not store profiling metrics, business context, classification, or DQ results 
 | Item | Details |
 | --- | --- |
 | Concept | `data_contracts` |
-| Purpose | Stores table-level guardrails used by `03_pc` pipeline runs. |
+| Purpose | Stores table-level guardrails approved by `04_gov` for enhanced `03_pc` pipeline runs. |
 | Grain | One row per table contract version. |
 | Key relationships | `table_id` or `metadata_table_key` links to `METADATA_DATA_CATALOGUE_TABLE`. Required rules link to `METADATA_DATA_QUALITY_RULES`. |
 | Main writer | `04_gov_*` after AI-assisted and human-approved governance review. |
-| Main downstream use | `03_pc_*` reads approved contracts to decide whether to continue, warn, quarantine, or fail. |
+| Main downstream use | Enhanced `03_pc_*` runs can read approved contracts after `04_gov` to decide whether to continue, warn, quarantine, or fail. The base `03_pc` template does not enforce these guardrails before approval. |
 | Runtime audit | Includes the standard runtime audit columns defined above. |
 
 | Column | Example | Input type | Purpose |
@@ -414,7 +414,7 @@ Do not store profiling metrics, business context, classification, or DQ results 
 | expected_schema | [{"name":"student_id","type":"string"}] | Planned | Expected schema definition |
 | required_rules | ["student_id_not_null"] | Planned | Rules that must be active for this table |
 | drift_policy | allow_add_nullable_columns | Planned | Drift policy for schema or profile changes |
-| enforcement_mode | fail_on_error | Planned | How `03_pc` should enforce the contract |
+| enforcement_mode | fail_on_error | Planned | How an enhanced `03_pc` should enforce the contract after approval |
 | approval_status | approved | Planned | Review state |
 | approved_by | user@org.com | Planned | Approver |
 | approved_at | 2026-05-29T10:45:00Z | Planned | Approval timestamp |
@@ -429,8 +429,8 @@ Do not store profiling metrics, business context, classification, or DQ results 
 | Purpose | Stores approved executable data quality expectations. |
 | Grain | One row per rule version. |
 | Key relationships | `column_id` or `metadata_column_key` links to `METADATA_DATA_CATALOGUE_COLUMN`. Table-wide rules can link to `table_id` or `metadata_table_key`. |
-| Main writer | `04_gov_*` for approval and rule governance. `03_pc_*` reads the active rules for enforcement. |
-| Main downstream use | Used by `03_pc_*` to enforce quality and by dashboards or handover outputs to explain approved rules. |
+| Main writer | `04_gov_*` for approval and rule governance. Enhanced `03_pc_*` runs read the active rules for enforcement after approval. |
+| Main downstream use | Used by enhanced `03_pc_*` runs to enforce quality after approval and by dashboards or handover outputs to explain approved rules. |
 | Runtime audit | Includes the standard runtime audit columns defined above. |
 
 | Column | Example | Input type | Purpose |
@@ -546,10 +546,10 @@ Do not store profiling metrics, business context, classification, or DQ results 
 | Item | Details |
 | --- | --- |
 | Concept | Runtime evidence for `data_quality_rules` |
-| Purpose | Stores runtime evidence from executing approved DQ rules. |
+| Purpose | Stores runtime evidence from executing approved DQ rules in enhanced production pipelines after `04_gov` approval. |
 | Grain | One row per rule execution per run. |
 | Key relationships | `rule_key` links to `METADATA_DATA_QUALITY_RULES`. Table and column keys link to catalogue tables. |
-| Main writer | `03_pc_*` through DQ enforcement. |
+| Main writer | Enhanced `03_pc_*` through DQ enforcement after `04_gov` approval. |
 | Main downstream use | Feeds quality dashboards, handover, audit checks, and run evidence. |
 | Runtime audit | Includes the standard runtime audit columns defined above. |
 

@@ -265,9 +265,9 @@ Exploration notebook flow used to profile source data and draft advisory AI outp
 
 ## `03_pc_<agreement>_<pipeline>`
 
-Pipeline notebook flow for deterministic enforcement and controlled publishing.
+Core production pipeline flow for clean evidence creation, inline runtime audit columns, large-table write tuning, and controlled publishing. 03_pc uses build_runtime_audit_fields for metadata runtime values, then adds dataframe audit columns inline. Audit columns are always useful; hashes, datetime features, and bucket columns are specialized patterns outside the default path.
 
-### Segment 1: Load shared config and runtime context
+### Segment 1: Runtime setup, parameters, agreement selection, and registration
 
 <table>
   <thead>
@@ -287,10 +287,31 @@ Pipeline notebook flow for deterministic enforcement and controlled publishing.
       <td>`_get_store`, `_run_config_smoke_tests`, `_validate_framework_config`</td>
       <td>Check dependency outputs and metadata writes.</td>
     </tr>
+    <tr>
+      <td>`select_agreement`</td>
+      <td>Callable orchestration wrapper</td>
+      <td>Render a searchable agreement selector and store selected agreement metadata row in module state.</td>
+      <td>`_html_escape`, `_latest_agreement_versions`, `_load_agreements`, `_refresh_registration_status`, `_render_searchable_selector`, `_selected_row`, `_status_message`</td>
+      <td>Check dependency outputs and metadata writes.</td>
+    </tr>
+    <tr>
+      <td>`get_selected_agreement`</td>
+      <td>Callable orchestration wrapper</td>
+      <td>Return the agreement selected by :func:`select_agreement`.</td>
+      <td>—</td>
+      <td>Check dependency outputs and metadata writes.</td>
+    </tr>
+    <tr>
+      <td>`current_notebook_active_registrations`</td>
+      <td>Callable orchestration wrapper</td>
+      <td>Return active latest agreement registrations for the running notebook.</td>
+      <td>`_context_get`, `_runtime_context`, `_safe_str`</td>
+      <td>Check dependency outputs and metadata writes.</td>
+    </tr>
   </tbody>
 </table>
 
-### Segment 2: Load source data and validate required columns
+### Segment 2: Read source data
 
 <table>
   <thead>
@@ -317,84 +338,24 @@ Pipeline notebook flow for deterministic enforcement and controlled publishing.
       <td>`_get_spark`, `_get_store`</td>
       <td>Check dependency outputs and metadata writes.</td>
     </tr>
-  </tbody>
-</table>
-
-### Segment 3: Transform and apply runtime standards
-
-<table>
-  <thead>
     <tr>
-      <th>Function</th>
-      <th>Role</th>
-      <th>What it does</th>
-      <th>Delegates to</th>
-      <th>Debug when</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>`standardize_columns`</td>
+      <td>`read_lakehouse_csv`</td>
       <td>Callable orchestration wrapper</td>
-      <td>Apply canonical technical/audit enrichment in one notebook-facing wrapper.</td>
-      <td>`_add_audit_columns`, `_add_datetime_features`, `_add_hash_columns`</td>
+      <td>Read a CSV file from a Fabric lakehouse Files path.</td>
+      <td>`_get_spark`, `_get_store`</td>
       <td>Check dependency outputs and metadata writes.</td>
     </tr>
     <tr>
-      <td>`validate_dq_rules`</td>
+      <td>`read_lakehouse_parquet`</td>
       <td>Callable orchestration wrapper</td>
-      <td>Validate canonical DQ rules before enforcement.</td>
-      <td>—</td>
+      <td>Read a Parquet file from a Fabric lakehouse Files path.</td>
+      <td>`_convert_single_parquet_ns_to_us`, `_get_spark`, `_get_store`</td>
       <td>Check dependency outputs and metadata writes.</td>
     </tr>
   </tbody>
 </table>
 
-### Segment 4: Run DQ, split outputs, and publish
-
-<table>
-  <thead>
-    <tr>
-      <th>Function</th>
-      <th>Role</th>
-      <th>What it does</th>
-      <th>Delegates to</th>
-      <th>Debug when</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>`enforce_dq`</td>
-      <td>Callable orchestration wrapper</td>
-      <td>Enforce approved DQ rules and return structured deterministic outputs.</td>
-      <td>`_load_active_dq_rules`, `_run_dq_rules`, `_split_dq_rows`</td>
-      <td>Check dependency outputs and metadata writes.</td>
-    </tr>
-    <tr>
-      <td>`assert_dq_passed`</td>
-      <td>Callable orchestration wrapper</td>
-      <td>Raise only after evidence materialization when error-severity rules fail.</td>
-      <td>—</td>
-      <td>Check dependency outputs and metadata writes.</td>
-    </tr>
-    <tr>
-      <td>`write_lakehouse_table`</td>
-      <td>Callable orchestration wrapper</td>
-      <td>Write a Spark DataFrame to a Fabric lakehouse Delta table.</td>
-      <td>`_get_store`</td>
-      <td>Check dependency outputs and metadata writes.</td>
-    </tr>
-    <tr>
-      <td>`write_warehouse_table`</td>
-      <td>Callable orchestration wrapper</td>
-      <td>Write a Spark DataFrame to a Microsoft Fabric warehouse table.</td>
-      <td>`_get_store`</td>
-      <td>Check dependency outputs and metadata writes.</td>
-    </tr>
-  </tbody>
-</table>
-
-### Optional profiling, drift, governance, lineage, and handover
+### Segment 3: Profile and write reusable catalogue evidence
 
 <table>
   <thead>
@@ -415,45 +376,84 @@ Pipeline notebook flow for deterministic enforcement and controlled publishing.
       <td>Check dependency outputs and metadata writes.</td>
     </tr>
     <tr>
-      <td>`check_schema_drift`</td>
+      <td>`write_lakehouse_table`</td>
       <td>Callable orchestration wrapper</td>
-      <td>Compare a current dataframe schema against a baseline schema snapshot.</td>
-      <td>—</td>
+      <td>Write a Spark DataFrame to a Fabric lakehouse Delta table.</td>
+      <td>`_get_store`</td>
+      <td>Check dependency outputs and metadata writes.</td>
+    </tr>
+  </tbody>
+</table>
+
+### Segment 4: Transform, add runtime audit columns, and publish outputs
+
+<table>
+  <thead>
+    <tr>
+      <th>Function</th>
+      <th>Role</th>
+      <th>What it does</th>
+      <th>Delegates to</th>
+      <th>Debug when</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>`build_runtime_audit_fields`</td>
+      <td>Callable orchestration wrapper</td>
+      <td>Build shared runtime audit values; 03_pc uses notebook and committed-by context while adding dataframe audit columns inline.</td>
+      <td>`_context_get`, `_first_non_blank`, `_runtime_context`, `_safe_str`</td>
       <td>Check dependency outputs and metadata writes.</td>
     </tr>
     <tr>
-      <td>`check_partition_drift`</td>
+      <td>`write_lakehouse_table`</td>
       <td>Callable orchestration wrapper</td>
-      <td>Check partition-level drift using keys, partitions, and optional watermark baselines.</td>
-      <td>—</td>
+      <td>Write a Spark DataFrame to a Fabric lakehouse Delta table.</td>
+      <td>`_get_store`</td>
       <td>Check dependency outputs and metadata writes.</td>
     </tr>
     <tr>
-      <td>`check_profile_drift`</td>
+      <td>`write_warehouse_table`</td>
       <td>Callable orchestration wrapper</td>
-      <td>Compare profile metrics against a baseline profile and drift thresholds.</td>
-      <td>—</td>
+      <td>Write a Spark DataFrame to a Microsoft Fabric warehouse table.</td>
+      <td>`_get_store`</td>
+      <td>Check dependency outputs and metadata writes.</td>
+    </tr>
+  </tbody>
+</table>
+
+### Segment 5: Read back output, profile output, and write lineage
+
+<table>
+  <thead>
+    <tr>
+      <th>Function</th>
+      <th>Role</th>
+      <th>What it does</th>
+      <th>Delegates to</th>
+      <th>Debug when</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>`read_lakehouse_table`</td>
+      <td>Callable orchestration wrapper</td>
+      <td>Read a Delta table from a Fabric lakehouse.</td>
+      <td>`_get_spark`, `_get_store`</td>
       <td>Check dependency outputs and metadata writes.</td>
     </tr>
     <tr>
-      <td>`summarize_drift_results`</td>
+      <td>`read_warehouse_table`</td>
       <td>Callable orchestration wrapper</td>
-      <td>Summarize schema, partition, and profile drift outcomes into one decision.</td>
-      <td>—</td>
+      <td>Read a table from a Microsoft Fabric warehouse.</td>
+      <td>`_get_spark`, `_get_store`</td>
       <td>Check dependency outputs and metadata writes.</td>
     </tr>
     <tr>
-      <td>`write_governance`</td>
+      <td>`profile_dataframe`</td>
       <td>Callable orchestration wrapper</td>
-      <td>Persist approved governance rows to metadata table.</td>
-      <td>`_approved_widget_rows`</td>
-      <td>Check dependency outputs and metadata writes.</td>
-    </tr>
-    <tr>
-      <td>`load_governance`</td>
-      <td>Callable orchestration wrapper</td>
-      <td>Load approved governance metadata as read-only agreement context.</td>
-      <td>`_coerce_row_dicts`</td>
+      <td>Build canonical DQ-ready profiling rows from a Spark DataFrame.</td>
+      <td>`_get_profiled_columns`, `_is_min_max_supported_type`</td>
       <td>Check dependency outputs and metadata writes.</td>
     </tr>
     <tr>
@@ -464,26 +464,11 @@ Pipeline notebook flow for deterministic enforcement and controlled publishing.
       <td>Check dependency outputs and metadata writes.</td>
     </tr>
     <tr>
-      <td>`build_lineage_handover_markdown`</td>
+      <td>`write_lakehouse_table`</td>
       <td>Callable orchestration wrapper</td>
-      <td>Build a concise markdown handover summary from lineage execution results.</td>
-      <td>—</td>
-      <td>Check dependency outputs and metadata writes.</td>
-    </tr>
-    <tr>
-      <td>`build_handover`</td>
-      <td>Callable orchestration wrapper</td>
-      <td>Build a handover-friendly summary for one data product run.</td>
-      <td>—</td>
-      <td>Check dependency outputs and metadata writes.</td>
-    </tr>
-    <tr>
-      <td>`render_handover_markdown`</td>
-      <td>Callable orchestration wrapper</td>
-      <td>Render a handover summary dictionary into Markdown for handover notes.</td>
-      <td>`_status_of`</td>
+      <td>Write a Spark DataFrame to a Fabric lakehouse Delta table.</td>
+      <td>`_get_store`</td>
       <td>Check dependency outputs and metadata writes.</td>
     </tr>
   </tbody>
 </table>
-

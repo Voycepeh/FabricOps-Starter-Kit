@@ -5,7 +5,7 @@
 
 ## Purpose
 
-Build shared underscore-prefixed runtime audit fields for metadata-table rows.
+Build shared runtime audit values; 03_pc uses notebook and committed-by context while adding dataframe audit columns inline.
 
 ## Function manifest
 
