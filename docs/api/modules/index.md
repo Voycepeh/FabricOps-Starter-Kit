@@ -16,3 +16,4 @@ Short-form modules remain import-compatible aliases but are intentionally hidden
 - [`handover`](handover.md)
 - [`metadata`](metadata.md)
 - [`technical_columns`](technical_columns.md)
+- [`versioning`](versioning.md)

@@ -6,6 +6,29 @@ Template-first view of public callables and their main delegated helpers.
 
 Shared environment bootstrap and validation before agreement intake, exploration, or pipeline notebooks run.
 
+### Segment 1: Explain the shared environment role
+
+<table>
+  <thead>
+    <tr>
+      <th>Function</th>
+      <th>Role</th>
+      <th>What it does</th>
+      <th>Delegates to</th>
+      <th>Debug when</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>`print_runtime_banner`</td>
+      <td>Callable orchestration wrapper</td>
+      <td>Print the installed package version and matching documentation links in a notebook-friendly banner.</td>
+      <td>—</td>
+      <td>Check dependency outputs and metadata writes.</td>
+    </tr>
+  </tbody>
+</table>
+
 ### Segment 2: Define environment targets and notebook policy
 
 <table>

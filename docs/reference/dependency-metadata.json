@@ -5066,6 +5066,96 @@
         "fabricops_kit.technical_columns._add_hash_columns"
       ],
       "internal_helper_count": 3
+    },
+    "fabricops_kit.versioning.get_docs_url": {
+      "qualified_name": "fabricops_kit.versioning.get_docs_url",
+      "short_name": "get_docs_url",
+      "module": "versioning",
+      "callable": "get_docs_url",
+      "docs_url": "/FabricOps-Starter-Kit/reference/get_docs_url/",
+      "classification": "optional",
+      "calls": [
+        "fabricops_kit.versioning.get_docs_version"
+      ],
+      "calls_count": 1,
+      "used_by": [
+        "fabricops_kit.versioning.print_runtime_banner"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.versioning.get_docs_version": {
+      "qualified_name": "fabricops_kit.versioning.get_docs_version",
+      "short_name": "get_docs_version",
+      "module": "versioning",
+      "callable": "get_docs_version",
+      "docs_url": "/FabricOps-Starter-Kit/reference/get_docs_version/",
+      "classification": "optional",
+      "calls": [
+        "fabricops_kit.versioning.get_package_version"
+      ],
+      "calls_count": 1,
+      "used_by": [
+        "fabricops_kit.versioning.get_docs_url"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.versioning.get_package_version": {
+      "qualified_name": "fabricops_kit.versioning.get_package_version",
+      "short_name": "get_package_version",
+      "module": "versioning",
+      "callable": "get_package_version",
+      "docs_url": "/FabricOps-Starter-Kit/reference/get_package_version/",
+      "classification": "optional",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.versioning.get_docs_version",
+        "fabricops_kit.versioning.get_release_notes_url",
+        "fabricops_kit.versioning.print_runtime_banner"
+      ],
+      "used_by_count": 3,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.versioning.get_release_notes_url": {
+      "qualified_name": "fabricops_kit.versioning.get_release_notes_url",
+      "short_name": "get_release_notes_url",
+      "module": "versioning",
+      "callable": "get_release_notes_url",
+      "docs_url": "/FabricOps-Starter-Kit/reference/get_release_notes_url/",
+      "classification": "optional",
+      "calls": [
+        "fabricops_kit.versioning.get_package_version"
+      ],
+      "calls_count": 1,
+      "used_by": [
+        "fabricops_kit.versioning.print_runtime_banner"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.versioning.print_runtime_banner": {
+      "qualified_name": "fabricops_kit.versioning.print_runtime_banner",
+      "short_name": "print_runtime_banner",
+      "module": "versioning",
+      "callable": "print_runtime_banner",
+      "docs_url": "/FabricOps-Starter-Kit/reference/print_runtime_banner/",
+      "classification": "essential",
+      "calls": [
+        "fabricops_kit.versioning.get_docs_url",
+        "fabricops_kit.versioning.get_package_version",
+        "fabricops_kit.versioning.get_release_notes_url"
+      ],
+      "calls_count": 3,
+      "used_by": [],
+      "used_by_count": 0,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
     }
   },
   "modules": {
@@ -5232,6 +5322,15 @@
       ],
       "outbound_count": 0,
       "inbound_count": 1
+    },
+    "versioning": {
+      "essential_count": 1,
+      "optional_count": 4,
+      "internal_count": 0,
+      "outbound_modules": [],
+      "inbound_modules": [],
+      "outbound_count": 0,
+      "inbound_count": 0
     }
   }
 }

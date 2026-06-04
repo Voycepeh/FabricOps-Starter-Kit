@@ -83,6 +83,13 @@
       "module_summary": "Owns standard output/audit columns for pipeline outputs.",
       "sidebar_group": "3. Data engineer",
       "sidebar_include": true
+    },
+    {
+      "module_name": "versioning",
+      "visibility": "public",
+      "module_summary": "Owns runtime package-version detection and documentation link helpers for Fabric notebooks.",
+      "sidebar_group": "0. Environment setup",
+      "sidebar_include": true
     }
   ],
   "callables": [
@@ -709,6 +716,66 @@
       "callable_role": "essential",
       "template_notebook": "\u2014",
       "template_segment": "\u2014"
+    },
+    {
+      "module_name": "versioning",
+      "visibility": "public",
+      "module_summary": "Owns runtime package-version detection and documentation link helpers for Fabric notebooks.",
+      "sidebar_group": "0. Environment setup",
+      "sidebar_include": true,
+      "callable_name": "get_docs_url",
+      "callable_visibility": "public",
+      "callable_role": "optional",
+      "template_notebook": "`00_env_config`",
+      "template_segment": "Segment 1: Explain the shared environment role"
+    },
+    {
+      "module_name": "versioning",
+      "visibility": "public",
+      "module_summary": "Owns runtime package-version detection and documentation link helpers for Fabric notebooks.",
+      "sidebar_group": "0. Environment setup",
+      "sidebar_include": true,
+      "callable_name": "get_docs_version",
+      "callable_visibility": "public",
+      "callable_role": "optional",
+      "template_notebook": "`00_env_config`",
+      "template_segment": "Segment 1: Explain the shared environment role"
+    },
+    {
+      "module_name": "versioning",
+      "visibility": "public",
+      "module_summary": "Owns runtime package-version detection and documentation link helpers for Fabric notebooks.",
+      "sidebar_group": "0. Environment setup",
+      "sidebar_include": true,
+      "callable_name": "get_package_version",
+      "callable_visibility": "public",
+      "callable_role": "optional",
+      "template_notebook": "`00_env_config`",
+      "template_segment": "Segment 1: Explain the shared environment role"
+    },
+    {
+      "module_name": "versioning",
+      "visibility": "public",
+      "module_summary": "Owns runtime package-version detection and documentation link helpers for Fabric notebooks.",
+      "sidebar_group": "0. Environment setup",
+      "sidebar_include": true,
+      "callable_name": "get_release_notes_url",
+      "callable_visibility": "public",
+      "callable_role": "optional",
+      "template_notebook": "`00_env_config`",
+      "template_segment": "Segment 1: Explain the shared environment role"
+    },
+    {
+      "module_name": "versioning",
+      "visibility": "public",
+      "module_summary": "Owns runtime package-version detection and documentation link helpers for Fabric notebooks.",
+      "sidebar_group": "0. Environment setup",
+      "sidebar_include": true,
+      "callable_name": "print_runtime_banner",
+      "callable_visibility": "public",
+      "callable_role": "essential",
+      "template_notebook": "`00_env_config`",
+      "template_segment": "Segment 1: Explain the shared environment role"
     }
   ]
 }
