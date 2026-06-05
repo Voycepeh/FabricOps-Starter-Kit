@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import ast
-from dataclasses import dataclass
 import json
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -37,6 +37,7 @@ PUBLIC_MODULE_PREFERRED_NAMES = {
     "technical_columns": "technical_columns",
     "business_context": "business_context",
     "data_agreement": "data_agreement",
+    "schema_contracts": "schema_contracts",
 }
 INTERNAL_MODULE_BLACKLIST = {"_utils"}
 INTERNAL_ALIAS_MODULES = {}

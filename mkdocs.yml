@@ -49,6 +49,7 @@ nav:
           - data_governance: api/modules/data_governance.md
           - data_profiling: api/modules/data_profiling.md
           - data_quality: api/modules/data_quality.md
+          - schema_contracts: api/modules/schema_contracts.md
           - fabric_input_output: api/modules/fabric_input_output.md
           - data_lineage: api/modules/data_lineage.md
           - drift: api/modules/drift.md

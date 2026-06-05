@@ -17,7 +17,7 @@ Use the architecture diagram as the source of truth for the starter kit metadata
 | `data_access` | Table level | Lakehouse or warehouse access logs | Records table access assignments, access levels, and expiry windows. |
 | `data_catalogue` | Table level | `02_ex` and `03_pc` | Stores the central table registry for profiled sources and pipeline outputs. |
 | `data_lineage` | Table level | `03_pc` | Captures source-to-target table lineage during pipeline runtime. |
-| `data_contracts` | Table level | `04_gov`, enforced by enhanced `03_pc` after approval | Stores table-level schema, required-rule, drift, and enforcement guardrails. |
+| `schema_contracts` | Dataset level | Schema review workflow, enforced by `03_pc` after approval | Stores versioned source and target dataset schema contracts linked to a data agreement. |
 | `data_catalogue` | Column level | `02_ex` and `03_pc` | Stores column names, data types, positions, and nullability. |
 | `data_lineage` | Column level | `03_pc`, assisted by AI where needed | Captures source-to-target column lineage. |
 | `data_quality_rules` | Column level | `04_gov`, enforced by enhanced `03_pc` after approval | Stores approved column-level quality expectations. |
@@ -608,3 +608,33 @@ Do not store profiling metrics, business context, classification, or DQ results 
 ## Next step
 
 Continue to [Metadata Dashboard](metadata-dashboard.md) to see how the source evidence becomes useful to people and tools.
+
+### `METADATA_SCHEMA_CONTRACT`
+
+| Item | Details |
+| --- | --- |
+| Purpose | Stores one dataset-level schema contract version for one source or target dataset under a data agreement. |
+| Grain | One row per `contract_id` and `contract_version`. |
+| Key relationships | `agreement_id` links to `METADATA_DATA_AGREEMENT`; `contract_id` and `contract_version` link to `METADATA_SCHEMA_CONTRACT_COLUMN` and schema validation evidence. |
+
+Key fields include `contract_id`, `agreement_id`, `dataset_role`, workspace/item identity fields, `schema_name`, `table_name`, `allow_extra_columns`, `check_column_order`, `default_enforcement`, `contract_status`, `contract_version`, `approved_by`, `approved_at`, `created_at`, and `updated_at`.
+
+### `METADATA_SCHEMA_CONTRACT_COLUMN`
+
+| Item | Details |
+| --- | --- |
+| Purpose | Stores normalized approved column-level schema contract rows. |
+| Grain | One row per approved column per `contract_id` and `contract_version`. |
+| Key relationships | `contract_id` and `contract_version` link to `METADATA_SCHEMA_CONTRACT`. |
+
+Key fields include `contract_id`, `column_name`, `data_type`, `required`, `nullable`, `ordinal_position`, `enforcement`, `contract_version`, `created_at`, and `updated_at`.
+
+### `METADATA_SCHEMA_VALIDATION_EVIDENCE`
+
+| Item | Details |
+| --- | --- |
+| Purpose | Records each `03_pc` source or target schema validation run. |
+| Grain | One row per dataset contract validation per pipeline run. |
+| Key relationships | `agreement_id`, `contract_id`, and `contract_version` link each evidence row to the approved dataset contract used during validation. |
+
+Key fields include `run_id`, `agreement_id`, `contract_id`, `contract_version`, `dataset_role`, dataset identity fields, `validation_status`, `enforcement_applied`, JSON detail payloads for missing columns, unexpected columns, datatype mismatches, nullability mismatches, column-order mismatches, and `validated_at`.

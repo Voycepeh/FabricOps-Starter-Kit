@@ -106,3 +106,61 @@ Enforcement evidence:
 ## Feedback loop
 
 Suggestions, review decisions, approved rules, rejected rules, and enforcement outcomes are stored as evidence. Teams can use that evidence to improve future prompts and rule suggestions.
+
+## Schema contracts versus row-level data quality
+
+Schema validation is structural data quality: **is the dataset shaped as expected?** Row-level data quality asks a different question: **are the values acceptable?** Contract enforcement decides what the pipeline should do when either type of validation detects a problem.
+
+A data agreement governs one or more datasets. Each source or target dataset has its own enforceable schema contract linked to that agreement. The agreement is the business and governance umbrella; the dataset contract is the technical schema that can be validated during `03_pc`.
+
+Agreement-level concerns include ownership, approved use, stewardship, lifecycle, shared enforcement expectations, and participating datasets.
+
+Dataset-level schema-contract concerns include the table or dataset identity, required columns, datatypes, nullability, whether extra columns are allowed, column-order requirements, enforcement response, and contract version.
+
+### First contract setup workflow
+
+Use profiling to avoid manually typing every column, but do not treat the profile itself as an approved contract:
+
+1. run profiling for the source or target dataset;
+2. load the latest profile metadata;
+3. call `suggest_schema_contract(...)` to create proposed column rows;
+4. call `review_schema_contract(...)` so a human reviewer selects locked columns and enforcement settings;
+5. call `write_schema_contract(...)` to store the approved dataset contract and versioned column rows;
+6. let future `03_pc` runs call `load_schema_contract(...)`, `validate_schema(...)`, and `enforce_schema_result(...)`.
+
+```python
+source_proposal = suggest_schema_contract(
+    source_profile_rows,
+    agreement_id=AGREEMENT_ID,
+    contract_id=f"{AGREEMENT_ID}_source_{SOURCE_TABLE}",
+    dataset_role="source",
+)
+source_review = review_schema_contract(
+    source_profile_rows,
+    agreement_id=AGREEMENT_ID,
+    contract_id=f"{AGREEMENT_ID}_source_{SOURCE_TABLE}",
+    dataset_role="source",
+    table_name=SOURCE_TABLE,
+)
+write_schema_contract(
+    spark,
+    config=CONFIG,
+    env=ENV_NAME,
+    agreement_id=AGREEMENT_ID,
+    contract_id=f"{AGREEMENT_ID}_source_{SOURCE_TABLE}",
+    dataset_role="source",
+    workspace_name=source_store.name,
+    item_name=source_store.name,
+    table_name=SOURCE_TABLE,
+    columns=source_review["columns"],
+    **source_review["settings"],
+)
+```
+
+Repeat the same setup for a transformed target profile, using `dataset_role="target"` and the target table identity.
+
+### Enforcement examples
+
+Use `default_enforcement="warn"` while onboarding a new contract if teams need to observe non-breaking drift. Use `default_enforcement="fail"` when missing required columns, datatype changes, or other breaking drift must stop the pipeline before write.
+
+A newly added source column can be handled by setting `allow_extra_columns=True` or by approving a new contract version if the column should become locked. A removed required column or datatype change should normally stay in `fail` mode so the pipeline stops before publishing incompatible data.

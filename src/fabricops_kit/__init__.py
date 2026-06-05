@@ -64,6 +64,18 @@ from .metadata import (
     register_current_notebook,
     setup_notebook_registry_table,
 )
+from .schema_contracts import (
+    SchemaContractValidationError,
+    build_schema_contract_review_state,
+    build_schema_validation_evidence,
+    enforce_schema_result,
+    load_schema_contract,
+    review_schema_contract,
+    suggest_schema_contract,
+    validate_schema,
+    write_schema_contract,
+    write_schema_validation_evidence,
+)
 from .versioning import get_docs_url, get_docs_version, get_package_version, get_release_notes_url, print_runtime_banner
 
 
@@ -125,6 +137,16 @@ __all__ = [
     "read_lakehouse_parquet",
     "read_lakehouse_excel",
     "validate_dq_rules",
+    "SchemaContractValidationError",
+    "suggest_schema_contract",
+    "review_schema_contract",
+    "build_schema_contract_review_state",
+    "write_schema_contract",
+    "load_schema_contract",
+    "validate_schema",
+    "enforce_schema_result",
+    "build_schema_validation_evidence",
+    "write_schema_validation_evidence",
     "review_dq_rule_deactivations",
     "check_schema_drift",
     "check_partition_drift",

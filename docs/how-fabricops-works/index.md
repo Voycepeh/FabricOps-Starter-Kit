@@ -2,6 +2,8 @@
 
 FabricOps Starter Kit is a lightweight Microsoft Fabric notebook starter kit.
 
+FabricOps Starter Kit focuses on reusable, modular patterns for governed data products within Microsoft Fabric. It is not intended to provide a general connector framework for external APIs or operational systems. External ingestion should normally be handled through Fabric pipelines, supported connectors, shortcuts, mirroring, or project-specific integration code. FabricOps begins where data enters the governed Fabric workflow and is validated, transformed, monitored, documented, and published.
+
 We adopt a Fabric notebook-first approach for data exploration, data pipelines, and governance.
 
 It helps governance teams, analysts, and engineers work from a shared structure without adding a large platform around Fabric.

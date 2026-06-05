@@ -4199,9 +4199,11 @@
         "fabricops_kit.data_agreement._list_all_data_agreement_rows",
         "fabricops_kit.data_agreement._list_data_stewards",
         "fabricops_kit.metadata.load_notebook_registry",
-        "fabricops_kit.metadata.setup_notebook_registry_table"
+        "fabricops_kit.metadata.setup_notebook_registry_table",
+        "fabricops_kit.schema_contracts.load_schema_contract",
+        "fabricops_kit.schema_contracts.write_schema_contract"
       ],
-      "used_by_count": 5,
+      "used_by_count": 7,
       "internal_helpers_used": [
         "fabricops_kit.fabric_input_output._get_spark"
       ],
@@ -4262,9 +4264,11 @@
         "fabricops_kit.data_quality.write_dq_rules",
         "fabricops_kit.fabric_input_output.seed_minimal_sample_source_table",
         "fabricops_kit.metadata.register_current_notebook",
-        "fabricops_kit.metadata.setup_notebook_registry_table"
+        "fabricops_kit.metadata.setup_notebook_registry_table",
+        "fabricops_kit.schema_contracts.write_schema_contract",
+        "fabricops_kit.schema_contracts.write_schema_validation_evidence"
       ],
-      "used_by_count": 6,
+      "used_by_count": 8,
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
@@ -4981,6 +4985,520 @@
       ],
       "internal_helper_count": 1
     },
+    "fabricops_kit.schema_contracts.SchemaContractValidationError": {
+      "qualified_name": "fabricops_kit.schema_contracts.SchemaContractValidationError",
+      "short_name": "SchemaContractValidationError",
+      "module": "schema_contracts",
+      "callable": "SchemaContractValidationError",
+      "docs_url": "/FabricOps-Starter-Kit/reference/SchemaContractValidationError/",
+      "classification": "optional",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.schema_contracts.enforce_schema_result"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.schema_contracts._bool": {
+      "qualified_name": "fabricops_kit.schema_contracts._bool",
+      "short_name": "_bool",
+      "module": "schema_contracts",
+      "callable": "_bool",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/schema_contracts/_bool/",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.schema_contracts._schema_rows_from_profile",
+        "fabricops_kit.schema_contracts.build_schema_contract_review_state",
+        "fabricops_kit.schema_contracts.load_schema_contract",
+        "fabricops_kit.schema_contracts.validate_schema",
+        "fabricops_kit.schema_contracts.write_schema_contract"
+      ],
+      "used_by_count": 5,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.schema_contracts._coerce_rows": {
+      "qualified_name": "fabricops_kit.schema_contracts._coerce_rows",
+      "short_name": "_coerce_rows",
+      "module": "schema_contracts",
+      "callable": "_coerce_rows",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/schema_contracts/_coerce_rows/",
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.schema_contracts._row_dict"
+      ],
+      "calls_count": 1,
+      "used_by": [
+        "fabricops_kit.schema_contracts._latest_profile_for_dataset",
+        "fabricops_kit.schema_contracts._schema_rows_from_profile",
+        "fabricops_kit.schema_contracts.load_schema_contract",
+        "fabricops_kit.schema_contracts.validate_schema",
+        "fabricops_kit.schema_contracts.write_schema_contract"
+      ],
+      "used_by_count": 5,
+      "internal_helpers_used": [
+        "fabricops_kit.schema_contracts._row_dict"
+      ],
+      "internal_helper_count": 1
+    },
+    "fabricops_kit.schema_contracts._get_any": {
+      "qualified_name": "fabricops_kit.schema_contracts._get_any",
+      "short_name": "_get_any",
+      "module": "schema_contracts",
+      "callable": "_get_any",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/schema_contracts/_get_any/",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.schema_contracts._identity_matches",
+        "fabricops_kit.schema_contracts._latest_profile_for_dataset",
+        "fabricops_kit.schema_contracts._next_contract_version",
+        "fabricops_kit.schema_contracts._schema_rows_from_profile",
+        "fabricops_kit.schema_contracts.load_schema_contract",
+        "fabricops_kit.schema_contracts.validate_schema"
+      ],
+      "used_by_count": 6,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.schema_contracts._identity_matches": {
+      "qualified_name": "fabricops_kit.schema_contracts._identity_matches",
+      "short_name": "_identity_matches",
+      "module": "schema_contracts",
+      "callable": "_identity_matches",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/schema_contracts/_identity_matches/",
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.schema_contracts._get_any"
+      ],
+      "calls_count": 1,
+      "used_by": [
+        "fabricops_kit.schema_contracts.load_schema_contract"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [
+        "fabricops_kit.schema_contracts._get_any"
+      ],
+      "internal_helper_count": 1
+    },
+    "fabricops_kit.schema_contracts._latest_profile_for_dataset": {
+      "qualified_name": "fabricops_kit.schema_contracts._latest_profile_for_dataset",
+      "short_name": "_latest_profile_for_dataset",
+      "module": "schema_contracts",
+      "callable": "_latest_profile_for_dataset",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/schema_contracts/_latest_profile_for_dataset/",
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.schema_contracts._coerce_rows",
+        "fabricops_kit.schema_contracts._get_any"
+      ],
+      "calls_count": 2,
+      "used_by": [
+        "fabricops_kit.schema_contracts.review_schema_contract"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [
+        "fabricops_kit.schema_contracts._coerce_rows",
+        "fabricops_kit.schema_contracts._get_any"
+      ],
+      "internal_helper_count": 2
+    },
+    "fabricops_kit.schema_contracts._next_contract_version": {
+      "qualified_name": "fabricops_kit.schema_contracts._next_contract_version",
+      "short_name": "_next_contract_version",
+      "module": "schema_contracts",
+      "callable": "_next_contract_version",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/schema_contracts/_next_contract_version/",
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.schema_contracts._get_any"
+      ],
+      "calls_count": 1,
+      "used_by": [
+        "fabricops_kit.schema_contracts.write_schema_contract"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [
+        "fabricops_kit.schema_contracts._get_any"
+      ],
+      "internal_helper_count": 1
+    },
+    "fabricops_kit.schema_contracts._now_utc_iso": {
+      "qualified_name": "fabricops_kit.schema_contracts._now_utc_iso",
+      "short_name": "_now_utc_iso",
+      "module": "schema_contracts",
+      "callable": "_now_utc_iso",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/schema_contracts/_now_utc_iso/",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.schema_contracts.build_schema_validation_evidence",
+        "fabricops_kit.schema_contracts.suggest_schema_contract",
+        "fabricops_kit.schema_contracts.write_schema_contract"
+      ],
+      "used_by_count": 3,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.schema_contracts._required_identity": {
+      "qualified_name": "fabricops_kit.schema_contracts._required_identity",
+      "short_name": "_required_identity",
+      "module": "schema_contracts",
+      "callable": "_required_identity",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/schema_contracts/_required_identity/",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.schema_contracts._validate_dataset_role",
+        "fabricops_kit.schema_contracts.build_schema_validation_evidence",
+        "fabricops_kit.schema_contracts.load_schema_contract",
+        "fabricops_kit.schema_contracts.suggest_schema_contract",
+        "fabricops_kit.schema_contracts.write_schema_contract"
+      ],
+      "used_by_count": 5,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.schema_contracts._row_dict": {
+      "qualified_name": "fabricops_kit.schema_contracts._row_dict",
+      "short_name": "_row_dict",
+      "module": "schema_contracts",
+      "callable": "_row_dict",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/schema_contracts/_row_dict/",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.schema_contracts._coerce_rows"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.schema_contracts._schema_rows": {
+      "qualified_name": "fabricops_kit.schema_contracts._schema_rows",
+      "short_name": "_schema_rows",
+      "module": "schema_contracts",
+      "callable": "_schema_rows",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/schema_contracts/_schema_rows/",
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.schema_contracts._schema_rows_from_dataframe",
+        "fabricops_kit.schema_contracts._schema_rows_from_profile"
+      ],
+      "calls_count": 2,
+      "used_by": [
+        "fabricops_kit.schema_contracts.suggest_schema_contract"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [
+        "fabricops_kit.schema_contracts._schema_rows_from_dataframe",
+        "fabricops_kit.schema_contracts._schema_rows_from_profile"
+      ],
+      "internal_helper_count": 2
+    },
+    "fabricops_kit.schema_contracts._schema_rows_from_dataframe": {
+      "qualified_name": "fabricops_kit.schema_contracts._schema_rows_from_dataframe",
+      "short_name": "_schema_rows_from_dataframe",
+      "module": "schema_contracts",
+      "callable": "_schema_rows_from_dataframe",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/schema_contracts/_schema_rows_from_dataframe/",
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.schema_contracts.normalize_spark_data_type"
+      ],
+      "calls_count": 1,
+      "used_by": [
+        "fabricops_kit.schema_contracts._schema_rows",
+        "fabricops_kit.schema_contracts.validate_schema"
+      ],
+      "used_by_count": 2,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.schema_contracts._schema_rows_from_profile": {
+      "qualified_name": "fabricops_kit.schema_contracts._schema_rows_from_profile",
+      "short_name": "_schema_rows_from_profile",
+      "module": "schema_contracts",
+      "callable": "_schema_rows_from_profile",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/schema_contracts/_schema_rows_from_profile/",
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.schema_contracts._bool",
+        "fabricops_kit.schema_contracts._coerce_rows",
+        "fabricops_kit.schema_contracts._get_any",
+        "fabricops_kit.schema_contracts.normalize_spark_data_type"
+      ],
+      "calls_count": 4,
+      "used_by": [
+        "fabricops_kit.schema_contracts._schema_rows"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [
+        "fabricops_kit.schema_contracts._bool",
+        "fabricops_kit.schema_contracts._coerce_rows",
+        "fabricops_kit.schema_contracts._get_any"
+      ],
+      "internal_helper_count": 3
+    },
+    "fabricops_kit.schema_contracts._validate_dataset_role": {
+      "qualified_name": "fabricops_kit.schema_contracts._validate_dataset_role",
+      "short_name": "_validate_dataset_role",
+      "module": "schema_contracts",
+      "callable": "_validate_dataset_role",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/schema_contracts/_validate_dataset_role/",
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.schema_contracts._required_identity"
+      ],
+      "calls_count": 1,
+      "used_by": [
+        "fabricops_kit.schema_contracts.build_schema_validation_evidence",
+        "fabricops_kit.schema_contracts.load_schema_contract",
+        "fabricops_kit.schema_contracts.suggest_schema_contract",
+        "fabricops_kit.schema_contracts.write_schema_contract"
+      ],
+      "used_by_count": 4,
+      "internal_helpers_used": [
+        "fabricops_kit.schema_contracts._required_identity"
+      ],
+      "internal_helper_count": 1
+    },
+    "fabricops_kit.schema_contracts.build_schema_contract_review_state": {
+      "qualified_name": "fabricops_kit.schema_contracts.build_schema_contract_review_state",
+      "short_name": "build_schema_contract_review_state",
+      "module": "schema_contracts",
+      "callable": "build_schema_contract_review_state",
+      "docs_url": "/FabricOps-Starter-Kit/reference/build_schema_contract_review_state/",
+      "classification": "optional",
+      "calls": [
+        "fabricops_kit.schema_contracts._bool",
+        "fabricops_kit.schema_contracts.normalize_spark_data_type"
+      ],
+      "calls_count": 2,
+      "used_by": [
+        "fabricops_kit.schema_contracts.review_schema_contract"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [
+        "fabricops_kit.schema_contracts._bool"
+      ],
+      "internal_helper_count": 1
+    },
+    "fabricops_kit.schema_contracts.build_schema_validation_evidence": {
+      "qualified_name": "fabricops_kit.schema_contracts.build_schema_validation_evidence",
+      "short_name": "build_schema_validation_evidence",
+      "module": "schema_contracts",
+      "callable": "build_schema_validation_evidence",
+      "docs_url": "/FabricOps-Starter-Kit/reference/build_schema_validation_evidence/",
+      "classification": "essential",
+      "calls": [
+        "fabricops_kit.schema_contracts._now_utc_iso",
+        "fabricops_kit.schema_contracts._required_identity",
+        "fabricops_kit.schema_contracts._validate_dataset_role"
+      ],
+      "calls_count": 3,
+      "used_by": [],
+      "used_by_count": 0,
+      "internal_helpers_used": [
+        "fabricops_kit.schema_contracts._now_utc_iso",
+        "fabricops_kit.schema_contracts._required_identity",
+        "fabricops_kit.schema_contracts._validate_dataset_role"
+      ],
+      "internal_helper_count": 3
+    },
+    "fabricops_kit.schema_contracts.enforce_schema_result": {
+      "qualified_name": "fabricops_kit.schema_contracts.enforce_schema_result",
+      "short_name": "enforce_schema_result",
+      "module": "schema_contracts",
+      "callable": "enforce_schema_result",
+      "docs_url": "/FabricOps-Starter-Kit/reference/enforce_schema_result/",
+      "classification": "essential",
+      "calls": [
+        "fabricops_kit.schema_contracts.SchemaContractValidationError"
+      ],
+      "calls_count": 1,
+      "used_by": [],
+      "used_by_count": 0,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.schema_contracts.load_schema_contract": {
+      "qualified_name": "fabricops_kit.schema_contracts.load_schema_contract",
+      "short_name": "load_schema_contract",
+      "module": "schema_contracts",
+      "callable": "load_schema_contract",
+      "docs_url": "/FabricOps-Starter-Kit/reference/load_schema_contract/",
+      "classification": "essential",
+      "calls": [
+        "fabricops_kit.fabric_input_output.read_lakehouse_table",
+        "fabricops_kit.schema_contracts._bool",
+        "fabricops_kit.schema_contracts._coerce_rows",
+        "fabricops_kit.schema_contracts._get_any",
+        "fabricops_kit.schema_contracts._identity_matches",
+        "fabricops_kit.schema_contracts._required_identity",
+        "fabricops_kit.schema_contracts._validate_dataset_role"
+      ],
+      "calls_count": 7,
+      "used_by": [],
+      "used_by_count": 0,
+      "internal_helpers_used": [
+        "fabricops_kit.schema_contracts._bool",
+        "fabricops_kit.schema_contracts._coerce_rows",
+        "fabricops_kit.schema_contracts._get_any",
+        "fabricops_kit.schema_contracts._identity_matches",
+        "fabricops_kit.schema_contracts._required_identity",
+        "fabricops_kit.schema_contracts._validate_dataset_role"
+      ],
+      "internal_helper_count": 6
+    },
+    "fabricops_kit.schema_contracts.normalize_spark_data_type": {
+      "qualified_name": "fabricops_kit.schema_contracts.normalize_spark_data_type",
+      "short_name": "normalize_spark_data_type",
+      "module": "schema_contracts",
+      "callable": "normalize_spark_data_type",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/schema_contracts/normalize_spark_data_type/",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.schema_contracts._schema_rows_from_dataframe",
+        "fabricops_kit.schema_contracts._schema_rows_from_profile",
+        "fabricops_kit.schema_contracts.build_schema_contract_review_state",
+        "fabricops_kit.schema_contracts.suggest_schema_contract",
+        "fabricops_kit.schema_contracts.validate_schema",
+        "fabricops_kit.schema_contracts.write_schema_contract"
+      ],
+      "used_by_count": 6,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.schema_contracts.review_schema_contract": {
+      "qualified_name": "fabricops_kit.schema_contracts.review_schema_contract",
+      "short_name": "review_schema_contract",
+      "module": "schema_contracts",
+      "callable": "review_schema_contract",
+      "docs_url": "/FabricOps-Starter-Kit/reference/review_schema_contract/",
+      "classification": "optional",
+      "calls": [
+        "fabricops_kit.schema_contracts._latest_profile_for_dataset",
+        "fabricops_kit.schema_contracts.build_schema_contract_review_state",
+        "fabricops_kit.schema_contracts.suggest_schema_contract"
+      ],
+      "calls_count": 3,
+      "used_by": [],
+      "used_by_count": 0,
+      "internal_helpers_used": [
+        "fabricops_kit.schema_contracts._latest_profile_for_dataset"
+      ],
+      "internal_helper_count": 1
+    },
+    "fabricops_kit.schema_contracts.suggest_schema_contract": {
+      "qualified_name": "fabricops_kit.schema_contracts.suggest_schema_contract",
+      "short_name": "suggest_schema_contract",
+      "module": "schema_contracts",
+      "callable": "suggest_schema_contract",
+      "docs_url": "/FabricOps-Starter-Kit/reference/suggest_schema_contract/",
+      "classification": "essential",
+      "calls": [
+        "fabricops_kit.schema_contracts._now_utc_iso",
+        "fabricops_kit.schema_contracts._required_identity",
+        "fabricops_kit.schema_contracts._schema_rows",
+        "fabricops_kit.schema_contracts._validate_dataset_role",
+        "fabricops_kit.schema_contracts.normalize_spark_data_type"
+      ],
+      "calls_count": 5,
+      "used_by": [
+        "fabricops_kit.schema_contracts.review_schema_contract"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [
+        "fabricops_kit.schema_contracts._now_utc_iso",
+        "fabricops_kit.schema_contracts._required_identity",
+        "fabricops_kit.schema_contracts._schema_rows",
+        "fabricops_kit.schema_contracts._validate_dataset_role"
+      ],
+      "internal_helper_count": 4
+    },
+    "fabricops_kit.schema_contracts.validate_schema": {
+      "qualified_name": "fabricops_kit.schema_contracts.validate_schema",
+      "short_name": "validate_schema",
+      "module": "schema_contracts",
+      "callable": "validate_schema",
+      "docs_url": "/FabricOps-Starter-Kit/reference/validate_schema/",
+      "classification": "essential",
+      "calls": [
+        "fabricops_kit.schema_contracts._bool",
+        "fabricops_kit.schema_contracts._coerce_rows",
+        "fabricops_kit.schema_contracts._get_any",
+        "fabricops_kit.schema_contracts._schema_rows_from_dataframe",
+        "fabricops_kit.schema_contracts.normalize_spark_data_type"
+      ],
+      "calls_count": 5,
+      "used_by": [],
+      "used_by_count": 0,
+      "internal_helpers_used": [
+        "fabricops_kit.schema_contracts._bool",
+        "fabricops_kit.schema_contracts._coerce_rows",
+        "fabricops_kit.schema_contracts._get_any",
+        "fabricops_kit.schema_contracts._schema_rows_from_dataframe"
+      ],
+      "internal_helper_count": 4
+    },
+    "fabricops_kit.schema_contracts.write_schema_contract": {
+      "qualified_name": "fabricops_kit.schema_contracts.write_schema_contract",
+      "short_name": "write_schema_contract",
+      "module": "schema_contracts",
+      "callable": "write_schema_contract",
+      "docs_url": "/FabricOps-Starter-Kit/reference/write_schema_contract/",
+      "classification": "essential",
+      "calls": [
+        "fabricops_kit.fabric_input_output.read_lakehouse_table",
+        "fabricops_kit.fabric_input_output.write_lakehouse_table",
+        "fabricops_kit.schema_contracts._bool",
+        "fabricops_kit.schema_contracts._coerce_rows",
+        "fabricops_kit.schema_contracts._next_contract_version",
+        "fabricops_kit.schema_contracts._now_utc_iso",
+        "fabricops_kit.schema_contracts._required_identity",
+        "fabricops_kit.schema_contracts._validate_dataset_role",
+        "fabricops_kit.schema_contracts.normalize_spark_data_type"
+      ],
+      "calls_count": 9,
+      "used_by": [],
+      "used_by_count": 0,
+      "internal_helpers_used": [
+        "fabricops_kit.schema_contracts._bool",
+        "fabricops_kit.schema_contracts._coerce_rows",
+        "fabricops_kit.schema_contracts._next_contract_version",
+        "fabricops_kit.schema_contracts._now_utc_iso",
+        "fabricops_kit.schema_contracts._required_identity",
+        "fabricops_kit.schema_contracts._validate_dataset_role"
+      ],
+      "internal_helper_count": 6
+    },
+    "fabricops_kit.schema_contracts.write_schema_validation_evidence": {
+      "qualified_name": "fabricops_kit.schema_contracts.write_schema_validation_evidence",
+      "short_name": "write_schema_validation_evidence",
+      "module": "schema_contracts",
+      "callable": "write_schema_validation_evidence",
+      "docs_url": "/FabricOps-Starter-Kit/reference/write_schema_validation_evidence/",
+      "classification": "essential",
+      "calls": [
+        "fabricops_kit.fabric_input_output.write_lakehouse_table"
+      ],
+      "calls_count": 1,
+      "used_by": [],
+      "used_by_count": 0,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
     "fabricops_kit.versioning.get_docs_url": {
       "qualified_name": "fabricops_kit.versioning.get_docs_url",
       "short_name": "get_docs_url",
@@ -5194,10 +5712,11 @@
       "inbound_modules": [
         "data_agreement",
         "data_quality",
-        "metadata"
+        "metadata",
+        "schema_contracts"
       ],
       "outbound_count": 1,
-      "inbound_count": 3
+      "inbound_count": 4
     },
     "handover": {
       "essential_count": 2,
@@ -5223,6 +5742,17 @@
       ],
       "outbound_count": 1,
       "inbound_count": 4
+    },
+    "schema_contracts": {
+      "essential_count": 7,
+      "optional_count": 3,
+      "internal_count": 13,
+      "outbound_modules": [
+        "fabric_input_output"
+      ],
+      "inbound_modules": [],
+      "outbound_count": 1,
+      "inbound_count": 0
     },
     "versioning": {
       "essential_count": 1,

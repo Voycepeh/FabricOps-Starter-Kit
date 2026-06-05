@@ -15,4 +15,5 @@ Short-form modules remain import-compatible aliases but are intentionally hidden
 - [`fabric_input_output`](fabric_input_output.md)
 - [`handover`](handover.md)
 - [`metadata`](metadata.md)
+- [`schema_contracts`](schema_contracts.md)
 - [`versioning`](versioning.md)

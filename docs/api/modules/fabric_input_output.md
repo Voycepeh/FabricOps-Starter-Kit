@@ -6,7 +6,7 @@
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 8</span><span class="reference-chip">Internal helpers: 3</span><span class="reference-chip">Outbound: 1</span><span class="reference-chip">Inbound: 3</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 8</span><span class="reference-chip">Internal helpers: 3</span><span class="reference-chip">Outbound: 1</span><span class="reference-chip">Inbound: 4</span></div>
 
 ## Module purpose
 
@@ -40,7 +40,7 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
     </tr>
     <tr>
       <td>Inbound module count</td>
-      <td>3</td>
+      <td>4</td>
     </tr>
     <tr>
       <td>Outbound module count</td>
@@ -48,7 +48,7 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
     </tr>
     <tr>
       <td>External callers</td>
-      <td><code>data_agreement</code>, <code>data_quality</code>, <code>metadata</code></td>
+      <td><code>data_agreement</code>, <code>data_quality</code>, <code>metadata</code>, <code>schema_contracts</code></td>
     </tr>
     <tr>
       <td>External callees</td>
@@ -228,6 +228,9 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
 
 **metadata**
 <a class="reference-chip" href="../../reference/load_notebook_registry/"><code>load_notebook_registry</code></a>, <a class="reference-chip" href="../../reference/register_current_notebook/"><code>register_current_notebook</code></a>, <a class="reference-chip" href="../../reference/setup_notebook_registry_table/"><code>setup_notebook_registry_table</code></a>
+
+**schema_contracts**
+<a class="reference-chip" href="../../reference/load_schema_contract/"><code>load_schema_contract</code></a>, <a class="reference-chip" href="../../reference/write_schema_contract/"><code>write_schema_contract</code></a>, <a class="reference-chip" href="../../reference/write_schema_validation_evidence/"><code>write_schema_validation_evidence</code></a>
 
 ### External callees
 
