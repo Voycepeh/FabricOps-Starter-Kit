@@ -91,6 +91,7 @@ def _normalize_datatype(data_type) -> str:
         "timestamptype()": "timestamp",
         "timestamptype": "timestamp",
         "timestamp": "timestamp",
+        "datetime64[ns]": "timestamp",
         "doubletype()": "double",
         "doubletype": "double",
         "double": "double",
@@ -116,10 +117,8 @@ def _actual_schema(df) -> tuple[list[str], dict[str, str]]:
 
     dtypes = getattr(df, "dtypes", None)
     if dtypes is not None:
-        if isinstance(dtypes, dict):
-            types = {str(name): _normalize_datatype(dtype) for name, dtype in dtypes.items()}
-        else:
-            types = {str(name): _normalize_datatype(dtype) for name, dtype in dtypes}
+        dtype_items = dtypes.items() if hasattr(dtypes, "items") else dtypes
+        types = {str(name): _normalize_datatype(dtype) for name, dtype in dtype_items}
         columns = [str(column) for column in getattr(df, "columns", list(types))]
         return columns, types
 

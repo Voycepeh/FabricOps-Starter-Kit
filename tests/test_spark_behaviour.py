@@ -8,7 +8,7 @@ pytest.importorskip("pyspark")
 from pyspark.sql.types import IntegerType, StringType, StructField, StructType
 
 from fabricops_kit.data_quality import _latest_dq_rule_versions, enforce_dq
-from fabricops_kit.drift import check_schema_drift
+from fabricops_kit.drift import check_schema
 from fabricops_kit.metadata import build_metadata_column_key, build_metadata_table_key
 
 pytestmark = pytest.mark.spark
@@ -82,29 +82,21 @@ def test_latest_dq_rule_versions_use_deterministic_tie_breaker(spark_session):
     assert latest[0].action_type == "deactivated"
 
 
-def test_schema_drift_detects_added_column_with_stable_schema_order(spark_session):
-    df = spark_session.createDataFrame([(1, "ok")], schema="id int, status string")
-    baseline = {
-        "columns": [
-            {
-                "column_name": "id",
-                "ordinal_position": 1,
-                "data_type": "int",
-                "nullable": True,
-            }
-        ]
-    }
+def test_check_schema_detects_added_spark_column(spark_session):
+    df = spark_session.createDataFrame(
+        [(1, "ok")],
+        schema="id int, status string",
+    )
 
-    result = check_schema_drift(df, "sales", "orders", baseline_snapshot=baseline, policy={"allow_added_columns": False})
+    result = check_schema(
+        df,
+        {"id": "int"},
+        allow_extra_columns=False,
+        action="observe",
+    )
 
     assert result["status"] == "failed"
-    current_columns = result["current_snapshot"]["columns"]
-    assert [(column["column_name"], column["data_type"], column["nullable"]) for column in current_columns] == [
-        ("id", "IntegerType()", True),
-        ("status", "StringType()", True),
-    ]
-    changes = result["comparison"]["changes"]
-    assert any(change["drift_type"] == "column_added" and change["column_name"] == "status" for change in changes)
+    assert result["unexpected_columns"] == ["status"]
 
 
 def test_metadata_hash_generation_is_deterministic():
