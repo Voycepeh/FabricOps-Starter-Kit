@@ -771,6 +771,7 @@ def load_latest_profile(spark, metadata_table: str, dataset_name: str, table_nam
     This helper reuses the existing profile metadata rows. It does not create a
     separate data-drift table or approval workflow.
     """
+    mode = _normalize_baseline_mode(baseline_mode)
     try:
         df = spark.table(metadata_table)
     except Exception as exc:
