@@ -57,7 +57,7 @@ jobs:
           python -m venv "${RUNNER_TEMP}/fabricops-wheel-smoke"
           source "${RUNNER_TEMP}/fabricops-wheel-smoke/bin/activate"
           python -m pip install --upgrade pip
-          python -m pip install "${wheel_path}"
+          python -m pip install "pyspark>=4.1.1" "${wheel_path}"
           python - <<'PY'
           from importlib.metadata import version
           import fabricops_kit as kit
