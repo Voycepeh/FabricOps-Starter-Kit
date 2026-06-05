@@ -197,7 +197,7 @@ Exploration notebook flow used to profile source data and draft advisory AI outp
       <td>`profile_dataframe`</td>
       <td>Callable orchestration wrapper</td>
       <td>Build canonical DQ-ready profiling rows from a Spark DataFrame.</td>
-      <td>`_get_profiled_columns`, `_is_min_max_supported_type`</td>
+      <td>`_build_distribution_summaries`, `_get_profiled_columns`, `_is_min_max_supported_type`</td>
       <td>Check dependency outputs and metadata writes.</td>
     </tr>
   </tbody>
@@ -379,7 +379,7 @@ Core production pipeline flow for clean evidence creation, pipeline-local schema
       <td>`profile_dataframe`</td>
       <td>Callable orchestration wrapper</td>
       <td>Build canonical DQ-ready profiling rows from a Spark DataFrame.</td>
-      <td>`_get_profiled_columns`, `_is_min_max_supported_type`</td>
+      <td>`_build_distribution_summaries`, `_get_profiled_columns`, `_is_min_max_supported_type`</td>
       <td>Check dependency outputs and metadata writes.</td>
     </tr>
     <tr>
@@ -467,7 +467,7 @@ Core production pipeline flow for clean evidence creation, pipeline-local schema
       <td>`profile_dataframe`</td>
       <td>Callable orchestration wrapper</td>
       <td>Build canonical DQ-ready profiling rows from a Spark DataFrame.</td>
-      <td>`_get_profiled_columns`, `_is_min_max_supported_type`</td>
+      <td>`_build_distribution_summaries`, `_get_profiled_columns`, `_is_min_max_supported_type`</td>
       <td>Check dependency outputs and metadata writes.</td>
     </tr>
     <tr>

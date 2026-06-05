@@ -9,6 +9,7 @@ partition and profile drift workflows.
 from __future__ import annotations
 
 from datetime import datetime, timezone
+import math
 import re
 import warnings
 
@@ -435,47 +436,210 @@ def load_latest_partition_snapshot(spark, metadata_table: str, dataset_name: str
     return json.loads(raw)
 
 
-def check_profile_drift(current_profile: dict, baseline_profile: dict | None = None, policy: dict | None = None) -> dict:
-    """Compare profile metrics against a baseline profile and drift thresholds.
-    
-        Parameters
-        ----------
-        current_profile : Any
-            Value used by this callable.
-        baseline_profile : Any
-            Value used by this callable.
-        policy : Any
-            Value used by this callable.
-    
-        Returns
-        -------
-        dict
-            Structured output produced by this callable.
+def default_profile_drift_policy() -> dict:
+    """Return the lightweight default profile drift policy.
+
+    Returns
+    -------
+    dict
+        Thresholds used by :func:`check_profile_drift` for row-count,
+        null-percent, distinct-percent, numeric PSI, categorical distance, and
+        missing-column enforcement.
     """
-    active = {
+    return {
         "max_row_count_change_percent": 50,
         "max_null_percent_change_points": 20,
         "max_distinct_percent_change_points": 30,
+        "warn_numeric_psi": 0.10,
+        "block_numeric_psi": 0.25,
+        "warn_categorical_distance": 0.10,
+        "block_categorical_distance": 0.25,
         "fail_on_missing_column": True,
-        **(policy or {}),
     }
-    if baseline_profile is None:
+
+
+def _row_get(row, *names):
+    for name in names:
+        if isinstance(row, dict) and name in row:
+            return row.get(name)
+        if hasattr(row, "asDict"):
+            data = row.asDict(recursive=True)
+            if name in data:
+                return data.get(name)
+        if hasattr(row, name):
+            return getattr(row, name)
+    return None
+
+
+def _parse_distribution(value):
+    if value in (None, ""):
+        return None
+    if isinstance(value, dict):
+        return value
+    try:
+        return json.loads(value)
+    except (TypeError, json.JSONDecodeError):
+        return None
+
+
+def _normalize_profile(profile) -> dict | None:
+    if profile is None:
+        return None
+    if isinstance(profile, dict) and "columns" in profile:
+        return profile
+    if hasattr(profile, "collect"):
+        return _normalize_profile(profile.collect())
+    if isinstance(profile, (list, tuple)):
+        rows = list(profile)
+        if not rows:
+            return None
+        first = rows[0]
+        row_count = _row_get(first, "row_count", "ROW_COUNT", "PROFILED_ROW_COUNT")
+        table_name = _row_get(first, "table_name", "TABLE_NAME", "PROFILED_TABLE_NAME")
+        dataset_name = _row_get(first, "dataset_name", "DATASET_NAME")
+        profile_stage = _row_get(first, "profile_stage", "PROFILE_STAGE", "EVIDENCE_ROLE")
+        columns = []
+        for row in rows:
+            distribution_type = _row_get(row, "distribution_type", "DISTRIBUTION_TYPE")
+            distribution = _parse_distribution(_row_get(row, "distribution", "DISTRIBUTION", "distribution_json", "DISTRIBUTION_JSON"))
+            column = {
+                "column_name": _row_get(row, "column_name", "COLUMN_NAME"),
+                "data_type": _row_get(row, "data_type", "DATA_TYPE"),
+                "row_count": _row_get(row, "row_count", "ROW_COUNT", "PROFILED_ROW_COUNT"),
+                "null_count": _row_get(row, "null_count", "NULL_COUNT"),
+                "null_pct": _row_get(row, "null_pct", "NULL_PCT", "null_percent", "NULL_PERCENT"),
+                "distinct_count": _row_get(row, "distinct_count", "DISTINCT_COUNT"),
+                "distinct_pct": _row_get(row, "distinct_pct", "DISTINCT_PCT", "distinct_percent", "DISTINCT_PERCENT"),
+                "min_value": _row_get(row, "min_value", "MIN_VALUE"),
+                "max_value": _row_get(row, "max_value", "MAX_VALUE"),
+            }
+            if distribution_type:
+                column["distribution_type"] = distribution_type
+            if distribution is not None:
+                column["distribution"] = distribution
+            columns.append(column)
+        return {
+            "dataset_name": dataset_name,
+            "table_name": table_name,
+            "profile_stage": profile_stage,
+            "row_count": row_count,
+            "columns": columns,
+        }
+    return profile
+
+
+def extract_numeric_distribution_bin_edges(profile) -> dict[str, list[float]]:
+    """Return numeric distribution bin edges from a profile payload.
+
+    Parameters
+    ----------
+    profile : dict or Spark DataFrame or list[dict]
+        Profile payload produced by :func:`fabricops_kit.profile_dataframe` or
+        loaded from profile metadata.
+
+    Returns
+    -------
+    dict[str, list[float]]
+        Mapping of column names to numeric bin edges that can be passed back to
+        ``profile_dataframe(..., distribution_bin_edges=...)`` for comparable
+        current-run distributions.
+    """
+    normalized = _normalize_profile(profile) or {}
+    edges: dict[str, list[float]] = {}
+    for column in normalized.get("columns", []):
+        distribution = column.get("distribution") or {}
+        if column.get("distribution_type") == "numeric" and distribution.get("bin_edges"):
+            edges[str(column.get("column_name"))] = [float(value) for value in distribution.get("bin_edges", [])]
+    return edges
+
+
+def _profile_check_status(value: float, warning_threshold: float, blocking_threshold: float) -> tuple[str, bool, bool]:
+    if value >= blocking_threshold:
+        return "failed", False, True
+    if value >= warning_threshold:
+        return "warning", True, False
+    return "passed", True, False
+
+
+def _proportions(counts: list[int | float], epsilon: float = 1e-9) -> list[float]:
+    total = float(sum(float(count or 0) for count in counts))
+    if total <= 0:
+        return [epsilon for _ in counts]
+    return [max(float(count or 0) / total, epsilon) for count in counts]
+
+
+def _numeric_psi(current_distribution: dict, baseline_distribution: dict) -> float | None:
+    current_edges = [float(value) for value in current_distribution.get("bin_edges", [])]
+    baseline_edges = [float(value) for value in baseline_distribution.get("bin_edges", [])]
+    if current_edges != baseline_edges:
+        return None
+    current_counts = [float(value or 0) for value in current_distribution.get("bin_counts", [])]
+    baseline_counts = [float(value or 0) for value in baseline_distribution.get("bin_counts", [])]
+    if len(current_counts) != len(baseline_counts) or not current_counts:
+        return None
+    current_props = _proportions(current_counts)
+    baseline_props = _proportions(baseline_counts)
+    return float(sum((current - baseline) * math.log(current / baseline) for current, baseline in zip(current_props, baseline_props)))
+
+
+def _categorical_distance(current_distribution: dict, baseline_distribution: dict) -> tuple[float, list[str]]:
+    current_counts = {str(k): float(v or 0) for k, v in (current_distribution.get("category_counts") or {}).items()}
+    baseline_counts = {str(k): float(v or 0) for k, v in (baseline_distribution.get("category_counts") or {}).items()}
+    current_counts["__other__"] = float(current_distribution.get("other_count") or 0)
+    baseline_counts["__other__"] = float(baseline_distribution.get("other_count") or 0)
+    current_total = sum(current_counts.values()) or 1.0
+    baseline_total = sum(baseline_counts.values()) or 1.0
+    categories = sorted(set(current_counts) | set(baseline_counts))
+    distance = 0.5 * sum(abs((current_counts.get(category, 0.0) / current_total) - (baseline_counts.get(category, 0.0) / baseline_total)) for category in categories)
+    new_categories = sorted(category for category in set(current_counts) - set(baseline_counts) if category != "__other__")
+    return float(distance), new_categories
+
+
+def check_profile_drift(current_profile: dict, baseline_profile: dict | None = None, policy: dict | None = None) -> dict:
+    """Compare profile metrics against a baseline profile and drift thresholds.
+
+    Parameters
+    ----------
+    current_profile : dict or Spark DataFrame or list[dict]
+        Current profile payload. Spark profile DataFrames and collected profile
+        rows are normalized into the existing dictionary shape.
+    baseline_profile : dict or Spark DataFrame or list[dict] or None, optional
+        Previous successful profile for the same dataset, table, and source or
+        target stage. ``None`` returns a non-blocking ``no_baseline`` result.
+    policy : dict, optional
+        Threshold overrides. Unspecified values fall back to
+        :func:`default_profile_drift_policy`.
+
+    Returns
+    -------
+    dict
+        Result with ``status``, ``can_continue``, ``checks``, and ``message``.
+        Status is ``passed``, ``warning``, ``failed``, or ``no_baseline``.
+    """
+    active = {**default_profile_drift_policy(), **(policy or {})}
+    current = _normalize_profile(current_profile)
+    baseline = _normalize_profile(baseline_profile)
+    if baseline is None:
         return {"status": "no_baseline", "can_continue": True, "checks": [], "message": "No baseline profile provided."}
+    if current is None:
+        raise ValueError("current_profile must contain at least one profile row.")
 
     checks = []
     blocking = False
-    b_row = float(baseline_profile.get("row_count") or 0)
-    c_row = float(current_profile.get("row_count") or 0)
+    warning = False
+    b_row = float(baseline.get("row_count") or 0)
+    c_row = float(current.get("row_count") or 0)
     row_delta_pct = 0.0 if b_row == 0 else abs(c_row - b_row) / b_row * 100.0
     row_ok = row_delta_pct <= float(active["max_row_count_change_percent"])
-    checks.append({"check": "row_count_change_percent", "passed": row_ok, "value": row_delta_pct, "threshold": active["max_row_count_change_percent"]})
+    checks.append({"check": "row_count_change_percent", "passed": row_ok, "value": row_delta_pct, "threshold": active["max_row_count_change_percent"], "status": "passed" if row_ok else "failed"})
     blocking = blocking or (not row_ok)
 
-    b_cols = {c.get("column_name"): c for c in baseline_profile.get("columns", [])}
-    c_cols = {c.get("column_name"): c for c in current_profile.get("columns", [])}
+    b_cols = {c.get("column_name"): c for c in baseline.get("columns", [])}
+    c_cols = {c.get("column_name"): c for c in current.get("columns", [])}
     for col in sorted(set(b_cols) - set(c_cols)):
         passed = not bool(active["fail_on_missing_column"])
-        checks.append({"check": "missing_column", "column": col, "passed": passed})
+        status = "passed" if passed else "failed"
+        checks.append({"check": "missing_column", "column": col, "passed": passed, "status": status})
         blocking = blocking or (not passed)
 
     for col in sorted(set(b_cols).intersection(c_cols)):
@@ -484,19 +648,134 @@ def check_profile_drift(current_profile: dict, baseline_profile: dict | None = N
         if "null_pct" in b and "null_pct" in c:
             delta = abs(float(c.get("null_pct") or 0) - float(b.get("null_pct") or 0))
             passed = delta <= float(active["max_null_percent_change_points"])
-            checks.append({"check": "null_percent_change_points", "column": col, "passed": passed, "value": delta, "threshold": active["max_null_percent_change_points"]})
+            checks.append({"check": "null_percent_change_points", "column": col, "passed": passed, "value": delta, "threshold": active["max_null_percent_change_points"], "status": "passed" if passed else "failed"})
             blocking = blocking or (not passed)
         if "distinct_pct" in b and "distinct_pct" in c:
             delta = abs(float(c.get("distinct_pct") or 0) - float(b.get("distinct_pct") or 0))
             passed = delta <= float(active["max_distinct_percent_change_points"])
-            checks.append({"check": "distinct_percent_change_points", "column": col, "passed": passed, "value": delta, "threshold": active["max_distinct_percent_change_points"]})
+            checks.append({"check": "distinct_percent_change_points", "column": col, "passed": passed, "value": delta, "threshold": active["max_distinct_percent_change_points"], "status": "passed" if passed else "failed"})
             blocking = blocking or (not passed)
         if b.get("min_value") != c.get("min_value"):
-            checks.append({"check": "min_changed", "column": col, "passed": True, "baseline": b.get("min_value"), "current": c.get("min_value")})
+            checks.append({"check": "min_changed", "column": col, "passed": True, "status": "passed", "baseline": b.get("min_value"), "current": c.get("min_value")})
         if b.get("max_value") != c.get("max_value"):
-            checks.append({"check": "max_changed", "column": col, "passed": True, "baseline": b.get("max_value"), "current": c.get("max_value")})
+            checks.append({"check": "max_changed", "column": col, "passed": True, "status": "passed", "baseline": b.get("max_value"), "current": c.get("max_value")})
 
-    return {"status": "failed" if blocking else "passed", "can_continue": not blocking, "checks": checks, "message": "Profile drift check completed."}
+        b_distribution = b.get("distribution") or {}
+        c_distribution = c.get("distribution") or {}
+        if b.get("distribution_type") == "numeric" and c.get("distribution_type") == "numeric" and b_distribution and c_distribution:
+            value = _numeric_psi(c_distribution, b_distribution)
+            if value is not None:
+                status, passed, blocks = _profile_check_status(value, float(active["warn_numeric_psi"]), float(active["block_numeric_psi"]))
+                checks.append({"check": "numeric_psi", "column": col, "value": value, "warning_threshold": active["warn_numeric_psi"], "blocking_threshold": active["block_numeric_psi"], "status": status, "passed": passed})
+                warning = warning or status == "warning"
+                blocking = blocking or blocks
+        if b.get("distribution_type") == "categorical" and c.get("distribution_type") == "categorical" and b_distribution and c_distribution:
+            value, new_categories = _categorical_distance(c_distribution, b_distribution)
+            status, passed, blocks = _profile_check_status(value, float(active["warn_categorical_distance"]), float(active["block_categorical_distance"]))
+            checks.append({"check": "categorical_distance", "column": col, "value": value, "warning_threshold": active["warn_categorical_distance"], "blocking_threshold": active["block_categorical_distance"], "status": status, "passed": passed, "new_categories": new_categories})
+            warning = warning or status == "warning"
+            blocking = blocking or blocks
+
+    status = "failed" if blocking else "warning" if warning else "passed"
+    return {"status": status, "can_continue": not blocking, "checks": checks, "message": "Profile drift check completed."}
+
+
+def assert_no_blocking_profile_drift(result: dict) -> None:
+    """Raise when a profile drift result should block notebook execution.
+
+    Parameters
+    ----------
+    result : dict
+        Result returned by :func:`check_profile_drift`.
+
+    Raises
+    ------
+    SchemaDriftError
+        If ``result["can_continue"]`` is false.
+    """
+    if not bool((result or {}).get("can_continue", True)):
+        status = (result or {}).get("status", "failed")
+        detail = (result or {}).get("message") or "Configured profile drift thresholds were exceeded."
+        raise SchemaDriftError(f"Profile drift guardrail blocked execution with status: {status}. {detail}")
+
+
+def load_latest_profile(spark, metadata_table: str, dataset_name: str, table_name: str, profile_stage: str, exclude_run_id: str | None = None) -> dict | None:
+    """Load the latest previous successful profile from profile metadata rows.
+
+    Parameters
+    ----------
+    spark : Any
+        Spark session used to query the existing profile metadata table.
+    metadata_table : str
+        Existing profile metadata table, such as
+        ``METADATA_DATA_CATALOGUE_COLUMN``.
+    dataset_name : str
+        Dataset name to match.
+    table_name : str
+        Profiled source or target table name to match.
+    profile_stage : {"source", "target"}
+        Profile stage to match. Existing ``EVIDENCE_ROLE`` values such as
+        ``source_profile`` and ``output_profile`` are supported.
+    exclude_run_id : str, optional
+        Current run identifier to exclude from baseline selection.
+
+    Returns
+    -------
+    dict or None
+        Normalized profile dictionary for the latest matching previous profile,
+        or ``None`` when no baseline exists.
+
+    Notes
+    -----
+    This helper reuses the existing profile metadata rows. It does not create a
+    separate data-drift table or approval workflow.
+    """
+    try:
+        df = spark.table(metadata_table)
+    except Exception as exc:
+        if _is_missing_table_error(exc):
+            return None
+        raise
+
+    try:
+        from pyspark.sql import functions as F
+
+        stage = str(profile_stage).lower()
+        stage_roles = [stage, f"{stage}_profile"]
+        if stage == "target":
+            stage_roles.append("output_profile")
+        filters = []
+        if "DATASET_NAME" in df.columns:
+            filters.append(F.col("DATASET_NAME") == dataset_name)
+        if "PROFILED_TABLE_NAME" in df.columns:
+            filters.append(F.col("PROFILED_TABLE_NAME") == table_name)
+        elif "TABLE_NAME" in df.columns:
+            filters.append(F.col("TABLE_NAME") == table_name)
+        if "PROFILE_STAGE" in df.columns:
+            filters.append(F.lower(F.col("PROFILE_STAGE")).isin(stage_roles))
+        elif "EVIDENCE_ROLE" in df.columns:
+            filters.append(F.lower(F.col("EVIDENCE_ROLE")).isin(stage_roles))
+        if exclude_run_id and "PROFILE_RUN_ID" in df.columns:
+            filters.append(F.col("PROFILE_RUN_ID") != exclude_run_id)
+        for condition in filters:
+            df = df.filter(condition)
+        if "PROFILE_RUN_ID" not in df.columns:
+            rows = _safe_spark_collect(df)
+            return _normalize_profile(rows)
+        order_columns = []
+        if "RUN_TIMESTAMP" in df.columns:
+            order_columns.append(F.col("RUN_TIMESTAMP").desc())
+        order_columns.append(F.col("PROFILE_RUN_ID").desc())
+        latest_runs = df.orderBy(*order_columns).select("PROFILE_RUN_ID").limit(1).collect()
+        if not latest_runs:
+            return None
+        latest_run_id = latest_runs[0]["PROFILE_RUN_ID"]
+        rows = df.filter(F.col("PROFILE_RUN_ID") == latest_run_id).collect()
+        return _normalize_profile(rows)
+    except Exception as exc:
+        if _is_missing_table_error(exc):
+            return None
+        raise
 
 
 def summarize_drift_results(schema_drift_result: dict | None = None, partition_drift_result: dict | None = None, profile_drift_result: dict | None = None) -> dict:

@@ -159,3 +159,21 @@ def test_obsolete_schema_drift_exports_and_references_are_removed():
                     if name in text:
                         references.append(f"{path}:{name}")
     assert references == []
+
+
+def test_03_pc_runs_source_and_target_profile_drift_guardrails():
+    notebook = json.loads(Path("templates/notebooks/03_pc_agreement_pipeline_template.ipynb").read_text(encoding="utf-8"))
+    source = "\n".join("".join(cell.get("source", [])) for cell in notebook["cells"] if cell["cell_type"] == "code")
+
+    assert "ENABLE_DATA_DRIFT = True" in source
+    assert "DATA_DRIFT_COLUMNS = None" in source
+    assert "source_baseline_profile = load_latest_profile(" in source
+    assert "profile_stage=\"source\"" in source
+    assert "source_drift = check_profile_drift(" in source
+    assert "assert_no_blocking_profile_drift(source_drift)" in source
+    assert "target_baseline_profile = load_latest_profile(" in source
+    assert "profile_stage=\"target\"" in source
+    assert "target_drift = check_profile_drift(" in source
+    assert "assert_no_blocking_profile_drift(target_drift)" in source
+    assert source.index("source_drift = check_profile_drift(") < source.index("write_lakehouse_table(\n    source_catalogue_evidence")
+    assert source.index("target_drift = check_profile_drift(") < source.index("write_lakehouse_table(\n    output_catalogue_evidence")

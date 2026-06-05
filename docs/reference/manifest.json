@@ -38,7 +38,7 @@
     {
       "module_name": "data_profiling",
       "visibility": "public",
-      "module_summary": "Owns deterministic profiling evidence such as schema, nulls, distincts, min/max, and samples.",
+      "module_summary": "Owns deterministic profiling evidence such as schema, nulls, distincts, min/max, and optional lightweight distributions.",
       "sidebar_group": "2. Analyst / data scientist",
       "sidebar_include": true
     },
@@ -353,7 +353,7 @@
     {
       "module_name": "data_profiling",
       "visibility": "public",
-      "module_summary": "Owns deterministic profiling evidence such as schema, nulls, distincts, min/max, and samples.",
+      "module_summary": "Owns deterministic profiling evidence such as schema, nulls, distincts, min/max, and optional lightweight distributions.",
       "sidebar_group": "2. Analyst / data scientist",
       "sidebar_include": true,
       "callable_name": "profile_dataframe",
@@ -476,6 +476,18 @@
       "module_summary": "Owns schema/profile/data drift checks as engineering guardrails during pipeline runs.",
       "sidebar_group": "3. Data engineer",
       "sidebar_include": true,
+      "callable_name": "assert_no_blocking_profile_drift",
+      "callable_visibility": "public",
+      "callable_role": "optional",
+      "template_notebook": "03_pc_<agreement>_<pipeline>",
+      "template_segment": "Profile-based data drift guardrails"
+    },
+    {
+      "module_name": "drift",
+      "visibility": "public",
+      "module_summary": "Owns schema/profile/data drift checks as engineering guardrails during pipeline runs.",
+      "sidebar_group": "3. Data engineer",
+      "sidebar_include": true,
       "callable_name": "check_partition_drift",
       "callable_visibility": "public",
       "callable_role": "optional",
@@ -505,6 +517,42 @@
       "callable_role": "essential",
       "template_notebook": "03_pc_<agreement>_<pipeline>",
       "template_segment": "Pipeline-local schema checks"
+    },
+    {
+      "module_name": "drift",
+      "visibility": "public",
+      "module_summary": "Owns schema/profile/data drift checks as engineering guardrails during pipeline runs.",
+      "sidebar_group": "3. Data engineer",
+      "sidebar_include": true,
+      "callable_name": "default_profile_drift_policy",
+      "callable_visibility": "public",
+      "callable_role": "optional",
+      "template_notebook": "03_pc_<agreement>_<pipeline>",
+      "template_segment": "Profile-based data drift guardrails"
+    },
+    {
+      "module_name": "drift",
+      "visibility": "public",
+      "module_summary": "Owns schema/profile/data drift checks as engineering guardrails during pipeline runs.",
+      "sidebar_group": "3. Data engineer",
+      "sidebar_include": true,
+      "callable_name": "extract_numeric_distribution_bin_edges",
+      "callable_visibility": "public",
+      "callable_role": "optional",
+      "template_notebook": "03_pc_<agreement>_<pipeline>",
+      "template_segment": "Profile-based data drift guardrails"
+    },
+    {
+      "module_name": "drift",
+      "visibility": "public",
+      "module_summary": "Owns schema/profile/data drift checks as engineering guardrails during pipeline runs.",
+      "sidebar_group": "3. Data engineer",
+      "sidebar_include": true,
+      "callable_name": "load_latest_profile",
+      "callable_visibility": "public",
+      "callable_role": "optional",
+      "template_notebook": "03_pc_<agreement>_<pipeline>",
+      "template_segment": "Profile-based data drift guardrails"
     },
     {
       "module_name": "drift",

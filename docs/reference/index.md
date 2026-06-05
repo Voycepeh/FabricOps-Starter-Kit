@@ -38,6 +38,15 @@ Use the finder below to look up public callable functions.
 
   </div>
 </article>
+<article id="assert_no_blocking_profile_drift" class="reference-catalogue-item" data-callable-row="true" data-callable-name="assert_no_blocking_profile_drift" data-callable-module="drift" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Raise when profile drift check results should block notebook execution.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/assert_no_blocking_profile_drift/"><code>assert_no_blocking_profile_drift</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Raise when profile drift check results should block notebook execution.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/drift/" title="Open drift module page" aria-label="Open drift module page">drift</a><span class="reference-chip reference-chip-role reference-chip-optional">Optional</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>SchemaDriftError</code></li></ul></details>
+
+  </div>
+</article>
 <article id="build_handover" class="reference-catalogue-item" data-callable-row="true" data-callable-name="build_handover" data-callable-module="handover" data-callable-starter-path="—" data-role="essential" data-callable-purpose="Build a handover-friendly summary for one data product run.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/build_handover/"><code>build_handover</code></a></h3>
   <p class="reference-catalogue-item-purpose">Build a handover-friendly summary for one data product run.</p>
@@ -88,7 +97,7 @@ Use the finder below to look up public callable functions.
   <p class="reference-catalogue-item-purpose">Compare profile metrics against a baseline profile and drift thresholds.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/drift/" title="Open drift module page" aria-label="Open drift module page">drift</a><span class="reference-chip reference-chip-role reference-chip-optional">Optional</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
-
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 5</span></summary><ul><li><code>_categorical_distance</code></li><li><code>_normalize_profile</code></li><li><code>_numeric_psi</code></li><li><code>_profile_check_status</code></li><li><code>default_profile_drift_policy</code></li></ul></details>
 
   </div>
 </article>
@@ -108,6 +117,15 @@ Use the finder below to look up public callable functions.
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 4</span></summary><ul><li><code>_context_get</code></li><li><code>_runtime_context</code></li><li><code>_safe_str</code></li><li><code>load_notebook_registry</code></li></ul></details>
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>widget_select_agreement</code></li></ul></details>
+  </div>
+</article>
+<article id="default_profile_drift_policy" class="reference-catalogue-item" data-callable-row="true" data-callable-name="default_profile_drift_policy" data-callable-module="drift" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Return lightweight default thresholds for profile-based data drift checks.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/default_profile_drift_policy/"><code>default_profile_drift_policy</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Return lightweight default thresholds for profile-based data drift checks.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/drift/" title="Open drift module page" aria-label="Open drift module page">drift</a><span class="reference-chip reference-chip-role reference-chip-optional">Optional</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>check_profile_drift</code></li></ul></details>
   </div>
 </article>
 <article id="draft_business_context" class="reference-catalogue-item" data-callable-row="true" data-callable-name="draft_business_context" data-callable-module="business_context" data-callable-starter-path="—" data-role="essential" data-callable-purpose="Run Fabric AI to draft column business context suggestions.">
@@ -161,6 +179,15 @@ Use the finder below to look up public callable functions.
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_governance/" title="Open data_governance module page" aria-label="Open data_governance module page">data_governance</a><span class="reference-chip reference-chip-role reference-chip-optional">Optional</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_extract_pii_suggestions</code></li></ul></details>
+
+  </div>
+</article>
+<article id="extract_numeric_distribution_bin_edges" class="reference-catalogue-item" data-callable-row="true" data-callable-name="extract_numeric_distribution_bin_edges" data-callable-module="drift" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Extract baseline numeric bin edges so current profiles can produce comparable PSI distributions.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/extract_numeric_distribution_bin_edges/"><code>extract_numeric_distribution_bin_edges</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Extract baseline numeric bin edges so current profiles can produce comparable PSI distributions.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/drift/" title="Open drift module page" aria-label="Open drift module page">drift</a><span class="reference-chip reference-chip-role reference-chip-optional">Optional</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_normalize_profile</code></li></ul></details>
 
   </div>
 </article>
@@ -254,6 +281,15 @@ Use the finder below to look up public callable functions.
 
   </div>
 </article>
+<article id="load_latest_profile" class="reference-catalogue-item" data-callable-row="true" data-callable-name="load_latest_profile" data-callable-module="drift" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Load the latest previous successful source or target profile from existing profile metadata.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/load_latest_profile/"><code>load_latest_profile</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Load the latest previous successful source or target profile from existing profile metadata.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/drift/" title="Open drift module page" aria-label="Open drift module page">drift</a><span class="reference-chip reference-chip-role reference-chip-optional">Optional</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 3</span></summary><ul><li><code>_is_missing_table_error</code></li><li><code>_normalize_profile</code></li><li><code>_safe_spark_collect</code></li></ul></details>
+
+  </div>
+</article>
 <article id="load_notebook_registry" class="reference-catalogue-item" data-callable-row="true" data-callable-name="load_notebook_registry" data-callable-module="metadata" data-callable-starter-path="—" data-role="essential" data-callable-purpose="Load notebook registration metadata rows for agreement notebook traceability.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/load_notebook_registry/"><code>load_notebook_registry</code></a></h3>
   <p class="reference-catalogue-item-purpose">Load notebook registration metadata rows for agreement notebook traceability.</p>
@@ -295,7 +331,7 @@ Use the finder below to look up public callable functions.
   <p class="reference-catalogue-item-purpose">Build canonical DQ-ready profiling rows from a Spark DataFrame.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_profiling/" title="Open data_profiling module page" aria-label="Open data_profiling module page">data_profiling</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">02_ex, 03_pc</span></p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>_get_profiled_columns</code></li><li><code>_is_min_max_supported_type</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 3</span></summary><ul><li><code>_build_distribution_summaries</code></li><li><code>_get_profiled_columns</code></li><li><code>_is_min_max_supported_type</code></li></ul></details>
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_prepare_dq_profile_input_rows</code></li></ul></details>
   </div>
 </article>

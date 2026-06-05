@@ -16,8 +16,9 @@ Exception raised when check_schema is configured to fail on schema differences.
 - Related module: `drift`
 - Source file path: `src/fabricops_kit/drift.py`
 - Source reference: <a href="../../api/modules/drift/#SchemaDriftError">Module source anchor</a>
-- Inbound references count: 1
+- Inbound references count: 2
 - Outbound references count: 0
 
 ## Inbound references
+- <a href="../assert_no_blocking_profile_drift/"><code>fabricops_kit.drift.assert_no_blocking_profile_drift</code></a>
 - <a href="../check_schema/"><code>fabricops_kit.drift.check_schema</code></a>

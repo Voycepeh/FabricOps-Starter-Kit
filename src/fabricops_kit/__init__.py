@@ -45,9 +45,13 @@ from .data_quality import (
 )
 from .drift import (
     SchemaDriftError,
+    assert_no_blocking_profile_drift,
     check_partition_drift,
     check_profile_drift,
     check_schema,
+    default_profile_drift_policy,
+    extract_numeric_distribution_bin_edges,
+    load_latest_profile,
     summarize_drift_results,
 )
 from .fabric_input_output import (
@@ -134,6 +138,10 @@ __all__ = [
     "widget_review_dq_rule_deactivations",
     "check_partition_drift",
     "check_profile_drift",
+    "default_profile_drift_policy",
+    "extract_numeric_distribution_bin_edges",
+    "load_latest_profile",
+    "assert_no_blocking_profile_drift",
     "summarize_drift_results",
     "widget_render_agreement_evidence",
     "widget_render_agreement_intake_app",
