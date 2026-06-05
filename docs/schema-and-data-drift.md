@@ -1,38 +1,26 @@
 # Schema and data-change guardrails
 
-FabricOps keeps production checks simple:
+![Schema and data-change guardrails showing source and target validation flow](assets/fabricops-schema-data-guardrails.png){ .full-width }
 
-> Users choose intent through presets. FabricOps handles profiling, baseline selection, comparison, and enforcement.
+**FabricOps applies the same guardrail pattern before transformation and before target publication.**
 
-Use:
+At each stage:
 
-* `validate_schema()` to check expected columns and datatypes;
-* `monitor_data_changes()` to compare the current profile with the correct baseline;
-* `stop_if_failed()` to stop execution when a result is blocking.
+Validate the dataframe schema.
+Stop when the schema result is blocking.
+Profile the dataframe and compare it with the preset-selected baseline.
+Stop when the data-change result is blocking.
+Continue to the next pipeline step.
 
-## Pipeline flow
+The three public functions keep the notebook workflow simple:
 
-```text
-Read source
-    ↓
-Validate source schema
-    ↓
-Monitor source data changes
-    ↓
-Stop if blocking
-    ↓
-Transform
-    ↓
-Validate proposed target schema
-    ↓
-Monitor proposed target changes
-    ↓
-Stop if blocking
-    ↓
-Write target
-```
+- validate_schema() checks expected columns and datatypes.
+- monitor_data_changes() handles profiling, baseline selection, and comparison.
+- stop_if_failed() stops execution only when can_continue=False.
 
-`monitor_data_changes()` profiles the dataframe internally. Notebook authors do not need to load baselines or call lower-level drift functions.
+Warnings remain visible without stopping execution. Monitor-only presets always allow the pipeline to continue.
+
+Beginner workflow
 
 ## Beginner workflow
 
