@@ -1,4 +1,4 @@
-# review_governance
+# widget_review_governance
 
 **Module:** `data_governance`  
 **Classification:** Essential
@@ -9,13 +9,13 @@ No summary available.
 
 ## Function manifest
 
-- Fully qualified function name: `fabricops_kit.data_governance.review_governance`
-- Short name: `review_governance`
+- Fully qualified function name: `fabricops_kit.data_governance.widget_review_governance`
+- Short name: `widget_review_governance`
 - Module: `data_governance`
 - Classification: Essential
 - Related module: `data_governance`
 - Source file path: `src/fabricops_kit/data_governance.py`
-- Source reference: <a href="../../api/modules/data_governance/#review_governance">Module source anchor</a>
+- Source reference: <a href="../../api/modules/data_governance/#widget_review_governance">Module source anchor</a>
 - Inbound references count: 0
 - Outbound references count: 4
 

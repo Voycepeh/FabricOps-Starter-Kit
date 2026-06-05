@@ -20,7 +20,7 @@ Return active latest agreement registrations for the running notebook.
 - Outbound references count: 4
 
 ## Inbound references
-- <a href="../select_agreement/"><code>fabricops_kit.data_agreement.select_agreement</code></a>
+- <a href="../widget_select_agreement/"><code>fabricops_kit.data_agreement.widget_select_agreement</code></a>
 
 ## Outbound references
 - <a href="../internal/metadata/_context_get/"><code>fabricops_kit.metadata._context_get</code></a>

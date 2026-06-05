@@ -17,12 +17,12 @@ No summary available.
 - Source file path: `src/fabricops_kit/data_agreement.py`
 - Source reference: <a href="../../api/modules/data_agreement/#_render_maintenance_widget">Module source anchor</a>
 - Inbound references count: 3
-- Outbound references count: 17
+- Outbound references count: 18
 
 ## Inbound references
-- <a href="../render_agreement_intake_app/"><code>fabricops_kit.data_agreement.render_agreement_intake_app</code></a>
-- <a href="../render_data_agreement_widget/"><code>fabricops_kit.data_agreement.render_data_agreement_widget</code></a>
-- <a href="../render_data_steward_widget/"><code>fabricops_kit.data_agreement.render_data_steward_widget</code></a>
+- <a href="../widget_render_agreement_intake_app/"><code>fabricops_kit.data_agreement.widget_render_agreement_intake_app</code></a>
+- <a href="../widget_render_data_agreement/"><code>fabricops_kit.data_agreement.widget_render_data_agreement</code></a>
+- <a href="../widget_render_data_steward/"><code>fabricops_kit.data_agreement.widget_render_data_steward</code></a>
 
 ## Outbound references
 - <a href="../internal/data_agreement/_agreement_identity_text/"><code>fabricops_kit.data_agreement._agreement_identity_text</code></a>
@@ -37,6 +37,7 @@ No summary available.
 - <a href="../internal/data_agreement/_option_values/"><code>fabricops_kit.data_agreement._option_values</code></a>
 - <a href="../internal/data_agreement/_render_custom_fields/"><code>fabricops_kit.data_agreement._render_custom_fields</code></a>
 - <a href="../internal/data_agreement/_render_searchable_selector/"><code>fabricops_kit.data_agreement._render_searchable_selector</code></a>
+- <a href="../internal/data_agreement/_require_ipywidgets/"><code>fabricops_kit.data_agreement._require_ipywidgets</code></a>
 - <a href="../internal/data_agreement/_set_widget_value/"><code>fabricops_kit.data_agreement._set_widget_value</code></a>
 - <a href="../internal/data_agreement/_standard_widget/"><code>fabricops_kit.data_agreement._standard_widget</code></a>
 - <a href="../internal/data_agreement/_steward_role_options/"><code>fabricops_kit.data_agreement._steward_role_options</code></a>

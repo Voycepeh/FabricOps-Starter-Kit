@@ -20,8 +20,8 @@ No summary available.
 - Outbound references count: 1
 
 ## Inbound references
-- <a href="../review_business_context/"><code>fabricops_kit.business_context.review_business_context</code></a>
-- <a href="../review_governance/"><code>fabricops_kit.data_governance.review_governance</code></a>
+- <a href="../widget_review_business_context/"><code>fabricops_kit.business_context.widget_review_business_context</code></a>
+- <a href="../widget_review_governance/"><code>fabricops_kit.data_governance.widget_review_governance</code></a>
 - <a href="../internal/data_quality/_attach_rule_metadata_keys/"><code>fabricops_kit.data_quality._attach_rule_metadata_keys</code></a>
 
 ## Outbound references

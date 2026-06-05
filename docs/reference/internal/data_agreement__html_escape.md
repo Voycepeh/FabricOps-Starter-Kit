@@ -21,4 +21,4 @@ No summary available.
 
 ## Inbound references
 - <a href="../internal/data_agreement/_selector_context_html/"><code>fabricops_kit.data_agreement._selector_context_html</code></a>
-- <a href="../select_agreement/"><code>fabricops_kit.data_agreement.select_agreement</code></a>
+- <a href="../widget_select_agreement/"><code>fabricops_kit.data_agreement.widget_select_agreement</code></a>

@@ -77,7 +77,7 @@ Shared environment bootstrap and validation before agreement intake, exploration
 
 ## `01_da_<agreement>`
 
-Form notebook that supports two agreement-intake layouts for A/B testing. Option A renders a compact section switcher through `render_agreement_intake_app(...)`. Option B renders separate widget cells for Data Steward, Data Agreement, and Agreement Evidence through `render_data_steward_widget(...)`, `render_data_agreement_widget(...)`, and `render_agreement_evidence_widget(...)`. Both layouts write append-only metadata and agreement intake selects active steward rows.
+Form notebook that supports two agreement-intake layouts for A/B testing. Option A renders a compact section switcher through `widget_render_agreement_intake_app(...)`. Option B renders separate widget cells for Data Steward, Data Agreement, and Agreement Evidence through `widget_render_data_steward(...)`, `widget_render_data_agreement(...)`, and `widget_render_agreement_evidence(...)`. Both layouts write append-only metadata and agreement intake selects active steward rows.
 
 ### Segment 1: Option A compact app
 
@@ -93,10 +93,10 @@ Form notebook that supports two agreement-intake layouts for A/B testing. Option
   </thead>
   <tbody>
     <tr>
-      <td>`render_agreement_intake_app`</td>
+      <td>`widget_render_agreement_intake_app`</td>
       <td>Callable orchestration wrapper</td>
       <td>Render and wire the compact agreement-intake section switcher application.</td>
-      <td>`_render_agreement_evidence_widget`, `_render_maintenance_widget`</td>
+      <td>`_render_maintenance_widget`, `_require_ipywidgets`, `_widget_render_agreement_evidence`</td>
       <td>Check dependency outputs and metadata writes.</td>
     </tr>
   </tbody>
@@ -116,24 +116,24 @@ Form notebook that supports two agreement-intake layouts for A/B testing. Option
   </thead>
   <tbody>
     <tr>
-      <td>`render_data_steward_widget`</td>
+      <td>`widget_render_data_steward`</td>
       <td>Callable orchestration wrapper</td>
       <td>Render append-only data steward maintenance.</td>
       <td>`_render_maintenance_widget`</td>
       <td>Check dependency outputs and metadata writes.</td>
     </tr>
     <tr>
-      <td>`render_data_agreement_widget`</td>
+      <td>`widget_render_data_agreement`</td>
       <td>Callable orchestration wrapper</td>
       <td>Render append-only agreement maintenance using active steward rows.</td>
       <td>`_render_maintenance_widget`</td>
       <td>Check dependency outputs and metadata writes.</td>
     </tr>
     <tr>
-      <td>`render_agreement_evidence_widget`</td>
+      <td>`widget_render_agreement_evidence`</td>
       <td>Callable orchestration wrapper</td>
       <td>Render standalone agreement evidence upload controls for an existing agreement version.</td>
-      <td>`_render_agreement_evidence_widget`</td>
+      <td>`_widget_render_agreement_evidence`</td>
       <td>Check dependency outputs and metadata writes.</td>
     </tr>
   </tbody>
@@ -224,7 +224,7 @@ Exploration notebook flow used to profile source data and draft advisory AI outp
       <td>Check dependency outputs and metadata writes.</td>
     </tr>
     <tr>
-      <td>`review_dq_rules`</td>
+      <td>`widget_review_dq_rules`</td>
       <td>Callable orchestration wrapper</td>
       <td>Review AI-suggested DQ rules sequentially with explicit approve/reject decisions.</td>
       <td>`_require_ipywidgets`</td>
@@ -288,16 +288,16 @@ Core production pipeline flow for clean evidence creation, inline runtime audit 
       <td>Check dependency outputs and metadata writes.</td>
     </tr>
     <tr>
-      <td>`select_agreement`</td>
+      <td>`widget_select_agreement`</td>
       <td>Callable orchestration wrapper</td>
       <td>Render a searchable agreement selector and store selected agreement metadata row in module state.</td>
-      <td>`_html_escape`, `_latest_agreement_versions`, `_load_agreements`, `_refresh_registration_status`, `_render_searchable_selector`, `_selected_row`, `_status_message`</td>
+      <td>`_html_escape`, `_latest_agreement_versions`, `_load_agreements`, `_refresh_registration_status`, `_render_searchable_selector`, `_require_ipywidgets`, `_selected_row`, `_status_message`</td>
       <td>Check dependency outputs and metadata writes.</td>
     </tr>
     <tr>
       <td>`get_selected_agreement`</td>
       <td>Callable orchestration wrapper</td>
-      <td>Return the agreement selected by :func:`select_agreement`.</td>
+      <td>Return the agreement selected by :func:`widget_select_agreement`.</td>
       <td>—</td>
       <td>Check dependency outputs and metadata writes.</td>
     </tr>
