@@ -6,12 +6,20 @@ AI uses that evidence to suggest candidate data quality rules. A human reviewer 
 
 A `03_pc_*` notebook loads approved rules during pipeline runs, applies them to the current dataframe or table, sends passing rows downstream, and quarantines failed rows with reasons. These approved rules are one enforceable part of the wider [How FabricOps Works](how-fabricops-works/index.md): the shared metadata flow used by governance and engineering.
 
+## Business rules and drift monitoring
+
+Business data quality rules validate whether current records satisfy approved expectations. FabricOps also uses schema and profile drift checks to detect structural or statistical changes that may not cause individual records to fail.
+
+For example, every faculty value may remain valid while the distribution of records changes unexpectedly. Business rules, schema drift, and profile drift therefore operate as complementary controls.
+
+Read [Schema and Data Drift Monitoring](schema-and-data-drift.md) for the monitoring approach.
+
 <figure markdown>
   ![Data quality workflow with AI suggestions, human review, approval, and deterministic enforcement in pipelines](assets/DQ-with-ai.png){ .full-width }
   <figcaption>Data quality workflow from profiling, rule suggestion, review, approval, enforcement, quarantine, and feedback.</figcaption>
 </figure>
 
-Next read: [How FabricOps Works](how-fabricops-works/index.md), [Quick Start](quick-start.md), [Function Reference](reference/index.md).
+Next read: [Schema and Data Drift Monitoring](schema-and-data-drift.md), [How FabricOps Works](how-fabricops-works/index.md), [Quick Start](quick-start.md), [Function Reference](reference/index.md).
 
 ## Operating flow
 
