@@ -77,12 +77,14 @@ markdown_extensions:
           class: mermaid
           format: !!python/name:pymdownx.superfences.fence_code_format
 
+hooks:
+  - docs/gen_release_info.py
+
 plugins:
   - search
   - gen-files:
       scripts:
         - docs/gen_ref_pages.py
-        - docs/gen_release_info.py
   - literate-nav
   - mkdocstrings:
       handlers:

@@ -38,5 +38,5 @@ def test_base_package_imports_without_optional_extras(block_optional_imports, fa
 def test_widget_feature_reports_actionable_optional_extra(block_optional_imports):
     data_agreement = importlib.import_module("fabricops_kit.data_agreement")
 
-    with pytest.raises(ModuleNotFoundError, match="fabricops-kit\[dq-review\]"):
+    with pytest.raises(ModuleNotFoundError, match=r"fabricops-kit\[dq-review\]"):
         data_agreement._render_custom_fields([{"key": "review_note", "type": "text"}])
