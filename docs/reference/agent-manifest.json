@@ -2856,6 +2856,17 @@
     "summary": "No summary available."
   },
   {
+    "name": "_normalize_baseline_mode",
+    "qualified_name": "fabricops_kit.drift._normalize_baseline_mode",
+    "module": "drift",
+    "type": "internal",
+    "role": "internal",
+    "inbound": [],
+    "outbound": [],
+    "source_file": "src/fabricops_kit/drift.py",
+    "summary": "No summary available."
+  },
+  {
     "name": "_normalize_datatype",
     "qualified_name": "fabricops_kit.drift._normalize_datatype",
     "module": "drift",
@@ -2878,6 +2889,7 @@
     "inbound": [
       "fabricops_kit.drift._normalize_profile",
       "fabricops_kit.drift.check_profile_drift",
+      "fabricops_kit.drift.extract_categorical_distribution_categories",
       "fabricops_kit.drift.extract_numeric_distribution_bin_edges",
       "fabricops_kit.drift.load_latest_profile"
     ],
@@ -3191,6 +3203,19 @@
     "summary": "No summary available."
   },
   {
+    "name": "extract_categorical_distribution_categories",
+    "qualified_name": "fabricops_kit.drift.extract_categorical_distribution_categories",
+    "module": "drift",
+    "type": "callable",
+    "role": "optional",
+    "inbound": [],
+    "outbound": [
+      "fabricops_kit.drift._normalize_profile"
+    ],
+    "source_file": "src/fabricops_kit/drift.py",
+    "summary": "Extract baseline categorical vocabularies so current profiles can produce comparable categorical distributions."
+  },
+  {
     "name": "extract_numeric_distribution_bin_edges",
     "qualified_name": "fabricops_kit.drift.extract_numeric_distribution_bin_edges",
     "module": "drift",
@@ -3230,7 +3255,7 @@
       "fabricops_kit.drift._safe_spark_collect"
     ],
     "source_file": "src/fabricops_kit/drift.py",
-    "summary": "Load the latest previous successful source or target profile from existing profile metadata."
+    "summary": "Load the latest previous successful or approved source/target profile baseline from existing profile metadata."
   },
   {
     "name": "prepare_drift_baselines",

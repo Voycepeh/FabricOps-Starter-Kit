@@ -3723,6 +3723,20 @@
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
+    "fabricops_kit.drift._normalize_baseline_mode": {
+      "qualified_name": "fabricops_kit.drift._normalize_baseline_mode",
+      "short_name": "_normalize_baseline_mode",
+      "module": "drift",
+      "callable": "_normalize_baseline_mode",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/drift/_normalize_baseline_mode/",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [],
+      "used_by_count": 0,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
     "fabricops_kit.drift._normalize_datatype": {
       "qualified_name": "fabricops_kit.drift._normalize_datatype",
       "short_name": "_normalize_datatype",
@@ -3756,10 +3770,11 @@
       "used_by": [
         "fabricops_kit.drift._normalize_profile",
         "fabricops_kit.drift.check_profile_drift",
+        "fabricops_kit.drift.extract_categorical_distribution_categories",
         "fabricops_kit.drift.extract_numeric_distribution_bin_edges",
         "fabricops_kit.drift.load_latest_profile"
       ],
-      "used_by_count": 4,
+      "used_by_count": 5,
       "internal_helpers_used": [
         "fabricops_kit.drift._normalize_profile",
         "fabricops_kit.drift._parse_distribution",
@@ -4152,6 +4167,24 @@
       "used_by_count": 1,
       "internal_helpers_used": [],
       "internal_helper_count": 0
+    },
+    "fabricops_kit.drift.extract_categorical_distribution_categories": {
+      "qualified_name": "fabricops_kit.drift.extract_categorical_distribution_categories",
+      "short_name": "extract_categorical_distribution_categories",
+      "module": "drift",
+      "callable": "extract_categorical_distribution_categories",
+      "docs_url": "/FabricOps-Starter-Kit/reference/extract_categorical_distribution_categories/",
+      "classification": "optional",
+      "calls": [
+        "fabricops_kit.drift._normalize_profile"
+      ],
+      "calls_count": 1,
+      "used_by": [],
+      "used_by_count": 0,
+      "internal_helpers_used": [
+        "fabricops_kit.drift._normalize_profile"
+      ],
+      "internal_helper_count": 1
     },
     "fabricops_kit.drift.extract_numeric_distribution_bin_edges": {
       "qualified_name": "fabricops_kit.drift.extract_numeric_distribution_bin_edges",
@@ -5378,8 +5411,8 @@
     },
     "drift": {
       "essential_count": 1,
-      "optional_count": 8,
-      "internal_count": 19,
+      "optional_count": 9,
+      "internal_count": 20,
       "outbound_modules": [
         "_utils"
       ],

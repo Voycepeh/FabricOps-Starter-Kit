@@ -524,8 +524,18 @@ def _normalize_profile(profile) -> dict | None:
             "profile_stage": profile_stage,
             "row_count": row_count,
             "columns": columns,
+            "profile_status": _row_get(first, "profile_status", "PROFILE_STATUS"),
+            "baseline_status": _row_get(first, "baseline_status", "BASELINE_STATUS"),
+            "source_change_signal": _parse_distribution(_row_get(first, "source_change_signal", "SOURCE_CHANGE_SIGNAL_JSON")),
         }
     return profile
+
+
+def _normalize_baseline_mode(baseline_mode: str) -> str:
+    value = str(baseline_mode or "latest_successful").lower()
+    if value not in {"latest_successful", "approved"}:
+        raise ValueError("baseline_mode must be one of: latest_successful, approved")
+    return value
 
 
 def extract_numeric_distribution_bin_edges(profile) -> dict[str, list[float]]:
@@ -551,6 +561,30 @@ def extract_numeric_distribution_bin_edges(profile) -> dict[str, list[float]]:
         if column.get("distribution_type") == "numeric" and distribution.get("bin_edges"):
             edges[str(column.get("column_name"))] = [float(value) for value in distribution.get("bin_edges", [])]
     return edges
+
+
+def extract_categorical_distribution_categories(profile) -> dict[str, list[str]]:
+    """Return categorical baseline vocabularies from a profile payload.
+
+    Parameters
+    ----------
+    profile : dict or Spark DataFrame or list[dict]
+        Profile payload produced by :func:`fabricops_kit.profile_dataframe` or
+        loaded from profile metadata.
+
+    Returns
+    -------
+    dict[str, list[str]]
+        Mapping of column names to baseline category values that can be passed
+        to ``profile_dataframe(..., categorical_categories=...)``.
+    """
+    normalized = _normalize_profile(profile) or {}
+    categories: dict[str, list[str]] = {}
+    for column in normalized.get("columns", []):
+        distribution = column.get("distribution") or {}
+        if column.get("distribution_type") == "categorical" and distribution.get("category_counts") is not None:
+            categories[str(column.get("column_name"))] = [str(value) for value in distribution.get("category_counts", {}).keys()]
+    return categories
 
 
 def _profile_check_status(value: float, warning_threshold: float, blocking_threshold: float) -> tuple[str, bool, bool]:
@@ -591,7 +625,9 @@ def _categorical_distance(current_distribution: dict, baseline_distribution: dic
     baseline_total = sum(baseline_counts.values()) or 1.0
     categories = sorted(set(current_counts) | set(baseline_counts))
     distance = 0.5 * sum(abs((current_counts.get(category, 0.0) / current_total) - (baseline_counts.get(category, 0.0) / baseline_total)) for category in categories)
-    new_categories = sorted(category for category in set(current_counts) - set(baseline_counts) if category != "__other__")
+    explicit_new = set(current_distribution.get("new_categories") or [])
+    compared_new = {category for category in set(current_counts) - set(baseline_counts) if category != "__other__"}
+    new_categories = sorted(str(category) for category in explicit_new | compared_new)
     return float(distance), new_categories
 
 
@@ -699,8 +735,8 @@ def assert_no_blocking_profile_drift(result: dict) -> None:
         raise SchemaDriftError(f"Profile drift guardrail blocked execution with status: {status}. {detail}")
 
 
-def load_latest_profile(spark, metadata_table: str, dataset_name: str, table_name: str, profile_stage: str, exclude_run_id: str | None = None) -> dict | None:
-    """Load the latest previous successful profile from profile metadata rows.
+def load_latest_profile(spark, metadata_table: str, dataset_name: str, table_name: str, profile_stage: str, exclude_run_id: str | None = None, baseline_mode: str = "latest_successful") -> dict | None:
+    """Load an explicit profile-drift baseline from profile metadata rows.
 
     Parameters
     ----------
@@ -718,6 +754,11 @@ def load_latest_profile(spark, metadata_table: str, dataset_name: str, table_nam
         ``source_profile`` and ``output_profile`` are supported.
     exclude_run_id : str, optional
         Current run identifier to exclude from baseline selection.
+    baseline_mode : {"latest_successful", "approved"}, default="latest_successful"
+        Baseline selection mode. ``latest_successful`` selects the latest
+        previous row marked ``PROFILE_STATUS = successful`` when that field is
+        present. ``approved`` selects rows marked ``BASELINE_STATUS = approved``
+        and never falls back to latest previous evidence.
 
     Returns
     -------
@@ -755,6 +796,12 @@ def load_latest_profile(spark, metadata_table: str, dataset_name: str, table_nam
             filters.append(F.lower(F.col("PROFILE_STAGE")).isin(stage_roles))
         elif "EVIDENCE_ROLE" in df.columns:
             filters.append(F.lower(F.col("EVIDENCE_ROLE")).isin(stage_roles))
+        if mode == "approved":
+            if "BASELINE_STATUS" not in df.columns:
+                return None
+            filters.append(F.lower(F.col("BASELINE_STATUS")) == "approved")
+        elif "PROFILE_STATUS" in df.columns:
+            filters.append(F.lower(F.col("PROFILE_STATUS")) == "successful")
         if exclude_run_id and "PROFILE_RUN_ID" in df.columns:
             filters.append(F.col("PROFILE_RUN_ID") != exclude_run_id)
         for condition in filters:

@@ -5,7 +5,7 @@
 
 ## Purpose
 
-Load the latest previous successful source or target profile from existing profile metadata.
+Load the latest previous successful or approved source/target profile baseline from existing profile metadata.
 
 ## Function manifest
 

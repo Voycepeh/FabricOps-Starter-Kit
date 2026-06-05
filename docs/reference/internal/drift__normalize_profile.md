@@ -16,12 +16,13 @@ No summary available.
 - Related module: `drift`
 - Source file path: `src/fabricops_kit/drift.py`
 - Source reference: <a href="../../api/modules/drift/#_normalize_profile">Module source anchor</a>
-- Inbound references count: 4
+- Inbound references count: 5
 - Outbound references count: 3
 
 ## Inbound references
 - <a href="../internal/drift/_normalize_profile/"><code>fabricops_kit.drift._normalize_profile</code></a>
 - <a href="../check_profile_drift/"><code>fabricops_kit.drift.check_profile_drift</code></a>
+- <a href="../extract_categorical_distribution_categories/"><code>fabricops_kit.drift.extract_categorical_distribution_categories</code></a>
 - <a href="../extract_numeric_distribution_bin_edges/"><code>fabricops_kit.drift.extract_numeric_distribution_bin_edges</code></a>
 - <a href="../load_latest_profile/"><code>fabricops_kit.drift.load_latest_profile</code></a>
 

@@ -536,6 +536,18 @@
       "module_summary": "Owns schema/profile/data drift checks as engineering guardrails during pipeline runs.",
       "sidebar_group": "3. Data engineer",
       "sidebar_include": true,
+      "callable_name": "extract_categorical_distribution_categories",
+      "callable_visibility": "public",
+      "callable_role": "optional",
+      "template_notebook": "03_pc_<agreement>_<pipeline>",
+      "template_segment": "Profile-based data drift guardrails"
+    },
+    {
+      "module_name": "drift",
+      "visibility": "public",
+      "module_summary": "Owns schema/profile/data drift checks as engineering guardrails during pipeline runs.",
+      "sidebar_group": "3. Data engineer",
+      "sidebar_include": true,
       "callable_name": "extract_numeric_distribution_bin_edges",
       "callable_visibility": "public",
       "callable_role": "optional",

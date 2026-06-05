@@ -149,11 +149,33 @@ def _build_numeric_distribution(df, column_name: str, edges: list[float]) -> dic
     return {"bin_edges": cleaned_edges, "bin_counts": counts}
 
 
-def _build_categorical_distribution(df, column_name: str, *, top_n: int = 20) -> dict[str, Any] | None:
+def _build_categorical_distribution(df, column_name: str, *, top_n: int = 20, categories: list[str] | set[str] | tuple[str, ...] | None = None) -> dict[str, Any] | None:
     from pyspark.sql import functions as F
 
+    non_null = df.where(F.col(column_name).isNotNull())
+    total_count = int(non_null.agg(F.count(F.lit(1)).alias("total_count")).collect()[0]["total_count"])
+    if total_count == 0:
+        return None
+
+    if categories is not None:
+        selected_categories = [str(category) for category in categories]
+        if not selected_categories:
+            return {"category_counts": {}, "other_count": total_count, "new_categories": []}
+        grouped = non_null.groupBy(F.col(column_name).cast("string").alias("_profile_category")).count()
+        rows = grouped.where(F.col("_profile_category").isin(selected_categories)).collect()
+        category_counts = {category: 0 for category in selected_categories}
+        for row in rows:
+            category_counts[str(row["_profile_category"])] = int(row["count"])
+        kept_count = int(sum(category_counts.values()))
+        new_rows = grouped.where(~F.col("_profile_category").isin(selected_categories)).orderBy(F.col("count").desc(), F.col("_profile_category").asc()).limit(top_n).collect()
+        return {
+            "category_counts": category_counts,
+            "other_count": max(total_count - kept_count, 0),
+            "new_categories": [str(row["_profile_category"]) for row in new_rows],
+        }
+
     grouped = (
-        df.where(F.col(column_name).isNotNull())
+        non_null
         .groupBy(F.col(column_name).cast("string").alias("_profile_category"))
         .count()
         .orderBy(F.col("count").desc(), F.col("_profile_category").asc())
@@ -163,7 +185,6 @@ def _build_categorical_distribution(df, column_name: str, *, top_n: int = 20) ->
         return None
     category_counts = {str(row["_profile_category"]): int(row["count"]) for row in rows}
     kept_count = int(sum(category_counts.values()))
-    total_count = int(df.where(F.col(column_name).isNotNull()).agg(F.count(F.lit(1)).alias("total_count")).collect()[0]["total_count"])
     other_count = max(total_count - kept_count, 0)
     return {"category_counts": category_counts, "other_count": other_count}
 
@@ -176,6 +197,7 @@ def _build_distribution_summaries(
     include_distributions: bool,
     distribution_columns: list[str] | set[str] | tuple[str, ...] | None,
     distribution_bin_edges: dict[str, list[float]] | None,
+    categorical_categories: dict[str, list[str]] | None,
     categorical_top_n: int,
 ) -> dict[str, tuple[str, dict[str, Any]]]:
     if not include_distributions:
@@ -193,7 +215,7 @@ def _build_distribution_summaries(
             if distribution is not None:
                 summaries[column_name] = ("numeric", distribution)
         elif _is_categorical_type(data_type):
-            distribution = _build_categorical_distribution(df, column_name, top_n=categorical_top_n)
+            distribution = _build_categorical_distribution(df, column_name, top_n=categorical_top_n, categories=(categorical_categories or {}).get(column_name))
             if distribution is not None:
                 summaries[column_name] = ("categorical", distribution)
     return summaries
@@ -208,6 +230,7 @@ def profile_dataframe(
     include_distributions: bool = False,
     distribution_columns: list[str] | set[str] | tuple[str, ...] | None = None,
     distribution_bin_edges: dict[str, list[float]] | None = None,
+    categorical_categories: dict[str, list[str]] | None = None,
     categorical_top_n: int = 20,
 ):
     """Build canonical DQ-ready profiling rows from a Spark DataFrame.
@@ -232,6 +255,11 @@ def profile_dataframe(
     distribution_bin_edges : dict[str, list[float]], optional
         Optional numeric bin edges keyed by column name. Pass baseline edges to
         make the current profile directly comparable with a previous profile.
+    categorical_categories : dict[str, list[str]], optional
+        Optional baseline category vocabulary keyed by column name. When
+        supplied, those categories are counted explicitly and all other non-null
+        values are rolled into ``other_count`` so the current profile remains
+        comparable with the baseline.
     categorical_top_n : int, default=20
         Maximum number of non-null category values to keep per categorical
         column before rolling the remainder into ``other_count``.
@@ -264,6 +292,7 @@ def profile_dataframe(
         include_distributions=include_distributions,
         distribution_columns=distribution_columns,
         distribution_bin_edges=distribution_bin_edges,
+        categorical_categories=categorical_categories,
         categorical_top_n=categorical_top_n,
     )
 

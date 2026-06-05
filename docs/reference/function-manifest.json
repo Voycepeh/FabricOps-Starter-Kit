@@ -3052,6 +3052,18 @@
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.drift._normalize_baseline_mode",
+    "name": "_normalize_baseline_mode",
+    "qualified_name": "fabricops_kit.drift._normalize_baseline_mode",
+    "module": "drift",
+    "classification": "Internal helper",
+    "inbound": [],
+    "outbound": [],
+    "source_path": "src/fabricops_kit/drift.py",
+    "docs_path": "reference/internal/drift__normalize_baseline_mode.md",
+    "summary": "No summary available."
+  },
+  {
     "id": "fabricops_kit.drift._normalize_datatype",
     "name": "_normalize_datatype",
     "qualified_name": "fabricops_kit.drift._normalize_datatype",
@@ -3075,6 +3087,7 @@
     "inbound": [
       "fabricops_kit.drift._normalize_profile",
       "fabricops_kit.drift.check_profile_drift",
+      "fabricops_kit.drift.extract_categorical_distribution_categories",
       "fabricops_kit.drift.extract_numeric_distribution_bin_edges",
       "fabricops_kit.drift.load_latest_profile"
     ],
@@ -3410,6 +3423,20 @@
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.drift.extract_categorical_distribution_categories",
+    "name": "extract_categorical_distribution_categories",
+    "qualified_name": "fabricops_kit.drift.extract_categorical_distribution_categories",
+    "module": "drift",
+    "classification": "Optional",
+    "inbound": [],
+    "outbound": [
+      "fabricops_kit.drift._normalize_profile"
+    ],
+    "source_path": "src/fabricops_kit/drift.py",
+    "docs_path": "reference/extract_categorical_distribution_categories.md",
+    "summary": "Extract baseline categorical vocabularies so current profiles can produce comparable categorical distributions."
+  },
+  {
     "id": "fabricops_kit.drift.extract_numeric_distribution_bin_edges",
     "name": "extract_numeric_distribution_bin_edges",
     "qualified_name": "fabricops_kit.drift.extract_numeric_distribution_bin_edges",
@@ -3452,7 +3479,7 @@
     ],
     "source_path": "src/fabricops_kit/drift.py",
     "docs_path": "reference/load_latest_profile.md",
-    "summary": "Load the latest previous successful source or target profile from existing profile metadata."
+    "summary": "Load the latest previous successful or approved source/target profile baseline from existing profile metadata."
   },
   {
     "id": "fabricops_kit.drift.prepare_drift_baselines",

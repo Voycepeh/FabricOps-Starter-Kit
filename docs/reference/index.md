@@ -164,6 +164,15 @@ Use the finder below to look up public callable functions.
 
   </div>
 </article>
+<article id="extract_categorical_distribution_categories" class="reference-catalogue-item" data-callable-row="true" data-callable-name="extract_categorical_distribution_categories" data-callable-module="drift" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Extract baseline categorical vocabularies so current profiles can produce comparable categorical distributions.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/extract_categorical_distribution_categories/"><code>extract_categorical_distribution_categories</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Extract baseline categorical vocabularies so current profiles can produce comparable categorical distributions.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/drift/" title="Open drift module page" aria-label="Open drift module page">drift</a><span class="reference-chip reference-chip-role reference-chip-optional">Optional</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_normalize_profile</code></li></ul></details>
+
+  </div>
+</article>
 <article id="extract_column_business_context_suggestions" class="reference-catalogue-item" data-callable-row="true" data-callable-name="extract_column_business_context_suggestions" data-callable-module="business_context" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Extract review-ready business context suggestion rows from AI responses.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/extract_column_business_context_suggestions/"><code>extract_column_business_context_suggestions</code></a></h3>
   <p class="reference-catalogue-item-purpose">Extract review-ready business context suggestion rows from AI responses.</p>
@@ -281,9 +290,9 @@ Use the finder below to look up public callable functions.
 
   </div>
 </article>
-<article id="load_latest_profile" class="reference-catalogue-item" data-callable-row="true" data-callable-name="load_latest_profile" data-callable-module="drift" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Load the latest previous successful source or target profile from existing profile metadata.">
+<article id="load_latest_profile" class="reference-catalogue-item" data-callable-row="true" data-callable-name="load_latest_profile" data-callable-module="drift" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Load the latest previous successful or approved source/target profile baseline from existing profile metadata.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/load_latest_profile/"><code>load_latest_profile</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Load the latest previous successful source or target profile from existing profile metadata.</p>
+  <p class="reference-catalogue-item-purpose">Load the latest previous successful or approved source/target profile baseline from existing profile metadata.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/drift/" title="Open drift module page" aria-label="Open drift module page">drift</a><span class="reference-chip reference-chip-role reference-chip-optional">Optional</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 3</span></summary><ul><li><code>_is_missing_table_error</code></li><li><code>_normalize_profile</code></li><li><code>_safe_spark_collect</code></li></ul></details>
