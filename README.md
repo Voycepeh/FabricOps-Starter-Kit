@@ -10,9 +10,9 @@ FabricOps Starter Kit combines a **reusable helper wheel** with **notebook templ
 
 <div align="center">
 
-[![Open Documentation](https://img.shields.io/badge/Docs-Open%20FabricOps-blue?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/)
-[![Start](https://img.shields.io/badge/Start-Use%20Templates-blue?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/quick-start/)
-[![Install](https://img.shields.io/badge/Install-Wheel-blue?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/install/)
+[![Open Documentation](https://img.shields.io/badge/Docs-Open%20FabricOps-blue?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/)
+[![Start](https://img.shields.io/badge/Start-Use%20Templates-blue?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/quick-start/)
+[![Install](https://img.shields.io/badge/Install-Wheel-blue?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/install/)
 
 </div>
 
@@ -22,16 +22,16 @@ FabricOps Starter Kit combines a **reusable helper wheel** with **notebook templ
 
 ## Documentation map
 
-- [Home](https://voycepeh.github.io/FabricOps-Starter-Kit/)
-- [Quick Start](https://voycepeh.github.io/FabricOps-Starter-Kit/quick-start/)
-- [How FabricOps Works](https://voycepeh.github.io/FabricOps-Starter-Kit/how-fabricops-works/)
-  - [Workspace Operating Model](https://voycepeh.github.io/FabricOps-Starter-Kit/how-fabricops-works/workspace-operating-model/)
-  - [Notebook Templates](https://voycepeh.github.io/FabricOps-Starter-Kit/how-fabricops-works/notebook-templates/)
-  - [Metadata Tables](https://voycepeh.github.io/FabricOps-Starter-Kit/how-fabricops-works/metadata-tables/)
-  - [Metadata Dashboard](https://voycepeh.github.io/FabricOps-Starter-Kit/how-fabricops-works/metadata-dashboard/)
-- [Data Quality Rules](https://voycepeh.github.io/FabricOps-Starter-Kit/data-quality-rules-system/)
-- [Setup](https://voycepeh.github.io/FabricOps-Starter-Kit/install/)
-- [Function Reference](https://voycepeh.github.io/FabricOps-Starter-Kit/reference/)
+- [Home](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/)
+- [Quick Start](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/quick-start/)
+- [How FabricOps Works](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/how-fabricops-works/)
+  - [Workspace Operating Model](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/how-fabricops-works/workspace-operating-model/)
+  - [Notebook Templates](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/how-fabricops-works/notebook-templates/)
+  - [Metadata Tables](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/how-fabricops-works/metadata-tables/)
+  - [Metadata Dashboard](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/how-fabricops-works/metadata-dashboard/)
+- [Data Quality Rules](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/data-quality-rules-system/)
+- [Setup](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/install/)
+- [Function Reference](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/reference/)
 
 ## Template quick links
 
