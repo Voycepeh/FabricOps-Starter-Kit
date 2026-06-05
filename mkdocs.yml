@@ -32,7 +32,9 @@ nav:
       - Metadata Tables: how-fabricops-works/metadata-tables.md
       - Metadata Dashboard: how-fabricops-works/metadata-dashboard.md
 
-  - Data Quality Rules: data-quality-rules-system.md
+  - Data Quality:
+      - AI-Assisted Rules: data-quality-rules-system.md
+      - Schema and Data Drift: schema-and-data-drift.md
 
   - Development:
       - Documentation Versioning: development/docs-versioning.md
