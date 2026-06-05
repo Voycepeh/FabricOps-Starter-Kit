@@ -66,8 +66,8 @@ These fields are populated by runtime audit helpers, for example `metadata.build
 
 `00_env_config` defines the physical steward, agreement, and evidence metadata tables plus the editable configuration for the visible `01_da` intake widgets. FabricOps currently supports two `01_da` layouts:
 
-- **Option A** is a compact section switcher via `render_agreement_intake_app(...)`.
-- **Option B** is separate widget cells for Data Steward, Data Agreement, and Agreement Evidence via `render_data_steward_widget(...)`, `render_data_agreement_widget(...)`, and `render_agreement_evidence_widget(...)`. Use Option B if Fabric output scrolling feels jumpy or if users prefer rerunning one section at a time.
+- **Option A** is a compact section switcher via `widget_render_agreement_intake_app(...)`.
+- **Option B** is separate widget cells for Data Steward, Data Agreement, and Agreement Evidence via `widget_render_data_steward(...)`, `widget_render_data_agreement(...)`, and `widget_render_agreement_evidence(...)`. Use Option B if Fabric output scrolling feels jumpy or if users prefer rerunning one section at a time.
 
 Both layouts expose the same workflow sections:
 

@@ -1,4 +1,4 @@
-# render_data_agreement_widget
+# widget_render_data_agreement
 
 **Module:** `data_agreement`  
 **Classification:** Essential
@@ -9,13 +9,13 @@ Render append-only agreement maintenance using active steward rows.
 
 ## Function manifest
 
-- Fully qualified function name: `fabricops_kit.data_agreement.render_data_agreement_widget`
-- Short name: `render_data_agreement_widget`
+- Fully qualified function name: `fabricops_kit.data_agreement.widget_render_data_agreement`
+- Short name: `widget_render_data_agreement`
 - Module: `data_agreement`
 - Classification: Essential
 - Related module: `data_agreement`
 - Source file path: `src/fabricops_kit/data_agreement.py`
-- Source reference: <a href="../../api/modules/data_agreement/#render_data_agreement_widget">Module source anchor</a>
+- Source reference: <a href="../../api/modules/data_agreement/#widget_render_data_agreement">Module source anchor</a>
 - Inbound references count: 0
 - Outbound references count: 1
 

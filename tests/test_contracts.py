@@ -1,3 +1,6 @@
+import pytest
+
+pytestmark = pytest.mark.contract
 from fabricops_kit.handover import build_handover, build_handover_record, render_handover_markdown
 
 

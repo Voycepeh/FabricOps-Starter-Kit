@@ -1,6 +1,11 @@
+
 """Regression checks for copy-ready notebook-template package API usage."""
 
 from __future__ import annotations
+
+import pytest
+
+pytestmark = pytest.mark.contract
 
 import ast
 import json
@@ -61,7 +66,7 @@ def test_02_ex_imports_only_public_fabricops_kit_functions():
 
 def test_02_ex_register_and_source_read_calls_match_public_signatures():
     calls = [node for node in ast.walk(_tree("02_ex_agreement_topic.ipynb")) if isinstance(node, ast.Call)]
-    selector = next(node for node in calls if _name(node.func) == "select_agreement")
+    selector = next(node for node in calls if _name(node.func) == "widget_select_agreement")
     keyword_names = {keyword.arg for keyword in selector.keywords}
     assert "register_notebook" in keyword_names
     assert "spark_session" in keyword_names
@@ -163,10 +168,10 @@ def test_01_da_imports_only_public_agreement_layout_helpers():
     imported = _fabricops_imports("01_da_agreement_template.ipynb")
     assert imported <= set(fabricops_kit.__all__)
     assert imported == {
-        "render_agreement_evidence_widget",
-        "render_agreement_intake_app",
-        "render_data_agreement_widget",
-        "render_data_steward_widget",
+        "widget_render_agreement_evidence",
+        "widget_render_agreement_intake_app",
+        "widget_render_data_agreement",
+        "widget_render_data_steward",
     }
     assert not (imported & REMOVED_AGREEMENT_CALLABLES)
 
@@ -174,11 +179,11 @@ def test_01_da_imports_only_public_agreement_layout_helpers():
 def test_01_da_renders_framework_managed_ab_layouts_without_notebook_callback():
     code = _code("01_da_agreement_template.ipynb")
     assert "%run 00_env_config" in code
-    assert "render_agreement_intake_app" in code
-    assert "agreement_app = render_agreement_intake_app(" in code
-    assert "steward_widget = render_data_steward_widget(" in code
-    assert "agreement_widget = render_data_agreement_widget(" in code
-    assert "evidence_widget = render_agreement_evidence_widget(" in code
+    assert "widget_render_agreement_intake_app" in code
+    assert "agreement_app = widget_render_agreement_intake_app(" in code
+    assert "steward_widget = widget_render_data_steward(" in code
+    assert "agreement_widget = widget_render_data_agreement(" in code
+    assert "evidence_widget = widget_render_agreement_evidence(" in code
     assert "spark=spark" in code
     assert "config=CONFIG" in code
     assert "env=ENV" in code
@@ -189,12 +194,12 @@ def test_01_da_renders_framework_managed_ab_layouts_without_notebook_callback():
 
 def test_public_all_exposes_small_supported_agreement_api_only():
     supported = {
-        "render_agreement_intake_app",
-        "render_data_steward_widget",
-        "render_data_agreement_widget",
-        "render_agreement_evidence_widget",
+        "widget_render_agreement_intake_app",
+        "widget_render_data_steward",
+        "widget_render_data_agreement",
+        "widget_render_agreement_evidence",
         "setup_data_agreement_tables",
-        "select_agreement",
+        "widget_select_agreement",
         "get_selected_agreement",
     }
     helper_style_names = {
@@ -211,7 +216,7 @@ def test_public_all_exposes_small_supported_agreement_api_only():
     assert not (helper_style_names & exported)
 
 
-def test_downstream_templates_select_agreements_without_loading_internal_helper():
+def test_downstream_templates_widget_select_agreements_without_loading_internal_helper():
     for template, env_name in (
         ("02_ex_agreement_topic.ipynb", "ENV_NAME"),
         ("03_pc_agreement_pipeline_template.ipynb", "ENV_NAME"),
@@ -220,10 +225,10 @@ def test_downstream_templates_select_agreements_without_loading_internal_helper(
         code = _code(template)
         assert "load_agreements" not in code
         if template in {"02_ex_agreement_topic.ipynb", "03_pc_agreement_pipeline_template.ipynb"}:
-            assert "select_agreement(" in code
+            assert "widget_select_agreement(" in code
             assert "register_notebook=True" in code
         else:
-            assert f"select_agreement(CONFIG, {env_name}, spark_session=spark)" in code
+            assert f"widget_select_agreement(CONFIG, {env_name}, spark_session=spark)" in code
 
 
 def test_generated_data_agreement_module_page_separates_supported_api_tiers():
@@ -295,7 +300,7 @@ def test_02_ex_uses_widget_registration_without_advanced_metadata_sections():
         "run_dq_rule_review_widget",
         "get_dq_review_results",
         "write_dq_rules",
-        "review_dq_rule_deactivations",
+        "widget_review_dq_rule_deactivations",
         "load_governance",
         "load_notebook_registry",
     ):
@@ -332,7 +337,7 @@ def test_03_pc_uses_agreement_widget_registration_without_manual_registration():
         if isinstance(node, ast.ImportFrom) and node.module == "fabricops_kit"
         for alias in node.names
     }
-    assert "select_agreement" in imported
+    assert "widget_select_agreement" in imported
     assert "get_selected_agreement" in imported
     assert "current_notebook_active_registrations" in imported
     assert "build_runtime_audit_fields" in imported
@@ -344,7 +349,7 @@ def test_03_pc_uses_agreement_widget_registration_without_manual_registration():
     assert "current_notebook_active_registrations(" in code
     assert "custom_fields_json" not in code
 
-    calls = [node for node in ast.walk(tree) if isinstance(node, ast.Call) and _name(node.func) == "select_agreement"]
+    calls = [node for node in ast.walk(tree) if isinstance(node, ast.Call) and _name(node.func) == "widget_select_agreement"]
     assert len(calls) == 1
     selector = calls[0]
     keyword_values = {keyword.arg: _name(keyword.value) for keyword in selector.keywords}

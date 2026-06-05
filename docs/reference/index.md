@@ -107,7 +107,7 @@ Use the finder below to look up public callable functions.
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/metadata/" title="Open metadata module page" aria-label="Open metadata module page">metadata</a><span class="reference-chip reference-chip-role reference-chip-optional">Optional</span><span class="reference-chip">03_pc</span></p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 4</span></summary><ul><li><code>_context_get</code></li><li><code>_runtime_context</code></li><li><code>_safe_str</code></li><li><code>load_notebook_registry</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>select_agreement</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>widget_select_agreement</code></li></ul></details>
   </div>
 </article>
 <article id="draft_business_context" class="reference-catalogue-item" data-callable-row="true" data-callable-name="draft_business_context" data-callable-module="business_context" data-callable-starter-path="—" data-role="essential" data-callable-purpose="Run Fabric AI to draft column business context suggestions.">
@@ -227,9 +227,9 @@ Use the finder below to look up public callable functions.
 
   </div>
 </article>
-<article id="get_selected_agreement" class="reference-catalogue-item" data-callable-row="true" data-callable-name="get_selected_agreement" data-callable-module="data_agreement" data-callable-starter-path="03_pc" data-role="essential" data-callable-purpose="Return the agreement selected by :func:`select_agreement`.">
+<article id="get_selected_agreement" class="reference-catalogue-item" data-callable-row="true" data-callable-name="get_selected_agreement" data-callable-module="data_agreement" data-callable-starter-path="03_pc" data-role="essential" data-callable-purpose="Return the agreement selected by :func:`widget_select_agreement`.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/get_selected_agreement/"><code>get_selected_agreement</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Return the agreement selected by :func:`select_agreement`.</p>
+  <p class="reference-catalogue-item-purpose">Return the agreement selected by :func:`widget_select_agreement`.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">03_pc</span></p>
   <div class="reference-catalogue-item-counts">
 
@@ -350,43 +350,7 @@ Use the finder below to look up public callable functions.
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/metadata/" title="Open metadata module page" aria-label="Open metadata module page">metadata</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 7</span></summary><ul><li><code>write_lakehouse_table</code></li><li><code>_context_get</code></li><li><code>_notebook_registration_key</code></li><li><code>_runtime_context</code></li><li><code>_safe_str</code></li><li><code>_write_metadata_rows_legacy</code></li><li><code>column_context_rows_for_spark</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>select_agreement</code></li></ul></details>
-  </div>
-</article>
-<article id="render_agreement_evidence_widget" class="reference-catalogue-item" data-callable-row="true" data-callable-name="render_agreement_evidence_widget" data-callable-module="data_agreement" data-callable-starter-path="01_data_agreement" data-role="essential" data-callable-purpose="Render standalone agreement evidence upload controls for an existing agreement version.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/render_agreement_evidence_widget/"><code>render_agreement_evidence_widget</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Render standalone agreement evidence upload controls for an existing agreement version.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">01_data_agreement</span></p>
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_render_agreement_evidence_widget</code></li></ul></details>
-
-  </div>
-</article>
-<article id="render_agreement_intake_app" class="reference-catalogue-item" data-callable-row="true" data-callable-name="render_agreement_intake_app" data-callable-module="data_agreement" data-callable-starter-path="01_data_agreement" data-role="essential" data-callable-purpose="Render and wire the compact agreement-intake section switcher application.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/render_agreement_intake_app/"><code>render_agreement_intake_app</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Render and wire the compact agreement-intake section switcher application.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">01_data_agreement</span></p>
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>_render_agreement_evidence_widget</code></li><li><code>_render_maintenance_widget</code></li></ul></details>
-
-  </div>
-</article>
-<article id="render_data_agreement_widget" class="reference-catalogue-item" data-callable-row="true" data-callable-name="render_data_agreement_widget" data-callable-module="data_agreement" data-callable-starter-path="01_data_agreement" data-role="essential" data-callable-purpose="Render append-only agreement maintenance using active steward rows.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/render_data_agreement_widget/"><code>render_data_agreement_widget</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Render append-only agreement maintenance using active steward rows.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">01_data_agreement</span></p>
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_render_maintenance_widget</code></li></ul></details>
-
-  </div>
-</article>
-<article id="render_data_steward_widget" class="reference-catalogue-item" data-callable-row="true" data-callable-name="render_data_steward_widget" data-callable-module="data_agreement" data-callable-starter-path="01_data_agreement" data-role="essential" data-callable-purpose="Render append-only data steward maintenance.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/render_data_steward_widget/"><code>render_data_steward_widget</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Render append-only data steward maintenance.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">01_data_agreement</span></p>
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_render_maintenance_widget</code></li></ul></details>
-
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>widget_select_agreement</code></li></ul></details>
   </div>
 </article>
 <article id="render_handover_markdown" class="reference-catalogue-item" data-callable-row="true" data-callable-name="render_handover_markdown" data-callable-module="handover" data-callable-starter-path="—" data-role="essential" data-callable-purpose="Render a handover summary dictionary into Markdown for handover notes.">
@@ -396,60 +360,6 @@ Use the finder below to look up public callable functions.
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_status_of</code></li></ul></details>
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>build_handover_record</code></li></ul></details>
-  </div>
-</article>
-<article id="review_business_context" class="reference-catalogue-item" data-callable-row="true" data-callable-name="review_business_context" data-callable-module="business_context" data-callable-starter-path="—" data-role="essential" data-callable-purpose="Display interactive approval widget.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/review_business_context/"><code>review_business_context</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Display interactive approval widget.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/business_context/" title="Open business_context module page" aria-label="Open business_context module page">business_context</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 3</span></summary><ul><li><code>_require_ipywidgets</code></li><li><code>build_metadata_column_key</code></li><li><code>build_metadata_table_key</code></li></ul></details>
-
-  </div>
-</article>
-<article id="review_dq_rule_deactivations" class="reference-catalogue-item" data-callable-row="true" data-callable-name="review_dq_rule_deactivations" data-callable-module="data_quality" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Review active DQ rules one at a time for governed deactivation actions.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/review_dq_rule_deactivations/"><code>review_dq_rule_deactivations</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Review active DQ rules one at a time for governed deactivation actions.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_quality/" title="Open data_quality module page" aria-label="Open data_quality module page">data_quality</a><span class="reference-chip reference-chip-role reference-chip-optional">Optional</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_require_ipywidgets</code></li></ul></details>
-
-  </div>
-</article>
-<article id="review_dq_rules" class="reference-catalogue-item" data-callable-row="true" data-callable-name="review_dq_rules" data-callable-module="data_quality" data-callable-starter-path="02_ex" data-role="essential" data-callable-purpose="Review AI-suggested DQ rules sequentially with explicit approve/reject decisions.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/review_dq_rules/"><code>review_dq_rules</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Review AI-suggested DQ rules sequentially with explicit approve/reject decisions.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_quality/" title="Open data_quality module page" aria-label="Open data_quality module page">data_quality</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">02_ex</span></p>
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_require_ipywidgets</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>run_dq_rule_review_widget</code></li></ul></details>
-  </div>
-</article>
-<article id="review_governance" class="reference-catalogue-item" data-callable-row="true" data-callable-name="review_governance" data-callable-module="data_governance" data-callable-starter-path="—" data-role="essential" data-callable-purpose="Display governance review widget and capture approve/reject decisions in module state.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/review_governance/"><code>review_governance</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Display governance review widget and capture approve/reject decisions in module state.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_governance/" title="Open data_governance module page" aria-label="Open data_governance module page">data_governance</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 4</span></summary><ul><li><code>_undo_last_action</code></li><li><code>_now_utc_iso</code></li><li><code>build_metadata_column_key</code></li><li><code>build_metadata_table_key</code></li></ul></details>
-
-  </div>
-</article>
-<article id="run_dq_rule_review_widget" class="reference-catalogue-item" data-callable-row="true" data-callable-name="run_dq_rule_review_widget" data-callable-module="data_quality" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Render the notebook widget for human review and approval/rejection of candidate DQ rules.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/run_dq_rule_review_widget/"><code>run_dq_rule_review_widget</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Render the notebook widget for human review and approval/rejection of candidate DQ rules.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_quality/" title="Open data_quality module page" aria-label="Open data_quality module page">data_quality</a><span class="reference-chip reference-chip-role reference-chip-optional">Optional</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>review_dq_rules</code></li></ul></details>
-
-  </div>
-</article>
-<article id="select_agreement" class="reference-catalogue-item" data-callable-row="true" data-callable-name="select_agreement" data-callable-module="data_agreement" data-callable-starter-path="03_pc" data-role="essential" data-callable-purpose="Render a searchable agreement selector and store selected agreement metadata row in module state.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/select_agreement/"><code>select_agreement</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Render a searchable agreement selector and store selected agreement metadata row in module state.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">03_pc</span></p>
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 6</span></summary><ul><li><code>_html_escape</code></li><li><code>_latest_agreement_versions</code></li><li><code>_load_agreements</code></li><li><code>_render_searchable_selector</code></li><li><code>current_notebook_active_registrations</code></li><li><code>register_current_notebook</code></li></ul></details>
-
   </div>
 </article>
 <article id="setup_data_agreement_tables" class="reference-catalogue-item" data-callable-row="true" data-callable-name="setup_data_agreement_tables" data-callable-module="data_agreement" data-callable-starter-path="—" data-role="essential" data-callable-purpose="Create, validate, and report readiness for agreement metadata tables.">
@@ -495,6 +405,87 @@ Use the finder below to look up public callable functions.
   <div class="reference-catalogue-item-counts">
 
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 4</span></summary><ul><li><code>_run_dq_rules</code></li><li><code>_split_dq_rows</code></li><li><code>enforce_dq</code></li><li><code>write_dq_rules</code></li></ul></details>
+  </div>
+</article>
+<article id="widget_render_agreement_evidence" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_render_agreement_evidence" data-callable-module="data_agreement" data-callable-starter-path="01_data_agreement" data-role="essential" data-callable-purpose="Render standalone agreement evidence upload controls for an existing agreement version.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_render_agreement_evidence/"><code>widget_render_agreement_evidence</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Render standalone agreement evidence upload controls for an existing agreement version.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">01_data_agreement</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_widget_render_agreement_evidence</code></li></ul></details>
+
+  </div>
+</article>
+<article id="widget_render_agreement_intake_app" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_render_agreement_intake_app" data-callable-module="data_agreement" data-callable-starter-path="01_data_agreement" data-role="essential" data-callable-purpose="Render and wire the compact agreement-intake section switcher application.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_render_agreement_intake_app/"><code>widget_render_agreement_intake_app</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Render and wire the compact agreement-intake section switcher application.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">01_data_agreement</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 3</span></summary><ul><li><code>_render_maintenance_widget</code></li><li><code>_require_ipywidgets</code></li><li><code>_widget_render_agreement_evidence</code></li></ul></details>
+
+  </div>
+</article>
+<article id="widget_render_data_agreement" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_render_data_agreement" data-callable-module="data_agreement" data-callable-starter-path="01_data_agreement" data-role="essential" data-callable-purpose="Render append-only agreement maintenance using active steward rows.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Render append-only agreement maintenance using active steward rows.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">01_data_agreement</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_render_maintenance_widget</code></li></ul></details>
+
+  </div>
+</article>
+<article id="widget_render_data_steward" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_render_data_steward" data-callable-module="data_agreement" data-callable-starter-path="01_data_agreement" data-role="essential" data-callable-purpose="Render append-only data steward maintenance.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Render append-only data steward maintenance.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">01_data_agreement</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_render_maintenance_widget</code></li></ul></details>
+
+  </div>
+</article>
+<article id="widget_review_business_context" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_review_business_context" data-callable-module="business_context" data-callable-starter-path="—" data-role="essential" data-callable-purpose="Display interactive approval widget.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_review_business_context/"><code>widget_review_business_context</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Display interactive approval widget.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/business_context/" title="Open business_context module page" aria-label="Open business_context module page">business_context</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 3</span></summary><ul><li><code>_require_ipywidgets</code></li><li><code>build_metadata_column_key</code></li><li><code>build_metadata_table_key</code></li></ul></details>
+
+  </div>
+</article>
+<article id="widget_review_dq_rule_deactivations" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_review_dq_rule_deactivations" data-callable-module="data_quality" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Review active DQ rules one at a time for governed deactivation actions.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_review_dq_rule_deactivations/"><code>widget_review_dq_rule_deactivations</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Review active DQ rules one at a time for governed deactivation actions.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_quality/" title="Open data_quality module page" aria-label="Open data_quality module page">data_quality</a><span class="reference-chip reference-chip-role reference-chip-optional">Optional</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_require_ipywidgets</code></li></ul></details>
+
+  </div>
+</article>
+<article id="widget_review_dq_rules" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_review_dq_rules" data-callable-module="data_quality" data-callable-starter-path="02_ex" data-role="essential" data-callable-purpose="Review AI-suggested DQ rules sequentially with explicit approve/reject decisions.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_review_dq_rules/"><code>widget_review_dq_rules</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Review AI-suggested DQ rules sequentially with explicit approve/reject decisions.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_quality/" title="Open data_quality module page" aria-label="Open data_quality module page">data_quality</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">02_ex</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_require_ipywidgets</code></li></ul></details>
+
+  </div>
+</article>
+<article id="widget_review_governance" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_review_governance" data-callable-module="data_governance" data-callable-starter-path="—" data-role="essential" data-callable-purpose="Display governance review widget and capture approve/reject decisions in module state.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_review_governance/"><code>widget_review_governance</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Display governance review widget and capture approve/reject decisions in module state.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_governance/" title="Open data_governance module page" aria-label="Open data_governance module page">data_governance</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 4</span></summary><ul><li><code>_undo_last_action</code></li><li><code>_now_utc_iso</code></li><li><code>build_metadata_column_key</code></li><li><code>build_metadata_table_key</code></li></ul></details>
+
+  </div>
+</article>
+<article id="widget_select_agreement" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_select_agreement" data-callable-module="data_agreement" data-callable-starter-path="03_pc" data-role="essential" data-callable-purpose="Render a searchable agreement selector and store selected agreement metadata row in module state.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_select_agreement/"><code>widget_select_agreement</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Render a searchable agreement selector and store selected agreement metadata row in module state.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">03_pc</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 7</span></summary><ul><li><code>_html_escape</code></li><li><code>_latest_agreement_versions</code></li><li><code>_load_agreements</code></li><li><code>_render_searchable_selector</code></li><li><code>_require_ipywidgets</code></li><li><code>current_notebook_active_registrations</code></li><li><code>register_current_notebook</code></li></ul></details>
+
   </div>
 </article>
 <article id="write_business_context" class="reference-catalogue-item" data-callable-row="true" data-callable-name="write_business_context" data-callable-module="business_context" data-callable-starter-path="—" data-role="essential" data-callable-purpose="Persist approved business context rows via metadata writer.">

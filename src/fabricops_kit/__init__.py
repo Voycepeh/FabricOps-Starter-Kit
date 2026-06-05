@@ -9,17 +9,17 @@ from .business_context import (
     extract_column_business_context_suggestions,
     get_reviewed_business_context_rows,
     prepare_business_context_profile_input,
-    review_business_context,
+    widget_review_business_context,
     write_business_context,
 )
 from .config import setup_notebook
 from .data_agreement import (
     get_selected_agreement,
-    render_agreement_evidence_widget,
-    render_agreement_intake_app,
-    render_data_agreement_widget,
-    render_data_steward_widget,
-    select_agreement,
+    widget_render_agreement_evidence,
+    widget_render_agreement_intake_app,
+    widget_render_data_agreement,
+    widget_render_data_steward,
+    widget_select_agreement,
     setup_data_agreement_tables,
 )
 from .data_governance import (
@@ -27,7 +27,7 @@ from .data_governance import (
     extract_governance_suggestions,
     load_governance,
     prepare_governance_input,
-    review_governance,
+    widget_review_governance,
     write_governance,
 )
 from .data_lineage import build_lineage_handover_markdown, build_lineage_records
@@ -38,9 +38,8 @@ from .data_quality import (
     enforce_dq,
     get_dq_review_results,
     load_dq_rules,
-    review_dq_rule_deactivations,
-    review_dq_rules,
-    run_dq_rule_review_widget,
+    widget_review_dq_rule_deactivations,
+    widget_review_dq_rules,
     validate_dq_rules,
     write_dq_rules,
 )
@@ -69,7 +68,7 @@ from .versioning import get_docs_url, get_docs_version, get_package_version, get
 
 def _load_package_version() -> str:
     try:
-        return version(__name__)
+        return version("fabricops-kit")
     except PackageNotFoundError:
         pyproject_path = pathlib.Path(__file__).resolve().parents[2] / "pyproject.toml"
         try:
@@ -80,11 +79,11 @@ def _load_package_version() -> str:
             return "unknown"
 
 
-__version__ = "0.1.0"
+__version__ = _load_package_version()
 
 __all__ = [
     "setup_notebook",
-    "select_agreement",
+    "widget_select_agreement",
     "get_selected_agreement",
     "register_current_notebook",
     "load_notebook_registry",
@@ -100,12 +99,11 @@ __all__ = [
     "draft_business_context",
     "prepare_business_context_profile_input",
     "extract_column_business_context_suggestions",
-    "review_business_context",
+    "widget_review_business_context",
     "get_reviewed_business_context_rows",
     "write_business_context",
     "draft_dq_rules",
-    "review_dq_rules",
-    "run_dq_rule_review_widget",
+    "widget_review_dq_rules",
     "get_dq_review_results",
     "write_dq_rules",
     "load_dq_rules",
@@ -114,7 +112,7 @@ __all__ = [
     "draft_governance",
     "prepare_governance_input",
     "extract_governance_suggestions",
-    "review_governance",
+    "widget_review_governance",
     "write_governance",
     "load_governance",
     "build_lineage_records",
@@ -128,13 +126,15 @@ __all__ = [
     "review_dq_rule_deactivations",
     "check_schema",
     "SchemaDriftError",
+    "widget_review_dq_rule_deactivations",
+    "check_schema_drift",
     "check_partition_drift",
     "check_profile_drift",
     "summarize_drift_results",
-    "render_agreement_evidence_widget",
-    "render_agreement_intake_app",
-    "render_data_agreement_widget",
-    "render_data_steward_widget",
+    "widget_render_agreement_evidence",
+    "widget_render_agreement_intake_app",
+    "widget_render_data_agreement",
+    "widget_render_data_steward",
     "setup_data_agreement_tables",
     "FabricStore",
     "get_package_version",

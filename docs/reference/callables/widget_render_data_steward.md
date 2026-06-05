@@ -1,4 +1,4 @@
-# render_data_steward_widget
+# widget_render_data_steward
 
 **Module:** `data_agreement`  
 **Classification:** Essential
@@ -9,13 +9,13 @@ Render append-only data steward maintenance.
 
 ## Function manifest
 
-- Fully qualified function name: `fabricops_kit.data_agreement.render_data_steward_widget`
-- Short name: `render_data_steward_widget`
+- Fully qualified function name: `fabricops_kit.data_agreement.widget_render_data_steward`
+- Short name: `widget_render_data_steward`
 - Module: `data_agreement`
 - Classification: Essential
 - Related module: `data_agreement`
 - Source file path: `src/fabricops_kit/data_agreement.py`
-- Source reference: <a href="../../api/modules/data_agreement/#render_data_steward_widget">Module source anchor</a>
+- Source reference: <a href="../../api/modules/data_agreement/#widget_render_data_steward">Module source anchor</a>
 - Inbound references count: 0
 - Outbound references count: 1
 

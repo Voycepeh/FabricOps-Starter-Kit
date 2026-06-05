@@ -20,7 +20,7 @@ Register current notebook metadata evidence for agreement traceability.
 - Outbound references count: 7
 
 ## Inbound references
-- <a href="../select_agreement/"><code>fabricops_kit.data_agreement.select_agreement</code></a>
+- <a href="../widget_select_agreement/"><code>fabricops_kit.data_agreement.widget_select_agreement</code></a>
 
 ## Outbound references
 - <a href="../write_lakehouse_table/"><code>fabricops_kit.fabric_input_output.write_lakehouse_table</code></a>

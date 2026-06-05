@@ -79,7 +79,7 @@ Owns business meaning for tables and columns.
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/review_business_context/"><code>review_business_context</code></a></td>
+      <td><a href="../../reference/widget_review_business_context/"><code>widget_review_business_context</code></a></td>
       <td>Essential</td>
       <td>function</td>
       <td>Display interactive approval widget.</td>
@@ -150,7 +150,7 @@ Owns business meaning for tables and columns.
 <a class="reference-chip" href="#_prepare_business_context_profile_input"><code>_prepare_business_context_profile_input</code></a>
 </li>
 <li>
-<a class="reference-chip" href="../../reference/review_business_context/"><code>review_business_context</code></a>
+<a class="reference-chip" href="../../reference/widget_review_business_context/"><code>widget_review_business_context</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_require_ipywidgets"><code>_require_ipywidgets</code></a>
 </li>
@@ -190,7 +190,7 @@ Owns business meaning for tables and columns.
     </tr>
     <tr>
       <td><a href="../../reference/internal/business_context/_require_ipywidgets/"><code>_require_ipywidgets</code></a></td>
-      <td><a href="../../reference/review_business_context/"><code>review_business_context</code></a></td>
+      <td><a href="../../reference/widget_review_business_context/"><code>widget_review_business_context</code></a></td>
     </tr>
   </tbody>
 </table>

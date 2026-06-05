@@ -60,6 +60,18 @@ AGREEMENT_EVIDENCE_TYPES = [
     "Supporting Screenshot", "Other",
 ]
 
+
+def _require_ipywidgets():
+    """Return ipywidgets or raise an actionable optional-dependency error."""
+    try:
+        import ipywidgets as widgets
+    except ModuleNotFoundError as exc:
+        raise ModuleNotFoundError(
+            "The data agreement widget feature requires the 'dq-review' extra. "
+            'Install with: pip install "fabricops-kit[dq-review]"'
+        ) from exc
+    return widgets
+
 FIELD_LABELS = {
     "steward_id": "Steward ID",
     "steward_name": "Steward Name",
@@ -419,7 +431,7 @@ def _render_custom_fields(config: list[dict[str, Any]] | dict[str, Any], *, valu
     Supported field types are ``text``, ``textarea``, ``select``,
     ``multiselect``, ``date``, and ``boolean``.
     """
-    import ipywidgets as widgets
+    widgets = _require_ipywidgets()
 
     definitions = config.get("custom_fields", []) if isinstance(config, dict) else config
     current = values or {}
@@ -778,12 +790,21 @@ def _next_minor_version(version: Any) -> str:
 
 def _latest_agreement_versions(rows: Any) -> list[dict[str, Any]]:
     """Return the latest semantic version for each stable agreement ID."""
+
+    def _agreement_sort_key(row: dict[str, Any]) -> tuple[Any, ...]:
+        return (
+            _parse_contract_version(row.get("contract_version")),
+            str(row.get("_committed_at") or row.get("updated_at") or row.get("uploaded_at") or ""),
+            str(row.get("agreement_name") or ""),
+            str(row.get("agreement_id") or ""),
+        )
+
     latest: dict[str, dict[str, Any]] = {}
     for row in _coerce_row_dicts(rows):
         key = str(row.get("agreement_id") or "").strip()
-        if key and (key not in latest or _parse_contract_version(row.get("contract_version")) > _parse_contract_version(latest[key].get("contract_version"))):
+        if key and (key not in latest or _agreement_sort_key(row) > _agreement_sort_key(latest[key])):
             latest[key] = row
-    return sorted(latest.values(), key=lambda row: str(row.get("agreement_name") or "").lower())
+    return sorted(latest.values(), key=lambda row: (str(row.get("agreement_name") or "").lower(), str(row.get("agreement_id") or "")))
 
 
 def _list_all_data_agreement_rows(config: Any, env_name: str, *, spark_session: Any = None, missing_ok: bool = False) -> list[dict[str, Any]]:
@@ -1046,7 +1067,7 @@ def _agreement_dropdown_options(rows: Any, *, include_prompt: bool = False) -> l
     return options
 
 
-def select_agreement(agreement_rows_or_config: Any, env_name: str | None = None, *, spark_session: Any = None, register_notebook: bool = False, notebook_type: str | None = None, environment_name: str | None = None, dataset_name: str | None = None, table_name: str | None = None, topic: str | None = None, pipeline_name: str | None = None) -> Any:
+def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None = None, *, spark_session: Any = None, register_notebook: bool = False, notebook_type: str | None = None, environment_name: str | None = None, dataset_name: str | None = None, table_name: str | None = None, topic: str | None = None, pipeline_name: str | None = None) -> Any:
     """Render a downstream agreement selector and retain the selected row.
 
     Parameters
@@ -1073,8 +1094,9 @@ def select_agreement(agreement_rows_or_config: Any, env_name: str | None = None,
         When registration is enabled, registration widgets are attached as
         attributes on the selector for advanced notebook automation.
     """
-    import ipywidgets as widgets
-    from IPython.display import display
+    widgets = _require_ipywidgets()
+    from IPython import display as ip
+
     global _SELECTED_AGREEMENT
     rows = _load_agreements(agreement_rows_or_config, env_name, spark_session=spark_session) if env_name is not None else agreement_rows_or_config
     latest_rows = _latest_agreement_versions(rows)
@@ -1148,7 +1170,7 @@ def select_agreement(agreement_rows_or_config: Any, env_name: str | None = None,
 
     if register_notebook:
         if env_name is None or spark_session is None:
-            raise ValueError("select_agreement(..., register_notebook=True) requires CONFIG, env_name, and spark_session.")
+            raise ValueError("widget_select_agreement(..., register_notebook=True) requires CONFIG, env_name, and spark_session.")
         config = agreement_rows_or_config
         active_rows = current_notebook_active_registrations(
             spark_session,
@@ -1262,12 +1284,12 @@ def select_agreement(agreement_rows_or_config: Any, env_name: str | None = None,
         selector.container = widgets.VBox([selector_parts["container"], registration_status, registration_action, register_button, registration_output])
     else:
         selector.container = selector_parts["container"]
-    display(selector.container)
+    ip.display(selector.container)
     return selector
 
 
 def get_selected_agreement() -> dict[str, Any]:
-    """Return the agreement selected by :func:`select_agreement`.
+    """Return the agreement selected by :func:`widget_select_agreement`.
 
     Returns
     -------
@@ -1280,7 +1302,7 @@ def get_selected_agreement() -> dict[str, Any]:
         If no selector has established a selected agreement.
     """
     if not _SELECTED_AGREEMENT:
-        raise RuntimeError("No agreement selected. Run select_agreement(...) first.")
+        raise RuntimeError("No agreement selected. Run widget_select_agreement(...) first.")
     return dict(_SELECTED_AGREEMENT)
 
 
@@ -1308,7 +1330,7 @@ def _widget_field_value(field: str, value: Any) -> Any:
 
 
 def _standard_widget(field: str, value: Any = "", *, options: list[Any] | None = None) -> Any:
-    import ipywidgets as widgets
+    widgets = _require_ipywidgets()
     description = _field_label(field)
     if options is not None:
         return widgets.Dropdown(options=options, value=_default_dropdown_value(options, value), **_widget_common(widgets, description))
@@ -1335,8 +1357,9 @@ def _agreement_identity_text(row: dict[str, Any] | None) -> str:
 
 
 def _render_maintenance_widget(*, spark: Any, config: Any, env_name: str, kind: str, display_widget: bool = True) -> dict[str, Any]:
-    import ipywidgets as widgets
-    from IPython.display import display
+    widgets = _require_ipywidgets()
+    from IPython import display as ip
+
     is_steward = kind == "data_steward_widget"
     prompt = "Create new steward" if is_steward else "Create new agreement"
     widget_config = _widget_config(config, kind)
@@ -1506,7 +1529,7 @@ def _render_maintenance_widget(*, spark: Any, config: Any, env_name: str, kind: 
         controls.append(refresh_stewards)
     container = widgets.VBox([*controls, save, output])
     if display_widget:
-        display(container)
+        ip.display(container)
     return {
         "container": container,
         "existing_record": selected,
@@ -1527,10 +1550,10 @@ def _render_maintenance_widget(*, spark: Any, config: Any, env_name: str, kind: 
 
 
 
-def _render_agreement_evidence_widget(*, spark: Any, config: Any, env_name: str, display_widget: bool = True) -> dict[str, Any]:
+def _widget_render_agreement_evidence(*, spark: Any, config: Any, env_name: str, display_widget: bool = True) -> dict[str, Any]:
     """Render optional agreement evidence upload controls."""
-    import ipywidgets as widgets
-    from IPython.display import display
+    widgets = _require_ipywidgets()
+    from IPython import display as ip
 
     row_lookup: dict[str, dict[str, Any]] = {}
 
@@ -1630,7 +1653,7 @@ def _render_agreement_evidence_widget(*, spark: Any, config: Any, env_name: str,
     _set_empty_state()
     container = widgets.VBox([message, version_selector["container"], evidence_type, instructions, evidence_file_paths, refresh, save, output])
     if display_widget:
-        display(container)
+        ip.display(container)
     return {
         "container": container,
         "message": message,
@@ -1648,7 +1671,7 @@ def _render_agreement_evidence_widget(*, spark: Any, config: Any, env_name: str,
     }
 
 
-def render_agreement_evidence_widget(config: Any, env_name: str, *, spark: Any) -> dict[str, Any]:
+def widget_render_agreement_evidence(config: Any, env_name: str, *, spark: Any) -> dict[str, Any]:
     """Render standalone agreement evidence upload controls.
 
     Parameters
@@ -1677,14 +1700,14 @@ def render_agreement_evidence_widget(config: Any, env_name: str, *, spark: Any) 
     pasted ``Files/...`` path to ``METADATA_DATA_AGREEMENT_EVIDENCE`` and
     does not read or write binary file content.
     """
-    return _render_agreement_evidence_widget(
+    return _widget_render_agreement_evidence(
         spark=spark,
         config=config,
         env_name=env_name,
     )
 
 
-def render_data_steward_widget(config: Any, env_name: str, *, spark: Any) -> dict[str, Any]:
+def widget_render_data_steward(config: Any, env_name: str, *, spark: Any) -> dict[str, Any]:
     """Render append-only data steward create/update maintenance.
 
     Parameters
@@ -1704,7 +1727,7 @@ def render_data_steward_widget(config: Any, env_name: str, *, spark: Any) -> dic
     return _render_maintenance_widget(spark=spark, config=config, env_name=env_name, kind="data_steward_widget")
 
 
-def render_data_agreement_widget(config: Any, env_name: str, *, spark: Any) -> dict[str, Any]:
+def widget_render_data_agreement(config: Any, env_name: str, *, spark: Any) -> dict[str, Any]:
     """Render append-only agreement create/update maintenance using active stewards.
 
     Parameters
@@ -1724,7 +1747,7 @@ def render_data_agreement_widget(config: Any, env_name: str, *, spark: Any) -> d
     return _render_maintenance_widget(spark=spark, config=config, env_name=env_name, kind="data_agreement_widget")
 
 
-def render_agreement_intake_app(*, spark: Any, config: Any, env: str, display_widget: bool = True) -> dict[str, Any]:
+def widget_render_agreement_intake_app(*, spark: Any, config: Any, env: str, display_widget: bool = True) -> dict[str, Any]:
     """Render the ``01_da`` metadata intake application.
 
     Parameters
@@ -1754,12 +1777,12 @@ def render_agreement_intake_app(*, spark: Any, config: Any, env: str, display_wi
     ``METADATA_DATA_AGREEMENT_EVIDENCE`` without reading or writing binary
     file content.
     """
-    import ipywidgets as widgets
-    from IPython.display import display
+    widgets = _require_ipywidgets()
+    from IPython import display as ip
 
     steward_app = _render_maintenance_widget(spark=spark, config=config, env_name=env, kind="data_steward_widget", display_widget=False)
     agreement_app = _render_maintenance_widget(spark=spark, config=config, env_name=env, kind="data_agreement_widget", display_widget=False)
-    evidence_app = _render_agreement_evidence_widget(spark=spark, config=config, env_name=env, display_widget=False)
+    evidence_app = _widget_render_agreement_evidence(spark=spark, config=config, env_name=env, display_widget=False)
     callbacks = steward_app.get("after_save_callbacks") if isinstance(steward_app, dict) else None
     agreement_refresh = agreement_app.get("refresh_steward_options") if isinstance(agreement_app, dict) else None
     if isinstance(callbacks, list) and callable(agreement_refresh):
@@ -1792,7 +1815,7 @@ def render_agreement_intake_app(*, spark: Any, config: Any, env: str, display_wi
     section_selector.observe(_show_section, names="value")
     container = widgets.VBox([section_selector, body])
     if display_widget:
-        display(container)
+        ip.display(container)
     return {
         "container": container,
         "section_selector": section_selector,

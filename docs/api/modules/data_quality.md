@@ -6,7 +6,7 @@
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 10</span><span class="reference-chip">Internal helpers: 20</span><span class="reference-chip">Outbound: 3</span><span class="reference-chip">Inbound: 0</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 9</span><span class="reference-chip">Internal helpers: 20</span><span class="reference-chip">Outbound: 3</span><span class="reference-chip">Inbound: 0</span></div>
 
 ## Module purpose
 
@@ -32,7 +32,7 @@ Owns DQ rule drafting, review, enforcement, quarantine, and quality results.
     </tr>
     <tr>
       <td>Public callable count</td>
-      <td>10</td>
+      <td>9</td>
     </tr>
     <tr>
       <td>Internal helper count</td>
@@ -107,7 +107,7 @@ Owns DQ rule drafting, review, enforcement, quarantine, and quality results.
       <td><a href="../../reference/internal/data_quality/_load_active_dq_rules/"><code>_load_active_dq_rules</code></a> (internal)</td>
     </tr>
     <tr>
-      <td><a href="../../reference/review_dq_rules/"><code>review_dq_rules</code></a></td>
+      <td><a href="../../reference/widget_review_dq_rules/"><code>widget_review_dq_rules</code></a></td>
       <td>Essential</td>
       <td>function</td>
       <td>Review AI-suggested DQ rules sequentially with explicit approve/reject decisions.</td>
@@ -121,25 +121,18 @@ Owns DQ rule drafting, review, enforcement, quarantine, and quality results.
       <td><a href="../../reference/internal/data_quality/_build_dq_rule_history/"><code>_build_dq_rule_history</code></a> (internal)</td>
     </tr>
     <tr>
-      <td><a href="../../reference/review_dq_rule_deactivations/"><code>review_dq_rule_deactivations</code></a></td>
-      <td>Optional</td>
-      <td>function</td>
-      <td>Review active DQ rules one at a time for governed deactivation actions.</td>
-      <td><a href="../../reference/internal/data_quality/_require_ipywidgets/"><code>_require_ipywidgets</code></a> (internal)</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/run_dq_rule_review_widget/"><code>run_dq_rule_review_widget</code></a></td>
-      <td>Optional</td>
-      <td>function</td>
-      <td>Render the notebook widget for human review and approval/rejection of candidate DQ rules.</td>
-      <td>—</td>
-    </tr>
-    <tr>
       <td><a href="../../reference/validate_dq_rules/"><code>validate_dq_rules</code></a></td>
       <td>Optional</td>
       <td>function</td>
       <td>Validate canonical DQ rules before enforcement.</td>
       <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/widget_review_dq_rule_deactivations/"><code>widget_review_dq_rule_deactivations</code></a></td>
+      <td>Optional</td>
+      <td>function</td>
+      <td>Review active DQ rules one at a time for governed deactivation actions.</td>
+      <td><a href="../../reference/internal/data_quality/_require_ipywidgets/"><code>_require_ipywidgets</code></a> (internal)</td>
     </tr>
   </tbody>
 </table>
@@ -183,24 +176,19 @@ Owns DQ rule drafting, review, enforcement, quarantine, and quality results.
 <a class="reference-chip" href="#_load_active_dq_rules"><code>_load_active_dq_rules</code></a>
 </li>
 <li>
-<a class="reference-chip" href="../../reference/review_dq_rule_deactivations/"><code>review_dq_rule_deactivations</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_require_ipywidgets"><code>_require_ipywidgets</code></a>
-</li>
-<li>
-<a class="reference-chip" href="../../reference/review_dq_rules/"><code>review_dq_rules</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_require_ipywidgets"><code>_require_ipywidgets</code></a>
-</li>
-<li>
-<a class="reference-chip" href="../../reference/run_dq_rule_review_widget/"><code>run_dq_rule_review_widget</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="../../reference/review_dq_rules/"><code>review_dq_rules</code></a>
-</li>
-<li>
 <a class="reference-chip" href="../../reference/validate_dq_rules/"><code>validate_dq_rules</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <span>None.</span>
+</li>
+<li>
+<a class="reference-chip" href="../../reference/widget_review_dq_rule_deactivations/"><code>widget_review_dq_rule_deactivations</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_require_ipywidgets"><code>_require_ipywidgets</code></a>
+</li>
+<li>
+<a class="reference-chip" href="../../reference/widget_review_dq_rules/"><code>widget_review_dq_rules</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_require_ipywidgets"><code>_require_ipywidgets</code></a>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/write_dq_rules/"><code>write_dq_rules</code></a>
@@ -286,7 +274,7 @@ Owns DQ rule drafting, review, enforcement, quarantine, and quality results.
     </tr>
     <tr>
       <td><a href="../../reference/internal/data_quality/_require_ipywidgets/"><code>_require_ipywidgets</code></a></td>
-      <td><a href="../../reference/review_dq_rule_deactivations/"><code>review_dq_rule_deactivations</code></a>, <a href="../../reference/review_dq_rules/"><code>review_dq_rules</code></a></td>
+      <td><a href="../../reference/widget_review_dq_rule_deactivations/"><code>widget_review_dq_rule_deactivations</code></a>, <a href="../../reference/widget_review_dq_rules/"><code>widget_review_dq_rules</code></a></td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/data_quality/_run_dq_rules/"><code>_run_dq_rules</code></a></td>

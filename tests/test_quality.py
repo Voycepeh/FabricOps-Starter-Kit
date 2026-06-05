@@ -1,5 +1,7 @@
 import pytest
 
+pytestmark = pytest.mark.unit
+
 from fabricops_kit.data_quality import (
     _approved_dq_rules_from_review_rows,
     _extract_candidate_rules_from_responses,

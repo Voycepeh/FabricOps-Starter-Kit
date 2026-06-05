@@ -1,38 +1,29 @@
 # Documentation versioning
 
-FabricOps Starter Kit documentation is maintained from the same source tree as the package. The `main` branch represents the latest documentation source and should stay ready for the next release.
-
-This page prepares documentation versioning infrastructure. It does **not** declare FabricOps Starter Kit as officially `v1.0.0` stable.
+FabricOps Starter Kit documentation is maintained from the same source tree as the package. The `main` branch represents documentation source for the next change, while released documentation is locked with Mike from Git tags.
 
 ## Version policy
 
-Package versions use full semantic versions, for example `1.0.2`. Published documentation versions use major/minor versions, for example `1.0`.
-
-Patch releases normally reuse the same major/minor documentation site. Release notes may still be patch-specific, using files such as `docs/releases/v1.0.2.md`.
-
-Use this mapping when publishing documentation:
+Package versions and published Mike documentation snapshots use full semantic versions, for example `1.0.2`. This preserves an exact documentation URL for each released wheel. Release aliases can still point users to the newest or recommended production snapshot.
 
 | Package version | Documentation version |
 | --- | --- |
-| `1.0.0` | `1.0` |
-| `1.0.1` | `1.0` |
-| `1.1.0` | `1.1` |
+| `1.0.0` | `1.0.0` |
+| `1.0.1` | `1.0.1` |
+| `1.1.0` | `1.1.0` |
 
-## Source snapshots and release notes
+## Aliases
 
-Release notes are kept as individual files under `docs/releases/` using the `vX.Y.Z.md` naming pattern. For example, release notes for package version `1.0.2` should live in `docs/releases/v1.0.2.md`.
+- `latest` points to the newest released documentation.
+- `stable` points to the recommended production documentation. Initially it moves with `latest` unless maintainers document a different recommendation.
+- `dev` may point to a preview built from `main`.
 
-Git tags represent release source snapshots. When maintainers tag a release, the tag captures the package source, generated reference documentation, and release notes for that exact version.
+Do not automatically make `main` the `latest` documentation version. Only a validated release tag updates `latest`.
 
-## Published documentation versions
+## Build-time traceability
 
-Full documentation versions should be published with [mike](https://github.com/jimporter/mike), rather than by manually duplicating the documentation tree into folders such as `docs/v1.0` or `docs/v1.1`.
+The documentation build generates a release traceability page with the full package version, Mike documentation version, and Git commit SHA. Release builds pass those values from GitHub Actions environment variables; local builds derive the package version from `pyproject.toml` and the commit from Git when available.
 
-Published documentation should expose version labels such as:
+## Release process
 
-- `1.0` for the 1.0 release line.
-- `1.1` for the 1.1 release line.
-- `latest` for the newest published release.
-- `stable` for the recommended production baseline when it differs from `latest`.
-
-Users should read the documentation version that matches their installed wheel version. For example, users running a `1.0.x` wheel should use the `1.0` documentation unless the release notes direct them to a more specific patch-level note.
+See [Release management](release-management.md) for the complete GitHub-only release flow, local validation commands, Mike deployment behavior, and retry guidance.

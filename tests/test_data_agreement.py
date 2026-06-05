@@ -227,18 +227,18 @@ def test_create_update_validation_fails_clearly(monkeypatch, factory, values, me
 
 def test_public_package_import_exposes_agreement_evidence_widget():
     from fabricops_kit import (
-        render_agreement_evidence_widget,
-        render_agreement_intake_app,
-        render_data_agreement_widget,
-        render_data_steward_widget,
+        widget_render_agreement_evidence,
+        widget_render_agreement_intake_app,
+        widget_render_data_agreement,
+        widget_render_data_steward,
     )
     import fabricops_kit
 
-    assert render_agreement_evidence_widget is data_agreement.render_agreement_evidence_widget
-    assert fabricops_kit.render_agreement_evidence_widget is data_agreement.render_agreement_evidence_widget
-    assert render_agreement_intake_app is data_agreement.render_agreement_intake_app
-    assert render_data_agreement_widget is data_agreement.render_data_agreement_widget
-    assert render_data_steward_widget is data_agreement.render_data_steward_widget
+    assert widget_render_agreement_evidence is data_agreement.widget_render_agreement_evidence
+    assert fabricops_kit.widget_render_agreement_evidence is data_agreement.widget_render_agreement_evidence
+    assert widget_render_agreement_intake_app is data_agreement.widget_render_agreement_intake_app
+    assert widget_render_data_agreement is data_agreement.widget_render_data_agreement
+    assert widget_render_data_steward is data_agreement.widget_render_data_steward
 
 
 def test_public_evidence_widget_wrapper_delegates_to_internal_helper(monkeypatch):
@@ -248,10 +248,10 @@ def test_public_evidence_widget_wrapper_delegates_to_internal_helper(monkeypatch
         calls.append(kwargs)
         return {"container": "evidence"}
 
-    monkeypatch.setattr(data_agreement, "_render_agreement_evidence_widget", fake_helper)
+    monkeypatch.setattr(data_agreement, "_widget_render_agreement_evidence", fake_helper)
     config = _config()
 
-    assert data_agreement.render_agreement_evidence_widget(config, "dev", spark="spark") == {"container": "evidence"}
+    assert data_agreement.widget_render_agreement_evidence(config, "dev", spark="spark") == {"container": "evidence"}
     assert calls == [{"spark": "spark", "config": config, "env_name": "dev"}]
 
 
@@ -262,9 +262,9 @@ def test_widget_entrypoints_display_individually_when_called_directly(monkeypatc
     monkeypatch.setattr(data_agreement, "_list_all_data_agreement_rows", lambda *args, **kwargs: [])
     display = sys.modules["IPython.display"]
 
-    steward = data_agreement.render_data_steward_widget(_config(), "dev", spark="spark")
-    agreement = data_agreement.render_data_agreement_widget(_config(), "dev", spark="spark")
-    evidence = data_agreement.render_agreement_evidence_widget(_config(), "dev", spark="spark")
+    steward = data_agreement.widget_render_data_steward(_config(), "dev", spark="spark")
+    agreement = data_agreement.widget_render_data_agreement(_config(), "dev", spark="spark")
+    evidence = data_agreement.widget_render_agreement_evidence(_config(), "dev", spark="spark")
 
     assert [call[0][0] for call in display.calls] == [steward["container"], agreement["container"], evidence["container"]]
 
@@ -276,7 +276,7 @@ def test_agreement_intake_app_uses_single_section_switcher(monkeypatch):
     monkeypatch.setattr(data_agreement, "_list_all_data_agreement_rows", lambda *args, **kwargs: [])
     display = sys.modules["IPython.display"]
 
-    app = data_agreement.render_agreement_intake_app(spark="spark", config=_config(), env="dev")
+    app = data_agreement.widget_render_agreement_intake_app(spark="spark", config=_config(), env="dev")
 
     assert set(app) == {"container", "section_selector", "body", "data_steward", "data_agreement", "agreement_evidence", "tab"}
     assert type(app["section_selector"]).__name__ == "ToggleButtons"
@@ -331,8 +331,8 @@ def test_01_da_template_and_docs_describe_option_a_and_option_b():
     for text in (template, metadata_docs, notebook_docs):
         assert "Option A" in text
         assert "Option B" in text
-        assert "render_agreement_intake_app" in text
-        assert "render_agreement_evidence_widget" in text
+        assert "widget_render_agreement_intake_app" in text
+        assert "widget_render_agreement_evidence" in text
     assert "Do not run both options in the same notebook execution unless testing UX" in template
     assert "Use Option B if Fabric output scrolling feels jumpy" in metadata_docs
 
@@ -341,18 +341,18 @@ def test_agreement_widget_hides_generated_ids_and_shows_read_only_context(monkey
     _install_widget_stubs(monkeypatch)
     monkeypatch.setattr(data_agreement, "_list_data_agreements", lambda *args, **kwargs: [])
     monkeypatch.setattr(data_agreement, "_list_data_stewards", lambda *args, **kwargs: [_steward()])
-    widget = data_agreement.render_data_agreement_widget(_config(), "dev", spark=object())
+    widget = data_agreement.widget_render_data_agreement(_config(), "dev", spark=object())
     assert "agreement_id" not in widget["fields"]
     assert "contract_version" not in widget["fields"]
     assert widget["identity_context"].value == "Agreement ID and version are generated when saved."
 
 
-def test_select_agreement_loads_configured_rows_for_downstream_notebooks(monkeypatch):
+def test_widget_select_agreement_loads_configured_rows_for_downstream_notebooks(monkeypatch):
     _install_widget_stubs(monkeypatch)
     calls = []
     monkeypatch.setattr(data_agreement, "_load_agreements", lambda config, env, spark_session=None: calls.append((config, env, spark_session)) or [{"agreement_id": "DA-001", "contract_version": "1.0.0", "agreement_name": "Orders", "domain": "Operations"}])
     config = _config()
-    dropdown = data_agreement.select_agreement(config, "dev", spark_session="spark")
+    dropdown = data_agreement.widget_select_agreement(config, "dev", spark_session="spark")
     assert calls == [(config, "dev", "spark")]
     assert dropdown is not None
     assert data_agreement.get_selected_agreement() == {"agreement_id": "DA-001", "contract_version": "1.0.0", "agreement_name": "Orders", "domain": "Operations"}
@@ -394,7 +394,7 @@ def test_widget_save_path_generates_steward_id_and_derives_active_status(monkeyp
     writes = []
     monkeypatch.setattr(data_agreement, "_list_data_stewards", lambda *args, **kwargs: [])
     monkeypatch.setattr(data_agreement, "_write_row", lambda **kwargs: writes.append(kwargs["row"]))
-    widget = data_agreement.render_data_steward_widget(_config(), "dev", spark=object())
+    widget = data_agreement.widget_render_data_steward(_config(), "dev", spark=object())
     assert "steward_id" not in widget["fields"]
     assert "is_active" not in widget["fields"]
     values = _steward()
@@ -464,7 +464,7 @@ def test_standard_dropdown_preserves_existing_tuple_option_value(monkeypatch):
 def test_maintenance_dropdowns_use_ids_and_internal_row_lookup(monkeypatch):
     _install_widget_stubs(monkeypatch)
     monkeypatch.setattr(data_agreement, "_list_data_stewards", lambda *args, **kwargs: [_steward()])
-    widget = data_agreement.render_data_steward_widget(_config(), "dev", spark=object())
+    widget = data_agreement.widget_render_data_steward(_config(), "dev", spark=object())
     assert widget["existing_record"].options[1] == ("Configured Steward | Data Steward | steward@example.com", "steward-001")
     assert widget["existing_records_by_id"]["steward-001"]["steward_name"] == "Configured Steward"
     assert not isinstance(widget["existing_record"].options[1][1], dict)
@@ -474,7 +474,7 @@ def test_agreement_steward_dropdown_returns_actual_steward_id(monkeypatch):
     _install_widget_stubs(monkeypatch)
     monkeypatch.setattr(data_agreement, "_list_data_agreements", lambda *args, **kwargs: [])
     monkeypatch.setattr(data_agreement, "_list_data_stewards", lambda *args, **kwargs: [_steward()])
-    widget = data_agreement.render_data_agreement_widget(_config(), "dev", spark=object())
+    widget = data_agreement.widget_render_data_agreement(_config(), "dev", spark=object())
     assert widget["fields"]["steward_id"].options == [("Configured Steward | Data Steward | steward@example.com", "steward-001")]
     assert widget["fields"]["steward_id"].value == "steward-001"
 
@@ -483,7 +483,7 @@ def test_save_output_clears_old_messages_before_save(monkeypatch):
     _install_widget_stubs(monkeypatch)
     monkeypatch.setattr(data_agreement, "_list_data_stewards", lambda *args, **kwargs: [])
     monkeypatch.setattr(data_agreement, "_create_or_update_data_steward", lambda **kwargs: _steward(**kwargs["values"]))
-    widget = data_agreement.render_data_steward_widget(_config(), "dev", spark=object())
+    widget = data_agreement.widget_render_data_steward(_config(), "dev", spark=object())
     values = _steward()
     for field, control in widget["fields"].items():
         control.value = date.fromisoformat(values[field]) if field == "effective_from" else values[field]
@@ -501,7 +501,7 @@ def test_steward_save_refreshes_agreement_steward_options(monkeypatch):
         steward_rows.append(row)
         return row
     monkeypatch.setattr(data_agreement, "_create_or_update_data_steward", save_steward)
-    app = data_agreement.render_agreement_intake_app(spark=object(), config=_config(), env="dev")
+    app = data_agreement.widget_render_agreement_intake_app(spark=object(), config=_config(), env="dev")
     steward_widget = app["data_steward"]
     agreement_widget = app["data_agreement"]
     assert agreement_widget["fields"]["steward_id"].options == []
@@ -538,7 +538,7 @@ def test_selecting_existing_steward_populates_standard_and_custom_fields(monkeyp
     _install_widget_stubs(monkeypatch)
     row = _steward(custom_fields_json=data_agreement._serialize_custom_fields({"group": "Shared Services"}))
     monkeypatch.setattr(data_agreement, "_list_data_stewards", lambda *args, **kwargs: [row])
-    widget = data_agreement.render_data_steward_widget(_config(), "dev", spark=object())
+    widget = data_agreement.widget_render_data_steward(_config(), "dev", spark=object())
     widget["existing_record"].callbacks[0]({"new": "steward-001"})
     assert widget["fields"]["steward_name"].value == "Configured Steward"
     assert widget["fields"]["steward_role"].value == "Data Steward"
@@ -552,7 +552,7 @@ def test_saving_existing_steward_reuses_selected_steward_id(monkeypatch):
     writes = []
     monkeypatch.setattr(data_agreement, "_list_data_stewards", lambda *args, **kwargs: [_steward()])
     monkeypatch.setattr(data_agreement, "_write_row", lambda **kwargs: writes.append(kwargs["row"]))
-    widget = data_agreement.render_data_steward_widget(_config(), "dev", spark=object())
+    widget = data_agreement.widget_render_data_steward(_config(), "dev", spark=object())
     widget["existing_record"].value = "steward-001"
     values = _steward(steward_name="Updated Steward")
     for field, control in widget["fields"].items():
@@ -577,7 +577,7 @@ def test_selecting_existing_agreement_populates_standard_and_custom_fields(monke
     row = {**_agreement(), "agreement_id": "DA-001", "contract_version": "1.1.0", "custom_fields_json": data_agreement._serialize_custom_fields({"consumer_group": "Faculty"})}
     monkeypatch.setattr(data_agreement, "_list_data_agreements", lambda *args, **kwargs: [row])
     monkeypatch.setattr(data_agreement, "_list_data_stewards", lambda *args, **kwargs: [_steward()])
-    widget = data_agreement.render_data_agreement_widget(_config(), "dev", spark=object())
+    widget = data_agreement.widget_render_data_agreement(_config(), "dev", spark=object())
     widget["existing_record"].callbacks[0]({"new": "DA-001"})
     assert widget["fields"]["agreement_name"].value == "Orders Agreement"
     assert widget["fields"]["domain"].value == "Operations"
@@ -636,7 +636,7 @@ def test_save_button_reenabled_after_success_and_failure(monkeypatch):
     _install_widget_stubs(monkeypatch)
     monkeypatch.setattr(data_agreement, "_list_data_stewards", lambda *args, **kwargs: [])
     monkeypatch.setattr(data_agreement, "_create_or_update_data_steward", lambda **kwargs: _steward(**kwargs["values"]))
-    success_widget = data_agreement.render_data_steward_widget(_config(), "dev", spark=object())
+    success_widget = data_agreement.widget_render_data_steward(_config(), "dev", spark=object())
     values = _steward()
     for field, control in success_widget["fields"].items():
         control.value = date.fromisoformat(values[field]) if field == "effective_from" else values[field]
@@ -646,7 +646,7 @@ def test_save_button_reenabled_after_success_and_failure(monkeypatch):
     def fail_save(**kwargs):
         raise ValueError("forced failure")
     monkeypatch.setattr(data_agreement, "_create_or_update_data_steward", fail_save)
-    failure_widget = data_agreement.render_data_steward_widget(_config(), "dev", spark=object())
+    failure_widget = data_agreement.widget_render_data_steward(_config(), "dev", spark=object())
     for field, control in failure_widget["fields"].items():
         control.value = date.fromisoformat(values[field]) if field == "effective_from" else values[field]
     failure_widget["save_button"].callbacks[0](None)
@@ -656,7 +656,7 @@ def test_save_button_reenabled_after_success_and_failure(monkeypatch):
 def test_steward_role_renders_as_dropdown_from_config(monkeypatch):
     _install_widget_stubs(monkeypatch)
     monkeypatch.setattr(data_agreement, "_list_data_stewards", lambda *args, **kwargs: [])
-    widget = data_agreement.render_data_steward_widget(
+    widget = data_agreement.widget_render_data_steward(
         _config(steward_role_options=["Data Owner", "Business Approver"]), "dev", spark=object()
     )
     role = widget["fields"]["steward_role"]
@@ -669,7 +669,7 @@ def test_selecting_existing_legacy_steward_role_preserves_dropdown_option(monkey
     _install_widget_stubs(monkeypatch)
     legacy = _steward(steward_role="Legacy Approver")
     monkeypatch.setattr(data_agreement, "_list_data_stewards", lambda *args, **kwargs: [legacy])
-    widget = data_agreement.render_data_steward_widget(
+    widget = data_agreement.widget_render_data_steward(
         _config(steward_role_options=["Data Owner", "Data Steward"]), "dev", spark=object()
     )
     widget["existing_record"].callbacks[0]({"new": "steward-001"})
@@ -706,7 +706,7 @@ def test_agreement_widget_renders_recipient_text_and_split_usage_textareas(monke
     _install_widget_stubs(monkeypatch)
     monkeypatch.setattr(data_agreement, "_list_data_agreements", lambda *args, **kwargs: [])
     monkeypatch.setattr(data_agreement, "_list_data_stewards", lambda *args, **kwargs: [_steward()])
-    widget = data_agreement.render_data_agreement_widget(_config(), "dev", spark=object())
+    widget = data_agreement.widget_render_data_agreement(_config(), "dev", spark=object())
     assert widget["fields"]["recipient"].description == "Recipient / Consumer"
     assert widget["fields"]["recipient"].options == ()
     for field, label in {
@@ -784,7 +784,7 @@ def test_evidence_widget_renders_textarea_for_file_paths_not_file_upload(monkeyp
     _install_widget_stubs(monkeypatch)
     row = {**_agreement(), "agreement_id": "DA-001", "contract_version": "1.0.0"}
     monkeypatch.setattr(data_agreement, "_list_all_data_agreement_rows", lambda *args, **kwargs: [row])
-    widget = data_agreement._render_agreement_evidence_widget(spark=object(), config=_config(), env_name="dev")
+    widget = data_agreement._widget_render_agreement_evidence(spark=object(), config=_config(), env_name="dev")
     assert "file_upload" not in widget
     assert type(widget["evidence_file_paths"]).__name__ == "Textarea"
     assert widget["evidence_file_paths"].description == "Evidence File Paths"
@@ -795,7 +795,7 @@ def test_evidence_widget_renders_textarea_for_file_paths_not_file_upload(monkeyp
 def test_evidence_widget_tells_user_to_save_agreement_first(monkeypatch):
     _install_widget_stubs(monkeypatch)
     monkeypatch.setattr(data_agreement, "_list_all_data_agreement_rows", lambda *args, **kwargs: [])
-    widget = data_agreement._render_agreement_evidence_widget(spark=object(), config=_config(), env_name="dev")
+    widget = data_agreement._widget_render_agreement_evidence(spark=object(), config=_config(), env_name="dev")
     assert "Save a Data Agreement first" in widget["message"].value
     assert widget["evidence_file_paths"].disabled is True
     assert widget["save_button"].disabled is True
@@ -983,7 +983,7 @@ def test_steward_selector_searches_name_role_contact_and_steward_id(monkeypatch)
         _steward(steward_id="STEW-REVIEW", steward_name="Bob Reviewer", steward_role="Governance Reviewer", contact="review@example.com"),
     ]
     monkeypatch.setattr(data_agreement, "_list_data_stewards", lambda *args, **kwargs: rows)
-    widget = data_agreement.render_data_steward_widget(_config(), "dev", spark=object())
+    widget = data_agreement.widget_render_data_steward(_config(), "dev", spark=object())
 
     for term, expected in [("alice", "STEW-OWNER"), ("governance", "STEW-REVIEW"), ("review@example", "STEW-REVIEW"), ("stew-owner", "STEW-OWNER")]:
         widget["existing_record_search"].value = term
@@ -999,7 +999,7 @@ def test_agreement_selectors_search_agreement_fields_and_preserve_keys(monkeypat
     ]
     monkeypatch.setattr(data_agreement, "_list_data_agreements", lambda *args, **kwargs: rows)
     monkeypatch.setattr(data_agreement, "_list_data_stewards", lambda *args, **kwargs: [_steward()])
-    agreement_widget = data_agreement.render_data_agreement_widget(_config(), "dev", spark=object())
+    agreement_widget = data_agreement.widget_render_data_agreement(_config(), "dev", spark=object())
 
     for term, expected in [("finance", "DA-FIN"), ("da-ops", "DA-OPS"), ("dispatch", "DA-OPS")]:
         agreement_widget["existing_record_search"].value = term
@@ -1007,7 +1007,7 @@ def test_agreement_selectors_search_agreement_fields_and_preserve_keys(monkeypat
         assert agreement_widget["existing_record"].value == expected
 
     monkeypatch.setattr(data_agreement, "_list_all_data_agreement_rows", lambda *args, **kwargs: rows)
-    evidence_widget = data_agreement._render_agreement_evidence_widget(spark=object(), config=_config(), env_name="dev")
+    evidence_widget = data_agreement._widget_render_agreement_evidence(spark=object(), config=_config(), env_name="dev")
     evidence_widget["agreement_version_search"].value = "dispatch"
     evidence_widget["agreement_version_search"].callbacks[0]({"name": "value", "new": "dispatch"})
     assert evidence_widget["agreement_version"].value == "DA-OPS||2.0.0"
@@ -1018,7 +1018,7 @@ def test_selected_record_context_renders_key_fields_without_truncation(monkeypat
     long_name = "Very Long Steward Name That Should Remain Visible In Context"
     steward = _steward(steward_id="STEW-LONG-KEY", steward_name=long_name, steward_role="Data Owner", contact="long@example.com")
     monkeypatch.setattr(data_agreement, "_list_data_stewards", lambda *args, **kwargs: [steward])
-    steward_widget = data_agreement.render_data_steward_widget(_config(), "dev", spark=object())
+    steward_widget = data_agreement.widget_render_data_steward(_config(), "dev", spark=object())
     steward_widget["existing_record"].callbacks[1]({"name": "value", "new": "STEW-LONG-KEY"})
     html = steward_widget["existing_record_context"].value
     assert long_name in html
@@ -1028,7 +1028,7 @@ def test_selected_record_context_renders_key_fields_without_truncation(monkeypat
 
     agreement = {**_agreement(agreement_name="Very Long Agreement Name That Should Remain Visible", recipient="Analytics recipients"), "agreement_id": "DA-LONG-KEY", "contract_version": "3.4.0"}
     monkeypatch.setattr(data_agreement, "_list_data_agreements", lambda *args, **kwargs: [agreement])
-    agreement_widget = data_agreement.render_data_agreement_widget(_config(), "dev", spark=object())
+    agreement_widget = data_agreement.widget_render_data_agreement(_config(), "dev", spark=object())
     agreement_widget["existing_record"].callbacks[1]({"name": "value", "new": "DA-LONG-KEY"})
     agreement_html = agreement_widget["existing_record_context"].value
     assert "Very Long Agreement Name" in agreement_html
@@ -1042,7 +1042,7 @@ def test_refresh_callbacks_keep_searchable_selectors_usable(monkeypatch):
     stewards = [_steward(steward_id="STEW-OLD")]
     monkeypatch.setattr(data_agreement, "_list_data_stewards", lambda *args, **kwargs: stewards)
     monkeypatch.setattr(data_agreement, "_list_data_agreements", lambda *args, **kwargs: [])
-    agreement_widget = data_agreement.render_data_agreement_widget(_config(), "dev", spark=object())
+    agreement_widget = data_agreement.widget_render_data_agreement(_config(), "dev", spark=object())
     stewards.append(_steward(steward_id="STEW-NEW", steward_name="New Searchable Steward", contact="new@example.com"))
 
     agreement_widget["refresh_steward_options"]("STEW-NEW")
@@ -1052,7 +1052,7 @@ def test_refresh_callbacks_keep_searchable_selectors_usable(monkeypatch):
 
     agreements = []
     monkeypatch.setattr(data_agreement, "_list_all_data_agreement_rows", lambda *args, **kwargs: agreements)
-    evidence_widget = data_agreement._render_agreement_evidence_widget(spark=object(), config=_config(), env_name="dev")
+    evidence_widget = data_agreement._widget_render_agreement_evidence(spark=object(), config=_config(), env_name="dev")
     agreements.append({**_agreement(agreement_name="New Evidence Agreement"), "agreement_id": "DA-NEW", "contract_version": "1.0.0"})
     evidence_widget["refresh_agreements"]()
     evidence_widget["agreement_version_search"].value = "new evidence"
@@ -1064,12 +1064,12 @@ def test_config_driven_small_dropdowns_remain_normal_dropdown_controls(monkeypat
     _install_widget_stubs(monkeypatch)
     import ipywidgets as widgets
     monkeypatch.setattr(data_agreement, "_list_data_stewards", lambda *args, **kwargs: [])
-    steward_widget = data_agreement.render_data_steward_widget(_config(), "dev", spark=object())
+    steward_widget = data_agreement.widget_render_data_steward(_config(), "dev", spark=object())
     assert isinstance(steward_widget["fields"]["steward_role"], widgets.Dropdown)
     assert not isinstance(steward_widget["fields"]["steward_role"], widgets.Select)
 
     monkeypatch.setattr(data_agreement, "_list_all_data_agreement_rows", lambda *args, **kwargs: [])
-    evidence_widget = data_agreement._render_agreement_evidence_widget(spark=object(), config=_config(), env_name="dev")
+    evidence_widget = data_agreement._widget_render_agreement_evidence(spark=object(), config=_config(), env_name="dev")
     assert isinstance(evidence_widget["evidence_type"], widgets.Dropdown)
     assert not isinstance(evidence_widget["evidence_type"], widgets.Select)
 
@@ -1087,30 +1087,30 @@ def _search_downstream_selector(selector, term):
     selector.callbacks[-1]({"name": "value", "new": selector.value})
 
 
-def test_select_agreement_searches_by_agreement_name(monkeypatch):
+def test_widget_select_agreement_searches_by_agreement_name(monkeypatch):
     _install_widget_stubs(monkeypatch)
-    selector = data_agreement.select_agreement(_downstream_agreements())
+    selector = data_agreement.widget_select_agreement(_downstream_agreements())
     _search_downstream_selector(selector, "dispatch agreement")
     assert selector.value == "DA-OPS"
 
 
-def test_select_agreement_searches_by_agreement_id(monkeypatch):
+def test_widget_select_agreement_searches_by_agreement_id(monkeypatch):
     _install_widget_stubs(monkeypatch)
-    selector = data_agreement.select_agreement(_downstream_agreements())
+    selector = data_agreement.widget_select_agreement(_downstream_agreements())
     _search_downstream_selector(selector, "da-fin")
     assert selector.value == "DA-FIN"
 
 
-def test_select_agreement_searches_by_recipient(monkeypatch):
+def test_widget_select_agreement_searches_by_recipient(monkeypatch):
     _install_widget_stubs(monkeypatch)
-    selector = data_agreement.select_agreement(_downstream_agreements())
+    selector = data_agreement.widget_select_agreement(_downstream_agreements())
     _search_downstream_selector(selector, "dispatch operations")
     assert selector.value == "DA-OPS"
 
 
-def test_select_agreement_keeps_value_as_agreement_id(monkeypatch):
+def test_widget_select_agreement_keeps_value_as_agreement_id(monkeypatch):
     _install_widget_stubs(monkeypatch)
-    selector = data_agreement.select_agreement(_downstream_agreements())
+    selector = data_agreement.widget_select_agreement(_downstream_agreements())
     _search_downstream_selector(selector, "finance sharing")
     assert selector.value == "DA-FIN"
     assert selector.value != "Finance Sharing"
@@ -1118,7 +1118,7 @@ def test_select_agreement_keeps_value_as_agreement_id(monkeypatch):
 
 def test_get_selected_agreement_returns_row_after_searchable_change(monkeypatch):
     _install_widget_stubs(monkeypatch)
-    selector = data_agreement.select_agreement(_downstream_agreements())
+    selector = data_agreement.widget_select_agreement(_downstream_agreements())
     _search_downstream_selector(selector, "dispatch operations")
     selected = data_agreement.get_selected_agreement()
     assert selected["agreement_id"] == "DA-OPS"
@@ -1126,9 +1126,9 @@ def test_get_selected_agreement_returns_row_after_searchable_change(monkeypatch)
     assert selected["recipient"] == "Dispatch operations team"
 
 
-def test_select_agreement_context_shows_selected_agreement_fields(monkeypatch):
+def test_widget_select_agreement_context_shows_selected_agreement_fields(monkeypatch):
     _install_widget_stubs(monkeypatch)
-    selector = data_agreement.select_agreement(_downstream_agreements())
+    selector = data_agreement.widget_select_agreement(_downstream_agreements())
     _search_downstream_selector(selector, "dispatch operations")
     html = selector.context_html.value
     assert "Operations Dispatch Agreement" in html
@@ -1137,14 +1137,14 @@ def test_select_agreement_context_shows_selected_agreement_fields(monkeypatch):
     assert "Dispatch operations team" in html
 
 
-def test_select_agreement_registers_current_notebook_without_duplicate(monkeypatch):
+def test_widget_select_agreement_registers_current_notebook_without_duplicate(monkeypatch):
     _install_widget_stubs(monkeypatch)
     writes = []
     monkeypatch.setattr(data_agreement, "current_notebook_active_registrations", lambda *args, **kwargs: [])
     monkeypatch.setattr(data_agreement, "register_current_notebook", lambda *args, **kwargs: writes.append(kwargs) or {"registration_id": "new-registration", **kwargs})
     monkeypatch.setattr(data_agreement, "_load_agreements", lambda *args, **kwargs: _downstream_agreements())
 
-    selector = data_agreement.select_agreement(
+    selector = data_agreement.widget_select_agreement(
         _config(),
         "dev",
         spark_session="spark",
@@ -1166,14 +1166,14 @@ def test_select_agreement_registers_current_notebook_without_duplicate(monkeypat
     assert "Registered notebook to DA-OPS version 2.0.0" in selector.registration_status.value
 
 
-def test_select_agreement_does_not_duplicate_same_active_registration(monkeypatch):
+def test_widget_select_agreement_does_not_duplicate_same_active_registration(monkeypatch):
     _install_widget_stubs(monkeypatch)
     writes = []
     monkeypatch.setattr(data_agreement, "current_notebook_active_registrations", lambda *args, **kwargs: [{"agreement_id": "DA-OPS", "agreement_contract_version": "2.0.0", "registration_id": "existing"}])
     monkeypatch.setattr(data_agreement, "register_current_notebook", lambda *args, **kwargs: writes.append(kwargs) or kwargs)
     monkeypatch.setattr(data_agreement, "_load_agreements", lambda *args, **kwargs: _downstream_agreements())
 
-    selector = data_agreement.select_agreement(_config(), "dev", spark_session="spark", register_notebook=True)
+    selector = data_agreement.widget_select_agreement(_config(), "dev", spark_session="spark", register_notebook=True)
     _search_downstream_selector(selector, "dispatch operations")
     selector.register_button.callbacks[0](None)
 
@@ -1181,7 +1181,7 @@ def test_select_agreement_does_not_duplicate_same_active_registration(monkeypatc
     assert "already registered to DA-OPS version 2.0.0" in selector.registration_status.value
 
 
-def test_select_agreement_replaces_different_active_registration(monkeypatch):
+def test_widget_select_agreement_replaces_different_active_registration(monkeypatch):
     _install_widget_stubs(monkeypatch)
     writes = []
     existing = {
@@ -1196,7 +1196,7 @@ def test_select_agreement_replaces_different_active_registration(monkeypatch):
     monkeypatch.setattr(data_agreement, "register_current_notebook", lambda *args, **kwargs: writes.append(kwargs) or {"registration_id": "new-registration", **kwargs})
     monkeypatch.setattr(data_agreement, "_load_agreements", lambda *args, **kwargs: _downstream_agreements())
 
-    selector = data_agreement.select_agreement(_config(), "dev", spark_session="spark", register_notebook=True, notebook_type="02_ex", environment_name="dev")
+    selector = data_agreement.widget_select_agreement(_config(), "dev", spark_session="spark", register_notebook=True, notebook_type="02_ex", environment_name="dev")
     _search_downstream_selector(selector, "dispatch operations")
     selector.registration_action.value = "Replace active registration"
     selector.register_button.callbacks[0](None)
@@ -1209,14 +1209,14 @@ def test_select_agreement_replaces_different_active_registration(monkeypatch):
     assert "Replaced active registration" in selector.registration_status.value
 
 
-def test_select_agreement_adds_additional_link_without_replacing(monkeypatch):
+def test_widget_select_agreement_adds_additional_link_without_replacing(monkeypatch):
     _install_widget_stubs(monkeypatch)
     writes = []
     monkeypatch.setattr(data_agreement, "current_notebook_active_registrations", lambda *args, **kwargs: [{"agreement_id": "DA-FIN", "agreement_contract_version": "1.0.0", "registration_id": "old-registration"}])
     monkeypatch.setattr(data_agreement, "register_current_notebook", lambda *args, **kwargs: writes.append(kwargs) or {"registration_id": "additional", **kwargs})
     monkeypatch.setattr(data_agreement, "_load_agreements", lambda *args, **kwargs: _downstream_agreements())
 
-    selector = data_agreement.select_agreement(_config(), "dev", spark_session="spark", register_notebook=True)
+    selector = data_agreement.widget_select_agreement(_config(), "dev", spark_session="spark", register_notebook=True)
     _search_downstream_selector(selector, "dispatch operations")
     selector.registration_action.value = "Add another agreement link"
     selector.register_button.callbacks[0](None)
@@ -1228,7 +1228,7 @@ def test_select_agreement_adds_additional_link_without_replacing(monkeypatch):
     assert "Existing primary registration was retained" in selector.registration_status.value
 
 
-def test_select_agreement_does_not_duplicate_existing_additional_link(monkeypatch):
+def test_widget_select_agreement_does_not_duplicate_existing_additional_link(monkeypatch):
     _install_widget_stubs(monkeypatch)
     writes = []
     active_rows = [
@@ -1239,7 +1239,7 @@ def test_select_agreement_does_not_duplicate_existing_additional_link(monkeypatc
     monkeypatch.setattr(data_agreement, "register_current_notebook", lambda *args, **kwargs: writes.append(kwargs) or kwargs)
     monkeypatch.setattr(data_agreement, "_load_agreements", lambda *args, **kwargs: _downstream_agreements())
 
-    selector = data_agreement.select_agreement(_config(), "dev", spark_session="spark", register_notebook=True)
+    selector = data_agreement.widget_select_agreement(_config(), "dev", spark_session="spark", register_notebook=True)
     _search_downstream_selector(selector, "dispatch operations")
     selector.register_button.callbacks[0](None)
 

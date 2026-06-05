@@ -1,3 +1,6 @@
+import pytest
+
+pytestmark = pytest.mark.contract
 import importlib
 import importlib.util
 import sys

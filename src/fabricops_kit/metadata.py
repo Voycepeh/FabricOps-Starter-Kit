@@ -469,6 +469,9 @@ def register_current_notebook(
     ``config=CONFIG`` and ``env=ENV`` so metadata writes use the configured
     ``metadata`` target from ``00_env_config``.
     """
+    if (config is None or env is None) and metadata_path is None:
+        raise ValueError("register_current_notebook requires config and env for metadata routing. Pass metadata_path only for legacy notebooks.")
+
     ctx = _runtime_context()
     workspace_id = _context_get(ctx, "currentWorkspaceId", "workspaceId")
     workspace_name = _context_get(ctx, "currentWorkspaceName", "workspaceName")
@@ -506,8 +509,6 @@ def register_current_notebook(
         write_lakehouse_table(df, config, env, "metadata", metadata_table, mode="append")
     elif metadata_path is not None:
         _write_metadata_rows_legacy(df, metadata_path=metadata_path, table_name=metadata_table, mode="append")
-    else:
-        raise ValueError("register_current_notebook requires config and env for metadata routing. Pass metadata_path only for legacy notebooks.")
     return row
 
 

@@ -57,6 +57,15 @@ Source inputs:
 - `src/fabricops_kit/docs_metadata.py`
 - `scripts/generate_function_reference.py`
 
+## Interactive widget API rules
+
+- Public interactive widget functions must begin with `widget_`.
+- Use `widget_<verb>_<object>`.
+- Import IPython display with `from IPython import display as ip`.
+- Use `ip.display(...)` for widgets.
+- Preserve unqualified `display(...)` for Fabric-native DataFrame rendering.
+- Do not create duplicate wrapper functions for an existing widget workflow.
+
 ## Public API docstring requirements
 
 For new/modified public APIs in `src/fabricops_kit/` (public functions/classes/dataclasses/important methods):
