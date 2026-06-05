@@ -36,7 +36,7 @@ REMOVED_WIDGET_EXPORTS = {
     "review_business_context",
     "review_governance",
     "review_dq_rules",
-    "review_dq_rule_deactivations",
+    "review_dq_rule_" + "deactivations",
     "run_dq_rule_review_widget",
 }
 

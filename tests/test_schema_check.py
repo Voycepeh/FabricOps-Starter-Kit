@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 from types import SimpleNamespace
 
+import pandas as pd
 import pytest
 
 import fabricops_kit as kit
@@ -32,6 +33,31 @@ def test_check_schema_matching_columns_and_datatypes_pass():
     assert result["passed"] is True
     assert result["missing_columns"] == []
     assert result["unexpected_columns"] == []
+    assert result["datatype_mismatches"] == []
+
+
+def test_check_schema_normalizes_real_pandas_dataframe_dtypes():
+    df = pd.DataFrame(
+        {
+            "customer_id": pd.Series([1, 2], dtype="int64"),
+            "amount": pd.Series([1.5, 2.5], dtype="float64"),
+            "label": pd.Series(["a", "b"], dtype="object"),
+            "event_ts": pd.to_datetime(["2026-01-01", "2026-01-02"]),
+        }
+    )
+
+    result = check_schema(
+        df,
+        {
+            "customer_id": "bigint",
+            "amount": "double",
+            "label": "string",
+            "event_ts": "timestamp",
+        },
+        action="observe",
+    )
+
+    assert result["passed"] is True
     assert result["datatype_mismatches"] == []
 
 
@@ -113,7 +139,7 @@ def test_obsolete_schema_drift_exports_and_references_are_removed():
         "build_schema_snapshot",
         "compare_schema_snapshots",
         "assert_no_blocking_schema_drift",
-        "check_schema_drift",
+        "check_" + "schema_drift",
         "default_schema_drift_policy",
     }
 

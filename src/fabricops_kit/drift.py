@@ -16,16 +16,10 @@ import warnings
 class SchemaDriftError(Exception):
     """Raised when a schema check is configured to fail on drift.
 
-    Parameters
-    ----------
-    *args : object
-        Error message and optional exception details passed to ``Exception``.
-
     Notes
     -----
-    This exception is intentionally shared by simple schema checks and older
-    drift-oriented workflows so notebook callers have one schema failure type
-    to catch when they choose fail-fast behavior.
+    This exception is shared by schema-check workflows so notebook callers
+    have one failure type to catch when they choose fail-fast behavior.
     """
 
 
@@ -91,6 +85,7 @@ def _normalize_datatype(data_type) -> str:
         "timestamptype()": "timestamp",
         "timestamptype": "timestamp",
         "timestamp": "timestamp",
+        "datetime64[ns]": "timestamp",
         "doubletype()": "double",
         "doubletype": "double",
         "double": "double",
@@ -116,10 +111,8 @@ def _actual_schema(df) -> tuple[list[str], dict[str, str]]:
 
     dtypes = getattr(df, "dtypes", None)
     if dtypes is not None:
-        if isinstance(dtypes, dict):
-            types = {str(name): _normalize_datatype(dtype) for name, dtype in dtypes.items()}
-        else:
-            types = {str(name): _normalize_datatype(dtype) for name, dtype in dtypes}
+        dtype_items = dtypes.items() if hasattr(dtypes, "items") else dtypes
+        types = {str(name): _normalize_datatype(dtype) for name, dtype in dtype_items}
         columns = [str(column) for column in getattr(df, "columns", list(types))]
         return columns, types
 
