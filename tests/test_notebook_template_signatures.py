@@ -1,6 +1,11 @@
+
 """Regression checks for copy-ready notebook-template package API usage."""
 
 from __future__ import annotations
+
+import pytest
+
+pytestmark = pytest.mark.contract
 
 import ast
 import json

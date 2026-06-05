@@ -69,7 +69,7 @@ from .versioning import get_docs_url, get_docs_version, get_package_version, get
 
 def _load_package_version() -> str:
     try:
-        return version(__name__)
+        return version("fabricops-kit")
     except PackageNotFoundError:
         pyproject_path = pathlib.Path(__file__).resolve().parents[2] / "pyproject.toml"
         try:
@@ -80,7 +80,7 @@ def _load_package_version() -> str:
             return "unknown"
 
 
-__version__ = "0.1.0"
+__version__ = _load_package_version()
 
 __all__ = [
     "setup_notebook",

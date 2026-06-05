@@ -2,6 +2,8 @@ from types import SimpleNamespace
 
 import pytest
 
+pytestmark = pytest.mark.fabric
+
 import fabricops_kit.metadata as metadata
 from fabricops_kit.fabric_input_output import FabricStore
 

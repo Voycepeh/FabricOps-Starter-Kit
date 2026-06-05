@@ -1,3 +1,6 @@
+import pytest
+
+pytestmark = pytest.mark.fabric
 from types import SimpleNamespace
 
 import fabricops_kit.metadata as metadata

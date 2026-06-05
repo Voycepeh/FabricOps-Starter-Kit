@@ -1,7 +1,10 @@
+import pytest
+
+pytestmark = pytest.mark.contract
 import subprocess
 import sys
 
-from scripts.check_release_ready import get_init_version, get_pyproject_version
+from scripts.check_release_ready import get_pyproject_version, version_from_tag
 
 
 def test_repo_versions_match():
@@ -25,4 +28,21 @@ def test_release_ready_script_runs():
 
 def test_version_parsers_smoke():
     assert get_pyproject_version('[project]\nversion = "1.2.3"\n') == "1.2.3"
-    assert get_init_version('__version__ = "1.2.4"\n') == "1.2.4"
+    assert version_from_tag("v1.2.4") == "1.2.4"
+
+
+def test_release_info_hook_writes_nav_target(tmp_path, monkeypatch):
+    import docs.gen_release_info as release_info
+
+    monkeypatch.setenv("FABRICOPS_PACKAGE_VERSION", "1.2.3")
+    monkeypatch.setenv("FABRICOPS_DOC_VERSION", "1.2.3")
+    monkeypatch.setenv("FABRICOPS_GIT_SHA", "abc123")
+
+    release_info.on_config({"docs_dir": str(tmp_path)})
+
+    generated = tmp_path / "release-info.md"
+    assert generated.exists()
+    text = generated.read_text(encoding="utf-8")
+    assert "Full package release version | `1.2.3`" in text
+    assert "Mike documentation version | `1.2.3`" in text
+    assert "Git commit SHA | `abc123`" in text

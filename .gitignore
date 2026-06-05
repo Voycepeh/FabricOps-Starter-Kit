@@ -39,3 +39,4 @@ secrets.*
 configs/fabric_houses.yaml
 configs/*.local.yaml
 .env
+docs/release-info.md

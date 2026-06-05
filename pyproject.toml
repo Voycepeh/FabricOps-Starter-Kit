@@ -21,6 +21,9 @@ dev = [
   "pytest~=8.0",
   "ruff~=0.11",
   "nbformat~=5.0",
+  "pytest-cov~=7.0",
+  "build~=1.3",
+  "twine~=6.2",
 ]
 lineage = [
   "matplotlib~=3.8",
@@ -50,15 +53,35 @@ fabricops_kit = ["schemas/*.json"]
 
 [tool.pytest.ini_options]
 pythonpath = ["src", "."]
+markers = [
+  "unit: fast tests that do not require Spark or Fabric runtime behaviour",
+  "spark: tests that require a local Spark session",
+  "fabric: tests that simulate Microsoft Fabric runtime behaviour",
+  "contract: package, schema, documentation, and public API consistency tests",
+]
 
 [tool.ruff]
 line-length = 120
+extend-exclude = ["examples/notebooks", "templates/notebooks"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I"]
+ignore = ["E402", "E501", "E701", "E702", "E712", "F401", "F821", "I001"]
 
 [dependency-groups]
 dev = [
+    "build>=1.3.0",
     "pyspark>=4.1.1",
     "pytest>=8.4.2",
+    "pytest-cov>=7.0.0",
+    "twine>=6.2.0",
 ]
+
+
+[tool.coverage.run]
+source = ["fabricops_kit"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true

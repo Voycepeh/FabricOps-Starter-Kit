@@ -60,6 +60,18 @@ AGREEMENT_EVIDENCE_TYPES = [
     "Supporting Screenshot", "Other",
 ]
 
+
+def _require_ipywidgets():
+    """Return ipywidgets or raise an actionable optional-dependency error."""
+    try:
+        import ipywidgets as widgets
+    except ModuleNotFoundError as exc:
+        raise ModuleNotFoundError(
+            "The data agreement widget feature requires the 'dq-review' extra. "
+            'Install with: pip install "fabricops-kit[dq-review]"'
+        ) from exc
+    return widgets
+
 FIELD_LABELS = {
     "steward_id": "Steward ID",
     "steward_name": "Steward Name",
@@ -419,7 +431,7 @@ def _render_custom_fields(config: list[dict[str, Any]] | dict[str, Any], *, valu
     Supported field types are ``text``, ``textarea``, ``select``,
     ``multiselect``, ``date``, and ``boolean``.
     """
-    import ipywidgets as widgets
+    widgets = _require_ipywidgets()
 
     definitions = config.get("custom_fields", []) if isinstance(config, dict) else config
     current = values or {}
@@ -778,12 +790,21 @@ def _next_minor_version(version: Any) -> str:
 
 def _latest_agreement_versions(rows: Any) -> list[dict[str, Any]]:
     """Return the latest semantic version for each stable agreement ID."""
+
+    def _agreement_sort_key(row: dict[str, Any]) -> tuple[Any, ...]:
+        return (
+            _parse_contract_version(row.get("contract_version")),
+            str(row.get("_committed_at") or row.get("updated_at") or row.get("uploaded_at") or ""),
+            str(row.get("agreement_name") or ""),
+            str(row.get("agreement_id") or ""),
+        )
+
     latest: dict[str, dict[str, Any]] = {}
     for row in _coerce_row_dicts(rows):
         key = str(row.get("agreement_id") or "").strip()
-        if key and (key not in latest or _parse_contract_version(row.get("contract_version")) > _parse_contract_version(latest[key].get("contract_version"))):
+        if key and (key not in latest or _agreement_sort_key(row) > _agreement_sort_key(latest[key])):
             latest[key] = row
-    return sorted(latest.values(), key=lambda row: str(row.get("agreement_name") or "").lower())
+    return sorted(latest.values(), key=lambda row: (str(row.get("agreement_name") or "").lower(), str(row.get("agreement_id") or "")))
 
 
 def _list_all_data_agreement_rows(config: Any, env_name: str, *, spark_session: Any = None, missing_ok: bool = False) -> list[dict[str, Any]]:
@@ -1073,7 +1094,7 @@ def select_agreement(agreement_rows_or_config: Any, env_name: str | None = None,
         When registration is enabled, registration widgets are attached as
         attributes on the selector for advanced notebook automation.
     """
-    import ipywidgets as widgets
+    widgets = _require_ipywidgets()
     from IPython.display import display
     global _SELECTED_AGREEMENT
     rows = _load_agreements(agreement_rows_or_config, env_name, spark_session=spark_session) if env_name is not None else agreement_rows_or_config
@@ -1308,7 +1329,7 @@ def _widget_field_value(field: str, value: Any) -> Any:
 
 
 def _standard_widget(field: str, value: Any = "", *, options: list[Any] | None = None) -> Any:
-    import ipywidgets as widgets
+    widgets = _require_ipywidgets()
     description = _field_label(field)
     if options is not None:
         return widgets.Dropdown(options=options, value=_default_dropdown_value(options, value), **_widget_common(widgets, description))
@@ -1335,7 +1356,7 @@ def _agreement_identity_text(row: dict[str, Any] | None) -> str:
 
 
 def _render_maintenance_widget(*, spark: Any, config: Any, env_name: str, kind: str, display_widget: bool = True) -> dict[str, Any]:
-    import ipywidgets as widgets
+    widgets = _require_ipywidgets()
     from IPython.display import display
     is_steward = kind == "data_steward_widget"
     prompt = "Create new steward" if is_steward else "Create new agreement"
@@ -1529,7 +1550,7 @@ def _render_maintenance_widget(*, spark: Any, config: Any, env_name: str, kind: 
 
 def _render_agreement_evidence_widget(*, spark: Any, config: Any, env_name: str, display_widget: bool = True) -> dict[str, Any]:
     """Render optional agreement evidence upload controls."""
-    import ipywidgets as widgets
+    widgets = _require_ipywidgets()
     from IPython.display import display
 
     row_lookup: dict[str, dict[str, Any]] = {}
@@ -1754,7 +1775,7 @@ def render_agreement_intake_app(*, spark: Any, config: Any, env: str, display_wi
     ``METADATA_DATA_AGREEMENT_EVIDENCE`` without reading or writing binary
     file content.
     """
-    import ipywidgets as widgets
+    widgets = _require_ipywidgets()
     from IPython.display import display
 
     steward_app = _render_maintenance_widget(spark=spark, config=config, env_name=env, kind="data_steward_widget", display_widget=False)
