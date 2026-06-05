@@ -114,10 +114,10 @@ def extract_governance_suggestions(response_rows, response_col: str = "ai_govern
     return _extract_pii_suggestions(response_rows=response_rows, response_col=response_col)
 
 
-def review_governance(suggestions: list[dict], environment_name: str, dataset_name: str, table_name: str) -> None:
+def widget_review_governance(suggestions: list[dict], environment_name: str, dataset_name: str, table_name: str) -> None:
     """Display governance review widget and capture approve/reject decisions in module state."""
     widgets = importlib.import_module("ipywidgets")
-    ipy_display = importlib.import_module("IPython.display").display
+    from IPython import display as ip
 
     _WIDGET_APPROVED_ROWS.clear()
     _WIDGET_REJECTED_ROWS.clear()
@@ -179,7 +179,7 @@ def review_governance(suggestions: list[dict], environment_name: str, dataset_na
     b2.on_click(on_reject)
     b3.on_click(on_undo)
     load()
-    ipy_display(widgets.VBox([summary, pid, conf, notes, widgets.HBox([b1, b2, b3])]))
+    ip.display(widgets.VBox([summary, pid, conf, notes, widgets.HBox([b1, b2, b3])]))
 
 
 def _coerce_row_dicts(rows) -> list[dict[str, Any]]:

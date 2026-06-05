@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import ast
+import importlib
 import json
 from datetime import datetime, timezone
-import importlib
 
 from .metadata import build_metadata_column_key, build_metadata_table_key
 from .config import DEFAULT_BUSINESS_CONTEXT_PROMPT_TEMPLATE
@@ -106,11 +106,10 @@ def get_reviewed_business_context_rows(status: str = "approved") -> list[dict]:
 
 def _require_ipywidgets():
     widgets = importlib.import_module("ipywidgets")
-    ipy_display = importlib.import_module("IPython.display").display
-    return widgets, ipy_display
+    return widgets
 
 
-def review_business_context(suggestions: list[dict], environment_name: str, dataset_name: str, table_name: str, default_approval_status: str = "pending") -> list[dict]:
+def widget_review_business_context(suggestions: list[dict], environment_name: str, dataset_name: str, table_name: str, default_approval_status: str = "pending") -> list[dict]:
     """Display interactive approval widget.
 
     Notes
@@ -119,7 +118,9 @@ def review_business_context(suggestions: list[dict], environment_name: str, data
     and stored in module globals.
     """
     global COLUMN_BUSINESS_CONTEXT_FROM_WIDGET, REJECTED_COLUMN_BUSINESS_CONTEXT_FROM_WIDGET
-    widgets, ipy_display = _require_ipywidgets()
+    widgets = _require_ipywidgets()
+    from IPython import display as ip
+
     approved, rejected = [], []
     action_history: list[str] = []
     state = {"i": 0}
@@ -210,7 +211,7 @@ def review_business_context(suggestions: list[dict], environment_name: str, data
     btn_reject.on_click(on_reject)
     btn_undo.on_click(on_undo)
     load()
-    ipy_display(widgets.VBox([title, summary, approved_box, notes_box, reviewer_box, widgets.HBox([btn_approve, btn_reject, btn_undo]), status]))
+    ip.display(widgets.VBox([title, summary, approved_box, notes_box, reviewer_box, widgets.HBox([btn_approve, btn_reject, btn_undo]), status]))
     return None
 
 

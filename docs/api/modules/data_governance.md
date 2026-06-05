@@ -86,7 +86,7 @@ Owns sensitivity, PII, confidentiality, policy labels, and governance approval e
       <td><a href="../../reference/internal/data_governance/_coerce_row_dicts/"><code>_coerce_row_dicts</code></a> (internal)</td>
     </tr>
     <tr>
-      <td><a href="../../reference/review_governance/"><code>review_governance</code></a></td>
+      <td><a href="../../reference/widget_review_governance/"><code>widget_review_governance</code></a></td>
       <td>Essential</td>
       <td>function</td>
       <td>Display governance review widget and capture approve/reject decisions in module state.</td>
@@ -150,7 +150,7 @@ Owns sensitivity, PII, confidentiality, policy labels, and governance approval e
 <a class="reference-chip" href="#_prepare_governance_input"><code>_prepare_governance_input</code></a>
 </li>
 <li>
-<a class="reference-chip" href="../../reference/review_governance/"><code>review_governance</code></a>
+<a class="reference-chip" href="../../reference/widget_review_governance/"><code>widget_review_governance</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_undo_last_action"><code>_undo_last_action</code></a>
 </li>
@@ -198,7 +198,7 @@ Owns sensitivity, PII, confidentiality, policy labels, and governance approval e
     </tr>
     <tr>
       <td><a href="../../reference/internal/data_governance/_undo_last_action/"><code>_undo_last_action</code></a></td>
-      <td><a href="../../reference/review_governance/"><code>review_governance</code></a></td>
+      <td><a href="../../reference/widget_review_governance/"><code>widget_review_governance</code></a></td>
     </tr>
   </tbody>
 </table>
