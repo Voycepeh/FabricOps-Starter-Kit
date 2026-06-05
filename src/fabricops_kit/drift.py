@@ -935,18 +935,18 @@ _DATA_CHANGE_PRESETS = {
     "fixed_data": {
         "baseline_mode": "approved",
         "policy": {
-            "max_row_count_change_percent": 5,
-            "max_null_percent_change_points": 5,
-            "max_distinct_percent_change_points": 10,
-            "warn_numeric_psi": 0.05,
+            "max_row_count_change_percent": 0,
+            "max_null_percent_change_points": 0,
+            "max_distinct_percent_change_points": 0,
+            "warn_numeric_psi": 0.01,
             "block_numeric_psi": 0.10,
-            "warn_categorical_distance": 0.05,
+            "warn_categorical_distance": 0.01,
             "block_categorical_distance": 0.10,
             "fail_on_missing_column": True,
         },
         "monitor_only": False,
     },
-    "monitor_only": {
+    "monitor_changing_data": {
         "baseline_mode": "latest_successful",
         "policy": {
             "max_row_count_change_percent": 50,
@@ -960,18 +960,38 @@ _DATA_CHANGE_PRESETS = {
         },
         "monitor_only": True,
     },
+    "monitor_fixed_data": {
+        "baseline_mode": "approved",
+        "policy": {
+            "max_row_count_change_percent": 0,
+            "max_null_percent_change_points": 0,
+            "max_distinct_percent_change_points": 0,
+            "warn_numeric_psi": 0.01,
+            "block_numeric_psi": 0.10,
+            "warn_categorical_distance": 0.01,
+            "block_categorical_distance": 0.10,
+            "fail_on_missing_column": True,
+        },
+        "monitor_only": True,
+    },
 }
 
 
 def _data_change_preset_config(preset: str, policy_overrides: dict | None = None) -> dict:
     normalized_preset = str(preset).lower()
     if normalized_preset not in _DATA_CHANGE_PRESETS:
-        raise ValueError("preset must be one of: changing_data, fixed_data, monitor_only")
+        raise ValueError("preset must be one of: changing_data, fixed_data, monitor_changing_data, monitor_fixed_data")
     base = _DATA_CHANGE_PRESETS[normalized_preset]
+    overrides = policy_overrides or {}
+    unsupported = sorted(set(overrides) - set(base["policy"]))
+    if unsupported:
+        allowed = ", ".join(sorted(base["policy"]))
+        invalid = ", ".join(unsupported)
+        raise ValueError(f"policy_overrides may only adjust threshold policy keys. Invalid: {invalid}. Allowed: {allowed}")
     return {
         "preset": normalized_preset,
         "baseline_mode": base["baseline_mode"],
-        "policy": {**base["policy"], **(policy_overrides or {})},
+        "policy": {**base["policy"], **overrides},
         "monitor_only": bool(base["monitor_only"]),
     }
 
@@ -1016,16 +1036,22 @@ def monitor_data_changes(
     stage : {"source", "target"}
         Pipeline stage being monitored. Source and target baselines are selected
         independently.
-    preset : {"changing_data", "fixed_data", "monitor_only"}, default="changing_data"
+    preset : {"changing_data", "fixed_data", "monitor_changing_data", "monitor_fixed_data"}, default="changing_data"
         Data-change monitoring intent. ``changing_data`` compares with the
-        latest successful profile, ``fixed_data`` compares with an approved
-        baseline, and ``monitor_only`` reports changes without blocking.
+        latest successful profile and may block, ``fixed_data`` compares with
+        an approved baseline and may block, ``monitor_changing_data`` compares
+        with the latest successful profile without blocking, and
+        ``monitor_fixed_data`` compares with an approved baseline without
+        blocking. Presets determine baseline and enforcement behavior;
+        ``policy_overrides`` adjusts thresholds only.
     exclude_run_id : str, optional
         Current run identifier to exclude from baseline lookup.
     distribution_columns : list[str] or set[str] or tuple[str, ...], optional
         Optional allow-list of columns for distribution comparisons.
     policy_overrides : dict, optional
-        Threshold overrides merged with the selected preset defaults.
+        Threshold policy overrides merged with the selected preset defaults.
+        Overrides may adjust thresholds only; presets retain control of
+        baseline selection and blocking behaviour.
 
     Returns
     -------

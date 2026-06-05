@@ -129,6 +129,9 @@ def test_03_pc_uses_simplified_functions_and_guidance_markdown():
     markdown_source = "\n".join("".join(cell.get("source", [])) for cell in notebook["cells"] if cell["cell_type"] == "markdown")
 
     assert "## Choose pipeline checks" in markdown_source
+    assert "Row count may change by up to 50%." in markdown_source
+    assert "monitor_changing_data" in markdown_source
+    assert "monitor_fixed_data" in markdown_source
     assert "source_schema_result = validate_schema(" in code_source
     assert "source_change_result = monitor_data_changes(" in code_source
     assert "target_schema_result = validate_schema(" in code_source
@@ -141,8 +144,9 @@ def test_03_pc_uses_simplified_functions_and_guidance_markdown():
     assert 'TARGET_SCHEMA_CHECK = "strict"' in code_source
     assert 'SOURCE_DATA_CHANGE_CHECK = "changing_data"' in code_source
     assert 'TARGET_DATA_CHANGE_CHECK = "changing_data"' in code_source
-    assert "SOURCE_DATA_CHANGE_OVERRIDES = {}" in code_source
-    assert "TARGET_DATA_CHANGE_OVERRIDES = {}" in code_source
+    assert "SOURCE_DATA_CHANGE_OVERRIDES = {" in code_source
+    assert "TARGET_DATA_CHANGE_OVERRIDES = {" in code_source
+    assert "# Leave empty to use FabricOps defaults." in code_source
     assert code_source.index("source_schema_result = validate_schema(") < code_source.index("source_change_result = monitor_data_changes(")
     assert code_source.index("source_change_result = monitor_data_changes(") < code_source.index("df_transformed = df_source")
     assert code_source.index("target_schema_result = validate_schema(") < code_source.index("target_change_result = monitor_data_changes(")

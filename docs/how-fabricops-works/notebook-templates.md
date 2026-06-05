@@ -72,7 +72,7 @@ Run this notebook in Engineering Dev and Engineering Prod.
 
 Data engineers use it for repeatable source-to-output transformations. The base template registers the notebook, reads supported source types, validates source schema with a preset, monitors source data changes with a preset, applies deterministic transformation logic, validates the proposed target schema, monitors proposed target changes, stops only for blocking guardrail results, writes targets, writes reusable catalogue evidence, and records table-level lineage.
 
-`03_pc` keeps guardrail intent explicit with schema presets (`strict`, `allow_new_columns`, `monitor_only`) and data-change presets (`changing_data`, `fixed_data`, `monitor_only`). Users choose intent; FabricOps handles profiling, baseline selection, comparable distributions, drift comparison, and enforcement mechanics internally.
+`03_pc` keeps guardrail intent explicit with schema presets (`strict`, `allow_new_columns`, `monitor_only`) and data-change presets (`changing_data`, `fixed_data`, `monitor_changing_data`, `monitor_fixed_data`). Users choose intent; FabricOps handles profiling, baseline selection, comparable distributions, drift comparison, and enforcement mechanics internally.
 
 Audit columns are always useful: they identify the run, pipeline, environment, source, load time, notebook, and user or process that produced each row. Hash columns are only for deduplication, masked key comparison, slowly changing dimensions, or change detection. Datetime feature columns are analytics features, not audit fields. Bucket columns are only for advanced large-table layout or skew handling. For simple parallel data loading, use `repartition_by`; for physical Delta pruning, use `partition_by` with a natural column.
 

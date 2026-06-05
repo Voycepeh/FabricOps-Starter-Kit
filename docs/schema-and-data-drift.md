@@ -24,6 +24,7 @@ source_change_result = monitor_data_changes(
     stage="source",
     preset=SOURCE_DATA_CHANGE_CHECK,
     exclude_run_id=RUN_ID,
+    policy_overrides=SOURCE_DATA_CHANGE_OVERRIDES,
 )
 
 stop_if_failed(source_schema_result)
@@ -48,6 +49,7 @@ target_change_result = monitor_data_changes(
     stage="target",
     preset=TARGET_DATA_CHANGE_CHECK,
     exclude_run_id=RUN_ID,
+    policy_overrides=TARGET_DATA_CHANGE_OVERRIDES,
 )
 
 stop_if_failed(target_schema_result)
@@ -64,15 +66,86 @@ stop_if_failed(target_change_result)
 
 ## Data-change presets
 
-| Preset | Baseline | Behaviour |
-| --- | --- | --- |
-| `changing_data` | Latest successful profile for the same dataset, table, and stage. | Uses moderate thresholds. Warnings continue; blocking drift stops publication. Successful observed profiles can become future baselines when evidence is written. |
-| `fixed_data` | Approved profile for the same dataset, table, and stage. | Uses stricter thresholds. Blocking drift stops publication. It does not silently fall back to latest successful evidence. |
-| `monitor_only` | Relevant latest successful baseline. | Loads a baseline, profiles, compares, and reports warnings without blocking execution. |
+Presets determine baseline and enforcement behaviour. Overrides adjust thresholds only.
+
+| Preset | Baseline | Can block |
+| --- | --- | ---: |
+| `changing_data` | Latest successful profile | Yes |
+| `fixed_data` | Approved profile | Yes |
+| `monitor_changing_data` | Latest successful profile | No |
+| `monitor_fixed_data` | Approved profile | No |
+
+### `changing_data`
+
+Use for operational or transactional data that changes regularly.
+
+Default behaviour:
+
+- Compare with the latest successful profile.
+- Row count may change by up to 50%.
+- Null percentage may change by up to 20 percentage points.
+- Distinct percentage may change by up to 30 percentage points.
+- Numeric PSI warns at 0.10 and blocks at 0.25.
+- Categorical distance warns at 0.10 and blocks at 0.25.
+- Blocking drift stops publication.
+
+### `fixed_data`
+
+Use for reference, historical, or controlled data that should remain stable.
+
+Default behaviour:
+
+- Compare with an approved baseline.
+- Any row-count, null-rate, or distinct-rate change is treated strictly.
+- Numeric PSI warns at 0.01 and blocks at 0.10.
+- Categorical distance warns at 0.01 and blocks at 0.10.
+- Blocking drift stops publication.
+- The current profile does not automatically replace the approved baseline.
+
+### `monitor_changing_data`
+
+Use when operational or transactional changes should be reported without blocking.
+
+Default behaviour:
+
+- Compare with the latest successful profile.
+- Use the same thresholds as `changing_data`.
+- Always return `can_continue=True`.
+
+### `monitor_fixed_data`
+
+Use when reference, historical, or controlled data should be compared with an approved baseline without blocking.
+
+Default behaviour:
+
+- Compare with an approved baseline.
+- Use the same thresholds as `fixed_data`.
+- Always return `can_continue=True`.
 
 ## Optional policy overrides
 
-Advanced users can tune a preset without rebuilding the whole policy:
+Advanced users can tune thresholds without rebuilding the whole policy. An empty dictionary uses the preset unchanged:
+
+```python
+SOURCE_DATA_CHANGE_CHECK = "changing_data"
+
+SOURCE_DATA_CHANGE_OVERRIDES = {
+    # Leave empty to use FabricOps defaults.
+    # "block_numeric_psi": 0.30,
+    # "max_row_count_change_percent": 75,
+}
+```
+
+Overrides are merged internally with the selected preset defaults:
+
+```python
+effective_policy = {
+    **preset_defaults,
+    **policy_overrides,
+}
+```
+
+For example, override only the values your pipeline needs:
 
 ```python
 source_change_result = monitor_data_changes(
@@ -89,8 +162,6 @@ source_change_result = monitor_data_changes(
 )
 ```
 
-Overrides are merged with the selected preset defaults.
-
 ## Profile evidence
 
 `monitor_data_changes()` returns a wrapper with:
@@ -100,4 +171,4 @@ Overrides are merged with the selected preset defaults.
 - `baseline`: the selected baseline profile, or `None` when no baseline exists;
 - `result`: the standard guardrail result with `status`, `can_continue`, `checks`, and `message`.
 
-Keep approved baseline promotion explicit. Setting `MARK_CURRENT_PROFILE_AS_APPROVED_BASELINE = True` in the notebook marks written evidence as approved; selecting `fixed_data` only chooses approved evidence for comparison.
+Keep approved baseline promotion explicit. Setting `MARK_CURRENT_PROFILE_AS_APPROVED_BASELINE = True` in the notebook marks written evidence as approved; selecting `fixed_data` or `monitor_fixed_data` only chooses approved evidence for comparison.

@@ -158,12 +158,38 @@ def test_monitor_data_changes_fixed_data_selects_approved_without_fallback(monke
     assert result["result"]["can_continue"] is True
 
 
-def test_monitor_data_changes_monitor_only_never_blocks(monkeypatch):
-    monkeypatch.setattr(drift, "_load_latest_profile", lambda *args, **kwargs: _profile())
+def test_monitor_data_changes_monitor_changing_data_never_blocks(monkeypatch):
+    calls = {}
+
+    def fake_load(*args, **kwargs):
+        calls.update(kwargs)
+        return _profile()
+
+    monkeypatch.setattr(drift, "_load_latest_profile", fake_load)
     monkeypatch.setattr(data_profiling, "profile_dataframe", lambda *args, **kwargs: _profile(amount_counts=[90, 10]))
 
-    result = monitor_data_changes(object(), object(), "metadata", "dataset", "orders", stage="source", preset="monitor_only")
+    result = monitor_data_changes(object(), object(), "metadata", "dataset", "orders", stage="source", preset="monitor_changing_data")
 
+    assert calls["baseline_mode"] == "latest_successful"
+    assert result["result"]["status"] == "warning"
+    assert result["result"]["can_continue"] is True
+    assert result["result"]["monitor_only"] is True
+
+
+def test_monitor_data_changes_monitor_fixed_data_uses_approved_and_never_blocks(monkeypatch):
+    calls = {}
+
+    def fake_load(*args, **kwargs):
+        calls.update(kwargs)
+        return _profile()
+
+    monkeypatch.setattr(drift, "_load_latest_profile", fake_load)
+    monkeypatch.setattr(data_profiling, "profile_dataframe", lambda *args, **kwargs: _profile(amount_counts=[90, 10]))
+
+    result = monitor_data_changes(object(), object(), "metadata", "dataset", "orders", stage="target", preset="monitor_fixed_data")
+
+    assert calls["baseline_mode"] == "approved"
+    assert calls["profile_stage"] == "target"
     assert result["result"]["status"] == "warning"
     assert result["result"]["can_continue"] is True
     assert result["result"]["monitor_only"] is True
@@ -186,6 +212,20 @@ def test_monitor_data_changes_policy_overrides_merge_with_preset_defaults(monkey
 
     assert result["result"]["policy"]["warn_numeric_psi"] == 0.10
     assert result["result"]["policy"]["block_numeric_psi"] == 0.30
+
+
+def test_monitor_data_changes_rejects_non_threshold_overrides():
+    with pytest.raises(ValueError, match="threshold policy keys"):
+        monitor_data_changes(
+            object(),
+            object(),
+            "metadata",
+            "dataset",
+            "orders",
+            stage="source",
+            preset="changing_data",
+            policy_overrides={"baseline_mode": "approved"},
+        )
 
 
 def test_monitor_data_changes_invalid_preset_errors():
