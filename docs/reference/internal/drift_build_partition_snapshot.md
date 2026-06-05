@@ -21,7 +21,7 @@ No summary available.
 
 ## Inbound references
 - <a href="../internal/drift/build_and_write_partition_snapshot/"><code>fabricops_kit.drift.build_and_write_partition_snapshot</code></a>
-- <a href="../check_partition_drift/"><code>fabricops_kit.drift.check_partition_drift</code></a>
+- <a href="../internal/drift/check_partition_drift/"><code>fabricops_kit.drift.check_partition_drift</code></a>
 
 ## Outbound references
 - <a href="../internal/drift/_build_pandas_partition_snapshot/"><code>fabricops_kit.drift._build_pandas_partition_snapshot</code></a>

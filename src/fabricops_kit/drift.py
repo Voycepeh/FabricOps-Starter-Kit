@@ -1,9 +1,9 @@
 """Lightweight schema, partition, and profile drift safeguards.
 
-Use :func:`check_schema` in production pipeline notebooks when a local,
-pipeline-specific check only needs to confirm expected dataframe columns and
-datatypes before execution continues. The remaining helpers support optional
-partition and profile drift workflows.
+Use :func:`validate_schema`, :func:`monitor_data_changes`, and
+:func:`stop_if_failed` in production pipeline notebooks. Users choose
+intent-based presets while FabricOps handles profiling, baseline selection,
+comparison, and enforcement mechanics internally.
 """
 
 from __future__ import annotations
@@ -121,7 +121,7 @@ def _actual_schema(df) -> tuple[list[str], dict[str, str]]:
     return columns, {}
 
 
-def check_schema(
+def _check_schema(
     df,
     expected_columns: dict[str, str],
     *,
@@ -213,6 +213,97 @@ def check_schema(
         warnings.warn(result["summary"], UserWarning, stacklevel=2)
         return result
     raise SchemaDriftError(result["summary"])
+
+
+_SCHEMA_PRESETS = {
+    "strict": {"allow_extra_columns": False, "action": "observe"},
+    "allow_new_columns": {"allow_extra_columns": True, "action": "observe"},
+    "monitor_only": {"allow_extra_columns": False, "action": "observe"},
+}
+
+
+def validate_schema(dataframe, expected_schema: dict[str, str], *, preset: str = "strict") -> dict:
+    """Validate a dataframe schema using an intent-based preset.
+
+    Parameters
+    ----------
+    dataframe : Any
+        Spark, pandas, or dataframe-like object with schema metadata.
+    expected_schema : dict[str, str]
+        Mapping of required column names to expected datatype strings.
+    preset : {"strict", "allow_new_columns", "monitor_only"}, default="strict"
+        Schema validation intent. ``strict`` blocks missing columns, datatype
+        changes, and unexpected columns. ``allow_new_columns`` blocks missing
+        columns and datatype changes while reporting additional columns as a
+        warning. ``monitor_only`` reports all differences without blocking.
+
+    Returns
+    -------
+    dict
+        Standard guardrail result with ``status``, ``can_continue``,
+        ``checks``, and ``message`` plus detailed schema difference fields.
+
+    Raises
+    ------
+    ValueError
+        If ``preset`` is not one of the supported schema presets.
+
+    Examples
+    --------
+    >>> validate_schema(df, {"id": "int"}, preset="allow_new_columns")
+    {'status': 'passed', 'can_continue': True, ...}
+    """
+    normalized_preset = str(preset).lower()
+    if normalized_preset not in _SCHEMA_PRESETS:
+        raise ValueError("preset must be one of: strict, allow_new_columns, monitor_only")
+
+    low_level = _check_schema(
+        dataframe,
+        expected_schema,
+        allow_extra_columns=_SCHEMA_PRESETS[normalized_preset]["allow_extra_columns"],
+        check_types=True,
+        action="observe",
+    )
+    checks = []
+    for column in low_level.get("missing_columns", []):
+        checks.append({"check": "missing_column", "column": column, "status": "failed", "passed": False})
+    for mismatch in low_level.get("datatype_mismatches", []):
+        checks.append({"check": "datatype_mismatch", **mismatch, "status": "failed", "passed": False})
+    actual_unexpected = [column for column in _actual_schema(dataframe)[0] if str(column) not in {str(c) for c in expected_schema}]
+    for column in actual_unexpected:
+        checks.append({"check": "unexpected_column", "column": column, "status": "warning" if normalized_preset == "allow_new_columns" else "failed", "passed": normalized_preset == "allow_new_columns"})
+
+    blocking = bool(low_level.get("missing_columns") or low_level.get("datatype_mismatches"))
+    if normalized_preset == "strict":
+        blocking = blocking or bool(actual_unexpected)
+    if normalized_preset == "monitor_only":
+        status = "warning" if checks else "passed"
+        can_continue = True
+    elif blocking:
+        status = "failed"
+        can_continue = False
+    elif normalized_preset == "allow_new_columns" and actual_unexpected:
+        status = "warning"
+        can_continue = True
+    else:
+        status = "passed"
+        can_continue = True
+
+    message = (
+        "Schema validation passed."
+        if status == "passed"
+        else f"Schema validation {status}: {len(low_level.get('missing_columns', []))} missing, {len(actual_unexpected)} unexpected, {len(low_level.get('datatype_mismatches', []))} datatype mismatch(es)."
+    )
+    return {
+        "status": status,
+        "can_continue": can_continue,
+        "checks": checks,
+        "message": message,
+        "missing_columns": low_level.get("missing_columns", []),
+        "unexpected_columns": actual_unexpected,
+        "datatype_mismatches": low_level.get("datatype_mismatches", []),
+        "preset": normalized_preset,
+    }
 
 
 # --- merged from drift_checkers.py ---
@@ -436,13 +527,13 @@ def load_latest_partition_snapshot(spark, metadata_table: str, dataset_name: str
     return json.loads(raw)
 
 
-def default_profile_drift_policy() -> dict:
+def _default_profile_drift_policy() -> dict:
     """Return the lightweight default profile drift policy.
 
     Returns
     -------
     dict
-        Thresholds used by :func:`check_profile_drift` for row-count,
+        Thresholds used by :func:`monitor_data_changes` for row-count,
         null-percent, distinct-percent, numeric PSI, categorical distance, and
         missing-column enforcement.
     """
@@ -538,7 +629,7 @@ def _normalize_baseline_mode(baseline_mode: str) -> str:
     return value
 
 
-def extract_numeric_distribution_bin_edges(profile) -> dict[str, list[float]]:
+def _extract_numeric_distribution_bin_edges(profile) -> dict[str, list[float]]:
     """Return numeric distribution bin edges from a profile payload.
 
     Parameters
@@ -563,7 +654,7 @@ def extract_numeric_distribution_bin_edges(profile) -> dict[str, list[float]]:
     return edges
 
 
-def extract_categorical_distribution_categories(profile) -> dict[str, list[str]]:
+def _extract_categorical_distribution_categories(profile) -> dict[str, list[str]]:
     """Return categorical baseline vocabularies from a profile payload.
 
     Parameters
@@ -631,7 +722,7 @@ def _categorical_distance(current_distribution: dict, baseline_distribution: dic
     return float(distance), new_categories
 
 
-def check_profile_drift(current_profile: dict, baseline_profile: dict | None = None, policy: dict | None = None) -> dict:
+def _check_profile_drift(current_profile: dict, baseline_profile: dict | None = None, policy: dict | None = None) -> dict:
     """Compare profile metrics against a baseline profile and drift thresholds.
 
     Parameters
@@ -644,7 +735,7 @@ def check_profile_drift(current_profile: dict, baseline_profile: dict | None = N
         target stage. ``None`` returns a non-blocking ``no_baseline`` result.
     policy : dict, optional
         Threshold overrides. Unspecified values fall back to
-        :func:`default_profile_drift_policy`.
+        :func:`monitor_data_changes`.
 
     Returns
     -------
@@ -652,7 +743,7 @@ def check_profile_drift(current_profile: dict, baseline_profile: dict | None = N
         Result with ``status``, ``can_continue``, ``checks``, and ``message``.
         Status is ``passed``, ``warning``, ``failed``, or ``no_baseline``.
     """
-    active = {**default_profile_drift_policy(), **(policy or {})}
+    active = {**_default_profile_drift_policy(), **(policy or {})}
     current = _normalize_profile(current_profile)
     baseline = _normalize_profile(baseline_profile)
     if baseline is None:
@@ -716,13 +807,13 @@ def check_profile_drift(current_profile: dict, baseline_profile: dict | None = N
     return {"status": status, "can_continue": not blocking, "checks": checks, "message": "Profile drift check completed."}
 
 
-def assert_no_blocking_profile_drift(result: dict) -> None:
+def _assert_no_blocking_profile_drift(result: dict) -> None:
     """Raise when a profile drift result should block notebook execution.
 
     Parameters
     ----------
     result : dict
-        Result returned by :func:`check_profile_drift`.
+        Result returned by :func:`monitor_data_changes`.
 
     Raises
     ------
@@ -735,7 +826,7 @@ def assert_no_blocking_profile_drift(result: dict) -> None:
         raise SchemaDriftError(f"Profile drift guardrail blocked execution with status: {status}. {detail}")
 
 
-def load_latest_profile(spark, metadata_table: str, dataset_name: str, table_name: str, profile_stage: str, exclude_run_id: str | None = None, baseline_mode: str = "latest_successful") -> dict | None:
+def _load_latest_profile(spark, metadata_table: str, dataset_name: str, table_name: str, profile_stage: str, exclude_run_id: str | None = None, baseline_mode: str = "latest_successful") -> dict | None:
     """Load an explicit profile-drift baseline from profile metadata rows.
 
     Parameters
@@ -824,6 +915,204 @@ def load_latest_profile(spark, metadata_table: str, dataset_name: str, table_nam
         if _is_missing_table_error(exc):
             return None
         raise
+
+
+_DATA_CHANGE_PRESETS = {
+    "changing_data": {
+        "baseline_mode": "latest_successful",
+        "policy": {
+            "max_row_count_change_percent": 50,
+            "max_null_percent_change_points": 20,
+            "max_distinct_percent_change_points": 30,
+            "warn_numeric_psi": 0.10,
+            "block_numeric_psi": 0.25,
+            "warn_categorical_distance": 0.10,
+            "block_categorical_distance": 0.25,
+            "fail_on_missing_column": True,
+        },
+        "monitor_only": False,
+    },
+    "fixed_data": {
+        "baseline_mode": "approved",
+        "policy": {
+            "max_row_count_change_percent": 0,
+            "max_null_percent_change_points": 0,
+            "max_distinct_percent_change_points": 0,
+            "warn_numeric_psi": 0.01,
+            "block_numeric_psi": 0.10,
+            "warn_categorical_distance": 0.01,
+            "block_categorical_distance": 0.10,
+            "fail_on_missing_column": True,
+        },
+        "monitor_only": False,
+    },
+    "monitor_changing_data": {
+        "baseline_mode": "latest_successful",
+        "policy": {
+            "max_row_count_change_percent": 50,
+            "max_null_percent_change_points": 20,
+            "max_distinct_percent_change_points": 30,
+            "warn_numeric_psi": 0.10,
+            "block_numeric_psi": 0.25,
+            "warn_categorical_distance": 0.10,
+            "block_categorical_distance": 0.25,
+            "fail_on_missing_column": True,
+        },
+        "monitor_only": True,
+    },
+    "monitor_fixed_data": {
+        "baseline_mode": "approved",
+        "policy": {
+            "max_row_count_change_percent": 0,
+            "max_null_percent_change_points": 0,
+            "max_distinct_percent_change_points": 0,
+            "warn_numeric_psi": 0.01,
+            "block_numeric_psi": 0.10,
+            "warn_categorical_distance": 0.01,
+            "block_categorical_distance": 0.10,
+            "fail_on_missing_column": True,
+        },
+        "monitor_only": True,
+    },
+}
+
+
+def _data_change_preset_config(preset: str, policy_overrides: dict | None = None) -> dict:
+    normalized_preset = str(preset).lower()
+    if normalized_preset not in _DATA_CHANGE_PRESETS:
+        raise ValueError("preset must be one of: changing_data, fixed_data, monitor_changing_data, monitor_fixed_data")
+    base = _DATA_CHANGE_PRESETS[normalized_preset]
+    overrides = policy_overrides or {}
+    unsupported = sorted(set(overrides) - set(base["policy"]))
+    if unsupported:
+        allowed = ", ".join(sorted(base["policy"]))
+        invalid = ", ".join(unsupported)
+        raise ValueError(f"policy_overrides may only adjust threshold policy keys. Invalid: {invalid}. Allowed: {allowed}")
+    return {
+        "preset": normalized_preset,
+        "baseline_mode": base["baseline_mode"],
+        "policy": {**base["policy"], **overrides},
+        "monitor_only": bool(base["monitor_only"]),
+    }
+
+
+def _as_monitor_only_result(result: dict) -> dict:
+    if bool(result.get("can_continue", True)):
+        return result
+    converted = {**result, "can_continue": True, "status": "warning"}
+    converted["message"] = f"Monitor-only data-change check observed blocking drift without stopping execution. {result.get('message', '')}".strip()
+    converted["monitor_only"] = True
+    converted["original_status"] = result.get("status")
+    return converted
+
+
+def monitor_data_changes(
+    spark,
+    dataframe,
+    metadata_table: str,
+    dataset_name: str,
+    table_name: str,
+    *,
+    stage: str,
+    preset: str = "changing_data",
+    exclude_run_id: str | None = None,
+    distribution_columns: list[str] | set[str] | tuple[str, ...] | None = None,
+    policy_overrides: dict | None = None,
+) -> dict:
+    """Profile a dataframe and compare it with the baseline selected by a preset.
+
+    Parameters
+    ----------
+    spark : Any
+        Spark session used to load existing profile metadata.
+    dataframe : Any
+        Spark DataFrame to profile.
+    metadata_table : str
+        Existing metadata table containing profile evidence rows.
+    dataset_name : str
+        Dataset identifier used to select matching baseline profiles.
+    table_name : str
+        Source or target table name used to select matching baseline profiles.
+    stage : {"source", "target"}
+        Pipeline stage being monitored. Source and target baselines are selected
+        independently.
+    preset : {"changing_data", "fixed_data", "monitor_changing_data", "monitor_fixed_data"}, default="changing_data"
+        Data-change monitoring intent. ``changing_data`` compares with the
+        latest successful profile and may block, ``fixed_data`` compares with
+        an approved baseline and may block, ``monitor_changing_data`` compares
+        with the latest successful profile without blocking, and
+        ``monitor_fixed_data`` compares with an approved baseline without
+        blocking. Presets determine baseline and enforcement behavior;
+        ``policy_overrides`` adjusts thresholds only.
+    exclude_run_id : str, optional
+        Current run identifier to exclude from baseline lookup.
+    distribution_columns : list[str] or set[str] or tuple[str, ...], optional
+        Optional allow-list of columns for distribution comparisons.
+    policy_overrides : dict, optional
+        Threshold policy overrides merged with the selected preset defaults.
+        Overrides may adjust thresholds only; presets retain control of
+        baseline selection and blocking behaviour.
+
+    Returns
+    -------
+    dict
+        Wrapper containing ``profile`` for the current profile, ``baseline`` for
+        the selected baseline profile, and ``result`` for the drift decision.
+
+    Notes
+    -----
+    Users choose intent through presets. FabricOps handles profiling, baseline
+    selection, comparison, and enforcement mechanics internally.
+    """
+    from fabricops_kit.data_profiling import profile_dataframe
+
+    config = _data_change_preset_config(preset, policy_overrides)
+    baseline_profile = _load_latest_profile(
+        spark,
+        metadata_table=metadata_table,
+        dataset_name=dataset_name,
+        table_name=table_name,
+        profile_stage=stage,
+        exclude_run_id=exclude_run_id,
+        baseline_mode=config["baseline_mode"],
+    )
+    current_profile_df = profile_dataframe(
+        dataframe,
+        table_name,
+        include_distributions=True,
+        distribution_columns=distribution_columns,
+        distribution_bin_edges=_extract_numeric_distribution_bin_edges(baseline_profile),
+        categorical_categories=_extract_categorical_distribution_categories(baseline_profile),
+    )
+    current_profile = _normalize_profile(current_profile_df)
+    result = _check_profile_drift(current_profile, baseline_profile, policy=config["policy"])
+    if config["monitor_only"]:
+        result = _as_monitor_only_result(result)
+    result = {**result, "preset": config["preset"], "baseline_mode": config["baseline_mode"], "policy": config["policy"]}
+    return {"profile": current_profile_df, "profile_payload": current_profile, "baseline": baseline_profile, "result": result}
+
+
+def stop_if_failed(result) -> None:
+    """Stop notebook execution when a guardrail result is blocking.
+
+    Parameters
+    ----------
+    result : dict
+        Direct schema result, direct data-change result, or the wrapper returned
+        by :func:`monitor_data_changes`.
+
+    Raises
+    ------
+    SchemaDriftError
+        If the resolved result has ``can_continue=False``.
+    """
+    resolved = (result or {}).get("result") if isinstance(result, dict) and "result" in result else result
+    resolved = resolved or {}
+    if bool(resolved.get("can_continue", True)):
+        return
+    status = resolved.get("status", "failed")
+    detail = resolved.get("message") or resolved.get("summary") or "Guardrail blocked execution."
+    raise SchemaDriftError(f"Guardrail blocked execution with status: {status}. {detail}")
 
 
 def summarize_drift_results(schema_drift_result: dict | None = None, partition_drift_result: dict | None = None, profile_drift_result: dict | None = None) -> dict:

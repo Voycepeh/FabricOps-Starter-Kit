@@ -6,7 +6,7 @@
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 10</span><span class="reference-chip">Internal helpers: 20</span><span class="reference-chip">Outbound: 1</span><span class="reference-chip">Inbound: 0</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 3</span><span class="reference-chip">Internal helpers: 29</span><span class="reference-chip">Outbound: 2</span><span class="reference-chip">Inbound: 0</span></div>
 
 ## Module purpose
 
@@ -32,11 +32,11 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
     </tr>
     <tr>
       <td>Public callable count</td>
-      <td>10</td>
+      <td>3</td>
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>20</td>
+      <td>29</td>
     </tr>
     <tr>
       <td>Inbound module count</td>
@@ -44,7 +44,7 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
     </tr>
     <tr>
       <td>Outbound module count</td>
-      <td>1</td>
+      <td>2</td>
     </tr>
     <tr>
       <td>External callers</td>
@@ -52,7 +52,7 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
     </tr>
     <tr>
       <td>External callees</td>
-      <td><code>_utils</code></td>
+      <td><code>_utils</code>, <code>data_profiling</code></td>
     </tr>
   </tbody>
 </table>
@@ -72,67 +72,25 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
   </thead>
   <tbody>
     <tr>
-      <td><a href="../../reference/check_schema/"><code>check_schema</code></a></td>
+      <td><a href="../../reference/monitor_data_changes/"><code>monitor_data_changes</code></a></td>
       <td>Essential</td>
       <td>function</td>
-      <td>Check a dataframe has the expected pipeline-local columns and datatypes before continuing.</td>
-      <td><a href="../../reference/internal/drift/_actual_schema/"><code>_actual_schema</code></a> (internal), <a href="../../reference/internal/drift/_normalize_datatype/"><code>_normalize_datatype</code></a> (internal)</td>
+      <td>Profile a dataframe, select the appropriate baseline, compare distributions, and return a data-change result from a preset.</td>
+      <td><a href="../../reference/internal/drift/_as_monitor_only_result/"><code>_as_monitor_only_result</code></a> (internal), <a href="../../reference/internal/drift/_check_profile_drift/"><code>_check_profile_drift</code></a> (internal), <a href="../../reference/internal/drift/_data_change_preset_config/"><code>_data_change_preset_config</code></a> (internal), <a href="../../reference/internal/drift/_extract_categorical_distribution_categories/"><code>_extract_categorical_distribution_categories</code></a> (internal), <a href="../../reference/internal/drift/_extract_numeric_distribution_bin_edges/"><code>_extract_numeric_distribution_bin_edges</code></a> (internal), <a href="../../reference/internal/drift/_load_latest_profile/"><code>_load_latest_profile</code></a> (internal), <a href="../../reference/internal/drift/_normalize_profile/"><code>_normalize_profile</code></a> (internal)</td>
     </tr>
     <tr>
-      <td><a href="../../reference/assert_no_blocking_profile_drift/"><code>assert_no_blocking_profile_drift</code></a></td>
-      <td>Optional</td>
+      <td><a href="../../reference/stop_if_failed/"><code>stop_if_failed</code></a></td>
+      <td>Essential</td>
       <td>function</td>
-      <td>Raise when profile drift check results should block notebook execution.</td>
+      <td>Raise the shared guardrail error only when a schema or data-change result cannot continue.</td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/check_partition_drift/"><code>check_partition_drift</code></a></td>
-      <td>Optional</td>
+      <td><a href="../../reference/validate_schema/"><code>validate_schema</code></a></td>
+      <td>Essential</td>
       <td>function</td>
-      <td>Check partition-level drift using keys, partitions, and optional watermark baselines.</td>
-      <td>—</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/check_profile_drift/"><code>check_profile_drift</code></a></td>
-      <td>Optional</td>
-      <td>function</td>
-      <td>Compare profile metrics against a baseline profile and drift thresholds.</td>
-      <td><a href="../../reference/internal/drift/_categorical_distance/"><code>_categorical_distance</code></a> (internal), <a href="../../reference/internal/drift/_normalize_profile/"><code>_normalize_profile</code></a> (internal), <a href="../../reference/internal/drift/_numeric_psi/"><code>_numeric_psi</code></a> (internal), <a href="../../reference/internal/drift/_profile_check_status/"><code>_profile_check_status</code></a> (internal)</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/default_profile_drift_policy/"><code>default_profile_drift_policy</code></a></td>
-      <td>Optional</td>
-      <td>function</td>
-      <td>Return lightweight default thresholds for profile-based data drift checks.</td>
-      <td>—</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/extract_categorical_distribution_categories/"><code>extract_categorical_distribution_categories</code></a></td>
-      <td>Optional</td>
-      <td>function</td>
-      <td>Extract baseline categorical vocabularies so current profiles can produce comparable categorical distributions.</td>
-      <td><a href="../../reference/internal/drift/_normalize_profile/"><code>_normalize_profile</code></a> (internal)</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/extract_numeric_distribution_bin_edges/"><code>extract_numeric_distribution_bin_edges</code></a></td>
-      <td>Optional</td>
-      <td>function</td>
-      <td>Extract baseline numeric bin edges so current profiles can produce comparable PSI distributions.</td>
-      <td><a href="../../reference/internal/drift/_normalize_profile/"><code>_normalize_profile</code></a> (internal)</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/load_latest_profile/"><code>load_latest_profile</code></a></td>
-      <td>Optional</td>
-      <td>function</td>
-      <td>Load the latest previous successful or approved source/target profile baseline from existing profile metadata.</td>
-      <td><a href="../../reference/internal/drift/_is_missing_table_error/"><code>_is_missing_table_error</code></a> (internal), <a href="../../reference/internal/drift/_normalize_profile/"><code>_normalize_profile</code></a> (internal), <a href="../../reference/internal/drift/_safe_spark_collect/"><code>_safe_spark_collect</code></a> (internal)</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/summarize_drift_results/"><code>summarize_drift_results</code></a></td>
-      <td>Optional</td>
-      <td>function</td>
-      <td>Summarize schema, partition, and profile drift outcomes into one decision.</td>
-      <td>—</td>
+      <td>Validate a dataframe schema using strict, allow_new_columns, or monitor_only presets.</td>
+      <td><a href="../../reference/internal/drift/_actual_schema/"><code>_actual_schema</code></a> (internal), <a href="../../reference/internal/drift/_check_schema/"><code>_check_schema</code></a> (internal)</td>
     </tr>
   </tbody>
 </table>
@@ -151,49 +109,19 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
 <h6>Public callables</h6>
 <ul class="callable-relationship-rows">
 <li>
-<a class="reference-chip" href="../../reference/assert_no_blocking_profile_drift/"><code>assert_no_blocking_profile_drift</code></a>
+<a class="reference-chip" href="../../reference/monitor_data_changes/"><code>monitor_data_changes</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_as_monitor_only_result"><code>_as_monitor_only_result</code></a>, <a class="reference-chip" href="#_check_profile_drift"><code>_check_profile_drift</code></a>, <a class="reference-chip" href="#_data_change_preset_config"><code>_data_change_preset_config</code></a>, <a class="reference-chip" href="#_extract_categorical_distribution_categories"><code>_extract_categorical_distribution_categories</code></a>, <a class="reference-chip" href="#_extract_numeric_distribution_bin_edges"><code>_extract_numeric_distribution_bin_edges</code></a>, <a class="reference-chip" href="#_load_latest_profile"><code>_load_latest_profile</code></a>, <a class="reference-chip" href="#_normalize_profile"><code>_normalize_profile</code></a>
+</li>
+<li>
+<a class="reference-chip" href="../../reference/stop_if_failed/"><code>stop_if_failed</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <span>None.</span>
 </li>
 <li>
-<a class="reference-chip" href="../../reference/check_partition_drift/"><code>check_partition_drift</code></a>
+<a class="reference-chip" href="../../reference/validate_schema/"><code>validate_schema</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#build_partition_snapshot"><code>build_partition_snapshot</code></a>, <a class="reference-chip" href="#compare_partition_snapshots"><code>compare_partition_snapshots</code></a>, <a class="reference-chip" href="#default_incremental_safety_policy"><code>default_incremental_safety_policy</code></a>
-</li>
-<li>
-<a class="reference-chip" href="../../reference/check_profile_drift/"><code>check_profile_drift</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_categorical_distance"><code>_categorical_distance</code></a>, <a class="reference-chip" href="#_normalize_profile"><code>_normalize_profile</code></a>, <a class="reference-chip" href="#_numeric_psi"><code>_numeric_psi</code></a>, <a class="reference-chip" href="#_profile_check_status"><code>_profile_check_status</code></a>, <a class="reference-chip" href="../../reference/default_profile_drift_policy/"><code>default_profile_drift_policy</code></a>
-</li>
-<li>
-<a class="reference-chip" href="../../reference/check_schema/"><code>check_schema</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_actual_schema"><code>_actual_schema</code></a>, <a class="reference-chip" href="#_normalize_datatype"><code>_normalize_datatype</code></a>
-</li>
-<li>
-<a class="reference-chip" href="../../reference/default_profile_drift_policy/"><code>default_profile_drift_policy</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<span>None.</span>
-</li>
-<li>
-<a class="reference-chip" href="../../reference/extract_categorical_distribution_categories/"><code>extract_categorical_distribution_categories</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_normalize_profile"><code>_normalize_profile</code></a>
-</li>
-<li>
-<a class="reference-chip" href="../../reference/extract_numeric_distribution_bin_edges/"><code>extract_numeric_distribution_bin_edges</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_normalize_profile"><code>_normalize_profile</code></a>
-</li>
-<li>
-<a class="reference-chip" href="../../reference/load_latest_profile/"><code>load_latest_profile</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_is_missing_table_error"><code>_is_missing_table_error</code></a>, <a class="reference-chip" href="#_normalize_profile"><code>_normalize_profile</code></a>, <a class="reference-chip" href="#_safe_spark_collect"><code>_safe_spark_collect</code></a>
-</li>
-<li>
-<a class="reference-chip" href="../../reference/summarize_drift_results/"><code>summarize_drift_results</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<span>None.</span>
+<a class="reference-chip" href="#_actual_schema"><code>_actual_schema</code></a>, <a class="reference-chip" href="#_check_schema"><code>_check_schema</code></a>
 </li>
 </ul>
 </section>
@@ -214,7 +142,15 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
   <tbody>
     <tr>
       <td><a href="../../reference/internal/drift/_actual_schema/"><code>_actual_schema</code></a></td>
-      <td><a href="../../reference/check_schema/"><code>check_schema</code></a></td>
+      <td><a href="../../reference/validate_schema/"><code>validate_schema</code></a></td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/drift/_as_monitor_only_result/"><code>_as_monitor_only_result</code></a></td>
+      <td><a href="../../reference/monitor_data_changes/"><code>monitor_data_changes</code></a></td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/drift/_assert_no_blocking_profile_drift/"><code>_assert_no_blocking_profile_drift</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/drift/_build_pandas_partition_snapshot/"><code>_build_pandas_partition_snapshot</code></a></td>
@@ -230,7 +166,31 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
     </tr>
     <tr>
       <td><a href="../../reference/internal/drift/_categorical_distance/"><code>_categorical_distance</code></a></td>
-      <td><a href="../../reference/check_profile_drift/"><code>check_profile_drift</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/drift/_check_profile_drift/"><code>_check_profile_drift</code></a></td>
+      <td><a href="../../reference/monitor_data_changes/"><code>monitor_data_changes</code></a></td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/drift/_check_schema/"><code>_check_schema</code></a></td>
+      <td><a href="../../reference/validate_schema/"><code>validate_schema</code></a></td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/drift/_data_change_preset_config/"><code>_data_change_preset_config</code></a></td>
+      <td><a href="../../reference/monitor_data_changes/"><code>monitor_data_changes</code></a></td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/drift/_default_profile_drift_policy/"><code>_default_profile_drift_policy</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/drift/_extract_categorical_distribution_categories/"><code>_extract_categorical_distribution_categories</code></a></td>
+      <td><a href="../../reference/monitor_data_changes/"><code>monitor_data_changes</code></a></td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/drift/_extract_numeric_distribution_bin_edges/"><code>_extract_numeric_distribution_bin_edges</code></a></td>
+      <td><a href="../../reference/monitor_data_changes/"><code>monitor_data_changes</code></a></td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/drift/_hash/"><code>_hash</code></a></td>
@@ -242,11 +202,15 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
     </tr>
     <tr>
       <td><a href="../../reference/internal/drift/_is_missing_table_error/"><code>_is_missing_table_error</code></a></td>
-      <td><a href="../../reference/load_latest_profile/"><code>load_latest_profile</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/drift/_json_dumps/"><code>_json_dumps</code></a></td>
       <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/drift/_load_latest_profile/"><code>_load_latest_profile</code></a></td>
+      <td><a href="../../reference/monitor_data_changes/"><code>monitor_data_changes</code></a></td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/drift/_normalize_baseline_mode/"><code>_normalize_baseline_mode</code></a></td>
@@ -254,15 +218,15 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
     </tr>
     <tr>
       <td><a href="../../reference/internal/drift/_normalize_datatype/"><code>_normalize_datatype</code></a></td>
-      <td><a href="../../reference/check_schema/"><code>check_schema</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/drift/_normalize_profile/"><code>_normalize_profile</code></a></td>
-      <td><a href="../../reference/check_profile_drift/"><code>check_profile_drift</code></a>, <a href="../../reference/extract_categorical_distribution_categories/"><code>extract_categorical_distribution_categories</code></a>, <a href="../../reference/extract_numeric_distribution_bin_edges/"><code>extract_numeric_distribution_bin_edges</code></a>, <a href="../../reference/load_latest_profile/"><code>load_latest_profile</code></a></td>
+      <td><a href="../../reference/monitor_data_changes/"><code>monitor_data_changes</code></a></td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/drift/_numeric_psi/"><code>_numeric_psi</code></a></td>
-      <td><a href="../../reference/check_profile_drift/"><code>check_profile_drift</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/drift/_parse_distribution/"><code>_parse_distribution</code></a></td>
@@ -270,7 +234,7 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
     </tr>
     <tr>
       <td><a href="../../reference/internal/drift/_profile_check_status/"><code>_profile_check_status</code></a></td>
-      <td><a href="../../reference/check_profile_drift/"><code>check_profile_drift</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/drift/_proportions/"><code>_proportions</code></a></td>
@@ -282,7 +246,7 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
     </tr>
     <tr>
       <td><a href="../../reference/internal/drift/_safe_spark_collect/"><code>_safe_spark_collect</code></a></td>
-      <td><a href="../../reference/load_latest_profile/"><code>load_latest_profile</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/drift/_utc_now_iso/"><code>_utc_now_iso</code></a></td>
@@ -304,6 +268,12 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
 <a class="reference-chip" href="#_normalize_datatype"><code>_normalize_datatype</code></a>
 </li>
 <li>
+<a class="reference-chip" href="#_as_monitor_only_result"><code>_as_monitor_only_result</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_assert_no_blocking_profile_drift"><code>_assert_no_blocking_profile_drift</code></a>
+</li>
+<li>
 <a class="reference-chip" href="#_build_pandas_partition_snapshot"><code>_build_pandas_partition_snapshot</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_build_partition_hash"><code>_build_partition_hash</code></a>, <a class="reference-chip" href="#_hash"><code>_hash</code></a>
@@ -322,6 +292,32 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
 <a class="reference-chip" href="#_categorical_distance"><code>_categorical_distance</code></a>
 </li>
 <li>
+<a class="reference-chip" href="#_check_profile_drift"><code>_check_profile_drift</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_categorical_distance"><code>_categorical_distance</code></a>, <a class="reference-chip" href="#_default_profile_drift_policy"><code>_default_profile_drift_policy</code></a>, <a class="reference-chip" href="#_normalize_profile"><code>_normalize_profile</code></a>, <a class="reference-chip" href="#_numeric_psi"><code>_numeric_psi</code></a>, <a class="reference-chip" href="#_profile_check_status"><code>_profile_check_status</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_check_schema"><code>_check_schema</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_actual_schema"><code>_actual_schema</code></a>, <a class="reference-chip" href="#_normalize_datatype"><code>_normalize_datatype</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_data_change_preset_config"><code>_data_change_preset_config</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_default_profile_drift_policy"><code>_default_profile_drift_policy</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_extract_categorical_distribution_categories"><code>_extract_categorical_distribution_categories</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_normalize_profile"><code>_normalize_profile</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_extract_numeric_distribution_bin_edges"><code>_extract_numeric_distribution_bin_edges</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_normalize_profile"><code>_normalize_profile</code></a>
+</li>
+<li>
 <a class="reference-chip" href="#_hash"><code>_hash</code></a>
 </li>
 <li>
@@ -332,6 +328,11 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
 </li>
 <li>
 <a class="reference-chip" href="#_json_dumps"><code>_json_dumps</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_load_latest_profile"><code>_load_latest_profile</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_is_missing_table_error"><code>_is_missing_table_error</code></a>, <a class="reference-chip" href="#_normalize_baseline_mode"><code>_normalize_baseline_mode</code></a>, <a class="reference-chip" href="#_normalize_profile"><code>_normalize_profile</code></a>, <a class="reference-chip" href="#_safe_spark_collect"><code>_safe_spark_collect</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_normalize_baseline_mode"><code>_normalize_baseline_mode</code></a>
@@ -380,3 +381,6 @@ None.
 
 **_utils**
 <a class="reference-chip" href="../_utils/#_to_jsonable"><code>_to_jsonable</code></a>
+
+**data_profiling**
+<a class="reference-chip" href="../../reference/profile_dataframe/"><code>profile_dataframe</code></a>

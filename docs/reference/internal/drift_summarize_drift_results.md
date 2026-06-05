@@ -1,7 +1,7 @@
 # summarize_drift_results
 
 **Module:** `drift`  
-**Classification:** Optional
+**Classification:** Internal helper
 
 ## Purpose
 
@@ -12,7 +12,7 @@ No summary available.
 - Fully qualified function name: `fabricops_kit.drift.summarize_drift_results`
 - Short name: `summarize_drift_results`
 - Module: `drift`
-- Classification: Optional
+- Classification: Internal helper
 - Related module: `drift`
 - Source file path: `src/fabricops_kit/drift.py`
 - Source reference: <a href="../../api/modules/drift/#summarize_drift_results">Module source anchor</a>

@@ -265,7 +265,7 @@ Exploration notebook flow used to profile source data and draft advisory AI outp
 
 ## `03_pc_<agreement>_<pipeline>`
 
-Core production pipeline flow for clean evidence creation, pipeline-local schema checks, inline runtime audit columns, large-table write tuning, and controlled publishing. 03_pc uses check_schema for source and transformed-target shape checks, uses build_runtime_audit_fields for metadata runtime values, then adds dataframe audit columns inline. Audit columns are always useful; hashes, datetime features, and bucket columns are specialized patterns outside the default path.
+Core production pipeline flow for clean evidence creation, preset-driven source and target guardrails, inline runtime audit columns, large-table write tuning, and controlled publishing. 03_pc uses validate_schema, monitor_data_changes, and stop_if_failed so users choose intent while FabricOps handles profiling, baseline selection, comparison, and enforcement mechanics internally. Audit columns are always useful; hashes, datetime features, and bucket columns are specialized patterns outside the default path.
 
 ### Segment 1: Runtime setup, parameters, agreement selection, and registration
 
@@ -353,16 +353,30 @@ Core production pipeline flow for clean evidence creation, pipeline-local schema
       <td>Check dependency outputs and metadata writes.</td>
     </tr>
     <tr>
-      <td>`check_schema`</td>
+      <td>`validate_schema`</td>
       <td>Callable orchestration wrapper</td>
-      <td>Check a dataframe has the expected pipeline-local columns and datatypes before continuing.</td>
-      <td>`_actual_schema`, `_normalize_datatype`</td>
+      <td>Validate a dataframe schema using strict, allow_new_columns, or monitor_only presets.</td>
+      <td>`_actual_schema`, `_check_schema`</td>
+      <td>Check dependency outputs and metadata writes.</td>
+    </tr>
+    <tr>
+      <td>`monitor_data_changes`</td>
+      <td>Callable orchestration wrapper</td>
+      <td>Profile a dataframe, select the appropriate baseline, compare distributions, and return a data-change result from a preset.</td>
+      <td>`_as_monitor_only_result`, `_check_profile_drift`, `_data_change_preset_config`, `_extract_categorical_distribution_categories`, `_extract_numeric_distribution_bin_edges`, `_load_latest_profile`, `_normalize_profile`</td>
+      <td>Check dependency outputs and metadata writes.</td>
+    </tr>
+    <tr>
+      <td>`stop_if_failed`</td>
+      <td>Callable orchestration wrapper</td>
+      <td>Raise the shared guardrail error only when a schema or data-change result cannot continue.</td>
+      <td>—</td>
       <td>Check dependency outputs and metadata writes.</td>
     </tr>
   </tbody>
 </table>
 
-### Segment 3: Profile and write reusable catalogue evidence
+### Segment 3: Write reusable catalogue evidence from monitored profiles
 
 <table>
   <thead>
@@ -375,13 +389,6 @@ Core production pipeline flow for clean evidence creation, pipeline-local schema
     </tr>
   </thead>
   <tbody>
-    <tr>
-      <td>`profile_dataframe`</td>
-      <td>Callable orchestration wrapper</td>
-      <td>Build canonical DQ-ready profiling rows from a Spark DataFrame.</td>
-      <td>`_build_distribution_summaries`, `_get_profiled_columns`, `_is_min_max_supported_type`</td>
-      <td>Check dependency outputs and metadata writes.</td>
-    </tr>
     <tr>
       <td>`write_lakehouse_table`</td>
       <td>Callable orchestration wrapper</td>
@@ -406,10 +413,24 @@ Core production pipeline flow for clean evidence creation, pipeline-local schema
   </thead>
   <tbody>
     <tr>
-      <td>`check_schema`</td>
+      <td>`validate_schema`</td>
       <td>Callable orchestration wrapper</td>
-      <td>Check a dataframe has the expected pipeline-local columns and datatypes before continuing.</td>
-      <td>`_actual_schema`, `_normalize_datatype`</td>
+      <td>Validate a dataframe schema using strict, allow_new_columns, or monitor_only presets.</td>
+      <td>`_actual_schema`, `_check_schema`</td>
+      <td>Check dependency outputs and metadata writes.</td>
+    </tr>
+    <tr>
+      <td>`monitor_data_changes`</td>
+      <td>Callable orchestration wrapper</td>
+      <td>Profile a dataframe, select the appropriate baseline, compare distributions, and return a data-change result from a preset.</td>
+      <td>`_as_monitor_only_result`, `_check_profile_drift`, `_data_change_preset_config`, `_extract_categorical_distribution_categories`, `_extract_numeric_distribution_bin_edges`, `_load_latest_profile`, `_normalize_profile`</td>
+      <td>Check dependency outputs and metadata writes.</td>
+    </tr>
+    <tr>
+      <td>`stop_if_failed`</td>
+      <td>Callable orchestration wrapper</td>
+      <td>Raise the shared guardrail error only when a schema or data-change result cannot continue.</td>
+      <td>—</td>
       <td>Check dependency outputs and metadata writes.</td>
     </tr>
     <tr>
@@ -436,7 +457,7 @@ Core production pipeline flow for clean evidence creation, pipeline-local schema
   </tbody>
 </table>
 
-### Segment 5: Read back output, profile output, and write lineage
+### Segment 5: Read back output and write lineage
 
 <table>
   <thead>
@@ -461,13 +482,6 @@ Core production pipeline flow for clean evidence creation, pipeline-local schema
       <td>Callable orchestration wrapper</td>
       <td>Read a table from a Microsoft Fabric warehouse.</td>
       <td>`_get_spark`, `_get_store`</td>
-      <td>Check dependency outputs and metadata writes.</td>
-    </tr>
-    <tr>
-      <td>`profile_dataframe`</td>
-      <td>Callable orchestration wrapper</td>
-      <td>Build canonical DQ-ready profiling rows from a Spark DataFrame.</td>
-      <td>`_build_distribution_summaries`, `_get_profiled_columns`, `_is_min_max_supported_type`</td>
       <td>Check dependency outputs and metadata writes.</td>
     </tr>
     <tr>

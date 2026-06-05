@@ -20,7 +20,7 @@ No summary available.
 - Outbound references count: 3
 
 ## Inbound references
-- <a href="../check_partition_drift/"><code>fabricops_kit.drift.check_partition_drift</code></a>
+- <a href="../internal/drift/check_partition_drift/"><code>fabricops_kit.drift.check_partition_drift</code></a>
 
 ## Outbound references
 - <a href="../internal/_utils/_to_jsonable/"><code>fabricops_kit._utils._to_jsonable</code></a>
