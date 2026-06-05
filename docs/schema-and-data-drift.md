@@ -1,10 +1,38 @@
 # Schema and data-change guardrails
 
-FabricOps Starter Kit keeps the production notebook experience simple:
+FabricOps keeps production checks simple:
 
-> Users choose intent through presets. FabricOps handles profiling, baseline selection, comparison and enforcement mechanics.
+> Users choose intent through presets. FabricOps handles profiling, baseline selection, comparison, and enforcement.
 
-Use schema validation to confirm the dataframe shape you expect, and use data-change monitoring to compare current profile evidence with the right historical baseline. Keep the two checks separate so a schema issue is easy to explain separately from a distribution or row-count change.
+Use:
+
+* `validate_schema()` to check expected columns and datatypes;
+* `monitor_data_changes()` to compare the current profile with the correct baseline;
+* `stop_if_failed()` to stop execution when a result is blocking.
+
+## Pipeline flow
+
+```text
+Read source
+    ↓
+Validate source schema
+    ↓
+Monitor source data changes
+    ↓
+Stop if blocking
+    ↓
+Transform
+    ↓
+Validate proposed target schema
+    ↓
+Monitor proposed target changes
+    ↓
+Stop if blocking
+    ↓
+Write target
+```
+
+`monitor_data_changes()` profiles the dataframe internally. Notebook authors do not need to load baselines or call lower-level drift functions.
 
 ## Beginner workflow
 
@@ -14,6 +42,8 @@ source_schema_result = validate_schema(
     expected_schema=SOURCE_EXPECTED_SCHEMA,
     preset=SOURCE_SCHEMA_CHECK,
 )
+
+stop_if_failed(source_schema_result)
 
 source_change_result = monitor_data_changes(
     spark=spark,
@@ -27,18 +57,19 @@ source_change_result = monitor_data_changes(
     policy_overrides=SOURCE_DATA_CHANGE_OVERRIDES,
 )
 
-stop_if_failed(source_schema_result)
 stop_if_failed(source_change_result)
 ```
 
-Apply the same pattern to the proposed target dataframe before publication:
+Apply the same pattern to the proposed target before writing:
 
 ```python
 target_schema_result = validate_schema(
-    dataframe=df_transformed,
+    dataframe=df_output,
     expected_schema=TARGET_EXPECTED_SCHEMA,
     preset=TARGET_SCHEMA_CHECK,
 )
+
+stop_if_failed(target_schema_result)
 
 target_change_result = monitor_data_changes(
     spark=spark,
@@ -52,123 +83,96 @@ target_change_result = monitor_data_changes(
     policy_overrides=TARGET_DATA_CHANGE_OVERRIDES,
 )
 
-stop_if_failed(target_schema_result)
 stop_if_failed(target_change_result)
+```
+
+## Recommended starter settings
+
+```python
+SOURCE_SCHEMA_CHECK = "allow_new_columns"
+TARGET_SCHEMA_CHECK = "strict"
+
+SOURCE_DATA_CHANGE_CHECK = "changing_data"
+TARGET_DATA_CHANGE_CHECK = "changing_data"
+
+SOURCE_DATA_CHANGE_OVERRIDES = {}
+TARGET_DATA_CHANGE_OVERRIDES = {}
+
+MARK_CURRENT_PROFILE_AS_APPROVED_BASELINE = False
 ```
 
 ## Schema presets
 
-| Preset | Use when | Blocking behaviour |
-| --- | --- | --- |
-| `strict` | The dataframe must exactly match the expected schema. | Missing required columns, datatype changes, and unexpected new columns stop execution. |
-| `allow_new_columns` | Upstream systems may add fields. | Missing required columns and datatype changes stop execution; unexpected columns are reported as warnings. |
-| `monitor_only` | Schema changes should be visible but non-blocking. | All differences are reported and `can_continue=True`. |
+| Preset              | Behaviour                                                                  |
+| ------------------- | -------------------------------------------------------------------------- |
+| `strict`            | Missing columns, datatype changes, and unexpected columns block execution. |
+| `allow_new_columns` | Missing columns and datatype changes block. New columns are warnings.      |
+| `monitor_only`      | All differences are reported without blocking.                             |
 
 ## Data-change presets
 
-Presets determine baseline and enforcement behaviour. Overrides adjust thresholds only.
+| Preset                  | Baseline                  | Can block |
+| ----------------------- | ------------------------- | --------: |
+| `changing_data`         | Latest successful profile |       Yes |
+| `fixed_data`            | Approved profile          |       Yes |
+| `monitor_changing_data` | Latest successful profile |        No |
+| `monitor_fixed_data`    | Approved profile          |        No |
 
-| Preset | Baseline | Can block |
-| --- | --- | ---: |
-| `changing_data` | Latest successful profile | Yes |
-| `fixed_data` | Approved profile | Yes |
-| `monitor_changing_data` | Latest successful profile | No |
-| `monitor_fixed_data` | Approved profile | No |
+Use `changing_data` for operational or transactional datasets.
 
-### `changing_data`
+Use `fixed_data` for reference, historical, or controlled datasets that should remain stable.
 
-Use for operational or transactional data that changes regularly.
+Use the monitor variants when changes should be visible without stopping publication.
 
-Default behaviour:
+## Baseline behaviour
 
-- Compare with the latest successful profile.
-- Row count may change by up to 50%.
-- Null percentage may change by up to 20 percentage points.
-- Distinct percentage may change by up to 30 percentage points.
-- Numeric PSI warns at 0.10 and blocks at 0.25.
-- Categorical distance warns at 0.10 and blocks at 0.25.
-- Blocking drift stops publication.
+Changing-data presets compare with the latest successful matching profile.
 
-### `fixed_data`
+Fixed-data presets compare only with an approved matching profile.
 
-Use for reference, historical, or controlled data that should remain stable.
-
-Default behaviour:
-
-- Compare with an approved baseline.
-- Any row-count, null-rate, or distinct-rate change is treated strictly.
-- Numeric PSI warns at 0.01 and blocks at 0.10.
-- Categorical distance warns at 0.01 and blocks at 0.10.
-- Blocking drift stops publication.
-- The current profile does not automatically replace the approved baseline.
-
-### `monitor_changing_data`
-
-Use when operational or transactional changes should be reported without blocking.
-
-Default behaviour:
-
-- Compare with the latest successful profile.
-- Use the same thresholds as `changing_data`.
-- Always return `can_continue=True`.
-
-### `monitor_fixed_data`
-
-Use when reference, historical, or controlled data should be compared with an approved baseline without blocking.
-
-Default behaviour:
-
-- Compare with an approved baseline.
-- Use the same thresholds as `fixed_data`.
-- Always return `can_continue=True`.
-
-## Optional policy overrides
-
-Advanced users can tune thresholds without rebuilding the whole policy. An empty dictionary uses the preset unchanged:
+Selecting `fixed_data` does not approve the current profile. Baseline approval remains explicit:
 
 ```python
-SOURCE_DATA_CHANGE_CHECK = "changing_data"
+MARK_CURRENT_PROFILE_AS_APPROVED_BASELINE = True
+```
 
+Routine production runs should normally leave this set to `False`.
+
+## Optional threshold overrides
+
+Presets control baseline selection and blocking behaviour. Overrides adjust thresholds only.
+
+```python
 SOURCE_DATA_CHANGE_OVERRIDES = {
-    # Leave empty to use FabricOps defaults.
-    # "block_numeric_psi": 0.30,
-    # "max_row_count_change_percent": 75,
+    "block_numeric_psi": 0.30,
+    "max_row_count_change_percent": 75,
 }
 ```
 
-Overrides are merged internally with the selected preset defaults:
+An empty dictionary uses the preset defaults unchanged.
 
-```python
-effective_policy = {
-    **preset_defaults,
-    **policy_overrides,
-}
-```
+## Returned evidence
 
-For example, override only the values your pipeline needs:
+`monitor_data_changes()` returns:
 
-```python
-source_change_result = monitor_data_changes(
-    spark=spark,
-    dataframe=df_source,
-    metadata_table=CATALOGUE_TABLE,
-    dataset_name=DATASET_NAME,
-    table_name=SOURCE_TABLE,
-    stage="source",
-    preset="changing_data",
-    policy_overrides={
-        "block_numeric_psi": 0.30,
-    },
-)
-```
+| Property          | Purpose                                                 |
+| ----------------- | ------------------------------------------------------- |
+| `profile`         | Current profile dataframe ready for catalogue evidence. |
+| `profile_payload` | Normalized profile used for comparison.                 |
+| `baseline`        | Selected historical profile, or `None`.                 |
+| `result`          | Guardrail status, checks, message, and `can_continue`.  |
 
-## Profile evidence
+`stop_if_failed()` accepts the complete wrapper returned by `monitor_data_changes()` and stops only when the resolved result has `can_continue=False`.
 
-`monitor_data_changes()` returns a wrapper with:
+## Use in the pipeline notebook
 
-- `profile`: the current profile dataframe, ready to enrich and write as catalogue evidence;
-- `profile_payload`: the normalized current profile used for comparison;
-- `baseline`: the selected baseline profile, or `None` when no baseline exists;
-- `result`: the standard guardrail result with `status`, `can_continue`, `checks`, and `message`.
+The `03_pc`  pipeline template contains the complete executable workflow for:
 
-Keep approved baseline promotion explicit. Setting `MARK_CURRENT_PROFILE_AS_APPROVED_BASELINE = True` in the notebook marks written evidence as approved; selecting `fixed_data` or `monitor_fixed_data` only chooses approved evidence for comparison.
+* source and target schema validation;
+* source and target data-change monitoring;
+* fail-fast enforcement;
+* profile evidence writing;
+* explicit approved-baseline promotion.
+
+Use this page to choose the appropriate presets. Use the notebook template as the implementation reference, and use the generated API reference for exact function parameters and return values.
+
