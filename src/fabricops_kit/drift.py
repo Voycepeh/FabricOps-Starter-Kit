@@ -16,16 +16,10 @@ import warnings
 class SchemaDriftError(Exception):
     """Raised when a schema check is configured to fail on drift.
 
-    Parameters
-    ----------
-    *args : object
-        Error message and optional exception details passed to ``Exception``.
-
     Notes
     -----
-    This exception is intentionally shared by simple schema checks and older
-    drift-oriented workflows so notebook callers have one schema failure type
-    to catch when they choose fail-fast behavior.
+    This exception is shared by schema-check workflows so notebook callers
+    have one failure type to catch when they choose fail-fast behavior.
     """
 
 
