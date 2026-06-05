@@ -50,9 +50,27 @@ Use existing repo commands (do not invent new tooling). Standard checks:
 
 - `uv run python -m compileall src tests`
 - `uv run python -m pytest -q`
+- `uv run pytest --cov=fabricops_kit --cov-report=term-missing`
 - `uv run mkdocs build`
+- `uv run ruff check .`
+- `python -m build`
+- `twine check dist/*`
 
-If a command is not available in your environment, report what you ran and why anything was skipped.
+Pytest markers describe the local test tiers:
+
+- `unit`: fast tests that do not require Spark or Fabric runtime behaviour.
+- `spark`: focused tests that require a local Spark session and should cover behaviour that mocks may hide.
+- `fabric`: tests that simulate Microsoft Fabric runtime interfaces through shared fixtures.
+- `contract`: package, schema, documentation, release, and public API consistency tests.
+
+Useful marker commands:
+
+- `uv run pytest -m unit`
+- `uv run pytest -m spark`
+- `uv run pytest -m fabric`
+- `uv run pytest -m contract`
+
+Live workspace integration is outside the local test suite. If a command is not available in your environment, report what you ran and why anything was skipped.
 
 For local development setup and reproducibility:
 

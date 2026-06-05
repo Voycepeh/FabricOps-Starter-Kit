@@ -305,11 +305,11 @@ def read_lakehouse_csv(config, env, target, relative_path, spark_session=None, h
     store = _get_store(config, env, target)
     if store.kind != "lakehouse":
         raise ValueError(f"Target '{env}/{target}' is not a lakehouse store.")
-    if not relative_path:
-        raise ValueError("relative_path is required.")
+    if not isinstance(relative_path, str) or not relative_path.strip():
+        raise ValueError("relative_path must be a non-empty string.")
 
     spark_obj = _get_spark(spark_session)
-    normalized_relative_path = relative_path.lstrip("/")
+    normalized_relative_path = relative_path.strip().lstrip("/")
     if normalized_relative_path.startswith("Files/"):
         normalized_relative_path = normalized_relative_path[len("Files/"):]
     path = f"{store.root.rstrip('/')}/Files/{normalized_relative_path}"
@@ -700,11 +700,11 @@ def read_lakehouse_excel(config, env, target, relative_path, sheet_name=0, spark
     store = _get_store(config, env, target)
     if store.kind != "lakehouse":
         raise ValueError(f"Target '{env}/{target}' is not a lakehouse store.")
-    if not relative_path:
-        raise ValueError("relative_path is required.")
+    if not isinstance(relative_path, str) or not relative_path.strip():
+        raise ValueError("relative_path must be a non-empty string.")
 
     spark_obj = _get_spark(spark_session)
-    normalized_relative_path = relative_path.lstrip("/")
+    normalized_relative_path = relative_path.strip().lstrip("/")
     if normalized_relative_path.startswith("Files/"):
         normalized_relative_path = normalized_relative_path[len("Files/"):]
     lakehouse_file_path = f"{store.root.rstrip('/')}/Files/{normalized_relative_path}"

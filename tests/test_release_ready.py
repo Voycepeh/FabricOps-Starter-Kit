@@ -1,3 +1,6 @@
+import pytest
+
+pytestmark = pytest.mark.contract
 import subprocess
 import sys
 

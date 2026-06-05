@@ -322,9 +322,20 @@ def _build_dq_rule_deactivations(spark, table_name: str, deactivations: list[dic
 
 
 def _latest_dq_rule_versions(metadata_df, table_name: str):
-    """Resolve latest metadata row per rule key."""
-    w = Window.partitionBy("rule_key").orderBy(F.col("action_ts").desc())
-    return metadata_df.filter(F.col("table_name") == table_name).withColumn("_rn", F.row_number().over(w)).filter(F.col("_rn") == 1).drop("_rn")
+    """Resolve the latest metadata row per rule key with deterministic ties."""
+    w = Window.partitionBy("rule_key").orderBy(
+        F.col("action_ts").desc(),
+        F.col("action_type").desc(),
+        F.col("action_by").desc(),
+        F.col("rule_source").desc(),
+        F.col("rule_json").desc(),
+    )
+    return (
+        metadata_df.filter(F.col("table_name") == table_name)
+        .withColumn("_rn", F.row_number().over(w))
+        .filter(F.col("_rn") == 1)
+        .drop("_rn")
+    )
 
 
 def _load_active_dq_rules(metadata_df, table_name: str) -> list[dict[str, Any]]:

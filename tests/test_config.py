@@ -2,6 +2,8 @@ from pathlib import Path
 
 import pytest
 
+pytestmark = pytest.mark.unit
+
 from fabricops_kit.config import (
     DatasetContractValidationError,
     assert_valid_dataset_contract,
