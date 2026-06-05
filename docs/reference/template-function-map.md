@@ -265,7 +265,7 @@ Exploration notebook flow used to profile source data and draft advisory AI outp
 
 ## `03_pc_<agreement>_<pipeline>`
 
-Core production pipeline flow for clean evidence creation, inline runtime audit columns, large-table write tuning, and controlled publishing. 03_pc uses build_runtime_audit_fields for metadata runtime values, then adds dataframe audit columns inline. Audit columns are always useful; hashes, datetime features, and bucket columns are specialized patterns outside the default path.
+Core production pipeline flow for clean evidence creation, pipeline-local schema checks, inline runtime audit columns, large-table write tuning, and controlled publishing. 03_pc uses check_schema for source and transformed-target shape checks, uses build_runtime_audit_fields for metadata runtime values, then adds dataframe audit columns inline. Audit columns are always useful; hashes, datetime features, and bucket columns are specialized patterns outside the default path.
 
 ### Segment 1: Runtime setup, parameters, agreement selection, and registration
 
@@ -352,6 +352,13 @@ Core production pipeline flow for clean evidence creation, inline runtime audit 
       <td>`_convert_single_parquet_ns_to_us`, `_get_spark`, `_get_store`</td>
       <td>Check dependency outputs and metadata writes.</td>
     </tr>
+    <tr>
+      <td>`check_schema`</td>
+      <td>Callable orchestration wrapper</td>
+      <td>Check a dataframe has the expected pipeline-local columns and datatypes before continuing.</td>
+      <td>`_actual_schema`, `_normalize_datatype`</td>
+      <td>Check dependency outputs and metadata writes.</td>
+    </tr>
   </tbody>
 </table>
 
@@ -398,6 +405,13 @@ Core production pipeline flow for clean evidence creation, inline runtime audit 
     </tr>
   </thead>
   <tbody>
+    <tr>
+      <td>`check_schema`</td>
+      <td>Callable orchestration wrapper</td>
+      <td>Check a dataframe has the expected pipeline-local columns and datatypes before continuing.</td>
+      <td>`_actual_schema`, `_normalize_datatype`</td>
+      <td>Check dependency outputs and metadata writes.</td>
+    </tr>
     <tr>
       <td>`build_runtime_audit_fields`</td>
       <td>Callable orchestration wrapper</td>
@@ -472,3 +486,4 @@ Core production pipeline flow for clean evidence creation, inline runtime audit 
     </tr>
   </tbody>
 </table>
+

@@ -1,18 +1,18 @@
 # SchemaDriftError
 
 **Module:** `drift`  
-**Classification:** Internal helper
+**Classification:** Optional
 
 ## Purpose
 
-No summary available.
+Exception raised when check_schema is configured to fail on schema differences.
 
 ## Function manifest
 
 - Fully qualified function name: `fabricops_kit.drift.SchemaDriftError`
 - Short name: `SchemaDriftError`
 - Module: `drift`
-- Classification: Internal helper
+- Classification: Optional
 - Related module: `drift`
 - Source file path: `src/fabricops_kit/drift.py`
 - Source reference: <a href="../../api/modules/drift/#SchemaDriftError">Module source anchor</a>
@@ -20,4 +20,4 @@ No summary available.
 - Outbound references count: 0
 
 ## Inbound references
-- <a href="../internal/drift/assert_no_blocking_schema_drift/"><code>fabricops_kit.drift.assert_no_blocking_schema_drift</code></a>
+- <a href="../check_schema/"><code>fabricops_kit.drift.check_schema</code></a>

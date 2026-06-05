@@ -6,7 +6,7 @@
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 4</span><span class="reference-chip">Internal helpers: 14</span><span class="reference-chip">Outbound: 1</span><span class="reference-chip">Inbound: 0</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 5</span><span class="reference-chip">Internal helpers: 12</span><span class="reference-chip">Outbound: 1</span><span class="reference-chip">Inbound: 0</span></div>
 
 ## Module purpose
 
@@ -32,11 +32,11 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
     </tr>
     <tr>
       <td>Public callable count</td>
-      <td>4</td>
+      <td>5</td>
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>14</td>
+      <td>12</td>
     </tr>
     <tr>
       <td>Inbound module count</td>
@@ -72,6 +72,13 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
   </thead>
   <tbody>
     <tr>
+      <td><a href="../../reference/check_schema/"><code>check_schema</code></a></td>
+      <td>Essential</td>
+      <td>function</td>
+      <td>Check a dataframe has the expected pipeline-local columns and datatypes before continuing.</td>
+      <td><a href="../../reference/internal/drift/_actual_schema/"><code>_actual_schema</code></a> (internal), <a href="../../reference/internal/drift/_normalize_datatype/"><code>_normalize_datatype</code></a> (internal)</td>
+    </tr>
+    <tr>
       <td><a href="../../reference/check_partition_drift/"><code>check_partition_drift</code></a></td>
       <td>Optional</td>
       <td>function</td>
@@ -83,13 +90,6 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
       <td>Optional</td>
       <td>function</td>
       <td>Compare profile metrics against a baseline profile and drift thresholds.</td>
-      <td>—</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/check_schema_drift/"><code>check_schema_drift</code></a></td>
-      <td>Optional</td>
-      <td>function</td>
-      <td>Compare a current dataframe schema against a baseline schema snapshot.</td>
       <td>—</td>
     </tr>
     <tr>
@@ -126,9 +126,9 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
 <span>None.</span>
 </li>
 <li>
-<a class="reference-chip" href="../../reference/check_schema_drift/"><code>check_schema_drift</code></a>
+<a class="reference-chip" href="../../reference/check_schema/"><code>check_schema</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#build_schema_snapshot"><code>build_schema_snapshot</code></a>, <a class="reference-chip" href="#compare_schema_snapshots"><code>compare_schema_snapshots</code></a>, <a class="reference-chip" href="#default_schema_drift_policy"><code>default_schema_drift_policy</code></a>
+<a class="reference-chip" href="#_actual_schema"><code>_actual_schema</code></a>, <a class="reference-chip" href="#_normalize_datatype"><code>_normalize_datatype</code></a>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/summarize_drift_results/"><code>summarize_drift_results</code></a>
@@ -153,11 +153,11 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
   </thead>
   <tbody>
     <tr>
-      <td><a href="../../reference/internal/drift/_build_pandas_partition_snapshot/"><code>_build_pandas_partition_snapshot</code></a></td>
-      <td>—</td>
+      <td><a href="../../reference/internal/drift/_actual_schema/"><code>_actual_schema</code></a></td>
+      <td><a href="../../reference/check_schema/"><code>check_schema</code></a></td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/drift/_build_pandas_schema_snapshot/"><code>_build_pandas_schema_snapshot</code></a></td>
+      <td><a href="../../reference/internal/drift/_build_pandas_partition_snapshot/"><code>_build_pandas_partition_snapshot</code></a></td>
       <td>—</td>
     </tr>
     <tr>
@@ -166,14 +166,6 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
     </tr>
     <tr>
       <td><a href="../../reference/internal/drift/_build_spark_partition_snapshot/"><code>_build_spark_partition_snapshot</code></a></td>
-      <td>—</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/internal/drift/_build_spark_schema_snapshot/"><code>_build_spark_schema_snapshot</code></a></td>
-      <td>—</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/internal/drift/_column_hash/"><code>_column_hash</code></a></td>
       <td>—</td>
     </tr>
     <tr>
@@ -193,8 +185,8 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/drift/_resolve_change_behavior/"><code>_resolve_change_behavior</code></a></td>
-      <td>—</td>
+      <td><a href="../../reference/internal/drift/_normalize_datatype/"><code>_normalize_datatype</code></a></td>
+      <td><a href="../../reference/check_schema/"><code>check_schema</code></a></td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/drift/_safe_spark_collect/"><code>_safe_spark_collect</code></a></td>
@@ -215,14 +207,14 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
 <h6>Internal helpers details</h6>
 <ul class="callable-relationship-rows">
 <li>
+<a class="reference-chip" href="#_actual_schema"><code>_actual_schema</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_normalize_datatype"><code>_normalize_datatype</code></a>
+</li>
+<li>
 <a class="reference-chip" href="#_build_pandas_partition_snapshot"><code>_build_pandas_partition_snapshot</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_build_partition_hash"><code>_build_partition_hash</code></a>, <a class="reference-chip" href="#_hash"><code>_hash</code></a>
-</li>
-<li>
-<a class="reference-chip" href="#_build_pandas_schema_snapshot"><code>_build_pandas_schema_snapshot</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_column_hash"><code>_column_hash</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_build_partition_hash"><code>_build_partition_hash</code></a>
@@ -233,14 +225,6 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
 <a class="reference-chip" href="#_build_spark_partition_snapshot"><code>_build_spark_partition_snapshot</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_build_partition_hash"><code>_build_partition_hash</code></a>
-</li>
-<li>
-<a class="reference-chip" href="#_build_spark_schema_snapshot"><code>_build_spark_schema_snapshot</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_column_hash"><code>_column_hash</code></a>
-</li>
-<li>
-<a class="reference-chip" href="#_column_hash"><code>_column_hash</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_hash"><code>_hash</code></a>
@@ -255,7 +239,7 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
 <a class="reference-chip" href="#_json_dumps"><code>_json_dumps</code></a>
 </li>
 <li>
-<a class="reference-chip" href="#_resolve_change_behavior"><code>_resolve_change_behavior</code></a>
+<a class="reference-chip" href="#_normalize_datatype"><code>_normalize_datatype</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_safe_spark_collect"><code>_safe_spark_collect</code></a>

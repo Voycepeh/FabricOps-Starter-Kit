@@ -512,11 +512,11 @@
       "module_summary": "Owns schema/profile/data drift checks as engineering guardrails during pipeline runs.",
       "sidebar_group": "3. Data engineer",
       "sidebar_include": true,
-      "callable_name": "check_schema_drift",
+      "callable_name": "check_schema",
       "callable_visibility": "public",
-      "callable_role": "optional",
-      "template_notebook": "\u2014",
-      "template_segment": "\u2014"
+      "callable_role": "essential",
+      "template_notebook": "03_pc_<agreement>_<pipeline>",
+      "template_segment": "Pipeline-local schema checks"
     },
     {
       "module_name": "drift",

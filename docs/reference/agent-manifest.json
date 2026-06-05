@@ -2586,14 +2586,14 @@
     "name": "SchemaDriftError",
     "qualified_name": "fabricops_kit.drift.SchemaDriftError",
     "module": "drift",
-    "type": "internal",
-    "role": "internal",
+    "type": "callable",
+    "role": "optional",
     "inbound": [
-      "fabricops_kit.drift.assert_no_blocking_schema_drift"
+      "fabricops_kit.drift.check_schema"
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/drift.py",
-    "summary": "No summary available."
+    "summary": "Exception raised when check_schema is configured to fail on schema differences."
   },
   {
     "name": "UnsupportedDataFrameEngineError",
@@ -2605,6 +2605,21 @@
       "fabricops_kit.drift.detect_dataframe_engine"
     ],
     "outbound": [],
+    "source_file": "src/fabricops_kit/drift.py",
+    "summary": "No summary available."
+  },
+  {
+    "name": "_actual_schema",
+    "qualified_name": "fabricops_kit.drift._actual_schema",
+    "module": "drift",
+    "type": "internal",
+    "role": "internal",
+    "inbound": [
+      "fabricops_kit.drift.check_schema"
+    ],
+    "outbound": [
+      "fabricops_kit.drift._normalize_datatype"
+    ],
     "source_file": "src/fabricops_kit/drift.py",
     "summary": "No summary available."
   },
@@ -2621,21 +2636,6 @@
       "fabricops_kit._utils._to_jsonable",
       "fabricops_kit.drift._build_partition_hash",
       "fabricops_kit.drift._hash"
-    ],
-    "source_file": "src/fabricops_kit/drift.py",
-    "summary": "No summary available."
-  },
-  {
-    "name": "_build_pandas_schema_snapshot",
-    "qualified_name": "fabricops_kit.drift._build_pandas_schema_snapshot",
-    "module": "drift",
-    "type": "internal",
-    "role": "internal",
-    "inbound": [
-      "fabricops_kit.drift.build_schema_snapshot"
-    ],
-    "outbound": [
-      "fabricops_kit.drift._column_hash"
     ],
     "source_file": "src/fabricops_kit/drift.py",
     "summary": "No summary available."
@@ -2673,35 +2673,6 @@
     "summary": "No summary available."
   },
   {
-    "name": "_build_spark_schema_snapshot",
-    "qualified_name": "fabricops_kit.drift._build_spark_schema_snapshot",
-    "module": "drift",
-    "type": "internal",
-    "role": "internal",
-    "inbound": [
-      "fabricops_kit.drift.build_schema_snapshot"
-    ],
-    "outbound": [
-      "fabricops_kit.drift._column_hash"
-    ],
-    "source_file": "src/fabricops_kit/drift.py",
-    "summary": "No summary available."
-  },
-  {
-    "name": "_column_hash",
-    "qualified_name": "fabricops_kit.drift._column_hash",
-    "module": "drift",
-    "type": "internal",
-    "role": "internal",
-    "inbound": [
-      "fabricops_kit.drift._build_pandas_schema_snapshot",
-      "fabricops_kit.drift._build_spark_schema_snapshot"
-    ],
-    "outbound": [],
-    "source_file": "src/fabricops_kit/drift.py",
-    "summary": "No summary available."
-  },
-  {
     "name": "_hash",
     "qualified_name": "fabricops_kit.drift._hash",
     "module": "drift",
@@ -2735,8 +2706,7 @@
     "type": "internal",
     "role": "internal",
     "inbound": [
-      "fabricops_kit.drift.load_latest_partition_snapshot",
-      "fabricops_kit.drift.load_latest_schema_snapshot"
+      "fabricops_kit.drift.load_latest_partition_snapshot"
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/drift.py",
@@ -2750,7 +2720,6 @@
     "role": "internal",
     "inbound": [
       "fabricops_kit.drift.build_and_write_partition_snapshot",
-      "fabricops_kit.drift.build_and_write_schema_snapshot",
       "fabricops_kit.drift.build_drift_evidence_record"
     ],
     "outbound": [
@@ -2760,13 +2729,14 @@
     "summary": "No summary available."
   },
   {
-    "name": "_resolve_change_behavior",
-    "qualified_name": "fabricops_kit.drift._resolve_change_behavior",
+    "name": "_normalize_datatype",
+    "qualified_name": "fabricops_kit.drift._normalize_datatype",
     "module": "drift",
     "type": "internal",
     "role": "internal",
     "inbound": [
-      "fabricops_kit.drift.compare_schema_snapshots"
+      "fabricops_kit.drift._actual_schema",
+      "fabricops_kit.drift.check_schema"
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/drift.py",
@@ -2779,8 +2749,7 @@
     "type": "internal",
     "role": "internal",
     "inbound": [
-      "fabricops_kit.drift.load_latest_partition_snapshot",
-      "fabricops_kit.drift.load_latest_schema_snapshot"
+      "fabricops_kit.drift.load_latest_partition_snapshot"
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/drift.py",
@@ -2794,7 +2763,6 @@
     "role": "internal",
     "inbound": [
       "fabricops_kit.drift.build_and_write_partition_snapshot",
-      "fabricops_kit.drift.build_and_write_schema_snapshot",
       "fabricops_kit.drift.build_drift_evidence_record"
     ],
     "outbound": [],
@@ -2808,8 +2776,7 @@
     "type": "internal",
     "role": "internal",
     "inbound": [
-      "fabricops_kit.drift.build_and_write_partition_snapshot",
-      "fabricops_kit.drift.build_and_write_schema_snapshot"
+      "fabricops_kit.drift.build_and_write_partition_snapshot"
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/drift.py",
@@ -2829,19 +2796,6 @@
     "summary": "No summary available."
   },
   {
-    "name": "assert_no_blocking_schema_drift",
-    "qualified_name": "fabricops_kit.drift.assert_no_blocking_schema_drift",
-    "module": "drift",
-    "type": "internal",
-    "role": "internal",
-    "inbound": [],
-    "outbound": [
-      "fabricops_kit.drift.SchemaDriftError"
-    ],
-    "source_file": "src/fabricops_kit/drift.py",
-    "summary": "No summary available."
-  },
-  {
     "name": "build_and_write_partition_snapshot",
     "qualified_name": "fabricops_kit.drift.build_and_write_partition_snapshot",
     "module": "drift",
@@ -2853,22 +2807,6 @@
       "fabricops_kit.drift._utc_now_iso",
       "fabricops_kit.drift._write_metadata_rows",
       "fabricops_kit.drift.build_partition_snapshot"
-    ],
-    "source_file": "src/fabricops_kit/drift.py",
-    "summary": "No summary available."
-  },
-  {
-    "name": "build_and_write_schema_snapshot",
-    "qualified_name": "fabricops_kit.drift.build_and_write_schema_snapshot",
-    "module": "drift",
-    "type": "internal",
-    "role": "internal",
-    "inbound": [],
-    "outbound": [
-      "fabricops_kit.drift._json_dumps",
-      "fabricops_kit.drift._utc_now_iso",
-      "fabricops_kit.drift._write_metadata_rows",
-      "fabricops_kit.drift.build_schema_snapshot"
     ],
     "source_file": "src/fabricops_kit/drift.py",
     "summary": "No summary available."
@@ -2919,24 +2857,6 @@
     "summary": "No summary available."
   },
   {
-    "name": "build_schema_snapshot",
-    "qualified_name": "fabricops_kit.drift.build_schema_snapshot",
-    "module": "drift",
-    "type": "internal",
-    "role": "internal",
-    "inbound": [
-      "fabricops_kit.drift.build_and_write_schema_snapshot",
-      "fabricops_kit.drift.check_schema_drift"
-    ],
-    "outbound": [
-      "fabricops_kit.drift._build_pandas_schema_snapshot",
-      "fabricops_kit.drift._build_spark_schema_snapshot",
-      "fabricops_kit.drift.detect_dataframe_engine"
-    ],
-    "source_file": "src/fabricops_kit/drift.py",
-    "summary": "No summary available."
-  },
-  {
     "name": "check_partition_drift",
     "qualified_name": "fabricops_kit.drift.check_partition_drift",
     "module": "drift",
@@ -2963,19 +2883,19 @@
     "summary": "No summary available."
   },
   {
-    "name": "check_schema_drift",
-    "qualified_name": "fabricops_kit.drift.check_schema_drift",
+    "name": "check_schema",
+    "qualified_name": "fabricops_kit.drift.check_schema",
     "module": "drift",
     "type": "callable",
-    "role": "optional",
+    "role": "essential",
     "inbound": [],
     "outbound": [
-      "fabricops_kit.drift.build_schema_snapshot",
-      "fabricops_kit.drift.compare_schema_snapshots",
-      "fabricops_kit.drift.default_schema_drift_policy"
+      "fabricops_kit.drift.SchemaDriftError",
+      "fabricops_kit.drift._actual_schema",
+      "fabricops_kit.drift._normalize_datatype"
     ],
     "source_file": "src/fabricops_kit/drift.py",
-    "summary": "No summary available."
+    "summary": "Check a dataframe has the expected pipeline-local columns and datatypes before continuing."
   },
   {
     "name": "compare_partition_snapshots",
@@ -2995,22 +2915,6 @@
     "summary": "No summary available."
   },
   {
-    "name": "compare_schema_snapshots",
-    "qualified_name": "fabricops_kit.drift.compare_schema_snapshots",
-    "module": "drift",
-    "type": "internal",
-    "role": "internal",
-    "inbound": [
-      "fabricops_kit.drift.check_schema_drift"
-    ],
-    "outbound": [
-      "fabricops_kit.drift._resolve_change_behavior",
-      "fabricops_kit.drift.default_schema_drift_policy"
-    ],
-    "source_file": "src/fabricops_kit/drift.py",
-    "summary": "No summary available."
-  },
-  {
     "name": "default_incremental_safety_policy",
     "qualified_name": "fabricops_kit.drift.default_incremental_safety_policy",
     "module": "drift",
@@ -3025,28 +2929,13 @@
     "summary": "No summary available."
   },
   {
-    "name": "default_schema_drift_policy",
-    "qualified_name": "fabricops_kit.drift.default_schema_drift_policy",
-    "module": "drift",
-    "type": "internal",
-    "role": "internal",
-    "inbound": [
-      "fabricops_kit.drift.check_schema_drift",
-      "fabricops_kit.drift.compare_schema_snapshots"
-    ],
-    "outbound": [],
-    "source_file": "src/fabricops_kit/drift.py",
-    "summary": "No summary available."
-  },
-  {
     "name": "detect_dataframe_engine",
     "qualified_name": "fabricops_kit.drift.detect_dataframe_engine",
     "module": "drift",
     "type": "internal",
     "role": "internal",
     "inbound": [
-      "fabricops_kit.drift.build_partition_snapshot",
-      "fabricops_kit.drift.build_schema_snapshot"
+      "fabricops_kit.drift.build_partition_snapshot"
     ],
     "outbound": [
       "fabricops_kit.drift.UnsupportedDataFrameEngineError"
@@ -3057,20 +2946,6 @@
   {
     "name": "load_latest_partition_snapshot",
     "qualified_name": "fabricops_kit.drift.load_latest_partition_snapshot",
-    "module": "drift",
-    "type": "internal",
-    "role": "internal",
-    "inbound": [],
-    "outbound": [
-      "fabricops_kit.drift._is_missing_table_error",
-      "fabricops_kit.drift._safe_spark_collect"
-    ],
-    "source_file": "src/fabricops_kit/drift.py",
-    "summary": "No summary available."
-  },
-  {
-    "name": "load_latest_schema_snapshot",
-    "qualified_name": "fabricops_kit.drift.load_latest_schema_snapshot",
     "module": "drift",
     "type": "internal",
     "role": "internal",

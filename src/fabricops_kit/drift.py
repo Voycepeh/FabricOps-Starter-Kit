@@ -1,27 +1,32 @@
-"""Schema and data drift safeguards for source-contract validation.
+"""Lightweight schema, partition, and profile drift safeguards.
 
-Use these helpers after ingestion/profile stages and before publication to
-compare observed schema/partition/profile signals against historical snapshots
-and enforce drift policies in a repeatable, auditable workflow.
+Use :func:`check_schema` in production pipeline notebooks when a local,
+pipeline-specific check only needs to confirm expected dataframe columns and
+datatypes before execution continues. The remaining helpers support optional
+partition and profile drift workflows.
 """
 
 from __future__ import annotations
 
 from datetime import datetime, timezone
-import hashlib
+import re
+import warnings
 
 
 class SchemaDriftError(Exception):
-    """Schemadrifterror.
+    """Raised when a schema check is configured to fail on drift.
 
-    Public class used by the framework API for `SchemaDriftError`.
+    Parameters
+    ----------
+    *args : object
+        Error message and optional exception details passed to ``Exception``.
 
-    Examples
-    --------
-    >>> SchemaDriftError(... )
+    Notes
+    -----
+    This exception is intentionally shared by simple schema checks and older
+    drift-oriented workflows so notebook callers have one schema failure type
+    to catch when they choose fail-fast behavior.
     """
-
-
 
 
 class UnsupportedDataFrameEngineError(ValueError):
@@ -54,227 +59,166 @@ def detect_dataframe_engine(df) -> str:
     raise UnsupportedDataFrameEngineError(f"Unsupported dataframe type: {type(df)!r}")
 
 
-def default_schema_drift_policy() -> dict:
-    """Return default policy flags used by schema drift comparison.
+def _normalize_datatype(data_type) -> str:
+    raw = str(data_type).strip().lower()
+    raw = re.sub(r"\s+", "", raw)
 
-    Returns
-    -------
-    dict
-        Policy dictionary controlling which schema changes should block
-        continuation and which should emit warnings.
-    """
-    return {
-        "block_on_removed_column": True,
-        "block_on_type_change": True,
-        "warn_on_added_column": True,
-        "require_approval_for_new_columns": True,
-        "warn_on_nullable_change": True,
-        "warn_on_ordinal_change": False,
+    decimal_match = re.search(r"decimaltype\((\d+),(\d+)\)|decimal\((\d+),(\d+)\)", raw)
+    if decimal_match:
+        precision = decimal_match.group(1) or decimal_match.group(3)
+        scale = decimal_match.group(2) or decimal_match.group(4)
+        return f"decimal({precision},{scale})"
+
+    aliases = {
+        "integertype()": "int",
+        "integertype": "int",
+        "integer": "int",
+        "int32": "int",
+        "int": "int",
+        "longtype()": "bigint",
+        "longtype": "bigint",
+        "long": "bigint",
+        "int64": "bigint",
+        "bigint": "bigint",
+        "stringtype()": "string",
+        "stringtype": "string",
+        "str": "string",
+        "object": "string",
+        "string": "string",
+        "datetype()": "date",
+        "datetype": "date",
+        "date": "date",
+        "timestamptype()": "timestamp",
+        "timestamptype": "timestamp",
+        "timestamp": "timestamp",
+        "doubletype()": "double",
+        "doubletype": "double",
+        "double": "double",
+        "float64": "double",
+        "floattype()": "float",
+        "floattype": "float",
+        "float32": "float",
+        "float": "float",
+        "booleantype()": "boolean",
+        "booleantype": "boolean",
+        "bool": "boolean",
+        "boolean": "boolean",
     }
+    return aliases.get(raw, raw)
 
 
-def _column_hash(column_name: str, ordinal_position: int, data_type: str, nullable: bool) -> str:
-    payload = f"{column_name}|{ordinal_position}|{data_type}|{nullable}"
-    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+def _actual_schema(df) -> tuple[list[str], dict[str, str]]:
+    schema = getattr(df, "schema", None)
+    if schema is not None and hasattr(schema, "fields"):
+        columns = [str(field.name) for field in schema.fields]
+        types = {str(field.name): _normalize_datatype(getattr(field, "dataType", "")) for field in schema.fields}
+        return columns, types
+
+    dtypes = getattr(df, "dtypes", None)
+    if dtypes is not None:
+        if isinstance(dtypes, dict):
+            types = {str(name): _normalize_datatype(dtype) for name, dtype in dtypes.items()}
+        else:
+            types = {str(name): _normalize_datatype(dtype) for name, dtype in dtypes}
+        columns = [str(column) for column in getattr(df, "columns", list(types))]
+        return columns, types
+
+    columns = [str(column) for column in getattr(df, "columns", [])]
+    return columns, {}
 
 
-def _build_pandas_schema_snapshot(df, dataset_name: str, table_name: str) -> dict:
-    columns = []
-    for index, column_name in enumerate(df.columns):
-        data_type = str(df[column_name].dtype)
-        nullable = bool(df[column_name].isna().any())
-        ordinal_position = int(index)
-        columns.append(
-            {
-                "column_name": str(column_name),
-                "ordinal_position": ordinal_position,
-                "data_type": data_type,
-                "nullable": nullable,
-                "column_hash": _column_hash(str(column_name), ordinal_position, data_type, nullable),
-            }
-        )
-
-    return {
-        "dataset_name": str(dataset_name),
-        "table_name": str(table_name),
-        "engine": "pandas",
-        "generated_at": datetime.now(timezone.utc).isoformat(),
-        "columns": columns,
-    }
-
-
-def _build_spark_schema_snapshot(df, dataset_name: str, table_name: str) -> dict:
-    columns = []
-    for index, field in enumerate(df.schema.fields):
-        column_name = str(field.name)
-        data_type = str(field.dataType)
-        nullable = bool(field.nullable)
-        ordinal_position = int(index)
-        columns.append(
-            {
-                "column_name": column_name,
-                "ordinal_position": ordinal_position,
-                "data_type": data_type,
-                "nullable": nullable,
-                "column_hash": _column_hash(column_name, ordinal_position, data_type, nullable),
-            }
-        )
-
-    return {
-        "dataset_name": str(dataset_name),
-        "table_name": str(table_name),
-        "engine": "spark",
-        "generated_at": datetime.now(timezone.utc).isoformat(),
-        "columns": columns,
-    }
-
-
-def build_schema_snapshot(df, dataset_name: str = "unknown", table_name: str = "unknown", engine: str = "auto") -> dict:
-    """Build a schema snapshot with column-level attributes and hashes.
+def check_schema(
+    df,
+    expected_columns: dict[str, str],
+    *,
+    allow_extra_columns: bool = False,
+    check_types: bool = True,
+    action: str = "fail",
+) -> dict:
+    """Check dataframe columns and datatypes against local expectations.
 
     Parameters
     ----------
     df : Any
-        Source pandas or PySpark DataFrame.
-    dataset_name : str, default="unknown"
-        Logical dataset name stored in the snapshot.
-    table_name : str, default="unknown"
-        Logical table name stored in the snapshot.
-    engine : str, default="auto"
-        Execution engine selector: ``auto``, ``pandas``, or ``spark``.
+        Spark, pandas, or dataframe-like object with ``schema`` or ``columns``
+        metadata. Spark ``schema.fields`` entries are compared by ``name`` and
+        ``dataType``.
+    expected_columns : dict[str, str]
+        Mapping of expected column names to expected datatype strings, such as
+        ``{"customer_id": "bigint", "amount": "decimal(18,2)"}``.
+    allow_extra_columns : bool, default=False
+        When false, columns not listed in ``expected_columns`` are reported as
+        unexpected.
+    check_types : bool, default=True
+        When true, compare actual and expected datatypes after minimal internal
+        normalization of common Spark datatype representations.
+    action : {"observe", "warn", "fail"}, default="fail"
+        Enforcement behavior when the check does not pass. ``observe`` only
+        returns the result, ``warn`` emits a Python warning and returns the
+        result, and ``fail`` raises :class:`SchemaDriftError`.
 
     Returns
     -------
     dict
-        Snapshot payload containing dataset/table metadata and normalized column records.
+        Small result dictionary containing pass/fail status, missing columns,
+        unexpected columns, datatype mismatches, and a concise summary.
 
     Raises
     ------
     ValueError
-        If an unsupported engine is provided.
-    UnsupportedDataFrameEngineError
-        If engine auto-detection cannot resolve a supported dataframe type.
+        If ``action`` is not one of ``observe``, ``warn``, or ``fail``.
+    SchemaDriftError
+        If the schema does not pass and ``action="fail"``.
+
+    Notes
+    -----
+    This helper intentionally does not check nullability, column ordering,
+    schema approvals, contract versions, metadata tables, or evidence
+    persistence. Define expected schemas directly in the notebook or caller
+    that owns the pipeline-specific expectation.
     """
-    selected_engine = detect_dataframe_engine(df) if engine == "auto" else engine
-    if selected_engine == "pandas":
-        return _build_pandas_schema_snapshot(df, dataset_name=dataset_name, table_name=table_name)
-    if selected_engine == "spark":
-        return _build_spark_schema_snapshot(df, dataset_name=dataset_name, table_name=table_name)
-    raise ValueError(f"Unsupported engine '{selected_engine}'.")
+    normalized_action = str(action).lower()
+    if normalized_action not in {"observe", "warn", "fail"}:
+        raise ValueError("action must be one of: observe, warn, fail")
 
+    actual_columns, actual_types = _actual_schema(df)
+    actual_set = set(actual_columns)
+    expected_names = [str(column) for column in expected_columns]
+    expected_set = set(expected_names)
 
-def _resolve_change_behavior(is_warning: bool, is_blocking: bool) -> tuple[str, str]:
-    if is_blocking:
-        return "critical", "block"
-    if is_warning:
-        return "warning", "warn"
-    return "info", "allow"
+    missing_columns = [column for column in expected_names if column not in actual_set]
+    unexpected_columns = [] if allow_extra_columns else [column for column in actual_columns if column not in expected_set]
 
+    datatype_mismatches = []
+    if check_types:
+        for column, expected_type in expected_columns.items():
+            column_name = str(column)
+            if column_name in actual_set and column_name in actual_types:
+                expected = _normalize_datatype(expected_type)
+                actual = actual_types[column_name]
+                if actual != expected:
+                    datatype_mismatches.append({"column": column_name, "expected": expected, "actual": actual})
 
-def compare_schema_snapshots(baseline_snapshot: dict, current_snapshot: dict, policy: dict | None = None) -> dict:
-    """Compare baseline and current schema snapshots to detect drift changes.
-
-    Parameters
-    ----------
-    baseline_snapshot : dict
-        Baseline schema snapshot payload.
-    current_snapshot : dict
-        Current schema snapshot payload.
-    policy : dict | None, default=None
-        Optional drift policy overrides merged onto defaults.
-
-    Returns
-    -------
-    dict
-        Comparison result including added/removed/type/nullable/ordinal changes,
-        blocking decisions, and ``can_continue`` status.
-    """
-    active_policy = {**default_schema_drift_policy(), **(policy or {})}
-
-    baseline_columns = {col["column_name"]: col for col in baseline_snapshot.get("columns", [])}
-    current_columns = {col["column_name"]: col for col in current_snapshot.get("columns", [])}
-    changes: list[dict] = []
-
-    def add_change(drift_type: str, column_name: str, previous_value, current_value, severity: str, action: str, message: str) -> None:
-        changes.append(
-            {
-                "drift_type": drift_type,
-                "column_name": str(column_name),
-                "previous_value": previous_value,
-                "current_value": current_value,
-                "severity": severity,
-                "action": action,
-                "message": message,
-            }
-        )
-
-    for column_name in sorted(set(current_columns) - set(baseline_columns)):
-        severity, action = _resolve_change_behavior(
-            bool(active_policy["warn_on_added_column"]), bool(active_policy["require_approval_for_new_columns"])
-        )
-        add_change("column_added", column_name, None, current_columns[column_name], severity, action, f"Column '{column_name}' was added.")
-
-    for column_name in sorted(set(baseline_columns) - set(current_columns)):
-        severity, action = _resolve_change_behavior(True, bool(active_policy["block_on_removed_column"]))
-        add_change("column_removed", column_name, baseline_columns[column_name], None, severity, action, f"Column '{column_name}' was removed.")
-
-    for column_name in sorted(set(baseline_columns).intersection(current_columns)):
-        base = baseline_columns[column_name]
-        curr = current_columns[column_name]
-
-        if base["data_type"] != curr["data_type"]:
-            severity, action = _resolve_change_behavior(True, bool(active_policy["block_on_type_change"]))
-            add_change("data_type_changed", column_name, base["data_type"], curr["data_type"], severity, action, f"Column '{column_name}' data type changed.")
-
-        if bool(base["nullable"]) != bool(curr["nullable"]):
-            severity, action = _resolve_change_behavior(bool(active_policy["warn_on_nullable_change"]), False)
-            add_change("nullable_changed", column_name, bool(base["nullable"]), bool(curr["nullable"]), severity, action, f"Column '{column_name}' nullability changed.")
-
-        if int(base["ordinal_position"]) != int(curr["ordinal_position"]):
-            severity, action = _resolve_change_behavior(bool(active_policy["warn_on_ordinal_change"]), False)
-            add_change("ordinal_changed", column_name, int(base["ordinal_position"]), int(curr["ordinal_position"]), severity, action, f"Column '{column_name}' ordinal position changed.")
-
-    blocking_change_count = sum(1 for change in changes if change["action"] == "block")
-    warning_change_count = sum(1 for change in changes if change["action"] == "warn")
-
-    status = "failed" if blocking_change_count > 0 else "warning" if warning_change_count > 0 else "passed"
-    can_continue = blocking_change_count == 0
-
-    return {
-        "dataset_name": str(current_snapshot.get("dataset_name") or baseline_snapshot.get("dataset_name") or "unknown"),
-        "table_name": str(current_snapshot.get("table_name") or baseline_snapshot.get("table_name") or "unknown"),
-        "baseline_engine": str(baseline_snapshot.get("engine", "unknown")),
-        "current_engine": str(current_snapshot.get("engine", "unknown")),
-        "status": status,
-        "can_continue": can_continue,
-        "changes": changes,
-        "summary": {
-            "added_columns": sum(1 for c in changes if c["drift_type"] == "column_added"),
-            "removed_columns": sum(1 for c in changes if c["drift_type"] == "column_removed"),
-            "type_changed_columns": sum(1 for c in changes if c["drift_type"] == "data_type_changed"),
-            "nullable_changed_columns": sum(1 for c in changes if c["drift_type"] == "nullable_changed"),
-            "ordinal_changed_columns": sum(1 for c in changes if c["drift_type"] == "ordinal_changed"),
-            "blocking_change_count": blocking_change_count,
-            "warning_change_count": warning_change_count,
-        },
+    passed = not missing_columns and not unexpected_columns and not datatype_mismatches
+    result = {
+        "passed": passed,
+        "status": "passed" if passed else "failed",
+        "missing_columns": missing_columns,
+        "unexpected_columns": unexpected_columns,
+        "datatype_mismatches": datatype_mismatches,
+        "summary": (
+            "Schema check passed."
+            if passed
+            else f"Schema check failed: {len(missing_columns)} missing, {len(unexpected_columns)} unexpected, {len(datatype_mismatches)} datatype mismatch(es)."
+        ),
     }
 
-
-def assert_no_blocking_schema_drift(result: dict) -> None:
-    """Raise when schema drift result indicates continuation is not allowed.
-
-    Parameters
-    ----------
-    result : dict
-        Schema drift result produced by ``compare_schema_snapshots`` or ``check_schema_drift``.
-
-    Raises
-    ------
-    SchemaDriftError
-        If ``result['can_continue']`` is false.
-    """
-    if not bool(result.get("can_continue", True)):
-        raise SchemaDriftError("Blocking schema drift detected.")
+    if passed or normalized_action == "observe":
+        return result
+    if normalized_action == "warn":
+        warnings.warn(result["summary"], UserWarning, stacklevel=2)
+        return result
+    raise SchemaDriftError(result["summary"])
 
 
 # --- merged from drift_checkers.py ---
@@ -312,150 +256,6 @@ def _write_metadata_rows(spark, metadata_table: str, records: list[dict], mode: 
     metadata_df = spark.createDataFrame(records)
     metadata_df.write.mode(mode).saveAsTable(metadata_table)
     return True
-
-
-def check_schema_drift(df, dataset_name: str, table_name: str, baseline_snapshot: dict | None = None, policy: dict | None = None, engine: str = "spark") -> dict:
-    """Compare a current dataframe schema against a baseline schema snapshot.
-    
-        Parameters
-        ----------
-        df : Any
-            Value used by this callable.
-        dataset_name : Any
-            Value used by this callable.
-        table_name : Any
-            Value used by this callable.
-        baseline_snapshot : Any
-            Value used by this callable.
-        policy : Any
-            Value used by this callable.
-        engine : Any
-            Value used by this callable.
-    
-        Returns
-        -------
-        dict
-            Structured output produced by this callable.
-    """
-    current_snapshot = build_schema_snapshot(df, dataset_name=dataset_name, table_name=table_name, engine=engine)
-    if baseline_snapshot is None:
-        return {
-            "dataset_name": dataset_name,
-            "table_name": table_name,
-            "status": "no_baseline",
-            "can_continue": True,
-            "current_snapshot": current_snapshot,
-            "baseline_snapshot": None,
-            "comparison": None,
-            "message": "No baseline schema snapshot found; current snapshot captured as first observation.",
-        }
-
-    comparison = compare_schema_snapshots(baseline_snapshot, current_snapshot, policy=policy or default_schema_drift_policy())
-    status = str(comparison.get("status", "passed"))
-    return {
-        "dataset_name": dataset_name,
-        "table_name": table_name,
-        "status": status,
-        "can_continue": bool(comparison.get("can_continue", True)),
-        "current_snapshot": current_snapshot,
-        "baseline_snapshot": baseline_snapshot,
-        "comparison": comparison,
-        "message": "Schema drift check completed.",
-    }
-
-
-def build_and_write_schema_snapshot(spark, df, dataset_name: str, table_name: str, metadata_table: str, run_id: str | None = None, mode: str = "append", engine: str = "spark") -> dict:
-    """Build a schema snapshot and persist it to the metadata table.
-
-    Parameters
-    ----------
-    spark : Any
-        Spark session used to write metadata rows.
-    df : Any
-        Source dataframe used to derive schema details.
-    dataset_name : str
-        Dataset identifier recorded in metadata.
-    table_name : str
-        Table identifier recorded in metadata.
-    metadata_table : str
-        Destination table for schema snapshot records.
-    run_id : str | None, default=None
-        Optional run identifier attached to each written row.
-    mode : str, default=\"append\"
-        Spark write mode.
-    engine : str, default=\"spark\"
-        Engine used when building the snapshot.
-
-    Returns
-    -------
-    dict
-        Schema snapshot payload that was converted and written as metadata records.
-    """
-    snapshot = build_schema_snapshot(df, dataset_name=dataset_name, table_name=table_name, engine=engine)
-    records = [
-        {
-            "run_id": run_id,
-            "dataset_name": dataset_name,
-            "table_name": table_name,
-            "snapshot_type": "schema",
-            "schema_snapshot_json": _json_dumps(snapshot),
-            "created_at": _utc_now_iso(),
-        }
-    ]
-    written = _write_metadata_rows(spark, metadata_table=metadata_table, records=records, mode=mode)
-    return {"snapshot": snapshot, "records": records, "metadata_table": metadata_table, "written": written}
-
-
-def load_latest_schema_snapshot(spark, metadata_table: str, dataset_name: str, table_name: str) -> dict | None:
-    """Load the most recent schema snapshot for a dataset/table pair.
-
-    Parameters
-    ----------
-    spark : Any
-        Spark session used to query metadata.
-    metadata_table : str
-        Metadata table containing schema snapshot rows.
-    dataset_name : str
-        Dataset identifier to filter.
-    table_name : str
-        Table identifier to filter.
-
-    Returns
-    -------
-    dict | None
-        Latest reconstructed snapshot dictionary, or ``None`` when no snapshot is found.
-    """
-    try:
-        df = spark.table(metadata_table)
-        if hasattr(df, "filter") and hasattr(df, "orderBy") and hasattr(df, "limit"):
-            from pyspark.sql import functions as F
-
-            df = (
-                df.filter(
-                    (F.col("dataset_name") == dataset_name)
-                    & (F.col("table_name") == table_name)
-                    & (F.col("snapshot_type") == "schema")
-                )
-                .orderBy(F.col("created_at").desc(), F.col("run_id").desc())
-                .limit(1)
-            )
-            rows = _safe_spark_collect(df)
-        else:
-            rows = _safe_spark_collect(df)
-    except Exception as exc:
-        if _is_missing_table_error(exc):
-            return None
-        raise
-
-    matched = [r.asDict() if hasattr(r, "asDict") else dict(r) for r in rows if (r["dataset_name"] == dataset_name and r["table_name"] == table_name and r.get("snapshot_type") == "schema")]
-    if not matched:
-        return None
-
-    matched.sort(key=lambda x: (str(x.get("created_at", "")), str(x.get("run_id", ""))), reverse=True)
-    raw = matched[0].get("schema_snapshot_json")
-    if not raw:
-        return None
-    return json.loads(raw)
 
 
 def check_partition_drift(df, dataset_name: str, table_name: str, partition_column: str, business_keys: list[str] | None = None, watermark_column: str | None = None, baseline_snapshot: list[dict] | dict | None = None, policy: dict | None = None, run_id: str | None = None, engine: str = "spark") -> dict:

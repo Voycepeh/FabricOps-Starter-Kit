@@ -44,7 +44,7 @@ from .data_quality import (
     validate_dq_rules,
     write_dq_rules,
 )
-from .drift import check_partition_drift, check_profile_drift, check_schema_drift, summarize_drift_results
+from .drift import SchemaDriftError, check_partition_drift, check_profile_drift, check_schema, summarize_drift_results
 from .fabric_input_output import (
     FabricStore,
     read_lakehouse_csv,
@@ -126,7 +126,8 @@ __all__ = [
     "read_lakehouse_excel",
     "validate_dq_rules",
     "review_dq_rule_deactivations",
-    "check_schema_drift",
+    "check_schema",
+    "SchemaDriftError",
     "check_partition_drift",
     "check_profile_drift",
     "summarize_drift_results",
