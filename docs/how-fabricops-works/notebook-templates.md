@@ -70,7 +70,9 @@ AI-assisted suggestions remain advisory until a human reviews and approves the r
 
 Run this notebook in Engineering Dev and Engineering Prod.
 
-Data engineers use it for repeatable source-to-output transformations. The base template registers the notebook, reads supported source types, profiles source data, writes reusable catalogue evidence, applies deterministic transformation logic, adds lightweight runtime audit columns inline before writing outputs, writes and reads back the target, profiles the output, writes output catalogue evidence, and records table-level lineage.
+Data engineers use it for repeatable source-to-output transformations. The base template registers the notebook, reads supported source types, validates pipeline-local schema expectations, optionally checks whether an evolving source has changed, profiles source data, compares source and target profiles with the selected data-drift baseline, applies deterministic transformation logic, adds lightweight runtime audit columns inline before writing outputs, writes targets only when drift guardrails allow publication, writes reusable catalogue evidence, and records table-level lineage.
+
+`03_pc` keeps source behaviour explicit with `SOURCE_BEHAVIOUR = "evolving" | "stable"` and `PROFILE_BASELINE_MODE = "latest_successful" | "approved"`. Evolving sources normally compare with latest successful evidence and can skip unchanged source runs when source-change checking is enabled. Stable sources normally compare with an approved baseline and continue monitoring even when no source-change signal is expected.
 
 Audit columns are always useful: they identify the run, pipeline, environment, source, load time, notebook, and user or process that produced each row. Hash columns are only for deduplication, masked key comparison, slowly changing dimensions, or change detection. Datetime feature columns are analytics features, not audit fields. Bucket columns are only for advanced large-table layout or skew handling. For simple parallel data loading, use `repartition_by`; for physical Delta pruning, use `partition_by` with a natural column.
 

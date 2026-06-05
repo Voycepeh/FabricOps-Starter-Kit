@@ -159,3 +159,36 @@ def test_obsolete_schema_drift_exports_and_references_are_removed():
                     if name in text:
                         references.append(f"{path}:{name}")
     assert references == []
+
+
+def test_03_pc_runs_source_and_target_profile_drift_guardrails():
+    notebook = json.loads(Path("templates/notebooks/03_pc_agreement_pipeline_template.ipynb").read_text(encoding="utf-8"))
+    source = "\n".join("".join(cell.get("source", [])) for cell in notebook["cells"] if cell["cell_type"] == "code")
+
+    assert "ENABLE_DATA_DRIFT = True" in source
+    assert 'SOURCE_BEHAVIOUR = "evolving"' in source
+    assert 'PROFILE_BASELINE_MODE = "latest_successful"' in source
+    assert "ENABLE_SOURCE_CHANGE_CHECK = False" in source
+    assert "SOURCE_CHANGE_STRATEGY = None" in source
+    assert "DATA_DRIFT_COLUMNS = None" in source
+    assert "EXECUTION_TIMESTAMP = datetime.now(timezone.utc).strftime" in source
+    assert 'RUN_ID = f"{PIPELINE_NAME}_{ENV_NAME}_{EXECUTION_TIMESTAMP}"' in source
+    assert "SOURCE_BEHAVIOUR must be one of: evolving, stable" in source
+    assert "PROFILE_BASELINE_MODE must be one of: latest_successful, approved" in source
+    assert "source_baseline_profile = load_latest_profile(" in source
+    assert "baseline_mode=PROFILE_BASELINE_MODE" in source
+    assert 'profile_stage="source"' in source
+    assert "source_drift = check_profile_drift(" in source
+    assert "assert_no_blocking_profile_drift(source_drift)" in source
+    assert "target_baseline_profile = load_latest_profile(" in source
+    assert 'profile_stage="target"' in source
+    assert "target_drift = check_profile_drift(" in source
+    assert "assert_no_blocking_profile_drift(target_drift)" in source
+    assert "extract_categorical_distribution_categories(source_baseline_profile)" in source
+    assert 'SOURCE_BEHAVIOUR == "evolving"' in source
+    assert "skipped_no_source_change" in source
+    assert "BASELINE_STATUS" in source
+    assert "approved" in source
+    assert source.index("source_drift = check_profile_drift(") < source.index("write_lakehouse_table(\n    source_catalogue_evidence")
+    assert source.index("target_drift = check_profile_drift(") < source.index("write_lakehouse_table(df_output")
+    assert source.index("target_drift = check_profile_drift(") < source.index("write_lakehouse_table(\n    output_catalogue_evidence")

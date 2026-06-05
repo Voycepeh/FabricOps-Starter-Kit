@@ -1,206 +1,229 @@
-# Schema and Data Drift Monitoring
+# Schema and data drift guardrails
 
-Business data quality rules, schema drift checks, and profile drift checks answer different questions. FabricOps uses them together so expected daily changes can continue while unexpected changes are surfaced for review.
+FabricOps Starter Kit treats schema drift and data drift as small runtime guardrails in the existing `03_pc` notebook flow. They decide whether a pipeline can continue safely while reusing the standard profile evidence and metadata catalogue rows.
 
-| Control | Question answered | Example |
+Data drift does **not** automatically mean the data is incorrect. It means the current data differs materially from the selected baseline and may require investigation.
+
+## What each control answers
+
+| Control | Question answered | Notes |
 | --- | --- | --- |
-| Business data quality rule | Is the current data valid? | `faculty_code` must be from an approved list. |
-| Schema drift | Can the pipeline still interpret the structure safely? | A required column is removed or changes type. |
-| Profile or data drift | Has the dataset changed beyond expected behaviour? | A null rate rises from 1% to 25%. |
+| Source-change detection | Is there useful new processing work for this scheduled run? | Optional and disabled by default. Evolving sources can skip when the configured source signal is unchanged. Stable sources still monitor even when no change is expected. |
+| Schema drift | Can the pipeline still interpret the dataframe structure safely? | Validates structural changes such as added columns, removed columns, data-type changes, nullability changes, and column ordering when a caller chooses to enforce those checks. |
+| Profile/data drift | Did observed profile statistics move beyond configured tolerances? | Compares the current standard profile with either the latest successful profile or an approved baseline. |
+| Profile evidence storage | What did this run observe? | Stores source and target profile evidence in the existing `METADATA_DATA_CATALOGUE_COLUMN` path. |
+| Baseline promotion | Which profile should future runs compare against? | Separate from storage. Latest-successful mode can use later successful evidence; approved mode only uses rows explicitly marked approved. |
 
-A dataset can pass its business rules and still show suspicious drift. For example, every faculty code may remain valid while one faculty suddenly increases from 20% to 75% of all records.
+No separate data-drift metadata table is used. No separate drift-evidence record is written.
 
-## Expected change is not automatically drift
+## Source behaviours and baseline modes
 
-Daily datasets are expected to change. FabricOps therefore does not treat every difference from the previous run as a failure.
+`03_pc` supports the two lightweight source behaviours that matter for starter-kit pipelines:
 
-> FabricOps monitors whether data changed beyond an expected tolerance, rather than whether data changed at all.
+| Source behaviour | Meaning | Recommended baseline mode |
+| --- | --- | --- |
+| `evolving` | The source is expected to change regularly. Warnings may continue; blocking drift stops publication. | `latest_successful` |
+| `stable` | The source is expected to remain unchanged. The scheduled run acts as an integrity monitor and compares to a fixed approved baseline. | `approved` |
 
-Normal daily movement may include:
-
-- row count increasing by 3%;
-- null rate moving from 0.10% to 0.12%;
-- category distributions moving slightly.
-
-Potential issues may include:
-
-- row count dropping by 60%;
-- null rate rising from 0.10% to 18%;
-- a previously stable category disappearing;
-- a previously unseen department or faculty code appearing;
-- one category becoming unexpectedly dominant.
-
-## Reuse the catalogue profile
-
-FabricOps already uses `profile_dataframe()` to create deterministic profiling evidence such as schema, null counts, distinct counts, minimum and maximum values, and samples. Drift monitoring should reuse that canonical evidence rather than create a second profiling system.
-
-```text
-Current dataframe
-      ↓
-profile_dataframe()
-      ↓
-Catalogue profile evidence
-      ↓
-Select historical baseline
-      ↓
-check_schema_drift()
-check_profile_drift()
-check_partition_drift()
-      ↓
-summarize_drift_results()
-```
-
-The existing drift functions have separate responsibilities:
-
-- `check_schema_drift()` compares the current dataframe structure with a baseline schema snapshot;
-- `check_profile_drift()` compares current profile metrics with a baseline profile and configured thresholds;
-- `check_partition_drift()` supports partition-level comparison using keys, partitions, and optional watermark baselines;
-- `summarize_drift_results()` combines schema, partition, and profile outcomes into one decision.
-
-Not every monitoring signal described on this page is necessarily present in the current canonical profile. Where additional evidence is needed, extend the canonical profile rather than creating parallel profiling tables or functions.
-
-## Monitoring signals
-
-### Schema signals
-
-Schema monitoring can surface structural changes such as:
-
-- columns being added or removed;
-- data types changing;
-- nullable behaviour changing;
-- other schema differences supported by the current drift implementation.
-
-### Dataset signals
-
-Dataset-level monitoring may include:
-
-- row-count movement;
-- column-count movement;
-- duplicate-key movement where captured;
-- data freshness.
-
-### Column profile signals
-
-Column-level monitoring may include:
-
-- null-rate movement;
-- distinct-count movement;
-- minimum and maximum changes;
-- unexpected range movement.
-
-### Categorical signals
-
-Important categorical fields such as faculty, department, status, or programme may require monitoring for:
-
-- new values;
-- previously observed values disappearing;
-- value frequency;
-- percentage distribution;
-- unexpected category concentration.
-
-Category-frequency and distribution monitoring may require extending the canonical profile evidence if the current profile stores samples but not the required frequency metrics.
-
-## Select an appropriate baseline
-
-Comparing only with yesterday is unreliable because yesterday may itself be abnormal. FabricOps should support a baseline appropriate to the dataset and its operating pattern.
-
-Possible approaches include:
-
-- the previous successful run;
-- the median of the previous seven successful runs;
-- a rolling historical baseline;
-- the last approved baseline;
-- an equivalent academic period;
-- the same weekday where daily seasonality matters.
-
-The median of recent successful runs is a sensible general default because it is less affected by one unusual run. Baseline selection should still remain dataset-specific.
-
-For one-time or irregular datasets, the last steward-approved profile may be more appropriate than a rolling baseline.
-
-## Apply thresholds and severity
-
-Drift monitoring is policy-driven. The following is a conceptual example rather than a guaranteed representation of the current API:
+The settings are related but explicit so users can override them intentionally:
 
 ```python
-drift_policy = {
-    "row_count_change_pct": {
-        "warning": 10,
-        "critical": 30,
-    },
-    "null_rate_change_points": {
-        "warning": 2,
-        "critical": 10,
-    },
-    "distribution_change_points": {
-        "warning": 10,
-        "critical": 25,
-    },
+SOURCE_BEHAVIOUR = "evolving"  # evolving | stable
+PROFILE_BASELINE_MODE = "latest_successful"  # latest_successful | approved
+```
+
+Unsupported values raise clear notebook errors.
+
+## Lightweight runtime flow
+
+```text
+Determine source behaviour
+        ↓
+Optional source-change check
+        ↓
+Select latest-successful or approved baseline
+        ↓
+Profile current source
+        ↓
+Evaluate schema and profile drift
+        ↓
+Pass / warn / block
+        ↓
+Transform and publish only when allowed
+        ↓
+Store evidence
+        ↓
+Promote baseline only according to baseline mode
+```
+
+Source and target drift remain separate:
+
+```text
+Profile source
+→ compare with previous source profile
+→ enforce source data drift
+→ transform and profile target
+→ compare with previous target profile
+→ enforce target data drift
+→ publish target only when allowed
+→ store source and target profile evidence
+```
+
+The source profile is compared only with a source-stage baseline for the same dataset and profiled table. The target profile is compared only with a target-stage baseline for the same dataset and profiled table. Source profiles are never compared directly with target profiles.
+
+## Baseline selection
+
+`load_latest_profile(..., baseline_mode=...)` reuses the existing profile metadata rows.
+
+### `latest_successful`
+
+This mode selects the latest previous profile that matches dataset, profiled table, source/target stage, and excludes the current execution-level `PROFILE_RUN_ID`. New `03_pc` evidence rows include `PROFILE_STATUS = "successful"`, so latest-successful lookup can filter to successful profile evidence when that field exists.
+
+Every execution gets a unique `RUN_ID`, while `PIPELINE_NAME` stays stable:
+
+```python
+PIPELINE_NAME = f"{SOURCE_TABLE}_to_{TARGET_TABLE}"
+RUN_ID = f"{PIPELINE_NAME}_{ENV_NAME}_{EXECUTION_TIMESTAMP}"
+```
+
+Persisted profile rows use the unique `PROFILE_RUN_ID`, so the current run can be excluded without hiding earlier executions of the same pipeline.
+
+### `approved`
+
+This mode selects rows explicitly marked with:
+
+```text
+BASELINE_STATUS = approved
+```
+
+When `approved` is requested and no approved baseline exists, the result is `no_baseline`. The notebook does not silently fall back to latest successful evidence.
+
+Current profiles are stored as observed evidence by default. Drifted current profiles do **not** automatically become approved baselines. Approving or replacing a stable-source baseline remains an explicit metadata action outside this lightweight PR; no approval UI is introduced.
+
+## Optional source-change skipping
+
+The source-change check is disabled by default:
+
+```python
+ENABLE_SOURCE_CHANGE_CHECK = False
+SOURCE_CHANGE_STRATEGY = None
+```
+
+Supported lightweight strategies are:
+
+- `watermark`;
+- `batch_id`;
+- `file_modified_time`;
+- `row_count_and_max_timestamp`.
+
+For an `evolving` source, if the configured source signal is unchanged from the selected baseline, the notebook reports:
+
+```text
+skipped_no_source_change
+```
+
+It then exits successfully without transforming, republishing the target, or writing another full profile.
+
+For a `stable` source, the notebook does **not** skip profiling solely because a source signal is unchanged. Stable-source monitoring is an integrity check: it should still profile and compare against the approved baseline to detect unauthorized or accidental changes.
+
+## Metrics checked
+
+`profile_dataframe()` keeps its existing lightweight output by default. When data drift is enabled, it can add distribution summaries for suitable columns:
+
+- numeric columns: `bin_edges` and `bin_counts`;
+- categorical columns: `category_counts`, `other_count`, and newly observed categories when profiling against a baseline vocabulary.
+
+`check_profile_drift()` evaluates:
+
+| Metric | Meaning |
+| --- | --- |
+| Row-count percentage change | How much total row count changed from the baseline profile. |
+| Null-percentage-point change | How much a column null percentage changed. |
+| Distinct-percentage-point change | How much a column distinct percentage changed. |
+| Numeric distribution change using PSI | Population Stability Index over comparable numeric profile bins. |
+| Categorical distribution change using total variation distance | Half the sum of absolute category-proportion differences across baseline categories, current categories, and the `other` bucket. |
+| Newly observed categories | Current values that were not in the baseline categorical vocabulary. |
+
+Current numeric distributions reuse baseline bin edges when available. Current categorical distributions can reuse the baseline vocabulary so categories moving into or out of an independently calculated top-N list do not create artificial drift.
+
+## Example configuration
+
+```python
+ENABLE_DATA_DRIFT = True
+SOURCE_BEHAVIOUR = "evolving"
+PROFILE_BASELINE_MODE = "latest_successful"
+
+DATA_DRIFT_COLUMNS = [
+    "transaction_amount",
+    "customer_segment",
+    "order_status",
+]
+
+DATA_DRIFT_POLICY = {
+    "warn_numeric_psi": 0.10,
+    "block_numeric_psi": 0.25,
+    "warn_categorical_distance": 0.10,
+    "block_categorical_distance": 0.25,
 }
 ```
 
-| Severity | Behaviour |
-| --- | --- |
-| Info | Record the evidence. |
-| Warning | Continue and surface an alert. |
-| Critical | Stop processing or require review. |
-| Approved change | Accept the change and establish a new expectation or baseline. |
+For stable sources, teams can start with stricter thresholds and then tune intentionally:
 
-Legitimate changes should not remain permanent alerts. Planned source changes, organisational restructuring, renamed departments, or new faculties should be reviewed and then reflected in an approved rule, policy, or baseline.
+```python
+SOURCE_BEHAVIOUR = "stable"
+PROFILE_BASELINE_MODE = "approved"
 
-## Keep AI in the design and review loop
+STABLE_SOURCE_DRIFT_POLICY = {
+    "max_row_count_change_percent": 0,
+    "max_null_percent_change_points": 0,
+    "max_distinct_percent_change_points": 0,
+    "warn_numeric_psi": 0.0,
+    "block_numeric_psi": 0.01,
+    "warn_categorical_distance": 0.0,
+    "block_categorical_distance": 0.01,
+    "fail_on_missing_column": True,
+}
+```
 
-AI can help analysts propose:
+Teams should exclude volatile technical fields from stable-source profiling so the guardrail focuses on fields that are genuinely expected to remain unchanged.
 
-- important columns to monitor;
-- likely categorical fields;
-- initial drift thresholds;
-- candidate allowed-value rules;
-- useful partition columns;
-- suitable baseline approaches.
+## Runtime outcomes
 
-AI suggestions remain proposed evidence until a human reviewer approves or edits them. Production execution stays deterministic: runtime notebooks execute approved rules and policies without asking AI to decide whether the data passes.
+| Outcome | Continue processing | Publish target |
+| --- | ---: | ---: |
+| `passed` | yes | yes |
+| `warning` | yes | yes |
+| `failed` | no | no |
+| `no_baseline` | yes | configurable/default yes |
+| `skipped_no_source_change` | no further work | no |
 
-## Notebook responsibilities
+Warnings remain visible in notebook output and do not block execution. `assert_no_blocking_profile_drift()` blocks only when `can_continue=False`.
 
-### `02_ex_*`: profile and approve
+Examples:
 
-The exploration notebook should:
+```text
+Source data drift: no_baseline
+Target data drift: passed
+Source data drift: warning
+- transaction_amount numeric psi: 0.140
+Target data drift: failed
+- order_status categorical distance: 0.310
+skipped_no_source_change
+```
 
-1. profile the source data;
-2. review catalogue evidence;
-3. use AI to propose business rules and drift policies;
-4. review and approve the suggestions;
-5. establish or approve the initial baseline.
+## Design boundaries
 
-### `03_pc_*`: execute and record
+This implementation intentionally avoids:
 
-The pipeline contract notebook should:
-
-1. generate the current canonical profile;
-2. load the approved business rules and drift policy;
-3. load the selected baseline;
-4. run business data quality rules;
-5. run schema and profile drift checks;
-6. store the evidence;
-7. warn, quarantine, block, or continue according to approved severity.
-
-No additional notebook template is required for the first implementation. Monitoring belongs in the existing exploration and pipeline contract flow.
-
-## How the controls work together
-
-| Situation | Business DQ | Schema drift | Profile drift |
-| --- | --- | --- | --- |
-| Null student identifier | Fail | Pass | May alert |
-| Required column removed | Cannot run safely | Fail | May also alert |
-| New legitimate faculty introduced | May require rule update | Pass | Alert until approved |
-| Faculty share rises from 20% to 75% | Pass | Pass | Alert |
-| Daily row count increases by 3% | Pass | Pass | Pass |
-| Daily row count drops by 70% | May pass individual row checks | Pass | Critical |
-
-Business data quality rules determine whether current values are valid.
-
-Schema drift determines whether the pipeline can safely interpret the data.
-
-Profile drift determines whether the dataset changed beyond expected behaviour.
+- new standalone drift metadata tables;
+- streaming-window monitoring;
+- CDC orchestration;
+- rolling averages or seasonal baselines;
+- ML anomaly detection;
+- automated baseline learning;
+- notification integrations;
+- approval user interfaces;
+- a second pipeline notebook template;
+- heavy statistical libraries.
 
 Next read: [AI-Assisted Data Quality Rules System](data-quality-rules-system.md), [Metadata Tables](how-fabricops-works/metadata-tables.md), [Function Reference](reference/index.md).

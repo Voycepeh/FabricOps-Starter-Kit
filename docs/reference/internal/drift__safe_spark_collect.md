@@ -16,8 +16,9 @@ No summary available.
 - Related module: `drift`
 - Source file path: `src/fabricops_kit/drift.py`
 - Source reference: <a href="../../api/modules/drift/#_safe_spark_collect">Module source anchor</a>
-- Inbound references count: 1
+- Inbound references count: 2
 - Outbound references count: 0
 
 ## Inbound references
 - <a href="../internal/drift/load_latest_partition_snapshot/"><code>fabricops_kit.drift.load_latest_partition_snapshot</code></a>
+- <a href="../load_latest_profile/"><code>fabricops_kit.drift.load_latest_profile</code></a>

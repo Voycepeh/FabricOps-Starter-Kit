@@ -17,11 +17,12 @@ No summary available.
 - Source file path: `src/fabricops_kit/data_profiling.py`
 - Source reference: <a href="../../api/modules/data_profiling/#profile_dataframe">Module source anchor</a>
 - Inbound references count: 1
-- Outbound references count: 2
+- Outbound references count: 3
 
 ## Inbound references
 - <a href="../internal/data_quality/_prepare_dq_profile_input_rows/"><code>fabricops_kit.data_quality._prepare_dq_profile_input_rows</code></a>
 
 ## Outbound references
+- <a href="../internal/data_profiling/_build_distribution_summaries/"><code>fabricops_kit.data_profiling._build_distribution_summaries</code></a>
 - <a href="../internal/data_profiling/_get_profiled_columns/"><code>fabricops_kit.data_profiling._get_profiled_columns</code></a>
 - <a href="../internal/data_profiling/_is_min_max_supported_type/"><code>fabricops_kit.data_profiling._is_min_max_supported_type</code></a>
