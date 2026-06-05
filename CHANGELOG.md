@@ -10,7 +10,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 - Formalized the GitHub-only release workflow for tagged FabricOps releases.
 - Added CI expectations for locked dependency installation, linting, tests, strict documentation builds, distribution builds, distribution validation, and wheel import smoke tests.
-- Added build-time release traceability documentation for package version, Mike documentation series, and Git commit SHA.
+- Added build-time release traceability documentation for package version, Mike documentation version, and Git commit SHA.
 
 ### Changed
 

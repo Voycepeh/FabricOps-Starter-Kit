@@ -67,25 +67,26 @@ The tag workflow performs the release in this order:
 5. Run Ruff, tests, and `mkdocs build --strict`.
 6. Build the wheel and source distribution with `uv build`.
 7. Validate distributions with `uvx twine check dist/*`.
-8. Install the wheel in a clean temporary environment.
-9. Test stable public imports from the package `__all__` surface.
-10. Generate `dist/SHA256SUMS.txt`.
-11. Create a GitHub Release and attach the wheel, source distribution, and checksums.
-12. Use the matching changelog section for release notes when available.
-13. Deploy the versioned documentation with Mike only after package and documentation checks pass.
+8. Require a matching `CHANGELOG.md` release section for the package version.
+9. Install the wheel in a clean temporary environment.
+10. Test stable public imports from the package `__all__` surface.
+11. Generate `dist/SHA256SUMS.txt`.
+12. Create a GitHub Release and attach the wheel, source distribution, and checksums.
+13. Use the matching changelog section for release notes.
+14. Deploy the versioned documentation with Mike only after package and documentation checks pass.
 
 ## Mike documentation versioning
 
-Python package releases retain the full semantic version, such as `0.8.1`. Mike documentation snapshots normally use the major-minor series, such as `0.8`.
+Python package releases and Mike documentation snapshots both retain the full semantic version, such as `0.8.1`. This keeps each documentation snapshot aligned to the exact released wheel.
 
 | Git tag | Package version | Mike version |
 | --- | --- | --- |
-| `v0.8.0` | `0.8.0` | `0.8` |
-| `v0.8.1` | `0.8.1` | `0.8` |
-| `v0.9.0` | `0.9.0` | `0.9` |
-| `v1.0.0` | `1.0.0` | `1.0` |
+| `v0.8.0` | `0.8.0` | `0.8.0` |
+| `v0.8.1` | `0.8.1` | `0.8.1` |
+| `v0.9.0` | `0.9.0` | `0.9.0` |
+| `v1.0.0` | `1.0.0` | `1.0.0` |
 
-The release workflow derives `DOC_VERSION` from the first two package-version components and deploys with Mike after validation succeeds:
+The release workflow derives `DOC_VERSION` from the full package version and deploys with Mike after validation succeeds:
 
 ```bash
 uv run mike deploy \
@@ -107,10 +108,10 @@ If package validation and GitHub Release creation succeeded but the Mike deploym
 
 ## Hotfix releases
 
-For a hotfix, branch from the released tag or the commit that contains the production release, apply the minimal fix, update `CHANGELOG.md`, bump the patch version in `pyproject.toml`, validate locally, and tag the new patch release. Patch hotfix documentation normally reuses the same Mike major-minor version while updating the title and aliases to the new full package version.
+For a hotfix, branch from the released tag or the commit that contains the production release, apply the minimal fix, update `CHANGELOG.md`, bump the patch version in `pyproject.toml`, validate locally, and tag the new patch release. Patch hotfix documentation publishes a new full-version Mike snapshot and updates the title and aliases to the new full package version.
 
 ## Rollback, deprecation, and follow-up guidance
 
-GitHub Releases and tags are immutable release evidence. Prefer deprecating a bad release with a clear GitHub Release note and a follow-up patch release instead of deleting or rewriting history. Move `stable` back to the recommended documentation series only when maintainers explicitly decide that the newest release should not be the production recommendation.
+GitHub Releases and tags are immutable release evidence. Prefer deprecating a bad release with a clear GitHub Release note and a follow-up patch release instead of deleting or rewriting history. Move `stable` back to the recommended documentation version only when maintainers explicitly decide that the newest release should not be the production recommendation.
 
 Runtime traceability should continue to record FabricOps package version, notebook or repository commit SHA where available, agreement version, and pipeline version as separate concepts. Do not introduce metadata migrations as part of release administration; add schema migrations in focused follow-up PRs when persistent metadata columns are required.

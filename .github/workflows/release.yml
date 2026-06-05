@@ -41,8 +41,7 @@ jobs:
           doc_version="$(uv run python - <<'PY'
           import os
           version = os.environ["GITHUB_REF_NAME"].removeprefix("v")
-          major, minor, _patch = version.split(".")
-          print(f"{major}.{minor}")
+          print(version)
           PY
           )"
           echo "FABRICOPS_PACKAGE_VERSION=${version}" >> "${GITHUB_ENV}"
@@ -102,13 +101,11 @@ jobs:
           changelog = Path("CHANGELOG.md").read_text(encoding="utf-8")
           pattern = re.compile(rf"^## \\[(?:v)?{re.escape(version)}\\].*?$", re.MULTILINE)
           match = pattern.search(changelog)
-          notes = ""
-          if match:
-              next_heading = re.search(r"^## ", changelog[match.end():], re.MULTILINE)
-              end = match.end() + next_heading.start() if next_heading else len(changelog)
-              notes = changelog[match.start():end].strip()
-          if not notes:
-              notes = f"See CHANGELOG.md for FabricOps Starter Kit v{version} release notes."
+          if not match:
+              raise SystemExit(f"CHANGELOG.md has no release section for {version}")
+          next_heading = re.search(r"^## ", changelog[match.end():], re.MULTILINE)
+          end = match.end() + next_heading.start() if next_heading else len(changelog)
+          notes = changelog[match.start():end].strip()
           Path("dist/RELEASE_NOTES.md").write_text(notes + "\n", encoding="utf-8")
           PY
 

@@ -4,15 +4,13 @@ FabricOps Starter Kit documentation is maintained from the same source tree as t
 
 ## Version policy
 
-Package versions use full semantic versions, for example `1.0.2`. Published Mike documentation versions use the major-minor series, for example `1.0`.
-
-Patch releases normally reuse the same major-minor documentation site. Release notes and GitHub Releases remain patch-specific.
+Package versions and published Mike documentation snapshots use full semantic versions, for example `1.0.2`. This preserves an exact documentation URL for each released wheel. Release aliases can still point users to the newest or recommended production snapshot.
 
 | Package version | Documentation version |
 | --- | --- |
-| `1.0.0` | `1.0` |
-| `1.0.1` | `1.0` |
-| `1.1.0` | `1.1` |
+| `1.0.0` | `1.0.0` |
+| `1.0.1` | `1.0.1` |
+| `1.1.0` | `1.1.0` |
 
 ## Aliases
 
@@ -24,7 +22,7 @@ Do not automatically make `main` the `latest` documentation version. Only a vali
 
 ## Build-time traceability
 
-The documentation build generates a release traceability page with the full package version, Mike documentation series, and Git commit SHA. Release builds pass those values from GitHub Actions environment variables; local builds derive the package version from `pyproject.toml` and the commit from Git when available.
+The documentation build generates a release traceability page with the full package version, Mike documentation version, and Git commit SHA. Release builds pass those values from GitHub Actions environment variables; local builds derive the package version from `pyproject.toml` and the commit from Git when available.
 
 ## Release process
 

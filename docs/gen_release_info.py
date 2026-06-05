@@ -27,8 +27,8 @@ def _doc_version(package_version: str) -> str:
     if override:
         return override
     parts = package_version.split(".")
-    if len(parts) >= 2 and parts[0].isdigit() and parts[1].isdigit():
-        return f"{parts[0]}.{parts[1]}"
+    if len(parts) == 3 and all(part.isdigit() for part in parts):
+        return package_version
     return UNKNOWN
 
 
@@ -58,9 +58,9 @@ with mkdocs_gen_files.open("release-info.md", "w") as handle:
         "| Concept | Value |\n"
         "| --- | --- |\n"
         f"| Full package release version | `{package_version}` |\n"
-        f"| Mike documentation series | `{doc_version}` |\n"
+        f"| Mike documentation version | `{doc_version}` |\n"
         f"| Git commit SHA | `{git_sha}` |\n\n"
-        "Package release versions, documentation series, source commits, agreement "
+        "Package release versions, documentation versions, source commits, agreement "
         "versions, and pipeline versions are separate traceability concepts. "
         "Metadata schema changes that persist additional traceability fields should "
         "be handled in a dedicated follow-up migration.\n"
