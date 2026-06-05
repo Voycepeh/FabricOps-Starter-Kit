@@ -20,5 +20,5 @@ No summary available.
 - Outbound references count: 0
 
 ## Inbound references
-- <a href="../check_partition_drift/"><code>fabricops_kit.drift.check_partition_drift</code></a>
+- <a href="../internal/drift/check_partition_drift/"><code>fabricops_kit.drift.check_partition_drift</code></a>
 - <a href="../internal/drift/compare_partition_snapshots/"><code>fabricops_kit.drift.compare_partition_snapshots</code></a>

@@ -8,7 +8,7 @@ pytest.importorskip("pyspark")
 from pyspark.sql.types import IntegerType, StringType, StructField, StructType
 
 from fabricops_kit.data_quality import _latest_dq_rule_versions, enforce_dq
-from fabricops_kit.drift import check_schema
+from fabricops_kit import validate_schema
 from fabricops_kit.metadata import build_metadata_column_key, build_metadata_table_key
 
 pytestmark = pytest.mark.spark
@@ -82,17 +82,16 @@ def test_latest_dq_rule_versions_use_deterministic_tie_breaker(spark_session):
     assert latest[0].action_type == "deactivated"
 
 
-def test_check_schema_detects_added_spark_column(spark_session):
+def test_validate_schema_detects_added_spark_column(spark_session):
     df = spark_session.createDataFrame(
         [(1, "ok")],
         schema="id int, status string",
     )
 
-    result = check_schema(
+    result = validate_schema(
         df,
         {"id": "int"},
-        allow_extra_columns=False,
-        action="observe",
+        preset="strict",
     )
 
     assert result["status"] == "failed"

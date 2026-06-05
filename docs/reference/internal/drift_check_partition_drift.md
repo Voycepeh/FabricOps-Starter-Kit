@@ -1,7 +1,7 @@
 # check_partition_drift
 
 **Module:** `drift`  
-**Classification:** Optional
+**Classification:** Internal helper
 
 ## Purpose
 
@@ -12,7 +12,7 @@ No summary available.
 - Fully qualified function name: `fabricops_kit.drift.check_partition_drift`
 - Short name: `check_partition_drift`
 - Module: `drift`
-- Classification: Optional
+- Classification: Internal helper
 - Related module: `drift`
 - Source file path: `src/fabricops_kit/drift.py`
 - Source reference: <a href="../../api/modules/drift/#check_partition_drift">Module source anchor</a>

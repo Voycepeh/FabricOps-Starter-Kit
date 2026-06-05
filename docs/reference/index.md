@@ -38,15 +38,6 @@ Use the finder below to look up public callable functions.
 
   </div>
 </article>
-<article id="assert_no_blocking_profile_drift" class="reference-catalogue-item" data-callable-row="true" data-callable-name="assert_no_blocking_profile_drift" data-callable-module="drift" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Raise when profile drift check results should block notebook execution.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/assert_no_blocking_profile_drift/"><code>assert_no_blocking_profile_drift</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Raise when profile drift check results should block notebook execution.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/drift/" title="Open drift module page" aria-label="Open drift module page">drift</a><span class="reference-chip reference-chip-role reference-chip-optional">Optional</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>SchemaDriftError</code></li></ul></details>
-
-  </div>
-</article>
 <article id="build_handover" class="reference-catalogue-item" data-callable-row="true" data-callable-name="build_handover" data-callable-module="handover" data-callable-starter-path="—" data-role="essential" data-callable-purpose="Build a handover-friendly summary for one data product run.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/build_handover/"><code>build_handover</code></a></h3>
   <p class="reference-catalogue-item-purpose">Build a handover-friendly summary for one data product run.</p>
@@ -83,33 +74,6 @@ Use the finder below to look up public callable functions.
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 3</span></summary><ul><li><code>_create_or_update_data_agreement</code></li><li><code>_create_or_update_data_steward</code></li><li><code>_save_agreement_evidence_records</code></li></ul></details>
   </div>
 </article>
-<article id="check_partition_drift" class="reference-catalogue-item" data-callable-row="true" data-callable-name="check_partition_drift" data-callable-module="drift" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Check partition-level drift using keys, partitions, and optional watermark baselines.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/check_partition_drift/"><code>check_partition_drift</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Check partition-level drift using keys, partitions, and optional watermark baselines.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/drift/" title="Open drift module page" aria-label="Open drift module page">drift</a><span class="reference-chip reference-chip-role reference-chip-optional">Optional</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 3</span></summary><ul><li><code>build_partition_snapshot</code></li><li><code>compare_partition_snapshots</code></li><li><code>default_incremental_safety_policy</code></li></ul></details>
-
-  </div>
-</article>
-<article id="check_profile_drift" class="reference-catalogue-item" data-callable-row="true" data-callable-name="check_profile_drift" data-callable-module="drift" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Compare profile metrics against a baseline profile and drift thresholds.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/check_profile_drift/"><code>check_profile_drift</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Compare profile metrics against a baseline profile and drift thresholds.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/drift/" title="Open drift module page" aria-label="Open drift module page">drift</a><span class="reference-chip reference-chip-role reference-chip-optional">Optional</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 5</span></summary><ul><li><code>_categorical_distance</code></li><li><code>_normalize_profile</code></li><li><code>_numeric_psi</code></li><li><code>_profile_check_status</code></li><li><code>default_profile_drift_policy</code></li></ul></details>
-
-  </div>
-</article>
-<article id="check_schema" class="reference-catalogue-item" data-callable-row="true" data-callable-name="check_schema" data-callable-module="drift" data-callable-starter-path="03_pc" data-role="essential" data-callable-purpose="Check a dataframe has the expected pipeline-local columns and datatypes before continuing.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/check_schema/"><code>check_schema</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Check a dataframe has the expected pipeline-local columns and datatypes before continuing.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/drift/" title="Open drift module page" aria-label="Open drift module page">drift</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">03_pc</span></p>
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 3</span></summary><ul><li><code>SchemaDriftError</code></li><li><code>_actual_schema</code></li><li><code>_normalize_datatype</code></li></ul></details>
-
-  </div>
-</article>
 <article id="current_notebook_active_registrations" class="reference-catalogue-item" data-callable-row="true" data-callable-name="current_notebook_active_registrations" data-callable-module="metadata" data-callable-starter-path="03_pc" data-role="optional" data-callable-purpose="Return active latest agreement registrations for the running notebook.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/current_notebook_active_registrations/"><code>current_notebook_active_registrations</code></a></h3>
   <p class="reference-catalogue-item-purpose">Return active latest agreement registrations for the running notebook.</p>
@@ -117,15 +81,6 @@ Use the finder below to look up public callable functions.
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 4</span></summary><ul><li><code>_context_get</code></li><li><code>_runtime_context</code></li><li><code>_safe_str</code></li><li><code>load_notebook_registry</code></li></ul></details>
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>widget_select_agreement</code></li></ul></details>
-  </div>
-</article>
-<article id="default_profile_drift_policy" class="reference-catalogue-item" data-callable-row="true" data-callable-name="default_profile_drift_policy" data-callable-module="drift" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Return lightweight default thresholds for profile-based data drift checks.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/default_profile_drift_policy/"><code>default_profile_drift_policy</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Return lightweight default thresholds for profile-based data drift checks.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/drift/" title="Open drift module page" aria-label="Open drift module page">drift</a><span class="reference-chip reference-chip-role reference-chip-optional">Optional</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
-
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>check_profile_drift</code></li></ul></details>
   </div>
 </article>
 <article id="draft_business_context" class="reference-catalogue-item" data-callable-row="true" data-callable-name="draft_business_context" data-callable-module="business_context" data-callable-starter-path="—" data-role="essential" data-callable-purpose="Run Fabric AI to draft column business context suggestions.">
@@ -164,15 +119,6 @@ Use the finder below to look up public callable functions.
 
   </div>
 </article>
-<article id="extract_categorical_distribution_categories" class="reference-catalogue-item" data-callable-row="true" data-callable-name="extract_categorical_distribution_categories" data-callable-module="drift" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Extract baseline categorical vocabularies so current profiles can produce comparable categorical distributions.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/extract_categorical_distribution_categories/"><code>extract_categorical_distribution_categories</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Extract baseline categorical vocabularies so current profiles can produce comparable categorical distributions.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/drift/" title="Open drift module page" aria-label="Open drift module page">drift</a><span class="reference-chip reference-chip-role reference-chip-optional">Optional</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_normalize_profile</code></li></ul></details>
-
-  </div>
-</article>
 <article id="extract_column_business_context_suggestions" class="reference-catalogue-item" data-callable-row="true" data-callable-name="extract_column_business_context_suggestions" data-callable-module="business_context" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Extract review-ready business context suggestion rows from AI responses.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/extract_column_business_context_suggestions/"><code>extract_column_business_context_suggestions</code></a></h3>
   <p class="reference-catalogue-item-purpose">Extract review-ready business context suggestion rows from AI responses.</p>
@@ -188,15 +134,6 @@ Use the finder below to look up public callable functions.
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_governance/" title="Open data_governance module page" aria-label="Open data_governance module page">data_governance</a><span class="reference-chip reference-chip-role reference-chip-optional">Optional</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_extract_pii_suggestions</code></li></ul></details>
-
-  </div>
-</article>
-<article id="extract_numeric_distribution_bin_edges" class="reference-catalogue-item" data-callable-row="true" data-callable-name="extract_numeric_distribution_bin_edges" data-callable-module="drift" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Extract baseline numeric bin edges so current profiles can produce comparable PSI distributions.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/extract_numeric_distribution_bin_edges/"><code>extract_numeric_distribution_bin_edges</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Extract baseline numeric bin edges so current profiles can produce comparable PSI distributions.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/drift/" title="Open drift module page" aria-label="Open drift module page">drift</a><span class="reference-chip reference-chip-role reference-chip-optional">Optional</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_normalize_profile</code></li></ul></details>
 
   </div>
 </article>
@@ -290,15 +227,6 @@ Use the finder below to look up public callable functions.
 
   </div>
 </article>
-<article id="load_latest_profile" class="reference-catalogue-item" data-callable-row="true" data-callable-name="load_latest_profile" data-callable-module="drift" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Load the latest previous successful or approved source/target profile baseline from existing profile metadata.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/load_latest_profile/"><code>load_latest_profile</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Load the latest previous successful or approved source/target profile baseline from existing profile metadata.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/drift/" title="Open drift module page" aria-label="Open drift module page">drift</a><span class="reference-chip reference-chip-role reference-chip-optional">Optional</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 3</span></summary><ul><li><code>_is_missing_table_error</code></li><li><code>_normalize_profile</code></li><li><code>_safe_spark_collect</code></li></ul></details>
-
-  </div>
-</article>
 <article id="load_notebook_registry" class="reference-catalogue-item" data-callable-row="true" data-callable-name="load_notebook_registry" data-callable-module="metadata" data-callable-starter-path="—" data-role="essential" data-callable-purpose="Load notebook registration metadata rows for agreement notebook traceability.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/load_notebook_registry/"><code>load_notebook_registry</code></a></h3>
   <p class="reference-catalogue-item-purpose">Load notebook registration metadata rows for agreement notebook traceability.</p>
@@ -306,6 +234,15 @@ Use the finder below to look up public callable functions.
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 3</span></summary><ul><li><code>read_lakehouse_table</code></li><li><code>_latest_registration_events</code></li><li><code>_registry_rows_with_defaults</code></li></ul></details>
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>current_notebook_active_registrations</code></li></ul></details>
+  </div>
+</article>
+<article id="monitor_data_changes" class="reference-catalogue-item" data-callable-row="true" data-callable-name="monitor_data_changes" data-callable-module="drift" data-callable-starter-path="03_pc" data-role="essential" data-callable-purpose="Profile a dataframe, select the appropriate baseline, compare distributions, and return a data-change result from a preset.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/monitor_data_changes/"><code>monitor_data_changes</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Profile a dataframe, select the appropriate baseline, compare distributions, and return a data-change result from a preset.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/drift/" title="Open drift module page" aria-label="Open drift module page">drift</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">03_pc</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 8</span></summary><ul><li><code>profile_dataframe</code></li><li><code>_as_monitor_only_result</code></li><li><code>_check_profile_drift</code></li><li><code>_data_change_preset_config</code></li><li><code>_extract_categorical_distribution_categories</code></li><li><code>_extract_numeric_distribution_bin_edges</code></li><li><code>_load_latest_profile</code></li><li><code>_normalize_profile</code></li></ul></details>
+
   </div>
 </article>
 <article id="prepare_business_context_profile_input" class="reference-catalogue-item" data-callable-row="true" data-callable-name="prepare_business_context_profile_input" data-callable-module="business_context" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Prepare profile rows for business context prompt drafting.">
@@ -335,13 +272,13 @@ Use the finder below to look up public callable functions.
 
   </div>
 </article>
-<article id="profile_dataframe" class="reference-catalogue-item" data-callable-row="true" data-callable-name="profile_dataframe" data-callable-module="data_profiling" data-callable-starter-path="02_ex, 03_pc" data-role="essential" data-callable-purpose="Build canonical DQ-ready profiling rows from a Spark DataFrame.">
+<article id="profile_dataframe" class="reference-catalogue-item" data-callable-row="true" data-callable-name="profile_dataframe" data-callable-module="data_profiling" data-callable-starter-path="02_ex" data-role="essential" data-callable-purpose="Build canonical DQ-ready profiling rows from a Spark DataFrame.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/profile_dataframe/"><code>profile_dataframe</code></a></h3>
   <p class="reference-catalogue-item-purpose">Build canonical DQ-ready profiling rows from a Spark DataFrame.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_profiling/" title="Open data_profiling module page" aria-label="Open data_profiling module page">data_profiling</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">02_ex, 03_pc</span></p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_profiling/" title="Open data_profiling module page" aria-label="Open data_profiling module page">data_profiling</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">02_ex</span></p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 3</span></summary><ul><li><code>_build_distribution_summaries</code></li><li><code>_get_profiled_columns</code></li><li><code>_is_min_max_supported_type</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_prepare_dq_profile_input_rows</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 2</span></summary><ul><li><code>_prepare_dq_profile_input_rows</code></li><li><code>monitor_data_changes</code></li></ul></details>
   </div>
 </article>
 <article id="read_lakehouse_csv" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_lakehouse_csv" data-callable-module="fabric_input_output" data-callable-starter-path="03_pc" data-role="optional" data-callable-purpose="Read a CSV file from a Fabric lakehouse Files path.">
@@ -434,12 +371,12 @@ Use the finder below to look up public callable functions.
 
   </div>
 </article>
-<article id="summarize_drift_results" class="reference-catalogue-item" data-callable-row="true" data-callable-name="summarize_drift_results" data-callable-module="drift" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Summarize schema, partition, and profile drift outcomes into one decision.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/summarize_drift_results/"><code>summarize_drift_results</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Summarize schema, partition, and profile drift outcomes into one decision.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/drift/" title="Open drift module page" aria-label="Open drift module page">drift</a><span class="reference-chip reference-chip-role reference-chip-optional">Optional</span><span class="reference-chip">—</span></p>
+<article id="stop_if_failed" class="reference-catalogue-item" data-callable-row="true" data-callable-name="stop_if_failed" data-callable-module="drift" data-callable-starter-path="03_pc" data-role="essential" data-callable-purpose="Raise the shared guardrail error only when a schema or data-change result cannot continue.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/stop_if_failed/"><code>stop_if_failed</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Raise the shared guardrail error only when a schema or data-change result cannot continue.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/drift/" title="Open drift module page" aria-label="Open drift module page">drift</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">03_pc</span></p>
   <div class="reference-catalogue-item-counts">
-
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>SchemaDriftError</code></li></ul></details>
 
   </div>
 </article>
@@ -450,6 +387,15 @@ Use the finder below to look up public callable functions.
   <div class="reference-catalogue-item-counts">
 
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 4</span></summary><ul><li><code>_run_dq_rules</code></li><li><code>_split_dq_rows</code></li><li><code>enforce_dq</code></li><li><code>write_dq_rules</code></li></ul></details>
+  </div>
+</article>
+<article id="validate_schema" class="reference-catalogue-item" data-callable-row="true" data-callable-name="validate_schema" data-callable-module="drift" data-callable-starter-path="03_pc" data-role="essential" data-callable-purpose="Validate a dataframe schema using strict, allow_new_columns, or monitor_only presets.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/validate_schema/"><code>validate_schema</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Validate a dataframe schema using strict, allow_new_columns, or monitor_only presets.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/drift/" title="Open drift module page" aria-label="Open drift module page">drift</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">03_pc</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>_actual_schema</code></li><li><code>_check_schema</code></li></ul></details>
+
   </div>
 </article>
 <article id="widget_render_agreement_evidence" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_render_agreement_evidence" data-callable-module="data_agreement" data-callable-starter-path="01_data_agreement" data-role="essential" data-callable-purpose="Render standalone agreement evidence upload controls for an existing agreement version.">
