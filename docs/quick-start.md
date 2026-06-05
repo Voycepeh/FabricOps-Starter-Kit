@@ -11,7 +11,7 @@ By the end of this quick start, you should have:
 3. A configured `00_env_config` notebook.
 4. A working role-based sequence from agreement to exploration, pipeline build, governance enrichment, and rule enforcement.
 
-For the full operating model, read [How FabricOps Works](how-fabricops-works.md).
+For the full operating model, read [How FabricOps Works](how-fabricops-works/index.md).
 
 ## First run setup
 
@@ -27,31 +27,31 @@ Start with one Governance workspace and one Engineering workspace. **Alternative
 
 | Step | Do this | Expected result | Read more |
 | ---- | ------- | --------------- |---------- |
-| 1    | Install the FabricOps wheel in a Microsoft Fabric Environment.              | Fabric notebooks attached to that Environment can import `fabricops_kit`.                                 | [Fabric Wheel Install](fabric-wheel-install.md)      |
+| 1    | Install the FabricOps wheel in a Microsoft Fabric Environment.              | Fabric notebooks attached to that Environment can import `fabricops_kit`.                                 | [Fabric Wheel Install](install.md)      |
 
 ![IMG](assets/fabric-example-install-custom-whl.png)
 
 | Step | Do this | Expected result | Read more |
 | ---- | ------- | --------------- |---------- |
-| 2    | Copy the notebook templates from the GitHub `templates` folder and upload into Fabric. | You have editable copies of `00_env_config`, `01_da`, `02_ex`, `03_pc`, and `04_gov`.                     | [Notebook Templates](notebook-templates.md)          |
+| 2    | Copy the notebook templates from the GitHub `templates` folder and upload into Fabric. | You have editable copies of `00_env_config`, `01_da`, `02_ex`, `03_pc`, and `04_gov`.                     | [Notebook Templates](how-fabricops-works/notebook-templates.md)          |
 
 ![IMG](assets/fabric-example-workspace-setup.png)
 
 | Step | Do this | Expected result | Read more |
 | ---- | ------- | --------------- |---------- |
-| 3    | Attach the same Fabric Environment to each copied notebook.                 | Each notebook uses the installed helper wheel and compatible runtime configuration.                       | [Fabric Wheel Install](fabric-wheel-install.md)      |
+| 3    | Attach the same Fabric Environment to each copied notebook.                 | Each notebook uses the installed helper wheel and compatible runtime configuration.                       | [Fabric Wheel Install](install.md)      |
 
 ![IMG](assets/fabric-example-set-notebook-environment.png)
 
 | Step | Do this | Expected result | Read more |
 | ---- | ------- | --------------- |---------- |
-| 4    | Configure `00_env_config` and update the path via the lakehouse/warehouse urls   | Workspace, lakehouse, warehouse, and governance metadata paths are available to the downstream notebooks. |[Notebook Templates](notebook-templates.md)  |
+| 4    | Configure `00_env_config` and update the path via the lakehouse/warehouse urls   | Workspace, lakehouse, warehouse, and governance metadata paths are available to the downstream notebooks. |[Notebook Templates](how-fabricops-works/notebook-templates.md)  |
 
 ![IMG](assets/fabric-example-00_config_paths.png)
 
 | Step | Do this | Expected result | Read more |
 | ---- | ------- | --------------- |---------- |
-| 5    | Run the notebook in sequence. | The starter metadata loop is created and can be reviewed before production promotion. | [Notebook Templates](notebook-templates.md)    |
+| 5    | Run the notebook in sequence. | The starter metadata loop is created and can be reviewed before production promotion. | [Notebook Templates](how-fabricops-works/notebook-templates.md)    |
 
 The notebooks are intentionally separated by role. Each template produces metadata or outputs that the next role can reuse.
 
@@ -91,6 +91,6 @@ The goal is that support, review, and handover should no longer depend on memory
 
 | Page                                          | Why read it                                                                                               |
 | --------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| [How FabricOps Works](how-fabricops-works.md) | Understand workspace and production deployment, notebook by roles, metadata tables, meatadata dashboard   |
-| [Data Quality Rules](data-quality-rules.md)   | Learn how we utilize AI to sugggest DQ rules in `04_gov`and store thes rules in a metadata table  to be enforced in `03_pc` notebooks.                                               |
-| [Function Reference](function-reference.md)   | Review the reusable helper APIs used by the notebook templates.                                           |
+| [How FabricOps Works](how-fabricops-works/index.md) | Understand workspace and production deployment, notebook by roles, metadata tables, meatadata dashboard   |
+| [Data Quality Rules](data-quality-rules-system.md)   | Learn how we utilize AI to sugggest DQ rules in `04_gov`and store thes rules in a metadata table  to be enforced in `03_pc` notebooks.                                               |
+| [Function Reference](reference/index.md)   | Review the reusable helper APIs used by the notebook templates.                                           |
