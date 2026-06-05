@@ -30,6 +30,7 @@ Thank you for contributing to **FabricOps Starter Kit**. This guide is for human
 - Put lifecycle/operating behavior in `docs/`.
 - Keep callable API reference centered in `src/README.md` + generated docs.
 - If template behavior or helper APIs change, update docs/templates in the same PR.
+- For releases, follow the GitHub-only [release management guide](docs/development/release-management.md).
 - Do not duplicate long content across files; link to the canonical doc.
 
 ## 5) Function and docstring standards

@@ -1,7 +1,7 @@
 import subprocess
 import sys
 
-from scripts.check_release_ready import get_init_version, get_pyproject_version
+from scripts.check_release_ready import get_pyproject_version, version_from_tag
 
 
 def test_repo_versions_match():
@@ -25,4 +25,4 @@ def test_release_ready_script_runs():
 
 def test_version_parsers_smoke():
     assert get_pyproject_version('[project]\nversion = "1.2.3"\n') == "1.2.3"
-    assert get_init_version('__version__ = "1.2.4"\n') == "1.2.4"
+    assert version_from_tag("v1.2.4") == "1.2.4"

@@ -1,0 +1,69 @@
+name: FabricOps CI
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    env:
+      DISABLE_MKDOCS_2_WARNING: "true"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+
+      - name: Install locked dependencies
+        run: uv sync --frozen --extra docs --extra dev
+
+      - name: Ruff lint
+        run: uv run ruff check .
+
+      - name: Run tests
+        run: uv run pytest
+
+      - name: Build strict documentation
+        env:
+          FABRICOPS_GIT_SHA: ${{ github.sha }}
+        run: uv run mkdocs build --strict
+
+      - name: Build distributions
+        run: uv build
+
+      - name: Check distributions
+        run: uvx twine check dist/*
+
+      - name: Install wheel and smoke-test public imports
+        shell: bash
+        run: |
+          set -euo pipefail
+          wheel_path="$(find dist -maxdepth 1 -name '*.whl' -print -quit)"
+          test -n "${wheel_path}"
+          python -m venv "${RUNNER_TEMP}/fabricops-wheel-smoke"
+          source "${RUNNER_TEMP}/fabricops-wheel-smoke/bin/activate"
+          python -m pip install --upgrade pip
+          python -m pip install "${wheel_path}"
+          python - <<'PY'
+          from importlib.metadata import version
+          import fabricops_kit as kit
+
+          assert kit.__version__ == version("fabricops-kit")
+          for public_name in kit.__all__:
+              getattr(kit, public_name)
+          print(f"Imported fabricops_kit {kit.__version__} with {len(kit.__all__)} public names")
+          PY

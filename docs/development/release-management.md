@@ -1,16 +1,116 @@
 # Release management
 
-This page captures maintainer-facing release documentation practices for FabricOps Starter Kit.
+FabricOps Starter Kit uses a GitHub-only release process. A Git tag named `vMAJOR.MINOR.PATCH` identifies one immutable FabricOps release made up of the GitHub source tag, Python wheel, Python source distribution, GitHub Release, matching changelog section, and versioned Mike documentation snapshot.
 
-## Versioned documentation deployment
+## Release authority and scope
 
-After tagging a release, maintainers should publish the matching documentation snapshot with mike. Use the minor release version as the published documentation version and update aliases deliberately:
+- Keep the package version explicit in `pyproject.toml` under `[project].version`.
+- Do not use `setuptools-scm`, dynamic Git-derived package versions, PyPI publishing, Azure Artifacts, or an alternate build tool in this release flow.
+- Build distributions from the tagged commit with `uv build`.
+- Use semantic versioning across the public FabricOps surface, including Python APIs, notebook contracts, configuration structures, metadata schemas, agreement and pipeline contract structures, and data-quality rule formats.
+- Keep package version, documentation version, Git commit SHA, agreement version, and pipeline version as separate traceability concepts.
+
+## Selecting the next semantic version
+
+Use the smallest version bump that communicates the public impact:
+
+| Bump | Use when |
+| --- | --- |
+| Patch | Backward-compatible fixes, documentation corrections, and non-breaking notebook-template improvements. |
+| Minor | Backward-compatible public APIs, new notebook capabilities, new optional configuration, or additive metadata/rule formats. |
+| Major | Breaking changes to Python APIs, notebook contracts, configuration structures, metadata schemas, agreement or pipeline contracts, or data-quality rule formats. |
+
+Fabric-specific runtime-only changes should still be evaluated by their effect on the public notebook and metadata contracts.
+
+## Update release files
+
+1. Move completed entries from `CHANGELOG.md` `Unreleased` into a new released section named `## [X.Y.Z] - YYYY-MM-DD`.
+2. Use the standard Keep a Changelog categories (`Added`, `Changed`, `Deprecated`, `Removed`, `Fixed`, `Security`).
+3. Add FabricOps-specific subsections where relevant: `Python package`, `Notebook templates`, `Metadata model`, `Documentation`, `Breaking changes`, and `Upgrade instructions`.
+4. Preserve useful existing history and do not invent entries that are not supported by repository history.
+5. Update `pyproject.toml` `[project].version` to the exact `X.Y.Z` value.
+
+## Local validation
+
+Run the same repository-compatible checks that CI and the release workflow run:
 
 ```bash
-mike deploy --push --update-aliases 1.0 latest stable
-mike set-default --push latest
+uv sync --frozen
+uv run ruff check .
+uv run pytest
+uv run mkdocs build --strict
+uv build
+uvx twine check dist/*
 ```
 
-Use `latest` for the newest release. Use `stable` for the recommended production baseline; this can point to a different version when the newest release should not yet be the production recommendation.
+For a local wheel import smoke test, install the generated wheel into a clean temporary environment and import the public package surface exposed by `fabricops_kit.__all__`.
 
-Do not manually copy documentation into versioned folders such as `docs/v1.0` or `docs/v1.1`; mike manages published version directories on the documentation publishing branch. Do not publish documentation, create GitHub releases, or publish to PyPI until the release process is intentionally started by maintainers.
+## Tagging and release trigger
+
+Create an annotated tag only after the changelog, version, generated docs, and local validation are ready:
+
+```bash
+git tag -a vX.Y.Z -m "FabricOps Starter Kit vX.Y.Z"
+git push origin vX.Y.Z
+```
+
+The release workflow runs only for tags matching `v*.*.*`. It removes the leading `v`, reads `[project].version` from `pyproject.toml`, and fails if the tag version and package version do not match exactly.
+
+## Final GitHub release sequence
+
+The tag workflow performs the release in this order:
+
+1. Check out full Git history for the tagged commit.
+2. Install `uv` and the repository-supported Python version.
+3. Install locked project, development, and documentation dependencies.
+4. Verify the tag version matches `pyproject.toml`.
+5. Run Ruff, tests, and `mkdocs build --strict`.
+6. Build the wheel and source distribution with `uv build`.
+7. Validate distributions with `uvx twine check dist/*`.
+8. Install the wheel in a clean temporary environment.
+9. Test stable public imports from the package `__all__` surface.
+10. Generate `dist/SHA256SUMS.txt`.
+11. Create a GitHub Release and attach the wheel, source distribution, and checksums.
+12. Use the matching changelog section for release notes when available.
+13. Deploy the versioned documentation with Mike only after package and documentation checks pass.
+
+## Mike documentation versioning
+
+Python package releases retain the full semantic version, such as `0.8.1`. Mike documentation snapshots normally use the major-minor series, such as `0.8`.
+
+| Git tag | Package version | Mike version |
+| --- | --- | --- |
+| `v0.8.0` | `0.8.0` | `0.8` |
+| `v0.8.1` | `0.8.1` | `0.8` |
+| `v0.9.0` | `0.9.0` | `0.9` |
+| `v1.0.0` | `1.0.0` | `1.0` |
+
+The release workflow derives `DOC_VERSION` from the first two package-version components and deploys with Mike after validation succeeds:
+
+```bash
+uv run mike deploy \
+  --push \
+  --update-aliases \
+  "${DOC_VERSION}" \
+  latest \
+  stable
+uv run mike set-default --push latest
+```
+
+`latest` points to the newest released documentation. `stable` points to the recommended production documentation. For the initial GitHub-only release implementation, `latest` and `stable` move together unless maintainers document a deliberate distinction. The optional `dev` alias may be updated from `main` for preview documentation, but `main` is never promoted automatically to `latest`.
+
+## Retrying failed documentation deployment
+
+If the workflow fails before the GitHub Release is created, fix the problem and push a new annotated tag for the corrected release commit. Do not rewrite a published release tag.
+
+If package validation and GitHub Release creation succeeded but the Mike deployment failed, rerun the failed workflow job from GitHub Actions after fixing the documentation deployment issue. The Mike commands are idempotent for the same documentation version and aliases because they use `--update-aliases`.
+
+## Hotfix releases
+
+For a hotfix, branch from the released tag or the commit that contains the production release, apply the minimal fix, update `CHANGELOG.md`, bump the patch version in `pyproject.toml`, validate locally, and tag the new patch release. Patch hotfix documentation normally reuses the same Mike major-minor version while updating the title and aliases to the new full package version.
+
+## Rollback, deprecation, and follow-up guidance
+
+GitHub Releases and tags are immutable release evidence. Prefer deprecating a bad release with a clear GitHub Release note and a follow-up patch release instead of deleting or rewriting history. Move `stable` back to the recommended documentation series only when maintainers explicitly decide that the newest release should not be the production recommendation.
+
+Runtime traceability should continue to record FabricOps package version, notebook or repository commit SHA where available, agreement version, and pipeline version as separate concepts. Do not introduce metadata migrations as part of release administration; add schema migrations in focused follow-up PRs when persistent metadata columns are required.

@@ -37,6 +37,7 @@ nav:
   - Development:
       - Documentation Versioning: development/docs-versioning.md
       - Release Management: development/release-management.md
+      - Release Traceability: release-info.md
 
   - Function Reference:
       - Overview: reference/index.md
@@ -59,6 +60,10 @@ nav:
 extra:
   version:
     provider: mike
+  fabricops_release:
+    package_version: !ENV [FABRICOPS_PACKAGE_VERSION, "unknown"]
+    doc_version: !ENV [FABRICOPS_DOC_VERSION, "unknown"]
+    git_sha: !ENV [FABRICOPS_GIT_SHA, "unknown"]
 
 markdown_extensions:
   - admonition
@@ -77,6 +82,7 @@ plugins:
   - gen-files:
       scripts:
         - docs/gen_ref_pages.py
+        - docs/gen_release_info.py
   - literate-nav
   - mkdocstrings:
       handlers:

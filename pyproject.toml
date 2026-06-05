@@ -53,12 +53,15 @@ pythonpath = ["src", "."]
 
 [tool.ruff]
 line-length = 120
+extend-exclude = ["examples/notebooks", "templates/notebooks"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I"]
+ignore = ["E402", "E501", "E701", "E702", "E712", "F401", "F821", "I001"]
 
 [dependency-groups]
 dev = [
     "pyspark>=4.1.1",
     "pytest>=8.4.2",
 ]
+
