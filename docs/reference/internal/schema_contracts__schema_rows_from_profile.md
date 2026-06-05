@@ -26,4 +26,4 @@ No summary available.
 - <a href="../internal/schema_contracts/_bool/"><code>fabricops_kit.schema_contracts._bool</code></a>
 - <a href="../internal/schema_contracts/_coerce_rows/"><code>fabricops_kit.schema_contracts._coerce_rows</code></a>
 - <a href="../internal/schema_contracts/_get_any/"><code>fabricops_kit.schema_contracts._get_any</code></a>
-- <a href="../internal/schema_contracts/normalize_spark_data_type/"><code>fabricops_kit.schema_contracts.normalize_spark_data_type</code></a>
+- <a href="../internal/schema_contracts/_normalize_spark_data_type/"><code>fabricops_kit.schema_contracts._normalize_spark_data_type</code></a>

@@ -24,4 +24,4 @@ No summary available.
 - <a href="../validate_schema/"><code>fabricops_kit.schema_contracts.validate_schema</code></a>
 
 ## Outbound references
-- <a href="../internal/schema_contracts/normalize_spark_data_type/"><code>fabricops_kit.schema_contracts.normalize_spark_data_type</code></a>
+- <a href="../internal/schema_contracts/_normalize_spark_data_type/"><code>fabricops_kit.schema_contracts._normalize_spark_data_type</code></a>

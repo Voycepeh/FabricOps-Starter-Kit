@@ -265,7 +265,7 @@ Exploration notebook flow used to profile source data and draft advisory AI outp
 
 ## `03_pc_<agreement>_<pipeline>`
 
-Core production pipeline flow for clean evidence creation, inline runtime audit columns, large-table write tuning, and controlled publishing. 03_pc uses build_runtime_audit_fields for metadata runtime values, then adds dataframe audit columns inline. Audit columns are always useful; hashes, datetime features, and bucket columns are specialized patterns outside the default path.
+Core production pipeline flow for clean evidence creation, schema guardrails, inline runtime audit columns, large-table write tuning, and controlled publishing. 03_pc applies source schema guardrails after read and target schema guardrails before audit columns/write.
 
 ### Segment 1: Runtime setup, parameters, agreement selection, and registration
 
@@ -355,7 +355,7 @@ Core production pipeline flow for clean evidence creation, inline runtime audit 
   </tbody>
 </table>
 
-### Segment 3: Profile and write reusable catalogue evidence
+### Segment 3: Apply schema guardrails, profile, and write reusable catalogue evidence
 
 <table>
   <thead>
@@ -368,6 +368,13 @@ Core production pipeline flow for clean evidence creation, inline runtime audit 
     </tr>
   </thead>
   <tbody>
+    <tr>
+      <td>`apply_schema_guardrail`</td>
+      <td>Callable orchestration wrapper</td>
+      <td>Load the approved dataset contract, validate schema drift, enforce observe/warn/fail behavior, and write evidence.</td>
+      <td>`_build_schema_validation_evidence`, `_enforce_schema_result`, `_get_active_spark`, `_load_schema_contract`, `_write_schema_validation_evidence`</td>
+      <td>Check dependency outputs and metadata writes.</td>
+    </tr>
     <tr>
       <td>`profile_dataframe`</td>
       <td>Callable orchestration wrapper</td>
@@ -385,7 +392,7 @@ Core production pipeline flow for clean evidence creation, inline runtime audit 
   </tbody>
 </table>
 
-### Segment 4: Transform, add runtime audit columns, and publish outputs
+### Segment 4: Transform, apply target guardrail, add runtime audit columns, and publish outputs
 
 <table>
   <thead>

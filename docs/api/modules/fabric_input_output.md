@@ -230,7 +230,7 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
 <a class="reference-chip" href="../../reference/load_notebook_registry/"><code>load_notebook_registry</code></a>, <a class="reference-chip" href="../../reference/register_current_notebook/"><code>register_current_notebook</code></a>, <a class="reference-chip" href="../../reference/setup_notebook_registry_table/"><code>setup_notebook_registry_table</code></a>
 
 **schema_contracts**
-<a class="reference-chip" href="../../reference/load_schema_contract/"><code>load_schema_contract</code></a>, <a class="reference-chip" href="../../reference/write_schema_contract/"><code>write_schema_contract</code></a>, <a class="reference-chip" href="../../reference/write_schema_validation_evidence/"><code>write_schema_validation_evidence</code></a>
+<a class="reference-chip" href="../schema_contracts/#_load_schema_contract"><code>_load_schema_contract</code></a>, <a class="reference-chip" href="../schema_contracts/#_write_schema_contract"><code>_write_schema_contract</code></a>, <a class="reference-chip" href="../schema_contracts/#_write_schema_validation_evidence"><code>_write_schema_validation_evidence</code></a>
 
 ### External callees
 

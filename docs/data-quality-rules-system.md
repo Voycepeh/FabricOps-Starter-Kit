@@ -123,27 +123,12 @@ Use profiling to avoid manually typing every column, but do not treat the profil
 
 1. run profiling for the source or target dataset;
 2. load the latest profile metadata;
-3. call `suggest_schema_contract(...)` to create proposed column rows;
-4. call `review_schema_contract(...)` so a human reviewer selects locked columns and enforcement settings;
-5. call `write_schema_contract(...)` to store the approved dataset contract and versioned column rows;
-6. let future `03_pc` runs call `load_schema_contract(...)`, `validate_schema(...)`, and `enforce_schema_result(...)`.
+3. call `review_schema_contract(...)` to generate the proposal, review/edit the columns, explicitly approve the schema, and write a versioned dataset contract;
+4. let future `03_pc` runs call `apply_schema_guardrail(...)` to load, validate, enforce, and record evidence in one pipeline step.
 
 ```python
-source_proposal = suggest_schema_contract(
+source_contract_review = review_schema_contract(
     source_profile_rows,
-    agreement_id=AGREEMENT_ID,
-    contract_id=f"{AGREEMENT_ID}_source_{SOURCE_TABLE}",
-    dataset_role="source",
-)
-source_review = review_schema_contract(
-    source_profile_rows,
-    agreement_id=AGREEMENT_ID,
-    contract_id=f"{AGREEMENT_ID}_source_{SOURCE_TABLE}",
-    dataset_role="source",
-    table_name=SOURCE_TABLE,
-)
-write_schema_contract(
-    spark,
     config=CONFIG,
     env=ENV_NAME,
     agreement_id=AGREEMENT_ID,
@@ -152,12 +137,24 @@ write_schema_contract(
     workspace_name=source_store.name,
     item_name=source_store.name,
     table_name=SOURCE_TABLE,
-    columns=source_review["columns"],
-    **source_review["settings"],
+    spark_session=spark,
+)
+
+target_contract_review = review_schema_contract(
+    target_profile_rows,
+    config=CONFIG,
+    env=ENV_NAME,
+    agreement_id=AGREEMENT_ID,
+    contract_id=f"{AGREEMENT_ID}_target_{TARGET_TABLE}",
+    dataset_role="target",
+    workspace_name=target_store.name,
+    item_name=target_store.name,
+    table_name=TARGET_TABLE,
+    spark_session=spark,
 )
 ```
 
-Repeat the same setup for a transformed target profile, using `dataset_role="target"` and the target table identity.
+Repeat the same setup for each source or target dataset under the agreement.
 
 ### Enforcement examples
 

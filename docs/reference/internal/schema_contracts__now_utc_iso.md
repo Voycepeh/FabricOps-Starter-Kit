@@ -20,6 +20,6 @@ No summary available.
 - Outbound references count: 0
 
 ## Inbound references
-- <a href="../build_schema_validation_evidence/"><code>fabricops_kit.schema_contracts.build_schema_validation_evidence</code></a>
-- <a href="../suggest_schema_contract/"><code>fabricops_kit.schema_contracts.suggest_schema_contract</code></a>
-- <a href="../write_schema_contract/"><code>fabricops_kit.schema_contracts.write_schema_contract</code></a>
+- <a href="../internal/schema_contracts/_build_schema_validation_evidence/"><code>fabricops_kit.schema_contracts._build_schema_validation_evidence</code></a>
+- <a href="../internal/schema_contracts/_suggest_schema_contract/"><code>fabricops_kit.schema_contracts._suggest_schema_contract</code></a>
+- <a href="../internal/schema_contracts/_write_schema_contract/"><code>fabricops_kit.schema_contracts._write_schema_contract</code></a>

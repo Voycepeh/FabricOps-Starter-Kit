@@ -26,8 +26,8 @@ No summary available.
 - <a href="../internal/fabric_input_output/seed_minimal_sample_source_table/"><code>fabricops_kit.fabric_input_output.seed_minimal_sample_source_table</code></a>
 - <a href="../register_current_notebook/"><code>fabricops_kit.metadata.register_current_notebook</code></a>
 - <a href="../setup_notebook_registry_table/"><code>fabricops_kit.metadata.setup_notebook_registry_table</code></a>
-- <a href="../write_schema_contract/"><code>fabricops_kit.schema_contracts.write_schema_contract</code></a>
-- <a href="../write_schema_validation_evidence/"><code>fabricops_kit.schema_contracts.write_schema_validation_evidence</code></a>
+- <a href="../internal/schema_contracts/_write_schema_contract/"><code>fabricops_kit.schema_contracts._write_schema_contract</code></a>
+- <a href="../internal/schema_contracts/_write_schema_validation_evidence/"><code>fabricops_kit.schema_contracts._write_schema_validation_evidence</code></a>
 
 ## Outbound references
 - <a href="../internal/config/_get_store/"><code>fabricops_kit.config._get_store</code></a>

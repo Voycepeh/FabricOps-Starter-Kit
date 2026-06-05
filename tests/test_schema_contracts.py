@@ -2,12 +2,9 @@ import pytest
 
 from fabricops_kit import (
     SchemaContractValidationError,
-    build_schema_contract_review_state,
-    enforce_schema_result,
-    load_schema_contract,
-    suggest_schema_contract,
+    apply_schema_guardrail,
+    review_schema_contract,
     validate_schema,
-    write_schema_contract,
 )
 from fabricops_kit import schema_contracts as sc
 
@@ -35,35 +32,91 @@ class FakeSpark:
         return [dict(r) for r in rows]
 
 
-def test_suggest_schema_contract_from_profile_rows_retains_ordinal_type_and_nullability():
-    rows = [
-        {"COLUMN_NAME": "id", "DATA_TYPE": "integer", "NULL_COUNT": 0, "ORDINAL_POSITION": 1},
-        {"COLUMN_NAME": "name", "DATA_TYPE": "string", "NULL_COUNT": 2, "ORDINAL_POSITION": 2},
-    ]
-    proposed = suggest_schema_contract(rows, agreement_id="AGR", contract_id="SRC", dataset_role="source")
-
-    assert [r["column_name"] for r in proposed] == ["id", "name"]
-    assert proposed[0]["data_type"] == "int"
-    assert proposed[0]["nullable"] is False
-    assert proposed[1]["nullable"] is True
-    assert proposed[1]["ordinal_position"] == 2
-    assert all(r["selected"] for r in proposed)
-
-
-def test_suggest_schema_contract_from_dataframe_schema():
-    df = FakeDf([FakeField("id", "Integer", False), FakeField("amount", "decimal(10,2)", True)])
-    proposed = suggest_schema_contract(df, agreement_id="AGR", contract_id="TGT", dataset_role="target")
-
-    assert proposed[0]["data_type"] == "int"
-    assert proposed[0]["nullable"] is False
-    assert proposed[1]["ordinal_position"] == 2
-
-
 def expected(required=True):
     return [
         {"column_name": "id", "data_type": "int", "required": required, "nullable": False, "ordinal_position": 1},
         {"column_name": "name", "data_type": "string", "required": True, "nullable": True, "ordinal_position": 2},
     ]
+
+
+def profile_rows():
+    return [
+        {"COLUMN_NAME": "id", "DATA_TYPE": "integer", "NULL_COUNT": 0, "ORDINAL_POSITION": 1},
+        {"COLUMN_NAME": "name", "DATA_TYPE": "string", "NULL_COUNT": 2, "ORDINAL_POSITION": 2},
+    ]
+
+
+def test_review_schema_contract_approves_versions_and_persists(monkeypatch):
+    tables = {sc.SCHEMA_CONTRACT_TABLE: [], sc.SCHEMA_CONTRACT_COLUMN_TABLE: []}
+
+    def fake_read(_config, _env, _target, table, **_kwargs):
+        return tables[table]
+
+    def fake_write(df, _config, _env, _target, table, **_kwargs):
+        tables[table].extend(df)
+
+    monkeypatch.setattr(sc, "read_lakehouse_table", fake_read)
+    monkeypatch.setattr(sc, "write_lakehouse_table", fake_write)
+
+    result = review_schema_contract(
+        profile_rows(),
+        config=object(),
+        env="dev",
+        agreement_id="AGR",
+        contract_id="SRC",
+        dataset_role="source",
+        workspace_name="ws",
+        item_name="lh",
+        table_name="raw_orders",
+        spark_session=FakeSpark(),
+        approved=True,
+        default_enforcement="warn",
+    )
+    second = review_schema_contract(
+        profile_rows(),
+        config=object(),
+        env="dev",
+        agreement_id="AGR",
+        contract_id="SRC",
+        dataset_role="source",
+        workspace_name="ws",
+        item_name="lh",
+        table_name="raw_orders",
+        spark_session=FakeSpark(),
+        approved=True,
+    )
+
+    assert result["status"] == "approved"
+    assert result["contract_version"] == 1
+    assert result["settings"]["default_enforcement"] == "warn"
+    assert [r["column_name"] for r in result["columns"]] == ["id", "name"]
+    assert result["columns"][0]["data_type"] == "int"
+    assert result["columns"][0]["nullable"] is False
+    assert second["contract_version"] == 2
+    assert len(tables[sc.SCHEMA_CONTRACT_TABLE]) == 2
+    assert len(tables[sc.SCHEMA_CONTRACT_COLUMN_TABLE]) == 4
+
+
+def test_review_schema_contract_does_not_persist_without_explicit_approval(monkeypatch):
+    writes = []
+    monkeypatch.setattr(sc, "write_lakehouse_table", lambda *args, **kwargs: writes.append(args))
+    result = review_schema_contract(
+        profile_rows(),
+        config=object(),
+        env="dev",
+        agreement_id="AGR",
+        contract_id="SRC",
+        dataset_role="source",
+        workspace_name="ws",
+        item_name="lh",
+        table_name="raw_orders",
+        spark_session=FakeSpark(),
+        approved=False,
+    )
+
+    assert result["status"] == "pending_approval"
+    assert result["contract_version"] is None
+    assert writes == []
 
 
 def test_validate_schema_exact_match():
@@ -118,106 +171,145 @@ def test_validate_schema_column_order_enabled_and_ignored_by_default():
     assert checked["is_valid"] is False
 
 
-def test_enforce_schema_result_modes():
-    drift = {"is_valid": False, "missing_required_columns": ["id"]}
-    assert enforce_schema_result(drift, enforcement="observe")["can_continue"] is True
-    with pytest.warns(UserWarning):
-        assert enforce_schema_result(drift, enforcement="warn")["can_continue"] is True
-    with pytest.raises(SchemaContractValidationError):
-        enforce_schema_result(drift, enforcement="fail")
-
-
-def test_review_state_filters_unselected_columns():
-    state = build_schema_contract_review_state(
-        [
-            {"column_name": "id", "data_type": "integer", "selected": True},
-            {"column_name": "debug", "data_type": "string", "selected": False},
-        ]
-    )
-    assert [r["column_name"] for r in state["columns"]] == ["id"]
-    assert state["columns"][0]["data_type"] == "int"
-
-
-def test_contract_persistence_and_latest_dataset_specific_loading(monkeypatch):
-    tables = {sc.SCHEMA_CONTRACT_TABLE: [], sc.SCHEMA_CONTRACT_COLUMN_TABLE: []}
+def test_apply_schema_guardrail_loads_validates_enforces_and_writes_evidence(monkeypatch):
+    dataset = {
+        "contract_id": "SRC",
+        "agreement_id": "AGR",
+        "dataset_role": "source",
+        "workspace_name": "ws",
+        "item_name": "lh",
+        "table_name": "raw_orders",
+        "allow_extra_columns": False,
+        "check_column_order": False,
+        "default_enforcement": "observe",
+        "contract_status": "approved",
+        "contract_version": 1,
+    }
+    columns = [{**row, "contract_id": "SRC", "contract_version": 1} for row in expected()]
+    writes = []
 
     def fake_read(_config, _env, _target, table, **_kwargs):
-        return tables[table]
+        return {sc.SCHEMA_CONTRACT_TABLE: [dataset], sc.SCHEMA_CONTRACT_COLUMN_TABLE: columns}[table]
 
     def fake_write(df, _config, _env, _target, table, **_kwargs):
-        tables[table].extend(df)
+        writes.append((table, df))
 
     monkeypatch.setattr(sc, "read_lakehouse_table", fake_read)
     monkeypatch.setattr(sc, "write_lakehouse_table", fake_write)
-    spark = FakeSpark()
-    config = object()
 
-    write_schema_contract(
-        spark,
-        config=config,
+    result = apply_schema_guardrail(
+        FakeDf([FakeField("id", "int", False), FakeField("name", "string", True)]),
+        config=object(),
         env="dev",
         agreement_id="AGR",
-        contract_id="SRC1",
         dataset_role="source",
         workspace_name="ws",
         item_name="lh",
-        table_name="raw_a",
-        columns=expected(),
-        default_enforcement="warn",
-    )
-    write_schema_contract(
-        spark,
-        config=config,
-        env="dev",
-        agreement_id="AGR",
-        contract_id="SRC2",
-        dataset_role="source",
-        workspace_name="ws",
-        item_name="lh",
-        table_name="raw_b",
-        columns=expected(),
-    )
-    first_target = write_schema_contract(
-        spark,
-        config=config,
-        env="dev",
-        agreement_id="AGR",
-        contract_id="TGT1",
-        dataset_role="target",
-        workspace_name="ws",
-        item_name="lh",
-        table_name="curated",
-        columns=expected(),
-    )
-    second_target = write_schema_contract(
-        spark,
-        config=config,
-        env="dev",
-        agreement_id="AGR",
-        contract_id="TGT1",
-        dataset_role="target",
-        workspace_name="ws",
-        item_name="lh",
-        table_name="curated",
-        columns=expected(),
-    )
-    # Draft versions are preserved but ignored by load.
-    tables[sc.SCHEMA_CONTRACT_TABLE].append({**second_target, "contract_version": 99, "contract_status": "draft"})
-
-    source = load_schema_contract(
-        config=config, env="dev", agreement_id="AGR", dataset_role="source", table_name="raw_a"
-    )
-    target = load_schema_contract(
-        config=config, env="dev", agreement_id="AGR", dataset_role="target", table_name="curated"
+        table_name="raw_orders",
+        run_id="run-1",
+        spark_session=FakeSpark(),
     )
 
-    assert source["contract_id"] == "SRC1"
-    assert target["contract_version"] == 2
-    assert target["contract_status"] == "approved"
-    assert first_target["contract_version"] == 1
+    assert result["status"] == "passed"
+    assert result["can_continue"] is True
+    assert result["validation"]["is_valid"] is True
+    assert result["evidence_status"] == "written"
+    assert writes[0][0] == sc.SCHEMA_VALIDATION_EVIDENCE_TABLE
 
 
-def test_load_schema_contract_rejects_agreement_only(monkeypatch):
+def test_apply_schema_guardrail_returns_not_configured_when_contract_missing(monkeypatch):
     monkeypatch.setattr(sc, "read_lakehouse_table", lambda *args, **kwargs: [])
-    with pytest.raises(ValueError):
-        load_schema_contract(config=object(), env="dev", agreement_id="AGR", dataset_role="source")
+    result = apply_schema_guardrail(
+        FakeDf([FakeField("id", "int", False)]),
+        config=object(),
+        env="dev",
+        agreement_id="AGR",
+        dataset_role="source",
+        table_name="raw_orders",
+        run_id="run-1",
+        spark_session=FakeSpark(),
+    )
+
+    assert result["status"] == "not_configured"
+    assert result["can_continue"] is True
+    assert result["evidence_status"] == "not_written"
+
+
+def test_apply_schema_guardrail_raises_on_fail_drift_after_writing_evidence(monkeypatch):
+    dataset = {
+        "contract_id": "SRC",
+        "agreement_id": "AGR",
+        "dataset_role": "source",
+        "table_name": "raw_orders",
+        "allow_extra_columns": False,
+        "check_column_order": False,
+        "default_enforcement": "fail",
+        "contract_status": "approved",
+        "contract_version": 1,
+    }
+    columns = [{**row, "contract_id": "SRC", "contract_version": 1} for row in expected()]
+    writes = []
+
+    def fake_read(_config, _env, _target, table, **_kwargs):
+        return {sc.SCHEMA_CONTRACT_TABLE: [dataset], sc.SCHEMA_CONTRACT_COLUMN_TABLE: columns}[table]
+
+    def fake_write(df, _config, _env, _target, table, **_kwargs):
+        writes.append((table, df))
+
+    monkeypatch.setattr(sc, "read_lakehouse_table", fake_read)
+    monkeypatch.setattr(sc, "write_lakehouse_table", fake_write)
+
+    with pytest.raises(SchemaContractValidationError):
+        apply_schema_guardrail(
+            FakeDf([FakeField("name", "string", True)]),
+            config=object(),
+            env="dev",
+            agreement_id="AGR",
+            dataset_role="source",
+            table_name="raw_orders",
+            run_id="run-1",
+            spark_session=FakeSpark(),
+        )
+
+    assert writes and writes[0][0] == sc.SCHEMA_VALIDATION_EVIDENCE_TABLE
+    assert writes[0][1][0]["validation_status"] == "failed"
+
+
+def test_internal_helpers_are_not_exported_from_package():
+    import fabricops_kit
+
+    for name in [
+        "suggest_schema_contract",
+        "write_schema_contract",
+        "load_schema_contract",
+        "enforce_schema_result",
+        "build_schema_validation_evidence",
+        "write_schema_validation_evidence",
+        "normalize_spark_data_type",
+    ]:
+        assert name not in fabricops_kit.__all__
+        assert not hasattr(fabricops_kit, name)
+
+    assert "review_schema_contract" in fabricops_kit.__all__
+    assert "apply_schema_guardrail" in fabricops_kit.__all__
+    assert "validate_schema" in fabricops_kit.__all__
+
+
+def test_03_pc_uses_apply_schema_guardrail_not_manual_schema_chain():
+    import json
+    from pathlib import Path
+
+    nb = json.loads(Path("templates/notebooks/03_pc_agreement_pipeline_template.ipynb").read_text())
+    code = "\n".join("".join(cell.get("source", [])) for cell in nb["cells"] if cell.get("cell_type") == "code")
+
+    assert "apply_schema_guardrail(" in code
+    assert code.count("apply_schema_guardrail(") == 2
+    assert "dataset_role=\"source\"" in code
+    assert "dataset_role=\"target\"" in code
+    for internal_name in [
+        "load_schema_contract(",
+        "enforce_schema_result(",
+        "build_schema_validation_evidence(",
+        "write_schema_validation_evidence(",
+    ]:
+        assert internal_name not in code

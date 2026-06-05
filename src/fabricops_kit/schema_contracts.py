@@ -80,7 +80,7 @@ def _validate_dataset_role(dataset_role: str) -> str:
     return role
 
 
-def normalize_spark_data_type(data_type: Any) -> str:
+def _normalize_spark_data_type(data_type: Any) -> str:
     """Return a stable lowercase Spark data type representation.
 
     Parameters
@@ -118,7 +118,7 @@ def _schema_rows_from_dataframe(dataframe: Any) -> list[dict[str, Any]]:
         return [
             {
                 "column_name": field.name,
-                "data_type": normalize_spark_data_type(field.dataType),
+                "data_type": _normalize_spark_data_type(field.dataType),
                 "nullable": bool(field.nullable),
                 "ordinal_position": idx + 1,
             }
@@ -132,7 +132,7 @@ def _schema_rows_from_dataframe(dataframe: Any) -> list[dict[str, Any]]:
         return [
             {
                 "column_name": name,
-                "data_type": normalize_spark_data_type(dtype),
+                "data_type": _normalize_spark_data_type(dtype),
                 "nullable": nullable_lookup.get(name, True),
                 "ordinal_position": idx + 1,
             }
@@ -155,7 +155,7 @@ def _schema_rows_from_profile(profile_rows: Any) -> list[dict[str, Any]]:
         rows.append(
             {
                 "column_name": str(column_name),
-                "data_type": normalize_spark_data_type(_get_any(row, "data_type")),
+                "data_type": _normalize_spark_data_type(_get_any(row, "data_type")),
                 "nullable": _bool(nullable_value, default=True),
                 "ordinal_position": int(ordinal),
             }
@@ -169,7 +169,7 @@ def _schema_rows(profile_or_dataframe: Any) -> list[dict[str, Any]]:
     return _schema_rows_from_profile(profile_or_dataframe)
 
 
-def suggest_schema_contract(
+def _suggest_schema_contract(
     profile_or_dataframe: Any, *, agreement_id: str, contract_id: str, dataset_role: str
 ) -> list[dict[str, Any]]:
     """Draft column-level schema-contract rows from a profile or DataFrame.
@@ -195,7 +195,7 @@ def suggest_schema_contract(
     Notes
     -----
     Profiles are proposals only. Production enforcement should load an approved
-    stored contract with :func:`load_schema_contract`.
+    stored contract with :func:`_load_schema_contract`.
     """
     agreement = _required_identity(agreement_id, "agreement_id")
     contract = _required_identity(contract_id, "contract_id")
@@ -209,7 +209,7 @@ def suggest_schema_contract(
                 "contract_id": contract,
                 "dataset_role": role,
                 "column_name": row["column_name"],
-                "data_type": normalize_spark_data_type(row.get("data_type")),
+                "data_type": _normalize_spark_data_type(row.get("data_type")),
                 "required": True,
                 "nullable": bool(row.get("nullable", True)),
                 "ordinal_position": int(row.get("ordinal_position") or len(rows) + 1),
@@ -233,7 +233,7 @@ def _latest_profile_for_dataset(profile_rows: Any, table_name: str | None = None
     return [r for r in rows if str(_get_any(r, "run_timestamp", default="")) == latest]
 
 
-def build_schema_contract_review_state(
+def _build_schema_contract_review_state(
     proposed_rows: list[dict[str, Any]],
     *,
     allow_extra_columns: bool = False,
@@ -245,7 +245,7 @@ def build_schema_contract_review_state(
     Parameters
     ----------
     proposed_rows : list[dict[str, Any]]
-        Proposed rows returned by :func:`suggest_schema_contract` or edited by
+        Proposed rows returned by :func:`_suggest_schema_contract` or edited by
         a reviewer.
     allow_extra_columns : bool, default=False
         Whether non-contracted columns are allowed.
@@ -265,7 +265,7 @@ def build_schema_contract_review_state(
     selected = [dict(row) for row in proposed_rows or [] if _bool(row.get("selected"), default=True)]
     for idx, row in enumerate(selected, start=1):
         row["ordinal_position"] = int(row.get("ordinal_position") or idx)
-        row["data_type"] = normalize_spark_data_type(row.get("data_type"))
+        row["data_type"] = _normalize_spark_data_type(row.get("data_type"))
         row["required"] = _bool(row.get("required"), default=True)
         row["nullable"] = _bool(row.get("nullable"), default=True)
         row["enforcement"] = str(row.get("enforcement") or "")
@@ -279,46 +279,151 @@ def build_schema_contract_review_state(
     }
 
 
+def _get_active_spark(spark_session: Any = None) -> Any:
+    if spark_session is not None:
+        return spark_session
+    try:
+        from pyspark.sql import SparkSession
+    except Exception as exc:
+        raise ValueError("spark_session is required when no active SparkSession is available.") from exc
+    spark = SparkSession.getActiveSession()
+    if spark is None:
+        raise ValueError("spark_session is required when no active SparkSession is available.")
+    return spark
+
+
+def _contract_review_result(saved_contract: dict[str, Any], settings: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "status": str(saved_contract.get("contract_status") or _APPROVED_STATUS),
+        "contract_id": saved_contract["contract_id"],
+        "contract_version": saved_contract["contract_version"],
+        "dataset_role": saved_contract["dataset_role"],
+        "table_name": saved_contract["table_name"],
+        "settings": settings,
+        "columns": saved_contract["columns"],
+    }
+
+
 def review_schema_contract(
-    profile_rows: Any, *, agreement_id: str, contract_id: str, dataset_role: str, table_name: str | None = None
+    profile_or_dataframe: Any,
+    *,
+    config: Any,
+    env: str,
+    agreement_id: str,
+    contract_id: str,
+    dataset_role: str,
+    table_name: str,
+    workspace_name: str = "",
+    workspace_id: str = "",
+    item_name: str = "",
+    item_id: str = "",
+    schema_name: str = "",
+    spark_session: Any = None,
+    allow_extra_columns: bool = False,
+    check_column_order: bool = False,
+    default_enforcement: str = "fail",
+    approved: bool = False,
+    approved_by: str = "",
 ) -> dict[str, Any]:
-    """Render a lightweight ipywidgets review interface for a schema proposal.
+    """Review, approve, version, and persist a dataset schema contract.
 
     Parameters
     ----------
-    profile_rows : Any
-        Profile rows or Spark DataFrame containing one or more profile runs.
+    profile_or_dataframe : Any
+        Profile rows or Spark DataFrame-like object used to propose the schema.
+    config : FrameworkConfig or dict
+        Configuration containing the metadata lakehouse route.
+    env : str
+        Environment key paired with ``config``.
     agreement_id : str
-        Data agreement identifier.
+        Owning data agreement identifier.
     contract_id : str
-        Dataset contract identifier.
+        Dataset contract identifier for this specific source or target dataset.
     dataset_role : {"source", "target"}
-        Dataset role within the agreement.
-    table_name : str, optional
-        Table name used to select the latest matching profile rows.
+        Dataset role under the agreement.
+    table_name : str
+        Dataset table identity.
+    workspace_name, workspace_id, item_name, item_id, schema_name : str, optional
+        Dataset identity values persisted with the contract.
+    spark_session : pyspark.sql.SparkSession, optional
+        Spark session used to persist the approved contract. Required when
+        ``approved=True`` unless an active Spark session exists.
+    allow_extra_columns, check_column_order : bool, default=False
+        Dataset-level schema settings proposed to the reviewer.
+    default_enforcement : {"observe", "warn", "fail"}, default="fail"
+        Dataset-level enforcement mode proposed to the reviewer.
+    approved : bool, default=False
+        Explicit approval flag for non-interactive workflows. In notebooks, the
+        rendered approval button performs the same write after a human click.
+    approved_by : str, optional
+        Human approver identifier.
 
     Returns
     -------
     dict[str, Any]
-        Mutable review state with ``settings`` and ``columns`` keys. In a
-        notebook, the displayed widget updates this state as reviewers edit it.
+        Concise review result. Pending reviews return ``status='pending_approval'``;
+        approved reviews return the saved contract version and approved columns.
 
     Notes
     -----
-    The widget reviews and approves only. It does not validate a production
-    pipeline and does not write metadata.
+    This is the user-facing governance workflow: proposal generation, review,
+    explicit approval, versioning, and persistence happen behind one callable.
+    Production validation is handled separately by :func:`apply_schema_guardrail`.
     """
-    latest = _latest_profile_for_dataset(profile_rows, table_name=table_name)
-    proposed = suggest_schema_contract(
-        latest or profile_rows, agreement_id=agreement_id, contract_id=contract_id, dataset_role=dataset_role
+    latest = _latest_profile_for_dataset(profile_or_dataframe, table_name=table_name)
+    proposed = _suggest_schema_contract(
+        latest or profile_or_dataframe,
+        agreement_id=agreement_id,
+        contract_id=contract_id,
+        dataset_role=dataset_role,
     )
-    state = build_schema_contract_review_state(proposed)
+    state = _build_schema_contract_review_state(
+        proposed,
+        allow_extra_columns=allow_extra_columns,
+        check_column_order=check_column_order,
+        default_enforcement=default_enforcement,
+    )
+
+    def _approve(current_state: dict[str, Any]) -> dict[str, Any]:
+        spark = _get_active_spark(spark_session)
+        saved = _write_schema_contract(
+            spark,
+            config=config,
+            env=env,
+            agreement_id=agreement_id,
+            contract_id=contract_id,
+            dataset_role=dataset_role,
+            workspace_name=workspace_name,
+            workspace_id=workspace_id,
+            item_name=item_name,
+            item_id=item_id,
+            schema_name=schema_name,
+            table_name=table_name,
+            columns=current_state["columns"],
+            approved_by=approved_by,
+            **current_state["settings"],
+        )
+        return _contract_review_result(saved, current_state["settings"])
+
+    if approved:
+        return _approve(state)
+
+    pending_result = {
+        "status": "pending_approval",
+        "contract_id": contract_id,
+        "contract_version": None,
+        "dataset_role": _validate_dataset_role(dataset_role),
+        "table_name": table_name,
+        "settings": state["settings"],
+        "columns": state["columns"],
+        "message": "Review the proposed schema and explicitly approve before the contract is written.",
+    }
+
     try:
         import ipywidgets as widgets
         from IPython.display import display
     except Exception:
-        state["message"] = "ipywidgets is unavailable; edit the returned state directly before write_schema_contract."
-        return state
+        return pending_result
 
     extra = widgets.Checkbox(value=state["settings"]["allow_extra_columns"], description="Allow extra columns")
     order = widgets.Checkbox(value=state["settings"]["check_column_order"], description="Check column order")
@@ -335,16 +440,16 @@ def review_schema_contract(
             options=["", *sorted(_ENFORCEMENTS)], value=row.get("enforcement", ""), description="enforce"
         )
         column_widgets.append((row, include, required, dtype, nullable, enforcement))
-    approve = widgets.Button(description="Update approved schema", button_style="success")
-    status = widgets.HTML(value="Review columns, then click Update approved schema.")
+    approve_button = widgets.Button(description="Approve and write contract", button_style="success")
+    status = widgets.HTML(value="Review columns, then click Approve and write contract.")
 
-    def _on_click(_button):
-        state["settings"] = {
+    def _current_state_from_widgets() -> dict[str, Any]:
+        widget_settings = {
             "allow_extra_columns": extra.value,
             "check_column_order": order.value,
             "default_enforcement": default.value,
         }
-        approved = []
+        approved_rows = []
         for row, include, required, dtype, nullable, enforcement in column_widgets:
             if not include.value:
                 continue
@@ -358,16 +463,21 @@ def review_schema_contract(
                     "selected": True,
                 }
             )
-            approved.append(updated)
-        state["columns"] = build_schema_contract_review_state(approved, **state["settings"])["columns"]
-        status.value = f"Approved {len(state['columns'])} schema column(s)."
+            approved_rows.append(updated)
+        return _build_schema_contract_review_state(approved_rows, **widget_settings)
 
-    approve.on_click(_on_click)
+    def _on_approve(_button):
+        state.update(_current_state_from_widgets())
+        saved = _approve(state)
+        pending_result.update(saved)
+        status.value = f"Approved contract version {saved['contract_version']} with {len(saved['columns'])} column(s)."
+
+    approve_button.on_click(_on_approve)
     controls = [widgets.HBox([extra, order, default])]
     controls.extend(widgets.HBox(items[1:]) for items in column_widgets)
-    controls.extend([approve, status])
+    controls.extend([approve_button, status])
     display(widgets.VBox(controls))
-    return state
+    return pending_result
 
 
 def _next_contract_version(existing_rows: list[dict[str, Any]], contract_id: str) -> int:
@@ -379,7 +489,7 @@ def _next_contract_version(existing_rows: list[dict[str, Any]], contract_id: str
     return max(versions, default=0) + 1
 
 
-def write_schema_contract(
+def _write_schema_contract(
     spark: Any,
     *,
     config: Any,
@@ -483,7 +593,7 @@ def write_schema_contract(
             {
                 "contract_id": contract,
                 "column_name": _required_identity(row.get("column_name"), "column_name"),
-                "data_type": normalize_spark_data_type(row.get("data_type")),
+                "data_type": _normalize_spark_data_type(row.get("data_type")),
                 "required": _bool(row.get("required"), default=True),
                 "nullable": _bool(row.get("nullable"), default=True),
                 "ordinal_position": int(row.get("ordinal_position") or idx),
@@ -531,7 +641,7 @@ def _identity_matches(
     return True
 
 
-def load_schema_contract(
+def _load_schema_contract(
     *,
     config: Any,
     env: str,
@@ -644,7 +754,7 @@ def validate_schema(
     dataframe : pyspark.sql.DataFrame
         Spark DataFrame or DataFrame-like object with schema metadata.
     expected_schema : Any
-        Approved column rows from :func:`load_schema_contract`.
+        Approved column rows from :func:`_load_schema_contract`.
     allow_extra_columns : bool, default=False
         Whether unexpected DataFrame columns are allowed.
     check_nullability : bool, default=True
@@ -661,7 +771,7 @@ def validate_schema(
     Notes
     -----
     This function never writes metadata and never stops the pipeline. Use
-    :func:`enforce_schema_result` to apply enforcement behavior.
+    :func:`apply_schema_guardrail` to apply enforcement behavior.
     """
     actual = _schema_rows_from_dataframe(dataframe)
     expected = []
@@ -669,7 +779,7 @@ def validate_schema(
         expected.append(
             {
                 "column_name": _get_any(row, "column_name"),
-                "data_type": normalize_spark_data_type(_get_any(row, "data_type")),
+                "data_type": _normalize_spark_data_type(_get_any(row, "data_type")),
                 "required": _bool(_get_any(row, "required", default=True), True),
                 "nullable": _bool(_get_any(row, "nullable", default=True), True),
                 "ordinal_position": int(_get_any(row, "ordinal_position", default=idx) or idx),
@@ -693,7 +803,7 @@ def validate_schema(
         actual_row = actual_by_name.get(name)
         if not actual_row:
             continue
-        if normalize_spark_data_type(actual_row["data_type"]) != expected_row["data_type"]:
+        if _normalize_spark_data_type(actual_row["data_type"]) != expected_row["data_type"]:
             datatype_mismatches.append(
                 {"column_name": name, "expected": expected_row["data_type"], "actual": actual_row["data_type"]}
             )
@@ -725,8 +835,12 @@ def validate_schema(
     }
 
 
-def enforce_schema_result(
-    schema_result: dict[str, Any], enforcement: str = "fail", *, per_drift_enforcement: dict[str, str] | None = None
+def _enforce_schema_result(
+    schema_result: dict[str, Any],
+    enforcement: str = "fail",
+    *,
+    per_drift_enforcement: dict[str, str] | None = None,
+    raise_on_fail: bool = True,
 ) -> dict[str, Any]:
     """Apply schema-contract enforcement behavior to a validation result.
 
@@ -778,14 +892,160 @@ def enforce_schema_result(
     }
     if warning:
         warnings.warn(f"Schema contract drift detected: {', '.join(warning)}", UserWarning, stacklevel=2)
-    if failing:
+    if failing and raise_on_fail:
         raise SchemaContractValidationError(
             f"Schema contract validation failed for drift type(s): {', '.join(failing)}"
         )
     return summary
 
 
-def build_schema_validation_evidence(
+
+def apply_schema_guardrail(
+    df: Any,
+    *,
+    config: Any,
+    env: str,
+    agreement_id: str,
+    dataset_role: str,
+    table_name: str,
+    run_id: str,
+    workspace_name: str | None = None,
+    workspace_id: str | None = None,
+    item_name: str | None = None,
+    item_id: str | None = None,
+    schema_name: str | None = None,
+    notebook_registry_id: str | None = None,
+    metadata_table: str = SCHEMA_VALIDATION_EVIDENCE_TABLE,
+    spark_session: Any = None,
+    require_contract: bool = False,
+) -> dict[str, Any]:
+    """Apply the approved dataset schema guardrail in a pipeline run.
+
+    Parameters
+    ----------
+    df : pyspark.sql.DataFrame
+        Current source or transformed target DataFrame to validate.
+    config : FrameworkConfig or dict
+        Configuration containing the metadata lakehouse route.
+    env : str
+        Environment key paired with ``config``.
+    agreement_id : str
+        Owning data agreement identifier.
+    dataset_role : {"source", "target"}
+        Role of the dataset under the agreement.
+    table_name : str
+        Dataset table identity.
+    run_id : str
+        Pipeline run identifier recorded in validation evidence.
+    workspace_name, workspace_id, item_name, item_id, schema_name : str, optional
+        Dataset identity filters used to load the approved contract and write
+        evidence.
+    notebook_registry_id : str, optional
+        Active notebook registration identifier to include in the returned
+        structured result.
+    metadata_table : str, default="METADATA_SCHEMA_VALIDATION_EVIDENCE"
+        Evidence metadata table.
+    spark_session : pyspark.sql.SparkSession, optional
+        Spark session used for metadata reads/writes.
+    require_contract : bool, default=False
+        When True, missing approved contracts raise ``LookupError`` instead of
+        returning ``status='not_configured'``.
+
+    Returns
+    -------
+    dict[str, Any]
+        Structured guardrail result containing the original DataFrame, loaded
+        contract, validation result, enforcement result, evidence status, and
+        continuation flag.
+
+    Raises
+    ------
+    LookupError
+        If ``require_contract=True`` and no approved contract exists.
+    SchemaContractValidationError
+        If approved enforcement is ``fail`` and drift is detected. Evidence is
+        written before raising when metadata writes are available.
+    """
+    spark = _get_active_spark(spark_session)
+    identity = {
+        "workspace_name": workspace_name or "",
+        "workspace_id": workspace_id or "",
+        "item_name": item_name or "",
+        "item_id": item_id or "",
+        "schema_name": schema_name or "",
+    }
+    try:
+        contract = _load_schema_contract(
+            config=config,
+            env=env,
+            agreement_id=agreement_id,
+            dataset_role=dataset_role,
+            table_name=table_name,
+            spark_session=spark,
+            **identity,
+        )
+    except LookupError as exc:
+        if require_contract:
+            raise
+        return {
+            "status": "not_configured",
+            "dataframe": df,
+            "contract": None,
+            "validation": None,
+            "enforcement": {"status": "not_configured", "can_continue": True},
+            "evidence_status": "not_written",
+            "can_continue": True,
+            "message": str(exc),
+            "notebook_registry_id": notebook_registry_id,
+        }
+
+    validation = validate_schema(
+        df,
+        contract["columns"],
+        allow_extra_columns=contract["allow_extra_columns"],
+        check_column_order=contract["check_column_order"],
+    )
+    enforcement = _enforce_schema_result(
+        validation,
+        enforcement=contract["default_enforcement"],
+        raise_on_fail=False,
+    )
+    evidence = _build_schema_validation_evidence(
+        validation,
+        run_id=run_id,
+        agreement_id=agreement_id,
+        contract_id=contract["contract_id"],
+        contract_version=contract["contract_version"],
+        dataset_role=dataset_role,
+        table_name=table_name,
+        enforcement_applied=enforcement,
+        workspace_name=identity["workspace_name"],
+        workspace_id=identity["workspace_id"],
+        item_name=identity["item_name"],
+        item_id=identity["item_id"],
+    )
+    evidence_df = _write_schema_validation_evidence(
+        spark, evidence, config=config, env=env, metadata_table=metadata_table
+    )
+    result = {
+        "status": enforcement["status"],
+        "dataframe": df,
+        "contract": contract,
+        "validation": validation,
+        "enforcement": enforcement,
+        "evidence": evidence,
+        "evidence_dataframe": evidence_df,
+        "evidence_status": "written",
+        "can_continue": enforcement["can_continue"],
+        "notebook_registry_id": notebook_registry_id,
+    }
+    if not enforcement["can_continue"]:
+        raise SchemaContractValidationError(
+            "Schema contract validation failed before write. Evidence was written to metadata."
+        )
+    return result
+
+def _build_schema_validation_evidence(
     result: dict[str, Any],
     *,
     run_id: str,
@@ -811,7 +1071,7 @@ def build_schema_validation_evidence(
     workspace_name, workspace_id, item_name, item_id : str, optional
         Additional dataset identity fields.
     enforcement_applied : Any, optional
-        Enforcement summary returned by :func:`enforce_schema_result`.
+        Enforcement summary returned by :func:`apply_schema_guardrail`.
 
     Returns
     -------
@@ -840,7 +1100,7 @@ def build_schema_validation_evidence(
     }
 
 
-def write_schema_validation_evidence(
+def _write_schema_validation_evidence(
     spark: Any,
     evidence_rows: list[dict[str, Any]] | dict[str, Any],
     *,
@@ -855,7 +1115,7 @@ def write_schema_validation_evidence(
     spark : pyspark.sql.SparkSession
         Spark session used to create the evidence DataFrame.
     evidence_rows : list[dict[str, Any]] or dict[str, Any]
-        Evidence rows from :func:`build_schema_validation_evidence`.
+        Evidence rows from :func:`_build_schema_validation_evidence`.
     config : FrameworkConfig or dict
         Configuration containing the metadata lakehouse route.
     env : str

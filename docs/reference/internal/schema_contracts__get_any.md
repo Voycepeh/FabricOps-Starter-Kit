@@ -22,7 +22,7 @@ No summary available.
 ## Inbound references
 - <a href="../internal/schema_contracts/_identity_matches/"><code>fabricops_kit.schema_contracts._identity_matches</code></a>
 - <a href="../internal/schema_contracts/_latest_profile_for_dataset/"><code>fabricops_kit.schema_contracts._latest_profile_for_dataset</code></a>
+- <a href="../internal/schema_contracts/_load_schema_contract/"><code>fabricops_kit.schema_contracts._load_schema_contract</code></a>
 - <a href="../internal/schema_contracts/_next_contract_version/"><code>fabricops_kit.schema_contracts._next_contract_version</code></a>
 - <a href="../internal/schema_contracts/_schema_rows_from_profile/"><code>fabricops_kit.schema_contracts._schema_rows_from_profile</code></a>
-- <a href="../load_schema_contract/"><code>fabricops_kit.schema_contracts.load_schema_contract</code></a>
 - <a href="../validate_schema/"><code>fabricops_kit.schema_contracts.validate_schema</code></a>

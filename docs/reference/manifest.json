@@ -723,43 +723,7 @@
       "module_summary": "Owns dataset-level schema contract suggestions, review state, versioned persistence, validation, enforcement, and evidence.",
       "sidebar_group": "2. Analyst / data scientist",
       "sidebar_include": true,
-      "callable_name": "build_schema_contract_review_state",
-      "callable_visibility": "public",
-      "callable_role": "optional",
-      "template_notebook": "\u2014",
-      "template_segment": "Exploration/schema contract setup"
-    },
-    {
-      "module_name": "schema_contracts",
-      "visibility": "public",
-      "module_summary": "Owns dataset-level schema contract suggestions, review state, versioned persistence, validation, enforcement, and evidence.",
-      "sidebar_group": "2. Analyst / data scientist",
-      "sidebar_include": true,
-      "callable_name": "build_schema_validation_evidence",
-      "callable_visibility": "public",
-      "callable_role": "essential",
-      "template_notebook": "`03_pc_<agreement>_<source>_to_<target>`",
-      "template_segment": "Schema validation"
-    },
-    {
-      "module_name": "schema_contracts",
-      "visibility": "public",
-      "module_summary": "Owns dataset-level schema contract suggestions, review state, versioned persistence, validation, enforcement, and evidence.",
-      "sidebar_group": "2. Analyst / data scientist",
-      "sidebar_include": true,
-      "callable_name": "enforce_schema_result",
-      "callable_visibility": "public",
-      "callable_role": "essential",
-      "template_notebook": "`03_pc_<agreement>_<source>_to_<target>`",
-      "template_segment": "Schema validation"
-    },
-    {
-      "module_name": "schema_contracts",
-      "visibility": "public",
-      "module_summary": "Owns dataset-level schema contract suggestions, review state, versioned persistence, validation, enforcement, and evidence.",
-      "sidebar_group": "2. Analyst / data scientist",
-      "sidebar_include": true,
-      "callable_name": "load_schema_contract",
+      "callable_name": "apply_schema_guardrail",
       "callable_visibility": "public",
       "callable_role": "essential",
       "template_notebook": "`03_pc_<agreement>_<source>_to_<target>`",
@@ -773,21 +737,9 @@
       "sidebar_include": true,
       "callable_name": "review_schema_contract",
       "callable_visibility": "public",
-      "callable_role": "optional",
-      "template_notebook": "\u2014",
-      "template_segment": "Exploration/schema contract setup"
-    },
-    {
-      "module_name": "schema_contracts",
-      "visibility": "public",
-      "module_summary": "Owns dataset-level schema contract suggestions, review state, versioned persistence, validation, enforcement, and evidence.",
-      "sidebar_group": "2. Analyst / data scientist",
-      "sidebar_include": true,
-      "callable_name": "suggest_schema_contract",
-      "callable_visibility": "public",
       "callable_role": "essential",
       "template_notebook": "\u2014",
-      "template_segment": "Exploration/schema contract setup"
+      "template_segment": "Schema contract governance workflow"
     },
     {
       "module_name": "schema_contracts",
@@ -797,33 +749,9 @@
       "sidebar_include": true,
       "callable_name": "validate_schema",
       "callable_visibility": "public",
-      "callable_role": "essential",
-      "template_notebook": "`03_pc_<agreement>_<source>_to_<target>`",
-      "template_segment": "Schema validation"
-    },
-    {
-      "module_name": "schema_contracts",
-      "visibility": "public",
-      "module_summary": "Owns dataset-level schema contract suggestions, review state, versioned persistence, validation, enforcement, and evidence.",
-      "sidebar_group": "2. Analyst / data scientist",
-      "sidebar_include": true,
-      "callable_name": "write_schema_contract",
-      "callable_visibility": "public",
-      "callable_role": "essential",
+      "callable_role": "optional",
       "template_notebook": "\u2014",
-      "template_segment": "Exploration/schema contract setup"
-    },
-    {
-      "module_name": "schema_contracts",
-      "visibility": "public",
-      "module_summary": "Owns dataset-level schema contract suggestions, review state, versioned persistence, validation, enforcement, and evidence.",
-      "sidebar_group": "2. Analyst / data scientist",
-      "sidebar_include": true,
-      "callable_name": "write_schema_validation_evidence",
-      "callable_visibility": "public",
-      "callable_role": "essential",
-      "template_notebook": "`03_pc_<agreement>_<source>_to_<target>`",
-      "template_segment": "Schema validation"
+      "template_segment": "Advanced schema validation"
     },
     {
       "module_name": "versioning",

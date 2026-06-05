@@ -3227,8 +3227,8 @@
       "fabricops_kit.data_agreement._list_data_stewards",
       "fabricops_kit.metadata.load_notebook_registry",
       "fabricops_kit.metadata.setup_notebook_registry_table",
-      "fabricops_kit.schema_contracts.load_schema_contract",
-      "fabricops_kit.schema_contracts.write_schema_contract"
+      "fabricops_kit.schema_contracts._load_schema_contract",
+      "fabricops_kit.schema_contracts._write_schema_contract"
     ],
     "outbound": [
       "fabricops_kit.config._get_store",
@@ -3278,8 +3278,8 @@
       "fabricops_kit.fabric_input_output.seed_minimal_sample_source_table",
       "fabricops_kit.metadata.register_current_notebook",
       "fabricops_kit.metadata.setup_notebook_registry_table",
-      "fabricops_kit.schema_contracts.write_schema_contract",
-      "fabricops_kit.schema_contracts.write_schema_validation_evidence"
+      "fabricops_kit.schema_contracts._write_schema_contract",
+      "fabricops_kit.schema_contracts._write_schema_validation_evidence"
     ],
     "outbound": [
       "fabricops_kit.config._get_store"
@@ -3847,7 +3847,8 @@
     "type": "callable",
     "role": "optional",
     "inbound": [
-      "fabricops_kit.schema_contracts.enforce_schema_result"
+      "fabricops_kit.schema_contracts._enforce_schema_result",
+      "fabricops_kit.schema_contracts.apply_schema_guardrail"
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/schema_contracts.py",
@@ -3860,13 +3861,46 @@
     "type": "internal",
     "role": "internal",
     "inbound": [
+      "fabricops_kit.schema_contracts._build_schema_contract_review_state",
+      "fabricops_kit.schema_contracts._load_schema_contract",
       "fabricops_kit.schema_contracts._schema_rows_from_profile",
-      "fabricops_kit.schema_contracts.build_schema_contract_review_state",
-      "fabricops_kit.schema_contracts.load_schema_contract",
-      "fabricops_kit.schema_contracts.validate_schema",
-      "fabricops_kit.schema_contracts.write_schema_contract"
+      "fabricops_kit.schema_contracts._write_schema_contract",
+      "fabricops_kit.schema_contracts.validate_schema"
     ],
     "outbound": [],
+    "source_file": "src/fabricops_kit/schema_contracts.py",
+    "summary": "No summary available."
+  },
+  {
+    "name": "_build_schema_contract_review_state",
+    "qualified_name": "fabricops_kit.schema_contracts._build_schema_contract_review_state",
+    "module": "schema_contracts",
+    "type": "internal",
+    "role": "internal",
+    "inbound": [
+      "fabricops_kit.schema_contracts.review_schema_contract"
+    ],
+    "outbound": [
+      "fabricops_kit.schema_contracts._bool",
+      "fabricops_kit.schema_contracts._normalize_spark_data_type"
+    ],
+    "source_file": "src/fabricops_kit/schema_contracts.py",
+    "summary": "No summary available."
+  },
+  {
+    "name": "_build_schema_validation_evidence",
+    "qualified_name": "fabricops_kit.schema_contracts._build_schema_validation_evidence",
+    "module": "schema_contracts",
+    "type": "internal",
+    "role": "internal",
+    "inbound": [
+      "fabricops_kit.schema_contracts.apply_schema_guardrail"
+    ],
+    "outbound": [
+      "fabricops_kit.schema_contracts._now_utc_iso",
+      "fabricops_kit.schema_contracts._required_identity",
+      "fabricops_kit.schema_contracts._validate_dataset_role"
+    ],
     "source_file": "src/fabricops_kit/schema_contracts.py",
     "summary": "No summary available."
   },
@@ -3878,14 +3912,56 @@
     "role": "internal",
     "inbound": [
       "fabricops_kit.schema_contracts._latest_profile_for_dataset",
+      "fabricops_kit.schema_contracts._load_schema_contract",
       "fabricops_kit.schema_contracts._schema_rows_from_profile",
-      "fabricops_kit.schema_contracts.load_schema_contract",
-      "fabricops_kit.schema_contracts.validate_schema",
-      "fabricops_kit.schema_contracts.write_schema_contract"
+      "fabricops_kit.schema_contracts._write_schema_contract",
+      "fabricops_kit.schema_contracts.validate_schema"
     ],
     "outbound": [
       "fabricops_kit.schema_contracts._row_dict"
     ],
+    "source_file": "src/fabricops_kit/schema_contracts.py",
+    "summary": "No summary available."
+  },
+  {
+    "name": "_contract_review_result",
+    "qualified_name": "fabricops_kit.schema_contracts._contract_review_result",
+    "module": "schema_contracts",
+    "type": "internal",
+    "role": "internal",
+    "inbound": [
+      "fabricops_kit.schema_contracts.review_schema_contract"
+    ],
+    "outbound": [],
+    "source_file": "src/fabricops_kit/schema_contracts.py",
+    "summary": "No summary available."
+  },
+  {
+    "name": "_enforce_schema_result",
+    "qualified_name": "fabricops_kit.schema_contracts._enforce_schema_result",
+    "module": "schema_contracts",
+    "type": "internal",
+    "role": "internal",
+    "inbound": [
+      "fabricops_kit.schema_contracts.apply_schema_guardrail"
+    ],
+    "outbound": [
+      "fabricops_kit.schema_contracts.SchemaContractValidationError"
+    ],
+    "source_file": "src/fabricops_kit/schema_contracts.py",
+    "summary": "No summary available."
+  },
+  {
+    "name": "_get_active_spark",
+    "qualified_name": "fabricops_kit.schema_contracts._get_active_spark",
+    "module": "schema_contracts",
+    "type": "internal",
+    "role": "internal",
+    "inbound": [
+      "fabricops_kit.schema_contracts.apply_schema_guardrail",
+      "fabricops_kit.schema_contracts.review_schema_contract"
+    ],
+    "outbound": [],
     "source_file": "src/fabricops_kit/schema_contracts.py",
     "summary": "No summary available."
   },
@@ -3898,9 +3974,9 @@
     "inbound": [
       "fabricops_kit.schema_contracts._identity_matches",
       "fabricops_kit.schema_contracts._latest_profile_for_dataset",
+      "fabricops_kit.schema_contracts._load_schema_contract",
       "fabricops_kit.schema_contracts._next_contract_version",
       "fabricops_kit.schema_contracts._schema_rows_from_profile",
-      "fabricops_kit.schema_contracts.load_schema_contract",
       "fabricops_kit.schema_contracts.validate_schema"
     ],
     "outbound": [],
@@ -3914,7 +3990,7 @@
     "type": "internal",
     "role": "internal",
     "inbound": [
-      "fabricops_kit.schema_contracts.load_schema_contract"
+      "fabricops_kit.schema_contracts._load_schema_contract"
     ],
     "outbound": [
       "fabricops_kit.schema_contracts._get_any"
@@ -3939,17 +4015,56 @@
     "summary": "No summary available."
   },
   {
+    "name": "_load_schema_contract",
+    "qualified_name": "fabricops_kit.schema_contracts._load_schema_contract",
+    "module": "schema_contracts",
+    "type": "internal",
+    "role": "internal",
+    "inbound": [
+      "fabricops_kit.schema_contracts.apply_schema_guardrail"
+    ],
+    "outbound": [
+      "fabricops_kit.fabric_input_output.read_lakehouse_table",
+      "fabricops_kit.schema_contracts._bool",
+      "fabricops_kit.schema_contracts._coerce_rows",
+      "fabricops_kit.schema_contracts._get_any",
+      "fabricops_kit.schema_contracts._identity_matches",
+      "fabricops_kit.schema_contracts._required_identity",
+      "fabricops_kit.schema_contracts._validate_dataset_role"
+    ],
+    "source_file": "src/fabricops_kit/schema_contracts.py",
+    "summary": "No summary available."
+  },
+  {
     "name": "_next_contract_version",
     "qualified_name": "fabricops_kit.schema_contracts._next_contract_version",
     "module": "schema_contracts",
     "type": "internal",
     "role": "internal",
     "inbound": [
-      "fabricops_kit.schema_contracts.write_schema_contract"
+      "fabricops_kit.schema_contracts._write_schema_contract"
     ],
     "outbound": [
       "fabricops_kit.schema_contracts._get_any"
     ],
+    "source_file": "src/fabricops_kit/schema_contracts.py",
+    "summary": "No summary available."
+  },
+  {
+    "name": "_normalize_spark_data_type",
+    "qualified_name": "fabricops_kit.schema_contracts._normalize_spark_data_type",
+    "module": "schema_contracts",
+    "type": "internal",
+    "role": "internal",
+    "inbound": [
+      "fabricops_kit.schema_contracts._build_schema_contract_review_state",
+      "fabricops_kit.schema_contracts._schema_rows_from_dataframe",
+      "fabricops_kit.schema_contracts._schema_rows_from_profile",
+      "fabricops_kit.schema_contracts._suggest_schema_contract",
+      "fabricops_kit.schema_contracts._write_schema_contract",
+      "fabricops_kit.schema_contracts.validate_schema"
+    ],
+    "outbound": [],
     "source_file": "src/fabricops_kit/schema_contracts.py",
     "summary": "No summary available."
   },
@@ -3960,9 +4075,9 @@
     "type": "internal",
     "role": "internal",
     "inbound": [
-      "fabricops_kit.schema_contracts.build_schema_validation_evidence",
-      "fabricops_kit.schema_contracts.suggest_schema_contract",
-      "fabricops_kit.schema_contracts.write_schema_contract"
+      "fabricops_kit.schema_contracts._build_schema_validation_evidence",
+      "fabricops_kit.schema_contracts._suggest_schema_contract",
+      "fabricops_kit.schema_contracts._write_schema_contract"
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/schema_contracts.py",
@@ -3975,11 +4090,11 @@
     "type": "internal",
     "role": "internal",
     "inbound": [
+      "fabricops_kit.schema_contracts._build_schema_validation_evidence",
+      "fabricops_kit.schema_contracts._load_schema_contract",
+      "fabricops_kit.schema_contracts._suggest_schema_contract",
       "fabricops_kit.schema_contracts._validate_dataset_role",
-      "fabricops_kit.schema_contracts.build_schema_validation_evidence",
-      "fabricops_kit.schema_contracts.load_schema_contract",
-      "fabricops_kit.schema_contracts.suggest_schema_contract",
-      "fabricops_kit.schema_contracts.write_schema_contract"
+      "fabricops_kit.schema_contracts._write_schema_contract"
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/schema_contracts.py",
@@ -4005,7 +4120,7 @@
     "type": "internal",
     "role": "internal",
     "inbound": [
-      "fabricops_kit.schema_contracts.suggest_schema_contract"
+      "fabricops_kit.schema_contracts._suggest_schema_contract"
     ],
     "outbound": [
       "fabricops_kit.schema_contracts._schema_rows_from_dataframe",
@@ -4025,7 +4140,7 @@
       "fabricops_kit.schema_contracts.validate_schema"
     ],
     "outbound": [
-      "fabricops_kit.schema_contracts.normalize_spark_data_type"
+      "fabricops_kit.schema_contracts._normalize_spark_data_type"
     ],
     "source_file": "src/fabricops_kit/schema_contracts.py",
     "summary": "No summary available."
@@ -4043,7 +4158,26 @@
       "fabricops_kit.schema_contracts._bool",
       "fabricops_kit.schema_contracts._coerce_rows",
       "fabricops_kit.schema_contracts._get_any",
-      "fabricops_kit.schema_contracts.normalize_spark_data_type"
+      "fabricops_kit.schema_contracts._normalize_spark_data_type"
+    ],
+    "source_file": "src/fabricops_kit/schema_contracts.py",
+    "summary": "No summary available."
+  },
+  {
+    "name": "_suggest_schema_contract",
+    "qualified_name": "fabricops_kit.schema_contracts._suggest_schema_contract",
+    "module": "schema_contracts",
+    "type": "internal",
+    "role": "internal",
+    "inbound": [
+      "fabricops_kit.schema_contracts.review_schema_contract"
+    ],
+    "outbound": [
+      "fabricops_kit.schema_contracts._normalize_spark_data_type",
+      "fabricops_kit.schema_contracts._now_utc_iso",
+      "fabricops_kit.schema_contracts._required_identity",
+      "fabricops_kit.schema_contracts._schema_rows",
+      "fabricops_kit.schema_contracts._validate_dataset_role"
     ],
     "source_file": "src/fabricops_kit/schema_contracts.py",
     "summary": "No summary available."
@@ -4055,10 +4189,11 @@
     "type": "internal",
     "role": "internal",
     "inbound": [
-      "fabricops_kit.schema_contracts.build_schema_validation_evidence",
-      "fabricops_kit.schema_contracts.load_schema_contract",
-      "fabricops_kit.schema_contracts.suggest_schema_contract",
-      "fabricops_kit.schema_contracts.write_schema_contract"
+      "fabricops_kit.schema_contracts._build_schema_validation_evidence",
+      "fabricops_kit.schema_contracts._load_schema_contract",
+      "fabricops_kit.schema_contracts._suggest_schema_contract",
+      "fabricops_kit.schema_contracts._write_schema_contract",
+      "fabricops_kit.schema_contracts.review_schema_contract"
     ],
     "outbound": [
       "fabricops_kit.schema_contracts._required_identity"
@@ -4067,170 +4202,99 @@
     "summary": "No summary available."
   },
   {
-    "name": "build_schema_contract_review_state",
-    "qualified_name": "fabricops_kit.schema_contracts.build_schema_contract_review_state",
-    "module": "schema_contracts",
-    "type": "callable",
-    "role": "optional",
-    "inbound": [
-      "fabricops_kit.schema_contracts.review_schema_contract"
-    ],
-    "outbound": [
-      "fabricops_kit.schema_contracts._bool",
-      "fabricops_kit.schema_contracts.normalize_spark_data_type"
-    ],
-    "source_file": "src/fabricops_kit/schema_contracts.py",
-    "summary": "Normalize non-UI schema-contract review state for tests and notebooks."
-  },
-  {
-    "name": "build_schema_validation_evidence",
-    "qualified_name": "fabricops_kit.schema_contracts.build_schema_validation_evidence",
-    "module": "schema_contracts",
-    "type": "callable",
-    "role": "essential",
-    "inbound": [],
-    "outbound": [
-      "fabricops_kit.schema_contracts._now_utc_iso",
-      "fabricops_kit.schema_contracts._required_identity",
-      "fabricops_kit.schema_contracts._validate_dataset_role"
-    ],
-    "source_file": "src/fabricops_kit/schema_contracts.py",
-    "summary": "Build structured schema-drift evidence rows for metadata storage."
-  },
-  {
-    "name": "enforce_schema_result",
-    "qualified_name": "fabricops_kit.schema_contracts.enforce_schema_result",
-    "module": "schema_contracts",
-    "type": "callable",
-    "role": "essential",
-    "inbound": [],
-    "outbound": [
-      "fabricops_kit.schema_contracts.SchemaContractValidationError"
-    ],
-    "source_file": "src/fabricops_kit/schema_contracts.py",
-    "summary": "Apply observe, warn, or fail behavior to a schema validation result."
-  },
-  {
-    "name": "load_schema_contract",
-    "qualified_name": "fabricops_kit.schema_contracts.load_schema_contract",
-    "module": "schema_contracts",
-    "type": "callable",
-    "role": "essential",
-    "inbound": [],
-    "outbound": [
-      "fabricops_kit.fabric_input_output.read_lakehouse_table",
-      "fabricops_kit.schema_contracts._bool",
-      "fabricops_kit.schema_contracts._coerce_rows",
-      "fabricops_kit.schema_contracts._get_any",
-      "fabricops_kit.schema_contracts._identity_matches",
-      "fabricops_kit.schema_contracts._required_identity",
-      "fabricops_kit.schema_contracts._validate_dataset_role"
-    ],
-    "source_file": "src/fabricops_kit/schema_contracts.py",
-    "summary": "Load the latest approved schema contract for one specific source or target dataset."
-  },
-  {
-    "name": "normalize_spark_data_type",
-    "qualified_name": "fabricops_kit.schema_contracts.normalize_spark_data_type",
+    "name": "_write_schema_contract",
+    "qualified_name": "fabricops_kit.schema_contracts._write_schema_contract",
     "module": "schema_contracts",
     "type": "internal",
     "role": "internal",
     "inbound": [
-      "fabricops_kit.schema_contracts._schema_rows_from_dataframe",
-      "fabricops_kit.schema_contracts._schema_rows_from_profile",
-      "fabricops_kit.schema_contracts.build_schema_contract_review_state",
-      "fabricops_kit.schema_contracts.suggest_schema_contract",
-      "fabricops_kit.schema_contracts.validate_schema",
-      "fabricops_kit.schema_contracts.write_schema_contract"
-    ],
-    "outbound": [],
-    "source_file": "src/fabricops_kit/schema_contracts.py",
-    "summary": "No summary available."
-  },
-  {
-    "name": "review_schema_contract",
-    "qualified_name": "fabricops_kit.schema_contracts.review_schema_contract",
-    "module": "schema_contracts",
-    "type": "callable",
-    "role": "optional",
-    "inbound": [],
-    "outbound": [
-      "fabricops_kit.schema_contracts._latest_profile_for_dataset",
-      "fabricops_kit.schema_contracts.build_schema_contract_review_state",
-      "fabricops_kit.schema_contracts.suggest_schema_contract"
-    ],
-    "source_file": "src/fabricops_kit/schema_contracts.py",
-    "summary": "Render a lightweight schema-contract approval widget and return editable approved settings and column rows."
-  },
-  {
-    "name": "suggest_schema_contract",
-    "qualified_name": "fabricops_kit.schema_contracts.suggest_schema_contract",
-    "module": "schema_contracts",
-    "type": "callable",
-    "role": "essential",
-    "inbound": [
       "fabricops_kit.schema_contracts.review_schema_contract"
     ],
-    "outbound": [
-      "fabricops_kit.schema_contracts._now_utc_iso",
-      "fabricops_kit.schema_contracts._required_identity",
-      "fabricops_kit.schema_contracts._schema_rows",
-      "fabricops_kit.schema_contracts._validate_dataset_role",
-      "fabricops_kit.schema_contracts.normalize_spark_data_type"
-    ],
-    "source_file": "src/fabricops_kit/schema_contracts.py",
-    "summary": "Draft dataset-level schema-contract column rows from profile metadata or a Spark DataFrame without writing metadata."
-  },
-  {
-    "name": "validate_schema",
-    "qualified_name": "fabricops_kit.schema_contracts.validate_schema",
-    "module": "schema_contracts",
-    "type": "callable",
-    "role": "essential",
-    "inbound": [],
-    "outbound": [
-      "fabricops_kit.schema_contracts._bool",
-      "fabricops_kit.schema_contracts._coerce_rows",
-      "fabricops_kit.schema_contracts._get_any",
-      "fabricops_kit.schema_contracts._schema_rows_from_dataframe",
-      "fabricops_kit.schema_contracts.normalize_spark_data_type"
-    ],
-    "source_file": "src/fabricops_kit/schema_contracts.py",
-    "summary": "Validate a Spark DataFrame shape against approved dataset-level schema contract columns without writing metadata or stopping the pipeline."
-  },
-  {
-    "name": "write_schema_contract",
-    "qualified_name": "fabricops_kit.schema_contracts.write_schema_contract",
-    "module": "schema_contracts",
-    "type": "callable",
-    "role": "essential",
-    "inbound": [],
     "outbound": [
       "fabricops_kit.fabric_input_output.read_lakehouse_table",
       "fabricops_kit.fabric_input_output.write_lakehouse_table",
       "fabricops_kit.schema_contracts._bool",
       "fabricops_kit.schema_contracts._coerce_rows",
       "fabricops_kit.schema_contracts._next_contract_version",
+      "fabricops_kit.schema_contracts._normalize_spark_data_type",
       "fabricops_kit.schema_contracts._now_utc_iso",
       "fabricops_kit.schema_contracts._required_identity",
-      "fabricops_kit.schema_contracts._validate_dataset_role",
-      "fabricops_kit.schema_contracts.normalize_spark_data_type"
+      "fabricops_kit.schema_contracts._validate_dataset_role"
     ],
     "source_file": "src/fabricops_kit/schema_contracts.py",
-    "summary": "Persist a versioned approved source or target dataset schema contract and normalized column rows."
+    "summary": "No summary available."
   },
   {
-    "name": "write_schema_validation_evidence",
-    "qualified_name": "fabricops_kit.schema_contracts.write_schema_validation_evidence",
+    "name": "_write_schema_validation_evidence",
+    "qualified_name": "fabricops_kit.schema_contracts._write_schema_validation_evidence",
+    "module": "schema_contracts",
+    "type": "internal",
+    "role": "internal",
+    "inbound": [
+      "fabricops_kit.schema_contracts.apply_schema_guardrail"
+    ],
+    "outbound": [
+      "fabricops_kit.fabric_input_output.write_lakehouse_table"
+    ],
+    "source_file": "src/fabricops_kit/schema_contracts.py",
+    "summary": "No summary available."
+  },
+  {
+    "name": "apply_schema_guardrail",
+    "qualified_name": "fabricops_kit.schema_contracts.apply_schema_guardrail",
     "module": "schema_contracts",
     "type": "callable",
     "role": "essential",
     "inbound": [],
     "outbound": [
-      "fabricops_kit.fabric_input_output.write_lakehouse_table"
+      "fabricops_kit.schema_contracts.SchemaContractValidationError",
+      "fabricops_kit.schema_contracts._build_schema_validation_evidence",
+      "fabricops_kit.schema_contracts._enforce_schema_result",
+      "fabricops_kit.schema_contracts._get_active_spark",
+      "fabricops_kit.schema_contracts._load_schema_contract",
+      "fabricops_kit.schema_contracts._write_schema_validation_evidence",
+      "fabricops_kit.schema_contracts.validate_schema"
     ],
     "source_file": "src/fabricops_kit/schema_contracts.py",
-    "summary": "Append schema validation evidence through the configured metadata lakehouse route."
+    "summary": "Load the approved dataset contract, validate schema drift, enforce observe/warn/fail behavior, and write evidence."
+  },
+  {
+    "name": "review_schema_contract",
+    "qualified_name": "fabricops_kit.schema_contracts.review_schema_contract",
+    "module": "schema_contracts",
+    "type": "callable",
+    "role": "essential",
+    "inbound": [],
+    "outbound": [
+      "fabricops_kit.schema_contracts._build_schema_contract_review_state",
+      "fabricops_kit.schema_contracts._contract_review_result",
+      "fabricops_kit.schema_contracts._get_active_spark",
+      "fabricops_kit.schema_contracts._latest_profile_for_dataset",
+      "fabricops_kit.schema_contracts._suggest_schema_contract",
+      "fabricops_kit.schema_contracts._validate_dataset_role",
+      "fabricops_kit.schema_contracts._write_schema_contract"
+    ],
+    "source_file": "src/fabricops_kit/schema_contracts.py",
+    "summary": "Review, approve, version, and persist a dataset schema contract."
+  },
+  {
+    "name": "validate_schema",
+    "qualified_name": "fabricops_kit.schema_contracts.validate_schema",
+    "module": "schema_contracts",
+    "type": "callable",
+    "role": "optional",
+    "inbound": [
+      "fabricops_kit.schema_contracts.apply_schema_guardrail"
+    ],
+    "outbound": [
+      "fabricops_kit.schema_contracts._bool",
+      "fabricops_kit.schema_contracts._coerce_rows",
+      "fabricops_kit.schema_contracts._get_any",
+      "fabricops_kit.schema_contracts._normalize_spark_data_type",
+      "fabricops_kit.schema_contracts._schema_rows_from_dataframe"
+    ],
+    "source_file": "src/fabricops_kit/schema_contracts.py",
+    "summary": "Validate a Spark DataFrame shape against approved dataset-level schema contract columns without enforcement or metadata writes."
   },
   {
     "name": "get_docs_url",

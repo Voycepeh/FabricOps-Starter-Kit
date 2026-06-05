@@ -25,8 +25,8 @@ No summary available.
 - <a href="../internal/data_agreement/_list_data_stewards/"><code>fabricops_kit.data_agreement._list_data_stewards</code></a>
 - <a href="../load_notebook_registry/"><code>fabricops_kit.metadata.load_notebook_registry</code></a>
 - <a href="../setup_notebook_registry_table/"><code>fabricops_kit.metadata.setup_notebook_registry_table</code></a>
-- <a href="../load_schema_contract/"><code>fabricops_kit.schema_contracts.load_schema_contract</code></a>
-- <a href="../write_schema_contract/"><code>fabricops_kit.schema_contracts.write_schema_contract</code></a>
+- <a href="../internal/schema_contracts/_load_schema_contract/"><code>fabricops_kit.schema_contracts._load_schema_contract</code></a>
+- <a href="../internal/schema_contracts/_write_schema_contract/"><code>fabricops_kit.schema_contracts._write_schema_contract</code></a>
 
 ## Outbound references
 - <a href="../internal/config/_get_store/"><code>fabricops_kit.config._get_store</code></a>

@@ -20,7 +20,7 @@ No summary available.
 - Outbound references count: 1
 
 ## Inbound references
-- <a href="../load_schema_contract/"><code>fabricops_kit.schema_contracts.load_schema_contract</code></a>
+- <a href="../internal/schema_contracts/_load_schema_contract/"><code>fabricops_kit.schema_contracts._load_schema_contract</code></a>
 
 ## Outbound references
 - <a href="../internal/schema_contracts/_get_any/"><code>fabricops_kit.schema_contracts._get_any</code></a>
