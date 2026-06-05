@@ -92,12 +92,12 @@ Use the finder below to look up public callable functions.
 
   </div>
 </article>
-<article id="check_schema_drift" class="reference-catalogue-item" data-callable-row="true" data-callable-name="check_schema_drift" data-callable-module="drift" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Compare a current dataframe schema against a baseline schema snapshot.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/check_schema_drift/"><code>check_schema_drift</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Compare a current dataframe schema against a baseline schema snapshot.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/drift/" title="Open drift module page" aria-label="Open drift module page">drift</a><span class="reference-chip reference-chip-role reference-chip-optional">Optional</span><span class="reference-chip">—</span></p>
+<article id="check_schema" class="reference-catalogue-item" data-callable-row="true" data-callable-name="check_schema" data-callable-module="drift" data-callable-starter-path="03_pc" data-role="essential" data-callable-purpose="Check a dataframe has the expected pipeline-local columns and datatypes before continuing.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/check_schema/"><code>check_schema</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Check a dataframe has the expected pipeline-local columns and datatypes before continuing.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/drift/" title="Open drift module page" aria-label="Open drift module page">drift</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">03_pc</span></p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 3</span></summary><ul><li><code>build_schema_snapshot</code></li><li><code>compare_schema_snapshots</code></li><li><code>default_schema_drift_policy</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 3</span></summary><ul><li><code>SchemaDriftError</code></li><li><code>_actual_schema</code></li><li><code>_normalize_datatype</code></li></ul></details>
 
   </div>
 </article>
