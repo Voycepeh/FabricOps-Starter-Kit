@@ -10,11 +10,11 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 7</span><span class="reference-chip">Internal helpers: 15</span><span class="reference-chip">Outbound: 2</span><span class="reference-chip">Inbound: 1</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 7</span><span class="reference-chip">Internal helpers: 38</span><span class="reference-chip">Outbound: 3</span><span class="reference-chip">Inbound: 1</span></div>
 
 ## Module purpose
 
-Owns table-scoped 04_gov catalogue selection, explicit approval record builders, and metadata commit helpers.
+Owns table-scoped governance review, approved metadata recording, and internal DQ drafting/enforcement helpers migrated from the removed standalone data_quality.py module for the upcoming production enforcement track.
 
 ## Module manifest
 
@@ -32,7 +32,7 @@ Owns table-scoped 04_gov catalogue selection, explicit approval record builders,
     </tr>
     <tr>
       <td>Module purpose</td>
-      <td>Owns table-scoped 04_gov catalogue selection, explicit approval record builders, and metadata commit helpers.</td>
+      <td>Owns table-scoped governance review, approved metadata recording, and internal DQ drafting/enforcement helpers migrated from the removed standalone data_quality.py module for the upcoming production enforcement track.</td>
     </tr>
     <tr>
       <td>Public callable count</td>
@@ -40,7 +40,7 @@ Owns table-scoped 04_gov catalogue selection, explicit approval record builders,
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>15</td>
+      <td>38</td>
     </tr>
     <tr>
       <td>Inbound module count</td>
@@ -48,7 +48,7 @@ Owns table-scoped 04_gov catalogue selection, explicit approval record builders,
     </tr>
     <tr>
       <td>Outbound module count</td>
-      <td>2</td>
+      <td>3</td>
     </tr>
     <tr>
       <td>External callers</td>
@@ -56,7 +56,7 @@ Owns table-scoped 04_gov catalogue selection, explicit approval record builders,
     </tr>
     <tr>
       <td>External callees</td>
-      <td><code>fabric_input_output</code>, <code>metadata</code></td>
+      <td><code>data_profiling</code>, <code>fabric_input_output</code>, <code>metadata</code></td>
     </tr>
   </tbody>
 </table>
@@ -193,6 +193,10 @@ Owns table-scoped 04_gov catalogue selection, explicit approval record builders,
   </thead>
   <tbody>
     <tr>
+      <td><a href="../../reference/internal/governance_review/_assert_dq_passed/"><code>_assert_dq_passed</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
       <td><a href="../../reference/internal/governance_review/_build_classification_records/"><code>_build_classification_records</code></a></td>
       <td><a href="../../reference/record_table_governance/"><code>record_table_governance</code></a></td>
     </tr>
@@ -217,6 +221,26 @@ Owns table-scoped 04_gov catalogue selection, explicit approval record builders,
       <td><a href="../../reference/widget_review_column_classification/"><code>widget_review_column_classification</code></a>, <a href="../../reference/widget_review_column_context/"><code>widget_review_column_context</code></a>, <a href="../../reference/widget_review_dq_rules/"><code>widget_review_dq_rules</code></a></td>
     </tr>
     <tr>
+      <td><a href="../../reference/internal/governance_review/_dq_rule_sort_key/"><code>_dq_rule_sort_key</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/governance_review/_draft_dq_rules/"><code>_draft_dq_rules</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/governance_review/_enforce_dq/"><code>_enforce_dq</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/governance_review/_extract_candidate_rules_from_responses/"><code>_extract_candidate_rules_from_responses</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/governance_review/_extract_dq_rules/"><code>_extract_dq_rules</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
       <td><a href="../../reference/internal/governance_review/_get_governance_metadata_schemas/"><code>_get_governance_metadata_schemas</code></a></td>
       <td>—</td>
     </tr>
@@ -233,6 +257,50 @@ Owns table-scoped 04_gov catalogue selection, explicit approval record builders,
       <td>—</td>
     </tr>
     <tr>
+      <td><a href="../../reference/internal/governance_review/_latest_dq_rule_versions/"><code>_latest_dq_rule_versions</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/governance_review/_load_active_dq_rule_metadata/"><code>_load_active_dq_rule_metadata</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/governance_review/_load_active_dq_rules/"><code>_load_active_dq_rules</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/governance_review/_normalise_enforcement_rule/"><code>_normalise_enforcement_rule</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/governance_review/_parse_dq_rules_dict_from_text/"><code>_parse_dq_rules_dict_from_text</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/governance_review/_parse_jsonish/"><code>_parse_jsonish</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/governance_review/_prepare_dq_profile_input_rows/"><code>_prepare_dq_profile_input_rows</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/governance_review/_prepare_dq_profile_rows_with_context/"><code>_prepare_dq_profile_rows_with_context</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/governance_review/_row_to_dict/"><code>_row_to_dict</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/governance_review/_rule_from_metadata_row/"><code>_rule_from_metadata_row</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/governance_review/_run_dq_rules/"><code>_run_dq_rules</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
       <td><a href="../../reference/internal/governance_review/_schema/"><code>_schema</code></a></td>
       <td>—</td>
     </tr>
@@ -245,7 +313,31 @@ Owns table-scoped 04_gov catalogue selection, explicit approval record builders,
       <td>—</td>
     </tr>
     <tr>
+      <td><a href="../../reference/internal/governance_review/_spark_functions/"><code>_spark_functions</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
       <td><a href="../../reference/internal/governance_review/_spark_types/"><code>_spark_types</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/governance_review/_split_dq_rows/"><code>_split_dq_rows</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/governance_review/_suggest_dq_rules/"><code>_suggest_dq_rules</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/governance_review/_suggest_dq_rules_with_fabric_ai/"><code>_suggest_dq_rules_with_fabric_ai</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/governance_review/_truthy/"><code>_truthy</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/governance_review/_validate_dq_rules/"><code>_validate_dq_rules</code></a></td>
       <td>—</td>
     </tr>
     <tr>
@@ -258,6 +350,9 @@ Owns table-scoped 04_gov catalogue selection, explicit approval record builders,
 
 <h6>Internal helpers details</h6>
 <ul class="callable-relationship-rows">
+<li>
+<a class="reference-chip" href="#_assert_dq_passed"><code>_assert_dq_passed</code></a>
+</li>
 <li>
 <a class="reference-chip" href="#_build_classification_records"><code>_build_classification_records</code></a>
  <span class="callable-relationship-uses">uses:</span>
@@ -287,6 +382,29 @@ Owns table-scoped 04_gov catalogue selection, explicit approval record builders,
 <a class="reference-chip" href="#_value"><code>_value</code></a>
 </li>
 <li>
+<a class="reference-chip" href="#_dq_rule_sort_key"><code>_dq_rule_sort_key</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_draft_dq_rules"><code>_draft_dq_rules</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_extract_dq_rules"><code>_extract_dq_rules</code></a>, <a class="reference-chip" href="#_prepare_dq_profile_input_rows"><code>_prepare_dq_profile_input_rows</code></a>, <a class="reference-chip" href="#_suggest_dq_rules"><code>_suggest_dq_rules</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_enforce_dq"><code>_enforce_dq</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_load_active_dq_rules"><code>_load_active_dq_rules</code></a>, <a class="reference-chip" href="#_run_dq_rules"><code>_run_dq_rules</code></a>, <a class="reference-chip" href="#_split_dq_rows"><code>_split_dq_rows</code></a>, <a class="reference-chip" href="#_validate_dq_rules"><code>_validate_dq_rules</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_extract_candidate_rules_from_responses"><code>_extract_candidate_rules_from_responses</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_extract_dq_rules"><code>_extract_dq_rules</code></a>, <a class="reference-chip" href="#_parse_dq_rules_dict_from_text"><code>_parse_dq_rules_dict_from_text</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_extract_dq_rules"><code>_extract_dq_rules</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_parse_dq_rules_dict_from_text"><code>_parse_dq_rules_dict_from_text</code></a>
+</li>
+<li>
 <a class="reference-chip" href="#_get_governance_metadata_schemas"><code>_get_governance_metadata_schemas</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_schema"><code>_schema</code></a>, <a class="reference-chip" href="#_spark_types"><code>_spark_types</code></a>
@@ -303,6 +421,53 @@ Owns table-scoped 04_gov catalogue selection, explicit approval record builders,
 <a class="reference-chip" href="#_json"><code>_json</code></a>
 </li>
 <li>
+<a class="reference-chip" href="#_latest_dq_rule_versions"><code>_latest_dq_rule_versions</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_dq_rule_sort_key"><code>_dq_rule_sort_key</code></a>, <a class="reference-chip" href="#_row_to_dict"><code>_row_to_dict</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_load_active_dq_rule_metadata"><code>_load_active_dq_rule_metadata</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_latest_dq_rule_versions"><code>_latest_dq_rule_versions</code></a>, <a class="reference-chip" href="#_truthy"><code>_truthy</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_load_active_dq_rules"><code>_load_active_dq_rules</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_latest_dq_rule_versions"><code>_latest_dq_rule_versions</code></a>, <a class="reference-chip" href="#_rule_from_metadata_row"><code>_rule_from_metadata_row</code></a>, <a class="reference-chip" href="#_truthy"><code>_truthy</code></a>, <a class="reference-chip" href="#_validate_dq_rules"><code>_validate_dq_rules</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_normalise_enforcement_rule"><code>_normalise_enforcement_rule</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_parse_jsonish"><code>_parse_jsonish</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_parse_dq_rules_dict_from_text"><code>_parse_dq_rules_dict_from_text</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_parse_jsonish"><code>_parse_jsonish</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_prepare_dq_profile_input_rows"><code>_prepare_dq_profile_input_rows</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_spark_functions"><code>_spark_functions</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_prepare_dq_profile_rows_with_context"><code>_prepare_dq_profile_rows_with_context</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_row_to_dict"><code>_row_to_dict</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_rule_from_metadata_row"><code>_rule_from_metadata_row</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_normalise_enforcement_rule"><code>_normalise_enforcement_rule</code></a>, <a class="reference-chip" href="#_parse_jsonish"><code>_parse_jsonish</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_run_dq_rules"><code>_run_dq_rules</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_spark_functions"><code>_spark_functions</code></a>, <a class="reference-chip" href="#_split_dq_rows"><code>_split_dq_rows</code></a>, <a class="reference-chip" href="#_validate_dq_rules"><code>_validate_dq_rules</code></a>
+</li>
+<li>
 <a class="reference-chip" href="#_schema"><code>_schema</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_spark_types"><code>_spark_types</code></a>
@@ -316,7 +481,29 @@ Owns table-scoped 04_gov catalogue selection, explicit approval record builders,
 <a class="reference-chip" href="#_coerce_rows"><code>_coerce_rows</code></a>, <a class="reference-chip" href="#_get_governance_metadata_schemas"><code>_get_governance_metadata_schemas</code></a>, <a class="reference-chip" href="#_is_table_not_found_error"><code>_is_table_not_found_error</code></a>, <a class="reference-chip" href="#_schema_field_names"><code>_schema_field_names</code></a>
 </li>
 <li>
+<a class="reference-chip" href="#_spark_functions"><code>_spark_functions</code></a>
+</li>
+<li>
 <a class="reference-chip" href="#_spark_types"><code>_spark_types</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_split_dq_rows"><code>_split_dq_rows</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_spark_functions"><code>_spark_functions</code></a>, <a class="reference-chip" href="#_validate_dq_rules"><code>_validate_dq_rules</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_suggest_dq_rules"><code>_suggest_dq_rules</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_suggest_dq_rules_with_fabric_ai"><code>_suggest_dq_rules_with_fabric_ai</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_truthy"><code>_truthy</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_validate_dq_rules"><code>_validate_dq_rules</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_normalise_enforcement_rule"><code>_normalise_enforcement_rule</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_value"><code>_value</code></a>
@@ -330,6 +517,9 @@ Owns table-scoped 04_gov catalogue selection, explicit approval record builders,
 <a class="reference-chip" href="../../reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a>
 
 ### External callees
+
+**data_profiling**
+<a class="reference-chip" href="../../reference/profile_dataframe/"><code>profile_dataframe</code></a>
 
 **fabric_input_output**
 <a class="reference-chip" href="../../reference/read_lakehouse_table/"><code>read_lakehouse_table</code></a>, <a class="reference-chip" href="../../reference/write_lakehouse_table/"><code>write_lakehouse_table</code></a>

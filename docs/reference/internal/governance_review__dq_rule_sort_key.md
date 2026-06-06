@@ -1,0 +1,23 @@
+# _dq_rule_sort_key
+
+**Module:** `governance_review`  
+**Classification:** Internal helper
+
+## Purpose
+
+No summary available.
+
+## Function manifest
+
+- Fully qualified function name: `fabricops_kit.governance_review._dq_rule_sort_key`
+- Short name: `_dq_rule_sort_key`
+- Module: `governance_review`
+- Classification: Internal helper
+- Related module: `governance_review`
+- Source file path: `src/fabricops_kit/governance_review.py`
+- Source reference: <a href="../../api/modules/governance_review/#_dq_rule_sort_key">Module source anchor</a>
+- Inbound references count: 1
+- Outbound references count: 0
+
+## Inbound references
+- <a href="../internal/governance_review/_latest_dq_rule_versions/"><code>fabricops_kit.governance_review._latest_dq_rule_versions</code></a>

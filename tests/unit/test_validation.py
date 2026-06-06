@@ -4,6 +4,11 @@ import pandas as pd
 import pytest
 
 from fabricops_kit.drift import _check_profile_drift, stop_if_failed, validate_schema
+from fabricops_kit.governance_review import (
+    _extract_candidate_rules_from_responses,
+    _parse_dq_rules_dict_from_text,
+    _validate_dq_rules,
+)
 
 pytestmark = pytest.mark.unit
 
@@ -25,6 +30,26 @@ def test_validate_schema_supports_strict_allow_new_and_monitor_modes():
     with pytest.raises(ValueError, match="preset"):
         validate_schema(df, expected, preset="unknown")
 
+
+
+def test_dq_ai_response_parsing_candidate_extraction_and_validation_are_migrated():
+    response_text = """DQ_RULES = {
+        'orders': [
+            {'rule_id': 'id_required', 'rule_type': 'not_null', 'columns': ['id'], 'severity': 'error', 'description': 'ID required'},
+            {'rule_id': 'id_required', 'rule_type': 'not_null', 'columns': ['id'], 'severity': 'error', 'description': 'Duplicate should dedupe'},
+            {'rule_id': 'status_known', 'rule_type': 'accepted_values', 'columns': ['status'], 'allowed_values': ['active'], 'severity': 'warning', 'description': 'Known status'}
+        ]
+    }"""
+
+    parsed = _parse_dq_rules_dict_from_text(response_text)
+    candidates = _extract_candidate_rules_from_responses([{"ai_dq_response": response_text}], table_name="orders")
+    validated = _validate_dq_rules(candidates)
+
+    assert "orders" in parsed
+    assert {rule["rule_id"] for rule in candidates} == {"id_required", "status_known"}
+    assert validated[0]["columns"]
+    with pytest.raises(ValueError, match="unsupported rule_type"):
+        _validate_dq_rules([{"rule_id": "bad", "rule_type": "future", "columns": ["id"], "severity": "warning", "description": "x"}])
 
 def test_monitor_data_changes_uses_profile_baselines_without_blocking_first_observation():
     current = {
