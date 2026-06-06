@@ -1,19 +1,16 @@
-## FabricOps Starter Kit
+# FabricOps Starter Kit
 
-Lightweight, notebook centric, plug and play starter kit for Microsoft Fabric.
+FabricOps Starter Kit is a lightweight Microsoft Fabric notebook starter kit for governed, quality checked pipelines.
 
-FabricOps Starter Kit helps teams quickly bootstrap governed Fabric notebook delivery using reusable templates and a lightweight helper wheel.
+Use it when you want Fabric notebooks to move data from source to target while keeping useful metadata for review, guardrails, and governance.
 
-It supports a metadata backed workflow from agreement, to pipeline, to governance review, then back into pipeline enforcement.
+## Start fast
 
-- 01_da captures the agreement, steward, and context.
+New to the kit? Start with [Quick Start](quick-start.md).
 
-- 03_pc pipes data from source to target while capturing key metadata such as data profile, lineage, schema, and data drift details.
+Want to understand the workflow? Read [How FabricOps Works](how-fabricops-works/index.md).
 
-- 04_gov uses that metadata to add business context, data quality rules, data sensitivity, and classification.
-
-The approved data quality rules, sensitivity rules, and classification rules are then used by 03_pc when the pipeline runs again, alongside schema and data drift guardrails.
-
+Need the notebook files? Open [Notebook Templates](how-fabricops-works/notebook-templates.md).
 
 <div class="home-cta" markdown="1">
 
@@ -23,19 +20,23 @@ The approved data quality rules, sensitivity rules, and classification rules are
 
 </div>
 
-## Where to go
+## Main flow
+
+`01_da` captures the agreement, steward, and context.
+
+`03_pc` pipes data from source to target and captures key metadata such as data profile, lineage, schema, and data drift details.
+
+`04_gov` uses that metadata to add business context, data quality rules, data sensitivity, and classification.
+
+When the pipeline runs again, `03_pc` uses the approved rules and classifications alongside schema and data drift guardrails.
+
+## Where to go next
 
 | Page | Use it for |
 | --- | --- |
-| [How FabricOps Works](how-fabricops-works/index.md) | Start here to understand how the v1.0.0 system is structured across workspaces, notebooks, metadata, and handover evidence. |
-| [Production Guardrails Workflow](schema-and-data-drift.md) | Read after How FabricOps Works; explains how `03_pc` owns schema checks, data-change monitoring, notebook-defined checks, output writes, lineage, and run evidence. |
-| [Governance Review Workflow](data-quality-rules-system.md) | Read after How FabricOps Works; explains how `04_gov` reviews profile evidence and commits column context, DQ expectations, and classifications. |
 | [Quick Start](quick-start.md) | Install the helper wheel, copy the templates, and run a Fabric smoke test. |
-| [Function Reference](reference/index.md) | Look up helper functions used by the notebooks. |
-
-## Recommended path
-
-New users should read **How FabricOps Works**, then the two **Workflow Guides**, then use **Quick Start** to test the notebook flow in Fabric.
-
-
--
+| [How FabricOps Works](how-fabricops-works/index.md) | Understand the target workflow from agreement to pipeline enforcement. |
+| [Notebook Templates](how-fabricops-works/notebook-templates.md) | See what each notebook template is for. |
+| [Metadata Tables](how-fabricops-works/metadata-tables.md) | See what metadata the notebooks write and read. |
+| [Pipeline Guardrails](schema-and-data-drift.md) | Understand how `03_pc` checks schema, drift, and approved governance metadata. |
+| [Governance Review](data-quality-rules-system.md) | Understand how `04_gov` adds reviewed governance metadata. |
