@@ -164,3 +164,50 @@ def test_record_table_governance_persists_approved_dq_rule_metadata(monkeypatch)
     assert result["dq_rules"][0]["rule_id"] == "amount_positive"
     assert result["dq_rules"][0]["metadata_column_key"] == "col-amount"
     assert [(table_name, len(records)) for table_name, records in writes] == [(governance_review.DQ_RULES_TABLE, 1)]
+
+
+def test_record_table_governance_persists_approved_context_and_classification(monkeypatch):
+    writes: list[tuple[str, list[dict]]] = []
+
+    class FakeSpark:
+        def createDataFrame(self, records):
+            return records
+
+    config = SimpleNamespace(
+        path_config=SimpleNamespace(
+            paths={"dev": {"metadata": SimpleNamespace(name="metadata_lakehouse")}}
+        )
+    )
+
+    def capture_write(df, config, env, store, table_name, mode="append"):
+        writes.append((table_name, df))
+
+    monkeypatch.setattr(governance_review, "write_lakehouse_table", capture_write)
+
+    result = governance_review.record_table_governance(
+        config,
+        "dev",
+        _profile_rows(),
+        spark_session=FakeSpark(),
+        context_reviews=[
+            {"column_name": "amount", "business_context": "Approved amount", "review_status": "approved", "commit": True},
+            {"column_name": "order_id", "business_context": "Draft only", "review_status": "approved", "commit": False},
+        ],
+        classification_reviews=[
+            {
+                "column_name": "order_id",
+                "sensitivity_label": "confidential",
+                "personal_data_classification": "indirect_identifier",
+                "review_status": "approved",
+                "commit": True,
+            }
+        ],
+        approved_by="reviewer",
+    )
+
+    assert result["column_context"][0]["business_context"] == "Approved amount"
+    assert result["column_classification"][0]["personal_data_classification"] == "indirect_identifier"
+    assert [(table_name, len(records)) for table_name, records in writes] == [
+        (governance_review.COLUMN_CONTEXT_TABLE, 1),
+        (governance_review.COLUMN_CLASSIFICATION_TABLE, 1),
+    ]

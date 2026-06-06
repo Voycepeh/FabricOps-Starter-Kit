@@ -25,6 +25,9 @@ AI_SUGGESTABLE_DQ_RULE_TYPES = {"not_null", "unique_key", "accepted_values", "va
 SENSITIVITY_LABELS = ["public", "internal", "confidential", "restricted"]
 PERSONAL_DATA_CLASSIFICATIONS = ["not_personal_data", "direct_identifier", "indirect_identifier", "sensitive_personal_data", "unknown"]
 
+_BUSINESS_CONTEXT_REVIEWED_ROWS: list[dict[str, Any]] = []
+_GOVERNANCE_REVIEWED_ROWS: list[dict[str, Any]] = []
+
 _SELECTED_CATALOGUE_TABLE: dict[str, Any] | None = None
 
 
@@ -44,6 +47,149 @@ def _is_success(row: dict[str, Any]) -> bool:
     return str(_value(row, "profile_status", "")).strip().lower() in SUCCESS_STATUSES
 
 
+
+
+
+
+def _prepare_business_context_profile_input(profile_rows: list[dict[str, Any]], table_name: str, table_context: str = "") -> list[dict[str, Any]]:
+    """Prepare profile evidence rows for AI-assisted business-context drafting."""
+    return [
+        {
+            "table_name": table_name,
+            "table_context": table_context,
+            "column_name": row.get("column_name") or row.get("COLUMN_NAME"),
+            "data_type": row.get("data_type") or row.get("DATA_TYPE"),
+            "row_count": row.get("row_count") or row.get("ROW_COUNT"),
+            "null_count": row.get("null_count") or row.get("NULL_COUNT"),
+            "distinct_count": row.get("distinct_count") or row.get("DISTINCT_COUNT"),
+            "observed_values_sample": row.get("observed_values_sample") or row.get("OBSERVED_VALUES_SAMPLE") or "",
+        }
+        for row in profile_rows or []
+    ]
+
+
+def _draft_business_context(prepared_profile_df: Any, prompt_template: str, output_col: str = "ai_business_context_response") -> Any:
+    """Run Fabric AI to draft column business-context suggestions."""
+    ai = getattr(prepared_profile_df, "ai", None)
+    if ai is None or not hasattr(ai, "generate_response"):
+        raise RuntimeError("_draft_business_context requires Fabric DataFrame.ai.generate_response.")
+    return prepared_profile_df.ai.generate_response(prompt=prompt_template, is_prompt_template=True, output_col=output_col)
+
+
+def _parse_ai_dict_response(text: Any, marker: str | None = None) -> dict[str, Any]:
+    """Parse JSON, Python-literal, or assignment-wrapped AI dictionary text."""
+    if isinstance(text, dict):
+        return text
+    cleaned = str(text or "").strip()
+    if marker and marker in cleaned and "=" in cleaned:
+        cleaned = cleaned.split("=", 1)[1].strip()
+    elif "=" in cleaned and cleaned.split("=", 1)[0].strip().isupper():
+        cleaned = cleaned.split("=", 1)[1].strip()
+    for parser in (json.loads, ast.literal_eval):
+        try:
+            parsed = parser(cleaned)
+        except Exception:
+            continue
+        if isinstance(parsed, dict):
+            return parsed
+    return {}
+
+
+def _extract_column_business_context_suggestions(response_rows: Any, response_col: str = "ai_business_context_response") -> list[dict[str, Any]]:
+    """Extract review-ready business-context suggestions from AI responses."""
+    iterable = _coerce_rows(response_rows)
+    suggestions: list[dict[str, Any]] = []
+    for row in iterable:
+        parsed = _parse_ai_dict_response(row.get(response_col) or row.get("response") or row.get("ai_response") or "", marker="BUSINESS_CONTEXT")
+        if parsed:
+            suggestions.append(parsed)
+    return suggestions
+
+
+def _get_reviewed_business_context_rows(status: str = "approved") -> list[dict[str, Any]]:
+    """Return retained reviewed business-context rows from current process state."""
+    normalised = str(status or "").strip().lower()
+    if normalised != "approved":
+        raise ValueError("Only approved business-context rows are retained by the migrated helper.")
+    return list(_BUSINESS_CONTEXT_REVIEWED_ROWS)
+
+
+def _build_governance_context(
+    business_context: str,
+    approved_usage: str,
+    dataset_context: str,
+    profile_context: str = "",
+    glossary_context: str = "",
+    steward_notes: str = "",
+) -> dict[str, str]:
+    """Build governance prompt context fields for AI-assisted classification drafting."""
+    return {
+        "business_context": business_context or "",
+        "approved_usage": approved_usage or "",
+        "dataset_context": dataset_context or "",
+        "profile_context": profile_context or "",
+        "glossary_context": glossary_context or "",
+        "steward_notes": steward_notes or "",
+    }
+
+
+def _prepare_governance_input(profile_rows: list[dict[str, Any]], table_name: str, column_contexts: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Join approved business context into profile rows for governance AI suggestions."""
+    context_lookup = {str(row.get("column_name")): row for row in column_contexts or [] if row.get("column_name")}
+    out: list[dict[str, Any]] = []
+    for row in profile_rows or []:
+        column_name = row.get("column_name") or row.get("COLUMN_NAME")
+        context = context_lookup.get(str(column_name)) or {}
+        approved_context = context.get("approved_business_context") or context.get("business_context")
+        if approved_context:
+            out.append({**row, "table_name": table_name, "column_name": column_name, "approved_business_context": approved_context})
+    return out
+
+
+def _draft_governance(prepared_profile_df: Any, prompt: str | None = None, output_col: str = "ai_governance_response") -> Any:
+    """Run Fabric AI sensitivity/PII classification drafting on prepared rows."""
+    ai = getattr(prepared_profile_df, "ai", None)
+    if ai is None or not hasattr(ai, "generate_response"):
+        raise RuntimeError("_draft_governance requires Fabric DataFrame.ai.generate_response.")
+    return prepared_profile_df.ai.generate_response(prompt=prompt, is_prompt_template=True, output_col=output_col)
+
+
+def _extract_pii_suggestions(response_rows: Any, response_col: str = "ai_governance_response") -> list[dict[str, Any]]:
+    """Extract sensitivity and PII suggestions from Spark/list AI responses."""
+    suggestions: list[dict[str, Any]] = []
+    for row in _coerce_rows(response_rows):
+        parsed = _parse_ai_dict_response(row.get(response_col), marker="GOVERNANCE_CONTEXT")
+        if parsed:
+            suggestions.append(parsed)
+            continue
+        fallback = {
+            "column_name": row.get("column_name"),
+            "ai_suggested_personal_identifier_classification": row.get("ai_suggested_personal_identifier_classification", "unknown"),
+            "personal_data_classification": row.get("personal_data_classification") or row.get("ai_suggested_personal_identifier_classification", "unknown"),
+            "sensitivity_label": row.get("sensitivity_label") or row.get("confidentiality_label", "confidential"),
+            "confidentiality_label": row.get("confidentiality_label") or row.get("sensitivity_label", "confidential"),
+            "approved_business_context": row.get("approved_business_context", ""),
+        }
+        if fallback["column_name"]:
+            suggestions.append(fallback)
+    return suggestions
+
+
+def _extract_governance_suggestions(response_rows: Any, response_col: str = "ai_governance_response") -> list[dict[str, Any]]:
+    """Extract review-ready governance/classification suggestions from AI responses."""
+    return _extract_pii_suggestions(response_rows=response_rows, response_col=response_col)
+
+
+def _approved_governance_suggestion_rows(review_rows: list[dict[str, Any]], *, action_by: str | None = None) -> list[dict[str, Any]]:
+    """Return approved governance/classification suggestion rows for downstream metadata commit."""
+    actor = _resolve_action_by(action_by)
+    approved: list[dict[str, Any]] = []
+    for row in review_rows or []:
+        if str(row.get("review_status") or row.get("approval_status") or "approved").lower() != "approved":
+            continue
+        approved.append({**row, "review_status": "approved", "approved_by": actor})
+    _GOVERNANCE_REVIEWED_ROWS[:] = approved
+    return approved
 
 
 @dataclass

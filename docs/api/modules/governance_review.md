@@ -10,11 +10,11 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 7</span><span class="reference-chip">Internal helpers: 38</span><span class="reference-chip">Outbound: 3</span><span class="reference-chip">Inbound: 1</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 7</span><span class="reference-chip">Internal helpers: 49</span><span class="reference-chip">Outbound: 3</span><span class="reference-chip">Inbound: 1</span></div>
 
 ## Module purpose
 
-Owns table-scoped governance review, approved metadata recording, and internal DQ drafting/enforcement helpers migrated from the removed standalone data_quality.py module for the upcoming production enforcement track.
+Owns table-scoped governance review, approved metadata recording, and migrated internal AI drafting/enforcement helpers for business context, sensitivity/PII classification, and DQ rules after removing the standalone business_context.py, data_governance.py, and data_quality.py modules.
 
 ## Module manifest
 
@@ -32,7 +32,7 @@ Owns table-scoped governance review, approved metadata recording, and internal D
     </tr>
     <tr>
       <td>Module purpose</td>
-      <td>Owns table-scoped governance review, approved metadata recording, and internal DQ drafting/enforcement helpers migrated from the removed standalone data_quality.py module for the upcoming production enforcement track.</td>
+      <td>Owns table-scoped governance review, approved metadata recording, and migrated internal AI drafting/enforcement helpers for business context, sensitivity/PII classification, and DQ rules after removing the standalone business_context.py, data_governance.py, and data_quality.py modules.</td>
     </tr>
     <tr>
       <td>Public callable count</td>
@@ -40,7 +40,7 @@ Owns table-scoped governance review, approved metadata recording, and internal D
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>38</td>
+      <td>49</td>
     </tr>
     <tr>
       <td>Inbound module count</td>
@@ -193,6 +193,10 @@ Owns table-scoped governance review, approved metadata recording, and internal D
   </thead>
   <tbody>
     <tr>
+      <td><a href="../../reference/internal/governance_review/_approved_governance_suggestion_rows/"><code>_approved_governance_suggestion_rows</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
       <td><a href="../../reference/internal/governance_review/_assert_dq_passed/"><code>_assert_dq_passed</code></a></td>
       <td>—</td>
     </tr>
@@ -207,6 +211,10 @@ Owns table-scoped governance review, approved metadata recording, and internal D
     <tr>
       <td><a href="../../reference/internal/governance_review/_build_dq_rule_records/"><code>_build_dq_rule_records</code></a></td>
       <td><a href="../../reference/record_table_governance/"><code>record_table_governance</code></a></td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/governance_review/_build_governance_context/"><code>_build_governance_context</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/governance_review/_catalogue_table_options/"><code>_catalogue_table_options</code></a></td>
@@ -225,7 +233,15 @@ Owns table-scoped governance review, approved metadata recording, and internal D
       <td>—</td>
     </tr>
     <tr>
+      <td><a href="../../reference/internal/governance_review/_draft_business_context/"><code>_draft_business_context</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
       <td><a href="../../reference/internal/governance_review/_draft_dq_rules/"><code>_draft_dq_rules</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/governance_review/_draft_governance/"><code>_draft_governance</code></a></td>
       <td>—</td>
     </tr>
     <tr>
@@ -237,11 +253,27 @@ Owns table-scoped governance review, approved metadata recording, and internal D
       <td>—</td>
     </tr>
     <tr>
+      <td><a href="../../reference/internal/governance_review/_extract_column_business_context_suggestions/"><code>_extract_column_business_context_suggestions</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
       <td><a href="../../reference/internal/governance_review/_extract_dq_rules/"><code>_extract_dq_rules</code></a></td>
       <td>—</td>
     </tr>
     <tr>
+      <td><a href="../../reference/internal/governance_review/_extract_governance_suggestions/"><code>_extract_governance_suggestions</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/governance_review/_extract_pii_suggestions/"><code>_extract_pii_suggestions</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
       <td><a href="../../reference/internal/governance_review/_get_governance_metadata_schemas/"><code>_get_governance_metadata_schemas</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/governance_review/_get_reviewed_business_context_rows/"><code>_get_reviewed_business_context_rows</code></a></td>
       <td>—</td>
     </tr>
     <tr>
@@ -273,6 +305,10 @@ Owns table-scoped governance review, approved metadata recording, and internal D
       <td>—</td>
     </tr>
     <tr>
+      <td><a href="../../reference/internal/governance_review/_parse_ai_dict_response/"><code>_parse_ai_dict_response</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
       <td><a href="../../reference/internal/governance_review/_parse_dq_rules_dict_from_text/"><code>_parse_dq_rules_dict_from_text</code></a></td>
       <td>—</td>
     </tr>
@@ -281,11 +317,19 @@ Owns table-scoped governance review, approved metadata recording, and internal D
       <td>—</td>
     </tr>
     <tr>
+      <td><a href="../../reference/internal/governance_review/_prepare_business_context_profile_input/"><code>_prepare_business_context_profile_input</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
       <td><a href="../../reference/internal/governance_review/_prepare_dq_profile_input_rows/"><code>_prepare_dq_profile_input_rows</code></a></td>
       <td>—</td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/governance_review/_prepare_dq_profile_rows_with_context/"><code>_prepare_dq_profile_rows_with_context</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/governance_review/_prepare_governance_input/"><code>_prepare_governance_input</code></a></td>
       <td>—</td>
     </tr>
     <tr>
@@ -351,6 +395,9 @@ Owns table-scoped governance review, approved metadata recording, and internal D
 <h6>Internal helpers details</h6>
 <ul class="callable-relationship-rows">
 <li>
+<a class="reference-chip" href="#_approved_governance_suggestion_rows"><code>_approved_governance_suggestion_rows</code></a>
+</li>
+<li>
 <a class="reference-chip" href="#_assert_dq_passed"><code>_assert_dq_passed</code></a>
 </li>
 <li>
@@ -369,6 +416,9 @@ Owns table-scoped governance review, approved metadata recording, and internal D
 <a class="reference-chip" href="#_json"><code>_json</code></a>, <a class="reference-chip" href="#_value"><code>_value</code></a>
 </li>
 <li>
+<a class="reference-chip" href="#_build_governance_context"><code>_build_governance_context</code></a>
+</li>
+<li>
 <a class="reference-chip" href="#_catalogue_table_options"><code>_catalogue_table_options</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_is_success"><code>_is_success</code></a>, <a class="reference-chip" href="#_value"><code>_value</code></a>
@@ -385,9 +435,15 @@ Owns table-scoped governance review, approved metadata recording, and internal D
 <a class="reference-chip" href="#_dq_rule_sort_key"><code>_dq_rule_sort_key</code></a>
 </li>
 <li>
+<a class="reference-chip" href="#_draft_business_context"><code>_draft_business_context</code></a>
+</li>
+<li>
 <a class="reference-chip" href="#_draft_dq_rules"><code>_draft_dq_rules</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_extract_dq_rules"><code>_extract_dq_rules</code></a>, <a class="reference-chip" href="#_prepare_dq_profile_input_rows"><code>_prepare_dq_profile_input_rows</code></a>, <a class="reference-chip" href="#_suggest_dq_rules"><code>_suggest_dq_rules</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_draft_governance"><code>_draft_governance</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_enforce_dq"><code>_enforce_dq</code></a>
@@ -400,14 +456,32 @@ Owns table-scoped governance review, approved metadata recording, and internal D
 <a class="reference-chip" href="#_extract_dq_rules"><code>_extract_dq_rules</code></a>, <a class="reference-chip" href="#_parse_dq_rules_dict_from_text"><code>_parse_dq_rules_dict_from_text</code></a>
 </li>
 <li>
+<a class="reference-chip" href="#_extract_column_business_context_suggestions"><code>_extract_column_business_context_suggestions</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_coerce_rows"><code>_coerce_rows</code></a>, <a class="reference-chip" href="#_parse_ai_dict_response"><code>_parse_ai_dict_response</code></a>
+</li>
+<li>
 <a class="reference-chip" href="#_extract_dq_rules"><code>_extract_dq_rules</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_parse_dq_rules_dict_from_text"><code>_parse_dq_rules_dict_from_text</code></a>
 </li>
 <li>
+<a class="reference-chip" href="#_extract_governance_suggestions"><code>_extract_governance_suggestions</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_extract_pii_suggestions"><code>_extract_pii_suggestions</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_extract_pii_suggestions"><code>_extract_pii_suggestions</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_coerce_rows"><code>_coerce_rows</code></a>, <a class="reference-chip" href="#_parse_ai_dict_response"><code>_parse_ai_dict_response</code></a>
+</li>
+<li>
 <a class="reference-chip" href="#_get_governance_metadata_schemas"><code>_get_governance_metadata_schemas</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_schema"><code>_schema</code></a>, <a class="reference-chip" href="#_spark_types"><code>_spark_types</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_get_reviewed_business_context_rows"><code>_get_reviewed_business_context_rows</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_is_success"><code>_is_success</code></a>
@@ -441,10 +515,16 @@ Owns table-scoped governance review, approved metadata recording, and internal D
 <a class="reference-chip" href="#_parse_jsonish"><code>_parse_jsonish</code></a>
 </li>
 <li>
+<a class="reference-chip" href="#_parse_ai_dict_response"><code>_parse_ai_dict_response</code></a>
+</li>
+<li>
 <a class="reference-chip" href="#_parse_dq_rules_dict_from_text"><code>_parse_dq_rules_dict_from_text</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_parse_jsonish"><code>_parse_jsonish</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_prepare_business_context_profile_input"><code>_prepare_business_context_profile_input</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_prepare_dq_profile_input_rows"><code>_prepare_dq_profile_input_rows</code></a>
@@ -453,6 +533,9 @@ Owns table-scoped governance review, approved metadata recording, and internal D
 </li>
 <li>
 <a class="reference-chip" href="#_prepare_dq_profile_rows_with_context"><code>_prepare_dq_profile_rows_with_context</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_prepare_governance_input"><code>_prepare_governance_input</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_row_to_dict"><code>_row_to_dict</code></a>

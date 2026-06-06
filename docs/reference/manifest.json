@@ -45,7 +45,7 @@
     {
       "module_name": "governance_review",
       "visibility": "public",
-      "module_summary": "Owns table-scoped governance review, approved metadata recording, and internal DQ drafting/enforcement helpers migrated from the removed standalone data_quality.py module for the upcoming production enforcement track.",
+      "module_summary": "Owns table-scoped governance review, approved metadata recording, and migrated internal AI drafting/enforcement helpers for business context, sensitivity/PII classification, and DQ rules after removing the standalone business_context.py, data_governance.py, and data_quality.py modules.",
       "sidebar_group": "1. Governance steward",
       "sidebar_include": true
     },
@@ -296,7 +296,7 @@
     {
       "module_name": "governance_review",
       "visibility": "public",
-      "module_summary": "Owns table-scoped governance review, approved metadata recording, and internal DQ drafting/enforcement helpers migrated from the removed standalone data_quality.py module for the upcoming production enforcement track.",
+      "module_summary": "Owns table-scoped governance review, approved metadata recording, and migrated internal AI drafting/enforcement helpers for business context, sensitivity/PII classification, and DQ rules after removing the standalone business_context.py, data_governance.py, and data_quality.py modules.",
       "sidebar_group": "1. Governance steward",
       "sidebar_include": true,
       "callable_name": "get_selected_catalogue_table",
@@ -308,7 +308,7 @@
     {
       "module_name": "governance_review",
       "visibility": "public",
-      "module_summary": "Owns table-scoped governance review, approved metadata recording, and internal DQ drafting/enforcement helpers migrated from the removed standalone data_quality.py module for the upcoming production enforcement track.",
+      "module_summary": "Owns table-scoped governance review, approved metadata recording, and migrated internal AI drafting/enforcement helpers for business context, sensitivity/PII classification, and DQ rules after removing the standalone business_context.py, data_governance.py, and data_quality.py modules.",
       "sidebar_group": "1. Governance steward",
       "sidebar_include": true,
       "callable_name": "load_catalogue_profile_rows",
@@ -320,7 +320,7 @@
     {
       "module_name": "governance_review",
       "visibility": "public",
-      "module_summary": "Owns table-scoped governance review, approved metadata recording, and internal DQ drafting/enforcement helpers migrated from the removed standalone data_quality.py module for the upcoming production enforcement track.",
+      "module_summary": "Owns table-scoped governance review, approved metadata recording, and migrated internal AI drafting/enforcement helpers for business context, sensitivity/PII classification, and DQ rules after removing the standalone business_context.py, data_governance.py, and data_quality.py modules.",
       "sidebar_group": "1. Governance steward",
       "sidebar_include": true,
       "callable_name": "record_table_governance",
@@ -332,7 +332,7 @@
     {
       "module_name": "governance_review",
       "visibility": "public",
-      "module_summary": "Owns table-scoped governance review, approved metadata recording, and internal DQ drafting/enforcement helpers migrated from the removed standalone data_quality.py module for the upcoming production enforcement track.",
+      "module_summary": "Owns table-scoped governance review, approved metadata recording, and migrated internal AI drafting/enforcement helpers for business context, sensitivity/PII classification, and DQ rules after removing the standalone business_context.py, data_governance.py, and data_quality.py modules.",
       "sidebar_group": "1. Governance steward",
       "sidebar_include": true,
       "callable_name": "widget_review_column_classification",
@@ -344,7 +344,7 @@
     {
       "module_name": "governance_review",
       "visibility": "public",
-      "module_summary": "Owns table-scoped governance review, approved metadata recording, and internal DQ drafting/enforcement helpers migrated from the removed standalone data_quality.py module for the upcoming production enforcement track.",
+      "module_summary": "Owns table-scoped governance review, approved metadata recording, and migrated internal AI drafting/enforcement helpers for business context, sensitivity/PII classification, and DQ rules after removing the standalone business_context.py, data_governance.py, and data_quality.py modules.",
       "sidebar_group": "1. Governance steward",
       "sidebar_include": true,
       "callable_name": "widget_review_column_context",
@@ -356,7 +356,7 @@
     {
       "module_name": "governance_review",
       "visibility": "public",
-      "module_summary": "Owns table-scoped governance review, approved metadata recording, and internal DQ drafting/enforcement helpers migrated from the removed standalone data_quality.py module for the upcoming production enforcement track.",
+      "module_summary": "Owns table-scoped governance review, approved metadata recording, and migrated internal AI drafting/enforcement helpers for business context, sensitivity/PII classification, and DQ rules after removing the standalone business_context.py, data_governance.py, and data_quality.py modules.",
       "sidebar_group": "1. Governance steward",
       "sidebar_include": true,
       "callable_name": "widget_review_dq_rules",
@@ -368,7 +368,7 @@
     {
       "module_name": "governance_review",
       "visibility": "public",
-      "module_summary": "Owns table-scoped governance review, approved metadata recording, and internal DQ drafting/enforcement helpers migrated from the removed standalone data_quality.py module for the upcoming production enforcement track.",
+      "module_summary": "Owns table-scoped governance review, approved metadata recording, and migrated internal AI drafting/enforcement helpers for business context, sensitivity/PII classification, and DQ rules after removing the standalone business_context.py, data_governance.py, and data_quality.py modules.",
       "sidebar_group": "1. Governance steward",
       "sidebar_include": true,
       "callable_name": "widget_select_catalogue_table",

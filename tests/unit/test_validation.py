@@ -6,6 +6,9 @@ import pytest
 from fabricops_kit.drift import _check_profile_drift, stop_if_failed, validate_schema
 from fabricops_kit.governance_review import (
     _extract_candidate_rules_from_responses,
+    _extract_column_business_context_suggestions,
+    _extract_governance_suggestions,
+    _parse_ai_dict_response,
     _parse_dq_rules_dict_from_text,
     _validate_dq_rules,
 )
@@ -50,6 +53,36 @@ def test_dq_ai_response_parsing_candidate_extraction_and_validation_are_migrated
     assert validated[0]["columns"]
     with pytest.raises(ValueError, match="unsupported rule_type"):
         _validate_dq_rules([{"rule_id": "bad", "rule_type": "future", "columns": ["id"], "severity": "warning", "description": "x"}])
+
+
+def test_business_context_ai_response_parsing_and_suggestion_extraction_are_migrated():
+    response_text = "BUSINESS_CONTEXT = {'column_name': 'amount', 'business_context': 'Approved payment amount', 'notes': 'numeric'}"
+
+    parsed = _parse_ai_dict_response(response_text, marker="BUSINESS_CONTEXT")
+    suggestions = _extract_column_business_context_suggestions([{"ai_business_context_response": response_text}])
+
+    assert parsed["column_name"] == "amount"
+    assert suggestions == [{"column_name": "amount", "business_context": "Approved payment amount", "notes": "numeric"}]
+
+
+def test_governance_ai_response_parsing_and_classification_extraction_are_migrated():
+    response_text = """GOVERNANCE_CONTEXT = {
+        'column_name': 'customer_id',
+        'personal_data_classification': 'indirect_identifier',
+        'sensitivity_label': 'confidential',
+        'reasoning': 'Identifier-like customer key'
+    }"""
+
+    suggestions = _extract_governance_suggestions([{"ai_governance_response": response_text}])
+
+    assert suggestions == [
+        {
+            "column_name": "customer_id",
+            "personal_data_classification": "indirect_identifier",
+            "sensitivity_label": "confidential",
+            "reasoning": "Identifier-like customer key",
+        }
+    ]
 
 def test_monitor_data_changes_uses_profile_baselines_without_blocking_first_observation():
     current = {
