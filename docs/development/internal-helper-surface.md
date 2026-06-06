@@ -11,7 +11,7 @@ This page records focused cleanup notes for helper-heavy modules. It is a handov
 - Internal helper count before: 41 underscore-prefixed helper functions.
 - Internal helper count after: 14 underscore-prefixed helper functions.
 
-### Deleted functions and classes
+### Deleted functions
 
 Removed unused advanced partition, incremental-safety, evidence, and summary paths that were not active in the v1 notebook guardrail flow:
 
@@ -36,8 +36,11 @@ Removed unused advanced partition, incremental-safety, evidence, and summary pat
 - `_compare_partition_snapshots`
 - `_assert_incremental_safe`
 - `_build_incremental_safety_records`
-- `UnsupportedDataFrameEngineError`
-- `IncrementalSafetyError`
+
+### Compatibility classes restored
+
+- `UnsupportedDataFrameEngineError` remains import-compatible for previously documented internal dataframe-engine imports, but the removed engine-detection helper path was not restored.
+- `IncrementalSafetyError` remains import-compatible for previously documented internal incremental-safety imports, but the removed incremental helper path was not restored.
 
 ### Merged helpers
 

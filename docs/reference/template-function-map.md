@@ -216,14 +216,14 @@ Production pipeline guardrails, IO, lineage, and publishing.
       <td>[`validate_schema`](./callables/validate_schema.md)</td>
       <td>Callable orchestration wrapper</td>
       <td>Validate a DataFrame schema using strict, allow-new-columns, or monitor-only presets.</td>
-      <td>`_actual_schema`, `_check_schema`</td>
+      <td>`_actual_schema`, `_normalize_datatype`</td>
       <td>Check dependency outputs and metadata writes.</td>
     </tr>
     <tr>
       <td>[`monitor_data_changes`](./callables/monitor_data_changes.md)</td>
       <td>Callable orchestration wrapper</td>
       <td>Profile data, compare against the approved baseline, and return a drift guardrail result.</td>
-      <td>`_as_monitor_only_result`, `_check_profile_drift`, `_data_change_preset_config`, `_extract_categorical_distribution_categories`, `_extract_numeric_distribution_bin_edges`, `_load_latest_profile`, `_normalize_profile`</td>
+      <td>`_check_profile_drift`, `_data_change_preset_config`, `_extract_categorical_distribution_categories`, `_extract_numeric_distribution_bin_edges`, `_load_latest_profile`, `_normalize_profile`</td>
       <td>Check dependency outputs and metadata writes.</td>
     </tr>
     <tr>

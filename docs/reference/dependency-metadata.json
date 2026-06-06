@@ -12,14 +12,9 @@
       ],
       "calls_count": 1,
       "used_by": [
-        "fabricops_kit._utils._to_jsonable",
-        "fabricops_kit.drift._build_incremental_safety_records",
-        "fabricops_kit.drift._build_pandas_partition_snapshot",
-        "fabricops_kit.drift._build_spark_partition_snapshot",
-        "fabricops_kit.drift._compare_partition_snapshots",
-        "fabricops_kit.drift._json_dumps"
+        "fabricops_kit._utils._to_jsonable"
       ],
-      "used_by_count": 6,
+      "used_by_count": 1,
       "internal_helpers_used": [
         "fabricops_kit._utils._to_jsonable"
       ],
@@ -3501,10 +3496,8 @@
       "classification": "internal",
       "calls": [],
       "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.drift._assert_incremental_safe"
-      ],
-      "used_by_count": 1,
+      "used_by": [],
+      "used_by_count": 0,
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
@@ -3518,11 +3511,9 @@
       "calls": [],
       "calls_count": 0,
       "used_by": [
-        "fabricops_kit.drift._assert_no_blocking_profile_drift",
-        "fabricops_kit.drift._check_schema",
         "fabricops_kit.drift.stop_if_failed"
       ],
-      "used_by_count": 3,
+      "used_by_count": 1,
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
@@ -3535,10 +3526,8 @@
       "classification": "internal",
       "calls": [],
       "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.drift._detect_dataframe_engine"
-      ],
-      "used_by_count": 1,
+      "used_by": [],
+      "used_by_count": 0,
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
@@ -3554,210 +3543,11 @@
       ],
       "calls_count": 1,
       "used_by": [
-        "fabricops_kit.drift._check_schema",
         "fabricops_kit.drift.validate_schema"
       ],
-      "used_by_count": 2,
+      "used_by_count": 1,
       "internal_helpers_used": [
         "fabricops_kit.drift._normalize_datatype"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.drift._as_monitor_only_result": {
-      "qualified_name": "fabricops_kit.drift._as_monitor_only_result",
-      "short_name": "_as_monitor_only_result",
-      "module": "drift",
-      "callable": "_as_monitor_only_result",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/drift/_as_monitor_only_result/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.drift.monitor_data_changes"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.drift._assert_incremental_safe": {
-      "qualified_name": "fabricops_kit.drift._assert_incremental_safe",
-      "short_name": "_assert_incremental_safe",
-      "module": "drift",
-      "callable": "_assert_incremental_safe",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/drift/_assert_incremental_safe/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.drift.IncrementalSafetyError"
-      ],
-      "calls_count": 1,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.drift._assert_no_blocking_profile_drift": {
-      "qualified_name": "fabricops_kit.drift._assert_no_blocking_profile_drift",
-      "short_name": "_assert_no_blocking_profile_drift",
-      "module": "drift",
-      "callable": "_assert_no_blocking_profile_drift",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/drift/_assert_no_blocking_profile_drift/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.drift.SchemaDriftError"
-      ],
-      "calls_count": 1,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.drift._build_and_write_partition_snapshot": {
-      "qualified_name": "fabricops_kit.drift._build_and_write_partition_snapshot",
-      "short_name": "_build_and_write_partition_snapshot",
-      "module": "drift",
-      "callable": "_build_and_write_partition_snapshot",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/drift/_build_and_write_partition_snapshot/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.drift._build_partition_snapshot",
-        "fabricops_kit.drift._json_dumps",
-        "fabricops_kit.drift._utc_now_iso",
-        "fabricops_kit.drift._write_metadata_rows"
-      ],
-      "calls_count": 4,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [
-        "fabricops_kit.drift._build_partition_snapshot",
-        "fabricops_kit.drift._json_dumps",
-        "fabricops_kit.drift._utc_now_iso",
-        "fabricops_kit.drift._write_metadata_rows"
-      ],
-      "internal_helper_count": 4
-    },
-    "fabricops_kit.drift._build_drift_evidence_record": {
-      "qualified_name": "fabricops_kit.drift._build_drift_evidence_record",
-      "short_name": "_build_drift_evidence_record",
-      "module": "drift",
-      "callable": "_build_drift_evidence_record",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/drift/_build_drift_evidence_record/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.drift._json_dumps",
-        "fabricops_kit.drift._utc_now_iso"
-      ],
-      "calls_count": 2,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [
-        "fabricops_kit.drift._json_dumps",
-        "fabricops_kit.drift._utc_now_iso"
-      ],
-      "internal_helper_count": 2
-    },
-    "fabricops_kit.drift._build_incremental_safety_records": {
-      "qualified_name": "fabricops_kit.drift._build_incremental_safety_records",
-      "short_name": "_build_incremental_safety_records",
-      "module": "drift",
-      "callable": "_build_incremental_safety_records",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/drift/_build_incremental_safety_records/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit._utils._to_jsonable"
-      ],
-      "calls_count": 1,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.drift._build_pandas_partition_snapshot": {
-      "qualified_name": "fabricops_kit.drift._build_pandas_partition_snapshot",
-      "short_name": "_build_pandas_partition_snapshot",
-      "module": "drift",
-      "callable": "_build_pandas_partition_snapshot",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/drift/_build_pandas_partition_snapshot/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit._utils._to_jsonable",
-        "fabricops_kit.drift._build_partition_hash",
-        "fabricops_kit.drift._hash"
-      ],
-      "calls_count": 3,
-      "used_by": [
-        "fabricops_kit.drift._build_partition_snapshot"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [
-        "fabricops_kit.drift._build_partition_hash",
-        "fabricops_kit.drift._hash"
-      ],
-      "internal_helper_count": 2
-    },
-    "fabricops_kit.drift._build_partition_hash": {
-      "qualified_name": "fabricops_kit.drift._build_partition_hash",
-      "short_name": "_build_partition_hash",
-      "module": "drift",
-      "callable": "_build_partition_hash",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/drift/_build_partition_hash/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.drift._hash"
-      ],
-      "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.drift._build_pandas_partition_snapshot",
-        "fabricops_kit.drift._build_spark_partition_snapshot"
-      ],
-      "used_by_count": 2,
-      "internal_helpers_used": [
-        "fabricops_kit.drift._hash"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.drift._build_partition_snapshot": {
-      "qualified_name": "fabricops_kit.drift._build_partition_snapshot",
-      "short_name": "_build_partition_snapshot",
-      "module": "drift",
-      "callable": "_build_partition_snapshot",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/drift/_build_partition_snapshot/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.drift._build_pandas_partition_snapshot",
-        "fabricops_kit.drift._build_spark_partition_snapshot",
-        "fabricops_kit.drift._detect_dataframe_engine"
-      ],
-      "calls_count": 3,
-      "used_by": [
-        "fabricops_kit.drift._build_and_write_partition_snapshot",
-        "fabricops_kit.drift._check_partition_drift"
-      ],
-      "used_by_count": 2,
-      "internal_helpers_used": [
-        "fabricops_kit.drift._build_pandas_partition_snapshot",
-        "fabricops_kit.drift._build_spark_partition_snapshot",
-        "fabricops_kit.drift._detect_dataframe_engine"
-      ],
-      "internal_helper_count": 3
-    },
-    "fabricops_kit.drift._build_spark_partition_snapshot": {
-      "qualified_name": "fabricops_kit.drift._build_spark_partition_snapshot",
-      "short_name": "_build_spark_partition_snapshot",
-      "module": "drift",
-      "callable": "_build_spark_partition_snapshot",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/drift/_build_spark_partition_snapshot/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit._utils._to_jsonable",
-        "fabricops_kit.drift._build_partition_hash"
-      ],
-      "calls_count": 2,
-      "used_by": [
-        "fabricops_kit.drift._build_partition_snapshot"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [
-        "fabricops_kit.drift._build_partition_hash"
       ],
       "internal_helper_count": 1
     },
@@ -3777,28 +3567,6 @@
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
-    "fabricops_kit.drift._check_partition_drift": {
-      "qualified_name": "fabricops_kit.drift._check_partition_drift",
-      "short_name": "_check_partition_drift",
-      "module": "drift",
-      "callable": "_check_partition_drift",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/drift/_check_partition_drift/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.drift._build_partition_snapshot",
-        "fabricops_kit.drift._compare_partition_snapshots",
-        "fabricops_kit.drift._default_incremental_safety_policy"
-      ],
-      "calls_count": 3,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [
-        "fabricops_kit.drift._build_partition_snapshot",
-        "fabricops_kit.drift._compare_partition_snapshots",
-        "fabricops_kit.drift._default_incremental_safety_policy"
-      ],
-      "internal_helper_count": 3
-    },
     "fabricops_kit.drift._check_profile_drift": {
       "qualified_name": "fabricops_kit.drift._check_profile_drift",
       "short_name": "_check_profile_drift",
@@ -3808,70 +3576,20 @@
       "classification": "internal",
       "calls": [
         "fabricops_kit.drift._categorical_distance",
-        "fabricops_kit.drift._default_profile_drift_policy",
         "fabricops_kit.drift._normalize_profile",
-        "fabricops_kit.drift._numeric_psi",
-        "fabricops_kit.drift._profile_check_status"
+        "fabricops_kit.drift._numeric_psi"
       ],
-      "calls_count": 5,
+      "calls_count": 3,
       "used_by": [
         "fabricops_kit.drift.monitor_data_changes"
       ],
       "used_by_count": 1,
       "internal_helpers_used": [
         "fabricops_kit.drift._categorical_distance",
-        "fabricops_kit.drift._default_profile_drift_policy",
         "fabricops_kit.drift._normalize_profile",
-        "fabricops_kit.drift._numeric_psi",
-        "fabricops_kit.drift._profile_check_status"
+        "fabricops_kit.drift._numeric_psi"
       ],
-      "internal_helper_count": 5
-    },
-    "fabricops_kit.drift._check_schema": {
-      "qualified_name": "fabricops_kit.drift._check_schema",
-      "short_name": "_check_schema",
-      "module": "drift",
-      "callable": "_check_schema",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/drift/_check_schema/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.drift.SchemaDriftError",
-        "fabricops_kit.drift._actual_schema",
-        "fabricops_kit.drift._normalize_datatype"
-      ],
-      "calls_count": 3,
-      "used_by": [
-        "fabricops_kit.drift.validate_schema"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [
-        "fabricops_kit.drift._actual_schema",
-        "fabricops_kit.drift._normalize_datatype"
-      ],
-      "internal_helper_count": 2
-    },
-    "fabricops_kit.drift._compare_partition_snapshots": {
-      "qualified_name": "fabricops_kit.drift._compare_partition_snapshots",
-      "short_name": "_compare_partition_snapshots",
-      "module": "drift",
-      "callable": "_compare_partition_snapshots",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/drift/_compare_partition_snapshots/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit._utils._to_jsonable",
-        "fabricops_kit.drift._default_incremental_safety_policy",
-        "fabricops_kit.drift._is_closed_partition"
-      ],
-      "calls_count": 3,
-      "used_by": [
-        "fabricops_kit.drift._check_partition_drift"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [
-        "fabricops_kit.drift._default_incremental_safety_policy",
-        "fabricops_kit.drift._is_closed_partition"
-      ],
-      "internal_helper_count": 2
+      "internal_helper_count": 3
     },
     "fabricops_kit.drift._data_change_preset_config": {
       "qualified_name": "fabricops_kit.drift._data_change_preset_config",
@@ -3884,57 +3602,6 @@
       "calls_count": 0,
       "used_by": [
         "fabricops_kit.drift.monitor_data_changes"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.drift._default_incremental_safety_policy": {
-      "qualified_name": "fabricops_kit.drift._default_incremental_safety_policy",
-      "short_name": "_default_incremental_safety_policy",
-      "module": "drift",
-      "callable": "_default_incremental_safety_policy",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/drift/_default_incremental_safety_policy/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.drift._check_partition_drift",
-        "fabricops_kit.drift._compare_partition_snapshots"
-      ],
-      "used_by_count": 2,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.drift._default_profile_drift_policy": {
-      "qualified_name": "fabricops_kit.drift._default_profile_drift_policy",
-      "short_name": "_default_profile_drift_policy",
-      "module": "drift",
-      "callable": "_default_profile_drift_policy",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/drift/_default_profile_drift_policy/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.drift._check_profile_drift"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.drift._detect_dataframe_engine": {
-      "qualified_name": "fabricops_kit.drift._detect_dataframe_engine",
-      "short_name": "_detect_dataframe_engine",
-      "module": "drift",
-      "callable": "_detect_dataframe_engine",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/drift/_detect_dataframe_engine/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.drift.UnsupportedDataFrameEngineError"
-      ],
-      "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.drift._build_partition_snapshot"
       ],
       "used_by_count": 1,
       "internal_helpers_used": [],
@@ -3980,39 +3647,6 @@
       ],
       "internal_helper_count": 1
     },
-    "fabricops_kit.drift._hash": {
-      "qualified_name": "fabricops_kit.drift._hash",
-      "short_name": "_hash",
-      "module": "drift",
-      "callable": "_hash",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/drift/_hash/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.drift._build_pandas_partition_snapshot",
-        "fabricops_kit.drift._build_partition_hash"
-      ],
-      "used_by_count": 2,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.drift._is_closed_partition": {
-      "qualified_name": "fabricops_kit.drift._is_closed_partition",
-      "short_name": "_is_closed_partition",
-      "module": "drift",
-      "callable": "_is_closed_partition",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/drift/_is_closed_partition/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.drift._compare_partition_snapshots"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
     "fabricops_kit.drift._is_missing_table_error": {
       "qualified_name": "fabricops_kit.drift._is_missing_table_error",
       "short_name": "_is_missing_table_error",
@@ -4023,51 +3657,11 @@
       "calls": [],
       "calls_count": 0,
       "used_by": [
-        "fabricops_kit.drift._load_latest_partition_snapshot",
         "fabricops_kit.drift._load_latest_profile"
       ],
-      "used_by_count": 2,
+      "used_by_count": 1,
       "internal_helpers_used": [],
       "internal_helper_count": 0
-    },
-    "fabricops_kit.drift._json_dumps": {
-      "qualified_name": "fabricops_kit.drift._json_dumps",
-      "short_name": "_json_dumps",
-      "module": "drift",
-      "callable": "_json_dumps",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/drift/_json_dumps/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit._utils._to_jsonable"
-      ],
-      "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.drift._build_and_write_partition_snapshot",
-        "fabricops_kit.drift._build_drift_evidence_record"
-      ],
-      "used_by_count": 2,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.drift._load_latest_partition_snapshot": {
-      "qualified_name": "fabricops_kit.drift._load_latest_partition_snapshot",
-      "short_name": "_load_latest_partition_snapshot",
-      "module": "drift",
-      "callable": "_load_latest_partition_snapshot",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/drift/_load_latest_partition_snapshot/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.drift._is_missing_table_error",
-        "fabricops_kit.drift._safe_spark_collect"
-      ],
-      "calls_count": 2,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [
-        "fabricops_kit.drift._is_missing_table_error",
-        "fabricops_kit.drift._safe_spark_collect"
-      ],
-      "internal_helper_count": 2
     },
     "fabricops_kit.drift._load_latest_profile": {
       "qualified_name": "fabricops_kit.drift._load_latest_profile",
@@ -4078,38 +3672,18 @@
       "classification": "internal",
       "calls": [
         "fabricops_kit.drift._is_missing_table_error",
-        "fabricops_kit.drift._normalize_baseline_mode",
-        "fabricops_kit.drift._normalize_profile",
-        "fabricops_kit.drift._safe_spark_collect"
+        "fabricops_kit.drift._normalize_profile"
       ],
-      "calls_count": 4,
+      "calls_count": 2,
       "used_by": [
         "fabricops_kit.drift.monitor_data_changes"
       ],
       "used_by_count": 1,
       "internal_helpers_used": [
         "fabricops_kit.drift._is_missing_table_error",
-        "fabricops_kit.drift._normalize_baseline_mode",
-        "fabricops_kit.drift._normalize_profile",
-        "fabricops_kit.drift._safe_spark_collect"
+        "fabricops_kit.drift._normalize_profile"
       ],
-      "internal_helper_count": 4
-    },
-    "fabricops_kit.drift._normalize_baseline_mode": {
-      "qualified_name": "fabricops_kit.drift._normalize_baseline_mode",
-      "short_name": "_normalize_baseline_mode",
-      "module": "drift",
-      "callable": "_normalize_baseline_mode",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/drift/_normalize_baseline_mode/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.drift._load_latest_profile"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
+      "internal_helper_count": 2
     },
     "fabricops_kit.drift._normalize_datatype": {
       "qualified_name": "fabricops_kit.drift._normalize_datatype",
@@ -4122,7 +3696,7 @@
       "calls_count": 0,
       "used_by": [
         "fabricops_kit.drift._actual_schema",
-        "fabricops_kit.drift._check_schema"
+        "fabricops_kit.drift.validate_schema"
       ],
       "used_by_count": 2,
       "internal_helpers_used": [],
@@ -4193,36 +3767,6 @@
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
-    "fabricops_kit.drift._prepare_drift_baselines": {
-      "qualified_name": "fabricops_kit.drift._prepare_drift_baselines",
-      "short_name": "_prepare_drift_baselines",
-      "module": "drift",
-      "callable": "_prepare_drift_baselines",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/drift/_prepare_drift_baselines/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.drift._profile_check_status": {
-      "qualified_name": "fabricops_kit.drift._profile_check_status",
-      "short_name": "_profile_check_status",
-      "module": "drift",
-      "callable": "_profile_check_status",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/drift/_profile_check_status/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.drift._check_profile_drift"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
     "fabricops_kit.drift._proportions": {
       "qualified_name": "fabricops_kit.drift._proportions",
       "short_name": "_proportions",
@@ -4255,70 +3799,6 @@
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
-    "fabricops_kit.drift._safe_spark_collect": {
-      "qualified_name": "fabricops_kit.drift._safe_spark_collect",
-      "short_name": "_safe_spark_collect",
-      "module": "drift",
-      "callable": "_safe_spark_collect",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/drift/_safe_spark_collect/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.drift._load_latest_partition_snapshot",
-        "fabricops_kit.drift._load_latest_profile"
-      ],
-      "used_by_count": 2,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.drift._summarize_drift_results": {
-      "qualified_name": "fabricops_kit.drift._summarize_drift_results",
-      "short_name": "_summarize_drift_results",
-      "module": "drift",
-      "callable": "_summarize_drift_results",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/drift/_summarize_drift_results/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.drift._utc_now_iso": {
-      "qualified_name": "fabricops_kit.drift._utc_now_iso",
-      "short_name": "_utc_now_iso",
-      "module": "drift",
-      "callable": "_utc_now_iso",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/drift/_utc_now_iso/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.drift._build_and_write_partition_snapshot",
-        "fabricops_kit.drift._build_drift_evidence_record"
-      ],
-      "used_by_count": 2,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.drift._write_metadata_rows": {
-      "qualified_name": "fabricops_kit.drift._write_metadata_rows",
-      "short_name": "_write_metadata_rows",
-      "module": "drift",
-      "callable": "_write_metadata_rows",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/drift/_write_metadata_rows/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.drift._build_and_write_partition_snapshot"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
     "fabricops_kit.drift.monitor_data_changes": {
       "qualified_name": "fabricops_kit.drift.monitor_data_changes",
       "short_name": "monitor_data_changes",
@@ -4328,7 +3808,6 @@
       "classification": "essential",
       "calls": [
         "fabricops_kit.data_profiling.profile_dataframe",
-        "fabricops_kit.drift._as_monitor_only_result",
         "fabricops_kit.drift._check_profile_drift",
         "fabricops_kit.drift._data_change_preset_config",
         "fabricops_kit.drift._extract_categorical_distribution_categories",
@@ -4336,11 +3815,10 @@
         "fabricops_kit.drift._load_latest_profile",
         "fabricops_kit.drift._normalize_profile"
       ],
-      "calls_count": 8,
+      "calls_count": 7,
       "used_by": [],
       "used_by_count": 0,
       "internal_helpers_used": [
-        "fabricops_kit.drift._as_monitor_only_result",
         "fabricops_kit.drift._check_profile_drift",
         "fabricops_kit.drift._data_change_preset_config",
         "fabricops_kit.drift._extract_categorical_distribution_categories",
@@ -4348,7 +3826,7 @@
         "fabricops_kit.drift._load_latest_profile",
         "fabricops_kit.drift._normalize_profile"
       ],
-      "internal_helper_count": 7
+      "internal_helper_count": 6
     },
     "fabricops_kit.drift.stop_if_failed": {
       "qualified_name": "fabricops_kit.drift.stop_if_failed",
@@ -4375,14 +3853,14 @@
       "classification": "essential",
       "calls": [
         "fabricops_kit.drift._actual_schema",
-        "fabricops_kit.drift._check_schema"
+        "fabricops_kit.drift._normalize_datatype"
       ],
       "calls_count": 2,
       "used_by": [],
       "used_by_count": 0,
       "internal_helpers_used": [
         "fabricops_kit.drift._actual_schema",
-        "fabricops_kit.drift._check_schema"
+        "fabricops_kit.drift._normalize_datatype"
       ],
       "internal_helper_count": 2
     },
@@ -6121,11 +5599,9 @@
       "optional_count": 0,
       "internal_count": 1,
       "outbound_modules": [],
-      "inbound_modules": [
-        "drift"
-      ],
+      "inbound_modules": [],
       "outbound_count": 0,
-      "inbound_count": 1
+      "inbound_count": 0
     },
     "business_context": {
       "essential_count": 0,
@@ -6226,13 +5702,12 @@
     "drift": {
       "essential_count": 3,
       "optional_count": 0,
-      "internal_count": 41,
+      "internal_count": 14,
       "outbound_modules": [
-        "_utils",
         "data_profiling"
       ],
       "inbound_modules": [],
-      "outbound_count": 2,
+      "outbound_count": 1,
       "inbound_count": 0
     },
     "fabric_input_output": {

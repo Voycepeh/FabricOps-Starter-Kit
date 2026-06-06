@@ -16,8 +16,7 @@ No summary available.
 - Related module: `drift`
 - Source file path: `src/fabricops_kit/drift.py`
 - Source reference: <a href="../../api/modules/drift/#IncrementalSafetyError">Module source anchor</a>
-- Inbound references count: 1
+- Inbound references count: 0
 - Outbound references count: 0
 
-## Inbound references
-- <a href="../internal/drift/_assert_incremental_safe/"><code>fabricops_kit.drift._assert_incremental_safe</code></a>
+_No inbound or outbound references detected._

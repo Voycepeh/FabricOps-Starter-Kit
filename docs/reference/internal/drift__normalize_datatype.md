@@ -21,4 +21,4 @@ No summary available.
 
 ## Inbound references
 - <a href="../internal/drift/_actual_schema/"><code>fabricops_kit.drift._actual_schema</code></a>
-- <a href="../internal/drift/_check_schema/"><code>fabricops_kit.drift._check_schema</code></a>
+- <a href="../validate_schema/"><code>fabricops_kit.drift.validate_schema</code></a>

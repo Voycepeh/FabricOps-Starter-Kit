@@ -69,3 +69,26 @@ def test_monitor_data_changes_uses_profile_baselines_without_blocking_first_obse
     assert changed["status"] in {"warning", "failed", "passed"}
     with pytest.raises(Exception):
         stop_if_failed({"can_continue": False, "status": "failed", "message": "blocked"})
+
+
+def test_drift_public_surface_keeps_compatibility_exceptions_unexported():
+    import fabricops_kit
+    import fabricops_kit.drift as drift
+
+    public_drift_callables = {"validate_schema", "monitor_data_changes", "stop_if_failed"}
+    exported_from_drift = {
+        name
+        for name in fabricops_kit.__all__
+        if getattr(fabricops_kit, name).__module__ == "fabricops_kit.drift"
+    }
+
+    assert exported_from_drift == public_drift_callables
+    assert "UnsupportedDataFrameEngineError" not in fabricops_kit.__all__
+    assert "IncrementalSafetyError" not in fabricops_kit.__all__
+    assert not hasattr(fabricops_kit, "UnsupportedDataFrameEngineError")
+    assert not hasattr(fabricops_kit, "IncrementalSafetyError")
+
+    assert issubclass(drift.UnsupportedDataFrameEngineError, ValueError)
+    assert issubclass(drift.IncrementalSafetyError, Exception)
+    assert not hasattr(drift, "_check_partition_drift")
+    assert not hasattr(drift, "_build_partition_snapshot")
