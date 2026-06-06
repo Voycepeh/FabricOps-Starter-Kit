@@ -35,14 +35,14 @@ The active metadata model contains only the following tables:
 | `METADATA_DATA_CATALOGUE`          | `03_pc`                | Stores table context and column profiling evidence.                               |
 | `METADATA_DATA_ACCESS`             | Access capture process | Stores table-level access assignments.                                            |
 | `METADATA_COLUMN_CONTEXT`          | `04_gov`               | Stores human-approved business meaning for catalogue columns.                     |
-| `METADATA_DQ_RULES`                | `04_gov`               | Stores human-approved data-quality rules.                                         |
+| `METADATA_DQ_RULES`                | `04_gov`               | Stores reviewed DQ expectations as governance metadata.                           |
 | `METADATA_COLUMN_CLASSIFICATION`   | `04_gov`               | Stores human-approved sensitivity and PII classifications.                        |
 
-`04_gov` is table-scoped. It selects a table from `METADATA_DATA_CATALOGUE` and does not require a data agreement.
+`04_gov` reviews catalogue evidence from `METADATA_DATA_CATALOGUE` and commits approved governance metadata. It does not require a separate data agreement relationship for every reviewed table.
 
-Schema and data-drift guardrails remain inside each `03_pc` notebook. They are not duplicated in a separate contract table.
+Schema and data-change guardrails remain inside each `03_pc` notebook. Separate data contracts are not part of the v1.0.0 operating model.
 
-Enforcement of approved DQ rules and classifications is planned for enforcement in 03_pc but outside the v1.0.0 scope.
+Metadata-driven DQ rule execution and classification enforcement are planned after v1.0.0. In v1.0.0, production enforcement comes from checks implemented in `03_pc`.
 
 ## Standard runtime audit columns
 
@@ -305,7 +305,7 @@ AI suggestions are not committed as approved metadata without human action.
 
 ### `METADATA_DQ_RULES`
 
-Stores append-only human-reviewed DQ rules.
+Stores append-only human-reviewed DQ expectations.
 
 | Column                | Purpose                                          |
 | --------------------- | ------------------------------------------------ |
@@ -334,7 +334,7 @@ Stores append-only human-reviewed DQ rules.
 
 Includes the standard runtime audit columns.
 
-Approved rules are stored in v1.0.0 but are not yet enforced by `03_pc`.
+Reviewed DQ expectations are stored in v1.0.0 as governance metadata. They are not automatically enforced unless implemented as checks in `03_pc`.
 
 ### `METADATA_COLUMN_CLASSIFICATION`
 

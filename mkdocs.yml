@@ -30,12 +30,11 @@ nav:
       - Workspace Operating Model: how-fabricops-works/workspace-operating-model.md
       - Notebook Templates: how-fabricops-works/notebook-templates.md
       - Metadata Tables: how-fabricops-works/metadata-tables.md
-      - Table-Scoped Governance: how-fabricops-works/table-scoped-governance.md
       - Metadata Dashboard: how-fabricops-works/metadata-dashboard.md
 
-  - Data Quality:
-      - AI-Assisted Rules: data-quality-rules-system.md
-      - Schema and Data Drift: schema-and-data-drift.md
+  - Workflow Guides:
+      - Governance Review Workflow: data-quality-rules-system.md
+      - Production Guardrails Workflow: schema-and-data-drift.md
 
   - Development:
       - Documentation Versioning: development/docs-versioning.md

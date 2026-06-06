@@ -2,6 +2,8 @@
 
 FabricOps v1.0.0 uses each `03_pc` notebook as the production guardrail boundary. Data quality is one part of that workflow, alongside profiling, output writes, lineage, run summaries, governance review, and handover.
 
+Read [How FabricOps Works](how-fabricops-works/index.md) first. This page then explains the `03_pc` production guardrails workflow.
+
 Separate data contracts are not part of the v1.0.0 operating model. The checks that control production behavior live in the relevant `03_pc` notebook.
 
 ![Schema and data-change guardrails showing source and target validation flow](assets/fabricops-schema-data-guardrails.png){ .full-width }

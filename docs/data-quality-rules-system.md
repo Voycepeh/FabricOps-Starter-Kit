@@ -2,6 +2,8 @@
 
 FabricOps v1.0.0 treats data quality as one part of a notebook workflow, not as a standalone data quality product.
 
+Read [How FabricOps Works](how-fabricops-works/index.md) first. This page then explains the `04_gov` governance review workflow.
+
 The workflow is intentionally lightweight:
 
 1. teams profile and inspect data;
