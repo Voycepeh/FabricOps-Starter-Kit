@@ -2,9 +2,9 @@
 
 Use this page as a callable lookup after you understand the notebook flow.
 
-- Use [Template Function Map](template-function-map.md) to see what notebook users actually call.
-- Use the function catalogue below to browse the public v1 callable API.
-- Use [Implementation Modules](../api/modules/) only when debugging or maintaining source internals.
+- **Template Function Map** shows what notebook users call in each starter template step.
+- **Function catalogue** lists the public v1 callables exported from `fabricops_kit`.
+- **Implementation Modules** documents only major source boundaries; it is not a page for every `.py` file or internal helper.
 
 > Graph exploration is intentionally deferred. Future PR may use Neo4j or a proper graph backend.
 
@@ -16,7 +16,7 @@ Use the finder below to look up public callable functions.
   <label class="callable-finder-label" for="callable-finder-input">Search callable functions</label>
   <input id="callable-finder-input" class="callable-finder-input" type="search" placeholder="Search callable functions" aria-describedby="callable-finder-help callable-finder-status callable-finder-examples" autocomplete="off">
   <p id="callable-finder-help" class="callable-finder-help">Search by function name, module, role, starter path, or what the public function does.</p>
-  <p id="callable-finder-examples" class="callable-finder-examples">Try: <span class="callable-finder-chip">csv</span> <span class="callable-finder-chip">data_quality</span> <span class="callable-finder-chip">quarantine</span></p>
+  <p id="callable-finder-examples" class="callable-finder-examples">Try: <span class="callable-finder-chip">csv</span> <span class="callable-finder-chip">governance_review</span> <span class="callable-finder-chip">schema</span></p>
   <p id="callable-finder-status" class="callable-finder-status" aria-live="polite">Showing all public callables.</p>
   <fieldset class="callable-role-filters">
     <legend>Role filters</legend>
@@ -93,7 +93,7 @@ Use the finder below to look up public callable functions.
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_profiling/" title="Open data_profiling module page" aria-label="Open data_profiling module page">data_profiling</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">02_ex_agreement_topic</span></p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 3</span></summary><ul><li><code>_build_distribution_summaries</code></li><li><code>_get_profiled_columns</code></li><li><code>_is_min_max_supported_type</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 2</span></summary><ul><li><code>_prepare_dq_profile_input_rows</code></li><li><code>monitor_data_changes</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>monitor_data_changes</code></li></ul></details>
   </div>
 </article>
 <article id="read_lakehouse_csv" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_lakehouse_csv" data-callable-module="fabric_input_output" data-callable-starter-path="02_ex_agreement_topic, 03_pc_agreement_pipeline_template" data-role="essential" data-callable-purpose="Read a CSV file from a configured Fabric lakehouse Files path.">
@@ -273,7 +273,7 @@ Use the finder below to look up public callable functions.
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">03_pc_agreement_pipeline_template</span></p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_get_store</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 8</span></summary><ul><li><code>_ensure_metadata_tables</code></li><li><code>_write_row</code></li><li><code>_write_dq_rules</code></li><li><code>_seed_minimal_sample_source_table</code></li><li><code>_setup_governance_metadata_tables</code></li><li><code>record_table_governance</code></li><li><code>_register_current_notebook</code></li><li><code>_setup_notebook_registry_table</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 7</span></summary><ul><li><code>_ensure_metadata_tables</code></li><li><code>_write_row</code></li><li><code>_seed_minimal_sample_source_table</code></li><li><code>_setup_governance_metadata_tables</code></li><li><code>record_table_governance</code></li><li><code>_register_current_notebook</code></li><li><code>_setup_notebook_registry_table</code></li></ul></details>
   </div>
 </article>
 <article id="write_warehouse_table" class="reference-catalogue-item" data-callable-row="true" data-callable-name="write_warehouse_table" data-callable-module="fabric_input_output" data-callable-starter-path="03_pc_agreement_pipeline_template" data-role="essential" data-callable-purpose="Write a DataFrame to a configured Fabric warehouse target.">

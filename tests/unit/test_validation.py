@@ -3,7 +3,6 @@ from __future__ import annotations
 import pandas as pd
 import pytest
 
-from fabricops_kit.data_quality import _validate_dq_rules
 from fabricops_kit.drift import _check_profile_drift, stop_if_failed, validate_schema
 
 pytestmark = pytest.mark.unit
@@ -25,30 +24,6 @@ def test_validate_schema_supports_strict_allow_new_and_monitor_modes():
     assert monitor["can_continue"] is True
     with pytest.raises(ValueError, match="preset"):
         validate_schema(df, expected, preset="unknown")
-
-
-def test__validate_dq_rules_accepts_canonical_rules_and_rejects_invalid_shapes():
-    valid_rules = [
-        {"rule_id": "id_required", "rule_type": "not_null", "columns": ["id"], "severity": "error", "description": "ID required"},
-        {
-            "rule_id": "status_values",
-            "rule_type": "accepted_values",
-            "columns": ["status"],
-            "allowed_values": ["active", "inactive"],
-            "severity": "warning",
-            "description": "Known status",
-        },
-    ]
-
-    assert _validate_dq_rules(valid_rules) == valid_rules
-    for invalid in (
-        None,
-        [{"rule_id": "missing", "rule_type": "not_null", "columns": ["id"]}],
-        [{"rule_id": "bad_type", "rule_type": "custom", "columns": ["id"], "severity": "error", "description": "x"}],
-        [{"rule_id": "no_cols", "rule_type": "not_null", "columns": [], "severity": "error", "description": "x"}],
-    ):
-        with pytest.raises(ValueError):
-            _validate_dq_rules(invalid)
 
 
 def test_monitor_data_changes_uses_profile_baselines_without_blocking_first_observation():

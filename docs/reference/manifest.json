@@ -1,13 +1,6 @@
 {
   "modules": [
     {
-      "module_name": "business_context",
-      "visibility": "public",
-      "module_summary": "Owns business meaning for tables and columns.",
-      "sidebar_group": "1. Governance steward",
-      "sidebar_include": true
-    },
-    {
       "module_name": "config",
       "visibility": "public",
       "module_summary": "Owns environment setup, runtime initialization, paths, and notebook-wide configuration.",
@@ -22,13 +15,6 @@
       "sidebar_include": true
     },
     {
-      "module_name": "data_governance",
-      "visibility": "public",
-      "module_summary": "Owns sensitivity, PII, confidentiality, policy labels, and governance approval evidence.",
-      "sidebar_group": "1. Governance steward",
-      "sidebar_include": true
-    },
-    {
       "module_name": "data_lineage",
       "visibility": "public",
       "module_summary": "Owns source-to-target lineage and transformation evidence.",
@@ -39,13 +25,6 @@
       "module_name": "data_profiling",
       "visibility": "public",
       "module_summary": "Owns deterministic profiling evidence such as schema, nulls, distincts, min/max, and optional lightweight distributions.",
-      "sidebar_group": "2. Analyst / data scientist",
-      "sidebar_include": true
-    },
-    {
-      "module_name": "data_quality",
-      "visibility": "public",
-      "module_summary": "Owns DQ rule drafting, review, enforcement, quarantine, and quality results.",
       "sidebar_group": "2. Analyst / data scientist",
       "sidebar_include": true
     },
@@ -82,13 +61,6 @@
       "visibility": "public",
       "module_summary": "Owns metadata evidence persistence, stable keys, notebook registry, catalogue keys, and runtime audit helpers.",
       "sidebar_group": "5. Metadata store",
-      "sidebar_include": true
-    },
-    {
-      "module_name": "versioning",
-      "visibility": "public",
-      "module_summary": "Owns runtime package-version detection and documentation link helpers for Fabric notebooks.",
-      "sidebar_group": "0. Environment setup",
       "sidebar_include": true
     }
   ],

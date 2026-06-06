@@ -36,21 +36,15 @@ class ModuleDocMetadata(TypedDict):
 MODULE_DOCS_METADATA: list[ModuleDocMetadata] = [
     {"module_name": "config", "visibility": "public", "module_summary": "Owns environment setup, runtime initialization, paths, and notebook-wide configuration.", "sidebar_group": "0. Environment setup", "sidebar_include": True},
     {"module_name": "data_agreement", "visibility": "public", "module_summary": "Owns agreement metadata capture, audited record building, metadata commit helpers, and agreement selection helpers used to anchor notebook workflows to approved business agreements. Standard notebooks create or check agreement metadata tables in `00_env_config`, render agreement intake in `01_da_<agreement>`, and bind downstream work with `widget_select_agreement(...)` and `get_selected_agreement()`.", "sidebar_group": "1. Governance steward", "sidebar_include": True},
-    {"module_name": "business_context", "visibility": "public", "module_summary": "Owns business meaning for tables and columns.", "sidebar_group": "1. Governance steward", "sidebar_include": True},
-    {"module_name": "data_governance", "visibility": "public", "module_summary": "Owns sensitivity, PII, confidentiality, policy labels, and governance approval evidence.", "sidebar_group": "1. Governance steward", "sidebar_include": True},
     {"module_name": "data_profiling", "visibility": "public", "module_summary": "Owns deterministic profiling evidence such as schema, nulls, distincts, min/max, and optional lightweight distributions.", "sidebar_group": "2. Analyst / data scientist", "sidebar_include": True},
-    {"module_name": "data_quality", "visibility": "public", "module_summary": "Owns DQ rule drafting, review, enforcement, quarantine, and quality results.", "sidebar_group": "2. Analyst / data scientist", "sidebar_include": True},
     {"module_name": "fabric_input_output", "visibility": "public", "module_summary": "Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.", "sidebar_group": "3. Data engineer", "sidebar_include": True},
     {"module_name": "data_lineage", "visibility": "public", "module_summary": "Owns source-to-target lineage and transformation evidence.", "sidebar_group": "3. Data engineer", "sidebar_include": True},
     {"module_name": "drift", "visibility": "public", "module_summary": "Owns schema/profile/data drift checks as engineering guardrails during pipeline runs.", "sidebar_group": "3. Data engineer", "sidebar_include": True},
     {"module_name": "handover", "visibility": "public", "module_summary": "Owns final handover assembly and notebook-friendly rendering/export.", "sidebar_group": "4. Handover", "sidebar_include": True},
     {"module_name": "metadata", "visibility": "public", "module_summary": "Owns metadata evidence persistence, stable keys, notebook registry, catalogue keys, and runtime audit helpers.", "sidebar_group": "5. Metadata store", "sidebar_include": True},
     {"module_name": "governance_review", "visibility": "public", "module_summary": "Owns table-scoped 04_gov catalogue selection, explicit approval record builders, and metadata commit helpers.", "sidebar_group": "1. Governance steward", "sidebar_include": True},
-    {"module_name": "versioning", "visibility": "public", "module_summary": "Owns runtime package-version detection and documentation link helpers for Fabric notebooks.", "sidebar_group": "0. Environment setup", "sidebar_include": True},
     {"module_name": "ai", "visibility": "internal", "module_summary": "Internal AI utility surface used by workflow-facing public functions.", "sidebar_group": "Internal", "sidebar_include": False},
-    {"module_name": "docs_metadata", "visibility": "internal", "module_summary": "Documentation generation metadata and flow mapping internals.", "sidebar_group": "Internal", "sidebar_include": False},
     {"module_name": "schemas", "visibility": "internal", "module_summary": "Internal schema artifacts used for validation and contracts.", "sidebar_group": "Internal", "sidebar_include": False},
-    {"module_name": "_utils", "visibility": "internal", "module_summary": "Internal shared helper utilities.", "sidebar_group": "Internal", "sidebar_include": False},
 ]
 
 

@@ -231,15 +231,6 @@ def _extract_columns_from_profile(profile_rows) -> list[str]:
     return sorted(set(cols))
 
 
-def _normalise_records_by_column(records) -> dict[str, dict]:
-    out = {}
-    for row in records or []:
-        key = str(row.get("column_name") or row.get("COLUMN_NAME") or "")
-        if key:
-            out[key] = dict(row)
-    return out
-
-
 def _column_context_rows_for_spark(rows: list[dict]) -> list[dict]:
     out = []
     for row in rows or []:
@@ -252,13 +243,6 @@ def _column_context_rows_for_spark(rows: list[dict]) -> list[dict]:
     return out
 
 
-def _write_metadata_rows(spark, rows: list[dict], metadata_path, table_name: str, mode: str = "append"):
-    """Write metadata rows to a legacy lakehouse metadata path."""
-    df = spark.createDataFrame(_column_context_rows_for_spark(rows))
-    _write_metadata_rows_legacy(df, metadata_path=metadata_path, table_name=table_name, mode=mode)
-    return df
-
-
 def _write_metadata_rows_legacy(df: Any, metadata_path: Any, table_name: str, mode: str = "append") -> None:
     """Write metadata rows using the pre-route lakehouse path convention."""
     root = getattr(metadata_path, "root", None) or str(metadata_path or "").strip()
@@ -267,14 +251,6 @@ def _write_metadata_rows_legacy(df: Any, metadata_path: Any, table_name: str, mo
     path = f"{root.rstrip('/')}/Tables/{table_name}"
     writer = df.write.format("delta").mode(mode).option("overwriteSchema", "true")
     writer.save(path)
-
-
-def _write_column_business_context(spark, rows: list[dict], metadata_path, table_name: str = "METADATA_COLUMN_CONTEXT", mode: str = "append"):
-    return _write_metadata_rows(spark, rows, metadata_path, table_name, mode=mode)
-
-
-def _write_column_governance_context(spark, rows: list[dict], metadata_path, table_name: str = "METADATA_COLUMN_CLASSIFICATION", mode: str = "append"):
-    return _write_metadata_rows(spark, rows, metadata_path, table_name, mode=mode)
 
 
 def _context_get(context: Any, *keys: str) -> Any:

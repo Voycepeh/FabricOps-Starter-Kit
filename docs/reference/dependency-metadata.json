@@ -1,163 +1,5 @@
 {
   "callables": {
-    "fabricops_kit._utils._to_jsonable": {
-      "qualified_name": "fabricops_kit._utils._to_jsonable",
-      "short_name": "_to_jsonable",
-      "module": "_utils",
-      "callable": "_to_jsonable",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/_utils/_to_jsonable/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit._utils._to_jsonable"
-      ],
-      "calls_count": 1,
-      "used_by": [
-        "fabricops_kit._utils._to_jsonable"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [
-        "fabricops_kit._utils._to_jsonable"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.business_context._draft_business_context": {
-      "qualified_name": "fabricops_kit.business_context._draft_business_context",
-      "short_name": "_draft_business_context",
-      "module": "business_context",
-      "callable": "_draft_business_context",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/business_context/_draft_business_context/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.business_context._extract_column_business_context_suggestions": {
-      "qualified_name": "fabricops_kit.business_context._extract_column_business_context_suggestions",
-      "short_name": "_extract_column_business_context_suggestions",
-      "module": "business_context",
-      "callable": "_extract_column_business_context_suggestions",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/business_context/_extract_column_business_context_suggestions/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.business_context._extract_column_business_context_suggestions",
-        "fabricops_kit.business_context._parse_ai_dict_response"
-      ],
-      "calls_count": 2,
-      "used_by": [
-        "fabricops_kit.business_context._extract_column_business_context_suggestions"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [
-        "fabricops_kit.business_context._extract_column_business_context_suggestions",
-        "fabricops_kit.business_context._parse_ai_dict_response"
-      ],
-      "internal_helper_count": 2
-    },
-    "fabricops_kit.business_context._get_reviewed_business_context_rows": {
-      "qualified_name": "fabricops_kit.business_context._get_reviewed_business_context_rows",
-      "short_name": "_get_reviewed_business_context_rows",
-      "module": "business_context",
-      "callable": "_get_reviewed_business_context_rows",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/business_context/_get_reviewed_business_context_rows/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.business_context._parse_ai_dict_response": {
-      "qualified_name": "fabricops_kit.business_context._parse_ai_dict_response",
-      "short_name": "_parse_ai_dict_response",
-      "module": "business_context",
-      "callable": "_parse_ai_dict_response",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/business_context/_parse_ai_dict_response/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.business_context._extract_column_business_context_suggestions"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.business_context._prepare_business_context_profile_input": {
-      "qualified_name": "fabricops_kit.business_context._prepare_business_context_profile_input",
-      "short_name": "_prepare_business_context_profile_input",
-      "module": "business_context",
-      "callable": "_prepare_business_context_profile_input",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/business_context/_prepare_business_context_profile_input/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.business_context._prepare_business_context_profile_input"
-      ],
-      "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.business_context._prepare_business_context_profile_input"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [
-        "fabricops_kit.business_context._prepare_business_context_profile_input"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.business_context._require_ipywidgets": {
-      "qualified_name": "fabricops_kit.business_context._require_ipywidgets",
-      "short_name": "_require_ipywidgets",
-      "module": "business_context",
-      "callable": "_require_ipywidgets",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/business_context/_require_ipywidgets/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.business_context._widget_review_business_context"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.business_context._widget_review_business_context": {
-      "qualified_name": "fabricops_kit.business_context._widget_review_business_context",
-      "short_name": "_widget_review_business_context",
-      "module": "business_context",
-      "callable": "_widget_review_business_context",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/business_context/_widget_review_business_context/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.business_context._require_ipywidgets",
-        "fabricops_kit.metadata._build_metadata_column_key",
-        "fabricops_kit.metadata._build_metadata_table_key"
-      ],
-      "calls_count": 3,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [
-        "fabricops_kit.business_context._require_ipywidgets"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.business_context._write_business_context": {
-      "qualified_name": "fabricops_kit.business_context._write_business_context",
-      "short_name": "_write_business_context",
-      "module": "business_context",
-      "callable": "_write_business_context",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/business_context/_write_business_context/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.metadata._write_column_business_context"
-      ],
-      "calls_count": 1,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
     "fabricops_kit.config.AIPromptConfig": {
       "qualified_name": "fabricops_kit.config.AIPromptConfig",
       "short_name": "AIPromptConfig",
@@ -1642,195 +1484,6 @@
       ],
       "internal_helper_count": 5
     },
-    "fabricops_kit.data_governance._approved_widget_rows": {
-      "qualified_name": "fabricops_kit.data_governance._approved_widget_rows",
-      "short_name": "_approved_widget_rows",
-      "module": "data_governance",
-      "callable": "_approved_widget_rows",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_governance/_approved_widget_rows/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.metadata._resolve_action_by"
-      ],
-      "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.data_governance._write_governance"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.data_governance._build_governance_context": {
-      "qualified_name": "fabricops_kit.data_governance._build_governance_context",
-      "short_name": "_build_governance_context",
-      "module": "data_governance",
-      "callable": "_build_governance_context",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_governance/_build_governance_context/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.data_governance._coerce_row_dicts": {
-      "qualified_name": "fabricops_kit.data_governance._coerce_row_dicts",
-      "short_name": "_coerce_row_dicts",
-      "module": "data_governance",
-      "callable": "_coerce_row_dicts",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_governance/_coerce_row_dicts/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.data_governance._load_governance"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.data_governance._draft_governance": {
-      "qualified_name": "fabricops_kit.data_governance._draft_governance",
-      "short_name": "_draft_governance",
-      "module": "data_governance",
-      "callable": "_draft_governance",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_governance/_draft_governance/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.data_governance._extract_governance_suggestions": {
-      "qualified_name": "fabricops_kit.data_governance._extract_governance_suggestions",
-      "short_name": "_extract_governance_suggestions",
-      "module": "data_governance",
-      "callable": "_extract_governance_suggestions",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_governance/_extract_governance_suggestions/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.data_governance._extract_pii_suggestions"
-      ],
-      "calls_count": 1,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [
-        "fabricops_kit.data_governance._extract_pii_suggestions"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.data_governance._extract_pii_suggestions": {
-      "qualified_name": "fabricops_kit.data_governance._extract_pii_suggestions",
-      "short_name": "_extract_pii_suggestions",
-      "module": "data_governance",
-      "callable": "_extract_pii_suggestions",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_governance/_extract_pii_suggestions/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.data_governance._extract_governance_suggestions"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.data_governance._load_governance": {
-      "qualified_name": "fabricops_kit.data_governance._load_governance",
-      "short_name": "_load_governance",
-      "module": "data_governance",
-      "callable": "_load_governance",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_governance/_load_governance/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.data_governance._coerce_row_dicts"
-      ],
-      "calls_count": 1,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [
-        "fabricops_kit.data_governance._coerce_row_dicts"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.data_governance._prepare_governance_input": {
-      "qualified_name": "fabricops_kit.data_governance._prepare_governance_input",
-      "short_name": "_prepare_governance_input",
-      "module": "data_governance",
-      "callable": "_prepare_governance_input",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_governance/_prepare_governance_input/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.data_governance._prepare_governance_input"
-      ],
-      "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.data_governance._prepare_governance_input"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [
-        "fabricops_kit.data_governance._prepare_governance_input"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.data_governance._undo_last_action": {
-      "qualified_name": "fabricops_kit.data_governance._undo_last_action",
-      "short_name": "_undo_last_action",
-      "module": "data_governance",
-      "callable": "_undo_last_action",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_governance/_undo_last_action/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.data_governance._widget_review_governance"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.data_governance._widget_review_governance": {
-      "qualified_name": "fabricops_kit.data_governance._widget_review_governance",
-      "short_name": "_widget_review_governance",
-      "module": "data_governance",
-      "callable": "_widget_review_governance",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_governance/_widget_review_governance/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.data_governance._undo_last_action",
-        "fabricops_kit.metadata._build_metadata_column_key",
-        "fabricops_kit.metadata._build_metadata_table_key",
-        "fabricops_kit.metadata._now_utc_iso"
-      ],
-      "calls_count": 4,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [
-        "fabricops_kit.data_governance._undo_last_action"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.data_governance._write_governance": {
-      "qualified_name": "fabricops_kit.data_governance._write_governance",
-      "short_name": "_write_governance",
-      "module": "data_governance",
-      "callable": "_write_governance",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_governance/_write_governance/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.data_governance._approved_widget_rows"
-      ],
-      "calls_count": 1,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [
-        "fabricops_kit.data_governance._approved_widget_rows"
-      ],
-      "internal_helper_count": 1
-    },
     "fabricops_kit.data_lineage._build_lineage_handover_markdown": {
       "qualified_name": "fabricops_kit.data_lineage._build_lineage_handover_markdown",
       "short_name": "_build_lineage_handover_markdown",
@@ -2277,613 +1930,15 @@
       ],
       "calls_count": 3,
       "used_by": [
-        "fabricops_kit.data_quality._prepare_dq_profile_input_rows",
         "fabricops_kit.drift.monitor_data_changes"
       ],
-      "used_by_count": 2,
+      "used_by_count": 1,
       "internal_helpers_used": [
         "fabricops_kit.data_profiling._build_distribution_summaries",
         "fabricops_kit.data_profiling._get_profiled_columns",
         "fabricops_kit.data_profiling._is_min_max_supported_type"
       ],
       "internal_helper_count": 3
-    },
-    "fabricops_kit.data_quality.DQEnforcementResult": {
-      "qualified_name": "fabricops_kit.data_quality.DQEnforcementResult",
-      "short_name": "DQEnforcementResult",
-      "module": "data_quality",
-      "callable": "DQEnforcementResult",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_quality/DQEnforcementResult/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.data_quality._enforce_dq"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.data_quality._approved_dq_rules_from_review_rows": {
-      "qualified_name": "fabricops_kit.data_quality._approved_dq_rules_from_review_rows",
-      "short_name": "_approved_dq_rules_from_review_rows",
-      "module": "data_quality",
-      "callable": "_approved_dq_rules_from_review_rows",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_quality/_approved_dq_rules_from_review_rows/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.data_quality._assert_dq_passed": {
-      "qualified_name": "fabricops_kit.data_quality._assert_dq_passed",
-      "short_name": "_assert_dq_passed",
-      "module": "data_quality",
-      "callable": "_assert_dq_passed",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_quality/_assert_dq_passed/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.data_quality._attach_rule_metadata_keys": {
-      "qualified_name": "fabricops_kit.data_quality._attach_rule_metadata_keys",
-      "short_name": "_attach_rule_metadata_keys",
-      "module": "data_quality",
-      "callable": "_attach_rule_metadata_keys",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_quality/_attach_rule_metadata_keys/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.metadata._build_dq_rule_key",
-        "fabricops_kit.metadata._build_metadata_column_key",
-        "fabricops_kit.metadata._build_metadata_table_key"
-      ],
-      "calls_count": 3,
-      "used_by": [
-        "fabricops_kit.data_quality._get_dq_review_results"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.data_quality._build_dq_rule_deactivation_metadata_df": {
-      "qualified_name": "fabricops_kit.data_quality._build_dq_rule_deactivation_metadata_df",
-      "short_name": "_build_dq_rule_deactivation_metadata_df",
-      "module": "data_quality",
-      "callable": "_build_dq_rule_deactivation_metadata_df",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_quality/_build_dq_rule_deactivation_metadata_df/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.metadata._now_utc_iso",
-        "fabricops_kit.metadata._resolve_action_by"
-      ],
-      "calls_count": 2,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.data_quality._build_dq_rule_deactivations": {
-      "qualified_name": "fabricops_kit.data_quality._build_dq_rule_deactivations",
-      "short_name": "_build_dq_rule_deactivations",
-      "module": "data_quality",
-      "callable": "_build_dq_rule_deactivations",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_quality/_build_dq_rule_deactivations/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.metadata._resolve_action_by"
-      ],
-      "calls_count": 1,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.data_quality._build_dq_rule_history": {
-      "qualified_name": "fabricops_kit.data_quality._build_dq_rule_history",
-      "short_name": "_build_dq_rule_history",
-      "module": "data_quality",
-      "callable": "_build_dq_rule_history",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_quality/_build_dq_rule_history/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.metadata._resolve_action_by"
-      ],
-      "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.data_quality._write_dq_rules"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.data_quality._build_dq_rules_metadata_df": {
-      "qualified_name": "fabricops_kit.data_quality._build_dq_rules_metadata_df",
-      "short_name": "_build_dq_rules_metadata_df",
-      "module": "data_quality",
-      "callable": "_build_dq_rules_metadata_df",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_quality/_build_dq_rules_metadata_df/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.metadata._now_utc_iso",
-        "fabricops_kit.metadata._resolve_action_by"
-      ],
-      "calls_count": 2,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.data_quality._draft_dq_rules": {
-      "qualified_name": "fabricops_kit.data_quality._draft_dq_rules",
-      "short_name": "_draft_dq_rules",
-      "module": "data_quality",
-      "callable": "_draft_dq_rules",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_quality/_draft_dq_rules/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.data_quality._extract_dq_rules",
-        "fabricops_kit.data_quality._prepare_dq_profile_input_rows",
-        "fabricops_kit.data_quality._suggest_dq_rules"
-      ],
-      "calls_count": 3,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [
-        "fabricops_kit.data_quality._extract_dq_rules",
-        "fabricops_kit.data_quality._prepare_dq_profile_input_rows",
-        "fabricops_kit.data_quality._suggest_dq_rules"
-      ],
-      "internal_helper_count": 3
-    },
-    "fabricops_kit.data_quality._enforce_dq": {
-      "qualified_name": "fabricops_kit.data_quality._enforce_dq",
-      "short_name": "_enforce_dq",
-      "module": "data_quality",
-      "callable": "_enforce_dq",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_quality/_enforce_dq/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.data_quality.DQEnforcementResult",
-        "fabricops_kit.data_quality._load_active_dq_rules",
-        "fabricops_kit.data_quality._run_dq_rules",
-        "fabricops_kit.data_quality._split_dq_rows",
-        "fabricops_kit.data_quality._validate_dq_rules"
-      ],
-      "calls_count": 5,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [
-        "fabricops_kit.data_quality._load_active_dq_rules",
-        "fabricops_kit.data_quality._run_dq_rules",
-        "fabricops_kit.data_quality._split_dq_rows",
-        "fabricops_kit.data_quality._validate_dq_rules"
-      ],
-      "internal_helper_count": 4
-    },
-    "fabricops_kit.data_quality._extract_candidate_rules_from_responses": {
-      "qualified_name": "fabricops_kit.data_quality._extract_candidate_rules_from_responses",
-      "short_name": "_extract_candidate_rules_from_responses",
-      "module": "data_quality",
-      "callable": "_extract_candidate_rules_from_responses",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_quality/_extract_candidate_rules_from_responses/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.data_quality._extract_dq_rules",
-        "fabricops_kit.data_quality._parse_dq_rules_dict_from_text"
-      ],
-      "calls_count": 2,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [
-        "fabricops_kit.data_quality._extract_dq_rules",
-        "fabricops_kit.data_quality._parse_dq_rules_dict_from_text"
-      ],
-      "internal_helper_count": 2
-    },
-    "fabricops_kit.data_quality._extract_dq_rules": {
-      "qualified_name": "fabricops_kit.data_quality._extract_dq_rules",
-      "short_name": "_extract_dq_rules",
-      "module": "data_quality",
-      "callable": "_extract_dq_rules",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_quality/_extract_dq_rules/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.data_quality._parse_dq_rules_dict_from_text"
-      ],
-      "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.data_quality._draft_dq_rules",
-        "fabricops_kit.data_quality._extract_candidate_rules_from_responses"
-      ],
-      "used_by_count": 2,
-      "internal_helpers_used": [
-        "fabricops_kit.data_quality._parse_dq_rules_dict_from_text"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.data_quality._get_dq_review_results": {
-      "qualified_name": "fabricops_kit.data_quality._get_dq_review_results",
-      "short_name": "_get_dq_review_results",
-      "module": "data_quality",
-      "callable": "_get_dq_review_results",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_quality/_get_dq_review_results/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.data_quality._attach_rule_metadata_keys"
-      ],
-      "calls_count": 1,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [
-        "fabricops_kit.data_quality._attach_rule_metadata_keys"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.data_quality._latest_dq_rule_versions": {
-      "qualified_name": "fabricops_kit.data_quality._latest_dq_rule_versions",
-      "short_name": "_latest_dq_rule_versions",
-      "module": "data_quality",
-      "callable": "_latest_dq_rule_versions",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_quality/_latest_dq_rule_versions/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.data_quality._load_active_dq_rule_metadata",
-        "fabricops_kit.data_quality._load_active_dq_rules"
-      ],
-      "used_by_count": 2,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.data_quality._load_active_dq_rule_metadata": {
-      "qualified_name": "fabricops_kit.data_quality._load_active_dq_rule_metadata",
-      "short_name": "_load_active_dq_rule_metadata",
-      "module": "data_quality",
-      "callable": "_load_active_dq_rule_metadata",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_quality/_load_active_dq_rule_metadata/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.data_quality._latest_dq_rule_versions"
-      ],
-      "calls_count": 1,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [
-        "fabricops_kit.data_quality._latest_dq_rule_versions"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.data_quality._load_active_dq_rules": {
-      "qualified_name": "fabricops_kit.data_quality._load_active_dq_rules",
-      "short_name": "_load_active_dq_rules",
-      "module": "data_quality",
-      "callable": "_load_active_dq_rules",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_quality/_load_active_dq_rules/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.data_quality._latest_dq_rule_versions"
-      ],
-      "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.data_quality._enforce_dq",
-        "fabricops_kit.data_quality._load_dq_rules"
-      ],
-      "used_by_count": 2,
-      "internal_helpers_used": [
-        "fabricops_kit.data_quality._latest_dq_rule_versions"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.data_quality._load_dq_rules": {
-      "qualified_name": "fabricops_kit.data_quality._load_dq_rules",
-      "short_name": "_load_dq_rules",
-      "module": "data_quality",
-      "callable": "_load_dq_rules",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_quality/_load_dq_rules/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.data_quality._load_active_dq_rules"
-      ],
-      "calls_count": 1,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [
-        "fabricops_kit.data_quality._load_active_dq_rules"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.data_quality._parse_dq_rules_dict_from_text": {
-      "qualified_name": "fabricops_kit.data_quality._parse_dq_rules_dict_from_text",
-      "short_name": "_parse_dq_rules_dict_from_text",
-      "module": "data_quality",
-      "callable": "_parse_dq_rules_dict_from_text",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_quality/_parse_dq_rules_dict_from_text/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.data_quality._extract_candidate_rules_from_responses",
-        "fabricops_kit.data_quality._extract_dq_rules"
-      ],
-      "used_by_count": 2,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.data_quality._prepare_dq_profile_input_rows": {
-      "qualified_name": "fabricops_kit.data_quality._prepare_dq_profile_input_rows",
-      "short_name": "_prepare_dq_profile_input_rows",
-      "module": "data_quality",
-      "callable": "_prepare_dq_profile_input_rows",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_quality/_prepare_dq_profile_input_rows/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.data_profiling.profile_dataframe"
-      ],
-      "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.data_quality._draft_dq_rules"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.data_quality._prepare_dq_profile_rows_with_context": {
-      "qualified_name": "fabricops_kit.data_quality._prepare_dq_profile_rows_with_context",
-      "short_name": "_prepare_dq_profile_rows_with_context",
-      "module": "data_quality",
-      "callable": "_prepare_dq_profile_rows_with_context",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_quality/_prepare_dq_profile_rows_with_context/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.data_quality._profile_for_dq": {
-      "qualified_name": "fabricops_kit.data_quality._profile_for_dq",
-      "short_name": "_profile_for_dq",
-      "module": "data_quality",
-      "callable": "_profile_for_dq",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_quality/_profile_for_dq/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.data_quality._require_ipywidgets": {
-      "qualified_name": "fabricops_kit.data_quality._require_ipywidgets",
-      "short_name": "_require_ipywidgets",
-      "module": "data_quality",
-      "callable": "_require_ipywidgets",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_quality/_require_ipywidgets/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.data_quality._widget_review_dq_rule_deactivations",
-        "fabricops_kit.data_quality._widget_review_dq_rules"
-      ],
-      "used_by_count": 2,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.data_quality._run_dq_rules": {
-      "qualified_name": "fabricops_kit.data_quality._run_dq_rules",
-      "short_name": "_run_dq_rules",
-      "module": "data_quality",
-      "callable": "_run_dq_rules",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_quality/_run_dq_rules/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.data_quality._split_dq_rows",
-        "fabricops_kit.data_quality._validate_dq_rules"
-      ],
-      "calls_count": 2,
-      "used_by": [
-        "fabricops_kit.data_quality._enforce_dq"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [
-        "fabricops_kit.data_quality._split_dq_rows",
-        "fabricops_kit.data_quality._validate_dq_rules"
-      ],
-      "internal_helper_count": 2
-    },
-    "fabricops_kit.data_quality._split_dq_rows": {
-      "qualified_name": "fabricops_kit.data_quality._split_dq_rows",
-      "short_name": "_split_dq_rows",
-      "module": "data_quality",
-      "callable": "_split_dq_rows",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_quality/_split_dq_rows/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.data_quality._validate_dq_rules"
-      ],
-      "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.data_quality._enforce_dq",
-        "fabricops_kit.data_quality._run_dq_rules"
-      ],
-      "used_by_count": 2,
-      "internal_helpers_used": [
-        "fabricops_kit.data_quality._validate_dq_rules"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.data_quality._suggest_dq_rules": {
-      "qualified_name": "fabricops_kit.data_quality._suggest_dq_rules",
-      "short_name": "_suggest_dq_rules",
-      "module": "data_quality",
-      "callable": "_suggest_dq_rules",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_quality/_suggest_dq_rules/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.data_quality._draft_dq_rules"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.data_quality._suggest_dq_rules_with_fabric_ai": {
-      "qualified_name": "fabricops_kit.data_quality._suggest_dq_rules_with_fabric_ai",
-      "short_name": "_suggest_dq_rules_with_fabric_ai",
-      "module": "data_quality",
-      "callable": "_suggest_dq_rules_with_fabric_ai",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_quality/_suggest_dq_rules_with_fabric_ai/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.data_quality._validate_dq_rules": {
-      "qualified_name": "fabricops_kit.data_quality._validate_dq_rules",
-      "short_name": "_validate_dq_rules",
-      "module": "data_quality",
-      "callable": "_validate_dq_rules",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_quality/_validate_dq_rules/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.data_quality._enforce_dq",
-        "fabricops_kit.data_quality._run_dq_rules",
-        "fabricops_kit.data_quality._split_dq_rows",
-        "fabricops_kit.data_quality._write_dq_rules"
-      ],
-      "used_by_count": 4,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.data_quality._widget_review_dq_rule_deactivations": {
-      "qualified_name": "fabricops_kit.data_quality._widget_review_dq_rule_deactivations",
-      "short_name": "_widget_review_dq_rule_deactivations",
-      "module": "data_quality",
-      "callable": "_widget_review_dq_rule_deactivations",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_quality/_widget_review_dq_rule_deactivations/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.data_quality._require_ipywidgets"
-      ],
-      "calls_count": 1,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [
-        "fabricops_kit.data_quality._require_ipywidgets"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.data_quality._widget_review_dq_rules": {
-      "qualified_name": "fabricops_kit.data_quality._widget_review_dq_rules",
-      "short_name": "_widget_review_dq_rules",
-      "module": "data_quality",
-      "callable": "_widget_review_dq_rules",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_quality/_widget_review_dq_rules/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.data_quality._require_ipywidgets"
-      ],
-      "calls_count": 1,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [
-        "fabricops_kit.data_quality._require_ipywidgets"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.data_quality._write_dq_rules": {
-      "qualified_name": "fabricops_kit.data_quality._write_dq_rules",
-      "short_name": "_write_dq_rules",
-      "module": "data_quality",
-      "callable": "_write_dq_rules",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_quality/_write_dq_rules/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.data_quality._build_dq_rule_history",
-        "fabricops_kit.data_quality._validate_dq_rules",
-        "fabricops_kit.fabric_input_output.write_lakehouse_table"
-      ],
-      "calls_count": 3,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [
-        "fabricops_kit.data_quality._build_dq_rule_history",
-        "fabricops_kit.data_quality._validate_dq_rules"
-      ],
-      "internal_helper_count": 2
-    },
-    "fabricops_kit.docs_metadata.ModuleDocMetadata": {
-      "qualified_name": "fabricops_kit.docs_metadata.ModuleDocMetadata",
-      "short_name": "ModuleDocMetadata",
-      "module": "docs_metadata",
-      "callable": "ModuleDocMetadata",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/docs_metadata/ModuleDocMetadata/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.docs_metadata.PublicSymbolDocMetadata": {
-      "qualified_name": "fabricops_kit.docs_metadata.PublicSymbolDocMetadata",
-      "short_name": "PublicSymbolDocMetadata",
-      "module": "docs_metadata",
-      "callable": "PublicSymbolDocMetadata",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/docs_metadata/PublicSymbolDocMetadata/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.docs_metadata.TemplateFlowDocMetadata": {
-      "qualified_name": "fabricops_kit.docs_metadata.TemplateFlowDocMetadata",
-      "short_name": "TemplateFlowDocMetadata",
-      "module": "docs_metadata",
-      "callable": "TemplateFlowDocMetadata",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/docs_metadata/TemplateFlowDocMetadata/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.docs_metadata.TemplateFlowSegmentMetadata": {
-      "qualified_name": "fabricops_kit.docs_metadata.TemplateFlowSegmentMetadata",
-      "short_name": "TemplateFlowSegmentMetadata",
-      "module": "docs_metadata",
-      "callable": "TemplateFlowSegmentMetadata",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/docs_metadata/TemplateFlowSegmentMetadata/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
     },
     "fabricops_kit.drift.IncrementalSafetyError": {
       "qualified_name": "fabricops_kit.drift.IncrementalSafetyError",
@@ -3486,14 +2541,13 @@
       "used_by": [
         "fabricops_kit.data_agreement._ensure_metadata_tables",
         "fabricops_kit.data_agreement._write_row",
-        "fabricops_kit.data_quality._write_dq_rules",
         "fabricops_kit.fabric_input_output._seed_minimal_sample_source_table",
         "fabricops_kit.governance_review._setup_governance_metadata_tables",
         "fabricops_kit.governance_review.record_table_governance",
         "fabricops_kit.metadata._register_current_notebook",
         "fabricops_kit.metadata._setup_notebook_registry_table"
       ],
-      "used_by_count": 8,
+      "used_by_count": 7,
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
@@ -4056,10 +3110,9 @@
       ],
       "calls_count": 1,
       "used_by": [
-        "fabricops_kit.data_quality._attach_rule_metadata_keys",
         "fabricops_kit.governance_review._build_dq_rule_records"
       ],
-      "used_by_count": 2,
+      "used_by_count": 1,
       "internal_helpers_used": [
         "fabricops_kit.metadata._sha256_key"
       ],
@@ -4095,14 +3148,11 @@
       ],
       "calls_count": 1,
       "used_by": [
-        "fabricops_kit.business_context._widget_review_business_context",
-        "fabricops_kit.data_governance._widget_review_governance",
-        "fabricops_kit.data_quality._attach_rule_metadata_keys",
         "fabricops_kit.governance_review._build_classification_records",
         "fabricops_kit.governance_review._build_column_context_records",
         "fabricops_kit.governance_review._build_dq_rule_records"
       ],
-      "used_by_count": 6,
+      "used_by_count": 3,
       "internal_helpers_used": [
         "fabricops_kit.metadata._sha256_key"
       ],
@@ -4120,16 +3170,13 @@
       ],
       "calls_count": 1,
       "used_by": [
-        "fabricops_kit.business_context._widget_review_business_context",
-        "fabricops_kit.data_governance._widget_review_governance",
-        "fabricops_kit.data_quality._attach_rule_metadata_keys",
         "fabricops_kit.governance_review._build_classification_records",
         "fabricops_kit.governance_review._build_column_context_records",
         "fabricops_kit.governance_review._build_dq_rule_records",
         "fabricops_kit.governance_review._catalogue_table_options",
         "fabricops_kit.governance_review.load_catalogue_profile_rows"
       ],
-      "used_by_count": 8,
+      "used_by_count": 5,
       "internal_helpers_used": [
         "fabricops_kit.metadata._sha256_key"
       ],
@@ -4193,10 +3240,9 @@
       "calls_count": 0,
       "used_by": [
         "fabricops_kit.metadata._register_current_notebook",
-        "fabricops_kit.metadata._setup_notebook_registry_table",
-        "fabricops_kit.metadata._write_metadata_rows"
+        "fabricops_kit.metadata._setup_notebook_registry_table"
       ],
-      "used_by_count": 3,
+      "used_by_count": 2,
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
@@ -4371,20 +3417,6 @@
       ],
       "internal_helper_count": 2
     },
-    "fabricops_kit.metadata._normalise_records_by_column": {
-      "qualified_name": "fabricops_kit.metadata._normalise_records_by_column",
-      "short_name": "_normalise_records_by_column",
-      "module": "metadata",
-      "callable": "_normalise_records_by_column",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/metadata/_normalise_records_by_column/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
     "fabricops_kit.metadata._notebook_registration_key": {
       "qualified_name": "fabricops_kit.metadata._notebook_registration_key",
       "short_name": "_notebook_registration_key",
@@ -4428,15 +3460,12 @@
       "calls": [],
       "calls_count": 0,
       "used_by": [
-        "fabricops_kit.data_governance._widget_review_governance",
-        "fabricops_kit.data_quality._build_dq_rule_deactivation_metadata_df",
-        "fabricops_kit.data_quality._build_dq_rules_metadata_df",
         "fabricops_kit.governance_review._build_classification_records",
         "fabricops_kit.governance_review._build_column_context_records",
         "fabricops_kit.governance_review._build_dq_rule_records",
         "fabricops_kit.metadata._build_evidence_row"
       ],
-      "used_by_count": 7,
+      "used_by_count": 4,
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
@@ -4509,16 +3538,11 @@
       ],
       "calls_count": 2,
       "used_by": [
-        "fabricops_kit.data_governance._approved_widget_rows",
-        "fabricops_kit.data_quality._build_dq_rule_deactivation_metadata_df",
-        "fabricops_kit.data_quality._build_dq_rule_deactivations",
-        "fabricops_kit.data_quality._build_dq_rule_history",
-        "fabricops_kit.data_quality._build_dq_rules_metadata_df",
         "fabricops_kit.governance_review._build_classification_records",
         "fabricops_kit.governance_review._build_column_context_records",
         "fabricops_kit.governance_review._build_dq_rule_records"
       ],
-      "used_by_count": 8,
+      "used_by_count": 3,
       "internal_helpers_used": [
         "fabricops_kit.metadata._context_get",
         "fabricops_kit.metadata._runtime_context"
@@ -4622,67 +3646,6 @@
       ],
       "internal_helper_count": 1
     },
-    "fabricops_kit.metadata._write_column_business_context": {
-      "qualified_name": "fabricops_kit.metadata._write_column_business_context",
-      "short_name": "_write_column_business_context",
-      "module": "metadata",
-      "callable": "_write_column_business_context",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/metadata/_write_column_business_context/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.metadata._write_metadata_rows"
-      ],
-      "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.business_context._write_business_context"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [
-        "fabricops_kit.metadata._write_metadata_rows"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.metadata._write_column_governance_context": {
-      "qualified_name": "fabricops_kit.metadata._write_column_governance_context",
-      "short_name": "_write_column_governance_context",
-      "module": "metadata",
-      "callable": "_write_column_governance_context",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/metadata/_write_column_governance_context/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.metadata._write_metadata_rows"
-      ],
-      "calls_count": 1,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [
-        "fabricops_kit.metadata._write_metadata_rows"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.metadata._write_metadata_rows": {
-      "qualified_name": "fabricops_kit.metadata._write_metadata_rows",
-      "short_name": "_write_metadata_rows",
-      "module": "metadata",
-      "callable": "_write_metadata_rows",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/metadata/_write_metadata_rows/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.metadata._column_context_rows_for_spark",
-        "fabricops_kit.metadata._write_metadata_rows_legacy"
-      ],
-      "calls_count": 2,
-      "used_by": [
-        "fabricops_kit.metadata._write_column_business_context",
-        "fabricops_kit.metadata._write_column_governance_context"
-      ],
-      "used_by_count": 2,
-      "internal_helpers_used": [
-        "fabricops_kit.metadata._column_context_rows_for_spark",
-        "fabricops_kit.metadata._write_metadata_rows_legacy"
-      ],
-      "internal_helper_count": 2
-    },
     "fabricops_kit.metadata._write_metadata_rows_legacy": {
       "qualified_name": "fabricops_kit.metadata._write_metadata_rows_legacy",
       "short_name": "_write_metadata_rows_legacy",
@@ -4693,135 +3656,14 @@
       "calls": [],
       "calls_count": 0,
       "used_by": [
-        "fabricops_kit.metadata._register_current_notebook",
-        "fabricops_kit.metadata._write_metadata_rows"
+        "fabricops_kit.metadata._register_current_notebook"
       ],
-      "used_by_count": 2,
+      "used_by_count": 1,
       "internal_helpers_used": [],
       "internal_helper_count": 0
-    },
-    "fabricops_kit.versioning._get_docs_url": {
-      "qualified_name": "fabricops_kit.versioning._get_docs_url",
-      "short_name": "_get_docs_url",
-      "module": "versioning",
-      "callable": "_get_docs_url",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/versioning/_get_docs_url/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.versioning._get_docs_version"
-      ],
-      "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.versioning._print_runtime_banner"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [
-        "fabricops_kit.versioning._get_docs_version"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.versioning._get_docs_version": {
-      "qualified_name": "fabricops_kit.versioning._get_docs_version",
-      "short_name": "_get_docs_version",
-      "module": "versioning",
-      "callable": "_get_docs_version",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/versioning/_get_docs_version/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.versioning._get_package_version"
-      ],
-      "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.versioning._get_docs_url"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [
-        "fabricops_kit.versioning._get_package_version"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.versioning._get_package_version": {
-      "qualified_name": "fabricops_kit.versioning._get_package_version",
-      "short_name": "_get_package_version",
-      "module": "versioning",
-      "callable": "_get_package_version",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/versioning/_get_package_version/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.versioning._get_docs_version",
-        "fabricops_kit.versioning._get_release_notes_url",
-        "fabricops_kit.versioning._print_runtime_banner"
-      ],
-      "used_by_count": 3,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.versioning._get_release_notes_url": {
-      "qualified_name": "fabricops_kit.versioning._get_release_notes_url",
-      "short_name": "_get_release_notes_url",
-      "module": "versioning",
-      "callable": "_get_release_notes_url",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/versioning/_get_release_notes_url/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.versioning._get_package_version"
-      ],
-      "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.versioning._print_runtime_banner"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [
-        "fabricops_kit.versioning._get_package_version"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.versioning._print_runtime_banner": {
-      "qualified_name": "fabricops_kit.versioning._print_runtime_banner",
-      "short_name": "_print_runtime_banner",
-      "module": "versioning",
-      "callable": "_print_runtime_banner",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/versioning/_print_runtime_banner/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.versioning._get_docs_url",
-        "fabricops_kit.versioning._get_package_version",
-        "fabricops_kit.versioning._get_release_notes_url"
-      ],
-      "calls_count": 3,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [
-        "fabricops_kit.versioning._get_docs_url",
-        "fabricops_kit.versioning._get_package_version",
-        "fabricops_kit.versioning._get_release_notes_url"
-      ],
-      "internal_helper_count": 3
     }
   },
   "modules": {
-    "_utils": {
-      "essential_count": 0,
-      "optional_count": 0,
-      "internal_count": 1,
-      "outbound_modules": [],
-      "inbound_modules": [],
-      "outbound_count": 0,
-      "inbound_count": 0
-    },
-    "business_context": {
-      "essential_count": 0,
-      "optional_count": 0,
-      "internal_count": 8,
-      "outbound_modules": [
-        "metadata"
-      ],
-      "inbound_modules": [],
-      "outbound_count": 1,
-      "inbound_count": 0
-    },
     "config": {
       "essential_count": 2,
       "optional_count": 0,
@@ -4853,17 +3695,6 @@
       "outbound_count": 3,
       "inbound_count": 1
     },
-    "data_governance": {
-      "essential_count": 0,
-      "optional_count": 0,
-      "internal_count": 11,
-      "outbound_modules": [
-        "metadata"
-      ],
-      "inbound_modules": [],
-      "outbound_count": 1,
-      "inbound_count": 0
-    },
     "data_lineage": {
       "essential_count": 1,
       "optional_count": 0,
@@ -4879,33 +3710,10 @@
       "internal_count": 9,
       "outbound_modules": [],
       "inbound_modules": [
-        "data_quality",
         "drift"
       ],
       "outbound_count": 0,
-      "inbound_count": 2
-    },
-    "data_quality": {
-      "essential_count": 0,
-      "optional_count": 0,
-      "internal_count": 29,
-      "outbound_modules": [
-        "data_profiling",
-        "fabric_input_output",
-        "metadata"
-      ],
-      "inbound_modules": [],
-      "outbound_count": 3,
-      "inbound_count": 0
-    },
-    "docs_metadata": {
-      "essential_count": 0,
-      "optional_count": 0,
-      "internal_count": 0,
-      "outbound_modules": [],
-      "inbound_modules": [],
-      "outbound_count": 0,
-      "inbound_count": 0
+      "inbound_count": 1
     },
     "drift": {
       "essential_count": 3,
@@ -4927,12 +3735,11 @@
       ],
       "inbound_modules": [
         "data_agreement",
-        "data_quality",
         "governance_review",
         "metadata"
       ],
       "outbound_count": 1,
-      "inbound_count": 4
+      "inbound_count": 3
     },
     "governance_review": {
       "essential_count": 7,
@@ -4960,29 +3767,17 @@
     "metadata": {
       "essential_count": 0,
       "optional_count": 0,
-      "internal_count": 31,
+      "internal_count": 27,
       "outbound_modules": [
         "fabric_input_output"
       ],
       "inbound_modules": [
-        "business_context",
         "config",
         "data_agreement",
-        "data_governance",
-        "data_quality",
         "governance_review"
       ],
       "outbound_count": 1,
-      "inbound_count": 6
-    },
-    "versioning": {
-      "essential_count": 0,
-      "optional_count": 0,
-      "internal_count": 5,
-      "outbound_modules": [],
-      "inbound_modules": [],
-      "outbound_count": 0,
-      "inbound_count": 0
+      "inbound_count": 3
     }
   }
 }

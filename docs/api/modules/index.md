@@ -1,21 +1,17 @@
 # Implementation Module Catalogue
 
-Implementation modules are source-level reference pages for package maintainers and internal helper traceability.
+Implementation modules are curated source-level reference pages for package maintainers and internal helper traceability.
 
-They are useful for debugging implementation details, but they are not the public v1 callable API. The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__all__` and is surfaced through the Function Reference catalogue.
+They are useful for debugging major implementation boundaries, but they are not the public v1 callable API and are not generated for every `.py` file. The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__all__` and is surfaced through the Function Reference catalogue.
 
-Short-form modules remain import-compatible aliases but are intentionally hidden from this user-facing catalogue.
+Zero-callable modules are hidden unless explicitly allowlisted as major internal plumbing, such as `metadata`.
 
-- [`business_context`](business_context.md)
 - [`config`](config.md)
 - [`data_agreement`](data_agreement.md)
-- [`data_governance`](data_governance.md)
 - [`data_lineage`](data_lineage.md)
 - [`data_profiling`](data_profiling.md)
-- [`data_quality`](data_quality.md)
 - [`drift`](drift.md)
 - [`fabric_input_output`](fabric_input_output.md)
 - [`governance_review`](governance_review.md)
 - [`handover`](handover.md)
 - [`metadata`](metadata.md)
-- [`versioning`](versioning.md)

@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 1</span><span class="reference-chip">Internal helpers: 9</span><span class="reference-chip">Outbound: 0</span><span class="reference-chip">Inbound: 2</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 1</span><span class="reference-chip">Internal helpers: 9</span><span class="reference-chip">Outbound: 0</span><span class="reference-chip">Inbound: 1</span></div>
 
 ## Module purpose
 
@@ -44,7 +44,7 @@ Owns deterministic profiling evidence such as schema, nulls, distincts, min/max,
     </tr>
     <tr>
       <td>Inbound module count</td>
-      <td>2</td>
+      <td>1</td>
     </tr>
     <tr>
       <td>Outbound module count</td>
@@ -52,7 +52,7 @@ Owns deterministic profiling evidence such as schema, nulls, distincts, min/max,
     </tr>
     <tr>
       <td>External callers</td>
-      <td><code>data_quality</code>, <code>drift</code></td>
+      <td><code>drift</code></td>
     </tr>
     <tr>
       <td>External callees</td>
@@ -199,9 +199,6 @@ Owns deterministic profiling evidence such as schema, nulls, distincts, min/max,
 </details>
 
 ### External callers
-
-**data_quality**
-<a class="reference-chip" href="../data_quality/#_prepare_dq_profile_input_rows"><code>_prepare_dq_profile_input_rows</code></a>
 
 **drift**
 <a class="reference-chip" href="../../reference/monitor_data_changes/"><code>monitor_data_changes</code></a>

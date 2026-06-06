@@ -8,7 +8,7 @@ import mkdocs_gen_files
 
 PACKAGE = "fabricops_kit"
 PKG_DIR = Path(__file__).resolve().parents[1] / "src" / PACKAGE
-DOCS_METADATA_PATH = PKG_DIR / "docs_metadata.py"
+DOCS_METADATA_PATH = Path(__file__).resolve().parents[1] / "scripts" / "reference_docs_metadata.py"
 NOISE_ATTRS = {"append", "clear", "get", "items", "on_click"}
 NOISE_CALLS = {
     "json.dumps",
@@ -52,7 +52,7 @@ def _build_index():
     modules: dict[str, dict[str, str]] = {}
     imports: dict[str, tuple[dict[str, str], dict[str, str]]] = {}
     for p in sorted(PKG_DIR.glob("*.py")):
-        if p.name in {"__init__.py", "docs_metadata.py"}:
+        if p.name in {"__init__.py"}:
             continue
         tree = ast.parse(p.read_text(encoding="utf-8"))
         mod = p.stem
@@ -102,7 +102,7 @@ def _collect_calls(modules, imports, exports):
     call_map = {m: {} for m in modules}
     reverse: dict[str, set[str]] = {}
     for p in sorted(PKG_DIR.glob("*.py")):
-        if p.name in {"__init__.py", "docs_metadata.py"}:
+        if p.name in {"__init__.py"}:
             continue
         mod = p.stem
         tree = ast.parse(p.read_text(encoding="utf-8"))

@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 PKG_DIR = ROOT / "src" / "fabricops_kit"
 PACKAGE_NAME = "fabricops_kit"
 INIT_PATH = PKG_DIR / "__init__.py"
-DOCS_METADATA_PATH = PKG_DIR / "docs_metadata.py"
+DOCS_METADATA_PATH = ROOT / "scripts" / "reference_docs_metadata.py"
 REFERENCE_PATH = ROOT / "docs" / "reference" / "index.md"
 MODULE_DIR = ROOT / "docs" / "api" / "modules"
 MKDOCS_PATH = ROOT / "mkdocs.yml"
@@ -28,18 +28,15 @@ PUBLIC_MODULE_PREFERRED_NAMES = {
     "config": "config",
     "fabric_input_output": "fabric_input_output",
     "data_profiling": "data_profiling",
-    "data_quality": "data_quality",
     "drift": "drift",
-    "data_governance": "data_governance",
     "metadata": "metadata",
     "data_lineage": "data_lineage",
     "handover": "handover",
-    "technical_columns": "technical_columns",
-    "business_context": "business_context",
     "data_agreement": "data_agreement",
 }
-INTERNAL_MODULE_BLACKLIST = {"_utils"}
+INTERNAL_MODULE_BLACKLIST: set[str] = set()
 INTERNAL_ALIAS_MODULES = {}
+MAJOR_INTERNAL_MODULES = {"metadata"}
 
 # Callable reference pages are intentionally curated for v1. A callable is a
 # notebook-template function that users actively call, not every public helper in
@@ -239,7 +236,7 @@ def build_callable_graph(
     public_exports: list[str],
     docs_metadata: dict[str, dict[str, Any]],
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
-    package_modules = {m for m in module_data if m not in {"docs_metadata"}}
+    package_modules = set(module_data)
     nodes: list[dict[str, Any]] = []
     edges: list[dict[str, Any]] = []
     node_keys: set[tuple[str, str]] = set()
@@ -346,7 +343,7 @@ def parse_docs_metadata() -> dict[str, dict[str, Any]]:
                 seen.add(name)
                 out[name] = row
             return out
-    raise RuntimeError("Could not parse PUBLIC_SYMBOL_DOCS from docs_metadata.py")
+    raise RuntimeError("Could not parse PUBLIC_SYMBOL_DOCS from scripts/reference_docs_metadata.py")
 
 
 def parse_template_flow_docs() -> list[dict[str, Any]]:
@@ -358,7 +355,7 @@ def parse_template_flow_docs() -> list[dict[str, Any]]:
         is_annassign = isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name) and node.target.id == "TEMPLATE_FLOW_DOCS"
         if (is_assign or is_annassign) and node.value is not None:
             return ast.literal_eval(node.value)
-    raise RuntimeError("Could not parse TEMPLATE_FLOW_DOCS from docs_metadata.py")
+    raise RuntimeError("Could not parse TEMPLATE_FLOW_DOCS from scripts/reference_docs_metadata.py")
 
 
 def parse_module_docs_metadata() -> list[dict[str, Any]]:
@@ -370,7 +367,7 @@ def parse_module_docs_metadata() -> list[dict[str, Any]]:
         is_annassign = isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name) and node.target.id == "MODULE_DOCS_METADATA"
         if (is_assign or is_annassign) and node.value is not None:
             return ast.literal_eval(node.value)
-    raise RuntimeError("Could not parse MODULE_DOCS_METADATA from docs_metadata.py")
+    raise RuntimeError("Could not parse MODULE_DOCS_METADATA from scripts/reference_docs_metadata.py")
 
 
 def internal_helper_link(actual_module: str, helper: str) -> str:
@@ -550,15 +547,18 @@ def main() -> None:
         missing = sorted(V1_CALLABLES - set(public))
         extra = sorted(set(public) - V1_CALLABLES)
         raise RuntimeError(f"__all__ must match curated V1_CALLABLES. Missing: {missing}; extra: {extra}")
+    docs_metadata = parse_docs_metadata()
     module_data = {p.stem: parse_module(p) for p in PKG_DIR.glob("*.py") if p.name != "__init__.py"}
+
+    def _should_surface_module(module: str, info: dict[str, Any]) -> bool:
+        public_callables = [name for name in info["functions"] if name in public]
+        return bool(public_callables) or module in MAJOR_INTERNAL_MODULES
 
     discovered_modules = sorted(
         p.stem
         for p in PKG_DIR.glob("*.py")
-        if p.name not in {"__init__.py", "docs_metadata.py"} and p.stem not in INTERNAL_MODULE_BLACKLIST
+        if p.name != "__init__.py" and p.stem not in INTERNAL_MODULE_BLACKLIST and _should_surface_module(p.stem, module_data[p.stem])
     )
-
-    docs_metadata = parse_docs_metadata()
     usage_overrides = parse_simple_yaml(FUNCTION_USAGE_OVERRIDES_PATH) if FUNCTION_USAGE_OVERRIDES_PATH.exists() else {}
     template_flow_docs = parse_template_flow_docs()
     module_docs_metadata = parse_module_docs_metadata()
@@ -637,16 +637,18 @@ def main() -> None:
     def _module_name(qn: str) -> str:
         return qn.split(".")[-2]
     MODULE_DIR.mkdir(parents=True, exist_ok=True)
+    for generated_page in MODULE_DIR.glob("*.md"):
+        generated_page.unlink()
     module_manifest = {row["module_name"]: row for row in module_docs_metadata}
     discovered_doc_modules = [INTERNAL_ALIAS_MODULES.get(module, module) for module in discovered_modules]
     module_index_lines = [
         "# Implementation Module Catalogue",
         "",
-        "Implementation modules are source-level reference pages for package maintainers and internal helper traceability.",
+        "Implementation modules are curated source-level reference pages for package maintainers and internal helper traceability.",
         "",
-        "They are useful for debugging implementation details, but they are not the public v1 callable API. The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__all__` and is surfaced through the Function Reference catalogue.",
+        "They are useful for debugging major implementation boundaries, but they are not the public v1 callable API and are not generated for every `.py` file. The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__all__` and is surfaced through the Function Reference catalogue.",
         "",
-        "Short-form modules remain import-compatible aliases but are intentionally hidden from this user-facing catalogue.",
+        "Zero-callable modules are hidden unless explicitly allowlisted as major internal plumbing, such as `metadata`.",
         "",
     ]
     all_doc_modules = discovered_doc_modules
@@ -1111,9 +1113,9 @@ def main() -> None:
         "",
         "Use this page as a callable lookup after you understand the notebook flow.",
         "",
-        "- Use [Template Function Map](template-function-map.md) to see what notebook users actually call.",
-        "- Use the function catalogue below to browse the public v1 callable API.",
-        "- Use [Implementation Modules](../api/modules/) only when debugging or maintaining source internals.",
+        "- **Template Function Map** shows what notebook users call in each starter template step.",
+        "- **Function catalogue** lists the public v1 callables exported from `fabricops_kit`.",
+        "- **Implementation Modules** documents only major source boundaries; it is not a page for every `.py` file or internal helper.",
         "",
         "> Graph exploration is intentionally deferred. Future PR may use Neo4j or a proper graph backend.",
         "",
@@ -1129,7 +1131,7 @@ def main() -> None:
             '  <label class="callable-finder-label" for="callable-finder-input">Search callable functions</label>',
             '  <input id="callable-finder-input" class="callable-finder-input" type="search" placeholder="Search callable functions" aria-describedby="callable-finder-help callable-finder-status callable-finder-examples" autocomplete="off">',
             '  <p id="callable-finder-help" class="callable-finder-help">Search by function name, module, role, starter path, or what the public function does.</p>',
-            '  <p id="callable-finder-examples" class="callable-finder-examples">Try: <span class="callable-finder-chip">csv</span> <span class="callable-finder-chip">data_quality</span> <span class="callable-finder-chip">quarantine</span></p>',
+            '  <p id="callable-finder-examples" class="callable-finder-examples">Try: <span class="callable-finder-chip">csv</span> <span class="callable-finder-chip">governance_review</span> <span class="callable-finder-chip">schema</span></p>',
             '  <p id="callable-finder-status" class="callable-finder-status" aria-live="polite">Showing all public callables.</p>',
             '  <fieldset class="callable-role-filters">',
             '    <legend>Role filters</legend>',
