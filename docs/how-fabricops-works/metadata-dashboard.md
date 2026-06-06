@@ -1,76 +1,41 @@
-# Metadata Dashboard (Out of scope of V1.0.0 will revisit)
+# Metadata Dashboard
 
-FabricOps Starter Kit collects metadata through project notebooks and assembles it into a dashboard-ready reporting layer.
+The metadata dashboard is planned after v1.0.0. This page describes the recommended direction for a future Power BI reporting layer over FabricOps metadata.
 
-This page describes the recommended Power BI dashboard wireframe and the assembled views that the dashboard consumes.
+FabricOps v1.0.0 already collects metadata through notebooks and stores it in the configured metadata lakehouse. A future dashboard can make agreement status, table health, column context, reviewed DQ expectations, classification metadata, data-change results, and lineage easier to review without inspecting raw metadata tables.
 
-The dashboard is the user-facing layer of the metadata collected by the framework. It helps users review agreement status, table health, column definitions, data quality results, drift checks, and lineage evidence without inspecting raw metadata tables directly.
+## v1.0.0 scope
 
-The governed source evidence remains in the metadata tables described on the [Metadata Tables](metadata-tables.md) page.
+Dashboard improvements are not part of the v1.0.0 implementation scope. The v1.0.0 production guardrail boundary remains each `03_pc` notebook. Separate data contracts are not required, and reviewed governance DQ expectations remain advisory unless manually implemented inside the relevant `03_pc` notebook.
 
-## Dashboard wireframe
+## Planned dashboard pages
 
 ![FabricOps metadata dashboard wireframe](../assets/fabricops-metadata-dashboard.png){ .full-width }
 
-A lightweight Power BI dashboard can be organised into the following pages.
-
-
-| Page | Purpose | Main view |
+| Page | Purpose | Likely metadata sources |
 | --- | --- | --- |
-| Overview | Shows agreement status, owner, steward, coverage, and readiness. | `VW_AGREEMENT_CONTRACT_SUMMARY` |
-| Table Health | Shows table profile, data quality status, drift status, freshness, and lineage coverage. | `VW_TABLE_CONTRACT_SUMMARY` |
-| Column Catalogue | Shows column definitions, data types, classifications, profiling evidence, and rule coverage. | `VW_COLUMN_CATALOGUE` |
-| Quality View | Shows rule counts, latest validation status, failed rules, and affected tables or columns. | `VW_TABLE_CONTRACT_SUMMARY`, `VW_COLUMN_CATALOGUE` |
-| Lineage View | Shows source tables, target tables, notebook traceability, and lineage status. | `VW_TABLE_CONTRACT_SUMMARY` |
-| Readiness View | Shows whether agreements and tables have enough metadata coverage for review and operational follow-up. | `VW_AGREEMENT_CONTRACT_SUMMARY`, `VW_TABLE_CONTRACT_SUMMARY` |
+| Overview | Agreement status, owner, steward, coverage, and readiness. | Agreement, steward, catalogue, lineage, and governance metadata. |
+| Table Health | Table profile, latest guardrail evidence, data-change status, freshness, and lineage coverage. | Catalogue/profile evidence, lineage, and run summaries. |
+| Column Catalogue | Column descriptions, classifications, data types, null percentages, and reviewed expectations. | Catalogue, column context, DQ expectations, and classifications. |
+| Quality View | Reviewed DQ expectations and any implemented notebook guardrail outcomes. | `METADATA_DQ_RULES`, catalogue evidence, and `03_pc` run evidence. |
+| Lineage View | Source tables, target tables, notebook traceability, and lineage status. | `METADATA_DATA_LINEAGE_TABLE` and notebook registry. |
+| Readiness View | Metadata coverage for review and operational follow-up. | Agreement, catalogue, governance, and handover metadata. |
 
-## Dashboard preview
+## Planned reporting views
 
-The documentation should include screenshots of the dashboard so users can understand the intended experience before downloading or recreating it.
-
-Recommended screenshots:
-
-| Screenshot | What it should show |
-| --- | --- |
-| Overview page | Agreement status, coverage, owner, steward, and readiness cards. |
-| Table Health page | Table-level quality, drift, freshness, lineage, and overall health. |
-| Column Catalogue page | Column descriptions, classifications, data types, null percentage, and rule coverage. |
-| Quality View page | Rule status, failures, warnings, and affected assets. |
-| Lineage View page | Source-to-target relationship and notebook evidence. |
-
-Screenshots should use sample or anonymised metadata only.
-
-## Views consumed by the dashboard
-
-The dashboard should consume assembled reporting views rather than raw metadata tables directly.
+A future dashboard should consume assembled views rather than raw metadata tables directly. Suggested view names are intentionally descriptive and not v1.0.0 source-of-truth objects.
 
 | View | Grain | Dashboard use |
 | --- | --- | --- |
-| `VW_AGREEMENT_CONTRACT_SUMMARY` | One row per agreement | Overview, stewardship, and readiness pages. |
-| `VW_TABLE_CONTRACT_SUMMARY` | One row per agreement and table | Table health, quality, drift, freshness, lineage, and readiness pages. |
-| `VW_COLUMN_CATALOGUE` | One row per agreement, table, and column | Column catalogue, classification, profiling, and rule coverage pages. |
+| `VW_AGREEMENT_SUMMARY` | One row per agreement | Overview, stewardship, and readiness pages. |
+| `VW_TABLE_HEALTH_SUMMARY` | One row per table/run context | Table health, quality, data-change, freshness, lineage, and readiness pages. |
+| `VW_COLUMN_CATALOGUE` | One row per table and column | Column catalogue, classification, profiling, and expectation coverage pages. |
 
-These views are derived from the governed metadata tables. They are not separate sources of truth.
-
-## View design rule
-
-Each view should stay at its own grain.
-
-| View | Owns | Should avoid |
-| --- | --- | --- |
-| `VW_AGREEMENT_CONTRACT_SUMMARY` | Agreement ownership, usage, status, coverage, and readiness. | Table-level row counts or column-level descriptions. |
-| `VW_TABLE_CONTRACT_SUMMARY` | Table profile, quality status, drift status, freshness, lineage, and table health. | Agreement policy text or column-level business definitions. |
-| `VW_COLUMN_CATALOGUE` | Column definitions, data types, classifications, profiling evidence, and rule coverage. | Agreement-level ownership summary or table-level health narrative. |
-
-Lower-grain views may include parent keys such as `agreement_id` and `table_name` for joining and filtering, but they should not duplicate full parent-level narratives.
+Each view should stay at its own grain. Lower-grain views may include parent keys such as `agreement_id` and `table_name` for joining and filtering, but they should not duplicate full parent-level narratives.
 
 ## Suggested dashboard fields
 
 ### Overview page
-
-Use `VW_AGREEMENT_CONTRACT_SUMMARY`.
-
-Suggested fields:
 
 | Field | Purpose |
 | --- | --- |
@@ -83,77 +48,51 @@ Suggested fields:
 | `table_count` | Number of governed tables. |
 | `column_count` | Number of governed columns. |
 | `classified_column_count` | Classification coverage. |
-| `dq_rule_count` | Data quality rule coverage. |
-| `latest_dq_status` | Latest quality outcome. |
-| `latest_drift_status` | Latest drift outcome. |
+| `dq_expectation_count` | Reviewed DQ expectation coverage. |
+| `latest_guardrail_status` | Latest implemented `03_pc` guardrail outcome where available. |
 | `lineage_coverage_status` | Lineage coverage summary. |
-| `overall_contract_status` | Overall dashboard readiness. |
+| `readiness_status` | Overall metadata readiness indicator. |
 
 ### Table Health page
 
-Use `VW_TABLE_CONTRACT_SUMMARY`.
-
-Suggested fields:
-
 | Field | Purpose |
 | --- | --- |
-| `agreement_id` | Parent agreement key. |
-| `dataset_name` | Dataset or data product name. |
+| `agreement_id` | Parent agreement key where available. |
+| `dataset_name` | Dataset or topic name. |
 | `table_name` | Governed table name. |
 | `row_count` | Latest profiled row count. |
 | `column_count` | Latest profiled column count. |
 | `profile_status` | Profiling completion status. |
-| `dq_rule_count` | Number of rules for the table. |
-| `latest_dq_status` | Latest table-level quality result. |
-| `failed_rule_count` | Failed rules in the latest run. |
-| `latest_drift_status` | Latest drift result. |
-| `drift_summary` | Short drift explanation. |
+| `dq_expectation_count` | Number of reviewed expectations for the table. |
+| `latest_schema_status` | Latest implemented schema guardrail status where available. |
+| `latest_data_change_status` | Latest implemented data-change guardrail status where available. |
 | `lineage_status` | Whether lineage evidence exists. |
 | `source_tables` | Upstream source tables. |
 | `target_table` | Output table. |
-| `pipeline_notebook_url` | Link to producing or enforcing notebook. |
-| `overall_table_status` | Overall table health status. |
+| `pipeline_notebook_url` | Link to producing notebook where available. |
+| `overall_table_status` | Overall table health indicator. |
 
 ### Column Catalogue page
 
-Use `VW_COLUMN_CATALOGUE`.
-
-Suggested fields:
-
 | Field | Purpose |
 | --- | --- |
-| `agreement_id` | Parent agreement key. |
+| `agreement_id` | Parent agreement key where available. |
 | `table_name` | Parent table. |
 | `column_name` | Column name. |
 | `ordinal_position` | Column order. |
 | `data_type` | Observed or declared data type. |
-| `description` | Business description. |
-| `source_derivation` | How the column is derived. |
+| `description` | Reviewed business description. |
 | `field_classification` | Field category. |
 | `pii_classification` | PII classification. |
 | `confidentiality_label` | Confidentiality level. |
-| `sensitivity_label` | Sensitivity summary. |
 | `handling_requirement` | Handling instruction. |
-| `business_rules` | Rules affecting the column. |
-| `latest_dq_status` | Latest rule outcome. |
+| `dq_expectations` | Reviewed expectations affecting the column. |
 | `null_count` | Missing value count. |
 | `null_percent` | Missing value percentage. |
 | `example_values` | Example observed values. |
-| `latest_drift_status` | Latest drift status. |
 | `lineage_summary` | Column or table lineage summary. |
-| `evidence_notebook_url` | Link back to evidence notebook. |
+| `evidence_notebook_url` | Link back to evidence notebook where available. |
 
-## Downloadable dashboard asset
+## Dashboard asset guidance
 
-The repository can provide a Power BI dashboard file as a starter template.
-
-The dashboard file should connect to the assembled views above. Users can then point the template to their own Fabric metadata lakehouse and refresh it with their project metadata.
-
-Recommended assets:
-
-| Asset | Purpose |
-| --- | --- |
-| Power BI dashboard file | Reusable dashboard template. |
-| Dashboard screenshots | Preview of the expected dashboard. |
-| Sample metadata | Optional sample data for testing the dashboard layout. |
-
+Future dashboard assets should use only generic sample or anonymised metadata. Do not include real data, secrets, tenant/workspace identifiers, internal URLs, or production screenshots.

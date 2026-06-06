@@ -5,7 +5,7 @@
 
 ## Purpose
 
-Persist approved DQ rule records after an explicit human commit.
+Persist reviewed DQ expectation records after an explicit human commit.
 
 ## Function manifest
 

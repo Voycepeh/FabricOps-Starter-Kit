@@ -4,6 +4,10 @@
 
 **FabricOps applies the same guardrail pattern before transformation and before target publication.**
 
+## v1.0.0 boundary
+
+In v1.0.0, schema and data-change guardrails are implemented inside each `03_pc` notebook. Separate data contracts are not required. Governance DQ expectations from `04_gov` are advisory unless manually implemented as additional checks in the relevant `03_pc` notebook.
+
 At each stage:
 
 Validate the dataframe schema.
@@ -19,8 +23,6 @@ The three public functions keep the notebook workflow simple:
 - stop_if_failed() stops execution only when can_continue=False.
 
 Warnings remain visible without stopping execution. Monitor-only presets always allow the pipeline to continue.
-
-Beginner workflow
 
 ## Beginner workflow
 

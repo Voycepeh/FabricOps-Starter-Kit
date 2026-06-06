@@ -21,6 +21,13 @@ write_lakehouse_table(
 )
 ```
 
+
+## v1.0.0 metadata scope
+
+`00_env_config` prepares the configured metadata lakehouse target and creates or validates the active metadata tables. `01_da` captures data agreement, steward, and evidence metadata. `02_ex` demonstrates example source/topic setup and writes profiling/catalogue evidence. `03_pc` is the production guardrail notebook and writes production evidence such as profiles, lineage, and run summaries. `04_gov` reviews and commits governance metadata for column context, DQ expectations, and classifications.
+
+Separate data contracts are not required for v1.0.0. Metadata DQ rules are reviewed expectations/advisory metadata unless they are manually implemented as checks inside the relevant `03_pc` notebook.
+
 ## Product-truth metadata model
 
 The active metadata model contains only the following tables:
@@ -35,14 +42,14 @@ The active metadata model contains only the following tables:
 | `METADATA_DATA_CATALOGUE`          | `03_pc`                | Stores table context and column profiling evidence.                               |
 | `METADATA_DATA_ACCESS`             | Access capture process | Stores table-level access assignments.                                            |
 | `METADATA_COLUMN_CONTEXT`          | `04_gov`               | Stores human-approved business meaning for catalogue columns.                     |
-| `METADATA_DQ_RULES`                | `04_gov`               | Stores human-approved data-quality rules.                                         |
+| `METADATA_DQ_RULES`                | `04_gov`               | Stores human-reviewed DQ expectations/advisory metadata.                          |
 | `METADATA_COLUMN_CLASSIFICATION`   | `04_gov`               | Stores human-approved sensitivity and PII classifications.                        |
 
 `04_gov` is table-scoped. It selects a table from `METADATA_DATA_CATALOGUE` and does not require a data agreement.
 
-Schema and data-drift guardrails remain inside each `03_pc` notebook. They are not duplicated in a separate contract table.
+Schema checks and data-change guardrails remain inside each `03_pc` notebook. Separate data contracts are not required for v1.0.0.
 
-Enforcement of approved DQ rules and classifications is planned for enforcement in 03_pc but outside the v1.0.0 scope.
+Metadata-driven enforcement of reviewed DQ expectations and classifications is planned after v1.0.0; v1 enforcement happens only when checks are implemented inside `03_pc`.
 
 ## Standard runtime audit columns
 
@@ -334,7 +341,7 @@ Stores append-only human-reviewed DQ rules.
 
 Includes the standard runtime audit columns.
 
-Approved rules are stored in v1.0.0 but are not yet enforced by `03_pc`.
+Reviewed DQ expectations are stored in v1.0.0 as advisory governance metadata. They are not enforced unless a team manually implements them as guardrails inside the relevant `03_pc` notebook.
 
 ### `METADATA_COLUMN_CLASSIFICATION`
 
@@ -359,5 +366,5 @@ Stores append-only human-reviewed sensitivity and PII decisions.
 
 Includes the standard runtime audit columns.
 
-Continue to [Metadata Dashboard](metadata-dashboard.md) to see how the metadata becomes useful to people and tools.
+Continue to [Metadata Dashboard](metadata-dashboard.md) to see planned dashboard/reporting guidance for making metadata useful to people and tools.
 

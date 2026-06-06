@@ -2716,7 +2716,7 @@
     "name": "enforce_dq",
     "qualified_name": "fabricops_kit.data_quality.enforce_dq",
     "module": "data_quality",
-    "classification": "Essential",
+    "classification": "Optional",
     "inbound": [],
     "outbound": [
       "fabricops_kit.data_quality.DQEnforcementResult",
@@ -2727,7 +2727,7 @@
     ],
     "source_path": "src/fabricops_kit/data_quality.py",
     "docs_path": "reference/enforce_dq.md",
-    "summary": "No summary available."
+    "summary": "Optionally apply reviewed DQ expectations when a team manually wires this helper into a 03_pc notebook."
   },
   {
     "id": "fabricops_kit.data_quality.get_dq_review_results",
@@ -2748,14 +2748,14 @@
     "name": "load_dq_rules",
     "qualified_name": "fabricops_kit.data_quality.load_dq_rules",
     "module": "data_quality",
-    "classification": "Essential",
+    "classification": "Optional",
     "inbound": [],
     "outbound": [
       "fabricops_kit.data_quality._load_active_dq_rules"
     ],
     "source_path": "src/fabricops_kit/data_quality.py",
     "docs_path": "reference/load_dq_rules.md",
-    "summary": "No summary available."
+    "summary": "Load reviewed active DQ expectations for teams that manually implement them as notebook guardrails."
   },
   {
     "id": "fabricops_kit.data_quality.validate_dq_rules",
@@ -2772,7 +2772,7 @@
     "outbound": [],
     "source_path": "src/fabricops_kit/data_quality.py",
     "docs_path": "reference/validate_dq_rules.md",
-    "summary": "No summary available."
+    "summary": "Validate canonical DQ expectation definitions before storage or optional notebook use."
   },
   {
     "id": "fabricops_kit.data_quality.widget_review_dq_rule_deactivations",
@@ -2816,7 +2816,7 @@
     ],
     "source_path": "src/fabricops_kit/data_quality.py",
     "docs_path": "reference/write_dq_rules.md",
-    "summary": "No summary available."
+    "summary": "Validate, build, and persist reviewed DQ expectations as metadata."
   },
   {
     "id": "fabricops_kit.docs_metadata.ModuleDocMetadata",
@@ -4049,7 +4049,7 @@
     ],
     "source_path": "src/fabricops_kit/governance_review.py",
     "docs_path": "reference/build_dq_rule_records.md",
-    "summary": "Build append-only approved METADATA_DQ_RULES records without enforcement."
+    "summary": "Build append-only reviewed METADATA_DQ_RULES expectation records without production enforcement."
   },
   {
     "id": "fabricops_kit.governance_review.build_profile_summary",
@@ -4123,7 +4123,7 @@
     ],
     "source_path": "src/fabricops_kit/governance_review.py",
     "docs_path": "reference/commit_dq_rules.md",
-    "summary": "Persist approved DQ rule records after an explicit human commit."
+    "summary": "Persist reviewed DQ expectation records after an explicit human commit."
   },
   {
     "id": "fabricops_kit.governance_review.get_governance_metadata_schemas",

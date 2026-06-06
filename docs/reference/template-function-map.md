@@ -233,14 +233,14 @@ Exploration notebook flow used to profile source data and draft advisory AI outp
     <tr>
       <td>`write_dq_rules`</td>
       <td>Callable orchestration wrapper</td>
-      <td>Validate, build, and persist approved DQ rules.</td>
+      <td>Validate, build, and persist reviewed DQ expectations as metadata.</td>
       <td>`_build_dq_rule_history`</td>
       <td>Check dependency outputs and metadata writes.</td>
     </tr>
   </tbody>
 </table>
 
-### Segment 4: Human review and write approved DQ rules
+### Segment 4: Human review and write DQ expectations
 
 <table>
   <thead>
@@ -256,7 +256,7 @@ Exploration notebook flow used to profile source data and draft advisory AI outp
     <tr>
       <td>`write_dq_rules`</td>
       <td>Callable orchestration wrapper</td>
-      <td>Validate, build, and persist approved DQ rules.</td>
+      <td>Validate, build, and persist reviewed DQ expectations as metadata.</td>
       <td>`_build_dq_rule_history`</td>
       <td>Check dependency outputs and metadata writes.</td>
     </tr>

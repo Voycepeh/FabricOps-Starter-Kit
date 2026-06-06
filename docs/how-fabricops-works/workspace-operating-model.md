@@ -22,6 +22,11 @@ The recommended setup uses three workspaces:
 | Governance review  | `04_gov` notebook creates review outputs |  `02_ex` and  `03_pc`  create profiled outputs  |  `02_ex` and  `03_pc`  create profiled outputs        |
 
 
+
+## v1.0.0 control boundary
+
+FabricOps v1.0.0 uses each `03_pc` notebook as the production control boundary. Promote the implemented production notebook and its reviewed supporting metadata, but do not rely on a separate metadata-enforcement layer. `04_gov` review metadata is advisory unless the relevant expectations are manually implemented as `03_pc` guardrails.
+
 ## Promotion principle
 
 Production promotion should remain lightweight.

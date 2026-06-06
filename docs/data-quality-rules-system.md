@@ -1,104 +1,110 @@
-# AI-Assisted Data Quality Rules System
+# AI-assisted DQ expectation review
 
 A data analyst profiles source data in a `02_ex_*` notebook. The notebook captures profile evidence such as nulls, distinct values, ranges, patterns, duplicates, and suspicious values.
 
-AI uses that evidence to suggest candidate data quality rules. A human reviewer approves, edits, rejects, or defers each suggestion. Only approved active rules are stored as append-only governance metadata for later enforcement work.
+AI can use that evidence to suggest candidate DQ expectations. A human reviewer approves, edits, rejects, or defers each suggestion. Reviewed active expectations are stored as append-only governance metadata.
 
-In v1.0.0, `04_gov_dataset_table` stores approved DQ rules but the base `03_pc_*` notebook does not load or enforce them. Future enhanced pipeline patterns can consume these approved rules as part of the wider [How FabricOps Works](how-fabricops-works/index.md) metadata flow.
+In v1.0.0, `04_gov` stores reviewed DQ expectations, but the base `03_pc` template does not load or enforce them. They are advisory metadata unless a team manually implements them as guardrails inside the relevant `03_pc` notebook.
 
-## Business rules and drift monitoring
+## v1.0.0 boundary
 
-Business data quality rules validate whether current records satisfy approved expectations. FabricOps also uses schema and profile drift checks to detect structural or statistical changes that may not cause individual records to fail.
+| Area | v1.0.0 behavior |
+| --- | --- |
+| AI suggestions | Optional and advisory only. |
+| Human review | Required before suggestions become committed governance metadata. |
+| Metadata storage | Reviewed expectations are stored in `METADATA_DQ_RULES`. |
+| Production enforcement | Lives in `03_pc` only when engineers implement the checks in that notebook. |
+| Future enhancement | Optional metadata-driven execution and rule promotion are planned after v1.0.0. |
 
-For example, every faculty value may remain valid while the distribution of records changes unexpectedly. Business rules, schema drift, and profile drift therefore operate as complementary controls.
+## Business expectations and data-change monitoring
 
-Read [Schema and Data Drift Monitoring](schema-and-data-drift.md) for the monitoring approach.
+Business DQ expectations describe what reviewers expect from current records. FabricOps also uses schema and profile/data-change checks to detect structural or statistical changes that may not cause individual records to fail.
+
+For example, every value in a column may remain valid while the distribution of records changes unexpectedly. Business expectations, schema checks, and data-change monitoring therefore operate as complementary controls when teams implement them in `03_pc`.
+
+Read [Schema and Data-Change Guardrails](schema-and-data-drift.md) for the production-control guardrail approach.
 
 <figure markdown>
   ![Data quality workflow with AI suggestions, human review, approval, and planned deterministic enforcement in pipelines](assets/DQ-with-ai.png){ .full-width }
-  <figcaption>Data quality workflow from profiling, rule suggestion, human review, approval, and planned later enforcement.</figcaption>
+  <figcaption>DQ expectation workflow from profiling, suggestion, human review, metadata storage, and planned later metadata-driven enforcement.</figcaption>
 </figure>
-
-Next read: [Schema and Data Drift Monitoring](schema-and-data-drift.md), [How FabricOps Works](how-fabricops-works/index.md), [Quick Start](quick-start.md), [Function Reference](reference/index.md).
 
 ## Operating flow
 
-1. **Source data**
-   Analyst starts with the raw dataframe or source table.
+1. **Profile source/topic data**
+   `02_ex` captures profile evidence from the dataframe or source table.
 
-2. **Profile in `02_ex_*`**
-   Capture nulls, distinct values, ranges, patterns, duplicates, and suspicious values.
+2. **Suggest expectations**
+   AI may suggest candidate expectations from profile evidence when configured.
 
-3. **Suggest rules**
-   AI suggests candidate DQ rules from the profile evidence.
+3. **Review expectations**
+   A human reviewer approves, edits, rejects, or defers each suggestion.
 
-4. **Review rules**
-   Human reviewer approves, edits, rejects, or defers each suggestion.
+4. **Store reviewed metadata**
+   Reviewed active expectations are saved to `METADATA_DQ_RULES`. Rejected and deferred items remain review evidence.
 
-5. **Store approved rules**
-   Approved active rules are saved as metadata. Rejected and deferred rules are kept as review evidence only.
+5. **Implement guardrails when needed**
+   If an expectation should stop production, an engineer manually implements the check inside the relevant `03_pc` notebook and smoke tests the failure behavior.
 
-6. **Enforce in `03_pc_*`**
-   A later enhanced pipeline pattern can load approved active rules and apply the same checks on every run. The v1.0.0 `03_pc` template does not enforce approved DQ rules.
+6. **Planned later pattern**
+   Optional metadata-driven rule execution, rule promotion, and richer monitoring are planned after v1.0.0.
 
-7. **Later enforcement pattern**
-   Passing/quarantine split outputs are planned for a future enhanced production pattern, not the v1.0.0 base `03_pc` notebook.
-
-## What happens in the `02_ex_*` notebook
+## What happens in `02_ex`
 
 The analyst:
 
-1. loads the source data;
+1. loads the source/topic data;
 2. profiles columns and candidate keys;
 3. reviews profile output;
-4. asks AI for candidate rules;
-5. checks whether each rule makes business sense;
+4. optionally asks AI for candidate expectations;
+5. checks whether each expectation makes business sense;
 6. records the review decision.
 
-The `02_ex_*` notebook is for exploration and review. It does not enforce production rules.
+`02_ex` is for exploration and evidence. It does not enforce production rules.
 
-## What happens in the v1.0.0 `03_pc_*` notebook
+## What happens in v1.0.0 `03_pc`
 
-The base pipeline:
+The production-control notebook:
 
-1. uses notebook-defined schema and drift guardrails;
-2. writes profile evidence to `METADATA_DATA_CATALOGUE`;
-3. does not load approved DQ rules for enforcement;
-4. does not quarantine rows based on approved governance metadata.
+1. uses notebook-defined schema and data-change guardrails;
+2. can include manually implemented DQ checks;
+3. writes profile evidence to `METADATA_DATA_CATALOGUE`;
+4. writes outputs only after implemented blocking guardrails pass;
+5. does not automatically load or enforce reviewed DQ expectations from metadata.
 
-AI is not used during production pipeline checks. Approved-rule enforcement is planned for a later enhancement.
+AI is not used during production pipeline checks.
 
 ## Metadata to capture
 
-Rule metadata:
+Expectation metadata:
 
 | Field | Purpose |
 | --- | --- |
-| `rule_id` | Identifies the rule. |
-| `agreement_id` or `data_product_id` | Links the rule to the agreement or product. |
-| `table_name` | Table being checked. |
-| `column_name` | Column being checked, when applicable. |
-| `rule_type` | Check type. |
-| `rule_parameters` | Values or expression used by the check. |
-| `suggested_by_ai` | Whether the rule started as an AI suggestion. |
+| `rule_id` | Identifies the reviewed expectation. |
+| `agreement_id` or `data_product_id` | Links the expectation to the agreement or product where used. |
+| `table_name` | Table being reviewed. |
+| `column_name` | Column being reviewed, when applicable. |
+| `rule_type` | Expectation/check type. |
+| `rule_parameters` | Values or expression used by the expectation. |
+| `suggested_by_ai` | Whether the expectation started as an AI suggestion. |
 | `human_decision` | Approve, edit, reject, or defer. |
-| `approval_status` | Whether the rule is approved for storage and future enforcement work. |
-| `approved_by` | Reviewer who approved the rule. |
+| `approval_status` | Whether the expectation is approved for metadata storage. |
+| `approved_by` | Reviewer who approved the expectation. |
 | `approved_at` | When approval happened. |
-| `active_flag` | Whether the rule is currently stored for later enforcement. |
-| `severity` | How failure should be handled. |
+| `active_flag` | Whether the expectation is currently active as reviewed metadata. |
+| `severity` | Intended severity if a team later implements the expectation as a guardrail. |
 
 Planned future enforcement evidence:
 
 | Field | Purpose |
 | --- | --- |
-| `run_id` | Future pipeline run that applies the rule. |
-| `rule_id` | Rule that would be applied by a future enhanced pipeline. |
+| `run_id` | Future pipeline run that applies a metadata-driven rule. |
+| `rule_id` | Reviewed expectation applied by a future enhanced pipeline. |
 | `failure_reason` | Why the row failed. |
 | `failed_row_count` | Number of failed rows. |
 | `accepted_row_count` | Number of accepted rows. |
 
-## Starter rule types
+## Starter expectation types
 
 - not null
 - allowed values
@@ -112,4 +118,4 @@ Planned future enforcement evidence:
 
 ## Feedback loop
 
-Suggestions, review decisions, approved rules, and rejected rules are stored as evidence. Future enforcement outcomes can be added by a later enhanced pipeline pattern. Teams can use that evidence to improve prompts and rule suggestions.
+Suggestions, review decisions, approved expectations, rejected expectations, and manually implemented guardrail outcomes are evidence. Teams can use that evidence to improve review prompts, production notebooks, and future rule-promotion workflows.

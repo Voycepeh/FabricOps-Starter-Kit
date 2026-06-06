@@ -10,7 +10,7 @@
 
 ## Module purpose
 
-Owns DQ rule drafting, review, enforcement, quarantine, and quality results.
+Owns DQ rule drafting, review metadata, and optional helper functions for teams that manually implement DQ guardrails.
 
 ## Module manifest
 
@@ -28,7 +28,7 @@ Owns DQ rule drafting, review, enforcement, quarantine, and quality results.
     </tr>
     <tr>
       <td>Module purpose</td>
-      <td>Owns DQ rule drafting, review, enforcement, quarantine, and quality results.</td>
+      <td>Owns DQ rule drafting, review metadata, and optional helper functions for teams that manually implement DQ guardrails.</td>
     </tr>
     <tr>
       <td>Public callable count</td>
@@ -86,25 +86,11 @@ Owns DQ rule drafting, review, enforcement, quarantine, and quality results.
       <td><a href="../../reference/internal/data_quality/_extract_dq_rules/"><code>_extract_dq_rules</code></a> (internal), <a href="../../reference/internal/data_quality/_prepare_dq_profile_input_rows/"><code>_prepare_dq_profile_input_rows</code></a> (internal), <a href="../../reference/internal/data_quality/_suggest_dq_rules/"><code>_suggest_dq_rules</code></a> (internal)</td>
     </tr>
     <tr>
-      <td><a href="../../reference/enforce_dq/"><code>enforce_dq</code></a></td>
-      <td>Essential</td>
-      <td>function</td>
-      <td>Enforce approved DQ rules and return structured deterministic outputs.</td>
-      <td><a href="../../reference/internal/data_quality/_load_active_dq_rules/"><code>_load_active_dq_rules</code></a> (internal), <a href="../../reference/internal/data_quality/_run_dq_rules/"><code>_run_dq_rules</code></a> (internal), <a href="../../reference/internal/data_quality/_split_dq_rows/"><code>_split_dq_rows</code></a> (internal)</td>
-    </tr>
-    <tr>
       <td><a href="../../reference/get_dq_review_results/"><code>get_dq_review_results</code></a></td>
       <td>Essential</td>
       <td>function</td>
       <td>Collect current approved/rejected DQ review results from widget state.</td>
       <td><a href="../../reference/internal/data_quality/_attach_rule_metadata_keys/"><code>_attach_rule_metadata_keys</code></a> (internal)</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/load_dq_rules/"><code>load_dq_rules</code></a></td>
-      <td>Essential</td>
-      <td>function</td>
-      <td>Load latest active approved DQ rules from append-only metadata history.</td>
-      <td><a href="../../reference/internal/data_quality/_load_active_dq_rules/"><code>_load_active_dq_rules</code></a> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/widget_review_dq_rules/"><code>widget_review_dq_rules</code></a></td>
@@ -117,14 +103,28 @@ Owns DQ rule drafting, review, enforcement, quarantine, and quality results.
       <td><a href="../../reference/write_dq_rules/"><code>write_dq_rules</code></a></td>
       <td>Essential</td>
       <td>function</td>
-      <td>Validate, build, and persist approved DQ rules.</td>
+      <td>Validate, build, and persist reviewed DQ expectations as metadata.</td>
       <td><a href="../../reference/internal/data_quality/_build_dq_rule_history/"><code>_build_dq_rule_history</code></a> (internal)</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/enforce_dq/"><code>enforce_dq</code></a></td>
+      <td>Optional</td>
+      <td>function</td>
+      <td>Optionally apply reviewed DQ expectations when a team manually wires this helper into a 03_pc notebook.</td>
+      <td><a href="../../reference/internal/data_quality/_load_active_dq_rules/"><code>_load_active_dq_rules</code></a> (internal), <a href="../../reference/internal/data_quality/_run_dq_rules/"><code>_run_dq_rules</code></a> (internal), <a href="../../reference/internal/data_quality/_split_dq_rows/"><code>_split_dq_rows</code></a> (internal)</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/load_dq_rules/"><code>load_dq_rules</code></a></td>
+      <td>Optional</td>
+      <td>function</td>
+      <td>Load reviewed active DQ expectations for teams that manually implement them as notebook guardrails.</td>
+      <td><a href="../../reference/internal/data_quality/_load_active_dq_rules/"><code>_load_active_dq_rules</code></a> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/validate_dq_rules/"><code>validate_dq_rules</code></a></td>
       <td>Optional</td>
       <td>function</td>
-      <td>Validate canonical DQ rules before enforcement.</td>
+      <td>Validate canonical DQ expectation definitions before storage or optional notebook use.</td>
       <td>—</td>
     </tr>
     <tr>

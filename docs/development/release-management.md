@@ -7,7 +7,7 @@ FabricOps Starter Kit uses a GitHub-only release process. A Git tag named `vMAJO
 - Keep the package version explicit in `pyproject.toml` under `[project].version`.
 - Do not use `setuptools-scm`, dynamic Git-derived package versions, PyPI publishing, Azure Artifacts, or an alternate build tool in this release flow.
 - Build distributions from the tagged commit with `uv build`.
-- Use semantic versioning across the public FabricOps surface, including Python APIs, notebook contracts, configuration structures, metadata schemas, agreement and pipeline contract structures, and data-quality rule formats.
+- Use semantic versioning across the public FabricOps surface, including Python APIs, notebook interfaces, configuration structures, metadata schemas, agreement records, pipeline structures, and data-quality rule formats.
 - Keep package version, documentation version, Git commit SHA, agreement version, and pipeline version as separate traceability concepts.
 
 ## Selecting the next semantic version
@@ -18,9 +18,9 @@ Use the smallest version bump that communicates the public impact:
 | --- | --- |
 | Patch | Backward-compatible fixes, documentation corrections, and non-breaking notebook-template improvements. |
 | Minor | Backward-compatible public APIs, new notebook capabilities, new optional configuration, or additive metadata/rule formats. |
-| Major | Breaking changes to Python APIs, notebook contracts, configuration structures, metadata schemas, agreement or pipeline contracts, or data-quality rule formats. |
+| Major | Breaking changes to Python APIs, notebook interfaces, configuration structures, metadata schemas, agreement records, pipeline structures, or data-quality rule formats. |
 
-Fabric-specific runtime-only changes should still be evaluated by their effect on the public notebook and metadata contracts.
+Fabric-specific runtime-only changes should still be evaluated by their effect on public notebook behavior and metadata schemas. Separate data contracts are not required for v1.0.0.
 
 ## Update release files
 

@@ -5,7 +5,7 @@
 
 ## Purpose
 
-No summary available.
+Validate canonical DQ expectation definitions before storage or optional notebook use.
 
 ## Function manifest
 
