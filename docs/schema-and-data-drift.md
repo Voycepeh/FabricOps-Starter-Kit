@@ -1,30 +1,40 @@
-# Schema and data-change guardrails
+# Notebook-scoped production guardrails
+
+FabricOps v1.0.0 uses each `03_pc` notebook as the production guardrail boundary. Data quality is one part of that workflow, alongside profiling, output writes, lineage, run summaries, governance review, and handover.
+
+Separate data contracts are not part of the v1.0.0 operating model. The checks that control production behavior live in the relevant `03_pc` notebook.
 
 ![Schema and data-change guardrails showing source and target validation flow](assets/fabricops-schema-data-guardrails.png){ .full-width }
 
-**FabricOps applies the same guardrail pattern before transformation and before target publication.**
+## What `03_pc` owns
 
-## v1.0.0 boundary
+A production `03_pc` notebook should make its guardrails explicit before writing outputs:
 
-In v1.0.0, schema and data-change guardrails are implemented inside each `03_pc` notebook. Separate data contracts are not required. Governance DQ expectations from `04_gov` are advisory unless manually implemented as additional checks in the relevant `03_pc` notebook.
+- schema validation for expected columns and datatypes;
+- data-change monitoring for unusual row count, null, distinct, or distribution changes;
+- notebook-defined DQ checks added where the pipeline logic lives;
+- fail-fast behavior for blocking guardrail results;
+- output writes only after required guardrails pass;
+- profile and lineage evidence;
+- run summaries for review and handover.
 
-At each stage:
+`04_gov` is separate. It reviews column context, DQ expectations, and classification metadata, but it does not enforce production rules.
 
-Validate the dataframe schema.
-Stop when the schema result is blocking.
-Profile the dataframe and compare it with the preset-selected baseline.
-Stop when the data-change result is blocking.
-Continue to the next pipeline step.
+## Guardrail flow
 
-The three public functions keep the notebook workflow simple:
+Use the same pattern before transformation and before target publication:
 
-- validate_schema() checks expected columns and datatypes.
-- monitor_data_changes() handles profiling, baseline selection, and comparison.
-- stop_if_failed() stops execution only when can_continue=False.
+1. validate the dataframe schema;
+2. stop when the schema result is blocking;
+3. profile the dataframe and compare it with the selected baseline;
+4. stop when the data-change result is blocking;
+5. run any notebook-defined DQ checks;
+6. write outputs only after required guardrails pass;
+7. record profile evidence, lineage, and run-summary evidence.
 
-Warnings remain visible without stopping execution. Monitor-only presets always allow the pipeline to continue.
+Warnings should remain visible without stopping execution. Monitor-only presets can be used when changes should be reviewed but should not block publication.
 
-## Beginner workflow
+## Starter implementation pattern
 
 ```python
 source_schema_result = validate_schema(
@@ -93,76 +103,32 @@ MARK_CURRENT_PROFILE_AS_APPROVED_BASELINE = False
 
 ## Schema presets
 
-| Preset              | Behaviour                                                                  |
-| ------------------- | -------------------------------------------------------------------------- |
-| `strict`            | Missing columns, datatype changes, and unexpected columns block execution. |
-| `allow_new_columns` | Missing columns and datatype changes block. New columns are warnings.      |
-| `monitor_only`      | All differences are reported without blocking.                             |
+| Preset | Behavior |
+| --- | --- |
+| `strict` | Missing columns, datatype changes, and unexpected columns block execution. |
+| `allow_new_columns` | Missing columns and datatype changes block. New columns are warnings. |
+| `monitor_only` | All differences are reported without blocking. |
 
 ## Data-change presets
 
-| Preset                  | Baseline                  | Can block |
-| ----------------------- | ------------------------- | --------: |
-| `changing_data`         | Latest successful profile |       Yes |
-| `fixed_data`            | Approved profile          |       Yes |
-| `monitor_changing_data` | Latest successful profile |        No |
-| `monitor_fixed_data`    | Approved profile          |        No |
+| Preset | Baseline | Can block |
+| --- | --- | ---: |
+| `changing_data` | Latest successful profile | Yes |
+| `fixed_data` | Approved profile | Yes |
+| `monitor_changing_data` | Latest successful profile | No |
+| `monitor_fixed_data` | Approved profile | No |
 
-Use `changing_data` for operational or transactional datasets.
+Use `changing_data` for operational or transactional datasets. Use `fixed_data` for reference, historical, or controlled datasets that should remain stable.
 
-Use `fixed_data` for reference, historical, or controlled datasets that should remain stable.
+## Evidence for review and handover
 
-Use the monitor variants when changes should be visible without stopping publication.
+`monitor_data_changes()` returns profile and comparison evidence that can be written to metadata:
 
-## Baseline behaviour
+| Property | Purpose |
+| --- | --- |
+| `profile` | Current profile dataframe ready for catalogue evidence. |
+| `profile_payload` | Normalized profile used for comparison. |
+| `baseline` | Selected historical profile, or `None`. |
+| `result` | Guardrail status, checks, message, and `can_continue`. |
 
-Changing-data presets compare with the latest successful matching profile.
-
-Fixed-data presets compare only with an approved matching profile.
-
-Selecting `fixed_data` does not approve the current profile. Baseline approval remains explicit:
-
-```python
-MARK_CURRENT_PROFILE_AS_APPROVED_BASELINE = True
-```
-
-Routine production runs should normally leave this set to `False`.
-
-## Optional threshold overrides
-
-Presets control baseline selection and blocking behaviour. Overrides adjust thresholds only.
-
-```python
-SOURCE_DATA_CHANGE_OVERRIDES = {
-    "block_numeric_psi": 0.30,
-    "max_row_count_change_percent": 75,
-}
-```
-
-An empty dictionary uses the preset defaults unchanged.
-
-## Returned evidence
-
-`monitor_data_changes()` returns:
-
-| Property          | Purpose                                                 |
-| ----------------- | ------------------------------------------------------- |
-| `profile`         | Current profile dataframe ready for catalogue evidence. |
-| `profile_payload` | Normalized profile used for comparison.                 |
-| `baseline`        | Selected historical profile, or `None`.                 |
-| `result`          | Guardrail status, checks, message, and `can_continue`.  |
-
-`stop_if_failed()` accepts the complete wrapper returned by `monitor_data_changes()` and stops only when the resolved result has `can_continue=False`.
-
-## Use in the pipeline notebook
-
-The `03_pc`  pipeline template contains the complete executable workflow for:
-
-* source and target schema validation;
-* source and target data-change monitoring;
-* fail-fast enforcement;
-* profile evidence writing;
-* explicit approved-baseline promotion.
-
-Use this page to choose the appropriate presets. Use the notebook template as the implementation reference, and use the generated API reference for exact function parameters and return values.
-
+Together with lineage and run summaries, this evidence helps reviewers and support teams understand what the production notebook checked and why it did or did not write outputs.

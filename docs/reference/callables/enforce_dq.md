@@ -1,18 +1,18 @@
 # enforce_dq
 
 **Module:** `data_quality`  
-**Classification:** Optional
+**Classification:** Essential
 
 ## Purpose
 
-Optionally apply reviewed DQ expectations when a team manually wires this helper into a 03_pc notebook.
+No summary available.
 
 ## Function manifest
 
 - Fully qualified function name: `fabricops_kit.data_quality.enforce_dq`
 - Short name: `enforce_dq`
 - Module: `data_quality`
-- Classification: Optional
+- Classification: Essential
 - Related module: `data_quality`
 - Source file path: `src/fabricops_kit/data_quality.py`
 - Source reference: <a href="../../api/modules/data_quality/#enforce_dq">Module source anchor</a>

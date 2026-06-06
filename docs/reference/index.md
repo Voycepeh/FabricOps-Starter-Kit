@@ -56,9 +56,9 @@ Use the finder below to look up public callable functions.
 
   </div>
 </article>
-<article id="build_dq_rule_records" class="reference-catalogue-item" data-callable-row="true" data-callable-name="build_dq_rule_records" data-callable-module="governance_review" data-callable-starter-path="—" data-role="essential" data-callable-purpose="Build append-only reviewed METADATA_DQ_RULES expectation records without production enforcement.">
+<article id="build_dq_rule_records" class="reference-catalogue-item" data-callable-row="true" data-callable-name="build_dq_rule_records" data-callable-module="governance_review" data-callable-starter-path="—" data-role="essential" data-callable-purpose="Build append-only approved METADATA_DQ_RULES records without enforcement.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/build_dq_rule_records/"><code>build_dq_rule_records</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Build append-only reviewed METADATA_DQ_RULES expectation records without production enforcement.</p>
+  <p class="reference-catalogue-item-purpose">Build append-only approved METADATA_DQ_RULES records without enforcement.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 8</span></summary><ul><li><code>_audit</code></li><li><code>_json</code></li><li><code>_value</code></li><li><code>_now_utc_iso</code></li><li><code>_resolve_action_by</code></li><li><code>build_dq_rule_key</code></li><li><code>build_metadata_column_key</code></li><li><code>build_metadata_table_key</code></li></ul></details>
@@ -137,9 +137,9 @@ Use the finder below to look up public callable functions.
 
   </div>
 </article>
-<article id="commit_dq_rules" class="reference-catalogue-item" data-callable-row="true" data-callable-name="commit_dq_rules" data-callable-module="governance_review" data-callable-starter-path="—" data-role="essential" data-callable-purpose="Persist reviewed DQ expectation records after an explicit human commit.">
+<article id="commit_dq_rules" class="reference-catalogue-item" data-callable-row="true" data-callable-name="commit_dq_rules" data-callable-module="governance_review" data-callable-starter-path="—" data-role="essential" data-callable-purpose="Persist approved DQ rule records after an explicit human commit.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/commit_dq_rules/"><code>commit_dq_rules</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Persist reviewed DQ expectation records after an explicit human commit.</p>
+  <p class="reference-catalogue-item-purpose">Persist approved DQ rule records after an explicit human commit.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>write_lakehouse_table</code></li></ul></details>
@@ -182,10 +182,10 @@ Use the finder below to look up public callable functions.
 
   </div>
 </article>
-<article id="enforce_dq" class="reference-catalogue-item" data-callable-row="true" data-callable-name="enforce_dq" data-callable-module="data_quality" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Optionally apply reviewed DQ expectations when a team manually wires this helper into a 03_pc notebook.">
+<article id="enforce_dq" class="reference-catalogue-item" data-callable-row="true" data-callable-name="enforce_dq" data-callable-module="data_quality" data-callable-starter-path="—" data-role="essential" data-callable-purpose="Enforce approved DQ rules and return structured deterministic outputs.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/enforce_dq/"><code>enforce_dq</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Optionally apply reviewed DQ expectations when a team manually wires this helper into a 03_pc notebook.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_quality/" title="Open data_quality module page" aria-label="Open data_quality module page">data_quality</a><span class="reference-chip reference-chip-role reference-chip-optional">Optional</span><span class="reference-chip">—</span></p>
+  <p class="reference-catalogue-item-purpose">Enforce approved DQ rules and return structured deterministic outputs.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_quality/" title="Open data_quality module page" aria-label="Open data_quality module page">data_quality</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 5</span></summary><ul><li><code>DQEnforcementResult</code></li><li><code>_load_active_dq_rules</code></li><li><code>_run_dq_rules</code></li><li><code>_split_dq_rows</code></li><li><code>validate_dq_rules</code></li></ul></details>
 
@@ -317,10 +317,10 @@ Use the finder below to look up public callable functions.
 
   </div>
 </article>
-<article id="load_dq_rules" class="reference-catalogue-item" data-callable-row="true" data-callable-name="load_dq_rules" data-callable-module="data_quality" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Load reviewed active DQ expectations for teams that manually implement them as notebook guardrails.">
+<article id="load_dq_rules" class="reference-catalogue-item" data-callable-row="true" data-callable-name="load_dq_rules" data-callable-module="data_quality" data-callable-starter-path="—" data-role="essential" data-callable-purpose="Load latest active approved DQ rules from append-only metadata history.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/load_dq_rules/"><code>load_dq_rules</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Load reviewed active DQ expectations for teams that manually implement them as notebook guardrails.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_quality/" title="Open data_quality module page" aria-label="Open data_quality module page">data_quality</a><span class="reference-chip reference-chip-role reference-chip-optional">Optional</span><span class="reference-chip">—</span></p>
+  <p class="reference-catalogue-item-purpose">Load latest active approved DQ rules from append-only metadata history.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_quality/" title="Open data_quality module page" aria-label="Open data_quality module page">data_quality</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_load_active_dq_rules</code></li></ul></details>
 
@@ -506,9 +506,9 @@ Use the finder below to look up public callable functions.
 
   </div>
 </article>
-<article id="validate_dq_rules" class="reference-catalogue-item" data-callable-row="true" data-callable-name="validate_dq_rules" data-callable-module="data_quality" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Validate canonical DQ expectation definitions before storage or optional notebook use.">
+<article id="validate_dq_rules" class="reference-catalogue-item" data-callable-row="true" data-callable-name="validate_dq_rules" data-callable-module="data_quality" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Validate canonical DQ rules before enforcement.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/validate_dq_rules/"><code>validate_dq_rules</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Validate canonical DQ expectation definitions before storage or optional notebook use.</p>
+  <p class="reference-catalogue-item-purpose">Validate canonical DQ rules before enforcement.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_quality/" title="Open data_quality module page" aria-label="Open data_quality module page">data_quality</a><span class="reference-chip reference-chip-role reference-chip-optional">Optional</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
 
@@ -632,9 +632,9 @@ Use the finder below to look up public callable functions.
 
   </div>
 </article>
-<article id="write_dq_rules" class="reference-catalogue-item" data-callable-row="true" data-callable-name="write_dq_rules" data-callable-module="data_quality" data-callable-starter-path="02_ex" data-role="essential" data-callable-purpose="Validate, build, and persist reviewed DQ expectations as metadata.">
+<article id="write_dq_rules" class="reference-catalogue-item" data-callable-row="true" data-callable-name="write_dq_rules" data-callable-module="data_quality" data-callable-starter-path="02_ex" data-role="essential" data-callable-purpose="Validate, build, and persist approved DQ rules.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/write_dq_rules/"><code>write_dq_rules</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Validate, build, and persist reviewed DQ expectations as metadata.</p>
+  <p class="reference-catalogue-item-purpose">Validate, build, and persist approved DQ rules.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_quality/" title="Open data_quality module page" aria-label="Open data_quality module page">data_quality</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">02_ex</span></p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 3</span></summary><ul><li><code>_build_dq_rule_history</code></li><li><code>validate_dq_rules</code></li><li><code>write_lakehouse_table</code></li></ul></details>

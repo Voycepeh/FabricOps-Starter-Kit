@@ -89,7 +89,7 @@ Owns table-scoped 04_gov catalogue selection, explicit approval record builders,
       <td><a href="../../reference/build_dq_rule_records/"><code>build_dq_rule_records</code></a></td>
       <td>Essential</td>
       <td>function</td>
-      <td>Build append-only reviewed METADATA_DQ_RULES expectation records without production enforcement.</td>
+      <td>Build append-only approved METADATA_DQ_RULES records without enforcement.</td>
       <td><a href="../../reference/internal/governance_review/_audit/"><code>_audit</code></a> (internal), <a href="../../reference/internal/governance_review/_json/"><code>_json</code></a> (internal), <a href="../../reference/internal/governance_review/_value/"><code>_value</code></a> (internal)</td>
     </tr>
     <tr>
@@ -124,7 +124,7 @@ Owns table-scoped 04_gov catalogue selection, explicit approval record builders,
       <td><a href="../../reference/commit_dq_rules/"><code>commit_dq_rules</code></a></td>
       <td>Essential</td>
       <td>function</td>
-      <td>Persist reviewed DQ expectation records after an explicit human commit.</td>
+      <td>Persist approved DQ rule records after an explicit human commit.</td>
       <td>—</td>
     </tr>
     <tr>

@@ -1,47 +1,41 @@
-# Table-scoped governance
+# Table-scoped governance review
 
-`04_gov` is the FabricOps v1.0.0 human review workflow for one catalogue table at a time.
+`04_gov_dataset_table` is the v1.0.0 governance review workflow. It selects a logical table directly from `METADATA_DATA_CATALOGUE`, loads the latest successful profile run, and lets a human approve append-only governance metadata.
 
-It uses catalogue/profile evidence written by `02_ex` or `03_pc`, lets reviewers add or approve column context, DQ expectations, and classification metadata, and commits those decisions to the configured metadata lakehouse.
-
-## v1.0.0 boundary
-
-`04_gov` does not enforce production rules. It does not block pipelines, mutate production data, or change `03_pc` output behavior.
-
-Governance DQ rules stored in `METADATA_DQ_RULES` are reviewed expectations/advisory metadata in v1.0.0 unless a team manually implements them as guardrails inside the relevant `03_pc` notebook.
-
-Separate data contracts are not required for v1.0.0. Data agreements remain available from `01_da`, but `04_gov` can review a catalogue table without requiring a separate agreement relationship.
-
-AI suggestions are optional and advisory only. A human reviewer must explicitly commit any accepted metadata.
+```text
+METADATA_DATA_CATALOGUE
+    |
+    +--> METADATA_DATA_LINEAGE_TABLE
+    |
+    +--> METADATA_COLUMN_CONTEXT
+    |
+    +--> METADATA_DQ_RULES
+    |
+    +--> METADATA_COLUMN_CLASSIFICATION
+```
 
 ## Implemented in v1.0.0
 
-| Area | Implemented behavior |
-| --- | --- |
-| Table selection | Selects from `METADATA_DATA_CATALOGUE`. |
-| Column context review | Commits reviewed business context to `METADATA_COLUMN_CONTEXT`. |
-| DQ expectation review | Commits reviewed expectations to `METADATA_DQ_RULES` as advisory metadata. |
-| Classification review | Commits reviewed PII and sensitivity decisions to `METADATA_COLUMN_CLASSIFICATION`. |
-| AI assistance | Can draft suggestions when configured, but suggestions remain editable and advisory. |
+- A single data catalogue table stores table context and column profile evidence.
+- `03_pc` writes profile evidence to `METADATA_DATA_CATALOGUE` and table lineage to `METADATA_DATA_LINEAGE_TABLE`.
+- `04_gov` approves column business context into `METADATA_COLUMN_CONTEXT`.
+- `04_gov` approves DQ-rule metadata into `METADATA_DQ_RULES` without executing the rules.
+- `04_gov` approves sensitivity and PII decisions into `METADATA_COLUMN_CLASSIFICATION`.
+- Fabric AI suggestions are optional, editable, and advisory. No AI suggestion is written unless a human runs an explicit commit action.
 
-## Planned after v1.0.0
+## Planned
 
-| Planned enhancement | Notes |
-| --- | --- |
-| Optional metadata-driven DQ rule execution | Let `03_pc` notebooks opt into executing reviewed metadata rules. |
-| Rule promotion workflow | Promote reviewed expectations into implemented production guardrails. |
-| Governance dashboard improvements | Improve reporting over reviewed context, expectations, and classifications. |
-| Richer AI-assisted review | Improve suggestions while keeping humans accountable for commits. |
+- Table access metadata.
+- AI-assisted column lineage.
+- `03_pc` enforcement of approved DQ rules and classification metadata.
 
-## Review workflow
+## Removed from the v1.0.0 architecture
 
-1. Select a catalogue table created by `02_ex` or `03_pc`.
-2. Review observed columns, profiles, and existing metadata.
-3. Optionally generate AI suggestions where configured.
-4. Edit, approve, reject, or defer suggested context, expectations, and classifications.
-5. Commit reviewed metadata to the relevant metadata tables.
-6. If a DQ expectation should become enforceable, manually implement the check inside the relevant `03_pc` notebook and smoke test the failure behavior.
+- Separate physical table-level and column-level catalogue tables.
+- Profile rows stored outside the canonical catalogue.
+- A separate data-contract metadata table.
+- Mandatory Data Agreement relationship for `04_gov`.
 
 ## Enforcement boundary
 
-For v1.0.0, `03_pc` is the production guardrail notebook. `04_gov` supplies reviewed metadata that helps people understand and improve production notebooks, but it is not itself an enforcement engine.
+For v1.0.0, schema and drift guardrails remain defined in each `03_pc` notebook. Governance metadata is authored and approved by `04_gov`; production enforcement is a later enhancement.

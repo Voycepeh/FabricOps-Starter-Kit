@@ -5,7 +5,7 @@
 
 ## Purpose
 
-Build append-only reviewed METADATA_DQ_RULES expectation records without production enforcement.
+Build append-only approved METADATA_DQ_RULES records without enforcement.
 
 ## Function manifest
 

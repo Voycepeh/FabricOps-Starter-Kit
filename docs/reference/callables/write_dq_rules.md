@@ -5,7 +5,7 @@
 
 ## Purpose
 
-Validate, build, and persist reviewed DQ expectations as metadata.
+No summary available.
 
 ## Function manifest
 

@@ -45,7 +45,7 @@
     {
       "module_name": "data_quality",
       "visibility": "public",
-      "module_summary": "Owns DQ rule drafting, review metadata, and optional helper functions for teams that manually implement DQ guardrails.",
+      "module_summary": "Owns DQ rule drafting, review, enforcement, quarantine, and quality results.",
       "sidebar_group": "2. Analyst / data scientist",
       "sidebar_include": true
     },
@@ -372,7 +372,7 @@
     {
       "module_name": "data_quality",
       "visibility": "public",
-      "module_summary": "Owns DQ rule drafting, review metadata, and optional helper functions for teams that manually implement DQ guardrails.",
+      "module_summary": "Owns DQ rule drafting, review, enforcement, quarantine, and quality results.",
       "sidebar_group": "2. Analyst / data scientist",
       "sidebar_include": true,
       "callable_name": "assert_dq_passed",
@@ -384,7 +384,7 @@
     {
       "module_name": "data_quality",
       "visibility": "public",
-      "module_summary": "Owns DQ rule drafting, review metadata, and optional helper functions for teams that manually implement DQ guardrails.",
+      "module_summary": "Owns DQ rule drafting, review, enforcement, quarantine, and quality results.",
       "sidebar_group": "2. Analyst / data scientist",
       "sidebar_include": true,
       "callable_name": "draft_dq_rules",
@@ -396,19 +396,19 @@
     {
       "module_name": "data_quality",
       "visibility": "public",
-      "module_summary": "Owns DQ rule drafting, review metadata, and optional helper functions for teams that manually implement DQ guardrails.",
+      "module_summary": "Owns DQ rule drafting, review, enforcement, quarantine, and quality results.",
       "sidebar_group": "2. Analyst / data scientist",
       "sidebar_include": true,
       "callable_name": "enforce_dq",
       "callable_visibility": "public",
-      "callable_role": "optional",
+      "callable_role": "essential",
       "template_notebook": "\u2014",
       "template_segment": "\u2014"
     },
     {
       "module_name": "data_quality",
       "visibility": "public",
-      "module_summary": "Owns DQ rule drafting, review metadata, and optional helper functions for teams that manually implement DQ guardrails.",
+      "module_summary": "Owns DQ rule drafting, review, enforcement, quarantine, and quality results.",
       "sidebar_group": "2. Analyst / data scientist",
       "sidebar_include": true,
       "callable_name": "get_dq_review_results",
@@ -420,19 +420,19 @@
     {
       "module_name": "data_quality",
       "visibility": "public",
-      "module_summary": "Owns DQ rule drafting, review metadata, and optional helper functions for teams that manually implement DQ guardrails.",
+      "module_summary": "Owns DQ rule drafting, review, enforcement, quarantine, and quality results.",
       "sidebar_group": "2. Analyst / data scientist",
       "sidebar_include": true,
       "callable_name": "load_dq_rules",
       "callable_visibility": "public",
-      "callable_role": "optional",
+      "callable_role": "essential",
       "template_notebook": "\u2014",
       "template_segment": "\u2014"
     },
     {
       "module_name": "data_quality",
       "visibility": "public",
-      "module_summary": "Owns DQ rule drafting, review metadata, and optional helper functions for teams that manually implement DQ guardrails.",
+      "module_summary": "Owns DQ rule drafting, review, enforcement, quarantine, and quality results.",
       "sidebar_group": "2. Analyst / data scientist",
       "sidebar_include": true,
       "callable_name": "validate_dq_rules",
@@ -444,7 +444,7 @@
     {
       "module_name": "data_quality",
       "visibility": "public",
-      "module_summary": "Owns DQ rule drafting, review metadata, and optional helper functions for teams that manually implement DQ guardrails.",
+      "module_summary": "Owns DQ rule drafting, review, enforcement, quarantine, and quality results.",
       "sidebar_group": "2. Analyst / data scientist",
       "sidebar_include": true,
       "callable_name": "widget_review_dq_rule_deactivations",
@@ -456,7 +456,7 @@
     {
       "module_name": "data_quality",
       "visibility": "public",
-      "module_summary": "Owns DQ rule drafting, review metadata, and optional helper functions for teams that manually implement DQ guardrails.",
+      "module_summary": "Owns DQ rule drafting, review, enforcement, quarantine, and quality results.",
       "sidebar_group": "2. Analyst / data scientist",
       "sidebar_include": true,
       "callable_name": "widget_review_dq_rules",
@@ -468,7 +468,7 @@
     {
       "module_name": "data_quality",
       "visibility": "public",
-      "module_summary": "Owns DQ rule drafting, review metadata, and optional helper functions for teams that manually implement DQ guardrails.",
+      "module_summary": "Owns DQ rule drafting, review, enforcement, quarantine, and quality results.",
       "sidebar_group": "2. Analyst / data scientist",
       "sidebar_include": true,
       "callable_name": "write_dq_rules",

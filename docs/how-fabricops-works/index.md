@@ -1,77 +1,80 @@
 # How FabricOps Works
 
-FabricOps Starter Kit is a Fabric-native notebook operating model for metadata setup, agreement intake, exploration, production notebook guardrails, profiling evidence, lineage, governance review, and handover.
+FabricOps Starter Kit is a lightweight Microsoft Fabric notebook starter kit.
 
-It is not a full data product platform. It gives teams a small, reusable structure for running quality-checked notebooks in Microsoft Fabric and storing the evidence needed for governance and support.
+We adopt a Fabric notebook-first approach for data exploration, data pipelines, and governance.
 
-## v1.0.0 scope
+It helps governance teams, analysts, and engineers work from a shared structure without adding a large platform around Fabric.
 
-In v1.0.0, the production control boundary is each `03_pc` notebook. That notebook owns the implemented guardrails for its pipeline: schema checks, data-change checks, notebook-defined DQ checks, output writes, lineage records, profiling evidence, and run summaries.
+These notebooks capture agreements, profiling results, quality rules, classifications, lineage, drift checks, and production evidence. 
+The evidence is stored in a metadata lakehouse and presented through a Power BI dashboard.
 
-Separate data contracts are not required for v1.0.0. Data agreements remain part of `01_da`, but they are intake and stewardship metadata rather than a separate enforcement layer.
+**The result is a self-contained Fabric workflow for governing data products without adding a separate platform.**
+- Configure the environment so every notebook writes to the right workspace, lakehouse, warehouse, and metadata target.
+- Capture the agreement so ownership, approved usage, and stewardship are recorded before delivery.
+- Explore and build with notebooks so profiling, transformation, lineage, drift, and quality evidence are created as part of the work.
+- Review governance centrally so business context, rules, classifications, and exceptions are approved in one place.
+- Run approved notebooks in production so production outputs are created from production config and approved metadata.
+- Present the evidence in Power BI so users can see coverage, health, lineage, and readiness without reading raw metadata tables.
 
-`04_gov` is a human review workflow for column context, DQ expectations, and classification metadata. It does not enforce production rules. Governance DQ rules stored in metadata are reviewed expectations and advisory metadata unless a team manually implements them as guardrails inside the relevant `03_pc` notebook.
+## Workspace setup
 
-AI suggestions are optional and advisory only. A human must review and commit governance metadata.
+<figure markdown>
+  ![FabricOps Starter Kit operating model with Governance, Engineering Dev, and Engineering Prod workspaces](../assets/fabricops-operating-model-overview.png){ .full-width }
+  <figcaption>Governance, Engineering Dev, and Engineering Prod workspaces separate shared metadata from development and production processing.</figcaption>
+</figure>
 
-## Implemented in v1.0.0
+The workspace operating model explains how the Governance, Engineering Dev, and Engineering Prod workspaces work together, including production promotion and storing final notebook evidence.
 
-| Capability | Primary template or component |
-| --- | --- |
-| Metadata lakehouse setup | `00_env_config` |
-| Data agreement, steward, and evidence tables | `01_da` |
-| Notebook registry | `00_env_config`, `02_ex`, `03_pc` |
-| Production notebook template with schema validation and data-change monitoring | `03_pc` |
-| Lakehouse and warehouse IO helpers | `fabricops_kit` helper wheel |
-| Profiling/catalogue evidence | `02_ex`, `03_pc` |
-| Lineage records | `03_pc` |
-| Table-scoped governance review | `04_gov` |
-| Human-reviewed column context, DQ expectation, and classification metadata | `04_gov` |
-| Handover summary support | Handover helpers and stored notebook evidence |
 
-## Planned after v1.0.0
+<div class="home-cta" markdown="1">
 
-| Planned enhancement | Notes |
-| --- | --- |
-| Full Fabric validation notes from real workspace testing | Expand release evidence from representative workspaces. |
-| Governance dashboard improvements | Improve dashboard starter assets and reporting guidance. |
-| Optional metadata-driven DQ rule execution | Allow pipelines to opt into executing reviewed metadata rules. |
-| Rule promotion workflow | Promote reviewed expectations into implemented `03_pc` guardrails. |
-| Richer AI-assisted governance suggestions | Keep AI optional, advisory, and human-reviewed. |
-| More complete operational monitoring | Add broader run health and support views. |
+[Open Workspace Operating Model](workspace-operating-model.md){ .md-button .md-button--primary }
 
-## Notebook flow
+</div>
 
-| Step | Notebook | What it does |
-| ---: | --- | --- |
-| 0 | `00_env_config` | Prepares environment paths and creates or validates metadata tables. |
-| 1 | `01_da` | Captures agreement, steward, and evidence metadata. |
-| 2 | `02_ex` | Demonstrates example source/topic setup, exploration, profiling, and catalogue evidence. |
-| 3 | `03_pc` | Runs the production-control flow with schema/data-change guardrails, writes outputs, records profiles, writes lineage, and produces run evidence. |
-| 4 | `04_gov` | Reviews and commits governance metadata for column context, DQ expectations, and classifications. |
-| 5 | Rerun `03_pc` | Confirms the production notebook still passes its implemented guardrails; manually implemented governance expectations can be enforced here. |
+## Notebook workflow
 
-## Metadata evidence
+<figure markdown>
+  ![Role-based notebook workflow from environment configuration through AI-assisted handover](../assets/fabricops-role-workflow.png){ .full-width }
+  <figcaption>The notebook flow connects configuration, agreements, exploration, pipeline delivery, governance enrichment, enforcement, and production handover evidence.</figcaption>
+</figure>
 
-FabricOps stores metadata evidence in a configured metadata lakehouse. `00_env_config` owns metadata target routing and table setup. Workflow notebooks append or read metadata; they do not create their own separate metadata stores.
+The notebook templates page explains what each notebook owns, who uses it, and how the notebook flow passes reusable evidence from one role to the next.
+<div class="home-cta" markdown="1">
 
-Key metadata themes are:
+[Open Notebook Templates](notebook-templates.md){ .md-button .md-button--primary }
 
-- agreement, steward, and evidence metadata;
-- notebook registration and run traceability;
-- profiling/catalogue evidence;
-- lineage records;
-- reviewed column context;
-- reviewed DQ expectations;
-- reviewed classification metadata;
-- handover summaries.
+</div>
 
-## What to read next
 
-| Page | Use it for |
-| --- | --- |
-| [Workspace Operating Model](workspace-operating-model.md) | Set up Fabric workspaces and promotion boundaries. |
-| [Notebook Templates](notebook-templates.md) | Understand what each template owns. |
-| [Metadata Tables](metadata-tables.md) | Review metadata table responsibilities. |
-| [Table-Scoped Governance](table-scoped-governance.md) | Understand `04_gov` human review. |
-| [Metadata Dashboard](metadata-dashboard.md) | See planned dashboard/reporting guidance. |
+## Metadata architecture
+
+<figure markdown>
+  ![Shared FabricOps metadata model connecting governance and engineering notebooks](../assets/fabricops-metadata-model.png){ .full-width }
+  <figcaption>The governance metadata lakehouse acts as the shared coordination layer between governance and engineering.</figcaption>
+</figure>
+
+The metadata tables page explains how the notebooks store reusable evidence for agreements, profiles, quality rules, governance review, lineage, drift, and notebook registration.
+
+<div class="home-cta" markdown="1">
+
+[Open Metadata Tables](metadata-tables.md){ .md-button .md-button--primary }
+
+</div>
+
+
+## Metadata dashboard
+
+<figure markdown>
+  ![FabricOps metadata dashboard wireframe](../assets/fabricops-metadata-dashboard.png){ .full-width }
+  <figcaption>The metadata dashboard turns collected metadata into a user-facing Power BI reporting layer.</figcaption>
+</figure>
+
+The metadata dashboard page explains the recommended dashboard wireframe and the assembled views consumed by the dashboard.
+
+<div class="home-cta" markdown="1">
+
+[Open Metadata Dashboard](metadata-dashboard.md){ .md-button .md-button--primary }
+
+</div>

@@ -1,18 +1,18 @@
 # load_dq_rules
 
 **Module:** `data_quality`  
-**Classification:** Optional
+**Classification:** Essential
 
 ## Purpose
 
-Load reviewed active DQ expectations for teams that manually implement them as notebook guardrails.
+No summary available.
 
 ## Function manifest
 
 - Fully qualified function name: `fabricops_kit.data_quality.load_dq_rules`
 - Short name: `load_dq_rules`
 - Module: `data_quality`
-- Classification: Optional
+- Classification: Essential
 - Related module: `data_quality`
 - Source file path: `src/fabricops_kit/data_quality.py`
 - Source reference: <a href="../../api/modules/data_quality/#load_dq_rules">Module source anchor</a>
