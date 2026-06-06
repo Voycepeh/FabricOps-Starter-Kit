@@ -3,8 +3,8 @@
 Use this page as a callable lookup after you understand the notebook flow.
 
 - Use [Template Function Map](template-function-map.md) to see what notebook users actually call.
-- Use the Function catalogue below to browse the public v1 callable API.
-- Use Implementation Modules only when debugging or maintaining the package internals.
+- Use the function catalogue below to browse the public v1 callable API.
+- Use [Implementation Modules](../api/modules/) only when debugging or maintaining source internals.
 
 > Graph exploration is intentionally deferred. Future PR may use Neo4j or a proper graph backend.
 
@@ -74,7 +74,7 @@ Use the finder below to look up public callable functions.
   <p class="reference-catalogue-item-purpose">Load column profile rows for the selected catalogue table.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">04_gov_dataset_table</span></p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 5</span></summary><ul><li><code>read_lakehouse_table</code></li><li><code>_coerce_rows</code></li><li><code>_is_success</code></li><li><code>_row_metadata_table_key</code></li><li><code>_value</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 5</span></summary><ul><li><code>read_lakehouse_table</code></li><li><code>_coerce_rows</code></li><li><code>_is_success</code></li><li><code>_value</code></li><li><code>_build_metadata_table_key</code></li></ul></details>
 
   </div>
 </article>
@@ -146,7 +146,7 @@ Use the finder below to look up public callable functions.
   <p class="reference-catalogue-item-purpose">Persist approved table-governance context, DQ-rule, and classification evidence in one v1 commit action.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">04_gov_dataset_table</span></p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 6</span></summary><ul><li><code>_build_classification_records</code></li><li><code>_build_column_context_records</code></li><li><code>_build_dq_rule_records</code></li><li><code>_commit_column_classification</code></li><li><code>_commit_column_context</code></li><li><code>_commit_dq_rules</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 4</span></summary><ul><li><code>write_lakehouse_table</code></li><li><code>_build_classification_records</code></li><li><code>_build_column_context_records</code></li><li><code>_build_dq_rule_records</code></li></ul></details>
 
   </div>
 </article>
@@ -273,7 +273,7 @@ Use the finder below to look up public callable functions.
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">03_pc_agreement_pipeline_template</span></p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_get_store</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 10</span></summary><ul><li><code>_ensure_metadata_tables</code></li><li><code>_write_row</code></li><li><code>_write_dq_rules</code></li><li><code>_seed_minimal_sample_source_table</code></li><li><code>_commit_column_classification</code></li><li><code>_commit_column_context</code></li><li><code>_commit_dq_rules</code></li><li><code>_setup_governance_metadata_tables</code></li><li><code>_register_current_notebook</code></li><li><code>_setup_notebook_registry_table</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 8</span></summary><ul><li><code>_ensure_metadata_tables</code></li><li><code>_write_row</code></li><li><code>_write_dq_rules</code></li><li><code>_seed_minimal_sample_source_table</code></li><li><code>_setup_governance_metadata_tables</code></li><li><code>record_table_governance</code></li><li><code>_register_current_notebook</code></li><li><code>_setup_notebook_registry_table</code></li></ul></details>
   </div>
 </article>
 <article id="write_warehouse_table" class="reference-catalogue-item" data-callable-row="true" data-callable-name="write_warehouse_table" data-callable-module="fabric_input_output" data-callable-starter-path="03_pc_agreement_pipeline_template" data-role="essential" data-callable-purpose="Write a DataFrame to a configured Fabric warehouse target.">

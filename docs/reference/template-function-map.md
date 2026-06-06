@@ -292,7 +292,7 @@ Table-scoped governance review and approved metadata recording.
       <td>[`load_catalogue_profile_rows`](./callables/load_catalogue_profile_rows.md)</td>
       <td>Callable orchestration wrapper</td>
       <td>Load column profile rows for the selected catalogue table.</td>
-      <td>`_coerce_rows`, `_is_success`, `_row_metadata_table_key`, `_value`</td>
+      <td>`_build_metadata_table_key`, `_coerce_rows`, `_is_success`, `_value`</td>
       <td>Check dependency outputs and metadata writes.</td>
     </tr>
     <tr>
@@ -320,7 +320,7 @@ Table-scoped governance review and approved metadata recording.
       <td>[`record_table_governance`](./callables/record_table_governance.md)</td>
       <td>Callable orchestration wrapper</td>
       <td>Persist approved table-governance context, DQ-rule, and classification evidence in one v1 commit action.</td>
-      <td>`_build_classification_records`, `_build_column_context_records`, `_build_dq_rule_records`, `_commit_column_classification`, `_commit_column_context`, `_commit_dq_rules`</td>
+      <td>`_build_classification_records`, `_build_column_context_records`, `_build_dq_rule_records`</td>
       <td>Check dependency outputs and metadata writes.</td>
     </tr>
   </tbody>

@@ -27,7 +27,7 @@ No summary available.
 - <a href="../internal/governance_review/_build_column_context_records/"><code>fabricops_kit.governance_review._build_column_context_records</code></a>
 - <a href="../internal/governance_review/_build_dq_rule_records/"><code>fabricops_kit.governance_review._build_dq_rule_records</code></a>
 - <a href="../internal/governance_review/_catalogue_table_options/"><code>fabricops_kit.governance_review._catalogue_table_options</code></a>
-- <a href="../internal/governance_review/_row_metadata_table_key/"><code>fabricops_kit.governance_review._row_metadata_table_key</code></a>
+- <a href="../load_catalogue_profile_rows/"><code>fabricops_kit.governance_review.load_catalogue_profile_rows</code></a>
 
 ## Outbound references
 - <a href="../internal/metadata/_sha256_key/"><code>fabricops_kit.metadata._sha256_key</code></a>

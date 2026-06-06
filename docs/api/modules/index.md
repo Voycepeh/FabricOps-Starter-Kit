@@ -1,8 +1,8 @@
 # Implementation Module Catalogue
 
-Module pages document source modules and internal helpers for package maintainers.
+Implementation modules are source-level reference pages for package maintainers and internal helper traceability.
 
-They are useful for debugging and implementation traceability, but they are not the public v1 callable surface. The public v1 callable surface is controlled by `src/fabricops_kit/__init__.py::__all__` and is surfaced through the Function Reference catalogue.
+They are useful for debugging implementation details, but they are not the public v1 callable API. The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__all__` and is surfaced through the Function Reference catalogue.
 
 Short-form modules remain import-compatible aliases but are intentionally hidden from this user-facing catalogue.
 

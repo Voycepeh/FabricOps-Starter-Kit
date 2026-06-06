@@ -16,11 +16,10 @@ No summary available.
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
 - Source reference: <a href="../../api/modules/governance_review/#_coerce_rows">Module source anchor</a>
-- Inbound references count: 4
+- Inbound references count: 3
 - Outbound references count: 0
 
 ## Inbound references
-- <a href="../internal/governance_review/_latest_by_column/"><code>fabricops_kit.governance_review._latest_by_column</code></a>
 - <a href="../internal/governance_review/_setup_governance_metadata_tables/"><code>fabricops_kit.governance_review._setup_governance_metadata_tables</code></a>
 - <a href="../load_catalogue_profile_rows/"><code>fabricops_kit.governance_review.load_catalogue_profile_rows</code></a>
 - <a href="../widget_select_catalogue_table/"><code>fabricops_kit.governance_review.widget_select_catalogue_table</code></a>
