@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import importlib
 import json
-from dataclasses import dataclass
 from typing import Any, Iterable
 
 from .fabric_input_output import read_lakehouse_table, write_lakehouse_table
@@ -21,41 +20,6 @@ SENSITIVITY_LABELS = ["public", "internal", "confidential", "restricted"]
 PERSONAL_DATA_CLASSIFICATIONS = ["not_personal_data", "direct_identifier", "indirect_identifier", "sensitive_personal_data", "unknown"]
 
 _SELECTED_CATALOGUE_TABLE: dict[str, Any] | None = None
-
-
-@dataclass(frozen=True)
-class CatalogueTableSelection:
-    """Stable identity for a profiled table selected from the data catalogue.
-
-    Parameters
-    ----------
-    environment_name, dataset_name, table_name : str
-        Logical table identity selected from ``METADATA_DATA_CATALOGUE``.
-    metadata_table_key : str
-        Stable table key preserved from catalogue rows or derived from the logical identity.
-    profile_run_id : str
-        Latest successful profile run selected for governance review.
-    profile_stage : str
-        Profile stage such as ``source`` or ``target``.
-    layer, asset_kind : str
-        Display context from the catalogue.
-    profiled_at : str, optional
-        Profile timestamp for the selected run.
-    """
-
-    environment_name: str
-    dataset_name: str
-    table_name: str
-    metadata_table_key: str
-    profile_run_id: str
-    profile_stage: str
-    layer: str = ""
-    asset_kind: str = ""
-    profiled_at: str = ""
-
-    def as_dict(self) -> dict[str, Any]:
-        """Return the selection as a plain dictionary."""
-        return dict(self.__dict__)
 
 
 def _coerce_rows(rows_or_df: Any) -> list[dict[str, Any]]:
@@ -155,13 +119,6 @@ def _is_table_not_found_error(exc: Exception) -> bool:
     )
     non_not_found_markers = ("permission", "access denied", "unauthorized", "forbidden", "authentication", "credential", "malformed", "invalid configuration")
     return any(marker in message for marker in not_found_markers) and not any(marker in message for marker in non_not_found_markers)
-
-
-def _row_metadata_table_key(row: dict[str, Any]) -> str:
-    explicit = _value(row, "metadata_table_key")
-    if explicit:
-        return str(explicit)
-    return _build_metadata_table_key(_value(row, "environment_name"), _value(row, "dataset_name"), _value(row, "table_name"))
 
 
 def _setup_governance_metadata_tables(*, spark: Any, config: Any, env: str) -> dict[str, Any]:
@@ -327,56 +284,29 @@ def widget_select_catalogue_table(config: Any, env: str, *, spark_session: Any):
 def load_catalogue_profile_rows(config: Any, env: str, selection: dict[str, Any], *, spark_session: Any) -> list[dict[str, Any]]:
     """Load column rows for the selected latest successful profile run."""
     rows = _coerce_rows(read_lakehouse_table(config, env, "metadata", CATALOGUE_TABLE, spark_session=spark_session))
-    filtered = [
-        r for r in rows
-        if _is_success(r)
-        and str(_value(r, "environment_name")) == str(selection["environment_name"])
-        and str(_value(r, "dataset_name")) == str(selection["dataset_name"])
-        and str(_value(r, "table_name")) == str(selection["table_name"])
-        and str(_value(r, "profile_run_id")) == str(selection["profile_run_id"])
-        and str(_value(r, "profile_stage")) == str(selection["profile_stage"])
-        and _row_metadata_table_key(r) == str(selection["metadata_table_key"])
-    ]
+    filtered = []
+    for row in rows:
+        table_key = str(
+            _value(row, "metadata_table_key")
+            or _build_metadata_table_key(
+                _value(row, "environment_name"),
+                _value(row, "dataset_name"),
+                _value(row, "table_name"),
+            )
+        )
+        if (
+            _is_success(row)
+            and str(_value(row, "environment_name")) == str(selection["environment_name"])
+            and str(_value(row, "dataset_name")) == str(selection["dataset_name"])
+            and str(_value(row, "table_name")) == str(selection["table_name"])
+            and str(_value(row, "profile_run_id")) == str(selection["profile_run_id"])
+            and str(_value(row, "profile_stage")) == str(selection["profile_stage"])
+            and table_key == str(selection["metadata_table_key"])
+        ):
+            filtered.append(row)
     if not filtered:
         raise ValueError("The selected successful profile has no column rows in METADATA_DATA_CATALOGUE.")
     return filtered
-
-
-def _build_profile_summary(profile_rows: list[dict[str, Any]], selection: dict[str, Any]) -> dict[str, Any]:
-    """Build a concise table summary for display before governance review."""
-    if not profile_rows:
-        raise ValueError("Cannot summarize an empty selected profile.")
-    first = profile_rows[0]
-    return {
-        "environment_name": selection.get("environment_name"), "dataset_name": selection.get("dataset_name"), "table_name": selection.get("table_name"),
-        "layer": selection.get("layer") or _value(first, "layer"), "asset_kind": selection.get("asset_kind") or _value(first, "asset_kind"),
-        "profile_stage": selection.get("profile_stage") or _value(first, "profile_stage"), "profile_run_id": selection.get("profile_run_id"),
-        "profiled_at": max(str(_value(r, "profiled_at")) for r in profile_rows), "row_count": max(int(_value(r, "row_count", 0) or 0) for r in profile_rows),
-        "column_count": len({str(_value(r, "column_name")) for r in profile_rows if _value(r, "column_name")}),
-    }
-
-
-def _latest_by_column(rows: Any, *, approved_status: str = "approved") -> dict[str, dict[str, Any]]:
-    """Return latest approved metadata row by ``metadata_column_key``."""
-    filtered = [r for r in _coerce_rows(rows) if str(r.get("review_status") or r.get("status") or "").lower() == approved_status]
-    out: dict[str, dict[str, Any]] = {}
-    for row in sorted(filtered, key=lambda r: str(r.get("approved_at") or r.get("_committed_at") or "")):
-        key = str(row.get("metadata_column_key") or "")
-        if key:
-            out[key] = row
-    return out
-
-
-def _optional_ai_generate_response(prepared_df: Any, *, prompt: str, output_col: str = "ai_suggestion") -> Any | None:
-    """Run Fabric AI when available and return ``None`` when unavailable."""
-    ai = getattr(prepared_df, "ai", None)
-    if ai is None or not hasattr(ai, "generate_response"):
-        return None
-    return ai.generate_response(prompt=prompt, is_prompt_template=True, output_col=output_col)
-
-
-def _audit(config: Any, env: str, approved_by: str | None) -> dict[str, str]:
-    return _build_runtime_audit_fields(config=config, env=env, committed_by=approved_by)
 
 
 def _build_column_context_records(profile_rows: list[dict[str, Any]], reviewed_rows: list[dict[str, Any]], *, config: Any = None, env: str | None = None, approved_by: str | None = None) -> list[dict[str, Any]]:
@@ -384,7 +314,7 @@ def _build_column_context_records(profile_rows: list[dict[str, Any]], reviewed_r
     profile = {str(_value(r, "column_name")): r for r in profile_rows}
     actor = _resolve_action_by(approved_by)
     now = _now_utc_iso()
-    audit = _audit(config, env or "", actor) if config is not None and env is not None else {}
+    audit = _build_runtime_audit_fields(config=config, env=env or "", committed_by=actor) if config is not None and env is not None else {}
     rows = []
     for review in reviewed_rows or []:
         if str(review.get("review_status", "approved")).lower() != "approved" or not review.get("commit"):
@@ -408,7 +338,7 @@ def _build_dq_rule_records(profile_rows: list[dict[str, Any]], reviewed_rules: l
     """Build append-only approved DQ-rule records without enforcing them."""
     actor = _resolve_action_by(approved_by)
     now = _now_utc_iso()
-    audit = _audit(config, env or "", actor) if config is not None and env is not None else {}
+    audit = _build_runtime_audit_fields(config=config, env=env or "", committed_by=actor) if config is not None and env is not None else {}
     profile = {str(_value(r, "column_name")): r for r in profile_rows}
     rows = []
     for rule in reviewed_rules or []:
@@ -439,7 +369,7 @@ def _build_classification_records(profile_rows: list[dict[str, Any]], reviewed_r
     """Build append-only approved sensitivity and PII classification records."""
     actor = _resolve_action_by(approved_by)
     now = _now_utc_iso()
-    audit = _audit(config, env or "", actor) if config is not None and env is not None else {}
+    audit = _build_runtime_audit_fields(config=config, env=env or "", committed_by=actor) if config is not None and env is not None else {}
     profile = {str(_value(r, "column_name")): r for r in profile_rows}
     rows = []
     for review in reviewed_rows or []:
@@ -474,28 +404,6 @@ def _json(value: Any) -> str:
     if isinstance(value, str):
         return value
     return json.dumps(value, sort_keys=True)
-
-
-def _commit_column_context(config: Any, env: str, rows: list[dict[str, Any]], *, spark_session: Any, mode: str = "append") -> list[dict[str, Any]]:
-    """Persist approved business context rows after explicit human commit."""
-    if rows:
-        write_lakehouse_table(spark_session.createDataFrame(rows), config, env, "metadata", COLUMN_CONTEXT_TABLE, mode=mode)
-    return rows
-
-
-def _commit_dq_rules(config: Any, env: str, rows: list[dict[str, Any]], *, spark_session: Any, mode: str = "append") -> list[dict[str, Any]]:
-    """Persist approved DQ rules after explicit human commit."""
-    if rows:
-        write_lakehouse_table(spark_session.createDataFrame(rows), config, env, "metadata", DQ_RULES_TABLE, mode=mode)
-    return rows
-
-
-def _commit_column_classification(config: Any, env: str, rows: list[dict[str, Any]], *, spark_session: Any, mode: str = "append") -> list[dict[str, Any]]:
-    """Persist approved classification rows after explicit human commit."""
-    if rows:
-        write_lakehouse_table(spark_session.createDataFrame(rows), config, env, "metadata", COLUMN_CLASSIFICATION_TABLE, mode=mode)
-    return rows
-
 
 
 def _display_review_guidance(title: str, profile_rows: list[dict[str, Any]], instructions: str) -> list[dict[str, Any]]:
@@ -577,6 +485,7 @@ def widget_review_column_classification(profile_rows: list[dict[str, Any]]) -> l
         "Review sensitivity labels, personal-data classifications, identifier types, and handling requirements.",
     )
 
+
 def record_table_governance(
     config: Any,
     env: str,
@@ -644,44 +553,17 @@ def record_table_governance(
         env=env,
         approved_by=approved_by,
     )
-    _commit_column_context(config, env, context_records, spark_session=spark_session, mode=mode)
-    _commit_dq_rules(config, env, dq_rule_records, spark_session=spark_session, mode=mode)
-    _commit_column_classification(config, env, classification_records, spark_session=spark_session, mode=mode)
+    writes = {
+        COLUMN_CONTEXT_TABLE: context_records,
+        DQ_RULES_TABLE: dq_rule_records,
+        COLUMN_CLASSIFICATION_TABLE: classification_records,
+    }
+    for table_name, records in writes.items():
+        if records:
+            write_lakehouse_table(spark_session.createDataFrame(records), config, env, "metadata", table_name, mode=mode)
+
     return {
         "column_context": context_records,
         "dq_rules": dq_rule_records,
         "column_classification": classification_records,
     }
-
-
-def _widget_review_table_governance(profile_rows: list[dict[str, Any]], *, existing_context: dict[str, dict[str, Any]] | None = None, existing_rules: dict[str, dict[str, Any]] | None = None, existing_classification: dict[str, dict[str, Any]] | None = None) -> dict[str, Any]:
-    """Render lightweight copy-ready review guidance for three governance stages.
-
-    Parameters
-    ----------
-    profile_rows : list of dict
-        Selected column profile evidence.
-    existing_context, existing_rules, existing_classification : dict, optional
-        Latest approved state keyed by column key.
-
-    Returns
-    -------
-    dict[str, Any]
-        Review state scaffold. Users explicitly pass edited rows to build and
-        commit helpers; rendering this widget never writes metadata.
-    """
-    widgets = importlib.import_module("ipywidgets")
-    from IPython import display as ip
-
-    state = {"context": existing_context or {}, "rules": existing_rules or {}, "classification": existing_classification or {}}
-    columns = [str(_value(row, "column_name")) for row in profile_rows]
-    html = widgets.HTML(
-        "<h3>04_gov human review stages</h3>"
-        "<ol><li>Business context: edit rows and call record_table_governance only after approval.</li>"
-        "<li>DQ rules: author rules and call record_table_governance only after approval.</li>"
-        "<li>Sensitivity/PII: review labels and call record_table_governance only after approval.</li></ol>"
-        f"<p><b>Columns loaded:</b> {', '.join(columns)}</p>"
-        "<p>AI suggestions are advisory and are never written by this widget.</p>"
-    )
-    ip.display(html)
-    return state
