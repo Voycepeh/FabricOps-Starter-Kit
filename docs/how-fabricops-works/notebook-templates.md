@@ -1,39 +1,43 @@
 # Notebook Templates
 
-FabricOps Starter Kit uses five notebook templates. Each notebook has a clear role in the workflow.
+FabricOps Starter Kit uses five notebook templates. Each template has one clear responsibility in the workflow.
 
-The notebook templates are available in the [`templates/notebooks`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks) folder.
+The templates are available in the [`templates/notebooks`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks) folder.
 
 !!! note "Notebook preview"
-    The notebook templates are optimized for Microsoft Fabric execution. GitHub may not always render `.ipynb` previews reliably.
+The notebook templates are optimized for Microsoft Fabric execution. GitHub may not always render `.ipynb` files reliably.
 
-    If GitHub shows a notebook preview error, open the template in Microsoft Fabric or view it locally in VS Code or Jupyter.
+```
+Open the template in Microsoft Fabric, VS Code, or Jupyter if the GitHub preview fails.
 
-    The `%run 00_env_config` bootstrap cell is intentionally active so the templates remain plug-and-play in Fabric. Do not manually edit the bootstrap cell unless you are intentionally customizing the template.
+The `%run 00_env_config` bootstrap cell is intentionally active so the templates remain plug-and-play. Do not edit it unless you are intentionally customizing the framework setup.
+```
 
 ## Template overview
 
-| Notebook | Main owner | Purpose |
-| --- | --- | --- |
-| `00_env_config` | Engineer | Defines workspace, lakehouse, warehouse, and metadata paths for each environment. |
-| `01_da` | Governance | Maintains steward and data agreement records. |
-| `02_ex` | Analyst or data scientist | Profiles data and proposes schema or transformation advice. |
-| `03_pc` | Engineer | Builds repeatable transformations, runtime audit columns, catalogue evidence, output profiles, and lineage. |
-| `04_gov_dataset_table` | Governance | Selects a profiled table from `METADATA_DATA_CATALOGUE`, then reviews and commits business context, DQ rules, sensitivity, and PII decisions. |
+| Notebook        | Main owner                | Purpose                                                                                                   |
+| --------------- | ------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `00_env_config` | Engineer                  | Defines environment paths and creates or validates all active metadata tables.                            |
+| `01_da`         | Governance                | Maintains data stewards, data agreements, and supporting evidence.                                        |
+| `02_ex`         | Analyst or data scientist | Explores and profiles source data within one or more selected data agreements.                            |
+| `03_pc`         | Engineer                  | Builds repeatable pipelines, writes catalogue evidence, and records table-level lineage.                  |
+| `04_gov`        | Governance                | Reviews one catalogue table at a time and commits business context, DQ rules, and column classifications. |
 
 ## Role-based notebook flow
 
-![Role-based notebook workflow from environment configuration through AI-assisted handover](../assets/fabricops-role-workflow.png){ .full-width }
+![Role-based notebook workflow from environment configuration through governance review](../assets/fabricops-role-workflow.png){ .full-width }
 
-| Step | Owner | Notebook or action | Result |
-| --- | --- | --- | --- |
-| 0 | Engineer | Configure `00_env_config`. | Environment-specific workspace, lakehouse, warehouse, and metadata paths are ready. |
-| 1 | Governance| Use `01_da`. | Steward and data agreement records are stored in the Governance workspace metadata lakehouse. |
-| 2 | Analyst or data scientist | Use `02_ex` in Engineering Dev. | Exploration profiles, notebook registration, and proposed schema or transformation advice are available. |
-| 3 | Engineer | Build `03_pc` in Engineering Dev. | Repeatable transformations, runtime audit columns, source/output catalogue evidence, table-level lineage, profiles, and output tables are created without governance enforcement. |
-| 4 | Governance | Use `04_gov`. | Business context, data quality rules, sensitivity labels, PII classification, and business context are reviewed and stored; enforcement remains planned. |
-| 5 | Engineer | Rerun or enhance `03_pc` with approved metadata after `04_gov`. | The enhanced production pipeline can apply approved rules using actions such as warn, split, quarantine, or stop. |
-| 6 | Engineer | Use stored production notebook evidence. | Human-readable support material can be generated from approved evidence. |
+| Step | Owner                     | Notebook or action                                   | Result                                                                                                             |
+| ---- | ------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| 0    | Engineer                  | Configure and run `00_env_config`.                   | Environment paths and all active metadata table schemas are ready.                                                 |
+| 1    | Governance                | Use `01_da`.                                         | Steward, agreement, and agreement-evidence records are stored.                                                     |
+| 2    | Analyst or data scientist | Use `02_ex` in Engineering Dev.                      | Data is explored and profiled, and the notebook is linked to one or more data agreements.                          |
+| 3    | Engineer                  | Build and run `03_pc`.                               | Repeatable transformations, catalogue evidence, table-level lineage, and output tables are produced alongside schema and data drift guardrails               |
+| 4    | Governance                | Use `04_gov`.                                        | Business context, DQ rules, sensitivity labels, and PII classifications are reviewed and committed table by table. |
+| 5    | Engineer                  | Enforce the goverance rules created by `04_gov` | Fetch rules stored in* `METADATA_DQ_RULES` and `METADATA_COLUMN_CLASSIFICATION` and enforce them within the `03_pc` pipeline run |
+| 6    | Engineer                  | Store the approved production notebook for handover. | The production implementation and supporting metadata remain available for support and future enhancement.         |
+
+DQ-rule and classification enforcement in `03_pc` is outside the v1.0.0 scope.
 
 ## What each template owns
 
@@ -41,51 +45,249 @@ The notebook templates are available in the [`templates/notebooks`](https://gith
 
 Configure this notebook first in each environment.
 
-It stores workspace, lakehouse, warehouse, and metadata paths. Every other notebook reuses this configuration, so metadata operations use the configured metadata target rather than an attached or default lakehouse.
+It defines the environment-specific workspace, lakehouse, warehouse, and metadata paths used by all other notebooks.
 
-It also creates or checks the data agreement and steward metadata tables and reports whether active steward profiles are ready for agreement intake.
+On its first run, `00_env_config` creates every active metadata table with its expected schema. Later runs validate the existing schemas before any workflow notebook reads or writes metadata.
+
+The active metadata setup includes:
+
+* `METADATA_DATA_STEWARD`
+* `METADATA_DATA_AGREEMENT`
+* `METADATA_DATA_AGREEMENT_EVIDENCE`
+* `METADATA_NOTEBOOK_REGISTRY`
+* `METADATA_DATA_LINEAGE_TABLE`
+* `METADATA_DATA_CATALOGUE`
+* `METADATA_DATA_ACCESS`
+* `METADATA_COLUMN_CONTEXT`
+* `METADATA_DQ_RULES`
+* `METADATA_COLUMN_CLASSIFICATION`
+
+Downstream notebooks append or read records. They do not own physical metadata table creation.
 
 ### `01_da`
 
 Run this notebook in the Governance workspace.
 
-Data stewards or data owners use its simplified widget UI to maintain steward and data agreement records in `metadata_lakehouse`. FabricOps currently supports two `01_da` layouts:
+It provides the widget workflow for maintaining:
 
-- **Option A** is a compact section switcher via `widget_render_agreement_intake_app(...)`.
-- **Option B** is separate widget cells for Data Steward, Data Agreement, and Agreement Evidence through `widget_render_data_steward(...)`, `widget_render_data_agreement(...)`, and `widget_render_agreement_evidence(...)`. Use Option B if Fabric output scrolling feels jumpy or if users prefer rerunning one section at a time.
+* data stewards;
+* versioned data agreements;
+* supporting agreement evidence.
 
-Agreement intake appends immutable agreement-version rows. Creating an agreement starts a new stable ID, while updating an explicitly selected agreement appends its next version.
+FabricOps supports two layouts:
 
-Governance classification and review remain in `04_gov`.
+* **Option A:** a compact combined application using `widget_render_agreement_intake_app(...)`;
+* **Option B:** separate widgets using `widget_render_data_steward(...)`, `widget_render_data_agreement(...)`, and `widget_render_agreement_evidence(...)`.
+
+Both layouts write to the same metadata tables.
+
+Creating an agreement generates a stable `agreement_id` and its first version. Updating an agreement appends a new version instead of overwriting its previous record.
+
+Organisation-specific intake fields should be configured in `00_env_config` and stored in `custom_fields_json`.
+
+Governance classification, business context, and DQ-rule review do not belong in `01_da`.
 
 ### `02_ex`
 
 Run this notebook in Engineering Dev.
 
-Analysts or data scientists use it for less-structured exploration of source or unified data. It profiles data, registers the notebook, links the run to a selected agreement, and may propose an output schema or desired outcome table for engineers.
+Analysts and data scientists use it for less-structured exploration of source or unified data.
 
-AI-assisted suggestions remain advisory until a human reviews and approves the relevant metadata.
+The notebook can:
+
+* read supported source tables or files;
+* profile the selected data;
+* perform focused exploratory checks;
+* link the notebook to one or more data agreements.
+
+`METADATA_NOTEBOOK_REGISTRY` stores the relationships between the notebook and its selected agreements.
+
+Each notebook-agreement relationship has its own registry row. Removing an agreement from a notebook marks that relationship inactive or superseded while preserving its history.
+
+The base `02_ex` template does not own catalogue writes or governance approvals.
 
 ### `03_pc`
 
 Run this notebook in Engineering Dev and Engineering Prod.
 
-Data engineers use it for repeatable source-to-output transformations. The base template registers the notebook, reads supported source types, validates source schema with a preset, monitors source data changes with a preset, applies deterministic transformation logic, validates the proposed target schema, monitors proposed target changes, stops only for blocking guardrail results, writes targets, writes reusable catalogue evidence, and records table-level lineage.
+Data engineers use it to implement repeatable source-to-target pipelines.
 
-`03_pc` keeps guardrail intent explicit with schema presets (`strict`, `allow_new_columns`, `monitor_only`) and data-change presets (`changing_data`, `fixed_data`, `monitor_changing_data`, `monitor_fixed_data`). Users choose intent; FabricOps handles profiling, baseline selection, comparable distributions, drift comparison, and enforcement mechanics internally.
+The base template:
 
-Audit columns are always useful: they identify the run, pipeline, environment, source, load time, notebook, and user or process that produced each row. Hash columns are only for deduplication, masked key comparison, slowly changing dimensions, or change detection. Datetime feature columns are analytics features, not audit fields. Bucket columns are only for advanced large-table layout or skew handling. For simple parallel data loading, use `repartition_by`; for physical Delta pruning, use `partition_by` with a natural column.
+1. loads `00_env_config`;
+2. links the notebook to one or more data agreements;
+3. reads the configured source;
+4. validates the source schema;
+5. monitors source data changes;
+6. applies deterministic transformations;
+7. validates the proposed target schema;
+8. monitors proposed target changes;
+9. writes the target;
+10. writes source and target profiling evidence to `METADATA_DATA_CATALOGUE`;
+11. records table-level lineage in `METADATA_DATA_LINEAGE_TABLE`.
 
-The base `03_pc` does not read DQ rules, quarantine records, fail fast on governance rules, or enforce sensitivity/classification/business decisions before governance has enhanced the metadata. `04_gov` remains the place where governance users approve business context, schema expectations, data quality rules, sensitivity rules, classification rules, and enforcement decisions. After `04_gov`, approved metadata is available for a future enhanced production pattern; the base `03_pc` does not enforce it in v1.0.0.
+Schema and data-drift guardrails remain inside the pipeline notebook.
+
+Schema presets include:
+
+* `strict`
+* `allow_new_columns`
+* `monitor_only`
+
+Data-change presets include:
+
+* `changing_data`
+* `fixed_data`
+* `monitor_changing_data`
+* `monitor_fixed_data`
+
+The pipeline notebook is the executable source of truth for its expected schema, drift settings, threshold overrides, and blocking behaviour.
+
+FabricOps does not duplicate those settings in a separate data-contract metadata table.
+
+#### Catalogue ownership
+
+`03_pc` writes one catalogue row per profiled column per successful source or target profile.
+
+The catalogue combines:
+
+* stable table and column identity;
+* table context;
+* column profiling metrics;
+* pipeline and profile-run context;
+* baseline and drift-monitoring evidence.
+
+`04_gov` later uses this catalogue to select a table for governance review.
+
+#### Lineage ownership
+
+Table-level lineage belongs to the notebook, not to an individual data-agreement registration.
+
+A notebook may be linked to several agreements, but it has one current table-level lineage definition.
+
+The lineage record stores its source and target tables as JSON arrays containing stable catalogue table keys.
+
+This avoids duplicating the same lineage for every agreement linked to the notebook.
+
+#### Runtime audit columns
+
+Output rows include runtime audit fields identifying:
+
+* the pipeline run;
+* pipeline name;
+* environment;
+* source table;
+* load timestamp;
+* producing notebook;
+* user or service that executed the pipeline.
+
+Hash and bucket columns remain optional implementation choices and are not part of the standard pipeline path.
+
+The base `03_pc` does not yet enforce approved DQ rules or column classifications.
 
 ### `04_gov`
 
-Run this notebook in the Governance workspace after relevant `03_pc` outputs are available.
+Run this notebook in the Governance workspace after `03_pc` has written catalogue evidence.
 
-Governance users enrich profiles with approved business context, data quality rules, sensitivity and PII classification, access classification, retention or export flags, exceptions, and review notes.
+`04_gov` is a table-scoped governance workflow. It does not require a data agreement.
 
-These decisions stay in the governance stage and are stored through the configured metadata target for downstream enforcement by an enhanced production pipeline after approval.
+The workflow is:
+
+1. load `00_env_config`;
+2. select a table from `METADATA_DATA_CATALOGUE`;
+3. load the latest successful column profile for that table;
+4. review and commit business context;
+5. review and commit DQ rules;
+6. review and commit sensitivity and PII classifications.
+
+#### Business context
+
+Governance users review each column and enter its business meaning.
+
+Optional AI assistance may use `ai.generate_response(...)` to suggest a description from available column names, datatypes, and profiling evidence.
+
+AI output remains advisory. A human must review, edit, and explicitly commit the final value.
+
+Approved context is stored in:
+
+```text
+METADATA_COLUMN_CONTEXT
+```
+
+#### Data-quality rules
+
+Governance users can define and approve column-level or table-level rules such as:
+
+* not-null checks;
+* uniqueness;
+* accepted values;
+* numeric ranges;
+* regular expressions;
+* datatype requirements;
+* referential-integrity checks;
+* custom expressions.
+
+AI may suggest rules, but it cannot approve or save them automatically.
+
+Approved rules are stored in:
+
+```text
+METADATA_DQ_RULES
+```
+
+#### Column classification
+
+Governance users review:
+
+* confidentiality level;
+* sensitivity;
+* personal-data classification;
+* direct or indirect PII status;
+* masking or handling requirements;
+* reviewer notes.
+
+AI may suggest classifications, but a human must commit the final decision.
+
+Approved classifications are stored in:
+
+```text
+METADATA_COLUMN_CLASSIFICATION
+```
+
+#### Enforcement boundary
+
+For v1.0.0, `04_gov` authors and stores approved governance metadata.
+
+The base `03_pc` does not yet read these metadata tables for enforcement.
+
+Future versions may apply approved DQ rules and classification requirements using actions such as warn, quarantine, split, mask, or stop.
+
+### Data access capture
+
+`METADATA_DATA_ACCESS` is part of the active product metadata model but is not owned by a standard numbered notebook template.
+
+It stores table-level access assignments captured from an access-export process, administrator workflow, or future access-review notebook.
+
+Each access row links a user or group principal to a catalogue table and records:
+
+* access level;
+* granted date;
+* expiry date;
+* active status.
+
+One catalogue table can have many access assignments.
+
+## Notebook and metadata ownership
+
+| Notebook or process    | Reads                                                  | Writes                                                      |
+| ---------------------- | ------------------------------------------------------ | ----------------------------------------------------------- |
+| `00_env_config`        | Existing metadata schemas                              | Creates and validates all active metadata tables            |
+| `01_da`                | Existing stewards and agreements                       | Steward, agreement, and evidence metadata                   |
+| `02_ex`                | Agreement metadata and source data                     | Notebook-to-agreement registry relationships                |
+| `03_pc`                | Agreement metadata, previous profiles, and source data | Notebook registry, catalogue, lineage, and business outputs |
+| `04_gov`               | Catalogue and existing governance metadata             | Column context, DQ rules, and classifications               |
+| Access capture process | Catalogue and platform access assignments              | Data access metadata                                        |
 
 ## Next step
 
-Continue to [Metadata Tables](metadata-tables.md) to see how the notebook flow stores reusable evidence.
+Continue to [Metadata Tables](metadata-tables.md) for the product-truth data model, logical keys, relationships, and active metadata schemas.

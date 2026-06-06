@@ -1,4 +1,4 @@
-# Metadata Dashboard
+# Metadata Dashboard (Out of scope of V1.0.0 will revisit)
 
 FabricOps Starter Kit collects metadata through project notebooks and assembles it into a dashboard-ready reporting layer.
 
