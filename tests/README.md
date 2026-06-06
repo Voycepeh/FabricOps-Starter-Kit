@@ -4,14 +4,14 @@ This test suite validates the current **FabricOps Starter Kit** lifecycle implem
 
 ## Test categories
 
-FabricOps uses four pytest marker categories:
+FabricOps keeps a deliberately small pytest suite:
 
-- `unit`: fast tests that do not require Spark or Fabric runtime behaviour.
-- `spark`: focused tests that require a local Spark session.
-- `fabric`: tests that simulate Microsoft Fabric runtime interfaces with local fakes.
-- `contract`: package, schema, documentation, release, and public API consistency tests.
+- `unit`: focused tests for public functions, validation, config resolution, agreement logic, metadata helpers, and core transformations.
+- `integration`: mocked boundary tests for Lakehouse/Warehouse IO, file readers, metadata persistence, and Fabric-facing setup helpers.
+- `spark`: a small number of tests that need a local Spark session for DQ and schema behaviour.
+- `contract`: minimal public contract and notebook-template workflow checks.
 
-Unit tests should remain fast and deterministic. Spark tests should be limited to behaviour that cannot be trusted through mocks, such as schema preservation, data types, null handling, column ordering, quarantine output, and Spark window ordering. Fabric tests simulate runtime interfaces through shared fixtures; they must not require a live workspace. Live Microsoft Fabric workspace integration is outside the local test suite.
+Unit tests should remain fast and deterministic. Integration tests use local fakes and mocks; they must not require a live workspace. Spark tests should be limited to behaviour that cannot be trusted through mocks. Contract tests protect importability, essential schemas, and supported template workflows without checking exact wording or notebook presentation.
 
 ## Shared fixtures
 
@@ -26,37 +26,35 @@ Use these fixtures instead of repeated ad hoc notebook runtime mocks.
 
 ## What is covered
 
-- Configuration and contract loading/validation.
-- Data contract normalization and rule execution behavior.
-- Data quality workflows, rule compilation, deterministic rule history resolution, and quarantine record behavior.
-- Drift checks, metadata, profiling, runtime audit columns, lineage, governance classification, and handover summary helpers.
-- Optional dependency boundaries and package importability outside Fabric.
-- Distribution build validation and packaged schema assets.
-- Docs/reference generation and consistency checks.
+- Configuration and dataset-contract validation.
+- Environment and path resolution.
+- Data agreement and metadata-table persistence logic.
+- Data quality, schema/profile drift, profiling, lineage, governance review, and handover helpers.
+- Lakehouse, Warehouse, Excel, CSV, and Parquet helper boundaries through mocks.
+- Representative executable notebook-template workflows.
+- Minimal public API, schema, and template availability contracts.
 
 ## What should not be tested locally
 
 - Real Microsoft Fabric workspace access.
 - Live Spark clusters/notebook runtime dependencies outside the local Spark fixture.
 - Networked services, cloud credentials, or production resources.
-- Key Vault or live Fabric integration unless those are covered by a separate integration suite.
+- Exact documentation wording, Markdown headings, comments, or notebook cell ordering.
+- Private helper details unless they are the only practical seam for a current public workflow.
 
 ## How to run
 
 ```bash
 uv run pytest
 uv run pytest -m unit
+uv run pytest -m integration
 uv run pytest -m spark
-uv run pytest -m fabric
 uv run pytest -m contract
 uv run pytest --cov=fabricops_kit --cov-report=term-missing
-uv run ruff check .
-python -m build
-twine check dist/*
 ```
 
 ## Naming convention
 
-- Name tests by current product concepts and module behavior (for example: `test_config.py`, `test_data_contract.py`, `test_dq_workflow.py`, `test_drift.py`).
-- Avoid legacy MVP/template-era naming for new files.
-- Prefer consolidating closely related coverage into a single clear module-focused file.
+- Keep files grouped under `unit/`, `integration/`, `templates/`, or `contract/`.
+- Prefer scenario tests that validate a meaningful workflow over one assertion per field or cell.
+- Avoid adding regression-only folders while the starter kit is pre-live.
