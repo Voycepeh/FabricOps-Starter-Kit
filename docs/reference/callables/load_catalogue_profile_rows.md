@@ -23,5 +23,5 @@ Load column profile rows for the selected catalogue table.
 - <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a>
 - <a href="../internal/governance_review/_coerce_rows/"><code>fabricops_kit.governance_review._coerce_rows</code></a>
 - <a href="../internal/governance_review/_is_success/"><code>fabricops_kit.governance_review._is_success</code></a>
-- <a href="../internal/governance_review/_row_metadata_table_key/"><code>fabricops_kit.governance_review._row_metadata_table_key</code></a>
 - <a href="../internal/governance_review/_value/"><code>fabricops_kit.governance_review._value</code></a>
+- <a href="../internal/metadata/_build_metadata_table_key/"><code>fabricops_kit.metadata._build_metadata_table_key</code></a>

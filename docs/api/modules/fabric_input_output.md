@@ -4,9 +4,9 @@
   <span class="api-chip api-chip-module">Module overview</span>
 </div>
 
-Module pages document source modules and internal helpers for maintainers. They support debugging and implementation traceability, but they are not the public v1 callable surface.
+Implementation modules document source-level behavior and internal helper relationships for maintainers. They support debugging and implementation traceability, but they are not the public v1 callable API.
 
-The public v1 callable surface is controlled by `src/fabricops_kit/__init__.py::__all__` and is browsed from the Function Reference catalogue.
+The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__all__` and is browsed from the Function Reference catalogue.
 
 ## Module overview badges
 
@@ -249,7 +249,7 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
 <a class="reference-chip" href="../data_quality/#_write_dq_rules"><code>_write_dq_rules</code></a>
 
 **governance_review**
-<a class="reference-chip" href="../governance_review/#_commit_column_classification"><code>_commit_column_classification</code></a>, <a class="reference-chip" href="../governance_review/#_commit_column_context"><code>_commit_column_context</code></a>, <a class="reference-chip" href="../governance_review/#_commit_dq_rules"><code>_commit_dq_rules</code></a>, <a class="reference-chip" href="../governance_review/#_setup_governance_metadata_tables"><code>_setup_governance_metadata_tables</code></a>, <a class="reference-chip" href="../../reference/load_catalogue_profile_rows/"><code>load_catalogue_profile_rows</code></a>, <a class="reference-chip" href="../../reference/widget_select_catalogue_table/"><code>widget_select_catalogue_table</code></a>
+<a class="reference-chip" href="../governance_review/#_setup_governance_metadata_tables"><code>_setup_governance_metadata_tables</code></a>, <a class="reference-chip" href="../../reference/load_catalogue_profile_rows/"><code>load_catalogue_profile_rows</code></a>, <a class="reference-chip" href="../../reference/record_table_governance/"><code>record_table_governance</code></a>, <a class="reference-chip" href="../../reference/widget_select_catalogue_table/"><code>widget_select_catalogue_table</code></a>
 
 **metadata**
 <a class="reference-chip" href="../metadata/#_load_notebook_registry"><code>_load_notebook_registry</code></a>, <a class="reference-chip" href="../metadata/#_register_current_notebook"><code>_register_current_notebook</code></a>, <a class="reference-chip" href="../metadata/#_setup_notebook_registry_table"><code>_setup_notebook_registry_table</code></a>

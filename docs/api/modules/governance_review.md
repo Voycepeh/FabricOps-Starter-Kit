@@ -4,13 +4,13 @@
   <span class="api-chip api-chip-module">Module overview</span>
 </div>
 
-Module pages document source modules and internal helpers for maintainers. They support debugging and implementation traceability, but they are not the public v1 callable surface.
+Implementation modules document source-level behavior and internal helper relationships for maintainers. They support debugging and implementation traceability, but they are not the public v1 callable API.
 
-The public v1 callable surface is controlled by `src/fabricops_kit/__init__.py::__all__` and is browsed from the Function Reference catalogue.
+The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__all__` and is browsed from the Function Reference catalogue.
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 7</span><span class="reference-chip">Internal helpers: 24</span><span class="reference-chip">Outbound: 2</span><span class="reference-chip">Inbound: 1</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 7</span><span class="reference-chip">Internal helpers: 15</span><span class="reference-chip">Outbound: 2</span><span class="reference-chip">Inbound: 1</span></div>
 
 ## Module purpose
 
@@ -40,7 +40,7 @@ Owns table-scoped 04_gov catalogue selection, explicit approval record builders,
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>24</td>
+      <td>15</td>
     </tr>
     <tr>
       <td>Inbound module count</td>
@@ -87,14 +87,14 @@ Owns table-scoped 04_gov catalogue selection, explicit approval record builders,
       <td>Essential</td>
       <td>function</td>
       <td>Load column profile rows for the selected catalogue table.</td>
-      <td><a href="../../reference/internal/governance_review/_coerce_rows/"><code>_coerce_rows</code></a> (internal), <a href="../../reference/internal/governance_review/_is_success/"><code>_is_success</code></a> (internal), <a href="../../reference/internal/governance_review/_row_metadata_table_key/"><code>_row_metadata_table_key</code></a> (internal), <a href="../../reference/internal/governance_review/_value/"><code>_value</code></a> (internal)</td>
+      <td><a href="../../reference/internal/governance_review/_coerce_rows/"><code>_coerce_rows</code></a> (internal), <a href="../../reference/internal/governance_review/_is_success/"><code>_is_success</code></a> (internal), <a href="../../reference/internal/governance_review/_value/"><code>_value</code></a> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/record_table_governance/"><code>record_table_governance</code></a></td>
       <td>Essential</td>
       <td>function</td>
       <td>Persist approved table-governance context, DQ-rule, and classification evidence in one v1 commit action.</td>
-      <td><a href="../../reference/internal/governance_review/_build_classification_records/"><code>_build_classification_records</code></a> (internal), <a href="../../reference/internal/governance_review/_build_column_context_records/"><code>_build_column_context_records</code></a> (internal), <a href="../../reference/internal/governance_review/_build_dq_rule_records/"><code>_build_dq_rule_records</code></a> (internal), <a href="../../reference/internal/governance_review/_commit_column_classification/"><code>_commit_column_classification</code></a> (internal), <a href="../../reference/internal/governance_review/_commit_column_context/"><code>_commit_column_context</code></a> (internal), <a href="../../reference/internal/governance_review/_commit_dq_rules/"><code>_commit_dq_rules</code></a> (internal)</td>
+      <td><a href="../../reference/internal/governance_review/_build_classification_records/"><code>_build_classification_records</code></a> (internal), <a href="../../reference/internal/governance_review/_build_column_context_records/"><code>_build_column_context_records</code></a> (internal), <a href="../../reference/internal/governance_review/_build_dq_rule_records/"><code>_build_dq_rule_records</code></a> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/widget_review_column_classification/"><code>widget_review_column_classification</code></a></td>
@@ -148,12 +148,12 @@ Owns table-scoped 04_gov catalogue selection, explicit approval record builders,
 <li>
 <a class="reference-chip" href="../../reference/load_catalogue_profile_rows/"><code>load_catalogue_profile_rows</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_coerce_rows"><code>_coerce_rows</code></a>, <a class="reference-chip" href="#_is_success"><code>_is_success</code></a>, <a class="reference-chip" href="#_row_metadata_table_key"><code>_row_metadata_table_key</code></a>, <a class="reference-chip" href="#_value"><code>_value</code></a>
+<a class="reference-chip" href="#_coerce_rows"><code>_coerce_rows</code></a>, <a class="reference-chip" href="#_is_success"><code>_is_success</code></a>, <a class="reference-chip" href="#_value"><code>_value</code></a>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/record_table_governance/"><code>record_table_governance</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_build_classification_records"><code>_build_classification_records</code></a>, <a class="reference-chip" href="#_build_column_context_records"><code>_build_column_context_records</code></a>, <a class="reference-chip" href="#_build_dq_rule_records"><code>_build_dq_rule_records</code></a>, <a class="reference-chip" href="#_commit_column_classification"><code>_commit_column_classification</code></a>, <a class="reference-chip" href="#_commit_column_context"><code>_commit_column_context</code></a>, <a class="reference-chip" href="#_commit_dq_rules"><code>_commit_dq_rules</code></a>
+<a class="reference-chip" href="#_build_classification_records"><code>_build_classification_records</code></a>, <a class="reference-chip" href="#_build_column_context_records"><code>_build_column_context_records</code></a>, <a class="reference-chip" href="#_build_dq_rule_records"><code>_build_dq_rule_records</code></a>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/widget_review_column_classification/"><code>widget_review_column_classification</code></a>
@@ -193,10 +193,6 @@ Owns table-scoped 04_gov catalogue selection, explicit approval record builders,
   </thead>
   <tbody>
     <tr>
-      <td><a href="../../reference/internal/governance_review/_audit/"><code>_audit</code></a></td>
-      <td>—</td>
-    </tr>
-    <tr>
       <td><a href="../../reference/internal/governance_review/_build_classification_records/"><code>_build_classification_records</code></a></td>
       <td><a href="../../reference/record_table_governance/"><code>record_table_governance</code></a></td>
     </tr>
@@ -209,28 +205,12 @@ Owns table-scoped 04_gov catalogue selection, explicit approval record builders,
       <td><a href="../../reference/record_table_governance/"><code>record_table_governance</code></a></td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/governance_review/_build_profile_summary/"><code>_build_profile_summary</code></a></td>
-      <td>—</td>
-    </tr>
-    <tr>
       <td><a href="../../reference/internal/governance_review/_catalogue_table_options/"><code>_catalogue_table_options</code></a></td>
       <td><a href="../../reference/widget_select_catalogue_table/"><code>widget_select_catalogue_table</code></a></td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/governance_review/_coerce_rows/"><code>_coerce_rows</code></a></td>
       <td><a href="../../reference/load_catalogue_profile_rows/"><code>load_catalogue_profile_rows</code></a>, <a href="../../reference/widget_select_catalogue_table/"><code>widget_select_catalogue_table</code></a></td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/internal/governance_review/_commit_column_classification/"><code>_commit_column_classification</code></a></td>
-      <td><a href="../../reference/record_table_governance/"><code>record_table_governance</code></a></td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/internal/governance_review/_commit_column_context/"><code>_commit_column_context</code></a></td>
-      <td><a href="../../reference/record_table_governance/"><code>record_table_governance</code></a></td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/internal/governance_review/_commit_dq_rules/"><code>_commit_dq_rules</code></a></td>
-      <td><a href="../../reference/record_table_governance/"><code>record_table_governance</code></a></td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/governance_review/_display_review_guidance/"><code>_display_review_guidance</code></a></td>
@@ -253,18 +233,6 @@ Owns table-scoped 04_gov catalogue selection, explicit approval record builders,
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/governance_review/_latest_by_column/"><code>_latest_by_column</code></a></td>
-      <td>—</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/internal/governance_review/_optional_ai_generate_response/"><code>_optional_ai_generate_response</code></a></td>
-      <td>—</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/internal/governance_review/_row_metadata_table_key/"><code>_row_metadata_table_key</code></a></td>
-      <td><a href="../../reference/load_catalogue_profile_rows/"><code>load_catalogue_profile_rows</code></a></td>
-    </tr>
-    <tr>
       <td><a href="../../reference/internal/governance_review/_schema/"><code>_schema</code></a></td>
       <td>—</td>
     </tr>
@@ -284,10 +252,6 @@ Owns table-scoped 04_gov catalogue selection, explicit approval record builders,
       <td><a href="../../reference/internal/governance_review/_value/"><code>_value</code></a></td>
       <td><a href="../../reference/load_catalogue_profile_rows/"><code>load_catalogue_profile_rows</code></a></td>
     </tr>
-    <tr>
-      <td><a href="../../reference/internal/governance_review/_widget_review_table_governance/"><code>_widget_review_table_governance</code></a></td>
-      <td>—</td>
-    </tr>
   </tbody>
 </table>
 </div>
@@ -295,27 +259,19 @@ Owns table-scoped 04_gov catalogue selection, explicit approval record builders,
 <h6>Internal helpers details</h6>
 <ul class="callable-relationship-rows">
 <li>
-<a class="reference-chip" href="#_audit"><code>_audit</code></a>
-</li>
-<li>
 <a class="reference-chip" href="#_build_classification_records"><code>_build_classification_records</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_audit"><code>_audit</code></a>, <a class="reference-chip" href="#_json"><code>_json</code></a>, <a class="reference-chip" href="#_value"><code>_value</code></a>
+<a class="reference-chip" href="#_json"><code>_json</code></a>, <a class="reference-chip" href="#_value"><code>_value</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_build_column_context_records"><code>_build_column_context_records</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_audit"><code>_audit</code></a>, <a class="reference-chip" href="#_json"><code>_json</code></a>, <a class="reference-chip" href="#_value"><code>_value</code></a>
+<a class="reference-chip" href="#_json"><code>_json</code></a>, <a class="reference-chip" href="#_value"><code>_value</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_build_dq_rule_records"><code>_build_dq_rule_records</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_audit"><code>_audit</code></a>, <a class="reference-chip" href="#_json"><code>_json</code></a>, <a class="reference-chip" href="#_value"><code>_value</code></a>
-</li>
-<li>
-<a class="reference-chip" href="#_build_profile_summary"><code>_build_profile_summary</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_value"><code>_value</code></a>
+<a class="reference-chip" href="#_json"><code>_json</code></a>, <a class="reference-chip" href="#_value"><code>_value</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_catalogue_table_options"><code>_catalogue_table_options</code></a>
@@ -324,15 +280,6 @@ Owns table-scoped 04_gov catalogue selection, explicit approval record builders,
 </li>
 <li>
 <a class="reference-chip" href="#_coerce_rows"><code>_coerce_rows</code></a>
-</li>
-<li>
-<a class="reference-chip" href="#_commit_column_classification"><code>_commit_column_classification</code></a>
-</li>
-<li>
-<a class="reference-chip" href="#_commit_column_context"><code>_commit_column_context</code></a>
-</li>
-<li>
-<a class="reference-chip" href="#_commit_dq_rules"><code>_commit_dq_rules</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_display_review_guidance"><code>_display_review_guidance</code></a>
@@ -356,19 +303,6 @@ Owns table-scoped 04_gov catalogue selection, explicit approval record builders,
 <a class="reference-chip" href="#_json"><code>_json</code></a>
 </li>
 <li>
-<a class="reference-chip" href="#_latest_by_column"><code>_latest_by_column</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_coerce_rows"><code>_coerce_rows</code></a>
-</li>
-<li>
-<a class="reference-chip" href="#_optional_ai_generate_response"><code>_optional_ai_generate_response</code></a>
-</li>
-<li>
-<a class="reference-chip" href="#_row_metadata_table_key"><code>_row_metadata_table_key</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_value"><code>_value</code></a>
-</li>
-<li>
 <a class="reference-chip" href="#_schema"><code>_schema</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_spark_types"><code>_spark_types</code></a>
@@ -385,11 +319,6 @@ Owns table-scoped 04_gov catalogue selection, explicit approval record builders,
 <a class="reference-chip" href="#_spark_types"><code>_spark_types</code></a>
 </li>
 <li>
-<a class="reference-chip" href="#_value"><code>_value</code></a>
-</li>
-<li>
-<a class="reference-chip" href="#_widget_review_table_governance"><code>_widget_review_table_governance</code></a>
- <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_value"><code>_value</code></a>
 </li>
 </ul>
