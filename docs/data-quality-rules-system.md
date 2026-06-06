@@ -1,115 +1,63 @@
-# AI-Assisted Data Quality Rules System
+# AI-assisted governance review
 
-A data analyst profiles source data in a `02_ex_*` notebook. The notebook captures profile evidence such as nulls, distinct values, ranges, patterns, duplicates, and suspicious values.
+FabricOps v1.0.0 treats data quality as one part of a notebook workflow, not as a standalone data quality product.
 
-AI uses that evidence to suggest candidate data quality rules. A human reviewer approves, edits, rejects, or defers each suggestion. Only approved active rules are stored as append-only governance metadata for later enforcement work.
+Read [How FabricOps Works](how-fabricops-works/index.md) first. This page then explains the `04_gov` governance review workflow.
 
-In v1.0.0, `04_gov_dataset_table` stores approved DQ rules but the base `03_pc_*` notebook does not load or enforce them. Future enhanced pipeline patterns can consume these approved rules as part of the wider [How FabricOps Works](how-fabricops-works/index.md) metadata flow.
+The workflow is intentionally lightweight:
 
-## Business rules and drift monitoring
+1. teams profile and inspect data;
+2. engineers implement notebook-scoped guardrails inside each `03_pc` production notebook;
+3. `03_pc` records profile and lineage evidence;
+4. reviewers use `04_gov` to review governance metadata;
+5. teams prepare production handover from the implemented notebook and supporting evidence.
 
-Business data quality rules validate whether current records satisfy approved expectations. FabricOps also uses schema and profile drift checks to detect structural or statistical changes that may not cause individual records to fail.
+Separate data contracts are not part of the v1.0.0 operating model.
 
-For example, every faculty value may remain valid while the distribution of records changes unexpectedly. Business rules, schema drift, and profile drift therefore operate as complementary controls.
+## Where review evidence comes from
 
-Read [Schema and Data Drift Monitoring](schema-and-data-drift.md) for the monitoring approach.
+`03_pc` creates the production evidence that governance reviewers need:
 
-<figure markdown>
-  ![Data quality workflow with AI suggestions, human review, approval, and planned deterministic enforcement in pipelines](assets/DQ-with-ai.png){ .full-width }
-  <figcaption>Data quality workflow from profiling, rule suggestion, human review, approval, and planned later enforcement.</figcaption>
-</figure>
+- current source and output profiles;
+- schema and data-change guardrail results;
+- notebook-defined DQ check outcomes, when the engineer adds them;
+- output write evidence;
+- lineage records;
+- run summaries for review and handover.
 
-Next read: [Schema and Data Drift Monitoring](schema-and-data-drift.md), [How FabricOps Works](how-fabricops-works/index.md), [Quick Start](quick-start.md), [Function Reference](reference/index.md).
+`04_gov` uses that evidence to help reviewers understand columns, candidate DQ expectations, and classification metadata. It is a human review workflow, not an enforcement engine.
 
-## Operating flow
+## What `04_gov` does
 
-1. **Source data**
-   Analyst starts with the raw dataframe or source table.
+`04_gov` helps reviewers:
 
-2. **Profile in `02_ex_*`**
-   Capture nulls, distinct values, ranges, patterns, duplicates, and suspicious values.
+- review column context and business meaning;
+- review candidate DQ expectations;
+- review classification and sensitivity metadata;
+- optionally use AI suggestions as a starting point;
+- commit reviewed governance metadata after human approval.
 
-3. **Suggest rules**
-   AI suggests candidate DQ rules from the profile evidence.
+AI suggestions are optional and advisory. They must be reviewed, edited where needed, and explicitly approved by a person before they become committed metadata.
 
-4. **Review rules**
-   Human reviewer approves, edits, rejects, or defers each suggestion.
+## What `04_gov` does not do
 
-5. **Store approved rules**
-   Approved active rules are saved as metadata. Rejected and deferred rules are kept as review evidence only.
+`04_gov` does not enforce production rules. It does not block a production run, quarantine rows, change output data, or replace checks implemented in `03_pc`.
 
-6. **Enforce in `03_pc_*`**
-   A later enhanced pipeline pattern can load approved active rules and apply the same checks on every run. The v1.0.0 `03_pc` template does not enforce approved DQ rules.
+Approved DQ expectations stored in metadata are review evidence in v1.0.0. They are not automatically enforced unless an engineer manually implements them as guardrails inside the relevant `03_pc` notebook.
 
-7. **Later enforcement pattern**
-   Passing/quarantine split outputs are planned for a future enhanced production pattern, not the v1.0.0 base `03_pc` notebook.
+## How expectations become guardrails
 
-## What happens in the `02_ex_*` notebook
+When a reviewed DQ expectation should affect production behavior:
 
-The analyst:
+1. identify the relevant `03_pc` notebook;
+2. add the check where the pipeline logic lives;
+3. decide whether the check should warn or stop the run;
+4. write outputs only after required guardrails pass;
+5. record profile, lineage, and run-summary evidence;
+6. rerun the notebook and deliberately test failure behavior.
 
-1. loads the source data;
-2. profiles columns and candidate keys;
-3. reviews profile output;
-4. asks AI for candidate rules;
-5. checks whether each rule makes business sense;
-6. records the review decision.
+This keeps the v1.0.0 boundary clear: `03_pc` owns production enforcement, while `04_gov` owns reviewed governance metadata.
 
-The `02_ex_*` notebook is for exploration and review. It does not enforce production rules.
+## Practical handover note
 
-## What happens in the v1.0.0 `03_pc_*` notebook
-
-The base pipeline:
-
-1. uses notebook-defined schema and drift guardrails;
-2. writes profile evidence to `METADATA_DATA_CATALOGUE`;
-3. does not load approved DQ rules for enforcement;
-4. does not quarantine rows based on approved governance metadata.
-
-AI is not used during production pipeline checks. Approved-rule enforcement is planned for a later enhancement.
-
-## Metadata to capture
-
-Rule metadata:
-
-| Field | Purpose |
-| --- | --- |
-| `rule_id` | Identifies the rule. |
-| `agreement_id` or `data_product_id` | Links the rule to the agreement or product. |
-| `table_name` | Table being checked. |
-| `column_name` | Column being checked, when applicable. |
-| `rule_type` | Check type. |
-| `rule_parameters` | Values or expression used by the check. |
-| `suggested_by_ai` | Whether the rule started as an AI suggestion. |
-| `human_decision` | Approve, edit, reject, or defer. |
-| `approval_status` | Whether the rule is approved for storage and future enforcement work. |
-| `approved_by` | Reviewer who approved the rule. |
-| `approved_at` | When approval happened. |
-| `active_flag` | Whether the rule is currently stored for later enforcement. |
-| `severity` | How failure should be handled. |
-
-Planned future enforcement evidence:
-
-| Field | Purpose |
-| --- | --- |
-| `run_id` | Future pipeline run that applies the rule. |
-| `rule_id` | Rule that would be applied by a future enhanced pipeline. |
-| `failure_reason` | Why the row failed. |
-| `failed_row_count` | Number of failed rows. |
-| `accepted_row_count` | Number of accepted rows. |
-
-## Starter rule types
-
-- not null
-- allowed values
-- numeric range
-- date range
-- format or regex
-- uniqueness
-- referential check
-- freshness
-- duplicate detection
-
-## Feedback loop
-
-Suggestions, review decisions, approved rules, and rejected rules are stored as evidence. Future enforcement outcomes can be added by a later enhanced pipeline pattern. Teams can use that evidence to improve prompts and rule suggestions.
+For handover, point support teams to the production `03_pc` notebook for implemented guardrails and to `04_gov` metadata for reviewed context, expectations, and classifications. The two should support each other, but only the notebook-scoped guardrails in `03_pc` control production behavior in v1.0.0.

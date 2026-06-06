@@ -19,7 +19,7 @@ Start with one Governance workspace and one Engineering workspace. **Alternative
 
 | Workspace                  | Required items                                               | Purpose                                                                                                                               |
 | -------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
-| Governance workspace       | `metadata_lakehouse`                                         | Stores shared metadata, notebook registration, agreements, profiles, approved rules, classifications, lineage, and handover evidence. |
+| Governance workspace       | `metadata_lakehouse`                                         | Stores shared metadata, notebook registration, agreements, profiles, reviewed DQ expectations, classifications, lineage, and handover evidence. |
 | Engineering workspace  | `source_lakehouse`, `unified_lakehouse`, `product_warehouse` | Used by data analysts, engineers, and pipeline contributors to build and test the governed flow.                                      |
 
 ## Once you have the workspace and lakehouses & warehouses set up follow these 5 steps
@@ -67,8 +67,8 @@ Run the templates in this order:
 |     2 | `01_da`                              | Captures steward input, data agreement records, source intent, ownership, and expected use.                                              |
 |     3 | `02_ex`                              | Profiles the source data, registers exploration evidence, and proposes schema or transformation advice.                                  |
 |     4 | `03_pc`                              | Builds repeatable transformations, writes output tables, records runtime audit columns, captures lineage, and writes profiles. |
-|     5 | `04_gov`                             | Reviews and approves business context, data quality rules, sensitivity classification, and governance metadata.                          |
-|     6 | Rerun `03_pc` with approved metadata | Enforces approved rules and classifications during the pipeline run.                                                                     |
+|     5 | `04_gov`                             | Reviews and commits business context, DQ expectations, sensitivity classification, and governance metadata.                              |
+|     6 | Rerun `03_pc`                         | Runs the production notebook guardrails again and records updated evidence.                                                              |
 |     7 | Production handover                  | Stores the production notebook export and generates handover evidence for support and review.                                            |
 
 ## What success looks like
@@ -80,8 +80,8 @@ After the first full run, the flow should replace tribal knowledge with metadata
 | Who owns the data and what is it used for?        | Agreement and steward metadata captured in `01_da`.                                         |
 | What did the source look like during exploration? | Profiling, schema, and exploration metadata captured in `02_ex`.                            |
 | What transformations created the output?          | Pipeline registration, lineage, and output metadata captured in `03_pc`.                    |
-| Which rules and classifications were approved?    | Approved governance metadata from `04_gov`.                                                 |
-| Were approved rules enforced in the pipeline?     | Evidence from rerunning `03_pc` using approved governance metadata.                         |
+| Which expectations and classifications were reviewed? | Governance metadata from `04_gov`.                                                     |
+| Which production guardrails ran?                  | Evidence from `03_pc` schema checks, data-change monitoring, notebook-defined checks, output writes, lineage, and run summaries. |
 | What should be handed over to production support? | Stored production notebook export, generated handover summary, manifest, and support notes. |
 
 The goal is that support, review, and handover should no longer depend on memory or side conversations. The metadata should explain who owns the data, how it was explored, how it was transformed, which controls were approved, and what evidence exists from the production run.
@@ -91,6 +91,7 @@ The goal is that support, review, and handover should no longer depend on memory
 
 | Page                                          | Why read it                                                                                               |
 | --------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| [How FabricOps Works](how-fabricops-works/index.md) | Understand workspace and production deployment, notebook by roles, metadata tables, meatadata dashboard   |
-| [Data Quality Rules](data-quality-rules-system.md)   | Learn how AI can suggest DQ rules in `04_gov`; humans approve them before storage, and `03_pc` enforcement is planned later.                                               |
+| [How FabricOps Works](how-fabricops-works/index.md) | Start with the v1.0.0 metadata-backed notebook workflow, production guardrails, governance review, and handover story. |
+| [Production Guardrails Workflow](schema-and-data-drift.md) | Learn how `03_pc` owns production guardrails and run evidence. |
+| [Governance Review Workflow](data-quality-rules-system.md) | Learn how `04_gov` reviews profile evidence and commits governance metadata. |
 | [Function Reference](reference/index.md)   | Review the reusable helper APIs used by the notebook templates.                                           |
