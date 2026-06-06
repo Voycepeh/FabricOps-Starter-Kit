@@ -835,7 +835,7 @@ def _load_latest_profile(spark, metadata_table: str, dataset_name: str, table_na
         Spark session used to query the existing profile metadata table.
     metadata_table : str
         Existing profile metadata table, such as
-        ``METADATA_DATA_CATALOGUE_COLUMN``.
+        ``METADATA_DATA_CATALOGUE``.
     dataset_name : str
         Dataset name to match.
     table_name : str

@@ -2,9 +2,9 @@
 
 A data analyst profiles source data in a `02_ex_*` notebook. The notebook captures profile evidence such as nulls, distinct values, ranges, patterns, duplicates, and suspicious values.
 
-AI uses that evidence to suggest candidate data quality rules. A human reviewer approves, edits, rejects, or defers each suggestion. Only approved active rules are stored for enforcement.
+AI uses that evidence to suggest candidate data quality rules. A human reviewer approves, edits, rejects, or defers each suggestion. Only approved active rules are stored as append-only governance metadata for later enforcement work.
 
-A `03_pc_*` notebook loads approved rules during pipeline runs, applies them to the current dataframe or table, sends passing rows downstream, and quarantines failed rows with reasons. These approved rules are one enforceable part of the wider [How FabricOps Works](how-fabricops-works/index.md): the shared metadata flow used by governance and engineering.
+In v1.0.0, `04_gov_dataset_table` stores approved DQ rules but the base `03_pc_*` notebook does not load or enforce them. Future enhanced pipeline patterns can consume these approved rules as part of the wider [How FabricOps Works](how-fabricops-works/index.md) metadata flow.
 
 ## Business rules and drift monitoring
 
@@ -15,8 +15,8 @@ For example, every faculty value may remain valid while the distribution of reco
 Read [Schema and Data Drift Monitoring](schema-and-data-drift.md) for the monitoring approach.
 
 <figure markdown>
-  ![Data quality workflow with AI suggestions, human review, approval, and deterministic enforcement in pipelines](assets/DQ-with-ai.png){ .full-width }
-  <figcaption>Data quality workflow from profiling, rule suggestion, review, approval, enforcement, quarantine, and feedback.</figcaption>
+  ![Data quality workflow with AI suggestions, human review, approval, and planned deterministic enforcement in pipelines](assets/DQ-with-ai.png){ .full-width }
+  <figcaption>Data quality workflow from profiling, rule suggestion, human review, approval, and planned later enforcement.</figcaption>
 </figure>
 
 Next read: [Schema and Data Drift Monitoring](schema-and-data-drift.md), [How FabricOps Works](how-fabricops-works/index.md), [Quick Start](quick-start.md), [Function Reference](reference/index.md).
@@ -39,10 +39,10 @@ Next read: [Schema and Data Drift Monitoring](schema-and-data-drift.md), [How Fa
    Approved active rules are saved as metadata. Rejected and deferred rules are kept as review evidence only.
 
 6. **Enforce in `03_pc_*`**
-   Pipeline contract notebook loads approved active rules and applies the same checks on every run.
+   A later enhanced pipeline pattern can load approved active rules and apply the same checks on every run. The v1.0.0 `03_pc` template does not enforce approved DQ rules.
 
-7. **Split outputs**
-   Passing rows continue downstream. Failed rows go to quarantine with failure reasons.
+7. **Later enforcement pattern**
+   Passing/quarantine split outputs are planned for a future enhanced production pattern, not the v1.0.0 base `03_pc` notebook.
 
 ## What happens in the `02_ex_*` notebook
 
@@ -57,17 +57,16 @@ The analyst:
 
 The `02_ex_*` notebook is for exploration and review. It does not enforce production rules.
 
-## What happens in the `03_pc_*` notebook
+## What happens in the v1.0.0 `03_pc_*` notebook
 
-The pipeline:
+The base pipeline:
 
-1. loads approved active rules;
-2. applies them to the current dataframe or table;
-3. writes accepted rows to the target layer;
-4. writes failed rows to quarantine;
-5. records rule results, failure reasons, and run context.
+1. uses notebook-defined schema and drift guardrails;
+2. writes profile evidence to `METADATA_DATA_CATALOGUE`;
+3. does not load approved DQ rules for enforcement;
+4. does not quarantine rows based on approved governance metadata.
 
-AI is not used during enforcement. The `03_pc_*` notebook only runs approved active rules.
+AI is not used during production pipeline checks. Approved-rule enforcement is planned for a later enhancement.
 
 ## Metadata to capture
 
@@ -83,18 +82,18 @@ Rule metadata:
 | `rule_parameters` | Values or expression used by the check. |
 | `suggested_by_ai` | Whether the rule started as an AI suggestion. |
 | `human_decision` | Approve, edit, reject, or defer. |
-| `approval_status` | Whether the rule is approved for enforcement. |
+| `approval_status` | Whether the rule is approved for storage and future enforcement work. |
 | `approved_by` | Reviewer who approved the rule. |
 | `approved_at` | When approval happened. |
-| `active_flag` | Whether the rule is currently enforced. |
+| `active_flag` | Whether the rule is currently stored for later enforcement. |
 | `severity` | How failure should be handled. |
 
-Enforcement evidence:
+Planned future enforcement evidence:
 
 | Field | Purpose |
 | --- | --- |
-| `run_id` | Pipeline run that applied the rule. |
-| `rule_id` | Rule that was applied. |
+| `run_id` | Future pipeline run that applies the rule. |
+| `rule_id` | Rule that would be applied by a future enhanced pipeline. |
 | `failure_reason` | Why the row failed. |
 | `failed_row_count` | Number of failed rows. |
 | `accepted_row_count` | Number of accepted rows. |
@@ -113,4 +112,4 @@ Enforcement evidence:
 
 ## Feedback loop
 
-Suggestions, review decisions, approved rules, rejected rules, and enforcement outcomes are stored as evidence. Teams can use that evidence to improve future prompts and rule suggestions.
+Suggestions, review decisions, approved rules, and rejected rules are stored as evidence. Future enforcement outcomes can be added by a later enhanced pipeline pattern. Teams can use that evidence to improve prompts and rule suggestions.

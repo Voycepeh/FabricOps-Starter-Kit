@@ -273,7 +273,7 @@ def write_column_business_context(spark, rows: list[dict], metadata_path, table_
     return write_metadata_rows(spark, rows, metadata_path, table_name, mode=mode)
 
 
-def write_column_governance_context(spark, rows: list[dict], metadata_path, table_name: str = "METADATA_COLUMN_GOVERNANCE", mode: str = "append"):
+def write_column_governance_context(spark, rows: list[dict], metadata_path, table_name: str = "METADATA_COLUMN_CLASSIFICATION", mode: str = "append"):
     return write_metadata_rows(spark, rows, metadata_path, table_name, mode=mode)
 
 

@@ -92,5 +92,5 @@ The goal is that support, review, and handover should no longer depend on memory
 | Page                                          | Why read it                                                                                               |
 | --------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
 | [How FabricOps Works](how-fabricops-works/index.md) | Understand workspace and production deployment, notebook by roles, metadata tables, meatadata dashboard   |
-| [Data Quality Rules](data-quality-rules-system.md)   | Learn how we utilize AI to sugggest DQ rules in `04_gov`and store thes rules in a metadata table  to be enforced in `03_pc` notebooks.                                               |
+| [Data Quality Rules](data-quality-rules-system.md)   | Learn how AI can suggest DQ rules in `04_gov`; humans approve them before storage, and `03_pc` enforcement is planned later.                                               |
 | [Function Reference](reference/index.md)   | Review the reusable helper APIs used by the notebook templates.                                           |

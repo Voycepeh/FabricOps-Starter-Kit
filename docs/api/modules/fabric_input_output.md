@@ -6,7 +6,7 @@
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 8</span><span class="reference-chip">Internal helpers: 3</span><span class="reference-chip">Outbound: 1</span><span class="reference-chip">Inbound: 3</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 8</span><span class="reference-chip">Internal helpers: 3</span><span class="reference-chip">Outbound: 1</span><span class="reference-chip">Inbound: 4</span></div>
 
 ## Module purpose
 
@@ -40,7 +40,7 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
     </tr>
     <tr>
       <td>Inbound module count</td>
-      <td>3</td>
+      <td>4</td>
     </tr>
     <tr>
       <td>Outbound module count</td>
@@ -48,7 +48,7 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
     </tr>
     <tr>
       <td>External callers</td>
-      <td><code>data_agreement</code>, <code>data_quality</code>, <code>metadata</code></td>
+      <td><code>data_agreement</code>, <code>data_quality</code>, <code>governance_review</code>, <code>metadata</code></td>
     </tr>
     <tr>
       <td>External callees</td>
@@ -225,6 +225,9 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
 
 **data_quality**
 <a class="reference-chip" href="../../reference/write_dq_rules/"><code>write_dq_rules</code></a>
+
+**governance_review**
+<a class="reference-chip" href="../../reference/commit_column_classification/"><code>commit_column_classification</code></a>, <a class="reference-chip" href="../../reference/commit_column_context/"><code>commit_column_context</code></a>, <a class="reference-chip" href="../../reference/commit_dq_rules/"><code>commit_dq_rules</code></a>, <a class="reference-chip" href="../../reference/load_catalogue_profile_rows/"><code>load_catalogue_profile_rows</code></a>, <a class="reference-chip" href="../../reference/setup_governance_metadata_tables/"><code>setup_governance_metadata_tables</code></a>, <a class="reference-chip" href="../../reference/widget_select_catalogue_table/"><code>widget_select_catalogue_table</code></a>
 
 **metadata**
 <a class="reference-chip" href="../../reference/load_notebook_registry/"><code>load_notebook_registry</code></a>, <a class="reference-chip" href="../../reference/register_current_notebook/"><code>register_current_notebook</code></a>, <a class="reference-chip" href="../../reference/setup_notebook_registry_table/"><code>setup_notebook_registry_table</code></a>

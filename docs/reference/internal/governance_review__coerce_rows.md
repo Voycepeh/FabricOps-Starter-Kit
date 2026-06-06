@@ -1,0 +1,26 @@
+# _coerce_rows
+
+**Module:** `governance_review`  
+**Classification:** Internal helper
+
+## Purpose
+
+No summary available.
+
+## Function manifest
+
+- Fully qualified function name: `fabricops_kit.governance_review._coerce_rows`
+- Short name: `_coerce_rows`
+- Module: `governance_review`
+- Classification: Internal helper
+- Related module: `governance_review`
+- Source file path: `src/fabricops_kit/governance_review.py`
+- Source reference: <a href="../../api/modules/governance_review/#_coerce_rows">Module source anchor</a>
+- Inbound references count: 4
+- Outbound references count: 0
+
+## Inbound references
+- <a href="../latest_by_column/"><code>fabricops_kit.governance_review.latest_by_column</code></a>
+- <a href="../load_catalogue_profile_rows/"><code>fabricops_kit.governance_review.load_catalogue_profile_rows</code></a>
+- <a href="../setup_governance_metadata_tables/"><code>fabricops_kit.governance_review.setup_governance_metadata_tables</code></a>
+- <a href="../widget_select_catalogue_table/"><code>fabricops_kit.governance_review.widget_select_catalogue_table</code></a>

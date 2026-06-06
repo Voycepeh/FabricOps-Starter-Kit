@@ -13,6 +13,7 @@ WIDGET_MODULES = [
     Path("src/fabricops_kit/business_context.py"),
     Path("src/fabricops_kit/data_governance.py"),
     Path("src/fabricops_kit/data_quality.py"),
+    Path("src/fabricops_kit/governance_review.py"),
 ]
 
 RENAMED_WIDGET_EXPORTS = {
@@ -25,6 +26,8 @@ RENAMED_WIDGET_EXPORTS = {
     "widget_review_governance",
     "widget_review_dq_rules",
     "widget_review_dq_rule_deactivations",
+    "widget_select_catalogue_table",
+    "widget_review_table_governance",
 }
 
 REMOVED_WIDGET_EXPORTS = {
@@ -47,7 +50,7 @@ EXPECTED_FABRIC_DISPLAY_CALLS = {
         "display(output_profile)",
         "display(run_summary)",
     },
-    "04_gov_agreement_dataset_table.ipynb": {"display(metadata_dq_rules)"},
+    "04_gov_dataset_table.ipynb": {"display(spark.createDataFrame([profile_summary]))", "display(spark.createDataFrame([completion_summary]))"},
 }
 
 

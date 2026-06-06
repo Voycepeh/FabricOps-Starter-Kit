@@ -10,7 +10,7 @@
 
 ## Module purpose
 
-Owns final handover assembly and contract artifact rendering/export.
+Owns final handover assembly and notebook-friendly rendering/export.
 
 ## Module manifest
 
@@ -28,7 +28,7 @@ Owns final handover assembly and contract artifact rendering/export.
     </tr>
     <tr>
       <td>Module purpose</td>
-      <td>Owns final handover assembly and contract artifact rendering/export.</td>
+      <td>Owns final handover assembly and notebook-friendly rendering/export.</td>
     </tr>
     <tr>
       <td>Public callable count</td>

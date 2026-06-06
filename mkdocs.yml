@@ -30,6 +30,7 @@ nav:
       - Workspace Operating Model: how-fabricops-works/workspace-operating-model.md
       - Notebook Templates: how-fabricops-works/notebook-templates.md
       - Metadata Tables: how-fabricops-works/metadata-tables.md
+      - Table-Scoped Governance: how-fabricops-works/table-scoped-governance.md
       - Metadata Dashboard: how-fabricops-works/metadata-dashboard.md
 
   - Data Quality:
@@ -50,6 +51,7 @@ nav:
           - data_agreement: api/modules/data_agreement.md
           - business_context: api/modules/business_context.md
           - data_governance: api/modules/data_governance.md
+          - governance_review: api/modules/governance_review.md
           - data_profiling: api/modules/data_profiling.md
           - data_quality: api/modules/data_quality.md
           - fabric_input_output: api/modules/fabric_input_output.md
