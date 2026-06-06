@@ -1,4 +1,9 @@
-"""Table-scoped governance review helpers for ``04_gov`` notebooks."""
+"""Table-scoped governance review and migrated AI/DQ internals.
+
+This module owns the v1 ``04_gov`` review flow and temporarily hosts
+internal AI-assisted business-context, classification, and DQ enforcement
+helpers until follow-up PRs decide which workflows to expose in notebook UX.
+"""
 
 from __future__ import annotations
 
