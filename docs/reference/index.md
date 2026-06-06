@@ -2,6 +2,10 @@
 
 Use this page as a callable lookup after you understand the notebook flow.
 
+- Use [Template Function Map](template-function-map.md) to see what notebook users actually call.
+- Use the Function catalogue below to browse the public v1 callable API.
+- Use Implementation Modules only when debugging or maintaining the package internals.
+
 > Graph exploration is intentionally deferred. Future PR may use Neo4j or a proper graph backend.
 
 ## Find a callable

@@ -43,7 +43,8 @@ nav:
 
   - Function Reference:
       - Overview: reference/index.md
-      - Modules:
+      - Template Function Map: reference/template-function-map.md
+      - Implementation Modules:
           # AUTO-GENERATED-MODULES-START
           - config: api/modules/config.md
           - versioning: api/modules/versioning.md
