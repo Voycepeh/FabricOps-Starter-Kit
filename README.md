@@ -4,10 +4,6 @@ Lightweight, notebook centric, plug and play starter kit for Microsoft Fabric.
 
 FabricOps Starter Kit helps teams quickly bootstrap governed Fabric notebook delivery using reusable templates and a lightweight helper wheel.
 
-No heavy orchestration platform required.
-
-FabricOps Starter Kit combines a **reusable helper wheel** with **notebook templates** so teams can run AI assisted, human approved delivery flows and generate **contract ready evidence** (metadata, quality, lineage, governance) without adopting a heavy orchestration platform.
-
 <div align="center">
 
 [![Open Documentation](https://img.shields.io/badge/Docs-Open%20FabricOps-blue?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/)
@@ -16,9 +12,6 @@ FabricOps Starter Kit combines a **reusable helper wheel** with **notebook templ
 
 </div>
 
-## Fast user journey
-
-**Understand → Install Wheel → Copy Templates → Run Notebooks → Review Evidence → Deploy Later**
 
 ## Documentation map
 
@@ -33,7 +26,7 @@ FabricOps Starter Kit combines a **reusable helper wheel** with **notebook templ
 - [Setup](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/install/)
 - [Function Reference](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/reference/)
 
-## Template quick links
+## Template quick links (Download and open in fabric directly for best experience)
 
 - [`00_env_config`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks/00_env_config.ipynb)
 - [`01_da_agreement_template`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks/01_da_agreement_template.ipynb)
