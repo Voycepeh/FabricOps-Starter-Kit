@@ -5,7 +5,7 @@
 
 ## Purpose
 
-No summary available.
+Assemble final handover evidence for reviewed notebook work.
 
 ## Function manifest
 

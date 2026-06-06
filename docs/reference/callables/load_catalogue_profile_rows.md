@@ -5,7 +5,7 @@
 
 ## Purpose
 
-Load selected column profile rows from METADATA_DATA_CATALOGUE.
+Load column profile rows for the selected catalogue table.
 
 ## Function manifest
 

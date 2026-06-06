@@ -1,18 +1,18 @@
 # read_lakehouse_csv
 
 **Module:** `fabric_input_output`  
-**Classification:** Optional
+**Classification:** Essential
 
 ## Purpose
 
-No summary available.
+Read a CSV file from a configured Fabric lakehouse Files path.
 
 ## Function manifest
 
 - Fully qualified function name: `fabricops_kit.fabric_input_output.read_lakehouse_csv`
 - Short name: `read_lakehouse_csv`
 - Module: `fabric_input_output`
-- Classification: Optional
+- Classification: Essential
 - Related module: `fabric_input_output`
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
 - Source reference: <a href="../../api/modules/fabric_input_output/#read_lakehouse_csv">Module source anchor</a>

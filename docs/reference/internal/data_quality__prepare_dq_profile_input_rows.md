@@ -20,7 +20,7 @@ No summary available.
 - Outbound references count: 1
 
 ## Inbound references
-- <a href="../draft_dq_rules/"><code>fabricops_kit.data_quality.draft_dq_rules</code></a>
+- <a href="../internal/data_quality/_draft_dq_rules/"><code>fabricops_kit.data_quality._draft_dq_rules</code></a>
 
 ## Outbound references
 - <a href="../profile_dataframe/"><code>fabricops_kit.data_profiling.profile_dataframe</code></a>

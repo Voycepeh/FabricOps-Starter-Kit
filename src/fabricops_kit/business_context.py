@@ -5,7 +5,7 @@ import importlib
 import json
 from datetime import datetime, timezone
 
-from .metadata import build_metadata_column_key, build_metadata_table_key
+from .metadata import _build_metadata_column_key, _build_metadata_table_key
 from .config import DEFAULT_BUSINESS_CONTEXT_PROMPT_TEMPLATE
 
 COLUMN_BUSINESS_CONTEXT_FROM_WIDGET: list[dict] = []
@@ -31,7 +31,7 @@ def _prepare_business_context_profile_input(profile_rows: list[dict], table_name
     return out
 
 
-def draft_business_context(prepared_profile_df, prompt_template: str = BUSINESS_CONTEXT_PROMPT, output_col: str = "ai_business_context_response"):
+def _draft_business_context(prepared_profile_df, prompt_template: str = BUSINESS_CONTEXT_PROMPT, output_col: str = "ai_business_context_response"):
     """Run Fabric AI to draft column business context suggestions.
 
     Parameters
@@ -50,7 +50,7 @@ def draft_business_context(prepared_profile_df, prompt_template: str = BUSINESS_
     """
     ai = getattr(prepared_profile_df, "ai", None)
     if ai is None or not hasattr(ai, "generate_response"):
-        raise RuntimeError("draft_business_context requires Fabric DataFrame.ai.generate_response.")
+        raise RuntimeError("_draft_business_context requires Fabric DataFrame.ai.generate_response.")
     return prepared_profile_df.ai.generate_response(prompt=prompt_template, is_prompt_template=True, output_col=output_col)
 
 
@@ -84,17 +84,17 @@ def _extract_column_business_context_suggestions(response_rows, response_col: st
     return out
 
 
-def prepare_business_context_profile_input(profile_rows: list[dict], table_name: str, table_context: str = "") -> list[dict]:
+def _prepare_business_context_profile_input(profile_rows: list[dict], table_name: str, table_context: str = "") -> list[dict]:
     """Prepare profile rows for business context prompt drafting."""
     return _prepare_business_context_profile_input(profile_rows=profile_rows, table_name=table_name, table_context=table_context)
 
 
-def extract_column_business_context_suggestions(response_rows, response_col: str = "ai_business_context_response") -> list[dict]:
+def _extract_column_business_context_suggestions(response_rows, response_col: str = "ai_business_context_response") -> list[dict]:
     """Extract review-ready business context suggestion rows from AI responses."""
     return _extract_column_business_context_suggestions(response_rows=response_rows, response_col=response_col)
 
 
-def get_reviewed_business_context_rows(status: str = "approved") -> list[dict]:
+def _get_reviewed_business_context_rows(status: str = "approved") -> list[dict]:
     """Return reviewed business context rows from widget state."""
     normalized = str(status or "").strip().lower()
     if normalized == "approved":
@@ -109,7 +109,7 @@ def _require_ipywidgets():
     return widgets
 
 
-def widget_review_business_context(suggestions: list[dict], environment_name: str, dataset_name: str, table_name: str, default_approval_status: str = "pending") -> list[dict]:
+def _widget_review_business_context(suggestions: list[dict], environment_name: str, dataset_name: str, table_name: str, default_approval_status: str = "pending") -> list[dict]:
     """Display interactive approval widget.
 
     Notes
@@ -158,8 +158,8 @@ def widget_review_business_context(suggestions: list[dict], environment_name: st
             "dataset_name": dataset_name,
             "table_name": table_name,
             "column_name": row.get("column_name"),
-            "metadata_table_key": build_metadata_table_key(environment_name, dataset_name, table_name),
-            "metadata_column_key": build_metadata_column_key(environment_name, dataset_name, table_name, row.get("column_name")),
+            "metadata_table_key": _build_metadata_table_key(environment_name, dataset_name, table_name),
+            "metadata_column_key": _build_metadata_column_key(environment_name, dataset_name, table_name, row.get("column_name")),
             "ai_suggested_business_context": row.get("business_context", ""),
             "approved_business_context": approved_box.value.strip(),
             "business_context_notes": notes_box.value.strip(),
@@ -216,7 +216,7 @@ def widget_review_business_context(suggestions: list[dict], environment_name: st
 
 
 
-def write_business_context(spark, *, rows: list[dict], metadata_path, table_name: str = "METADATA_COLUMN_BUSINESS_CONTEXT", mode: str = "append"):
+def _write_business_context(spark, *, rows: list[dict], metadata_path, table_name: str = "METADATA_COLUMN_BUSINESS_CONTEXT", mode: str = "append"):
     """Persist approved business context rows via metadata writer."""
-    from .metadata import write_column_business_context
-    return write_column_business_context(spark=spark, rows=rows, metadata_path=metadata_path, table_name=table_name, mode=mode)
+    from .metadata import _write_column_business_context
+    return _write_column_business_context(spark=spark, rows=rows, metadata_path=metadata_path, table_name=table_name, mode=mode)

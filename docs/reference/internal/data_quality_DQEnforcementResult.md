@@ -20,4 +20,4 @@ No summary available.
 - Outbound references count: 0
 
 ## Inbound references
-- <a href="../enforce_dq/"><code>fabricops_kit.data_quality.enforce_dq</code></a>
+- <a href="../internal/data_quality/_enforce_dq/"><code>fabricops_kit.data_quality._enforce_dq</code></a>

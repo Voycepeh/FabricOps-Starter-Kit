@@ -8,10 +8,10 @@ from fabricops_kit.config import (
     DataAgreementConfig,
     DatasetContractValidationError,
     PathConfig,
-    assert_valid_dataset_contract,
-    load_dataset_contract,
+    _assert_valid_dataset_contract,
+    _load_dataset_contract,
     setup_notebook,
-    validate_dataset_contract,
+    _validate_dataset_contract,
 )
 from tests.helpers import framework_config
 
@@ -21,15 +21,15 @@ FIXTURES = Path(__file__).parents[1] / "fixtures"
 
 
 def test_dataset_contract_valid_and_invalid_paths_are_actionable():
-    valid = load_dataset_contract(FIXTURES / "valid_dataset_contract.yaml")
-    invalid = load_dataset_contract(FIXTURES / "invalid_dataset_contract_missing_required.yaml")
+    valid = _load_dataset_contract(FIXTURES / "valid_dataset_contract.yaml")
+    invalid = _load_dataset_contract(FIXTURES / "invalid_dataset_contract_missing_required.yaml")
 
-    assert validate_dataset_contract(valid) == []
-    errors = validate_dataset_contract(invalid)
+    assert _validate_dataset_contract(valid) == []
+    errors = _validate_dataset_contract(invalid)
     assert errors
     assert any("required property" in error for error in errors)
     with pytest.raises(DatasetContractValidationError):
-        assert_valid_dataset_contract(invalid)
+        _assert_valid_dataset_contract(invalid)
 
 
 def test_setup_notebook_resolves_environment_paths_and_reports_invalid_targets(fake_notebookutils):

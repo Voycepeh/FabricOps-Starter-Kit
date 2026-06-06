@@ -5,7 +5,7 @@
 
 ## Purpose
 
-Create, validate, and report readiness for agreement metadata tables.
+Create or validate data-agreement metadata tables during environment setup.
 
 ## Function manifest
 

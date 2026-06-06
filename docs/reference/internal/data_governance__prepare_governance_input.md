@@ -17,7 +17,10 @@ No summary available.
 - Source file path: `src/fabricops_kit/data_governance.py`
 - Source reference: <a href="../../api/modules/data_governance/#_prepare_governance_input">Module source anchor</a>
 - Inbound references count: 1
-- Outbound references count: 0
+- Outbound references count: 1
 
 ## Inbound references
-- <a href="../prepare_governance_input/"><code>fabricops_kit.data_governance.prepare_governance_input</code></a>
+- <a href="../internal/data_governance/_prepare_governance_input/"><code>fabricops_kit.data_governance._prepare_governance_input</code></a>
+
+## Outbound references
+- <a href="../internal/data_governance/_prepare_governance_input/"><code>fabricops_kit.data_governance._prepare_governance_input</code></a>

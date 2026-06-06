@@ -5,7 +5,7 @@
 
 ## Purpose
 
-Raise the shared guardrail error only when a schema or data-change result cannot continue.
+Stop a notebook when a schema or data-change guardrail result blocks continuation.
 
 ## Function manifest
 

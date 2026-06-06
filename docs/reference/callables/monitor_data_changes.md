@@ -5,7 +5,7 @@
 
 ## Purpose
 
-Profile a dataframe, select the appropriate baseline, compare distributions, and return a data-change result from a preset.
+Profile data, compare against the approved baseline, and return a drift guardrail result.
 
 ## Function manifest
 

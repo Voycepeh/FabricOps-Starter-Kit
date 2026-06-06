@@ -20,4 +20,4 @@ No summary available.
 - Outbound references count: 0
 
 ## Inbound references
-- <a href="../internal/drift/detect_dataframe_engine/"><code>fabricops_kit.drift.detect_dataframe_engine</code></a>
+- <a href="../internal/drift/_detect_dataframe_engine/"><code>fabricops_kit.drift._detect_dataframe_engine</code></a>

@@ -21,7 +21,7 @@ No summary available.
 
 ## Inbound references
 - <a href="../internal/metadata/_latest_registration_events/"><code>fabricops_kit.metadata._latest_registration_events</code></a>
-- <a href="../load_notebook_registry/"><code>fabricops_kit.metadata.load_notebook_registry</code></a>
+- <a href="../internal/metadata/_load_notebook_registry/"><code>fabricops_kit.metadata._load_notebook_registry</code></a>
 
 ## Outbound references
 - <a href="../internal/metadata/_coerce_row_dicts/"><code>fabricops_kit.metadata._coerce_row_dicts</code></a>

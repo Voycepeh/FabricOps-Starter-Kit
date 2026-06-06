@@ -20,5 +20,5 @@ No summary available.
 - Outbound references count: 0
 
 ## Inbound references
+- <a href="../internal/governance_review/_get_governance_metadata_schemas/"><code>fabricops_kit.governance_review._get_governance_metadata_schemas</code></a>
 - <a href="../internal/governance_review/_schema/"><code>fabricops_kit.governance_review._schema</code></a>
-- <a href="../get_governance_metadata_schemas/"><code>fabricops_kit.governance_review.get_governance_metadata_schemas</code></a>

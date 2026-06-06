@@ -6,7 +6,7 @@
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 8</span><span class="reference-chip">Internal helpers: 3</span><span class="reference-chip">Outbound: 1</span><span class="reference-chip">Inbound: 4</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 7</span><span class="reference-chip">Internal helpers: 5</span><span class="reference-chip">Outbound: 1</span><span class="reference-chip">Inbound: 4</span></div>
 
 ## Module purpose
 
@@ -32,11 +32,11 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
     </tr>
     <tr>
       <td>Public callable count</td>
-      <td>8</td>
+      <td>7</td>
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>3</td>
+      <td>5</td>
     </tr>
     <tr>
       <td>Inbound module count</td>
@@ -72,53 +72,53 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
   </thead>
   <tbody>
     <tr>
+      <td><a href="../../reference/read_lakehouse_csv/"><code>read_lakehouse_csv</code></a></td>
+      <td>Essential</td>
+      <td>function</td>
+      <td>Read a CSV file from a configured Fabric lakehouse Files path.</td>
+      <td><a href="../../reference/internal/fabric_input_output/_get_spark/"><code>_get_spark</code></a> (internal)</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/read_lakehouse_excel/"><code>read_lakehouse_excel</code></a></td>
+      <td>Essential</td>
+      <td>function</td>
+      <td>Read an Excel file from a configured Fabric lakehouse Files path.</td>
+      <td><a href="../../reference/internal/fabric_input_output/_get_spark/"><code>_get_spark</code></a> (internal)</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/read_lakehouse_parquet/"><code>read_lakehouse_parquet</code></a></td>
+      <td>Essential</td>
+      <td>function</td>
+      <td>Read a Parquet path from a configured Fabric lakehouse Files path.</td>
+      <td><a href="../../reference/internal/fabric_input_output/_convert_single_parquet_ns_to_us/"><code>_convert_single_parquet_ns_to_us</code></a> (internal), <a href="../../reference/internal/fabric_input_output/_get_spark/"><code>_get_spark</code></a> (internal)</td>
+    </tr>
+    <tr>
       <td><a href="../../reference/read_lakehouse_table/"><code>read_lakehouse_table</code></a></td>
       <td>Essential</td>
       <td>function</td>
-      <td>Read a Delta table from a Fabric lakehouse.</td>
+      <td>Read a table from a configured Fabric lakehouse target.</td>
       <td><a href="../../reference/internal/fabric_input_output/_get_spark/"><code>_get_spark</code></a> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/read_warehouse_table/"><code>read_warehouse_table</code></a></td>
       <td>Essential</td>
       <td>function</td>
-      <td>Read a table from a Microsoft Fabric warehouse.</td>
+      <td>Read a table from a configured Fabric warehouse target.</td>
       <td><a href="../../reference/internal/fabric_input_output/_get_spark/"><code>_get_spark</code></a> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/write_lakehouse_table/"><code>write_lakehouse_table</code></a></td>
       <td>Essential</td>
       <td>function</td>
-      <td>Write a Spark DataFrame to a Fabric lakehouse Delta table.</td>
+      <td>Write a DataFrame to a configured Fabric lakehouse target.</td>
       <td>—</td>
     </tr>
     <tr>
       <td><a href="../../reference/write_warehouse_table/"><code>write_warehouse_table</code></a></td>
       <td>Essential</td>
       <td>function</td>
-      <td>Write a Spark DataFrame to a Microsoft Fabric warehouse table.</td>
+      <td>Write a DataFrame to a configured Fabric warehouse target.</td>
       <td>—</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/read_lakehouse_csv/"><code>read_lakehouse_csv</code></a></td>
-      <td>Optional</td>
-      <td>function</td>
-      <td>Read a CSV file from a Fabric lakehouse Files path.</td>
-      <td><a href="../../reference/internal/fabric_input_output/_get_spark/"><code>_get_spark</code></a> (internal)</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/read_lakehouse_excel/"><code>read_lakehouse_excel</code></a></td>
-      <td>Optional</td>
-      <td>function</td>
-      <td>Read an Excel file from a Fabric lakehouse Files path and pass options such as skiprows, header, usecols, dtype, and nrows through to pandas.read_excel.</td>
-      <td><a href="../../reference/internal/fabric_input_output/_get_spark/"><code>_get_spark</code></a> (internal)</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/read_lakehouse_parquet/"><code>read_lakehouse_parquet</code></a></td>
-      <td>Optional</td>
-      <td>function</td>
-      <td>Read a Parquet file from a Fabric lakehouse Files path.</td>
-      <td><a href="../../reference/internal/fabric_input_output/_convert_single_parquet_ns_to_us/"><code>_convert_single_parquet_ns_to_us</code></a> (internal), <a href="../../reference/internal/fabric_input_output/_get_spark/"><code>_get_spark</code></a> (internal)</td>
     </tr>
   </tbody>
 </table>
@@ -189,6 +189,10 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
   </thead>
   <tbody>
     <tr>
+      <td><a href="../../reference/internal/fabric_input_output/_check_naming_convention/"><code>_check_naming_convention</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
       <td><a href="../../reference/internal/fabric_input_output/_convert_single_parquet_ns_to_us/"><code>_convert_single_parquet_ns_to_us</code></a></td>
       <td><a href="../../reference/read_lakehouse_parquet/"><code>read_lakehouse_parquet</code></a></td>
     </tr>
@@ -200,12 +204,21 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
       <td><a href="../../reference/internal/fabric_input_output/_get_spark/"><code>_get_spark</code></a></td>
       <td><a href="../../reference/read_lakehouse_csv/"><code>read_lakehouse_csv</code></a>, <a href="../../reference/read_lakehouse_excel/"><code>read_lakehouse_excel</code></a>, <a href="../../reference/read_lakehouse_parquet/"><code>read_lakehouse_parquet</code></a>, <a href="../../reference/read_lakehouse_table/"><code>read_lakehouse_table</code></a>, <a href="../../reference/read_warehouse_table/"><code>read_warehouse_table</code></a></td>
     </tr>
+    <tr>
+      <td><a href="../../reference/internal/fabric_input_output/_seed_minimal_sample_source_table/"><code>_seed_minimal_sample_source_table</code></a></td>
+      <td>—</td>
+    </tr>
   </tbody>
 </table>
 </div>
 
 <h6>Internal helpers details</h6>
 <ul class="callable-relationship-rows">
+<li>
+<a class="reference-chip" href="#_check_naming_convention"><code>_check_naming_convention</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_get_fabric_runtime_context"><code>_get_fabric_runtime_context</code></a>
+</li>
 <li>
 <a class="reference-chip" href="#_convert_single_parquet_ns_to_us"><code>_convert_single_parquet_ns_to_us</code></a>
 </li>
@@ -214,6 +227,11 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
 </li>
 <li>
 <a class="reference-chip" href="#_get_spark"><code>_get_spark</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_seed_minimal_sample_source_table"><code>_seed_minimal_sample_source_table</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_get_spark"><code>_get_spark</code></a>, <a class="reference-chip" href="../../reference/write_lakehouse_table/"><code>write_lakehouse_table</code></a>
 </li>
 </ul>
 </details>
@@ -224,13 +242,13 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
 <a class="reference-chip" href="../data_agreement/#_ensure_metadata_tables"><code>_ensure_metadata_tables</code></a>, <a class="reference-chip" href="../data_agreement/#_list_all_data_agreement_rows"><code>_list_all_data_agreement_rows</code></a>, <a class="reference-chip" href="../data_agreement/#_list_data_stewards"><code>_list_data_stewards</code></a>, <a class="reference-chip" href="../data_agreement/#_write_row"><code>_write_row</code></a>
 
 **data_quality**
-<a class="reference-chip" href="../../reference/write_dq_rules/"><code>write_dq_rules</code></a>
+<a class="reference-chip" href="../data_quality/#_write_dq_rules"><code>_write_dq_rules</code></a>
 
 **governance_review**
-<a class="reference-chip" href="../../reference/commit_column_classification/"><code>commit_column_classification</code></a>, <a class="reference-chip" href="../../reference/commit_column_context/"><code>commit_column_context</code></a>, <a class="reference-chip" href="../../reference/commit_dq_rules/"><code>commit_dq_rules</code></a>, <a class="reference-chip" href="../../reference/load_catalogue_profile_rows/"><code>load_catalogue_profile_rows</code></a>, <a class="reference-chip" href="../../reference/setup_governance_metadata_tables/"><code>setup_governance_metadata_tables</code></a>, <a class="reference-chip" href="../../reference/widget_select_catalogue_table/"><code>widget_select_catalogue_table</code></a>
+<a class="reference-chip" href="../governance_review/#_commit_column_classification"><code>_commit_column_classification</code></a>, <a class="reference-chip" href="../governance_review/#_commit_column_context"><code>_commit_column_context</code></a>, <a class="reference-chip" href="../governance_review/#_commit_dq_rules"><code>_commit_dq_rules</code></a>, <a class="reference-chip" href="../../reference/load_catalogue_profile_rows/"><code>load_catalogue_profile_rows</code></a>, <a class="reference-chip" href="../../reference/setup_governance_metadata_tables/"><code>setup_governance_metadata_tables</code></a>, <a class="reference-chip" href="../../reference/widget_select_catalogue_table/"><code>widget_select_catalogue_table</code></a>
 
 **metadata**
-<a class="reference-chip" href="../../reference/load_notebook_registry/"><code>load_notebook_registry</code></a>, <a class="reference-chip" href="../../reference/register_current_notebook/"><code>register_current_notebook</code></a>, <a class="reference-chip" href="../../reference/setup_notebook_registry_table/"><code>setup_notebook_registry_table</code></a>
+<a class="reference-chip" href="../metadata/#_load_notebook_registry"><code>_load_notebook_registry</code></a>, <a class="reference-chip" href="../metadata/#_register_current_notebook"><code>_register_current_notebook</code></a>, <a class="reference-chip" href="../../reference/setup_notebook_registry_table/"><code>setup_notebook_registry_table</code></a>
 
 ### External callees
 

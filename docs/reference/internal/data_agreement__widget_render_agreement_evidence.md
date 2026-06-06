@@ -17,10 +17,10 @@ No summary available.
 - Source file path: `src/fabricops_kit/data_agreement.py`
 - Source reference: <a href="../../api/modules/data_agreement/#_widget_render_agreement_evidence">Module source anchor</a>
 - Inbound references count: 2
-- Outbound references count: 5
+- Outbound references count: 6
 
 ## Inbound references
-- <a href="../widget_render_agreement_evidence/"><code>fabricops_kit.data_agreement.widget_render_agreement_evidence</code></a>
+- <a href="../internal/data_agreement/_widget_render_agreement_evidence/"><code>fabricops_kit.data_agreement._widget_render_agreement_evidence</code></a>
 - <a href="../widget_render_agreement_intake_app/"><code>fabricops_kit.data_agreement.widget_render_agreement_intake_app</code></a>
 
 ## Outbound references
@@ -29,3 +29,4 @@ No summary available.
 - <a href="../internal/data_agreement/_require_ipywidgets/"><code>fabricops_kit.data_agreement._require_ipywidgets</code></a>
 - <a href="../internal/data_agreement/_save_agreement_evidence_records/"><code>fabricops_kit.data_agreement._save_agreement_evidence_records</code></a>
 - <a href="../internal/data_agreement/_widget_common/"><code>fabricops_kit.data_agreement._widget_common</code></a>
+- <a href="../internal/data_agreement/_widget_render_agreement_evidence/"><code>fabricops_kit.data_agreement._widget_render_agreement_evidence</code></a>

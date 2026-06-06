@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from typing import Any, Iterable
 
 from .fabric_input_output import read_lakehouse_table, write_lakehouse_table
-from .metadata import _now_utc_iso, _resolve_action_by, build_metadata_column_key, build_metadata_table_key, build_runtime_audit_fields, build_dq_rule_key
+from .metadata import _now_utc_iso, _resolve_action_by, _build_metadata_column_key, _build_metadata_table_key, _build_runtime_audit_fields, _build_dq_rule_key
 
 CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
 COLUMN_CONTEXT_TABLE = "METADATA_COLUMN_CONTEXT"
@@ -94,7 +94,7 @@ def _schema_field_names(schema: Any) -> list[str]:
     return [field.name for field in getattr(schema, "fields", [])]
 
 
-def get_governance_metadata_schemas() -> dict[str, Any]:
+def _get_governance_metadata_schemas() -> dict[str, Any]:
     """Return typed Spark schemas prepared by ``00_env_config`` for governance.
 
     Returns
@@ -161,7 +161,7 @@ def _row_metadata_table_key(row: dict[str, Any]) -> str:
     explicit = _value(row, "metadata_table_key")
     if explicit:
         return str(explicit)
-    return build_metadata_table_key(_value(row, "environment_name"), _value(row, "dataset_name"), _value(row, "table_name"))
+    return _build_metadata_table_key(_value(row, "environment_name"), _value(row, "dataset_name"), _value(row, "table_name"))
 
 
 def setup_governance_metadata_tables(*, spark: Any, config: Any, env: str) -> dict[str, Any]:
@@ -182,7 +182,7 @@ def setup_governance_metadata_tables(*, spark: Any, config: Any, env: str) -> di
         Setup status, checked tables, and newly created tables.
     """
     created: list[str] = []
-    schemas = get_governance_metadata_schemas()
+    schemas = _get_governance_metadata_schemas()
     for table_name, schema in schemas.items():
         try:
             table = read_lakehouse_table(config, env, "metadata", table_name, spark_session=spark)
@@ -201,7 +201,7 @@ def setup_governance_metadata_tables(*, spark: Any, config: Any, env: str) -> di
     return {"status": "ready", "tables": list(schemas), "created_tables": created}
 
 
-def catalogue_table_options(catalogue_rows: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
+def _catalogue_table_options(catalogue_rows: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
     """Return one option per logical table using its latest successful profile.
 
     Parameters
@@ -238,7 +238,7 @@ def catalogue_table_options(catalogue_rows: Iterable[dict[str, Any]]) -> list[di
     options = []
     for (env, dataset, table), item in latest.items():
         row = item["row"]
-        table_key = str(_value(row, "metadata_table_key") or build_metadata_table_key(env, dataset, table))
+        table_key = str(_value(row, "metadata_table_key") or _build_metadata_table_key(env, dataset, table))
         profile_run_id = str(_value(row, "profile_run_id"))
         profile_stage = str(_value(row, "profile_stage"))
         layer = str(_value(row, "layer"))
@@ -282,7 +282,7 @@ def widget_select_catalogue_table(config: Any, env: str, *, spark_session: Any):
     from IPython import display as ip
 
     rows = _coerce_rows(read_lakehouse_table(config, env, "metadata", CATALOGUE_TABLE, spark_session=spark_session))
-    options = catalogue_table_options(rows)
+    options = _catalogue_table_options(rows)
     by_label = {o["label"]: o for o in options}
     combo = widgets.Combobox(placeholder="Search profiled tables", options=[o["label"] for o in options], description="Table", ensure_option=True, layout=widgets.Layout(width="980px"))
     context = widgets.HTML()
@@ -322,7 +322,7 @@ def load_catalogue_profile_rows(config: Any, env: str, selection: dict[str, Any]
     return filtered
 
 
-def build_profile_summary(profile_rows: list[dict[str, Any]], selection: dict[str, Any]) -> dict[str, Any]:
+def _build_profile_summary(profile_rows: list[dict[str, Any]], selection: dict[str, Any]) -> dict[str, Any]:
     """Build a concise table summary for display before governance review."""
     if not profile_rows:
         raise ValueError("Cannot summarize an empty selected profile.")
@@ -336,7 +336,7 @@ def build_profile_summary(profile_rows: list[dict[str, Any]], selection: dict[st
     }
 
 
-def latest_by_column(rows: Any, *, approved_status: str = "approved") -> dict[str, dict[str, Any]]:
+def _latest_by_column(rows: Any, *, approved_status: str = "approved") -> dict[str, dict[str, Any]]:
     """Return latest approved metadata row by ``metadata_column_key``."""
     filtered = [r for r in _coerce_rows(rows) if str(r.get("review_status") or r.get("status") or "").lower() == approved_status]
     out: dict[str, dict[str, Any]] = {}
@@ -347,7 +347,7 @@ def latest_by_column(rows: Any, *, approved_status: str = "approved") -> dict[st
     return out
 
 
-def optional_ai_generate_response(prepared_df: Any, *, prompt: str, output_col: str = "ai_suggestion") -> Any | None:
+def _optional_ai_generate_response(prepared_df: Any, *, prompt: str, output_col: str = "ai_suggestion") -> Any | None:
     """Run Fabric AI when available and return ``None`` when unavailable."""
     ai = getattr(prepared_df, "ai", None)
     if ai is None or not hasattr(ai, "generate_response"):
@@ -356,10 +356,10 @@ def optional_ai_generate_response(prepared_df: Any, *, prompt: str, output_col: 
 
 
 def _audit(config: Any, env: str, approved_by: str | None) -> dict[str, str]:
-    return build_runtime_audit_fields(config=config, env=env, committed_by=approved_by)
+    return _build_runtime_audit_fields(config=config, env=env, committed_by=approved_by)
 
 
-def build_column_context_records(profile_rows: list[dict[str, Any]], reviewed_rows: list[dict[str, Any]], *, config: Any = None, env: str | None = None, approved_by: str | None = None) -> list[dict[str, Any]]:
+def _build_column_context_records(profile_rows: list[dict[str, Any]], reviewed_rows: list[dict[str, Any]], *, config: Any = None, env: str | None = None, approved_by: str | None = None) -> list[dict[str, Any]]:
     """Build append-only approved business-context records from explicit reviews."""
     profile = {str(_value(r, "column_name")): r for r in profile_rows}
     actor = _resolve_action_by(approved_by)
@@ -375,8 +375,8 @@ def build_column_context_records(profile_rows: list[dict[str, Any]], reviewed_ro
         dataset = str(_value(p, "dataset_name") or review.get("dataset_name") or "")
         table = str(_value(p, "table_name") or review.get("table_name") or "")
         rows.append({
-            "metadata_column_key": str(_value(p, "metadata_column_key") or review.get("metadata_column_key") or build_metadata_column_key(env_name, dataset, table, col)),
-            "metadata_table_key": str(_value(p, "metadata_table_key") or review.get("metadata_table_key") or build_metadata_table_key(env_name, dataset, table)),
+            "metadata_column_key": str(_value(p, "metadata_column_key") or review.get("metadata_column_key") or _build_metadata_column_key(env_name, dataset, table, col)),
+            "metadata_table_key": str(_value(p, "metadata_table_key") or review.get("metadata_table_key") or _build_metadata_table_key(env_name, dataset, table)),
             "environment_name": env_name, "dataset_name": dataset, "table_name": table, "column_name": col,
             "business_context": str(review.get("business_context") or ""), "notes": str(review.get("notes") or ""), "review_status": "approved",
             "approved_by": actor, "approved_at": now, "ai_suggestion_json": _json(review.get("ai_suggestion_json") or review.get("ai_suggestion")), **audit,
@@ -384,7 +384,7 @@ def build_column_context_records(profile_rows: list[dict[str, Any]], reviewed_ro
     return rows
 
 
-def build_dq_rule_records(profile_rows: list[dict[str, Any]], reviewed_rules: list[dict[str, Any]], *, config: Any = None, env: str | None = None, approved_by: str | None = None) -> list[dict[str, Any]]:
+def _build_dq_rule_records(profile_rows: list[dict[str, Any]], reviewed_rules: list[dict[str, Any]], *, config: Any = None, env: str | None = None, approved_by: str | None = None) -> list[dict[str, Any]]:
     """Build append-only approved DQ-rule records without enforcing them."""
     actor = _resolve_action_by(approved_by)
     now = _now_utc_iso()
@@ -404,9 +404,9 @@ def build_dq_rule_records(profile_rows: list[dict[str, Any]], reviewed_rules: li
         table = str(_value(p, "table_name") or rule.get("table_name") or "")
         rule_id = str(rule.get("rule_id") or f"{table}.{col}.{rule_type}")
         rows.append({
-            "rule_key": build_dq_rule_key(env_name, dataset, table, rule_id), "rule_id": rule_id,
-            "metadata_column_key": str(_value(p, "metadata_column_key") or rule.get("metadata_column_key") or build_metadata_column_key(env_name, dataset, table, col)),
-            "metadata_table_key": str(_value(p, "metadata_table_key") or rule.get("metadata_table_key") or build_metadata_table_key(env_name, dataset, table)),
+            "rule_key": _build_dq_rule_key(env_name, dataset, table, rule_id), "rule_id": rule_id,
+            "metadata_column_key": str(_value(p, "metadata_column_key") or rule.get("metadata_column_key") or _build_metadata_column_key(env_name, dataset, table, col)),
+            "metadata_table_key": str(_value(p, "metadata_table_key") or rule.get("metadata_table_key") or _build_metadata_table_key(env_name, dataset, table)),
             "environment_name": env_name, "dataset_name": dataset, "table_name": table, "column_name": col,
             "rule_type": rule_type, "rule_parameters_json": _json(rule.get("rule_parameters") or rule.get("rule_parameters_json") or {}),
             "severity": str(rule.get("severity") or "warning"), "description": str(rule.get("description") or ""), "is_active": bool(rule.get("is_active", True)),
@@ -415,7 +415,7 @@ def build_dq_rule_records(profile_rows: list[dict[str, Any]], reviewed_rules: li
     return rows
 
 
-def build_classification_records(profile_rows: list[dict[str, Any]], reviewed_rows: list[dict[str, Any]], *, config: Any = None, env: str | None = None, approved_by: str | None = None) -> list[dict[str, Any]]:
+def _build_classification_records(profile_rows: list[dict[str, Any]], reviewed_rows: list[dict[str, Any]], *, config: Any = None, env: str | None = None, approved_by: str | None = None) -> list[dict[str, Any]]:
     """Build append-only approved sensitivity and PII classification records."""
     actor = _resolve_action_by(approved_by)
     now = _now_utc_iso()
@@ -437,8 +437,8 @@ def build_classification_records(profile_rows: list[dict[str, Any]], reviewed_ro
         dataset = str(_value(p, "dataset_name") or review.get("dataset_name") or "")
         table = str(_value(p, "table_name") or review.get("table_name") or "")
         rows.append({
-            "metadata_column_key": str(_value(p, "metadata_column_key") or review.get("metadata_column_key") or build_metadata_column_key(env_name, dataset, table, col)),
-            "metadata_table_key": str(_value(p, "metadata_table_key") or review.get("metadata_table_key") or build_metadata_table_key(env_name, dataset, table)),
+            "metadata_column_key": str(_value(p, "metadata_column_key") or review.get("metadata_column_key") or _build_metadata_column_key(env_name, dataset, table, col)),
+            "metadata_table_key": str(_value(p, "metadata_table_key") or review.get("metadata_table_key") or _build_metadata_table_key(env_name, dataset, table)),
             "environment_name": env_name, "dataset_name": dataset, "table_name": table, "column_name": col,
             "sensitivity_label": sensitivity, "personal_data_classification": classification,
             "pii_identifier_type": str(review.get("pii_identifier_type") or ""), "handling_requirement": str(review.get("handling_requirement") or ""),
@@ -456,25 +456,102 @@ def _json(value: Any) -> str:
     return json.dumps(value, sort_keys=True)
 
 
-def commit_column_context(config: Any, env: str, rows: list[dict[str, Any]], *, spark_session: Any, mode: str = "append") -> list[dict[str, Any]]:
+def _commit_column_context(config: Any, env: str, rows: list[dict[str, Any]], *, spark_session: Any, mode: str = "append") -> list[dict[str, Any]]:
     """Persist approved business context rows after explicit human commit."""
     if rows:
         write_lakehouse_table(spark_session.createDataFrame(rows), config, env, "metadata", COLUMN_CONTEXT_TABLE, mode=mode)
     return rows
 
 
-def commit_dq_rules(config: Any, env: str, rows: list[dict[str, Any]], *, spark_session: Any, mode: str = "append") -> list[dict[str, Any]]:
+def _commit_dq_rules(config: Any, env: str, rows: list[dict[str, Any]], *, spark_session: Any, mode: str = "append") -> list[dict[str, Any]]:
     """Persist approved DQ rules after explicit human commit."""
     if rows:
         write_lakehouse_table(spark_session.createDataFrame(rows), config, env, "metadata", DQ_RULES_TABLE, mode=mode)
     return rows
 
 
-def commit_column_classification(config: Any, env: str, rows: list[dict[str, Any]], *, spark_session: Any, mode: str = "append") -> list[dict[str, Any]]:
+def _commit_column_classification(config: Any, env: str, rows: list[dict[str, Any]], *, spark_session: Any, mode: str = "append") -> list[dict[str, Any]]:
     """Persist approved classification rows after explicit human commit."""
     if rows:
         write_lakehouse_table(spark_session.createDataFrame(rows), config, env, "metadata", COLUMN_CLASSIFICATION_TABLE, mode=mode)
     return rows
+
+
+def record_table_governance(
+    config: Any,
+    env: str,
+    profile_rows: list[dict[str, Any]],
+    *,
+    spark_session: Any,
+    context_reviews: list[dict[str, Any]] | None = None,
+    dq_rule_reviews: list[dict[str, Any]] | None = None,
+    classification_reviews: list[dict[str, Any]] | None = None,
+    approved_by: str | None = None,
+    mode: str = "append",
+) -> dict[str, list[dict[str, Any]]]:
+    """Persist approved table-governance review evidence.
+
+    Parameters
+    ----------
+    config : FrameworkConfig or dict
+        Shared ``00_env_config`` configuration that routes metadata writes to
+        the configured metadata lakehouse target.
+    env : str
+        Environment key in ``config``.
+    profile_rows : list of dict
+        Column-profile rows loaded for the selected catalogue table.
+    spark_session : pyspark.sql.SparkSession
+        Spark session used to create DataFrames for metadata writes.
+    context_reviews, dq_rule_reviews, classification_reviews : list of dict, optional
+        Human-approved rows from the governance review workflow. Only rows with
+        ``review_status="approved"`` and ``commit=True`` are written.
+    approved_by : str, optional
+        Reviewer identity to stamp on records. When omitted, runtime defaults
+        are used.
+    mode : str, default "append"
+        Write mode for metadata table commits.
+
+    Returns
+    -------
+    dict[str, list[dict[str, Any]]]
+        Records written for ``column_context``, ``dq_rules``, and
+        ``column_classification``.
+
+    Notes
+    -----
+    This is the v1 governance commit action for ``04_gov`` notebooks. It merges
+    the previous row-builder and per-table commit helpers into one explicit
+    human approval step while preserving configured metadata lakehouse routing.
+    """
+    context_records = _build_column_context_records(
+        profile_rows,
+        context_reviews or [],
+        config=config,
+        env=env,
+        approved_by=approved_by,
+    )
+    dq_rule_records = _build_dq_rule_records(
+        profile_rows,
+        dq_rule_reviews or [],
+        config=config,
+        env=env,
+        approved_by=approved_by,
+    )
+    classification_records = _build_classification_records(
+        profile_rows,
+        classification_reviews or [],
+        config=config,
+        env=env,
+        approved_by=approved_by,
+    )
+    _commit_column_context(config, env, context_records, spark_session=spark_session, mode=mode)
+    _commit_dq_rules(config, env, dq_rule_records, spark_session=spark_session, mode=mode)
+    _commit_column_classification(config, env, classification_records, spark_session=spark_session, mode=mode)
+    return {
+        "column_context": context_records,
+        "dq_rules": dq_rule_records,
+        "column_classification": classification_records,
+    }
 
 
 def widget_review_table_governance(profile_rows: list[dict[str, Any]], *, existing_context: dict[str, dict[str, Any]] | None = None, existing_rules: dict[str, dict[str, Any]] | None = None, existing_classification: dict[str, dict[str, Any]] | None = None) -> dict[str, Any]:
@@ -500,9 +577,9 @@ def widget_review_table_governance(profile_rows: list[dict[str, Any]], *, existi
     columns = [str(_value(row, "column_name")) for row in profile_rows]
     html = widgets.HTML(
         "<h3>04_gov human review stages</h3>"
-        "<ol><li>Business context: edit rows and call commit_column_context only after approval.</li>"
-        "<li>DQ rules: author rules and call commit_dq_rules only after approval.</li>"
-        "<li>Sensitivity/PII: review labels and call commit_column_classification only after approval.</li></ol>"
+        "<ol><li>Business context: edit rows and call record_table_governance only after approval.</li>"
+        "<li>DQ rules: author rules and call record_table_governance only after approval.</li>"
+        "<li>Sensitivity/PII: review labels and call record_table_governance only after approval.</li></ol>"
         f"<p><b>Columns loaded:</b> {', '.join(columns)}</p>"
         "<p>AI suggestions are advisory and are never written by this widget.</p>"
     )

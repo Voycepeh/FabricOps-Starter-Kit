@@ -5,7 +5,7 @@
 
 ## Purpose
 
-Render non-persistent human review guidance for business context, DQ rules, and classification.
+Render non-persistent human review guidance for context, DQ rules, and classification.
 
 ## Function manifest
 

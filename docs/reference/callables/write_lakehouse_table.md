@@ -5,7 +5,7 @@
 
 ## Purpose
 
-No summary available.
+Write a DataFrame to a configured Fabric lakehouse target.
 
 ## Function manifest
 
@@ -22,13 +22,13 @@ No summary available.
 ## Inbound references
 - <a href="../internal/data_agreement/_ensure_metadata_tables/"><code>fabricops_kit.data_agreement._ensure_metadata_tables</code></a>
 - <a href="../internal/data_agreement/_write_row/"><code>fabricops_kit.data_agreement._write_row</code></a>
-- <a href="../write_dq_rules/"><code>fabricops_kit.data_quality.write_dq_rules</code></a>
-- <a href="../internal/fabric_input_output/seed_minimal_sample_source_table/"><code>fabricops_kit.fabric_input_output.seed_minimal_sample_source_table</code></a>
-- <a href="../commit_column_classification/"><code>fabricops_kit.governance_review.commit_column_classification</code></a>
-- <a href="../commit_column_context/"><code>fabricops_kit.governance_review.commit_column_context</code></a>
-- <a href="../commit_dq_rules/"><code>fabricops_kit.governance_review.commit_dq_rules</code></a>
+- <a href="../internal/data_quality/_write_dq_rules/"><code>fabricops_kit.data_quality._write_dq_rules</code></a>
+- <a href="../internal/fabric_input_output/_seed_minimal_sample_source_table/"><code>fabricops_kit.fabric_input_output._seed_minimal_sample_source_table</code></a>
+- <a href="../internal/governance_review/_commit_column_classification/"><code>fabricops_kit.governance_review._commit_column_classification</code></a>
+- <a href="../internal/governance_review/_commit_column_context/"><code>fabricops_kit.governance_review._commit_column_context</code></a>
+- <a href="../internal/governance_review/_commit_dq_rules/"><code>fabricops_kit.governance_review._commit_dq_rules</code></a>
 - <a href="../setup_governance_metadata_tables/"><code>fabricops_kit.governance_review.setup_governance_metadata_tables</code></a>
-- <a href="../register_current_notebook/"><code>fabricops_kit.metadata.register_current_notebook</code></a>
+- <a href="../internal/metadata/_register_current_notebook/"><code>fabricops_kit.metadata._register_current_notebook</code></a>
 - <a href="../setup_notebook_registry_table/"><code>fabricops_kit.metadata.setup_notebook_registry_table</code></a>
 
 ## Outbound references

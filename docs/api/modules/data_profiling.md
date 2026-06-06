@@ -75,7 +75,7 @@ Owns deterministic profiling evidence such as schema, nulls, distincts, min/max,
       <td><a href="../../reference/profile_dataframe/"><code>profile_dataframe</code></a></td>
       <td>Essential</td>
       <td>function</td>
-      <td>Build canonical DQ-ready profiling rows from a Spark DataFrame.</td>
+      <td>Profile a source or target DataFrame for schema, quality, and catalogue evidence.</td>
       <td><a href="../../reference/internal/data_profiling/_build_distribution_summaries/"><code>_build_distribution_summaries</code></a> (internal), <a href="../../reference/internal/data_profiling/_get_profiled_columns/"><code>_get_profiled_columns</code></a> (internal), <a href="../../reference/internal/data_profiling/_is_min_max_supported_type/"><code>_is_min_max_supported_type</code></a> (internal)</td>
     </tr>
   </tbody>

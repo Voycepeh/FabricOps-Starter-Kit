@@ -20,4 +20,4 @@ No summary available.
 - Outbound references count: 0
 
 ## Inbound references
-- <a href="../internal/config/validate_dataset_contract/"><code>fabricops_kit.config.validate_dataset_contract</code></a>
+- <a href="../internal/config/_validate_dataset_contract/"><code>fabricops_kit.config._validate_dataset_contract</code></a>

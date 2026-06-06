@@ -749,7 +749,7 @@ def _get_fabric_runtime_context():
         return {}
 
 
-def check_naming_convention(notebook_name=None, allowed_prefixes=None, fail_on_error=True):
+def _check_naming_convention(notebook_name=None, allowed_prefixes=None, fail_on_error=True):
     """Check whether a Fabric notebook name starts with an allowed prefix.
 
     The allowed prefixes should come from the project config notebook, not from
@@ -783,7 +783,7 @@ def check_naming_convention(notebook_name=None, allowed_prefixes=None, fail_on_e
     Examples
     --------
     >>> # %run 00_env_config
-    >>> check_naming_convention(allowed_prefixes=NOTEBOOK_PREFIX_LIST)
+    >>> _check_naming_convention(allowed_prefixes=NOTEBOOK_PREFIX_LIST)
     """
     if not allowed_prefixes:
         message = "allowed_prefixes is required. Define it in your config notebook and pass it in."
@@ -840,7 +840,7 @@ def check_naming_convention(notebook_name=None, allowed_prefixes=None, fail_on_e
     }
 
 
-def seed_minimal_sample_source_table(
+def _seed_minimal_sample_source_table(
     config,
     env,
     target,

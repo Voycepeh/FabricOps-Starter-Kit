@@ -5,7 +5,7 @@
 
 ## Purpose
 
-No summary available.
+Shared environment setup and runtime validation for notebook templates.
 
 ## Function manifest
 

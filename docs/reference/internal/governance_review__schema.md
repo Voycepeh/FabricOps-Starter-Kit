@@ -20,7 +20,7 @@ No summary available.
 - Outbound references count: 1
 
 ## Inbound references
-- <a href="../get_governance_metadata_schemas/"><code>fabricops_kit.governance_review.get_governance_metadata_schemas</code></a>
+- <a href="../internal/governance_review/_get_governance_metadata_schemas/"><code>fabricops_kit.governance_review._get_governance_metadata_schemas</code></a>
 
 ## Outbound references
 - <a href="../internal/governance_review/_spark_types/"><code>fabricops_kit.governance_review._spark_types</code></a>

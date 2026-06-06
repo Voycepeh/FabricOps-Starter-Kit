@@ -19,7 +19,7 @@ from typing import Any
 
 from .config import DEFAULT_STEWARD_ROLE_OPTIONS
 from .fabric_input_output import read_lakehouse_table, write_lakehouse_table
-from .metadata import build_runtime_audit_fields, current_notebook_active_registrations, register_current_notebook
+from .metadata import _build_runtime_audit_fields, _current_notebook_active_registrations, _register_current_notebook
 
 DATA_AGREEMENT_TABLE = "METADATA_DATA_AGREEMENT"
 DATA_AGREEMENT_EVIDENCE_TABLE = "METADATA_DATA_AGREEMENT_EVIDENCE"
@@ -768,7 +768,7 @@ def _create_or_update_data_steward(*, spark: Any, config: Any, env_name: str, va
     explicit_active = values.get("is_active")
     row["is_active"] = "false" if explicit_active not in (None, "") and not _to_bool(explicit_active) else _steward_active_value(row)
     row["custom_fields_json"] = _serialize_custom_fields(custom_fields)
-    row.update(build_runtime_audit_fields(config=config, env=env_name, committed_by=committed_by, committed_at=committed_at, runtime_context=runtime_context))
+    row.update(_build_runtime_audit_fields(config=config, env=env_name, committed_by=committed_by, committed_at=committed_at, runtime_context=runtime_context))
     _write_row(spark=spark, config=config, env_name=env_name, table=_table_name(config, "data_steward", DATA_STEWARD_TABLE), row=row)
     return row
 
@@ -907,7 +907,7 @@ def _create_or_update_data_agreement(*, spark: Any, config: Any, env_name: str, 
             return {**latest, "_fabricops_no_change": True, "_fabricops_message": "No changes detected. Nothing was appended."}
     if any(str(item.get("agreement_id") or "").strip() == row["agreement_id"] and str(item.get("contract_version") or "").strip() == row["contract_version"] for item in existing_rows):
         raise ValueError(f"Agreement {row['agreement_id']} version {row['contract_version']} already exists. Select the existing agreement to create the next version, or create a new agreement.")
-    row.update(build_runtime_audit_fields(config=config, env=env_name, committed_by=committed_by, committed_at=committed_at, runtime_context=runtime_context))
+    row.update(_build_runtime_audit_fields(config=config, env=env_name, committed_by=committed_by, committed_at=committed_at, runtime_context=runtime_context))
     _write_row(spark=spark, config=config, env_name=env_name, table=_table_name(config, "data_agreement", DATA_AGREEMENT_TABLE), row=row)
     return row
 
@@ -1037,7 +1037,7 @@ def _save_agreement_evidence_records(*, spark: Any, config: Any, env_name: str, 
         raise ValueError("contract_version is required before saving agreement evidence.")
     evidence_type = str(evidence_type or "Other").strip() or "Other"
     file_references = _prepare_evidence_file_references(evidence_file_paths)
-    audit = build_runtime_audit_fields(config=config, env=env_name, committed_by=committed_by, committed_at=committed_at, runtime_context=runtime_context)
+    audit = _build_runtime_audit_fields(config=config, env=env_name, committed_by=committed_by, committed_at=committed_at, runtime_context=runtime_context)
     uploaded_at = audit.get("_committed_at") or datetime.now(timezone.utc).isoformat()
     uploaded_by = audit.get("_committed_by") or ""
 
@@ -1083,7 +1083,7 @@ def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None 
         When True, render registration status and a button that links the
         current notebook to the selected agreement.
     notebook_type, environment_name, dataset_name, table_name, topic, pipeline_name : str, optional
-        Workflow metadata passed to ``register_current_notebook`` when
+        Workflow metadata passed to ``_register_current_notebook`` when
         ``register_notebook`` is enabled.
 
     Returns
@@ -1172,7 +1172,7 @@ def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None 
         if env_name is None or spark_session is None:
             raise ValueError("widget_select_agreement(..., register_notebook=True) requires CONFIG, env_name, and spark_session.")
         config = agreement_rows_or_config
-        active_rows = current_notebook_active_registrations(
+        active_rows = _current_notebook_active_registrations(
             spark_session,
             config=config,
             env=env_name,
@@ -1222,7 +1222,7 @@ def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None 
                 else:
                     return
 
-            new_row = register_current_notebook(
+            new_row = _register_current_notebook(
                 spark_session,
                 config=config,
                 env=env_name,
@@ -1240,7 +1240,7 @@ def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None 
             if other and role == "primary":
                 superseded_at = datetime.now(timezone.utc).isoformat()
                 for previous in other:
-                    register_current_notebook(
+                    _register_current_notebook(
                         spark_session,
                         config=config,
                         env=env_name,
@@ -1671,7 +1671,7 @@ def _widget_render_agreement_evidence(*, spark: Any, config: Any, env_name: str,
     }
 
 
-def widget_render_agreement_evidence(config: Any, env_name: str, *, spark: Any) -> dict[str, Any]:
+def _widget_render_agreement_evidence(config: Any, env_name: str, *, spark: Any) -> dict[str, Any]:
     """Render standalone agreement evidence upload controls.
 
     Parameters
@@ -1707,7 +1707,7 @@ def widget_render_agreement_evidence(config: Any, env_name: str, *, spark: Any) 
     )
 
 
-def widget_render_data_steward(config: Any, env_name: str, *, spark: Any) -> dict[str, Any]:
+def _widget_render_data_steward(config: Any, env_name: str, *, spark: Any) -> dict[str, Any]:
     """Render append-only data steward create/update maintenance.
 
     Parameters
@@ -1727,7 +1727,7 @@ def widget_render_data_steward(config: Any, env_name: str, *, spark: Any) -> dic
     return _render_maintenance_widget(spark=spark, config=config, env_name=env_name, kind="data_steward_widget")
 
 
-def widget_render_data_agreement(config: Any, env_name: str, *, spark: Any) -> dict[str, Any]:
+def _widget_render_data_agreement(config: Any, env_name: str, *, spark: Any) -> dict[str, Any]:
     """Render append-only agreement create/update maintenance using active stewards.
 
     Parameters

@@ -5,7 +5,7 @@ import json
 import ast
 from typing import Any
 
-from fabricops_kit.metadata import _now_utc_iso, _resolve_action_by, build_metadata_column_key, build_metadata_table_key
+from fabricops_kit.metadata import _now_utc_iso, _resolve_action_by, _build_metadata_column_key, _build_metadata_table_key
 from fabricops_kit.config import DEFAULT_GOVERNANCE_PERSONAL_IDENTIFIER_PROMPT_TEMPLATE
 
 _DEFAULT_WIDGET_CONFIG = {
@@ -49,16 +49,16 @@ def _prepare_governance_input(profile_rows: list[dict], table_name: str, column_
     return out
 
 
-def prepare_governance_input(profile_rows: list[dict], table_name: str, column_contexts: list[dict]) -> list[dict]:
+def _prepare_governance_input(profile_rows: list[dict], table_name: str, column_contexts: list[dict]) -> list[dict]:
     """Prepare governance prompt input rows from profile evidence and approved context."""
     return _prepare_governance_input(profile_rows=profile_rows, table_name=table_name, column_contexts=column_contexts)
 
 
-def draft_governance(prepared_profile_df, prompt: str | None = None, output_col: str = "ai_governance_response"):
+def _draft_governance(prepared_profile_df, prompt: str | None = None, output_col: str = "ai_governance_response"):
     """Run Fabric AI personal-identifier suggestion prompt on prepared governance rows."""
     ai = getattr(prepared_profile_df, "ai", None)
     if ai is None or not hasattr(ai, "generate_response"):
-        raise RuntimeError("draft_governance requires Fabric DataFrame.ai.generate_response.")
+        raise RuntimeError("_draft_governance requires Fabric DataFrame.ai.generate_response.")
     return prepared_profile_df.ai.generate_response(prompt=prompt, is_prompt_template=True, output_col=output_col)
 
 
@@ -109,12 +109,12 @@ def _extract_pii_suggestions(response_rows, response_col: str = "ai_governance_r
     return [r for r in out if r]
 
 
-def extract_governance_suggestions(response_rows, response_col: str = "ai_governance_response") -> list[dict]:
+def _extract_governance_suggestions(response_rows, response_col: str = "ai_governance_response") -> list[dict]:
     """Extract review-ready governance suggestions from AI responses."""
     return _extract_pii_suggestions(response_rows=response_rows, response_col=response_col)
 
 
-def widget_review_governance(suggestions: list[dict], environment_name: str, dataset_name: str, table_name: str) -> None:
+def _widget_review_governance(suggestions: list[dict], environment_name: str, dataset_name: str, table_name: str) -> None:
     """Display governance review widget and capture approve/reject decisions in module state."""
     widgets = importlib.import_module("ipywidgets")
     from IPython import display as ip
@@ -150,8 +150,8 @@ def widget_review_governance(suggestions: list[dict], environment_name: str, dat
             "dataset_name": dataset_name,
             "table_name": table_name,
             "column_name": r.get("column_name"),
-            "metadata_table_key": build_metadata_table_key(environment_name, dataset_name, table_name),
-            "metadata_column_key": build_metadata_column_key(environment_name, dataset_name, table_name, r.get("column_name")),
+            "metadata_table_key": _build_metadata_table_key(environment_name, dataset_name, table_name),
+            "metadata_column_key": _build_metadata_column_key(environment_name, dataset_name, table_name, r.get("column_name")),
             "approved_business_context": r.get("approved_business_context", ""),
             "ai_suggested_personal_identifier_classification": r.get("ai_suggested_personal_identifier_classification", "unknown"),
             "approved_personal_identifier_classification": pid.value,
@@ -223,7 +223,7 @@ def _undo_last_action(action_history: list[str], approved_rows: list[dict[str, A
         return True
     return False
 
-def write_governance(
+def _write_governance(
     spark,
     *,
     metadata_path,
@@ -237,12 +237,12 @@ def write_governance(
     rows = approved_rows if approved_rows is not None else _approved_widget_rows(agreement_context=agreement_context, action_by=action_by)
     if not rows:
         return []
-    writer = getattr(importlib.import_module("fabricops_kit.metadata"), "write_column_governance_context")
+    writer = getattr(importlib.import_module("fabricops_kit.metadata"), "_write_column_governance_context")
     writer(spark=spark, rows=rows, metadata_path=metadata_path, table_name=table_name, mode=mode)
     return rows
 
 
-def load_governance(governance_rows, *, agreement_rows=None, agreement_id: str | None = None, dataset_name: str | None = None, table_name: str | None = None) -> dict[str, Any]:
+def _load_governance(governance_rows, *, agreement_rows=None, agreement_id: str | None = None, dataset_name: str | None = None, table_name: str | None = None) -> dict[str, Any]:
     """Load approved governance metadata as read-only agreement context."""
     rows = _coerce_row_dicts(governance_rows)
     filtered = [

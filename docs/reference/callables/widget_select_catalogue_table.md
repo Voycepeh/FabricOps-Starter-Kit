@@ -5,7 +5,7 @@
 
 ## Purpose
 
-Render a searchable latest-successful-profile selector backed by METADATA_DATA_CATALOGUE.
+Render a searchable selector for latest successful catalogue profiles.
 
 ## Function manifest
 
@@ -21,5 +21,5 @@ Render a searchable latest-successful-profile selector backed by METADATA_DATA_C
 
 ## Outbound references
 - <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a>
+- <a href="../internal/governance_review/_catalogue_table_options/"><code>fabricops_kit.governance_review._catalogue_table_options</code></a>
 - <a href="../internal/governance_review/_coerce_rows/"><code>fabricops_kit.governance_review._coerce_rows</code></a>
-- <a href="../catalogue_table_options/"><code>fabricops_kit.governance_review.catalogue_table_options</code></a>

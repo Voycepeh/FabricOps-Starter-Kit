@@ -20,5 +20,5 @@ No summary available.
 - Outbound references count: 0
 
 ## Inbound references
-- <a href="../internal/handover/build_handover_record/"><code>fabricops_kit.handover.build_handover_record</code></a>
+- <a href="../internal/handover/_build_handover_record/"><code>fabricops_kit.handover._build_handover_record</code></a>
 - <a href="../render_handover_markdown/"><code>fabricops_kit.handover.render_handover_markdown</code></a>

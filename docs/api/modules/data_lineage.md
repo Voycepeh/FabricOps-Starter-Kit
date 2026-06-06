@@ -6,7 +6,7 @@
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 2</span><span class="reference-chip">Internal helpers: 13</span><span class="reference-chip">Outbound: 0</span><span class="reference-chip">Inbound: 0</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 1</span><span class="reference-chip">Internal helpers: 14</span><span class="reference-chip">Outbound: 0</span><span class="reference-chip">Inbound: 0</span></div>
 
 ## Module purpose
 
@@ -32,11 +32,11 @@ Owns source-to-target lineage and transformation evidence.
     </tr>
     <tr>
       <td>Public callable count</td>
-      <td>2</td>
+      <td>1</td>
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>13</td>
+      <td>14</td>
     </tr>
     <tr>
       <td>Inbound module count</td>
@@ -72,17 +72,10 @@ Owns source-to-target lineage and transformation evidence.
   </thead>
   <tbody>
     <tr>
-      <td><a href="../../reference/build_lineage_handover_markdown/"><code>build_lineage_handover_markdown</code></a></td>
-      <td>Essential</td>
-      <td>function</td>
-      <td>Build a concise markdown handover summary from lineage execution results.</td>
-      <td>—</td>
-    </tr>
-    <tr>
       <td><a href="../../reference/build_lineage_records/"><code>build_lineage_records</code></a></td>
       <td>Essential</td>
       <td>function</td>
-      <td>Build compact lineage records for downstream metadata sinks.</td>
+      <td>Build source-to-target lineage evidence records for a pipeline run.</td>
       <td>—</td>
     </tr>
   </tbody>
@@ -101,11 +94,6 @@ Owns source-to-target lineage and transformation evidence.
 <h5>data_lineage</h5>
 <h6>Public callables</h6>
 <ul class="callable-relationship-rows">
-<li>
-<a class="reference-chip" href="../../reference/build_lineage_handover_markdown/"><code>build_lineage_handover_markdown</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<span>None.</span>
-</li>
 <li>
 <a class="reference-chip" href="../../reference/build_lineage_records/"><code>build_lineage_records</code></a>
  <span class="callable-relationship-uses">uses:</span>
@@ -128,6 +116,10 @@ Owns source-to-target lineage and transformation evidence.
     </tr>
   </thead>
   <tbody>
+    <tr>
+      <td><a href="../../reference/internal/data_lineage/_build_lineage_handover_markdown/"><code>_build_lineage_handover_markdown</code></a></td>
+      <td>—</td>
+    </tr>
     <tr>
       <td><a href="../../reference/internal/data_lineage/_build_lineage_record_from_steps/"><code>_build_lineage_record_from_steps</code></a></td>
       <td>—</td>
@@ -186,6 +178,9 @@ Owns source-to-target lineage and transformation evidence.
 
 <h6>Internal helpers details</h6>
 <ul class="callable-relationship-rows">
+<li>
+<a class="reference-chip" href="#_build_lineage_handover_markdown"><code>_build_lineage_handover_markdown</code></a>
+</li>
 <li>
 <a class="reference-chip" href="#_build_lineage_record_from_steps"><code>_build_lineage_record_from_steps</code></a>
  <span class="callable-relationship-uses">uses:</span>

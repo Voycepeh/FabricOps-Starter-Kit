@@ -5,7 +5,7 @@
 
 ## Purpose
 
-No summary available.
+Write a DataFrame to a configured Fabric warehouse target.
 
 ## Function manifest
 

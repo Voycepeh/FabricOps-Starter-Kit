@@ -20,5 +20,5 @@ No summary available.
 - Outbound references count: 0
 
 ## Inbound references
-- <a href="../register_current_notebook/"><code>fabricops_kit.metadata.register_current_notebook</code></a>
-- <a href="../internal/metadata/write_metadata_rows/"><code>fabricops_kit.metadata.write_metadata_rows</code></a>
+- <a href="../internal/metadata/_register_current_notebook/"><code>fabricops_kit.metadata._register_current_notebook</code></a>
+- <a href="../internal/metadata/_write_metadata_rows/"><code>fabricops_kit.metadata._write_metadata_rows</code></a>

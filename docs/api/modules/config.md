@@ -6,7 +6,7 @@
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 1</span><span class="reference-chip">Internal helpers: 13</span><span class="reference-chip">Outbound: 0</span><span class="reference-chip">Inbound: 2</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 1</span><span class="reference-chip">Internal helpers: 17</span><span class="reference-chip">Outbound: 0</span><span class="reference-chip">Inbound: 2</span></div>
 
 ## Module purpose
 
@@ -36,7 +36,7 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>13</td>
+      <td>17</td>
     </tr>
     <tr>
       <td>Inbound module count</td>
@@ -75,7 +75,7 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
       <td><a href="../../reference/setup_notebook/"><code>setup_notebook</code></a></td>
       <td>Essential</td>
       <td>function</td>
-      <td>Run consolidated FabricOps startup for exploration and pipeline notebooks.</td>
+      <td>Shared environment setup and runtime validation for notebook templates.</td>
       <td><a href="../../reference/internal/config/_get_store/"><code>_get_store</code></a> (internal), <a href="../../reference/internal/config/_run_config_smoke_tests/"><code>_run_config_smoke_tests</code></a> (internal), <a href="../../reference/internal/config/_validate_framework_config/"><code>_validate_framework_config</code></a> (internal)</td>
     </tr>
   </tbody>
@@ -117,6 +117,10 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
   </thead>
   <tbody>
     <tr>
+      <td><a href="../../reference/internal/config/_assert_valid_dataset_contract/"><code>_assert_valid_dataset_contract</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
       <td><a href="../../reference/internal/config/_bootstrap_fabric_env/"><code>_bootstrap_fabric_env</code></a></td>
       <td>—</td>
     </tr>
@@ -149,6 +153,14 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
       <td><a href="../../reference/setup_notebook/"><code>setup_notebook</code></a></td>
     </tr>
     <tr>
+      <td><a href="../../reference/internal/config/_load_and_validate_dataset_contract/"><code>_load_and_validate_dataset_contract</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/config/_load_dataset_contract/"><code>_load_dataset_contract</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
       <td><a href="../../reference/internal/config/_load_schema/"><code>_load_schema</code></a></td>
       <td>—</td>
     </tr>
@@ -159,6 +171,10 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
     <tr>
       <td><a href="../../reference/internal/config/_run_config_smoke_tests/"><code>_run_config_smoke_tests</code></a></td>
       <td><a href="../../reference/setup_notebook/"><code>setup_notebook</code></a></td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/config/_validate_dataset_contract/"><code>_validate_dataset_contract</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/config/_validate_framework_config/"><code>_validate_framework_config</code></a></td>
@@ -174,6 +190,11 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
 
 <h6>Internal helpers details</h6>
 <ul class="callable-relationship-rows">
+<li>
+<a class="reference-chip" href="#_assert_valid_dataset_contract"><code>_assert_valid_dataset_contract</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_validate_dataset_contract"><code>_validate_dataset_contract</code></a>
+</li>
 <li>
 <a class="reference-chip" href="#_bootstrap_fabric_env"><code>_bootstrap_fabric_env</code></a>
  <span class="callable-relationship-uses">uses:</span>
@@ -201,6 +222,14 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
 <a class="reference-chip" href="#_get_store"><code>_get_store</code></a>
 </li>
 <li>
+<a class="reference-chip" href="#_load_and_validate_dataset_contract"><code>_load_and_validate_dataset_contract</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_load_dataset_contract"><code>_load_dataset_contract</code></a>, <a class="reference-chip" href="#_validate_dataset_contract"><code>_validate_dataset_contract</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_load_dataset_contract"><code>_load_dataset_contract</code></a>
+</li>
+<li>
 <a class="reference-chip" href="#_load_schema"><code>_load_schema</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_default_schema_text"><code>_default_schema_text</code></a>
@@ -212,6 +241,11 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
 <a class="reference-chip" href="#_run_config_smoke_tests"><code>_run_config_smoke_tests</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_check_spark_session"><code>_check_spark_session</code></a>, <a class="reference-chip" href="#_get_fabric_runtime_metadata"><code>_get_fabric_runtime_metadata</code></a>, <a class="reference-chip" href="#_get_store"><code>_get_store</code></a>, <a class="reference-chip" href="#_validate_notebook_name"><code>_validate_notebook_name</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_validate_dataset_contract"><code>_validate_dataset_contract</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_format_error_path"><code>_format_error_path</code></a>, <a class="reference-chip" href="#_load_schema"><code>_load_schema</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_validate_framework_config"><code>_validate_framework_config</code></a>

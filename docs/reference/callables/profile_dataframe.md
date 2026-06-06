@@ -5,7 +5,7 @@
 
 ## Purpose
 
-No summary available.
+Profile a source or target DataFrame for schema, quality, and catalogue evidence.
 
 ## Function manifest
 

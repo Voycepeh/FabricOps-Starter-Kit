@@ -5,7 +5,7 @@
 
 ## Purpose
 
-Create or validate catalogue, lineage, context, rule, and classification tables during 00_env_config.
+Create or validate governance metadata tables during environment setup.
 
 ## Function manifest
 
@@ -23,6 +23,6 @@ Create or validate catalogue, lineage, context, rule, and classification tables 
 - <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a>
 - <a href="../write_lakehouse_table/"><code>fabricops_kit.fabric_input_output.write_lakehouse_table</code></a>
 - <a href="../internal/governance_review/_coerce_rows/"><code>fabricops_kit.governance_review._coerce_rows</code></a>
+- <a href="../internal/governance_review/_get_governance_metadata_schemas/"><code>fabricops_kit.governance_review._get_governance_metadata_schemas</code></a>
 - <a href="../internal/governance_review/_is_table_not_found_error/"><code>fabricops_kit.governance_review._is_table_not_found_error</code></a>
 - <a href="../internal/governance_review/_schema_field_names/"><code>fabricops_kit.governance_review._schema_field_names</code></a>
-- <a href="../get_governance_metadata_schemas/"><code>fabricops_kit.governance_review.get_governance_metadata_schemas</code></a>

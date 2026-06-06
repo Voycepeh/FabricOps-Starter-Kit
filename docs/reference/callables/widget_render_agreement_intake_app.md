@@ -5,7 +5,7 @@
 
 ## Purpose
 
-Render and wire the compact agreement-intake section switcher application.
+Render the combined steward, agreement, and evidence intake app.
 
 ## Function manifest
 

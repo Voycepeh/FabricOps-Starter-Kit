@@ -20,4 +20,4 @@ No summary available.
 - Outbound references count: 0
 
 ## Inbound references
-- <a href="../internal/fabric_input_output/check_naming_convention/"><code>fabricops_kit.fabric_input_output.check_naming_convention</code></a>
+- <a href="../internal/fabric_input_output/_check_naming_convention/"><code>fabricops_kit.fabric_input_output._check_naming_convention</code></a>

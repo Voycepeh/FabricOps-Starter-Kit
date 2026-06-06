@@ -44,13 +44,13 @@ NOTEBOOK_REGISTRY_STATE_FIELDS = [
 NOTEBOOK_REGISTRY_FIELDS = [*NOTEBOOK_REGISTRY_BASE_FIELDS, *NOTEBOOK_REGISTRY_STATE_FIELDS]
 
 
-def get_notebook_registry_schema() -> list[str]:
+def _get_notebook_registry_schema() -> list[str]:
     """Return the required notebook registry metadata schema.
 
     Returns
     -------
     list[str]
-        Column names written by :func:`register_current_notebook` and required
+        Column names written by :func:`_register_current_notebook` and required
         by :func:`setup_notebook_registry_table`.
 
     Notes
@@ -127,7 +127,7 @@ def setup_notebook_registry_table(*, spark: Any, config: Any, env: str, metadata
     intake metadata. Reads and writes use the configured ``metadata`` target
     from ``00_env_config``.
     """
-    fields = get_notebook_registry_schema()
+    fields = _get_notebook_registry_schema()
     created = False
     try:
         table = read_lakehouse_table(config, env, "metadata", metadata_table, spark_session=spark)
@@ -156,13 +156,13 @@ def setup_notebook_registry_table(*, spark: Any, config: Any, env: str, metadata
             migrated_row["superseded_by_registration_id"] = _safe_str(row.get("superseded_by_registration_id"))
             migrated_row["registration_id"] = _safe_str(row.get("registration_id") or _notebook_registration_key(migrated_row))
             migrated_rows.append({field: migrated_row.get(field, "") for field in fields})
-        df = spark.createDataFrame(column_context_rows_for_spark(migrated_rows or [{field: "" for field in fields}])).limit(0 if not migrated_rows else len(migrated_rows))
+        df = spark.createDataFrame(_column_context_rows_for_spark(migrated_rows or [{field: "" for field in fields}])).limit(0 if not migrated_rows else len(migrated_rows))
         write_lakehouse_table(df, config, env, "metadata", metadata_table, mode="overwrite", overwrite_schema=True)
         migrated = True
     return {"status": "ready", "table": metadata_table, "schema": fields, "created": created, "migrated": migrated, "created_tables": [metadata_table] if created else []}
 
 
-def default_evidence_types() -> dict[str, str]:
+def _default_evidence_types() -> dict[str, str]:
     """Return canonical evidence type names used across metadata records."""
     return {
         "source_profile": EVIDENCE_SOURCE_PROFILE,
@@ -174,7 +174,7 @@ def default_evidence_types() -> dict[str, str]:
     }
 
 
-def build_evidence_row(*, dataset_name: str, table_name: str, run_id: str | None, evidence_type: str, payload_json: str, workspace_id: str | None = None, workspace_name: str | None = None, notebook_id: str | None = None, notebook_name: str | None = None, created_at: str | None = None) -> dict:
+def _build_evidence_row(*, dataset_name: str, table_name: str, run_id: str | None, evidence_type: str, payload_json: str, workspace_id: str | None = None, workspace_name: str | None = None, notebook_id: str | None = None, notebook_name: str | None = None, created_at: str | None = None) -> dict:
     """Build a lightweight metadata-ready evidence row."""
     return {
         "dataset_name": dataset_name,
@@ -210,15 +210,15 @@ def _sha256_key(*parts) -> str:
     return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
 
 
-def build_metadata_table_key(environment_name, dataset_name, table_name) -> str:
+def _build_metadata_table_key(environment_name, dataset_name, table_name) -> str:
     return _sha256_key(environment_name, dataset_name, table_name)
 
 
-def build_metadata_column_key(environment_name, dataset_name, table_name, column_name) -> str:
+def _build_metadata_column_key(environment_name, dataset_name, table_name, column_name) -> str:
     return _sha256_key(environment_name, dataset_name, table_name, column_name)
 
 
-def build_dq_rule_key(environment_name, dataset_name, table_name, rule_id) -> str:
+def _build_dq_rule_key(environment_name, dataset_name, table_name, rule_id) -> str:
     return _sha256_key(environment_name, dataset_name, table_name, rule_id)
 
 
@@ -231,7 +231,7 @@ def _extract_columns_from_profile(profile_rows) -> list[str]:
     return sorted(set(cols))
 
 
-def normalise_records_by_column(records) -> dict[str, dict]:
+def _normalise_records_by_column(records) -> dict[str, dict]:
     out = {}
     for row in records or []:
         key = str(row.get("column_name") or row.get("COLUMN_NAME") or "")
@@ -240,7 +240,7 @@ def normalise_records_by_column(records) -> dict[str, dict]:
     return out
 
 
-def column_context_rows_for_spark(rows: list[dict]) -> list[dict]:
+def _column_context_rows_for_spark(rows: list[dict]) -> list[dict]:
     out = []
     for row in rows or []:
         item = dict(row)
@@ -252,9 +252,9 @@ def column_context_rows_for_spark(rows: list[dict]) -> list[dict]:
     return out
 
 
-def write_metadata_rows(spark, rows: list[dict], metadata_path, table_name: str, mode: str = "append"):
+def _write_metadata_rows(spark, rows: list[dict], metadata_path, table_name: str, mode: str = "append"):
     """Write metadata rows to a legacy lakehouse metadata path."""
-    df = spark.createDataFrame(column_context_rows_for_spark(rows))
+    df = spark.createDataFrame(_column_context_rows_for_spark(rows))
     _write_metadata_rows_legacy(df, metadata_path=metadata_path, table_name=table_name, mode=mode)
     return df
 
@@ -269,12 +269,12 @@ def _write_metadata_rows_legacy(df: Any, metadata_path: Any, table_name: str, mo
     writer.save(path)
 
 
-def write_column_business_context(spark, rows: list[dict], metadata_path, table_name: str = "METADATA_COLUMN_CONTEXT", mode: str = "append"):
-    return write_metadata_rows(spark, rows, metadata_path, table_name, mode=mode)
+def _write_column_business_context(spark, rows: list[dict], metadata_path, table_name: str = "METADATA_COLUMN_CONTEXT", mode: str = "append"):
+    return _write_metadata_rows(spark, rows, metadata_path, table_name, mode=mode)
 
 
-def write_column_governance_context(spark, rows: list[dict], metadata_path, table_name: str = "METADATA_COLUMN_CLASSIFICATION", mode: str = "append"):
-    return write_metadata_rows(spark, rows, metadata_path, table_name, mode=mode)
+def _write_column_governance_context(spark, rows: list[dict], metadata_path, table_name: str = "METADATA_COLUMN_CLASSIFICATION", mode: str = "append"):
+    return _write_metadata_rows(spark, rows, metadata_path, table_name, mode=mode)
 
 
 def _context_get(context: Any, *keys: str) -> Any:
@@ -323,7 +323,7 @@ def _runtime_context() -> dict[str, Any]:
     return {key: _context_get(context, key) for key in keys}
 
 
-def build_runtime_audit_fields(
+def _build_runtime_audit_fields(
     *,
     config: Any = None,
     env: str | None = None,
@@ -392,7 +392,7 @@ def build_runtime_audit_fields(
     }
 
 
-def register_current_notebook(
+def _register_current_notebook(
     spark,
     metadata_path=None,
     agreement_id=None,
@@ -454,7 +454,7 @@ def register_current_notebook(
     Returns
     -------
     dict[str, str]
-        Registration row matching :func:`get_notebook_registry_schema`.
+        Registration row matching :func:`_get_notebook_registry_schema`.
 
     Raises
     ------
@@ -470,7 +470,7 @@ def register_current_notebook(
     ``metadata`` target from ``00_env_config``.
     """
     if (config is None or env is None) and metadata_path is None:
-        raise ValueError("register_current_notebook requires config and env for metadata routing. Pass metadata_path only for legacy notebooks.")
+        raise ValueError("_register_current_notebook requires config and env for metadata routing. Pass metadata_path only for legacy notebooks.")
 
     ctx = _runtime_context()
     workspace_id = _context_get(ctx, "currentWorkspaceId", "workspaceId")
@@ -504,7 +504,7 @@ def register_current_notebook(
     }
     row["registration_id"] = _safe_str(registration_id or _notebook_registration_key(row))
     row = {field: row.get(field, "") for field in NOTEBOOK_REGISTRY_FIELDS}
-    df = spark.createDataFrame(column_context_rows_for_spark([row]))
+    df = spark.createDataFrame(_column_context_rows_for_spark([row]))
     if config is not None and env is not None:
         write_lakehouse_table(df, config, env, "metadata", metadata_table, mode="append")
     elif metadata_path is not None:
@@ -536,7 +536,7 @@ def _latest_registration_events(rows: Any) -> list[dict[str, Any]]:
     return list(latest.values())
 
 
-def load_notebook_registry(spark, agreement_id=None, metadata_table=NOTEBOOK_REGISTRY_TABLE, notebook_type=None, environment_name=None, missing_ok: bool = True, *, config: Any = None, env: str | None = None, active_only: bool = False, notebook_id: str | None = None, notebook_name: str | None = None, registration_role: str | None = None) -> list[dict[str, Any]]:
+def _load_notebook_registry(spark, agreement_id=None, metadata_table=NOTEBOOK_REGISTRY_TABLE, notebook_type=None, environment_name=None, missing_ok: bool = True, *, config: Any = None, env: str | None = None, active_only: bool = False, notebook_id: str | None = None, notebook_name: str | None = None, registration_role: str | None = None) -> list[dict[str, Any]]:
     try:
         table = read_lakehouse_table(config, env, "metadata", metadata_table, spark_session=spark) if config is not None and env is not None else spark.table(metadata_table)
         rows = _registry_rows_with_defaults(table)
@@ -565,7 +565,7 @@ def load_notebook_registry(spark, agreement_id=None, metadata_table=NOTEBOOK_REG
     return out
 
 
-def current_notebook_active_registrations(spark, *, config: Any, env: str, metadata_table: str = NOTEBOOK_REGISTRY_TABLE, notebook_type: str | None = None, environment_name: str | None = None, registration_role: str | None = None, missing_ok: bool = True) -> list[dict[str, Any]]:
+def _current_notebook_active_registrations(spark, *, config: Any, env: str, metadata_table: str = NOTEBOOK_REGISTRY_TABLE, notebook_type: str | None = None, environment_name: str | None = None, registration_role: str | None = None, missing_ok: bool = True) -> list[dict[str, Any]]:
     """Return active agreement registrations for the running notebook.
 
     Parameters
@@ -592,5 +592,5 @@ def current_notebook_active_registrations(spark, *, config: Any, env: str, metad
     ctx = _runtime_context()
     notebook_id = _safe_str(_context_get(ctx, "currentNotebookId", "notebookId"))
     notebook_name = _safe_str(_context_get(ctx, "currentNotebookName", "notebookName") or "unknown_notebook")
-    rows = load_notebook_registry(spark, metadata_table=metadata_table, notebook_type=notebook_type, environment_name=environment_name, missing_ok=missing_ok, config=config, env=env, active_only=True, notebook_id=notebook_id or None, notebook_name=None if notebook_id else notebook_name, registration_role=registration_role)
+    rows = _load_notebook_registry(spark, metadata_table=metadata_table, notebook_type=notebook_type, environment_name=environment_name, missing_ok=missing_ok, config=config, env=env, active_only=True, notebook_id=notebook_id or None, notebook_name=None if notebook_id else notebook_name, registration_role=registration_role)
     return rows

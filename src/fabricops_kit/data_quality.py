@@ -17,7 +17,7 @@ from pyspark.sql.window import Window
 from pyspark.sql import SparkSession
 from .data_profiling import profile_dataframe
 from .fabric_input_output import write_lakehouse_table
-from .metadata import build_dq_rule_key, build_metadata_column_key, build_metadata_table_key, _now_utc_iso, _resolve_action_by
+from .metadata import _build_dq_rule_key, _build_metadata_column_key, _build_metadata_table_key, _now_utc_iso, _resolve_action_by
 
 AI_SUGGESTABLE_DQ_RULE_TYPES = {"not_null", "unique_key", "accepted_values", "value_range", "regex_format"}
 
@@ -126,9 +126,9 @@ def _attach_rule_metadata_keys(candidate_rules: list[dict], environment_name: st
                 "environment_name": environment_name,
                 "dataset_name": dataset_name,
                 "table_name": table_name,
-                "metadata_table_key": build_metadata_table_key(environment_name, dataset_name, table_name),
-                "metadata_column_keys": [build_metadata_column_key(environment_name, dataset_name, table_name, c) for c in cols],
-                "rule_key": build_dq_rule_key(environment_name, dataset_name, table_name, rule.get("rule_id")),
+                "metadata_table_key": _build_metadata_table_key(environment_name, dataset_name, table_name),
+                "metadata_column_keys": [_build_metadata_column_key(environment_name, dataset_name, table_name, c) for c in cols],
+                "rule_key": _build_dq_rule_key(environment_name, dataset_name, table_name, rule.get("rule_id")),
             }
         )
     return out
@@ -209,7 +209,7 @@ def _approved_dq_rules_from_review_rows(review_rows: list[dict[str, Any]]) -> li
     return approved
 
 
-def validate_dq_rules(rules: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def _validate_dq_rules(rules: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Validate canonical DQ rules before enforcement.
 
     Notes
@@ -408,7 +408,7 @@ def _split_dq_rows(df, rules: list[dict[str, Any]], dq_run_id: str | None = None
     -----
     A single source row may generate multiple failure-evidence rows when multiple rules fail.
     """
-    validate_dq_rules(rules)
+    _validate_dq_rules(rules)
     dq_run_id = dq_run_id or str(uuid.uuid4())
     run_ts = datetime.now(timezone.utc).isoformat()
     if row_id_columns:
@@ -475,7 +475,7 @@ def _run_dq_rules(df, table_name: str, rules: list[dict[str, Any]]):
     ValueError
         If rules fail canonical DQ validation.
     """
-    validate_dq_rules(rules)
+    _validate_dq_rules(rules)
     _, _, failures = _split_dq_rows(df, rules)
     total = df.count()
     failure_counts = {r["rule_id"]: int(r["failed_count"]) for r in failures.groupBy("rule_id").agg(F.count(F.lit(1)).alias("failed_count")).collect()}
@@ -486,7 +486,7 @@ def _run_dq_rules(df, table_name: str, rules: list[dict[str, Any]]):
     return df.sparkSession.createDataFrame(rows)
 
 
-def assert_dq_passed(dq_result_df) -> None:
+def _assert_dq_passed(dq_result_df) -> None:
     """Raise only after evidence materialization when error-severity rules fail.
 
     Parameters
@@ -529,30 +529,30 @@ def _prepare_dq_profile_input_rows(*, profile_df=None, df=None, table_name: str,
     )
 
 
-def draft_dq_rules(*, profile_df=None, df=None, table_name: str, business_context: str = "", prompt_template: str | None = None, output_col: str = "response") -> list[dict[str, Any]]:
+def _draft_dq_rules(*, profile_df=None, df=None, table_name: str, business_context: str = "", prompt_template: str | None = None, output_col: str = "response") -> list[dict[str, Any]]:
     """Draft candidate DQ rules from metadata profiles or raw DataFrame fallback."""
     prepared = _prepare_dq_profile_input_rows(profile_df=profile_df, df=df, table_name=table_name, business_context=business_context)
     responses = _suggest_dq_rules(prepared, prompt_template=prompt_template, output_col=output_col)
     return _extract_dq_rules(responses, table_name=table_name, response_col=output_col)
 
 
-def write_dq_rules(approved_rules, *, table_name: str, metadata_path, metadata_table: str = "METADATA_DQ_RULES", action_by: str | None = None, rule_source: str = "ai_widget_approval", action_reason: str = "Approved after human review.", mode: str = "append"):
+def _write_dq_rules(approved_rules, *, table_name: str, metadata_path, metadata_table: str = "METADATA_DQ_RULES", action_by: str | None = None, rule_source: str = "ai_widget_approval", action_reason: str = "Approved after human review.", mode: str = "append"):
     """Validate, build, and persist approved DQ rules."""
-    validate_dq_rules(approved_rules)
+    _validate_dq_rules(approved_rules)
     spark = SparkSession.getActiveSession()
     if spark is None:
-        raise ValueError("write_dq_rules requires an active SparkSession.")
+        raise ValueError("_write_dq_rules requires an active SparkSession.")
     history_df = _build_dq_rule_history(spark, table_name=table_name, approved_rules=approved_rules, action_by=action_by, rule_source=rule_source, action_reason=action_reason)
     write_lakehouse_table(history_df, metadata_path, metadata_table, mode=mode)
     return history_df
 
 
-def enforce_dq(df, *, table_name: str, rules=None, metadata_df=None, row_id_columns: list[str] | None = None, dq_run_id: str | None = None) -> DQEnforcementResult:
+def _enforce_dq(df, *, table_name: str, rules=None, metadata_df=None, row_id_columns: list[str] | None = None, dq_run_id: str | None = None) -> DQEnforcementResult:
     """Enforce approved DQ rules and return structured deterministic outputs."""
     if rules is None and metadata_df is None:
         raise ValueError("Provide rules or metadata_df.")
     active_rules = rules or _load_active_dq_rules(metadata_df, table_name=table_name)
-    validate_dq_rules(active_rules)
+    _validate_dq_rules(active_rules)
     rule_results = _run_dq_rules(df, table_name=table_name, rules=active_rules)
     valid_rows, quarantine_rows, failure_rows = _split_dq_rows(df, active_rules, dq_run_id=dq_run_id, row_id_columns=row_id_columns)
     return DQEnforcementResult(active_rules, rule_results, valid_rows, quarantine_rows, failure_rows)
@@ -626,7 +626,7 @@ APPROVED_RULES_FROM_WIDGET = []
 REJECTED_RULES_FROM_WIDGET = []
 
 
-def widget_review_dq_rules(candidate_rules, table_name: str):
+def _widget_review_dq_rules(candidate_rules, table_name: str):
     """Review AI-suggested DQ rules sequentially with explicit approve/reject decisions.
 
     Parameters
@@ -884,7 +884,7 @@ def widget_review_dq_rules(candidate_rules, table_name: str):
 
 
 
-def get_dq_review_results(
+def _get_dq_review_results(
     *,
     table_name: str,
     environment_name: str | None = None,
@@ -915,7 +915,7 @@ def get_dq_review_results(
     return {"approved_rules": approved, "rejected_rules": rejected}
 
 
-def load_dq_rules(metadata_df, *, table_name: str) -> list[dict[str, Any]]:
+def _load_dq_rules(metadata_df, *, table_name: str) -> list[dict[str, Any]]:
     """Load latest active approved DQ rules from append-only metadata history.
 
     Parameters
@@ -937,7 +937,7 @@ def load_dq_rules(metadata_df, *, table_name: str) -> list[dict[str, Any]]:
 DEACTIVATED_RULES_FROM_WIDGET = []
 KEPT_ACTIVE_RULES_FROM_WIDGET = []
 
-def widget_review_dq_rule_deactivations(active_rules, table_name: str):
+def _widget_review_dq_rule_deactivations(active_rules, table_name: str):
     """Review active DQ rules one at a time for governed deactivation actions.
 
     Parameters
