@@ -1,64 +1,66 @@
 # How FabricOps Works
 
-FabricOps Starter Kit is a lightweight Microsoft Fabric notebook starter kit for governed, quality-checked, AI-ready notebooks.
+FabricOps uses notebook templates and shared metadata to support a workflow from agreement, to pipeline, to governance review, then back into pipeline enforcement.
 
-Start here before reading the workflow detail pages. The v1.0.0 story is intentionally simple: metadata tables and notebook templates create a traceable operating trail from agreement, to production, to governance review, to handover.
+FabricOps Starter Kit is not a full governance platform or a standalone data quality product. It gives Microsoft Fabric notebooks a shared pattern for pipeline metadata, guardrails, and review.
 
-FabricOps is not a full governance platform or a standalone data quality product. Data quality checks are one part of a broader Fabric notebook workflow.
+## Target workflow
 
-## v1.0.0 operating model
+```mermaid
+flowchart LR
+    DA["01_da<br/>Agreement<br/>Captures agreement, steward, and context"] --> PC["03_pc<br/>Pipeline<br/>Pipes data from source to target<br/>Captures data profile, lineage, schema, and data drift"]
+    PC --> GOV["04_gov<br/>Governance Review<br/>Adds business context, data quality rules, sensitivity, and classification"]
+    GOV --> ENF["03_pc<br/>Pipeline Enforcement<br/>Enforces approved rules and classifications<br/>with schema and data drift guardrails"]
+    ENF --> PC
+```
 
-FabricOps v1.0.0 uses metadata tables and notebook templates to create a traceable operating trail from agreement, to production, to governance review, to handover.
+The main loop is:
 
-The detailed structure is explained by:
-
-- [Workspace Operating Model](workspace-operating-model.md) for workspace separation and production promotion.
-- [Notebook Templates](notebook-templates.md) for what each notebook owns.
-- [Metadata Tables](metadata-tables.md) for what evidence is stored and where.
-- [Metadata Dashboard](metadata-dashboard.md) for the planned post-v1.0.0 visibility layer.
-
-The two implemented operating workflows are covered in the Workflow Guides: `03_pc` production guardrails and `04_gov` governance review.
-
-Separate data contracts are not part of the v1.0.0 operating model.
+1. `01_da` captures the agreement, steward, and context.
+2. `03_pc` pipes data from source to target while capturing key metadata like data profile, lineage, schema, and data drift details.
+3. `04_gov` uses that metadata to add business context, data quality rules, data sensitivity, and classification.
+4. Approved data quality rules, sensitivity rules, and classification rules are enforced in `03_pc` when the pipeline runs again, alongside schema and data drift guardrails.
 
 ## Notebook responsibilities
 
-| Notebook | v1.0.0 responsibility |
+| Notebook | Responsibility |
 | --- | --- |
-| `00_env_config` | Prepares configuration and metadata tables. |
-| `01_da` | Captures data agreement, steward, and evidence metadata. |
-| `02_ex` | Supports exploration or example topic setup. |
-| `03_pc` | Runs production with notebook-scoped guardrails. |
-| `04_gov` | Reviews and commits governance metadata. |
+| `01_da` | Captures agreement, steward, and context. |
+| `03_pc` | Pipes data from source to target and captures key metadata. |
+| `04_gov` | Adds business context, data quality rules, sensitivity, and classification. |
+| `03_pc` rerun | Enforces approved rules and classifications with schema and data drift guardrails. |
 
-## Operating trail
+`00_env_config` supports environment setup. `02_ex` is an optional example or exploration notebook and is not part of the main target workflow.
 
-The metadata lakehouse is the shared evidence layer:
+## Metadata captured by `03_pc`
 
-1. `01_da` records agreement, steward, and evidence context.
-2. The notebook registry records which notebooks participate in an agreement or workflow.
-3. `03_pc` writes profile evidence, lineage, output evidence, and run summaries as part of production execution.
-4. `04_gov` commits reviewed column context, DQ expectations, and classifications.
-5. Handover is supported by collected evidence instead of memory or manually reconstructed notes.
+- Data profile
+- Lineage
+- Schema details
+- Data drift details
+- Pipeline outputs
+- Run summary
+
+## Metadata enhanced by `04_gov`
+
+- Business context
+- Data quality rules
+- Data sensitivity
+- Classification
+
+## Loop back into `03_pc`
+
+The workflow does not stop at governance review. Reviewed and approved governance metadata becomes part of later pipeline runs when `03_pc` reads or implements the approved rules and classifications.
+
+That keeps the review step connected to the pipeline: reviewers add context and rules, then `03_pc` uses the approved metadata with schema and data drift guardrails on later runs.
 
 ## What to read next
 
 | Page | Use it for |
 | --- | --- |
-| [Workspace Operating Model](workspace-operating-model.md) | Understand workspace separation and production promotion. |
+| [Workspace Operating Model](workspace-operating-model.md) | Understand workspace separation and pipeline promotion. |
 | [Notebook Templates](notebook-templates.md) | Understand what each notebook template owns. |
-| [Metadata Tables](metadata-tables.md) | Understand what evidence is stored and where. |
-| [Production Guardrails Workflow](../schema-and-data-drift.md) | Understand `03_pc` schema and data-change guardrails. |
-| [Governance Review Workflow](../data-quality-rules-system.md) | Understand `04_gov` review metadata and optional AI assistance. |
-| [Metadata Dashboard](metadata-dashboard.md) | Understand the planned post-v1.0.0 visibility layer over collected metadata. |
-
-## Planned after v1.0.0
-
-| Planned enhancement | Notes |
-| --- | --- |
-| Metadata dashboard visibility layer | A complete dashboard experience is planned after v1.0.0. |
-| Richer governance dashboard views | Additional views over agreements, profiles, lineage, classifications, and DQ expectations. |
-| Optional metadata-driven DQ rule execution | Future opt-in execution of reviewed DQ metadata. |
-| Rule promotion workflow | Future path from reviewed expectations to implemented guardrails. |
-| Richer AI-assisted review | More complete AI support while keeping humans accountable for approval. |
-| More complete operational monitoring | Broader run health and support visibility. |
+| [Metadata Tables](metadata-tables.md) | Understand what metadata is stored and where. |
+| [Pipeline Guardrails](../schema-and-data-drift.md) | Understand how `03_pc` checks schema, drift, and approved governance metadata. |
+| [Governance Review](../data-quality-rules-system.md) | Understand how `04_gov` adds reviewed governance metadata. |
+| [Metadata Dashboard](metadata-dashboard.md) | Understand the planned visibility layer over collected metadata. |

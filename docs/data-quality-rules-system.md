@@ -1,63 +1,61 @@
-# AI-assisted governance review
+# Governance Review
 
-FabricOps v1.0.0 treats data quality as one part of a notebook workflow, not as a standalone data quality product.
+FabricOps treats data quality as one part of a notebook pipeline workflow, not as a standalone data quality product.
 
-Read [How FabricOps Works](how-fabricops-works/index.md) first. This page then explains the `04_gov` governance review workflow.
+Read [How FabricOps Works](how-fabricops-works/index.md) first for the full `01_da` → `03_pc` → `04_gov` → `03_pc` loop. This page focuses on how `04_gov` enriches metadata for review and later pipeline use.
 
-The workflow is intentionally lightweight:
+Separate data contracts are not part of the current operating model.
 
-1. teams profile and inspect data;
-2. engineers implement notebook-scoped guardrails inside each `03_pc` production notebook;
-3. `03_pc` records profile and lineage evidence;
-4. reviewers use `04_gov` to review governance metadata;
-5. teams prepare production handover from the implemented notebook and supporting evidence.
+## Where review metadata comes from
 
-Separate data contracts are not part of the v1.0.0 operating model.
-
-## Where review evidence comes from
-
-`03_pc` creates the production evidence that governance reviewers need:
+`03_pc` creates the pipeline metadata that governance reviewers need:
 
 - current source and output profiles;
 - schema and data-change guardrail results;
 - notebook-defined DQ check outcomes, when the engineer adds them;
-- output write evidence;
+- output write metadata;
 - lineage records;
-- run summaries for review and handover.
+- run summaries for review.
 
-`04_gov` uses that evidence to help reviewers understand columns, candidate DQ expectations, and classification metadata. It is a human review workflow, not an enforcement engine.
+`04_gov` uses that metadata to help reviewers understand columns, candidate data quality rules, sensitivity, and classification. It is a human review workflow that adds governed metadata for later pipeline runs.
 
 ## What `04_gov` does
 
-`04_gov` helps reviewers:
+`04_gov` helps reviewers enrich metadata with:
 
-- review column context and business meaning;
-- review candidate DQ expectations;
-- review classification and sensitivity metadata;
-- optionally use AI suggestions as a starting point;
-- commit reviewed governance metadata after human approval.
+- business context;
+- data quality rules;
+- data sensitivity;
+- classification.
 
-AI suggestions are optional and advisory. They must be reviewed, edited where needed, and explicitly approved by a person before they become committed metadata.
+Reviewers may optionally use AI suggestions as a starting point. AI suggestions are advisory. A person must review, edit where needed, and approve governance metadata before it is used by a pipeline.
 
-## What `04_gov` does not do
+## Human approval boundary
 
-`04_gov` does not enforce production rules. It does not block a production run, quarantine rows, change output data, or replace checks implemented in `03_pc`.
+Reviewed governance metadata should not become active just because an AI suggestion exists or because a draft row was created. A person remains accountable for approving business context, data quality rules, sensitivity, and classification.
 
-Approved DQ expectations stored in metadata are review evidence in v1.0.0. They are not automatically enforced unless an engineer manually implements them as guardrails inside the relevant `03_pc` notebook.
+After approval, the metadata becomes useful when `03_pc` reads or implements the approved rules and classifications during pipeline runs.
 
-## How expectations become guardrails
+## How reviewed metadata becomes pipeline behavior
 
-When a reviewed DQ expectation should affect production behavior:
+When reviewed governance metadata should affect pipeline behavior:
 
 1. identify the relevant `03_pc` notebook;
-2. add the check where the pipeline logic lives;
-3. decide whether the check should warn or stop the run;
-4. write outputs only after required guardrails pass;
-5. record profile, lineage, and run-summary evidence;
-6. rerun the notebook and deliberately test failure behavior.
+2. decide which approved rules and classifications the pipeline should read or implement;
+3. decide whether each check should warn or stop the run;
+4. apply the approved metadata alongside schema and data drift guardrails;
+5. write outputs only after required guardrails pass;
+6. record profile, lineage, and run-summary metadata;
+7. rerun the notebook and test failure behavior where blocking checks are expected.
 
-This keeps the v1.0.0 boundary clear: `03_pc` owns production enforcement, while `04_gov` owns reviewed governance metadata.
+This keeps the boundary clear: `04_gov` owns reviewed governance metadata, and `03_pc` owns pipeline enforcement.
 
-## Practical handover note
+## What to review before approval
 
-For handover, point support teams to the production `03_pc` notebook for implemented guardrails and to `04_gov` metadata for reviewed context, expectations, and classifications. The two should support each other, but only the notebook-scoped guardrails in `03_pc` control production behavior in v1.0.0.
+Before approving governance metadata, reviewers should check:
+
+- whether the business context describes the column or table in plain wording;
+- whether each data quality rule is specific enough for `03_pc` to read or implement;
+- whether sensitivity values match the intended data handling policy;
+- whether classifications are appropriate for the data and audience;
+- whether any AI suggestion has been edited or rejected when it is not accurate.

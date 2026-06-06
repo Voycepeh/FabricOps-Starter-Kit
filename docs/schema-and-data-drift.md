@@ -1,26 +1,27 @@
-# Notebook-scoped production guardrails
+# Pipeline Guardrails
 
-FabricOps v1.0.0 uses each `03_pc` notebook as the production guardrail boundary. Data quality is one part of that workflow, alongside profiling, output writes, lineage, run summaries, governance review, and handover.
+`03_pc` owns pipeline guardrails. It pipes data from source to target, captures metadata, and enforces approved rules and classifications alongside schema and data drift guardrails.
 
-Read [How FabricOps Works](how-fabricops-works/index.md) first. This page then explains the `03_pc` production guardrails workflow.
+Read [How FabricOps Works](how-fabricops-works/index.md) first for the full `01_da` → `03_pc` → `04_gov` → `03_pc` loop. This page focuses on the guardrail pattern inside `03_pc`.
 
-Separate data contracts are not part of the v1.0.0 operating model. The checks that control production behavior live in the relevant `03_pc` notebook.
+Separate data contracts are not part of the current operating model. The checks that control pipeline behavior live in the relevant `03_pc` notebook and can use approved governance metadata from `04_gov` on later runs.
 
 ![Schema and data-change guardrails showing source and target validation flow](assets/fabricops-schema-data-guardrails.png){ .full-width }
 
 ## What `03_pc` owns
 
-A production `03_pc` notebook should make its guardrails explicit before writing outputs:
+A `03_pc` notebook should make its guardrails explicit before writing outputs:
 
 - schema validation for expected columns and datatypes;
 - data-change monitoring for unusual row count, null, distinct, or distribution changes;
+- approved data quality rules, sensitivity rules, and classification rules from governance review when the pipeline reads or implements them;
 - notebook-defined DQ checks added where the pipeline logic lives;
 - fail-fast behavior for blocking guardrail results;
 - output writes only after required guardrails pass;
-- profile and lineage evidence;
-- run summaries for review and handover.
+- profile and lineage metadata;
+- run summaries for review.
 
-`04_gov` is separate. It reviews column context, DQ expectations, and classification metadata, but it does not enforce production rules.
+`04_gov` adds reviewed metadata. After a person approves that metadata, `03_pc` can use the approved rules and classifications during later pipeline runs.
 
 ## Guardrail flow
 
@@ -30,9 +31,10 @@ Use the same pattern before transformation and before target publication:
 2. stop when the schema result is blocking;
 3. profile the dataframe and compare it with the selected baseline;
 4. stop when the data-change result is blocking;
-5. run any notebook-defined DQ checks;
-6. write outputs only after required guardrails pass;
-7. record profile evidence, lineage, and run-summary evidence.
+5. apply approved governance metadata that the pipeline reads or implements;
+6. run any notebook-defined DQ checks;
+7. write outputs only after required guardrails pass;
+8. record profile metadata, lineage, and run-summary metadata.
 
 Warnings should remain visible without stopping execution. Monitor-only presets can be used when changes should be reviewed but should not block publication.
 
@@ -122,15 +124,15 @@ MARK_CURRENT_PROFILE_AS_APPROVED_BASELINE = False
 
 Use `changing_data` for operational or transactional datasets. Use `fixed_data` for reference, historical, or controlled datasets that should remain stable.
 
-## Evidence for review and handover
+## Metadata for review
 
-`monitor_data_changes()` returns profile and comparison evidence that can be written to metadata:
+`monitor_data_changes()` returns profile and comparison metadata that can be written to metadata tables:
 
 | Property | Purpose |
 | --- | --- |
-| `profile` | Current profile dataframe ready for catalogue evidence. |
+| `profile` | Current profile dataframe ready for catalogue metadata. |
 | `profile_payload` | Normalized profile used for comparison. |
 | `baseline` | Selected historical profile, or `None`. |
 | `result` | Guardrail status, checks, message, and `can_continue`. |
 
-Together with lineage and run summaries, this evidence helps reviewers and support teams understand what the production notebook checked and why it did or did not write outputs.
+Together with lineage and run summaries, this metadata helps reviewers and support teams understand what the pipeline checked and why it did or did not write outputs.
