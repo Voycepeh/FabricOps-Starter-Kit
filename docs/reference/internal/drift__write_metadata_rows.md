@@ -20,4 +20,4 @@ No summary available.
 - Outbound references count: 0
 
 ## Inbound references
-- <a href="../internal/drift/build_and_write_partition_snapshot/"><code>fabricops_kit.drift.build_and_write_partition_snapshot</code></a>
+- <a href="../internal/drift/_build_and_write_partition_snapshot/"><code>fabricops_kit.drift._build_and_write_partition_snapshot</code></a>

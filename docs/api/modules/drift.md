@@ -6,7 +6,7 @@
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 3</span><span class="reference-chip">Internal helpers: 29</span><span class="reference-chip">Outbound: 2</span><span class="reference-chip">Inbound: 0</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 3</span><span class="reference-chip">Internal helpers: 41</span><span class="reference-chip">Outbound: 2</span><span class="reference-chip">Inbound: 0</span></div>
 
 ## Module purpose
 
@@ -36,7 +36,7 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>29</td>
+      <td>41</td>
     </tr>
     <tr>
       <td>Inbound module count</td>
@@ -75,21 +75,21 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
       <td><a href="../../reference/monitor_data_changes/"><code>monitor_data_changes</code></a></td>
       <td>Essential</td>
       <td>function</td>
-      <td>Profile a dataframe, select the appropriate baseline, compare distributions, and return a data-change result from a preset.</td>
+      <td>Profile data, compare against the approved baseline, and return a drift guardrail result.</td>
       <td><a href="../../reference/internal/drift/_as_monitor_only_result/"><code>_as_monitor_only_result</code></a> (internal), <a href="../../reference/internal/drift/_check_profile_drift/"><code>_check_profile_drift</code></a> (internal), <a href="../../reference/internal/drift/_data_change_preset_config/"><code>_data_change_preset_config</code></a> (internal), <a href="../../reference/internal/drift/_extract_categorical_distribution_categories/"><code>_extract_categorical_distribution_categories</code></a> (internal), <a href="../../reference/internal/drift/_extract_numeric_distribution_bin_edges/"><code>_extract_numeric_distribution_bin_edges</code></a> (internal), <a href="../../reference/internal/drift/_load_latest_profile/"><code>_load_latest_profile</code></a> (internal), <a href="../../reference/internal/drift/_normalize_profile/"><code>_normalize_profile</code></a> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/stop_if_failed/"><code>stop_if_failed</code></a></td>
       <td>Essential</td>
       <td>function</td>
-      <td>Raise the shared guardrail error only when a schema or data-change result cannot continue.</td>
+      <td>Stop a notebook only when a schema or data-change guardrail result blocks continuation.</td>
       <td>—</td>
     </tr>
     <tr>
       <td><a href="../../reference/validate_schema/"><code>validate_schema</code></a></td>
       <td>Essential</td>
       <td>function</td>
-      <td>Validate a dataframe schema using strict, allow_new_columns, or monitor_only presets.</td>
+      <td>Validate a DataFrame schema using strict, allow-new-columns, or monitor-only presets.</td>
       <td><a href="../../reference/internal/drift/_actual_schema/"><code>_actual_schema</code></a> (internal), <a href="../../reference/internal/drift/_check_schema/"><code>_check_schema</code></a> (internal)</td>
     </tr>
   </tbody>
@@ -149,7 +149,23 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
       <td><a href="../../reference/monitor_data_changes/"><code>monitor_data_changes</code></a></td>
     </tr>
     <tr>
+      <td><a href="../../reference/internal/drift/_assert_incremental_safe/"><code>_assert_incremental_safe</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
       <td><a href="../../reference/internal/drift/_assert_no_blocking_profile_drift/"><code>_assert_no_blocking_profile_drift</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/drift/_build_and_write_partition_snapshot/"><code>_build_and_write_partition_snapshot</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/drift/_build_drift_evidence_record/"><code>_build_drift_evidence_record</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/drift/_build_incremental_safety_records/"><code>_build_incremental_safety_records</code></a></td>
       <td>—</td>
     </tr>
     <tr>
@@ -161,11 +177,19 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
       <td>—</td>
     </tr>
     <tr>
+      <td><a href="../../reference/internal/drift/_build_partition_snapshot/"><code>_build_partition_snapshot</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
       <td><a href="../../reference/internal/drift/_build_spark_partition_snapshot/"><code>_build_spark_partition_snapshot</code></a></td>
       <td>—</td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/drift/_categorical_distance/"><code>_categorical_distance</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/drift/_check_partition_drift/"><code>_check_partition_drift</code></a></td>
       <td>—</td>
     </tr>
     <tr>
@@ -177,11 +201,23 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
       <td><a href="../../reference/validate_schema/"><code>validate_schema</code></a></td>
     </tr>
     <tr>
+      <td><a href="../../reference/internal/drift/_compare_partition_snapshots/"><code>_compare_partition_snapshots</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
       <td><a href="../../reference/internal/drift/_data_change_preset_config/"><code>_data_change_preset_config</code></a></td>
       <td><a href="../../reference/monitor_data_changes/"><code>monitor_data_changes</code></a></td>
     </tr>
     <tr>
+      <td><a href="../../reference/internal/drift/_default_incremental_safety_policy/"><code>_default_incremental_safety_policy</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
       <td><a href="../../reference/internal/drift/_default_profile_drift_policy/"><code>_default_profile_drift_policy</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/drift/_detect_dataframe_engine/"><code>_detect_dataframe_engine</code></a></td>
       <td>—</td>
     </tr>
     <tr>
@@ -209,6 +245,10 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
       <td>—</td>
     </tr>
     <tr>
+      <td><a href="../../reference/internal/drift/_load_latest_partition_snapshot/"><code>_load_latest_partition_snapshot</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
       <td><a href="../../reference/internal/drift/_load_latest_profile/"><code>_load_latest_profile</code></a></td>
       <td><a href="../../reference/monitor_data_changes/"><code>monitor_data_changes</code></a></td>
     </tr>
@@ -233,6 +273,10 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
       <td>—</td>
     </tr>
     <tr>
+      <td><a href="../../reference/internal/drift/_prepare_drift_baselines/"><code>_prepare_drift_baselines</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
       <td><a href="../../reference/internal/drift/_profile_check_status/"><code>_profile_check_status</code></a></td>
       <td>—</td>
     </tr>
@@ -246,6 +290,10 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
     </tr>
     <tr>
       <td><a href="../../reference/internal/drift/_safe_spark_collect/"><code>_safe_spark_collect</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/drift/_summarize_drift_results/"><code>_summarize_drift_results</code></a></td>
       <td>—</td>
     </tr>
     <tr>
@@ -271,7 +319,23 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
 <a class="reference-chip" href="#_as_monitor_only_result"><code>_as_monitor_only_result</code></a>
 </li>
 <li>
+<a class="reference-chip" href="#_assert_incremental_safe"><code>_assert_incremental_safe</code></a>
+</li>
+<li>
 <a class="reference-chip" href="#_assert_no_blocking_profile_drift"><code>_assert_no_blocking_profile_drift</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_build_and_write_partition_snapshot"><code>_build_and_write_partition_snapshot</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_build_partition_snapshot"><code>_build_partition_snapshot</code></a>, <a class="reference-chip" href="#_json_dumps"><code>_json_dumps</code></a>, <a class="reference-chip" href="#_utc_now_iso"><code>_utc_now_iso</code></a>, <a class="reference-chip" href="#_write_metadata_rows"><code>_write_metadata_rows</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_build_drift_evidence_record"><code>_build_drift_evidence_record</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_json_dumps"><code>_json_dumps</code></a>, <a class="reference-chip" href="#_utc_now_iso"><code>_utc_now_iso</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_build_incremental_safety_records"><code>_build_incremental_safety_records</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_build_pandas_partition_snapshot"><code>_build_pandas_partition_snapshot</code></a>
@@ -284,12 +348,22 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
 <a class="reference-chip" href="#_hash"><code>_hash</code></a>
 </li>
 <li>
+<a class="reference-chip" href="#_build_partition_snapshot"><code>_build_partition_snapshot</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_build_pandas_partition_snapshot"><code>_build_pandas_partition_snapshot</code></a>, <a class="reference-chip" href="#_build_spark_partition_snapshot"><code>_build_spark_partition_snapshot</code></a>, <a class="reference-chip" href="#_detect_dataframe_engine"><code>_detect_dataframe_engine</code></a>
+</li>
+<li>
 <a class="reference-chip" href="#_build_spark_partition_snapshot"><code>_build_spark_partition_snapshot</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_build_partition_hash"><code>_build_partition_hash</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_categorical_distance"><code>_categorical_distance</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_check_partition_drift"><code>_check_partition_drift</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_build_partition_snapshot"><code>_build_partition_snapshot</code></a>, <a class="reference-chip" href="#_compare_partition_snapshots"><code>_compare_partition_snapshots</code></a>, <a class="reference-chip" href="#_default_incremental_safety_policy"><code>_default_incremental_safety_policy</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_check_profile_drift"><code>_check_profile_drift</code></a>
@@ -302,10 +376,21 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
 <a class="reference-chip" href="#_actual_schema"><code>_actual_schema</code></a>, <a class="reference-chip" href="#_normalize_datatype"><code>_normalize_datatype</code></a>
 </li>
 <li>
+<a class="reference-chip" href="#_compare_partition_snapshots"><code>_compare_partition_snapshots</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_default_incremental_safety_policy"><code>_default_incremental_safety_policy</code></a>, <a class="reference-chip" href="#_is_closed_partition"><code>_is_closed_partition</code></a>
+</li>
+<li>
 <a class="reference-chip" href="#_data_change_preset_config"><code>_data_change_preset_config</code></a>
 </li>
 <li>
+<a class="reference-chip" href="#_default_incremental_safety_policy"><code>_default_incremental_safety_policy</code></a>
+</li>
+<li>
 <a class="reference-chip" href="#_default_profile_drift_policy"><code>_default_profile_drift_policy</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_detect_dataframe_engine"><code>_detect_dataframe_engine</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_extract_categorical_distribution_categories"><code>_extract_categorical_distribution_categories</code></a>
@@ -328,6 +413,11 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
 </li>
 <li>
 <a class="reference-chip" href="#_json_dumps"><code>_json_dumps</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_load_latest_partition_snapshot"><code>_load_latest_partition_snapshot</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_is_missing_table_error"><code>_is_missing_table_error</code></a>, <a class="reference-chip" href="#_safe_spark_collect"><code>_safe_spark_collect</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_load_latest_profile"><code>_load_latest_profile</code></a>
@@ -354,6 +444,9 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
 <a class="reference-chip" href="#_parse_distribution"><code>_parse_distribution</code></a>
 </li>
 <li>
+<a class="reference-chip" href="#_prepare_drift_baselines"><code>_prepare_drift_baselines</code></a>
+</li>
+<li>
 <a class="reference-chip" href="#_profile_check_status"><code>_profile_check_status</code></a>
 </li>
 <li>
@@ -364,6 +457,9 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
 </li>
 <li>
 <a class="reference-chip" href="#_safe_spark_collect"><code>_safe_spark_collect</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_summarize_drift_results"><code>_summarize_drift_results</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_utc_now_iso"><code>_utc_now_iso</code></a>

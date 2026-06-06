@@ -1,4 +1,4 @@
-# `data_quality` module
+# `data_quality` module (internal)
 
 <div class="api-status-block">
   <span class="api-chip api-chip-module">Module overview</span>
@@ -6,7 +6,7 @@
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 9</span><span class="reference-chip">Internal helpers: 20</span><span class="reference-chip">Outbound: 3</span><span class="reference-chip">Inbound: 0</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 0</span><span class="reference-chip">Internal helpers: 29</span><span class="reference-chip">Outbound: 3</span><span class="reference-chip">Inbound: 0</span></div>
 
 ## Module purpose
 
@@ -32,11 +32,11 @@ Owns DQ rule drafting, review, enforcement, quarantine, and quality results.
     </tr>
     <tr>
       <td>Public callable count</td>
-      <td>9</td>
+      <td>0</td>
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>20</td>
+      <td>29</td>
     </tr>
     <tr>
       <td>Inbound module count</td>
@@ -59,84 +59,7 @@ Owns DQ rule drafting, review, enforcement, quarantine, and quality results.
 
 ## Public callables
 
-<div class="module-table-scroll">
-<table>
-  <thead>
-    <tr>
-      <th>Callable</th>
-      <th>Tier</th>
-      <th>Type</th>
-      <th>Summary</th>
-      <th>Related helpers</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><a href="../../reference/assert_dq_passed/"><code>assert_dq_passed</code></a></td>
-      <td>Essential</td>
-      <td>function</td>
-      <td>Raise only after evidence materialization when error-severity rules fail.</td>
-      <td>—</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/draft_dq_rules/"><code>draft_dq_rules</code></a></td>
-      <td>Essential</td>
-      <td>function</td>
-      <td>Draft candidate DQ rules from metadata profiles or raw DataFrame fallback.</td>
-      <td><a href="../../reference/internal/data_quality/_extract_dq_rules/"><code>_extract_dq_rules</code></a> (internal), <a href="../../reference/internal/data_quality/_prepare_dq_profile_input_rows/"><code>_prepare_dq_profile_input_rows</code></a> (internal), <a href="../../reference/internal/data_quality/_suggest_dq_rules/"><code>_suggest_dq_rules</code></a> (internal)</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/enforce_dq/"><code>enforce_dq</code></a></td>
-      <td>Essential</td>
-      <td>function</td>
-      <td>Enforce approved DQ rules and return structured deterministic outputs.</td>
-      <td><a href="../../reference/internal/data_quality/_load_active_dq_rules/"><code>_load_active_dq_rules</code></a> (internal), <a href="../../reference/internal/data_quality/_run_dq_rules/"><code>_run_dq_rules</code></a> (internal), <a href="../../reference/internal/data_quality/_split_dq_rows/"><code>_split_dq_rows</code></a> (internal)</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/get_dq_review_results/"><code>get_dq_review_results</code></a></td>
-      <td>Essential</td>
-      <td>function</td>
-      <td>Collect current approved/rejected DQ review results from widget state.</td>
-      <td><a href="../../reference/internal/data_quality/_attach_rule_metadata_keys/"><code>_attach_rule_metadata_keys</code></a> (internal)</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/load_dq_rules/"><code>load_dq_rules</code></a></td>
-      <td>Essential</td>
-      <td>function</td>
-      <td>Load latest active approved DQ rules from append-only metadata history.</td>
-      <td><a href="../../reference/internal/data_quality/_load_active_dq_rules/"><code>_load_active_dq_rules</code></a> (internal)</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/widget_review_dq_rules/"><code>widget_review_dq_rules</code></a></td>
-      <td>Essential</td>
-      <td>function</td>
-      <td>Review AI-suggested DQ rules sequentially with explicit approve/reject decisions.</td>
-      <td><a href="../../reference/internal/data_quality/_require_ipywidgets/"><code>_require_ipywidgets</code></a> (internal)</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/write_dq_rules/"><code>write_dq_rules</code></a></td>
-      <td>Essential</td>
-      <td>function</td>
-      <td>Validate, build, and persist approved DQ rules.</td>
-      <td><a href="../../reference/internal/data_quality/_build_dq_rule_history/"><code>_build_dq_rule_history</code></a> (internal)</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/validate_dq_rules/"><code>validate_dq_rules</code></a></td>
-      <td>Optional</td>
-      <td>function</td>
-      <td>Validate canonical DQ rules before enforcement.</td>
-      <td>—</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/widget_review_dq_rule_deactivations/"><code>widget_review_dq_rule_deactivations</code></a></td>
-      <td>Optional</td>
-      <td>function</td>
-      <td>Review active DQ rules one at a time for governed deactivation actions.</td>
-      <td><a href="../../reference/internal/data_quality/_require_ipywidgets/"><code>_require_ipywidgets</code></a> (internal)</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+No public exports in this module.
 
 ## Module relationships
 
@@ -149,53 +72,7 @@ Owns DQ rule drafting, review, enforcement, quarantine, and quality results.
 <section class="callable-relationship-card">
 <h5>data_quality</h5>
 <h6>Public callables</h6>
-<ul class="callable-relationship-rows">
-<li>
-<a class="reference-chip" href="../../reference/assert_dq_passed/"><code>assert_dq_passed</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<span>None.</span>
-</li>
-<li>
-<a class="reference-chip" href="../../reference/draft_dq_rules/"><code>draft_dq_rules</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_extract_dq_rules"><code>_extract_dq_rules</code></a>, <a class="reference-chip" href="#_prepare_dq_profile_input_rows"><code>_prepare_dq_profile_input_rows</code></a>, <a class="reference-chip" href="#_suggest_dq_rules"><code>_suggest_dq_rules</code></a>
-</li>
-<li>
-<a class="reference-chip" href="../../reference/enforce_dq/"><code>enforce_dq</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_load_active_dq_rules"><code>_load_active_dq_rules</code></a>, <a class="reference-chip" href="#_run_dq_rules"><code>_run_dq_rules</code></a>, <a class="reference-chip" href="#_split_dq_rows"><code>_split_dq_rows</code></a>, <a class="reference-chip" href="../../reference/validate_dq_rules/"><code>validate_dq_rules</code></a>
-</li>
-<li>
-<a class="reference-chip" href="../../reference/get_dq_review_results/"><code>get_dq_review_results</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_attach_rule_metadata_keys"><code>_attach_rule_metadata_keys</code></a>
-</li>
-<li>
-<a class="reference-chip" href="../../reference/load_dq_rules/"><code>load_dq_rules</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_load_active_dq_rules"><code>_load_active_dq_rules</code></a>
-</li>
-<li>
-<a class="reference-chip" href="../../reference/validate_dq_rules/"><code>validate_dq_rules</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<span>None.</span>
-</li>
-<li>
-<a class="reference-chip" href="../../reference/widget_review_dq_rule_deactivations/"><code>widget_review_dq_rule_deactivations</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_require_ipywidgets"><code>_require_ipywidgets</code></a>
-</li>
-<li>
-<a class="reference-chip" href="../../reference/widget_review_dq_rules/"><code>widget_review_dq_rules</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_require_ipywidgets"><code>_require_ipywidgets</code></a>
-</li>
-<li>
-<a class="reference-chip" href="../../reference/write_dq_rules/"><code>write_dq_rules</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_build_dq_rule_history"><code>_build_dq_rule_history</code></a>, <a class="reference-chip" href="../../reference/validate_dq_rules/"><code>validate_dq_rules</code></a>
-</li>
-</ul>
+<p>None.</p>
 </section>
 
 ### Related internal helpers
@@ -217,8 +94,12 @@ Owns DQ rule drafting, review, enforcement, quarantine, and quality results.
       <td>—</td>
     </tr>
     <tr>
+      <td><a href="../../reference/internal/data_quality/_assert_dq_passed/"><code>_assert_dq_passed</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
       <td><a href="../../reference/internal/data_quality/_attach_rule_metadata_keys/"><code>_attach_rule_metadata_keys</code></a></td>
-      <td><a href="../../reference/get_dq_review_results/"><code>get_dq_review_results</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/data_quality/_build_dq_rule_deactivation_metadata_df/"><code>_build_dq_rule_deactivation_metadata_df</code></a></td>
@@ -230,10 +111,18 @@ Owns DQ rule drafting, review, enforcement, quarantine, and quality results.
     </tr>
     <tr>
       <td><a href="../../reference/internal/data_quality/_build_dq_rule_history/"><code>_build_dq_rule_history</code></a></td>
-      <td><a href="../../reference/write_dq_rules/"><code>write_dq_rules</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/data_quality/_build_dq_rules_metadata_df/"><code>_build_dq_rules_metadata_df</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/data_quality/_draft_dq_rules/"><code>_draft_dq_rules</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/data_quality/_enforce_dq/"><code>_enforce_dq</code></a></td>
       <td>—</td>
     </tr>
     <tr>
@@ -242,7 +131,11 @@ Owns DQ rule drafting, review, enforcement, quarantine, and quality results.
     </tr>
     <tr>
       <td><a href="../../reference/internal/data_quality/_extract_dq_rules/"><code>_extract_dq_rules</code></a></td>
-      <td><a href="../../reference/draft_dq_rules/"><code>draft_dq_rules</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/data_quality/_get_dq_review_results/"><code>_get_dq_review_results</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/data_quality/_latest_dq_rule_versions/"><code>_latest_dq_rule_versions</code></a></td>
@@ -254,7 +147,11 @@ Owns DQ rule drafting, review, enforcement, quarantine, and quality results.
     </tr>
     <tr>
       <td><a href="../../reference/internal/data_quality/_load_active_dq_rules/"><code>_load_active_dq_rules</code></a></td>
-      <td><a href="../../reference/enforce_dq/"><code>enforce_dq</code></a>, <a href="../../reference/load_dq_rules/"><code>load_dq_rules</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/data_quality/_load_dq_rules/"><code>_load_dq_rules</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/data_quality/_parse_dq_rules_dict_from_text/"><code>_parse_dq_rules_dict_from_text</code></a></td>
@@ -262,7 +159,7 @@ Owns DQ rule drafting, review, enforcement, quarantine, and quality results.
     </tr>
     <tr>
       <td><a href="../../reference/internal/data_quality/_prepare_dq_profile_input_rows/"><code>_prepare_dq_profile_input_rows</code></a></td>
-      <td><a href="../../reference/draft_dq_rules/"><code>draft_dq_rules</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/data_quality/_prepare_dq_profile_rows_with_context/"><code>_prepare_dq_profile_rows_with_context</code></a></td>
@@ -274,22 +171,38 @@ Owns DQ rule drafting, review, enforcement, quarantine, and quality results.
     </tr>
     <tr>
       <td><a href="../../reference/internal/data_quality/_require_ipywidgets/"><code>_require_ipywidgets</code></a></td>
-      <td><a href="../../reference/widget_review_dq_rule_deactivations/"><code>widget_review_dq_rule_deactivations</code></a>, <a href="../../reference/widget_review_dq_rules/"><code>widget_review_dq_rules</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/data_quality/_run_dq_rules/"><code>_run_dq_rules</code></a></td>
-      <td><a href="../../reference/enforce_dq/"><code>enforce_dq</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/data_quality/_split_dq_rows/"><code>_split_dq_rows</code></a></td>
-      <td><a href="../../reference/enforce_dq/"><code>enforce_dq</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/data_quality/_suggest_dq_rules/"><code>_suggest_dq_rules</code></a></td>
-      <td><a href="../../reference/draft_dq_rules/"><code>draft_dq_rules</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/data_quality/_suggest_dq_rules_with_fabric_ai/"><code>_suggest_dq_rules_with_fabric_ai</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/data_quality/_validate_dq_rules/"><code>_validate_dq_rules</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/data_quality/_widget_review_dq_rule_deactivations/"><code>_widget_review_dq_rule_deactivations</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/data_quality/_widget_review_dq_rules/"><code>_widget_review_dq_rules</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/data_quality/_write_dq_rules/"><code>_write_dq_rules</code></a></td>
       <td>—</td>
     </tr>
   </tbody>
@@ -300,6 +213,9 @@ Owns DQ rule drafting, review, enforcement, quarantine, and quality results.
 <ul class="callable-relationship-rows">
 <li>
 <a class="reference-chip" href="#_approved_dq_rules_from_review_rows"><code>_approved_dq_rules_from_review_rows</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_assert_dq_passed"><code>_assert_dq_passed</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_attach_rule_metadata_keys"><code>_attach_rule_metadata_keys</code></a>
@@ -317,6 +233,16 @@ Owns DQ rule drafting, review, enforcement, quarantine, and quality results.
 <a class="reference-chip" href="#_build_dq_rules_metadata_df"><code>_build_dq_rules_metadata_df</code></a>
 </li>
 <li>
+<a class="reference-chip" href="#_draft_dq_rules"><code>_draft_dq_rules</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_extract_dq_rules"><code>_extract_dq_rules</code></a>, <a class="reference-chip" href="#_prepare_dq_profile_input_rows"><code>_prepare_dq_profile_input_rows</code></a>, <a class="reference-chip" href="#_suggest_dq_rules"><code>_suggest_dq_rules</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_enforce_dq"><code>_enforce_dq</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_load_active_dq_rules"><code>_load_active_dq_rules</code></a>, <a class="reference-chip" href="#_run_dq_rules"><code>_run_dq_rules</code></a>, <a class="reference-chip" href="#_split_dq_rows"><code>_split_dq_rows</code></a>, <a class="reference-chip" href="#_validate_dq_rules"><code>_validate_dq_rules</code></a>
+</li>
+<li>
 <a class="reference-chip" href="#_extract_candidate_rules_from_responses"><code>_extract_candidate_rules_from_responses</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_extract_dq_rules"><code>_extract_dq_rules</code></a>, <a class="reference-chip" href="#_parse_dq_rules_dict_from_text"><code>_parse_dq_rules_dict_from_text</code></a>
@@ -325,6 +251,11 @@ Owns DQ rule drafting, review, enforcement, quarantine, and quality results.
 <a class="reference-chip" href="#_extract_dq_rules"><code>_extract_dq_rules</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_parse_dq_rules_dict_from_text"><code>_parse_dq_rules_dict_from_text</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_get_dq_review_results"><code>_get_dq_review_results</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_attach_rule_metadata_keys"><code>_attach_rule_metadata_keys</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_latest_dq_rule_versions"><code>_latest_dq_rule_versions</code></a>
@@ -338,6 +269,11 @@ Owns DQ rule drafting, review, enforcement, quarantine, and quality results.
 <a class="reference-chip" href="#_load_active_dq_rules"><code>_load_active_dq_rules</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_latest_dq_rule_versions"><code>_latest_dq_rule_versions</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_load_dq_rules"><code>_load_dq_rules</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_load_active_dq_rules"><code>_load_active_dq_rules</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_parse_dq_rules_dict_from_text"><code>_parse_dq_rules_dict_from_text</code></a>
@@ -357,18 +293,36 @@ Owns DQ rule drafting, review, enforcement, quarantine, and quality results.
 <li>
 <a class="reference-chip" href="#_run_dq_rules"><code>_run_dq_rules</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_split_dq_rows"><code>_split_dq_rows</code></a>, <a class="reference-chip" href="../../reference/validate_dq_rules/"><code>validate_dq_rules</code></a>
+<a class="reference-chip" href="#_split_dq_rows"><code>_split_dq_rows</code></a>, <a class="reference-chip" href="#_validate_dq_rules"><code>_validate_dq_rules</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_split_dq_rows"><code>_split_dq_rows</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="../../reference/validate_dq_rules/"><code>validate_dq_rules</code></a>
+<a class="reference-chip" href="#_validate_dq_rules"><code>_validate_dq_rules</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_suggest_dq_rules"><code>_suggest_dq_rules</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_suggest_dq_rules_with_fabric_ai"><code>_suggest_dq_rules_with_fabric_ai</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_validate_dq_rules"><code>_validate_dq_rules</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_widget_review_dq_rule_deactivations"><code>_widget_review_dq_rule_deactivations</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_require_ipywidgets"><code>_require_ipywidgets</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_widget_review_dq_rules"><code>_widget_review_dq_rules</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_require_ipywidgets"><code>_require_ipywidgets</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_write_dq_rules"><code>_write_dq_rules</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_build_dq_rule_history"><code>_build_dq_rule_history</code></a>, <a class="reference-chip" href="#_validate_dq_rules"><code>_validate_dq_rules</code></a>
 </li>
 </ul>
 </details>
@@ -385,4 +339,4 @@ None.
 <a class="reference-chip" href="../../reference/write_lakehouse_table/"><code>write_lakehouse_table</code></a>
 
 **metadata**
-<a class="reference-chip" href="../metadata/#_now_utc_iso"><code>_now_utc_iso</code></a>, <a class="reference-chip" href="../metadata/#_resolve_action_by"><code>_resolve_action_by</code></a>, <a class="reference-chip" href="../metadata/#build_dq_rule_key"><code>build_dq_rule_key</code></a>, <a class="reference-chip" href="../metadata/#build_metadata_column_key"><code>build_metadata_column_key</code></a>, <a class="reference-chip" href="../metadata/#build_metadata_table_key"><code>build_metadata_table_key</code></a>
+<a class="reference-chip" href="../metadata/#_build_dq_rule_key"><code>_build_dq_rule_key</code></a>, <a class="reference-chip" href="../metadata/#_build_metadata_column_key"><code>_build_metadata_column_key</code></a>, <a class="reference-chip" href="../metadata/#_build_metadata_table_key"><code>_build_metadata_table_key</code></a>, <a class="reference-chip" href="../metadata/#_now_utc_iso"><code>_now_utc_iso</code></a>, <a class="reference-chip" href="../metadata/#_resolve_action_by"><code>_resolve_action_by</code></a>

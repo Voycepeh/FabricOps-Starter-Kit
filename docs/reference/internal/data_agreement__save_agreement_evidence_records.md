@@ -20,10 +20,10 @@ No summary available.
 - Outbound references count: 4
 
 ## Inbound references
-- <a href="../internal/data_agreement/_widget_render_agreement_evidence/"><code>fabricops_kit.data_agreement._widget_render_agreement_evidence</code></a>
+- <a href="../internal/data_agreement/_render_agreement_evidence_widget/"><code>fabricops_kit.data_agreement._render_agreement_evidence_widget</code></a>
 
 ## Outbound references
 - <a href="../internal/data_agreement/_prepare_evidence_file_references/"><code>fabricops_kit.data_agreement._prepare_evidence_file_references</code></a>
 - <a href="../internal/data_agreement/_table_name/"><code>fabricops_kit.data_agreement._table_name</code></a>
 - <a href="../internal/data_agreement/_write_row/"><code>fabricops_kit.data_agreement._write_row</code></a>
-- <a href="../build_runtime_audit_fields/"><code>fabricops_kit.metadata.build_runtime_audit_fields</code></a>
+- <a href="../internal/metadata/_build_runtime_audit_fields/"><code>fabricops_kit.metadata._build_runtime_audit_fields</code></a>

@@ -9,7 +9,7 @@ _UNKNOWN_VERSION = "unknown"
 _LATEST_DOCS_VERSION = "latest"
 
 
-def get_package_version() -> str:
+def _get_package_version() -> str:
     """Return the FabricOps Starter Kit runtime package version.
 
     Returns
@@ -34,14 +34,14 @@ def get_package_version() -> str:
     return __version__ or _UNKNOWN_VERSION
 
 
-def get_docs_version(package_version: str | None = None) -> str:
+def _get_docs_version(package_version: str | None = None) -> str:
     """Return the published documentation version for a package version.
 
     Parameters
     ----------
     package_version : str or None, optional
         Full semantic package version such as ``"1.0.2"``. When omitted, the
-        installed package version is detected with :func:`get_package_version`.
+        installed package version is detected with :func:`_get_package_version`.
 
     Returns
     -------
@@ -51,13 +51,13 @@ def get_docs_version(package_version: str | None = None) -> str:
 
     Examples
     --------
-    >>> get_docs_version("1.0.2")
+    >>> _get_docs_version("1.0.2")
     '1.0'
-    >>> get_docs_version("1.1.0")
+    >>> _get_docs_version("1.1.0")
     '1.1'
     """
 
-    version = package_version if package_version is not None else get_package_version()
+    version = package_version if package_version is not None else _get_package_version()
     if not version or version == _UNKNOWN_VERSION:
         return _LATEST_DOCS_VERSION
 
@@ -67,7 +67,7 @@ def get_docs_version(package_version: str | None = None) -> str:
     return f"{match.group(1)}.{match.group(2)}"
 
 
-def get_docs_url(package_version: str | None = None) -> str:
+def _get_docs_url(package_version: str | None = None) -> str:
     """Return the documentation URL that matches a package version.
 
     Parameters
@@ -83,11 +83,11 @@ def get_docs_url(package_version: str | None = None) -> str:
         ``latest`` documentation URL.
     """
 
-    docs_version = get_docs_version(package_version)
+    docs_version = _get_docs_version(package_version)
     return f"{_DOCS_BASE_URL}/{docs_version}/"
 
 
-def get_release_notes_url(package_version: str | None = None) -> str:
+def _get_release_notes_url(package_version: str | None = None) -> str:
     """Return the release notes URL for a package version.
 
     Parameters
@@ -104,13 +104,13 @@ def get_release_notes_url(package_version: str | None = None) -> str:
         latest release notes index.
     """
 
-    version = package_version if package_version is not None else get_package_version()
+    version = package_version if package_version is not None else _get_package_version()
     if not version or version == _UNKNOWN_VERSION:
         return f"{_DOCS_BASE_URL}/{_LATEST_DOCS_VERSION}/releases/"
     return f"{_DOCS_BASE_URL}/{_LATEST_DOCS_VERSION}/releases/v{version}/"
 
 
-def print_runtime_banner() -> None:
+def _print_runtime_banner() -> None:
     """Print the installed package version and matching documentation links.
 
     Returns
@@ -125,9 +125,9 @@ def print_runtime_banner() -> None:
     Microsoft Fabric notebooks and local notebook previews.
     """
 
-    package_version = get_package_version()
-    docs_url = get_docs_url(package_version)
-    release_notes_url = get_release_notes_url(package_version)
+    package_version = _get_package_version()
+    docs_url = _get_docs_url(package_version)
+    release_notes_url = _get_release_notes_url(package_version)
 
     print("FabricOps Starter Kit runtime")
     print(f"- Installed package version: {package_version}")

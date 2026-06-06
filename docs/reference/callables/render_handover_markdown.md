@@ -5,7 +5,7 @@
 
 ## Purpose
 
-No summary available.
+Render handover evidence as notebook-friendly Markdown.
 
 ## Function manifest
 
@@ -20,7 +20,7 @@ No summary available.
 - Outbound references count: 1
 
 ## Inbound references
-- <a href="../internal/handover/build_handover_record/"><code>fabricops_kit.handover.build_handover_record</code></a>
+- <a href="../internal/handover/_build_handover_record/"><code>fabricops_kit.handover._build_handover_record</code></a>
 
 ## Outbound references
 - <a href="../internal/handover/_status_of/"><code>fabricops_kit.handover._status_of</code></a>

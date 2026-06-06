@@ -5,7 +5,7 @@
 
 ## Purpose
 
-Validate a dataframe schema using strict, allow_new_columns, or monitor_only presets.
+Validate a DataFrame schema using strict, allow-new-columns, or monitor-only presets.
 
 ## Function manifest
 

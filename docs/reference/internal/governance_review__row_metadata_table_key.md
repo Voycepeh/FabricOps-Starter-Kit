@@ -24,4 +24,4 @@ No summary available.
 
 ## Outbound references
 - <a href="../internal/governance_review/_value/"><code>fabricops_kit.governance_review._value</code></a>
-- <a href="../internal/metadata/build_metadata_table_key/"><code>fabricops_kit.metadata.build_metadata_table_key</code></a>
+- <a href="../internal/metadata/_build_metadata_table_key/"><code>fabricops_kit.metadata._build_metadata_table_key</code></a>

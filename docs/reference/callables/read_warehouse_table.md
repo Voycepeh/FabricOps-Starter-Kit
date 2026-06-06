@@ -5,7 +5,7 @@
 
 ## Purpose
 
-No summary available.
+Read a table from a configured Fabric warehouse target.
 
 ## Function manifest
 

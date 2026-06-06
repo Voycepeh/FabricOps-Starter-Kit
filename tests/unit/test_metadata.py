@@ -9,7 +9,7 @@ pytestmark = pytest.mark.unit
 
 
 def test_runtime_audit_fields_resolve_fabric_context_and_allow_overrides(fake_notebookutils):
-    audit = metadata.build_runtime_audit_fields(
+    audit = metadata._build_runtime_audit_fields(
         config=framework_config(),
         env="dev",
         runtime_context={"activityId": "manual-activity"},
@@ -29,7 +29,7 @@ def test_notebook_registry_setup_and_registration_use_metadata_route(monkeypatch
         reads.append((env, target, table))
         if len(reads) == 1:
             raise RuntimeError("missing")
-        return [dict.fromkeys(metadata.get_notebook_registry_schema(), "")]
+        return [dict.fromkeys(metadata._get_notebook_registry_schema(), "")]
 
     monkeypatch.setattr(metadata, "read_lakehouse_table", read_table)
     monkeypatch.setattr(metadata, "write_lakehouse_table", lambda df, config, env, target, table, **kwargs: writes.append((df, env, target, table, kwargs)))
@@ -47,8 +47,8 @@ def test_notebook_registry_setup_and_registration_use_metadata_route(monkeypatch
     )
 
     spark = FakeSpark()
-    setup = metadata.setup_notebook_registry_table(spark=spark, config=framework_config(), env="dev")
-    row = metadata.register_current_notebook(
+    setup = metadata._setup_notebook_registry_table(spark=spark, config=framework_config(), env="dev")
+    row = metadata._register_current_notebook(
         spark=spark,
         config=framework_config(),
         env="dev",
@@ -60,7 +60,7 @@ def test_notebook_registry_setup_and_registration_use_metadata_route(monkeypatch
     )
 
     assert setup["created"] is True
-    assert list(row) == metadata.get_notebook_registry_schema()
+    assert list(row) == metadata._get_notebook_registry_schema()
     assert row["notebook_url"] == "https://app.fabric.microsoft.com/groups/workspace-id/notebooks/notebook-id"
     assert [(env, target, table) for _, env, target, table, _ in writes] == [
         ("dev", "metadata", metadata.NOTEBOOK_REGISTRY_TABLE),
@@ -107,7 +107,7 @@ def test_current_notebook_active_registrations_filters_current_runtime_rows(monk
     monkeypatch.setattr(metadata, "_runtime_context", lambda: {"currentNotebookId": "notebook-id"})
     monkeypatch.setattr(metadata, "read_lakehouse_table", lambda *args, **kwargs: rows)
 
-    active = metadata.current_notebook_active_registrations(
+    active = metadata._current_notebook_active_registrations(
         object(), config=framework_config(), env="dev", notebook_type="03_pc", environment_name="dev", registration_role="primary"
     )
 

@@ -5,7 +5,7 @@
 
 ## Purpose
 
-No summary available.
+Return the agreement selected by widget_select_agreement.
 
 ## Function manifest
 

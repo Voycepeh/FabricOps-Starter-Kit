@@ -25,9 +25,9 @@ No summary available.
 - <a href="../internal/data_quality/_build_dq_rule_deactivations/"><code>fabricops_kit.data_quality._build_dq_rule_deactivations</code></a>
 - <a href="../internal/data_quality/_build_dq_rule_history/"><code>fabricops_kit.data_quality._build_dq_rule_history</code></a>
 - <a href="../internal/data_quality/_build_dq_rules_metadata_df/"><code>fabricops_kit.data_quality._build_dq_rules_metadata_df</code></a>
-- <a href="../build_classification_records/"><code>fabricops_kit.governance_review.build_classification_records</code></a>
-- <a href="../build_column_context_records/"><code>fabricops_kit.governance_review.build_column_context_records</code></a>
-- <a href="../build_dq_rule_records/"><code>fabricops_kit.governance_review.build_dq_rule_records</code></a>
+- <a href="../internal/governance_review/_build_classification_records/"><code>fabricops_kit.governance_review._build_classification_records</code></a>
+- <a href="../internal/governance_review/_build_column_context_records/"><code>fabricops_kit.governance_review._build_column_context_records</code></a>
+- <a href="../internal/governance_review/_build_dq_rule_records/"><code>fabricops_kit.governance_review._build_dq_rule_records</code></a>
 
 ## Outbound references
 - <a href="../internal/metadata/_context_get/"><code>fabricops_kit.metadata._context_get</code></a>

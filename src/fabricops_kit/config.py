@@ -859,6 +859,60 @@ def setup_notebook(
         readiness_status=readiness_status,
     )
 
+
+def setup_metadata_tables(
+    *,
+    spark: Any,
+    config: FrameworkConfig | dict[str, Any],
+    env: str,
+    require_active_steward: bool = False,
+) -> dict[str, Any]:
+    """Prepare all FabricOps metadata tables for the configured environment.
+
+    Parameters
+    ----------
+    spark : pyspark.sql.SparkSession
+        Fabric Spark session used by the table setup helpers.
+    config : FrameworkConfig or dict
+        Shared ``00_env_config`` configuration containing the metadata target.
+    env : str
+        Environment key to prepare.
+    require_active_steward : bool, default=False
+        Forwarded to the agreement metadata setup to optionally require an
+        active steward before returning success.
+
+    Returns
+    -------
+    dict[str, Any]
+        Combined setup summary keyed by ``data_agreement``,
+        ``notebook_registry``, and ``governance``.
+
+    Notes
+    -----
+    This is the v1 notebook setup action for metadata provisioning. It keeps
+    ``00_env_config`` simple while delegating to internal helpers that route all
+    metadata reads and writes through the configured metadata lakehouse target.
+    """
+    from fabricops_kit.data_agreement import _setup_data_agreement_tables
+    from fabricops_kit.governance_review import _setup_governance_metadata_tables
+    from fabricops_kit.metadata import _setup_notebook_registry_table
+
+    data_agreement = _setup_data_agreement_tables(
+        spark=spark,
+        config=config,
+        env=env,
+        require_active_steward=require_active_steward,
+    )
+    notebook_registry = _setup_notebook_registry_table(spark=spark, config=config, env=env)
+    governance = _setup_governance_metadata_tables(spark=spark, config=config, env=env)
+    statuses = [data_agreement.get("status"), notebook_registry.get("status"), governance.get("status")]
+    return {
+        "status": "ready" if all(status == "ready" for status in statuses) else "not_ready",
+        "data_agreement": data_agreement,
+        "notebook_registry": notebook_registry,
+        "governance": governance,
+    }
+
 def _check_fabric_ai_functions_available() -> dict[str, Any]:
     """Check whether Fabric AI Functions can be imported in the current runtime."""
     try:
@@ -978,7 +1032,7 @@ def _format_error_path(error_path: list[object], message: str, validator: str) -
             return f"{base_path}.{missing_property}" if base_path else missing_property
     return base_path or "$"
 
-def load_dataset_contract(path: str | Path) -> dict:
+def _load_dataset_contract(path: str | Path) -> dict:
     """Load a dataset contract YAML file into a dictionary.
 
     Parameters
@@ -995,7 +1049,7 @@ def load_dataset_contract(path: str | Path) -> dict:
 
     Examples
     --------
-    >>> contract = load_dataset_contract("configs/sales_contract.yml")
+    >>> contract = _load_dataset_contract("configs/sales_contract.yml")
     >>> isinstance(contract, dict)
     True
     """
@@ -1014,13 +1068,13 @@ def _load_schema(schema_path: str | Path | None = None) -> dict:
     with Path(schema_path).open("r", encoding="utf-8") as handle:
         return yaml.safe_load(handle)
 
-def validate_dataset_contract(contract: dict, schema_path: str | Path | None = None) -> list[str]:
+def _validate_dataset_contract(contract: dict, schema_path: str | Path | None = None) -> list[str]:
     """Validate a loaded dataset contract against the JSON schema.
 
     Parameters
     ----------
     contract : dict
-        Dataset contract content produced by :func:`load_dataset_contract`.
+        Dataset contract content produced by :func:`_load_dataset_contract`.
     schema_path : str or Path or None, default=None
         Optional custom schema location. When omitted, the packaged FabricOps
         dataset-contract schema is used.
@@ -1041,7 +1095,7 @@ def validate_dataset_contract(contract: dict, schema_path: str | Path | None = N
     errors = sorted(validator.iter_errors(contract), key=lambda error: (list(error.path), error.message))
     return [f"{_format_error_path(list(error.path), error.message, error.validator)}: {error.message}" for error in errors]
 
-def assert_valid_dataset_contract(contract: dict, schema_path: str | Path | None = None) -> None:
+def _assert_valid_dataset_contract(contract: dict, schema_path: str | Path | None = None) -> None:
     """Raise when a dataset contract violates the expected schema.
 
     Parameters
@@ -1058,11 +1112,11 @@ def assert_valid_dataset_contract(contract: dict, schema_path: str | Path | None
     DatasetContractValidationError
         Raised when one or more validation issues are found.
     """
-    errors = validate_dataset_contract(contract, schema_path=schema_path)
+    errors = _validate_dataset_contract(contract, schema_path=schema_path)
     if errors:
         raise DatasetContractValidationError("Dataset contract validation failed:\n" + "\n".join(f"- {e}" for e in errors))
 
-def load_and_validate_dataset_contract(path: str | Path, schema_path: str | Path | None = None) -> tuple[dict, list[str]]:
+def _load_and_validate_dataset_contract(path: str | Path, schema_path: str | Path | None = None) -> tuple[dict, list[str]]:
     """Load a dataset contract file and return schema validation findings.
 
     Parameters
@@ -1079,9 +1133,9 @@ def load_and_validate_dataset_contract(path: str | Path, schema_path: str | Path
 
     Examples
     --------
-    >>> contract, errors = load_and_validate_dataset_contract("configs/orders.yml")
+    >>> contract, errors = _load_and_validate_dataset_contract("configs/orders.yml")
     >>> len(errors) >= 0
     True
     """
-    contract = load_dataset_contract(path)
-    return contract, validate_dataset_contract(contract, schema_path=schema_path)
+    contract = _load_dataset_contract(path)
+    return contract, _validate_dataset_contract(contract, schema_path=schema_path)

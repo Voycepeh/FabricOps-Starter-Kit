@@ -6,7 +6,7 @@
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 2</span><span class="reference-chip">Internal helpers: 1</span><span class="reference-chip">Outbound: 0</span><span class="reference-chip">Inbound: 0</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 2</span><span class="reference-chip">Internal helpers: 2</span><span class="reference-chip">Outbound: 0</span><span class="reference-chip">Inbound: 0</span></div>
 
 ## Module purpose
 
@@ -36,7 +36,7 @@ Owns final handover assembly and notebook-friendly rendering/export.
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>1</td>
+      <td>2</td>
     </tr>
     <tr>
       <td>Inbound module count</td>
@@ -75,14 +75,14 @@ Owns final handover assembly and notebook-friendly rendering/export.
       <td><a href="../../reference/build_handover/"><code>build_handover</code></a></td>
       <td>Essential</td>
       <td>function</td>
-      <td>Build a handover-friendly summary for one data product run.</td>
+      <td>Assemble final handover evidence for reviewed notebook work.</td>
       <td>—</td>
     </tr>
     <tr>
       <td><a href="../../reference/render_handover_markdown/"><code>render_handover_markdown</code></a></td>
       <td>Essential</td>
       <td>function</td>
-      <td>Render a handover summary dictionary into Markdown for handover notes.</td>
+      <td>Render handover evidence as notebook-friendly Markdown.</td>
       <td><a href="../../reference/internal/handover/_status_of/"><code>_status_of</code></a> (internal)</td>
     </tr>
   </tbody>
@@ -129,6 +129,10 @@ Owns final handover assembly and notebook-friendly rendering/export.
   </thead>
   <tbody>
     <tr>
+      <td><a href="../../reference/internal/handover/_build_handover_record/"><code>_build_handover_record</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
       <td><a href="../../reference/internal/handover/_status_of/"><code>_status_of</code></a></td>
       <td><a href="../../reference/render_handover_markdown/"><code>render_handover_markdown</code></a></td>
     </tr>
@@ -138,6 +142,11 @@ Owns final handover assembly and notebook-friendly rendering/export.
 
 <h6>Internal helpers details</h6>
 <ul class="callable-relationship-rows">
+<li>
+<a class="reference-chip" href="#_build_handover_record"><code>_build_handover_record</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_status_of"><code>_status_of</code></a>, <a class="reference-chip" href="../../reference/render_handover_markdown/"><code>render_handover_markdown</code></a>
+</li>
 <li>
 <a class="reference-chip" href="#_status_of"><code>_status_of</code></a>
 </li>

@@ -5,7 +5,7 @@
 
 ## Purpose
 
-No summary available.
+Build source-to-target lineage evidence records for a pipeline run.
 
 ## Function manifest
 

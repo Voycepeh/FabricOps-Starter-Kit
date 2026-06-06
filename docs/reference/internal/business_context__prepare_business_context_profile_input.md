@@ -17,7 +17,10 @@ No summary available.
 - Source file path: `src/fabricops_kit/business_context.py`
 - Source reference: <a href="../../api/modules/business_context/#_prepare_business_context_profile_input">Module source anchor</a>
 - Inbound references count: 1
-- Outbound references count: 0
+- Outbound references count: 1
 
 ## Inbound references
-- <a href="../prepare_business_context_profile_input/"><code>fabricops_kit.business_context.prepare_business_context_profile_input</code></a>
+- <a href="../internal/business_context/_prepare_business_context_profile_input/"><code>fabricops_kit.business_context._prepare_business_context_profile_input</code></a>
+
+## Outbound references
+- <a href="../internal/business_context/_prepare_business_context_profile_input/"><code>fabricops_kit.business_context._prepare_business_context_profile_input</code></a>

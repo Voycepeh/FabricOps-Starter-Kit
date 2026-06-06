@@ -71,8 +71,8 @@ def render_handover_markdown(summary: dict) -> str:
     return "\n".join(lines)
 
 
-def build_handover_record(summary: dict) -> dict:
-    """Execute the `build_handover_record` workflow step in FabricOps.
+def _build_handover_record(summary: dict) -> dict:
+    """Execute the `_build_handover_record` workflow step in FabricOps.
     
         Use this callable at its corresponding stage of the pipeline contract
         (configuration, IO, profiling, quality, drift, lineage, or handover)
@@ -101,7 +101,7 @@ def build_handover_record(summary: dict) -> dict:
     
         Examples
         --------
-        >>> build_handover_record(...)
+        >>> _build_handover_record(...)
         """
     sections = summary.get("sections", {})
     return {"run_id": summary.get("run_id"), "dataset_name": summary.get("dataset_name"), "environment": summary.get("environment"), "source_table": summary.get("source_table"), "target_table": summary.get("target_table"), "overall_status": summary.get("overall_status"), "can_continue": summary.get("can_continue"), "generated_at_utc": summary.get("generated_at_utc"), "source_row_count": (sections.get("source_profile") or {}).get("row_count"), "output_row_count": (sections.get("output_profile") or {}).get("row_count"), "schema_drift_status": _status_of(sections.get("schema_drift")), "incremental_safety_status": _status_of(sections.get("incremental_safety")), "quality_status": _status_of(sections.get("quality")), "contract_status": _status_of(sections.get("contracts")), "action_item_count": len(summary.get("action_items", [])), "summary_markdown": render_handover_markdown(summary)}

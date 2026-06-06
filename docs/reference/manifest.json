@@ -94,76 +94,16 @@
   ],
   "callables": [
     {
-      "module_name": "business_context",
+      "module_name": "config",
       "visibility": "public",
-      "module_summary": "Owns business meaning for tables and columns.",
-      "sidebar_group": "1. Governance steward",
+      "module_summary": "Owns environment setup, runtime initialization, paths, and notebook-wide configuration.",
+      "sidebar_group": "0. Environment setup",
       "sidebar_include": true,
-      "callable_name": "draft_business_context",
+      "callable_name": "setup_metadata_tables",
       "callable_visibility": "public",
       "callable_role": "essential",
-      "template_notebook": "\u2014",
-      "template_segment": "\u2014"
-    },
-    {
-      "module_name": "business_context",
-      "visibility": "public",
-      "module_summary": "Owns business meaning for tables and columns.",
-      "sidebar_group": "1. Governance steward",
-      "sidebar_include": true,
-      "callable_name": "extract_column_business_context_suggestions",
-      "callable_visibility": "public",
-      "callable_role": "optional",
-      "template_notebook": "\u2014",
-      "template_segment": "\u2014"
-    },
-    {
-      "module_name": "business_context",
-      "visibility": "public",
-      "module_summary": "Owns business meaning for tables and columns.",
-      "sidebar_group": "1. Governance steward",
-      "sidebar_include": true,
-      "callable_name": "get_reviewed_business_context_rows",
-      "callable_visibility": "public",
-      "callable_role": "optional",
-      "template_notebook": "\u2014",
-      "template_segment": "\u2014"
-    },
-    {
-      "module_name": "business_context",
-      "visibility": "public",
-      "module_summary": "Owns business meaning for tables and columns.",
-      "sidebar_group": "1. Governance steward",
-      "sidebar_include": true,
-      "callable_name": "prepare_business_context_profile_input",
-      "callable_visibility": "public",
-      "callable_role": "optional",
-      "template_notebook": "\u2014",
-      "template_segment": "\u2014"
-    },
-    {
-      "module_name": "business_context",
-      "visibility": "public",
-      "module_summary": "Owns business meaning for tables and columns.",
-      "sidebar_group": "1. Governance steward",
-      "sidebar_include": true,
-      "callable_name": "widget_review_business_context",
-      "callable_visibility": "public",
-      "callable_role": "essential",
-      "template_notebook": "\u2014",
-      "template_segment": "\u2014"
-    },
-    {
-      "module_name": "business_context",
-      "visibility": "public",
-      "module_summary": "Owns business meaning for tables and columns.",
-      "sidebar_group": "1. Governance steward",
-      "sidebar_include": true,
-      "callable_name": "write_business_context",
-      "callable_visibility": "public",
-      "callable_role": "essential",
-      "template_notebook": "\u2014",
-      "template_segment": "\u2014"
+      "template_notebook": "00_env_config",
+      "template_segment": "Environment bootstrap"
     },
     {
       "module_name": "config",
@@ -174,8 +114,8 @@
       "callable_name": "setup_notebook",
       "callable_visibility": "public",
       "callable_role": "essential",
-      "template_notebook": "\u2014",
-      "template_segment": "\u2014"
+      "template_notebook": "00_env_config",
+      "template_segment": "Environment bootstrap"
     },
     {
       "module_name": "data_agreement",
@@ -186,20 +126,8 @@
       "callable_name": "get_selected_agreement",
       "callable_visibility": "public",
       "callable_role": "essential",
-      "template_notebook": "\u2014",
-      "template_segment": "\u2014"
-    },
-    {
-      "module_name": "data_agreement",
-      "visibility": "public",
-      "module_summary": "Owns agreement metadata capture, audited record building, metadata commit helpers, and agreement selection helpers used to anchor notebook workflows to approved business agreements. Standard notebooks create or check agreement metadata tables in `00_env_config`, render agreement intake in `01_da_<agreement>`, and bind downstream work with `widget_select_agreement(...)` and `get_selected_agreement()`.",
-      "sidebar_group": "1. Governance steward",
-      "sidebar_include": true,
-      "callable_name": "setup_data_agreement_tables",
-      "callable_visibility": "public",
-      "callable_role": "essential",
-      "template_notebook": "`00_env_config`",
-      "template_segment": "Environment and metadata bootstrap"
+      "template_notebook": "03_pc_agreement_pipeline_template",
+      "template_segment": "Agreement selection"
     },
     {
       "module_name": "data_agreement",
@@ -210,20 +138,8 @@
       "callable_name": "widget_render_agreement_evidence",
       "callable_visibility": "public",
       "callable_role": "essential",
-      "template_notebook": "`01_da_<agreement>`",
-      "template_segment": "Segment 2: Option B separate widgets"
-    },
-    {
-      "module_name": "data_agreement",
-      "visibility": "public",
-      "module_summary": "Owns agreement metadata capture, audited record building, metadata commit helpers, and agreement selection helpers used to anchor notebook workflows to approved business agreements. Standard notebooks create or check agreement metadata tables in `00_env_config`, render agreement intake in `01_da_<agreement>`, and bind downstream work with `widget_select_agreement(...)` and `get_selected_agreement()`.",
-      "sidebar_group": "1. Governance steward",
-      "sidebar_include": true,
-      "callable_name": "widget_render_agreement_intake_app",
-      "callable_visibility": "public",
-      "callable_role": "essential",
-      "template_notebook": "`01_da_<agreement>`",
-      "template_segment": "Segment 1: Option A compact app"
+      "template_notebook": "01_da_agreement_template",
+      "template_segment": "Agreement intake"
     },
     {
       "module_name": "data_agreement",
@@ -234,8 +150,8 @@
       "callable_name": "widget_render_data_agreement",
       "callable_visibility": "public",
       "callable_role": "essential",
-      "template_notebook": "`01_da_<agreement>`",
-      "template_segment": "Segment 2: Option B separate widgets"
+      "template_notebook": "01_da_agreement_template",
+      "template_segment": "Agreement intake"
     },
     {
       "module_name": "data_agreement",
@@ -246,8 +162,8 @@
       "callable_name": "widget_render_data_steward",
       "callable_visibility": "public",
       "callable_role": "essential",
-      "template_notebook": "`01_da_<agreement>`",
-      "template_segment": "Segment 2: Option B separate widgets"
+      "template_notebook": "01_da_agreement_template",
+      "template_segment": "Agreement intake"
     },
     {
       "module_name": "data_agreement",
@@ -258,92 +174,8 @@
       "callable_name": "widget_select_agreement",
       "callable_visibility": "public",
       "callable_role": "essential",
-      "template_notebook": "\u2014",
-      "template_segment": "\u2014"
-    },
-    {
-      "module_name": "data_governance",
-      "visibility": "public",
-      "module_summary": "Owns sensitivity, PII, confidentiality, policy labels, and governance approval evidence.",
-      "sidebar_group": "1. Governance steward",
-      "sidebar_include": true,
-      "callable_name": "draft_governance",
-      "callable_visibility": "public",
-      "callable_role": "essential",
-      "template_notebook": "\u2014",
-      "template_segment": "\u2014"
-    },
-    {
-      "module_name": "data_governance",
-      "visibility": "public",
-      "module_summary": "Owns sensitivity, PII, confidentiality, policy labels, and governance approval evidence.",
-      "sidebar_group": "1. Governance steward",
-      "sidebar_include": true,
-      "callable_name": "extract_governance_suggestions",
-      "callable_visibility": "public",
-      "callable_role": "optional",
-      "template_notebook": "\u2014",
-      "template_segment": "\u2014"
-    },
-    {
-      "module_name": "data_governance",
-      "visibility": "public",
-      "module_summary": "Owns sensitivity, PII, confidentiality, policy labels, and governance approval evidence.",
-      "sidebar_group": "1. Governance steward",
-      "sidebar_include": true,
-      "callable_name": "load_governance",
-      "callable_visibility": "public",
-      "callable_role": "essential",
-      "template_notebook": "\u2014",
-      "template_segment": "\u2014"
-    },
-    {
-      "module_name": "data_governance",
-      "visibility": "public",
-      "module_summary": "Owns sensitivity, PII, confidentiality, policy labels, and governance approval evidence.",
-      "sidebar_group": "1. Governance steward",
-      "sidebar_include": true,
-      "callable_name": "prepare_governance_input",
-      "callable_visibility": "public",
-      "callable_role": "optional",
-      "template_notebook": "\u2014",
-      "template_segment": "\u2014"
-    },
-    {
-      "module_name": "data_governance",
-      "visibility": "public",
-      "module_summary": "Owns sensitivity, PII, confidentiality, policy labels, and governance approval evidence.",
-      "sidebar_group": "1. Governance steward",
-      "sidebar_include": true,
-      "callable_name": "widget_review_governance",
-      "callable_visibility": "public",
-      "callable_role": "essential",
-      "template_notebook": "\u2014",
-      "template_segment": "\u2014"
-    },
-    {
-      "module_name": "data_governance",
-      "visibility": "public",
-      "module_summary": "Owns sensitivity, PII, confidentiality, policy labels, and governance approval evidence.",
-      "sidebar_group": "1. Governance steward",
-      "sidebar_include": true,
-      "callable_name": "write_governance",
-      "callable_visibility": "public",
-      "callable_role": "essential",
-      "template_notebook": "\u2014",
-      "template_segment": "\u2014"
-    },
-    {
-      "module_name": "data_lineage",
-      "visibility": "public",
-      "module_summary": "Owns source-to-target lineage and transformation evidence.",
-      "sidebar_group": "3. Data engineer",
-      "sidebar_include": true,
-      "callable_name": "build_lineage_handover_markdown",
-      "callable_visibility": "public",
-      "callable_role": "essential",
-      "template_notebook": "\u2014",
-      "template_segment": "\u2014"
+      "template_notebook": "02_ex/03_pc",
+      "template_segment": "Agreement selection"
     },
     {
       "module_name": "data_lineage",
@@ -354,8 +186,8 @@
       "callable_name": "build_lineage_records",
       "callable_visibility": "public",
       "callable_role": "essential",
-      "template_notebook": "\u2014",
-      "template_segment": "\u2014"
+      "template_notebook": "03_pc_agreement_pipeline_template",
+      "template_segment": "Lineage evidence"
     },
     {
       "module_name": "data_profiling",
@@ -366,116 +198,8 @@
       "callable_name": "profile_dataframe",
       "callable_visibility": "public",
       "callable_role": "essential",
-      "template_notebook": "\u2014",
-      "template_segment": "\u2014"
-    },
-    {
-      "module_name": "data_quality",
-      "visibility": "public",
-      "module_summary": "Owns DQ rule drafting, review, enforcement, quarantine, and quality results.",
-      "sidebar_group": "2. Analyst / data scientist",
-      "sidebar_include": true,
-      "callable_name": "assert_dq_passed",
-      "callable_visibility": "public",
-      "callable_role": "essential",
-      "template_notebook": "\u2014",
-      "template_segment": "\u2014"
-    },
-    {
-      "module_name": "data_quality",
-      "visibility": "public",
-      "module_summary": "Owns DQ rule drafting, review, enforcement, quarantine, and quality results.",
-      "sidebar_group": "2. Analyst / data scientist",
-      "sidebar_include": true,
-      "callable_name": "draft_dq_rules",
-      "callable_visibility": "public",
-      "callable_role": "essential",
-      "template_notebook": "\u2014",
-      "template_segment": "\u2014"
-    },
-    {
-      "module_name": "data_quality",
-      "visibility": "public",
-      "module_summary": "Owns DQ rule drafting, review, enforcement, quarantine, and quality results.",
-      "sidebar_group": "2. Analyst / data scientist",
-      "sidebar_include": true,
-      "callable_name": "enforce_dq",
-      "callable_visibility": "public",
-      "callable_role": "essential",
-      "template_notebook": "\u2014",
-      "template_segment": "\u2014"
-    },
-    {
-      "module_name": "data_quality",
-      "visibility": "public",
-      "module_summary": "Owns DQ rule drafting, review, enforcement, quarantine, and quality results.",
-      "sidebar_group": "2. Analyst / data scientist",
-      "sidebar_include": true,
-      "callable_name": "get_dq_review_results",
-      "callable_visibility": "public",
-      "callable_role": "essential",
-      "template_notebook": "\u2014",
-      "template_segment": "\u2014"
-    },
-    {
-      "module_name": "data_quality",
-      "visibility": "public",
-      "module_summary": "Owns DQ rule drafting, review, enforcement, quarantine, and quality results.",
-      "sidebar_group": "2. Analyst / data scientist",
-      "sidebar_include": true,
-      "callable_name": "load_dq_rules",
-      "callable_visibility": "public",
-      "callable_role": "essential",
-      "template_notebook": "\u2014",
-      "template_segment": "\u2014"
-    },
-    {
-      "module_name": "data_quality",
-      "visibility": "public",
-      "module_summary": "Owns DQ rule drafting, review, enforcement, quarantine, and quality results.",
-      "sidebar_group": "2. Analyst / data scientist",
-      "sidebar_include": true,
-      "callable_name": "validate_dq_rules",
-      "callable_visibility": "public",
-      "callable_role": "optional",
-      "template_notebook": "\u2014",
-      "template_segment": "\u2014"
-    },
-    {
-      "module_name": "data_quality",
-      "visibility": "public",
-      "module_summary": "Owns DQ rule drafting, review, enforcement, quarantine, and quality results.",
-      "sidebar_group": "2. Analyst / data scientist",
-      "sidebar_include": true,
-      "callable_name": "widget_review_dq_rule_deactivations",
-      "callable_visibility": "public",
-      "callable_role": "optional",
-      "template_notebook": "\u2014",
-      "template_segment": "\u2014"
-    },
-    {
-      "module_name": "data_quality",
-      "visibility": "public",
-      "module_summary": "Owns DQ rule drafting, review, enforcement, quarantine, and quality results.",
-      "sidebar_group": "2. Analyst / data scientist",
-      "sidebar_include": true,
-      "callable_name": "widget_review_dq_rules",
-      "callable_visibility": "public",
-      "callable_role": "essential",
-      "template_notebook": "\u2014",
-      "template_segment": "\u2014"
-    },
-    {
-      "module_name": "data_quality",
-      "visibility": "public",
-      "module_summary": "Owns DQ rule drafting, review, enforcement, quarantine, and quality results.",
-      "sidebar_group": "2. Analyst / data scientist",
-      "sidebar_include": true,
-      "callable_name": "write_dq_rules",
-      "callable_visibility": "public",
-      "callable_role": "essential",
-      "template_notebook": "\u2014",
-      "template_segment": "\u2014"
+      "template_notebook": "02_ex/03_pc",
+      "template_segment": "Profiling"
     },
     {
       "module_name": "drift",
@@ -486,8 +210,8 @@
       "callable_name": "monitor_data_changes",
       "callable_visibility": "public",
       "callable_role": "essential",
-      "template_notebook": "03_pc_<agreement>_<pipeline>",
-      "template_segment": "Preset data-change monitoring"
+      "template_notebook": "03_pc_agreement_pipeline_template",
+      "template_segment": "Drift monitoring"
     },
     {
       "module_name": "drift",
@@ -498,8 +222,8 @@
       "callable_name": "stop_if_failed",
       "callable_visibility": "public",
       "callable_role": "essential",
-      "template_notebook": "03_pc_<agreement>_<pipeline>",
-      "template_segment": "Preset guardrail enforcement"
+      "template_notebook": "03_pc_agreement_pipeline_template",
+      "template_segment": "Guardrail enforcement"
     },
     {
       "module_name": "drift",
@@ -510,8 +234,8 @@
       "callable_name": "validate_schema",
       "callable_visibility": "public",
       "callable_role": "essential",
-      "template_notebook": "03_pc_<agreement>_<pipeline>",
-      "template_segment": "Preset schema checks"
+      "template_notebook": "03_pc_agreement_pipeline_template",
+      "template_segment": "Schema validation"
     },
     {
       "module_name": "fabric_input_output",
@@ -521,9 +245,9 @@
       "sidebar_include": true,
       "callable_name": "read_lakehouse_csv",
       "callable_visibility": "public",
-      "callable_role": "optional",
-      "template_notebook": "\u2014",
-      "template_segment": "\u2014"
+      "callable_role": "essential",
+      "template_notebook": "02_ex/03_pc",
+      "template_segment": "Fabric IO"
     },
     {
       "module_name": "fabric_input_output",
@@ -533,9 +257,9 @@
       "sidebar_include": true,
       "callable_name": "read_lakehouse_excel",
       "callable_visibility": "public",
-      "callable_role": "optional",
-      "template_notebook": "\u2014",
-      "template_segment": "\u2014"
+      "callable_role": "essential",
+      "template_notebook": "02_ex/03_pc",
+      "template_segment": "Fabric IO"
     },
     {
       "module_name": "fabric_input_output",
@@ -545,9 +269,9 @@
       "sidebar_include": true,
       "callable_name": "read_lakehouse_parquet",
       "callable_visibility": "public",
-      "callable_role": "optional",
-      "template_notebook": "\u2014",
-      "template_segment": "\u2014"
+      "callable_role": "essential",
+      "template_notebook": "02_ex/03_pc",
+      "template_segment": "Fabric IO"
     },
     {
       "module_name": "fabric_input_output",
@@ -558,8 +282,8 @@
       "callable_name": "read_lakehouse_table",
       "callable_visibility": "public",
       "callable_role": "essential",
-      "template_notebook": "\u2014",
-      "template_segment": "\u2014"
+      "template_notebook": "02_ex/03_pc",
+      "template_segment": "Fabric IO"
     },
     {
       "module_name": "fabric_input_output",
@@ -570,8 +294,8 @@
       "callable_name": "read_warehouse_table",
       "callable_visibility": "public",
       "callable_role": "essential",
-      "template_notebook": "\u2014",
-      "template_segment": "\u2014"
+      "template_notebook": "02_ex/03_pc",
+      "template_segment": "Fabric IO"
     },
     {
       "module_name": "fabric_input_output",
@@ -582,8 +306,8 @@
       "callable_name": "write_lakehouse_table",
       "callable_visibility": "public",
       "callable_role": "essential",
-      "template_notebook": "\u2014",
-      "template_segment": "\u2014"
+      "template_notebook": "03_pc_agreement_pipeline_template",
+      "template_segment": "Fabric IO"
     },
     {
       "module_name": "fabric_input_output",
@@ -594,116 +318,8 @@
       "callable_name": "write_warehouse_table",
       "callable_visibility": "public",
       "callable_role": "essential",
-      "template_notebook": "\u2014",
-      "template_segment": "\u2014"
-    },
-    {
-      "module_name": "governance_review",
-      "visibility": "public",
-      "module_summary": "Owns table-scoped 04_gov catalogue selection, explicit approval record builders, and metadata commit helpers.",
-      "sidebar_group": "1. Governance steward",
-      "sidebar_include": true,
-      "callable_name": "build_classification_records",
-      "callable_visibility": "public",
-      "callable_role": "essential",
-      "template_notebook": "`04_gov_dataset_table`",
-      "template_segment": "Table-scoped governance review"
-    },
-    {
-      "module_name": "governance_review",
-      "visibility": "public",
-      "module_summary": "Owns table-scoped 04_gov catalogue selection, explicit approval record builders, and metadata commit helpers.",
-      "sidebar_group": "1. Governance steward",
-      "sidebar_include": true,
-      "callable_name": "build_column_context_records",
-      "callable_visibility": "public",
-      "callable_role": "essential",
-      "template_notebook": "`04_gov_dataset_table`",
-      "template_segment": "Table-scoped governance review"
-    },
-    {
-      "module_name": "governance_review",
-      "visibility": "public",
-      "module_summary": "Owns table-scoped 04_gov catalogue selection, explicit approval record builders, and metadata commit helpers.",
-      "sidebar_group": "1. Governance steward",
-      "sidebar_include": true,
-      "callable_name": "build_dq_rule_records",
-      "callable_visibility": "public",
-      "callable_role": "essential",
-      "template_notebook": "`04_gov_dataset_table`",
-      "template_segment": "Table-scoped governance review"
-    },
-    {
-      "module_name": "governance_review",
-      "visibility": "public",
-      "module_summary": "Owns table-scoped 04_gov catalogue selection, explicit approval record builders, and metadata commit helpers.",
-      "sidebar_group": "1. Governance steward",
-      "sidebar_include": true,
-      "callable_name": "build_profile_summary",
-      "callable_visibility": "public",
-      "callable_role": "essential",
-      "template_notebook": "`04_gov_dataset_table`",
-      "template_segment": "Table-scoped governance review"
-    },
-    {
-      "module_name": "governance_review",
-      "visibility": "public",
-      "module_summary": "Owns table-scoped 04_gov catalogue selection, explicit approval record builders, and metadata commit helpers.",
-      "sidebar_group": "1. Governance steward",
-      "sidebar_include": true,
-      "callable_name": "catalogue_table_options",
-      "callable_visibility": "public",
-      "callable_role": "essential",
-      "template_notebook": "`04_gov_dataset_table`",
-      "template_segment": "Table-scoped governance review"
-    },
-    {
-      "module_name": "governance_review",
-      "visibility": "public",
-      "module_summary": "Owns table-scoped 04_gov catalogue selection, explicit approval record builders, and metadata commit helpers.",
-      "sidebar_group": "1. Governance steward",
-      "sidebar_include": true,
-      "callable_name": "commit_column_classification",
-      "callable_visibility": "public",
-      "callable_role": "essential",
-      "template_notebook": "`04_gov_dataset_table`",
-      "template_segment": "Table-scoped governance review"
-    },
-    {
-      "module_name": "governance_review",
-      "visibility": "public",
-      "module_summary": "Owns table-scoped 04_gov catalogue selection, explicit approval record builders, and metadata commit helpers.",
-      "sidebar_group": "1. Governance steward",
-      "sidebar_include": true,
-      "callable_name": "commit_column_context",
-      "callable_visibility": "public",
-      "callable_role": "essential",
-      "template_notebook": "`04_gov_dataset_table`",
-      "template_segment": "Table-scoped governance review"
-    },
-    {
-      "module_name": "governance_review",
-      "visibility": "public",
-      "module_summary": "Owns table-scoped 04_gov catalogue selection, explicit approval record builders, and metadata commit helpers.",
-      "sidebar_group": "1. Governance steward",
-      "sidebar_include": true,
-      "callable_name": "commit_dq_rules",
-      "callable_visibility": "public",
-      "callable_role": "essential",
-      "template_notebook": "`04_gov_dataset_table`",
-      "template_segment": "Table-scoped governance review"
-    },
-    {
-      "module_name": "governance_review",
-      "visibility": "public",
-      "module_summary": "Owns table-scoped 04_gov catalogue selection, explicit approval record builders, and metadata commit helpers.",
-      "sidebar_group": "1. Governance steward",
-      "sidebar_include": true,
-      "callable_name": "get_governance_metadata_schemas",
-      "callable_visibility": "public",
-      "callable_role": "essential",
-      "template_notebook": "`04_gov_dataset_table`",
-      "template_segment": "Table-scoped governance review"
+      "template_notebook": "03_pc_agreement_pipeline_template",
+      "template_segment": "Fabric IO"
     },
     {
       "module_name": "governance_review",
@@ -714,20 +330,8 @@
       "callable_name": "get_selected_catalogue_table",
       "callable_visibility": "public",
       "callable_role": "essential",
-      "template_notebook": "`04_gov_dataset_table`",
-      "template_segment": "Table-scoped governance review"
-    },
-    {
-      "module_name": "governance_review",
-      "visibility": "public",
-      "module_summary": "Owns table-scoped 04_gov catalogue selection, explicit approval record builders, and metadata commit helpers.",
-      "sidebar_group": "1. Governance steward",
-      "sidebar_include": true,
-      "callable_name": "latest_by_column",
-      "callable_visibility": "public",
-      "callable_role": "essential",
-      "template_notebook": "`04_gov_dataset_table`",
-      "template_segment": "Table-scoped governance review"
+      "template_notebook": "04_gov_dataset_table",
+      "template_segment": "Governance review"
     },
     {
       "module_name": "governance_review",
@@ -738,8 +342,8 @@
       "callable_name": "load_catalogue_profile_rows",
       "callable_visibility": "public",
       "callable_role": "essential",
-      "template_notebook": "`04_gov_dataset_table`",
-      "template_segment": "Table-scoped governance review"
+      "template_notebook": "04_gov_dataset_table",
+      "template_segment": "Governance review"
     },
     {
       "module_name": "governance_review",
@@ -747,23 +351,11 @@
       "module_summary": "Owns table-scoped 04_gov catalogue selection, explicit approval record builders, and metadata commit helpers.",
       "sidebar_group": "1. Governance steward",
       "sidebar_include": true,
-      "callable_name": "optional_ai_generate_response",
-      "callable_visibility": "public",
-      "callable_role": "optional",
-      "template_notebook": "`04_gov_dataset_table`",
-      "template_segment": "Table-scoped governance review"
-    },
-    {
-      "module_name": "governance_review",
-      "visibility": "public",
-      "module_summary": "Owns table-scoped 04_gov catalogue selection, explicit approval record builders, and metadata commit helpers.",
-      "sidebar_group": "1. Governance steward",
-      "sidebar_include": true,
-      "callable_name": "setup_governance_metadata_tables",
+      "callable_name": "record_table_governance",
       "callable_visibility": "public",
       "callable_role": "essential",
-      "template_notebook": "`04_gov_dataset_table`",
-      "template_segment": "Table-scoped governance review"
+      "template_notebook": "04_gov_dataset_table",
+      "template_segment": "Governance review"
     },
     {
       "module_name": "governance_review",
@@ -771,11 +363,35 @@
       "module_summary": "Owns table-scoped 04_gov catalogue selection, explicit approval record builders, and metadata commit helpers.",
       "sidebar_group": "1. Governance steward",
       "sidebar_include": true,
-      "callable_name": "widget_review_table_governance",
+      "callable_name": "widget_review_column_classification",
       "callable_visibility": "public",
       "callable_role": "essential",
-      "template_notebook": "`04_gov_dataset_table`",
-      "template_segment": "Table-scoped governance review"
+      "template_notebook": "04_gov_dataset_table",
+      "template_segment": "Governance review"
+    },
+    {
+      "module_name": "governance_review",
+      "visibility": "public",
+      "module_summary": "Owns table-scoped 04_gov catalogue selection, explicit approval record builders, and metadata commit helpers.",
+      "sidebar_group": "1. Governance steward",
+      "sidebar_include": true,
+      "callable_name": "widget_review_column_context",
+      "callable_visibility": "public",
+      "callable_role": "essential",
+      "template_notebook": "04_gov_dataset_table",
+      "template_segment": "Governance review"
+    },
+    {
+      "module_name": "governance_review",
+      "visibility": "public",
+      "module_summary": "Owns table-scoped 04_gov catalogue selection, explicit approval record builders, and metadata commit helpers.",
+      "sidebar_group": "1. Governance steward",
+      "sidebar_include": true,
+      "callable_name": "widget_review_dq_rules",
+      "callable_visibility": "public",
+      "callable_role": "essential",
+      "template_notebook": "04_gov_dataset_table",
+      "template_segment": "Governance review"
     },
     {
       "module_name": "governance_review",
@@ -786,8 +402,8 @@
       "callable_name": "widget_select_catalogue_table",
       "callable_visibility": "public",
       "callable_role": "essential",
-      "template_notebook": "`04_gov_dataset_table`",
-      "template_segment": "Table-scoped governance review"
+      "template_notebook": "04_gov_dataset_table",
+      "template_segment": "Governance review"
     },
     {
       "module_name": "handover",
@@ -798,8 +414,8 @@
       "callable_name": "build_handover",
       "callable_visibility": "public",
       "callable_role": "essential",
-      "template_notebook": "\u2014",
-      "template_segment": "\u2014"
+      "template_notebook": "handover",
+      "template_segment": "Handover evidence"
     },
     {
       "module_name": "handover",
@@ -810,140 +426,8 @@
       "callable_name": "render_handover_markdown",
       "callable_visibility": "public",
       "callable_role": "essential",
-      "template_notebook": "\u2014",
-      "template_segment": "\u2014"
-    },
-    {
-      "module_name": "metadata",
-      "visibility": "public",
-      "module_summary": "Owns metadata evidence persistence, stable keys, notebook registry, catalogue keys, and runtime audit helpers.",
-      "sidebar_group": "5. Metadata store",
-      "sidebar_include": true,
-      "callable_name": "build_runtime_audit_fields",
-      "callable_visibility": "public",
-      "callable_role": "essential",
-      "template_notebook": "\u2014",
-      "template_segment": "\u2014"
-    },
-    {
-      "module_name": "metadata",
-      "visibility": "public",
-      "module_summary": "Owns metadata evidence persistence, stable keys, notebook registry, catalogue keys, and runtime audit helpers.",
-      "sidebar_group": "5. Metadata store",
-      "sidebar_include": true,
-      "callable_name": "current_notebook_active_registrations",
-      "callable_visibility": "public",
-      "callable_role": "optional",
-      "template_notebook": "\u2014",
-      "template_segment": "\u2014"
-    },
-    {
-      "module_name": "metadata",
-      "visibility": "public",
-      "module_summary": "Owns metadata evidence persistence, stable keys, notebook registry, catalogue keys, and runtime audit helpers.",
-      "sidebar_group": "5. Metadata store",
-      "sidebar_include": true,
-      "callable_name": "get_notebook_registry_schema",
-      "callable_visibility": "public",
-      "callable_role": "optional",
-      "template_notebook": "\u2014",
-      "template_segment": "\u2014"
-    },
-    {
-      "module_name": "metadata",
-      "visibility": "public",
-      "module_summary": "Owns metadata evidence persistence, stable keys, notebook registry, catalogue keys, and runtime audit helpers.",
-      "sidebar_group": "5. Metadata store",
-      "sidebar_include": true,
-      "callable_name": "load_notebook_registry",
-      "callable_visibility": "public",
-      "callable_role": "essential",
-      "template_notebook": "\u2014",
-      "template_segment": "\u2014"
-    },
-    {
-      "module_name": "metadata",
-      "visibility": "public",
-      "module_summary": "Owns metadata evidence persistence, stable keys, notebook registry, catalogue keys, and runtime audit helpers.",
-      "sidebar_group": "5. Metadata store",
-      "sidebar_include": true,
-      "callable_name": "register_current_notebook",
-      "callable_visibility": "public",
-      "callable_role": "essential",
-      "template_notebook": "\u2014",
-      "template_segment": "\u2014"
-    },
-    {
-      "module_name": "metadata",
-      "visibility": "public",
-      "module_summary": "Owns metadata evidence persistence, stable keys, notebook registry, catalogue keys, and runtime audit helpers.",
-      "sidebar_group": "5. Metadata store",
-      "sidebar_include": true,
-      "callable_name": "setup_notebook_registry_table",
-      "callable_visibility": "public",
-      "callable_role": "essential",
-      "template_notebook": "`00_env_config`",
-      "template_segment": "Metadata bootstrap"
-    },
-    {
-      "module_name": "versioning",
-      "visibility": "public",
-      "module_summary": "Owns runtime package-version detection and documentation link helpers for Fabric notebooks.",
-      "sidebar_group": "0. Environment setup",
-      "sidebar_include": true,
-      "callable_name": "get_docs_url",
-      "callable_visibility": "public",
-      "callable_role": "optional",
-      "template_notebook": "`00_env_config`",
-      "template_segment": "Segment 1: Explain the shared environment role"
-    },
-    {
-      "module_name": "versioning",
-      "visibility": "public",
-      "module_summary": "Owns runtime package-version detection and documentation link helpers for Fabric notebooks.",
-      "sidebar_group": "0. Environment setup",
-      "sidebar_include": true,
-      "callable_name": "get_docs_version",
-      "callable_visibility": "public",
-      "callable_role": "optional",
-      "template_notebook": "`00_env_config`",
-      "template_segment": "Segment 1: Explain the shared environment role"
-    },
-    {
-      "module_name": "versioning",
-      "visibility": "public",
-      "module_summary": "Owns runtime package-version detection and documentation link helpers for Fabric notebooks.",
-      "sidebar_group": "0. Environment setup",
-      "sidebar_include": true,
-      "callable_name": "get_package_version",
-      "callable_visibility": "public",
-      "callable_role": "optional",
-      "template_notebook": "`00_env_config`",
-      "template_segment": "Segment 1: Explain the shared environment role"
-    },
-    {
-      "module_name": "versioning",
-      "visibility": "public",
-      "module_summary": "Owns runtime package-version detection and documentation link helpers for Fabric notebooks.",
-      "sidebar_group": "0. Environment setup",
-      "sidebar_include": true,
-      "callable_name": "get_release_notes_url",
-      "callable_visibility": "public",
-      "callable_role": "optional",
-      "template_notebook": "`00_env_config`",
-      "template_segment": "Segment 1: Explain the shared environment role"
-    },
-    {
-      "module_name": "versioning",
-      "visibility": "public",
-      "module_summary": "Owns runtime package-version detection and documentation link helpers for Fabric notebooks.",
-      "sidebar_group": "0. Environment setup",
-      "sidebar_include": true,
-      "callable_name": "print_runtime_banner",
-      "callable_visibility": "public",
-      "callable_role": "essential",
-      "template_notebook": "`00_env_config`",
-      "template_segment": "Segment 1: Explain the shared environment role"
+      "template_notebook": "handover",
+      "template_segment": "Handover evidence"
     }
   ]
 }

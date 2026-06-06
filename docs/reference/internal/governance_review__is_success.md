@@ -20,7 +20,7 @@ No summary available.
 - Outbound references count: 1
 
 ## Inbound references
-- <a href="../catalogue_table_options/"><code>fabricops_kit.governance_review.catalogue_table_options</code></a>
+- <a href="../internal/governance_review/_catalogue_table_options/"><code>fabricops_kit.governance_review._catalogue_table_options</code></a>
 - <a href="../load_catalogue_profile_rows/"><code>fabricops_kit.governance_review.load_catalogue_profile_rows</code></a>
 
 ## Outbound references

@@ -22,7 +22,7 @@ No summary available.
 ## Inbound references
 - <a href="../internal/data_agreement/_create_or_update_data_agreement/"><code>fabricops_kit.data_agreement._create_or_update_data_agreement</code></a>
 - <a href="../internal/data_agreement/_list_data_agreements/"><code>fabricops_kit.data_agreement._list_data_agreements</code></a>
-- <a href="../internal/data_agreement/_widget_render_agreement_evidence/"><code>fabricops_kit.data_agreement._widget_render_agreement_evidence</code></a>
+- <a href="../internal/data_agreement/_render_agreement_evidence_widget/"><code>fabricops_kit.data_agreement._render_agreement_evidence_widget</code></a>
 
 ## Outbound references
 - <a href="../internal/data_agreement/_coerce_row_dicts/"><code>fabricops_kit.data_agreement._coerce_row_dicts</code></a>

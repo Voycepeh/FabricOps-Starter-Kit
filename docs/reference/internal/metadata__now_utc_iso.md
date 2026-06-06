@@ -20,10 +20,10 @@ No summary available.
 - Outbound references count: 0
 
 ## Inbound references
-- <a href="../widget_review_governance/"><code>fabricops_kit.data_governance.widget_review_governance</code></a>
+- <a href="../internal/data_governance/_widget_review_governance/"><code>fabricops_kit.data_governance._widget_review_governance</code></a>
 - <a href="../internal/data_quality/_build_dq_rule_deactivation_metadata_df/"><code>fabricops_kit.data_quality._build_dq_rule_deactivation_metadata_df</code></a>
 - <a href="../internal/data_quality/_build_dq_rules_metadata_df/"><code>fabricops_kit.data_quality._build_dq_rules_metadata_df</code></a>
-- <a href="../build_classification_records/"><code>fabricops_kit.governance_review.build_classification_records</code></a>
-- <a href="../build_column_context_records/"><code>fabricops_kit.governance_review.build_column_context_records</code></a>
-- <a href="../build_dq_rule_records/"><code>fabricops_kit.governance_review.build_dq_rule_records</code></a>
-- <a href="../internal/metadata/build_evidence_row/"><code>fabricops_kit.metadata.build_evidence_row</code></a>
+- <a href="../internal/governance_review/_build_classification_records/"><code>fabricops_kit.governance_review._build_classification_records</code></a>
+- <a href="../internal/governance_review/_build_column_context_records/"><code>fabricops_kit.governance_review._build_column_context_records</code></a>
+- <a href="../internal/governance_review/_build_dq_rule_records/"><code>fabricops_kit.governance_review._build_dq_rule_records</code></a>
+- <a href="../internal/metadata/_build_evidence_row/"><code>fabricops_kit.metadata._build_evidence_row</code></a>

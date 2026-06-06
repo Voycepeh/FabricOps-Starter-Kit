@@ -20,4 +20,4 @@ No summary available.
 - Outbound references count: 0
 
 ## Inbound references
-- <a href="../extract_governance_suggestions/"><code>fabricops_kit.data_governance.extract_governance_suggestions</code></a>
+- <a href="../internal/data_governance/_extract_governance_suggestions/"><code>fabricops_kit.data_governance._extract_governance_suggestions</code></a>

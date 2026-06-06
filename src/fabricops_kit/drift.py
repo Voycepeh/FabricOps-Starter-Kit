@@ -28,7 +28,7 @@ class UnsupportedDataFrameEngineError(ValueError):
     """Raised when dataframe engine detection cannot resolve pandas or Spark."""
 
 
-def detect_dataframe_engine(df) -> str:
+def _detect_dataframe_engine(df) -> str:
     """Detect whether a dataframe is pandas or Spark.
 
     Parameters
@@ -343,7 +343,7 @@ def _write_metadata_rows(spark, metadata_table: str, records: list[dict], mode: 
     return True
 
 
-def check_partition_drift(df, dataset_name: str, table_name: str, partition_column: str, business_keys: list[str] | None = None, watermark_column: str | None = None, baseline_snapshot: list[dict] | dict | None = None, policy: dict | None = None, run_id: str | None = None, engine: str = "spark") -> dict:
+def _check_partition_drift(df, dataset_name: str, table_name: str, partition_column: str, business_keys: list[str] | None = None, watermark_column: str | None = None, baseline_snapshot: list[dict] | dict | None = None, policy: dict | None = None, run_id: str | None = None, engine: str = "spark") -> dict:
     """Check partition-level drift using keys, partitions, and optional watermark baselines.
     
         Parameters
@@ -377,7 +377,7 @@ def check_partition_drift(df, dataset_name: str, table_name: str, partition_colu
     keys = business_keys or []
     if not keys:
         raise ValueError("business_keys must contain at least one column for partition drift checks.")
-    current_snapshot = build_partition_snapshot(
+    current_snapshot = _build_partition_snapshot(
         df,
         dataset_name=dataset_name,
         table_name=table_name,
@@ -400,7 +400,7 @@ def check_partition_drift(df, dataset_name: str, table_name: str, partition_colu
         }
 
     baseline_rows = baseline_snapshot if isinstance(baseline_snapshot, list) else [baseline_snapshot]
-    comparison = compare_partition_snapshots(baseline_rows, current_snapshot, policy=policy or default_incremental_safety_policy())
+    comparison = _compare_partition_snapshots(baseline_rows, current_snapshot, policy=policy or _default_incremental_safety_policy())
     status = str(comparison.get("status", "passed"))
     return {
         "dataset_name": dataset_name,
@@ -414,7 +414,7 @@ def check_partition_drift(df, dataset_name: str, table_name: str, partition_colu
     }
 
 
-def build_and_write_partition_snapshot(spark, df, dataset_name: str, table_name: str, metadata_table: str, partition_column: str, business_keys: list[str] | None = None, watermark_column: str | None = None, run_id: str | None = None, mode: str = "append", engine: str = "spark") -> dict:
+def _build_and_write_partition_snapshot(spark, df, dataset_name: str, table_name: str, metadata_table: str, partition_column: str, business_keys: list[str] | None = None, watermark_column: str | None = None, run_id: str | None = None, mode: str = "append", engine: str = "spark") -> dict:
     """Build a partition snapshot and persist it to the metadata table.
 
     Parameters
@@ -450,7 +450,7 @@ def build_and_write_partition_snapshot(spark, df, dataset_name: str, table_name:
     keys = business_keys or []
     if not keys:
         raise ValueError("business_keys must contain at least one column for partition snapshots.")
-    snapshot = build_partition_snapshot(
+    snapshot = _build_partition_snapshot(
         df,
         dataset_name=dataset_name,
         table_name=table_name,
@@ -477,7 +477,7 @@ def build_and_write_partition_snapshot(spark, df, dataset_name: str, table_name:
     return {"snapshot": snapshot, "records": records, "metadata_table": metadata_table, "written": written}
 
 
-def load_latest_partition_snapshot(spark, metadata_table: str, dataset_name: str, table_name: str) -> list[dict] | dict | None:
+def _load_latest_partition_snapshot(spark, metadata_table: str, dataset_name: str, table_name: str) -> list[dict] | dict | None:
     """Load the most recent partition snapshot for a dataset/table pair.
 
     Parameters
@@ -1115,7 +1115,7 @@ def stop_if_failed(result) -> None:
     raise SchemaDriftError(f"Guardrail blocked execution with status: {status}. {detail}")
 
 
-def summarize_drift_results(schema_drift_result: dict | None = None, partition_drift_result: dict | None = None, profile_drift_result: dict | None = None) -> dict:
+def _summarize_drift_results(schema_drift_result: dict | None = None, partition_drift_result: dict | None = None, profile_drift_result: dict | None = None) -> dict:
     """Summarize schema, partition, and profile drift outcomes into one decision.
     
         Parameters
@@ -1156,7 +1156,7 @@ def summarize_drift_results(schema_drift_result: dict | None = None, partition_d
     }
 
 
-def build_drift_evidence_record(*, dataset_name: str, table_name: str, run_id: str | None, drift_type: str, result: dict, workspace_id: str | None = None, workspace_name: str | None = None, notebook_id: str | None = None, notebook_name: str | None = None) -> dict:
+def _build_drift_evidence_record(*, dataset_name: str, table_name: str, run_id: str | None, drift_type: str, result: dict, workspace_id: str | None = None, workspace_name: str | None = None, notebook_id: str | None = None, notebook_name: str | None = None) -> dict:
     """Build a metadata-ready drift evidence record for schema/profile/partition checks."""
     return {
         "dataset_name": dataset_name,
@@ -1175,7 +1175,7 @@ def build_drift_evidence_record(*, dataset_name: str, table_name: str, run_id: s
     }
 
 
-def prepare_drift_baselines(
+def _prepare_drift_baselines(
     *,
     current_profile: dict | None = None,
     baseline_profile: dict | None = None,
@@ -1215,38 +1215,20 @@ class IncrementalSafetyError(Exception):
     """
 
 
-def default_incremental_safety_policy() -> dict:
-    """Execute the `default_incremental_safety_policy` workflow step in FabricOps.
-    
-        Use this callable at its corresponding stage of the pipeline contract
-        (configuration, IO, profiling, quality, drift, lineage, or handover)
-        to produce deterministic artifacts and validation evidence.
-    
-        Parameters
-        ----------
-        None
-            This function does not require explicit parameters.
-    
-        Returns
-        -------
-        Any
-            Function output used by downstream FabricOps workflow steps.
-    
-        Raises
-        ------
-        Exception
-            Propagates validation, runtime, or storage errors from underlying
-            operations when execution cannot continue safely.
-    
-        Notes
-        -----
-        Side effects may include metadata writes, quality evidence generation,
-        or persisted drift/lineage/handover artifacts depending on the function.
-    
-        Examples
-        --------
-        >>> default_incremental_safety_policy()
-        """
+def _default_incremental_safety_policy() -> dict:
+    """Return the default policy for incremental partition safety checks.
+
+    Returns
+    -------
+    dict
+        Default threshold and behavior settings used by incremental partition
+        safety helpers.
+
+    Examples
+    --------
+    >>> _default_incremental_safety_policy()["lookback_partitions"]
+    3
+    """
     return {
         "block_on_historical_partition_change": True,
         "closed_partition_grace_days": 1,
@@ -1359,8 +1341,8 @@ def _build_spark_partition_snapshot(df, *, dataset_name: str, table_name: str, p
     return sorted(rows, key=lambda r: str(r["partition_value"]))
 
 
-def build_partition_snapshot(df, *, dataset_name: str = "unknown", table_name: str = "unknown", partition_column: str, business_keys: list[str], watermark_column: str | None = None, run_id: str | None = None, engine: str = "auto") -> list[dict]:
-    """Execute the `build_partition_snapshot` workflow step in FabricOps.
+def _build_partition_snapshot(df, *, dataset_name: str = "unknown", table_name: str = "unknown", partition_column: str, business_keys: list[str], watermark_column: str | None = None, run_id: str | None = None, engine: str = "auto") -> list[dict]:
+    """Execute the `_build_partition_snapshot` workflow step in FabricOps.
     
         Use this callable at its corresponding stage of the pipeline contract
         (configuration, IO, profiling, quality, drift, lineage, or handover)
@@ -1389,9 +1371,9 @@ def build_partition_snapshot(df, *, dataset_name: str = "unknown", table_name: s
     
         Examples
         --------
-        >>> build_partition_snapshot(...)
+        >>> _build_partition_snapshot(...)
         """
-    selected_engine = detect_dataframe_engine(df) if engine == "auto" else engine
+    selected_engine = _detect_dataframe_engine(df) if engine == "auto" else engine
 
     columns = set(getattr(df, "columns", []))
     if partition_column not in columns:
@@ -1423,8 +1405,8 @@ def _is_closed_partition(partition_value: Any, grace_days: int) -> bool:
     return parsed < cutoff
 
 
-def compare_partition_snapshots(baseline_snapshots: list[dict], current_snapshots: list[dict], policy: dict | None = None) -> dict:
-    """Execute the `compare_partition_snapshots` workflow step in FabricOps.
+def _compare_partition_snapshots(baseline_snapshots: list[dict], current_snapshots: list[dict], policy: dict | None = None) -> dict:
+    """Execute the `_compare_partition_snapshots` workflow step in FabricOps.
     
         Use this callable at its corresponding stage of the pipeline contract
         (configuration, IO, profiling, quality, drift, lineage, or handover)
@@ -1457,9 +1439,9 @@ def compare_partition_snapshots(baseline_snapshots: list[dict], current_snapshot
     
         Examples
         --------
-        >>> compare_partition_snapshots(..., ..., ...)
+        >>> _compare_partition_snapshots(..., ..., ...)
         """
-    active_policy = {**default_incremental_safety_policy(), **(policy or {})}
+    active_policy = {**_default_incremental_safety_policy(), **(policy or {})}
     baseline = {str(s.get("partition_value")): s for s in baseline_snapshots}
     current = {str(s.get("partition_value")): s for s in current_snapshots}
     changes = []
@@ -1502,8 +1484,8 @@ def compare_partition_snapshots(baseline_snapshots: list[dict], current_snapshot
     return {"status": status, "can_continue": blocking == 0, "changes": changes, "summary": {"partition_count_baseline": len(baseline), "partition_count_current": len(current), "change_count": len(changes), "blocking_change_count": blocking, "warning_change_count": warning}, "policy": active_policy}
 
 
-def assert_incremental_safe(result: dict) -> None:
-    """Execute the `assert_incremental_safe` workflow step in FabricOps.
+def _assert_incremental_safe(result: dict) -> None:
+    """Execute the `_assert_incremental_safe` workflow step in FabricOps.
     
         Use this callable at its corresponding stage of the pipeline contract
         (configuration, IO, profiling, quality, drift, lineage, or handover)
@@ -1532,14 +1514,14 @@ def assert_incremental_safe(result: dict) -> None:
     
         Examples
         --------
-        >>> assert_incremental_safe(...)
+        >>> _assert_incremental_safe(...)
         """
     if not bool(result.get("can_continue", True)):
         raise IncrementalSafetyError("Blocking incremental partition safety changes detected.")
 
 
-def build_incremental_safety_records(result: dict, *, run_id: str, dataset_name: str, table_name: str) -> list[dict]:
-    """Execute the `build_incremental_safety_records` workflow step in FabricOps.
+def _build_incremental_safety_records(result: dict, *, run_id: str, dataset_name: str, table_name: str) -> list[dict]:
+    """Execute the `_build_incremental_safety_records` workflow step in FabricOps.
     
         Use this callable at its corresponding stage of the pipeline contract
         (configuration, IO, profiling, quality, drift, lineage, or handover)
@@ -1568,7 +1550,7 @@ def build_incremental_safety_records(result: dict, *, run_id: str, dataset_name:
     
         Examples
         --------
-        >>> build_incremental_safety_records(...)
+        >>> _build_incremental_safety_records(...)
         """
     changes = result.get("changes", []) or [
         {

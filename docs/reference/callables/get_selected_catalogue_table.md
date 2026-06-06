@@ -5,7 +5,7 @@
 
 ## Purpose
 
-Return stable table identity selected by widget_select_catalogue_table.
+Return the table selected by widget_select_catalogue_table.
 
 ## Function manifest
 

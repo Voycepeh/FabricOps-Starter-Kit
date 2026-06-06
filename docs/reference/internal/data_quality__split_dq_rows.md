@@ -20,8 +20,8 @@ No summary available.
 - Outbound references count: 1
 
 ## Inbound references
+- <a href="../internal/data_quality/_enforce_dq/"><code>fabricops_kit.data_quality._enforce_dq</code></a>
 - <a href="../internal/data_quality/_run_dq_rules/"><code>fabricops_kit.data_quality._run_dq_rules</code></a>
-- <a href="../enforce_dq/"><code>fabricops_kit.data_quality.enforce_dq</code></a>
 
 ## Outbound references
-- <a href="../validate_dq_rules/"><code>fabricops_kit.data_quality.validate_dq_rules</code></a>
+- <a href="../internal/data_quality/_validate_dq_rules/"><code>fabricops_kit.data_quality._validate_dq_rules</code></a>

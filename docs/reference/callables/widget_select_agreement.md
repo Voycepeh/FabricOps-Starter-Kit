@@ -5,7 +5,7 @@
 
 ## Purpose
 
-Render a searchable agreement selector and store selected agreement metadata row in module state.
+Render an agreement selector and optionally register the active notebook.
 
 ## Function manifest
 
@@ -25,5 +25,5 @@ Render a searchable agreement selector and store selected agreement metadata row
 - <a href="../internal/data_agreement/_load_agreements/"><code>fabricops_kit.data_agreement._load_agreements</code></a>
 - <a href="../internal/data_agreement/_render_searchable_selector/"><code>fabricops_kit.data_agreement._render_searchable_selector</code></a>
 - <a href="../internal/data_agreement/_require_ipywidgets/"><code>fabricops_kit.data_agreement._require_ipywidgets</code></a>
-- <a href="../current_notebook_active_registrations/"><code>fabricops_kit.metadata.current_notebook_active_registrations</code></a>
-- <a href="../register_current_notebook/"><code>fabricops_kit.metadata.register_current_notebook</code></a>
+- <a href="../internal/metadata/_current_notebook_active_registrations/"><code>fabricops_kit.metadata._current_notebook_active_registrations</code></a>
+- <a href="../internal/metadata/_register_current_notebook/"><code>fabricops_kit.metadata._register_current_notebook</code></a>

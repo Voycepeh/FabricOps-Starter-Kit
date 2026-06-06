@@ -4,7 +4,7 @@ import json
 
 import pytest
 
-from fabricops_kit.data_quality import enforce_dq, load_dq_rules
+from fabricops_kit.data_quality import _enforce_dq, _load_dq_rules
 from fabricops_kit.drift import validate_schema
 
 pytestmark = pytest.mark.spark
@@ -31,7 +31,7 @@ def test_spark_dq_enforcement_splits_valid_quarantine_and_failure_rows(spark_ses
         {"rule_id": "amount_positive", "rule_type": "value_range", "columns": ["amount"], "lower_bound": 0, "severity": "error", "description": "Positive"},
     ]
 
-    result = enforce_dq(df, table_name="orders", rules=rules, row_id_columns=["order_id"], dq_run_id="dq-run")
+    result = _enforce_dq(df, table_name="orders", rules=rules, row_id_columns=["order_id"], dq_run_id="dq-run")
 
     assert result.valid_rows.count() == 1
     assert result.quarantine_rows.count() == 2
@@ -67,4 +67,4 @@ def test_spark_schema_validation_and_latest_dq_metadata_are_stable(spark_session
     )
 
     assert schema_result["status"] == "warning"
-    assert load_dq_rules(metadata_df, table_name="orders") == []
+    assert _load_dq_rules(metadata_df, table_name="orders") == []

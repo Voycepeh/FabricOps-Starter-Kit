@@ -40,6 +40,41 @@ PUBLIC_MODULE_PREFERRED_NAMES = {
 }
 INTERNAL_MODULE_BLACKLIST = {"_utils"}
 INTERNAL_ALIAS_MODULES = {}
+
+# Callable reference pages are intentionally curated for v1. A callable is a
+# notebook-template function that users actively call, not every public helper in
+# the Python package. Keep this list in sync with src/fabricops_kit/__init__.py.
+V1_CALLABLES = {
+    "setup_notebook",
+    "setup_metadata_tables",
+    "widget_render_data_steward",
+    "widget_render_data_agreement",
+    "widget_render_agreement_evidence",
+    "widget_select_agreement",
+    "get_selected_agreement",
+    "read_lakehouse_table",
+    "write_lakehouse_table",
+    "read_lakehouse_csv",
+    "read_lakehouse_parquet",
+    "read_lakehouse_excel",
+    "read_warehouse_table",
+    "write_warehouse_table",
+    "profile_dataframe",
+    "validate_schema",
+    "monitor_data_changes",
+    "stop_if_failed",
+    "build_lineage_records",
+    "build_handover",
+    "render_handover_markdown",
+    "widget_select_catalogue_table",
+    "get_selected_catalogue_table",
+    "load_catalogue_profile_rows",
+    "widget_review_column_context",
+    "widget_review_dq_rules",
+    "widget_review_column_classification",
+    "record_table_governance",
+}
+
 @dataclass
 class Symbol:
     name: str
@@ -511,6 +546,10 @@ def render_callable_map_page(nodes: list[dict[str, Any]], edges: list[dict[str, 
 
 def main() -> None:
     public = parse_public_exports()
+    if set(public) != V1_CALLABLES:
+        missing = sorted(V1_CALLABLES - set(public))
+        extra = sorted(set(public) - V1_CALLABLES)
+        raise RuntimeError(f"__all__ must match curated V1_CALLABLES. Missing: {missing}; extra: {extra}")
     module_data = {p.stem: parse_module(p) for p in PKG_DIR.glob("*.py") if p.name != "__init__.py"}
 
     discovered_modules = sorted(
@@ -988,8 +1027,9 @@ def main() -> None:
                 ])
                 helper_text = ", ".join(f"`{h}`" for h in direct_helpers) if direct_helpers else "—"
                 override = usage_overrides.get(s.name, {})
+                callable_link = f"[`{s.name}`](./callables/{s.name}.md)"
                 rows.append([
-                    f"`{s.name}`",
+                    callable_link,
                     override.get("role", "Callable orchestration wrapper"),
                     override.get("purpose", s.purpose or s.summary or "—"),
                     helper_text,

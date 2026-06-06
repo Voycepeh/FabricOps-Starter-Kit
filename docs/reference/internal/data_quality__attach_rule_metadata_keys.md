@@ -20,9 +20,9 @@ No summary available.
 - Outbound references count: 3
 
 ## Inbound references
-- <a href="../get_dq_review_results/"><code>fabricops_kit.data_quality.get_dq_review_results</code></a>
+- <a href="../internal/data_quality/_get_dq_review_results/"><code>fabricops_kit.data_quality._get_dq_review_results</code></a>
 
 ## Outbound references
-- <a href="../internal/metadata/build_dq_rule_key/"><code>fabricops_kit.metadata.build_dq_rule_key</code></a>
-- <a href="../internal/metadata/build_metadata_column_key/"><code>fabricops_kit.metadata.build_metadata_column_key</code></a>
-- <a href="../internal/metadata/build_metadata_table_key/"><code>fabricops_kit.metadata.build_metadata_table_key</code></a>
+- <a href="../internal/metadata/_build_dq_rule_key/"><code>fabricops_kit.metadata._build_dq_rule_key</code></a>
+- <a href="../internal/metadata/_build_metadata_column_key/"><code>fabricops_kit.metadata._build_metadata_column_key</code></a>
+- <a href="../internal/metadata/_build_metadata_table_key/"><code>fabricops_kit.metadata._build_metadata_table_key</code></a>

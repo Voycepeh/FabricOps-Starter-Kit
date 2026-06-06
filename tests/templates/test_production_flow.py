@@ -29,7 +29,7 @@ def test_production_and_governance_templates_cover_output_handover_and_review_fl
     assert "build_lineage_records" in production
     assert "run_summary" in production
     assert "widget_select_catalogue_table" in governance
-    assert "widget_review_table_governance" in governance
-    assert "commit_column_context" in governance
-    assert "commit_dq_rules" in governance
-    assert "commit_column_classification" in governance
+    assert "widget_review_column_context" in governance
+    assert "record_table_governance" in governance
+    assert "record_table_governance" in governance
+    assert "record_table_governance" in governance

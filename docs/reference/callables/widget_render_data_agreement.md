@@ -5,7 +5,7 @@
 
 ## Purpose
 
-Render append-only agreement maintenance using active steward rows.
+Render the standalone data-agreement intake widget.
 
 ## Function manifest
 

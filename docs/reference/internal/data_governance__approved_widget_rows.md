@@ -20,7 +20,7 @@ No summary available.
 - Outbound references count: 1
 
 ## Inbound references
-- <a href="../write_governance/"><code>fabricops_kit.data_governance.write_governance</code></a>
+- <a href="../internal/data_governance/_write_governance/"><code>fabricops_kit.data_governance._write_governance</code></a>
 
 ## Outbound references
 - <a href="../internal/metadata/_resolve_action_by/"><code>fabricops_kit.metadata._resolve_action_by</code></a>

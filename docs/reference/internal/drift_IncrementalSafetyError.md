@@ -20,4 +20,4 @@ No summary available.
 - Outbound references count: 0
 
 ## Inbound references
-- <a href="../internal/drift/assert_incremental_safe/"><code>fabricops_kit.drift.assert_incremental_safe</code></a>
+- <a href="../internal/drift/_assert_incremental_safe/"><code>fabricops_kit.drift._assert_incremental_safe</code></a>

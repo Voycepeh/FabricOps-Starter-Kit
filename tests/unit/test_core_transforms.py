@@ -2,13 +2,13 @@ from __future__ import annotations
 
 import pytest
 
-from fabricops_kit.data_lineage import build_lineage_handover_markdown, build_lineage_records
+from fabricops_kit.data_lineage import _build_lineage_handover_markdown, build_lineage_records
 from fabricops_kit.governance_review import (
-    build_classification_records,
-    build_column_context_records,
-    build_dq_rule_records,
-    catalogue_table_options,
-    latest_by_column,
+    _build_classification_records,
+    _build_column_context_records,
+    _build_dq_rule_records,
+    _catalogue_table_options,
+    _latest_by_column,
 )
 from fabricops_kit.handover import build_handover, render_handover_markdown
 
@@ -72,12 +72,12 @@ def test_profile_lineage_and_handover_helpers_return_notebook_ready_structures()
     assert profile["row_count"] == 3
     assert lineage[0]["target_table"] == "orders"
     assert "orders" in render_handover_markdown(summary)
-    assert "orders" in build_lineage_handover_markdown({"records": lineage})
+    assert "orders" in _build_lineage_handover_markdown({"records": lineage})
 
 
 def test_governance_review_builders_commit_only_human_approved_records():
     profile_rows = _profile_rows()
-    context = build_column_context_records(
+    context = _build_column_context_records(
         profile_rows,
         [
             {"column_name": "order_id", "business_context": "AI only", "review_status": "approved"},
@@ -85,11 +85,11 @@ def test_governance_review_builders_commit_only_human_approved_records():
         ],
         approved_by="reviewer",
     )
-    dq = build_dq_rule_records(
+    dq = _build_dq_rule_records(
         profile_rows,
         [{"rule_id": "amount_positive", "column_name": "amount", "rule_type": "value_range", "rule_parameters": {"min": 0}, "review_status": "approved", "commit": True}],
     )
-    classification = build_classification_records(
+    classification = _build_classification_records(
         profile_rows,
         [{"column_name": "order_id", "sensitivity_label": "confidential", "personal_data_classification": "indirect_identifier", "review_status": "approved", "commit": True}],
     )
@@ -98,19 +98,19 @@ def test_governance_review_builders_commit_only_human_approved_records():
     assert dq[0]["rule_key"]
     assert classification[0]["metadata_column_key"] == "col-order"
     with pytest.raises(ValueError, match="Unsupported sensitivity"):
-        build_classification_records(
+        _build_classification_records(
             profile_rows,
             [{"column_name": "order_id", "sensitivity_label": "secret", "personal_data_classification": "unknown", "review_status": "approved", "commit": True}],
         )
 
 
 def test_catalogue_and_latest_review_selection_keep_latest_approved_values():
-    options = catalogue_table_options([
+    options = _catalogue_table_options([
         {**_profile_rows("run-1")[0], "profiled_at": "2026-01-01T00:00:00Z"},
         *_profile_rows("run-2"),
         {**_profile_rows("run-3")[0], "profile_status": "failed", "profiled_at": "2026-01-03T00:00:00Z"},
     ])
-    latest = latest_by_column(
+    latest = _latest_by_column(
         [
             {"metadata_column_key": "col-order", "business_context": "old", "review_status": "approved", "approved_at": "2026-01-01"},
             {"metadata_column_key": "col-order", "business_context": "new", "review_status": "approved", "approved_at": "2026-01-02"},

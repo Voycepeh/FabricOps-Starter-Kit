@@ -268,7 +268,7 @@ def build_lineage_records(*, dataset_name: str, run_id: str, source_tables: list
 
 
 
-def build_lineage_handover_markdown(result: dict[str, Any]) -> str:
+def _build_lineage_handover_markdown(result: dict[str, Any]) -> str:
     """Build a concise markdown handover summary from lineage execution results."""
     records = result.get("records") or result.get("lineage_records") or []
     lines = ["# Lineage Handover", "", f"Total records: {len(records)}", ""]

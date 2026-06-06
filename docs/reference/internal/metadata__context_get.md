@@ -20,8 +20,8 @@ No summary available.
 - Outbound references count: 0
 
 ## Inbound references
+- <a href="../internal/metadata/_build_runtime_audit_fields/"><code>fabricops_kit.metadata._build_runtime_audit_fields</code></a>
+- <a href="../internal/metadata/_current_notebook_active_registrations/"><code>fabricops_kit.metadata._current_notebook_active_registrations</code></a>
+- <a href="../internal/metadata/_register_current_notebook/"><code>fabricops_kit.metadata._register_current_notebook</code></a>
 - <a href="../internal/metadata/_resolve_action_by/"><code>fabricops_kit.metadata._resolve_action_by</code></a>
 - <a href="../internal/metadata/_runtime_context/"><code>fabricops_kit.metadata._runtime_context</code></a>
-- <a href="../build_runtime_audit_fields/"><code>fabricops_kit.metadata.build_runtime_audit_fields</code></a>
-- <a href="../current_notebook_active_registrations/"><code>fabricops_kit.metadata.current_notebook_active_registrations</code></a>
-- <a href="../register_current_notebook/"><code>fabricops_kit.metadata.register_current_notebook</code></a>

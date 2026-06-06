@@ -5,7 +5,7 @@
 
 ## Purpose
 
-Render append-only data steward maintenance.
+Render the standalone data-steward intake widget.
 
 ## Function manifest
 

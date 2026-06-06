@@ -20,6 +20,6 @@ No summary available.
 - Outbound references count: 0
 
 ## Inbound references
-- <a href="../build_classification_records/"><code>fabricops_kit.governance_review.build_classification_records</code></a>
-- <a href="../build_column_context_records/"><code>fabricops_kit.governance_review.build_column_context_records</code></a>
-- <a href="../build_dq_rule_records/"><code>fabricops_kit.governance_review.build_dq_rule_records</code></a>
+- <a href="../internal/governance_review/_build_classification_records/"><code>fabricops_kit.governance_review._build_classification_records</code></a>
+- <a href="../internal/governance_review/_build_column_context_records/"><code>fabricops_kit.governance_review._build_column_context_records</code></a>
+- <a href="../internal/governance_review/_build_dq_rule_records/"><code>fabricops_kit.governance_review._build_dq_rule_records</code></a>
