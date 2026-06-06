@@ -33,8 +33,8 @@ nav:
       - Metadata Dashboard: how-fabricops-works/metadata-dashboard.md
 
   - Workflow Guides:
-      - Governance Review Workflow: data-quality-rules-system.md
       - Production Guardrails Workflow: schema-and-data-drift.md
+      - Governance Review Workflow: data-quality-rules-system.md
 
   - Development:
       - Documentation Versioning: development/docs-versioning.md
