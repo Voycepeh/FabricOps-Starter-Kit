@@ -4,9 +4,9 @@
   <span class="api-chip api-chip-module">Module overview</span>
 </div>
 
-Module pages document source modules and internal helpers for maintainers. They support debugging and implementation traceability, but they are not the public v1 callable surface.
+Implementation modules document source-level behavior and internal helper relationships for maintainers. They support debugging and implementation traceability, but they are not the public v1 callable API.
 
-The public v1 callable surface is controlled by `src/fabricops_kit/__init__.py::__all__` and is browsed from the Function Reference catalogue.
+The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__all__` and is browsed from the Function Reference catalogue.
 
 ## Module overview badges
 
@@ -373,7 +373,7 @@ No public exports in this module.
 <a class="reference-chip" href="../data_quality/#_attach_rule_metadata_keys"><code>_attach_rule_metadata_keys</code></a>, <a class="reference-chip" href="../data_quality/#_build_dq_rule_deactivation_metadata_df"><code>_build_dq_rule_deactivation_metadata_df</code></a>, <a class="reference-chip" href="../data_quality/#_build_dq_rule_deactivations"><code>_build_dq_rule_deactivations</code></a>, <a class="reference-chip" href="../data_quality/#_build_dq_rule_history"><code>_build_dq_rule_history</code></a>, <a class="reference-chip" href="../data_quality/#_build_dq_rules_metadata_df"><code>_build_dq_rules_metadata_df</code></a>
 
 **governance_review**
-<a class="reference-chip" href="../governance_review/#_audit"><code>_audit</code></a>, <a class="reference-chip" href="../governance_review/#_build_classification_records"><code>_build_classification_records</code></a>, <a class="reference-chip" href="../governance_review/#_build_column_context_records"><code>_build_column_context_records</code></a>, <a class="reference-chip" href="../governance_review/#_build_dq_rule_records"><code>_build_dq_rule_records</code></a>, <a class="reference-chip" href="../governance_review/#_catalogue_table_options"><code>_catalogue_table_options</code></a>, <a class="reference-chip" href="../governance_review/#_row_metadata_table_key"><code>_row_metadata_table_key</code></a>
+<a class="reference-chip" href="../governance_review/#_build_classification_records"><code>_build_classification_records</code></a>, <a class="reference-chip" href="../governance_review/#_build_column_context_records"><code>_build_column_context_records</code></a>, <a class="reference-chip" href="../governance_review/#_build_dq_rule_records"><code>_build_dq_rule_records</code></a>, <a class="reference-chip" href="../governance_review/#_catalogue_table_options"><code>_catalogue_table_options</code></a>, <a class="reference-chip" href="../../reference/load_catalogue_profile_rows/"><code>load_catalogue_profile_rows</code></a>
 
 ### External callees
 

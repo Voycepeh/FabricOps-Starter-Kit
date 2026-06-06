@@ -36,7 +36,6 @@ nav:
 
   - Development:
       - Documentation Versioning: development/docs-versioning.md
-      - Internal Helper Surface: development/internal-helper-surface.md
       - Release Management: development/release-management.md
       - Release Traceability: release-info.md
 

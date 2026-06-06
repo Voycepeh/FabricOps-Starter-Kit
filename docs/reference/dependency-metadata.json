@@ -3488,14 +3488,12 @@
         "fabricops_kit.data_agreement._write_row",
         "fabricops_kit.data_quality._write_dq_rules",
         "fabricops_kit.fabric_input_output._seed_minimal_sample_source_table",
-        "fabricops_kit.governance_review._commit_column_classification",
-        "fabricops_kit.governance_review._commit_column_context",
-        "fabricops_kit.governance_review._commit_dq_rules",
         "fabricops_kit.governance_review._setup_governance_metadata_tables",
+        "fabricops_kit.governance_review.record_table_governance",
         "fabricops_kit.metadata._register_current_notebook",
         "fabricops_kit.metadata._setup_notebook_registry_table"
       ],
-      "used_by_count": 10,
+      "used_by_count": 8,
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
@@ -3515,40 +3513,6 @@
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
-    "fabricops_kit.governance_review.CatalogueTableSelection": {
-      "qualified_name": "fabricops_kit.governance_review.CatalogueTableSelection",
-      "short_name": "CatalogueTableSelection",
-      "module": "governance_review",
-      "callable": "CatalogueTableSelection",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/governance_review/CatalogueTableSelection/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.governance_review._audit": {
-      "qualified_name": "fabricops_kit.governance_review._audit",
-      "short_name": "_audit",
-      "module": "governance_review",
-      "callable": "_audit",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/governance_review/_audit/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.metadata._build_runtime_audit_fields"
-      ],
-      "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.governance_review._build_classification_records",
-        "fabricops_kit.governance_review._build_column_context_records",
-        "fabricops_kit.governance_review._build_dq_rule_records"
-      ],
-      "used_by_count": 3,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
     "fabricops_kit.governance_review._build_classification_records": {
       "qualified_name": "fabricops_kit.governance_review._build_classification_records",
       "short_name": "_build_classification_records",
@@ -3557,11 +3521,11 @@
       "docs_url": "/FabricOps-Starter-Kit/reference/internal/governance_review/_build_classification_records/",
       "classification": "internal",
       "calls": [
-        "fabricops_kit.governance_review._audit",
         "fabricops_kit.governance_review._json",
         "fabricops_kit.governance_review._value",
         "fabricops_kit.metadata._build_metadata_column_key",
         "fabricops_kit.metadata._build_metadata_table_key",
+        "fabricops_kit.metadata._build_runtime_audit_fields",
         "fabricops_kit.metadata._now_utc_iso",
         "fabricops_kit.metadata._resolve_action_by"
       ],
@@ -3571,11 +3535,10 @@
       ],
       "used_by_count": 1,
       "internal_helpers_used": [
-        "fabricops_kit.governance_review._audit",
         "fabricops_kit.governance_review._json",
         "fabricops_kit.governance_review._value"
       ],
-      "internal_helper_count": 3
+      "internal_helper_count": 2
     },
     "fabricops_kit.governance_review._build_column_context_records": {
       "qualified_name": "fabricops_kit.governance_review._build_column_context_records",
@@ -3585,11 +3548,11 @@
       "docs_url": "/FabricOps-Starter-Kit/reference/internal/governance_review/_build_column_context_records/",
       "classification": "internal",
       "calls": [
-        "fabricops_kit.governance_review._audit",
         "fabricops_kit.governance_review._json",
         "fabricops_kit.governance_review._value",
         "fabricops_kit.metadata._build_metadata_column_key",
         "fabricops_kit.metadata._build_metadata_table_key",
+        "fabricops_kit.metadata._build_runtime_audit_fields",
         "fabricops_kit.metadata._now_utc_iso",
         "fabricops_kit.metadata._resolve_action_by"
       ],
@@ -3599,11 +3562,10 @@
       ],
       "used_by_count": 1,
       "internal_helpers_used": [
-        "fabricops_kit.governance_review._audit",
         "fabricops_kit.governance_review._json",
         "fabricops_kit.governance_review._value"
       ],
-      "internal_helper_count": 3
+      "internal_helper_count": 2
     },
     "fabricops_kit.governance_review._build_dq_rule_records": {
       "qualified_name": "fabricops_kit.governance_review._build_dq_rule_records",
@@ -3613,12 +3575,12 @@
       "docs_url": "/FabricOps-Starter-Kit/reference/internal/governance_review/_build_dq_rule_records/",
       "classification": "internal",
       "calls": [
-        "fabricops_kit.governance_review._audit",
         "fabricops_kit.governance_review._json",
         "fabricops_kit.governance_review._value",
         "fabricops_kit.metadata._build_dq_rule_key",
         "fabricops_kit.metadata._build_metadata_column_key",
         "fabricops_kit.metadata._build_metadata_table_key",
+        "fabricops_kit.metadata._build_runtime_audit_fields",
         "fabricops_kit.metadata._now_utc_iso",
         "fabricops_kit.metadata._resolve_action_by"
       ],
@@ -3628,29 +3590,10 @@
       ],
       "used_by_count": 1,
       "internal_helpers_used": [
-        "fabricops_kit.governance_review._audit",
         "fabricops_kit.governance_review._json",
         "fabricops_kit.governance_review._value"
       ],
-      "internal_helper_count": 3
-    },
-    "fabricops_kit.governance_review._build_profile_summary": {
-      "qualified_name": "fabricops_kit.governance_review._build_profile_summary",
-      "short_name": "_build_profile_summary",
-      "module": "governance_review",
-      "callable": "_build_profile_summary",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/governance_review/_build_profile_summary/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.governance_review._value"
-      ],
-      "calls_count": 1,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [
-        "fabricops_kit.governance_review._value"
-      ],
-      "internal_helper_count": 1
+      "internal_helper_count": 2
     },
     "fabricops_kit.governance_review._catalogue_table_options": {
       "qualified_name": "fabricops_kit.governance_review._catalogue_table_options",
@@ -3685,66 +3628,11 @@
       "calls": [],
       "calls_count": 0,
       "used_by": [
-        "fabricops_kit.governance_review._latest_by_column",
         "fabricops_kit.governance_review._setup_governance_metadata_tables",
         "fabricops_kit.governance_review.load_catalogue_profile_rows",
         "fabricops_kit.governance_review.widget_select_catalogue_table"
       ],
-      "used_by_count": 4,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.governance_review._commit_column_classification": {
-      "qualified_name": "fabricops_kit.governance_review._commit_column_classification",
-      "short_name": "_commit_column_classification",
-      "module": "governance_review",
-      "callable": "_commit_column_classification",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/governance_review/_commit_column_classification/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.fabric_input_output.write_lakehouse_table"
-      ],
-      "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.governance_review.record_table_governance"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.governance_review._commit_column_context": {
-      "qualified_name": "fabricops_kit.governance_review._commit_column_context",
-      "short_name": "_commit_column_context",
-      "module": "governance_review",
-      "callable": "_commit_column_context",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/governance_review/_commit_column_context/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.fabric_input_output.write_lakehouse_table"
-      ],
-      "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.governance_review.record_table_governance"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.governance_review._commit_dq_rules": {
-      "qualified_name": "fabricops_kit.governance_review._commit_dq_rules",
-      "short_name": "_commit_dq_rules",
-      "module": "governance_review",
-      "callable": "_commit_dq_rules",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/governance_review/_commit_dq_rules/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.fabric_input_output.write_lakehouse_table"
-      ],
-      "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.governance_review.record_table_governance"
-      ],
-      "used_by_count": 1,
+      "used_by_count": 3,
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
@@ -3847,59 +3735,6 @@
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
-    "fabricops_kit.governance_review._latest_by_column": {
-      "qualified_name": "fabricops_kit.governance_review._latest_by_column",
-      "short_name": "_latest_by_column",
-      "module": "governance_review",
-      "callable": "_latest_by_column",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/governance_review/_latest_by_column/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.governance_review._coerce_rows"
-      ],
-      "calls_count": 1,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [
-        "fabricops_kit.governance_review._coerce_rows"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.governance_review._optional_ai_generate_response": {
-      "qualified_name": "fabricops_kit.governance_review._optional_ai_generate_response",
-      "short_name": "_optional_ai_generate_response",
-      "module": "governance_review",
-      "callable": "_optional_ai_generate_response",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/governance_review/_optional_ai_generate_response/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.governance_review._row_metadata_table_key": {
-      "qualified_name": "fabricops_kit.governance_review._row_metadata_table_key",
-      "short_name": "_row_metadata_table_key",
-      "module": "governance_review",
-      "callable": "_row_metadata_table_key",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/governance_review/_row_metadata_table_key/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.governance_review._value",
-        "fabricops_kit.metadata._build_metadata_table_key"
-      ],
-      "calls_count": 2,
-      "used_by": [
-        "fabricops_kit.governance_review.load_catalogue_profile_rows"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [
-        "fabricops_kit.governance_review._value"
-      ],
-      "internal_helper_count": 1
-    },
     "fabricops_kit.governance_review._schema": {
       "qualified_name": "fabricops_kit.governance_review._schema",
       "short_name": "_schema",
@@ -3994,35 +3829,14 @@
         "fabricops_kit.governance_review._build_classification_records",
         "fabricops_kit.governance_review._build_column_context_records",
         "fabricops_kit.governance_review._build_dq_rule_records",
-        "fabricops_kit.governance_review._build_profile_summary",
         "fabricops_kit.governance_review._catalogue_table_options",
         "fabricops_kit.governance_review._display_review_guidance",
         "fabricops_kit.governance_review._is_success",
-        "fabricops_kit.governance_review._row_metadata_table_key",
-        "fabricops_kit.governance_review._widget_review_table_governance",
         "fabricops_kit.governance_review.load_catalogue_profile_rows"
       ],
-      "used_by_count": 10,
+      "used_by_count": 7,
       "internal_helpers_used": [],
       "internal_helper_count": 0
-    },
-    "fabricops_kit.governance_review._widget_review_table_governance": {
-      "qualified_name": "fabricops_kit.governance_review._widget_review_table_governance",
-      "short_name": "_widget_review_table_governance",
-      "module": "governance_review",
-      "callable": "_widget_review_table_governance",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/governance_review/_widget_review_table_governance/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.governance_review._value"
-      ],
-      "calls_count": 1,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [
-        "fabricops_kit.governance_review._value"
-      ],
-      "internal_helper_count": 1
     },
     "fabricops_kit.governance_review.get_selected_catalogue_table": {
       "qualified_name": "fabricops_kit.governance_review.get_selected_catalogue_table",
@@ -4049,8 +3863,8 @@
         "fabricops_kit.fabric_input_output.read_lakehouse_table",
         "fabricops_kit.governance_review._coerce_rows",
         "fabricops_kit.governance_review._is_success",
-        "fabricops_kit.governance_review._row_metadata_table_key",
-        "fabricops_kit.governance_review._value"
+        "fabricops_kit.governance_review._value",
+        "fabricops_kit.metadata._build_metadata_table_key"
       ],
       "calls_count": 5,
       "used_by": [],
@@ -4058,10 +3872,9 @@
       "internal_helpers_used": [
         "fabricops_kit.governance_review._coerce_rows",
         "fabricops_kit.governance_review._is_success",
-        "fabricops_kit.governance_review._row_metadata_table_key",
         "fabricops_kit.governance_review._value"
       ],
-      "internal_helper_count": 4
+      "internal_helper_count": 3
     },
     "fabricops_kit.governance_review.record_table_governance": {
       "qualified_name": "fabricops_kit.governance_review.record_table_governance",
@@ -4071,25 +3884,20 @@
       "docs_url": "/FabricOps-Starter-Kit/reference/record_table_governance/",
       "classification": "essential",
       "calls": [
+        "fabricops_kit.fabric_input_output.write_lakehouse_table",
         "fabricops_kit.governance_review._build_classification_records",
         "fabricops_kit.governance_review._build_column_context_records",
-        "fabricops_kit.governance_review._build_dq_rule_records",
-        "fabricops_kit.governance_review._commit_column_classification",
-        "fabricops_kit.governance_review._commit_column_context",
-        "fabricops_kit.governance_review._commit_dq_rules"
+        "fabricops_kit.governance_review._build_dq_rule_records"
       ],
-      "calls_count": 6,
+      "calls_count": 4,
       "used_by": [],
       "used_by_count": 0,
       "internal_helpers_used": [
         "fabricops_kit.governance_review._build_classification_records",
         "fabricops_kit.governance_review._build_column_context_records",
-        "fabricops_kit.governance_review._build_dq_rule_records",
-        "fabricops_kit.governance_review._commit_column_classification",
-        "fabricops_kit.governance_review._commit_column_context",
-        "fabricops_kit.governance_review._commit_dq_rules"
+        "fabricops_kit.governance_review._build_dq_rule_records"
       ],
-      "internal_helper_count": 6
+      "internal_helper_count": 3
     },
     "fabricops_kit.governance_review.widget_review_column_classification": {
       "qualified_name": "fabricops_kit.governance_review.widget_review_column_classification",
@@ -4319,7 +4127,7 @@
         "fabricops_kit.governance_review._build_column_context_records",
         "fabricops_kit.governance_review._build_dq_rule_records",
         "fabricops_kit.governance_review._catalogue_table_options",
-        "fabricops_kit.governance_review._row_metadata_table_key"
+        "fabricops_kit.governance_review.load_catalogue_profile_rows"
       ],
       "used_by_count": 8,
       "internal_helpers_used": [
@@ -4344,9 +4152,11 @@
         "fabricops_kit.data_agreement._create_or_update_data_agreement",
         "fabricops_kit.data_agreement._create_or_update_data_steward",
         "fabricops_kit.data_agreement._save_agreement_evidence_records",
-        "fabricops_kit.governance_review._audit"
+        "fabricops_kit.governance_review._build_classification_records",
+        "fabricops_kit.governance_review._build_column_context_records",
+        "fabricops_kit.governance_review._build_dq_rule_records"
       ],
-      "used_by_count": 4,
+      "used_by_count": 6,
       "internal_helpers_used": [
         "fabricops_kit.metadata._context_get",
         "fabricops_kit.metadata._runtime_context",
@@ -5127,7 +4937,7 @@
     "governance_review": {
       "essential_count": 7,
       "optional_count": 0,
-      "internal_count": 24,
+      "internal_count": 15,
       "outbound_modules": [
         "fabric_input_output",
         "metadata"
