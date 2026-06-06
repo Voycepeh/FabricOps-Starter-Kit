@@ -16,9 +16,8 @@ No summary available.
 - Related module: `data_agreement`
 - Source file path: `src/fabricops_kit/data_agreement.py`
 - Source reference: <a href="../../api/modules/data_agreement/#_get_notebookutils">Module source anchor</a>
-- Inbound references count: 2
+- Inbound references count: 1
 - Outbound references count: 0
 
 ## Inbound references
-- <a href="../internal/data_agreement/_notebookutils_file_size/"><code>fabricops_kit.data_agreement._notebookutils_file_size</code></a>
-- <a href="../internal/data_agreement/_notebookutils_fs_exists/"><code>fabricops_kit.data_agreement._notebookutils_fs_exists</code></a>
+- <a href="../internal/data_agreement/_prepare_evidence_file_references/"><code>fabricops_kit.data_agreement._prepare_evidence_file_references</code></a>

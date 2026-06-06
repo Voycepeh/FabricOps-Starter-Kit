@@ -23,4 +23,4 @@ No summary available.
 - <a href="../internal/data_agreement/_render_maintenance_widget/"><code>fabricops_kit.data_agreement._render_maintenance_widget</code></a>
 
 ## Outbound references
-- <a href="../internal/data_agreement/_widget_config/"><code>fabricops_kit.data_agreement._widget_config</code></a>
+- <a href="../internal/data_agreement/_config_value/"><code>fabricops_kit.data_agreement._config_value</code></a>

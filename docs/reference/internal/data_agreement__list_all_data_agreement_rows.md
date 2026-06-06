@@ -26,5 +26,5 @@ No summary available.
 
 ## Outbound references
 - <a href="../internal/data_agreement/_coerce_row_dicts/"><code>fabricops_kit.data_agreement._coerce_row_dicts</code></a>
-- <a href="../internal/data_agreement/_table_name/"><code>fabricops_kit.data_agreement._table_name</code></a>
+- <a href="../internal/data_agreement/_config_value/"><code>fabricops_kit.data_agreement._config_value</code></a>
 - <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a>

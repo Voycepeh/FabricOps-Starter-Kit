@@ -10,7 +10,7 @@ The public v1 callable surface is controlled by `src/fabricops_kit/__init__.py::
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 5</span><span class="reference-chip">Internal helpers: 49</span><span class="reference-chip">Outbound: 3</span><span class="reference-chip">Inbound: 1</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 5</span><span class="reference-chip">Internal helpers: 37</span><span class="reference-chip">Outbound: 3</span><span class="reference-chip">Inbound: 1</span></div>
 
 ## Module purpose
 
@@ -40,7 +40,7 @@ Owns agreement metadata capture, audited record building, metadata commit helper
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>49</td>
+      <td>37</td>
     </tr>
     <tr>
       <td>Inbound module count</td>
@@ -201,19 +201,11 @@ Owns agreement metadata capture, audited record building, metadata commit helper
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_agreement/_default_dropdown_value/"><code>_default_dropdown_value</code></a></td>
-      <td>—</td>
-    </tr>
-    <tr>
       <td><a href="../../reference/internal/data_agreement/_deserialize_custom_fields/"><code>_deserialize_custom_fields</code></a></td>
       <td>—</td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/data_agreement/_ensure_metadata_tables/"><code>_ensure_metadata_tables</code></a></td>
-      <td>—</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/internal/data_agreement/_field_label/"><code>_field_label</code></a></td>
       <td>—</td>
     </tr>
     <tr>
@@ -261,23 +253,7 @@ Owns agreement metadata capture, audited record building, metadata commit helper
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_agreement/_notebookutils_file_size/"><code>_notebookutils_file_size</code></a></td>
-      <td>—</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/internal/data_agreement/_notebookutils_fs_exists/"><code>_notebookutils_fs_exists</code></a></td>
-      <td>—</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/internal/data_agreement/_option_values/"><code>_option_values</code></a></td>
-      <td>—</td>
-    </tr>
-    <tr>
       <td><a href="../../reference/internal/data_agreement/_parse_contract_version/"><code>_parse_contract_version</code></a></td>
-      <td>—</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/internal/data_agreement/_parse_evidence_file_paths/"><code>_parse_evidence_file_paths</code></a></td>
       <td>—</td>
     </tr>
     <tr>
@@ -317,23 +293,11 @@ Owns agreement metadata capture, audited record building, metadata commit helper
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_agreement/_set_widget_value/"><code>_set_widget_value</code></a></td>
-      <td>—</td>
-    </tr>
-    <tr>
       <td><a href="../../reference/internal/data_agreement/_setup_data_agreement_tables/"><code>_setup_data_agreement_tables</code></a></td>
       <td>—</td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/data_agreement/_standard_widget/"><code>_standard_widget</code></a></td>
-      <td>—</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/internal/data_agreement/_steward_role_options/"><code>_steward_role_options</code></a></td>
-      <td>—</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/internal/data_agreement/_table_name/"><code>_table_name</code></a></td>
       <td>—</td>
     </tr>
     <tr>
@@ -345,19 +309,7 @@ Owns agreement metadata capture, audited record building, metadata commit helper
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_agreement/_validate_evidence_file_path/"><code>_validate_evidence_file_path</code></a></td>
-      <td>—</td>
-    </tr>
-    <tr>
       <td><a href="../../reference/internal/data_agreement/_widget_common/"><code>_widget_common</code></a></td>
-      <td>—</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/internal/data_agreement/_widget_config/"><code>_widget_config</code></a></td>
-      <td>—</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/internal/data_agreement/_widget_field_value/"><code>_widget_field_value</code></a></td>
       <td>—</td>
     </tr>
     <tr>
@@ -399,17 +351,12 @@ Owns agreement metadata capture, audited record building, metadata commit helper
 <li>
 <a class="reference-chip" href="#_create_or_update_data_agreement"><code>_create_or_update_data_agreement</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_business_agreement_snapshot"><code>_business_agreement_snapshot</code></a>, <a class="reference-chip" href="#_generate_agreement_id"><code>_generate_agreement_id</code></a>, <a class="reference-chip" href="#_list_all_data_agreement_rows"><code>_list_all_data_agreement_rows</code></a>, <a class="reference-chip" href="#_list_data_stewards"><code>_list_data_stewards</code></a>, <a class="reference-chip" href="#_next_minor_version"><code>_next_minor_version</code></a>, <a class="reference-chip" href="#_parse_contract_version"><code>_parse_contract_version</code></a>, <a class="reference-chip" href="#_parse_iso_date"><code>_parse_iso_date</code></a>, <a class="reference-chip" href="#_serialize_custom_fields"><code>_serialize_custom_fields</code></a>, <a class="reference-chip" href="#_table_name"><code>_table_name</code></a>, <a class="reference-chip" href="#_write_row"><code>_write_row</code></a>
+<a class="reference-chip" href="#_business_agreement_snapshot"><code>_business_agreement_snapshot</code></a>, <a class="reference-chip" href="#_config_value"><code>_config_value</code></a>, <a class="reference-chip" href="#_generate_agreement_id"><code>_generate_agreement_id</code></a>, <a class="reference-chip" href="#_list_all_data_agreement_rows"><code>_list_all_data_agreement_rows</code></a>, <a class="reference-chip" href="#_list_data_stewards"><code>_list_data_stewards</code></a>, <a class="reference-chip" href="#_next_minor_version"><code>_next_minor_version</code></a>, <a class="reference-chip" href="#_parse_contract_version"><code>_parse_contract_version</code></a>, <a class="reference-chip" href="#_parse_iso_date"><code>_parse_iso_date</code></a>, <a class="reference-chip" href="#_serialize_custom_fields"><code>_serialize_custom_fields</code></a>, <a class="reference-chip" href="#_write_row"><code>_write_row</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_create_or_update_data_steward"><code>_create_or_update_data_steward</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_active_steward"><code>_active_steward</code></a>, <a class="reference-chip" href="#_generate_steward_id"><code>_generate_steward_id</code></a>, <a class="reference-chip" href="#_parse_iso_date"><code>_parse_iso_date</code></a>, <a class="reference-chip" href="#_serialize_custom_fields"><code>_serialize_custom_fields</code></a>, <a class="reference-chip" href="#_steward_role_options"><code>_steward_role_options</code></a>, <a class="reference-chip" href="#_table_name"><code>_table_name</code></a>, <a class="reference-chip" href="#_to_bool"><code>_to_bool</code></a>, <a class="reference-chip" href="#_write_row"><code>_write_row</code></a>
-</li>
-<li>
-<a class="reference-chip" href="#_default_dropdown_value"><code>_default_dropdown_value</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_option_values"><code>_option_values</code></a>
+<a class="reference-chip" href="#_active_steward"><code>_active_steward</code></a>, <a class="reference-chip" href="#_config_value"><code>_config_value</code></a>, <a class="reference-chip" href="#_generate_steward_id"><code>_generate_steward_id</code></a>, <a class="reference-chip" href="#_parse_iso_date"><code>_parse_iso_date</code></a>, <a class="reference-chip" href="#_serialize_custom_fields"><code>_serialize_custom_fields</code></a>, <a class="reference-chip" href="#_to_bool"><code>_to_bool</code></a>, <a class="reference-chip" href="#_write_row"><code>_write_row</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_deserialize_custom_fields"><code>_deserialize_custom_fields</code></a>
@@ -417,10 +364,7 @@ Owns agreement metadata capture, audited record building, metadata commit helper
 <li>
 <a class="reference-chip" href="#_ensure_metadata_tables"><code>_ensure_metadata_tables</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_coerce_row_dicts"><code>_coerce_row_dicts</code></a>, <a class="reference-chip" href="#_table_name"><code>_table_name</code></a>
-</li>
-<li>
-<a class="reference-chip" href="#_field_label"><code>_field_label</code></a>
+<a class="reference-chip" href="#_coerce_row_dicts"><code>_coerce_row_dicts</code></a>, <a class="reference-chip" href="#_config_value"><code>_config_value</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_generate_agreement_id"><code>_generate_agreement_id</code></a>
@@ -434,7 +378,7 @@ Owns agreement metadata capture, audited record building, metadata commit helper
 <li>
 <a class="reference-chip" href="#_get_widget_visible_fields"><code>_get_widget_visible_fields</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_widget_config"><code>_widget_config</code></a>
+<a class="reference-chip" href="#_config_value"><code>_config_value</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_html_escape"><code>_html_escape</code></a>
@@ -452,7 +396,7 @@ Owns agreement metadata capture, audited record building, metadata commit helper
 <li>
 <a class="reference-chip" href="#_list_all_data_agreement_rows"><code>_list_all_data_agreement_rows</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_coerce_row_dicts"><code>_coerce_row_dicts</code></a>, <a class="reference-chip" href="#_table_name"><code>_table_name</code></a>
+<a class="reference-chip" href="#_coerce_row_dicts"><code>_coerce_row_dicts</code></a>, <a class="reference-chip" href="#_config_value"><code>_config_value</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_list_data_agreements"><code>_list_data_agreements</code></a>
@@ -462,7 +406,7 @@ Owns agreement metadata capture, audited record building, metadata commit helper
 <li>
 <a class="reference-chip" href="#_list_data_stewards"><code>_list_data_stewards</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_active_steward"><code>_active_steward</code></a>, <a class="reference-chip" href="#_latest_by_key"><code>_latest_by_key</code></a>, <a class="reference-chip" href="#_table_name"><code>_table_name</code></a>
+<a class="reference-chip" href="#_active_steward"><code>_active_steward</code></a>, <a class="reference-chip" href="#_config_value"><code>_config_value</code></a>, <a class="reference-chip" href="#_latest_by_key"><code>_latest_by_key</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_next_minor_version"><code>_next_minor_version</code></a>
@@ -470,23 +414,7 @@ Owns agreement metadata capture, audited record building, metadata commit helper
 <a class="reference-chip" href="#_parse_contract_version"><code>_parse_contract_version</code></a>
 </li>
 <li>
-<a class="reference-chip" href="#_notebookutils_file_size"><code>_notebookutils_file_size</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_get_notebookutils"><code>_get_notebookutils</code></a>
-</li>
-<li>
-<a class="reference-chip" href="#_notebookutils_fs_exists"><code>_notebookutils_fs_exists</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_get_notebookutils"><code>_get_notebookutils</code></a>
-</li>
-<li>
-<a class="reference-chip" href="#_option_values"><code>_option_values</code></a>
-</li>
-<li>
 <a class="reference-chip" href="#_parse_contract_version"><code>_parse_contract_version</code></a>
-</li>
-<li>
-<a class="reference-chip" href="#_parse_evidence_file_paths"><code>_parse_evidence_file_paths</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_parse_iso_date"><code>_parse_iso_date</code></a>
@@ -494,7 +422,7 @@ Owns agreement metadata capture, audited record building, metadata commit helper
 <li>
 <a class="reference-chip" href="#_prepare_evidence_file_references"><code>_prepare_evidence_file_references</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_notebookutils_file_size"><code>_notebookutils_file_size</code></a>, <a class="reference-chip" href="#_notebookutils_fs_exists"><code>_notebookutils_fs_exists</code></a>, <a class="reference-chip" href="#_parse_evidence_file_paths"><code>_parse_evidence_file_paths</code></a>, <a class="reference-chip" href="#_validate_evidence_file_path"><code>_validate_evidence_file_path</code></a>
+<a class="reference-chip" href="#_get_notebookutils"><code>_get_notebookutils</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_render_agreement_evidence_widget"><code>_render_agreement_evidence_widget</code></a>
@@ -504,17 +432,17 @@ Owns agreement metadata capture, audited record building, metadata commit helper
 <li>
 <a class="reference-chip" href="#_render_custom_fields"><code>_render_custom_fields</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_default_dropdown_value"><code>_default_dropdown_value</code></a>, <a class="reference-chip" href="#_field_label"><code>_field_label</code></a>, <a class="reference-chip" href="#_require_ipywidgets"><code>_require_ipywidgets</code></a>, <a class="reference-chip" href="#_to_bool"><code>_to_bool</code></a>, <a class="reference-chip" href="#_widget_common"><code>_widget_common</code></a>
+<a class="reference-chip" href="#_require_ipywidgets"><code>_require_ipywidgets</code></a>, <a class="reference-chip" href="#_to_bool"><code>_to_bool</code></a>, <a class="reference-chip" href="#_widget_common"><code>_widget_common</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_render_maintenance_widget"><code>_render_maintenance_widget</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_agreement_identity_text"><code>_agreement_identity_text</code></a>, <a class="reference-chip" href="#_collect_custom_fields"><code>_collect_custom_fields</code></a>, <a class="reference-chip" href="#_create_or_update_data_agreement"><code>_create_or_update_data_agreement</code></a>, <a class="reference-chip" href="#_create_or_update_data_steward"><code>_create_or_update_data_steward</code></a>, <a class="reference-chip" href="#_deserialize_custom_fields"><code>_deserialize_custom_fields</code></a>, <a class="reference-chip" href="#_field_label"><code>_field_label</code></a>, <a class="reference-chip" href="#_get_widget_visible_fields"><code>_get_widget_visible_fields</code></a>, <a class="reference-chip" href="#_list_data_agreements"><code>_list_data_agreements</code></a>, <a class="reference-chip" href="#_list_data_stewards"><code>_list_data_stewards</code></a>, <a class="reference-chip" href="#_option_values"><code>_option_values</code></a>, <a class="reference-chip" href="#_render_custom_fields"><code>_render_custom_fields</code></a>, <a class="reference-chip" href="#_render_searchable_selector"><code>_render_searchable_selector</code></a>, <a class="reference-chip" href="#_require_ipywidgets"><code>_require_ipywidgets</code></a>, <a class="reference-chip" href="#_set_widget_value"><code>_set_widget_value</code></a>, <a class="reference-chip" href="#_standard_widget"><code>_standard_widget</code></a>, <a class="reference-chip" href="#_steward_role_options"><code>_steward_role_options</code></a>, <a class="reference-chip" href="#_widget_config"><code>_widget_config</code></a>, <a class="reference-chip" href="#_widget_field_value"><code>_widget_field_value</code></a>
+<a class="reference-chip" href="#_agreement_identity_text"><code>_agreement_identity_text</code></a>, <a class="reference-chip" href="#_collect_custom_fields"><code>_collect_custom_fields</code></a>, <a class="reference-chip" href="#_config_value"><code>_config_value</code></a>, <a class="reference-chip" href="#_create_or_update_data_agreement"><code>_create_or_update_data_agreement</code></a>, <a class="reference-chip" href="#_create_or_update_data_steward"><code>_create_or_update_data_steward</code></a>, <a class="reference-chip" href="#_deserialize_custom_fields"><code>_deserialize_custom_fields</code></a>, <a class="reference-chip" href="#_get_widget_visible_fields"><code>_get_widget_visible_fields</code></a>, <a class="reference-chip" href="#_list_data_agreements"><code>_list_data_agreements</code></a>, <a class="reference-chip" href="#_list_data_stewards"><code>_list_data_stewards</code></a>, <a class="reference-chip" href="#_render_custom_fields"><code>_render_custom_fields</code></a>, <a class="reference-chip" href="#_render_searchable_selector"><code>_render_searchable_selector</code></a>, <a class="reference-chip" href="#_require_ipywidgets"><code>_require_ipywidgets</code></a>, <a class="reference-chip" href="#_standard_widget"><code>_standard_widget</code></a>, <a class="reference-chip" href="#_to_bool"><code>_to_bool</code></a>, <a class="reference-chip" href="#_to_iso_date"><code>_to_iso_date</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_render_searchable_selector"><code>_render_searchable_selector</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_html_escape"><code>_html_escape</code></a>, <a class="reference-chip" href="#_option_values"><code>_option_values</code></a>, <a class="reference-chip" href="#_widget_common"><code>_widget_common</code></a>
+<a class="reference-chip" href="#_html_escape"><code>_html_escape</code></a>, <a class="reference-chip" href="#_widget_common"><code>_widget_common</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_require_ipywidgets"><code>_require_ipywidgets</code></a>
@@ -522,15 +450,10 @@ Owns agreement metadata capture, audited record building, metadata commit helper
 <li>
 <a class="reference-chip" href="#_save_agreement_evidence_records"><code>_save_agreement_evidence_records</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_prepare_evidence_file_references"><code>_prepare_evidence_file_references</code></a>, <a class="reference-chip" href="#_table_name"><code>_table_name</code></a>, <a class="reference-chip" href="#_write_row"><code>_write_row</code></a>
+<a class="reference-chip" href="#_config_value"><code>_config_value</code></a>, <a class="reference-chip" href="#_prepare_evidence_file_references"><code>_prepare_evidence_file_references</code></a>, <a class="reference-chip" href="#_write_row"><code>_write_row</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_serialize_custom_fields"><code>_serialize_custom_fields</code></a>
-</li>
-<li>
-<a class="reference-chip" href="#_set_widget_value"><code>_set_widget_value</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_default_dropdown_value"><code>_default_dropdown_value</code></a>, <a class="reference-chip" href="#_to_bool"><code>_to_bool</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_setup_data_agreement_tables"><code>_setup_data_agreement_tables</code></a>
@@ -540,17 +463,7 @@ Owns agreement metadata capture, audited record building, metadata commit helper
 <li>
 <a class="reference-chip" href="#_standard_widget"><code>_standard_widget</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_default_dropdown_value"><code>_default_dropdown_value</code></a>, <a class="reference-chip" href="#_field_label"><code>_field_label</code></a>, <a class="reference-chip" href="#_require_ipywidgets"><code>_require_ipywidgets</code></a>, <a class="reference-chip" href="#_to_bool"><code>_to_bool</code></a>, <a class="reference-chip" href="#_widget_common"><code>_widget_common</code></a>
-</li>
-<li>
-<a class="reference-chip" href="#_steward_role_options"><code>_steward_role_options</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_config_value"><code>_config_value</code></a>
-</li>
-<li>
-<a class="reference-chip" href="#_table_name"><code>_table_name</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_config_value"><code>_config_value</code></a>
+<a class="reference-chip" href="#_require_ipywidgets"><code>_require_ipywidgets</code></a>, <a class="reference-chip" href="#_to_bool"><code>_to_bool</code></a>, <a class="reference-chip" href="#_widget_common"><code>_widget_common</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_to_bool"><code>_to_bool</code></a>
@@ -559,20 +472,7 @@ Owns agreement metadata capture, audited record building, metadata commit helper
 <a class="reference-chip" href="#_to_iso_date"><code>_to_iso_date</code></a>
 </li>
 <li>
-<a class="reference-chip" href="#_validate_evidence_file_path"><code>_validate_evidence_file_path</code></a>
-</li>
-<li>
 <a class="reference-chip" href="#_widget_common"><code>_widget_common</code></a>
-</li>
-<li>
-<a class="reference-chip" href="#_widget_config"><code>_widget_config</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_config_value"><code>_config_value</code></a>
-</li>
-<li>
-<a class="reference-chip" href="#_widget_field_value"><code>_widget_field_value</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_to_iso_date"><code>_to_iso_date</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_write_row"><code>_write_row</code></a>

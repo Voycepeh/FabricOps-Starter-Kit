@@ -95,6 +95,10 @@ _WIDGET_LAYOUT_WIDTH = "600px"
 _TEXTAREA_HEIGHT = "80px"
 # Backward-compatible internal name retained for existing notebook customizations.
 _DATA_STEWARD_FIELDS = DATA_STEWARD_FIELDS
+_WIDGET_CONFIG_DEFAULTS = {
+    "data_steward_widget": {"visible_columns": DATA_STEWARD_VISIBLE_FIELDS, "custom_fields": []},
+    "data_agreement_widget": {"visible_columns": DATA_AGREEMENT_VISIBLE_FIELDS, "custom_fields": []},
+}
 
 
 def _serialize_custom_fields(values: dict[str, Any] | None) -> str:
@@ -151,27 +155,6 @@ def _config_value(config: Any, name: str, default: Any) -> Any:
     return getattr(agreement_config, name, default)
 
 
-def _table_name(config: Any, key: str, default: str) -> str:
-    """Return a configured metadata table name or its lightweight default."""
-    tables = _config_value(config, "metadata_tables", {}) or {}
-    return str(tables.get(key, default))
-
-
-def _steward_role_options(config: Any) -> list[str]:
-    """Return configured Data Steward role dropdown values."""
-    options = _config_value(config, "steward_role_options", DEFAULT_STEWARD_ROLE_OPTIONS)
-    return [str(option).strip() for option in (options or []) if str(option).strip()]
-
-
-def _widget_config(config: Any, kind: str) -> dict[str, Any]:
-    defaults = {
-        "data_steward_widget": {"visible_columns": DATA_STEWARD_VISIBLE_FIELDS, "custom_fields": []},
-        "data_agreement_widget": {"visible_columns": DATA_AGREEMENT_VISIBLE_FIELDS, "custom_fields": []},
-    }
-    configured = dict(_config_value(config, kind, {}) or {})
-    return {**defaults[kind], **configured}
-
-
 def _get_widget_visible_fields(config: Any, kind: str) -> list[str]:
     """Return configured editable columns without backend audit fields.
 
@@ -187,18 +170,13 @@ def _get_widget_visible_fields(config: Any, kind: str) -> list[str]:
     list[str]
         Safe editable fields. Technical audit fields are always excluded.
     """
-    configured = _widget_config(config, kind).get("visible_columns", [])
+    configured = {**_WIDGET_CONFIG_DEFAULTS[kind], **dict(_config_value(config, kind, {}) or {})}.get("visible_columns", [])
     hidden = set(STANDARD_RUNTIME_AUDIT_COLUMNS) | {"custom_fields_json"}
     if kind == "data_steward_widget":
         hidden.update({"steward_id", "is_active"})
     if kind == "data_agreement_widget":
         hidden.update(DATA_AGREEMENT_GENERATED_FIELDS)
     return [field for field in configured if field not in hidden]
-
-
-def _field_label(field: str) -> str:
-    """Return a notebook-friendly label for a configured intake field."""
-    return FIELD_LABELS.get(field, field.replace("_", " ").title())
 
 
 def _widget_common(widgets_module: Any, description: str, *, textarea: bool = False) -> dict[str, Any]:
@@ -211,19 +189,6 @@ def _widget_common(widgets_module: Any, description: str, *, textarea: bool = Fa
             kwargs["height"] = _TEXTAREA_HEIGHT
         common["layout"] = layout_class(**kwargs)
     return common
-
-
-def _option_values(options: list[Any]) -> list[Any]:
-    """Return actual values from plain or ``(label, value)`` dropdown options."""
-    return [option[1] if isinstance(option, tuple) and len(option) == 2 else option for option in options]
-
-
-def _default_dropdown_value(options: list[Any], value: Any = None) -> Any:
-    """Return a valid dropdown value for plain or labeled tuple options."""
-    if not options:
-        return None
-    values = _option_values(options)
-    return value if value in values else values[0]
 
 
 def _html_escape(value: Any) -> str:
@@ -295,11 +260,11 @@ def _render_searchable_selector(
         if empty_label is not None:
             options = [(empty_label, ""), *options]
         selector.options = options
-        values = _option_values(list(options))
+        values = [option[1] if isinstance(option, tuple) and len(option) == 2 else option for option in options]
         if current and current in lookup and current not in values and not str(search.value or "").strip():
             row = lookup[current]
             options = [(str(label_fn(row) or current), current), *options]
-            values = _option_values(list(options))
+            values = [option[1] if isinstance(option, tuple) and len(option) == 2 else option for option in options]
         non_empty_values = [value for value in values if value]
         if current in values and (current or not str(search.value or "").strip()):
             selector.value = current
@@ -372,13 +337,16 @@ def _render_custom_fields(config: list[dict[str, Any]] | dict[str, Any], *, valu
     for definition in definitions:
         key = str(definition["key"])
         field_type = str(definition.get("type", "text")).lower()
-        common = _widget_common(widgets, str(definition.get("label", _field_label(key))), textarea=field_type == "textarea")
+        label = str(definition.get("label", FIELD_LABELS.get(key, key.replace("_", " ").title())))
+        common = _widget_common(widgets, label, textarea=field_type == "textarea")
         value = current.get(key)
         if field_type == "textarea":
             widget = widgets.Textarea(value=str(value or ""), **common)
         elif field_type == "select":
             options = list(definition.get("options", []))
-            widget = widgets.Dropdown(options=options, value=_default_dropdown_value(options, value), **common)
+            option_values = [option[1] if isinstance(option, tuple) and len(option) == 2 else option for option in options]
+            default_value = value if value in option_values else option_values[0] if option_values else None
+            widget = widgets.Dropdown(options=options, value=default_value, **common)
         elif field_type == "multiselect":
             widget = widgets.SelectMultiple(options=list(definition.get("options", [])), value=tuple(value or ()), **common)
         elif field_type == "date":
@@ -459,10 +427,11 @@ def _ensure_metadata_tables(config: Any, env_name: str, *, spark: Any) -> dict[s
     Existing tables with older schemas require a deliberate migration; this
     helper does not destructively overwrite metadata.
     """
+    metadata_tables = _config_value(config, "metadata_tables", {}) or {}
     table_schemas = {
-        _table_name(config, "data_steward", DATA_STEWARD_TABLE): DATA_STEWARD_FIELDS,
-        _table_name(config, "data_agreement", DATA_AGREEMENT_TABLE): DATA_AGREEMENT_FIELDS,
-        _table_name(config, "data_agreement_evidence", DATA_AGREEMENT_EVIDENCE_TABLE): DATA_AGREEMENT_EVIDENCE_FIELDS,
+        str(metadata_tables.get("data_steward", DATA_STEWARD_TABLE)): DATA_STEWARD_FIELDS,
+        str(metadata_tables.get("data_agreement", DATA_AGREEMENT_TABLE)): DATA_AGREEMENT_FIELDS,
+        str(metadata_tables.get("data_agreement_evidence", DATA_AGREEMENT_EVIDENCE_TABLE)): DATA_AGREEMENT_EVIDENCE_FIELDS,
     }
     created = []
     for table_name, fields in table_schemas.items():
@@ -587,8 +556,9 @@ def _list_data_stewards(config: Any, env_name: str, *, spark_session: Any = None
     list[dict[str, Any]]
         Latest steward rows sorted by stable ID.
     """
+    metadata_tables = _config_value(config, "metadata_tables", {}) or {}
     try:
-        rows = read_lakehouse_table(config, env_name, "metadata", _table_name(config, "data_steward", DATA_STEWARD_TABLE), spark_session=spark_session)
+        rows = read_lakehouse_table(config, env_name, "metadata", str(metadata_tables.get("data_steward", DATA_STEWARD_TABLE)), spark_session=spark_session)
     except Exception:
         if missing_ok:
             return []
@@ -641,7 +611,11 @@ def _create_or_update_data_steward(*, spark: Any, config: Any, env_name: str, va
     missing = [field for field in required if not str(row.get(field) or "").strip()]
     if missing:
         raise ValueError("Missing required steward field(s): " + ", ".join(missing))
-    configured_roles = set(_steward_role_options(config))
+    configured_roles = {
+        str(option).strip()
+        for option in (_config_value(config, "steward_role_options", DEFAULT_STEWARD_ROLE_OPTIONS) or [])
+        if str(option).strip()
+    }
     legacy_role = str(values.get("_legacy_steward_role") or "").strip()
     selected_steward_id = str(values.get("steward_id") or "").strip()
     if str(row["steward_role"]).strip() not in configured_roles and not (selected_steward_id and legacy_role and str(row["steward_role"]).strip() == legacy_role):
@@ -658,7 +632,8 @@ def _create_or_update_data_steward(*, spark: Any, config: Any, env_name: str, va
         row["is_active"] = "true" if _active_steward({**row, "is_active": row.get("is_active", "")}) else "false"
     row["custom_fields_json"] = _serialize_custom_fields(custom_fields)
     row.update(_build_runtime_audit_fields(config=config, env=env_name, committed_by=committed_by, committed_at=committed_at, runtime_context=runtime_context))
-    _write_row(spark=spark, config=config, env_name=env_name, table=_table_name(config, "data_steward", DATA_STEWARD_TABLE), row=row)
+    metadata_tables = _config_value(config, "metadata_tables", {}) or {}
+    _write_row(spark=spark, config=config, env_name=env_name, table=str(metadata_tables.get("data_steward", DATA_STEWARD_TABLE)), row=row)
     return row
 
 
@@ -698,8 +673,9 @@ def _latest_agreement_versions(rows: Any) -> list[dict[str, Any]]:
 
 def _list_all_data_agreement_rows(config: Any, env_name: str, *, spark_session: Any = None, missing_ok: bool = False) -> list[dict[str, Any]]:
     """List all append-only agreement rows from the metadata lakehouse."""
+    metadata_tables = _config_value(config, "metadata_tables", {}) or {}
     try:
-        rows = read_lakehouse_table(config, env_name, "metadata", _table_name(config, "data_agreement", DATA_AGREEMENT_TABLE), spark_session=spark_session)
+        rows = read_lakehouse_table(config, env_name, "metadata", str(metadata_tables.get("data_agreement", DATA_AGREEMENT_TABLE)), spark_session=spark_session)
     except Exception:
         if missing_ok:
             return []
@@ -776,37 +752,9 @@ def _create_or_update_data_agreement(*, spark: Any, config: Any, env_name: str, 
     if any(str(item.get("agreement_id") or "").strip() == row["agreement_id"] and str(item.get("contract_version") or "").strip() == row["contract_version"] for item in existing_rows):
         raise ValueError(f"Agreement {row['agreement_id']} version {row['contract_version']} already exists. Select the existing agreement to create the next version, or create a new agreement.")
     row.update(_build_runtime_audit_fields(config=config, env=env_name, committed_by=committed_by, committed_at=committed_at, runtime_context=runtime_context))
-    _write_row(spark=spark, config=config, env_name=env_name, table=_table_name(config, "data_agreement", DATA_AGREEMENT_TABLE), row=row)
+    metadata_tables = _config_value(config, "metadata_tables", {}) or {}
+    _write_row(spark=spark, config=config, env_name=env_name, table=str(metadata_tables.get("data_agreement", DATA_AGREEMENT_TABLE)), row=row)
     return row
-
-
-def _parse_evidence_file_paths(value: Any) -> list[str]:
-    """Parse newline-separated lakehouse ``Files/`` evidence paths."""
-    paths: list[str] = []
-    for raw_line in str(value or "").splitlines():
-        line = raw_line.strip()
-        if not line:
-            continue
-        line = re.sub(r"^(?:[-*]\s*|\d+\.\s*)", "", line).strip()
-        if line:
-            paths.append(line)
-    return paths
-
-
-def _validate_evidence_file_path(path: str) -> str:
-    """Validate one manually supplied evidence file path and return its file name."""
-    if not path:
-        raise ValueError("Evidence file path is required.")
-    if not path.startswith("Files/"):
-        raise ValueError(f"Evidence file path must start with Files/: {path}")
-    file_name = path.replace("\\", "/").rsplit("/", 1)[-1].strip()
-    if not file_name:
-        raise ValueError(f"Evidence file path must include a file name: {path}")
-    suffix = "." + file_name.rsplit(".", 1)[-1].lower() if "." in file_name else ""
-    if suffix not in AGREEMENT_EVIDENCE_ALLOWED_EXTENSIONS:
-        allowed = ", ".join(AGREEMENT_EVIDENCE_ALLOWED_EXTENSIONS)
-        raise ValueError(f"Unsupported evidence file type for {path}. Allowed types: {allowed}.")
-    return file_name
 
 
 def _get_notebookutils() -> Any:
@@ -821,59 +769,57 @@ def _get_notebookutils() -> Any:
     return None
 
 
-def _notebookutils_fs_exists(path: str) -> bool | None:
-    """Return file existence when notebookutils.fs.exists is available."""
+def _prepare_evidence_file_references(paths_value: Any) -> list[dict[str, str]]:
+    """Parse and validate manually supplied evidence file paths before writes."""
     utils = _get_notebookutils()
     fs = getattr(utils, "fs", None) if utils is not None else None
     exists = getattr(fs, "exists", None) if fs is not None else None
-    if not callable(exists):
-        return None
-    return bool(exists(path))
+    list_dir = getattr(fs, "ls", None) if fs is not None else None
 
-
-def _notebookutils_file_size(path: str) -> str:
-    """Return file size from notebookutils.fs.ls(parent) when available."""
-    utils = _get_notebookutils()
-    fs = getattr(utils, "fs", None) if utils is not None else None
-    ls = getattr(fs, "ls", None) if fs is not None else None
-    if not callable(ls):
-        return ""
-    normalized = path.rstrip("/")
-    parent = normalized.rsplit("/", 1)[0] if "/" in normalized else ""
-    target_name = normalized.replace("\\", "/").rsplit("/", 1)[-1].strip()
-    try:
-        items = ls(parent)
-    except Exception:
-        return ""
-    for item in items:
-        item_path = str(getattr(item, "path", "") or getattr(item, "name", "") or "")
-        item_name = item_path.rstrip("/").rsplit("/", 1)[-1]
-        if item_path.rstrip("/") == normalized or item_name == target_name:
-            size = getattr(item, "size", "")
-            return "" if size is None else str(size)
-    return ""
-
-
-def _prepare_evidence_file_references(paths_value: Any) -> list[dict[str, str]]:
-    """Validate manually supplied evidence file paths before metadata writes."""
-    paths = _parse_evidence_file_paths(paths_value)
-    if not paths:
-        raise ValueError("Paste at least one evidence file path before saving.")
     references: list[dict[str, str]] = []
-    for path in paths:
-        file_name = _validate_evidence_file_path(path)
-        exists = _notebookutils_fs_exists(path)
-        if exists is False:
+    for raw_line in str(paths_value or "").splitlines():
+        path = re.sub(r"^(?:[-*]\s*|\d+\.\s*)", "", raw_line.strip()).strip()
+        if not path:
+            continue
+        if not path.startswith("Files/"):
+            raise ValueError(f"Evidence file path must start with Files/: {path}")
+
+        file_name = path.replace("\\", "/").rsplit("/", 1)[-1].strip()
+        if not file_name:
+            raise ValueError(f"Evidence file path must include a file name: {path}")
+        suffix = "." + file_name.rsplit(".", 1)[-1].lower() if "." in file_name else ""
+        if suffix not in AGREEMENT_EVIDENCE_ALLOWED_EXTENSIONS:
+            allowed = ", ".join(AGREEMENT_EVIDENCE_ALLOWED_EXTENSIONS)
+            raise ValueError(f"Unsupported evidence file type for {path}. Allowed types: {allowed}.")
+        if callable(exists) and not bool(exists(path)):
             raise ValueError(f"Evidence file path does not exist: {path}")
-        suffix = "." + file_name.rsplit(".", 1)[-1].lower()
+
+        file_size = ""
+        if callable(list_dir):
+            normalized = path.rstrip("/")
+            parent = normalized.rsplit("/", 1)[0] if "/" in normalized else ""
+            try:
+                items = list_dir(parent)
+            except Exception:
+                items = []
+            for item in items:
+                item_path = str(getattr(item, "path", "") or getattr(item, "name", "") or "")
+                item_name = item_path.rstrip("/").rsplit("/", 1)[-1]
+                if item_path.rstrip("/") == normalized or item_name == file_name:
+                    size = getattr(item, "size", "")
+                    file_size = "" if size is None else str(size)
+                    break
+
         references.append({
             "file_name": file_name,
             "file_path": path,
             "mime_type": AGREEMENT_EVIDENCE_MIME_TYPES.get(suffix, ""),
-            "file_size": _notebookutils_file_size(path),
+            "file_size": file_size,
         })
-    return references
 
+    if not references:
+        raise ValueError("Paste at least one evidence file path before saving.")
+    return references
 
 def _save_agreement_evidence_records(*, spark: Any, config: Any, env_name: str, agreement_id: str, contract_version: str, evidence_type: str, evidence_file_paths: Any, committed_by: str | None = None, committed_at: str | None = None, runtime_context: dict[str, Any] | None = None) -> list[dict[str, Any]]:
     """Append manually uploaded evidence file-reference metadata rows."""
@@ -889,6 +835,7 @@ def _save_agreement_evidence_records(*, spark: Any, config: Any, env_name: str, 
     uploaded_at = audit.get("_committed_at") or datetime.now(timezone.utc).isoformat()
     uploaded_by = audit.get("_committed_by") or ""
 
+    metadata_tables = _config_value(config, "metadata_tables", {}) or {}
     rows: list[dict[str, Any]] = []
     for reference in file_references:
         row = {
@@ -903,7 +850,7 @@ def _save_agreement_evidence_records(*, spark: Any, config: Any, env_name: str, 
             "uploaded_by": uploaded_by,
             **audit,
         }
-        _write_row(spark=spark, config=config, env_name=env_name, table=_table_name(config, "data_agreement_evidence", DATA_AGREEMENT_EVIDENCE_TABLE), row=row)
+        _write_row(spark=spark, config=config, env_name=env_name, table=str(metadata_tables.get("data_agreement_evidence", DATA_AGREEMENT_EVIDENCE_TABLE)), row=row)
         rows.append(row)
     return rows
 
@@ -1153,34 +1100,13 @@ def get_selected_agreement() -> dict[str, Any]:
     return dict(_SELECTED_AGREEMENT)
 
 
-def _set_widget_value(widget: Any, value: Any) -> None:
-    """Assign a stored value using the widget's expected runtime type."""
-    select_value = getattr(widget, "select_value", None)
-    if callable(select_value):
-        select_value(str(value or ""))
-        return
-    current = getattr(widget, "value", None)
-    if isinstance(current, tuple):
-        value = tuple(value or ())
-    elif isinstance(current, bool):
-        value = _to_bool(value)
-    else:
-        options = getattr(widget, "options", None)
-        if options not in (None, ()):
-            value = _default_dropdown_value(list(options), value)
-    widget.value = value
-
-
-def _widget_field_value(field: str, value: Any) -> Any:
-    """Convert only date fields before passing widget values to persistence."""
-    return _to_iso_date(value) if field in {"effective_from", "effective_to", "start_date", "expiry_date"} else value
-
-
 def _standard_widget(field: str, value: Any = "", *, options: list[Any] | None = None) -> Any:
     widgets = _require_ipywidgets()
-    description = _field_label(field)
+    description = FIELD_LABELS.get(field, field.replace("_", " ").title())
     if options is not None:
-        return widgets.Dropdown(options=options, value=_default_dropdown_value(options, value), **_widget_common(widgets, description))
+        option_values = [option[1] if isinstance(option, tuple) and len(option) == 2 else option for option in options]
+        default_value = value if value in option_values else option_values[0] if option_values else None
+        return widgets.Dropdown(options=options, value=default_value, **_widget_common(widgets, description))
     if field in {"effective_from", "effective_to", "start_date", "expiry_date"}:
         return widgets.DatePicker(value=date.fromisoformat(str(value)[:10]) if value else None, **_widget_common(widgets, description))
     if field == "is_active":
@@ -1209,7 +1135,7 @@ def _render_maintenance_widget(*, spark: Any, config: Any, env_name: str, kind: 
 
     is_steward = kind == "data_steward_widget"
     prompt = "Create new steward" if is_steward else "Create new agreement"
-    widget_config = _widget_config(config, kind)
+    widget_config = {**_WIDGET_CONFIG_DEFAULTS[kind], **dict(_config_value(config, kind, {}) or {})}
     fields = _get_widget_visible_fields(config, kind)
     after_save_callbacks: list[Any] = []
     row_lookup: dict[str, dict[str, Any]] = {}
@@ -1256,7 +1182,8 @@ def _render_maintenance_widget(*, spark: Any, config: Any, env_name: str, kind: 
     selected = selected_selector["selector"]
     identity_context = None if is_steward else widgets.HTML(value=_agreement_identity_text(None))
 
-    steward_role_options = [(role, role) for role in _steward_role_options(config)] if is_steward else None
+    roles = [str(option).strip() for option in (_config_value(config, "steward_role_options", DEFAULT_STEWARD_ROLE_OPTIONS) or []) if str(option).strip()]
+    steward_role_options = [(role, role) for role in roles] if is_steward else None
     form = {}
     steward_field_selector = None
     for field in fields:
@@ -1264,7 +1191,7 @@ def _render_maintenance_widget(*, spark: Any, config: Any, env_name: str, kind: 
             steward_rows = _list_data_stewards(config, env_name, spark_session=spark, active_only=True, missing_ok=True)
             steward_field_selector = _render_searchable_selector(
                 widgets=widgets,
-                label=_field_label(field),
+                label=FIELD_LABELS.get(field, field.replace("_", " ").title()),
                 rows=steward_rows,
                 label_fn=_steward_label,
                 value_fn=lambda row: str(row.get("steward_id") or "").strip(),
@@ -1297,21 +1224,36 @@ def _render_maintenance_widget(*, spark: Any, config: Any, env_name: str, kind: 
     save = widgets.Button(description="Save")
     output = widgets.Output()
 
+    def _apply_widget_value(widget: Any, value: Any) -> None:
+        select_value = getattr(widget, "select_value", None)
+        if callable(select_value):
+            select_value(str(value or ""))
+            return
+        current = getattr(widget, "value", None)
+        if isinstance(current, tuple):
+            widget.value = tuple(value or ())
+        elif isinstance(current, bool):
+            widget.value = _to_bool(value)
+        else:
+            options = list(getattr(widget, "options", []) or [])
+            option_values = [option[1] if isinstance(option, tuple) and len(option) == 2 else option for option in options]
+            widget.value = value if not option_values or value in option_values else option_values[0]
+
     def _populate(change: dict[str, Any]) -> None:
         row_id = change.get("new")
         row = row_lookup.get(row_id, {}) if row_id else {}
         for field, widget in form.items():
             value = row.get(field, "")
             if field == "steward_role" and value:
-                option_values = _option_values(list(getattr(widget, "options", [])))
+                option_values = [option[1] if isinstance(option, tuple) and len(option) == 2 else option for option in list(getattr(widget, "options", []))]
                 if value not in option_values:
                     widget.options = [*list(getattr(widget, "options", [])), (str(value), str(value))]
             if field in {"effective_from", "effective_to", "start_date", "expiry_date"}:
                 value = date.fromisoformat(str(value)[:10]) if value else None
-            _set_widget_value(widget, value)
+            _apply_widget_value(widget, value)
         stored = _deserialize_custom_fields(row.get("custom_fields_json", ""))
         for key, widget in custom.items():
-            _set_widget_value(widget, stored.get(key, widget.value))
+            _apply_widget_value(widget, stored.get(key, widget.value))
         if identity_context is not None:
             identity_context.value = _agreement_identity_text(row if row else None)
 
@@ -1333,7 +1275,10 @@ def _render_maintenance_widget(*, spark: Any, config: Any, env_name: str, kind: 
         _clear_output()
         with output:
             try:
-                values = {key: _widget_field_value(key, widget.value) for key, widget in form.items()}
+                values = {
+                    key: _to_iso_date(widget.value) if key in {"effective_from", "effective_to", "start_date", "expiry_date"} else widget.value
+                    for key, widget in form.items()
+                }
                 extras = _collect_custom_fields(widget_config, custom)
                 if is_steward:
                     if selected.value:

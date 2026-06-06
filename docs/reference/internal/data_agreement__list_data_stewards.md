@@ -26,6 +26,6 @@ No summary available.
 
 ## Outbound references
 - <a href="../internal/data_agreement/_active_steward/"><code>fabricops_kit.data_agreement._active_steward</code></a>
+- <a href="../internal/data_agreement/_config_value/"><code>fabricops_kit.data_agreement._config_value</code></a>
 - <a href="../internal/data_agreement/_latest_by_key/"><code>fabricops_kit.data_agreement._latest_by_key</code></a>
-- <a href="../internal/data_agreement/_table_name/"><code>fabricops_kit.data_agreement._table_name</code></a>
 - <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a>

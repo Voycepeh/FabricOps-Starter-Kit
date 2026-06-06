@@ -57,7 +57,7 @@ def test_agreement_validation_and_evidence_path_parsing_fail_before_writes(monke
     with pytest.raises(ValueError, match="recipient"):
         agreement._create_or_update_data_agreement(spark=object(), config=agreement_config(), env_name="dev", values=agreement_row(recipient=""))
 
-    paths = agreement._parse_evidence_file_paths("- Files/fabricops/evidence/a.pdf\n* Files/fabricops/evidence/b.csv\n")
-    assert paths == ["Files/fabricops/evidence/a.pdf", "Files/fabricops/evidence/b.csv"]
+    references = agreement._prepare_evidence_file_references("- Files/fabricops/evidence/a.pdf\n* Files/fabricops/evidence/b.docx\n")
+    assert [item["file_name"] for item in references] == ["a.pdf", "b.docx"]
     with pytest.raises(ValueError, match="Files/"):
         agreement._prepare_evidence_file_references("Files/fabricops/evidence/a.pdf\n/tmp/local.pdf")
