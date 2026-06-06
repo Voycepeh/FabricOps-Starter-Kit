@@ -1,7 +1,7 @@
 # UnsupportedDataFrameEngineError
 
 **Module:** `drift`  
-**Classification:** Internal helper
+**Classification:** Internal
 
 ## Purpose
 
@@ -12,7 +12,7 @@ No summary available.
 - Fully qualified function name: `fabricops_kit.drift.UnsupportedDataFrameEngineError`
 - Short name: `UnsupportedDataFrameEngineError`
 - Module: `drift`
-- Classification: Internal helper
+- Classification: Internal
 - Related module: `drift`
 - Source file path: `src/fabricops_kit/drift.py`
 - Source reference: <a href="../../api/modules/drift/#UnsupportedDataFrameEngineError">Module source anchor</a>

@@ -1,7 +1,7 @@
 # _categorical_distance
 
 **Module:** `drift`  
-**Classification:** Internal helper
+**Classification:** Internal
 
 ## Purpose
 
@@ -12,7 +12,7 @@ No summary available.
 - Fully qualified function name: `fabricops_kit.drift._categorical_distance`
 - Short name: `_categorical_distance`
 - Module: `drift`
-- Classification: Internal helper
+- Classification: Internal
 - Related module: `drift`
 - Source file path: `src/fabricops_kit/drift.py`
 - Source reference: <a href="../../api/modules/drift/#_categorical_distance">Module source anchor</a>

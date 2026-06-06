@@ -1,7 +1,7 @@
 # _build_distribution_summaries
 
 **Module:** `data_profiling`  
-**Classification:** Internal helper
+**Classification:** Internal
 
 ## Purpose
 
@@ -12,7 +12,7 @@ No summary available.
 - Fully qualified function name: `fabricops_kit.data_profiling._build_distribution_summaries`
 - Short name: `_build_distribution_summaries`
 - Module: `data_profiling`
-- Classification: Internal helper
+- Classification: Internal
 - Related module: `data_profiling`
 - Source file path: `src/fabricops_kit/data_profiling.py`
 - Source reference: <a href="../../api/modules/data_profiling/#_build_distribution_summaries">Module source anchor</a>

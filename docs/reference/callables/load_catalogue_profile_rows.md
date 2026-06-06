@@ -1,7 +1,7 @@
 # load_catalogue_profile_rows
 
 **Module:** `governance_review`  
-**Classification:** Essential
+**Classification:** Callable
 
 ## Purpose
 
@@ -12,7 +12,7 @@ Load column profile rows for the selected catalogue table.
 - Fully qualified function name: `fabricops_kit.governance_review.load_catalogue_profile_rows`
 - Short name: `load_catalogue_profile_rows`
 - Module: `governance_review`
-- Classification: Essential
+- Classification: Callable
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
 - Source reference: <a href="../../api/modules/governance_review/#load_catalogue_profile_rows">Module source anchor</a>

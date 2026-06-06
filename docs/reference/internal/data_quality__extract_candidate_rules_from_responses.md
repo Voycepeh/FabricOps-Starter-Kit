@@ -1,7 +1,7 @@
 # _extract_candidate_rules_from_responses
 
 **Module:** `data_quality`  
-**Classification:** Internal helper
+**Classification:** Internal
 
 ## Purpose
 
@@ -12,7 +12,7 @@ No summary available.
 - Fully qualified function name: `fabricops_kit.data_quality._extract_candidate_rules_from_responses`
 - Short name: `_extract_candidate_rules_from_responses`
 - Module: `data_quality`
-- Classification: Internal helper
+- Classification: Internal
 - Related module: `data_quality`
 - Source file path: `src/fabricops_kit/data_quality.py`
 - Source reference: <a href="../../api/modules/data_quality/#_extract_candidate_rules_from_responses">Module source anchor</a>

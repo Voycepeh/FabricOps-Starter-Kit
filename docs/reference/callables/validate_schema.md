@@ -1,7 +1,7 @@
 # validate_schema
 
 **Module:** `drift`  
-**Classification:** Essential
+**Classification:** Callable
 
 ## Purpose
 
@@ -12,7 +12,7 @@ Validate a DataFrame schema using strict, allow-new-columns, or monitor-only pre
 - Fully qualified function name: `fabricops_kit.drift.validate_schema`
 - Short name: `validate_schema`
 - Module: `drift`
-- Classification: Essential
+- Classification: Callable
 - Related module: `drift`
 - Source file path: `src/fabricops_kit/drift.py`
 - Source reference: <a href="../../api/modules/drift/#validate_schema">Module source anchor</a>

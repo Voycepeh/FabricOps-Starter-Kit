@@ -1,7 +1,7 @@
 # _save_agreement_evidence_records
 
 **Module:** `data_agreement`  
-**Classification:** Internal helper
+**Classification:** Internal
 
 ## Purpose
 
@@ -12,7 +12,7 @@ No summary available.
 - Fully qualified function name: `fabricops_kit.data_agreement._save_agreement_evidence_records`
 - Short name: `_save_agreement_evidence_records`
 - Module: `data_agreement`
-- Classification: Internal helper
+- Classification: Internal
 - Related module: `data_agreement`
 - Source file path: `src/fabricops_kit/data_agreement.py`
 - Source reference: <a href="../../api/modules/data_agreement/#_save_agreement_evidence_records">Module source anchor</a>

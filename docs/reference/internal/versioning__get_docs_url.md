@@ -1,7 +1,7 @@
 # _get_docs_url
 
 **Module:** `versioning`  
-**Classification:** Internal helper
+**Classification:** Internal
 
 ## Purpose
 
@@ -12,7 +12,7 @@ No summary available.
 - Fully qualified function name: `fabricops_kit.versioning._get_docs_url`
 - Short name: `_get_docs_url`
 - Module: `versioning`
-- Classification: Internal helper
+- Classification: Internal
 - Related module: `versioning`
 - Source file path: `src/fabricops_kit/versioning.py`
 - Source reference: <a href="../../api/modules/versioning/#_get_docs_url">Module source anchor</a>

@@ -1,7 +1,7 @@
 # _to_jsonable
 
 **Module:** `_utils`  
-**Classification:** Internal helper
+**Classification:** Internal
 
 ## Purpose
 
@@ -12,7 +12,7 @@ No summary available.
 - Fully qualified function name: `fabricops_kit._utils._to_jsonable`
 - Short name: `_to_jsonable`
 - Module: `_utils`
-- Classification: Internal helper
+- Classification: Internal
 - Related module: `_utils`
 - Source file path: `src/fabricops_kit/_utils.py`
 - Source reference: <a href="../../api/modules/_utils/#_to_jsonable">Module source anchor</a>

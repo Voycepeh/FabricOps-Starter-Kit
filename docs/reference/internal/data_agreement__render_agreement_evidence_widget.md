@@ -1,7 +1,7 @@
 # _render_agreement_evidence_widget
 
 **Module:** `data_agreement`  
-**Classification:** Internal helper
+**Classification:** Internal
 
 ## Purpose
 
@@ -12,7 +12,7 @@ No summary available.
 - Fully qualified function name: `fabricops_kit.data_agreement._render_agreement_evidence_widget`
 - Short name: `_render_agreement_evidence_widget`
 - Module: `data_agreement`
-- Classification: Internal helper
+- Classification: Internal
 - Related module: `data_agreement`
 - Source file path: `src/fabricops_kit/data_agreement.py`
 - Source reference: <a href="../../api/modules/data_agreement/#_render_agreement_evidence_widget">Module source anchor</a>

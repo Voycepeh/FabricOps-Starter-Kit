@@ -1,7 +1,7 @@
 # render_handover_markdown
 
 **Module:** `handover`  
-**Classification:** Essential
+**Classification:** Callable
 
 ## Purpose
 
@@ -12,7 +12,7 @@ Render handover evidence as notebook-friendly Markdown.
 - Fully qualified function name: `fabricops_kit.handover.render_handover_markdown`
 - Short name: `render_handover_markdown`
 - Module: `handover`
-- Classification: Essential
+- Classification: Callable
 - Related module: `handover`
 - Source file path: `src/fabricops_kit/handover.py`
 - Source reference: <a href="../../api/modules/handover/#render_handover_markdown">Module source anchor</a>

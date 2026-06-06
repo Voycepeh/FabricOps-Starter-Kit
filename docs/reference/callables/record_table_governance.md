@@ -1,7 +1,7 @@
 # record_table_governance
 
 **Module:** `governance_review`  
-**Classification:** Essential
+**Classification:** Callable
 
 ## Purpose
 
@@ -12,7 +12,7 @@ Persist approved table-governance context, DQ-rule, and classification evidence 
 - Fully qualified function name: `fabricops_kit.governance_review.record_table_governance`
 - Short name: `record_table_governance`
 - Module: `governance_review`
-- Classification: Essential
+- Classification: Callable
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
 - Source reference: <a href="../../api/modules/governance_review/#record_table_governance">Module source anchor</a>

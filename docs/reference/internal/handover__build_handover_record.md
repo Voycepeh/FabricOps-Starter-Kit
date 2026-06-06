@@ -1,7 +1,7 @@
 # _build_handover_record
 
 **Module:** `handover`  
-**Classification:** Internal helper
+**Classification:** Internal
 
 ## Purpose
 
@@ -12,7 +12,7 @@ No summary available.
 - Fully qualified function name: `fabricops_kit.handover._build_handover_record`
 - Short name: `_build_handover_record`
 - Module: `handover`
-- Classification: Internal helper
+- Classification: Internal
 - Related module: `handover`
 - Source file path: `src/fabricops_kit/handover.py`
 - Source reference: <a href="../../api/modules/handover/#_build_handover_record">Module source anchor</a>

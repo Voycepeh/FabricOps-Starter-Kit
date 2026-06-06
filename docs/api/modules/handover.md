@@ -77,14 +77,14 @@ Owns final handover assembly and notebook-friendly rendering/export.
   <tbody>
     <tr>
       <td><a href="../../reference/build_handover/"><code>build_handover</code></a></td>
-      <td>Essential</td>
+      <td>Callable</td>
       <td>function</td>
       <td>Assemble final handover evidence for reviewed notebook work.</td>
       <td>—</td>
     </tr>
     <tr>
       <td><a href="../../reference/render_handover_markdown/"><code>render_handover_markdown</code></a></td>
-      <td>Essential</td>
+      <td>Callable</td>
       <td>function</td>
       <td>Render handover evidence as notebook-friendly Markdown.</td>
       <td><a href="../../reference/internal/handover/_status_of/"><code>_status_of</code></a> (internal)</td>

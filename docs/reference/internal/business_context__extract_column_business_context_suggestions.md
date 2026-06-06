@@ -1,7 +1,7 @@
 # _extract_column_business_context_suggestions
 
 **Module:** `business_context`  
-**Classification:** Internal helper
+**Classification:** Internal
 
 ## Purpose
 
@@ -12,7 +12,7 @@ No summary available.
 - Fully qualified function name: `fabricops_kit.business_context._extract_column_business_context_suggestions`
 - Short name: `_extract_column_business_context_suggestions`
 - Module: `business_context`
-- Classification: Internal helper
+- Classification: Internal
 - Related module: `business_context`
 - Source file path: `src/fabricops_kit/business_context.py`
 - Source reference: <a href="../../api/modules/business_context/#_extract_column_business_context_suggestions">Module source anchor</a>
