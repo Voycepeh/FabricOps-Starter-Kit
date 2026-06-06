@@ -1,6 +1,8 @@
 ## FabricOps Starter Kit
 
-FabricOps Starter Kit is a lightweight Microsoft Fabric notebook starter kit for governed, quality checked pipelines.
+Lightweight, notebook centric, plug and play starter kit for Microsoft Fabric.
+
+FabricOps Starter Kit helps teams quickly bootstrap governed Fabric notebook delivery using reusable templates and a lightweight helper wheel.
 
 It supports a metadata backed workflow from agreement, to pipeline, to governance review, then back into pipeline enforcement.
 
@@ -34,3 +36,6 @@ The approved data quality rules, sensitivity rules, and classification rules are
 ## Recommended path
 
 New users should read **How FabricOps Works**, then the two **Workflow Guides**, then use **Quick Start** to test the notebook flow in Fabric.
+
+
+-
