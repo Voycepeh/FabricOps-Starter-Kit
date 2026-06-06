@@ -14,7 +14,7 @@ def test_agreement_metadata_schemas_and_widget_fields_keep_only_supported_busine
     steward_fields = agreement._get_widget_visible_fields(config, "data_steward_widget")
     agreement_fields = agreement._get_widget_visible_fields(config, "data_agreement_widget")
 
-    assert set(agreement._get_data_agreement_evidence_schema()).issuperset({"agreement_id", "contract_version", "file_path"})
+    assert set(agreement.DATA_AGREEMENT_EVIDENCE_FIELDS).issuperset({"agreement_id", "contract_version", "file_path"})
     assert {"recipient", "approved_usage_internal", "approved_usage_external", "approved_usage_research"}.issubset(agreement_fields)
     assert "approved_usage" not in agreement_fields
     assert "custom_fields_json" not in steward_fields + agreement_fields
@@ -22,7 +22,7 @@ def test_agreement_metadata_schemas_and_widget_fields_keep_only_supported_busine
 
 
 def test_steward_and_agreement_create_update_write_append_only_metadata(monkeypatch):
-    audit_columns = agreement._get_standard_runtime_audit_columns()
+    audit_columns = agreement.STANDARD_RUNTIME_AUDIT_COLUMNS
     writes = []
 
     monkeypatch.setattr(agreement, "_build_runtime_audit_fields", lambda **kwargs: {field: f"audit:{field}" for field in audit_columns})
