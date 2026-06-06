@@ -84,6 +84,44 @@
   vertical-align: top;
 }
 
+
+.template-function-group {
+  margin: 0.85rem 0 1rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.7rem;
+  background: color-mix(in srgb, var(--md-code-bg-color) 42%, transparent);
+}
+
+.template-function-group h2 {
+  margin: 0 0 0.18rem;
+  font-size: 1.05rem;
+  line-height: 1.3;
+}
+
+.template-function-purpose {
+  margin: 0 0 0.55rem;
+  color: var(--md-default-fg-color--light);
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.template-function-row {
+  display: grid;
+  grid-template-columns: minmax(7rem, 11rem) 1fr;
+  gap: 0.35rem 0.7rem;
+  align-items: start;
+}
+
+.template-function-segment {
+  color: var(--md-default-fg-color--light);
+  font-size: 0.76rem;
+  font-weight: 700;
+  line-height: 1.8;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
 .function-chip-wrap {
   display: flex;
   flex-wrap: wrap;
@@ -369,6 +407,46 @@
     text-transform: uppercase;
     letter-spacing: 0.02em;
     margin-bottom: 0.1rem;
+  }
+
+
+  .template-function-group {
+    margin: 0.65rem 0 0.8rem;
+    padding: 0.55rem 0.62rem;
+    border-radius: 0.55rem;
+  }
+
+  .template-function-group h2 {
+    font-size: 0.96rem;
+  }
+
+  .template-function-purpose {
+    margin-bottom: 0.42rem;
+    font-size: 0.8rem;
+  }
+
+  .template-function-row {
+    display: block;
+  }
+
+  .template-function-segment {
+    display: block;
+    margin-bottom: 0.18rem;
+    line-height: 1.35;
+  }
+
+  .function-chip-wrap {
+    gap: 0.16rem;
+  }
+
+  .function-chip {
+    margin: 0.1rem 0.12rem 0.1rem 0;
+    padding: 0.08rem 0.34rem;
+    font-size: 0.78em;
+    line-height: 1.45;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: normal;
   }
 
   .reference-catalogue-item {
