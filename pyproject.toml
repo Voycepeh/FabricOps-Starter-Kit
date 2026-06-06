@@ -55,6 +55,7 @@ fabricops_kit = ["schemas/*.json"]
 pythonpath = ["src", "."]
 markers = [
   "unit: fast tests that do not require Spark or Fabric runtime behaviour",
+  "integration: small mocked integration tests for storage, metadata, and platform boundaries",
   "spark: tests that require a local Spark session",
   "fabric: tests that simulate Microsoft Fabric runtime behaviour",
   "contract: package, schema, documentation, and public API consistency tests",
