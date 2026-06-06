@@ -1027,8 +1027,9 @@ def main() -> None:
                 ])
                 helper_text = ", ".join(f"`{h}`" for h in direct_helpers) if direct_helpers else "—"
                 override = usage_overrides.get(s.name, {})
+                callable_link = f"[`{s.name}`](./callables/{s.name}.md)"
                 rows.append([
-                    f"`{s.name}`",
+                    callable_link,
                     override.get("role", "Callable orchestration wrapper"),
                     override.get("purpose", s.purpose or s.summary or "—"),
                     helper_text,
