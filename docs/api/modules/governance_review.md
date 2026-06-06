@@ -233,7 +233,7 @@ Owns table-scoped governance review, approved metadata recording, and migrated i
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/governance_review/_draft_business_context/"><code>_draft_business_context</code></a></td>
+      <td><a href="../../reference/internal/governance_review/_draft_column_context/"><code>_draft_column_context</code></a></td>
       <td>—</td>
     </tr>
     <tr>
@@ -253,7 +253,7 @@ Owns table-scoped governance review, approved metadata recording, and migrated i
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/governance_review/_extract_column_business_context_suggestions/"><code>_extract_column_business_context_suggestions</code></a></td>
+      <td><a href="../../reference/internal/governance_review/_extract_column_context_suggestions/"><code>_extract_column_context_suggestions</code></a></td>
       <td>—</td>
     </tr>
     <tr>
@@ -273,7 +273,7 @@ Owns table-scoped governance review, approved metadata recording, and migrated i
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/governance_review/_get_reviewed_business_context_rows/"><code>_get_reviewed_business_context_rows</code></a></td>
+      <td><a href="../../reference/internal/governance_review/_get_reviewed_column_context_rows/"><code>_get_reviewed_column_context_rows</code></a></td>
       <td>—</td>
     </tr>
     <tr>
@@ -317,7 +317,7 @@ Owns table-scoped governance review, approved metadata recording, and migrated i
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/governance_review/_prepare_business_context_profile_input/"><code>_prepare_business_context_profile_input</code></a></td>
+      <td><a href="../../reference/internal/governance_review/_prepare_column_context_profile_input/"><code>_prepare_column_context_profile_input</code></a></td>
       <td>—</td>
     </tr>
     <tr>
@@ -435,7 +435,7 @@ Owns table-scoped governance review, approved metadata recording, and migrated i
 <a class="reference-chip" href="#_dq_rule_sort_key"><code>_dq_rule_sort_key</code></a>
 </li>
 <li>
-<a class="reference-chip" href="#_draft_business_context"><code>_draft_business_context</code></a>
+<a class="reference-chip" href="#_draft_column_context"><code>_draft_column_context</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_draft_dq_rules"><code>_draft_dq_rules</code></a>
@@ -456,7 +456,7 @@ Owns table-scoped governance review, approved metadata recording, and migrated i
 <a class="reference-chip" href="#_extract_dq_rules"><code>_extract_dq_rules</code></a>, <a class="reference-chip" href="#_parse_dq_rules_dict_from_text"><code>_parse_dq_rules_dict_from_text</code></a>
 </li>
 <li>
-<a class="reference-chip" href="#_extract_column_business_context_suggestions"><code>_extract_column_business_context_suggestions</code></a>
+<a class="reference-chip" href="#_extract_column_context_suggestions"><code>_extract_column_context_suggestions</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_coerce_rows"><code>_coerce_rows</code></a>, <a class="reference-chip" href="#_parse_ai_dict_response"><code>_parse_ai_dict_response</code></a>
 </li>
@@ -481,7 +481,7 @@ Owns table-scoped governance review, approved metadata recording, and migrated i
 <a class="reference-chip" href="#_schema"><code>_schema</code></a>, <a class="reference-chip" href="#_spark_types"><code>_spark_types</code></a>
 </li>
 <li>
-<a class="reference-chip" href="#_get_reviewed_business_context_rows"><code>_get_reviewed_business_context_rows</code></a>
+<a class="reference-chip" href="#_get_reviewed_column_context_rows"><code>_get_reviewed_column_context_rows</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_is_success"><code>_is_success</code></a>
@@ -524,7 +524,7 @@ Owns table-scoped governance review, approved metadata recording, and migrated i
 <a class="reference-chip" href="#_parse_jsonish"><code>_parse_jsonish</code></a>
 </li>
 <li>
-<a class="reference-chip" href="#_prepare_business_context_profile_input"><code>_prepare_business_context_profile_input</code></a>
+<a class="reference-chip" href="#_prepare_column_context_profile_input"><code>_prepare_column_context_profile_input</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_prepare_dq_profile_input_rows"><code>_prepare_dq_profile_input_rows</code></a>

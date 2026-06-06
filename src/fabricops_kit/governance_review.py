@@ -56,7 +56,7 @@ def _is_success(row: dict[str, Any]) -> bool:
 
 
 
-def _prepare_business_context_profile_input(profile_rows: list[dict[str, Any]], table_name: str, table_context: str = "") -> list[dict[str, Any]]:
+def _prepare_column_context_profile_input(profile_rows: list[dict[str, Any]], table_name: str, table_context: str = "") -> list[dict[str, Any]]:
     """Prepare profile evidence rows for AI-assisted business-context drafting."""
     return [
         {
@@ -73,11 +73,11 @@ def _prepare_business_context_profile_input(profile_rows: list[dict[str, Any]], 
     ]
 
 
-def _draft_business_context(prepared_profile_df: Any, prompt_template: str, output_col: str = "ai_business_context_response") -> Any:
+def _draft_column_context(prepared_profile_df: Any, prompt_template: str, output_col: str = "ai_business_context_response") -> Any:
     """Run Fabric AI to draft column business-context suggestions."""
     ai = getattr(prepared_profile_df, "ai", None)
     if ai is None or not hasattr(ai, "generate_response"):
-        raise RuntimeError("_draft_business_context requires Fabric DataFrame.ai.generate_response.")
+        raise RuntimeError("_draft_column_context requires Fabric DataFrame.ai.generate_response.")
     return prepared_profile_df.ai.generate_response(prompt=prompt_template, is_prompt_template=True, output_col=output_col)
 
 
@@ -100,7 +100,7 @@ def _parse_ai_dict_response(text: Any, marker: str | None = None) -> dict[str, A
     return {}
 
 
-def _extract_column_business_context_suggestions(response_rows: Any, response_col: str = "ai_business_context_response") -> list[dict[str, Any]]:
+def _extract_column_context_suggestions(response_rows: Any, response_col: str = "ai_business_context_response") -> list[dict[str, Any]]:
     """Extract review-ready business-context suggestions from AI responses."""
     iterable = _coerce_rows(response_rows)
     suggestions: list[dict[str, Any]] = []
@@ -111,7 +111,7 @@ def _extract_column_business_context_suggestions(response_rows: Any, response_co
     return suggestions
 
 
-def _get_reviewed_business_context_rows(status: str = "approved") -> list[dict[str, Any]]:
+def _get_reviewed_column_context_rows(status: str = "approved") -> list[dict[str, Any]]:
     """Return retained reviewed business-context rows from current process state."""
     normalised = str(status or "").strip().lower()
     if normalised != "approved":

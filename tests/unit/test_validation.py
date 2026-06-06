@@ -6,7 +6,7 @@ import pytest
 from fabricops_kit.drift import _check_profile_drift, stop_if_failed, validate_schema
 from fabricops_kit.governance_review import (
     _extract_candidate_rules_from_responses,
-    _extract_column_business_context_suggestions,
+    _extract_column_context_suggestions,
     _extract_governance_suggestions,
     _parse_ai_dict_response,
     _parse_dq_rules_dict_from_text,
@@ -59,7 +59,7 @@ def test_business_context_ai_response_parsing_and_suggestion_extraction_are_migr
     response_text = "BUSINESS_CONTEXT = {'column_name': 'amount', 'business_context': 'Approved payment amount', 'notes': 'numeric'}"
 
     parsed = _parse_ai_dict_response(response_text, marker="BUSINESS_CONTEXT")
-    suggestions = _extract_column_business_context_suggestions([{"ai_business_context_response": response_text}])
+    suggestions = _extract_column_context_suggestions([{"ai_business_context_response": response_text}])
 
     assert parsed["column_name"] == "amount"
     assert suggestions == [{"column_name": "amount", "business_context": "Approved payment amount", "notes": "numeric"}]

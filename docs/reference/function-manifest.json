@@ -2241,7 +2241,7 @@
     "module": "governance_review",
     "classification": "Internal helper",
     "inbound": [
-      "fabricops_kit.governance_review._extract_column_business_context_suggestions",
+      "fabricops_kit.governance_review._extract_column_context_suggestions",
       "fabricops_kit.governance_review._extract_pii_suggestions",
       "fabricops_kit.governance_review._setup_governance_metadata_tables",
       "fabricops_kit.governance_review.load_catalogue_profile_rows",
@@ -2285,15 +2285,15 @@
     "summary": "No summary available."
   },
   {
-    "id": "fabricops_kit.governance_review._draft_business_context",
-    "name": "_draft_business_context",
-    "qualified_name": "fabricops_kit.governance_review._draft_business_context",
+    "id": "fabricops_kit.governance_review._draft_column_context",
+    "name": "_draft_column_context",
+    "qualified_name": "fabricops_kit.governance_review._draft_column_context",
     "module": "governance_review",
     "classification": "Internal helper",
     "inbound": [],
     "outbound": [],
     "source_path": "src/fabricops_kit/governance_review.py",
-    "docs_path": "reference/internal/governance_review__draft_business_context.md",
+    "docs_path": "reference/internal/governance_review__draft_column_context.md",
     "summary": "No summary available."
   },
   {
@@ -2358,9 +2358,9 @@
     "summary": "No summary available."
   },
   {
-    "id": "fabricops_kit.governance_review._extract_column_business_context_suggestions",
-    "name": "_extract_column_business_context_suggestions",
-    "qualified_name": "fabricops_kit.governance_review._extract_column_business_context_suggestions",
+    "id": "fabricops_kit.governance_review._extract_column_context_suggestions",
+    "name": "_extract_column_context_suggestions",
+    "qualified_name": "fabricops_kit.governance_review._extract_column_context_suggestions",
     "module": "governance_review",
     "classification": "Internal helper",
     "inbound": [],
@@ -2369,7 +2369,7 @@
       "fabricops_kit.governance_review._parse_ai_dict_response"
     ],
     "source_path": "src/fabricops_kit/governance_review.py",
-    "docs_path": "reference/internal/governance_review__extract_column_business_context_suggestions.md",
+    "docs_path": "reference/internal/governance_review__extract_column_context_suggestions.md",
     "summary": "No summary available."
   },
   {
@@ -2438,15 +2438,15 @@
     "summary": "No summary available."
   },
   {
-    "id": "fabricops_kit.governance_review._get_reviewed_business_context_rows",
-    "name": "_get_reviewed_business_context_rows",
-    "qualified_name": "fabricops_kit.governance_review._get_reviewed_business_context_rows",
+    "id": "fabricops_kit.governance_review._get_reviewed_column_context_rows",
+    "name": "_get_reviewed_column_context_rows",
+    "qualified_name": "fabricops_kit.governance_review._get_reviewed_column_context_rows",
     "module": "governance_review",
     "classification": "Internal helper",
     "inbound": [],
     "outbound": [],
     "source_path": "src/fabricops_kit/governance_review.py",
-    "docs_path": "reference/internal/governance_review__get_reviewed_business_context_rows.md",
+    "docs_path": "reference/internal/governance_review__get_reviewed_column_context_rows.md",
     "summary": "No summary available."
   },
   {
@@ -2572,7 +2572,7 @@
     "module": "governance_review",
     "classification": "Internal helper",
     "inbound": [
-      "fabricops_kit.governance_review._extract_column_business_context_suggestions",
+      "fabricops_kit.governance_review._extract_column_context_suggestions",
       "fabricops_kit.governance_review._extract_pii_suggestions"
     ],
     "outbound": [],
@@ -2611,15 +2611,15 @@
     "summary": "No summary available."
   },
   {
-    "id": "fabricops_kit.governance_review._prepare_business_context_profile_input",
-    "name": "_prepare_business_context_profile_input",
-    "qualified_name": "fabricops_kit.governance_review._prepare_business_context_profile_input",
+    "id": "fabricops_kit.governance_review._prepare_column_context_profile_input",
+    "name": "_prepare_column_context_profile_input",
+    "qualified_name": "fabricops_kit.governance_review._prepare_column_context_profile_input",
     "module": "governance_review",
     "classification": "Internal helper",
     "inbound": [],
     "outbound": [],
     "source_path": "src/fabricops_kit/governance_review.py",
-    "docs_path": "reference/internal/governance_review__prepare_business_context_profile_input.md",
+    "docs_path": "reference/internal/governance_review__prepare_column_context_profile_input.md",
     "summary": "No summary available."
   },
   {

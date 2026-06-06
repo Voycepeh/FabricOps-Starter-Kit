@@ -20,5 +20,5 @@ No summary available.
 - Outbound references count: 0
 
 ## Inbound references
-- <a href="../internal/governance_review/_extract_column_business_context_suggestions/"><code>fabricops_kit.governance_review._extract_column_business_context_suggestions</code></a>
+- <a href="../internal/governance_review/_extract_column_context_suggestions/"><code>fabricops_kit.governance_review._extract_column_context_suggestions</code></a>
 - <a href="../internal/governance_review/_extract_pii_suggestions/"><code>fabricops_kit.governance_review._extract_pii_suggestions</code></a>
