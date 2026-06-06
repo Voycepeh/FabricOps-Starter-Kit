@@ -4,13 +4,9 @@ FabricOps Starter Kit is a lightweight Microsoft Fabric notebook starter kit for
 
 Use it when you want Fabric notebooks to move data from source to target while keeping useful metadata for review, guardrails, and governance.
 
-## Start fast
+## Start here
 
-New to the kit? Start with [Quick Start](quick-start.md).
-
-Want to understand the workflow? Read [How FabricOps Works](how-fabricops-works/index.md).
-
-Need the notebook files? Open [Notebook Templates](how-fabricops-works/notebook-templates.md).
+Choose where to begin:
 
 <div class="home-cta" markdown="1">
 
@@ -18,17 +14,9 @@ Need the notebook files? Open [Notebook Templates](how-fabricops-works/notebook-
 
 [How FabricOps Works](how-fabricops-works/index.md){ .md-button }
 
+[Notebook Templates](how-fabricops-works/notebook-templates.md){ .md-button }
+
 </div>
-
-## Main flow
-
-`01_da` captures the agreement, steward, and context.
-
-`03_pc` pipes data from source to target and captures key metadata such as data profile, lineage, schema, and data drift details.
-
-`04_gov` uses that metadata to add business context, data quality rules, data sensitivity, and classification.
-
-When the pipeline runs again, `03_pc` uses the approved rules and classifications alongside schema and data drift guardrails.
 
 ## Where to go next
 

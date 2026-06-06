@@ -443,11 +443,34 @@ def render_html_table(headers: list[str], rows: list[list[str]], *, table_class:
     lines.extend(["    </tr>", "  </thead>", "  <tbody>"])
     for row in rows:
         lines.append("    <tr>")
-        for cell in row:
-            lines.append(f"      <td>{cell}</td>")
+        for idx, cell in enumerate(row):
+            label_attr = f' data-label="{html_escape(headers[idx])}"' if table_class == "reference-template-table" else ""
+            lines.append(f"      <td{label_attr}>{cell}</td>")
         lines.append("    </tr>")
     lines.extend(["  </tbody>", "</table>"])
     return lines
+
+
+def html_escape(text: str) -> str:
+    """Escape text for generated inline HTML snippets."""
+    return (
+        text.replace("&", "&amp;")
+        .replace('"', "&quot;")
+        .replace("<", "&lt;")
+        .replace(">", "&gt;")
+    )
+
+
+def function_chip(name: str, href: str) -> str:
+    """Return a clickable function chip for generated docs tables."""
+    return f'<a class="function-chip" href="{html_escape(href)}"><code>{html_escape(name)}</code></a>'
+
+
+def function_chip_wrap(chips: list[str]) -> str:
+    """Return a mobile-friendly chip wrapper for a generated docs table cell."""
+    if not chips:
+        return "—"
+    return '<span class="function-chip-wrap">' + "".join(chips) + "</span>"
 
 
 def parse_simple_yaml(path: Path) -> dict[str, dict[str, Any]]:
@@ -652,9 +675,9 @@ def main() -> None:
     module_index_lines = [
         "# Implementation Module Catalogue",
         "",
-        "Module pages document source modules and internal helpers for package maintainers.",
+        "Implementation modules are source-level reference pages for package maintainers and internal helper traceability.",
         "",
-        "They are useful for debugging and implementation traceability, but they are not the public v1 callable surface. The public v1 callable surface is controlled by `src/fabricops_kit/__init__.py::__all__` and is surfaced through the Function Reference catalogue.",
+        "They are useful for debugging implementation details, but they are not the public v1 callable API. The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__all__` and is surfaced through the Function Reference catalogue.",
         "",
         "Short-form modules remain import-compatible aliases but are intentionally hidden from this user-facing catalogue.",
         "",
@@ -697,9 +720,9 @@ def main() -> None:
             "",
             status_banner,
             "",
-            "Module pages document source modules and internal helpers for maintainers. They support debugging and implementation traceability, but they are not the public v1 callable surface.",
+            "Implementation modules document source-level behavior and internal helper relationships for maintainers. They support debugging and implementation traceability, but they are not the public v1 callable API.",
             "",
-            "The public v1 callable surface is controlled by `src/fabricops_kit/__init__.py::__all__` and is browsed from the Function Reference catalogue.",
+            "The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__all__` and is browsed from the Function Reference catalogue.",
             "",
         ]
         module_nodes = [n for n in nodes if n["module_name"] == actual_module]
@@ -1048,12 +1071,22 @@ def main() -> None:
             rows = []
             for symbol_name in unique_symbols:
                 s = symbol_map[symbol_name]
-                direct_helpers = sorted([
-                    c for c in module_data[s.actual_module]["calls"].get(s.name, set()) if c.startswith("_")
-                ])
-                helper_text = ", ".join(f"`{h}`" for h in direct_helpers) if direct_helpers else "—"
+                caller_qn = f"{PACKAGE_NAME}.{s.actual_module}.{s.name}"
+                direct_helpers = sorted(
+                    (dep for dep in set(calls_by_qn.get(caller_qn, [])) if dep.split(".")[-1].startswith("_")),
+                    key=lambda dep: dep.split(".")[-1],
+                )
+                helper_text = function_chip_wrap(
+                    [
+                        function_chip(
+                            dep.split(".")[-1],
+                            f"../internal/{dep.split('.')[-2]}/{dep.split('.')[-1]}/",
+                        )
+                        for dep in direct_helpers
+                    ]
+                )
                 override = usage_overrides.get(s.name, {})
-                callable_link = f"[`{s.name}`](./callables/{s.name}.md)"
+                callable_link = function_chip(s.name, f"../callables/{s.name}/")
                 rows.append([
                     callable_link,
                     override.get("role", "Callable orchestration wrapper"),
@@ -1061,7 +1094,13 @@ def main() -> None:
                     helper_text,
                     "; ".join(override.get("debug_when", [])) or "Check dependency outputs and metadata writes.",
                 ])
-            template_function_map.extend(render_html_table(["Function", "Role", "What it does", "Delegates to", "Debug when"], rows))
+            template_function_map.extend(
+                render_html_table(
+                    ["Function", "Role", "What it does", "Delegates to", "Debug when"],
+                    rows,
+                    table_class="reference-template-table",
+                )
+            )
             template_function_map.append("")
     TEMPLATE_FUNCTION_MAP_PATH.write_text("\n".join(template_function_map) + "\n", encoding="utf-8", newline="\n")
     starter_symbol_to_notebooks: dict[str, set[str]] = {}
