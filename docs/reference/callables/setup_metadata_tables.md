@@ -1,7 +1,7 @@
 # setup_metadata_tables
 
 **Module:** `config`  
-**Classification:** Essential
+**Classification:** Callable
 
 ## Purpose
 
@@ -12,7 +12,7 @@ Create or validate all FabricOps metadata tables through one setup action.
 - Fully qualified function name: `fabricops_kit.config.setup_metadata_tables`
 - Short name: `setup_metadata_tables`
 - Module: `config`
-- Classification: Essential
+- Classification: Callable
 - Related module: `config`
 - Source file path: `src/fabricops_kit/config.py`
 - Source reference: <a href="../../api/modules/config/#setup_metadata_tables">Module source anchor</a>

@@ -1,7 +1,7 @@
 # profile_dataframe
 
 **Module:** `data_profiling`  
-**Classification:** Essential
+**Classification:** Callable
 
 ## Purpose
 
@@ -12,7 +12,7 @@ Profile a source or target DataFrame for schema, quality, and catalogue evidence
 - Fully qualified function name: `fabricops_kit.data_profiling.profile_dataframe`
 - Short name: `profile_dataframe`
 - Module: `data_profiling`
-- Classification: Essential
+- Classification: Callable
 - Related module: `data_profiling`
 - Source file path: `src/fabricops_kit/data_profiling.py`
 - Source reference: <a href="../../api/modules/data_profiling/#profile_dataframe">Module source anchor</a>

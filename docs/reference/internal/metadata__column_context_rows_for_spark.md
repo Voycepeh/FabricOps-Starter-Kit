@@ -1,7 +1,7 @@
 # _column_context_rows_for_spark
 
 **Module:** `metadata`  
-**Classification:** Internal helper
+**Classification:** Internal
 
 ## Purpose
 
@@ -12,7 +12,7 @@ No summary available.
 - Fully qualified function name: `fabricops_kit.metadata._column_context_rows_for_spark`
 - Short name: `_column_context_rows_for_spark`
 - Module: `metadata`
-- Classification: Internal helper
+- Classification: Internal
 - Related module: `metadata`
 - Source file path: `src/fabricops_kit/metadata.py`
 - Source reference: <a href="../../api/modules/metadata/#_column_context_rows_for_spark">Module source anchor</a>

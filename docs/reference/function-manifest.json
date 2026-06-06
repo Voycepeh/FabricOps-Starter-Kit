@@ -4,7 +4,7 @@
     "name": "_to_jsonable",
     "qualified_name": "fabricops_kit._utils._to_jsonable",
     "module": "_utils",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit._utils._to_jsonable"
     ],
@@ -20,7 +20,7 @@
     "name": "_draft_business_context",
     "qualified_name": "fabricops_kit.business_context._draft_business_context",
     "module": "business_context",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [],
     "outbound": [],
     "source_path": "src/fabricops_kit/business_context.py",
@@ -32,7 +32,7 @@
     "name": "_extract_column_business_context_suggestions",
     "qualified_name": "fabricops_kit.business_context._extract_column_business_context_suggestions",
     "module": "business_context",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.business_context._extract_column_business_context_suggestions"
     ],
@@ -49,7 +49,7 @@
     "name": "_get_reviewed_business_context_rows",
     "qualified_name": "fabricops_kit.business_context._get_reviewed_business_context_rows",
     "module": "business_context",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [],
     "outbound": [],
     "source_path": "src/fabricops_kit/business_context.py",
@@ -61,7 +61,7 @@
     "name": "_parse_ai_dict_response",
     "qualified_name": "fabricops_kit.business_context._parse_ai_dict_response",
     "module": "business_context",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.business_context._extract_column_business_context_suggestions"
     ],
@@ -75,7 +75,7 @@
     "name": "_prepare_business_context_profile_input",
     "qualified_name": "fabricops_kit.business_context._prepare_business_context_profile_input",
     "module": "business_context",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.business_context._prepare_business_context_profile_input"
     ],
@@ -91,7 +91,7 @@
     "name": "_require_ipywidgets",
     "qualified_name": "fabricops_kit.business_context._require_ipywidgets",
     "module": "business_context",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.business_context._widget_review_business_context"
     ],
@@ -105,7 +105,7 @@
     "name": "_widget_review_business_context",
     "qualified_name": "fabricops_kit.business_context._widget_review_business_context",
     "module": "business_context",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [],
     "outbound": [
       "fabricops_kit.business_context._require_ipywidgets",
@@ -121,7 +121,7 @@
     "name": "_write_business_context",
     "qualified_name": "fabricops_kit.business_context._write_business_context",
     "module": "business_context",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [],
     "outbound": [
       "fabricops_kit.metadata._write_column_business_context"
@@ -135,7 +135,7 @@
     "name": "AIPromptConfig",
     "qualified_name": "fabricops_kit.config.AIPromptConfig",
     "module": "config",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [],
     "outbound": [],
     "source_path": "src/fabricops_kit/config.py",
@@ -147,7 +147,7 @@
     "name": "ConfigBootstrapResult",
     "qualified_name": "fabricops_kit.config.ConfigBootstrapResult",
     "module": "config",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.config._bootstrap_fabric_env"
     ],
@@ -161,7 +161,7 @@
     "name": "ConfigSmokeCheckResult",
     "qualified_name": "fabricops_kit.config.ConfigSmokeCheckResult",
     "module": "config",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.config._run_config_smoke_tests"
     ],
@@ -175,7 +175,7 @@
     "name": "DataAgreementConfig",
     "qualified_name": "fabricops_kit.config.DataAgreementConfig",
     "module": "config",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [],
     "outbound": [],
     "source_path": "src/fabricops_kit/config.py",
@@ -187,7 +187,7 @@
     "name": "DatasetContractValidationError",
     "qualified_name": "fabricops_kit.config.DatasetContractValidationError",
     "module": "config",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.config._assert_valid_dataset_contract"
     ],
@@ -201,7 +201,7 @@
     "name": "FrameworkConfig",
     "qualified_name": "fabricops_kit.config.FrameworkConfig",
     "module": "config",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.config._validate_framework_config"
     ],
@@ -215,7 +215,7 @@
     "name": "GovernanceConfig",
     "qualified_name": "fabricops_kit.config.GovernanceConfig",
     "module": "config",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [],
     "outbound": [],
     "source_path": "src/fabricops_kit/config.py",
@@ -227,7 +227,7 @@
     "name": "LineageConfig",
     "qualified_name": "fabricops_kit.config.LineageConfig",
     "module": "config",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [],
     "outbound": [],
     "source_path": "src/fabricops_kit/config.py",
@@ -239,7 +239,7 @@
     "name": "NotebookRuntimeConfig",
     "qualified_name": "fabricops_kit.config.NotebookRuntimeConfig",
     "module": "config",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [],
     "outbound": [],
     "source_path": "src/fabricops_kit/config.py",
@@ -251,7 +251,7 @@
     "name": "NotebookSetupContext",
     "qualified_name": "fabricops_kit.config.NotebookSetupContext",
     "module": "config",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.config.setup_notebook"
     ],
@@ -265,7 +265,7 @@
     "name": "PathConfig",
     "qualified_name": "fabricops_kit.config.PathConfig",
     "module": "config",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [],
     "outbound": [],
     "source_path": "src/fabricops_kit/config.py",
@@ -277,7 +277,7 @@
     "name": "QualityConfig",
     "qualified_name": "fabricops_kit.config.QualityConfig",
     "module": "config",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [],
     "outbound": [],
     "source_path": "src/fabricops_kit/config.py",
@@ -289,7 +289,7 @@
     "name": "ReviewWorkflowConfig",
     "qualified_name": "fabricops_kit.config.ReviewWorkflowConfig",
     "module": "config",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [],
     "outbound": [],
     "source_path": "src/fabricops_kit/config.py",
@@ -301,7 +301,7 @@
     "name": "_assert_valid_dataset_contract",
     "qualified_name": "fabricops_kit.config._assert_valid_dataset_contract",
     "module": "config",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [],
     "outbound": [
       "fabricops_kit.config.DatasetContractValidationError",
@@ -316,7 +316,7 @@
     "name": "_bootstrap_fabric_env",
     "qualified_name": "fabricops_kit.config._bootstrap_fabric_env",
     "module": "config",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [],
     "outbound": [
       "fabricops_kit.config.ConfigBootstrapResult",
@@ -334,7 +334,7 @@
     "name": "_check_fabric_ai_functions_available",
     "qualified_name": "fabricops_kit.config._check_fabric_ai_functions_available",
     "module": "config",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [],
     "outbound": [],
     "source_path": "src/fabricops_kit/config.py",
@@ -346,7 +346,7 @@
     "name": "_check_spark_session",
     "qualified_name": "fabricops_kit.config._check_spark_session",
     "module": "config",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.config._run_config_smoke_tests"
     ],
@@ -360,7 +360,7 @@
     "name": "_configure_fabric_ai_functions",
     "qualified_name": "fabricops_kit.config._configure_fabric_ai_functions",
     "module": "config",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [],
     "outbound": [],
     "source_path": "src/fabricops_kit/config.py",
@@ -372,7 +372,7 @@
     "name": "_default_schema_text",
     "qualified_name": "fabricops_kit.config._default_schema_text",
     "module": "config",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.config._load_schema"
     ],
@@ -386,7 +386,7 @@
     "name": "_format_error_path",
     "qualified_name": "fabricops_kit.config._format_error_path",
     "module": "config",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.config._validate_dataset_contract"
     ],
@@ -400,7 +400,7 @@
     "name": "_get_fabric_runtime_metadata",
     "qualified_name": "fabricops_kit.config._get_fabric_runtime_metadata",
     "module": "config",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.config._bootstrap_fabric_env",
       "fabricops_kit.config._run_config_smoke_tests"
@@ -415,7 +415,7 @@
     "name": "_get_store",
     "qualified_name": "fabricops_kit.config._get_store",
     "module": "config",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.config._bootstrap_fabric_env",
       "fabricops_kit.config._run_config_smoke_tests",
@@ -438,7 +438,7 @@
     "name": "_load_and_validate_dataset_contract",
     "qualified_name": "fabricops_kit.config._load_and_validate_dataset_contract",
     "module": "config",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [],
     "outbound": [
       "fabricops_kit.config._load_dataset_contract",
@@ -453,7 +453,7 @@
     "name": "_load_dataset_contract",
     "qualified_name": "fabricops_kit.config._load_dataset_contract",
     "module": "config",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.config._load_and_validate_dataset_contract"
     ],
@@ -467,7 +467,7 @@
     "name": "_load_schema",
     "qualified_name": "fabricops_kit.config._load_schema",
     "module": "config",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.config._validate_dataset_contract"
     ],
@@ -483,7 +483,7 @@
     "name": "_normalize_name",
     "qualified_name": "fabricops_kit.config._normalize_name",
     "module": "config",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.config._validate_notebook_name"
     ],
@@ -497,7 +497,7 @@
     "name": "_run_config_smoke_tests",
     "qualified_name": "fabricops_kit.config._run_config_smoke_tests",
     "module": "config",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.config._bootstrap_fabric_env",
       "fabricops_kit.config.setup_notebook"
@@ -518,7 +518,7 @@
     "name": "_validate_dataset_contract",
     "qualified_name": "fabricops_kit.config._validate_dataset_contract",
     "module": "config",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.config._assert_valid_dataset_contract",
       "fabricops_kit.config._load_and_validate_dataset_contract"
@@ -536,7 +536,7 @@
     "name": "_validate_framework_config",
     "qualified_name": "fabricops_kit.config._validate_framework_config",
     "module": "config",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.config._bootstrap_fabric_env",
       "fabricops_kit.config.setup_notebook"
@@ -554,7 +554,7 @@
     "name": "_validate_notebook_name",
     "qualified_name": "fabricops_kit.config._validate_notebook_name",
     "module": "config",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.config._run_config_smoke_tests"
     ],
@@ -570,7 +570,7 @@
     "name": "setup_metadata_tables",
     "qualified_name": "fabricops_kit.config.setup_metadata_tables",
     "module": "config",
-    "classification": "Essential",
+    "classification": "Callable",
     "inbound": [],
     "outbound": [
       "fabricops_kit.data_agreement._setup_data_agreement_tables",
@@ -587,7 +587,7 @@
     "name": "setup_notebook",
     "qualified_name": "fabricops_kit.config.setup_notebook",
     "module": "config",
-    "classification": "Essential",
+    "classification": "Callable",
     "inbound": [],
     "outbound": [
       "fabricops_kit.config.NotebookSetupContext",
@@ -604,7 +604,7 @@
     "name": "_active_steward",
     "qualified_name": "fabricops_kit.data_agreement._active_steward",
     "module": "data_agreement",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_agreement._create_or_update_data_steward",
       "fabricops_kit.data_agreement._list_data_stewards"
@@ -621,7 +621,7 @@
     "name": "_agreement_identity_text",
     "qualified_name": "fabricops_kit.data_agreement._agreement_identity_text",
     "module": "data_agreement",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_agreement._render_maintenance_widget"
     ],
@@ -637,7 +637,7 @@
     "name": "_business_agreement_snapshot",
     "qualified_name": "fabricops_kit.data_agreement._business_agreement_snapshot",
     "module": "data_agreement",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_agreement._create_or_update_data_agreement"
     ],
@@ -654,7 +654,7 @@
     "name": "_coerce_row_dicts",
     "qualified_name": "fabricops_kit.data_agreement._coerce_row_dicts",
     "module": "data_agreement",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_agreement._ensure_metadata_tables",
       "fabricops_kit.data_agreement._latest_agreement_versions",
@@ -671,7 +671,7 @@
     "name": "_collect_custom_fields",
     "qualified_name": "fabricops_kit.data_agreement._collect_custom_fields",
     "module": "data_agreement",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_agreement._render_maintenance_widget"
     ],
@@ -688,7 +688,7 @@
     "name": "_config_value",
     "qualified_name": "fabricops_kit.data_agreement._config_value",
     "module": "data_agreement",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_agreement._create_or_update_data_agreement",
       "fabricops_kit.data_agreement._create_or_update_data_steward",
@@ -709,7 +709,7 @@
     "name": "_create_or_update_data_agreement",
     "qualified_name": "fabricops_kit.data_agreement._create_or_update_data_agreement",
     "module": "data_agreement",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_agreement._render_maintenance_widget"
     ],
@@ -735,7 +735,7 @@
     "name": "_create_or_update_data_steward",
     "qualified_name": "fabricops_kit.data_agreement._create_or_update_data_steward",
     "module": "data_agreement",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_agreement._render_maintenance_widget"
     ],
@@ -758,7 +758,7 @@
     "name": "_deserialize_custom_fields",
     "qualified_name": "fabricops_kit.data_agreement._deserialize_custom_fields",
     "module": "data_agreement",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_agreement._business_agreement_snapshot",
       "fabricops_kit.data_agreement._render_maintenance_widget"
@@ -773,7 +773,7 @@
     "name": "_ensure_metadata_tables",
     "qualified_name": "fabricops_kit.data_agreement._ensure_metadata_tables",
     "module": "data_agreement",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_agreement._setup_data_agreement_tables"
     ],
@@ -792,7 +792,7 @@
     "name": "_generate_agreement_id",
     "qualified_name": "fabricops_kit.data_agreement._generate_agreement_id",
     "module": "data_agreement",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_agreement._create_or_update_data_agreement"
     ],
@@ -806,7 +806,7 @@
     "name": "_generate_steward_id",
     "qualified_name": "fabricops_kit.data_agreement._generate_steward_id",
     "module": "data_agreement",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_agreement._create_or_update_data_steward"
     ],
@@ -820,7 +820,7 @@
     "name": "_get_notebookutils",
     "qualified_name": "fabricops_kit.data_agreement._get_notebookutils",
     "module": "data_agreement",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_agreement._prepare_evidence_file_references"
     ],
@@ -834,7 +834,7 @@
     "name": "_get_widget_visible_fields",
     "qualified_name": "fabricops_kit.data_agreement._get_widget_visible_fields",
     "module": "data_agreement",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_agreement._render_maintenance_widget"
     ],
@@ -850,7 +850,7 @@
     "name": "_html_escape",
     "qualified_name": "fabricops_kit.data_agreement._html_escape",
     "module": "data_agreement",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_agreement._render_searchable_selector",
       "fabricops_kit.data_agreement.widget_select_agreement"
@@ -865,7 +865,7 @@
     "name": "_latest_agreement_versions",
     "qualified_name": "fabricops_kit.data_agreement._latest_agreement_versions",
     "module": "data_agreement",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_agreement._list_data_agreements",
       "fabricops_kit.data_agreement.widget_select_agreement"
@@ -883,7 +883,7 @@
     "name": "_latest_by_key",
     "qualified_name": "fabricops_kit.data_agreement._latest_by_key",
     "module": "data_agreement",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_agreement._list_data_stewards"
     ],
@@ -899,7 +899,7 @@
     "name": "_list_all_data_agreement_rows",
     "qualified_name": "fabricops_kit.data_agreement._list_all_data_agreement_rows",
     "module": "data_agreement",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_agreement._create_or_update_data_agreement",
       "fabricops_kit.data_agreement._list_data_agreements",
@@ -919,7 +919,7 @@
     "name": "_list_data_agreements",
     "qualified_name": "fabricops_kit.data_agreement._list_data_agreements",
     "module": "data_agreement",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_agreement._render_maintenance_widget",
       "fabricops_kit.data_agreement.widget_select_agreement"
@@ -937,7 +937,7 @@
     "name": "_list_data_stewards",
     "qualified_name": "fabricops_kit.data_agreement._list_data_stewards",
     "module": "data_agreement",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_agreement._create_or_update_data_agreement",
       "fabricops_kit.data_agreement._render_maintenance_widget",
@@ -958,7 +958,7 @@
     "name": "_next_minor_version",
     "qualified_name": "fabricops_kit.data_agreement._next_minor_version",
     "module": "data_agreement",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_agreement._agreement_identity_text",
       "fabricops_kit.data_agreement._create_or_update_data_agreement"
@@ -975,7 +975,7 @@
     "name": "_parse_contract_version",
     "qualified_name": "fabricops_kit.data_agreement._parse_contract_version",
     "module": "data_agreement",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_agreement._create_or_update_data_agreement",
       "fabricops_kit.data_agreement._latest_agreement_versions",
@@ -991,7 +991,7 @@
     "name": "_parse_iso_date",
     "qualified_name": "fabricops_kit.data_agreement._parse_iso_date",
     "module": "data_agreement",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_agreement._create_or_update_data_agreement",
       "fabricops_kit.data_agreement._create_or_update_data_steward"
@@ -1006,7 +1006,7 @@
     "name": "_prepare_evidence_file_references",
     "qualified_name": "fabricops_kit.data_agreement._prepare_evidence_file_references",
     "module": "data_agreement",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_agreement._save_agreement_evidence_records"
     ],
@@ -1022,7 +1022,7 @@
     "name": "_render_agreement_evidence_widget",
     "qualified_name": "fabricops_kit.data_agreement._render_agreement_evidence_widget",
     "module": "data_agreement",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_agreement.widget_render_agreement_evidence"
     ],
@@ -1042,7 +1042,7 @@
     "name": "_render_custom_fields",
     "qualified_name": "fabricops_kit.data_agreement._render_custom_fields",
     "module": "data_agreement",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_agreement._render_maintenance_widget"
     ],
@@ -1061,7 +1061,7 @@
     "name": "_render_maintenance_widget",
     "qualified_name": "fabricops_kit.data_agreement._render_maintenance_widget",
     "module": "data_agreement",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_agreement.widget_render_data_agreement",
       "fabricops_kit.data_agreement.widget_render_data_steward"
@@ -1092,7 +1092,7 @@
     "name": "_render_searchable_selector",
     "qualified_name": "fabricops_kit.data_agreement._render_searchable_selector",
     "module": "data_agreement",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_agreement._render_agreement_evidence_widget",
       "fabricops_kit.data_agreement._render_maintenance_widget",
@@ -1111,7 +1111,7 @@
     "name": "_require_ipywidgets",
     "qualified_name": "fabricops_kit.data_agreement._require_ipywidgets",
     "module": "data_agreement",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_agreement._render_agreement_evidence_widget",
       "fabricops_kit.data_agreement._render_custom_fields",
@@ -1129,7 +1129,7 @@
     "name": "_save_agreement_evidence_records",
     "qualified_name": "fabricops_kit.data_agreement._save_agreement_evidence_records",
     "module": "data_agreement",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_agreement._render_agreement_evidence_widget"
     ],
@@ -1148,7 +1148,7 @@
     "name": "_serialize_custom_fields",
     "qualified_name": "fabricops_kit.data_agreement._serialize_custom_fields",
     "module": "data_agreement",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_agreement._business_agreement_snapshot",
       "fabricops_kit.data_agreement._create_or_update_data_agreement",
@@ -1164,7 +1164,7 @@
     "name": "_setup_data_agreement_tables",
     "qualified_name": "fabricops_kit.data_agreement._setup_data_agreement_tables",
     "module": "data_agreement",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.config.setup_metadata_tables"
     ],
@@ -1181,7 +1181,7 @@
     "name": "_standard_widget",
     "qualified_name": "fabricops_kit.data_agreement._standard_widget",
     "module": "data_agreement",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_agreement._render_maintenance_widget"
     ],
@@ -1199,7 +1199,7 @@
     "name": "_to_bool",
     "qualified_name": "fabricops_kit.data_agreement._to_bool",
     "module": "data_agreement",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_agreement._active_steward",
       "fabricops_kit.data_agreement._create_or_update_data_steward",
@@ -1217,7 +1217,7 @@
     "name": "_to_iso_date",
     "qualified_name": "fabricops_kit.data_agreement._to_iso_date",
     "module": "data_agreement",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_agreement._collect_custom_fields",
       "fabricops_kit.data_agreement._render_maintenance_widget"
@@ -1232,7 +1232,7 @@
     "name": "_widget_common",
     "qualified_name": "fabricops_kit.data_agreement._widget_common",
     "module": "data_agreement",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_agreement._render_agreement_evidence_widget",
       "fabricops_kit.data_agreement._render_custom_fields",
@@ -1249,7 +1249,7 @@
     "name": "_write_row",
     "qualified_name": "fabricops_kit.data_agreement._write_row",
     "module": "data_agreement",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_agreement._create_or_update_data_agreement",
       "fabricops_kit.data_agreement._create_or_update_data_steward",
@@ -1267,7 +1267,7 @@
     "name": "get_selected_agreement",
     "qualified_name": "fabricops_kit.data_agreement.get_selected_agreement",
     "module": "data_agreement",
-    "classification": "Essential",
+    "classification": "Callable",
     "inbound": [],
     "outbound": [],
     "source_path": "src/fabricops_kit/data_agreement.py",
@@ -1279,7 +1279,7 @@
     "name": "widget_render_agreement_evidence",
     "qualified_name": "fabricops_kit.data_agreement.widget_render_agreement_evidence",
     "module": "data_agreement",
-    "classification": "Essential",
+    "classification": "Callable",
     "inbound": [],
     "outbound": [
       "fabricops_kit.data_agreement._render_agreement_evidence_widget"
@@ -1293,7 +1293,7 @@
     "name": "widget_render_data_agreement",
     "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
     "module": "data_agreement",
-    "classification": "Essential",
+    "classification": "Callable",
     "inbound": [],
     "outbound": [
       "fabricops_kit.data_agreement._render_maintenance_widget"
@@ -1307,7 +1307,7 @@
     "name": "widget_render_data_steward",
     "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
     "module": "data_agreement",
-    "classification": "Essential",
+    "classification": "Callable",
     "inbound": [],
     "outbound": [
       "fabricops_kit.data_agreement._render_maintenance_widget"
@@ -1321,7 +1321,7 @@
     "name": "widget_select_agreement",
     "qualified_name": "fabricops_kit.data_agreement.widget_select_agreement",
     "module": "data_agreement",
-    "classification": "Essential",
+    "classification": "Callable",
     "inbound": [],
     "outbound": [
       "fabricops_kit.data_agreement._html_escape",
@@ -1341,7 +1341,7 @@
     "name": "_approved_widget_rows",
     "qualified_name": "fabricops_kit.data_governance._approved_widget_rows",
     "module": "data_governance",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_governance._write_governance"
     ],
@@ -1357,7 +1357,7 @@
     "name": "_build_governance_context",
     "qualified_name": "fabricops_kit.data_governance._build_governance_context",
     "module": "data_governance",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [],
     "outbound": [],
     "source_path": "src/fabricops_kit/data_governance.py",
@@ -1369,7 +1369,7 @@
     "name": "_coerce_row_dicts",
     "qualified_name": "fabricops_kit.data_governance._coerce_row_dicts",
     "module": "data_governance",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_governance._load_governance"
     ],
@@ -1383,7 +1383,7 @@
     "name": "_draft_governance",
     "qualified_name": "fabricops_kit.data_governance._draft_governance",
     "module": "data_governance",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [],
     "outbound": [],
     "source_path": "src/fabricops_kit/data_governance.py",
@@ -1395,7 +1395,7 @@
     "name": "_extract_governance_suggestions",
     "qualified_name": "fabricops_kit.data_governance._extract_governance_suggestions",
     "module": "data_governance",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [],
     "outbound": [
       "fabricops_kit.data_governance._extract_pii_suggestions"
@@ -1409,7 +1409,7 @@
     "name": "_extract_pii_suggestions",
     "qualified_name": "fabricops_kit.data_governance._extract_pii_suggestions",
     "module": "data_governance",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_governance._extract_governance_suggestions"
     ],
@@ -1423,7 +1423,7 @@
     "name": "_load_governance",
     "qualified_name": "fabricops_kit.data_governance._load_governance",
     "module": "data_governance",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [],
     "outbound": [
       "fabricops_kit.data_governance._coerce_row_dicts"
@@ -1437,7 +1437,7 @@
     "name": "_prepare_governance_input",
     "qualified_name": "fabricops_kit.data_governance._prepare_governance_input",
     "module": "data_governance",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_governance._prepare_governance_input"
     ],
@@ -1453,7 +1453,7 @@
     "name": "_undo_last_action",
     "qualified_name": "fabricops_kit.data_governance._undo_last_action",
     "module": "data_governance",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_governance._widget_review_governance"
     ],
@@ -1467,7 +1467,7 @@
     "name": "_widget_review_governance",
     "qualified_name": "fabricops_kit.data_governance._widget_review_governance",
     "module": "data_governance",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [],
     "outbound": [
       "fabricops_kit.data_governance._undo_last_action",
@@ -1484,7 +1484,7 @@
     "name": "_write_governance",
     "qualified_name": "fabricops_kit.data_governance._write_governance",
     "module": "data_governance",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [],
     "outbound": [
       "fabricops_kit.data_governance._approved_widget_rows"
@@ -1498,7 +1498,7 @@
     "name": "_build_lineage_handover_markdown",
     "qualified_name": "fabricops_kit.data_lineage._build_lineage_handover_markdown",
     "module": "data_lineage",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [],
     "outbound": [],
     "source_path": "src/fabricops_kit/data_lineage.py",
@@ -1510,7 +1510,7 @@
     "name": "_build_lineage_record_from_steps",
     "qualified_name": "fabricops_kit.data_lineage._build_lineage_record_from_steps",
     "module": "data_lineage",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_lineage._build_lineage_records"
     ],
@@ -1526,7 +1526,7 @@
     "name": "_build_lineage_records",
     "qualified_name": "fabricops_kit.data_lineage._build_lineage_records",
     "module": "data_lineage",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [],
     "outbound": [
       "fabricops_kit.data_lineage._build_lineage_record_from_steps"
@@ -1540,7 +1540,7 @@
     "name": "_call_name",
     "qualified_name": "fabricops_kit.data_lineage._call_name",
     "module": "data_lineage",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_lineage._scan_notebook_lineage"
     ],
@@ -1554,7 +1554,7 @@
     "name": "_enrich_lineage_steps_with_ai",
     "qualified_name": "fabricops_kit.data_lineage._enrich_lineage_steps_with_ai",
     "module": "data_lineage",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [],
     "outbound": [
       "fabricops_kit.data_lineage._fallback_copilot_lineage_prompt"
@@ -1568,7 +1568,7 @@
     "name": "_fallback_copilot_lineage_prompt",
     "qualified_name": "fabricops_kit.data_lineage._fallback_copilot_lineage_prompt",
     "module": "data_lineage",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_lineage._enrich_lineage_steps_with_ai"
     ],
@@ -1582,7 +1582,7 @@
     "name": "_flatten_chain",
     "qualified_name": "fabricops_kit.data_lineage._flatten_chain",
     "module": "data_lineage",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_lineage._scan_notebook_lineage"
     ],
@@ -1598,7 +1598,7 @@
     "name": "_literal",
     "qualified_name": "fabricops_kit.data_lineage._literal",
     "module": "data_lineage",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_lineage._resolve_write_target"
     ],
@@ -1612,7 +1612,7 @@
     "name": "_name",
     "qualified_name": "fabricops_kit.data_lineage._name",
     "module": "data_lineage",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_lineage._flatten_chain",
       "fabricops_kit.data_lineage._scan_notebook_lineage"
@@ -1627,7 +1627,7 @@
     "name": "_resolve_write_target",
     "qualified_name": "fabricops_kit.data_lineage._resolve_write_target",
     "module": "data_lineage",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_lineage._scan_notebook_lineage"
     ],
@@ -1643,7 +1643,7 @@
     "name": "_scan_notebook_cells",
     "qualified_name": "fabricops_kit.data_lineage._scan_notebook_cells",
     "module": "data_lineage",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [],
     "outbound": [
       "fabricops_kit.data_lineage._scan_notebook_lineage"
@@ -1657,7 +1657,7 @@
     "name": "_scan_notebook_lineage",
     "qualified_name": "fabricops_kit.data_lineage._scan_notebook_lineage",
     "module": "data_lineage",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_lineage._scan_notebook_cells"
     ],
@@ -1677,7 +1677,7 @@
     "name": "_step",
     "qualified_name": "fabricops_kit.data_lineage._step",
     "module": "data_lineage",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_lineage._scan_notebook_lineage"
     ],
@@ -1691,7 +1691,7 @@
     "name": "_validate_lineage_steps",
     "qualified_name": "fabricops_kit.data_lineage._validate_lineage_steps",
     "module": "data_lineage",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_lineage._build_lineage_record_from_steps"
     ],
@@ -1705,7 +1705,7 @@
     "name": "build_lineage_records",
     "qualified_name": "fabricops_kit.data_lineage.build_lineage_records",
     "module": "data_lineage",
-    "classification": "Essential",
+    "classification": "Callable",
     "inbound": [],
     "outbound": [],
     "source_path": "src/fabricops_kit/data_lineage.py",
@@ -1717,7 +1717,7 @@
     "name": "_build_categorical_distribution",
     "qualified_name": "fabricops_kit.data_profiling._build_categorical_distribution",
     "module": "data_profiling",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_profiling._build_distribution_summaries"
     ],
@@ -1731,7 +1731,7 @@
     "name": "_build_distribution_summaries",
     "qualified_name": "fabricops_kit.data_profiling._build_distribution_summaries",
     "module": "data_profiling",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_profiling.profile_dataframe"
     ],
@@ -1751,7 +1751,7 @@
     "name": "_build_numeric_distribution",
     "qualified_name": "fabricops_kit.data_profiling._build_numeric_distribution",
     "module": "data_profiling",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_profiling._build_distribution_summaries"
     ],
@@ -1767,7 +1767,7 @@
     "name": "_dedupe_edges",
     "qualified_name": "fabricops_kit.data_profiling._dedupe_edges",
     "module": "data_profiling",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_profiling._build_numeric_distribution",
       "fabricops_kit.data_profiling._numeric_bin_edges"
@@ -1782,7 +1782,7 @@
     "name": "_get_profiled_columns",
     "qualified_name": "fabricops_kit.data_profiling._get_profiled_columns",
     "module": "data_profiling",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_profiling.profile_dataframe"
     ],
@@ -1796,7 +1796,7 @@
     "name": "_is_categorical_type",
     "qualified_name": "fabricops_kit.data_profiling._is_categorical_type",
     "module": "data_profiling",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_profiling._build_distribution_summaries"
     ],
@@ -1810,7 +1810,7 @@
     "name": "_is_min_max_supported_type",
     "qualified_name": "fabricops_kit.data_profiling._is_min_max_supported_type",
     "module": "data_profiling",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_profiling.profile_dataframe"
     ],
@@ -1824,7 +1824,7 @@
     "name": "_is_numeric_type",
     "qualified_name": "fabricops_kit.data_profiling._is_numeric_type",
     "module": "data_profiling",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_profiling._build_distribution_summaries"
     ],
@@ -1838,7 +1838,7 @@
     "name": "_numeric_bin_edges",
     "qualified_name": "fabricops_kit.data_profiling._numeric_bin_edges",
     "module": "data_profiling",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_profiling._build_distribution_summaries"
     ],
@@ -1854,7 +1854,7 @@
     "name": "profile_dataframe",
     "qualified_name": "fabricops_kit.data_profiling.profile_dataframe",
     "module": "data_profiling",
-    "classification": "Essential",
+    "classification": "Callable",
     "inbound": [
       "fabricops_kit.data_quality._prepare_dq_profile_input_rows",
       "fabricops_kit.drift.monitor_data_changes"
@@ -1873,7 +1873,7 @@
     "name": "DQEnforcementResult",
     "qualified_name": "fabricops_kit.data_quality.DQEnforcementResult",
     "module": "data_quality",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_quality._enforce_dq"
     ],
@@ -1887,7 +1887,7 @@
     "name": "_approved_dq_rules_from_review_rows",
     "qualified_name": "fabricops_kit.data_quality._approved_dq_rules_from_review_rows",
     "module": "data_quality",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [],
     "outbound": [],
     "source_path": "src/fabricops_kit/data_quality.py",
@@ -1899,7 +1899,7 @@
     "name": "_assert_dq_passed",
     "qualified_name": "fabricops_kit.data_quality._assert_dq_passed",
     "module": "data_quality",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [],
     "outbound": [],
     "source_path": "src/fabricops_kit/data_quality.py",
@@ -1911,7 +1911,7 @@
     "name": "_attach_rule_metadata_keys",
     "qualified_name": "fabricops_kit.data_quality._attach_rule_metadata_keys",
     "module": "data_quality",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_quality._get_dq_review_results"
     ],
@@ -1929,7 +1929,7 @@
     "name": "_build_dq_rule_deactivation_metadata_df",
     "qualified_name": "fabricops_kit.data_quality._build_dq_rule_deactivation_metadata_df",
     "module": "data_quality",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [],
     "outbound": [
       "fabricops_kit.metadata._now_utc_iso",
@@ -1944,7 +1944,7 @@
     "name": "_build_dq_rule_deactivations",
     "qualified_name": "fabricops_kit.data_quality._build_dq_rule_deactivations",
     "module": "data_quality",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [],
     "outbound": [
       "fabricops_kit.metadata._resolve_action_by"
@@ -1958,7 +1958,7 @@
     "name": "_build_dq_rule_history",
     "qualified_name": "fabricops_kit.data_quality._build_dq_rule_history",
     "module": "data_quality",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_quality._write_dq_rules"
     ],
@@ -1974,7 +1974,7 @@
     "name": "_build_dq_rules_metadata_df",
     "qualified_name": "fabricops_kit.data_quality._build_dq_rules_metadata_df",
     "module": "data_quality",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [],
     "outbound": [
       "fabricops_kit.metadata._now_utc_iso",
@@ -1989,7 +1989,7 @@
     "name": "_draft_dq_rules",
     "qualified_name": "fabricops_kit.data_quality._draft_dq_rules",
     "module": "data_quality",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [],
     "outbound": [
       "fabricops_kit.data_quality._extract_dq_rules",
@@ -2005,7 +2005,7 @@
     "name": "_enforce_dq",
     "qualified_name": "fabricops_kit.data_quality._enforce_dq",
     "module": "data_quality",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [],
     "outbound": [
       "fabricops_kit.data_quality.DQEnforcementResult",
@@ -2023,7 +2023,7 @@
     "name": "_extract_candidate_rules_from_responses",
     "qualified_name": "fabricops_kit.data_quality._extract_candidate_rules_from_responses",
     "module": "data_quality",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [],
     "outbound": [
       "fabricops_kit.data_quality._extract_dq_rules",
@@ -2038,7 +2038,7 @@
     "name": "_extract_dq_rules",
     "qualified_name": "fabricops_kit.data_quality._extract_dq_rules",
     "module": "data_quality",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_quality._draft_dq_rules",
       "fabricops_kit.data_quality._extract_candidate_rules_from_responses"
@@ -2055,7 +2055,7 @@
     "name": "_get_dq_review_results",
     "qualified_name": "fabricops_kit.data_quality._get_dq_review_results",
     "module": "data_quality",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [],
     "outbound": [
       "fabricops_kit.data_quality._attach_rule_metadata_keys"
@@ -2069,7 +2069,7 @@
     "name": "_latest_dq_rule_versions",
     "qualified_name": "fabricops_kit.data_quality._latest_dq_rule_versions",
     "module": "data_quality",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_quality._load_active_dq_rule_metadata",
       "fabricops_kit.data_quality._load_active_dq_rules"
@@ -2084,7 +2084,7 @@
     "name": "_load_active_dq_rule_metadata",
     "qualified_name": "fabricops_kit.data_quality._load_active_dq_rule_metadata",
     "module": "data_quality",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [],
     "outbound": [
       "fabricops_kit.data_quality._latest_dq_rule_versions"
@@ -2098,7 +2098,7 @@
     "name": "_load_active_dq_rules",
     "qualified_name": "fabricops_kit.data_quality._load_active_dq_rules",
     "module": "data_quality",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_quality._enforce_dq",
       "fabricops_kit.data_quality._load_dq_rules"
@@ -2115,7 +2115,7 @@
     "name": "_load_dq_rules",
     "qualified_name": "fabricops_kit.data_quality._load_dq_rules",
     "module": "data_quality",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [],
     "outbound": [
       "fabricops_kit.data_quality._load_active_dq_rules"
@@ -2129,7 +2129,7 @@
     "name": "_parse_dq_rules_dict_from_text",
     "qualified_name": "fabricops_kit.data_quality._parse_dq_rules_dict_from_text",
     "module": "data_quality",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_quality._extract_candidate_rules_from_responses",
       "fabricops_kit.data_quality._extract_dq_rules"
@@ -2144,7 +2144,7 @@
     "name": "_prepare_dq_profile_input_rows",
     "qualified_name": "fabricops_kit.data_quality._prepare_dq_profile_input_rows",
     "module": "data_quality",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_quality._draft_dq_rules"
     ],
@@ -2160,7 +2160,7 @@
     "name": "_prepare_dq_profile_rows_with_context",
     "qualified_name": "fabricops_kit.data_quality._prepare_dq_profile_rows_with_context",
     "module": "data_quality",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [],
     "outbound": [],
     "source_path": "src/fabricops_kit/data_quality.py",
@@ -2172,7 +2172,7 @@
     "name": "_profile_for_dq",
     "qualified_name": "fabricops_kit.data_quality._profile_for_dq",
     "module": "data_quality",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [],
     "outbound": [],
     "source_path": "src/fabricops_kit/data_quality.py",
@@ -2184,7 +2184,7 @@
     "name": "_require_ipywidgets",
     "qualified_name": "fabricops_kit.data_quality._require_ipywidgets",
     "module": "data_quality",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_quality._widget_review_dq_rule_deactivations",
       "fabricops_kit.data_quality._widget_review_dq_rules"
@@ -2199,7 +2199,7 @@
     "name": "_run_dq_rules",
     "qualified_name": "fabricops_kit.data_quality._run_dq_rules",
     "module": "data_quality",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_quality._enforce_dq"
     ],
@@ -2216,7 +2216,7 @@
     "name": "_split_dq_rows",
     "qualified_name": "fabricops_kit.data_quality._split_dq_rows",
     "module": "data_quality",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_quality._enforce_dq",
       "fabricops_kit.data_quality._run_dq_rules"
@@ -2233,7 +2233,7 @@
     "name": "_suggest_dq_rules",
     "qualified_name": "fabricops_kit.data_quality._suggest_dq_rules",
     "module": "data_quality",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_quality._draft_dq_rules"
     ],
@@ -2247,7 +2247,7 @@
     "name": "_suggest_dq_rules_with_fabric_ai",
     "qualified_name": "fabricops_kit.data_quality._suggest_dq_rules_with_fabric_ai",
     "module": "data_quality",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [],
     "outbound": [],
     "source_path": "src/fabricops_kit/data_quality.py",
@@ -2259,7 +2259,7 @@
     "name": "_validate_dq_rules",
     "qualified_name": "fabricops_kit.data_quality._validate_dq_rules",
     "module": "data_quality",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_quality._enforce_dq",
       "fabricops_kit.data_quality._run_dq_rules",
@@ -2276,7 +2276,7 @@
     "name": "_widget_review_dq_rule_deactivations",
     "qualified_name": "fabricops_kit.data_quality._widget_review_dq_rule_deactivations",
     "module": "data_quality",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [],
     "outbound": [
       "fabricops_kit.data_quality._require_ipywidgets"
@@ -2290,7 +2290,7 @@
     "name": "_widget_review_dq_rules",
     "qualified_name": "fabricops_kit.data_quality._widget_review_dq_rules",
     "module": "data_quality",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [],
     "outbound": [
       "fabricops_kit.data_quality._require_ipywidgets"
@@ -2304,7 +2304,7 @@
     "name": "_write_dq_rules",
     "qualified_name": "fabricops_kit.data_quality._write_dq_rules",
     "module": "data_quality",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [],
     "outbound": [
       "fabricops_kit.data_quality._build_dq_rule_history",
@@ -2320,7 +2320,7 @@
     "name": "ModuleDocMetadata",
     "qualified_name": "fabricops_kit.docs_metadata.ModuleDocMetadata",
     "module": "docs_metadata",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [],
     "outbound": [],
     "source_path": "src/fabricops_kit/docs_metadata.py",
@@ -2332,7 +2332,7 @@
     "name": "PublicSymbolDocMetadata",
     "qualified_name": "fabricops_kit.docs_metadata.PublicSymbolDocMetadata",
     "module": "docs_metadata",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [],
     "outbound": [],
     "source_path": "src/fabricops_kit/docs_metadata.py",
@@ -2344,7 +2344,7 @@
     "name": "TemplateFlowDocMetadata",
     "qualified_name": "fabricops_kit.docs_metadata.TemplateFlowDocMetadata",
     "module": "docs_metadata",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [],
     "outbound": [],
     "source_path": "src/fabricops_kit/docs_metadata.py",
@@ -2356,7 +2356,7 @@
     "name": "TemplateFlowSegmentMetadata",
     "qualified_name": "fabricops_kit.docs_metadata.TemplateFlowSegmentMetadata",
     "module": "docs_metadata",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [],
     "outbound": [],
     "source_path": "src/fabricops_kit/docs_metadata.py",
@@ -2368,7 +2368,7 @@
     "name": "IncrementalSafetyError",
     "qualified_name": "fabricops_kit.drift.IncrementalSafetyError",
     "module": "drift",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [],
     "outbound": [],
     "source_path": "src/fabricops_kit/drift.py",
@@ -2380,7 +2380,7 @@
     "name": "SchemaDriftError",
     "qualified_name": "fabricops_kit.drift.SchemaDriftError",
     "module": "drift",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.drift.stop_if_failed"
     ],
@@ -2394,7 +2394,7 @@
     "name": "UnsupportedDataFrameEngineError",
     "qualified_name": "fabricops_kit.drift.UnsupportedDataFrameEngineError",
     "module": "drift",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [],
     "outbound": [],
     "source_path": "src/fabricops_kit/drift.py",
@@ -2406,7 +2406,7 @@
     "name": "_actual_schema",
     "qualified_name": "fabricops_kit.drift._actual_schema",
     "module": "drift",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.drift.validate_schema"
     ],
@@ -2422,7 +2422,7 @@
     "name": "_categorical_distance",
     "qualified_name": "fabricops_kit.drift._categorical_distance",
     "module": "drift",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.drift._check_profile_drift"
     ],
@@ -2436,7 +2436,7 @@
     "name": "_check_profile_drift",
     "qualified_name": "fabricops_kit.drift._check_profile_drift",
     "module": "drift",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.drift.monitor_data_changes"
     ],
@@ -2454,7 +2454,7 @@
     "name": "_data_change_preset_config",
     "qualified_name": "fabricops_kit.drift._data_change_preset_config",
     "module": "drift",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.drift.monitor_data_changes"
     ],
@@ -2468,7 +2468,7 @@
     "name": "_extract_categorical_distribution_categories",
     "qualified_name": "fabricops_kit.drift._extract_categorical_distribution_categories",
     "module": "drift",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.drift.monitor_data_changes"
     ],
@@ -2484,7 +2484,7 @@
     "name": "_extract_numeric_distribution_bin_edges",
     "qualified_name": "fabricops_kit.drift._extract_numeric_distribution_bin_edges",
     "module": "drift",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.drift.monitor_data_changes"
     ],
@@ -2500,7 +2500,7 @@
     "name": "_is_missing_table_error",
     "qualified_name": "fabricops_kit.drift._is_missing_table_error",
     "module": "drift",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.drift._load_latest_profile"
     ],
@@ -2514,7 +2514,7 @@
     "name": "_load_latest_profile",
     "qualified_name": "fabricops_kit.drift._load_latest_profile",
     "module": "drift",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.drift.monitor_data_changes"
     ],
@@ -2531,7 +2531,7 @@
     "name": "_normalize_datatype",
     "qualified_name": "fabricops_kit.drift._normalize_datatype",
     "module": "drift",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.drift._actual_schema",
       "fabricops_kit.drift.validate_schema"
@@ -2546,7 +2546,7 @@
     "name": "_normalize_profile",
     "qualified_name": "fabricops_kit.drift._normalize_profile",
     "module": "drift",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.drift._check_profile_drift",
       "fabricops_kit.drift._extract_categorical_distribution_categories",
@@ -2569,7 +2569,7 @@
     "name": "_numeric_psi",
     "qualified_name": "fabricops_kit.drift._numeric_psi",
     "module": "drift",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.drift._check_profile_drift"
     ],
@@ -2585,7 +2585,7 @@
     "name": "_parse_distribution",
     "qualified_name": "fabricops_kit.drift._parse_distribution",
     "module": "drift",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.drift._normalize_profile"
     ],
@@ -2599,7 +2599,7 @@
     "name": "_proportions",
     "qualified_name": "fabricops_kit.drift._proportions",
     "module": "drift",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.drift._numeric_psi"
     ],
@@ -2613,7 +2613,7 @@
     "name": "_row_get",
     "qualified_name": "fabricops_kit.drift._row_get",
     "module": "drift",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.drift._normalize_profile"
     ],
@@ -2627,7 +2627,7 @@
     "name": "monitor_data_changes",
     "qualified_name": "fabricops_kit.drift.monitor_data_changes",
     "module": "drift",
-    "classification": "Essential",
+    "classification": "Callable",
     "inbound": [],
     "outbound": [
       "fabricops_kit.data_profiling.profile_dataframe",
@@ -2647,7 +2647,7 @@
     "name": "stop_if_failed",
     "qualified_name": "fabricops_kit.drift.stop_if_failed",
     "module": "drift",
-    "classification": "Essential",
+    "classification": "Callable",
     "inbound": [],
     "outbound": [
       "fabricops_kit.drift.SchemaDriftError"
@@ -2661,7 +2661,7 @@
     "name": "validate_schema",
     "qualified_name": "fabricops_kit.drift.validate_schema",
     "module": "drift",
-    "classification": "Essential",
+    "classification": "Callable",
     "inbound": [],
     "outbound": [
       "fabricops_kit.drift._actual_schema",
@@ -2676,7 +2676,7 @@
     "name": "FabricStore",
     "qualified_name": "fabricops_kit.fabric_input_output.FabricStore",
     "module": "fabric_input_output",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [],
     "outbound": [],
     "source_path": "src/fabricops_kit/fabric_input_output.py",
@@ -2688,7 +2688,7 @@
     "name": "_check_naming_convention",
     "qualified_name": "fabricops_kit.fabric_input_output._check_naming_convention",
     "module": "fabric_input_output",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [],
     "outbound": [
       "fabricops_kit.fabric_input_output._get_fabric_runtime_context"
@@ -2702,7 +2702,7 @@
     "name": "_convert_single_parquet_ns_to_us",
     "qualified_name": "fabricops_kit.fabric_input_output._convert_single_parquet_ns_to_us",
     "module": "fabric_input_output",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.fabric_input_output.read_lakehouse_parquet"
     ],
@@ -2716,7 +2716,7 @@
     "name": "_get_fabric_runtime_context",
     "qualified_name": "fabricops_kit.fabric_input_output._get_fabric_runtime_context",
     "module": "fabric_input_output",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.fabric_input_output._check_naming_convention"
     ],
@@ -2730,7 +2730,7 @@
     "name": "_get_spark",
     "qualified_name": "fabricops_kit.fabric_input_output._get_spark",
     "module": "fabric_input_output",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.fabric_input_output._seed_minimal_sample_source_table",
       "fabricops_kit.fabric_input_output.read_lakehouse_csv",
@@ -2749,7 +2749,7 @@
     "name": "_seed_minimal_sample_source_table",
     "qualified_name": "fabricops_kit.fabric_input_output._seed_minimal_sample_source_table",
     "module": "fabric_input_output",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [],
     "outbound": [
       "fabricops_kit.fabric_input_output._get_spark",
@@ -2764,7 +2764,7 @@
     "name": "read_lakehouse_csv",
     "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_csv",
     "module": "fabric_input_output",
-    "classification": "Essential",
+    "classification": "Callable",
     "inbound": [],
     "outbound": [
       "fabricops_kit.config._get_store",
@@ -2779,7 +2779,7 @@
     "name": "read_lakehouse_excel",
     "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_excel",
     "module": "fabric_input_output",
-    "classification": "Essential",
+    "classification": "Callable",
     "inbound": [],
     "outbound": [
       "fabricops_kit.config._get_store",
@@ -2794,7 +2794,7 @@
     "name": "read_lakehouse_parquet",
     "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_parquet",
     "module": "fabric_input_output",
-    "classification": "Essential",
+    "classification": "Callable",
     "inbound": [],
     "outbound": [
       "fabricops_kit.config._get_store",
@@ -2810,7 +2810,7 @@
     "name": "read_lakehouse_table",
     "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_table",
     "module": "fabric_input_output",
-    "classification": "Essential",
+    "classification": "Callable",
     "inbound": [
       "fabricops_kit.data_agreement._ensure_metadata_tables",
       "fabricops_kit.data_agreement._list_all_data_agreement_rows",
@@ -2834,7 +2834,7 @@
     "name": "read_warehouse_table",
     "qualified_name": "fabricops_kit.fabric_input_output.read_warehouse_table",
     "module": "fabric_input_output",
-    "classification": "Essential",
+    "classification": "Callable",
     "inbound": [],
     "outbound": [
       "fabricops_kit.config._get_store",
@@ -2849,16 +2849,14 @@
     "name": "write_lakehouse_table",
     "qualified_name": "fabricops_kit.fabric_input_output.write_lakehouse_table",
     "module": "fabric_input_output",
-    "classification": "Essential",
+    "classification": "Callable",
     "inbound": [
       "fabricops_kit.data_agreement._ensure_metadata_tables",
       "fabricops_kit.data_agreement._write_row",
       "fabricops_kit.data_quality._write_dq_rules",
       "fabricops_kit.fabric_input_output._seed_minimal_sample_source_table",
-      "fabricops_kit.governance_review._commit_column_classification",
-      "fabricops_kit.governance_review._commit_column_context",
-      "fabricops_kit.governance_review._commit_dq_rules",
       "fabricops_kit.governance_review._setup_governance_metadata_tables",
+      "fabricops_kit.governance_review.record_table_governance",
       "fabricops_kit.metadata._register_current_notebook",
       "fabricops_kit.metadata._setup_notebook_registry_table"
     ],
@@ -2874,7 +2872,7 @@
     "name": "write_warehouse_table",
     "qualified_name": "fabricops_kit.fabric_input_output.write_warehouse_table",
     "module": "fabric_input_output",
-    "classification": "Essential",
+    "classification": "Callable",
     "inbound": [],
     "outbound": [
       "fabricops_kit.config._get_store"
@@ -2884,50 +2882,20 @@
     "summary": "Write a DataFrame to a configured Fabric warehouse target."
   },
   {
-    "id": "fabricops_kit.governance_review.CatalogueTableSelection",
-    "name": "CatalogueTableSelection",
-    "qualified_name": "fabricops_kit.governance_review.CatalogueTableSelection",
-    "module": "governance_review",
-    "classification": "Internal helper",
-    "inbound": [],
-    "outbound": [],
-    "source_path": "src/fabricops_kit/governance_review.py",
-    "docs_path": "reference/internal/governance_review_CatalogueTableSelection.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.governance_review._audit",
-    "name": "_audit",
-    "qualified_name": "fabricops_kit.governance_review._audit",
-    "module": "governance_review",
-    "classification": "Internal helper",
-    "inbound": [
-      "fabricops_kit.governance_review._build_classification_records",
-      "fabricops_kit.governance_review._build_column_context_records",
-      "fabricops_kit.governance_review._build_dq_rule_records"
-    ],
-    "outbound": [
-      "fabricops_kit.metadata._build_runtime_audit_fields"
-    ],
-    "source_path": "src/fabricops_kit/governance_review.py",
-    "docs_path": "reference/internal/governance_review__audit.md",
-    "summary": "No summary available."
-  },
-  {
     "id": "fabricops_kit.governance_review._build_classification_records",
     "name": "_build_classification_records",
     "qualified_name": "fabricops_kit.governance_review._build_classification_records",
     "module": "governance_review",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.governance_review.record_table_governance"
     ],
     "outbound": [
-      "fabricops_kit.governance_review._audit",
       "fabricops_kit.governance_review._json",
       "fabricops_kit.governance_review._value",
       "fabricops_kit.metadata._build_metadata_column_key",
       "fabricops_kit.metadata._build_metadata_table_key",
+      "fabricops_kit.metadata._build_runtime_audit_fields",
       "fabricops_kit.metadata._now_utc_iso",
       "fabricops_kit.metadata._resolve_action_by"
     ],
@@ -2940,16 +2908,16 @@
     "name": "_build_column_context_records",
     "qualified_name": "fabricops_kit.governance_review._build_column_context_records",
     "module": "governance_review",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.governance_review.record_table_governance"
     ],
     "outbound": [
-      "fabricops_kit.governance_review._audit",
       "fabricops_kit.governance_review._json",
       "fabricops_kit.governance_review._value",
       "fabricops_kit.metadata._build_metadata_column_key",
       "fabricops_kit.metadata._build_metadata_table_key",
+      "fabricops_kit.metadata._build_runtime_audit_fields",
       "fabricops_kit.metadata._now_utc_iso",
       "fabricops_kit.metadata._resolve_action_by"
     ],
@@ -2962,17 +2930,17 @@
     "name": "_build_dq_rule_records",
     "qualified_name": "fabricops_kit.governance_review._build_dq_rule_records",
     "module": "governance_review",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.governance_review.record_table_governance"
     ],
     "outbound": [
-      "fabricops_kit.governance_review._audit",
       "fabricops_kit.governance_review._json",
       "fabricops_kit.governance_review._value",
       "fabricops_kit.metadata._build_dq_rule_key",
       "fabricops_kit.metadata._build_metadata_column_key",
       "fabricops_kit.metadata._build_metadata_table_key",
+      "fabricops_kit.metadata._build_runtime_audit_fields",
       "fabricops_kit.metadata._now_utc_iso",
       "fabricops_kit.metadata._resolve_action_by"
     ],
@@ -2981,25 +2949,11 @@
     "summary": "No summary available."
   },
   {
-    "id": "fabricops_kit.governance_review._build_profile_summary",
-    "name": "_build_profile_summary",
-    "qualified_name": "fabricops_kit.governance_review._build_profile_summary",
-    "module": "governance_review",
-    "classification": "Internal helper",
-    "inbound": [],
-    "outbound": [
-      "fabricops_kit.governance_review._value"
-    ],
-    "source_path": "src/fabricops_kit/governance_review.py",
-    "docs_path": "reference/internal/governance_review__build_profile_summary.md",
-    "summary": "No summary available."
-  },
-  {
     "id": "fabricops_kit.governance_review._catalogue_table_options",
     "name": "_catalogue_table_options",
     "qualified_name": "fabricops_kit.governance_review._catalogue_table_options",
     "module": "governance_review",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.governance_review.widget_select_catalogue_table"
     ],
@@ -3017,9 +2971,8 @@
     "name": "_coerce_rows",
     "qualified_name": "fabricops_kit.governance_review._coerce_rows",
     "module": "governance_review",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
-      "fabricops_kit.governance_review._latest_by_column",
       "fabricops_kit.governance_review._setup_governance_metadata_tables",
       "fabricops_kit.governance_review.load_catalogue_profile_rows",
       "fabricops_kit.governance_review.widget_select_catalogue_table"
@@ -3030,59 +2983,11 @@
     "summary": "No summary available."
   },
   {
-    "id": "fabricops_kit.governance_review._commit_column_classification",
-    "name": "_commit_column_classification",
-    "qualified_name": "fabricops_kit.governance_review._commit_column_classification",
-    "module": "governance_review",
-    "classification": "Internal helper",
-    "inbound": [
-      "fabricops_kit.governance_review.record_table_governance"
-    ],
-    "outbound": [
-      "fabricops_kit.fabric_input_output.write_lakehouse_table"
-    ],
-    "source_path": "src/fabricops_kit/governance_review.py",
-    "docs_path": "reference/internal/governance_review__commit_column_classification.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.governance_review._commit_column_context",
-    "name": "_commit_column_context",
-    "qualified_name": "fabricops_kit.governance_review._commit_column_context",
-    "module": "governance_review",
-    "classification": "Internal helper",
-    "inbound": [
-      "fabricops_kit.governance_review.record_table_governance"
-    ],
-    "outbound": [
-      "fabricops_kit.fabric_input_output.write_lakehouse_table"
-    ],
-    "source_path": "src/fabricops_kit/governance_review.py",
-    "docs_path": "reference/internal/governance_review__commit_column_context.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.governance_review._commit_dq_rules",
-    "name": "_commit_dq_rules",
-    "qualified_name": "fabricops_kit.governance_review._commit_dq_rules",
-    "module": "governance_review",
-    "classification": "Internal helper",
-    "inbound": [
-      "fabricops_kit.governance_review.record_table_governance"
-    ],
-    "outbound": [
-      "fabricops_kit.fabric_input_output.write_lakehouse_table"
-    ],
-    "source_path": "src/fabricops_kit/governance_review.py",
-    "docs_path": "reference/internal/governance_review__commit_dq_rules.md",
-    "summary": "No summary available."
-  },
-  {
     "id": "fabricops_kit.governance_review._display_review_guidance",
     "name": "_display_review_guidance",
     "qualified_name": "fabricops_kit.governance_review._display_review_guidance",
     "module": "governance_review",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.governance_review.widget_review_column_classification",
       "fabricops_kit.governance_review.widget_review_column_context",
@@ -3100,7 +3005,7 @@
     "name": "_get_governance_metadata_schemas",
     "qualified_name": "fabricops_kit.governance_review._get_governance_metadata_schemas",
     "module": "governance_review",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.governance_review._setup_governance_metadata_tables"
     ],
@@ -3117,7 +3022,7 @@
     "name": "_is_success",
     "qualified_name": "fabricops_kit.governance_review._is_success",
     "module": "governance_review",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.governance_review._catalogue_table_options",
       "fabricops_kit.governance_review.load_catalogue_profile_rows"
@@ -3134,7 +3039,7 @@
     "name": "_is_table_not_found_error",
     "qualified_name": "fabricops_kit.governance_review._is_table_not_found_error",
     "module": "governance_review",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.governance_review._setup_governance_metadata_tables"
     ],
@@ -3148,7 +3053,7 @@
     "name": "_json",
     "qualified_name": "fabricops_kit.governance_review._json",
     "module": "governance_review",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.governance_review._build_classification_records",
       "fabricops_kit.governance_review._build_column_context_records",
@@ -3160,54 +3065,11 @@
     "summary": "No summary available."
   },
   {
-    "id": "fabricops_kit.governance_review._latest_by_column",
-    "name": "_latest_by_column",
-    "qualified_name": "fabricops_kit.governance_review._latest_by_column",
-    "module": "governance_review",
-    "classification": "Internal helper",
-    "inbound": [],
-    "outbound": [
-      "fabricops_kit.governance_review._coerce_rows"
-    ],
-    "source_path": "src/fabricops_kit/governance_review.py",
-    "docs_path": "reference/internal/governance_review__latest_by_column.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.governance_review._optional_ai_generate_response",
-    "name": "_optional_ai_generate_response",
-    "qualified_name": "fabricops_kit.governance_review._optional_ai_generate_response",
-    "module": "governance_review",
-    "classification": "Internal helper",
-    "inbound": [],
-    "outbound": [],
-    "source_path": "src/fabricops_kit/governance_review.py",
-    "docs_path": "reference/internal/governance_review__optional_ai_generate_response.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.governance_review._row_metadata_table_key",
-    "name": "_row_metadata_table_key",
-    "qualified_name": "fabricops_kit.governance_review._row_metadata_table_key",
-    "module": "governance_review",
-    "classification": "Internal helper",
-    "inbound": [
-      "fabricops_kit.governance_review.load_catalogue_profile_rows"
-    ],
-    "outbound": [
-      "fabricops_kit.governance_review._value",
-      "fabricops_kit.metadata._build_metadata_table_key"
-    ],
-    "source_path": "src/fabricops_kit/governance_review.py",
-    "docs_path": "reference/internal/governance_review__row_metadata_table_key.md",
-    "summary": "No summary available."
-  },
-  {
     "id": "fabricops_kit.governance_review._schema",
     "name": "_schema",
     "qualified_name": "fabricops_kit.governance_review._schema",
     "module": "governance_review",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.governance_review._get_governance_metadata_schemas"
     ],
@@ -3223,7 +3085,7 @@
     "name": "_schema_field_names",
     "qualified_name": "fabricops_kit.governance_review._schema_field_names",
     "module": "governance_review",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.governance_review._setup_governance_metadata_tables"
     ],
@@ -3237,7 +3099,7 @@
     "name": "_setup_governance_metadata_tables",
     "qualified_name": "fabricops_kit.governance_review._setup_governance_metadata_tables",
     "module": "governance_review",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.config.setup_metadata_tables"
     ],
@@ -3258,7 +3120,7 @@
     "name": "_spark_types",
     "qualified_name": "fabricops_kit.governance_review._spark_types",
     "module": "governance_review",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.governance_review._get_governance_metadata_schemas",
       "fabricops_kit.governance_review._schema"
@@ -3273,17 +3135,14 @@
     "name": "_value",
     "qualified_name": "fabricops_kit.governance_review._value",
     "module": "governance_review",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.governance_review._build_classification_records",
       "fabricops_kit.governance_review._build_column_context_records",
       "fabricops_kit.governance_review._build_dq_rule_records",
-      "fabricops_kit.governance_review._build_profile_summary",
       "fabricops_kit.governance_review._catalogue_table_options",
       "fabricops_kit.governance_review._display_review_guidance",
       "fabricops_kit.governance_review._is_success",
-      "fabricops_kit.governance_review._row_metadata_table_key",
-      "fabricops_kit.governance_review._widget_review_table_governance",
       "fabricops_kit.governance_review.load_catalogue_profile_rows"
     ],
     "outbound": [],
@@ -3292,25 +3151,11 @@
     "summary": "No summary available."
   },
   {
-    "id": "fabricops_kit.governance_review._widget_review_table_governance",
-    "name": "_widget_review_table_governance",
-    "qualified_name": "fabricops_kit.governance_review._widget_review_table_governance",
-    "module": "governance_review",
-    "classification": "Internal helper",
-    "inbound": [],
-    "outbound": [
-      "fabricops_kit.governance_review._value"
-    ],
-    "source_path": "src/fabricops_kit/governance_review.py",
-    "docs_path": "reference/internal/governance_review__widget_review_table_governance.md",
-    "summary": "No summary available."
-  },
-  {
     "id": "fabricops_kit.governance_review.get_selected_catalogue_table",
     "name": "get_selected_catalogue_table",
     "qualified_name": "fabricops_kit.governance_review.get_selected_catalogue_table",
     "module": "governance_review",
-    "classification": "Essential",
+    "classification": "Callable",
     "inbound": [],
     "outbound": [],
     "source_path": "src/fabricops_kit/governance_review.py",
@@ -3322,14 +3167,14 @@
     "name": "load_catalogue_profile_rows",
     "qualified_name": "fabricops_kit.governance_review.load_catalogue_profile_rows",
     "module": "governance_review",
-    "classification": "Essential",
+    "classification": "Callable",
     "inbound": [],
     "outbound": [
       "fabricops_kit.fabric_input_output.read_lakehouse_table",
       "fabricops_kit.governance_review._coerce_rows",
       "fabricops_kit.governance_review._is_success",
-      "fabricops_kit.governance_review._row_metadata_table_key",
-      "fabricops_kit.governance_review._value"
+      "fabricops_kit.governance_review._value",
+      "fabricops_kit.metadata._build_metadata_table_key"
     ],
     "source_path": "src/fabricops_kit/governance_review.py",
     "docs_path": "reference/load_catalogue_profile_rows.md",
@@ -3340,15 +3185,13 @@
     "name": "record_table_governance",
     "qualified_name": "fabricops_kit.governance_review.record_table_governance",
     "module": "governance_review",
-    "classification": "Essential",
+    "classification": "Callable",
     "inbound": [],
     "outbound": [
+      "fabricops_kit.fabric_input_output.write_lakehouse_table",
       "fabricops_kit.governance_review._build_classification_records",
       "fabricops_kit.governance_review._build_column_context_records",
-      "fabricops_kit.governance_review._build_dq_rule_records",
-      "fabricops_kit.governance_review._commit_column_classification",
-      "fabricops_kit.governance_review._commit_column_context",
-      "fabricops_kit.governance_review._commit_dq_rules"
+      "fabricops_kit.governance_review._build_dq_rule_records"
     ],
     "source_path": "src/fabricops_kit/governance_review.py",
     "docs_path": "reference/record_table_governance.md",
@@ -3359,7 +3202,7 @@
     "name": "widget_review_column_classification",
     "qualified_name": "fabricops_kit.governance_review.widget_review_column_classification",
     "module": "governance_review",
-    "classification": "Essential",
+    "classification": "Callable",
     "inbound": [],
     "outbound": [
       "fabricops_kit.governance_review._display_review_guidance"
@@ -3373,7 +3216,7 @@
     "name": "widget_review_column_context",
     "qualified_name": "fabricops_kit.governance_review.widget_review_column_context",
     "module": "governance_review",
-    "classification": "Essential",
+    "classification": "Callable",
     "inbound": [],
     "outbound": [
       "fabricops_kit.governance_review._display_review_guidance"
@@ -3387,7 +3230,7 @@
     "name": "widget_review_dq_rules",
     "qualified_name": "fabricops_kit.governance_review.widget_review_dq_rules",
     "module": "governance_review",
-    "classification": "Essential",
+    "classification": "Callable",
     "inbound": [],
     "outbound": [
       "fabricops_kit.governance_review._display_review_guidance"
@@ -3401,7 +3244,7 @@
     "name": "widget_select_catalogue_table",
     "qualified_name": "fabricops_kit.governance_review.widget_select_catalogue_table",
     "module": "governance_review",
-    "classification": "Essential",
+    "classification": "Callable",
     "inbound": [],
     "outbound": [
       "fabricops_kit.fabric_input_output.read_lakehouse_table",
@@ -3417,7 +3260,7 @@
     "name": "_build_handover_record",
     "qualified_name": "fabricops_kit.handover._build_handover_record",
     "module": "handover",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [],
     "outbound": [
       "fabricops_kit.handover._status_of",
@@ -3432,7 +3275,7 @@
     "name": "_status_of",
     "qualified_name": "fabricops_kit.handover._status_of",
     "module": "handover",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.handover._build_handover_record",
       "fabricops_kit.handover.render_handover_markdown"
@@ -3447,7 +3290,7 @@
     "name": "build_handover",
     "qualified_name": "fabricops_kit.handover.build_handover",
     "module": "handover",
-    "classification": "Essential",
+    "classification": "Callable",
     "inbound": [],
     "outbound": [],
     "source_path": "src/fabricops_kit/handover.py",
@@ -3459,7 +3302,7 @@
     "name": "render_handover_markdown",
     "qualified_name": "fabricops_kit.handover.render_handover_markdown",
     "module": "handover",
-    "classification": "Essential",
+    "classification": "Callable",
     "inbound": [
       "fabricops_kit.handover._build_handover_record"
     ],
@@ -3475,7 +3318,7 @@
     "name": "_build_dq_rule_key",
     "qualified_name": "fabricops_kit.metadata._build_dq_rule_key",
     "module": "metadata",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_quality._attach_rule_metadata_keys",
       "fabricops_kit.governance_review._build_dq_rule_records"
@@ -3492,7 +3335,7 @@
     "name": "_build_evidence_row",
     "qualified_name": "fabricops_kit.metadata._build_evidence_row",
     "module": "metadata",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [],
     "outbound": [
       "fabricops_kit.metadata._now_utc_iso"
@@ -3506,7 +3349,7 @@
     "name": "_build_metadata_column_key",
     "qualified_name": "fabricops_kit.metadata._build_metadata_column_key",
     "module": "metadata",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.business_context._widget_review_business_context",
       "fabricops_kit.data_governance._widget_review_governance",
@@ -3527,7 +3370,7 @@
     "name": "_build_metadata_table_key",
     "qualified_name": "fabricops_kit.metadata._build_metadata_table_key",
     "module": "metadata",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.business_context._widget_review_business_context",
       "fabricops_kit.data_governance._widget_review_governance",
@@ -3536,7 +3379,7 @@
       "fabricops_kit.governance_review._build_column_context_records",
       "fabricops_kit.governance_review._build_dq_rule_records",
       "fabricops_kit.governance_review._catalogue_table_options",
-      "fabricops_kit.governance_review._row_metadata_table_key"
+      "fabricops_kit.governance_review.load_catalogue_profile_rows"
     ],
     "outbound": [
       "fabricops_kit.metadata._sha256_key"
@@ -3550,12 +3393,14 @@
     "name": "_build_runtime_audit_fields",
     "qualified_name": "fabricops_kit.metadata._build_runtime_audit_fields",
     "module": "metadata",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_agreement._create_or_update_data_agreement",
       "fabricops_kit.data_agreement._create_or_update_data_steward",
       "fabricops_kit.data_agreement._save_agreement_evidence_records",
-      "fabricops_kit.governance_review._audit"
+      "fabricops_kit.governance_review._build_classification_records",
+      "fabricops_kit.governance_review._build_column_context_records",
+      "fabricops_kit.governance_review._build_dq_rule_records"
     ],
     "outbound": [
       "fabricops_kit.metadata._context_get",
@@ -3571,7 +3416,7 @@
     "name": "_coerce_row_dicts",
     "qualified_name": "fabricops_kit.metadata._coerce_row_dicts",
     "module": "metadata",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.metadata._column_names",
       "fabricops_kit.metadata._registry_rows_with_defaults",
@@ -3587,7 +3432,7 @@
     "name": "_column_context_rows_for_spark",
     "qualified_name": "fabricops_kit.metadata._column_context_rows_for_spark",
     "module": "metadata",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.metadata._register_current_notebook",
       "fabricops_kit.metadata._setup_notebook_registry_table",
@@ -3603,7 +3448,7 @@
     "name": "_column_names",
     "qualified_name": "fabricops_kit.metadata._column_names",
     "module": "metadata",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.metadata._setup_notebook_registry_table"
     ],
@@ -3619,7 +3464,7 @@
     "name": "_context_get",
     "qualified_name": "fabricops_kit.metadata._context_get",
     "module": "metadata",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.metadata._build_runtime_audit_fields",
       "fabricops_kit.metadata._current_notebook_active_registrations",
@@ -3637,7 +3482,7 @@
     "name": "_current_notebook_active_registrations",
     "qualified_name": "fabricops_kit.metadata._current_notebook_active_registrations",
     "module": "metadata",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_agreement.widget_select_agreement"
     ],
@@ -3656,7 +3501,7 @@
     "name": "_default_evidence_types",
     "qualified_name": "fabricops_kit.metadata._default_evidence_types",
     "module": "metadata",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [],
     "outbound": [],
     "source_path": "src/fabricops_kit/metadata.py",
@@ -3668,7 +3513,7 @@
     "name": "_extract_columns_from_profile",
     "qualified_name": "fabricops_kit.metadata._extract_columns_from_profile",
     "module": "metadata",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [],
     "outbound": [],
     "source_path": "src/fabricops_kit/metadata.py",
@@ -3680,7 +3525,7 @@
     "name": "_get_notebook_registry_schema",
     "qualified_name": "fabricops_kit.metadata._get_notebook_registry_schema",
     "module": "metadata",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.metadata._setup_notebook_registry_table"
     ],
@@ -3694,7 +3539,7 @@
     "name": "_key_part",
     "qualified_name": "fabricops_kit.metadata._key_part",
     "module": "metadata",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.metadata._sha256_key"
     ],
@@ -3708,7 +3553,7 @@
     "name": "_latest_registration_events",
     "qualified_name": "fabricops_kit.metadata._latest_registration_events",
     "module": "metadata",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.metadata._load_notebook_registry"
     ],
@@ -3725,7 +3570,7 @@
     "name": "_load_notebook_registry",
     "qualified_name": "fabricops_kit.metadata._load_notebook_registry",
     "module": "metadata",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.metadata._current_notebook_active_registrations"
     ],
@@ -3743,7 +3588,7 @@
     "name": "_normalise_records_by_column",
     "qualified_name": "fabricops_kit.metadata._normalise_records_by_column",
     "module": "metadata",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [],
     "outbound": [],
     "source_path": "src/fabricops_kit/metadata.py",
@@ -3755,7 +3600,7 @@
     "name": "_notebook_registration_key",
     "qualified_name": "fabricops_kit.metadata._notebook_registration_key",
     "module": "metadata",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.metadata._latest_registration_events",
       "fabricops_kit.metadata._register_current_notebook",
@@ -3772,7 +3617,7 @@
     "name": "_notebook_registry_base_schema",
     "qualified_name": "fabricops_kit.metadata._notebook_registry_base_schema",
     "module": "metadata",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [],
     "outbound": [],
     "source_path": "src/fabricops_kit/metadata.py",
@@ -3784,7 +3629,7 @@
     "name": "_now_utc_iso",
     "qualified_name": "fabricops_kit.metadata._now_utc_iso",
     "module": "metadata",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_governance._widget_review_governance",
       "fabricops_kit.data_quality._build_dq_rule_deactivation_metadata_df",
@@ -3804,7 +3649,7 @@
     "name": "_register_current_notebook",
     "qualified_name": "fabricops_kit.metadata._register_current_notebook",
     "module": "metadata",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_agreement.widget_select_agreement"
     ],
@@ -3826,7 +3671,7 @@
     "name": "_registry_rows_with_defaults",
     "qualified_name": "fabricops_kit.metadata._registry_rows_with_defaults",
     "module": "metadata",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.metadata._latest_registration_events",
       "fabricops_kit.metadata._load_notebook_registry"
@@ -3845,7 +3690,7 @@
     "name": "_resolve_action_by",
     "qualified_name": "fabricops_kit.metadata._resolve_action_by",
     "module": "metadata",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_governance._approved_widget_rows",
       "fabricops_kit.data_quality._build_dq_rule_deactivation_metadata_df",
@@ -3869,7 +3714,7 @@
     "name": "_runtime_context",
     "qualified_name": "fabricops_kit.metadata._runtime_context",
     "module": "metadata",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.metadata._build_runtime_audit_fields",
       "fabricops_kit.metadata._current_notebook_active_registrations",
@@ -3888,7 +3733,7 @@
     "name": "_safe_str",
     "qualified_name": "fabricops_kit.metadata._safe_str",
     "module": "metadata",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.metadata._build_runtime_audit_fields",
       "fabricops_kit.metadata._current_notebook_active_registrations",
@@ -3906,7 +3751,7 @@
     "name": "_setup_notebook_registry_table",
     "qualified_name": "fabricops_kit.metadata._setup_notebook_registry_table",
     "module": "metadata",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.config.setup_metadata_tables"
     ],
@@ -3929,7 +3774,7 @@
     "name": "_sha256_key",
     "qualified_name": "fabricops_kit.metadata._sha256_key",
     "module": "metadata",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.metadata._build_dq_rule_key",
       "fabricops_kit.metadata._build_metadata_column_key",
@@ -3947,7 +3792,7 @@
     "name": "_write_column_business_context",
     "qualified_name": "fabricops_kit.metadata._write_column_business_context",
     "module": "metadata",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.business_context._write_business_context"
     ],
@@ -3963,7 +3808,7 @@
     "name": "_write_column_governance_context",
     "qualified_name": "fabricops_kit.metadata._write_column_governance_context",
     "module": "metadata",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [],
     "outbound": [
       "fabricops_kit.metadata._write_metadata_rows"
@@ -3977,7 +3822,7 @@
     "name": "_write_metadata_rows",
     "qualified_name": "fabricops_kit.metadata._write_metadata_rows",
     "module": "metadata",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.metadata._write_column_business_context",
       "fabricops_kit.metadata._write_column_governance_context"
@@ -3995,7 +3840,7 @@
     "name": "_write_metadata_rows_legacy",
     "qualified_name": "fabricops_kit.metadata._write_metadata_rows_legacy",
     "module": "metadata",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.metadata._register_current_notebook",
       "fabricops_kit.metadata._write_metadata_rows"
@@ -4010,7 +3855,7 @@
     "name": "_get_docs_url",
     "qualified_name": "fabricops_kit.versioning._get_docs_url",
     "module": "versioning",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.versioning._print_runtime_banner"
     ],
@@ -4026,7 +3871,7 @@
     "name": "_get_docs_version",
     "qualified_name": "fabricops_kit.versioning._get_docs_version",
     "module": "versioning",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.versioning._get_docs_url"
     ],
@@ -4042,7 +3887,7 @@
     "name": "_get_package_version",
     "qualified_name": "fabricops_kit.versioning._get_package_version",
     "module": "versioning",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.versioning._get_docs_version",
       "fabricops_kit.versioning._get_release_notes_url",
@@ -4058,7 +3903,7 @@
     "name": "_get_release_notes_url",
     "qualified_name": "fabricops_kit.versioning._get_release_notes_url",
     "module": "versioning",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [
       "fabricops_kit.versioning._print_runtime_banner"
     ],
@@ -4074,7 +3919,7 @@
     "name": "_print_runtime_banner",
     "qualified_name": "fabricops_kit.versioning._print_runtime_banner",
     "module": "versioning",
-    "classification": "Internal helper",
+    "classification": "Internal",
     "inbound": [],
     "outbound": [
       "fabricops_kit.versioning._get_docs_url",

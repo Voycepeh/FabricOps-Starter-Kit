@@ -1,7 +1,7 @@
 # _get_spark
 
 **Module:** `fabric_input_output`  
-**Classification:** Internal helper
+**Classification:** Internal
 
 ## Purpose
 
@@ -12,7 +12,7 @@ No summary available.
 - Fully qualified function name: `fabricops_kit.fabric_input_output._get_spark`
 - Short name: `_get_spark`
 - Module: `fabric_input_output`
-- Classification: Internal helper
+- Classification: Internal
 - Related module: `fabric_input_output`
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
 - Source reference: <a href="../../api/modules/fabric_input_output/#_get_spark">Module source anchor</a>

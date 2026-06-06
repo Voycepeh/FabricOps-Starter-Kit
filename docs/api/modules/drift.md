@@ -77,21 +77,21 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
   <tbody>
     <tr>
       <td><a href="../../reference/monitor_data_changes/"><code>monitor_data_changes</code></a></td>
-      <td>Essential</td>
+      <td>Callable</td>
       <td>function</td>
       <td>Profile data, compare against the approved baseline, and return a drift guardrail result.</td>
       <td><a href="../../reference/internal/drift/_check_profile_drift/"><code>_check_profile_drift</code></a> (internal), <a href="../../reference/internal/drift/_data_change_preset_config/"><code>_data_change_preset_config</code></a> (internal), <a href="../../reference/internal/drift/_extract_categorical_distribution_categories/"><code>_extract_categorical_distribution_categories</code></a> (internal), <a href="../../reference/internal/drift/_extract_numeric_distribution_bin_edges/"><code>_extract_numeric_distribution_bin_edges</code></a> (internal), <a href="../../reference/internal/drift/_load_latest_profile/"><code>_load_latest_profile</code></a> (internal), <a href="../../reference/internal/drift/_normalize_profile/"><code>_normalize_profile</code></a> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/stop_if_failed/"><code>stop_if_failed</code></a></td>
-      <td>Essential</td>
+      <td>Callable</td>
       <td>function</td>
       <td>Stop a notebook only when a schema or data-change guardrail result blocks continuation.</td>
       <td>—</td>
     </tr>
     <tr>
       <td><a href="../../reference/validate_schema/"><code>validate_schema</code></a></td>
-      <td>Essential</td>
+      <td>Callable</td>
       <td>function</td>
       <td>Validate a DataFrame schema using strict, allow-new-columns, or monitor-only presets.</td>
       <td><a href="../../reference/internal/drift/_actual_schema/"><code>_actual_schema</code></a> (internal), <a href="../../reference/internal/drift/_normalize_datatype/"><code>_normalize_datatype</code></a> (internal)</td>

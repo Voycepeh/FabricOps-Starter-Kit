@@ -1,7 +1,7 @@
 # _list_data_agreements
 
 **Module:** `data_agreement`  
-**Classification:** Internal helper
+**Classification:** Internal
 
 ## Purpose
 
@@ -12,7 +12,7 @@ No summary available.
 - Fully qualified function name: `fabricops_kit.data_agreement._list_data_agreements`
 - Short name: `_list_data_agreements`
 - Module: `data_agreement`
-- Classification: Internal helper
+- Classification: Internal
 - Related module: `data_agreement`
 - Source file path: `src/fabricops_kit/data_agreement.py`
 - Source reference: <a href="../../api/modules/data_agreement/#_list_data_agreements">Module source anchor</a>

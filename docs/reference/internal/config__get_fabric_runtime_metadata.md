@@ -1,7 +1,7 @@
 # _get_fabric_runtime_metadata
 
 **Module:** `config`  
-**Classification:** Internal helper
+**Classification:** Internal
 
 ## Purpose
 
@@ -12,7 +12,7 @@ No summary available.
 - Fully qualified function name: `fabricops_kit.config._get_fabric_runtime_metadata`
 - Short name: `_get_fabric_runtime_metadata`
 - Module: `config`
-- Classification: Internal helper
+- Classification: Internal
 - Related module: `config`
 - Source file path: `src/fabricops_kit/config.py`
 - Source reference: <a href="../../api/modules/config/#_get_fabric_runtime_metadata">Module source anchor</a>

@@ -1,7 +1,7 @@
 # read_lakehouse_excel
 
 **Module:** `fabric_input_output`  
-**Classification:** Essential
+**Classification:** Callable
 
 ## Purpose
 
@@ -12,7 +12,7 @@ Read an Excel file from a configured Fabric lakehouse Files path.
 - Fully qualified function name: `fabricops_kit.fabric_input_output.read_lakehouse_excel`
 - Short name: `read_lakehouse_excel`
 - Module: `fabric_input_output`
-- Classification: Essential
+- Classification: Callable
 - Related module: `fabric_input_output`
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
 - Source reference: <a href="../../api/modules/fabric_input_output/#read_lakehouse_excel">Module source anchor</a>

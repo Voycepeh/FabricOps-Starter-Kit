@@ -1,7 +1,7 @@
 # _is_missing_table_error
 
 **Module:** `drift`  
-**Classification:** Internal helper
+**Classification:** Internal
 
 ## Purpose
 
@@ -12,7 +12,7 @@ No summary available.
 - Fully qualified function name: `fabricops_kit.drift._is_missing_table_error`
 - Short name: `_is_missing_table_error`
 - Module: `drift`
-- Classification: Internal helper
+- Classification: Internal
 - Related module: `drift`
 - Source file path: `src/fabricops_kit/drift.py`
 - Source reference: <a href="../../api/modules/drift/#_is_missing_table_error">Module source anchor</a>

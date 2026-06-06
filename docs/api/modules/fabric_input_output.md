@@ -77,49 +77,49 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
   <tbody>
     <tr>
       <td><a href="../../reference/read_lakehouse_csv/"><code>read_lakehouse_csv</code></a></td>
-      <td>Essential</td>
+      <td>Callable</td>
       <td>function</td>
       <td>Read a CSV file from a configured Fabric lakehouse Files path.</td>
       <td><a href="../../reference/internal/fabric_input_output/_get_spark/"><code>_get_spark</code></a> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/read_lakehouse_excel/"><code>read_lakehouse_excel</code></a></td>
-      <td>Essential</td>
+      <td>Callable</td>
       <td>function</td>
       <td>Read an Excel file from a configured Fabric lakehouse Files path.</td>
       <td><a href="../../reference/internal/fabric_input_output/_get_spark/"><code>_get_spark</code></a> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/read_lakehouse_parquet/"><code>read_lakehouse_parquet</code></a></td>
-      <td>Essential</td>
+      <td>Callable</td>
       <td>function</td>
       <td>Read a Parquet path from a configured Fabric lakehouse Files path.</td>
       <td><a href="../../reference/internal/fabric_input_output/_convert_single_parquet_ns_to_us/"><code>_convert_single_parquet_ns_to_us</code></a> (internal), <a href="../../reference/internal/fabric_input_output/_get_spark/"><code>_get_spark</code></a> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/read_lakehouse_table/"><code>read_lakehouse_table</code></a></td>
-      <td>Essential</td>
+      <td>Callable</td>
       <td>function</td>
       <td>Read a table from a configured Fabric lakehouse target.</td>
       <td><a href="../../reference/internal/fabric_input_output/_get_spark/"><code>_get_spark</code></a> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/read_warehouse_table/"><code>read_warehouse_table</code></a></td>
-      <td>Essential</td>
+      <td>Callable</td>
       <td>function</td>
       <td>Read a table from a configured Fabric warehouse target.</td>
       <td><a href="../../reference/internal/fabric_input_output/_get_spark/"><code>_get_spark</code></a> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/write_lakehouse_table/"><code>write_lakehouse_table</code></a></td>
-      <td>Essential</td>
+      <td>Callable</td>
       <td>function</td>
       <td>Write a DataFrame to a configured Fabric lakehouse target.</td>
       <td>—</td>
     </tr>
     <tr>
       <td><a href="../../reference/write_warehouse_table/"><code>write_warehouse_table</code></a></td>
-      <td>Essential</td>
+      <td>Callable</td>
       <td>function</td>
       <td>Write a DataFrame to a configured Fabric warehouse target.</td>
       <td>—</td>
@@ -249,7 +249,7 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
 <a class="reference-chip" href="../data_quality/#_write_dq_rules"><code>_write_dq_rules</code></a>
 
 **governance_review**
-<a class="reference-chip" href="../governance_review/#_commit_column_classification"><code>_commit_column_classification</code></a>, <a class="reference-chip" href="../governance_review/#_commit_column_context"><code>_commit_column_context</code></a>, <a class="reference-chip" href="../governance_review/#_commit_dq_rules"><code>_commit_dq_rules</code></a>, <a class="reference-chip" href="../governance_review/#_setup_governance_metadata_tables"><code>_setup_governance_metadata_tables</code></a>, <a class="reference-chip" href="../../reference/load_catalogue_profile_rows/"><code>load_catalogue_profile_rows</code></a>, <a class="reference-chip" href="../../reference/widget_select_catalogue_table/"><code>widget_select_catalogue_table</code></a>
+<a class="reference-chip" href="../governance_review/#_setup_governance_metadata_tables"><code>_setup_governance_metadata_tables</code></a>, <a class="reference-chip" href="../../reference/load_catalogue_profile_rows/"><code>load_catalogue_profile_rows</code></a>, <a class="reference-chip" href="../../reference/record_table_governance/"><code>record_table_governance</code></a>, <a class="reference-chip" href="../../reference/widget_select_catalogue_table/"><code>widget_select_catalogue_table</code></a>
 
 **metadata**
 <a class="reference-chip" href="../metadata/#_load_notebook_registry"><code>_load_notebook_registry</code></a>, <a class="reference-chip" href="../metadata/#_register_current_notebook"><code>_register_current_notebook</code></a>, <a class="reference-chip" href="../metadata/#_setup_notebook_registry_table"><code>_setup_notebook_registry_table</code></a>

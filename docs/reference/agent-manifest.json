@@ -531,7 +531,7 @@
     "qualified_name": "fabricops_kit.config.setup_metadata_tables",
     "module": "config",
     "type": "callable",
-    "role": "essential",
+    "role": "callable",
     "inbound": [],
     "outbound": [
       "fabricops_kit.data_agreement._setup_data_agreement_tables",
@@ -547,7 +547,7 @@
     "qualified_name": "fabricops_kit.config.setup_notebook",
     "module": "config",
     "type": "callable",
-    "role": "essential",
+    "role": "callable",
     "inbound": [],
     "outbound": [
       "fabricops_kit.config.NotebookSetupContext",
@@ -1189,7 +1189,7 @@
     "qualified_name": "fabricops_kit.data_agreement.get_selected_agreement",
     "module": "data_agreement",
     "type": "callable",
-    "role": "essential",
+    "role": "callable",
     "inbound": [],
     "outbound": [],
     "source_file": "src/fabricops_kit/data_agreement.py",
@@ -1200,7 +1200,7 @@
     "qualified_name": "fabricops_kit.data_agreement.widget_render_agreement_evidence",
     "module": "data_agreement",
     "type": "callable",
-    "role": "essential",
+    "role": "callable",
     "inbound": [],
     "outbound": [
       "fabricops_kit.data_agreement._render_agreement_evidence_widget"
@@ -1213,7 +1213,7 @@
     "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
     "module": "data_agreement",
     "type": "callable",
-    "role": "essential",
+    "role": "callable",
     "inbound": [],
     "outbound": [
       "fabricops_kit.data_agreement._render_maintenance_widget"
@@ -1226,7 +1226,7 @@
     "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
     "module": "data_agreement",
     "type": "callable",
-    "role": "essential",
+    "role": "callable",
     "inbound": [],
     "outbound": [
       "fabricops_kit.data_agreement._render_maintenance_widget"
@@ -1239,7 +1239,7 @@
     "qualified_name": "fabricops_kit.data_agreement.widget_select_agreement",
     "module": "data_agreement",
     "type": "callable",
-    "role": "essential",
+    "role": "callable",
     "inbound": [],
     "outbound": [
       "fabricops_kit.data_agreement._html_escape",
@@ -1597,7 +1597,7 @@
     "qualified_name": "fabricops_kit.data_lineage.build_lineage_records",
     "module": "data_lineage",
     "type": "callable",
-    "role": "essential",
+    "role": "callable",
     "inbound": [],
     "outbound": [],
     "source_file": "src/fabricops_kit/data_lineage.py",
@@ -1736,7 +1736,7 @@
     "qualified_name": "fabricops_kit.data_profiling.profile_dataframe",
     "module": "data_profiling",
     "type": "callable",
-    "role": "essential",
+    "role": "callable",
     "inbound": [
       "fabricops_kit.data_quality._prepare_dq_profile_input_rows",
       "fabricops_kit.drift.monitor_data_changes"
@@ -2457,7 +2457,7 @@
     "qualified_name": "fabricops_kit.drift.monitor_data_changes",
     "module": "drift",
     "type": "callable",
-    "role": "essential",
+    "role": "callable",
     "inbound": [],
     "outbound": [
       "fabricops_kit.data_profiling.profile_dataframe",
@@ -2476,7 +2476,7 @@
     "qualified_name": "fabricops_kit.drift.stop_if_failed",
     "module": "drift",
     "type": "callable",
-    "role": "essential",
+    "role": "callable",
     "inbound": [],
     "outbound": [
       "fabricops_kit.drift.SchemaDriftError"
@@ -2489,7 +2489,7 @@
     "qualified_name": "fabricops_kit.drift.validate_schema",
     "module": "drift",
     "type": "callable",
-    "role": "essential",
+    "role": "callable",
     "inbound": [],
     "outbound": [
       "fabricops_kit.drift._actual_schema",
@@ -2585,7 +2585,7 @@
     "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_csv",
     "module": "fabric_input_output",
     "type": "callable",
-    "role": "essential",
+    "role": "callable",
     "inbound": [],
     "outbound": [
       "fabricops_kit.config._get_store",
@@ -2599,7 +2599,7 @@
     "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_excel",
     "module": "fabric_input_output",
     "type": "callable",
-    "role": "essential",
+    "role": "callable",
     "inbound": [],
     "outbound": [
       "fabricops_kit.config._get_store",
@@ -2613,7 +2613,7 @@
     "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_parquet",
     "module": "fabric_input_output",
     "type": "callable",
-    "role": "essential",
+    "role": "callable",
     "inbound": [],
     "outbound": [
       "fabricops_kit.config._get_store",
@@ -2628,7 +2628,7 @@
     "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_table",
     "module": "fabric_input_output",
     "type": "callable",
-    "role": "essential",
+    "role": "callable",
     "inbound": [
       "fabricops_kit.data_agreement._ensure_metadata_tables",
       "fabricops_kit.data_agreement._list_all_data_agreement_rows",
@@ -2651,7 +2651,7 @@
     "qualified_name": "fabricops_kit.fabric_input_output.read_warehouse_table",
     "module": "fabric_input_output",
     "type": "callable",
-    "role": "essential",
+    "role": "callable",
     "inbound": [],
     "outbound": [
       "fabricops_kit.config._get_store",
@@ -2665,16 +2665,14 @@
     "qualified_name": "fabricops_kit.fabric_input_output.write_lakehouse_table",
     "module": "fabric_input_output",
     "type": "callable",
-    "role": "essential",
+    "role": "callable",
     "inbound": [
       "fabricops_kit.data_agreement._ensure_metadata_tables",
       "fabricops_kit.data_agreement._write_row",
       "fabricops_kit.data_quality._write_dq_rules",
       "fabricops_kit.fabric_input_output._seed_minimal_sample_source_table",
-      "fabricops_kit.governance_review._commit_column_classification",
-      "fabricops_kit.governance_review._commit_column_context",
-      "fabricops_kit.governance_review._commit_dq_rules",
       "fabricops_kit.governance_review._setup_governance_metadata_tables",
+      "fabricops_kit.governance_review.record_table_governance",
       "fabricops_kit.metadata._register_current_notebook",
       "fabricops_kit.metadata._setup_notebook_registry_table"
     ],
@@ -2689,41 +2687,13 @@
     "qualified_name": "fabricops_kit.fabric_input_output.write_warehouse_table",
     "module": "fabric_input_output",
     "type": "callable",
-    "role": "essential",
+    "role": "callable",
     "inbound": [],
     "outbound": [
       "fabricops_kit.config._get_store"
     ],
     "source_file": "src/fabricops_kit/fabric_input_output.py",
     "summary": "Write a DataFrame to a configured Fabric warehouse target."
-  },
-  {
-    "name": "CatalogueTableSelection",
-    "qualified_name": "fabricops_kit.governance_review.CatalogueTableSelection",
-    "module": "governance_review",
-    "type": "internal",
-    "role": "internal",
-    "inbound": [],
-    "outbound": [],
-    "source_file": "src/fabricops_kit/governance_review.py",
-    "summary": "No summary available."
-  },
-  {
-    "name": "_audit",
-    "qualified_name": "fabricops_kit.governance_review._audit",
-    "module": "governance_review",
-    "type": "internal",
-    "role": "internal",
-    "inbound": [
-      "fabricops_kit.governance_review._build_classification_records",
-      "fabricops_kit.governance_review._build_column_context_records",
-      "fabricops_kit.governance_review._build_dq_rule_records"
-    ],
-    "outbound": [
-      "fabricops_kit.metadata._build_runtime_audit_fields"
-    ],
-    "source_file": "src/fabricops_kit/governance_review.py",
-    "summary": "No summary available."
   },
   {
     "name": "_build_classification_records",
@@ -2735,11 +2705,11 @@
       "fabricops_kit.governance_review.record_table_governance"
     ],
     "outbound": [
-      "fabricops_kit.governance_review._audit",
       "fabricops_kit.governance_review._json",
       "fabricops_kit.governance_review._value",
       "fabricops_kit.metadata._build_metadata_column_key",
       "fabricops_kit.metadata._build_metadata_table_key",
+      "fabricops_kit.metadata._build_runtime_audit_fields",
       "fabricops_kit.metadata._now_utc_iso",
       "fabricops_kit.metadata._resolve_action_by"
     ],
@@ -2756,11 +2726,11 @@
       "fabricops_kit.governance_review.record_table_governance"
     ],
     "outbound": [
-      "fabricops_kit.governance_review._audit",
       "fabricops_kit.governance_review._json",
       "fabricops_kit.governance_review._value",
       "fabricops_kit.metadata._build_metadata_column_key",
       "fabricops_kit.metadata._build_metadata_table_key",
+      "fabricops_kit.metadata._build_runtime_audit_fields",
       "fabricops_kit.metadata._now_utc_iso",
       "fabricops_kit.metadata._resolve_action_by"
     ],
@@ -2777,27 +2747,14 @@
       "fabricops_kit.governance_review.record_table_governance"
     ],
     "outbound": [
-      "fabricops_kit.governance_review._audit",
       "fabricops_kit.governance_review._json",
       "fabricops_kit.governance_review._value",
       "fabricops_kit.metadata._build_dq_rule_key",
       "fabricops_kit.metadata._build_metadata_column_key",
       "fabricops_kit.metadata._build_metadata_table_key",
+      "fabricops_kit.metadata._build_runtime_audit_fields",
       "fabricops_kit.metadata._now_utc_iso",
       "fabricops_kit.metadata._resolve_action_by"
-    ],
-    "source_file": "src/fabricops_kit/governance_review.py",
-    "summary": "No summary available."
-  },
-  {
-    "name": "_build_profile_summary",
-    "qualified_name": "fabricops_kit.governance_review._build_profile_summary",
-    "module": "governance_review",
-    "type": "internal",
-    "role": "internal",
-    "inbound": [],
-    "outbound": [
-      "fabricops_kit.governance_review._value"
     ],
     "source_file": "src/fabricops_kit/governance_review.py",
     "summary": "No summary available."
@@ -2826,57 +2783,11 @@
     "type": "internal",
     "role": "internal",
     "inbound": [
-      "fabricops_kit.governance_review._latest_by_column",
       "fabricops_kit.governance_review._setup_governance_metadata_tables",
       "fabricops_kit.governance_review.load_catalogue_profile_rows",
       "fabricops_kit.governance_review.widget_select_catalogue_table"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/governance_review.py",
-    "summary": "No summary available."
-  },
-  {
-    "name": "_commit_column_classification",
-    "qualified_name": "fabricops_kit.governance_review._commit_column_classification",
-    "module": "governance_review",
-    "type": "internal",
-    "role": "internal",
-    "inbound": [
-      "fabricops_kit.governance_review.record_table_governance"
-    ],
-    "outbound": [
-      "fabricops_kit.fabric_input_output.write_lakehouse_table"
-    ],
-    "source_file": "src/fabricops_kit/governance_review.py",
-    "summary": "No summary available."
-  },
-  {
-    "name": "_commit_column_context",
-    "qualified_name": "fabricops_kit.governance_review._commit_column_context",
-    "module": "governance_review",
-    "type": "internal",
-    "role": "internal",
-    "inbound": [
-      "fabricops_kit.governance_review.record_table_governance"
-    ],
-    "outbound": [
-      "fabricops_kit.fabric_input_output.write_lakehouse_table"
-    ],
-    "source_file": "src/fabricops_kit/governance_review.py",
-    "summary": "No summary available."
-  },
-  {
-    "name": "_commit_dq_rules",
-    "qualified_name": "fabricops_kit.governance_review._commit_dq_rules",
-    "module": "governance_review",
-    "type": "internal",
-    "role": "internal",
-    "inbound": [
-      "fabricops_kit.governance_review.record_table_governance"
-    ],
-    "outbound": [
-      "fabricops_kit.fabric_input_output.write_lakehouse_table"
-    ],
     "source_file": "src/fabricops_kit/governance_review.py",
     "summary": "No summary available."
   },
@@ -2958,46 +2869,6 @@
     "summary": "No summary available."
   },
   {
-    "name": "_latest_by_column",
-    "qualified_name": "fabricops_kit.governance_review._latest_by_column",
-    "module": "governance_review",
-    "type": "internal",
-    "role": "internal",
-    "inbound": [],
-    "outbound": [
-      "fabricops_kit.governance_review._coerce_rows"
-    ],
-    "source_file": "src/fabricops_kit/governance_review.py",
-    "summary": "No summary available."
-  },
-  {
-    "name": "_optional_ai_generate_response",
-    "qualified_name": "fabricops_kit.governance_review._optional_ai_generate_response",
-    "module": "governance_review",
-    "type": "internal",
-    "role": "internal",
-    "inbound": [],
-    "outbound": [],
-    "source_file": "src/fabricops_kit/governance_review.py",
-    "summary": "No summary available."
-  },
-  {
-    "name": "_row_metadata_table_key",
-    "qualified_name": "fabricops_kit.governance_review._row_metadata_table_key",
-    "module": "governance_review",
-    "type": "internal",
-    "role": "internal",
-    "inbound": [
-      "fabricops_kit.governance_review.load_catalogue_profile_rows"
-    ],
-    "outbound": [
-      "fabricops_kit.governance_review._value",
-      "fabricops_kit.metadata._build_metadata_table_key"
-    ],
-    "source_file": "src/fabricops_kit/governance_review.py",
-    "summary": "No summary available."
-  },
-  {
     "name": "_schema",
     "qualified_name": "fabricops_kit.governance_review._schema",
     "module": "governance_review",
@@ -3069,28 +2940,12 @@
       "fabricops_kit.governance_review._build_classification_records",
       "fabricops_kit.governance_review._build_column_context_records",
       "fabricops_kit.governance_review._build_dq_rule_records",
-      "fabricops_kit.governance_review._build_profile_summary",
       "fabricops_kit.governance_review._catalogue_table_options",
       "fabricops_kit.governance_review._display_review_guidance",
       "fabricops_kit.governance_review._is_success",
-      "fabricops_kit.governance_review._row_metadata_table_key",
-      "fabricops_kit.governance_review._widget_review_table_governance",
       "fabricops_kit.governance_review.load_catalogue_profile_rows"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/governance_review.py",
-    "summary": "No summary available."
-  },
-  {
-    "name": "_widget_review_table_governance",
-    "qualified_name": "fabricops_kit.governance_review._widget_review_table_governance",
-    "module": "governance_review",
-    "type": "internal",
-    "role": "internal",
-    "inbound": [],
-    "outbound": [
-      "fabricops_kit.governance_review._value"
-    ],
     "source_file": "src/fabricops_kit/governance_review.py",
     "summary": "No summary available."
   },
@@ -3099,7 +2954,7 @@
     "qualified_name": "fabricops_kit.governance_review.get_selected_catalogue_table",
     "module": "governance_review",
     "type": "callable",
-    "role": "essential",
+    "role": "callable",
     "inbound": [],
     "outbound": [],
     "source_file": "src/fabricops_kit/governance_review.py",
@@ -3110,14 +2965,14 @@
     "qualified_name": "fabricops_kit.governance_review.load_catalogue_profile_rows",
     "module": "governance_review",
     "type": "callable",
-    "role": "essential",
+    "role": "callable",
     "inbound": [],
     "outbound": [
       "fabricops_kit.fabric_input_output.read_lakehouse_table",
       "fabricops_kit.governance_review._coerce_rows",
       "fabricops_kit.governance_review._is_success",
-      "fabricops_kit.governance_review._row_metadata_table_key",
-      "fabricops_kit.governance_review._value"
+      "fabricops_kit.governance_review._value",
+      "fabricops_kit.metadata._build_metadata_table_key"
     ],
     "source_file": "src/fabricops_kit/governance_review.py",
     "summary": "Load column profile rows for the selected catalogue table."
@@ -3127,15 +2982,13 @@
     "qualified_name": "fabricops_kit.governance_review.record_table_governance",
     "module": "governance_review",
     "type": "callable",
-    "role": "essential",
+    "role": "callable",
     "inbound": [],
     "outbound": [
+      "fabricops_kit.fabric_input_output.write_lakehouse_table",
       "fabricops_kit.governance_review._build_classification_records",
       "fabricops_kit.governance_review._build_column_context_records",
-      "fabricops_kit.governance_review._build_dq_rule_records",
-      "fabricops_kit.governance_review._commit_column_classification",
-      "fabricops_kit.governance_review._commit_column_context",
-      "fabricops_kit.governance_review._commit_dq_rules"
+      "fabricops_kit.governance_review._build_dq_rule_records"
     ],
     "source_file": "src/fabricops_kit/governance_review.py",
     "summary": "Persist approved table-governance context, DQ-rule, and classification evidence in one v1 commit action."
@@ -3145,7 +2998,7 @@
     "qualified_name": "fabricops_kit.governance_review.widget_review_column_classification",
     "module": "governance_review",
     "type": "callable",
-    "role": "essential",
+    "role": "callable",
     "inbound": [],
     "outbound": [
       "fabricops_kit.governance_review._display_review_guidance"
@@ -3158,7 +3011,7 @@
     "qualified_name": "fabricops_kit.governance_review.widget_review_column_context",
     "module": "governance_review",
     "type": "callable",
-    "role": "essential",
+    "role": "callable",
     "inbound": [],
     "outbound": [
       "fabricops_kit.governance_review._display_review_guidance"
@@ -3171,7 +3024,7 @@
     "qualified_name": "fabricops_kit.governance_review.widget_review_dq_rules",
     "module": "governance_review",
     "type": "callable",
-    "role": "essential",
+    "role": "callable",
     "inbound": [],
     "outbound": [
       "fabricops_kit.governance_review._display_review_guidance"
@@ -3184,7 +3037,7 @@
     "qualified_name": "fabricops_kit.governance_review.widget_select_catalogue_table",
     "module": "governance_review",
     "type": "callable",
-    "role": "essential",
+    "role": "callable",
     "inbound": [],
     "outbound": [
       "fabricops_kit.fabric_input_output.read_lakehouse_table",
@@ -3227,7 +3080,7 @@
     "qualified_name": "fabricops_kit.handover.build_handover",
     "module": "handover",
     "type": "callable",
-    "role": "essential",
+    "role": "callable",
     "inbound": [],
     "outbound": [],
     "source_file": "src/fabricops_kit/handover.py",
@@ -3238,7 +3091,7 @@
     "qualified_name": "fabricops_kit.handover.render_handover_markdown",
     "module": "handover",
     "type": "callable",
-    "role": "essential",
+    "role": "callable",
     "inbound": [
       "fabricops_kit.handover._build_handover_record"
     ],
@@ -3311,7 +3164,7 @@
       "fabricops_kit.governance_review._build_column_context_records",
       "fabricops_kit.governance_review._build_dq_rule_records",
       "fabricops_kit.governance_review._catalogue_table_options",
-      "fabricops_kit.governance_review._row_metadata_table_key"
+      "fabricops_kit.governance_review.load_catalogue_profile_rows"
     ],
     "outbound": [
       "fabricops_kit.metadata._sha256_key"
@@ -3329,7 +3182,9 @@
       "fabricops_kit.data_agreement._create_or_update_data_agreement",
       "fabricops_kit.data_agreement._create_or_update_data_steward",
       "fabricops_kit.data_agreement._save_agreement_evidence_records",
-      "fabricops_kit.governance_review._audit"
+      "fabricops_kit.governance_review._build_classification_records",
+      "fabricops_kit.governance_review._build_column_context_records",
+      "fabricops_kit.governance_review._build_dq_rule_records"
     ],
     "outbound": [
       "fabricops_kit.metadata._context_get",

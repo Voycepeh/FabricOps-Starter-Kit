@@ -1,7 +1,7 @@
 # _coerce_row_dicts
 
 **Module:** `data_governance`  
-**Classification:** Internal helper
+**Classification:** Internal
 
 ## Purpose
 
@@ -12,7 +12,7 @@ No summary available.
 - Fully qualified function name: `fabricops_kit.data_governance._coerce_row_dicts`
 - Short name: `_coerce_row_dicts`
 - Module: `data_governance`
-- Classification: Internal helper
+- Classification: Internal
 - Related module: `data_governance`
 - Source file path: `src/fabricops_kit/data_governance.py`
 - Source reference: <a href="../../api/modules/data_governance/#_coerce_row_dicts">Module source anchor</a>

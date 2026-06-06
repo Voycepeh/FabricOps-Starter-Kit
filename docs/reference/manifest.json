@@ -101,7 +101,8 @@
       "sidebar_include": true,
       "callable_name": "setup_metadata_tables",
       "callable_visibility": "public",
-      "callable_role": "essential",
+      "callable_type": "callable",
+      "callable_role": "callable",
       "template_notebook": "00_env_config",
       "template_segment": "Environment bootstrap"
     },
@@ -113,7 +114,8 @@
       "sidebar_include": true,
       "callable_name": "setup_notebook",
       "callable_visibility": "public",
-      "callable_role": "essential",
+      "callable_type": "callable",
+      "callable_role": "callable",
       "template_notebook": "00_env_config",
       "template_segment": "Environment bootstrap"
     },
@@ -125,7 +127,8 @@
       "sidebar_include": true,
       "callable_name": "get_selected_agreement",
       "callable_visibility": "public",
-      "callable_role": "essential",
+      "callable_type": "callable",
+      "callable_role": "callable",
       "template_notebook": "03_pc_agreement_pipeline_template",
       "template_segment": "Agreement selection"
     },
@@ -137,7 +140,8 @@
       "sidebar_include": true,
       "callable_name": "widget_render_agreement_evidence",
       "callable_visibility": "public",
-      "callable_role": "essential",
+      "callable_type": "callable",
+      "callable_role": "callable",
       "template_notebook": "01_da_agreement_template",
       "template_segment": "Agreement intake"
     },
@@ -149,7 +153,8 @@
       "sidebar_include": true,
       "callable_name": "widget_render_data_agreement",
       "callable_visibility": "public",
-      "callable_role": "essential",
+      "callable_type": "callable",
+      "callable_role": "callable",
       "template_notebook": "01_da_agreement_template",
       "template_segment": "Agreement intake"
     },
@@ -161,7 +166,8 @@
       "sidebar_include": true,
       "callable_name": "widget_render_data_steward",
       "callable_visibility": "public",
-      "callable_role": "essential",
+      "callable_type": "callable",
+      "callable_role": "callable",
       "template_notebook": "01_da_agreement_template",
       "template_segment": "Agreement intake"
     },
@@ -173,7 +179,8 @@
       "sidebar_include": true,
       "callable_name": "widget_select_agreement",
       "callable_visibility": "public",
-      "callable_role": "essential",
+      "callable_type": "callable",
+      "callable_role": "callable",
       "template_notebook": "02_ex/03_pc",
       "template_segment": "Agreement selection"
     },
@@ -185,7 +192,8 @@
       "sidebar_include": true,
       "callable_name": "build_lineage_records",
       "callable_visibility": "public",
-      "callable_role": "essential",
+      "callable_type": "callable",
+      "callable_role": "callable",
       "template_notebook": "03_pc_agreement_pipeline_template",
       "template_segment": "Lineage evidence"
     },
@@ -197,7 +205,8 @@
       "sidebar_include": true,
       "callable_name": "profile_dataframe",
       "callable_visibility": "public",
-      "callable_role": "essential",
+      "callable_type": "callable",
+      "callable_role": "callable",
       "template_notebook": "02_ex/03_pc",
       "template_segment": "Profiling"
     },
@@ -209,7 +218,8 @@
       "sidebar_include": true,
       "callable_name": "monitor_data_changes",
       "callable_visibility": "public",
-      "callable_role": "essential",
+      "callable_type": "callable",
+      "callable_role": "callable",
       "template_notebook": "03_pc_agreement_pipeline_template",
       "template_segment": "Drift monitoring"
     },
@@ -221,7 +231,8 @@
       "sidebar_include": true,
       "callable_name": "stop_if_failed",
       "callable_visibility": "public",
-      "callable_role": "essential",
+      "callable_type": "callable",
+      "callable_role": "callable",
       "template_notebook": "03_pc_agreement_pipeline_template",
       "template_segment": "Guardrail enforcement"
     },
@@ -233,7 +244,8 @@
       "sidebar_include": true,
       "callable_name": "validate_schema",
       "callable_visibility": "public",
-      "callable_role": "essential",
+      "callable_type": "callable",
+      "callable_role": "callable",
       "template_notebook": "03_pc_agreement_pipeline_template",
       "template_segment": "Schema validation"
     },
@@ -245,7 +257,8 @@
       "sidebar_include": true,
       "callable_name": "read_lakehouse_csv",
       "callable_visibility": "public",
-      "callable_role": "essential",
+      "callable_type": "callable",
+      "callable_role": "callable",
       "template_notebook": "02_ex/03_pc",
       "template_segment": "Fabric IO"
     },
@@ -257,7 +270,8 @@
       "sidebar_include": true,
       "callable_name": "read_lakehouse_excel",
       "callable_visibility": "public",
-      "callable_role": "essential",
+      "callable_type": "callable",
+      "callable_role": "callable",
       "template_notebook": "02_ex/03_pc",
       "template_segment": "Fabric IO"
     },
@@ -269,7 +283,8 @@
       "sidebar_include": true,
       "callable_name": "read_lakehouse_parquet",
       "callable_visibility": "public",
-      "callable_role": "essential",
+      "callable_type": "callable",
+      "callable_role": "callable",
       "template_notebook": "02_ex/03_pc",
       "template_segment": "Fabric IO"
     },
@@ -281,7 +296,8 @@
       "sidebar_include": true,
       "callable_name": "read_lakehouse_table",
       "callable_visibility": "public",
-      "callable_role": "essential",
+      "callable_type": "callable",
+      "callable_role": "callable",
       "template_notebook": "02_ex/03_pc",
       "template_segment": "Fabric IO"
     },
@@ -293,7 +309,8 @@
       "sidebar_include": true,
       "callable_name": "read_warehouse_table",
       "callable_visibility": "public",
-      "callable_role": "essential",
+      "callable_type": "callable",
+      "callable_role": "callable",
       "template_notebook": "02_ex/03_pc",
       "template_segment": "Fabric IO"
     },
@@ -305,7 +322,8 @@
       "sidebar_include": true,
       "callable_name": "write_lakehouse_table",
       "callable_visibility": "public",
-      "callable_role": "essential",
+      "callable_type": "callable",
+      "callable_role": "callable",
       "template_notebook": "03_pc_agreement_pipeline_template",
       "template_segment": "Fabric IO"
     },
@@ -317,7 +335,8 @@
       "sidebar_include": true,
       "callable_name": "write_warehouse_table",
       "callable_visibility": "public",
-      "callable_role": "essential",
+      "callable_type": "callable",
+      "callable_role": "callable",
       "template_notebook": "03_pc_agreement_pipeline_template",
       "template_segment": "Fabric IO"
     },
@@ -329,7 +348,8 @@
       "sidebar_include": true,
       "callable_name": "get_selected_catalogue_table",
       "callable_visibility": "public",
-      "callable_role": "essential",
+      "callable_type": "callable",
+      "callable_role": "callable",
       "template_notebook": "04_gov_dataset_table",
       "template_segment": "Governance review"
     },
@@ -341,7 +361,8 @@
       "sidebar_include": true,
       "callable_name": "load_catalogue_profile_rows",
       "callable_visibility": "public",
-      "callable_role": "essential",
+      "callable_type": "callable",
+      "callable_role": "callable",
       "template_notebook": "04_gov_dataset_table",
       "template_segment": "Governance review"
     },
@@ -353,7 +374,8 @@
       "sidebar_include": true,
       "callable_name": "record_table_governance",
       "callable_visibility": "public",
-      "callable_role": "essential",
+      "callable_type": "callable",
+      "callable_role": "callable",
       "template_notebook": "04_gov_dataset_table",
       "template_segment": "Governance review"
     },
@@ -365,7 +387,8 @@
       "sidebar_include": true,
       "callable_name": "widget_review_column_classification",
       "callable_visibility": "public",
-      "callable_role": "essential",
+      "callable_type": "callable",
+      "callable_role": "callable",
       "template_notebook": "04_gov_dataset_table",
       "template_segment": "Governance review"
     },
@@ -377,7 +400,8 @@
       "sidebar_include": true,
       "callable_name": "widget_review_column_context",
       "callable_visibility": "public",
-      "callable_role": "essential",
+      "callable_type": "callable",
+      "callable_role": "callable",
       "template_notebook": "04_gov_dataset_table",
       "template_segment": "Governance review"
     },
@@ -389,7 +413,8 @@
       "sidebar_include": true,
       "callable_name": "widget_review_dq_rules",
       "callable_visibility": "public",
-      "callable_role": "essential",
+      "callable_type": "callable",
+      "callable_role": "callable",
       "template_notebook": "04_gov_dataset_table",
       "template_segment": "Governance review"
     },
@@ -401,7 +426,8 @@
       "sidebar_include": true,
       "callable_name": "widget_select_catalogue_table",
       "callable_visibility": "public",
-      "callable_role": "essential",
+      "callable_type": "callable",
+      "callable_role": "callable",
       "template_notebook": "04_gov_dataset_table",
       "template_segment": "Governance review"
     },
@@ -413,7 +439,8 @@
       "sidebar_include": true,
       "callable_name": "build_handover",
       "callable_visibility": "public",
-      "callable_role": "essential",
+      "callable_type": "callable",
+      "callable_role": "callable",
       "template_notebook": "handover",
       "template_segment": "Handover evidence"
     },
@@ -425,7 +452,8 @@
       "sidebar_include": true,
       "callable_name": "render_handover_markdown",
       "callable_visibility": "public",
-      "callable_role": "essential",
+      "callable_type": "callable",
+      "callable_role": "callable",
       "template_notebook": "handover",
       "template_segment": "Handover evidence"
     }

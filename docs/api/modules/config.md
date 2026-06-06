@@ -77,14 +77,14 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
   <tbody>
     <tr>
       <td><a href="../../reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a></td>
-      <td>Essential</td>
+      <td>Callable</td>
       <td>function</td>
       <td>Create or validate all FabricOps metadata tables through one setup action.</td>
       <td>—</td>
     </tr>
     <tr>
       <td><a href="../../reference/setup_notebook/"><code>setup_notebook</code></a></td>
-      <td>Essential</td>
+      <td>Callable</td>
       <td>function</td>
       <td>Shared environment setup and runtime validation for notebook templates.</td>
       <td><a href="../../reference/internal/config/_get_store/"><code>_get_store</code></a> (internal), <a href="../../reference/internal/config/_run_config_smoke_tests/"><code>_run_config_smoke_tests</code></a> (internal), <a href="../../reference/internal/config/_validate_framework_config/"><code>_validate_framework_config</code></a> (internal)</td>

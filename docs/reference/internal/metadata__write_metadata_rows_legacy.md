@@ -1,7 +1,7 @@
 # _write_metadata_rows_legacy
 
 **Module:** `metadata`  
-**Classification:** Internal helper
+**Classification:** Internal
 
 ## Purpose
 
@@ -12,7 +12,7 @@ No summary available.
 - Fully qualified function name: `fabricops_kit.metadata._write_metadata_rows_legacy`
 - Short name: `_write_metadata_rows_legacy`
 - Module: `metadata`
-- Classification: Internal helper
+- Classification: Internal
 - Related module: `metadata`
 - Source file path: `src/fabricops_kit/metadata.py`
 - Source reference: <a href="../../api/modules/metadata/#_write_metadata_rows_legacy">Module source anchor</a>

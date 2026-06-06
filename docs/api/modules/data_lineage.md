@@ -77,7 +77,7 @@ Owns source-to-target lineage and transformation evidence.
   <tbody>
     <tr>
       <td><a href="../../reference/build_lineage_records/"><code>build_lineage_records</code></a></td>
-      <td>Essential</td>
+      <td>Callable</td>
       <td>function</td>
       <td>Build source-to-target lineage evidence records for a pipeline run.</td>
       <td>—</td>

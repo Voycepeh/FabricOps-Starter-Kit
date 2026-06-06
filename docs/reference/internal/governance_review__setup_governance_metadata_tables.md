@@ -1,7 +1,7 @@
 # _setup_governance_metadata_tables
 
 **Module:** `governance_review`  
-**Classification:** Internal helper
+**Classification:** Internal
 
 ## Purpose
 
@@ -12,7 +12,7 @@ No summary available.
 - Fully qualified function name: `fabricops_kit.governance_review._setup_governance_metadata_tables`
 - Short name: `_setup_governance_metadata_tables`
 - Module: `governance_review`
-- Classification: Internal helper
+- Classification: Internal
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
 - Source reference: <a href="../../api/modules/governance_review/#_setup_governance_metadata_tables">Module source anchor</a>
