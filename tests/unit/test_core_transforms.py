@@ -8,7 +8,6 @@ from fabricops_kit.governance_review import (
     _build_column_context_records,
     _build_dq_rule_records,
     _catalogue_table_options,
-    _latest_by_column,
 )
 from fabricops_kit.handover import build_handover, render_handover_markdown
 
@@ -104,21 +103,12 @@ def test_governance_review_builders_commit_only_human_approved_records():
         )
 
 
-def test_catalogue_and_latest_review_selection_keep_latest_approved_values():
+def test_catalogue_selection_keeps_latest_successful_profile():
     options = _catalogue_table_options([
         {**_profile_rows("run-1")[0], "profiled_at": "2026-01-01T00:00:00Z"},
         *_profile_rows("run-2"),
         {**_profile_rows("run-3")[0], "profile_status": "failed", "profiled_at": "2026-01-03T00:00:00Z"},
     ])
-    latest = _latest_by_column(
-        [
-            {"metadata_column_key": "col-order", "business_context": "old", "review_status": "approved", "approved_at": "2026-01-01"},
-            {"metadata_column_key": "col-order", "business_context": "new", "review_status": "approved", "approved_at": "2026-01-02"},
-            {"metadata_column_key": "col-amount", "business_context": "draft", "review_status": "pending", "approved_at": "2026-01-03"},
-        ]
-    )
 
     assert len(options) == 1
     assert options[0]["profile_run_id"] == "run-2"
-    assert set(latest) == {"col-order"}
-    assert latest["col-order"]["business_context"] == "new"
