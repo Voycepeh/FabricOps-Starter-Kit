@@ -1216,37 +1216,19 @@ class IncrementalSafetyError(Exception):
 
 
 def _default_incremental_safety_policy() -> dict:
-    """Execute the `_default_incremental_safety_policy` workflow step in FabricOps.
-    
-        Use this callable at its corresponding stage of the pipeline contract
-        (configuration, IO, profiling, quality, drift, lineage, or handover)
-        to produce deterministic artifacts and validation evidence.
-    
-        Parameters
-        ----------
-        None
-            This function does not require explicit parameters.
-    
-        Returns
-        -------
-        Any
-            Function output used by downstream FabricOps workflow steps.
-    
-        Raises
-        ------
-        Exception
-            Propagates validation, runtime, or storage errors from underlying
-            operations when execution cannot continue safely.
-    
-        Notes
-        -----
-        Side effects may include metadata writes, quality evidence generation,
-        or persisted drift/lineage/handover artifacts depending on the function.
-    
-        Examples
-        --------
-        >>> _default_incremental_safety_policy()
-        """
+    """Return the default policy for incremental partition safety checks.
+
+    Returns
+    -------
+    dict
+        Default threshold and behavior settings used by incremental partition
+        safety helpers.
+
+    Examples
+    --------
+    >>> _default_incremental_safety_policy()["lookback_partitions"]
+    3
+    """
     return {
         "block_on_historical_partition_change": True,
         "closed_partition_grace_days": 1,

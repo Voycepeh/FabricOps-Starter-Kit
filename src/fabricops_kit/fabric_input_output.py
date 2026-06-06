@@ -852,8 +852,12 @@ def _seed_minimal_sample_source_table(
 
     Parameters
     ----------
-    source_lakehouse : FabricStore
-        Source lakehouse target selected by config/environment/target inputs.
+    config : FrameworkConfig or dict
+        Shared configuration containing the target lakehouse route.
+    env : str
+        Environment key used to resolve the lakehouse target.
+    target : str
+        Configured lakehouse target name to seed.
     table_name : str, default="minimal_source"
         Destination source-table name to seed for sample notebook runs.
     mode : str, default="overwrite"
