@@ -639,7 +639,16 @@ def main() -> None:
     MODULE_DIR.mkdir(parents=True, exist_ok=True)
     module_manifest = {row["module_name"]: row for row in module_docs_metadata}
     discovered_doc_modules = [INTERNAL_ALIAS_MODULES.get(module, module) for module in discovered_modules]
-    module_index_lines = ["# Module API Catalogue", "", "Function reference pages are the primary entrypoint. Module pages below are secondary technical references.", "", "Short-form modules remain import-compatible aliases but are intentionally hidden from this user-facing catalogue.", ""]
+    module_index_lines = [
+        "# Implementation Module Catalogue",
+        "",
+        "Module pages document source modules and internal helpers for package maintainers.",
+        "",
+        "They are useful for debugging and implementation traceability, but they are not the public v1 callable surface. The public v1 callable surface is controlled by `src/fabricops_kit/__init__.py::__all__` and is surfaced through the Function Reference catalogue.",
+        "",
+        "Short-form modules remain import-compatible aliases but are intentionally hidden from this user-facing catalogue.",
+        "",
+    ]
     all_doc_modules = discovered_doc_modules
     for module in all_doc_modules:
         actual_module = next((k for k,v in PUBLIC_MODULE_PREFERRED_NAMES.items() if v==module), module)
@@ -673,7 +682,16 @@ def main() -> None:
                 '  <span class="api-chip api-chip-internal">Internal-only module</span>\n'
                 '</div>'
             )
-        lines = [title, "", status_banner, ""]
+        lines = [
+            title,
+            "",
+            status_banner,
+            "",
+            "Module pages document source modules and internal helpers for maintainers. They support debugging and implementation traceability, but they are not the public v1 callable surface.",
+            "",
+            "The public v1 callable surface is controlled by `src/fabricops_kit/__init__.py::__all__` and is browsed from the Function Reference catalogue.",
+            "",
+        ]
         module_nodes = [n for n in nodes if n["module_name"] == actual_module]
         essential_count = len([n for n in module_nodes if n["role"] == "essential"])
         optional_count = len([n for n in module_nodes if n["role"] == "optional"])
@@ -1092,6 +1110,10 @@ def main() -> None:
         "# Function Reference",
         "",
         "Use this page as a callable lookup after you understand the notebook flow.",
+        "",
+        "- Use [Template Function Map](template-function-map.md) to see what notebook users actually call.",
+        "- Use the Function catalogue below to browse the public v1 callable API.",
+        "- Use Implementation Modules only when debugging or maintaining the package internals.",
         "",
         "> Graph exploration is intentionally deferred. Future PR may use Neo4j or a proper graph backend.",
         "",

@@ -1,6 +1,8 @@
-# Module API Catalogue
+# Implementation Module Catalogue
 
-Function reference pages are the primary entrypoint. Module pages below are secondary technical references.
+Module pages document source modules and internal helpers for package maintainers.
+
+They are useful for debugging and implementation traceability, but they are not the public v1 callable surface. The public v1 callable surface is controlled by `src/fabricops_kit/__init__.py::__all__` and is surfaced through the Function Reference catalogue.
 
 Short-form modules remain import-compatible aliases but are intentionally hidden from this user-facing catalogue.
 

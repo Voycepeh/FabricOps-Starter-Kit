@@ -4,6 +4,10 @@
   <span class="api-chip api-chip-module">Module overview</span>
 </div>
 
+Module pages document source modules and internal helpers for maintainers. They support debugging and implementation traceability, but they are not the public v1 callable surface.
+
+The public v1 callable surface is controlled by `src/fabricops_kit/__init__.py::__all__` and is browsed from the Function Reference catalogue.
+
 ## Module overview badges
 
 <div class="module-summary-cards"><span class="reference-chip">Callable count: 0</span><span class="reference-chip">Internal helpers: 29</span><span class="reference-chip">Outbound: 3</span><span class="reference-chip">Inbound: 0</span></div>
