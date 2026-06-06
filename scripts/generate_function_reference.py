@@ -1050,50 +1050,31 @@ def main() -> None:
     template_function_map = [
         "# Template Function Map",
         "",
-        "Template-first view of public callables and their main delegated helpers.",
+        "Compact template-first lookup for the public helper functions used by each notebook template. Use the linked function names for detailed API reference pages.",
         "",
     ]
     for flow in template_flow_docs:
-        template_function_map.extend([f"## {flow['notebook_label']}", "", flow.get("segment_intro", ""), ""])
+        template_function_map.extend([
+            '<section class="template-function-group">',
+            f'<h2><code>{html_escape(flow["notebook_key"])}</code></h2>',
+        ])
+        segment_intro = flow.get("segment_intro", "")
+        if segment_intro:
+            template_function_map.append(f'<p class="template-function-purpose">{html_escape(segment_intro)}</p>')
+
         for segment in flow["segments"]:
             unique_symbols = sorted(set(segment["symbols"]), key=segment["symbols"].index)
             if not unique_symbols:
                 continue
-            template_function_map.extend([f"### {segment['title']}", ""])
-            rows = []
-            for symbol_name in unique_symbols:
-                s = symbol_map[symbol_name]
-                caller_qn = f"{PACKAGE_NAME}.{s.actual_module}.{s.name}"
-                direct_helpers = sorted(
-                    (dep for dep in set(calls_by_qn.get(caller_qn, [])) if dep.split(".")[-1].startswith("_")),
-                    key=lambda dep: dep.split(".")[-1],
-                )
-                helper_text = function_chip_wrap(
-                    [
-                        function_chip(
-                            dep.split(".")[-1],
-                            f"../internal/{dep.split('.')[-2]}/{dep.split('.')[-1]}/",
-                        )
-                        for dep in direct_helpers
-                    ]
-                )
-                override = usage_overrides.get(s.name, {})
-                callable_link = function_chip(s.name, f"../callables/{s.name}/")
-                rows.append([
-                    callable_link,
-                    override.get("role", "Callable orchestration wrapper"),
-                    override.get("purpose", s.purpose or s.summary or "—"),
-                    helper_text,
-                    "; ".join(override.get("debug_when", [])) or "Check dependency outputs and metadata writes.",
-                ])
-            template_function_map.extend(
-                render_html_table(
-                    ["Function", "Role", "What it does", "Delegates to", "Debug when"],
-                    rows,
-                    table_class="reference-template-table",
-                )
-            )
-            template_function_map.append("")
+            chips = [function_chip(symbol_name, f"../callables/{symbol_name}/") for symbol_name in unique_symbols]
+            template_function_map.extend([
+                '<div class="template-function-row">',
+                f'<span class="template-function-segment">{html_escape(segment["title"])}</span>',
+                function_chip_wrap(chips),
+                "</div>",
+            ])
+
+        template_function_map.extend(["</section>", ""])
     TEMPLATE_FUNCTION_MAP_PATH.write_text("\n".join(template_function_map) + "\n", encoding="utf-8", newline="\n")
     starter_symbol_to_notebooks: dict[str, set[str]] = {}
     for flow in template_flow_docs:
