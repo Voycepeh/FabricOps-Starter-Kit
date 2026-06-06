@@ -65,7 +65,7 @@ The standalone agreement widgets `widget_render_data_steward`, `widget_render_da
 
 ## Renamed/private functions
 
-Non-v1 helpers that are still needed internally now use leading-underscore names in source modules. Examples include `_setup_data_agreement_tables`, `_setup_notebook_registry_table`, `_setup_governance_metadata_tables`, `_widget_render_agreement_intake_app`, `_widget_review_table_governance`, `_build_runtime_audit_fields`, `_get_governance_metadata_schemas`, `_build_column_context_records`, `_commit_dq_rules`, `_print_runtime_banner`, and `_validate_dq_rules`.
+Non-v1 helpers that are still needed internally now use leading-underscore names in source modules. Examples include `_setup_data_agreement_tables`, `_setup_notebook_registry_table`, `_setup_governance_metadata_tables`, `_widget_review_table_governance`, `_build_runtime_audit_fields`, `_get_governance_metadata_schemas`, `_build_column_context_records`, `_commit_dq_rules`, `_print_runtime_banner`, and `_validate_dq_rules`.
 
 ## 04_gov wrapper rationale
 

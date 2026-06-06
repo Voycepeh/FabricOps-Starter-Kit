@@ -20,8 +20,8 @@ No summary available.
 - Outbound references count: 1
 
 ## Inbound references
+- <a href="../internal/data_agreement/_create_or_update_data_steward/"><code>fabricops_kit.data_agreement._create_or_update_data_steward</code></a>
 - <a href="../internal/data_agreement/_list_data_stewards/"><code>fabricops_kit.data_agreement._list_data_stewards</code></a>
-- <a href="../internal/data_agreement/_steward_active_value/"><code>fabricops_kit.data_agreement._steward_active_value</code></a>
 
 ## Outbound references
 - <a href="../internal/data_agreement/_to_bool/"><code>fabricops_kit.data_agreement._to_bool</code></a>

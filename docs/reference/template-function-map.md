@@ -98,7 +98,7 @@ Explore approved agreement data and profile sources.
       <td>[`widget_select_agreement`](./callables/widget_select_agreement.md)</td>
       <td>Callable orchestration wrapper</td>
       <td>Render an agreement selector and optionally register the active notebook.</td>
-      <td>`_current_notebook_active_registrations`, `_html_escape`, `_latest_agreement_versions`, `_load_agreements`, `_refresh_registration_status`, `_register_current_notebook`, `_render_searchable_selector`, `_require_ipywidgets`, `_selected_row`, `_status_message`</td>
+      <td>`_current_notebook_active_registrations`, `_html_escape`, `_latest_agreement_versions`, `_list_data_agreements`, `_refresh_registration_status`, `_register_current_notebook`, `_render_searchable_selector`, `_require_ipywidgets`, `_selected_row`, `_status_message`</td>
       <td>Check dependency outputs and metadata writes.</td>
     </tr>
     <tr>
@@ -167,7 +167,7 @@ Production pipeline guardrails, IO, lineage, and publishing.
       <td>[`widget_select_agreement`](./callables/widget_select_agreement.md)</td>
       <td>Callable orchestration wrapper</td>
       <td>Render an agreement selector and optionally register the active notebook.</td>
-      <td>`_current_notebook_active_registrations`, `_html_escape`, `_latest_agreement_versions`, `_load_agreements`, `_refresh_registration_status`, `_register_current_notebook`, `_render_searchable_selector`, `_require_ipywidgets`, `_selected_row`, `_status_message`</td>
+      <td>`_current_notebook_active_registrations`, `_html_escape`, `_latest_agreement_versions`, `_list_data_agreements`, `_refresh_registration_status`, `_register_current_notebook`, `_render_searchable_selector`, `_require_ipywidgets`, `_selected_row`, `_status_message`</td>
       <td>Check dependency outputs and metadata writes.</td>
     </tr>
     <tr>

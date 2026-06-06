@@ -20,10 +20,10 @@ def test_agreement_metadata_table_setup_creates_missing_tables_only(monkeypatch)
         if attempts[table] == 1:
             raise RuntimeError("missing")
         if table == agreement.DATA_STEWARD_TABLE:
-            return [dict.fromkeys(agreement._get_data_steward_schema(), "")]
+            return [dict.fromkeys(agreement.DATA_STEWARD_FIELDS, "")]
         if table == agreement.DATA_AGREEMENT_TABLE:
-            return [dict.fromkeys(agreement._get_data_agreement_schema(), "")]
-        return [dict.fromkeys(agreement._get_data_agreement_evidence_schema(), "")]
+            return [dict.fromkeys(agreement.DATA_AGREEMENT_FIELDS, "")]
+        return [dict.fromkeys(agreement.DATA_AGREEMENT_EVIDENCE_FIELDS, "")]
 
     monkeypatch.setattr(agreement, "read_lakehouse_table", read_table)
     monkeypatch.setattr(agreement, "write_lakehouse_table", lambda df, config, env, target, table, **kwargs: writes.append((env, target, table, kwargs)))

@@ -24,6 +24,7 @@ No summary available.
 
 ## Outbound references
 - <a href="../internal/data_agreement/_business_agreement_snapshot/"><code>fabricops_kit.data_agreement._business_agreement_snapshot</code></a>
+- <a href="../internal/data_agreement/_config_value/"><code>fabricops_kit.data_agreement._config_value</code></a>
 - <a href="../internal/data_agreement/_generate_agreement_id/"><code>fabricops_kit.data_agreement._generate_agreement_id</code></a>
 - <a href="../internal/data_agreement/_list_all_data_agreement_rows/"><code>fabricops_kit.data_agreement._list_all_data_agreement_rows</code></a>
 - <a href="../internal/data_agreement/_list_data_stewards/"><code>fabricops_kit.data_agreement._list_data_stewards</code></a>
@@ -31,6 +32,5 @@ No summary available.
 - <a href="../internal/data_agreement/_parse_contract_version/"><code>fabricops_kit.data_agreement._parse_contract_version</code></a>
 - <a href="../internal/data_agreement/_parse_iso_date/"><code>fabricops_kit.data_agreement._parse_iso_date</code></a>
 - <a href="../internal/data_agreement/_serialize_custom_fields/"><code>fabricops_kit.data_agreement._serialize_custom_fields</code></a>
-- <a href="../internal/data_agreement/_table_name/"><code>fabricops_kit.data_agreement._table_name</code></a>
 - <a href="../internal/data_agreement/_write_row/"><code>fabricops_kit.data_agreement._write_row</code></a>
 - <a href="../internal/metadata/_build_runtime_audit_fields/"><code>fabricops_kit.metadata._build_runtime_audit_fields</code></a>
