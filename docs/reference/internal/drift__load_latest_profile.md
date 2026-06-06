@@ -17,13 +17,11 @@ No summary available.
 - Source file path: `src/fabricops_kit/drift.py`
 - Source reference: <a href="../../api/modules/drift/#_load_latest_profile">Module source anchor</a>
 - Inbound references count: 1
-- Outbound references count: 4
+- Outbound references count: 2
 
 ## Inbound references
 - <a href="../monitor_data_changes/"><code>fabricops_kit.drift.monitor_data_changes</code></a>
 
 ## Outbound references
 - <a href="../internal/drift/_is_missing_table_error/"><code>fabricops_kit.drift._is_missing_table_error</code></a>
-- <a href="../internal/drift/_normalize_baseline_mode/"><code>fabricops_kit.drift._normalize_baseline_mode</code></a>
 - <a href="../internal/drift/_normalize_profile/"><code>fabricops_kit.drift._normalize_profile</code></a>
-- <a href="../internal/drift/_safe_spark_collect/"><code>fabricops_kit.drift._safe_spark_collect</code></a>

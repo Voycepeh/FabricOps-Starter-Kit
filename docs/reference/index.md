@@ -83,7 +83,7 @@ Use the finder below to look up public callable functions.
   <p class="reference-catalogue-item-purpose">Profile data, compare against the approved baseline, and return a drift guardrail result.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/drift/" title="Open drift module page" aria-label="Open drift module page">drift</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">03_pc_agreement_pipeline_template</span></p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 8</span></summary><ul><li><code>profile_dataframe</code></li><li><code>_as_monitor_only_result</code></li><li><code>_check_profile_drift</code></li><li><code>_data_change_preset_config</code></li><li><code>_extract_categorical_distribution_categories</code></li><li><code>_extract_numeric_distribution_bin_edges</code></li><li><code>_load_latest_profile</code></li><li><code>_normalize_profile</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 7</span></summary><ul><li><code>profile_dataframe</code></li><li><code>_check_profile_drift</code></li><li><code>_data_change_preset_config</code></li><li><code>_extract_categorical_distribution_categories</code></li><li><code>_extract_numeric_distribution_bin_edges</code></li><li><code>_load_latest_profile</code></li><li><code>_normalize_profile</code></li></ul></details>
 
   </div>
 </article>
@@ -191,7 +191,7 @@ Use the finder below to look up public callable functions.
   <p class="reference-catalogue-item-purpose">Validate a DataFrame schema using strict, allow-new-columns, or monitor-only presets.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/drift/" title="Open drift module page" aria-label="Open drift module page">drift</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">03_pc_agreement_pipeline_template</span></p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>_actual_schema</code></li><li><code>_check_schema</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>_actual_schema</code></li><li><code>_normalize_datatype</code></li></ul></details>
 
   </div>
 </article>

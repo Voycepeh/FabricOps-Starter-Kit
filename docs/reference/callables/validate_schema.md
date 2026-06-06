@@ -21,4 +21,4 @@ Validate a DataFrame schema using strict, allow-new-columns, or monitor-only pre
 
 ## Outbound references
 - <a href="../internal/drift/_actual_schema/"><code>fabricops_kit.drift._actual_schema</code></a>
-- <a href="../internal/drift/_check_schema/"><code>fabricops_kit.drift._check_schema</code></a>
+- <a href="../internal/drift/_normalize_datatype/"><code>fabricops_kit.drift._normalize_datatype</code></a>

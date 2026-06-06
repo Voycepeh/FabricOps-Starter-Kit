@@ -16,11 +16,10 @@ No summary available.
 - Related module: `drift`
 - Source file path: `src/fabricops_kit/drift.py`
 - Source reference: <a href="../../api/modules/drift/#_actual_schema">Module source anchor</a>
-- Inbound references count: 2
+- Inbound references count: 1
 - Outbound references count: 1
 
 ## Inbound references
-- <a href="../internal/drift/_check_schema/"><code>fabricops_kit.drift._check_schema</code></a>
 - <a href="../validate_schema/"><code>fabricops_kit.drift.validate_schema</code></a>
 
 ## Outbound references

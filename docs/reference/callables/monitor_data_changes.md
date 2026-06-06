@@ -17,11 +17,10 @@ Profile data, compare against the approved baseline, and return a drift guardrai
 - Source file path: `src/fabricops_kit/drift.py`
 - Source reference: <a href="../../api/modules/drift/#monitor_data_changes">Module source anchor</a>
 - Inbound references count: 0
-- Outbound references count: 8
+- Outbound references count: 7
 
 ## Outbound references
 - <a href="../profile_dataframe/"><code>fabricops_kit.data_profiling.profile_dataframe</code></a>
-- <a href="../internal/drift/_as_monitor_only_result/"><code>fabricops_kit.drift._as_monitor_only_result</code></a>
 - <a href="../internal/drift/_check_profile_drift/"><code>fabricops_kit.drift._check_profile_drift</code></a>
 - <a href="../internal/drift/_data_change_preset_config/"><code>fabricops_kit.drift._data_change_preset_config</code></a>
 - <a href="../internal/drift/_extract_categorical_distribution_categories/"><code>fabricops_kit.drift._extract_categorical_distribution_categories</code></a>
