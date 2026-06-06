@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import pytest
+from types import SimpleNamespace
 
 from fabricops_kit.data_lineage import _build_lineage_handover_markdown, build_lineage_records
+import fabricops_kit.governance_review as governance_review
 from fabricops_kit.governance_review import (
     _build_classification_records,
     _build_column_context_records,
@@ -112,3 +114,53 @@ def test_catalogue_selection_keeps_latest_successful_profile():
 
     assert len(options) == 1
     assert options[0]["profile_run_id"] == "run-2"
+
+
+def test_record_table_governance_persists_approved_dq_rule_metadata(monkeypatch):
+    writes: list[tuple[str, list[dict]]] = []
+
+    class FakeSpark:
+        def createDataFrame(self, records):
+            return records
+
+    config = SimpleNamespace(
+        path_config=SimpleNamespace(
+            paths={"dev": {"metadata": SimpleNamespace(name="metadata_lakehouse")}}
+        )
+    )
+
+    def capture_write(df, config, env, store, table_name, mode="append"):
+        writes.append((table_name, df))
+
+    monkeypatch.setattr(governance_review, "write_lakehouse_table", capture_write)
+
+    result = governance_review.record_table_governance(
+        config,
+        "dev",
+        _profile_rows(),
+        spark_session=FakeSpark(),
+        dq_rule_reviews=[
+            {
+                "rule_id": "amount_positive",
+                "column_name": "amount",
+                "rule_type": "value_range",
+                "rule_parameters": {"min": 0},
+                "severity": "warning",
+                "review_status": "approved",
+                "commit": True,
+            },
+            {
+                "rule_id": "draft_only",
+                "column_name": "order_id",
+                "rule_type": "not_null",
+                "review_status": "approved",
+                "commit": False,
+            },
+        ],
+        approved_by="reviewer",
+    )
+
+    assert len(result["dq_rules"]) == 1
+    assert result["dq_rules"][0]["rule_id"] == "amount_positive"
+    assert result["dq_rules"][0]["metadata_column_key"] == "col-amount"
+    assert [(table_name, len(records)) for table_name, records in writes] == [(governance_review.DQ_RULES_TABLE, 1)]

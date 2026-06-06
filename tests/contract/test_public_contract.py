@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import ast
+import importlib
 import json
 from pathlib import Path
 
@@ -106,6 +107,26 @@ def _template_called_fabricops_functions() -> set[str]:
     return calls
 
 
+
+
+def _template_imports() -> list[tuple[Path, ast.AST]]:
+    root = Path(__file__).parents[2]
+    imports: list[tuple[Path, ast.AST]] = []
+    for notebook_path in (root / "templates" / "notebooks").glob("*.ipynb"):
+        notebook = json.loads(notebook_path.read_text(encoding="utf-8"))
+        for cell in notebook.get("cells", []):
+            if cell.get("cell_type") != "code":
+                continue
+            code = _clean_notebook_code("".join(cell.get("source", [])))
+            try:
+                tree = ast.parse(code)
+            except SyntaxError:
+                continue
+            for node in ast.walk(tree):
+                if isinstance(node, (ast.Import, ast.ImportFrom)):
+                    imports.append((notebook_path, node))
+    return imports
+
 def test_root_exports_only_approved_v1_template_callables():
     assert set(fabricops_kit.__all__) == APPROVED_V1_CALLABLES
     assert len(fabricops_kit.__all__) == 28
@@ -144,3 +165,59 @@ def test_notebook_templates_call_only_approved_v1_surface():
     called = _template_called_fabricops_functions()
     assert called <= APPROVED_V1_CALLABLES
     assert called.isdisjoint(REMOVED_LEGACY_ALIASES)
+
+
+def test_all_28_public_v1_callables_import_from_root_package():
+    package = importlib.import_module("fabricops_kit")
+
+    assert len(APPROVED_V1_CALLABLES) == 28
+    for name in sorted(APPROVED_V1_CALLABLES):
+        imported = getattr(package, name)
+        assert callable(imported), name
+
+
+def test_notebook_template_imports_resolve_to_existing_modules_and_symbols():
+    imports = _template_imports()
+    assert imports, "Expected at least one notebook template import to validate."
+
+    for notebook_path, node in imports:
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                importlib.import_module(alias.name)
+            continue
+
+        assert isinstance(node, ast.ImportFrom)
+        if node.module is None:
+            continue
+        module = importlib.import_module(node.module)
+        for alias in node.names:
+            if alias.name == "*":
+                continue
+            assert hasattr(module, alias.name), f"{notebook_path.name} imports missing {node.module}.{alias.name}"
+
+
+def test_no_deleted_modules_are_imported_from_source_tests_docs_or_templates():
+    root = Path(__file__).parents[2]
+    deleted_module_suffixes = ("business_context", "data_governance", "data_quality", "_utils", "versioning", "docs_metadata")
+    forbidden_imports = []
+    for suffix in deleted_module_suffixes:
+        forbidden_imports.extend(
+            [
+                f"fabricops_kit.{suffix}",
+                f"from .{suffix}",
+                f"from fabricops_kit import {suffix}",
+            ]
+        )
+    scan_roots = [root / "src", root / "tests", root / "docs", root / "templates", root / "scripts"]
+    scanned_suffixes = {".py", ".md", ".yml", ".yaml", ".ipynb"}
+    offenders: list[str] = []
+    for scan_root in scan_roots:
+        for file_path in scan_root.rglob("*"):
+            if file_path == Path(__file__).resolve() or file_path.suffix not in scanned_suffixes:
+                continue
+            text = file_path.read_text(encoding="utf-8")
+            for forbidden in forbidden_imports:
+                if forbidden in text:
+                    offenders.append(f"{file_path.relative_to(root)} contains {forbidden}")
+
+    assert offenders == []

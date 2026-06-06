@@ -23,8 +23,11 @@ def test_production_and_governance_templates_cover_output_handover_and_review_fl
     production = _code("03_pc_agreement_pipeline_template.ipynb")
     governance = _code("04_gov_dataset_table.ipynb")
 
-    assert "validate_schema" in production
-    assert "monitor_data_changes" in production
+    assert "source_schema_result = validate_schema" in production
+    assert "target_schema_result = validate_schema" in production
+    assert "source_change_result = monitor_data_changes" in production
+    assert "target_change_result = monitor_data_changes" in production
+    assert "stop_if_failed(source_schema_result" in production
     assert "write_lakehouse_table" in production or "write_warehouse_table" in production
     assert "build_lineage_records" in production
     assert "run_summary" in production
