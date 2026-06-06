@@ -2,7 +2,7 @@
 
 A full metadata dashboard is planned after v1.0.0. FabricOps v1.0.0 creates the metadata foundation, but it does not ship a complete dashboard experience.
 
-Read [How FabricOps Works](index.md) first. This page explains the future visibility layer that can sit over the metadata enabled workflow.
+Read [How FabricOps Works](index.md) first. This page explains the future visibility layer that can sit over the metadata-backed notebook workflow.
 
 ## v1.0.0 foundation
 

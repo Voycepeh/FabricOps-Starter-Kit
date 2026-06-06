@@ -6,13 +6,18 @@ Start here before reading the workflow detail pages. The v1.0.0 story is intenti
 
 FabricOps is not a full governance platform or a standalone data quality product. Data quality checks are one part of a broader Fabric notebook workflow.
 
-## v1.0.0 workflow
+## v1.0.0 operating model
 
-| Workflow | What it means in v1.0.0 |
-| --- | --- |
-| Metadata enabled workflow | `01_da` captures agreement and steward context, the notebook registry records notebook participation, `03_pc` writes profiling, lineage, and run evidence, and `04_gov` enriches that evidence with reviewed governance metadata. |
-| Production guardrails workflow | `03_pc` is the production control boundary. It validates schema, monitors data changes, applies notebook-defined checks, writes outputs, records lineage, and creates run evidence. |
-| Governance review workflow | `04_gov` reviews profile evidence and commits approved column context, DQ expectations, and classifications. It does not enforce production rules. |
+FabricOps v1.0.0 uses metadata tables and notebook templates to create a traceable operating trail from agreement, to production, to governance review, to handover.
+
+The detailed structure is explained by:
+
+- [Workspace Operating Model](workspace-operating-model.md) for workspace separation and production promotion.
+- [Notebook Templates](notebook-templates.md) for what each notebook owns.
+- [Metadata Tables](metadata-tables.md) for what evidence is stored and where.
+- [Metadata Dashboard](metadata-dashboard.md) for the planned post-v1.0.0 visibility layer.
+
+The two implemented operating workflows are covered in the Workflow Guides: `03_pc` production guardrails and `04_gov` governance review.
 
 Separate data contracts are not part of the v1.0.0 operating model.
 

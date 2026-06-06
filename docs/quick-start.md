@@ -91,7 +91,7 @@ The goal is that support, review, and handover should no longer depend on memory
 
 | Page                                          | Why read it                                                                                               |
 | --------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| [How FabricOps Works](how-fabricops-works/index.md) | Start with the v1.0.0 metadata enabled workflow, production guardrails, governance review, and handover story. |
+| [How FabricOps Works](how-fabricops-works/index.md) | Start with the v1.0.0 metadata-backed notebook workflow, production guardrails, governance review, and handover story. |
 | [Production Guardrails Workflow](schema-and-data-drift.md) | Learn how `03_pc` owns production guardrails and run evidence. |
 | [Governance Review Workflow](data-quality-rules-system.md) | Learn how `04_gov` reviews profile evidence and commits governance metadata. |
 | [Function Reference](reference/index.md)   | Review the reusable helper APIs used by the notebook templates.                                           |
