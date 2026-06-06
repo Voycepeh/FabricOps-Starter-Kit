@@ -136,3 +136,89 @@ def test_metadata_schemas_are_prepared_by_env_config_without_data_contract():
     assert "METADATA_COLUMN_CLASSIFICATION" in schemas
     assert "METADATA_DATA_LINEAGE_TABLE" in schemas
     assert not any("CONTRACT" in name for name in schemas)
+
+
+def test_governance_metadata_schemas_use_explicit_spark_types():
+    from pyspark.sql.types import BooleanType, DoubleType, LongType, StringType, TimestampType
+
+    schemas = gov.get_governance_metadata_schemas()
+    catalogue = {field.name: field.dataType for field in schemas["METADATA_DATA_CATALOGUE"].fields}
+    dq_rules = {field.name: field.dataType for field in schemas["METADATA_DQ_RULES"].fields}
+
+    assert isinstance(catalogue["row_count"], LongType)
+    assert isinstance(catalogue["null_count"], LongType)
+    assert isinstance(catalogue["distinct_count"], LongType)
+    assert isinstance(catalogue["null_percent"], DoubleType)
+    assert isinstance(catalogue["RUN_TIMESTAMP"], TimestampType)
+    assert isinstance(dq_rules["is_active"], BooleanType)
+    assert isinstance(dq_rules["approved_at"], StringType)
+
+
+def test_load_catalogue_profile_rows_filters_profile_stage_and_table_key(monkeypatch):
+    rows = [
+        *_profile_rows("run-2"),
+        {**_profile_rows("run-2")[0], "profile_stage": "source", "metadata_column_key": "source-col"},
+        {**_profile_rows("run-2")[0], "metadata_table_key": "other-table-key", "metadata_column_key": "other-table-col"},
+    ]
+
+    monkeypatch.setattr(gov, "read_lakehouse_table", lambda *args, **kwargs: rows)
+
+    selected = {
+        "environment_name": "dev",
+        "dataset_name": "sales",
+        "table_name": "orders",
+        "metadata_table_key": "table-key",
+        "profile_run_id": "run-2",
+        "profile_stage": "target",
+    }
+    loaded = gov.load_catalogue_profile_rows("config", "dev", selected, spark_session="spark")
+
+    assert {row["metadata_column_key"] for row in loaded} == {"col-order", "col-amount"}
+
+
+def test_setup_governance_metadata_tables_creates_only_for_confirmed_missing_tables(monkeypatch):
+    class FakeTable:
+        def __init__(self, columns):
+            self.columns = columns
+
+    class FakeSpark:
+        def __init__(self):
+            self.created_schemas = []
+
+        def createDataFrame(self, rows, schema=None):
+            self.created_schemas.append(schema)
+            return FakeTable(schema.fieldNames())
+
+    reads = {table: 0 for table in gov.get_governance_metadata_schemas()}
+    writes = []
+
+    def fake_read(config, env, target, table, spark_session=None):
+        reads[table] += 1
+        if reads[table] == 1:
+            raise Exception("[PATH_NOT_FOUND] Path does not exist")
+        return FakeTable(gov.get_governance_metadata_schemas()[table].fieldNames())
+
+    def fake_write(df, config, env, target, table, **kwargs):
+        writes.append((table, kwargs))
+
+    spark = FakeSpark()
+    monkeypatch.setattr(gov, "read_lakehouse_table", fake_read)
+    monkeypatch.setattr(gov, "write_lakehouse_table", fake_write)
+
+    result = gov.setup_governance_metadata_tables(spark=spark, config="config", env="dev")
+
+    assert result["created_tables"] == list(gov.get_governance_metadata_schemas())
+    assert all(schema is not None for schema in spark.created_schemas)
+    assert {kwargs["mode"] for _, kwargs in writes} == {"ignore"}
+
+
+def test_setup_governance_metadata_tables_does_not_create_for_permission_errors(monkeypatch):
+    class FakeSpark:
+        def createDataFrame(self, rows, schema=None):  # pragma: no cover - should not be called
+            raise AssertionError("createDataFrame should not be called for permission errors")
+
+    monkeypatch.setattr(gov, "read_lakehouse_table", lambda *args, **kwargs: (_ for _ in ()).throw(PermissionError("access denied")))
+    monkeypatch.setattr(gov, "write_lakehouse_table", lambda *args, **kwargs: (_ for _ in ()).throw(AssertionError("write should not be called")))
+
+    with pytest.raises(RuntimeError, match="not a confirmed table-not-found"):
+        gov.setup_governance_metadata_tables(spark=FakeSpark(), config="config", env="dev")

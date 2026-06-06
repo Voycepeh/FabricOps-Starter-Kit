@@ -241,7 +241,7 @@ Use the finder below to look up public callable functions.
   <p class="reference-catalogue-item-purpose">Return required governance metadata schemas prepared by 00_env_config.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
-
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>_schema</code></li><li><code>_spark_types</code></li></ul></details>
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>setup_governance_metadata_tables</code></li></ul></details>
   </div>
 </article>
@@ -313,7 +313,7 @@ Use the finder below to look up public callable functions.
   <p class="reference-catalogue-item-purpose">Load selected column profile rows from METADATA_DATA_CATALOGUE.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 4</span></summary><ul><li><code>read_lakehouse_table</code></li><li><code>_coerce_rows</code></li><li><code>_is_success</code></li><li><code>_value</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 5</span></summary><ul><li><code>read_lakehouse_table</code></li><li><code>_coerce_rows</code></li><li><code>_is_success</code></li><li><code>_row_metadata_table_key</code></li><li><code>_value</code></li></ul></details>
 
   </div>
 </article>
@@ -475,7 +475,7 @@ Use the finder below to look up public callable functions.
   <p class="reference-catalogue-item-purpose">Create or validate catalogue, lineage, context, rule, and classification tables during 00_env_config.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 4</span></summary><ul><li><code>read_lakehouse_table</code></li><li><code>write_lakehouse_table</code></li><li><code>_coerce_rows</code></li><li><code>get_governance_metadata_schemas</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 6</span></summary><ul><li><code>read_lakehouse_table</code></li><li><code>write_lakehouse_table</code></li><li><code>_coerce_rows</code></li><li><code>_is_table_not_found_error</code></li><li><code>_schema_field_names</code></li><li><code>get_governance_metadata_schemas</code></li></ul></details>
 
   </div>
 </article>

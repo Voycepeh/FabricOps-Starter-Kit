@@ -74,34 +74,94 @@ def _is_success(row: dict[str, Any]) -> bool:
     return str(_value(row, "profile_status", "")).strip().lower() in SUCCESS_STATUSES
 
 
-def get_governance_metadata_schemas() -> dict[str, list[str]]:
-    """Return metadata schemas prepared by ``00_env_config`` for governance.
+def _spark_types():
+    """Return Spark SQL type classes lazily so package import stays lightweight."""
+    try:
+        from pyspark.sql.types import BooleanType, DoubleType, LongType, StringType, StructField, StructType, TimestampType
+    except Exception as exc:  # pragma: no cover - Fabric/runtime dependency guard
+        raise RuntimeError("governance metadata schemas require pyspark.sql.types in the active runtime.") from exc
+    return BooleanType, DoubleType, LongType, StringType, StructField, StructType, TimestampType
+
+
+def _schema(fields: list[tuple[str, Any]]):
+    _, _, _, _, StructField, StructType, _ = _spark_types()
+    return StructType([StructField(name, data_type, True) for name, data_type in fields])
+
+
+def _schema_field_names(schema: Any) -> list[str]:
+    if hasattr(schema, "fieldNames"):
+        return list(schema.fieldNames())
+    return [field.name for field in getattr(schema, "fields", [])]
+
+
+def get_governance_metadata_schemas() -> dict[str, Any]:
+    """Return typed Spark schemas prepared by ``00_env_config`` for governance.
 
     Returns
     -------
-    dict[str, list[str]]
-        Physical metadata table names mapped to required string column names.
+    dict[str, pyspark.sql.types.StructType]
+        Physical metadata table names mapped to explicit nullable Spark schemas.
 
     Notes
     -----
-    The bootstrap creates empty Delta tables using these schemas. It does not
-    seed data, duplicate pipeline configuration, or create a data-contract table.
+    The bootstrap creates empty Delta tables with these explicit schemas instead
+    of inferring all columns from empty strings. It does not seed data,
+    duplicate pipeline configuration, or create a data-contract table.
     """
-    audit = ["_committed_at", "_committed_by", "_workspace_name", "_notebook_name", "_metadata_lakehouse_name", "_activity_id"]
+    BooleanType, DoubleType, LongType, StringType, _, _, TimestampType = _spark_types()
+    string = StringType()
+    long = LongType()
+    double = DoubleType()
+    boolean = BooleanType()
+    timestamp = TimestampType()
+    audit = [("_committed_at", string), ("_committed_by", string), ("_workspace_name", string), ("_notebook_name", string), ("_metadata_lakehouse_name", string), ("_activity_id", string)]
     catalogue = [
-        "metadata_table_key", "metadata_column_key", "environment_name", "dataset_name", "table_name", "column_name",
-        "layer", "asset_kind", "pipeline_name", "profile_run_id", "profile_stage", "profile_status", "baseline_status",
-        "source_data_change_check", "profile_baseline_mode", "data_type", "row_count", "null_count", "distinct_count",
-        "distribution_type", "distribution_json", "profiled_at", "null_percent", "distinct_percent", "min_value", "max_value",
-        "agreement_id", "contract_version", *audit,
+        ("metadata_table_key", string), ("metadata_column_key", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("column_name", string),
+        ("layer", string), ("asset_kind", string), ("pipeline_name", string), ("profile_run_id", string), ("profile_stage", string), ("profile_status", string), ("baseline_status", string),
+        ("source_data_change_check", string), ("profile_baseline_mode", string), ("data_type", string), ("row_count", long), ("null_count", long), ("distinct_count", long),
+        ("distribution_type", string), ("distribution_json", string), ("profiled_at", string), ("null_percent", double), ("distinct_percent", double), ("min_value", string), ("max_value", string),
+        ("agreement_id", string), ("contract_version", string),
+        ("TABLE_NAME", string), ("RUN_TIMESTAMP", timestamp), ("COLUMN_NAME", string), ("DATA_TYPE", string), ("ROW_COUNT", long), ("NULL_COUNT", long), ("NULL_PERCENT", double), ("DISTINCT_COUNT", long), ("DISTINCT_PERCENT", double), ("MIN_VALUE", string), ("MAX_VALUE", string), ("DISTRIBUTION_TYPE", string), ("DISTRIBUTION_JSON", string),
+        ("AGREEMENT_ID", string), ("AGREEMENT_CONTRACT_VERSION", string), ("NOTEBOOK_REGISTRY_ID", string), ("NOTEBOOK_ID", string), ("PROFILE_RUN_ID", string), ("ENVIRONMENT_NAME", string), ("DATASET_NAME", string), ("PIPELINE_NAME", string), ("EVIDENCE_ROLE", string), ("PROFILE_STAGE", string), ("PROFILE_STATUS", string), ("BASELINE_STATUS", string), ("SOURCE_SCHEMA_CHECK", string), ("TARGET_SCHEMA_CHECK", string), ("SOURCE_DATA_CHANGE_CHECK", string), ("TARGET_DATA_CHANGE_CHECK", string), ("SOURCE_CHANGE_SIGNAL_JSON", string), ("LAYER", string), ("ASSET_KIND", string), ("PROFILED_TABLE_NAME", string), ("PROFILED_ROW_COUNT", long),
+        *audit,
     ]
     return {
-        CATALOGUE_TABLE: catalogue,
-        COLUMN_CONTEXT_TABLE: ["metadata_column_key", "metadata_table_key", "environment_name", "dataset_name", "table_name", "column_name", "business_context", "notes", "review_status", "approved_by", "approved_at", "ai_suggestion_json", *audit],
-        DQ_RULES_TABLE: ["rule_key", "rule_id", "metadata_column_key", "metadata_table_key", "environment_name", "dataset_name", "table_name", "column_name", "rule_type", "rule_parameters_json", "severity", "description", "is_active", "review_status", "approved_by", "approved_at", "ai_suggestion_json", "action_type", *audit],
-        COLUMN_CLASSIFICATION_TABLE: ["metadata_column_key", "metadata_table_key", "environment_name", "dataset_name", "table_name", "column_name", "sensitivity_label", "personal_data_classification", "pii_identifier_type", "handling_requirement", "reasoning", "review_status", "approved_by", "approved_at", "ai_suggestion_json", *audit],
-        LINEAGE_TABLE: ["lineage_id", "dataset_name", "run_id", "source_table", "target_table", "source_table_key", "target_table_key", "transformation_steps_json", "created_at", *audit],
+        CATALOGUE_TABLE: _schema(catalogue),
+        COLUMN_CONTEXT_TABLE: _schema([("metadata_column_key", string), ("metadata_table_key", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("column_name", string), ("business_context", string), ("notes", string), ("review_status", string), ("approved_by", string), ("approved_at", string), ("ai_suggestion_json", string), *audit]),
+        DQ_RULES_TABLE: _schema([("rule_key", string), ("rule_id", string), ("metadata_column_key", string), ("metadata_table_key", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("column_name", string), ("rule_type", string), ("rule_parameters_json", string), ("severity", string), ("description", string), ("is_active", boolean), ("review_status", string), ("approved_by", string), ("approved_at", string), ("ai_suggestion_json", string), ("action_type", string), *audit]),
+        COLUMN_CLASSIFICATION_TABLE: _schema([("metadata_column_key", string), ("metadata_table_key", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("column_name", string), ("sensitivity_label", string), ("personal_data_classification", string), ("pii_identifier_type", string), ("handling_requirement", string), ("reasoning", string), ("review_status", string), ("approved_by", string), ("approved_at", string), ("ai_suggestion_json", string), *audit]),
+        LINEAGE_TABLE: _schema([("lineage_id", string), ("dataset_name", string), ("run_id", string), ("source_table", string), ("target_table", string), ("source_table_key", string), ("target_table_key", string), ("transformation_steps_json", string), ("created_at", string), *audit]),
     }
+
+
+def _is_table_not_found_error(exc: Exception) -> bool:
+    """Return whether a Spark/read exception clearly means the table is absent."""
+    error_class_getter = getattr(exc, "getErrorClass", None)
+    try:
+        error_class = str(error_class_getter() or "") if callable(error_class_getter) else ""
+    except Exception:
+        error_class = ""
+    if error_class.upper() in {"PATH_NOT_FOUND", "TABLE_OR_VIEW_NOT_FOUND", "DELTA_TABLE_NOT_FOUND"}:
+        return True
+    message = str(exc).lower()
+    not_found_markers = (
+        "path does not exist",
+        "path_not_found",
+        "table_or_view_not_found",
+        "table not found",
+        "no such file or directory",
+        "doesn't exist",
+        "does not exist",
+    )
+    non_not_found_markers = ("permission", "access denied", "unauthorized", "forbidden", "authentication", "credential", "malformed", "invalid configuration")
+    return any(marker in message for marker in not_found_markers) and not any(marker in message for marker in non_not_found_markers)
+
+
+def _row_metadata_table_key(row: dict[str, Any]) -> str:
+    explicit = _value(row, "metadata_table_key")
+    if explicit:
+        return str(explicit)
+    return build_metadata_table_key(_value(row, "environment_name"), _value(row, "dataset_name"), _value(row, "table_name"))
 
 
 def setup_governance_metadata_tables(*, spark: Any, config: Any, env: str) -> dict[str, Any]:
@@ -123,15 +183,18 @@ def setup_governance_metadata_tables(*, spark: Any, config: Any, env: str) -> di
     """
     created: list[str] = []
     schemas = get_governance_metadata_schemas()
-    for table_name, fields in schemas.items():
+    for table_name, schema in schemas.items():
         try:
             table = read_lakehouse_table(config, env, "metadata", table_name, spark_session=spark)
-        except Exception:
-            empty_df = spark.createDataFrame([{field: "" for field in fields}]).limit(0)
+        except Exception as exc:
+            if not _is_table_not_found_error(exc):
+                raise RuntimeError(f"Unable to read governance metadata table {table_name!r}; not attempting creation because the error was not a confirmed table-not-found condition.") from exc
+            empty_df = spark.createDataFrame([], schema=schema)
             write_lakehouse_table(empty_df, config, env, "metadata", table_name, mode="ignore", overwrite_schema=True)
             table = read_lakehouse_table(config, env, "metadata", table_name, spark_session=spark)
             created.append(table_name)
         columns = list(getattr(table, "columns", [])) or (list(_coerce_rows(table)[0]) if _coerce_rows(table) else [])
+        fields = _schema_field_names(schema)
         missing = [field for field in fields if field not in columns]
         if missing:
             raise ValueError(f"{table_name} is missing required column(s): {', '.join(missing)}. Migrate the table before running 04_gov.")
@@ -244,7 +307,16 @@ def widget_select_catalogue_table(config: Any, env: str, *, spark_session: Any):
 def load_catalogue_profile_rows(config: Any, env: str, selection: dict[str, Any], *, spark_session: Any) -> list[dict[str, Any]]:
     """Load column rows for the selected latest successful profile run."""
     rows = _coerce_rows(read_lakehouse_table(config, env, "metadata", CATALOGUE_TABLE, spark_session=spark_session))
-    filtered = [r for r in rows if _is_success(r) and str(_value(r, "environment_name")) == str(selection["environment_name"]) and str(_value(r, "dataset_name")) == str(selection["dataset_name"]) and str(_value(r, "table_name")) == str(selection["table_name"]) and str(_value(r, "profile_run_id")) == str(selection["profile_run_id"])]
+    filtered = [
+        r for r in rows
+        if _is_success(r)
+        and str(_value(r, "environment_name")) == str(selection["environment_name"])
+        and str(_value(r, "dataset_name")) == str(selection["dataset_name"])
+        and str(_value(r, "table_name")) == str(selection["table_name"])
+        and str(_value(r, "profile_run_id")) == str(selection["profile_run_id"])
+        and str(_value(r, "profile_stage")) == str(selection["profile_stage"])
+        and _row_metadata_table_key(r) == str(selection["metadata_table_key"])
+    ]
     if not filtered:
         raise ValueError("The selected successful profile has no column rows in METADATA_DATA_CATALOGUE.")
     return filtered

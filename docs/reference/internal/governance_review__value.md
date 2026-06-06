@@ -16,11 +16,12 @@ No summary available.
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
 - Source reference: <a href="../../api/modules/governance_review/#_value">Module source anchor</a>
-- Inbound references count: 8
+- Inbound references count: 9
 - Outbound references count: 0
 
 ## Inbound references
 - <a href="../internal/governance_review/_is_success/"><code>fabricops_kit.governance_review._is_success</code></a>
+- <a href="../internal/governance_review/_row_metadata_table_key/"><code>fabricops_kit.governance_review._row_metadata_table_key</code></a>
 - <a href="../build_classification_records/"><code>fabricops_kit.governance_review.build_classification_records</code></a>
 - <a href="../build_column_context_records/"><code>fabricops_kit.governance_review.build_column_context_records</code></a>
 - <a href="../build_dq_rule_records/"><code>fabricops_kit.governance_review.build_dq_rule_records</code></a>

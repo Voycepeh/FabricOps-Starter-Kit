@@ -6,7 +6,7 @@
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 16</span><span class="reference-chip">Internal helpers: 5</span><span class="reference-chip">Outbound: 2</span><span class="reference-chip">Inbound: 0</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 16</span><span class="reference-chip">Internal helpers: 10</span><span class="reference-chip">Outbound: 2</span><span class="reference-chip">Inbound: 0</span></div>
 
 ## Module purpose
 
@@ -36,7 +36,7 @@ Owns table-scoped 04_gov catalogue selection, explicit approval record builders,
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>5</td>
+      <td>10</td>
     </tr>
     <tr>
       <td>Inbound module count</td>
@@ -132,7 +132,7 @@ Owns table-scoped 04_gov catalogue selection, explicit approval record builders,
       <td>Essential</td>
       <td>function</td>
       <td>Return required governance metadata schemas prepared by 00_env_config.</td>
-      <td>—</td>
+      <td><a href="../../reference/internal/governance_review/_schema/"><code>_schema</code></a> (internal), <a href="../../reference/internal/governance_review/_spark_types/"><code>_spark_types</code></a> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/get_selected_catalogue_table/"><code>get_selected_catalogue_table</code></a></td>
@@ -153,14 +153,14 @@ Owns table-scoped 04_gov catalogue selection, explicit approval record builders,
       <td>Essential</td>
       <td>function</td>
       <td>Load selected column profile rows from METADATA_DATA_CATALOGUE.</td>
-      <td><a href="../../reference/internal/governance_review/_coerce_rows/"><code>_coerce_rows</code></a> (internal), <a href="../../reference/internal/governance_review/_is_success/"><code>_is_success</code></a> (internal), <a href="../../reference/internal/governance_review/_value/"><code>_value</code></a> (internal)</td>
+      <td><a href="../../reference/internal/governance_review/_coerce_rows/"><code>_coerce_rows</code></a> (internal), <a href="../../reference/internal/governance_review/_is_success/"><code>_is_success</code></a> (internal), <a href="../../reference/internal/governance_review/_row_metadata_table_key/"><code>_row_metadata_table_key</code></a> (internal), <a href="../../reference/internal/governance_review/_value/"><code>_value</code></a> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/setup_governance_metadata_tables/"><code>setup_governance_metadata_tables</code></a></td>
       <td>Essential</td>
       <td>function</td>
       <td>Create or validate catalogue, lineage, context, rule, and classification tables during 00_env_config.</td>
-      <td><a href="../../reference/internal/governance_review/_coerce_rows/"><code>_coerce_rows</code></a> (internal)</td>
+      <td><a href="../../reference/internal/governance_review/_coerce_rows/"><code>_coerce_rows</code></a> (internal), <a href="../../reference/internal/governance_review/_is_table_not_found_error/"><code>_is_table_not_found_error</code></a> (internal), <a href="../../reference/internal/governance_review/_schema_field_names/"><code>_schema_field_names</code></a> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/widget_review_table_governance/"><code>widget_review_table_governance</code></a></td>
@@ -242,7 +242,7 @@ Owns table-scoped 04_gov catalogue selection, explicit approval record builders,
 <li>
 <a class="reference-chip" href="../../reference/get_governance_metadata_schemas/"><code>get_governance_metadata_schemas</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<span>None.</span>
+<a class="reference-chip" href="#_schema"><code>_schema</code></a>, <a class="reference-chip" href="#_spark_types"><code>_spark_types</code></a>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/get_selected_catalogue_table/"><code>get_selected_catalogue_table</code></a>
@@ -257,7 +257,7 @@ Owns table-scoped 04_gov catalogue selection, explicit approval record builders,
 <li>
 <a class="reference-chip" href="../../reference/load_catalogue_profile_rows/"><code>load_catalogue_profile_rows</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_coerce_rows"><code>_coerce_rows</code></a>, <a class="reference-chip" href="#_is_success"><code>_is_success</code></a>, <a class="reference-chip" href="#_value"><code>_value</code></a>
+<a class="reference-chip" href="#_coerce_rows"><code>_coerce_rows</code></a>, <a class="reference-chip" href="#_is_success"><code>_is_success</code></a>, <a class="reference-chip" href="#_row_metadata_table_key"><code>_row_metadata_table_key</code></a>, <a class="reference-chip" href="#_value"><code>_value</code></a>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/optional_ai_generate_response/"><code>optional_ai_generate_response</code></a>
@@ -267,7 +267,7 @@ Owns table-scoped 04_gov catalogue selection, explicit approval record builders,
 <li>
 <a class="reference-chip" href="../../reference/setup_governance_metadata_tables/"><code>setup_governance_metadata_tables</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_coerce_rows"><code>_coerce_rows</code></a>, <a class="reference-chip" href="../../reference/get_governance_metadata_schemas/"><code>get_governance_metadata_schemas</code></a>
+<a class="reference-chip" href="#_coerce_rows"><code>_coerce_rows</code></a>, <a class="reference-chip" href="#_is_table_not_found_error"><code>_is_table_not_found_error</code></a>, <a class="reference-chip" href="#_schema_field_names"><code>_schema_field_names</code></a>, <a class="reference-chip" href="../../reference/get_governance_metadata_schemas/"><code>get_governance_metadata_schemas</code></a>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/widget_review_table_governance/"><code>widget_review_table_governance</code></a>
@@ -309,8 +309,28 @@ Owns table-scoped 04_gov catalogue selection, explicit approval record builders,
       <td><a href="../../reference/catalogue_table_options/"><code>catalogue_table_options</code></a>, <a href="../../reference/load_catalogue_profile_rows/"><code>load_catalogue_profile_rows</code></a></td>
     </tr>
     <tr>
+      <td><a href="../../reference/internal/governance_review/_is_table_not_found_error/"><code>_is_table_not_found_error</code></a></td>
+      <td><a href="../../reference/setup_governance_metadata_tables/"><code>setup_governance_metadata_tables</code></a></td>
+    </tr>
+    <tr>
       <td><a href="../../reference/internal/governance_review/_json/"><code>_json</code></a></td>
       <td><a href="../../reference/build_classification_records/"><code>build_classification_records</code></a>, <a href="../../reference/build_column_context_records/"><code>build_column_context_records</code></a>, <a href="../../reference/build_dq_rule_records/"><code>build_dq_rule_records</code></a></td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/governance_review/_row_metadata_table_key/"><code>_row_metadata_table_key</code></a></td>
+      <td><a href="../../reference/load_catalogue_profile_rows/"><code>load_catalogue_profile_rows</code></a></td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/governance_review/_schema/"><code>_schema</code></a></td>
+      <td><a href="../../reference/get_governance_metadata_schemas/"><code>get_governance_metadata_schemas</code></a></td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/governance_review/_schema_field_names/"><code>_schema_field_names</code></a></td>
+      <td><a href="../../reference/setup_governance_metadata_tables/"><code>setup_governance_metadata_tables</code></a></td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/governance_review/_spark_types/"><code>_spark_types</code></a></td>
+      <td><a href="../../reference/get_governance_metadata_schemas/"><code>get_governance_metadata_schemas</code></a></td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/governance_review/_value/"><code>_value</code></a></td>
@@ -334,7 +354,26 @@ Owns table-scoped 04_gov catalogue selection, explicit approval record builders,
 <a class="reference-chip" href="#_value"><code>_value</code></a>
 </li>
 <li>
+<a class="reference-chip" href="#_is_table_not_found_error"><code>_is_table_not_found_error</code></a>
+</li>
+<li>
 <a class="reference-chip" href="#_json"><code>_json</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_row_metadata_table_key"><code>_row_metadata_table_key</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_value"><code>_value</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_schema"><code>_schema</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_spark_types"><code>_spark_types</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_schema_field_names"><code>_schema_field_names</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_spark_types"><code>_spark_types</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_value"><code>_value</code></a>

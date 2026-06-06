@@ -227,6 +227,8 @@ def test_downstream_templates_widget_select_agreements_without_loading_internal_
 def test_04_gov_selects_catalogue_table_without_mandatory_agreement():
     code = _code("04_gov_dataset_table.ipynb")
     assert "load_agreements" not in code
+    assert "env_name = ENV" in code
+    assert "env_name = ENV_NAME" not in code
     assert "widget_select_catalogue_table(CONFIG, env_name, spark_session=spark)" in code
     assert "get_selected_catalogue_table()" in code
     assert "widget_select_agreement(" not in code

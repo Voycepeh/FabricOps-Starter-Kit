@@ -17,7 +17,11 @@ Return required governance metadata schemas prepared by 00_env_config.
 - Source file path: `src/fabricops_kit/governance_review.py`
 - Source reference: <a href="../../api/modules/governance_review/#get_governance_metadata_schemas">Module source anchor</a>
 - Inbound references count: 1
-- Outbound references count: 0
+- Outbound references count: 2
 
 ## Inbound references
 - <a href="../setup_governance_metadata_tables/"><code>fabricops_kit.governance_review.setup_governance_metadata_tables</code></a>
+
+## Outbound references
+- <a href="../internal/governance_review/_schema/"><code>fabricops_kit.governance_review._schema</code></a>
+- <a href="../internal/governance_review/_spark_types/"><code>fabricops_kit.governance_review._spark_types</code></a>
