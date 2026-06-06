@@ -18,7 +18,7 @@ DEPENDENT_TEMPLATE_NAMES = (
     "01_da_agreement_template.ipynb",
     "02_ex_agreement_topic.ipynb",
     "03_pc_agreement_pipeline_template.ipynb",
-    "04_gov_agreement_dataset_table.ipynb",
+    "04_gov_dataset_table.ipynb",
 )
 
 
@@ -217,18 +217,25 @@ def test_public_all_exposes_small_supported_agreement_api_only():
 
 
 def test_downstream_templates_widget_select_agreements_without_loading_internal_helper():
-    for template, env_name in (
-        ("02_ex_agreement_topic.ipynb", "ENV_NAME"),
-        ("03_pc_agreement_pipeline_template.ipynb", "ENV_NAME"),
-        ("04_gov_agreement_dataset_table.ipynb", "env_name"),
-    ):
+    for template in ("02_ex_agreement_topic.ipynb", "03_pc_agreement_pipeline_template.ipynb"):
         code = _code(template)
         assert "load_agreements" not in code
-        if template in {"02_ex_agreement_topic.ipynb", "03_pc_agreement_pipeline_template.ipynb"}:
-            assert "widget_select_agreement(" in code
-            assert "register_notebook=True" in code
-        else:
-            assert f"widget_select_agreement(CONFIG, {env_name}, spark_session=spark)" in code
+        assert "widget_select_agreement(" in code
+        assert "register_notebook=True" in code
+
+
+def test_04_gov_selects_catalogue_table_without_mandatory_agreement():
+    code = _code("04_gov_dataset_table.ipynb")
+    assert "load_agreements" not in code
+    assert "env_name = ENV" in code
+    assert "env_name = ENV_NAME" not in code
+    assert "widget_select_catalogue_table(CONFIG, env_name, spark_session=spark)" in code
+    assert "get_selected_catalogue_table()" in code
+    assert "widget_select_agreement(" not in code
+    assert "get_selected_agreement" not in code
+    assert "register_current_notebook" not in code
+    assert "agreement_id" not in code
+    assert "contract_version" not in code
 
 
 def test_generated_data_agreement_module_page_separates_supported_api_tiers():
@@ -387,7 +394,11 @@ def test_03_pc_base_pipeline_defers_governance_enforcement():
         "PUBLISHED_PROFILE",
     ):
         assert removed not in code
-    assert "METADATA_DATA_CATALOGUE_COLUMN" in code
+    assert "METADATA_DATA_CATALOGUE" in code
+    assert "METADATA_DATA_CATALOGUE_COLUMN" not in code
+    assert ".withColumn(\"metadata_table_key\"" in code
+    assert ".withColumn(\"metadata_column_key\"" in code
+    assert ".withColumn(\"profile_status\", F.lit(\"success\"))" in code
     assert "METADATA_DATA_LINEAGE_TABLE" in code
     assert 'write_lakehouse_table(lineage_df, CONFIG, ENV_NAME, "metadata", LINEAGE_TABLE' in code
     assert "read_lakehouse_csv" in code
@@ -413,3 +424,33 @@ def test_03_pc_base_pipeline_defers_governance_enforcement():
     assert "repartition_by=LARGE_TABLE_REPARTITION_BY" in code
     assert "# LARGE_TABLE_REPARTITION_BY = 2000" in code
     assert "does not read DQ rules" in template_text
+
+
+def test_00_env_config_bootstraps_governance_metadata_tables():
+    code = _code("00_env_config.ipynb")
+    assert "setup_governance_metadata_tables" in code
+    assert "GOVERNANCE_METADATA_SETUP = setup_governance_metadata_tables(" in code
+    for table in (
+        "METADATA_DATA_CATALOGUE",
+        "METADATA_COLUMN_CONTEXT",
+        "METADATA_DQ_RULES",
+        "METADATA_COLUMN_CLASSIFICATION",
+        "METADATA_DATA_LINEAGE_TABLE",
+    ):
+        assert table in code or table in fabricops_kit.get_governance_metadata_schemas()
+
+
+def test_removed_catalogue_and_profile_tables_are_not_referenced():
+    haystack = "\n".join(path.read_text(encoding="utf-8") for root in [Path("src"), Path("templates"), Path("docs"), Path("scripts")] for path in root.rglob("*.py") if root.name != "templates")
+    haystack += "\n".join(path.read_text(encoding="utf-8") for path in Path("templates/notebooks").glob("*.ipynb"))
+    for removed in ("METADATA_PROFILE_ROWS", "METADATA_DATA_CATALOGUE_TABLE", "METADATA_DATA_CATALOGUE_COLUMN", "METADATA_DATA_CONTRACT"):
+        assert removed not in haystack
+
+
+def test_04_gov_imports_only_supported_public_apis_and_does_not_enforce_rules():
+    imported = _fabricops_imports("04_gov_dataset_table.ipynb")
+    assert imported <= set(fabricops_kit.__all__)
+    code = _code("04_gov_dataset_table.ipynb")
+    assert "METADATA_DATA_CATALOGUE" in code or "load_catalogue_profile_rows" in code
+    assert "enforce_dq" not in code
+    assert "assert_dq_passed" not in code

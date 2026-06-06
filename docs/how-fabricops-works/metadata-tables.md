@@ -1,4 +1,4 @@
-# Metadata Tables
+# Metadata tables
 
 The governance `metadata_lakehouse` is the shared coordination layer for FabricOps metadata.
 
@@ -358,8 +358,6 @@ Stores append-only human-reviewed sensitivity and PII decisions.
 | `ai_suggestion_json`                              | Optional full AI suggestion payload.           |
 
 Includes the standard runtime audit columns.
-
-## Next step
 
 Continue to [Metadata Dashboard](metadata-dashboard.md) to see how the metadata becomes useful to people and tools.
 

@@ -38,6 +38,33 @@ Use the finder below to look up public callable functions.
 
   </div>
 </article>
+<article id="build_classification_records" class="reference-catalogue-item" data-callable-row="true" data-callable-name="build_classification_records" data-callable-module="governance_review" data-callable-starter-path="—" data-role="essential" data-callable-purpose="Build append-only approved METADATA_COLUMN_CLASSIFICATION records.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/build_classification_records/"><code>build_classification_records</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Build append-only approved METADATA_COLUMN_CLASSIFICATION records.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 7</span></summary><ul><li><code>_audit</code></li><li><code>_json</code></li><li><code>_value</code></li><li><code>_now_utc_iso</code></li><li><code>_resolve_action_by</code></li><li><code>build_metadata_column_key</code></li><li><code>build_metadata_table_key</code></li></ul></details>
+
+  </div>
+</article>
+<article id="build_column_context_records" class="reference-catalogue-item" data-callable-row="true" data-callable-name="build_column_context_records" data-callable-module="governance_review" data-callable-starter-path="—" data-role="essential" data-callable-purpose="Build append-only approved METADATA_COLUMN_CONTEXT records from explicit human commits.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/build_column_context_records/"><code>build_column_context_records</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Build append-only approved METADATA_COLUMN_CONTEXT records from explicit human commits.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 7</span></summary><ul><li><code>_audit</code></li><li><code>_json</code></li><li><code>_value</code></li><li><code>_now_utc_iso</code></li><li><code>_resolve_action_by</code></li><li><code>build_metadata_column_key</code></li><li><code>build_metadata_table_key</code></li></ul></details>
+
+  </div>
+</article>
+<article id="build_dq_rule_records" class="reference-catalogue-item" data-callable-row="true" data-callable-name="build_dq_rule_records" data-callable-module="governance_review" data-callable-starter-path="—" data-role="essential" data-callable-purpose="Build append-only approved METADATA_DQ_RULES records without enforcement.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/build_dq_rule_records/"><code>build_dq_rule_records</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Build append-only approved METADATA_DQ_RULES records without enforcement.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 8</span></summary><ul><li><code>_audit</code></li><li><code>_json</code></li><li><code>_value</code></li><li><code>_now_utc_iso</code></li><li><code>_resolve_action_by</code></li><li><code>build_dq_rule_key</code></li><li><code>build_metadata_column_key</code></li><li><code>build_metadata_table_key</code></li></ul></details>
+
+  </div>
+</article>
 <article id="build_handover" class="reference-catalogue-item" data-callable-row="true" data-callable-name="build_handover" data-callable-module="handover" data-callable-starter-path="—" data-role="essential" data-callable-purpose="Build a handover-friendly summary for one data product run.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/build_handover/"><code>build_handover</code></a></h3>
   <p class="reference-catalogue-item-purpose">Build a handover-friendly summary for one data product run.</p>
@@ -65,13 +92,58 @@ Use the finder below to look up public callable functions.
 
   </div>
 </article>
+<article id="build_profile_summary" class="reference-catalogue-item" data-callable-row="true" data-callable-name="build_profile_summary" data-callable-module="governance_review" data-callable-starter-path="—" data-role="essential" data-callable-purpose="Summarize the selected catalogue profile before governance review.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/build_profile_summary/"><code>build_profile_summary</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Summarize the selected catalogue profile before governance review.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_value</code></li></ul></details>
+
+  </div>
+</article>
 <article id="build_runtime_audit_fields" class="reference-catalogue-item" data-callable-row="true" data-callable-name="build_runtime_audit_fields" data-callable-module="metadata" data-callable-starter-path="03_pc" data-role="essential" data-callable-purpose="Build shared runtime audit values; 03_pc uses notebook and committed-by context while adding dataframe audit columns inline.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/build_runtime_audit_fields/"><code>build_runtime_audit_fields</code></a></h3>
   <p class="reference-catalogue-item-purpose">Build shared runtime audit values; 03_pc uses notebook and committed-by context while adding dataframe audit columns inline.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/metadata/" title="Open metadata module page" aria-label="Open metadata module page">metadata</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">03_pc</span></p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 3</span></summary><ul><li><code>_context_get</code></li><li><code>_runtime_context</code></li><li><code>_safe_str</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 3</span></summary><ul><li><code>_create_or_update_data_agreement</code></li><li><code>_create_or_update_data_steward</code></li><li><code>_save_agreement_evidence_records</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 4</span></summary><ul><li><code>_create_or_update_data_agreement</code></li><li><code>_create_or_update_data_steward</code></li><li><code>_save_agreement_evidence_records</code></li><li><code>_audit</code></li></ul></details>
+  </div>
+</article>
+<article id="catalogue_table_options" class="reference-catalogue-item" data-callable-row="true" data-callable-name="catalogue_table_options" data-callable-module="governance_review" data-callable-starter-path="—" data-role="essential" data-callable-purpose="Build one selectable option per logical table using the latest successful profile run.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/catalogue_table_options/"><code>catalogue_table_options</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Build one selectable option per logical table using the latest successful profile run.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 3</span></summary><ul><li><code>_is_success</code></li><li><code>_value</code></li><li><code>build_metadata_table_key</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>widget_select_catalogue_table</code></li></ul></details>
+  </div>
+</article>
+<article id="commit_column_classification" class="reference-catalogue-item" data-callable-row="true" data-callable-name="commit_column_classification" data-callable-module="governance_review" data-callable-starter-path="—" data-role="essential" data-callable-purpose="Persist approved sensitivity and PII classification records after explicit human commit.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/commit_column_classification/"><code>commit_column_classification</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Persist approved sensitivity and PII classification records after explicit human commit.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>write_lakehouse_table</code></li></ul></details>
+
+  </div>
+</article>
+<article id="commit_column_context" class="reference-catalogue-item" data-callable-row="true" data-callable-name="commit_column_context" data-callable-module="governance_review" data-callable-starter-path="—" data-role="essential" data-callable-purpose="Persist approved business context records after an explicit human commit.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/commit_column_context/"><code>commit_column_context</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Persist approved business context records after an explicit human commit.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>write_lakehouse_table</code></li></ul></details>
+
+  </div>
+</article>
+<article id="commit_dq_rules" class="reference-catalogue-item" data-callable-row="true" data-callable-name="commit_dq_rules" data-callable-module="governance_review" data-callable-starter-path="—" data-role="essential" data-callable-purpose="Persist approved DQ rule records after an explicit human commit.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/commit_dq_rules/"><code>commit_dq_rules</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Persist approved DQ rule records after an explicit human commit.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>write_lakehouse_table</code></li></ul></details>
+
   </div>
 </article>
 <article id="current_notebook_active_registrations" class="reference-catalogue-item" data-callable-row="true" data-callable-name="current_notebook_active_registrations" data-callable-module="metadata" data-callable-starter-path="03_pc" data-role="optional" data-callable-purpose="Return active latest agreement registrations for the running notebook.">
@@ -164,6 +236,15 @@ Use the finder below to look up public callable functions.
 
   </div>
 </article>
+<article id="get_governance_metadata_schemas" class="reference-catalogue-item" data-callable-row="true" data-callable-name="get_governance_metadata_schemas" data-callable-module="governance_review" data-callable-starter-path="—" data-role="essential" data-callable-purpose="Return required governance metadata schemas prepared by 00_env_config.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/get_governance_metadata_schemas/"><code>get_governance_metadata_schemas</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Return required governance metadata schemas prepared by 00_env_config.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>_schema</code></li><li><code>_spark_types</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>setup_governance_metadata_tables</code></li></ul></details>
+  </div>
+</article>
 <article id="get_notebook_registry_schema" class="reference-catalogue-item" data-callable-row="true" data-callable-name="get_notebook_registry_schema" data-callable-module="metadata" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Return the required notebook registry metadata columns.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/get_notebook_registry_schema/"><code>get_notebook_registry_schema</code></a></h3>
   <p class="reference-catalogue-item-purpose">Return the required notebook registry metadata columns.</p>
@@ -209,6 +290,33 @@ Use the finder below to look up public callable functions.
 
   </div>
 </article>
+<article id="get_selected_catalogue_table" class="reference-catalogue-item" data-callable-row="true" data-callable-name="get_selected_catalogue_table" data-callable-module="governance_review" data-callable-starter-path="—" data-role="essential" data-callable-purpose="Return stable table identity selected by widget_select_catalogue_table.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/get_selected_catalogue_table/"><code>get_selected_catalogue_table</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Return stable table identity selected by widget_select_catalogue_table.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+
+
+  </div>
+</article>
+<article id="latest_by_column" class="reference-catalogue-item" data-callable-row="true" data-callable-name="latest_by_column" data-callable-module="governance_review" data-callable-starter-path="—" data-role="essential" data-callable-purpose="Load latest approved metadata state by stable column key.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/latest_by_column/"><code>latest_by_column</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Load latest approved metadata state by stable column key.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_coerce_rows</code></li></ul></details>
+
+  </div>
+</article>
+<article id="load_catalogue_profile_rows" class="reference-catalogue-item" data-callable-row="true" data-callable-name="load_catalogue_profile_rows" data-callable-module="governance_review" data-callable-starter-path="—" data-role="essential" data-callable-purpose="Load selected column profile rows from METADATA_DATA_CATALOGUE.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/load_catalogue_profile_rows/"><code>load_catalogue_profile_rows</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Load selected column profile rows from METADATA_DATA_CATALOGUE.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 5</span></summary><ul><li><code>read_lakehouse_table</code></li><li><code>_coerce_rows</code></li><li><code>_is_success</code></li><li><code>_row_metadata_table_key</code></li><li><code>_value</code></li></ul></details>
+
+  </div>
+</article>
 <article id="load_dq_rules" class="reference-catalogue-item" data-callable-row="true" data-callable-name="load_dq_rules" data-callable-module="data_quality" data-callable-starter-path="—" data-role="essential" data-callable-purpose="Load latest active approved DQ rules from append-only metadata history.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/load_dq_rules/"><code>load_dq_rules</code></a></h3>
   <p class="reference-catalogue-item-purpose">Load latest active approved DQ rules from append-only metadata history.</p>
@@ -242,6 +350,15 @@ Use the finder below to look up public callable functions.
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/drift/" title="Open drift module page" aria-label="Open drift module page">drift</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">03_pc</span></p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 8</span></summary><ul><li><code>profile_dataframe</code></li><li><code>_as_monitor_only_result</code></li><li><code>_check_profile_drift</code></li><li><code>_data_change_preset_config</code></li><li><code>_extract_categorical_distribution_categories</code></li><li><code>_extract_numeric_distribution_bin_edges</code></li><li><code>_load_latest_profile</code></li><li><code>_normalize_profile</code></li></ul></details>
+
+  </div>
+</article>
+<article id="optional_ai_generate_response" class="reference-catalogue-item" data-callable-row="true" data-callable-name="optional_ai_generate_response" data-callable-module="governance_review" data-callable-starter-path="—" data-role="optional" data-callable-purpose="Run Fabric AI suggestions when available and return None when unavailable.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/optional_ai_generate_response/"><code>optional_ai_generate_response</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Run Fabric AI suggestions when available and return None when unavailable.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-role reference-chip-optional">Optional</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+
 
   </div>
 </article>
@@ -314,7 +431,7 @@ Use the finder below to look up public callable functions.
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">02_ex, 03_pc</span></p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>_get_store</code></li><li><code>_get_spark</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 5</span></summary><ul><li><code>_ensure_metadata_tables</code></li><li><code>_list_all_data_agreement_rows</code></li><li><code>_list_data_stewards</code></li><li><code>load_notebook_registry</code></li><li><code>setup_notebook_registry_table</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 8</span></summary><ul><li><code>_ensure_metadata_tables</code></li><li><code>_list_all_data_agreement_rows</code></li><li><code>_list_data_stewards</code></li><li><code>load_catalogue_profile_rows</code></li><li><code>setup_governance_metadata_tables</code></li><li><code>widget_select_catalogue_table</code></li><li><code>load_notebook_registry</code></li><li><code>setup_notebook_registry_table</code></li></ul></details>
   </div>
 </article>
 <article id="read_warehouse_table" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_warehouse_table" data-callable-module="fabric_input_output" data-callable-starter-path="02_ex, 03_pc" data-role="essential" data-callable-purpose="Read a table from a Microsoft Fabric warehouse.">
@@ -350,6 +467,15 @@ Use the finder below to look up public callable functions.
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>_ensure_metadata_tables</code></li><li><code>_list_data_stewards</code></li></ul></details>
+
+  </div>
+</article>
+<article id="setup_governance_metadata_tables" class="reference-catalogue-item" data-callable-row="true" data-callable-name="setup_governance_metadata_tables" data-callable-module="governance_review" data-callable-starter-path="—" data-role="essential" data-callable-purpose="Create or validate catalogue, lineage, context, rule, and classification tables during 00_env_config.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/setup_governance_metadata_tables/"><code>setup_governance_metadata_tables</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Create or validate catalogue, lineage, context, rule, and classification tables during 00_env_config.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 6</span></summary><ul><li><code>read_lakehouse_table</code></li><li><code>write_lakehouse_table</code></li><li><code>_coerce_rows</code></li><li><code>_is_table_not_found_error</code></li><li><code>_schema_field_names</code></li><li><code>get_governance_metadata_schemas</code></li></ul></details>
 
   </div>
 </article>
@@ -470,12 +596,30 @@ Use the finder below to look up public callable functions.
 
   </div>
 </article>
+<article id="widget_review_table_governance" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_review_table_governance" data-callable-module="governance_review" data-callable-starter-path="—" data-role="essential" data-callable-purpose="Render non-persistent human review guidance for business context, DQ rules, and classification.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_review_table_governance/"><code>widget_review_table_governance</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Render non-persistent human review guidance for business context, DQ rules, and classification.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_value</code></li></ul></details>
+
+  </div>
+</article>
 <article id="widget_select_agreement" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_select_agreement" data-callable-module="data_agreement" data-callable-starter-path="03_pc" data-role="essential" data-callable-purpose="Render a searchable agreement selector and store selected agreement metadata row in module state.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_select_agreement/"><code>widget_select_agreement</code></a></h3>
   <p class="reference-catalogue-item-purpose">Render a searchable agreement selector and store selected agreement metadata row in module state.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">03_pc</span></p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 7</span></summary><ul><li><code>_html_escape</code></li><li><code>_latest_agreement_versions</code></li><li><code>_load_agreements</code></li><li><code>_render_searchable_selector</code></li><li><code>_require_ipywidgets</code></li><li><code>current_notebook_active_registrations</code></li><li><code>register_current_notebook</code></li></ul></details>
+
+  </div>
+</article>
+<article id="widget_select_catalogue_table" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_select_catalogue_table" data-callable-module="governance_review" data-callable-starter-path="—" data-role="essential" data-callable-purpose="Render a searchable latest-successful-profile selector backed by METADATA_DATA_CATALOGUE.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_select_catalogue_table/"><code>widget_select_catalogue_table</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Render a searchable latest-successful-profile selector backed by METADATA_DATA_CATALOGUE.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 3</span></summary><ul><li><code>read_lakehouse_table</code></li><li><code>_coerce_rows</code></li><li><code>catalogue_table_options</code></li></ul></details>
 
   </div>
 </article>
@@ -512,7 +656,7 @@ Use the finder below to look up public callable functions.
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">03_pc</span></p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_get_store</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 6</span></summary><ul><li><code>_ensure_metadata_tables</code></li><li><code>_write_row</code></li><li><code>write_dq_rules</code></li><li><code>seed_minimal_sample_source_table</code></li><li><code>register_current_notebook</code></li><li><code>setup_notebook_registry_table</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 10</span></summary><ul><li><code>_ensure_metadata_tables</code></li><li><code>_write_row</code></li><li><code>write_dq_rules</code></li><li><code>seed_minimal_sample_source_table</code></li><li><code>commit_column_classification</code></li><li><code>commit_column_context</code></li><li><code>commit_dq_rules</code></li><li><code>setup_governance_metadata_tables</code></li><li><code>register_current_notebook</code></li><li><code>setup_notebook_registry_table</code></li></ul></details>
   </div>
 </article>
 <article id="write_warehouse_table" class="reference-catalogue-item" data-callable-row="true" data-callable-name="write_warehouse_table" data-callable-module="fabric_input_output" data-callable-starter-path="03_pc" data-role="essential" data-callable-purpose="Write a Spark DataFrame to a Microsoft Fabric warehouse table.">

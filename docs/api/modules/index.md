@@ -13,6 +13,7 @@ Short-form modules remain import-compatible aliases but are intentionally hidden
 - [`data_quality`](data_quality.md)
 - [`drift`](drift.md)
 - [`fabric_input_output`](fabric_input_output.md)
+- [`governance_review`](governance_review.md)
 - [`handover`](handover.md)
 - [`metadata`](metadata.md)
 - [`versioning`](versioning.md)

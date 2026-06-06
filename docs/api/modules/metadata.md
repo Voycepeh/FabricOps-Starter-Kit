@@ -6,11 +6,11 @@
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 6</span><span class="reference-chip">Internal helpers: 15</span><span class="reference-chip">Outbound: 1</span><span class="reference-chip">Inbound: 4</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 6</span><span class="reference-chip">Internal helpers: 15</span><span class="reference-chip">Outbound: 1</span><span class="reference-chip">Inbound: 5</span></div>
 
 ## Module purpose
 
-Owns metadata evidence persistence, stable keys, notebook registry, and contract evidence loading.
+Owns metadata evidence persistence, stable keys, notebook registry, catalogue keys, and runtime audit helpers.
 
 ## Module manifest
 
@@ -28,7 +28,7 @@ Owns metadata evidence persistence, stable keys, notebook registry, and contract
     </tr>
     <tr>
       <td>Module purpose</td>
-      <td>Owns metadata evidence persistence, stable keys, notebook registry, and contract evidence loading.</td>
+      <td>Owns metadata evidence persistence, stable keys, notebook registry, catalogue keys, and runtime audit helpers.</td>
     </tr>
     <tr>
       <td>Public callable count</td>
@@ -40,7 +40,7 @@ Owns metadata evidence persistence, stable keys, notebook registry, and contract
     </tr>
     <tr>
       <td>Inbound module count</td>
-      <td>4</td>
+      <td>5</td>
     </tr>
     <tr>
       <td>Outbound module count</td>
@@ -48,7 +48,7 @@ Owns metadata evidence persistence, stable keys, notebook registry, and contract
     </tr>
     <tr>
       <td>External callers</td>
-      <td><code>business_context</code>, <code>data_agreement</code>, <code>data_governance</code>, <code>data_quality</code></td>
+      <td><code>business_context</code>, <code>data_agreement</code>, <code>data_governance</code>, <code>data_quality</code>, <code>governance_review</code></td>
     </tr>
     <tr>
       <td>External callees</td>
@@ -315,6 +315,9 @@ Owns metadata evidence persistence, stable keys, notebook registry, and contract
 
 **data_quality**
 <a class="reference-chip" href="../data_quality/#_attach_rule_metadata_keys"><code>_attach_rule_metadata_keys</code></a>, <a class="reference-chip" href="../data_quality/#_build_dq_rule_deactivation_metadata_df"><code>_build_dq_rule_deactivation_metadata_df</code></a>, <a class="reference-chip" href="../data_quality/#_build_dq_rule_deactivations"><code>_build_dq_rule_deactivations</code></a>, <a class="reference-chip" href="../data_quality/#_build_dq_rule_history"><code>_build_dq_rule_history</code></a>, <a class="reference-chip" href="../data_quality/#_build_dq_rules_metadata_df"><code>_build_dq_rules_metadata_df</code></a>
+
+**governance_review**
+<a class="reference-chip" href="../governance_review/#_audit"><code>_audit</code></a>, <a class="reference-chip" href="../governance_review/#_row_metadata_table_key"><code>_row_metadata_table_key</code></a>, <a class="reference-chip" href="../../reference/build_classification_records/"><code>build_classification_records</code></a>, <a class="reference-chip" href="../../reference/build_column_context_records/"><code>build_column_context_records</code></a>, <a class="reference-chip" href="../../reference/build_dq_rule_records/"><code>build_dq_rule_records</code></a>, <a class="reference-chip" href="../../reference/catalogue_table_options/"><code>catalogue_table_options</code></a>
 
 ### External callees
 

@@ -230,7 +230,7 @@ def write_governance(
     approved_rows: list[dict[str, Any]] | None = None,
     agreement_context: dict[str, Any] | None = None,
     action_by: str | None = None,
-    table_name: str = "METADATA_COLUMN_GOVERNANCE",
+    table_name: str = "METADATA_COLUMN_CLASSIFICATION",
     mode: str = "append",
 ) -> list[dict[str, Any]]:
     """Persist approved governance rows to metadata table."""
