@@ -77,49 +77,49 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
   <tbody>
     <tr>
       <td><a href="../../reference/read_lakehouse_csv/"><code>read_lakehouse_csv</code></a></td>
-      <td>Essential</td>
+      <td>Callable</td>
       <td>function</td>
       <td>Read a CSV file from a configured Fabric lakehouse Files path.</td>
       <td><a href="../../reference/internal/fabric_input_output/_get_spark/"><code>_get_spark</code></a> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/read_lakehouse_excel/"><code>read_lakehouse_excel</code></a></td>
-      <td>Essential</td>
+      <td>Callable</td>
       <td>function</td>
       <td>Read an Excel file from a configured Fabric lakehouse Files path.</td>
       <td><a href="../../reference/internal/fabric_input_output/_get_spark/"><code>_get_spark</code></a> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/read_lakehouse_parquet/"><code>read_lakehouse_parquet</code></a></td>
-      <td>Essential</td>
+      <td>Callable</td>
       <td>function</td>
       <td>Read a Parquet path from a configured Fabric lakehouse Files path.</td>
       <td><a href="../../reference/internal/fabric_input_output/_convert_single_parquet_ns_to_us/"><code>_convert_single_parquet_ns_to_us</code></a> (internal), <a href="../../reference/internal/fabric_input_output/_get_spark/"><code>_get_spark</code></a> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/read_lakehouse_table/"><code>read_lakehouse_table</code></a></td>
-      <td>Essential</td>
+      <td>Callable</td>
       <td>function</td>
       <td>Read a table from a configured Fabric lakehouse target.</td>
       <td><a href="../../reference/internal/fabric_input_output/_get_spark/"><code>_get_spark</code></a> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/read_warehouse_table/"><code>read_warehouse_table</code></a></td>
-      <td>Essential</td>
+      <td>Callable</td>
       <td>function</td>
       <td>Read a table from a configured Fabric warehouse target.</td>
       <td><a href="../../reference/internal/fabric_input_output/_get_spark/"><code>_get_spark</code></a> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/write_lakehouse_table/"><code>write_lakehouse_table</code></a></td>
-      <td>Essential</td>
+      <td>Callable</td>
       <td>function</td>
       <td>Write a DataFrame to a configured Fabric lakehouse target.</td>
       <td>—</td>
     </tr>
     <tr>
       <td><a href="../../reference/write_warehouse_table/"><code>write_warehouse_table</code></a></td>
-      <td>Essential</td>
+      <td>Callable</td>
       <td>function</td>
       <td>Write a DataFrame to a configured Fabric warehouse target.</td>
       <td>—</td>

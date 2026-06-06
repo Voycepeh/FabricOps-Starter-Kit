@@ -1,7 +1,7 @@
 # _coerce_row_dicts
 
 **Module:** `metadata`  
-**Classification:** Internal helper
+**Classification:** Internal
 
 ## Purpose
 
@@ -12,7 +12,7 @@ No summary available.
 - Fully qualified function name: `fabricops_kit.metadata._coerce_row_dicts`
 - Short name: `_coerce_row_dicts`
 - Module: `metadata`
-- Classification: Internal helper
+- Classification: Internal
 - Related module: `metadata`
 - Source file path: `src/fabricops_kit/metadata.py`
 - Source reference: <a href="../../api/modules/metadata/#_coerce_row_dicts">Module source anchor</a>

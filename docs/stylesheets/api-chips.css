@@ -127,6 +127,8 @@
 }
 
 .callable-finder {
+  box-sizing: border-box;
+  max-width: 100%;
   margin: 0.7rem 0 1.35rem;
   padding: 1rem 1.05rem;
   border: 1px solid color-mix(in srgb, rgb(99, 102, 241) 28%, var(--md-default-fg-color--lightest));
@@ -142,6 +144,7 @@
 }
 
 .callable-finder-input {
+  box-sizing: border-box;
   width: 100%;
   max-width: 36rem;
   min-height: 2.6rem;
@@ -175,13 +178,28 @@
   line-height: 1.35;
 }
 
-.callable-role-note {
+.callable-type-filters {
+  max-width: 100%;
+  min-width: 0;
+  margin: 0.75rem 0 0;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid color-mix(in srgb, rgb(99, 102, 241) 20%, var(--md-default-fg-color--lightest));
+  border-radius: 0.65rem;
+}
+
+.callable-type-filters label,
+.callable-type-filters legend {
+  overflow-wrap: anywhere;
+}
+
+.callable-type-note {
   margin: 0.2rem 0 0.45rem 1.55rem;
   font-size: 0.8rem;
   color: var(--md-default-fg-color--light);
+  overflow-wrap: anywhere;
 }
 
-.callable-role-note strong {
+.callable-type-note strong {
   color: var(--md-default-fg-color);
 }
 
@@ -257,11 +275,11 @@
   background: color-mix(in srgb, var(--md-default-bg-color) 98%, rgb(148, 163, 184) 2%);
 }
 
-.reference-chip-role.reference-chip-essential {
+.reference-chip-type.reference-chip-callable {
   background: color-mix(in srgb, rgb(16, 185, 129) 18%, var(--md-default-bg-color));
 }
 
-.reference-chip-role.reference-chip-optional {
+.reference-chip-type.reference-chip-internal {
   background: color-mix(in srgb, rgb(245, 158, 11) 18%, var(--md-default-bg-color));
 }
 
@@ -300,6 +318,18 @@
 }
 
 @media screen and (max-width: 760px) {
+  .callable-finder {
+    padding: 0.85rem 0.8rem;
+  }
+
+  .callable-type-filters {
+    padding: 0.65rem 0.7rem;
+  }
+
+  .callable-type-note {
+    margin-left: 1.3rem;
+  }
+
   .reference-template-table thead,
   .reference-function-table thead,
   .reference-template-table,
@@ -372,11 +402,11 @@
   background: color-mix(in srgb, var(--md-default-bg-color) 94%, rgb(99, 102, 241) 6%);
 }
 
-.reference-chip-role.reference-chip-essential {
+.reference-chip-type.reference-chip-callable {
   background: color-mix(in srgb, rgb(16, 185, 129) 18%, var(--md-default-bg-color));
 }
 
-.reference-chip-role.reference-chip-optional {
+.reference-chip-type.reference-chip-internal {
   background: color-mix(in srgb, rgb(245, 158, 11) 18%, var(--md-default-bg-color));
 }
 

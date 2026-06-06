@@ -1,7 +1,7 @@
 # _notebook_registration_key
 
 **Module:** `metadata`  
-**Classification:** Internal helper
+**Classification:** Internal
 
 ## Purpose
 
@@ -12,7 +12,7 @@ No summary available.
 - Fully qualified function name: `fabricops_kit.metadata._notebook_registration_key`
 - Short name: `_notebook_registration_key`
 - Module: `metadata`
-- Classification: Internal helper
+- Classification: Internal
 - Related module: `metadata`
 - Source file path: `src/fabricops_kit/metadata.py`
 - Source reference: <a href="../../api/modules/metadata/#_notebook_registration_key">Module source anchor</a>

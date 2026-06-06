@@ -1,7 +1,7 @@
 # monitor_data_changes
 
 **Module:** `drift`  
-**Classification:** Essential
+**Classification:** Callable
 
 ## Purpose
 
@@ -12,7 +12,7 @@ Profile data, compare against the approved baseline, and return a drift guardrai
 - Fully qualified function name: `fabricops_kit.drift.monitor_data_changes`
 - Short name: `monitor_data_changes`
 - Module: `drift`
-- Classification: Essential
+- Classification: Callable
 - Related module: `drift`
 - Source file path: `src/fabricops_kit/drift.py`
 - Source reference: <a href="../../api/modules/drift/#monitor_data_changes">Module source anchor</a>

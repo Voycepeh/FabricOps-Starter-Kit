@@ -1,7 +1,7 @@
 # _actual_schema
 
 **Module:** `drift`  
-**Classification:** Internal helper
+**Classification:** Internal
 
 ## Purpose
 
@@ -12,7 +12,7 @@ No summary available.
 - Fully qualified function name: `fabricops_kit.drift._actual_schema`
 - Short name: `_actual_schema`
 - Module: `drift`
-- Classification: Internal helper
+- Classification: Internal
 - Related module: `drift`
 - Source file path: `src/fabricops_kit/drift.py`
 - Source reference: <a href="../../api/modules/drift/#_actual_schema">Module source anchor</a>

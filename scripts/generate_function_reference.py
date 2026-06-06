@@ -82,7 +82,7 @@ class Symbol:
     public_module: str
     obj_type: str
     summary: str
-    role: str = "optional"
+    role: str = "callable"
     purpose: str = ""
 
 
@@ -255,9 +255,14 @@ def build_callable_graph(
         exported_names = {name for name, sym in symbol_map.items() if sym.actual_module == module}
         same_module_names = set(functions) | set(classes)
         for callable_name in sorted(set(functions) | set(classes)):
-            role = str(docs_metadata.get(callable_name, {}).get("role", "internal")).lower()
+            role = str(
+                docs_metadata.get(callable_name, {}).get("function_type")
+                or docs_metadata.get(callable_name, {}).get("role", "internal")
+            ).lower()
+            if role in {"essential", "optional"}:
+                role = "callable"
             exported = callable_name in exported_names
-            if not exported and role not in {"essential", "optional", "internal"}:
+            if not exported and role not in {"callable", "internal"}:
                 role = "internal"
             qualified_name = f"{PACKAGE_NAME}.{module}.{callable_name}"
             key = (module, callable_name)
@@ -458,7 +463,7 @@ def html_escape(text: str) -> str:
 
 def function_chip(name: str, href: str) -> str:
     """Return a clickable function chip for generated docs tables."""
-    return f'<a class="function-chip" href="{html_escape(href)}">{html_escape(name)}</a>'
+    return f'<a class="function-chip" href="{html_escape(href)}"><code>{html_escape(name)}</code></a>'
 
 
 def function_chip_wrap(chips: list[str]) -> str:
@@ -625,16 +630,21 @@ def main() -> None:
             _assert_non_placeholder_summary(symbol.name, "summary", symbol.summary)
         if enforce_placeholder_guard and symbol.purpose and symbol.purpose != "—":
             _assert_non_placeholder_summary(symbol.name, "purpose", symbol.purpose)
-        symbol_role = meta.get("role")
+        symbol_role = meta.get("function_type") or meta.get("role")
         if not symbol_role:
-            raise RuntimeError(f"Missing explicit role for {symbol.name} in PUBLIC_SYMBOL_DOCS")
+            raise RuntimeError(f"Missing explicit function_type for {symbol.name} in PUBLIC_SYMBOL_DOCS")
         symbol.role = str(symbol_role).lower()
-        if symbol.role not in {"essential", "optional", "internal"}:
-            raise RuntimeError(f"Invalid role {symbol.role!r} for {symbol.name}; expected essential/optional/internal")
+        # Backward-compatible input support: older metadata used essential/optional
+        # roles for public functions. The generated catalogue now exposes the
+        # clearer callable/internal function type model.
+        if symbol.role in {"essential", "optional"}:
+            symbol.role = "callable"
+        if symbol.role not in {"callable", "internal"}:
+            raise RuntimeError(f"Invalid function type {symbol.role!r} for {symbol.name}; expected callable/internal")
         if symbol.role == "internal" and not symbol.name.startswith("_"):
             raise RuntimeError(f"Non-underscore callable cannot be internal: {symbol.name}")
-        if symbol.role in {"essential", "optional"} and symbol.name.startswith("_"):
-            raise RuntimeError(f"Underscore callable cannot be public role: {symbol.name}")
+        if symbol.role == "callable" and symbol.name.startswith("_"):
+            raise RuntimeError(f"Underscore callable cannot be public callable: {symbol.name}")
 
     function_symbol_map = {name: symbol for name, symbol in symbol_map.items() if symbol.obj_type == "function"}
     nodes, edges, _ = build_callable_graph(module_data, symbol_map, public, docs_metadata)
@@ -716,8 +726,7 @@ def main() -> None:
             "",
         ]
         module_nodes = [n for n in nodes if n["module_name"] == actual_module]
-        essential_count = len([n for n in module_nodes if n["role"] == "essential"])
-        optional_count = len([n for n in module_nodes if n["role"] == "optional"])
+        callable_count = len([n for n in module_nodes if n["role"] == "callable"])
         internal_count = len([n for n in module_nodes if n["callable_name"].startswith("_")])
         outbound_mods = sorted({
             e["callee_qualified_name"].split(".")[-2]
@@ -735,7 +744,7 @@ def main() -> None:
         })
         summary_cards = (
             '<div class="module-summary-cards">'
-            f'<span class="reference-chip">Callable count: {essential_count + optional_count}</span>'
+            f'<span class="reference-chip">Callable count: {callable_count}</span>'
             f'<span class="reference-chip">Internal helpers: {internal_count}</span>'
             f'<span class="reference-chip">Outbound: {len(outbound_mods)}</span>'
             f'<span class="reference-chip">Inbound: {len(inbound_mods)}</span>'
@@ -747,13 +756,13 @@ def main() -> None:
         if module_purpose:
             lines.extend(["## Module purpose", "", module_purpose, ""])
 
-        recommended = sorted([s for s in public_in_module if s.role == "essential"], key=lambda x: x.name.lower())
-        advanced = sorted([s for s in public_in_module if s.role == "optional"], key=lambda x: x.name.lower())
+        recommended = sorted([s for s in public_in_module if s.role == "callable"], key=lambda x: x.name.lower())
+        advanced: list[Symbol] = []
         lines.extend(["## Module manifest", ""])
         manifest_rows = [
             ["Module name", f"<code>{module}</code>"],
             ["Module purpose", module_purpose or "—"],
-            ["Public callable count", str(essential_count + optional_count)],
+            ["Public callable count", str(callable_count)],
             ["Internal helper count", str(internal_count)],
             ["Inbound module count", str(len(inbound_mods))],
             ["Outbound module count", str(len(outbound_mods))],
@@ -779,7 +788,7 @@ def main() -> None:
                 return rows
 
             lines.extend(["## Public callables", ""])
-            public_rows = _public_callable_rows(recommended, "Essential") + _public_callable_rows(advanced, "Optional")
+            public_rows = _public_callable_rows(recommended, "Callable")
             if not public_rows:
                 public_rows.append(["—", "—", "—", "No public exports in this module.", "—"])
             lines.extend(['<div class="module-table-scroll">'])
@@ -895,7 +904,7 @@ def main() -> None:
         else:
             lines.append("No callable relationships detected for this module.")
         if public_in_module:
-            for s in sorted([x for x in public_in_module if x.role in {"essential", "optional"}], key=lambda x: x.name.lower()):
+            for s in sorted([x for x in public_in_module if x.role == "callable"], key=lambda x: x.name.lower()):
                 expected_target = callable_docs_link(s.name, module, docs_metadata, source_module=actual_module)
                 expected_href = f'href="{expected_target}"'
                 expected_md_link = f"[`{s.name}`]({expected_target})"
@@ -961,6 +970,7 @@ def main() -> None:
                 "sidebar_include": module_meta["sidebar_include"],
                 "callable_name": s.name,
                 "callable_visibility": module_meta["visibility"],
+                "callable_type": callable_role,
                 "callable_role": callable_role,
                 "template_notebook": docs_metadata[s.name].get("template_notebook"),
                 "template_segment": docs_metadata[s.name].get("template_segment"),
@@ -1017,8 +1027,7 @@ def main() -> None:
     dependency_modules: dict[str, dict[str, Any]] = {}
     for module in sorted({n["module_name"] for n in nodes}):
         module_nodes = [n for n in nodes if n["module_name"] == module]
-        essential = sum(1 for n in module_nodes if n["role"] == "essential")
-        optional = sum(1 for n in module_nodes if n["role"] == "optional")
+        callable_count = sum(1 for n in module_nodes if n["role"] == "callable")
         internal = sum(1 for n in module_nodes if n["callable_name"].startswith("_"))
         out_mods, in_mods = set(), set()
         for e in edges:
@@ -1032,8 +1041,7 @@ def main() -> None:
             if dst_mod == module and src_mod != module:
                 in_mods.add(src_mod)
         dependency_modules[module] = {
-            "essential_count": essential,
-            "optional_count": optional,
+            "callable_count": callable_count,
             "internal_count": internal,
             "outbound_modules": sorted(out_mods),
             "inbound_modules": sorted(in_mods),
@@ -1148,11 +1156,11 @@ def main() -> None:
     ref = [
         "# Function Reference",
         "",
-        "Use this page as a callable lookup after you understand the notebook flow.",
+        "Use this page as a function lookup after you understand the notebook flow.",
         "",
         "- Use [Template Function Map](template-function-map.md) to see what notebook users actually call.",
-        "- Use the function catalogue below to browse the public v1 callable API.",
-        "- Use [Implementation Modules](../api/modules/) only when debugging or maintaining source internals.",
+        "- Use the Function catalogue below to browse callable functions by default; enable Internal for package helpers.",
+        "- Use Implementation Modules only when debugging or maintaining the package internals.",
         "",
         "> Graph exploration is intentionally deferred. Future PR may use Neo4j or a proper graph backend.",
         "",
@@ -1160,60 +1168,78 @@ def main() -> None:
 
     ref.extend(
         [
-            "## Find a callable",
+            "## Find a function",
             "",
-            "Use the finder below to look up public callable functions.",
+            "Use the finder below to look up callable and internal FabricOps functions.",
             "",
             '<div class="callable-finder" data-callable-finder>',
-            '  <label class="callable-finder-label" for="callable-finder-input">Search callable functions</label>',
-            '  <input id="callable-finder-input" class="callable-finder-input" type="search" placeholder="Search callable functions" aria-describedby="callable-finder-help callable-finder-status callable-finder-examples" autocomplete="off">',
-            '  <p id="callable-finder-help" class="callable-finder-help">Search by function name, module, role, starter path, or what the public function does.</p>',
+            '  <label class="callable-finder-label" for="callable-finder-input">Search functions</label>',
+            '  <input id="callable-finder-input" class="callable-finder-input" type="search" placeholder="Search functions" aria-describedby="callable-finder-help callable-finder-status callable-finder-examples" autocomplete="off">',
+            '  <p id="callable-finder-help" class="callable-finder-help">Search by function name, module, function type, starter path, or description.</p>',
             '  <p id="callable-finder-examples" class="callable-finder-examples">Try: <span class="callable-finder-chip">csv</span> <span class="callable-finder-chip">data_quality</span> <span class="callable-finder-chip">quarantine</span></p>',
-            '  <p id="callable-finder-status" class="callable-finder-status" aria-live="polite">Showing all public callables.</p>',
-            '  <fieldset class="callable-role-filters">',
-            '    <legend>Role filters</legend>',
-            '    <label><input type="checkbox" data-role-filter="essential" checked> Essential</label>',
-            '    <p class="callable-role-note"><strong>Essential</strong>: Core functions used in the starter notebook flow.</p>',
-            '    <label><input type="checkbox" data-role-filter="optional" checked> Optional</label>',
-            '    <p class="callable-role-note"><strong>Optional</strong>: Extra helper functions for advanced or situational use.</p>',
+            '  <p id="callable-finder-status" class="callable-finder-status" aria-live="polite">Showing callable functions.</p>',
+            '  <fieldset class="callable-type-filters">',
+            '    <legend>Function type filters</legend>',
+            '    <label><input type="checkbox" data-function-type-filter="callable" checked> Callable</label>',
+            '    <p class="callable-type-note"><strong>Callable</strong>: Public functions intended for notebook authors.</p>',
+            '    <label><input type="checkbox" data-function-type-filter="internal"> Internal</label>',
+            '    <p class="callable-type-note"><strong>Internal</strong>: Supporting functions used by the package. Shown for transparency and debugging.</p>',
             '  </fieldset>',
-            '  <p class="callable-finder-empty" data-callable-finder-empty hidden>No callables match your search.</p>',
+            '  <p class="callable-finder-empty" data-callable-finder-empty hidden>No functions match your search.</p>',
             "</div>",
             "",
             "## Function catalogue",
             "",
-            "## All public functions",
+            "## Functions",
             "",
         ]
     )
     all_items: list[str] = []
-    for s in sorted(function_symbol_map.values(), key=lambda x: x.name.lower()):
-        symbol_link = public_reference_link(s.name, docs_metadata, context="reference")
-        starter_path = ", ".join(sorted(starter_symbol_to_notebooks.get(s.name, set()))) or "—"
-        purpose = s.purpose or s.summary or "—"
-        qn = f"{PACKAGE_NAME}.{s.actual_module}.{s.name}"
+    def _function_type_label(function_type: str) -> str:
+        return "Callable" if function_type == "callable" else "Internal"
+
+    catalogue_nodes = sorted(
+        [n for n in node_by_qn.values() if n["callable_name"] in module_data[n["module_name"]]["functions"]],
+        key=lambda n: (0 if n["role"] == "callable" else 1, n["callable_name"].lower(), n["module_name"]),
+    )
+    for node in catalogue_nodes:
+        name = node["callable_name"]
+        module_name = node["module_name"]
+        function_type = node.get("role", "internal")
+        symbol = function_symbol_map.get(name)
+        if node["exported"] and symbol:
+            symbol_link = public_reference_link(name, docs_metadata, context="reference")
+            starter_path = ", ".join(sorted(starter_symbol_to_notebooks.get(name, set()))) or "—"
+            purpose = symbol.purpose or symbol.summary or "—"
+            display_module = symbol.public_module
+        else:
+            symbol_link = f"internal/{_esc(module_name)}_{_esc(name)}/"
+            starter_path = "—"
+            purpose = module_data[module_name]["functions"].get(name) or "Internal helper used by the package."
+            display_module = canonical_public_module(module_name)
+        qn = f"{PACKAGE_NAME}.{module_name}.{name}"
         dependency_meta = dependency_callables.get(qn, {})
         calls = dependency_meta.get("calls", [])
         used_by = dependency_meta.get("used_by", [])
         calls_count = int(dependency_meta.get("calls_count", len(calls)))
         used_by_count = int(dependency_meta.get("used_by_count", len(used_by)))
-        classification_label = "Essential" if s.role == "essential" else "Optional"
+        classification_label = _function_type_label(function_type)
         all_items.extend(
             [
                 (
-                    f'<article id="{_esc(s.name)}" class="reference-catalogue-item" '
-                    f'data-callable-row="true" data-callable-name="{_esc(s.name)}" '
-                    f'data-callable-module="{_esc(s.public_module)}" '
+                    f'<article id="{_esc(module_name)}-{_esc(name)}" class="reference-catalogue-item" '
+                    f'data-callable-row="true" data-callable-name="{_esc(name)}" '
+                    f'data-callable-module="{_esc(display_module)}" '
                     f'data-callable-starter-path="{_esc(starter_path)}" '
-                    f'data-role="{_esc(s.role)}" '
+                    f'data-function-type="{_esc(function_type)}" '
                     f'data-callable-purpose="{_esc(purpose)}">'
                 ),
-                f'  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="{_esc(symbol_link)}"><code>{_esc(s.name)}</code></a></h3>',
+                f'  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="{_esc(symbol_link)}"><code>{_esc(name)}</code></a></h3>',
                 f'  <p class="reference-catalogue-item-purpose">{_esc(purpose)}</p>',
                 (
                     '  <p class="reference-catalogue-item-meta reference-catalogue-item-badges">'
-                    f'{_module_link(s.public_module)}'
-                    f'<span class="reference-chip reference-chip-role reference-chip-{_esc(s.role)}">{_esc(classification_label)}</span>'
+                    f'{_module_link(display_module)}'
+                    f'<span class="reference-chip reference-chip-type reference-chip-{_esc(function_type)}">{_esc(classification_label)}</span>'
                     f'<span class="reference-chip">{_esc(starter_path)}</span>'
                     "</p>"
                 ),
@@ -1258,7 +1284,7 @@ def main() -> None:
         )
         source_path = f"src/fabricops_kit/{node['module_name']}.py"
         source_ref = f"../../api/modules/{node['module_name']}/#{short_name}"
-        classification = "Essential" if node.get("role") == "essential" else ("Optional" if node.get("role") == "optional" else "Internal helper")
+        classification = "Callable" if node.get("role") == "callable" else "Internal"
         purpose = summary or "No summary available."
         rel_module = canonical_public_module(node['module_name'])
 

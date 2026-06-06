@@ -1,7 +1,7 @@
 # build_handover
 
 **Module:** `handover`  
-**Classification:** Essential
+**Classification:** Callable
 
 ## Purpose
 
@@ -12,7 +12,7 @@ Assemble final handover evidence for reviewed notebook work.
 - Fully qualified function name: `fabricops_kit.handover.build_handover`
 - Short name: `build_handover`
 - Module: `handover`
-- Classification: Essential
+- Classification: Callable
 - Related module: `handover`
 - Source file path: `src/fabricops_kit/handover.py`
 - Source reference: <a href="../../api/modules/handover/#build_handover">Module source anchor</a>

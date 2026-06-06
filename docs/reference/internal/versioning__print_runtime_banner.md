@@ -1,7 +1,7 @@
 # _print_runtime_banner
 
 **Module:** `versioning`  
-**Classification:** Internal helper
+**Classification:** Internal
 
 ## Purpose
 
@@ -12,7 +12,7 @@ No summary available.
 - Fully qualified function name: `fabricops_kit.versioning._print_runtime_banner`
 - Short name: `_print_runtime_banner`
 - Module: `versioning`
-- Classification: Internal helper
+- Classification: Internal
 - Related module: `versioning`
 - Source file path: `src/fabricops_kit/versioning.py`
 - Source reference: <a href="../../api/modules/versioning/#_print_runtime_banner">Module source anchor</a>

@@ -1,7 +1,7 @@
 # widget_select_catalogue_table
 
 **Module:** `governance_review`  
-**Classification:** Essential
+**Classification:** Callable
 
 ## Purpose
 
@@ -12,7 +12,7 @@ Render a searchable selector for latest successful catalogue profiles.
 - Fully qualified function name: `fabricops_kit.governance_review.widget_select_catalogue_table`
 - Short name: `widget_select_catalogue_table`
 - Module: `governance_review`
-- Classification: Essential
+- Classification: Callable
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
 - Source reference: <a href="../../api/modules/governance_review/#widget_select_catalogue_table">Module source anchor</a>

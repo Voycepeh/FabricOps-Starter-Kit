@@ -1,7 +1,7 @@
 # get_selected_agreement
 
 **Module:** `data_agreement`  
-**Classification:** Essential
+**Classification:** Callable
 
 ## Purpose
 
@@ -12,7 +12,7 @@ Return the agreement selected by widget_select_agreement.
 - Fully qualified function name: `fabricops_kit.data_agreement.get_selected_agreement`
 - Short name: `get_selected_agreement`
 - Module: `data_agreement`
-- Classification: Essential
+- Classification: Callable
 - Related module: `data_agreement`
 - Source file path: `src/fabricops_kit/data_agreement.py`
 - Source reference: <a href="../../api/modules/data_agreement/#get_selected_agreement">Module source anchor</a>

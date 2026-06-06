@@ -1,7 +1,7 @@
 # write_lakehouse_table
 
 **Module:** `fabric_input_output`  
-**Classification:** Essential
+**Classification:** Callable
 
 ## Purpose
 
@@ -12,7 +12,7 @@ Write a DataFrame to a configured Fabric lakehouse target.
 - Fully qualified function name: `fabricops_kit.fabric_input_output.write_lakehouse_table`
 - Short name: `write_lakehouse_table`
 - Module: `fabric_input_output`
-- Classification: Essential
+- Classification: Callable
 - Related module: `fabric_input_output`
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
 - Source reference: <a href="../../api/modules/fabric_input_output/#write_lakehouse_table">Module source anchor</a>

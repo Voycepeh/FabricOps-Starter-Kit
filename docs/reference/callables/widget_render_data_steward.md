@@ -1,7 +1,7 @@
 # widget_render_data_steward
 
 **Module:** `data_agreement`  
-**Classification:** Essential
+**Classification:** Callable
 
 ## Purpose
 
@@ -12,7 +12,7 @@ Render the standalone data-steward intake widget.
 - Fully qualified function name: `fabricops_kit.data_agreement.widget_render_data_steward`
 - Short name: `widget_render_data_steward`
 - Module: `data_agreement`
-- Classification: Essential
+- Classification: Callable
 - Related module: `data_agreement`
 - Source file path: `src/fabricops_kit/data_agreement.py`
 - Source reference: <a href="../../api/modules/data_agreement/#widget_render_data_steward">Module source anchor</a>

@@ -1,7 +1,7 @@
 # NotebookRuntimeConfig
 
 **Module:** `config`  
-**Classification:** Internal helper
+**Classification:** Internal
 
 ## Purpose
 
@@ -12,7 +12,7 @@ No summary available.
 - Fully qualified function name: `fabricops_kit.config.NotebookRuntimeConfig`
 - Short name: `NotebookRuntimeConfig`
 - Module: `config`
-- Classification: Internal helper
+- Classification: Internal
 - Related module: `config`
 - Source file path: `src/fabricops_kit/config.py`
 - Source reference: <a href="../../api/modules/config/#NotebookRuntimeConfig">Module source anchor</a>

@@ -77,35 +77,35 @@ Owns agreement metadata capture, audited record building, metadata commit helper
   <tbody>
     <tr>
       <td><a href="../../reference/get_selected_agreement/"><code>get_selected_agreement</code></a></td>
-      <td>Essential</td>
+      <td>Callable</td>
       <td>function</td>
       <td>Return the agreement selected by widget_select_agreement.</td>
       <td>—</td>
     </tr>
     <tr>
       <td><a href="../../reference/widget_render_agreement_evidence/"><code>widget_render_agreement_evidence</code></a></td>
-      <td>Essential</td>
+      <td>Callable</td>
       <td>function</td>
       <td>Render the standalone agreement-evidence widget.</td>
       <td><a href="../../reference/internal/data_agreement/_render_agreement_evidence_widget/"><code>_render_agreement_evidence_widget</code></a> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a></td>
-      <td>Essential</td>
+      <td>Callable</td>
       <td>function</td>
       <td>Render the standalone data-agreement intake widget.</td>
       <td><a href="../../reference/internal/data_agreement/_render_maintenance_widget/"><code>_render_maintenance_widget</code></a> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a></td>
-      <td>Essential</td>
+      <td>Callable</td>
       <td>function</td>
       <td>Render the standalone data-steward intake widget.</td>
       <td><a href="../../reference/internal/data_agreement/_render_maintenance_widget/"><code>_render_maintenance_widget</code></a> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/widget_select_agreement/"><code>widget_select_agreement</code></a></td>
-      <td>Essential</td>
+      <td>Callable</td>
       <td>function</td>
       <td>Render an agreement selector and optionally register the active notebook.</td>
       <td><a href="../../reference/internal/data_agreement/_html_escape/"><code>_html_escape</code></a> (internal), <a href="../../reference/internal/data_agreement/_latest_agreement_versions/"><code>_latest_agreement_versions</code></a> (internal), <a href="../../reference/internal/data_agreement/_list_data_agreements/"><code>_list_data_agreements</code></a> (internal), <a href="../../reference/internal/data_agreement/_render_searchable_selector/"><code>_render_searchable_selector</code></a> (internal), <a href="../../reference/internal/data_agreement/_require_ipywidgets/"><code>_require_ipywidgets</code></a> (internal)</td>

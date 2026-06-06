@@ -1,7 +1,7 @@
 # _run_config_smoke_tests
 
 **Module:** `config`  
-**Classification:** Internal helper
+**Classification:** Internal
 
 ## Purpose
 
@@ -12,7 +12,7 @@ No summary available.
 - Fully qualified function name: `fabricops_kit.config._run_config_smoke_tests`
 - Short name: `_run_config_smoke_tests`
 - Module: `config`
-- Classification: Internal helper
+- Classification: Internal
 - Related module: `config`
 - Source file path: `src/fabricops_kit/config.py`
 - Source reference: <a href="../../api/modules/config/#_run_config_smoke_tests">Module source anchor</a>

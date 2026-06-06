@@ -1,7 +1,7 @@
 # read_warehouse_table
 
 **Module:** `fabric_input_output`  
-**Classification:** Essential
+**Classification:** Callable
 
 ## Purpose
 
@@ -12,7 +12,7 @@ Read a table from a configured Fabric warehouse target.
 - Fully qualified function name: `fabricops_kit.fabric_input_output.read_warehouse_table`
 - Short name: `read_warehouse_table`
 - Module: `fabric_input_output`
-- Classification: Essential
+- Classification: Callable
 - Related module: `fabric_input_output`
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
 - Source reference: <a href="../../api/modules/fabric_input_output/#read_warehouse_table">Module source anchor</a>

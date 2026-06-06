@@ -1,7 +1,7 @@
 # _flatten_chain
 
 **Module:** `data_lineage`  
-**Classification:** Internal helper
+**Classification:** Internal
 
 ## Purpose
 
@@ -12,7 +12,7 @@ No summary available.
 - Fully qualified function name: `fabricops_kit.data_lineage._flatten_chain`
 - Short name: `_flatten_chain`
 - Module: `data_lineage`
-- Classification: Internal helper
+- Classification: Internal
 - Related module: `data_lineage`
 - Source file path: `src/fabricops_kit/data_lineage.py`
 - Source reference: <a href="../../api/modules/data_lineage/#_flatten_chain">Module source anchor</a>

@@ -1,7 +1,7 @@
 # _load_and_validate_dataset_contract
 
 **Module:** `config`  
-**Classification:** Internal helper
+**Classification:** Internal
 
 ## Purpose
 
@@ -12,7 +12,7 @@ No summary available.
 - Fully qualified function name: `fabricops_kit.config._load_and_validate_dataset_contract`
 - Short name: `_load_and_validate_dataset_contract`
 - Module: `config`
-- Classification: Internal helper
+- Classification: Internal
 - Related module: `config`
 - Source file path: `src/fabricops_kit/config.py`
 - Source reference: <a href="../../api/modules/config/#_load_and_validate_dataset_contract">Module source anchor</a>

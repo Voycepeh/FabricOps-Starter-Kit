@@ -1,7 +1,7 @@
 # _bootstrap_fabric_env
 
 **Module:** `config`  
-**Classification:** Internal helper
+**Classification:** Internal
 
 ## Purpose
 
@@ -12,7 +12,7 @@ No summary available.
 - Fully qualified function name: `fabricops_kit.config._bootstrap_fabric_env`
 - Short name: `_bootstrap_fabric_env`
 - Module: `config`
-- Classification: Internal helper
+- Classification: Internal
 - Related module: `config`
 - Source file path: `src/fabricops_kit/config.py`
 - Source reference: <a href="../../api/modules/config/#_bootstrap_fabric_env">Module source anchor</a>

@@ -1,7 +1,7 @@
 # setup_notebook
 
 **Module:** `config`  
-**Classification:** Essential
+**Classification:** Callable
 
 ## Purpose
 
@@ -12,7 +12,7 @@ Shared environment setup and runtime validation for notebook templates.
 - Fully qualified function name: `fabricops_kit.config.setup_notebook`
 - Short name: `setup_notebook`
 - Module: `config`
-- Classification: Essential
+- Classification: Callable
 - Related module: `config`
 - Source file path: `src/fabricops_kit/config.py`
 - Source reference: <a href="../../api/modules/config/#setup_notebook">Module source anchor</a>

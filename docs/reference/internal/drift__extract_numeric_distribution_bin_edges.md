@@ -1,7 +1,7 @@
 # _extract_numeric_distribution_bin_edges
 
 **Module:** `drift`  
-**Classification:** Internal helper
+**Classification:** Internal
 
 ## Purpose
 
@@ -12,7 +12,7 @@ No summary available.
 - Fully qualified function name: `fabricops_kit.drift._extract_numeric_distribution_bin_edges`
 - Short name: `_extract_numeric_distribution_bin_edges`
 - Module: `drift`
-- Classification: Internal helper
+- Classification: Internal
 - Related module: `drift`
 - Source file path: `src/fabricops_kit/drift.py`
 - Source reference: <a href="../../api/modules/drift/#_extract_numeric_distribution_bin_edges">Module source anchor</a>

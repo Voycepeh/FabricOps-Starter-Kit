@@ -1,7 +1,7 @@
 # widget_select_agreement
 
 **Module:** `data_agreement`  
-**Classification:** Essential
+**Classification:** Callable
 
 ## Purpose
 
@@ -12,7 +12,7 @@ Render an agreement selector and optionally register the active notebook.
 - Fully qualified function name: `fabricops_kit.data_agreement.widget_select_agreement`
 - Short name: `widget_select_agreement`
 - Module: `data_agreement`
-- Classification: Essential
+- Classification: Callable
 - Related module: `data_agreement`
 - Source file path: `src/fabricops_kit/data_agreement.py`
 - Source reference: <a href="../../api/modules/data_agreement/#widget_select_agreement">Module source anchor</a>

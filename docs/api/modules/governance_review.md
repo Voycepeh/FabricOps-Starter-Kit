@@ -77,49 +77,49 @@ Owns table-scoped 04_gov catalogue selection, explicit approval record builders,
   <tbody>
     <tr>
       <td><a href="../../reference/get_selected_catalogue_table/"><code>get_selected_catalogue_table</code></a></td>
-      <td>Essential</td>
+      <td>Callable</td>
       <td>function</td>
       <td>Return the table selected by widget_select_catalogue_table.</td>
       <td>—</td>
     </tr>
     <tr>
       <td><a href="../../reference/load_catalogue_profile_rows/"><code>load_catalogue_profile_rows</code></a></td>
-      <td>Essential</td>
+      <td>Callable</td>
       <td>function</td>
       <td>Load column profile rows for the selected catalogue table.</td>
       <td><a href="../../reference/internal/governance_review/_coerce_rows/"><code>_coerce_rows</code></a> (internal), <a href="../../reference/internal/governance_review/_is_success/"><code>_is_success</code></a> (internal), <a href="../../reference/internal/governance_review/_value/"><code>_value</code></a> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/record_table_governance/"><code>record_table_governance</code></a></td>
-      <td>Essential</td>
+      <td>Callable</td>
       <td>function</td>
       <td>Persist approved table-governance context, DQ-rule, and classification evidence in one v1 commit action.</td>
       <td><a href="../../reference/internal/governance_review/_build_classification_records/"><code>_build_classification_records</code></a> (internal), <a href="../../reference/internal/governance_review/_build_column_context_records/"><code>_build_column_context_records</code></a> (internal), <a href="../../reference/internal/governance_review/_build_dq_rule_records/"><code>_build_dq_rule_records</code></a> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/widget_review_column_classification/"><code>widget_review_column_classification</code></a></td>
-      <td>Essential</td>
+      <td>Callable</td>
       <td>function</td>
       <td>Render standalone sensitivity and PII classification review guidance for selected profile rows.</td>
       <td><a href="../../reference/internal/governance_review/_display_review_guidance/"><code>_display_review_guidance</code></a> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/widget_review_column_context/"><code>widget_review_column_context</code></a></td>
-      <td>Essential</td>
+      <td>Callable</td>
       <td>function</td>
       <td>Render standalone business-context review guidance for selected profile rows.</td>
       <td><a href="../../reference/internal/governance_review/_display_review_guidance/"><code>_display_review_guidance</code></a> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/widget_review_dq_rules/"><code>widget_review_dq_rules</code></a></td>
-      <td>Essential</td>
+      <td>Callable</td>
       <td>function</td>
       <td>Render standalone DQ-rule review guidance for selected profile rows.</td>
       <td><a href="../../reference/internal/governance_review/_display_review_guidance/"><code>_display_review_guidance</code></a> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/widget_select_catalogue_table/"><code>widget_select_catalogue_table</code></a></td>
-      <td>Essential</td>
+      <td>Callable</td>
       <td>function</td>
       <td>Render a searchable selector for latest successful catalogue profiles.</td>
       <td><a href="../../reference/internal/governance_review/_catalogue_table_options/"><code>_catalogue_table_options</code></a> (internal), <a href="../../reference/internal/governance_review/_coerce_rows/"><code>_coerce_rows</code></a> (internal)</td>

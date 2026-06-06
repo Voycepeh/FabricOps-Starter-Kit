@@ -1,7 +1,7 @@
 # ModuleDocMetadata
 
 **Module:** `docs_metadata`  
-**Classification:** Internal helper
+**Classification:** Internal
 
 ## Purpose
 
@@ -12,7 +12,7 @@ No summary available.
 - Fully qualified function name: `fabricops_kit.docs_metadata.ModuleDocMetadata`
 - Short name: `ModuleDocMetadata`
 - Module: `docs_metadata`
-- Classification: Internal helper
+- Classification: Internal
 - Related module: `docs_metadata`
 - Source file path: `src/fabricops_kit/docs_metadata.py`
 - Source reference: <a href="../../api/modules/docs_metadata/#ModuleDocMetadata">Module source anchor</a>
