@@ -22,4 +22,4 @@ No summary available.
 ## Inbound references
 - <a href="../internal/metadata/_column_names/"><code>fabricops_kit.metadata._column_names</code></a>
 - <a href="../internal/metadata/_registry_rows_with_defaults/"><code>fabricops_kit.metadata._registry_rows_with_defaults</code></a>
-- <a href="../setup_notebook_registry_table/"><code>fabricops_kit.metadata.setup_notebook_registry_table</code></a>
+- <a href="../internal/metadata/_setup_notebook_registry_table/"><code>fabricops_kit.metadata._setup_notebook_registry_table</code></a>

@@ -46,10 +46,10 @@ INTERNAL_ALIAS_MODULES = {}
 # the Python package. Keep this list in sync with src/fabricops_kit/__init__.py.
 V1_CALLABLES = {
     "setup_notebook",
-    "setup_data_agreement_tables",
-    "setup_notebook_registry_table",
-    "setup_governance_metadata_tables",
-    "widget_render_agreement_intake_app",
+    "setup_metadata_tables",
+    "widget_render_data_steward",
+    "widget_render_data_agreement",
+    "widget_render_agreement_evidence",
     "widget_select_agreement",
     "get_selected_agreement",
     "read_lakehouse_table",
@@ -69,9 +69,12 @@ V1_CALLABLES = {
     "widget_select_catalogue_table",
     "get_selected_catalogue_table",
     "load_catalogue_profile_rows",
-    "widget_review_table_governance",
+    "widget_review_column_context",
+    "widget_review_dq_rules",
+    "widget_review_column_classification",
     "record_table_governance",
 }
+
 @dataclass
 class Symbol:
     name: str

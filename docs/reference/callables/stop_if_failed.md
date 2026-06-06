@@ -5,7 +5,7 @@
 
 ## Purpose
 
-Stop a notebook when a schema or data-change guardrail result blocks continuation.
+Stop a notebook only when a schema or data-change guardrail result blocks continuation.
 
 ## Function manifest
 

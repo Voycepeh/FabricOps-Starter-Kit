@@ -12,10 +12,10 @@ pytestmark = pytest.mark.contract
 
 APPROVED_V1_CALLABLES = {
     "setup_notebook",
-    "setup_data_agreement_tables",
-    "setup_notebook_registry_table",
-    "setup_governance_metadata_tables",
-    "widget_render_agreement_intake_app",
+    "setup_metadata_tables",
+    "widget_render_data_steward",
+    "widget_render_data_agreement",
+    "widget_render_agreement_evidence",
     "widget_select_agreement",
     "get_selected_agreement",
     "read_lakehouse_table",
@@ -35,11 +35,18 @@ APPROVED_V1_CALLABLES = {
     "widget_select_catalogue_table",
     "get_selected_catalogue_table",
     "load_catalogue_profile_rows",
-    "widget_review_table_governance",
+    "widget_review_column_context",
+    "widget_review_dq_rules",
+    "widget_review_column_classification",
     "record_table_governance",
 }
 
 REMOVED_LEGACY_ALIASES = {
+    "widget_review_table_governance",
+    "widget_render_agreement_intake_app",
+    "setup_governance_metadata_tables",
+    "setup_notebook_registry_table",
+    "setup_data_agreement_tables",
     "draft_business_context",
     "prepare_business_context_profile_input",
     "extract_column_business_context_suggestions",
@@ -47,7 +54,6 @@ REMOVED_LEGACY_ALIASES = {
     "get_reviewed_business_context_rows",
     "write_business_context",
     "draft_dq_rules",
-    "widget_review_dq_rules",
     "get_dq_review_results",
     "write_dq_rules",
     "load_dq_rules",
@@ -102,7 +108,7 @@ def _template_called_fabricops_functions() -> set[str]:
 
 def test_root_exports_only_approved_v1_template_callables():
     assert set(fabricops_kit.__all__) == APPROVED_V1_CALLABLES
-    assert len(fabricops_kit.__all__) == 26
+    assert len(fabricops_kit.__all__) == 28
     assert len(fabricops_kit.__all__) < 71
     for name in fabricops_kit.__all__:
         assert callable(getattr(fabricops_kit, name))

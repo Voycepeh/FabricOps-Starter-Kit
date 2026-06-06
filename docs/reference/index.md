@@ -101,10 +101,10 @@ Use the finder below to look up public callable functions.
 
   </div>
 </article>
-<article id="read_lakehouse_excel" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_lakehouse_excel" data-callable-module="fabric_input_output" data-callable-starter-path="02_ex_agreement_topic" data-role="essential" data-callable-purpose="Read an Excel file from a configured Fabric lakehouse Files path.">
+<article id="read_lakehouse_excel" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_lakehouse_excel" data-callable-module="fabric_input_output" data-callable-starter-path="02_ex_agreement_topic, 03_pc_agreement_pipeline_template" data-role="essential" data-callable-purpose="Read an Excel file from a configured Fabric lakehouse Files path.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/read_lakehouse_excel/"><code>read_lakehouse_excel</code></a></h3>
   <p class="reference-catalogue-item-purpose">Read an Excel file from a configured Fabric lakehouse Files path.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">02_ex_agreement_topic</span></p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">02_ex_agreement_topic, 03_pc_agreement_pipeline_template</span></p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>_get_store</code></li><li><code>_get_spark</code></li></ul></details>
 
@@ -125,7 +125,7 @@ Use the finder below to look up public callable functions.
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">02_ex_agreement_topic, 03_pc_agreement_pipeline_template</span></p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>_get_store</code></li><li><code>_get_spark</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 8</span></summary><ul><li><code>_ensure_metadata_tables</code></li><li><code>_list_all_data_agreement_rows</code></li><li><code>_list_data_stewards</code></li><li><code>load_catalogue_profile_rows</code></li><li><code>setup_governance_metadata_tables</code></li><li><code>widget_select_catalogue_table</code></li><li><code>_load_notebook_registry</code></li><li><code>setup_notebook_registry_table</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 8</span></summary><ul><li><code>_ensure_metadata_tables</code></li><li><code>_list_all_data_agreement_rows</code></li><li><code>_list_data_stewards</code></li><li><code>_setup_governance_metadata_tables</code></li><li><code>load_catalogue_profile_rows</code></li><li><code>widget_select_catalogue_table</code></li><li><code>_load_notebook_registry</code></li><li><code>_setup_notebook_registry_table</code></li></ul></details>
   </div>
 </article>
 <article id="read_warehouse_table" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_warehouse_table" data-callable-module="fabric_input_output" data-callable-starter-path="02_ex_agreement_topic, 03_pc_agreement_pipeline_template" data-role="essential" data-callable-purpose="Read a table from a configured Fabric warehouse target.">
@@ -155,45 +155,27 @@ Use the finder below to look up public callable functions.
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_build_handover_record</code></li></ul></details>
   </div>
 </article>
-<article id="setup_data_agreement_tables" class="reference-catalogue-item" data-callable-row="true" data-callable-name="setup_data_agreement_tables" data-callable-module="data_agreement" data-callable-starter-path="00_env_config" data-role="essential" data-callable-purpose="Create or validate data-agreement metadata tables during environment setup.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/setup_data_agreement_tables/"><code>setup_data_agreement_tables</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Create or validate data-agreement metadata tables during environment setup.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">00_env_config</span></p>
+<article id="setup_metadata_tables" class="reference-catalogue-item" data-callable-row="true" data-callable-name="setup_metadata_tables" data-callable-module="config" data-callable-starter-path="00_env_config" data-role="essential" data-callable-purpose="Create or validate all FabricOps metadata tables through one setup action.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Create or validate all FabricOps metadata tables through one setup action.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/config/" title="Open config module page" aria-label="Open config module page">config</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">00_env_config</span></p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>_ensure_metadata_tables</code></li><li><code>_list_data_stewards</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 4</span></summary><ul><li><code>_setup_data_agreement_tables</code></li><li><code>get</code></li><li><code>_setup_governance_metadata_tables</code></li><li><code>_setup_notebook_registry_table</code></li></ul></details>
 
   </div>
 </article>
-<article id="setup_governance_metadata_tables" class="reference-catalogue-item" data-callable-row="true" data-callable-name="setup_governance_metadata_tables" data-callable-module="governance_review" data-callable-starter-path="00_env_config" data-role="essential" data-callable-purpose="Create or validate governance metadata tables during environment setup.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/setup_governance_metadata_tables/"><code>setup_governance_metadata_tables</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Create or validate governance metadata tables during environment setup.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">00_env_config</span></p>
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 6</span></summary><ul><li><code>read_lakehouse_table</code></li><li><code>write_lakehouse_table</code></li><li><code>_coerce_rows</code></li><li><code>_get_governance_metadata_schemas</code></li><li><code>_is_table_not_found_error</code></li><li><code>_schema_field_names</code></li></ul></details>
-
-  </div>
-</article>
-<article id="setup_notebook" class="reference-catalogue-item" data-callable-row="true" data-callable-name="setup_notebook" data-callable-module="config" data-callable-starter-path="00_env_config, 03_pc_agreement_pipeline_template" data-role="essential" data-callable-purpose="Shared environment setup and runtime validation for notebook templates.">
+<article id="setup_notebook" class="reference-catalogue-item" data-callable-row="true" data-callable-name="setup_notebook" data-callable-module="config" data-callable-starter-path="00_env_config" data-role="essential" data-callable-purpose="Shared environment setup and runtime validation for notebook templates.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/setup_notebook/"><code>setup_notebook</code></a></h3>
   <p class="reference-catalogue-item-purpose">Shared environment setup and runtime validation for notebook templates.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/config/" title="Open config module page" aria-label="Open config module page">config</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">00_env_config, 03_pc_agreement_pipeline_template</span></p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/config/" title="Open config module page" aria-label="Open config module page">config</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">00_env_config</span></p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 4</span></summary><ul><li><code>NotebookSetupContext</code></li><li><code>_get_store</code></li><li><code>_run_config_smoke_tests</code></li><li><code>_validate_framework_config</code></li></ul></details>
 
   </div>
 </article>
-<article id="setup_notebook_registry_table" class="reference-catalogue-item" data-callable-row="true" data-callable-name="setup_notebook_registry_table" data-callable-module="metadata" data-callable-starter-path="00_env_config" data-role="essential" data-callable-purpose="Create or validate notebook registry metadata during environment setup.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/setup_notebook_registry_table/"><code>setup_notebook_registry_table</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Create or validate notebook registry metadata during environment setup.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/metadata/" title="Open metadata module page" aria-label="Open metadata module page">metadata</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">00_env_config</span></p>
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 8</span></summary><ul><li><code>read_lakehouse_table</code></li><li><code>write_lakehouse_table</code></li><li><code>_coerce_row_dicts</code></li><li><code>_column_context_rows_for_spark</code></li><li><code>_column_names</code></li><li><code>_get_notebook_registry_schema</code></li><li><code>_notebook_registration_key</code></li><li><code>_safe_str</code></li></ul></details>
-
-  </div>
-</article>
-<article id="stop_if_failed" class="reference-catalogue-item" data-callable-row="true" data-callable-name="stop_if_failed" data-callable-module="drift" data-callable-starter-path="03_pc_agreement_pipeline_template" data-role="essential" data-callable-purpose="Stop a notebook when a schema or data-change guardrail result blocks continuation.">
+<article id="stop_if_failed" class="reference-catalogue-item" data-callable-row="true" data-callable-name="stop_if_failed" data-callable-module="drift" data-callable-starter-path="03_pc_agreement_pipeline_template" data-role="essential" data-callable-purpose="Stop a notebook only when a schema or data-change guardrail result blocks continuation.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/stop_if_failed/"><code>stop_if_failed</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Stop a notebook when a schema or data-change guardrail result blocks continuation.</p>
+  <p class="reference-catalogue-item-purpose">Stop a notebook only when a schema or data-change guardrail result blocks continuation.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/drift/" title="Open drift module page" aria-label="Open drift module page">drift</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">03_pc_agreement_pipeline_template</span></p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>SchemaDriftError</code></li></ul></details>
@@ -209,21 +191,57 @@ Use the finder below to look up public callable functions.
 
   </div>
 </article>
-<article id="widget_render_agreement_intake_app" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_render_agreement_intake_app" data-callable-module="data_agreement" data-callable-starter-path="01_da_agreement_template" data-role="essential" data-callable-purpose="Render the combined steward, agreement, and evidence intake app.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_render_agreement_intake_app/"><code>widget_render_agreement_intake_app</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Render the combined steward, agreement, and evidence intake app.</p>
+<article id="widget_render_agreement_evidence" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_render_agreement_evidence" data-callable-module="data_agreement" data-callable-starter-path="01_da_agreement_template" data-role="essential" data-callable-purpose="Render the standalone agreement-evidence widget.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_render_agreement_evidence/"><code>widget_render_agreement_evidence</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Render the standalone agreement-evidence widget.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">01_da_agreement_template</span></p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 3</span></summary><ul><li><code>_render_maintenance_widget</code></li><li><code>_require_ipywidgets</code></li><li><code>_widget_render_agreement_evidence</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_render_agreement_evidence_widget</code></li></ul></details>
 
   </div>
 </article>
-<article id="widget_review_table_governance" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_review_table_governance" data-callable-module="governance_review" data-callable-starter-path="04_gov_dataset_table" data-role="essential" data-callable-purpose="Render non-persistent human review guidance for context, DQ rules, and classification.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_review_table_governance/"><code>widget_review_table_governance</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Render non-persistent human review guidance for context, DQ rules, and classification.</p>
+<article id="widget_render_data_agreement" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_render_data_agreement" data-callable-module="data_agreement" data-callable-starter-path="01_da_agreement_template" data-role="essential" data-callable-purpose="Render the standalone data-agreement intake widget.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Render the standalone data-agreement intake widget.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">01_da_agreement_template</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_render_maintenance_widget</code></li></ul></details>
+
+  </div>
+</article>
+<article id="widget_render_data_steward" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_render_data_steward" data-callable-module="data_agreement" data-callable-starter-path="01_da_agreement_template" data-role="essential" data-callable-purpose="Render the standalone data-steward intake widget.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Render the standalone data-steward intake widget.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">01_da_agreement_template</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_render_maintenance_widget</code></li></ul></details>
+
+  </div>
+</article>
+<article id="widget_review_column_classification" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_review_column_classification" data-callable-module="governance_review" data-callable-starter-path="04_gov_dataset_table" data-role="essential" data-callable-purpose="Render standalone sensitivity and PII classification review guidance for selected profile rows.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_review_column_classification/"><code>widget_review_column_classification</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Render standalone sensitivity and PII classification review guidance for selected profile rows.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">04_gov_dataset_table</span></p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_value</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_display_review_guidance</code></li></ul></details>
+
+  </div>
+</article>
+<article id="widget_review_column_context" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_review_column_context" data-callable-module="governance_review" data-callable-starter-path="04_gov_dataset_table" data-role="essential" data-callable-purpose="Render standalone business-context review guidance for selected profile rows.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_review_column_context/"><code>widget_review_column_context</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Render standalone business-context review guidance for selected profile rows.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">04_gov_dataset_table</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_display_review_guidance</code></li></ul></details>
+
+  </div>
+</article>
+<article id="widget_review_dq_rules" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_review_dq_rules" data-callable-module="governance_review" data-callable-starter-path="04_gov_dataset_table" data-role="essential" data-callable-purpose="Render standalone DQ-rule review guidance for selected profile rows.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_review_dq_rules/"><code>widget_review_dq_rules</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Render standalone DQ-rule review guidance for selected profile rows.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">04_gov_dataset_table</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_display_review_guidance</code></li></ul></details>
 
   </div>
 </article>
@@ -251,7 +269,7 @@ Use the finder below to look up public callable functions.
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip reference-chip-role reference-chip-essential">Essential</span><span class="reference-chip">03_pc_agreement_pipeline_template</span></p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_get_store</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 10</span></summary><ul><li><code>_ensure_metadata_tables</code></li><li><code>_write_row</code></li><li><code>_write_dq_rules</code></li><li><code>_seed_minimal_sample_source_table</code></li><li><code>_commit_column_classification</code></li><li><code>_commit_column_context</code></li><li><code>_commit_dq_rules</code></li><li><code>setup_governance_metadata_tables</code></li><li><code>_register_current_notebook</code></li><li><code>setup_notebook_registry_table</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 10</span></summary><ul><li><code>_ensure_metadata_tables</code></li><li><code>_write_row</code></li><li><code>_write_dq_rules</code></li><li><code>_seed_minimal_sample_source_table</code></li><li><code>_commit_column_classification</code></li><li><code>_commit_column_context</code></li><li><code>_commit_dq_rules</code></li><li><code>_setup_governance_metadata_tables</code></li><li><code>_register_current_notebook</code></li><li><code>_setup_notebook_registry_table</code></li></ul></details>
   </div>
 </article>
 <article id="write_warehouse_table" class="reference-catalogue-item" data-callable-row="true" data-callable-name="write_warehouse_table" data-callable-module="fabric_input_output" data-callable-starter-path="03_pc_agreement_pipeline_template" data-role="essential" data-callable-purpose="Write a DataFrame to a configured Fabric warehouse target.">

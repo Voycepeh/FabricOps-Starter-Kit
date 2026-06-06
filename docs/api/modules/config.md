@@ -6,7 +6,7 @@
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 1</span><span class="reference-chip">Internal helpers: 17</span><span class="reference-chip">Outbound: 0</span><span class="reference-chip">Inbound: 2</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 2</span><span class="reference-chip">Internal helpers: 17</span><span class="reference-chip">Outbound: 3</span><span class="reference-chip">Inbound: 2</span></div>
 
 ## Module purpose
 
@@ -32,7 +32,7 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
     </tr>
     <tr>
       <td>Public callable count</td>
-      <td>1</td>
+      <td>2</td>
     </tr>
     <tr>
       <td>Internal helper count</td>
@@ -44,7 +44,7 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
     </tr>
     <tr>
       <td>Outbound module count</td>
-      <td>0</td>
+      <td>3</td>
     </tr>
     <tr>
       <td>External callers</td>
@@ -52,7 +52,7 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
     </tr>
     <tr>
       <td>External callees</td>
-      <td>—</td>
+      <td><code>data_agreement</code>, <code>governance_review</code>, <code>metadata</code></td>
     </tr>
   </tbody>
 </table>
@@ -71,6 +71,13 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
     </tr>
   </thead>
   <tbody>
+    <tr>
+      <td><a href="../../reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a></td>
+      <td>Essential</td>
+      <td>function</td>
+      <td>Create or validate all FabricOps metadata tables through one setup action.</td>
+      <td>—</td>
+    </tr>
     <tr>
       <td><a href="../../reference/setup_notebook/"><code>setup_notebook</code></a></td>
       <td>Essential</td>
@@ -94,6 +101,11 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
 <h5>config</h5>
 <h6>Public callables</h6>
 <ul class="callable-relationship-rows">
+<li>
+<a class="reference-chip" href="../../reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<span>None.</span>
+</li>
 <li>
 <a class="reference-chip" href="../../reference/setup_notebook/"><code>setup_notebook</code></a>
  <span class="callable-relationship-uses">uses:</span>
@@ -265,4 +277,11 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
 
 ### External callees
 
-None.
+**data_agreement**
+<a class="reference-chip" href="../data_agreement/#_setup_data_agreement_tables"><code>_setup_data_agreement_tables</code></a>
+
+**governance_review**
+<a class="reference-chip" href="../governance_review/#_setup_governance_metadata_tables"><code>_setup_governance_metadata_tables</code></a>
+
+**metadata**
+<a class="reference-chip" href="../metadata/#_setup_notebook_registry_table"><code>_setup_notebook_registry_table</code></a>

@@ -553,7 +553,7 @@ def _ensure_metadata_tables(config: Any, env_name: str, *, spark: Any) -> dict[s
     return {"status": "ready", "tables": list(table_schemas), "created_tables": created}
 
 
-def setup_data_agreement_tables(*, spark: Any, config: Any, env: str, require_active_steward: bool = False) -> dict[str, Any]:
+def _setup_data_agreement_tables(*, spark: Any, config: Any, env: str, require_active_steward: bool = False) -> dict[str, Any]:
     """Prepare intake tables and report whether agreement intake has a steward.
 
     Parameters
@@ -1550,7 +1550,7 @@ def _render_maintenance_widget(*, spark: Any, config: Any, env_name: str, kind: 
 
 
 
-def _widget_render_agreement_evidence(*, spark: Any, config: Any, env_name: str, display_widget: bool = True) -> dict[str, Any]:
+def _render_agreement_evidence_widget(*, spark: Any, config: Any, env_name: str, display_widget: bool = True) -> dict[str, Any]:
     """Render optional agreement evidence upload controls."""
     widgets = _require_ipywidgets()
     from IPython import display as ip
@@ -1671,7 +1671,7 @@ def _widget_render_agreement_evidence(*, spark: Any, config: Any, env_name: str,
     }
 
 
-def _widget_render_agreement_evidence(config: Any, env_name: str, *, spark: Any) -> dict[str, Any]:
+def widget_render_agreement_evidence(config: Any, env_name: str, *, spark: Any) -> dict[str, Any]:
     """Render standalone agreement evidence upload controls.
 
     Parameters
@@ -1700,14 +1700,14 @@ def _widget_render_agreement_evidence(config: Any, env_name: str, *, spark: Any)
     pasted ``Files/...`` path to ``METADATA_DATA_AGREEMENT_EVIDENCE`` and
     does not read or write binary file content.
     """
-    return _widget_render_agreement_evidence(
+    return _render_agreement_evidence_widget(
         spark=spark,
         config=config,
         env_name=env_name,
     )
 
 
-def _widget_render_data_steward(config: Any, env_name: str, *, spark: Any) -> dict[str, Any]:
+def widget_render_data_steward(config: Any, env_name: str, *, spark: Any) -> dict[str, Any]:
     """Render append-only data steward create/update maintenance.
 
     Parameters
@@ -1727,7 +1727,7 @@ def _widget_render_data_steward(config: Any, env_name: str, *, spark: Any) -> di
     return _render_maintenance_widget(spark=spark, config=config, env_name=env_name, kind="data_steward_widget")
 
 
-def _widget_render_data_agreement(config: Any, env_name: str, *, spark: Any) -> dict[str, Any]:
+def widget_render_data_agreement(config: Any, env_name: str, *, spark: Any) -> dict[str, Any]:
     """Render append-only agreement create/update maintenance using active stewards.
 
     Parameters
@@ -1747,7 +1747,7 @@ def _widget_render_data_agreement(config: Any, env_name: str, *, spark: Any) -> 
     return _render_maintenance_widget(spark=spark, config=config, env_name=env_name, kind="data_agreement_widget")
 
 
-def widget_render_agreement_intake_app(*, spark: Any, config: Any, env: str, display_widget: bool = True) -> dict[str, Any]:
+def _widget_render_agreement_intake_app(*, spark: Any, config: Any, env: str, display_widget: bool = True) -> dict[str, Any]:
     """Render the ``01_da`` metadata intake application.
 
     Parameters
@@ -1782,7 +1782,7 @@ def widget_render_agreement_intake_app(*, spark: Any, config: Any, env: str, dis
 
     steward_app = _render_maintenance_widget(spark=spark, config=config, env_name=env, kind="data_steward_widget", display_widget=False)
     agreement_app = _render_maintenance_widget(spark=spark, config=config, env_name=env, kind="data_agreement_widget", display_widget=False)
-    evidence_app = _widget_render_agreement_evidence(spark=spark, config=config, env_name=env, display_widget=False)
+    evidence_app = _render_agreement_evidence_widget(spark=spark, config=config, env_name=env, display_widget=False)
     callbacks = steward_app.get("after_save_callbacks") if isinstance(steward_app, dict) else None
     agreement_refresh = agreement_app.get("refresh_steward_options") if isinstance(agreement_app, dict) else None
     if isinstance(callbacks, list) and callable(agreement_refresh):

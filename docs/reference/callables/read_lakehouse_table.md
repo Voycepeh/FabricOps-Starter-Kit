@@ -23,11 +23,11 @@ Read a table from a configured Fabric lakehouse target.
 - <a href="../internal/data_agreement/_ensure_metadata_tables/"><code>fabricops_kit.data_agreement._ensure_metadata_tables</code></a>
 - <a href="../internal/data_agreement/_list_all_data_agreement_rows/"><code>fabricops_kit.data_agreement._list_all_data_agreement_rows</code></a>
 - <a href="../internal/data_agreement/_list_data_stewards/"><code>fabricops_kit.data_agreement._list_data_stewards</code></a>
+- <a href="../internal/governance_review/_setup_governance_metadata_tables/"><code>fabricops_kit.governance_review._setup_governance_metadata_tables</code></a>
 - <a href="../load_catalogue_profile_rows/"><code>fabricops_kit.governance_review.load_catalogue_profile_rows</code></a>
-- <a href="../setup_governance_metadata_tables/"><code>fabricops_kit.governance_review.setup_governance_metadata_tables</code></a>
 - <a href="../widget_select_catalogue_table/"><code>fabricops_kit.governance_review.widget_select_catalogue_table</code></a>
 - <a href="../internal/metadata/_load_notebook_registry/"><code>fabricops_kit.metadata._load_notebook_registry</code></a>
-- <a href="../setup_notebook_registry_table/"><code>fabricops_kit.metadata.setup_notebook_registry_table</code></a>
+- <a href="../internal/metadata/_setup_notebook_registry_table/"><code>fabricops_kit.metadata._setup_notebook_registry_table</code></a>
 
 ## Outbound references
 - <a href="../internal/config/_get_store/"><code>fabricops_kit.config._get_store</code></a>

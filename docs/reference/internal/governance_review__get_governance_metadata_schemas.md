@@ -20,7 +20,7 @@ No summary available.
 - Outbound references count: 2
 
 ## Inbound references
-- <a href="../setup_governance_metadata_tables/"><code>fabricops_kit.governance_review.setup_governance_metadata_tables</code></a>
+- <a href="../internal/governance_review/_setup_governance_metadata_tables/"><code>fabricops_kit.governance_review._setup_governance_metadata_tables</code></a>
 
 ## Outbound references
 - <a href="../internal/governance_review/_schema/"><code>fabricops_kit.governance_review._schema</code></a>

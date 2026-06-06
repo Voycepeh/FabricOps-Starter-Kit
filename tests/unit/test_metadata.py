@@ -47,7 +47,7 @@ def test_notebook_registry_setup_and_registration_use_metadata_route(monkeypatch
     )
 
     spark = FakeSpark()
-    setup = metadata.setup_notebook_registry_table(spark=spark, config=framework_config(), env="dev")
+    setup = metadata._setup_notebook_registry_table(spark=spark, config=framework_config(), env="dev")
     row = metadata._register_current_notebook(
         spark=spark,
         config=framework_config(),

@@ -24,4 +24,4 @@ No summary available.
 - <a href="../internal/metadata/_current_notebook_active_registrations/"><code>fabricops_kit.metadata._current_notebook_active_registrations</code></a>
 - <a href="../internal/metadata/_register_current_notebook/"><code>fabricops_kit.metadata._register_current_notebook</code></a>
 - <a href="../internal/metadata/_registry_rows_with_defaults/"><code>fabricops_kit.metadata._registry_rows_with_defaults</code></a>
-- <a href="../setup_notebook_registry_table/"><code>fabricops_kit.metadata.setup_notebook_registry_table</code></a>
+- <a href="../internal/metadata/_setup_notebook_registry_table/"><code>fabricops_kit.metadata._setup_notebook_registry_table</code></a>

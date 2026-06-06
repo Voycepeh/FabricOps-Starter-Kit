@@ -1,21 +1,21 @@
-# _widget_render_data_agreement
+# widget_render_data_agreement
 
 **Module:** `data_agreement`  
-**Classification:** Internal helper
+**Classification:** Essential
 
 ## Purpose
 
-No summary available.
+Render the standalone data-agreement intake widget.
 
 ## Function manifest
 
-- Fully qualified function name: `fabricops_kit.data_agreement._widget_render_data_agreement`
-- Short name: `_widget_render_data_agreement`
+- Fully qualified function name: `fabricops_kit.data_agreement.widget_render_data_agreement`
+- Short name: `widget_render_data_agreement`
 - Module: `data_agreement`
-- Classification: Internal helper
+- Classification: Essential
 - Related module: `data_agreement`
 - Source file path: `src/fabricops_kit/data_agreement.py`
-- Source reference: <a href="../../api/modules/data_agreement/#_widget_render_data_agreement">Module source anchor</a>
+- Source reference: <a href="../../api/modules/data_agreement/#widget_render_data_agreement">Module source anchor</a>
 - Inbound references count: 0
 - Outbound references count: 1
 

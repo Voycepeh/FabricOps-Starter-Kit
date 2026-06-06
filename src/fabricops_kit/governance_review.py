@@ -164,7 +164,7 @@ def _row_metadata_table_key(row: dict[str, Any]) -> str:
     return _build_metadata_table_key(_value(row, "environment_name"), _value(row, "dataset_name"), _value(row, "table_name"))
 
 
-def setup_governance_metadata_tables(*, spark: Any, config: Any, env: str) -> dict[str, Any]:
+def _setup_governance_metadata_tables(*, spark: Any, config: Any, env: str) -> dict[str, Any]:
     """Create or validate governance metadata tables via the configured route.
 
     Parameters
@@ -253,11 +253,31 @@ def _catalogue_table_options(catalogue_rows: Iterable[dict[str, Any]]) -> list[d
     return sorted(options, key=lambda r: r["label"])
 
 
-def get_selected_catalogue_table() -> dict[str, Any]:
-    """Return the current catalogue table selection from widget state."""
-    if _SELECTED_CATALOGUE_TABLE is None:
-        raise ValueError("No catalogue table has been selected. Run widget_select_catalogue_table first.")
-    return dict(_SELECTED_CATALOGUE_TABLE)
+def get_selected_catalogue_table(table_selector: Any | None = None) -> dict[str, Any]:
+    """Return the catalogue table selected by ``widget_select_catalogue_table``.
+
+    Parameters
+    ----------
+    table_selector : ipywidgets.Combobox, optional
+        Selector returned by ``widget_select_catalogue_table``. Passing it is
+        optional because the widget also maintains module-level selection state.
+
+    Returns
+    -------
+    dict[str, Any]
+        Stable table identity used by ``load_catalogue_profile_rows``.
+    """
+    if _SELECTED_CATALOGUE_TABLE is not None:
+        return dict(_SELECTED_CATALOGUE_TABLE)
+    raw_value = getattr(table_selector, "value", None) if table_selector is not None else None
+    if raw_value:
+        try:
+            parsed = json.loads(str(raw_value))
+            if isinstance(parsed, dict):
+                return dict(parsed)
+        except json.JSONDecodeError:
+            pass
+    raise ValueError("No catalogue table has been selected. Run widget_select_catalogue_table first.")
 
 
 def widget_select_catalogue_table(config: Any, env: str, *, spark_session: Any):
@@ -477,6 +497,86 @@ def _commit_column_classification(config: Any, env: str, rows: list[dict[str, An
     return rows
 
 
+
+def _display_review_guidance(title: str, profile_rows: list[dict[str, Any]], instructions: str) -> list[dict[str, Any]]:
+    widgets = importlib.import_module("ipywidgets")
+    from IPython import display as ip
+
+    columns = [str(_value(row, "column_name")) for row in profile_rows]
+    html = widgets.HTML(
+        f"<h3>{title}</h3>"
+        f"<p>{instructions}</p>"
+        f"<p><b>Columns loaded:</b> {', '.join(columns)}</p>"
+        "<p>Return value is an editable list scaffold. Add reviewed dictionaries, set "
+        "<code>review_status='approved'</code> and <code>commit=True</code>, then pass the list to "
+        "<code>record_table_governance</code>.</p>"
+    )
+    ip.display(html)
+    return []
+
+
+def widget_review_column_context(profile_rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Render standalone business-context review guidance for ``04_gov``.
+
+    Parameters
+    ----------
+    profile_rows : list of dict
+        Selected column profile evidence from ``load_catalogue_profile_rows``.
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Empty editable review list. Add approved context rows before calling
+        ``record_table_governance``.
+    """
+    return _display_review_guidance(
+        "Business context review",
+        profile_rows,
+        "Describe human-approved business meaning for each column. AI suggestions, if used, are advisory only.",
+    )
+
+
+def widget_review_dq_rules(profile_rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Render standalone DQ-rule review guidance for ``04_gov``.
+
+    Parameters
+    ----------
+    profile_rows : list of dict
+        Selected column profile evidence from ``load_catalogue_profile_rows``.
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Empty editable review list. Add approved rule dictionaries before
+        calling ``record_table_governance``.
+    """
+    return _display_review_guidance(
+        "DQ rule review",
+        profile_rows,
+        "Author human-approved DQ rules for selected columns. These records are governance evidence and are not automatically enforced by 03_pc.",
+    )
+
+
+def widget_review_column_classification(profile_rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Render standalone sensitivity and PII classification review guidance.
+
+    Parameters
+    ----------
+    profile_rows : list of dict
+        Selected column profile evidence from ``load_catalogue_profile_rows``.
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Empty editable review list. Add approved classification dictionaries
+        before calling ``record_table_governance``.
+    """
+    return _display_review_guidance(
+        "Sensitivity and PII classification review",
+        profile_rows,
+        "Review sensitivity labels, personal-data classifications, identifier types, and handling requirements.",
+    )
+
 def record_table_governance(
     config: Any,
     env: str,
@@ -554,7 +654,7 @@ def record_table_governance(
     }
 
 
-def widget_review_table_governance(profile_rows: list[dict[str, Any]], *, existing_context: dict[str, dict[str, Any]] | None = None, existing_rules: dict[str, dict[str, Any]] | None = None, existing_classification: dict[str, dict[str, Any]] | None = None) -> dict[str, Any]:
+def _widget_review_table_governance(profile_rows: list[dict[str, Any]], *, existing_context: dict[str, dict[str, Any]] | None = None, existing_rules: dict[str, dict[str, Any]] | None = None, existing_classification: dict[str, dict[str, Any]] | None = None) -> dict[str, Any]:
     """Render lightweight copy-ready review guidance for three governance stages.
 
     Parameters

@@ -532,6 +532,22 @@
     "summary": "No summary available."
   },
   {
+    "name": "setup_metadata_tables",
+    "qualified_name": "fabricops_kit.config.setup_metadata_tables",
+    "module": "config",
+    "type": "callable",
+    "role": "essential",
+    "inbound": [],
+    "outbound": [
+      "fabricops_kit.data_agreement._setup_data_agreement_tables",
+      "fabricops_kit.data_agreement.get",
+      "fabricops_kit.governance_review._setup_governance_metadata_tables",
+      "fabricops_kit.metadata._setup_notebook_registry_table"
+    ],
+    "source_file": "src/fabricops_kit/config.py",
+    "summary": "Create or validate all FabricOps metadata tables through one setup action."
+  },
+  {
     "name": "setup_notebook",
     "qualified_name": "fabricops_kit.config.setup_notebook",
     "module": "config",
@@ -786,7 +802,7 @@
     "type": "internal",
     "role": "internal",
     "inbound": [
-      "fabricops_kit.data_agreement.setup_data_agreement_tables"
+      "fabricops_kit.data_agreement._setup_data_agreement_tables"
     ],
     "outbound": [
       "fabricops_kit.data_agreement._column_names",
@@ -994,7 +1010,7 @@
     "inbound": [
       "fabricops_kit.data_agreement._create_or_update_data_agreement",
       "fabricops_kit.data_agreement._list_data_agreements",
-      "fabricops_kit.data_agreement._widget_render_agreement_evidence"
+      "fabricops_kit.data_agreement._render_agreement_evidence_widget"
     ],
     "outbound": [
       "fabricops_kit.data_agreement._coerce_row_dicts",
@@ -1031,7 +1047,7 @@
       "fabricops_kit.data_agreement._create_or_update_data_agreement",
       "fabricops_kit.data_agreement._load_active_data_steward_profiles",
       "fabricops_kit.data_agreement._render_maintenance_widget",
-      "fabricops_kit.data_agreement.setup_data_agreement_tables"
+      "fabricops_kit.data_agreement._setup_data_agreement_tables"
     ],
     "outbound": [
       "fabricops_kit.data_agreement._active_steward",
@@ -1196,6 +1212,26 @@
     "summary": "No summary available."
   },
   {
+    "name": "_render_agreement_evidence_widget",
+    "qualified_name": "fabricops_kit.data_agreement._render_agreement_evidence_widget",
+    "module": "data_agreement",
+    "type": "internal",
+    "role": "internal",
+    "inbound": [
+      "fabricops_kit.data_agreement._widget_render_agreement_intake_app",
+      "fabricops_kit.data_agreement.widget_render_agreement_evidence"
+    ],
+    "outbound": [
+      "fabricops_kit.data_agreement._list_all_data_agreement_rows",
+      "fabricops_kit.data_agreement._render_searchable_selector",
+      "fabricops_kit.data_agreement._require_ipywidgets",
+      "fabricops_kit.data_agreement._save_agreement_evidence_records",
+      "fabricops_kit.data_agreement._widget_common"
+    ],
+    "source_file": "src/fabricops_kit/data_agreement.py",
+    "summary": "No summary available."
+  },
+  {
     "name": "_render_custom_fields",
     "qualified_name": "fabricops_kit.data_agreement._render_custom_fields",
     "module": "data_agreement",
@@ -1222,9 +1258,9 @@
     "type": "internal",
     "role": "internal",
     "inbound": [
-      "fabricops_kit.data_agreement._widget_render_data_agreement",
-      "fabricops_kit.data_agreement._widget_render_data_steward",
-      "fabricops_kit.data_agreement.widget_render_agreement_intake_app"
+      "fabricops_kit.data_agreement._widget_render_agreement_intake_app",
+      "fabricops_kit.data_agreement.widget_render_data_agreement",
+      "fabricops_kit.data_agreement.widget_render_data_steward"
     ],
     "outbound": [
       "fabricops_kit.data_agreement._agreement_identity_text",
@@ -1256,8 +1292,8 @@
     "type": "internal",
     "role": "internal",
     "inbound": [
+      "fabricops_kit.data_agreement._render_agreement_evidence_widget",
       "fabricops_kit.data_agreement._render_maintenance_widget",
-      "fabricops_kit.data_agreement._widget_render_agreement_evidence",
       "fabricops_kit.data_agreement.widget_select_agreement"
     ],
     "outbound": [
@@ -1276,11 +1312,11 @@
     "type": "internal",
     "role": "internal",
     "inbound": [
+      "fabricops_kit.data_agreement._render_agreement_evidence_widget",
       "fabricops_kit.data_agreement._render_custom_fields",
       "fabricops_kit.data_agreement._render_maintenance_widget",
       "fabricops_kit.data_agreement._standard_widget",
-      "fabricops_kit.data_agreement._widget_render_agreement_evidence",
-      "fabricops_kit.data_agreement.widget_render_agreement_intake_app",
+      "fabricops_kit.data_agreement._widget_render_agreement_intake_app",
       "fabricops_kit.data_agreement.widget_select_agreement"
     ],
     "outbound": [],
@@ -1321,7 +1357,7 @@
     "type": "internal",
     "role": "internal",
     "inbound": [
-      "fabricops_kit.data_agreement._widget_render_agreement_evidence"
+      "fabricops_kit.data_agreement._render_agreement_evidence_widget"
     ],
     "outbound": [
       "fabricops_kit.data_agreement._prepare_evidence_file_references",
@@ -1374,6 +1410,22 @@
     "outbound": [
       "fabricops_kit.data_agreement._default_dropdown_value",
       "fabricops_kit.data_agreement._to_bool"
+    ],
+    "source_file": "src/fabricops_kit/data_agreement.py",
+    "summary": "No summary available."
+  },
+  {
+    "name": "_setup_data_agreement_tables",
+    "qualified_name": "fabricops_kit.data_agreement._setup_data_agreement_tables",
+    "module": "data_agreement",
+    "type": "internal",
+    "role": "internal",
+    "inbound": [
+      "fabricops_kit.config.setup_metadata_tables"
+    ],
+    "outbound": [
+      "fabricops_kit.data_agreement._ensure_metadata_tables",
+      "fabricops_kit.data_agreement._list_data_stewards"
     ],
     "source_file": "src/fabricops_kit/data_agreement.py",
     "summary": "No summary available."
@@ -1501,10 +1553,10 @@
     "type": "internal",
     "role": "internal",
     "inbound": [
+      "fabricops_kit.data_agreement._render_agreement_evidence_widget",
       "fabricops_kit.data_agreement._render_custom_fields",
       "fabricops_kit.data_agreement._render_searchable_selector",
-      "fabricops_kit.data_agreement._standard_widget",
-      "fabricops_kit.data_agreement._widget_render_agreement_evidence"
+      "fabricops_kit.data_agreement._standard_widget"
     ],
     "outbound": [
       "fabricops_kit.data_agreement._widget_layout"
@@ -1557,48 +1609,16 @@
     "summary": "No summary available."
   },
   {
-    "name": "_widget_render_agreement_evidence",
-    "qualified_name": "fabricops_kit.data_agreement._widget_render_agreement_evidence",
-    "module": "data_agreement",
-    "type": "internal",
-    "role": "internal",
-    "inbound": [
-      "fabricops_kit.data_agreement._widget_render_agreement_evidence",
-      "fabricops_kit.data_agreement.widget_render_agreement_intake_app"
-    ],
-    "outbound": [
-      "fabricops_kit.data_agreement._list_all_data_agreement_rows",
-      "fabricops_kit.data_agreement._render_searchable_selector",
-      "fabricops_kit.data_agreement._require_ipywidgets",
-      "fabricops_kit.data_agreement._save_agreement_evidence_records",
-      "fabricops_kit.data_agreement._widget_common",
-      "fabricops_kit.data_agreement._widget_render_agreement_evidence"
-    ],
-    "source_file": "src/fabricops_kit/data_agreement.py",
-    "summary": "No summary available."
-  },
-  {
-    "name": "_widget_render_data_agreement",
-    "qualified_name": "fabricops_kit.data_agreement._widget_render_data_agreement",
+    "name": "_widget_render_agreement_intake_app",
+    "qualified_name": "fabricops_kit.data_agreement._widget_render_agreement_intake_app",
     "module": "data_agreement",
     "type": "internal",
     "role": "internal",
     "inbound": [],
     "outbound": [
-      "fabricops_kit.data_agreement._render_maintenance_widget"
-    ],
-    "source_file": "src/fabricops_kit/data_agreement.py",
-    "summary": "No summary available."
-  },
-  {
-    "name": "_widget_render_data_steward",
-    "qualified_name": "fabricops_kit.data_agreement._widget_render_data_steward",
-    "module": "data_agreement",
-    "type": "internal",
-    "role": "internal",
-    "inbound": [],
-    "outbound": [
-      "fabricops_kit.data_agreement._render_maintenance_widget"
+      "fabricops_kit.data_agreement._render_agreement_evidence_widget",
+      "fabricops_kit.data_agreement._render_maintenance_widget",
+      "fabricops_kit.data_agreement._require_ipywidgets"
     ],
     "source_file": "src/fabricops_kit/data_agreement.py",
     "summary": "No summary available."
@@ -1632,33 +1652,43 @@
     "summary": "Return the agreement selected by widget_select_agreement."
   },
   {
-    "name": "setup_data_agreement_tables",
-    "qualified_name": "fabricops_kit.data_agreement.setup_data_agreement_tables",
+    "name": "widget_render_agreement_evidence",
+    "qualified_name": "fabricops_kit.data_agreement.widget_render_agreement_evidence",
     "module": "data_agreement",
     "type": "callable",
     "role": "essential",
     "inbound": [],
     "outbound": [
-      "fabricops_kit.data_agreement._ensure_metadata_tables",
-      "fabricops_kit.data_agreement._list_data_stewards"
+      "fabricops_kit.data_agreement._render_agreement_evidence_widget"
     ],
     "source_file": "src/fabricops_kit/data_agreement.py",
-    "summary": "Create or validate data-agreement metadata tables during environment setup."
+    "summary": "Render the standalone agreement-evidence widget."
   },
   {
-    "name": "widget_render_agreement_intake_app",
-    "qualified_name": "fabricops_kit.data_agreement.widget_render_agreement_intake_app",
+    "name": "widget_render_data_agreement",
+    "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
     "module": "data_agreement",
     "type": "callable",
     "role": "essential",
     "inbound": [],
     "outbound": [
-      "fabricops_kit.data_agreement._render_maintenance_widget",
-      "fabricops_kit.data_agreement._require_ipywidgets",
-      "fabricops_kit.data_agreement._widget_render_agreement_evidence"
+      "fabricops_kit.data_agreement._render_maintenance_widget"
     ],
     "source_file": "src/fabricops_kit/data_agreement.py",
-    "summary": "Render the combined steward, agreement, and evidence intake app."
+    "summary": "Render the standalone data-agreement intake widget."
+  },
+  {
+    "name": "widget_render_data_steward",
+    "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
+    "module": "data_agreement",
+    "type": "callable",
+    "role": "essential",
+    "inbound": [],
+    "outbound": [
+      "fabricops_kit.data_agreement._render_maintenance_widget"
+    ],
+    "source_file": "src/fabricops_kit/data_agreement.py",
+    "summary": "Render the standalone data-steward intake widget."
   },
   {
     "name": "widget_select_agreement",
@@ -3307,7 +3337,7 @@
       "fabricops_kit.drift.SchemaDriftError"
     ],
     "source_file": "src/fabricops_kit/drift.py",
-    "summary": "Stop a notebook when a schema or data-change guardrail result blocks continuation."
+    "summary": "Stop a notebook only when a schema or data-change guardrail result blocks continuation."
   },
   {
     "name": "validate_schema",
@@ -3458,11 +3488,11 @@
       "fabricops_kit.data_agreement._ensure_metadata_tables",
       "fabricops_kit.data_agreement._list_all_data_agreement_rows",
       "fabricops_kit.data_agreement._list_data_stewards",
+      "fabricops_kit.governance_review._setup_governance_metadata_tables",
       "fabricops_kit.governance_review.load_catalogue_profile_rows",
-      "fabricops_kit.governance_review.setup_governance_metadata_tables",
       "fabricops_kit.governance_review.widget_select_catalogue_table",
       "fabricops_kit.metadata._load_notebook_registry",
-      "fabricops_kit.metadata.setup_notebook_registry_table"
+      "fabricops_kit.metadata._setup_notebook_registry_table"
     ],
     "outbound": [
       "fabricops_kit.config._get_store",
@@ -3499,9 +3529,9 @@
       "fabricops_kit.governance_review._commit_column_classification",
       "fabricops_kit.governance_review._commit_column_context",
       "fabricops_kit.governance_review._commit_dq_rules",
-      "fabricops_kit.governance_review.setup_governance_metadata_tables",
+      "fabricops_kit.governance_review._setup_governance_metadata_tables",
       "fabricops_kit.metadata._register_current_notebook",
-      "fabricops_kit.metadata.setup_notebook_registry_table"
+      "fabricops_kit.metadata._setup_notebook_registry_table"
     ],
     "outbound": [
       "fabricops_kit.config._get_store"
@@ -3652,8 +3682,8 @@
     "role": "internal",
     "inbound": [
       "fabricops_kit.governance_review._latest_by_column",
+      "fabricops_kit.governance_review._setup_governance_metadata_tables",
       "fabricops_kit.governance_review.load_catalogue_profile_rows",
-      "fabricops_kit.governance_review.setup_governance_metadata_tables",
       "fabricops_kit.governance_review.widget_select_catalogue_table"
     ],
     "outbound": [],
@@ -3706,13 +3736,30 @@
     "summary": "No summary available."
   },
   {
+    "name": "_display_review_guidance",
+    "qualified_name": "fabricops_kit.governance_review._display_review_guidance",
+    "module": "governance_review",
+    "type": "internal",
+    "role": "internal",
+    "inbound": [
+      "fabricops_kit.governance_review.widget_review_column_classification",
+      "fabricops_kit.governance_review.widget_review_column_context",
+      "fabricops_kit.governance_review.widget_review_dq_rules"
+    ],
+    "outbound": [
+      "fabricops_kit.governance_review._value"
+    ],
+    "source_file": "src/fabricops_kit/governance_review.py",
+    "summary": "No summary available."
+  },
+  {
     "name": "_get_governance_metadata_schemas",
     "qualified_name": "fabricops_kit.governance_review._get_governance_metadata_schemas",
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
     "inbound": [
-      "fabricops_kit.governance_review.setup_governance_metadata_tables"
+      "fabricops_kit.governance_review._setup_governance_metadata_tables"
     ],
     "outbound": [
       "fabricops_kit.governance_review._schema",
@@ -3744,7 +3791,7 @@
     "type": "internal",
     "role": "internal",
     "inbound": [
-      "fabricops_kit.governance_review.setup_governance_metadata_tables"
+      "fabricops_kit.governance_review._setup_governance_metadata_tables"
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/governance_review.py",
@@ -3827,9 +3874,29 @@
     "type": "internal",
     "role": "internal",
     "inbound": [
-      "fabricops_kit.governance_review.setup_governance_metadata_tables"
+      "fabricops_kit.governance_review._setup_governance_metadata_tables"
     ],
     "outbound": [],
+    "source_file": "src/fabricops_kit/governance_review.py",
+    "summary": "No summary available."
+  },
+  {
+    "name": "_setup_governance_metadata_tables",
+    "qualified_name": "fabricops_kit.governance_review._setup_governance_metadata_tables",
+    "module": "governance_review",
+    "type": "internal",
+    "role": "internal",
+    "inbound": [
+      "fabricops_kit.config.setup_metadata_tables"
+    ],
+    "outbound": [
+      "fabricops_kit.fabric_input_output.read_lakehouse_table",
+      "fabricops_kit.fabric_input_output.write_lakehouse_table",
+      "fabricops_kit.governance_review._coerce_rows",
+      "fabricops_kit.governance_review._get_governance_metadata_schemas",
+      "fabricops_kit.governance_review._is_table_not_found_error",
+      "fabricops_kit.governance_review._schema_field_names"
+    ],
     "source_file": "src/fabricops_kit/governance_review.py",
     "summary": "No summary available."
   },
@@ -3859,12 +3926,26 @@
       "fabricops_kit.governance_review._build_dq_rule_records",
       "fabricops_kit.governance_review._build_profile_summary",
       "fabricops_kit.governance_review._catalogue_table_options",
+      "fabricops_kit.governance_review._display_review_guidance",
       "fabricops_kit.governance_review._is_success",
       "fabricops_kit.governance_review._row_metadata_table_key",
-      "fabricops_kit.governance_review.load_catalogue_profile_rows",
-      "fabricops_kit.governance_review.widget_review_table_governance"
+      "fabricops_kit.governance_review._widget_review_table_governance",
+      "fabricops_kit.governance_review.load_catalogue_profile_rows"
     ],
     "outbound": [],
+    "source_file": "src/fabricops_kit/governance_review.py",
+    "summary": "No summary available."
+  },
+  {
+    "name": "_widget_review_table_governance",
+    "qualified_name": "fabricops_kit.governance_review._widget_review_table_governance",
+    "module": "governance_review",
+    "type": "internal",
+    "role": "internal",
+    "inbound": [],
+    "outbound": [
+      "fabricops_kit.governance_review._value"
+    ],
     "source_file": "src/fabricops_kit/governance_review.py",
     "summary": "No summary available."
   },
@@ -3915,35 +3996,43 @@
     "summary": "Persist approved table-governance context, DQ-rule, and classification evidence in one v1 commit action."
   },
   {
-    "name": "setup_governance_metadata_tables",
-    "qualified_name": "fabricops_kit.governance_review.setup_governance_metadata_tables",
+    "name": "widget_review_column_classification",
+    "qualified_name": "fabricops_kit.governance_review.widget_review_column_classification",
     "module": "governance_review",
     "type": "callable",
     "role": "essential",
     "inbound": [],
     "outbound": [
-      "fabricops_kit.fabric_input_output.read_lakehouse_table",
-      "fabricops_kit.fabric_input_output.write_lakehouse_table",
-      "fabricops_kit.governance_review._coerce_rows",
-      "fabricops_kit.governance_review._get_governance_metadata_schemas",
-      "fabricops_kit.governance_review._is_table_not_found_error",
-      "fabricops_kit.governance_review._schema_field_names"
+      "fabricops_kit.governance_review._display_review_guidance"
     ],
     "source_file": "src/fabricops_kit/governance_review.py",
-    "summary": "Create or validate governance metadata tables during environment setup."
+    "summary": "Render standalone sensitivity and PII classification review guidance for selected profile rows."
   },
   {
-    "name": "widget_review_table_governance",
-    "qualified_name": "fabricops_kit.governance_review.widget_review_table_governance",
+    "name": "widget_review_column_context",
+    "qualified_name": "fabricops_kit.governance_review.widget_review_column_context",
     "module": "governance_review",
     "type": "callable",
     "role": "essential",
     "inbound": [],
     "outbound": [
-      "fabricops_kit.governance_review._value"
+      "fabricops_kit.governance_review._display_review_guidance"
     ],
     "source_file": "src/fabricops_kit/governance_review.py",
-    "summary": "Render non-persistent human review guidance for context, DQ rules, and classification."
+    "summary": "Render standalone business-context review guidance for selected profile rows."
+  },
+  {
+    "name": "widget_review_dq_rules",
+    "qualified_name": "fabricops_kit.governance_review.widget_review_dq_rules",
+    "module": "governance_review",
+    "type": "callable",
+    "role": "essential",
+    "inbound": [],
+    "outbound": [
+      "fabricops_kit.governance_review._display_review_guidance"
+    ],
+    "source_file": "src/fabricops_kit/governance_review.py",
+    "summary": "Render standalone DQ-rule review guidance for selected profile rows."
   },
   {
     "name": "widget_select_catalogue_table",
@@ -4114,7 +4203,7 @@
     "inbound": [
       "fabricops_kit.metadata._column_names",
       "fabricops_kit.metadata._registry_rows_with_defaults",
-      "fabricops_kit.metadata.setup_notebook_registry_table"
+      "fabricops_kit.metadata._setup_notebook_registry_table"
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/metadata.py",
@@ -4128,8 +4217,8 @@
     "role": "internal",
     "inbound": [
       "fabricops_kit.metadata._register_current_notebook",
-      "fabricops_kit.metadata._write_metadata_rows",
-      "fabricops_kit.metadata.setup_notebook_registry_table"
+      "fabricops_kit.metadata._setup_notebook_registry_table",
+      "fabricops_kit.metadata._write_metadata_rows"
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/metadata.py",
@@ -4142,7 +4231,7 @@
     "type": "internal",
     "role": "internal",
     "inbound": [
-      "fabricops_kit.metadata.setup_notebook_registry_table"
+      "fabricops_kit.metadata._setup_notebook_registry_table"
     ],
     "outbound": [
       "fabricops_kit.metadata._coerce_row_dicts"
@@ -4214,7 +4303,7 @@
     "type": "internal",
     "role": "internal",
     "inbound": [
-      "fabricops_kit.metadata.setup_notebook_registry_table"
+      "fabricops_kit.metadata._setup_notebook_registry_table"
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/metadata.py",
@@ -4287,7 +4376,7 @@
       "fabricops_kit.metadata._latest_registration_events",
       "fabricops_kit.metadata._register_current_notebook",
       "fabricops_kit.metadata._registry_rows_with_defaults",
-      "fabricops_kit.metadata.setup_notebook_registry_table"
+      "fabricops_kit.metadata._setup_notebook_registry_table"
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/metadata.py",
@@ -4414,9 +4503,31 @@
       "fabricops_kit.metadata._current_notebook_active_registrations",
       "fabricops_kit.metadata._register_current_notebook",
       "fabricops_kit.metadata._registry_rows_with_defaults",
-      "fabricops_kit.metadata.setup_notebook_registry_table"
+      "fabricops_kit.metadata._setup_notebook_registry_table"
     ],
     "outbound": [],
+    "source_file": "src/fabricops_kit/metadata.py",
+    "summary": "No summary available."
+  },
+  {
+    "name": "_setup_notebook_registry_table",
+    "qualified_name": "fabricops_kit.metadata._setup_notebook_registry_table",
+    "module": "metadata",
+    "type": "internal",
+    "role": "internal",
+    "inbound": [
+      "fabricops_kit.config.setup_metadata_tables"
+    ],
+    "outbound": [
+      "fabricops_kit.fabric_input_output.read_lakehouse_table",
+      "fabricops_kit.fabric_input_output.write_lakehouse_table",
+      "fabricops_kit.metadata._coerce_row_dicts",
+      "fabricops_kit.metadata._column_context_rows_for_spark",
+      "fabricops_kit.metadata._column_names",
+      "fabricops_kit.metadata._get_notebook_registry_schema",
+      "fabricops_kit.metadata._notebook_registration_key",
+      "fabricops_kit.metadata._safe_str"
+    ],
     "source_file": "src/fabricops_kit/metadata.py",
     "summary": "No summary available."
   },
@@ -4495,26 +4606,6 @@
     "outbound": [],
     "source_file": "src/fabricops_kit/metadata.py",
     "summary": "No summary available."
-  },
-  {
-    "name": "setup_notebook_registry_table",
-    "qualified_name": "fabricops_kit.metadata.setup_notebook_registry_table",
-    "module": "metadata",
-    "type": "callable",
-    "role": "essential",
-    "inbound": [],
-    "outbound": [
-      "fabricops_kit.fabric_input_output.read_lakehouse_table",
-      "fabricops_kit.fabric_input_output.write_lakehouse_table",
-      "fabricops_kit.metadata._coerce_row_dicts",
-      "fabricops_kit.metadata._column_context_rows_for_spark",
-      "fabricops_kit.metadata._column_names",
-      "fabricops_kit.metadata._get_notebook_registry_schema",
-      "fabricops_kit.metadata._notebook_registration_key",
-      "fabricops_kit.metadata._safe_str"
-    ],
-    "source_file": "src/fabricops_kit/metadata.py",
-    "summary": "Create or validate notebook registry metadata during environment setup."
   },
   {
     "name": "_get_docs_url",

@@ -82,7 +82,7 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
       <td><a href="../../reference/stop_if_failed/"><code>stop_if_failed</code></a></td>
       <td>Essential</td>
       <td>function</td>
-      <td>Stop a notebook when a schema or data-change guardrail result blocks continuation.</td>
+      <td>Stop a notebook only when a schema or data-change guardrail result blocks continuation.</td>
       <td>—</td>
     </tr>
     <tr>

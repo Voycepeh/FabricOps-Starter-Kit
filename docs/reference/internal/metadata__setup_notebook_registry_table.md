@@ -1,23 +1,26 @@
-# setup_notebook_registry_table
+# _setup_notebook_registry_table
 
 **Module:** `metadata`  
-**Classification:** Essential
+**Classification:** Internal helper
 
 ## Purpose
 
-Create or validate notebook registry metadata during environment setup.
+No summary available.
 
 ## Function manifest
 
-- Fully qualified function name: `fabricops_kit.metadata.setup_notebook_registry_table`
-- Short name: `setup_notebook_registry_table`
+- Fully qualified function name: `fabricops_kit.metadata._setup_notebook_registry_table`
+- Short name: `_setup_notebook_registry_table`
 - Module: `metadata`
-- Classification: Essential
+- Classification: Internal helper
 - Related module: `metadata`
 - Source file path: `src/fabricops_kit/metadata.py`
-- Source reference: <a href="../../api/modules/metadata/#setup_notebook_registry_table">Module source anchor</a>
-- Inbound references count: 0
+- Source reference: <a href="../../api/modules/metadata/#_setup_notebook_registry_table">Module source anchor</a>
+- Inbound references count: 1
 - Outbound references count: 8
+
+## Inbound references
+- <a href="../setup_metadata_tables/"><code>fabricops_kit.config.setup_metadata_tables</code></a>
 
 ## Outbound references
 - <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a>

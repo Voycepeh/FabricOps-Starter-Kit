@@ -4,8 +4,14 @@ import pathlib
 import tomllib
 from importlib.metadata import PackageNotFoundError, version
 
-from .config import setup_notebook
-from .data_agreement import get_selected_agreement, setup_data_agreement_tables, widget_render_agreement_intake_app, widget_select_agreement
+from .config import setup_metadata_tables, setup_notebook
+from .data_agreement import (
+    get_selected_agreement,
+    widget_render_agreement_evidence,
+    widget_render_data_agreement,
+    widget_render_data_steward,
+    widget_select_agreement,
+)
 from .data_lineage import build_lineage_records
 from .data_profiling import profile_dataframe
 from .drift import monitor_data_changes, stop_if_failed, validate_schema
@@ -22,12 +28,12 @@ from .governance_review import (
     get_selected_catalogue_table,
     load_catalogue_profile_rows,
     record_table_governance,
-    setup_governance_metadata_tables,
-    widget_review_table_governance,
+    widget_review_column_classification,
+    widget_review_column_context,
+    widget_review_dq_rules,
     widget_select_catalogue_table,
 )
 from .handover import build_handover, render_handover_markdown
-from .metadata import setup_notebook_registry_table
 
 
 def _load_package_version() -> str:
@@ -47,10 +53,10 @@ __version__ = _load_package_version()
 
 __all__ = [
     "setup_notebook",
-    "setup_data_agreement_tables",
-    "setup_notebook_registry_table",
-    "setup_governance_metadata_tables",
-    "widget_render_agreement_intake_app",
+    "setup_metadata_tables",
+    "widget_render_data_steward",
+    "widget_render_data_agreement",
+    "widget_render_agreement_evidence",
     "widget_select_agreement",
     "get_selected_agreement",
     "read_lakehouse_table",
@@ -70,6 +76,8 @@ __all__ = [
     "widget_select_catalogue_table",
     "get_selected_catalogue_table",
     "load_catalogue_profile_rows",
-    "widget_review_table_governance",
+    "widget_review_column_context",
+    "widget_review_dq_rules",
+    "widget_review_column_classification",
     "record_table_governance",
 ]

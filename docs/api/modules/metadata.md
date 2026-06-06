@@ -1,4 +1,4 @@
-# `metadata` module
+# `metadata` module (internal)
 
 <div class="api-status-block">
   <span class="api-chip api-chip-module">Module overview</span>
@@ -6,7 +6,7 @@
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 1</span><span class="reference-chip">Internal helpers: 30</span><span class="reference-chip">Outbound: 1</span><span class="reference-chip">Inbound: 5</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 0</span><span class="reference-chip">Internal helpers: 31</span><span class="reference-chip">Outbound: 1</span><span class="reference-chip">Inbound: 6</span></div>
 
 ## Module purpose
 
@@ -32,15 +32,15 @@ Owns metadata evidence persistence, stable keys, notebook registry, catalogue ke
     </tr>
     <tr>
       <td>Public callable count</td>
-      <td>1</td>
+      <td>0</td>
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>30</td>
+      <td>31</td>
     </tr>
     <tr>
       <td>Inbound module count</td>
-      <td>5</td>
+      <td>6</td>
     </tr>
     <tr>
       <td>Outbound module count</td>
@@ -48,7 +48,7 @@ Owns metadata evidence persistence, stable keys, notebook registry, catalogue ke
     </tr>
     <tr>
       <td>External callers</td>
-      <td><code>business_context</code>, <code>data_agreement</code>, <code>data_governance</code>, <code>data_quality</code>, <code>governance_review</code></td>
+      <td><code>business_context</code>, <code>config</code>, <code>data_agreement</code>, <code>data_governance</code>, <code>data_quality</code>, <code>governance_review</code></td>
     </tr>
     <tr>
       <td>External callees</td>
@@ -59,28 +59,7 @@ Owns metadata evidence persistence, stable keys, notebook registry, catalogue ke
 
 ## Public callables
 
-<div class="module-table-scroll">
-<table>
-  <thead>
-    <tr>
-      <th>Callable</th>
-      <th>Tier</th>
-      <th>Type</th>
-      <th>Summary</th>
-      <th>Related helpers</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><a href="../../reference/setup_notebook_registry_table/"><code>setup_notebook_registry_table</code></a></td>
-      <td>Essential</td>
-      <td>function</td>
-      <td>Create or validate notebook registry metadata during environment setup.</td>
-      <td><a href="../../reference/internal/metadata/_coerce_row_dicts/"><code>_coerce_row_dicts</code></a> (internal), <a href="../../reference/internal/metadata/_column_context_rows_for_spark/"><code>_column_context_rows_for_spark</code></a> (internal), <a href="../../reference/internal/metadata/_column_names/"><code>_column_names</code></a> (internal), <a href="../../reference/internal/metadata/_get_notebook_registry_schema/"><code>_get_notebook_registry_schema</code></a> (internal), <a href="../../reference/internal/metadata/_notebook_registration_key/"><code>_notebook_registration_key</code></a> (internal), <a href="../../reference/internal/metadata/_safe_str/"><code>_safe_str</code></a> (internal)</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+No public exports in this module.
 
 ## Module relationships
 
@@ -93,13 +72,7 @@ Owns metadata evidence persistence, stable keys, notebook registry, catalogue ke
 <section class="callable-relationship-card">
 <h5>metadata</h5>
 <h6>Public callables</h6>
-<ul class="callable-relationship-rows">
-<li>
-<a class="reference-chip" href="../../reference/setup_notebook_registry_table/"><code>setup_notebook_registry_table</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_coerce_row_dicts"><code>_coerce_row_dicts</code></a>, <a class="reference-chip" href="#_column_context_rows_for_spark"><code>_column_context_rows_for_spark</code></a>, <a class="reference-chip" href="#_column_names"><code>_column_names</code></a>, <a class="reference-chip" href="#_get_notebook_registry_schema"><code>_get_notebook_registry_schema</code></a>, <a class="reference-chip" href="#_notebook_registration_key"><code>_notebook_registration_key</code></a>, <a class="reference-chip" href="#_safe_str"><code>_safe_str</code></a>
-</li>
-</ul>
+<p>None.</p>
 </section>
 
 ### Related internal helpers
@@ -138,15 +111,15 @@ Owns metadata evidence persistence, stable keys, notebook registry, catalogue ke
     </tr>
     <tr>
       <td><a href="../../reference/internal/metadata/_coerce_row_dicts/"><code>_coerce_row_dicts</code></a></td>
-      <td><a href="../../reference/setup_notebook_registry_table/"><code>setup_notebook_registry_table</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/metadata/_column_context_rows_for_spark/"><code>_column_context_rows_for_spark</code></a></td>
-      <td><a href="../../reference/setup_notebook_registry_table/"><code>setup_notebook_registry_table</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/metadata/_column_names/"><code>_column_names</code></a></td>
-      <td><a href="../../reference/setup_notebook_registry_table/"><code>setup_notebook_registry_table</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/metadata/_context_get/"><code>_context_get</code></a></td>
@@ -166,7 +139,7 @@ Owns metadata evidence persistence, stable keys, notebook registry, catalogue ke
     </tr>
     <tr>
       <td><a href="../../reference/internal/metadata/_get_notebook_registry_schema/"><code>_get_notebook_registry_schema</code></a></td>
-      <td><a href="../../reference/setup_notebook_registry_table/"><code>setup_notebook_registry_table</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/metadata/_key_part/"><code>_key_part</code></a></td>
@@ -186,7 +159,7 @@ Owns metadata evidence persistence, stable keys, notebook registry, catalogue ke
     </tr>
     <tr>
       <td><a href="../../reference/internal/metadata/_notebook_registration_key/"><code>_notebook_registration_key</code></a></td>
-      <td><a href="../../reference/setup_notebook_registry_table/"><code>setup_notebook_registry_table</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/metadata/_notebook_registry_base_schema/"><code>_notebook_registry_base_schema</code></a></td>
@@ -214,7 +187,11 @@ Owns metadata evidence persistence, stable keys, notebook registry, catalogue ke
     </tr>
     <tr>
       <td><a href="../../reference/internal/metadata/_safe_str/"><code>_safe_str</code></a></td>
-      <td><a href="../../reference/setup_notebook_registry_table/"><code>setup_notebook_registry_table</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/metadata/_setup_notebook_registry_table/"><code>_setup_notebook_registry_table</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/metadata/_sha256_key/"><code>_sha256_key</code></a></td>
@@ -344,6 +321,11 @@ Owns metadata evidence persistence, stable keys, notebook registry, catalogue ke
 <a class="reference-chip" href="#_safe_str"><code>_safe_str</code></a>
 </li>
 <li>
+<a class="reference-chip" href="#_setup_notebook_registry_table"><code>_setup_notebook_registry_table</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_coerce_row_dicts"><code>_coerce_row_dicts</code></a>, <a class="reference-chip" href="#_column_context_rows_for_spark"><code>_column_context_rows_for_spark</code></a>, <a class="reference-chip" href="#_column_names"><code>_column_names</code></a>, <a class="reference-chip" href="#_get_notebook_registry_schema"><code>_get_notebook_registry_schema</code></a>, <a class="reference-chip" href="#_notebook_registration_key"><code>_notebook_registration_key</code></a>, <a class="reference-chip" href="#_safe_str"><code>_safe_str</code></a>
+</li>
+<li>
 <a class="reference-chip" href="#_sha256_key"><code>_sha256_key</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_key_part"><code>_key_part</code></a>
@@ -373,6 +355,9 @@ Owns metadata evidence persistence, stable keys, notebook registry, catalogue ke
 
 **business_context**
 <a class="reference-chip" href="../business_context/#_widget_review_business_context"><code>_widget_review_business_context</code></a>, <a class="reference-chip" href="../business_context/#_write_business_context"><code>_write_business_context</code></a>
+
+**config**
+<a class="reference-chip" href="../../reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a>
 
 **data_agreement**
 <a class="reference-chip" href="../data_agreement/#_create_or_update_data_agreement"><code>_create_or_update_data_agreement</code></a>, <a class="reference-chip" href="../data_agreement/#_create_or_update_data_steward"><code>_create_or_update_data_steward</code></a>, <a class="reference-chip" href="../data_agreement/#_save_agreement_evidence_records"><code>_save_agreement_evidence_records</code></a>, <a class="reference-chip" href="../../reference/widget_select_agreement/"><code>widget_select_agreement</code></a>

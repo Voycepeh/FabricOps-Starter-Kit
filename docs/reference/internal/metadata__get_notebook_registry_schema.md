@@ -20,4 +20,4 @@ No summary available.
 - Outbound references count: 0
 
 ## Inbound references
-- <a href="../setup_notebook_registry_table/"><code>fabricops_kit.metadata.setup_notebook_registry_table</code></a>
+- <a href="../internal/metadata/_setup_notebook_registry_table/"><code>fabricops_kit.metadata._setup_notebook_registry_table</code></a>

@@ -27,24 +27,10 @@ Shared environment bootstrap and metadata table setup.
       <td>Check dependency outputs and metadata writes.</td>
     </tr>
     <tr>
-      <td>`setup_data_agreement_tables`</td>
+      <td>`setup_metadata_tables`</td>
       <td>Callable orchestration wrapper</td>
-      <td>Create or validate data-agreement metadata tables during environment setup.</td>
-      <td>`_ensure_metadata_tables`, `_list_data_stewards`</td>
-      <td>Check dependency outputs and metadata writes.</td>
-    </tr>
-    <tr>
-      <td>`setup_notebook_registry_table`</td>
-      <td>Callable orchestration wrapper</td>
-      <td>Create or validate notebook registry metadata during environment setup.</td>
-      <td>`_coerce_row_dicts`, `_column_context_rows_for_spark`, `_column_names`, `_get_notebook_registry_schema`, `_notebook_registration_key`, `_safe_str`</td>
-      <td>Check dependency outputs and metadata writes.</td>
-    </tr>
-    <tr>
-      <td>`setup_governance_metadata_tables`</td>
-      <td>Callable orchestration wrapper</td>
-      <td>Create or validate governance metadata tables during environment setup.</td>
-      <td>`_coerce_rows`, `_get_governance_metadata_schemas`, `_is_table_not_found_error`, `_schema_field_names`</td>
+      <td>Create or validate all FabricOps metadata tables through one setup action.</td>
+      <td>`_setup_data_agreement_tables`, `_setup_governance_metadata_tables`, `_setup_notebook_registry_table`</td>
       <td>Check dependency outputs and metadata writes.</td>
     </tr>
   </tbody>
@@ -52,7 +38,7 @@ Shared environment bootstrap and metadata table setup.
 
 ## `01_da_agreement_template`
 
-Agreement, steward, and evidence intake.
+Standalone steward, agreement, and evidence widgets for Fabric stability.
 
 ### Agreement intake
 
@@ -68,10 +54,24 @@ Agreement, steward, and evidence intake.
   </thead>
   <tbody>
     <tr>
-      <td>`widget_render_agreement_intake_app`</td>
+      <td>`widget_render_data_steward`</td>
       <td>Callable orchestration wrapper</td>
-      <td>Render the combined steward, agreement, and evidence intake app.</td>
-      <td>`_render_maintenance_widget`, `_require_ipywidgets`, `_widget_render_agreement_evidence`</td>
+      <td>Render the standalone data-steward intake widget.</td>
+      <td>`_render_maintenance_widget`</td>
+      <td>Check dependency outputs and metadata writes.</td>
+    </tr>
+    <tr>
+      <td>`widget_render_data_agreement`</td>
+      <td>Callable orchestration wrapper</td>
+      <td>Render the standalone data-agreement intake widget.</td>
+      <td>`_render_maintenance_widget`</td>
+      <td>Check dependency outputs and metadata writes.</td>
+    </tr>
+    <tr>
+      <td>`widget_render_agreement_evidence`</td>
+      <td>Callable orchestration wrapper</td>
+      <td>Render the standalone agreement-evidence widget.</td>
+      <td>`_render_agreement_evidence_widget`</td>
       <td>Check dependency outputs and metadata writes.</td>
     </tr>
   </tbody>
@@ -164,13 +164,6 @@ Production pipeline guardrails, IO, lineage, and publishing.
   </thead>
   <tbody>
     <tr>
-      <td>`setup_notebook`</td>
-      <td>Callable orchestration wrapper</td>
-      <td>Shared environment setup and runtime validation for notebook templates.</td>
-      <td>`_get_store`, `_run_config_smoke_tests`, `_validate_framework_config`</td>
-      <td>Check dependency outputs and metadata writes.</td>
-    </tr>
-    <tr>
       <td>`widget_select_agreement`</td>
       <td>Callable orchestration wrapper</td>
       <td>Render an agreement selector and optionally register the active notebook.</td>
@@ -206,6 +199,13 @@ Production pipeline guardrails, IO, lineage, and publishing.
       <td>Check dependency outputs and metadata writes.</td>
     </tr>
     <tr>
+      <td>`read_lakehouse_excel`</td>
+      <td>Callable orchestration wrapper</td>
+      <td>Read an Excel file from a configured Fabric lakehouse Files path.</td>
+      <td>`_get_spark`, `_get_store`</td>
+      <td>Check dependency outputs and metadata writes.</td>
+    </tr>
+    <tr>
       <td>`read_warehouse_table`</td>
       <td>Callable orchestration wrapper</td>
       <td>Read a table from a configured Fabric warehouse target.</td>
@@ -229,7 +229,7 @@ Production pipeline guardrails, IO, lineage, and publishing.
     <tr>
       <td>`stop_if_failed`</td>
       <td>Callable orchestration wrapper</td>
-      <td>Stop a notebook when a schema or data-change guardrail result blocks continuation.</td>
+      <td>Stop a notebook only when a schema or data-change guardrail result blocks continuation.</td>
       <td>—</td>
       <td>Check dependency outputs and metadata writes.</td>
     </tr>
@@ -296,10 +296,24 @@ Table-scoped governance review and approved metadata recording.
       <td>Check dependency outputs and metadata writes.</td>
     </tr>
     <tr>
-      <td>`widget_review_table_governance`</td>
+      <td>`widget_review_column_context`</td>
       <td>Callable orchestration wrapper</td>
-      <td>Render non-persistent human review guidance for context, DQ rules, and classification.</td>
-      <td>`_value`</td>
+      <td>Render standalone business-context review guidance for selected profile rows.</td>
+      <td>`_display_review_guidance`</td>
+      <td>Check dependency outputs and metadata writes.</td>
+    </tr>
+    <tr>
+      <td>`widget_review_dq_rules`</td>
+      <td>Callable orchestration wrapper</td>
+      <td>Render standalone DQ-rule review guidance for selected profile rows.</td>
+      <td>`_display_review_guidance`</td>
+      <td>Check dependency outputs and metadata writes.</td>
+    </tr>
+    <tr>
+      <td>`widget_review_column_classification`</td>
+      <td>Callable orchestration wrapper</td>
+      <td>Render standalone sensitivity and PII classification review guidance for selected profile rows.</td>
+      <td>`_display_review_guidance`</td>
       <td>Check dependency outputs and metadata writes.</td>
     </tr>
     <tr>

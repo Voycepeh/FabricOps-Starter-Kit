@@ -1,23 +1,26 @@
-# setup_governance_metadata_tables
+# _setup_governance_metadata_tables
 
 **Module:** `governance_review`  
-**Classification:** Essential
+**Classification:** Internal helper
 
 ## Purpose
 
-Create or validate governance metadata tables during environment setup.
+No summary available.
 
 ## Function manifest
 
-- Fully qualified function name: `fabricops_kit.governance_review.setup_governance_metadata_tables`
-- Short name: `setup_governance_metadata_tables`
+- Fully qualified function name: `fabricops_kit.governance_review._setup_governance_metadata_tables`
+- Short name: `_setup_governance_metadata_tables`
 - Module: `governance_review`
-- Classification: Essential
+- Classification: Internal helper
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
-- Source reference: <a href="../../api/modules/governance_review/#setup_governance_metadata_tables">Module source anchor</a>
-- Inbound references count: 0
+- Source reference: <a href="../../api/modules/governance_review/#_setup_governance_metadata_tables">Module source anchor</a>
+- Inbound references count: 1
 - Outbound references count: 6
+
+## Inbound references
+- <a href="../setup_metadata_tables/"><code>fabricops_kit.config.setup_metadata_tables</code></a>
 
 ## Outbound references
 - <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a>

@@ -20,9 +20,9 @@ No summary available.
 - Outbound references count: 18
 
 ## Inbound references
-- <a href="../internal/data_agreement/_widget_render_data_agreement/"><code>fabricops_kit.data_agreement._widget_render_data_agreement</code></a>
-- <a href="../internal/data_agreement/_widget_render_data_steward/"><code>fabricops_kit.data_agreement._widget_render_data_steward</code></a>
-- <a href="../widget_render_agreement_intake_app/"><code>fabricops_kit.data_agreement.widget_render_agreement_intake_app</code></a>
+- <a href="../internal/data_agreement/_widget_render_agreement_intake_app/"><code>fabricops_kit.data_agreement._widget_render_agreement_intake_app</code></a>
+- <a href="../widget_render_data_agreement/"><code>fabricops_kit.data_agreement.widget_render_data_agreement</code></a>
+- <a href="../widget_render_data_steward/"><code>fabricops_kit.data_agreement.widget_render_data_steward</code></a>
 
 ## Outbound references
 - <a href="../internal/data_agreement/_agreement_identity_text/"><code>fabricops_kit.data_agreement._agreement_identity_text</code></a>

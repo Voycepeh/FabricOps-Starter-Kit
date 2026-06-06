@@ -51,7 +51,7 @@ def _get_notebook_registry_schema() -> list[str]:
     -------
     list[str]
         Column names written by :func:`_register_current_notebook` and required
-        by :func:`setup_notebook_registry_table`.
+        by :func:`_setup_notebook_registry_table`.
 
     Notes
     -----
@@ -94,7 +94,7 @@ def _column_names(rows_or_df: Any) -> list[str]:
     return list(rows[0]) if rows else []
 
 
-def setup_notebook_registry_table(*, spark: Any, config: Any, env: str, metadata_table: str = NOTEBOOK_REGISTRY_TABLE) -> dict[str, Any]:
+def _setup_notebook_registry_table(*, spark: Any, config: Any, env: str, metadata_table: str = NOTEBOOK_REGISTRY_TABLE) -> dict[str, Any]:
     """Create or validate the notebook registry metadata table.
 
     Parameters
@@ -122,7 +122,7 @@ def setup_notebook_registry_table(*, spark: Any, config: Any, env: str, metadata
 
     Notes
     -----
-    This helper is separate from ``setup_data_agreement_tables`` because the
+    This helper is separate from ``_setup_data_agreement_tables`` because the
     registry is workflow-notebook bootstrap metadata, not ``01_da`` agreement
     intake metadata. Reads and writes use the configured ``metadata`` target
     from ``00_env_config``.
@@ -464,7 +464,7 @@ def _register_current_notebook(
 
     Notes
     -----
-    Prepare the registry with :func:`setup_notebook_registry_table` before
+    Prepare the registry with :func:`_setup_notebook_registry_table` before
     workflow notebooks register themselves. New notebooks should pass
     ``config=CONFIG`` and ``env=ENV`` so metadata writes use the configured
     ``metadata`` target from ``00_env_config``.
