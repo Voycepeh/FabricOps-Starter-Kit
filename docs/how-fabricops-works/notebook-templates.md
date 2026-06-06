@@ -73,12 +73,13 @@ It provides the widget workflow for maintaining:
 * versioned data agreements;
 * supporting agreement evidence.
 
-FabricOps supports two layouts:
+FabricOps uses separate Fabric-friendly widget cells:
 
-* **Option A:** a compact combined application using `widget_render_agreement_intake_app(...)`;
-* **Option B:** separate widgets using `widget_render_data_steward(...)`, `widget_render_data_agreement(...)`, and `widget_render_agreement_evidence(...)`.
+* `widget_render_data_steward(...)` for steward maintenance.
+* `widget_render_data_agreement(...)` for agreement maintenance.
+* `widget_render_agreement_evidence(...)` for optional evidence file-reference metadata.
 
-Both layouts write to the same metadata tables.
+All cells write to the same metadata tables.
 
 Creating an agreement generates a stable `agreement_id` and its first version. Updating an agreement appends a new version instead of overwriting its previous record.
 

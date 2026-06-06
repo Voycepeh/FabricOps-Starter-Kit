@@ -1,15 +1,19 @@
-# FabricOps Starter Kit
+## FabricOps Starter Kit
 
-FabricOps Starter Kit is a lightweight Microsoft Fabric notebook starter kit for governed, quality-checked, AI-ready notebooks.
+Lightweight, notebook centric, plug and play starter kit for Microsoft Fabric.
 
-FabricOps enables a metadata-backed notebook workflow from agreement, to production, to governance review, to handover:
+FabricOps Starter Kit helps teams quickly bootstrap governed Fabric notebook delivery using reusable templates and a lightweight helper wheel.
 
-- `01_da` captures agreement, steward, and evidence context.
-- `03_pc` produces guarded production outputs and evidence.
-- `04_gov` reviews evidence into approved governance metadata.
-- Handover uses collected evidence instead of memory or side conversations.
+It supports a metadata backed workflow from agreement, to pipeline, to governance review, then back into pipeline enforcement.
 
-FabricOps v1.0.0 is not a full governance platform and not a standalone data quality product. It keeps the operating model small so teams can use Fabric notebooks, shared metadata, and reviewed evidence without adding a separate platform.
+- 01_da captures the agreement, steward, and context.
+
+- 03_pc pipes data from source to target while capturing key metadata such as data profile, lineage, schema, and data drift details.
+
+- 04_gov uses that metadata to add business context, data quality rules, data sensitivity, and classification.
+
+The approved data quality rules, sensitivity rules, and classification rules are then used by 03_pc when the pipeline runs again, alongside schema and data drift guardrails.
+
 
 <div class="home-cta" markdown="1">
 
@@ -32,3 +36,6 @@ FabricOps v1.0.0 is not a full governance platform and not a standalone data qua
 ## Recommended path
 
 New users should read **How FabricOps Works**, then the two **Workflow Guides**, then use **Quick Start** to test the notebook flow in Fabric.
+
+
+-

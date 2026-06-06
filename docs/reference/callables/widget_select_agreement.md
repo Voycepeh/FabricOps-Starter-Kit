@@ -22,7 +22,7 @@ Render an agreement selector and optionally register the active notebook.
 ## Outbound references
 - <a href="../internal/data_agreement/_html_escape/"><code>fabricops_kit.data_agreement._html_escape</code></a>
 - <a href="../internal/data_agreement/_latest_agreement_versions/"><code>fabricops_kit.data_agreement._latest_agreement_versions</code></a>
-- <a href="../internal/data_agreement/_load_agreements/"><code>fabricops_kit.data_agreement._load_agreements</code></a>
+- <a href="../internal/data_agreement/_list_data_agreements/"><code>fabricops_kit.data_agreement._list_data_agreements</code></a>
 - <a href="../internal/data_agreement/_render_searchable_selector/"><code>fabricops_kit.data_agreement._render_searchable_selector</code></a>
 - <a href="../internal/data_agreement/_require_ipywidgets/"><code>fabricops_kit.data_agreement._require_ipywidgets</code></a>
 - <a href="../internal/metadata/_current_notebook_active_registrations/"><code>fabricops_kit.metadata._current_notebook_active_registrations</code></a>

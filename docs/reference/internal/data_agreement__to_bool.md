@@ -23,5 +23,5 @@ No summary available.
 - <a href="../internal/data_agreement/_active_steward/"><code>fabricops_kit.data_agreement._active_steward</code></a>
 - <a href="../internal/data_agreement/_create_or_update_data_steward/"><code>fabricops_kit.data_agreement._create_or_update_data_steward</code></a>
 - <a href="../internal/data_agreement/_render_custom_fields/"><code>fabricops_kit.data_agreement._render_custom_fields</code></a>
-- <a href="../internal/data_agreement/_set_widget_value/"><code>fabricops_kit.data_agreement._set_widget_value</code></a>
+- <a href="../internal/data_agreement/_render_maintenance_widget/"><code>fabricops_kit.data_agreement._render_maintenance_widget</code></a>
 - <a href="../internal/data_agreement/_standard_widget/"><code>fabricops_kit.data_agreement._standard_widget</code></a>
