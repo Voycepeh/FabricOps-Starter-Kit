@@ -25,4 +25,4 @@ No summary available.
 - <a href="../load_catalogue_profile_rows/"><code>fabricops_kit.governance_review.load_catalogue_profile_rows</code></a>
 
 ## Outbound references
-- <a href="../internal/metadata/_sha256_key/"><code>fabricops_kit.metadata._sha256_key</code></a>
+- <a href="../internal/metadata/_stable_metadata_key/"><code>fabricops_kit.metadata._stable_metadata_key</code></a>

@@ -24,5 +24,5 @@ No summary available.
 
 ## Outbound references
 - <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a>
-- <a href="../internal/metadata/_latest_registration_events/"><code>fabricops_kit.metadata._latest_registration_events</code></a>
+- <a href="../internal/metadata/_notebook_registration_key/"><code>fabricops_kit.metadata._notebook_registration_key</code></a>
 - <a href="../internal/metadata/_registry_rows_with_defaults/"><code>fabricops_kit.metadata._registry_rows_with_defaults</code></a>

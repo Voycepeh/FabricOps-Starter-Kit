@@ -17,7 +17,7 @@ No summary available.
 - Source file path: `src/fabricops_kit/metadata.py`
 - Source reference: <a href="../../api/modules/metadata/#_setup_notebook_registry_table">Module source anchor</a>
 - Inbound references count: 1
-- Outbound references count: 8
+- Outbound references count: 5
 
 ## Inbound references
 - <a href="../setup_metadata_tables/"><code>fabricops_kit.config.setup_metadata_tables</code></a>
@@ -26,8 +26,5 @@ No summary available.
 - <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a>
 - <a href="../write_lakehouse_table/"><code>fabricops_kit.fabric_input_output.write_lakehouse_table</code></a>
 - <a href="../internal/metadata/_coerce_row_dicts/"><code>fabricops_kit.metadata._coerce_row_dicts</code></a>
-- <a href="../internal/metadata/_column_context_rows_for_spark/"><code>fabricops_kit.metadata._column_context_rows_for_spark</code></a>
-- <a href="../internal/metadata/_column_names/"><code>fabricops_kit.metadata._column_names</code></a>
-- <a href="../internal/metadata/_get_notebook_registry_schema/"><code>fabricops_kit.metadata._get_notebook_registry_schema</code></a>
-- <a href="../internal/metadata/_notebook_registration_key/"><code>fabricops_kit.metadata._notebook_registration_key</code></a>
-- <a href="../internal/metadata/_safe_str/"><code>fabricops_kit.metadata._safe_str</code></a>
+- <a href="../internal/metadata/_registry_rows_with_defaults/"><code>fabricops_kit.metadata._registry_rows_with_defaults</code></a>
+- <a href="../internal/metadata/_rows_for_spark/"><code>fabricops_kit.metadata._rows_for_spark</code></a>

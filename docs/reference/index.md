@@ -398,7 +398,7 @@ Use the finder below to look up callable and internal FabricOps functions.
   <p class="reference-catalogue-item-purpose">Internal helper used by the package.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/metadata/" title="Open metadata module page" aria-label="Open metadata module page">metadata</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_sha256_key</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_stable_metadata_key</code></li></ul></details>
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_build_dq_rule_records</code></li></ul></details>
   </div>
 </article>
@@ -409,15 +409,6 @@ Use the finder below to look up callable and internal FabricOps functions.
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 5</span></summary><ul><li><code>_approved_column_identity</code></li><li><code>_approved_review_context</code></li><li><code>_canonical_dq_rule_type</code></li><li><code>_json</code></li><li><code>_build_dq_rule_key</code></li></ul></details>
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>record_table_governance</code></li></ul></details>
-  </div>
-</article>
-<article id="metadata-_build_evidence_row" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_build_evidence_row" data-callable-module="metadata" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Build a lightweight metadata-ready evidence row.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/metadata__build_evidence_row/"><code>_build_evidence_row</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Build a lightweight metadata-ready evidence row.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/metadata/" title="Open metadata module page" aria-label="Open metadata module page">metadata</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_now_utc_iso</code></li></ul></details>
-
   </div>
 </article>
 <article id="handover-_build_handover_record" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_build_handover_record" data-callable-module="handover" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Execute the `_build_handover_record` workflow step in FabricOps.">
@@ -443,7 +434,7 @@ Use the finder below to look up callable and internal FabricOps functions.
   <p class="reference-catalogue-item-purpose">Internal helper used by the package.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/metadata/" title="Open metadata module page" aria-label="Open metadata module page">metadata</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_sha256_key</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_stable_metadata_key</code></li></ul></details>
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_approved_column_identity</code></li></ul></details>
   </div>
 </article>
@@ -452,7 +443,7 @@ Use the finder below to look up callable and internal FabricOps functions.
   <p class="reference-catalogue-item-purpose">Internal helper used by the package.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/metadata/" title="Open metadata module page" aria-label="Open metadata module page">metadata</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_sha256_key</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_stable_metadata_key</code></li></ul></details>
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 3</span></summary><ul><li><code>_approved_column_identity</code></li><li><code>_catalogue_table_options</code></li><li><code>load_catalogue_profile_rows</code></li></ul></details>
   </div>
 </article>
@@ -561,7 +552,7 @@ Use the finder below to look up callable and internal FabricOps functions.
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/metadata/" title="Open metadata module page" aria-label="Open metadata module page">metadata</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
 
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 3</span></summary><ul><li><code>_column_names</code></li><li><code>_registry_rows_with_defaults</code></li><li><code>_setup_notebook_registry_table</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 2</span></summary><ul><li><code>_registry_rows_with_defaults</code></li><li><code>_setup_notebook_registry_table</code></li></ul></details>
   </div>
 </article>
 <article id="governance_review-_coerce_rows" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_coerce_rows" data-callable-module="governance_review" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Internal helper used by the package.">
@@ -580,24 +571,6 @@ Use the finder below to look up callable and internal FabricOps functions.
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>get</code></li><li><code>_to_iso_date</code></li></ul></details>
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_render_maintenance_widget</code></li></ul></details>
-  </div>
-</article>
-<article id="metadata-_column_context_rows_for_spark" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_column_context_rows_for_spark" data-callable-module="metadata" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Internal helper used by the package.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/metadata__column_context_rows_for_spark/"><code>_column_context_rows_for_spark</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Internal helper used by the package.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/metadata/" title="Open metadata module page" aria-label="Open metadata module page">metadata</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
-
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 3</span></summary><ul><li><code>_register_current_notebook</code></li><li><code>_setup_notebook_registry_table</code></li><li><code>_write_metadata_rows</code></li></ul></details>
-  </div>
-</article>
-<article id="metadata-_column_names" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_column_names" data-callable-module="metadata" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Internal helper used by the package.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/metadata__column_names/"><code>_column_names</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Internal helper used by the package.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/metadata/" title="Open metadata module page" aria-label="Open metadata module page">metadata</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_coerce_row_dicts</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_setup_notebook_registry_table</code></li></ul></details>
   </div>
 </article>
 <article id="data_agreement-_config_value" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_config_value" data-callable-module="data_agreement" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Internal helper used by the package.">
@@ -670,15 +643,6 @@ Use the finder below to look up callable and internal FabricOps functions.
   <div class="reference-catalogue-item-counts">
 
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>monitor_data_changes</code></li></ul></details>
-  </div>
-</article>
-<article id="metadata-_default_evidence_types" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_default_evidence_types" data-callable-module="metadata" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Return canonical evidence type names used across metadata records.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/metadata__default_evidence_types/"><code>_default_evidence_types</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Return canonical evidence type names used across metadata records.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/metadata/" title="Open metadata module page" aria-label="Open metadata module page">metadata</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
-
-
   </div>
 </article>
 <article id="config-_default_schema_text" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_default_schema_text" data-callable-module="config" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Internal helper used by the package.">
@@ -771,15 +735,6 @@ Use the finder below to look up callable and internal FabricOps functions.
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_draft_dq_rules</code></li></ul></details>
   </div>
 </article>
-<article id="metadata-_extract_columns_from_profile" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_extract_columns_from_profile" data-callable-module="metadata" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Internal helper used by the package.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/metadata__extract_columns_from_profile/"><code>_extract_columns_from_profile</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Internal helper used by the package.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/metadata/" title="Open metadata module page" aria-label="Open metadata module page">metadata</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
-
-
-  </div>
-</article>
 <article id="data_lineage-_flatten_chain" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_flatten_chain" data-callable-module="data_lineage" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Internal helper used by the package.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/data_lineage__flatten_chain/"><code>_flatten_chain</code></a></h3>
   <p class="reference-catalogue-item-purpose">Internal helper used by the package.</p>
@@ -841,15 +796,6 @@ Use the finder below to look up callable and internal FabricOps functions.
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>_schema</code></li><li><code>_spark_types</code></li></ul></details>
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_setup_governance_metadata_tables</code></li></ul></details>
-  </div>
-</article>
-<article id="metadata-_get_notebook_registry_schema" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_get_notebook_registry_schema" data-callable-module="metadata" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Return the required notebook registry metadata schema.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/metadata__get_notebook_registry_schema/"><code>_get_notebook_registry_schema</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Return the required notebook registry metadata schema.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/metadata/" title="Open metadata module page" aria-label="Open metadata module page">metadata</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
-
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_setup_notebook_registry_table</code></li></ul></details>
   </div>
 </article>
 <article id="data_agreement-_get_notebookutils" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_get_notebookutils" data-callable-module="data_agreement" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Return a notebookutils-like object when the Fabric runtime exposes one.">
@@ -951,15 +897,6 @@ Use the finder below to look up callable and internal FabricOps functions.
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 3</span></summary><ul><li><code>_build_classification_records</code></li><li><code>_build_column_context_records</code></li><li><code>_build_dq_rule_records</code></li></ul></details>
   </div>
 </article>
-<article id="metadata-_key_part" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_key_part" data-callable-module="metadata" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Internal helper used by the package.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/metadata__key_part/"><code>_key_part</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Internal helper used by the package.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/metadata/" title="Open metadata module page" aria-label="Open metadata module page">metadata</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
-
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_sha256_key</code></li></ul></details>
-  </div>
-</article>
 <article id="data_agreement-_latest_agreement_versions" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_latest_agreement_versions" data-callable-module="data_agreement" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Return the latest semantic version for each stable agreement ID.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/data_agreement__latest_agreement_versions/"><code>_latest_agreement_versions</code></a></h3>
   <p class="reference-catalogue-item-purpose">Return the latest semantic version for each stable agreement ID.</p>
@@ -985,15 +922,6 @@ Use the finder below to look up callable and internal FabricOps functions.
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_spark_sql_helpers</code></li></ul></details>
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_load_active_dq_rules</code></li></ul></details>
-  </div>
-</article>
-<article id="metadata-_latest_registration_events" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_latest_registration_events" data-callable-module="metadata" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Internal helper used by the package.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/metadata__latest_registration_events/"><code>_latest_registration_events</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Internal helper used by the package.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/metadata/" title="Open metadata module page" aria-label="Open metadata module page">metadata</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>_notebook_registration_key</code></li><li><code>_registry_rows_with_defaults</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_load_notebook_registry</code></li></ul></details>
   </div>
 </article>
 <article id="data_agreement-_list_all_data_agreement_rows" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_list_all_data_agreement_rows" data-callable-module="data_agreement" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="List all append-only agreement rows from the metadata lakehouse.">
@@ -1064,7 +992,7 @@ Use the finder below to look up callable and internal FabricOps functions.
   <p class="reference-catalogue-item-purpose">Internal helper used by the package.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/metadata/" title="Open metadata module page" aria-label="Open metadata module page">metadata</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 3</span></summary><ul><li><code>read_lakehouse_table</code></li><li><code>_latest_registration_events</code></li><li><code>_registry_rows_with_defaults</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 3</span></summary><ul><li><code>read_lakehouse_table</code></li><li><code>_notebook_registration_key</code></li><li><code>_registry_rows_with_defaults</code></li></ul></details>
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_current_notebook_active_registrations</code></li></ul></details>
   </div>
 </article>
@@ -1084,15 +1012,6 @@ Use the finder below to look up callable and internal FabricOps functions.
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_parse_contract_version</code></li></ul></details>
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 2</span></summary><ul><li><code>_agreement_identity_text</code></li><li><code>_create_or_update_data_agreement</code></li></ul></details>
-  </div>
-</article>
-<article id="metadata-_normalise_records_by_column" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_normalise_records_by_column" data-callable-module="metadata" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Internal helper used by the package.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/metadata__normalise_records_by_column/"><code>_normalise_records_by_column</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Internal helper used by the package.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/metadata/" title="Open metadata module page" aria-label="Open metadata module page">metadata</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
-
-
   </div>
 </article>
 <article id="drift-_normalize_datatype" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_normalize_datatype" data-callable-module="drift" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Internal helper used by the package.">
@@ -1128,16 +1047,7 @@ Use the finder below to look up callable and internal FabricOps functions.
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/metadata/" title="Open metadata module page" aria-label="Open metadata module page">metadata</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
 
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 4</span></summary><ul><li><code>_latest_registration_events</code></li><li><code>_register_current_notebook</code></li><li><code>_registry_rows_with_defaults</code></li><li><code>_setup_notebook_registry_table</code></li></ul></details>
-  </div>
-</article>
-<article id="metadata-_notebook_registry_base_schema" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_notebook_registry_base_schema" data-callable-module="metadata" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Return columns required by legacy notebook registry tables.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/metadata__notebook_registry_base_schema/"><code>_notebook_registry_base_schema</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Return columns required by legacy notebook registry tables.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/metadata/" title="Open metadata module page" aria-label="Open metadata module page">metadata</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
-
-
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 3</span></summary><ul><li><code>_load_notebook_registry</code></li><li><code>_register_current_notebook</code></li><li><code>_registry_rows_with_defaults</code></li></ul></details>
   </div>
 </article>
 <article id="metadata-_now_utc_iso" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_now_utc_iso" data-callable-module="metadata" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Internal helper used by the package.">
@@ -1146,7 +1056,7 @@ Use the finder below to look up callable and internal FabricOps functions.
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/metadata/" title="Open metadata module page" aria-label="Open metadata module page">metadata</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
 
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 2</span></summary><ul><li><code>_approved_review_context</code></li><li><code>_build_evidence_row</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_approved_review_context</code></li></ul></details>
   </div>
 </article>
 <article id="data_profiling-_numeric_bin_edges" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_numeric_bin_edges" data-callable-module="data_profiling" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Internal helper used by the package.">
@@ -1217,7 +1127,7 @@ Use the finder below to look up callable and internal FabricOps functions.
   <p class="reference-catalogue-item-purpose">Append a runtime notebook registration row.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/metadata/" title="Open metadata module page" aria-label="Open metadata module page">metadata</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 7</span></summary><ul><li><code>write_lakehouse_table</code></li><li><code>_column_context_rows_for_spark</code></li><li><code>_context_get</code></li><li><code>_notebook_registration_key</code></li><li><code>_runtime_context</code></li><li><code>_safe_str</code></li><li><code>_write_metadata_rows_legacy</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 6</span></summary><ul><li><code>write_lakehouse_table</code></li><li><code>_context_get</code></li><li><code>_notebook_registration_key</code></li><li><code>_rows_for_spark</code></li><li><code>_runtime_context</code></li><li><code>_safe_str</code></li></ul></details>
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>widget_select_agreement</code></li></ul></details>
   </div>
 </article>
@@ -1227,7 +1137,7 @@ Use the finder below to look up callable and internal FabricOps functions.
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/metadata/" title="Open metadata module page" aria-label="Open metadata module page">metadata</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 3</span></summary><ul><li><code>_coerce_row_dicts</code></li><li><code>_notebook_registration_key</code></li><li><code>_safe_str</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 2</span></summary><ul><li><code>_latest_registration_events</code></li><li><code>_load_notebook_registry</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 2</span></summary><ul><li><code>_load_notebook_registry</code></li><li><code>_setup_notebook_registry_table</code></li></ul></details>
   </div>
 </article>
 <article id="data_agreement-_render_agreement_evidence_widget" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_render_agreement_evidence_widget" data-callable-module="data_agreement" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Render optional agreement evidence upload controls.">
@@ -1293,6 +1203,15 @@ Use the finder below to look up callable and internal FabricOps functions.
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_scan_notebook_lineage</code></li></ul></details>
   </div>
 </article>
+<article id="metadata-_rows_for_spark" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_rows_for_spark" data-callable-module="metadata" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Internal helper used by the package.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/metadata__rows_for_spark/"><code>_rows_for_spark</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Internal helper used by the package.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/metadata/" title="Open metadata module page" aria-label="Open metadata module page">metadata</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 2</span></summary><ul><li><code>_register_current_notebook</code></li><li><code>_setup_notebook_registry_table</code></li></ul></details>
+  </div>
+</article>
 <article id="config-_run_config_smoke_tests" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_run_config_smoke_tests" data-callable-module="config" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Run 00_env_config readiness smoke checks for configuration bootstrap.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/config__run_config_smoke_tests/"><code>_run_config_smoke_tests</code></a></h3>
   <p class="reference-catalogue-item-purpose">Run 00_env_config readiness smoke checks for configuration bootstrap.</p>
@@ -1335,7 +1254,7 @@ Use the finder below to look up callable and internal FabricOps functions.
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/metadata/" title="Open metadata module page" aria-label="Open metadata module page">metadata</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
 
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 5</span></summary><ul><li><code>_build_runtime_audit_fields</code></li><li><code>_current_notebook_active_registrations</code></li><li><code>_register_current_notebook</code></li><li><code>_registry_rows_with_defaults</code></li><li><code>_setup_notebook_registry_table</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 4</span></summary><ul><li><code>_build_runtime_audit_fields</code></li><li><code>_current_notebook_active_registrations</code></li><li><code>_register_current_notebook</code></li><li><code>_registry_rows_with_defaults</code></li></ul></details>
   </div>
 </article>
 <article id="data_agreement-_save_agreement_evidence_records" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_save_agreement_evidence_records" data-callable-module="data_agreement" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Append manually uploaded evidence file-reference metadata rows.">
@@ -1424,17 +1343,8 @@ Use the finder below to look up callable and internal FabricOps functions.
   <p class="reference-catalogue-item-purpose">Create or validate the notebook registry metadata table.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/metadata/" title="Open metadata module page" aria-label="Open metadata module page">metadata</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 8</span></summary><ul><li><code>read_lakehouse_table</code></li><li><code>write_lakehouse_table</code></li><li><code>_coerce_row_dicts</code></li><li><code>_column_context_rows_for_spark</code></li><li><code>_column_names</code></li><li><code>_get_notebook_registry_schema</code></li><li><code>_notebook_registration_key</code></li><li><code>_safe_str</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 5</span></summary><ul><li><code>read_lakehouse_table</code></li><li><code>write_lakehouse_table</code></li><li><code>_coerce_row_dicts</code></li><li><code>_registry_rows_with_defaults</code></li><li><code>_rows_for_spark</code></li></ul></details>
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>setup_metadata_tables</code></li></ul></details>
-  </div>
-</article>
-<article id="metadata-_sha256_key" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_sha256_key" data-callable-module="metadata" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Internal helper used by the package.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/metadata__sha256_key/"><code>_sha256_key</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Internal helper used by the package.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/metadata/" title="Open metadata module page" aria-label="Open metadata module page">metadata</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_key_part</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 3</span></summary><ul><li><code>_build_dq_rule_key</code></li><li><code>_build_metadata_column_key</code></li><li><code>_build_metadata_table_key</code></li></ul></details>
   </div>
 </article>
 <article id="governance_review-_spark_sql_helpers" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_spark_sql_helpers" data-callable-module="governance_review" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Return Spark SQL helper modules lazily for DQ runtime helpers.">
@@ -1462,6 +1372,15 @@ Use the finder below to look up callable and internal FabricOps functions.
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>_spark_sql_helpers</code></li><li><code>_validate_dq_rules</code></li></ul></details>
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 2</span></summary><ul><li><code>_enforce_dq</code></li><li><code>_run_dq_rules</code></li></ul></details>
+  </div>
+</article>
+<article id="metadata-_stable_metadata_key" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_stable_metadata_key" data-callable-module="metadata" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Internal helper used by the package.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/metadata__stable_metadata_key/"><code>_stable_metadata_key</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Internal helper used by the package.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/metadata/" title="Open metadata module page" aria-label="Open metadata module page">metadata</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 3</span></summary><ul><li><code>_build_dq_rule_key</code></li><li><code>_build_metadata_column_key</code></li><li><code>_build_metadata_table_key</code></li></ul></details>
   </div>
 </article>
 <article id="data_agreement-_standard_widget" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_standard_widget" data-callable-module="data_agreement" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Internal helper used by the package.">
@@ -1561,42 +1480,6 @@ Use the finder below to look up callable and internal FabricOps functions.
   <div class="reference-catalogue-item-counts">
 
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 4</span></summary><ul><li><code>_render_agreement_evidence_widget</code></li><li><code>_render_custom_fields</code></li><li><code>_render_searchable_selector</code></li><li><code>_standard_widget</code></li></ul></details>
-  </div>
-</article>
-<article id="metadata-_write_column_business_context" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_write_column_business_context" data-callable-module="metadata" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Internal helper used by the package.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/metadata__write_column_business_context/"><code>_write_column_business_context</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Internal helper used by the package.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/metadata/" title="Open metadata module page" aria-label="Open metadata module page">metadata</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_write_metadata_rows</code></li></ul></details>
-
-  </div>
-</article>
-<article id="metadata-_write_column_governance_context" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_write_column_governance_context" data-callable-module="metadata" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Internal helper used by the package.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/metadata__write_column_governance_context/"><code>_write_column_governance_context</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Internal helper used by the package.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/metadata/" title="Open metadata module page" aria-label="Open metadata module page">metadata</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_write_metadata_rows</code></li></ul></details>
-
-  </div>
-</article>
-<article id="metadata-_write_metadata_rows" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_write_metadata_rows" data-callable-module="metadata" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Write metadata rows to a legacy lakehouse metadata path.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/metadata__write_metadata_rows/"><code>_write_metadata_rows</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Write metadata rows to a legacy lakehouse metadata path.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/metadata/" title="Open metadata module page" aria-label="Open metadata module page">metadata</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>_column_context_rows_for_spark</code></li><li><code>_write_metadata_rows_legacy</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 2</span></summary><ul><li><code>_write_column_business_context</code></li><li><code>_write_column_governance_context</code></li></ul></details>
-  </div>
-</article>
-<article id="metadata-_write_metadata_rows_legacy" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_write_metadata_rows_legacy" data-callable-module="metadata" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Write metadata rows using the pre-route lakehouse path convention.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/metadata__write_metadata_rows_legacy/"><code>_write_metadata_rows_legacy</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Write metadata rows using the pre-route lakehouse path convention.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/metadata/" title="Open metadata module page" aria-label="Open metadata module page">metadata</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
-
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 2</span></summary><ul><li><code>_register_current_notebook</code></li><li><code>_write_metadata_rows</code></li></ul></details>
   </div>
 </article>
 <article id="data_agreement-_write_row" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_write_row" data-callable-module="data_agreement" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Internal helper used by the package.">
