@@ -8,6 +8,8 @@ The boundary is simple: `03_review` owns review and approval. `02_pipeline` owns
 
 Read [How FabricOps Works](how-fabricops-works/index.md) first for the standard `01_agreement` → `02_pipeline` → `03_review` path. For pipeline blocking behavior, see [Pipeline Guardrails](schema-and-data-drift.md).
 
+![FabricOps governance review workflow](assets/fabricops-goverance-review.png)
+
 ## From AI assisted DQ to governance review
 
 This workflow started as an AI assisted data quality pattern:
