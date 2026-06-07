@@ -2,7 +2,7 @@
 
 This page explains: how to build a FabricOps Starter Kit wheel for Fabric installation.
 Use this when: you need packaging and versioning steps before runtime setup.
-Next read: [Setup / Run in Fabric](run-in-fabric.md), [Start](../quick-start.md), [Workspace Operating Model](../how-fabricops-works/workspace-operating-model.md).
+Next read: [Setup / Run in Fabric](run-in-fabric.md), [Start](../quick-start.md), [How FabricOps Works](../how-fabricops-works/).
 
 ## Prerequisites
 

@@ -5,7 +5,7 @@ FabricOps Starter Kit helper wheel.
 Use this when: you want to build the package from this repository and install it
 as a Microsoft Fabric Environment custom library.
 Next read: [Notebook Templates](how-fabricops-works/notebook-templates.md), [Start](quick-start.md),
-[Workspace Operating Model](how-fabricops-works/workspace-operating-model.md).
+[How FabricOps Works](how-fabricops-works/).
 
 The flow is:
 

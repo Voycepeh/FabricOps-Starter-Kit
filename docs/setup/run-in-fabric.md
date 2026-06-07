@@ -2,7 +2,7 @@
 
 This page explains: how to configure and verify Fabric runtime execution.
 Use this when: your wheel is ready and you need environment/library setup plus first-run checks.
-Next read: [Setup / Create Wheel](create-wheel.md), [Start](../quick-start.md), [Workspace Operating Model](../how-fabricops-works/workspace-operating-model.md).
+Next read: [Setup / Create Wheel](create-wheel.md), [Start](../quick-start.md), [How FabricOps Works](../how-fabricops-works/).
 
 ## Install and configure
 
