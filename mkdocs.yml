@@ -29,8 +29,8 @@ nav:
       - Overview: how-fabricops-works/index.md
       - Notebook Templates: how-fabricops-works/notebook-templates.md
       - Metadata Tables: how-fabricops-works/metadata-tables.md
-      - Pipeline Guardrails: schema-and-data-drift.md
-      - Governance Review: governance-review.md
+      - Pipeline Guardrails: how-fabricops-works/schema-and-data-drift.md
+      - Governance Review: how-fabricops-works/governance-review.md
       - Metadata Dashboard: how-fabricops-works/metadata-dashboard.md
 
   - Maintainer Guide:
