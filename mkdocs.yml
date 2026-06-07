@@ -27,7 +27,6 @@ nav:
 
   - How FabricOps Works:
       - Overview: how-fabricops-works/index.md
-      - Workspace Operating Model: how-fabricops-works/workspace-operating-model.md
       - Notebook Templates: how-fabricops-works/notebook-templates.md
       - Metadata Tables: how-fabricops-works/metadata-tables.md
       - Pipeline Guardrails: schema-and-data-drift.md
