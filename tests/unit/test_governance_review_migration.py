@@ -94,7 +94,7 @@ def test_governance_sensitivity_and_pii_suggestion_extraction():
             )
         }
     ]
-    assert governance._extract_governance_suggestions(rows) == [
+    assert governance._extract_pii_suggestions(rows) == [
         {
             "column_name": "email",
             "ai_suggested_personal_identifier_classification": "direct_identifier",
@@ -105,7 +105,7 @@ def test_governance_sensitivity_and_pii_suggestion_extraction():
 
 def test_dq_ai_response_parsing_and_candidate_rule_extraction():
     payload = "DQ_RULES = {'orders': [{'rule_id': 'id_required', 'rule_type': 'not_null', 'columns': ['order_id'], 'severity': 'error', 'description': 'Required'}]}"
-    parsed = governance._parse_dq_rules_dict_from_text(payload)
+    parsed = governance._parse_ai_dict_response(payload)
     assert parsed["orders"][0]["rule_id"] == "id_required"
     assert governance._extract_candidate_rules_from_responses([{"ai_dq_response": payload}], table_name="orders") == parsed["orders"]
 

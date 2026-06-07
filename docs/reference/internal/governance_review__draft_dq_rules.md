@@ -20,6 +20,6 @@ No summary available.
 - Outbound references count: 3
 
 ## Outbound references
-- <a href="../internal/governance_review/_extract_dq_rules/"><code>fabricops_kit.governance_review._extract_dq_rules</code></a>
+- <a href="../internal/governance_review/_extract_candidate_rules_from_responses/"><code>fabricops_kit.governance_review._extract_candidate_rules_from_responses</code></a>
 - <a href="../internal/governance_review/_prepare_dq_profile_input_rows/"><code>fabricops_kit.governance_review._prepare_dq_profile_input_rows</code></a>
-- <a href="../internal/governance_review/_suggest_dq_rules_with_fabric_ai/"><code>fabricops_kit.governance_review._suggest_dq_rules_with_fabric_ai</code></a>
+- <a href="../internal/governance_review/_run_fabric_ai_drafting/"><code>fabricops_kit.governance_review._run_fabric_ai_drafting</code></a>

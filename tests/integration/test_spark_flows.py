@@ -4,7 +4,7 @@ import json
 
 import pytest
 
-from fabricops_kit.governance_review import _enforce_dq, _load_dq_rules
+from fabricops_kit.governance_review import _enforce_dq, _load_active_dq_rules
 from fabricops_kit.drift import validate_schema
 
 pytestmark = pytest.mark.spark
@@ -67,4 +67,4 @@ def test_spark_schema_validation_and_latest_dq_metadata_are_stable(spark_session
     )
 
     assert schema_result["status"] == "warning"
-    assert _load_dq_rules(metadata_df, table_name="orders") == []
+    assert _load_active_dq_rules(metadata_df, table_name="orders") == []

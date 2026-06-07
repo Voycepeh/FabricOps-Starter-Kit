@@ -17,8 +17,7 @@ No summary available.
 - Source file path: `src/fabricops_kit/governance_review.py`
 - Source reference: <a href="../../api/modules/governance_review/#_extract_column_business_context_suggestions">Module source anchor</a>
 - Inbound references count: 0
-- Outbound references count: 2
+- Outbound references count: 1
 
 ## Outbound references
-- <a href="../internal/governance_review/_coerce_rows/"><code>fabricops_kit.governance_review._coerce_rows</code></a>
-- <a href="../internal/governance_review/_parse_ai_dict_response/"><code>fabricops_kit.governance_review._parse_ai_dict_response</code></a>
+- <a href="../internal/governance_review/_extract_assignment_payload/"><code>fabricops_kit.governance_review._extract_assignment_payload</code></a>

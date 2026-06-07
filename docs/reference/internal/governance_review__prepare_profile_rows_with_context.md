@@ -1,4 +1,4 @@
-# _get_reviewed_business_context_rows
+# _prepare_profile_rows_with_context
 
 **Module:** `governance_review`  
 **Classification:** Internal
@@ -9,13 +9,13 @@ No summary available.
 
 ## Function manifest
 
-- Fully qualified function name: `fabricops_kit.governance_review._get_reviewed_business_context_rows`
-- Short name: `_get_reviewed_business_context_rows`
+- Fully qualified function name: `fabricops_kit.governance_review._prepare_profile_rows_with_context`
+- Short name: `_prepare_profile_rows_with_context`
 - Module: `governance_review`
 - Classification: Internal
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
-- Source reference: <a href="../../api/modules/governance_review/#_get_reviewed_business_context_rows">Module source anchor</a>
+- Source reference: <a href="../../api/modules/governance_review/#_prepare_profile_rows_with_context">Module source anchor</a>
 - Inbound references count: 0
 - Outbound references count: 0
 
