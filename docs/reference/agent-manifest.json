@@ -1481,19 +1481,6 @@
     "summary": "No summary available."
   },
   {
-    "name": "_check_naming_convention",
-    "qualified_name": "fabricops_kit.fabric_input_output._check_naming_convention",
-    "module": "fabric_input_output",
-    "type": "internal",
-    "role": "internal",
-    "inbound": [],
-    "outbound": [
-      "fabricops_kit.fabric_input_output._get_fabric_runtime_context"
-    ],
-    "source_file": "src/fabricops_kit/fabric_input_output.py",
-    "summary": "No summary available."
-  },
-  {
     "name": "_convert_single_parquet_ns_to_us",
     "qualified_name": "fabricops_kit.fabric_input_output._convert_single_parquet_ns_to_us",
     "module": "fabric_input_output",
@@ -1507,26 +1494,12 @@
     "summary": "No summary available."
   },
   {
-    "name": "_get_fabric_runtime_context",
-    "qualified_name": "fabricops_kit.fabric_input_output._get_fabric_runtime_context",
-    "module": "fabric_input_output",
-    "type": "internal",
-    "role": "internal",
-    "inbound": [
-      "fabricops_kit.fabric_input_output._check_naming_convention"
-    ],
-    "outbound": [],
-    "source_file": "src/fabricops_kit/fabric_input_output.py",
-    "summary": "No summary available."
-  },
-  {
     "name": "_get_spark",
     "qualified_name": "fabricops_kit.fabric_input_output._get_spark",
     "module": "fabric_input_output",
     "type": "internal",
     "role": "internal",
     "inbound": [
-      "fabricops_kit.fabric_input_output._seed_minimal_sample_source_table",
       "fabricops_kit.fabric_input_output.read_lakehouse_csv",
       "fabricops_kit.fabric_input_output.read_lakehouse_excel",
       "fabricops_kit.fabric_input_output.read_lakehouse_parquet",
@@ -1538,16 +1511,17 @@
     "summary": "No summary available."
   },
   {
-    "name": "_seed_minimal_sample_source_table",
-    "qualified_name": "fabricops_kit.fabric_input_output._seed_minimal_sample_source_table",
+    "name": "_lakehouse_file_path",
+    "qualified_name": "fabricops_kit.fabric_input_output._lakehouse_file_path",
     "module": "fabric_input_output",
     "type": "internal",
     "role": "internal",
-    "inbound": [],
-    "outbound": [
-      "fabricops_kit.fabric_input_output._get_spark",
-      "fabricops_kit.fabric_input_output.write_lakehouse_table"
+    "inbound": [
+      "fabricops_kit.fabric_input_output.read_lakehouse_csv",
+      "fabricops_kit.fabric_input_output.read_lakehouse_excel",
+      "fabricops_kit.fabric_input_output.read_lakehouse_parquet"
     ],
+    "outbound": [],
     "source_file": "src/fabricops_kit/fabric_input_output.py",
     "summary": "No summary available."
   },
@@ -1560,7 +1534,8 @@
     "inbound": [],
     "outbound": [
       "fabricops_kit.config._get_store",
-      "fabricops_kit.fabric_input_output._get_spark"
+      "fabricops_kit.fabric_input_output._get_spark",
+      "fabricops_kit.fabric_input_output._lakehouse_file_path"
     ],
     "source_file": "src/fabricops_kit/fabric_input_output.py",
     "summary": "Read a CSV file from a configured Fabric lakehouse Files path."
@@ -1574,7 +1549,8 @@
     "inbound": [],
     "outbound": [
       "fabricops_kit.config._get_store",
-      "fabricops_kit.fabric_input_output._get_spark"
+      "fabricops_kit.fabric_input_output._get_spark",
+      "fabricops_kit.fabric_input_output._lakehouse_file_path"
     ],
     "source_file": "src/fabricops_kit/fabric_input_output.py",
     "summary": "Read an Excel file from a configured Fabric lakehouse Files path."
@@ -1589,7 +1565,8 @@
     "outbound": [
       "fabricops_kit.config._get_store",
       "fabricops_kit.fabric_input_output._convert_single_parquet_ns_to_us",
-      "fabricops_kit.fabric_input_output._get_spark"
+      "fabricops_kit.fabric_input_output._get_spark",
+      "fabricops_kit.fabric_input_output._lakehouse_file_path"
     ],
     "source_file": "src/fabricops_kit/fabric_input_output.py",
     "summary": "Read a Parquet path from a configured Fabric lakehouse Files path."
@@ -1640,7 +1617,6 @@
     "inbound": [
       "fabricops_kit.data_agreement._ensure_metadata_tables",
       "fabricops_kit.data_agreement._write_row",
-      "fabricops_kit.fabric_input_output._seed_minimal_sample_source_table",
       "fabricops_kit.governance_review._setup_governance_metadata_tables",
       "fabricops_kit.governance_review.record_table_governance",
       "fabricops_kit.metadata._register_current_notebook",

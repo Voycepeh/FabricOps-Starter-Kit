@@ -17,7 +17,7 @@ import tempfile
 
 import pandas as pd
 
-from .config import FrameworkConfig, PathConfig, _get_store
+from .config import _get_store
 
 
 @dataclass(frozen=True)
@@ -115,6 +115,19 @@ def _get_spark(spark_session=None):
             "Spark session was not provided and global 'spark' was not found. "
             "Run this inside Fabric/Spark or pass spark_session explicitly."
         ) from exc
+
+
+def _lakehouse_file_path(store, env: str, target: str, relative_path: str) -> str:
+    """Return an ABFSS path under a configured lakehouse Files area."""
+    if store.kind != "lakehouse":
+        raise ValueError(f"Target '{env}/{target}' is not a lakehouse store.")
+    if not isinstance(relative_path, str) or not relative_path.strip():
+        raise ValueError("relative_path must be a non-empty string.")
+
+    normalized_relative_path = relative_path.strip().lstrip("/")
+    if normalized_relative_path.startswith("Files/"):
+        normalized_relative_path = normalized_relative_path[len("Files/") :]
+    return f"{store.root.rstrip('/')}/Files/{normalized_relative_path}"
 
 
 def read_lakehouse_table(config, env, target, table, spark_session=None):
@@ -303,17 +316,8 @@ def read_lakehouse_csv(config, env, target, relative_path, spark_session=None, h
     >>> df = read_lakehouse_csv(CONFIG, ENV, "source", "raw/orders.csv")
     """
     store = _get_store(config, env, target)
-    if store.kind != "lakehouse":
-        raise ValueError(f"Target '{env}/{target}' is not a lakehouse store.")
-    if not isinstance(relative_path, str) or not relative_path.strip():
-        raise ValueError("relative_path must be a non-empty string.")
-
     spark_obj = _get_spark(spark_session)
-    normalized_relative_path = relative_path.strip().lstrip("/")
-    if normalized_relative_path.startswith("Files/"):
-        normalized_relative_path = normalized_relative_path[len("Files/"):]
-    path = f"{store.root.rstrip('/')}/Files/{normalized_relative_path}"
-    return spark_obj.read.option("header", header).csv(path)
+    return spark_obj.read.option("header", header).csv(_lakehouse_file_path(store, env, target, relative_path))
 
 
 def read_warehouse_table(config, env, target, schema, table, spark_session=None):
@@ -549,30 +553,25 @@ def read_lakehouse_parquet(config, env, target, relative_path, verbose=True, spa
     conversion paths (``/lakehouse/default/Files/...``).
     """
     store = _get_store(config, env, target)
-    if store.kind != "lakehouse":
-        raise ValueError(f"Target '{env}/{target}' is not a lakehouse store.")
-    if not relative_path:
-        raise ValueError("relative_path is required.")
-
     spark_obj = _get_spark(spark_session)
+    orig_spark_path = _lakehouse_file_path(store, env, target, relative_path)
 
-    relative_path = relative_path.lstrip("/")
-    if relative_path.startswith("Files/"):
-        relative_path = relative_path[len("Files/") :]
+    normalized_relative_path = str(relative_path).strip().lstrip("/")
+    if normalized_relative_path.startswith("Files/"):
+        normalized_relative_path = normalized_relative_path[len("Files/") :]
 
-    orig_spark_path = f"Files/{relative_path}"
     lakehouse_prefix = "/lakehouse/default/"
-    parts = relative_path.split("/")
+    parts = normalized_relative_path.split("/")
 
     if len(parts) < 2:
         raise ValueError("relative_path should look like folder/file.parquet or folder/subfolder/file.parquet.")
 
     tsus_dir = parts[:-2] + [parts[-2] + "_tsus"]
     tsus_relative_path = "/".join(tsus_dir + [parts[-1]])
-    tsus_spark_path = f"Files/{tsus_relative_path}"
+    tsus_spark_path = _lakehouse_file_path(store, env, target, tsus_relative_path)
 
-    orig_local_path = f"{lakehouse_prefix}{orig_spark_path}"
-    tsus_local_path = f"{lakehouse_prefix}{tsus_spark_path}"
+    orig_local_path = f"{lakehouse_prefix}Files/{normalized_relative_path}"
+    tsus_local_path = f"{lakehouse_prefix}Files/{tsus_relative_path}"
 
     if verbose:
         print(f"Try Spark read: {orig_spark_path}")
@@ -613,7 +612,7 @@ def read_lakehouse_parquet(config, env, target, relative_path, verbose=True, spa
                     print("PATH NOT FOUND for _tsus parquet. Will convert one file and retry.")
 
                 try:
-                    mssparkutils.fs.mkdirs("/".join(tsus_dir))
+                    mssparkutils.fs.mkdirs(_lakehouse_file_path(store, env, target, "/".join(tsus_dir)))
                 except Exception:
                     pass
 
@@ -698,16 +697,8 @@ def read_lakehouse_excel(config, env, target, relative_path, sheet_name=0, spark
     - Materializes rows through pandas before creating a Spark DataFrame.
     """
     store = _get_store(config, env, target)
-    if store.kind != "lakehouse":
-        raise ValueError(f"Target '{env}/{target}' is not a lakehouse store.")
-    if not isinstance(relative_path, str) or not relative_path.strip():
-        raise ValueError("relative_path must be a non-empty string.")
-
     spark_obj = _get_spark(spark_session)
-    normalized_relative_path = relative_path.strip().lstrip("/")
-    if normalized_relative_path.startswith("Files/"):
-        normalized_relative_path = normalized_relative_path[len("Files/"):]
-    lakehouse_file_path = f"{store.root.rstrip('/')}/Files/{normalized_relative_path}"
+    lakehouse_file_path = _lakehouse_file_path(store, env, target, relative_path)
 
     bin_df = (
         spark_obj.read.format("binaryFile")
@@ -726,163 +717,3 @@ def read_lakehouse_excel(config, env, target, relative_path, sheet_name=0, spark
 
     pandas_df = pd.read_excel(temp_file_path, sheet_name=sheet_name, **read_excel_kwargs)
     return spark_obj.createDataFrame(pandas_df)
-
-
-def _get_fabric_runtime_context():
-    """Return the Fabric notebook runtime context when available.
-
-    Fabric notebooks expose runtime metadata through `notebookutils.runtime`.
-    This helper keeps that dependency optional so the module can still be
-    imported in local tests or non-Fabric environments.
-
-    Returns
-    -------
-    dict
-        Fabric runtime context when running inside Fabric. Returns an empty
-        dictionary when the context is unavailable.
-    """
-    try:
-        from notebookutils import runtime
-
-        return runtime.context
-    except Exception:
-        return {}
-
-
-def _check_naming_convention(notebook_name=None, allowed_prefixes=None, fail_on_error=True):
-    """Check whether a Fabric notebook name starts with an allowed prefix.
-
-    The allowed prefixes should come from the project config notebook, not from
-    this module. This keeps naming policy configurable per project. Call this
-    early in notebooks (before Source reads) to enforce naming governance in
-    the project lifecycle.
-
-    Parameters
-    ----------
-    notebook_name : str, optional
-        Notebook name to check. If omitted, the helper tries to read the
-        current Fabric notebook name from `notebookutils.runtime`.
-    allowed_prefixes : list[str] or tuple[str, ...]
-        Prefixes that are valid for this project.
-    fail_on_error : bool, default True
-        If True, raise `ValueError` when the notebook name is unavailable or
-        invalid. If False, return a result dictionary instead.
-
-    Returns
-    -------
-    dict
-        Validation result containing notebook name, compliance status, allowed
-        prefixes, and message.
-
-    Raises
-    ------
-    ValueError
-        If `allowed_prefixes` is missing, the notebook name is unavailable, or
-        the notebook name does not match any allowed prefix.
-
-    Examples
-    --------
-    >>> # %run 00_env_config
-    >>> _check_naming_convention(allowed_prefixes=NOTEBOOK_PREFIX_LIST)
-    """
-    if not allowed_prefixes:
-        message = "allowed_prefixes is required. Define it in your config notebook and pass it in."
-        if fail_on_error:
-            raise ValueError(message)
-        return {
-            "notebook_name": notebook_name,
-            "compliant": False,
-            "allowed_prefixes": [],
-            "message": message,
-        }
-
-    prefixes = list(allowed_prefixes)
-
-    if notebook_name is None:
-        context = _get_fabric_runtime_context()
-        notebook_name = context.get("currentNotebookName")
-
-    if not notebook_name:
-        message = "Notebook name is unavailable. Pass notebook_name or run inside Fabric."
-        if fail_on_error:
-            raise ValueError(message)
-        return {
-            "notebook_name": None,
-            "compliant": False,
-            "allowed_prefixes": prefixes,
-            "message": message,
-        }
-
-    notebook_name_normalized = notebook_name.lower()
-    prefixes_normalized = [prefix.lower() for prefix in prefixes]
-    match = any(notebook_name_normalized.startswith(prefix) for prefix in prefixes_normalized)
-
-    status = "comply" if match else "failed - please follow standard naming convention for notebook"
-
-    print(f"Notebook name: {notebook_name_normalized}")
-    print(f"Naming convention check: {status}\n")
-
-    df = pd.DataFrame({"No": list(range(1, len(prefixes) + 1)), "Allowed Prefix": prefixes})
-    print("Standard Naming Convention Prefix List:")
-    print(df.to_string(index=False))
-
-    if not match and fail_on_error:
-        raise ValueError(
-            f"Notebook name '{notebook_name_normalized}' does not comply with naming conventions. "
-            f"Allowed prefixes: {', '.join(prefixes)}"
-        )
-
-    return {
-        "notebook_name": notebook_name_normalized,
-        "compliant": match,
-        "allowed_prefixes": prefixes,
-        "message": status,
-    }
-
-
-def _seed_minimal_sample_source_table(
-    config,
-    env,
-    target,
-    table_name: str = "minimal_source",
-    mode: str = "overwrite",
-    spark_session=None,
-):
-    """Create and persist a minimal demo source table for end-to-end samples.
-
-    Parameters
-    ----------
-    config : FrameworkConfig or dict
-        Shared configuration containing the target lakehouse route.
-    env : str
-        Environment key used to resolve the lakehouse target.
-    target : str
-        Configured lakehouse target name to seed.
-    table_name : str, default="minimal_source"
-        Destination source-table name to seed for sample notebook runs.
-    mode : str, default="overwrite"
-        Write mode passed to :func:`write_lakehouse_table`.
-    spark_session : object, optional
-        Spark session to use. If omitted, the helper uses notebook global ``spark``.
-
-    Returns
-    -------
-    pyspark.sql.DataFrame
-        Seeded Spark DataFrame that was written to the source table.
-
-    Notes
-    -----
-    Runtime assumptions:
-    - Fabric notebook runtime with Spark session available, or ``spark_session`` provided.
-    - Writes a tiny deterministic dataset for demo/tutorial workflows only.
-    """
-    rows = [
-        {"customer_id": 1001, "event_ts": "2026-01-01T09:00:00Z", "status": "active", "amount": 120.5, "email": "user1001@example.com", "country_code": "SG"},
-        {"customer_id": 1002, "event_ts": "2026-01-02T10:15:00Z", "status": "inactive", "amount": 89.0, "email": "user1002@example.com", "country_code": "US"},
-        {"customer_id": 1003, "event_ts": "2026-01-03T12:30:00Z", "status": "active", "amount": 0.0, "email": "user1003@example.com", "country_code": "GB"},
-        {"customer_id": 1004, "event_ts": "2026-01-04T14:45:00Z", "status": "pending", "amount": 410.2, "email": "user1004@example.com", "country_code": "SG"},
-    ]
-    spark_obj = _get_spark(spark_session)
-    df = spark_obj.createDataFrame(rows)
-    write_lakehouse_table(df, config, env, target, table_name, mode=mode)
-    return df

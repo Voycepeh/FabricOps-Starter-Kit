@@ -35,6 +35,10 @@ class _Reader:
         self.calls.append(("parquet", path))
         return SimpleNamespace(limit=lambda count: SimpleNamespace(collect=lambda: []))
 
+    def synapsesql(self, table):
+        self.calls.append(("synapsesql", table))
+        return {"synapsesql": table}
+
 
 class _Spark:
     def __init__(self):
@@ -68,6 +72,9 @@ class _Writer:
 
     def save(self, path):
         self.calls.append(("save", path))
+
+    def synapsesql(self, table):
+        self.calls.append(("synapsesql", table))
 
 
 class _Frame:

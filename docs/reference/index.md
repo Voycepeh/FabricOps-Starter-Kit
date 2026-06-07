@@ -101,7 +101,7 @@ Use the finder below to look up callable and internal FabricOps functions.
   <p class="reference-catalogue-item-purpose">Read a CSV file from a configured Fabric lakehouse Files path.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">02_pipeline, 99_explore</span></p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>_get_store</code></li><li><code>_get_spark</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 3</span></summary><ul><li><code>_get_store</code></li><li><code>_get_spark</code></li><li><code>_lakehouse_file_path</code></li></ul></details>
 
   </div>
 </article>
@@ -110,7 +110,7 @@ Use the finder below to look up callable and internal FabricOps functions.
   <p class="reference-catalogue-item-purpose">Read an Excel file from a configured Fabric lakehouse Files path.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">02_pipeline, 99_explore</span></p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>_get_store</code></li><li><code>_get_spark</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 3</span></summary><ul><li><code>_get_store</code></li><li><code>_get_spark</code></li><li><code>_lakehouse_file_path</code></li></ul></details>
 
   </div>
 </article>
@@ -119,7 +119,7 @@ Use the finder below to look up callable and internal FabricOps functions.
   <p class="reference-catalogue-item-purpose">Read a Parquet path from a configured Fabric lakehouse Files path.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">02_pipeline, 99_explore</span></p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 3</span></summary><ul><li><code>_get_store</code></li><li><code>_convert_single_parquet_ns_to_us</code></li><li><code>_get_spark</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 4</span></summary><ul><li><code>_get_store</code></li><li><code>_convert_single_parquet_ns_to_us</code></li><li><code>_get_spark</code></li><li><code>_lakehouse_file_path</code></li></ul></details>
 
   </div>
 </article>
@@ -273,7 +273,7 @@ Use the finder below to look up callable and internal FabricOps functions.
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">02_pipeline</span></p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_get_store</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 7</span></summary><ul><li><code>_ensure_metadata_tables</code></li><li><code>_write_row</code></li><li><code>_seed_minimal_sample_source_table</code></li><li><code>_setup_governance_metadata_tables</code></li><li><code>record_table_governance</code></li><li><code>_register_current_notebook</code></li><li><code>_setup_notebook_registry_table</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 6</span></summary><ul><li><code>_ensure_metadata_tables</code></li><li><code>_write_row</code></li><li><code>_setup_governance_metadata_tables</code></li><li><code>record_table_governance</code></li><li><code>_register_current_notebook</code></li><li><code>_setup_notebook_registry_table</code></li></ul></details>
   </div>
 </article>
 <article id="fabric_input_output-write_warehouse_table" class="reference-catalogue-item" data-callable-row="true" data-callable-name="write_warehouse_table" data-callable-module="fabric_input_output" data-callable-starter-path="02_pipeline" data-function-type="callable" data-callable-purpose="Write a DataFrame to a configured Fabric warehouse target.">
@@ -490,15 +490,6 @@ Use the finder below to look up callable and internal FabricOps functions.
   <div class="reference-catalogue-item-counts">
 
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_check_profile_drift</code></li></ul></details>
-  </div>
-</article>
-<article id="fabric_input_output-_check_naming_convention" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_check_naming_convention" data-callable-module="fabric_input_output" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Check whether a Fabric notebook name starts with an allowed prefix.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/fabric_input_output__check_naming_convention/"><code>_check_naming_convention</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Check whether a Fabric notebook name starts with an allowed prefix.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_get_fabric_runtime_context</code></li></ul></details>
-
   </div>
 </article>
 <article id="drift-_check_profile_drift" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_check_profile_drift" data-callable-module="drift" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Compare profile metrics against a baseline profile and drift thresholds.">
@@ -744,15 +735,6 @@ Use the finder below to look up callable and internal FabricOps functions.
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_create_or_update_data_steward</code></li></ul></details>
   </div>
 </article>
-<article id="fabric_input_output-_get_fabric_runtime_context" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_get_fabric_runtime_context" data-callable-module="fabric_input_output" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Return the Fabric notebook runtime context when available.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/fabric_input_output__get_fabric_runtime_context/"><code>_get_fabric_runtime_context</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Return the Fabric notebook runtime context when available.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
-
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_check_naming_convention</code></li></ul></details>
-  </div>
-</article>
 <article id="config-_get_fabric_runtime_metadata" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_get_fabric_runtime_metadata" data-callable-module="config" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Best-effort retrieval of Fabric runtime metadata.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/config__get_fabric_runtime_metadata/"><code>_get_fabric_runtime_metadata</code></a></h3>
   <p class="reference-catalogue-item-purpose">Best-effort retrieval of Fabric runtime metadata.</p>
@@ -795,7 +777,7 @@ Use the finder below to look up callable and internal FabricOps functions.
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
 
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 6</span></summary><ul><li><code>_seed_minimal_sample_source_table</code></li><li><code>read_lakehouse_csv</code></li><li><code>read_lakehouse_excel</code></li><li><code>read_lakehouse_parquet</code></li><li><code>read_lakehouse_table</code></li><li><code>read_warehouse_table</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 5</span></summary><ul><li><code>read_lakehouse_csv</code></li><li><code>read_lakehouse_excel</code></li><li><code>read_lakehouse_parquet</code></li><li><code>read_lakehouse_table</code></li><li><code>read_warehouse_table</code></li></ul></details>
   </div>
 </article>
 <article id="config-_get_store" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_get_store" data-callable-module="config" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Resolve a configured Fabric path for an environment and target.">
@@ -868,6 +850,15 @@ Use the finder below to look up callable and internal FabricOps functions.
   <div class="reference-catalogue-item-counts">
 
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 3</span></summary><ul><li><code>_build_classification_records</code></li><li><code>_build_column_context_records</code></li><li><code>_build_dq_rule_records</code></li></ul></details>
+  </div>
+</article>
+<article id="fabric_input_output-_lakehouse_file_path" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_lakehouse_file_path" data-callable-module="fabric_input_output" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Return an ABFSS path under a configured lakehouse Files area.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/fabric_input_output__lakehouse_file_path/"><code>_lakehouse_file_path</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Return an ABFSS path under a configured lakehouse Files area.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 3</span></summary><ul><li><code>read_lakehouse_csv</code></li><li><code>read_lakehouse_excel</code></li><li><code>read_lakehouse_parquet</code></li></ul></details>
   </div>
 </article>
 <article id="data_agreement-_latest_agreement_versions" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_latest_agreement_versions" data-callable-module="data_agreement" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Return the latest semantic version for each stable agreement ID.">
@@ -1264,15 +1255,6 @@ Use the finder below to look up callable and internal FabricOps functions.
   <div class="reference-catalogue-item-counts">
 
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_setup_governance_metadata_tables</code></li></ul></details>
-  </div>
-</article>
-<article id="fabric_input_output-_seed_minimal_sample_source_table" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_seed_minimal_sample_source_table" data-callable-module="fabric_input_output" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Create and persist a minimal demo source table for end-to-end samples.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/fabric_input_output__seed_minimal_sample_source_table/"><code>_seed_minimal_sample_source_table</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Create and persist a minimal demo source table for end-to-end samples.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>_get_spark</code></li><li><code>write_lakehouse_table</code></li></ul></details>
-
   </div>
 </article>
 <article id="data_agreement-_serialize_custom_fields" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_serialize_custom_fields" data-callable-module="data_agreement" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Serialize organization-specific intake values to deterministic JSON.">

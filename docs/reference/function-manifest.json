@@ -1580,20 +1580,6 @@
     "summary": "No summary available."
   },
   {
-    "id": "fabricops_kit.fabric_input_output._check_naming_convention",
-    "name": "_check_naming_convention",
-    "qualified_name": "fabricops_kit.fabric_input_output._check_naming_convention",
-    "module": "fabric_input_output",
-    "classification": "Internal",
-    "inbound": [],
-    "outbound": [
-      "fabricops_kit.fabric_input_output._get_fabric_runtime_context"
-    ],
-    "source_path": "src/fabricops_kit/fabric_input_output.py",
-    "docs_path": "reference/internal/fabric_input_output__check_naming_convention.md",
-    "summary": "No summary available."
-  },
-  {
     "id": "fabricops_kit.fabric_input_output._convert_single_parquet_ns_to_us",
     "name": "_convert_single_parquet_ns_to_us",
     "qualified_name": "fabricops_kit.fabric_input_output._convert_single_parquet_ns_to_us",
@@ -1608,27 +1594,12 @@
     "summary": "No summary available."
   },
   {
-    "id": "fabricops_kit.fabric_input_output._get_fabric_runtime_context",
-    "name": "_get_fabric_runtime_context",
-    "qualified_name": "fabricops_kit.fabric_input_output._get_fabric_runtime_context",
-    "module": "fabric_input_output",
-    "classification": "Internal",
-    "inbound": [
-      "fabricops_kit.fabric_input_output._check_naming_convention"
-    ],
-    "outbound": [],
-    "source_path": "src/fabricops_kit/fabric_input_output.py",
-    "docs_path": "reference/internal/fabric_input_output__get_fabric_runtime_context.md",
-    "summary": "No summary available."
-  },
-  {
     "id": "fabricops_kit.fabric_input_output._get_spark",
     "name": "_get_spark",
     "qualified_name": "fabricops_kit.fabric_input_output._get_spark",
     "module": "fabric_input_output",
     "classification": "Internal",
     "inbound": [
-      "fabricops_kit.fabric_input_output._seed_minimal_sample_source_table",
       "fabricops_kit.fabric_input_output.read_lakehouse_csv",
       "fabricops_kit.fabric_input_output.read_lakehouse_excel",
       "fabricops_kit.fabric_input_output.read_lakehouse_parquet",
@@ -1641,18 +1612,19 @@
     "summary": "No summary available."
   },
   {
-    "id": "fabricops_kit.fabric_input_output._seed_minimal_sample_source_table",
-    "name": "_seed_minimal_sample_source_table",
-    "qualified_name": "fabricops_kit.fabric_input_output._seed_minimal_sample_source_table",
+    "id": "fabricops_kit.fabric_input_output._lakehouse_file_path",
+    "name": "_lakehouse_file_path",
+    "qualified_name": "fabricops_kit.fabric_input_output._lakehouse_file_path",
     "module": "fabric_input_output",
     "classification": "Internal",
-    "inbound": [],
-    "outbound": [
-      "fabricops_kit.fabric_input_output._get_spark",
-      "fabricops_kit.fabric_input_output.write_lakehouse_table"
+    "inbound": [
+      "fabricops_kit.fabric_input_output.read_lakehouse_csv",
+      "fabricops_kit.fabric_input_output.read_lakehouse_excel",
+      "fabricops_kit.fabric_input_output.read_lakehouse_parquet"
     ],
+    "outbound": [],
     "source_path": "src/fabricops_kit/fabric_input_output.py",
-    "docs_path": "reference/internal/fabric_input_output__seed_minimal_sample_source_table.md",
+    "docs_path": "reference/internal/fabric_input_output__lakehouse_file_path.md",
     "summary": "No summary available."
   },
   {
@@ -1664,7 +1636,8 @@
     "inbound": [],
     "outbound": [
       "fabricops_kit.config._get_store",
-      "fabricops_kit.fabric_input_output._get_spark"
+      "fabricops_kit.fabric_input_output._get_spark",
+      "fabricops_kit.fabric_input_output._lakehouse_file_path"
     ],
     "source_path": "src/fabricops_kit/fabric_input_output.py",
     "docs_path": "reference/read_lakehouse_csv.md",
@@ -1679,7 +1652,8 @@
     "inbound": [],
     "outbound": [
       "fabricops_kit.config._get_store",
-      "fabricops_kit.fabric_input_output._get_spark"
+      "fabricops_kit.fabric_input_output._get_spark",
+      "fabricops_kit.fabric_input_output._lakehouse_file_path"
     ],
     "source_path": "src/fabricops_kit/fabric_input_output.py",
     "docs_path": "reference/read_lakehouse_excel.md",
@@ -1695,7 +1669,8 @@
     "outbound": [
       "fabricops_kit.config._get_store",
       "fabricops_kit.fabric_input_output._convert_single_parquet_ns_to_us",
-      "fabricops_kit.fabric_input_output._get_spark"
+      "fabricops_kit.fabric_input_output._get_spark",
+      "fabricops_kit.fabric_input_output._lakehouse_file_path"
     ],
     "source_path": "src/fabricops_kit/fabric_input_output.py",
     "docs_path": "reference/read_lakehouse_parquet.md",
@@ -1749,7 +1724,6 @@
     "inbound": [
       "fabricops_kit.data_agreement._ensure_metadata_tables",
       "fabricops_kit.data_agreement._write_row",
-      "fabricops_kit.fabric_input_output._seed_minimal_sample_source_table",
       "fabricops_kit.governance_review._setup_governance_metadata_tables",
       "fabricops_kit.governance_review.record_table_governance",
       "fabricops_kit.metadata._register_current_notebook",
