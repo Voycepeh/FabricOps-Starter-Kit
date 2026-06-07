@@ -76,8 +76,9 @@ def test_business_context_ai_parsing_and_suggestion_extraction():
     parsed = governance._parse_ai_dict_response("BUSINESS_CONTEXT = {'column_name': 'customer_id', 'business_context': 'Customer identifier'}")
     assert parsed["column_name"] == "customer_id"
 
-    suggestions = governance._extract_column_business_context_suggestions(
-        [{"ai_business_context_response": json.dumps({"column_name": "amount", "business_context": "Order value"})}]
+    suggestions = governance._extract_assignment_payload(
+        [{"ai_business_context_response": json.dumps({"column_name": "amount", "business_context": "Order value"})}],
+        response_col="ai_business_context_response",
     )
     assert suggestions == [{"column_name": "amount", "business_context": "Order value"}]
 
@@ -94,7 +95,7 @@ def test_governance_sensitivity_and_pii_suggestion_extraction():
             )
         }
     ]
-    assert governance._extract_pii_suggestions(rows) == [
+    assert governance._extract_assignment_payload(rows, response_col="ai_governance_response") == [
         {
             "column_name": "email",
             "ai_suggested_personal_identifier_classification": "direct_identifier",
@@ -107,7 +108,12 @@ def test_dq_ai_response_parsing_and_candidate_rule_extraction():
     payload = "DQ_RULES = {'orders': [{'rule_id': 'id_required', 'rule_type': 'not_null', 'columns': ['order_id'], 'severity': 'error', 'description': 'Required'}]}"
     parsed = governance._parse_ai_dict_response(payload)
     assert parsed["orders"][0]["rule_id"] == "id_required"
-    assert governance._extract_candidate_rules_from_responses([{"ai_dq_response": payload}], table_name="orders") == parsed["orders"]
+    assert governance._extract_assignment_payload(
+        [{"ai_dq_response": payload}],
+        response_col="ai_dq_response",
+        assignment_key="DQ_RULES",
+        table_name="orders",
+    ) == parsed["orders"]
 
 
 def test_dq_rule_validation_and_enforcement_result_shape():

@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 7</span><span class="reference-chip">Internal helpers: 38</span><span class="reference-chip">Outbound: 3</span><span class="reference-chip">Inbound: 1</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 7</span><span class="reference-chip">Internal helpers: 32</span><span class="reference-chip">Outbound: 3</span><span class="reference-chip">Inbound: 1</span></div>
 
 ## Module purpose
 
@@ -40,7 +40,7 @@ Owns table-scoped 04_gov catalogue selection, business context review, AI-assist
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>38</td>
+      <td>32</td>
     </tr>
     <tr>
       <td>Inbound module count</td>
@@ -197,10 +197,6 @@ Owns table-scoped 04_gov catalogue selection, business context review, AI-assist
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/governance_review/_approved_dq_rules_from_review_rows/"><code>_approved_dq_rules_from_review_rows</code></a></td>
-      <td>—</td>
-    </tr>
-    <tr>
       <td><a href="../../reference/internal/governance_review/_approved_review_context/"><code>_approved_review_context</code></a></td>
       <td>—</td>
     </tr>
@@ -253,18 +249,6 @@ Owns table-scoped 04_gov catalogue selection, business context review, AI-assist
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/governance_review/_extract_candidate_rules_from_responses/"><code>_extract_candidate_rules_from_responses</code></a></td>
-      <td>—</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/internal/governance_review/_extract_column_business_context_suggestions/"><code>_extract_column_business_context_suggestions</code></a></td>
-      <td>—</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/internal/governance_review/_extract_pii_suggestions/"><code>_extract_pii_suggestions</code></a></td>
-      <td>—</td>
-    </tr>
-    <tr>
       <td><a href="../../reference/internal/governance_review/_get_governance_metadata_schemas/"><code>_get_governance_metadata_schemas</code></a></td>
       <td>—</td>
     </tr>
@@ -293,15 +277,7 @@ Owns table-scoped 04_gov catalogue selection, business context review, AI-assist
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/governance_review/_prepare_business_context_profile_input/"><code>_prepare_business_context_profile_input</code></a></td>
-      <td>—</td>
-    </tr>
-    <tr>
       <td><a href="../../reference/internal/governance_review/_prepare_dq_profile_input_rows/"><code>_prepare_dq_profile_input_rows</code></a></td>
-      <td>—</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/internal/governance_review/_prepare_profile_rows_with_context/"><code>_prepare_profile_rows_with_context</code></a></td>
       <td>—</td>
     </tr>
     <tr>
@@ -356,9 +332,6 @@ Owns table-scoped 04_gov catalogue selection, business context review, AI-assist
 <a class="reference-chip" href="#_value"><code>_value</code></a>
 </li>
 <li>
-<a class="reference-chip" href="#_approved_dq_rules_from_review_rows"><code>_approved_dq_rules_from_review_rows</code></a>
-</li>
-<li>
 <a class="reference-chip" href="#_approved_review_context"><code>_approved_review_context</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_value"><code>_value</code></a>
@@ -402,7 +375,7 @@ Owns table-scoped 04_gov catalogue selection, business context review, AI-assist
 <li>
 <a class="reference-chip" href="#_draft_dq_rules"><code>_draft_dq_rules</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_extract_candidate_rules_from_responses"><code>_extract_candidate_rules_from_responses</code></a>, <a class="reference-chip" href="#_prepare_dq_profile_input_rows"><code>_prepare_dq_profile_input_rows</code></a>, <a class="reference-chip" href="#_run_fabric_ai_drafting"><code>_run_fabric_ai_drafting</code></a>
+<a class="reference-chip" href="#_canonical_dq_rule_type"><code>_canonical_dq_rule_type</code></a>, <a class="reference-chip" href="#_extract_assignment_payload"><code>_extract_assignment_payload</code></a>, <a class="reference-chip" href="#_prepare_dq_profile_input_rows"><code>_prepare_dq_profile_input_rows</code></a>, <a class="reference-chip" href="#_run_fabric_ai_drafting"><code>_run_fabric_ai_drafting</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_draft_governance"><code>_draft_governance</code></a>
@@ -418,21 +391,6 @@ Owns table-scoped 04_gov catalogue selection, business context review, AI-assist
 <a class="reference-chip" href="#_extract_assignment_payload"><code>_extract_assignment_payload</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_coerce_rows"><code>_coerce_rows</code></a>, <a class="reference-chip" href="#_parse_ai_dict_response"><code>_parse_ai_dict_response</code></a>
-</li>
-<li>
-<a class="reference-chip" href="#_extract_candidate_rules_from_responses"><code>_extract_candidate_rules_from_responses</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_canonical_dq_rule_type"><code>_canonical_dq_rule_type</code></a>, <a class="reference-chip" href="#_extract_assignment_payload"><code>_extract_assignment_payload</code></a>
-</li>
-<li>
-<a class="reference-chip" href="#_extract_column_business_context_suggestions"><code>_extract_column_business_context_suggestions</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_extract_assignment_payload"><code>_extract_assignment_payload</code></a>
-</li>
-<li>
-<a class="reference-chip" href="#_extract_pii_suggestions"><code>_extract_pii_suggestions</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_coerce_rows"><code>_coerce_rows</code></a>, <a class="reference-chip" href="#_extract_assignment_payload"><code>_extract_assignment_payload</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_get_governance_metadata_schemas"><code>_get_governance_metadata_schemas</code></a>
@@ -458,21 +416,15 @@ Owns table-scoped 04_gov catalogue selection, business context review, AI-assist
 <li>
 <a class="reference-chip" href="#_load_active_dq_rules"><code>_load_active_dq_rules</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_latest_dq_rule_versions"><code>_latest_dq_rule_versions</code></a>, <a class="reference-chip" href="#_spark_sql_helpers"><code>_spark_sql_helpers</code></a>, <a class="reference-chip" href="#_validate_dq_rules"><code>_validate_dq_rules</code></a>
+<a class="reference-chip" href="#_canonical_dq_rule_type"><code>_canonical_dq_rule_type</code></a>, <a class="reference-chip" href="#_coerce_rows"><code>_coerce_rows</code></a>, <a class="reference-chip" href="#_latest_dq_rule_versions"><code>_latest_dq_rule_versions</code></a>, <a class="reference-chip" href="#_spark_sql_helpers"><code>_spark_sql_helpers</code></a>, <a class="reference-chip" href="#_validate_dq_rules"><code>_validate_dq_rules</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_parse_ai_dict_response"><code>_parse_ai_dict_response</code></a>
 </li>
 <li>
-<a class="reference-chip" href="#_prepare_business_context_profile_input"><code>_prepare_business_context_profile_input</code></a>
-</li>
-<li>
 <a class="reference-chip" href="#_prepare_dq_profile_input_rows"><code>_prepare_dq_profile_input_rows</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_spark_sql_helpers"><code>_spark_sql_helpers</code></a>
-</li>
-<li>
-<a class="reference-chip" href="#_prepare_profile_rows_with_context"><code>_prepare_profile_rows_with_context</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_run_dq_rules"><code>_run_dq_rules</code></a>

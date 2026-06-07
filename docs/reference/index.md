@@ -321,15 +321,6 @@ Use the finder below to look up callable and internal FabricOps functions.
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 3</span></summary><ul><li><code>_build_classification_records</code></li><li><code>_build_column_context_records</code></li><li><code>_build_dq_rule_records</code></li></ul></details>
   </div>
 </article>
-<article id="governance_review-_approved_dq_rules_from_review_rows" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_approved_dq_rules_from_review_rows" data-callable-module="governance_review" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Return approved canonical DQ rules from notebook review rows.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/governance_review__approved_dq_rules_from_review_rows/"><code>_approved_dq_rules_from_review_rows</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Return approved canonical DQ rules from notebook review rows.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
-
-
-  </div>
-</article>
 <article id="governance_review-_approved_review_context" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_approved_review_context" data-callable-module="governance_review" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Internal helper used by the package.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/governance_review__approved_review_context/"><code>_approved_review_context</code></a></h3>
   <p class="reference-catalogue-item-purpose">Internal helper used by the package.</p>
@@ -516,7 +507,7 @@ Use the finder below to look up callable and internal FabricOps functions.
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
 
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 3</span></summary><ul><li><code>_build_dq_rule_records</code></li><li><code>_extract_candidate_rules_from_responses</code></li><li><code>_validate_dq_rules</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 4</span></summary><ul><li><code>_build_dq_rule_records</code></li><li><code>_draft_dq_rules</code></li><li><code>_load_active_dq_rules</code></li><li><code>_validate_dq_rules</code></li></ul></details>
   </div>
 </article>
 <article id="governance_review-_catalogue_table_options" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_catalogue_table_options" data-callable-module="governance_review" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Return one option per logical table using its latest successful profile.">
@@ -597,7 +588,7 @@ Use the finder below to look up callable and internal FabricOps functions.
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
 
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 5</span></summary><ul><li><code>_extract_assignment_payload</code></li><li><code>_extract_pii_suggestions</code></li><li><code>_setup_governance_metadata_tables</code></li><li><code>load_catalogue_profile_rows</code></li><li><code>widget_select_catalogue_table</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 5</span></summary><ul><li><code>_extract_assignment_payload</code></li><li><code>_load_active_dq_rules</code></li><li><code>_setup_governance_metadata_tables</code></li><li><code>load_catalogue_profile_rows</code></li><li><code>widget_select_catalogue_table</code></li></ul></details>
   </div>
 </article>
 <article id="data_agreement-_collect_custom_fields" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_collect_custom_fields" data-callable-module="data_agreement" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Collect and validate configured custom-field widget values.">
@@ -758,7 +749,7 @@ Use the finder below to look up callable and internal FabricOps functions.
   <p class="reference-catalogue-item-purpose">Draft candidate DQ rules from metadata profiles or a raw DataFrame fallback.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 3</span></summary><ul><li><code>_extract_candidate_rules_from_responses</code></li><li><code>_prepare_dq_profile_input_rows</code></li><li><code>_run_fabric_ai_drafting</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 4</span></summary><ul><li><code>_canonical_dq_rule_type</code></li><li><code>_extract_assignment_payload</code></li><li><code>_prepare_dq_profile_input_rows</code></li><li><code>_run_fabric_ai_drafting</code></li></ul></details>
 
   </div>
 </article>
@@ -804,15 +795,6 @@ Use the finder below to look up callable and internal FabricOps functions.
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>_coerce_rows</code></li><li><code>_parse_ai_dict_response</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 3</span></summary><ul><li><code>_extract_candidate_rules_from_responses</code></li><li><code>_extract_column_business_context_suggestions</code></li><li><code>_extract_pii_suggestions</code></li></ul></details>
-  </div>
-</article>
-<article id="governance_review-_extract_candidate_rules_from_responses" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_extract_candidate_rules_from_responses" data-callable-module="governance_review" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Extract deduplicated candidate DQ rules from AI response rows.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/governance_review__extract_candidate_rules_from_responses/"><code>_extract_candidate_rules_from_responses</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Extract deduplicated candidate DQ rules from AI response rows.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>_canonical_dq_rule_type</code></li><li><code>_extract_assignment_payload</code></li></ul></details>
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_draft_dq_rules</code></li></ul></details>
   </div>
 </article>
@@ -823,15 +805,6 @@ Use the finder below to look up callable and internal FabricOps functions.
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_normalize_profile</code></li></ul></details>
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>monitor_data_changes</code></li></ul></details>
-  </div>
-</article>
-<article id="governance_review-_extract_column_business_context_suggestions" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_extract_column_business_context_suggestions" data-callable-module="governance_review" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Extract review-ready business-context suggestions from AI responses.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/governance_review__extract_column_business_context_suggestions/"><code>_extract_column_business_context_suggestions</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Extract review-ready business-context suggestions from AI responses.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_extract_assignment_payload</code></li></ul></details>
-
   </div>
 </article>
 <article id="metadata-_extract_columns_from_profile" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_extract_columns_from_profile" data-callable-module="metadata" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Internal helper used by the package.">
@@ -850,15 +823,6 @@ Use the finder below to look up callable and internal FabricOps functions.
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_normalize_profile</code></li></ul></details>
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>monitor_data_changes</code></li></ul></details>
-  </div>
-</article>
-<article id="governance_review-_extract_pii_suggestions" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_extract_pii_suggestions" data-callable-module="governance_review" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Extract sensitivity and personal-data suggestions from Spark/list response payloads.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/governance_review__extract_pii_suggestions/"><code>_extract_pii_suggestions</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Extract sensitivity and personal-data suggestions from Spark/list response payloads.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>_coerce_rows</code></li><li><code>_extract_assignment_payload</code></li></ul></details>
-
   </div>
 </article>
 <article id="data_lineage-_fallback_copilot_lineage_prompt" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_fallback_copilot_lineage_prompt" data-callable-module="data_lineage" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Build a fallback Copilot prompt for manual lineage enrichment.">
@@ -1086,9 +1050,9 @@ Use the finder below to look up callable and internal FabricOps functions.
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_list_data_stewards</code></li></ul></details>
   </div>
 </article>
-<article id="governance_review-_latest_dq_rule_versions" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_latest_dq_rule_versions" data-callable-module="governance_review" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Resolve the latest DQ metadata row per rule key with deterministic ties.">
+<article id="governance_review-_latest_dq_rule_versions" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_latest_dq_rule_versions" data-callable-module="governance_review" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Resolve latest DQ metadata rows using current v1 fields with legacy fallback.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/governance_review__latest_dq_rule_versions/"><code>_latest_dq_rule_versions</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Resolve the latest DQ metadata row per rule key with deterministic ties.</p>
+  <p class="reference-catalogue-item-purpose">Resolve latest DQ metadata rows using current v1 fields with legacy fallback.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_spark_sql_helpers</code></li></ul></details>
@@ -1140,12 +1104,12 @@ Use the finder below to look up callable and internal FabricOps functions.
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_resolve_write_target</code></li></ul></details>
   </div>
 </article>
-<article id="governance_review-_load_active_dq_rules" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_load_active_dq_rules" data-callable-module="governance_review" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Load latest active approved DQ rule payloads from append-only metadata history.">
+<article id="governance_review-_load_active_dq_rules" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_load_active_dq_rules" data-callable-module="governance_review" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Load active DQ rules from current v1 metadata, falling back to legacy rule_json.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/governance_review__load_active_dq_rules/"><code>_load_active_dq_rules</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Load latest active approved DQ rule payloads from append-only metadata history.</p>
+  <p class="reference-catalogue-item-purpose">Load active DQ rules from current v1 metadata, falling back to legacy rule_json.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 3</span></summary><ul><li><code>_latest_dq_rule_versions</code></li><li><code>_spark_sql_helpers</code></li><li><code>_validate_dq_rules</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 5</span></summary><ul><li><code>_canonical_dq_rule_type</code></li><li><code>_coerce_rows</code></li><li><code>_latest_dq_rule_versions</code></li><li><code>_spark_sql_helpers</code></li><li><code>_validate_dq_rules</code></li></ul></details>
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_enforce_dq</code></li></ul></details>
   </div>
 </article>
@@ -1329,15 +1293,6 @@ Use the finder below to look up callable and internal FabricOps functions.
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 2</span></summary><ul><li><code>_create_or_update_data_agreement</code></li><li><code>_create_or_update_data_steward</code></li></ul></details>
   </div>
 </article>
-<article id="governance_review-_prepare_business_context_profile_input" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_prepare_business_context_profile_input" data-callable-module="governance_review" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Prepare profile rows for business-context AI drafting.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/governance_review__prepare_business_context_profile_input/"><code>_prepare_business_context_profile_input</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Prepare profile rows for business-context AI drafting.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
-
-
-  </div>
-</article>
 <article id="governance_review-_prepare_dq_profile_input_rows" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_prepare_dq_profile_input_rows" data-callable-module="governance_review" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Prepare DQ prompt profile rows from a profile DataFrame or raw DataFrame.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/governance_review__prepare_dq_profile_input_rows/"><code>_prepare_dq_profile_input_rows</code></a></h3>
   <p class="reference-catalogue-item-purpose">Prepare DQ prompt profile rows from a profile DataFrame or raw DataFrame.</p>
@@ -1354,15 +1309,6 @@ Use the finder below to look up callable and internal FabricOps functions.
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_get_notebookutils</code></li></ul></details>
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_save_agreement_evidence_records</code></li></ul></details>
-  </div>
-</article>
-<article id="governance_review-_prepare_profile_rows_with_context" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_prepare_profile_rows_with_context" data-callable-module="governance_review" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Join approved column business context into profile rows for AI drafting.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/governance_review__prepare_profile_rows_with_context/"><code>_prepare_profile_rows_with_context</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Join approved column business context into profile rows for AI drafting.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
-
-
   </div>
 </article>
 <article id="drift-_proportions" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_proportions" data-callable-module="drift" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Internal helper used by the package.">

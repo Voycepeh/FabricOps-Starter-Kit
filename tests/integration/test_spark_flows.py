@@ -68,3 +68,54 @@ def test_spark_schema_validation_and_latest_dq_metadata_are_stable(spark_session
 
     assert schema_result["status"] == "warning"
     assert _load_active_dq_rules(metadata_df, table_name="orders") == []
+
+
+def test_load_active_dq_rules_reconstructs_current_governance_metadata(spark_session, monkeypatch):
+    import fabricops_kit.governance_review as governance
+    from tests.helpers import framework_config
+
+    writes = []
+    monkeypatch.setattr(governance, "write_lakehouse_table", lambda df, config, env, target, table, **kwargs: writes.append((table, df)))
+    profile_rows = [
+        {
+            "environment_name": "dev",
+            "dataset_name": "sales",
+            "table_name": "orders",
+            "column_name": "amount",
+            "metadata_table_key": "dev|sales|orders",
+            "metadata_column_key": "dev|sales|orders|amount",
+        }
+    ]
+
+    governance.record_table_governance(
+        framework_config(),
+        "dev",
+        profile_rows,
+        spark_session=spark_session,
+        dq_rule_reviews=[
+            {
+                "rule_id": "amount_positive",
+                "column_name": "amount",
+                "rule_type": "value_range",
+                "rule_parameters": {"lower_bound": 0},
+                "severity": "error",
+                "description": "Amount must be non-negative",
+                "commit": True,
+            }
+        ],
+        approved_by="reviewer@example.com",
+    )
+
+    assert [table for table, _ in writes] == [governance.DQ_RULES_TABLE]
+    loaded = governance._load_active_dq_rules(writes[0][1], table_name="orders")
+
+    assert loaded == [
+        {
+            "rule_id": "amount_positive",
+            "rule_type": "value_range",
+            "columns": ["amount"],
+            "severity": "error",
+            "description": "Amount must be non-negative",
+            "lower_bound": 0,
+        }
+    ]

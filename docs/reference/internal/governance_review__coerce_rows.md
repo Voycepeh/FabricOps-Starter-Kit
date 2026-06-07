@@ -21,7 +21,7 @@ No summary available.
 
 ## Inbound references
 - <a href="../internal/governance_review/_extract_assignment_payload/"><code>fabricops_kit.governance_review._extract_assignment_payload</code></a>
-- <a href="../internal/governance_review/_extract_pii_suggestions/"><code>fabricops_kit.governance_review._extract_pii_suggestions</code></a>
+- <a href="../internal/governance_review/_load_active_dq_rules/"><code>fabricops_kit.governance_review._load_active_dq_rules</code></a>
 - <a href="../internal/governance_review/_setup_governance_metadata_tables/"><code>fabricops_kit.governance_review._setup_governance_metadata_tables</code></a>
 - <a href="../load_catalogue_profile_rows/"><code>fabricops_kit.governance_review.load_catalogue_profile_rows</code></a>
 - <a href="../widget_select_catalogue_table/"><code>fabricops_kit.governance_review.widget_select_catalogue_table</code></a>

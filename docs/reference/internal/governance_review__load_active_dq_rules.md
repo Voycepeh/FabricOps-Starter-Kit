@@ -17,12 +17,14 @@ No summary available.
 - Source file path: `src/fabricops_kit/governance_review.py`
 - Source reference: <a href="../../api/modules/governance_review/#_load_active_dq_rules">Module source anchor</a>
 - Inbound references count: 1
-- Outbound references count: 3
+- Outbound references count: 5
 
 ## Inbound references
 - <a href="../internal/governance_review/_enforce_dq/"><code>fabricops_kit.governance_review._enforce_dq</code></a>
 
 ## Outbound references
+- <a href="../internal/governance_review/_canonical_dq_rule_type/"><code>fabricops_kit.governance_review._canonical_dq_rule_type</code></a>
+- <a href="../internal/governance_review/_coerce_rows/"><code>fabricops_kit.governance_review._coerce_rows</code></a>
 - <a href="../internal/governance_review/_latest_dq_rule_versions/"><code>fabricops_kit.governance_review._latest_dq_rule_versions</code></a>
 - <a href="../internal/governance_review/_spark_sql_helpers/"><code>fabricops_kit.governance_review._spark_sql_helpers</code></a>
 - <a href="../internal/governance_review/_validate_dq_rules/"><code>fabricops_kit.governance_review._validate_dq_rules</code></a>
