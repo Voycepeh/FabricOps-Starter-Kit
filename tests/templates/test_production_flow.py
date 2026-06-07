@@ -36,7 +36,6 @@ def test_production_and_governance_templates_cover_output_summary_and_review_flo
     assert "record_table_governance" in governance
 
 
-
 def test_production_template_enforces_dq_before_full_dataset_write():
     production = _code("02_pipeline.ipynb")
 
@@ -55,3 +54,51 @@ def test_production_template_enforces_dq_before_full_dataset_write():
     assert "df_output.filter" not in production
     assert "df_output.where" not in production
     assert "dq_summary=dq_result.get(\"summary\")" in production
+
+
+def test_dq_section_prints_result_and_documents_simple_v1_behavior():
+    production = _code("02_pipeline.ipynb")
+
+    dq_call = production.index("dq_result = enforce_dq_rules(")
+    dq_print = production.index("print(dq_result)")
+    dq_stop = production.index("stop_if_failed(dq_result)")
+
+    assert dq_call < dq_print < dq_stop
+    assert "Warning severity writes full data" in production
+    assert "error severity stops before write" in production
+    assert "No quarantine/filtering in v1." in production
+
+
+def test_docs_and_templates_do_not_add_dq_failure_table_behavior():
+    root = Path(__file__).parents[2]
+    checked_paths = [
+        root / "docs" / "schema-and-data-drift.md",
+        root / "docs" / "governance-review.md",
+        root / "docs" / "how-fabricops-works" / "notebook-templates.md",
+        root / "docs" / "how-fabricops-works" / "metadata-tables.md",
+        root / "docs" / "quick-start.md",
+        root / "templates" / "notebooks" / "02_pipeline.ipynb",
+        root / "templates" / "notebooks" / "03_review.ipynb",
+    ]
+    forbidden = [
+        "METADATA_DQ_FAILURE",
+        "METADATA_DQ_FAILURES",
+        "DQ failure metadata table",
+        "DQ failure metadata tables",
+        "row-level failure table",
+        "row-level failure tables",
+        "quarantine table",
+        "quarantine tables",
+        "quarantine_rows",
+        "failure_rows",
+        "valid_rows",
+    ]
+    offenders = []
+    for path in checked_paths:
+        text = path.read_text(encoding="utf-8")
+        lowered = text.lower()
+        for needle in forbidden:
+            if needle.lower() in lowered:
+                offenders.append(f"{path.relative_to(root)} contains {needle}")
+
+    assert offenders == []

@@ -14,8 +14,8 @@ templates/notebooks/
 | --- | --- | --- | --- |
 | `00_env_config` | Platform or engineering lead | Configure Fabric paths, runtime defaults, and metadata tables for an environment. | Other notebooks know where to read, write, and store metadata. |
 | `01_agreement` | Data steward or product owner | Capture the agreed purpose, owner, steward, and supporting agreement evidence. | A clear agreement exists before build work is treated as production-ready. |
-| `02_pipeline` | Data engineer | Build the data product, run guardrails, write outputs, and record metadata evidence. | A repeatable pipeline produces data and evidence for review. |
-| `03_review` | Governance reviewer or data steward | Review catalogue evidence and approve business context, DQ expectations, sensitivity, and classification. | Reviewed metadata is available for support and later pipeline use when engineers wire it in. |
+| `02_pipeline` | Data engineer | Build the data product, run schema/data-change/DQ guardrails, write outputs, and record metadata evidence. | A repeatable pipeline produces data and evidence for review, and enforces active approved DQ rules with `enforce_dq_rules`. |
+| `03_review` | Governance reviewer or data steward | Review catalogue evidence and approve business context, DQ expectations, sensitivity, and classification. | Approved DQ expectations are stored in `METADATA_DQ_RULES` for a later `02_pipeline` run to enforce. |
 | `99_explore` | Analyst or engineer | Optional discovery, profiling, troubleshooting, or ad hoc investigation. | Findings can inform agreement, pipeline, or review work, but this is not a required step. |
 
 ## Role-based notebook flow
@@ -69,11 +69,11 @@ Use it to:
 - link the pipeline to the relevant agreement;
 - read configured sources;
 - transform data;
-- run guardrails for schema, data changes, and any implemented approved rules;
+- run guardrails for schema, data changes, and active approved DQ rules from `METADATA_DQ_RULES`;
 - write outputs;
 - record metadata evidence such as profiles, lineage, and run context.
 
-`02_pipeline` owns enforcement. If a check should block or warn during a run, it belongs in the pipeline notebook.
+`02_pipeline` owns enforcement. It calls `enforce_dq_rules` before the target write so warning-severity DQ failures continue with the full annotated dataset, while error-severity failures block before write.
 
 ### `03_review`
 
@@ -86,7 +86,7 @@ Use it to review and save:
 - sensitivity notes;
 - column classification.
 
-`03_review` stores reviewed metadata. It does not enforce anything by itself. A later `02_pipeline` run can use approved reviewed metadata only when the engineer has implemented that behavior in the pipeline.
+`03_review` stores reviewed metadata. It does not enforce anything by itself. Approved DQ expectations become active when a later `02_pipeline` run loads `METADATA_DQ_RULES` through `enforce_dq_rules`.
 
 ### `99_explore`
 

@@ -4,7 +4,7 @@ Governance Review is where metadata evidence becomes reviewed metadata.
 
 `02_pipeline` records metadata evidence about source and target data. `03_review` uses that evidence to help reviewers add business context, DQ expectations, sensitivity, and classification. AI can help draft suggestions, but people approve the final values.
 
-The boundary is simple: `03_review` owns review and approval. `02_pipeline` owns guardrails and enforcement later, only when it is built to use the approved metadata.
+The boundary is simple: `03_review` owns review and approval. `02_pipeline` owns guardrails and enforcement. Approved DQ expectations become active only when `02_pipeline` runs `enforce_dq_rules` against active approved rows in `METADATA_DQ_RULES`.
 
 Read [How FabricOps Works](how-fabricops-works/index.md) first for the standard `01_agreement` → `02_pipeline` → `03_review` path. For pipeline blocking behavior, see [Pipeline Guardrails](schema-and-data-drift.md).
 
@@ -68,7 +68,7 @@ In short:
 - AI suggests.
 - Humans approve.
 - Metadata stores.
-- Pipelines enforce only when implemented.
+- Pipelines enforce DQ only when `02_pipeline` calls `enforce_dq_rules`.
 
 ## How approved metadata returns to the pipeline
 
@@ -84,7 +84,7 @@ The same idea can apply to other reviewed metadata:
 | DQ expectations | Run active approved DQ rules that warn or block before the target write. Warning failures continue, tag rows, and write the full dataset; error failures block. |
 | Sensitivity and classification | Record handling context or support checks that an engineer intentionally adds. |
 
-The pipeline decides how reviewed metadata is used. For DQ rules, v1 uses severity: warning failures log a warning, add `_dq_check_status` and `_dq_failed_rules` to the full target dataset, and continue, while error failures block through `stop_if_failed(...)`. Aggregate DQ summary fields are stored with existing profiling/catalogue evidence. The DQ guardrail does not create DQ failure tables, quarantine tables, row-level metadata evidence, filtered writes, alert sends, or partial target writes. Aggregated DQ results can feed dashboards and alerts later.
+The pipeline decides how reviewed metadata is used. For DQ rules, v1 uses severity: warning failures log a warning, add `_dq_check_status` and `_dq_failed_rules` to the full target dataset, and continue, while error failures block through `stop_if_failed(...)`. Aggregate DQ summary fields are stored with existing profiling/catalogue evidence. The DQ guardrail does not create new metadata tables for failed rows, row-level metadata evidence, filtered writes, alert sends, or partial target writes. Aggregated DQ results can feed dashboards and alerts later.
 
 ## What this page is not
 

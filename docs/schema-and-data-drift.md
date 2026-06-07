@@ -4,7 +4,7 @@ Pipeline guardrails are checks inside `02_pipeline` that help decide whether a r
 
 Read [How FabricOps Works](how-fabricops-works/index.md) first for the standard `01_agreement` → `02_pipeline` → `03_review` path. This page focuses on the guardrails that the pipeline owns.
 
-![Schema and data-change guardrails showing source and target validation flow](assets/fabricops-schema-data-guardrails.png){ .full-width }
+![Schema, data-change, and DQ guardrails showing source and target validation flow](assets/fabricops-schema-data-guardrails.png){ .full-width }
 
 ## What `02_pipeline` checks
 
@@ -16,7 +16,7 @@ A typical `02_pipeline` can check:
 - target data changes before outputs are written;
 - approved active DQ rules from `METADATA_DQ_RULES` before outputs are written.
 
-The important boundary is that `02_pipeline` owns blocking behavior. `03_review` can provide reviewed metadata, but it does not stop a run by itself.
+The important boundary is that `02_pipeline` owns blocking behavior. `03_review` can approve DQ metadata, but those expectations become active only when `02_pipeline` loads them with `enforce_dq_rules`.
 
 ## Guardrail flow
 
@@ -63,7 +63,11 @@ Severity controls the result:
 | Error-severity failure | `failed`, `can_continue=False` | `stop_if_failed(...)` blocks before the target write. |
 | Mixed warning and error failures | `failed`, `can_continue=False` | Error severity wins and blocks before the target write. |
 
-FabricOps v1 keeps DQ enforcement intentionally simple. It does not quarantine rows, write row-level failure tables, filter invalid rows out of the target, send alerts, or perform partial target writes. For warning-level failures, the written dataset keeps every row and adds row-level technical annotations (`_dq_check_status` plus `_dq_failed_rules`) so consumers can see warning-only row issues without losing data; these annotations support catalogue/profile evidence without changing the guardrail blocking contract. Aggregate DQ summary fields such as `DQ_STATUS`, `DQ_RULE_COUNT`, `DQ_FAILED_RULE_COUNT`, `DQ_WARNING_RULE_COUNT`, `DQ_ERROR_RULE_COUNT`, `DQ_FAILED_ROW_COUNT`, `DQ_FAILED_ROW_PERCENT`, and `DQ_CHECKED_AT` are captured with the existing profiling/catalogue evidence path and can feed dashboards and alerts later without changing the target write path.
+FabricOps v1 keeps DQ enforcement intentionally simple. It does not write separate row-level failure metadata, filter invalid rows out of the target, send alerts, or perform partial target writes. For warning-level failures, the written dataset keeps every row and adds row-level technical annotations (`_dq_check_status` plus `_dq_failed_rules`) so consumers can see warning-only row issues without losing data; these annotations support catalogue/profile evidence without changing the guardrail blocking contract. Aggregate DQ summary fields such as `DQ_STATUS`, `DQ_RULE_COUNT`, `DQ_FAILED_RULE_COUNT`, `DQ_WARNING_RULE_COUNT`, `DQ_ERROR_RULE_COUNT`, `DQ_FAILED_ROW_COUNT`, `DQ_FAILED_ROW_PERCENT`, and `DQ_CHECKED_AT` are captured with the existing profiling/catalogue evidence path and can feed dashboards and alerts later without changing the target write path.
+
+## Three pipeline guardrails
+
+`02_pipeline` treats schema checks, data-change monitoring, and approved DQ rules as one guardrail family. Schema guardrails check structure, data-change guardrails compare profile movement, and DQ guardrails evaluate human-approved expectations from `METADATA_DQ_RULES`. Each guardrail returns a notebook result that can be printed for run evidence and passed to `stop_if_failed(...)` when it should block.
 
 ## Presets
 
