@@ -108,6 +108,17 @@ def test_every_internal_page_marks_direct_use_as_no() -> None:
         assert "## Direct use: No" in text, page
 
 
+def test_github_source_url_uses_configured_source_ref(monkeypatch) -> None:
+    monkeypatch.setenv("GITHUB_SOURCE_REF", "review-sha-123")
+
+    from scripts.generate_function_reference import github_source_url
+
+    assert github_source_url("src/fabricops_kit/config.py", 595, 704) == (
+        "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/"
+        "review-sha-123/src/fabricops_kit/config.py#L595-L704"
+    )
+
+
 def test_callable_pages_include_source_code_section_and_github_source_link() -> None:
     callable_pages = sorted((REFERENCE_DIR / "callables").glob("*.md"))
 

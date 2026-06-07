@@ -568,22 +568,23 @@ def render_html_table(headers: list[str], rows: list[list[str]], *, table_class:
 
 
 def github_source_ref() -> str:
-    """Return the GitHub branch/ref used by generated source links."""
-    explicit_ref = os.environ.get("FABRICOPS_SOURCE_REF", "").strip()
-    if explicit_ref:
-        return explicit_ref
+    """Return the stable GitHub ref used by generated source links."""
+    for variable in ("GITHUB_SOURCE_REF", "FABRICOPS_SOURCE_REF"):
+        explicit_ref = os.environ.get(variable, "").strip()
+        if explicit_ref:
+            return explicit_ref
     try:
-        branch = subprocess.run(
-            ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+        commit_sha = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
             cwd=ROOT,
             text=True,
             capture_output=True,
             check=False,
         ).stdout.strip()
     except Exception:
-        branch = ""
-    if branch and branch not in {"HEAD", "work"}:
-        return branch
+        commit_sha = ""
+    if commit_sha:
+        return commit_sha
     return DEFAULT_SOURCE_REF
 
 
