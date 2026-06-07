@@ -1,4 +1,4 @@
-# _get_spark
+# _lakehouse_file_path
 
 **Module:** `fabric_input_output`  
 **Classification:** Internal
@@ -9,19 +9,17 @@ No summary available.
 
 ## Function manifest
 
-- Fully qualified function name: `fabricops_kit.fabric_input_output._get_spark`
-- Short name: `_get_spark`
+- Fully qualified function name: `fabricops_kit.fabric_input_output._lakehouse_file_path`
+- Short name: `_lakehouse_file_path`
 - Module: `fabric_input_output`
 - Classification: Internal
 - Related module: `fabric_input_output`
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- Source reference: <a href="../../api/modules/fabric_input_output/#_get_spark">Module source anchor</a>
-- Inbound references count: 5
+- Source reference: <a href="../../api/modules/fabric_input_output/#_lakehouse_file_path">Module source anchor</a>
+- Inbound references count: 3
 - Outbound references count: 0
 
 ## Inbound references
 - <a href="../read_lakehouse_csv/"><code>fabricops_kit.fabric_input_output.read_lakehouse_csv</code></a>
 - <a href="../read_lakehouse_excel/"><code>fabricops_kit.fabric_input_output.read_lakehouse_excel</code></a>
 - <a href="../read_lakehouse_parquet/"><code>fabricops_kit.fabric_input_output.read_lakehouse_parquet</code></a>
-- <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a>
-- <a href="../read_warehouse_table/"><code>fabricops_kit.fabric_input_output.read_warehouse_table</code></a>

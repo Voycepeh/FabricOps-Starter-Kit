@@ -1,0 +1,142 @@
+from __future__ import annotations
+
+import ast
+import inspect
+import sys
+import types
+from pathlib import Path
+
+from fabricops_kit.config import PathConfig
+from fabricops_kit.fabric_input_output import FabricStore
+import fabricops_kit.fabric_input_output as io
+from tests.integration.test_storage_io import _Frame, _Spark
+
+
+PUBLIC_IO_CALLABLES = {
+    "read_lakehouse_table",
+    "write_lakehouse_table",
+    "read_lakehouse_csv",
+    "read_lakehouse_parquet",
+    "read_lakehouse_excel",
+    "read_warehouse_table",
+    "write_warehouse_table",
+}
+
+DELETED_INTERNAL_HELPERS = {
+    "_get_fabric_runtime_context",
+    "_check_naming_convention",
+    "_seed_minimal_sample_source_table",
+}
+
+
+def _store(target: str, kind: str, name: str) -> FabricStore:
+    return FabricStore(
+        env="dev",
+        workspace_id=f"dev-{target}-workspace",
+        item_id=f"dev-{target}-item",
+        name=name,
+        kind=kind,
+    )
+
+
+def _io_config() -> PathConfig:
+    return PathConfig(
+        paths={
+            "dev": {
+                "source": _store("source", "lakehouse", "lh_source_dev"),
+                "unified": _store("unified", "lakehouse", "lh_unified_dev"),
+                "product": _store("product", "lakehouse", "lh_product_dev"),
+                "metadata": _store("metadata", "lakehouse", "lh_metadata_dev"),
+                "warehouse": _store("warehouse", "warehouse", "wh_product_dev"),
+            }
+        }
+    )
+
+
+def test_lakehouse_table_read_routes_every_configured_lakehouse_store():
+    config = _io_config()
+
+    for target in ("source", "unified", "product", "metadata"):
+        spark = _Spark()
+        io.read_lakehouse_table(config, "dev", target, "orders", spark_session=spark)
+
+        expected_path = f"abfss://dev-{target}-workspace@onelake.dfs.fabric.microsoft.com/dev-{target}-item/Tables/orders"
+        assert ("format", "delta") in spark.read.calls
+        assert ("load", expected_path) in spark.read.calls
+
+
+def test_lakehouse_table_write_routes_to_configured_store():
+    config = _io_config()
+    frame = _Frame()
+
+    io.write_lakehouse_table(frame, config, "dev", "metadata", "metadata_orders", mode="overwrite")
+
+    assert ("mode", "overwrite") in frame.write.calls
+    assert ("format", "delta") in frame.write.calls
+    assert ("save", "abfss://dev-metadata-workspace@onelake.dfs.fabric.microsoft.com/dev-metadata-item/Tables/metadata_orders") in frame.write.calls
+
+
+def test_lakehouse_file_readers_build_configured_files_paths():
+    config = _io_config()
+    spark = _Spark()
+
+    io.read_lakehouse_csv(config, "dev", "source", "Files/raw/orders.csv", spark_session=spark)
+    io.read_lakehouse_parquet(config, "dev", "unified", "curated/orders.parquet", spark_session=spark, verbose=False)
+
+    assert ("csv", "abfss://dev-source-workspace@onelake.dfs.fabric.microsoft.com/dev-source-item/Files/raw/orders.csv") in spark.read.calls
+    assert ("parquet", "abfss://dev-unified-workspace@onelake.dfs.fabric.microsoft.com/dev-unified-item/Files/curated/orders.parquet") in spark.read.calls
+
+
+def test_lakehouse_excel_remains_exposed_and_callable():
+    assert hasattr(io, "read_lakehouse_excel")
+    assert callable(io.read_lakehouse_excel)
+    assert inspect.signature(io.read_lakehouse_excel).parameters["relative_path"]
+
+
+def test_warehouse_helpers_build_configured_query(monkeypatch):
+    config = _io_config()
+
+    class Constants:
+        WorkspaceId = "workspace_id"
+        DatawarehouseId = "datawarehouse_id"
+
+    constants_module = types.ModuleType("com.microsoft.spark.fabric.Constants")
+    constants_module.Constants = Constants
+    monkeypatch.setitem(sys.modules, "com", types.ModuleType("com"))
+    monkeypatch.setitem(sys.modules, "com.microsoft", types.ModuleType("com.microsoft"))
+    monkeypatch.setitem(sys.modules, "com.microsoft.spark", types.ModuleType("com.microsoft.spark"))
+    monkeypatch.setitem(sys.modules, "com.microsoft.spark.fabric", types.ModuleType("com.microsoft.spark.fabric"))
+    monkeypatch.setitem(sys.modules, "com.microsoft.spark.fabric.Constants", constants_module)
+
+    spark = _Spark()
+    frame = _Frame()
+    read_result = io.read_warehouse_table(config, "dev", "warehouse", "dbo", "orders", spark_session=spark)
+    io.write_warehouse_table(frame, config, "dev", "warehouse", "dbo", "orders", mode="overwrite")
+
+    assert read_result == {"synapsesql": "wh_product_dev.dbo.orders"}
+    assert ("option", "workspace_id", "dev-warehouse-workspace") in spark.read.calls
+    assert ("option", "datawarehouse_id", "dev-warehouse-item") in spark.read.calls
+    assert ("mode", "overwrite") in frame.write.calls
+    assert ("option", "workspace_id", "dev-warehouse-workspace") in frame.write.calls
+    assert ("option", "datawarehouse_id", "dev-warehouse-item") in frame.write.calls
+    assert ("synapsesql", "wh_product_dev.dbo.orders") in frame.write.calls
+
+
+def test_deleted_internal_helpers_are_absent_and_unreferenced():
+    source = Path("src/fabricops_kit/fabric_input_output.py").read_text(encoding="utf-8")
+    tree = ast.parse(source)
+    defined_functions = {node.name for node in tree.body if isinstance(node, ast.FunctionDef)}
+    referenced_names = {node.id for node in ast.walk(tree) if isinstance(node, ast.Name)}
+
+    assert DELETED_INTERNAL_HELPERS.isdisjoint(defined_functions)
+    assert DELETED_INTERNAL_HELPERS.isdisjoint(referenced_names)
+
+
+def test_public_v1_io_callable_list_remains_unchanged():
+    public_functions = {
+        name
+        for name, value in vars(io).items()
+        if inspect.isfunction(value) and value.__module__ == io.__name__ and not name.startswith("_")
+    }
+
+    assert public_functions == PUBLIC_IO_CALLABLES
