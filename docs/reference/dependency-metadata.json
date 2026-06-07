@@ -14,22 +14,6 @@
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
-    "fabricops_kit.config.ConfigBootstrapResult": {
-      "qualified_name": "fabricops_kit.config.ConfigBootstrapResult",
-      "short_name": "ConfigBootstrapResult",
-      "module": "config",
-      "callable": "ConfigBootstrapResult",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/config/ConfigBootstrapResult/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.config._bootstrap_fabric_env"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
     "fabricops_kit.config.ConfigSmokeCheckResult": {
       "qualified_name": "fabricops_kit.config.ConfigSmokeCheckResult",
       "short_name": "ConfigSmokeCheckResult",
@@ -211,45 +195,6 @@
       ],
       "internal_helper_count": 1
     },
-    "fabricops_kit.config._bootstrap_fabric_env": {
-      "qualified_name": "fabricops_kit.config._bootstrap_fabric_env",
-      "short_name": "_bootstrap_fabric_env",
-      "module": "config",
-      "callable": "_bootstrap_fabric_env",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/config/_bootstrap_fabric_env/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.config.ConfigBootstrapResult",
-        "fabricops_kit.config._get_fabric_runtime_metadata",
-        "fabricops_kit.config._get_store",
-        "fabricops_kit.config._run_config_smoke_tests",
-        "fabricops_kit.config._validate_framework_config"
-      ],
-      "calls_count": 5,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [
-        "fabricops_kit.config._get_fabric_runtime_metadata",
-        "fabricops_kit.config._get_store",
-        "fabricops_kit.config._run_config_smoke_tests",
-        "fabricops_kit.config._validate_framework_config"
-      ],
-      "internal_helper_count": 4
-    },
-    "fabricops_kit.config._check_fabric_ai_functions_available": {
-      "qualified_name": "fabricops_kit.config._check_fabric_ai_functions_available",
-      "short_name": "_check_fabric_ai_functions_available",
-      "module": "config",
-      "callable": "_check_fabric_ai_functions_available",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/config/_check_fabric_ai_functions_available/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
     "fabricops_kit.config._check_spark_session": {
       "qualified_name": "fabricops_kit.config._check_spark_session",
       "short_name": "_check_spark_session",
@@ -263,20 +208,6 @@
         "fabricops_kit.config._run_config_smoke_tests"
       ],
       "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.config._configure_fabric_ai_functions": {
-      "qualified_name": "fabricops_kit.config._configure_fabric_ai_functions",
-      "short_name": "_configure_fabric_ai_functions",
-      "module": "config",
-      "callable": "_configure_fabric_ai_functions",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/config/_configure_fabric_ai_functions/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [],
-      "used_by_count": 0,
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
@@ -322,10 +253,9 @@
       "calls": [],
       "calls_count": 0,
       "used_by": [
-        "fabricops_kit.config._bootstrap_fabric_env",
         "fabricops_kit.config._run_config_smoke_tests"
       ],
-      "used_by_count": 2,
+      "used_by_count": 1,
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
@@ -339,7 +269,6 @@
       "calls": [],
       "calls_count": 0,
       "used_by": [
-        "fabricops_kit.config._bootstrap_fabric_env",
         "fabricops_kit.config._run_config_smoke_tests",
         "fabricops_kit.config.setup_notebook",
         "fabricops_kit.fabric_input_output.read_lakehouse_csv",
@@ -350,7 +279,7 @@
         "fabricops_kit.fabric_input_output.write_lakehouse_table",
         "fabricops_kit.fabric_input_output.write_warehouse_table"
       ],
-      "used_by_count": 10,
+      "used_by_count": 9,
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
@@ -410,22 +339,6 @@
       ],
       "internal_helper_count": 1
     },
-    "fabricops_kit.config._normalize_name": {
-      "qualified_name": "fabricops_kit.config._normalize_name",
-      "short_name": "_normalize_name",
-      "module": "config",
-      "callable": "_normalize_name",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/config/_normalize_name/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.config._validate_notebook_name"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
     "fabricops_kit.config._run_config_smoke_tests": {
       "qualified_name": "fabricops_kit.config._run_config_smoke_tests",
       "short_name": "_run_config_smoke_tests",
@@ -442,10 +355,9 @@
       ],
       "calls_count": 5,
       "used_by": [
-        "fabricops_kit.config._bootstrap_fabric_env",
         "fabricops_kit.config.setup_notebook"
       ],
-      "used_by_count": 2,
+      "used_by_count": 1,
       "internal_helpers_used": [
         "fabricops_kit.config._check_spark_session",
         "fabricops_kit.config._get_fabric_runtime_metadata",
@@ -490,10 +402,9 @@
       ],
       "calls_count": 2,
       "used_by": [
-        "fabricops_kit.config._bootstrap_fabric_env",
         "fabricops_kit.config.setup_notebook"
       ],
-      "used_by_count": 2,
+      "used_by_count": 1,
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
@@ -504,18 +415,14 @@
       "callable": "_validate_notebook_name",
       "docs_url": "/FabricOps-Starter-Kit/reference/internal/config/_validate_notebook_name/",
       "classification": "internal",
-      "calls": [
-        "fabricops_kit.config._normalize_name"
-      ],
-      "calls_count": 1,
+      "calls": [],
+      "calls_count": 0,
       "used_by": [
         "fabricops_kit.config._run_config_smoke_tests"
       ],
       "used_by_count": 1,
-      "internal_helpers_used": [
-        "fabricops_kit.config._normalize_name"
-      ],
-      "internal_helper_count": 1
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
     },
     "fabricops_kit.config.setup_metadata_tables": {
       "qualified_name": "fabricops_kit.config.setup_metadata_tables",
@@ -3568,7 +3475,7 @@
   "modules": {
     "config": {
       "callable_count": 2,
-      "internal_count": 17,
+      "internal_count": 13,
       "outbound_modules": [
         "data_agreement",
         "governance_review",

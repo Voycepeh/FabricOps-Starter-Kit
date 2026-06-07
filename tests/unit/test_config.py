@@ -10,6 +10,7 @@ from fabricops_kit.config import (
     PathConfig,
     _assert_valid_dataset_contract,
     _load_dataset_contract,
+    setup_metadata_tables,
     setup_notebook,
     _validate_dataset_contract,
 )
@@ -35,10 +36,17 @@ def test_dataset_contract_valid_and_invalid_paths_are_actionable():
 def test_setup_notebook_resolves_environment_paths_and_reports_invalid_targets(fake_notebookutils):
     config = framework_config()
 
-    context = setup_notebook(config=config, env="dev", required_targets=["source", "metadata"], notebook_name="99_explore_orders")
+    required_targets = ["source", "unified", "product", "metadata"]
+    context = setup_notebook(
+        config=config, env="dev", required_targets=required_targets, notebook_name="99_explore_orders"
+    )
 
     assert context.environment == "dev"
-    assert set(context.paths) == {"source", "metadata"}
+    assert set(context.paths) == set(required_targets)
+    assert context.paths["source"].name == "lh_source_dev"
+    assert context.paths["unified"].name == "lh_unified_dev"
+    assert context.paths["product"].name == "wh_product_dev"
+    assert context.paths["metadata"].name == "lh_metadata_dev"
     assert context.readiness_status in {"ready", "not_ready"}
     with pytest.raises(ValueError, match="Target 'missing' was not found"):
         setup_notebook(config=config, env="dev", required_targets=["missing"])
@@ -56,3 +64,40 @@ def test_config_objects_copy_nested_agreement_defaults_and_validate_paths():
     )
     with pytest.raises(ValueError, match="paths must be a non-empty mapping"):
         PathConfig(paths={})
+
+
+def test_setup_metadata_tables_delegates_v1_metadata_setup(monkeypatch):
+    calls = []
+
+    def data_agreement_setup(**kwargs):
+        calls.append(("data_agreement", kwargs))
+        return {"status": "ready", "created_tables": []}
+
+    def notebook_registry_setup(**kwargs):
+        calls.append(("notebook_registry", kwargs))
+        return {"status": "ready", "created_tables": []}
+
+    def governance_setup(**kwargs):
+        calls.append(("governance", kwargs))
+        return {"status": "ready", "created_tables": []}
+
+    monkeypatch.setattr("fabricops_kit.data_agreement._setup_data_agreement_tables", data_agreement_setup)
+    monkeypatch.setattr("fabricops_kit.metadata._setup_notebook_registry_table", notebook_registry_setup)
+    monkeypatch.setattr("fabricops_kit.governance_review._setup_governance_metadata_tables", governance_setup)
+
+    config = framework_config()
+    spark = object()
+    result = setup_metadata_tables(spark=spark, config=config, env="dev", require_active_steward=True)
+
+    assert result["status"] == "ready"
+    assert [name for name, _ in calls] == ["data_agreement", "notebook_registry", "governance"]
+    assert calls[0][1] == {"spark": spark, "config": config, "env": "dev", "require_active_steward": True}
+    assert calls[1][1] == {"spark": spark, "config": config, "env": "dev"}
+    assert calls[2][1] == {"spark": spark, "config": config, "env": "dev"}
+
+
+def test_governance_review_imports_current_prompt_constants():
+    import fabricops_kit.governance_review as governance_review
+
+    assert governance_review.BUSINESS_CONTEXT_PROMPT.strip()
+    assert governance_review.PDPA_PERSONAL_IDENTIFIER_PROMPT.strip()

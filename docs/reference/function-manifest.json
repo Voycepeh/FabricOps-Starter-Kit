@@ -12,20 +12,6 @@
     "summary": "No summary available."
   },
   {
-    "id": "fabricops_kit.config.ConfigBootstrapResult",
-    "name": "ConfigBootstrapResult",
-    "qualified_name": "fabricops_kit.config.ConfigBootstrapResult",
-    "module": "config",
-    "classification": "Internal",
-    "inbound": [
-      "fabricops_kit.config._bootstrap_fabric_env"
-    ],
-    "outbound": [],
-    "source_path": "src/fabricops_kit/config.py",
-    "docs_path": "reference/internal/config_ConfigBootstrapResult.md",
-    "summary": "No summary available."
-  },
-  {
     "id": "fabricops_kit.config.ConfigSmokeCheckResult",
     "name": "ConfigSmokeCheckResult",
     "qualified_name": "fabricops_kit.config.ConfigSmokeCheckResult",
@@ -181,36 +167,6 @@
     "summary": "No summary available."
   },
   {
-    "id": "fabricops_kit.config._bootstrap_fabric_env",
-    "name": "_bootstrap_fabric_env",
-    "qualified_name": "fabricops_kit.config._bootstrap_fabric_env",
-    "module": "config",
-    "classification": "Internal",
-    "inbound": [],
-    "outbound": [
-      "fabricops_kit.config.ConfigBootstrapResult",
-      "fabricops_kit.config._get_fabric_runtime_metadata",
-      "fabricops_kit.config._get_store",
-      "fabricops_kit.config._run_config_smoke_tests",
-      "fabricops_kit.config._validate_framework_config"
-    ],
-    "source_path": "src/fabricops_kit/config.py",
-    "docs_path": "reference/internal/config__bootstrap_fabric_env.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.config._check_fabric_ai_functions_available",
-    "name": "_check_fabric_ai_functions_available",
-    "qualified_name": "fabricops_kit.config._check_fabric_ai_functions_available",
-    "module": "config",
-    "classification": "Internal",
-    "inbound": [],
-    "outbound": [],
-    "source_path": "src/fabricops_kit/config.py",
-    "docs_path": "reference/internal/config__check_fabric_ai_functions_available.md",
-    "summary": "No summary available."
-  },
-  {
     "id": "fabricops_kit.config._check_spark_session",
     "name": "_check_spark_session",
     "qualified_name": "fabricops_kit.config._check_spark_session",
@@ -222,18 +178,6 @@
     "outbound": [],
     "source_path": "src/fabricops_kit/config.py",
     "docs_path": "reference/internal/config__check_spark_session.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.config._configure_fabric_ai_functions",
-    "name": "_configure_fabric_ai_functions",
-    "qualified_name": "fabricops_kit.config._configure_fabric_ai_functions",
-    "module": "config",
-    "classification": "Internal",
-    "inbound": [],
-    "outbound": [],
-    "source_path": "src/fabricops_kit/config.py",
-    "docs_path": "reference/internal/config__configure_fabric_ai_functions.md",
     "summary": "No summary available."
   },
   {
@@ -271,7 +215,6 @@
     "module": "config",
     "classification": "Internal",
     "inbound": [
-      "fabricops_kit.config._bootstrap_fabric_env",
       "fabricops_kit.config._run_config_smoke_tests"
     ],
     "outbound": [],
@@ -286,7 +229,6 @@
     "module": "config",
     "classification": "Internal",
     "inbound": [
-      "fabricops_kit.config._bootstrap_fabric_env",
       "fabricops_kit.config._run_config_smoke_tests",
       "fabricops_kit.config.setup_notebook",
       "fabricops_kit.fabric_input_output.read_lakehouse_csv",
@@ -348,27 +290,12 @@
     "summary": "No summary available."
   },
   {
-    "id": "fabricops_kit.config._normalize_name",
-    "name": "_normalize_name",
-    "qualified_name": "fabricops_kit.config._normalize_name",
-    "module": "config",
-    "classification": "Internal",
-    "inbound": [
-      "fabricops_kit.config._validate_notebook_name"
-    ],
-    "outbound": [],
-    "source_path": "src/fabricops_kit/config.py",
-    "docs_path": "reference/internal/config__normalize_name.md",
-    "summary": "No summary available."
-  },
-  {
     "id": "fabricops_kit.config._run_config_smoke_tests",
     "name": "_run_config_smoke_tests",
     "qualified_name": "fabricops_kit.config._run_config_smoke_tests",
     "module": "config",
     "classification": "Internal",
     "inbound": [
-      "fabricops_kit.config._bootstrap_fabric_env",
       "fabricops_kit.config.setup_notebook"
     ],
     "outbound": [
@@ -407,7 +334,6 @@
     "module": "config",
     "classification": "Internal",
     "inbound": [
-      "fabricops_kit.config._bootstrap_fabric_env",
       "fabricops_kit.config.setup_notebook"
     ],
     "outbound": [
@@ -427,9 +353,7 @@
     "inbound": [
       "fabricops_kit.config._run_config_smoke_tests"
     ],
-    "outbound": [
-      "fabricops_kit.config._normalize_name"
-    ],
+    "outbound": [],
     "source_path": "src/fabricops_kit/config.py",
     "docs_path": "reference/internal/config__validate_notebook_name.md",
     "summary": "No summary available."
