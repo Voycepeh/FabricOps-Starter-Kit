@@ -8,10 +8,10 @@ Read [How FabricOps Works](index.md) first. This page explains the future visibi
 
 The v1.0.0 notebooks create useful metadata even without a complete dashboard:
 
-- `01_da` captures agreement, steward, and evidence context.
+- `01_agreement` captures agreement, steward, and evidence context.
 - The notebook registry records notebook participation.
-- `03_pc` writes profile evidence, lineage, output evidence, and run summaries.
-- `04_gov` commits reviewed column context, DQ expectations, and classifications.
+- `02_pipeline` writes profile evidence, lineage, output evidence, and run summaries.
+- `03_review` commits reviewed column context, DQ expectations, and classifications.
 
 This evidence can support handover and manual review today. A dashboard can make the same evidence easier to browse later.
 
@@ -24,8 +24,8 @@ A future dashboard should be a visibility layer over collected metadata, not a s
 | Planned view | Purpose |
 | --- | --- |
 | Agreement overview | Show agreement status, owner, steward, and coverage. |
-| Production evidence | Show recent `03_pc` profile, lineage, guardrail, output, and run-summary evidence. |
-| Governance review | Show reviewed column context, DQ expectations, and classifications from `04_gov`. |
+| Production evidence | Show recent `02_pipeline` profile, lineage, guardrail, output, and run-summary evidence. |
+| Governance review | Show reviewed column context, DQ expectations, and classifications from `03_review`. |
 | Handover readiness | Show whether enough evidence exists for support and operational handover. |
 
 ## Planned after v1.0.0
@@ -35,7 +35,7 @@ A future dashboard should be a visibility layer over collected metadata, not a s
 | Metadata dashboard visibility layer | Build a complete dashboard experience over collected metadata. |
 | Richer governance dashboard views | Improve views for classifications, DQ expectations, agreement coverage, and lineage. |
 | Optional metadata-driven DQ rule execution | Show execution results if future pipelines opt into metadata-driven rules. |
-| Rule promotion workflow | Show which reviewed expectations have been implemented as `03_pc` guardrails. |
+| Rule promotion workflow | Show which reviewed expectations have been implemented as `02_pipeline` guardrails. |
 | Richer AI-assisted review | Surface AI suggestions and human approval status clearly. |
 | More complete operational monitoring | Add broader run health and support visibility. |
 

@@ -22,12 +22,31 @@ def _python_cell(cell: str) -> str:
 
 def test_environment_and_agreement_templates_have_executable_public_workflow_cells():
     env_cells = "\n".join(_code_cells(TEMPLATES / "00_env_config.ipynb"))
-    agreement_cells = "\n".join(_code_cells(TEMPLATES / "01_da_agreement_template.ipynb"))
+    agreement_cells = "\n".join(_code_cells(TEMPLATES / "01_agreement.ipynb"))
 
-    for cell in _code_cells(TEMPLATES / "00_env_config.ipynb") + _code_cells(TEMPLATES / "01_da_agreement_template.ipynb"):
+    for cell in _code_cells(TEMPLATES / "00_env_config.ipynb") + _code_cells(TEMPLATES / "01_agreement.ipynb"):
         ast.parse(_python_cell(cell))
     assert "CONFIG" in env_cells
     assert "setup_metadata_tables" in env_cells
     assert "widget_render_data_steward" in agreement_cells
     assert "widget_render_data_agreement" in agreement_cells
     assert "widget_render_agreement_evidence" in agreement_cells
+
+
+def test_template_notebook_filenames_follow_v1_delivery_order():
+    expected = [
+        "00_env_config.ipynb",
+        "01_agreement.ipynb",
+        "02_pipeline.ipynb",
+        "03_review.ipynb",
+        "99_explore.ipynb",
+    ]
+
+    assert sorted(path.name for path in TEMPLATES.glob("*.ipynb")) == expected
+
+
+def test_templates_do_not_reintroduce_old_numbered_stage_references():
+    stale_terms = ("01" + "_da", "02" + "_ex", "03" + "_pc", "04" + "_gov", "03" + "_pipeline", "02" + "_explore")
+    combined = "\n".join(path.read_text(encoding="utf-8") for path in TEMPLATES.glob("*.ipynb"))
+
+    assert not any(term in combined for term in stale_terms)

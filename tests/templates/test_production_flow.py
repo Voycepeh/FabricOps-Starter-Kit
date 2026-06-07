@@ -20,8 +20,8 @@ def _code(path: str) -> str:
 
 
 def test_production_and_governance_templates_cover_output_handover_and_review_flows():
-    production = _code("03_pc_agreement_pipeline_template.ipynb")
-    governance = _code("04_gov_dataset_table.ipynb")
+    production = _code("02_pipeline.ipynb")
+    governance = _code("03_review.ipynb")
 
     assert "validate_schema" in production
     assert "monitor_data_changes" in production

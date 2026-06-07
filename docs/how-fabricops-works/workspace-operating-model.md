@@ -14,19 +14,19 @@ The recommended setup uses three workspaces:
 
 ## Workspace roles and responsibilities
 
-| Responsibility                 | Governance workspace                     | Engineering Dev workspace                   | Engineering Prod workspace                           |
-| ------------------------------ | ---------------------------------------- | ------------------------------------------- | ---------------------------------------------------- |
-| Data Steward and agreement collection | `01_da` notebook creates metadata        | `02_ex` and `03_pc` notebooks consumes metadata | `02_ex` and `03_pc` notebooks consumes metadata |
-| Data Exploration    | not done here | `02_ex` notebook for exploration            | not done here|
-| Data Transformation / Pipeline | not done here                  |  development `03_pc`                    | production `03_pc`          |
-| Governance review  | `04_gov` notebook creates review outputs |  `02_ex` and  `03_pc`  create profiled outputs  |  `02_ex` and  `03_pc`  create profiled outputs        |
+| Responsibility | Governance workspace | Engineering Dev workspace | Engineering Prod workspace |
+| -------------- | -------------------- | ------------------------- | -------------------------- |
+| Data Steward and agreement collection | `01_agreement` notebook creates metadata. | `02_pipeline` consumes agreement metadata; optional `99_explore` may read it for support analysis. | `02_pipeline` consumes approved agreement metadata; optional `99_explore` is not part of production delivery. |
+| Optional exploration support | Not a required delivery step. | `99_explore` supports discovery, profiling, troubleshooting, investigation, and ad hoc analysis. | Use only for controlled production troubleshooting when approved locally. |
+| Data Transformation / Pipeline | Not done here. | Development `02_pipeline`. | Production `02_pipeline`. |
+| Governance review | `03_review` notebook creates review outputs. | `02_pipeline` creates profiled outputs for review; optional `99_explore` can support investigation. | `02_pipeline` creates production evidence for review and handover. |
 
 
 ## Promotion principle
 
 Production promotion should remain lightweight.
 
-Promote the production-ready `03_pc` notebook from Engineering Dev to Engineering Prod, run it with the production `00_env_config`, and let the production notebook create production outputs in the production workspace.
+Promote the production-ready `02_pipeline` notebook from Engineering Dev to Engineering Prod, run it with the production `00_env_config`, and let the production notebook create production outputs in the production workspace.
 
 Do not copy development outputs into production.
 
@@ -35,7 +35,7 @@ Do not copy development outputs into production.
 | Item                                        | Promotion approach                                                                             |
 | ------------------------------------------- | ---------------------------------------------------------------------------------------------- |
 | `00_env_config`                             | Recreate or maintain separately in each environment. Do not blindly promote it.                |
-| `03_pc`                                     | Promote the production-ready transformation notebook from Engineering Dev to Engineering Prod. |
+| `02_pipeline`                                     | Promote the production-ready transformation notebook from Engineering Dev to Engineering Prod. |
 | Approved metadata                           | Promote or recreate through a controlled process.                                              |
 | Production outputs                          | Create by running the production notebook in Engineering Prod.                                 |
 | Draft metadata, dev paths, unreviewed rules | Do not promote.                                                                                |
@@ -44,7 +44,7 @@ Production pipelines must read only production configuration and approved produc
 
 ## Store production notebook evidence
 
-Once a production `03_pc` pipeline is stable, store a copy of the final production notebook as a `.py` or `.ipynb` file in the Governance workspace metadata lakehouse file area.
+Once a production `02_pipeline` pipeline is stable, store a copy of the final production notebook as a `.py` or `.ipynb` file in the Governance workspace metadata lakehouse file area.
 
 This keeps handover and support material grounded in the actual production implementation, rather than a separate manually written explanation that may drift over time.
 

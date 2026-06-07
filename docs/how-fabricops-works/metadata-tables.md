@@ -27,22 +27,22 @@ The active metadata model contains only the following tables:
 
 | Metadata table                     | Main writer            | Purpose                                                                           |
 | ---------------------------------- | ---------------------- | --------------------------------------------------------------------------------- |
-| `METADATA_DATA_STEWARD`            | `01_da`                | Stores steward identities used during agreement intake.                           |
-| `METADATA_DATA_AGREEMENT`          | `01_da`                | Stores versioned data agreements and approved usage.                              |
-| `METADATA_DATA_AGREEMENT_EVIDENCE` | `01_da`                | Stores file references supporting an agreement version.                           |
-| `METADATA_NOTEBOOK_REGISTRY`       | `02_ex`, `03_pc`       | Stores active and historical relationships between notebooks and data agreements. |
-| `METADATA_DATA_LINEAGE_TABLE`      | `03_pc`                | Stores one current table-level lineage definition for each notebook.              |
-| `METADATA_DATA_CATALOGUE`          | `03_pc`                | Stores table context and column profiling evidence.                               |
+| `METADATA_DATA_STEWARD`            | `01_agreement`                | Stores steward identities used during agreement intake.                           |
+| `METADATA_DATA_AGREEMENT`          | `01_agreement`                | Stores versioned data agreements and approved usage.                              |
+| `METADATA_DATA_AGREEMENT_EVIDENCE` | `01_agreement`                | Stores file references supporting an agreement version.                           |
+| `METADATA_NOTEBOOK_REGISTRY`       | `02_pipeline`, optional `99_explore`       | Stores active and historical relationships between notebooks and data agreements. |
+| `METADATA_DATA_LINEAGE_TABLE`      | `02_pipeline`                | Stores one current table-level lineage definition for each notebook.              |
+| `METADATA_DATA_CATALOGUE`          | `02_pipeline`                | Stores table context and column profiling evidence.                               |
 | `METADATA_DATA_ACCESS`             | Access capture process | Stores table-level access assignments.                                            |
-| `METADATA_COLUMN_CONTEXT`          | `04_gov`               | Stores human-approved business meaning for catalogue columns.                     |
-| `METADATA_DQ_RULES`                | `04_gov`               | Stores reviewed DQ expectations as governance metadata.                           |
-| `METADATA_COLUMN_CLASSIFICATION`   | `04_gov`               | Stores human-approved sensitivity and PII classifications.                        |
+| `METADATA_COLUMN_CONTEXT`          | `03_review`               | Stores human-approved business meaning for catalogue columns.                     |
+| `METADATA_DQ_RULES`                | `03_review`               | Stores reviewed DQ expectations as governance metadata.                           |
+| `METADATA_COLUMN_CLASSIFICATION`   | `03_review`               | Stores human-approved sensitivity and PII classifications.                        |
 
-`04_gov` reviews catalogue evidence from `METADATA_DATA_CATALOGUE` and commits approved governance metadata. It does not require a separate data agreement relationship for every reviewed table.
+`03_review` reviews catalogue evidence from `METADATA_DATA_CATALOGUE` and commits approved governance metadata. It does not require a separate data agreement relationship for every reviewed table.
 
-Schema and data-change guardrails remain inside each `03_pc` notebook. Separate data contracts are not part of the v1.0.0 operating model.
+Schema and data-change guardrails remain inside each `02_pipeline` notebook. Separate data contracts are not part of the v1.0.0 operating model.
 
-Metadata-driven DQ rule execution and classification enforcement are planned after v1.0.0. In v1.0.0, production enforcement comes from checks implemented in `03_pc`.
+Metadata-driven DQ rule execution and classification enforcement are planned after v1.0.0. In v1.0.0, production enforcement comes from checks implemented in `02_pipeline`.
 
 ## Standard runtime audit columns
 
@@ -157,7 +157,7 @@ One notebook can have multiple active agreement relationships. One agreement can
 | `registration_status`           | `active`, `inactive` or `superseded`.                |
 | `notebook_id`                   | Fabric notebook identifier.                          |
 | `notebook_name`                 | Fabric notebook name.                                |
-| `notebook_type`                 | Notebook family such as `02_ex` or `03_pc`.          |
+| `notebook_type`                 | Notebook family such as `02_pipeline` or optional `99_explore`.          |
 | `workspace_id`                  | Fabric workspace identifier.                         |
 | `workspace_name`                | Fabric workspace name.                               |
 | `notebook_url`                  | Fabric notebook URL.                                 |
@@ -334,7 +334,7 @@ Stores append-only human-reviewed DQ expectations.
 
 Includes the standard runtime audit columns.
 
-Reviewed DQ expectations are stored in v1.0.0 as governance metadata. They are not automatically enforced unless implemented as checks in `03_pc`.
+Reviewed DQ expectations are stored in v1.0.0 as governance metadata. They are not automatically enforced unless implemented as checks in `02_pipeline`.
 
 ### `METADATA_COLUMN_CLASSIFICATION`
 

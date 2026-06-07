@@ -67,7 +67,7 @@ The standalone agreement widgets `widget_render_data_steward`, `widget_render_da
 
 Non-v1 helpers that are still needed internally now use leading-underscore names in source modules. Examples include `_setup_data_agreement_tables`, `_setup_notebook_registry_table`, `_setup_governance_metadata_tables`, `_widget_review_table_governance`, `_build_runtime_audit_fields`, `_get_governance_metadata_schemas`, `_build_column_context_records`, `_commit_dq_rules`, `_print_runtime_banner`, and `_validate_dq_rules`.
 
-## 04_gov wrapper rationale
+## 03_review wrapper rationale
 
 `get_selected_catalogue_table` remains public because users must explicitly read the stable table identity after interacting with `widget_select_catalogue_table`. It accepts the selector returned by the widget for readability while preserving widget state fallback.
 

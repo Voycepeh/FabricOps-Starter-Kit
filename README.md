@@ -30,7 +30,7 @@ FabricOps Starter Kit helps teams quickly bootstrap governed Fabric notebook del
 ## Template quick links (Download and open in fabric directly for best experience)
 
 - [`00_env_config`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks/00_env_config.ipynb)
-- [`01_da_agreement_template`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks/01_da_agreement_template.ipynb)
-- [`02_ex_agreement_topic`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks/02_ex_agreement_topic.ipynb)
-- [`03_pc_agreement_pipeline_template`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks/03_pc_agreement_pipeline_template.ipynb)
-- [`04_gov_agreement_dataset_table`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks/04_gov_agreement_dataset_table.ipynb)
+- [`01_agreement`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks/01_agreement.ipynb)
+- [`02_pipeline`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks/02_pipeline.ipynb)
+- [`03_review`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks/03_review.ipynb)
+- [`99_explore`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks/99_explore.ipynb) — optional support
