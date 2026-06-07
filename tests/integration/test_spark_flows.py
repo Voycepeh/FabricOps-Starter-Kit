@@ -4,8 +4,8 @@ import json
 
 import pytest
 
-from fabricops_kit.governance_review import _enforce_dq, _load_active_dq_rules
-from fabricops_kit.drift import validate_schema
+from fabricops_kit.governance_review import _enforce_dq, _load_active_dq_rules, enforce_dq_rules
+from fabricops_kit.drift import stop_if_failed, validate_schema
 
 pytestmark = pytest.mark.spark
 
@@ -168,3 +168,203 @@ def test_load_active_dq_rules_reconstructs_current_governance_metadata(spark_ses
             "lower_bound": 0,
         }
     ]
+
+
+
+def _dq_metadata_df(spark_session, rows):
+    schema = (
+        "environment_name string, dataset_name string, table_name string, rule_key string, rule_id string, "
+        "column_name string, rule_type string, rule_parameters_json string, severity string, description string, "
+        "is_active boolean, review_status string, approved_by string, approved_at string, action_type string, "
+        "_committed_at string, _committed_by string"
+    )
+    return spark_session.createDataFrame(rows, schema=schema)
+
+
+def test_enforce_dq_rules_returns_passed_when_no_active_rules(spark_session, monkeypatch):
+    import fabricops_kit.governance_review as governance
+
+    df = spark_session.createDataFrame([{"order_id": "A", "status": "active", "amount": 10.0}])
+    metadata_df = _dq_metadata_df(spark_session, [])
+    monkeypatch.setattr(governance, "read_lakehouse_table", lambda *args, **kwargs: metadata_df)
+
+    result = enforce_dq_rules(df, object(), "dev", "sales", "orders", spark_session=spark_session)
+
+    assert result == {
+        "status": "passed",
+        "can_continue": True,
+        "checks": [],
+        "message": "No active approved DQ rules found.",
+    }
+
+
+def test_enforce_dq_rules_warning_failure_can_continue(spark_session, monkeypatch):
+    import fabricops_kit.governance_review as governance
+
+    df = spark_session.createDataFrame([{"order_id": "A", "status": "invalid", "amount": 10.0}])
+    metadata_df = _dq_metadata_df(
+        spark_session,
+        [
+            {
+                "environment_name": "dev",
+                "dataset_name": "sales",
+                "table_name": "orders",
+                "rule_key": "orders|status_known",
+                "rule_id": "status_known",
+                "column_name": "status",
+                "rule_type": "accepted_values",
+                "rule_parameters_json": json.dumps({"allowed_values": ["active", "inactive"]}),
+                "severity": "warning",
+                "description": "Known status",
+                "is_active": True,
+                "review_status": "approved",
+                "approved_by": "reviewer@example.com",
+                "approved_at": "2026-01-03T00:00:00Z",
+                "action_type": "approved",
+                "_committed_at": "2026-01-03T00:00:01Z",
+                "_committed_by": "reviewer@example.com",
+            }
+        ],
+    )
+    monkeypatch.setattr(governance, "read_lakehouse_table", lambda *args, **kwargs: metadata_df)
+
+    result = enforce_dq_rules(df, object(), "dev", "sales", "orders", spark_session=spark_session)
+
+    assert result["status"] == "warning"
+    assert result["can_continue"] is True
+    assert result["checks"][0]["status"] == "warning"
+    assert result["checks"][0]["failed_count"] == 1
+    assert result["checks"][0]["total_count"] == 1
+    assert result["checks"][0]["failed_percent"] == 100.0
+
+
+def test_enforce_dq_rules_error_failure_blocks(spark_session, monkeypatch):
+    import fabricops_kit.governance_review as governance
+
+    df = spark_session.createDataFrame([(None, "active", 10.0)], "order_id string, status string, amount double")
+    metadata_df = _dq_metadata_df(
+        spark_session,
+        [
+            {
+                "environment_name": "dev",
+                "dataset_name": "sales",
+                "table_name": "orders",
+                "rule_key": "orders|order_id_required",
+                "rule_id": "order_id_required",
+                "column_name": "order_id",
+                "rule_type": "not_null",
+                "rule_parameters_json": "{}",
+                "severity": "error",
+                "description": "Required",
+                "is_active": True,
+                "review_status": "approved",
+                "approved_by": "reviewer@example.com",
+                "approved_at": "2026-01-03T00:00:00Z",
+                "action_type": "approved",
+                "_committed_at": "2026-01-03T00:00:01Z",
+                "_committed_by": "reviewer@example.com",
+            }
+        ],
+    )
+    monkeypatch.setattr(governance, "read_lakehouse_table", lambda *args, **kwargs: metadata_df)
+
+    result = enforce_dq_rules(df, object(), "dev", "sales", "orders", spark_session=spark_session)
+
+    assert result["status"] == "failed"
+    assert result["can_continue"] is False
+    assert result["checks"][0]["status"] == "failed"
+    with pytest.raises(Exception, match="Guardrail blocked execution"):
+        stop_if_failed(result)
+
+
+def test_enforce_dq_rules_mixed_warning_and_error_failures_return_failed(spark_session, monkeypatch):
+    import fabricops_kit.governance_review as governance
+
+    df = spark_session.createDataFrame([(None, "invalid", 10.0)], "order_id string, status string, amount double")
+    metadata_df = _dq_metadata_df(
+        spark_session,
+        [
+            {
+                "environment_name": "dev",
+                "dataset_name": "sales",
+                "table_name": "orders",
+                "rule_key": "orders|order_id_required",
+                "rule_id": "order_id_required",
+                "column_name": "order_id",
+                "rule_type": "not_null",
+                "rule_parameters_json": "{}",
+                "severity": "error",
+                "description": "Required",
+                "is_active": True,
+                "review_status": "approved",
+                "approved_by": "reviewer@example.com",
+                "approved_at": "2026-01-03T00:00:00Z",
+                "action_type": "approved",
+                "_committed_at": "2026-01-03T00:00:01Z",
+                "_committed_by": "reviewer@example.com",
+            },
+            {
+                "environment_name": "dev",
+                "dataset_name": "sales",
+                "table_name": "orders",
+                "rule_key": "orders|status_known",
+                "rule_id": "status_known",
+                "column_name": "status",
+                "rule_type": "accepted_values",
+                "rule_parameters_json": json.dumps({"allowed_values": ["active", "inactive"]}),
+                "severity": "warning",
+                "description": "Known status",
+                "is_active": True,
+                "review_status": "approved",
+                "approved_by": "reviewer@example.com",
+                "approved_at": "2026-01-03T00:00:00Z",
+                "action_type": "approved",
+                "_committed_at": "2026-01-03T00:00:01Z",
+                "_committed_by": "reviewer@example.com",
+            },
+        ],
+    )
+    monkeypatch.setattr(governance, "read_lakehouse_table", lambda *args, **kwargs: metadata_df)
+
+    result = enforce_dq_rules(df, object(), "dev", "sales", "orders", spark_session=spark_session)
+
+    assert result["status"] == "failed"
+    assert result["can_continue"] is False
+    assert {check["status"] for check in result["checks"]} == {"failed", "warning"}
+
+
+def test_enforce_dq_rules_supports_current_v1_metadata_shape(spark_session, monkeypatch):
+    import fabricops_kit.governance_review as governance
+
+    df = spark_session.createDataFrame([{"order_id": "A", "status": "active", "amount": 10.0, "email": "a@example.com"}])
+    metadata_df = _dq_metadata_df(
+        spark_session,
+        [
+            {
+                "environment_name": "dev",
+                "dataset_name": "sales",
+                "table_name": "orders",
+                "rule_key": "orders|email_format",
+                "rule_id": "email_format",
+                "column_name": "email",
+                "rule_type": "not_null",
+                "rule_parameters_json": "{}",
+                "severity": "error",
+                "description": "Email format",
+                "is_active": True,
+                "review_status": "approved",
+                "approved_by": "reviewer@example.com",
+                "approved_at": "2026-01-03T00:00:00Z",
+                "action_type": "approved",
+                "_committed_at": "2026-01-03T00:00:01Z",
+                "_committed_by": "reviewer@example.com",
+            }
+        ],
+    )
+    monkeypatch.setattr(governance, "read_lakehouse_table", lambda *args, **kwargs: metadata_df)
+
+    result = enforce_dq_rules(df, object(), "dev", "sales", "orders", spark_session=spark_session)
+
+    assert result["status"] == "passed"
+    assert result["can_continue"] is True
+    assert result["checks"][0]["rule_type"] == "not_null"

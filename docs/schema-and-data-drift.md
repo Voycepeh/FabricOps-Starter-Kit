@@ -14,7 +14,7 @@ A typical `02_pipeline` can check:
 - source data changes against previous profile evidence;
 - transformed target schema before outputs are written;
 - target data changes before outputs are written;
-- any approved reviewed metadata that the engineer has intentionally implemented as pipeline checks.
+- approved active DQ rules from `METADATA_DQ_RULES` before outputs are written.
 
 The important boundary is that `02_pipeline` owns blocking behavior. `03_review` can provide reviewed metadata, but it does not stop a run by itself.
 
@@ -24,7 +24,7 @@ The important boundary is that `02_pipeline` owns blocking behavior. `03_review`
 | --- | --- | --- |
 | Before transform | Check the source schema and source profile. | Catch unexpected input changes early. |
 | During transform | Apply deterministic business logic. | Keep the output repeatable. |
-| Before write | Check the target schema and target profile. | Avoid publishing unexpected output changes. |
+| Before write | Check the target schema, target profile, and approved active DQ rules. | Avoid publishing unexpected output changes or error-severity DQ failures. |
 | After successful checks | Write outputs and metadata evidence. | Keep review and support grounded in what actually ran. |
 
 ## Compact starter pattern
@@ -37,12 +37,33 @@ Use a simple pattern first, then add stricter checks only when the team needs th
 # 3. Profile source data and compare it with previous metadata evidence.
 # 4. Transform the data.
 # 5. Validate and profile the proposed target.
-# 6. Stop or warn based on configured guardrails.
-# 7. Write the target only after required checks pass.
-# 8. Record profile, lineage, and run metadata evidence.
+# 6. Enforce approved active DQ rules as aggregate guardrails.
+# 7. Stop or warn based on configured guardrails.
+# 8. Write the full target only after required checks pass.
+# 9. Record profile, lineage, and run metadata evidence.
 ```
 
-A pipeline can later read reviewed metadata from `03_review`, such as approved DQ expectations or classifications, when the engineer chooses to implement those expectations as guardrails.
+
+
+## DQ guardrail behavior
+
+`03_review` records human-approved DQ expectations in `METADATA_DQ_RULES`. `02_pipeline` reads the active approved rules for the target table and evaluates them with the same simple guardrail contract used by schema and data-change checks:
+
+- `status`: `passed`, `warning`, or `failed`;
+- `can_continue`: whether publication can proceed;
+- `checks`: aggregate rule-level outcomes;
+- `message`: a concise summary.
+
+Severity controls the result:
+
+| Rule outcome | Guardrail result | Pipeline behavior |
+| --- | --- | --- |
+| No rule failures | `passed`, `can_continue=True` | Continue and write the full target dataset. |
+| Warning-severity failure | `warning`, `can_continue=True` | Log the warning result and write the full target dataset. |
+| Error-severity failure | `failed`, `can_continue=False` | `stop_if_failed(...)` blocks before the target write. |
+| Mixed warning and error failures | `failed`, `can_continue=False` | Error severity wins and blocks before the target write. |
+
+FabricOps v1 keeps DQ enforcement intentionally simple. It does not quarantine rows, write row-level failure tables, filter invalid rows out of the target, send alerts, or perform partial target writes. Aggregated DQ guardrail results can feed dashboards and alerts later without changing the target write path.
 
 ## Presets
 
@@ -72,6 +93,7 @@ When guardrails run, `02_pipeline` should record useful metadata evidence such a
 - the schema that was checked;
 - profile results;
 - whether checks passed, warned, or failed;
+- aggregate DQ rule outcomes when approved active rules were evaluated;
 - source and target table context;
 - lineage and run context.
 

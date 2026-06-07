@@ -25,6 +25,7 @@ from .fabric_input_output import (
     write_warehouse_table,
 )
 from .governance_review import (
+    enforce_dq_rules,
     get_selected_catalogue_table,
     load_catalogue_profile_rows,
     record_table_governance,
@@ -69,6 +70,7 @@ __all__ = [
     "validate_schema",
     "monitor_data_changes",
     "stop_if_failed",
+    "enforce_dq_rules",
     "build_lineage_records",
     "widget_select_catalogue_table",
     "get_selected_catalogue_table",

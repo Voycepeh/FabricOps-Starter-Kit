@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 7</span><span class="reference-chip">Internal helpers: 32</span><span class="reference-chip">Outbound: 3</span><span class="reference-chip">Inbound: 1</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 8</span><span class="reference-chip">Internal helpers: 36</span><span class="reference-chip">Outbound: 3</span><span class="reference-chip">Inbound: 1</span></div>
 
 ## Module purpose
 
@@ -36,11 +36,11 @@ Owns table-scoped 03_review catalogue selection, business context review, DQ-rul
     </tr>
     <tr>
       <td>Public callable count</td>
-      <td>7</td>
+      <td>8</td>
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>32</td>
+      <td>36</td>
     </tr>
     <tr>
       <td>Inbound module count</td>
@@ -75,6 +75,13 @@ Owns table-scoped 03_review catalogue selection, business context review, DQ-rul
     </tr>
   </thead>
   <tbody>
+    <tr>
+      <td><a href="../../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a></td>
+      <td>Callable</td>
+      <td>function</td>
+      <td>Enforce approved active DQ rules as a target-write guardrail without filtering rows.</td>
+      <td><a href="../../reference/internal/governance_review/_load_active_dq_rules/"><code>_load_active_dq_rules</code></a> (internal), <a href="../../reference/internal/governance_review/_run_dq_guardrail_checks/"><code>_run_dq_guardrail_checks</code></a> (internal), <a href="../../reference/internal/governance_review/_summarize_dq_guardrail/"><code>_summarize_dq_guardrail</code></a> (internal)</td>
+    </tr>
     <tr>
       <td><a href="../../reference/get_selected_catalogue_table/"><code>get_selected_catalogue_table</code></a></td>
       <td>Callable</td>
@@ -140,6 +147,11 @@ Owns table-scoped 03_review catalogue selection, business context review, DQ-rul
 <h5>governance_review</h5>
 <h6>Public callables</h6>
 <ul class="callable-relationship-rows">
+<li>
+<a class="reference-chip" href="../../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_load_active_dq_rules"><code>_load_active_dq_rules</code></a>, <a class="reference-chip" href="#_run_dq_guardrail_checks"><code>_run_dq_guardrail_checks</code></a>, <a class="reference-chip" href="#_summarize_dq_guardrail"><code>_summarize_dq_guardrail</code></a>
+</li>
 <li>
 <a class="reference-chip" href="../../reference/get_selected_catalogue_table/"><code>get_selected_catalogue_table</code></a>
  <span class="callable-relationship-uses">uses:</span>
@@ -229,6 +241,14 @@ Owns table-scoped 03_review catalogue selection, business context review, DQ-rul
       <td><a href="../../reference/widget_review_column_classification/"><code>widget_review_column_classification</code></a>, <a href="../../reference/widget_review_column_context/"><code>widget_review_column_context</code></a>, <a href="../../reference/widget_review_dq_rules/"><code>widget_review_dq_rules</code></a></td>
     </tr>
     <tr>
+      <td><a href="../../reference/internal/governance_review/_dq_check_status/"><code>_dq_check_status</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/governance_review/_dq_failed_expression/"><code>_dq_failed_expression</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
       <td><a href="../../reference/internal/governance_review/_draft_business_context/"><code>_draft_business_context</code></a></td>
       <td>—</td>
     </tr>
@@ -270,7 +290,7 @@ Owns table-scoped 03_review catalogue selection, business context review, DQ-rul
     </tr>
     <tr>
       <td><a href="../../reference/internal/governance_review/_load_active_dq_rules/"><code>_load_active_dq_rules</code></a></td>
-      <td>—</td>
+      <td><a href="../../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a></td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/governance_review/_parse_ai_dict_response/"><code>_parse_ai_dict_response</code></a></td>
@@ -279,6 +299,10 @@ Owns table-scoped 03_review catalogue selection, business context review, DQ-rul
     <tr>
       <td><a href="../../reference/internal/governance_review/_prepare_dq_profile_input_rows/"><code>_prepare_dq_profile_input_rows</code></a></td>
       <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/governance_review/_run_dq_guardrail_checks/"><code>_run_dq_guardrail_checks</code></a></td>
+      <td><a href="../../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a></td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/governance_review/_run_dq_rules/"><code>_run_dq_rules</code></a></td>
@@ -311,6 +335,10 @@ Owns table-scoped 03_review catalogue selection, business context review, DQ-rul
     <tr>
       <td><a href="../../reference/internal/governance_review/_split_dq_rows/"><code>_split_dq_rows</code></a></td>
       <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/governance_review/_summarize_dq_guardrail/"><code>_summarize_dq_guardrail</code></a></td>
+      <td><a href="../../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a></td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/governance_review/_validate_dq_rules/"><code>_validate_dq_rules</code></a></td>
@@ -366,6 +394,14 @@ Owns table-scoped 03_review catalogue selection, business context review, DQ-rul
 <a class="reference-chip" href="#_display_review_guidance"><code>_display_review_guidance</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_value"><code>_value</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_dq_check_status"><code>_dq_check_status</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_dq_failed_expression"><code>_dq_failed_expression</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_spark_sql_helpers"><code>_spark_sql_helpers</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_draft_business_context"><code>_draft_business_context</code></a>
@@ -427,6 +463,11 @@ Owns table-scoped 03_review catalogue selection, business context review, DQ-rul
 <a class="reference-chip" href="#_spark_sql_helpers"><code>_spark_sql_helpers</code></a>
 </li>
 <li>
+<a class="reference-chip" href="#_run_dq_guardrail_checks"><code>_run_dq_guardrail_checks</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_dq_check_status"><code>_dq_check_status</code></a>, <a class="reference-chip" href="#_dq_failed_expression"><code>_dq_failed_expression</code></a>, <a class="reference-chip" href="#_spark_sql_helpers"><code>_spark_sql_helpers</code></a>, <a class="reference-chip" href="#_validate_dq_rules"><code>_validate_dq_rules</code></a>
+</li>
+<li>
 <a class="reference-chip" href="#_run_dq_rules"><code>_run_dq_rules</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_spark_sql_helpers"><code>_spark_sql_helpers</code></a>, <a class="reference-chip" href="#_split_dq_rows"><code>_split_dq_rows</code></a>, <a class="reference-chip" href="#_validate_dq_rules"><code>_validate_dq_rules</code></a>
@@ -457,6 +498,9 @@ Owns table-scoped 03_review catalogue selection, business context review, DQ-rul
 <a class="reference-chip" href="#_split_dq_rows"><code>_split_dq_rows</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_spark_sql_helpers"><code>_spark_sql_helpers</code></a>, <a class="reference-chip" href="#_validate_dq_rules"><code>_validate_dq_rules</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_summarize_dq_guardrail"><code>_summarize_dq_guardrail</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_validate_dq_rules"><code>_validate_dq_rules</code></a>

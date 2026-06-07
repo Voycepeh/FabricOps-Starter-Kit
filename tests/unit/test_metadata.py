@@ -223,6 +223,7 @@ def test_public_v1_callable_list_unchanged_after_metadata_cleanup():
         "validate_schema",
         "monitor_data_changes",
         "stop_if_failed",
+        "enforce_dq_rules",
         "build_lineage_records",
         "widget_select_catalogue_table",
         "get_selected_catalogue_table",
