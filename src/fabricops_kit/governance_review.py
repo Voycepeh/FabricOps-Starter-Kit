@@ -814,7 +814,10 @@ def _run_dq_guardrail_checks(df, table_name: str, rules: list[dict[str, Any]]) -
 def _dq_tagged_dataframe(df, rules: list[dict[str, Any]]):
     """Return the full DataFrame tagged with warning-rule DQ columns."""
     _, F, _ = _spark_sql_helpers()
-    warning_rules = [rule for rule in rules if str(rule.get("severity", "warning")).strip().lower() == "warning"]
+    warning_rules = sorted(
+        (rule for rule in rules if str(rule.get("severity", "warning")).strip().lower() == "warning"),
+        key=lambda rule: str(rule.get("rule_id") or ""),
+    )
     failed_rule_columns = [
         F.when(_dq_failed_expression(df, rule), F.lit(str(rule.get("rule_id") or "")))
         for rule in warning_rules

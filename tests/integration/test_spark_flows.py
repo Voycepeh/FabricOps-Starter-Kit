@@ -300,7 +300,7 @@ def test_enforce_dq_rules_warning_failure_adds_technical_columns_and_preserves_r
     assert result["can_continue"] is True
     assert result["dataframe"].count() == df.count()
     assert tagged_rows["A"]["_dq_check_status"] == "warning"
-    assert set(tagged_rows["A"]["_dq_failed_rules"].split(",")) == {"status_known", "amount_positive"}
+    assert tagged_rows["A"]["_dq_failed_rules"] == "amount_positive,status_known"
     assert tagged_rows["B"]["_dq_check_status"] == "passed"
     assert tagged_rows["B"]["_dq_failed_rules"] == ""
     assert result["summary"]["DQ_FAILED_RULE_COUNT"] == 2

@@ -42,15 +42,16 @@ def test_production_template_enforces_dq_before_full_dataset_write():
 
     dq_call = production.index("dq_result = enforce_dq_rules(")
     dq_stop = production.index("stop_if_failed(dq_result)")
+    dq_print = production.index("dq_result", dq_call + 1)
+    dq_dataframe_assignment = production.index("df_output = dq_result[\"dataframe\"]")
     lakehouse_write = production.index("write_lakehouse_table(df_output")
     warehouse_write = production.index("write_warehouse_table(df_output")
 
-    assert dq_call < dq_stop < lakehouse_write
-    assert dq_call < dq_stop < warehouse_write
+    assert dq_call < dq_print < dq_stop < dq_dataframe_assignment < lakehouse_write
+    assert dq_call < dq_stop < dq_dataframe_assignment < warehouse_write
     assert "valid_rows" not in production
     assert "quarantine_rows" not in production
     assert "failure_rows" not in production
     assert "df_output.filter" not in production
     assert "df_output.where" not in production
-    assert "df_output = dq_result[\"dataframe\"]" in production
     assert "dq_summary=dq_result.get(\"summary\")" in production
