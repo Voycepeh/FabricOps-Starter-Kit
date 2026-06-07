@@ -31,7 +31,7 @@ write_lakehouse_table(
 | `METADATA_DATA_CATALOGUE` | `02_pipeline` | Stores table context, profile evidence, and guardrail context. |
 | `METADATA_DATA_ACCESS` | Access capture process | Stores table-level access assignments when captured. |
 | `METADATA_COLUMN_CONTEXT` | `03_review` | Stores reviewed business meaning for catalogue columns. |
-| `METADATA_DQ_RULES` | `03_review` | Stores reviewed DQ expectations as governance metadata. |
+| `METADATA_DQ_RULES` | `03_review` | Stores approved DQ expectations only; runtime DQ results stay with notebook guardrail output and existing catalogue/profile evidence. |
 | `METADATA_COLUMN_CLASSIFICATION` | `03_review` | Stores reviewed sensitivity and PII classifications. |
 
 `01_agreement` writes steward, agreement, and evidence metadata. `02_pipeline` writes registry, catalogue, lineage, profile, guardrail, and run evidence. `03_review` writes reviewed metadata such as column context, DQ expectations, sensitivity, and classification. `99_explore` can support investigation, but it is optional and is not a required gate.
@@ -257,7 +257,7 @@ Fabric Delta tables do not enforce primary and foreign keys. FabricOps still use
 
 ### `METADATA_DQ_RULES`
 
-**For:** human-reviewed DQ expectations, written by `03_review`.
+**For:** approved DQ expectations only, written by `03_review`.
 
 | Column | Purpose |
 | --- | --- |
@@ -283,7 +283,7 @@ Fabric Delta tables do not enforce primary and foreign keys. FabricOps still use
 | `action_reason` | Reason for the action. |
 | `rule_source` | Source of the rule or suggestion. |
 
-**Workflow connection:** reviewed DQ expectations are governance metadata. They do not enforce anything unless `02_pipeline` intentionally implements them as guardrails. Includes the standard runtime audit columns.
+**Workflow connection:** approved active DQ expectations become runtime guardrails only when `02_pipeline` calls `enforce_dq_rules`. DQ run results are notebook/runtime guardrail output: aggregated rule-level results are printed in the notebook, and warning/passed annotation evidence can be captured through the existing profiling/catalogue path. FabricOps v1 does not add new metadata tables for failed rows or filter rows from the target. Includes the standard runtime audit columns.
 
 ### `METADATA_COLUMN_CLASSIFICATION`
 

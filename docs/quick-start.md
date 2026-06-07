@@ -53,6 +53,8 @@ Start with one Governance workspace and one Engineering workspace. **Alternative
 | ---- | ------- | --------------- |---------- |
 | 5    | Run the required notebooks in sequence. | The Agreement → Pipeline → Review delivery flow is created and can be reviewed before production promotion. | [Notebook Templates](how-fabricops-works/notebook-templates.md)    |
 
+On first and later pipeline runs, approved DQ warning rules do not block publication and write the full dataset; approved DQ error rules block before the target write.
+
 The notebooks are intentionally separated by role. Each template produces metadata or outputs that the next role can reuse.
 
 ![Role-based notebook workflow from environment configuration through governed review](assets/fabricops-role-workflow.png){ .full-width }
@@ -65,9 +67,9 @@ Run the required delivery templates in this order:
 | ----: | ------------------ | ------------------- |
 | 1 | `00_env_config` | Defines environment-specific paths, lakehouses, warehouse targets, and governance metadata routing. |
 | 2 | `01_agreement` | Defines what should be built, who owns it, what rules apply, and what readiness means. |
-| 3 | `02_pipeline` | Builds repeatable transformations, validates source and target data, publishes outputs, records runtime audit columns, captures lineage, and writes profiles. |
-| 4 | `03_review` | Checks evidence, metadata, ownership, rules, and readiness. |
-| 5 | Rerun `02_pipeline` when needed | Applies approved review metadata in the production pipeline when explicit enforcement has been implemented. |
+| 3 | `02_pipeline` | Builds repeatable transformations, validates source and target data, enforces active approved DQ rules, publishes outputs, records runtime audit columns, captures lineage, and writes profiles. |
+| 4 | `03_review` | Checks evidence, metadata, ownership, rules, and readiness; approved DQ expectations are stored for the next pipeline run. |
+| 5 | Rerun `02_pipeline` when needed | Loads active approved DQ rules from `METADATA_DQ_RULES` and enforces them before the target write. |
 | 6 | Operational support | Use the production notebook export plus FabricOps metadata evidence for support and review. |
 
 Optional support:
