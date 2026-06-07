@@ -83,7 +83,7 @@ Use the finder below to look up callable and internal FabricOps functions.
   <p class="reference-catalogue-item-purpose">Profile data, compare against the approved baseline, and return a drift guardrail result.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/drift/" title="Open drift module page" aria-label="Open drift module page">drift</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">03_pc_agreement_pipeline_template</span></p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 7</span></summary><ul><li><code>profile_dataframe</code></li><li><code>_check_profile_drift</code></li><li><code>_data_change_preset_config</code></li><li><code>_extract_categorical_distribution_categories</code></li><li><code>_extract_numeric_distribution_bin_edges</code></li><li><code>_load_latest_profile</code></li><li><code>_normalize_profile</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 6</span></summary><ul><li><code>profile_dataframe</code></li><li><code>_baseline_distribution_args</code></li><li><code>_check_profile_drift</code></li><li><code>_data_change_preset_config</code></li><li><code>_load_latest_profile</code></li><li><code>_normalize_profile</code></li></ul></details>
 
   </div>
 </article>
@@ -339,6 +339,15 @@ Use the finder below to look up callable and internal FabricOps functions.
 
   </div>
 </article>
+<article id="drift-_baseline_distribution_args" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_baseline_distribution_args" data-callable-module="drift" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Internal helper used by the package.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/drift__baseline_distribution_args/"><code>_baseline_distribution_args</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Internal helper used by the package.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/drift/" title="Open drift module page" aria-label="Open drift module page">drift</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_normalize_profile</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>monitor_data_changes</code></li></ul></details>
+  </div>
+</article>
 <article id="config-_bootstrap_fabric_env" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_bootstrap_fabric_env" data-callable-module="config" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Bootstrap 00_env_config environment readiness for FabricOps notebooks.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/config__bootstrap_fabric_env/"><code>_bootstrap_fabric_env</code></a></h3>
   <p class="reference-catalogue-item-purpose">Bootstrap 00_env_config environment readiness for FabricOps notebooks.</p>
@@ -380,7 +389,7 @@ Use the finder below to look up callable and internal FabricOps functions.
   <p class="reference-catalogue-item-purpose">Internal helper used by the package.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_profiling/" title="Open data_profiling module page" aria-label="Open data_profiling module page">data_profiling</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 5</span></summary><ul><li><code>_build_categorical_distribution</code></li><li><code>_build_numeric_distribution</code></li><li><code>_is_categorical_type</code></li><li><code>_is_numeric_type</code></li><li><code>_numeric_bin_edges</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 3</span></summary><ul><li><code>_build_categorical_distribution</code></li><li><code>_build_numeric_distribution</code></li><li><code>_numeric_bin_edges</code></li></ul></details>
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>profile_dataframe</code></li></ul></details>
   </div>
 </article>
@@ -420,30 +429,12 @@ Use the finder below to look up callable and internal FabricOps functions.
 
   </div>
 </article>
-<article id="data_lineage-_build_lineage_handover_markdown" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_build_lineage_handover_markdown" data-callable-module="data_lineage" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Build a concise markdown handover summary from lineage execution results.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/data_lineage__build_lineage_handover_markdown/"><code>_build_lineage_handover_markdown</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Build a concise markdown handover summary from lineage execution results.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_lineage/" title="Open data_lineage module page" aria-label="Open data_lineage module page">data_lineage</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
-
-
-  </div>
-</article>
-<article id="data_lineage-_build_lineage_record_from_steps" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_build_lineage_record_from_steps" data-callable-module="data_lineage" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Create metadata-ready lineage records from validated lineage steps.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/data_lineage__build_lineage_record_from_steps/"><code>_build_lineage_record_from_steps</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Create metadata-ready lineage records from validated lineage steps.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_lineage/" title="Open data_lineage module page" aria-label="Open data_lineage module page">data_lineage</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_validate_lineage_steps</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_build_lineage_records</code></li></ul></details>
-  </div>
-</article>
 <article id="data_lineage-_build_lineage_records" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_build_lineage_records" data-callable-module="data_lineage" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Build metadata-ready lineage rows from validated lineage steps.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/data_lineage__build_lineage_records/"><code>_build_lineage_records</code></a></h3>
   <p class="reference-catalogue-item-purpose">Build metadata-ready lineage rows from validated lineage steps.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_lineage/" title="Open data_lineage module page" aria-label="Open data_lineage module page">data_lineage</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_build_lineage_record_from_steps</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_validate_lineage_steps</code></li></ul></details>
 
   </div>
 </article>
@@ -470,7 +461,7 @@ Use the finder below to look up callable and internal FabricOps functions.
   <p class="reference-catalogue-item-purpose">Internal helper used by the package.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_profiling/" title="Open data_profiling module page" aria-label="Open data_profiling module page">data_profiling</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_dedupe_edges</code></li></ul></details>
+
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_build_distribution_summaries</code></li></ul></details>
   </div>
 </article>
@@ -490,15 +481,6 @@ Use the finder below to look up callable and internal FabricOps functions.
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>_deserialize_custom_fields</code></li><li><code>_serialize_custom_fields</code></li></ul></details>
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_create_or_update_data_agreement</code></li></ul></details>
-  </div>
-</article>
-<article id="data_lineage-_call_name" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_call_name" data-callable-module="data_lineage" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Internal helper used by the package.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/data_lineage__call_name/"><code>_call_name</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Internal helper used by the package.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_lineage/" title="Open data_lineage module page" aria-label="Open data_lineage module page">data_lineage</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
-
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_scan_notebook_lineage</code></li></ul></details>
   </div>
 </article>
 <article id="governance_review-_canonical_dq_rule_type" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_canonical_dq_rule_type" data-callable-module="governance_review" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Internal helper used by the package.">
@@ -690,15 +672,6 @@ Use the finder below to look up callable and internal FabricOps functions.
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>monitor_data_changes</code></li></ul></details>
   </div>
 </article>
-<article id="data_profiling-_dedupe_edges" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_dedupe_edges" data-callable-module="data_profiling" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Internal helper used by the package.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/data_profiling__dedupe_edges/"><code>_dedupe_edges</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Internal helper used by the package.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_profiling/" title="Open data_profiling module page" aria-label="Open data_profiling module page">data_profiling</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
-
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 2</span></summary><ul><li><code>_build_numeric_distribution</code></li><li><code>_numeric_bin_edges</code></li></ul></details>
-  </div>
-</article>
 <article id="metadata-_default_evidence_types" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_default_evidence_types" data-callable-module="metadata" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Return canonical evidence type names used across metadata records.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/metadata__default_evidence_types/"><code>_default_evidence_types</code></a></h3>
   <p class="reference-catalogue-item-purpose">Return canonical evidence type names used across metadata records.</p>
@@ -776,7 +749,7 @@ Use the finder below to look up callable and internal FabricOps functions.
   <p class="reference-catalogue-item-purpose">Optionally enrich deterministic lineage steps using an AI helper callable.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_lineage/" title="Open data_lineage module page" aria-label="Open data_lineage module page">data_lineage</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_fallback_copilot_lineage_prompt</code></li></ul></details>
+
 
   </div>
 </article>
@@ -798,15 +771,6 @@ Use the finder below to look up callable and internal FabricOps functions.
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_draft_dq_rules</code></li></ul></details>
   </div>
 </article>
-<article id="drift-_extract_categorical_distribution_categories" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_extract_categorical_distribution_categories" data-callable-module="drift" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Return categorical baseline vocabularies from a profile payload.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/drift__extract_categorical_distribution_categories/"><code>_extract_categorical_distribution_categories</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Return categorical baseline vocabularies from a profile payload.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/drift/" title="Open drift module page" aria-label="Open drift module page">drift</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_normalize_profile</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>monitor_data_changes</code></li></ul></details>
-  </div>
-</article>
 <article id="metadata-_extract_columns_from_profile" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_extract_columns_from_profile" data-callable-module="metadata" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Internal helper used by the package.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/metadata__extract_columns_from_profile/"><code>_extract_columns_from_profile</code></a></h3>
   <p class="reference-catalogue-item-purpose">Internal helper used by the package.</p>
@@ -816,30 +780,12 @@ Use the finder below to look up callable and internal FabricOps functions.
 
   </div>
 </article>
-<article id="drift-_extract_numeric_distribution_bin_edges" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_extract_numeric_distribution_bin_edges" data-callable-module="drift" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Return numeric distribution bin edges from a profile payload.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/drift__extract_numeric_distribution_bin_edges/"><code>_extract_numeric_distribution_bin_edges</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Return numeric distribution bin edges from a profile payload.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/drift/" title="Open drift module page" aria-label="Open drift module page">drift</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_normalize_profile</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>monitor_data_changes</code></li></ul></details>
-  </div>
-</article>
-<article id="data_lineage-_fallback_copilot_lineage_prompt" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_fallback_copilot_lineage_prompt" data-callable-module="data_lineage" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Build a fallback Copilot prompt for manual lineage enrichment.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/data_lineage__fallback_copilot_lineage_prompt/"><code>_fallback_copilot_lineage_prompt</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Build a fallback Copilot prompt for manual lineage enrichment.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_lineage/" title="Open data_lineage module page" aria-label="Open data_lineage module page">data_lineage</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
-
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_enrich_lineage_steps_with_ai</code></li></ul></details>
-  </div>
-</article>
 <article id="data_lineage-_flatten_chain" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_flatten_chain" data-callable-module="data_lineage" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Internal helper used by the package.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/data_lineage__flatten_chain/"><code>_flatten_chain</code></a></h3>
   <p class="reference-catalogue-item-purpose">Internal helper used by the package.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_lineage/" title="Open data_lineage module page" aria-label="Open data_lineage module page">data_lineage</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_name</code></li></ul></details>
+
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_scan_notebook_lineage</code></li></ul></details>
   </div>
 </article>
@@ -960,15 +906,6 @@ Use the finder below to look up callable and internal FabricOps functions.
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 2</span></summary><ul><li><code>_render_searchable_selector</code></li><li><code>widget_select_agreement</code></li></ul></details>
   </div>
 </article>
-<article id="data_profiling-_is_categorical_type" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_is_categorical_type" data-callable-module="data_profiling" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Return whether a Spark type string is suitable for categorical distributions.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/data_profiling__is_categorical_type/"><code>_is_categorical_type</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Return whether a Spark type string is suitable for categorical distributions.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_profiling/" title="Open data_profiling module page" aria-label="Open data_profiling module page">data_profiling</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
-
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_build_distribution_summaries</code></li></ul></details>
-  </div>
-</article>
 <article id="data_profiling-_is_min_max_supported_type" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_is_min_max_supported_type" data-callable-module="data_profiling" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Return whether min/max aggregation is safe for a Spark type string.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/data_profiling__is_min_max_supported_type/"><code>_is_min_max_supported_type</code></a></h3>
   <p class="reference-catalogue-item-purpose">Return whether min/max aggregation is safe for a Spark type string.</p>
@@ -985,15 +922,6 @@ Use the finder below to look up callable and internal FabricOps functions.
   <div class="reference-catalogue-item-counts">
 
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_load_latest_profile</code></li></ul></details>
-  </div>
-</article>
-<article id="data_profiling-_is_numeric_type" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_is_numeric_type" data-callable-module="data_profiling" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Return whether a Spark type string is suitable for numeric distributions.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/data_profiling__is_numeric_type/"><code>_is_numeric_type</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Return whether a Spark type string is suitable for numeric distributions.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_profiling/" title="Open data_profiling module page" aria-label="Open data_profiling module page">data_profiling</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
-
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_build_distribution_summaries</code></li></ul></details>
   </div>
 </article>
 <article id="governance_review-_is_success" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_is_success" data-callable-module="governance_review" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Internal helper used by the package.">
@@ -1095,15 +1023,6 @@ Use the finder below to look up callable and internal FabricOps functions.
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 3</span></summary><ul><li><code>_create_or_update_data_agreement</code></li><li><code>_render_maintenance_widget</code></li><li><code>_setup_data_agreement_tables</code></li></ul></details>
   </div>
 </article>
-<article id="data_lineage-_literal" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_literal" data-callable-module="data_lineage" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Internal helper used by the package.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/data_lineage__literal/"><code>_literal</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Internal helper used by the package.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_lineage/" title="Open data_lineage module page" aria-label="Open data_lineage module page">data_lineage</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
-
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_resolve_write_target</code></li></ul></details>
-  </div>
-</article>
 <article id="governance_review-_load_active_dq_rules" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_load_active_dq_rules" data-callable-module="governance_review" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Load active DQ rules from current v1 metadata, falling back to legacy rule_json.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/governance_review__load_active_dq_rules/"><code>_load_active_dq_rules</code></a></h3>
   <p class="reference-catalogue-item-purpose">Load active DQ rules from current v1 metadata, falling back to legacy rule_json.</p>
@@ -1158,15 +1077,6 @@ Use the finder below to look up callable and internal FabricOps functions.
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_validate_dataset_contract</code></li></ul></details>
   </div>
 </article>
-<article id="data_lineage-_name" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_name" data-callable-module="data_lineage" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Internal helper used by the package.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/data_lineage__name/"><code>_name</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Internal helper used by the package.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_lineage/" title="Open data_lineage module page" aria-label="Open data_lineage module page">data_lineage</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
-
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 2</span></summary><ul><li><code>_flatten_chain</code></li><li><code>_scan_notebook_lineage</code></li></ul></details>
-  </div>
-</article>
 <article id="data_agreement-_next_minor_version" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_next_minor_version" data-callable-module="data_agreement" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Return the next minor contract version, defaulting to ``1.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/data_agreement__next_minor_version/"><code>_next_minor_version</code></a></h3>
   <p class="reference-catalogue-item-purpose">Return the next minor contract version, defaulting to ``1.</p>
@@ -1208,8 +1118,8 @@ Use the finder below to look up callable and internal FabricOps functions.
   <p class="reference-catalogue-item-purpose">Internal helper used by the package.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/drift/" title="Open drift module page" aria-label="Open drift module page">drift</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 3</span></summary><ul><li><code>_normalize_profile</code></li><li><code>_parse_distribution</code></li><li><code>_row_get</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 6</span></summary><ul><li><code>_check_profile_drift</code></li><li><code>_extract_categorical_distribution_categories</code></li><li><code>_extract_numeric_distribution_bin_edges</code></li><li><code>_load_latest_profile</code></li><li><code>_normalize_profile</code></li><li><code>monitor_data_changes</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_normalize_profile</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 5</span></summary><ul><li><code>_baseline_distribution_args</code></li><li><code>_check_profile_drift</code></li><li><code>_load_latest_profile</code></li><li><code>_normalize_profile</code></li><li><code>monitor_data_changes</code></li></ul></details>
   </div>
 </article>
 <article id="metadata-_notebook_registration_key" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_notebook_registration_key" data-callable-module="metadata" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Internal helper used by the package.">
@@ -1244,7 +1154,7 @@ Use the finder below to look up callable and internal FabricOps functions.
   <p class="reference-catalogue-item-purpose">Internal helper used by the package.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_profiling/" title="Open data_profiling module page" aria-label="Open data_profiling module page">data_profiling</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_dedupe_edges</code></li></ul></details>
+
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_build_distribution_summaries</code></li></ul></details>
   </div>
 </article>
@@ -1253,7 +1163,7 @@ Use the finder below to look up callable and internal FabricOps functions.
   <p class="reference-catalogue-item-purpose">Internal helper used by the package.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/drift/" title="Open drift module page" aria-label="Open drift module page">drift</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_proportions</code></li></ul></details>
+
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_check_profile_drift</code></li></ul></details>
   </div>
 </article>
@@ -1273,15 +1183,6 @@ Use the finder below to look up callable and internal FabricOps functions.
   <div class="reference-catalogue-item-counts">
 
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 3</span></summary><ul><li><code>_create_or_update_data_agreement</code></li><li><code>_latest_agreement_versions</code></li><li><code>_next_minor_version</code></li></ul></details>
-  </div>
-</article>
-<article id="drift-_parse_distribution" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_parse_distribution" data-callable-module="drift" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Internal helper used by the package.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/drift__parse_distribution/"><code>_parse_distribution</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Internal helper used by the package.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/drift/" title="Open drift module page" aria-label="Open drift module page">drift</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
-
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_normalize_profile</code></li></ul></details>
   </div>
 </article>
 <article id="data_agreement-_parse_iso_date" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_parse_iso_date" data-callable-module="data_agreement" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Return an ISO date string or raise a clear intake validation error.">
@@ -1309,15 +1210,6 @@ Use the finder below to look up callable and internal FabricOps functions.
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_get_notebookutils</code></li></ul></details>
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_save_agreement_evidence_records</code></li></ul></details>
-  </div>
-</article>
-<article id="drift-_proportions" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_proportions" data-callable-module="drift" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Internal helper used by the package.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/drift__proportions/"><code>_proportions</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Internal helper used by the package.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/drift/" title="Open drift module page" aria-label="Open drift module page">drift</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
-
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_numeric_psi</code></li></ul></details>
   </div>
 </article>
 <article id="metadata-_register_current_notebook" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_register_current_notebook" data-callable-module="metadata" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Append a runtime notebook registration row.">
@@ -1397,17 +1289,8 @@ Use the finder below to look up callable and internal FabricOps functions.
   <p class="reference-catalogue-item-purpose">Internal helper used by the package.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_lineage/" title="Open data_lineage module page" aria-label="Open data_lineage module page">data_lineage</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_literal</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_scan_notebook_lineage</code></li></ul></details>
-  </div>
-</article>
-<article id="drift-_row_get" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_row_get" data-callable-module="drift" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Internal helper used by the package.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/drift__row_get/"><code>_row_get</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Internal helper used by the package.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/drift/" title="Open drift module page" aria-label="Open drift module page">drift</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
 
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_normalize_profile</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_scan_notebook_lineage</code></li></ul></details>
   </div>
 </article>
 <article id="config-_run_config_smoke_tests" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_run_config_smoke_tests" data-callable-module="config" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Run 00_env_config readiness smoke checks for configuration bootstrap.">
@@ -1478,7 +1361,7 @@ Use the finder below to look up callable and internal FabricOps functions.
   <p class="reference-catalogue-item-purpose">Extract deterministic lineage steps from notebook code using AST parsing.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_lineage/" title="Open data_lineage module page" aria-label="Open data_lineage module page">data_lineage</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 5</span></summary><ul><li><code>_call_name</code></li><li><code>_flatten_chain</code></li><li><code>_name</code></li><li><code>_resolve_write_target</code></li><li><code>_step</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>_flatten_chain</code></li><li><code>_resolve_write_target</code></li></ul></details>
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_scan_notebook_cells</code></li></ul></details>
   </div>
 </article>
@@ -1599,15 +1482,6 @@ Use the finder below to look up callable and internal FabricOps functions.
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 2</span></summary><ul><li><code>_build_handover_record</code></li><li><code>render_handover_markdown</code></li></ul></details>
   </div>
 </article>
-<article id="data_lineage-_step" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_step" data-callable-module="data_lineage" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Internal helper used by the package.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/data_lineage__step/"><code>_step</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Internal helper used by the package.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_lineage/" title="Open data_lineage module page" aria-label="Open data_lineage module page">data_lineage</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
-
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_scan_notebook_lineage</code></li></ul></details>
-  </div>
-</article>
 <article id="data_agreement-_to_bool" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_to_bool" data-callable-module="data_agreement" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Normalize common notebook and metadata boolean representations.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/data_agreement__to_bool/"><code>_to_bool</code></a></h3>
   <p class="reference-catalogue-item-purpose">Normalize common notebook and metadata boolean representations.</p>
@@ -1659,7 +1533,7 @@ Use the finder below to look up callable and internal FabricOps functions.
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_lineage/" title="Open data_lineage module page" aria-label="Open data_lineage module page">data_lineage</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
 
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_build_lineage_record_from_steps</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_build_lineage_records</code></li></ul></details>
   </div>
 </article>
 <article id="config-_validate_notebook_name" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_validate_notebook_name" data-callable-module="config" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Internal helper used by the package.">

@@ -1132,32 +1132,6 @@
     "summary": "Render an agreement selector and optionally register the active notebook."
   },
   {
-    "name": "_build_lineage_handover_markdown",
-    "qualified_name": "fabricops_kit.data_lineage._build_lineage_handover_markdown",
-    "module": "data_lineage",
-    "type": "internal",
-    "role": "internal",
-    "inbound": [],
-    "outbound": [],
-    "source_file": "src/fabricops_kit/data_lineage.py",
-    "summary": "No summary available."
-  },
-  {
-    "name": "_build_lineage_record_from_steps",
-    "qualified_name": "fabricops_kit.data_lineage._build_lineage_record_from_steps",
-    "module": "data_lineage",
-    "type": "internal",
-    "role": "internal",
-    "inbound": [
-      "fabricops_kit.data_lineage._build_lineage_records"
-    ],
-    "outbound": [
-      "fabricops_kit.data_lineage._validate_lineage_steps"
-    ],
-    "source_file": "src/fabricops_kit/data_lineage.py",
-    "summary": "No summary available."
-  },
-  {
     "name": "_build_lineage_records",
     "qualified_name": "fabricops_kit.data_lineage._build_lineage_records",
     "module": "data_lineage",
@@ -1165,21 +1139,8 @@
     "role": "internal",
     "inbound": [],
     "outbound": [
-      "fabricops_kit.data_lineage._build_lineage_record_from_steps"
+      "fabricops_kit.data_lineage._validate_lineage_steps"
     ],
-    "source_file": "src/fabricops_kit/data_lineage.py",
-    "summary": "No summary available."
-  },
-  {
-    "name": "_call_name",
-    "qualified_name": "fabricops_kit.data_lineage._call_name",
-    "module": "data_lineage",
-    "type": "internal",
-    "role": "internal",
-    "inbound": [
-      "fabricops_kit.data_lineage._scan_notebook_lineage"
-    ],
-    "outbound": [],
     "source_file": "src/fabricops_kit/data_lineage.py",
     "summary": "No summary available."
   },
@@ -1190,21 +1151,6 @@
     "type": "internal",
     "role": "internal",
     "inbound": [],
-    "outbound": [
-      "fabricops_kit.data_lineage._fallback_copilot_lineage_prompt"
-    ],
-    "source_file": "src/fabricops_kit/data_lineage.py",
-    "summary": "No summary available."
-  },
-  {
-    "name": "_fallback_copilot_lineage_prompt",
-    "qualified_name": "fabricops_kit.data_lineage._fallback_copilot_lineage_prompt",
-    "module": "data_lineage",
-    "type": "internal",
-    "role": "internal",
-    "inbound": [
-      "fabricops_kit.data_lineage._enrich_lineage_steps_with_ai"
-    ],
     "outbound": [],
     "source_file": "src/fabricops_kit/data_lineage.py",
     "summary": "No summary available."
@@ -1216,35 +1162,6 @@
     "type": "internal",
     "role": "internal",
     "inbound": [
-      "fabricops_kit.data_lineage._scan_notebook_lineage"
-    ],
-    "outbound": [
-      "fabricops_kit.data_lineage._name"
-    ],
-    "source_file": "src/fabricops_kit/data_lineage.py",
-    "summary": "No summary available."
-  },
-  {
-    "name": "_literal",
-    "qualified_name": "fabricops_kit.data_lineage._literal",
-    "module": "data_lineage",
-    "type": "internal",
-    "role": "internal",
-    "inbound": [
-      "fabricops_kit.data_lineage._resolve_write_target"
-    ],
-    "outbound": [],
-    "source_file": "src/fabricops_kit/data_lineage.py",
-    "summary": "No summary available."
-  },
-  {
-    "name": "_name",
-    "qualified_name": "fabricops_kit.data_lineage._name",
-    "module": "data_lineage",
-    "type": "internal",
-    "role": "internal",
-    "inbound": [
-      "fabricops_kit.data_lineage._flatten_chain",
       "fabricops_kit.data_lineage._scan_notebook_lineage"
     ],
     "outbound": [],
@@ -1260,9 +1177,7 @@
     "inbound": [
       "fabricops_kit.data_lineage._scan_notebook_lineage"
     ],
-    "outbound": [
-      "fabricops_kit.data_lineage._literal"
-    ],
+    "outbound": [],
     "source_file": "src/fabricops_kit/data_lineage.py",
     "summary": "No summary available."
   },
@@ -1289,25 +1204,9 @@
       "fabricops_kit.data_lineage._scan_notebook_cells"
     ],
     "outbound": [
-      "fabricops_kit.data_lineage._call_name",
       "fabricops_kit.data_lineage._flatten_chain",
-      "fabricops_kit.data_lineage._name",
-      "fabricops_kit.data_lineage._resolve_write_target",
-      "fabricops_kit.data_lineage._step"
+      "fabricops_kit.data_lineage._resolve_write_target"
     ],
-    "source_file": "src/fabricops_kit/data_lineage.py",
-    "summary": "No summary available."
-  },
-  {
-    "name": "_step",
-    "qualified_name": "fabricops_kit.data_lineage._step",
-    "module": "data_lineage",
-    "type": "internal",
-    "role": "internal",
-    "inbound": [
-      "fabricops_kit.data_lineage._scan_notebook_lineage"
-    ],
-    "outbound": [],
     "source_file": "src/fabricops_kit/data_lineage.py",
     "summary": "No summary available."
   },
@@ -1318,7 +1217,7 @@
     "type": "internal",
     "role": "internal",
     "inbound": [
-      "fabricops_kit.data_lineage._build_lineage_record_from_steps"
+      "fabricops_kit.data_lineage._build_lineage_records"
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/data_lineage.py",
@@ -1360,8 +1259,6 @@
     "outbound": [
       "fabricops_kit.data_profiling._build_categorical_distribution",
       "fabricops_kit.data_profiling._build_numeric_distribution",
-      "fabricops_kit.data_profiling._is_categorical_type",
-      "fabricops_kit.data_profiling._is_numeric_type",
       "fabricops_kit.data_profiling._numeric_bin_edges"
     ],
     "source_file": "src/fabricops_kit/data_profiling.py",
@@ -1375,22 +1272,6 @@
     "role": "internal",
     "inbound": [
       "fabricops_kit.data_profiling._build_distribution_summaries"
-    ],
-    "outbound": [
-      "fabricops_kit.data_profiling._dedupe_edges"
-    ],
-    "source_file": "src/fabricops_kit/data_profiling.py",
-    "summary": "No summary available."
-  },
-  {
-    "name": "_dedupe_edges",
-    "qualified_name": "fabricops_kit.data_profiling._dedupe_edges",
-    "module": "data_profiling",
-    "type": "internal",
-    "role": "internal",
-    "inbound": [
-      "fabricops_kit.data_profiling._build_numeric_distribution",
-      "fabricops_kit.data_profiling._numeric_bin_edges"
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/data_profiling.py",
@@ -1410,19 +1291,6 @@
     "summary": "No summary available."
   },
   {
-    "name": "_is_categorical_type",
-    "qualified_name": "fabricops_kit.data_profiling._is_categorical_type",
-    "module": "data_profiling",
-    "type": "internal",
-    "role": "internal",
-    "inbound": [
-      "fabricops_kit.data_profiling._build_distribution_summaries"
-    ],
-    "outbound": [],
-    "source_file": "src/fabricops_kit/data_profiling.py",
-    "summary": "No summary available."
-  },
-  {
     "name": "_is_min_max_supported_type",
     "qualified_name": "fabricops_kit.data_profiling._is_min_max_supported_type",
     "module": "data_profiling",
@@ -1430,19 +1298,6 @@
     "role": "internal",
     "inbound": [
       "fabricops_kit.data_profiling.profile_dataframe"
-    ],
-    "outbound": [],
-    "source_file": "src/fabricops_kit/data_profiling.py",
-    "summary": "No summary available."
-  },
-  {
-    "name": "_is_numeric_type",
-    "qualified_name": "fabricops_kit.data_profiling._is_numeric_type",
-    "module": "data_profiling",
-    "type": "internal",
-    "role": "internal",
-    "inbound": [
-      "fabricops_kit.data_profiling._build_distribution_summaries"
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/data_profiling.py",
@@ -1457,9 +1312,7 @@
     "inbound": [
       "fabricops_kit.data_profiling._build_distribution_summaries"
     ],
-    "outbound": [
-      "fabricops_kit.data_profiling._dedupe_edges"
-    ],
+    "outbound": [],
     "source_file": "src/fabricops_kit/data_profiling.py",
     "summary": "No summary available."
   },
@@ -1532,6 +1385,21 @@
     "summary": "No summary available."
   },
   {
+    "name": "_baseline_distribution_args",
+    "qualified_name": "fabricops_kit.drift._baseline_distribution_args",
+    "module": "drift",
+    "type": "internal",
+    "role": "internal",
+    "inbound": [
+      "fabricops_kit.drift.monitor_data_changes"
+    ],
+    "outbound": [
+      "fabricops_kit.drift._normalize_profile"
+    ],
+    "source_file": "src/fabricops_kit/drift.py",
+    "summary": "No summary available."
+  },
+  {
     "name": "_categorical_distance",
     "qualified_name": "fabricops_kit.drift._categorical_distance",
     "module": "drift",
@@ -1571,36 +1439,6 @@
       "fabricops_kit.drift.monitor_data_changes"
     ],
     "outbound": [],
-    "source_file": "src/fabricops_kit/drift.py",
-    "summary": "No summary available."
-  },
-  {
-    "name": "_extract_categorical_distribution_categories",
-    "qualified_name": "fabricops_kit.drift._extract_categorical_distribution_categories",
-    "module": "drift",
-    "type": "internal",
-    "role": "internal",
-    "inbound": [
-      "fabricops_kit.drift.monitor_data_changes"
-    ],
-    "outbound": [
-      "fabricops_kit.drift._normalize_profile"
-    ],
-    "source_file": "src/fabricops_kit/drift.py",
-    "summary": "No summary available."
-  },
-  {
-    "name": "_extract_numeric_distribution_bin_edges",
-    "qualified_name": "fabricops_kit.drift._extract_numeric_distribution_bin_edges",
-    "module": "drift",
-    "type": "internal",
-    "role": "internal",
-    "inbound": [
-      "fabricops_kit.drift.monitor_data_changes"
-    ],
-    "outbound": [
-      "fabricops_kit.drift._normalize_profile"
-    ],
     "source_file": "src/fabricops_kit/drift.py",
     "summary": "No summary available."
   },
@@ -1654,17 +1492,14 @@
     "type": "internal",
     "role": "internal",
     "inbound": [
+      "fabricops_kit.drift._baseline_distribution_args",
       "fabricops_kit.drift._check_profile_drift",
-      "fabricops_kit.drift._extract_categorical_distribution_categories",
-      "fabricops_kit.drift._extract_numeric_distribution_bin_edges",
       "fabricops_kit.drift._load_latest_profile",
       "fabricops_kit.drift._normalize_profile",
       "fabricops_kit.drift.monitor_data_changes"
     ],
     "outbound": [
-      "fabricops_kit.drift._normalize_profile",
-      "fabricops_kit.drift._parse_distribution",
-      "fabricops_kit.drift._row_get"
+      "fabricops_kit.drift._normalize_profile"
     ],
     "source_file": "src/fabricops_kit/drift.py",
     "summary": "No summary available."
@@ -1677,47 +1512,6 @@
     "role": "internal",
     "inbound": [
       "fabricops_kit.drift._check_profile_drift"
-    ],
-    "outbound": [
-      "fabricops_kit.drift._proportions"
-    ],
-    "source_file": "src/fabricops_kit/drift.py",
-    "summary": "No summary available."
-  },
-  {
-    "name": "_parse_distribution",
-    "qualified_name": "fabricops_kit.drift._parse_distribution",
-    "module": "drift",
-    "type": "internal",
-    "role": "internal",
-    "inbound": [
-      "fabricops_kit.drift._normalize_profile"
-    ],
-    "outbound": [],
-    "source_file": "src/fabricops_kit/drift.py",
-    "summary": "No summary available."
-  },
-  {
-    "name": "_proportions",
-    "qualified_name": "fabricops_kit.drift._proportions",
-    "module": "drift",
-    "type": "internal",
-    "role": "internal",
-    "inbound": [
-      "fabricops_kit.drift._numeric_psi"
-    ],
-    "outbound": [],
-    "source_file": "src/fabricops_kit/drift.py",
-    "summary": "No summary available."
-  },
-  {
-    "name": "_row_get",
-    "qualified_name": "fabricops_kit.drift._row_get",
-    "module": "drift",
-    "type": "internal",
-    "role": "internal",
-    "inbound": [
-      "fabricops_kit.drift._normalize_profile"
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/drift.py",
@@ -1732,10 +1526,9 @@
     "inbound": [],
     "outbound": [
       "fabricops_kit.data_profiling.profile_dataframe",
+      "fabricops_kit.drift._baseline_distribution_args",
       "fabricops_kit.drift._check_profile_drift",
       "fabricops_kit.drift._data_change_preset_config",
-      "fabricops_kit.drift._extract_categorical_distribution_categories",
-      "fabricops_kit.drift._extract_numeric_distribution_bin_edges",
       "fabricops_kit.drift._load_latest_profile",
       "fabricops_kit.drift._normalize_profile"
     ],

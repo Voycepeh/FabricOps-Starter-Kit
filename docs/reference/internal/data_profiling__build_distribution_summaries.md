@@ -17,7 +17,7 @@ No summary available.
 - Source file path: `src/fabricops_kit/data_profiling.py`
 - Source reference: <a href="../../api/modules/data_profiling/#_build_distribution_summaries">Module source anchor</a>
 - Inbound references count: 1
-- Outbound references count: 5
+- Outbound references count: 3
 
 ## Inbound references
 - <a href="../profile_dataframe/"><code>fabricops_kit.data_profiling.profile_dataframe</code></a>
@@ -25,6 +25,4 @@ No summary available.
 ## Outbound references
 - <a href="../internal/data_profiling/_build_categorical_distribution/"><code>fabricops_kit.data_profiling._build_categorical_distribution</code></a>
 - <a href="../internal/data_profiling/_build_numeric_distribution/"><code>fabricops_kit.data_profiling._build_numeric_distribution</code></a>
-- <a href="../internal/data_profiling/_is_categorical_type/"><code>fabricops_kit.data_profiling._is_categorical_type</code></a>
-- <a href="../internal/data_profiling/_is_numeric_type/"><code>fabricops_kit.data_profiling._is_numeric_type</code></a>
 - <a href="../internal/data_profiling/_numeric_bin_edges/"><code>fabricops_kit.data_profiling._numeric_bin_edges</code></a>

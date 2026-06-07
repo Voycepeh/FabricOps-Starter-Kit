@@ -17,10 +17,7 @@ No summary available.
 - Source file path: `src/fabricops_kit/data_lineage.py`
 - Source reference: <a href="../../api/modules/data_lineage/#_flatten_chain">Module source anchor</a>
 - Inbound references count: 1
-- Outbound references count: 1
+- Outbound references count: 0
 
 ## Inbound references
 - <a href="../internal/data_lineage/_scan_notebook_lineage/"><code>fabricops_kit.data_lineage._scan_notebook_lineage</code></a>
-
-## Outbound references
-- <a href="../internal/data_lineage/_name/"><code>fabricops_kit.data_lineage._name</code></a>

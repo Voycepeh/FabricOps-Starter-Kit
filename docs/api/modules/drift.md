@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 3</span><span class="reference-chip">Internal helpers: 14</span><span class="reference-chip">Outbound: 1</span><span class="reference-chip">Inbound: 0</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 3</span><span class="reference-chip">Internal helpers: 10</span><span class="reference-chip">Outbound: 1</span><span class="reference-chip">Inbound: 0</span></div>
 
 ## Module purpose
 
@@ -40,7 +40,7 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>14</td>
+      <td>10</td>
     </tr>
     <tr>
       <td>Inbound module count</td>
@@ -80,7 +80,7 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
       <td>Callable</td>
       <td>function</td>
       <td>Profile data, compare against the approved baseline, and return a drift guardrail result.</td>
-      <td><a href="../../reference/internal/drift/_check_profile_drift/"><code>_check_profile_drift</code></a> (internal), <a href="../../reference/internal/drift/_data_change_preset_config/"><code>_data_change_preset_config</code></a> (internal), <a href="../../reference/internal/drift/_extract_categorical_distribution_categories/"><code>_extract_categorical_distribution_categories</code></a> (internal), <a href="../../reference/internal/drift/_extract_numeric_distribution_bin_edges/"><code>_extract_numeric_distribution_bin_edges</code></a> (internal), <a href="../../reference/internal/drift/_load_latest_profile/"><code>_load_latest_profile</code></a> (internal), <a href="../../reference/internal/drift/_normalize_profile/"><code>_normalize_profile</code></a> (internal)</td>
+      <td><a href="../../reference/internal/drift/_baseline_distribution_args/"><code>_baseline_distribution_args</code></a> (internal), <a href="../../reference/internal/drift/_check_profile_drift/"><code>_check_profile_drift</code></a> (internal), <a href="../../reference/internal/drift/_data_change_preset_config/"><code>_data_change_preset_config</code></a> (internal), <a href="../../reference/internal/drift/_load_latest_profile/"><code>_load_latest_profile</code></a> (internal), <a href="../../reference/internal/drift/_normalize_profile/"><code>_normalize_profile</code></a> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/stop_if_failed/"><code>stop_if_failed</code></a></td>
@@ -115,7 +115,7 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
 <li>
 <a class="reference-chip" href="../../reference/monitor_data_changes/"><code>monitor_data_changes</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_check_profile_drift"><code>_check_profile_drift</code></a>, <a class="reference-chip" href="#_data_change_preset_config"><code>_data_change_preset_config</code></a>, <a class="reference-chip" href="#_extract_categorical_distribution_categories"><code>_extract_categorical_distribution_categories</code></a>, <a class="reference-chip" href="#_extract_numeric_distribution_bin_edges"><code>_extract_numeric_distribution_bin_edges</code></a>, <a class="reference-chip" href="#_load_latest_profile"><code>_load_latest_profile</code></a>, <a class="reference-chip" href="#_normalize_profile"><code>_normalize_profile</code></a>
+<a class="reference-chip" href="#_baseline_distribution_args"><code>_baseline_distribution_args</code></a>, <a class="reference-chip" href="#_check_profile_drift"><code>_check_profile_drift</code></a>, <a class="reference-chip" href="#_data_change_preset_config"><code>_data_change_preset_config</code></a>, <a class="reference-chip" href="#_load_latest_profile"><code>_load_latest_profile</code></a>, <a class="reference-chip" href="#_normalize_profile"><code>_normalize_profile</code></a>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/stop_if_failed/"><code>stop_if_failed</code></a>
@@ -149,6 +149,10 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
       <td><a href="../../reference/validate_schema/"><code>validate_schema</code></a></td>
     </tr>
     <tr>
+      <td><a href="../../reference/internal/drift/_baseline_distribution_args/"><code>_baseline_distribution_args</code></a></td>
+      <td><a href="../../reference/monitor_data_changes/"><code>monitor_data_changes</code></a></td>
+    </tr>
+    <tr>
       <td><a href="../../reference/internal/drift/_categorical_distance/"><code>_categorical_distance</code></a></td>
       <td>—</td>
     </tr>
@@ -158,14 +162,6 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
     </tr>
     <tr>
       <td><a href="../../reference/internal/drift/_data_change_preset_config/"><code>_data_change_preset_config</code></a></td>
-      <td><a href="../../reference/monitor_data_changes/"><code>monitor_data_changes</code></a></td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/internal/drift/_extract_categorical_distribution_categories/"><code>_extract_categorical_distribution_categories</code></a></td>
-      <td><a href="../../reference/monitor_data_changes/"><code>monitor_data_changes</code></a></td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/internal/drift/_extract_numeric_distribution_bin_edges/"><code>_extract_numeric_distribution_bin_edges</code></a></td>
       <td><a href="../../reference/monitor_data_changes/"><code>monitor_data_changes</code></a></td>
     </tr>
     <tr>
@@ -188,18 +184,6 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
       <td><a href="../../reference/internal/drift/_numeric_psi/"><code>_numeric_psi</code></a></td>
       <td>—</td>
     </tr>
-    <tr>
-      <td><a href="../../reference/internal/drift/_parse_distribution/"><code>_parse_distribution</code></a></td>
-      <td>—</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/internal/drift/_proportions/"><code>_proportions</code></a></td>
-      <td>—</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/internal/drift/_row_get/"><code>_row_get</code></a></td>
-      <td>—</td>
-    </tr>
   </tbody>
 </table>
 </div>
@@ -212,6 +196,11 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
 <a class="reference-chip" href="#_normalize_datatype"><code>_normalize_datatype</code></a>
 </li>
 <li>
+<a class="reference-chip" href="#_baseline_distribution_args"><code>_baseline_distribution_args</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_normalize_profile"><code>_normalize_profile</code></a>
+</li>
+<li>
 <a class="reference-chip" href="#_categorical_distance"><code>_categorical_distance</code></a>
 </li>
 <li>
@@ -221,16 +210,6 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
 </li>
 <li>
 <a class="reference-chip" href="#_data_change_preset_config"><code>_data_change_preset_config</code></a>
-</li>
-<li>
-<a class="reference-chip" href="#_extract_categorical_distribution_categories"><code>_extract_categorical_distribution_categories</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_normalize_profile"><code>_normalize_profile</code></a>
-</li>
-<li>
-<a class="reference-chip" href="#_extract_numeric_distribution_bin_edges"><code>_extract_numeric_distribution_bin_edges</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_normalize_profile"><code>_normalize_profile</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_is_missing_table_error"><code>_is_missing_table_error</code></a>
@@ -246,21 +225,10 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
 <li>
 <a class="reference-chip" href="#_normalize_profile"><code>_normalize_profile</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_normalize_profile"><code>_normalize_profile</code></a>, <a class="reference-chip" href="#_parse_distribution"><code>_parse_distribution</code></a>, <a class="reference-chip" href="#_row_get"><code>_row_get</code></a>
+<a class="reference-chip" href="#_normalize_profile"><code>_normalize_profile</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_numeric_psi"><code>_numeric_psi</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_proportions"><code>_proportions</code></a>
-</li>
-<li>
-<a class="reference-chip" href="#_parse_distribution"><code>_parse_distribution</code></a>
-</li>
-<li>
-<a class="reference-chip" href="#_proportions"><code>_proportions</code></a>
-</li>
-<li>
-<a class="reference-chip" href="#_row_get"><code>_row_get</code></a>
 </li>
 </ul>
 </details>

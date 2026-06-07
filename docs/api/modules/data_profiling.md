@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 1</span><span class="reference-chip">Internal helpers: 9</span><span class="reference-chip">Outbound: 0</span><span class="reference-chip">Inbound: 2</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 1</span><span class="reference-chip">Internal helpers: 6</span><span class="reference-chip">Outbound: 0</span><span class="reference-chip">Inbound: 2</span></div>
 
 ## Module purpose
 
@@ -40,7 +40,7 @@ Owns deterministic profiling evidence such as schema, nulls, distincts, min/max,
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>9</td>
+      <td>6</td>
     </tr>
     <tr>
       <td>Inbound module count</td>
@@ -133,24 +133,12 @@ Owns deterministic profiling evidence such as schema, nulls, distincts, min/max,
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_profiling/_dedupe_edges/"><code>_dedupe_edges</code></a></td>
-      <td>—</td>
-    </tr>
-    <tr>
       <td><a href="../../reference/internal/data_profiling/_get_profiled_columns/"><code>_get_profiled_columns</code></a></td>
       <td><a href="../../reference/profile_dataframe/"><code>profile_dataframe</code></a></td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_profiling/_is_categorical_type/"><code>_is_categorical_type</code></a></td>
-      <td>—</td>
-    </tr>
-    <tr>
       <td><a href="../../reference/internal/data_profiling/_is_min_max_supported_type/"><code>_is_min_max_supported_type</code></a></td>
       <td><a href="../../reference/profile_dataframe/"><code>profile_dataframe</code></a></td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/internal/data_profiling/_is_numeric_type/"><code>_is_numeric_type</code></a></td>
-      <td>—</td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/data_profiling/_numeric_bin_edges/"><code>_numeric_bin_edges</code></a></td>
@@ -168,32 +156,19 @@ Owns deterministic profiling evidence such as schema, nulls, distincts, min/max,
 <li>
 <a class="reference-chip" href="#_build_distribution_summaries"><code>_build_distribution_summaries</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_build_categorical_distribution"><code>_build_categorical_distribution</code></a>, <a class="reference-chip" href="#_build_numeric_distribution"><code>_build_numeric_distribution</code></a>, <a class="reference-chip" href="#_is_categorical_type"><code>_is_categorical_type</code></a>, <a class="reference-chip" href="#_is_numeric_type"><code>_is_numeric_type</code></a>, <a class="reference-chip" href="#_numeric_bin_edges"><code>_numeric_bin_edges</code></a>
+<a class="reference-chip" href="#_build_categorical_distribution"><code>_build_categorical_distribution</code></a>, <a class="reference-chip" href="#_build_numeric_distribution"><code>_build_numeric_distribution</code></a>, <a class="reference-chip" href="#_numeric_bin_edges"><code>_numeric_bin_edges</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_build_numeric_distribution"><code>_build_numeric_distribution</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_dedupe_edges"><code>_dedupe_edges</code></a>
-</li>
-<li>
-<a class="reference-chip" href="#_dedupe_edges"><code>_dedupe_edges</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_get_profiled_columns"><code>_get_profiled_columns</code></a>
 </li>
 <li>
-<a class="reference-chip" href="#_is_categorical_type"><code>_is_categorical_type</code></a>
-</li>
-<li>
 <a class="reference-chip" href="#_is_min_max_supported_type"><code>_is_min_max_supported_type</code></a>
 </li>
 <li>
-<a class="reference-chip" href="#_is_numeric_type"><code>_is_numeric_type</code></a>
-</li>
-<li>
 <a class="reference-chip" href="#_numeric_bin_edges"><code>_numeric_bin_edges</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_dedupe_edges"><code>_dedupe_edges</code></a>
 </li>
 </ul>
 </details>

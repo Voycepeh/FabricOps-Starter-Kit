@@ -219,31 +219,29 @@ _DEFAULT_PROFILE_DRIFT_POLICY = {
 }
 
 
-def _row_get(row, *names):
-    for name in names:
-        if isinstance(row, dict) and name in row:
-            return row.get(name)
-        if hasattr(row, "asDict"):
-            data = row.asDict(recursive=True)
-            if name in data:
-                return data.get(name)
-        if hasattr(row, name):
-            return getattr(row, name)
-    return None
-
-
-def _parse_distribution(value):
-    if value in (None, ""):
-        return None
-    if isinstance(value, dict):
-        return value
-    try:
-        return json.loads(value)
-    except (TypeError, json.JSONDecodeError):
-        return None
-
-
 def _normalize_profile(profile) -> dict | None:
+    def row_value(row, *names):
+        for name in names:
+            if isinstance(row, dict) and name in row:
+                return row.get(name)
+            if hasattr(row, "asDict"):
+                data = row.asDict(recursive=True)
+                if name in data:
+                    return data.get(name)
+            if hasattr(row, name):
+                return getattr(row, name)
+        return None
+
+    def distribution_payload(value):
+        if value in (None, ""):
+            return None
+        if isinstance(value, dict):
+            return value
+        try:
+            return json.loads(value)
+        except (TypeError, json.JSONDecodeError):
+            return None
+
     if profile is None:
         return None
     if isinstance(profile, dict) and "columns" in profile:
@@ -255,24 +253,24 @@ def _normalize_profile(profile) -> dict | None:
         if not rows:
             return None
         first = rows[0]
-        row_count = _row_get(first, "row_count", "ROW_COUNT", "PROFILED_ROW_COUNT")
-        table_name = _row_get(first, "table_name", "TABLE_NAME", "PROFILED_TABLE_NAME")
-        dataset_name = _row_get(first, "dataset_name", "DATASET_NAME")
-        profile_stage = _row_get(first, "profile_stage", "PROFILE_STAGE", "EVIDENCE_ROLE")
+        row_count = row_value(first, "row_count", "ROW_COUNT", "PROFILED_ROW_COUNT")
+        table_name = row_value(first, "table_name", "TABLE_NAME", "PROFILED_TABLE_NAME")
+        dataset_name = row_value(first, "dataset_name", "DATASET_NAME")
+        profile_stage = row_value(first, "profile_stage", "PROFILE_STAGE", "EVIDENCE_ROLE")
         columns = []
         for row in rows:
-            distribution_type = _row_get(row, "distribution_type", "DISTRIBUTION_TYPE")
-            distribution = _parse_distribution(_row_get(row, "distribution", "DISTRIBUTION", "distribution_json", "DISTRIBUTION_JSON"))
+            distribution_type = row_value(row, "distribution_type", "DISTRIBUTION_TYPE")
+            distribution = distribution_payload(row_value(row, "distribution", "DISTRIBUTION", "distribution_json", "DISTRIBUTION_JSON"))
             column = {
-                "column_name": _row_get(row, "column_name", "COLUMN_NAME"),
-                "data_type": _row_get(row, "data_type", "DATA_TYPE"),
-                "row_count": _row_get(row, "row_count", "ROW_COUNT", "PROFILED_ROW_COUNT"),
-                "null_count": _row_get(row, "null_count", "NULL_COUNT"),
-                "null_pct": _row_get(row, "null_pct", "NULL_PCT", "null_percent", "NULL_PERCENT"),
-                "distinct_count": _row_get(row, "distinct_count", "DISTINCT_COUNT"),
-                "distinct_pct": _row_get(row, "distinct_pct", "DISTINCT_PCT", "distinct_percent", "DISTINCT_PERCENT"),
-                "min_value": _row_get(row, "min_value", "MIN_VALUE"),
-                "max_value": _row_get(row, "max_value", "MAX_VALUE"),
+                "column_name": row_value(row, "column_name", "COLUMN_NAME"),
+                "data_type": row_value(row, "data_type", "DATA_TYPE"),
+                "row_count": row_value(row, "row_count", "ROW_COUNT", "PROFILED_ROW_COUNT"),
+                "null_count": row_value(row, "null_count", "NULL_COUNT"),
+                "null_pct": row_value(row, "null_pct", "NULL_PCT", "null_percent", "NULL_PERCENT"),
+                "distinct_count": row_value(row, "distinct_count", "DISTINCT_COUNT"),
+                "distinct_pct": row_value(row, "distinct_pct", "DISTINCT_PCT", "distinct_percent", "DISTINCT_PERCENT"),
+                "min_value": row_value(row, "min_value", "MIN_VALUE"),
+                "max_value": row_value(row, "max_value", "MAX_VALUE"),
             }
             if distribution_type:
                 column["distribution_type"] = distribution_type
@@ -285,68 +283,25 @@ def _normalize_profile(profile) -> dict | None:
             "profile_stage": profile_stage,
             "row_count": row_count,
             "columns": columns,
-            "profile_status": _row_get(first, "profile_status", "PROFILE_STATUS"),
-            "baseline_status": _row_get(first, "baseline_status", "BASELINE_STATUS"),
-            "source_change_signal": _parse_distribution(_row_get(first, "source_change_signal", "SOURCE_CHANGE_SIGNAL_JSON")),
+            "profile_status": row_value(first, "profile_status", "PROFILE_STATUS"),
+            "baseline_status": row_value(first, "baseline_status", "BASELINE_STATUS"),
+            "source_change_signal": distribution_payload(row_value(first, "source_change_signal", "SOURCE_CHANGE_SIGNAL_JSON")),
         }
     return profile
 
 
-def _extract_numeric_distribution_bin_edges(profile) -> dict[str, list[float]]:
-    """Return numeric distribution bin edges from a profile payload.
-
-    Parameters
-    ----------
-    profile : dict or Spark DataFrame or list[dict]
-        Profile payload produced by :func:`fabricops_kit.profile_dataframe` or
-        loaded from profile metadata.
-
-    Returns
-    -------
-    dict[str, list[float]]
-        Mapping of column names to numeric bin edges that can be passed back to
-        ``profile_dataframe(..., distribution_bin_edges=...)`` for comparable
-        current-run distributions.
-    """
+def _baseline_distribution_args(profile) -> dict[str, dict[str, list[float] | list[str]]]:
     normalized = _normalize_profile(profile) or {}
-    edges: dict[str, list[float]] = {}
+    numeric_edges: dict[str, list[float]] = {}
+    categorical_values: dict[str, list[str]] = {}
     for column in normalized.get("columns", []):
         distribution = column.get("distribution") or {}
+        column_name = str(column.get("column_name"))
         if column.get("distribution_type") == "numeric" and distribution.get("bin_edges"):
-            edges[str(column.get("column_name"))] = [float(value) for value in distribution.get("bin_edges", [])]
-    return edges
-
-
-def _extract_categorical_distribution_categories(profile) -> dict[str, list[str]]:
-    """Return categorical baseline vocabularies from a profile payload.
-
-    Parameters
-    ----------
-    profile : dict or Spark DataFrame or list[dict]
-        Profile payload produced by :func:`fabricops_kit.profile_dataframe` or
-        loaded from profile metadata.
-
-    Returns
-    -------
-    dict[str, list[str]]
-        Mapping of column names to baseline category values that can be passed
-        to ``profile_dataframe(..., categorical_categories=...)``.
-    """
-    normalized = _normalize_profile(profile) or {}
-    categories: dict[str, list[str]] = {}
-    for column in normalized.get("columns", []):
-        distribution = column.get("distribution") or {}
-        if column.get("distribution_type") == "categorical" and distribution.get("category_counts") is not None:
-            categories[str(column.get("column_name"))] = [str(value) for value in distribution.get("category_counts", {}).keys()]
-    return categories
-
-
-def _proportions(counts: list[int | float], epsilon: float = 1e-9) -> list[float]:
-    total = float(sum(float(count or 0) for count in counts))
-    if total <= 0:
-        return [epsilon for _ in counts]
-    return [max(float(count or 0) / total, epsilon) for count in counts]
-
+            numeric_edges[column_name] = [float(value) for value in distribution.get("bin_edges", [])]
+        elif column.get("distribution_type") == "categorical" and distribution.get("category_counts") is not None:
+            categorical_values[column_name] = [str(value) for value in distribution.get("category_counts", {}).keys()]
+    return {"numeric_edges": numeric_edges, "categorical_values": categorical_values}
 
 def _numeric_psi(current_distribution: dict, baseline_distribution: dict) -> float | None:
     current_edges = [float(value) for value in current_distribution.get("bin_edges", [])]
@@ -357,8 +312,14 @@ def _numeric_psi(current_distribution: dict, baseline_distribution: dict) -> flo
     baseline_counts = [float(value or 0) for value in baseline_distribution.get("bin_counts", [])]
     if len(current_counts) != len(baseline_counts) or not current_counts:
         return None
-    current_props = _proportions(current_counts)
-    baseline_props = _proportions(baseline_counts)
+    def proportions(counts: list[float], epsilon: float = 1e-9) -> list[float]:
+        total = float(sum(float(count or 0) for count in counts))
+        if total <= 0:
+            return [epsilon for _ in counts]
+        return [max(float(count or 0) / total, epsilon) for count in counts]
+
+    current_props = proportions(current_counts)
+    baseline_props = proportions(baseline_counts)
     return float(sum((current - baseline) * math.log(current / baseline) for current, baseline in zip(current_props, baseline_props)))
 
 
@@ -710,13 +671,14 @@ def monitor_data_changes(
         exclude_run_id=exclude_run_id,
         baseline_mode=config["baseline_mode"],
     )
+    baseline_distribution_args = _baseline_distribution_args(baseline_profile)
     current_profile_df = profile_dataframe(
         dataframe,
         table_name,
         include_distributions=True,
         distribution_columns=distribution_columns,
-        distribution_bin_edges=_extract_numeric_distribution_bin_edges(baseline_profile),
-        categorical_categories=_extract_categorical_distribution_categories(baseline_profile),
+        distribution_bin_edges=baseline_distribution_args["numeric_edges"],
+        categorical_categories=baseline_distribution_args["categorical_values"],
     )
     current_profile = _normalize_profile(current_profile_df)
     result = _check_profile_drift(current_profile, baseline_profile, policy=config["policy"])

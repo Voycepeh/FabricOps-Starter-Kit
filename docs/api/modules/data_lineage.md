@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 1</span><span class="reference-chip">Internal helpers: 14</span><span class="reference-chip">Outbound: 0</span><span class="reference-chip">Inbound: 0</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 1</span><span class="reference-chip">Internal helpers: 7</span><span class="reference-chip">Outbound: 0</span><span class="reference-chip">Inbound: 0</span></div>
 
 ## Module purpose
 
@@ -40,7 +40,7 @@ Owns source-to-target lineage and transformation evidence.
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>14</td>
+      <td>7</td>
     </tr>
     <tr>
       <td>Inbound module count</td>
@@ -121,19 +121,7 @@ Owns source-to-target lineage and transformation evidence.
   </thead>
   <tbody>
     <tr>
-      <td><a href="../../reference/internal/data_lineage/_build_lineage_handover_markdown/"><code>_build_lineage_handover_markdown</code></a></td>
-      <td>—</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/internal/data_lineage/_build_lineage_record_from_steps/"><code>_build_lineage_record_from_steps</code></a></td>
-      <td>—</td>
-    </tr>
-    <tr>
       <td><a href="../../reference/internal/data_lineage/_build_lineage_records/"><code>_build_lineage_records</code></a></td>
-      <td>—</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/internal/data_lineage/_call_name/"><code>_call_name</code></a></td>
       <td>—</td>
     </tr>
     <tr>
@@ -141,19 +129,7 @@ Owns source-to-target lineage and transformation evidence.
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_lineage/_fallback_copilot_lineage_prompt/"><code>_fallback_copilot_lineage_prompt</code></a></td>
-      <td>—</td>
-    </tr>
-    <tr>
       <td><a href="../../reference/internal/data_lineage/_flatten_chain/"><code>_flatten_chain</code></a></td>
-      <td>—</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/internal/data_lineage/_literal/"><code>_literal</code></a></td>
-      <td>—</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/internal/data_lineage/_name/"><code>_name</code></a></td>
       <td>—</td>
     </tr>
     <tr>
@@ -169,10 +145,6 @@ Owns source-to-target lineage and transformation evidence.
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_lineage/_step/"><code>_step</code></a></td>
-      <td>—</td>
-    </tr>
-    <tr>
       <td><a href="../../reference/internal/data_lineage/_validate_lineage_steps/"><code>_validate_lineage_steps</code></a></td>
       <td>—</td>
     </tr>
@@ -183,44 +155,18 @@ Owns source-to-target lineage and transformation evidence.
 <h6>Internal helpers details</h6>
 <ul class="callable-relationship-rows">
 <li>
-<a class="reference-chip" href="#_build_lineage_handover_markdown"><code>_build_lineage_handover_markdown</code></a>
-</li>
-<li>
-<a class="reference-chip" href="#_build_lineage_record_from_steps"><code>_build_lineage_record_from_steps</code></a>
+<a class="reference-chip" href="#_build_lineage_records"><code>_build_lineage_records</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_validate_lineage_steps"><code>_validate_lineage_steps</code></a>
 </li>
 <li>
-<a class="reference-chip" href="#_build_lineage_records"><code>_build_lineage_records</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_build_lineage_record_from_steps"><code>_build_lineage_record_from_steps</code></a>
-</li>
-<li>
-<a class="reference-chip" href="#_call_name"><code>_call_name</code></a>
-</li>
-<li>
 <a class="reference-chip" href="#_enrich_lineage_steps_with_ai"><code>_enrich_lineage_steps_with_ai</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_fallback_copilot_lineage_prompt"><code>_fallback_copilot_lineage_prompt</code></a>
-</li>
-<li>
-<a class="reference-chip" href="#_fallback_copilot_lineage_prompt"><code>_fallback_copilot_lineage_prompt</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_flatten_chain"><code>_flatten_chain</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_name"><code>_name</code></a>
-</li>
-<li>
-<a class="reference-chip" href="#_literal"><code>_literal</code></a>
-</li>
-<li>
-<a class="reference-chip" href="#_name"><code>_name</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_resolve_write_target"><code>_resolve_write_target</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_literal"><code>_literal</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_scan_notebook_cells"><code>_scan_notebook_cells</code></a>
@@ -230,10 +176,7 @@ Owns source-to-target lineage and transformation evidence.
 <li>
 <a class="reference-chip" href="#_scan_notebook_lineage"><code>_scan_notebook_lineage</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_call_name"><code>_call_name</code></a>, <a class="reference-chip" href="#_flatten_chain"><code>_flatten_chain</code></a>, <a class="reference-chip" href="#_name"><code>_name</code></a>, <a class="reference-chip" href="#_resolve_write_target"><code>_resolve_write_target</code></a>, <a class="reference-chip" href="#_step"><code>_step</code></a>
-</li>
-<li>
-<a class="reference-chip" href="#_step"><code>_step</code></a>
+<a class="reference-chip" href="#_flatten_chain"><code>_flatten_chain</code></a>, <a class="reference-chip" href="#_resolve_write_target"><code>_resolve_write_target</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_validate_lineage_steps"><code>_validate_lineage_steps</code></a>

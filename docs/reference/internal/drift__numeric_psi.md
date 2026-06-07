@@ -17,10 +17,7 @@ No summary available.
 - Source file path: `src/fabricops_kit/drift.py`
 - Source reference: <a href="../../api/modules/drift/#_numeric_psi">Module source anchor</a>
 - Inbound references count: 1
-- Outbound references count: 1
+- Outbound references count: 0
 
 ## Inbound references
 - <a href="../internal/drift/_check_profile_drift/"><code>fabricops_kit.drift._check_profile_drift</code></a>
-
-## Outbound references
-- <a href="../internal/drift/_proportions/"><code>fabricops_kit.drift._proportions</code></a>

@@ -90,41 +90,27 @@ def _is_min_max_supported_type(data_type: str) -> bool:
     return any(token in value for token in supported)
 
 
-def _is_numeric_type(data_type: str) -> bool:
-    """Return whether a Spark type string is suitable for numeric distributions."""
-    value = (data_type or "").lower()
-    return any(token in value for token in ("tinyint", "smallint", "int", "bigint", "float", "double", "decimal"))
-
-
-def _is_categorical_type(data_type: str) -> bool:
-    """Return whether a Spark type string is suitable for categorical distributions."""
-    value = (data_type or "").lower()
-    return any(token in value for token in ("string", "char", "varchar", "boolean"))
-
-
-def _dedupe_edges(edges: list[float]) -> list[float]:
-    cleaned: list[float] = []
-    for edge in edges:
-        value = float(edge)
-        if not cleaned or value > cleaned[-1]:
-            cleaned.append(value)
-    return cleaned
-
-
 def _numeric_bin_edges(df, column_name: str, *, bin_count: int = 10) -> list[float]:
     values = df.select(column_name).where(f"`{column_name}` is not null")
     try:
         quantiles = values.approxQuantile(column_name, [i / bin_count for i in range(bin_count + 1)], 0.01)
     except Exception:
         return []
-    edges = _dedupe_edges([float(value) for value in quantiles if value is not None])
+    edges: list[float] = []
+    for value in quantiles:
+        if value is not None and (not edges or float(value) > edges[-1]):
+            edges.append(float(value))
     return edges if len(edges) >= 2 else []
 
 
 def _build_numeric_distribution(df, column_name: str, edges: list[float]) -> dict[str, list[float] | list[int]] | None:
     from pyspark.sql import functions as F
 
-    cleaned_edges = _dedupe_edges(edges)
+    cleaned_edges: list[float] = []
+    for edge in edges:
+        value = float(edge)
+        if not cleaned_edges or value > cleaned_edges[-1]:
+            cleaned_edges.append(value)
     if len(cleaned_edges) < 2:
         return None
 
@@ -209,12 +195,13 @@ def _build_distribution_summaries(
         if column_name not in selected:
             continue
         data_type = dtype_map[column_name]
-        if _is_numeric_type(data_type):
+        lowered_type = (data_type or "").lower()
+        if any(token in lowered_type for token in ("tinyint", "smallint", "int", "bigint", "float", "double", "decimal")):
             edges = (distribution_bin_edges or {}).get(column_name) or _numeric_bin_edges(df, column_name)
             distribution = _build_numeric_distribution(df, column_name, edges)
             if distribution is not None:
                 summaries[column_name] = ("numeric", distribution)
-        elif _is_categorical_type(data_type):
+        elif any(token in lowered_type for token in ("string", "char", "varchar", "boolean")):
             distribution = _build_categorical_distribution(df, column_name, top_n=categorical_top_n, categories=(categorical_categories or {}).get(column_name))
             if distribution is not None:
                 summaries[column_name] = ("categorical", distribution)
