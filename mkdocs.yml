@@ -33,10 +33,10 @@ nav:
       - Governance Review: data-quality-rules-system.md
       - Metadata Dashboard: how-fabricops-works/metadata-dashboard.md
 
-  - Development:
-      - Documentation Versioning: development/docs-versioning.md
+  - Maintainer Guide:
       - Release Management: development/release-management.md
       - Release Traceability: release-info.md
+      - Documentation Versioning: development/docs-versioning.md
 
   - Function Reference:
       - Overview: reference/index.md
