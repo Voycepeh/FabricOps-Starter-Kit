@@ -30,8 +30,6 @@ APPROVED_V1_CALLABLES = {
     "monitor_data_changes",
     "stop_if_failed",
     "build_lineage_records",
-    "build_handover",
-    "render_handover_markdown",
     "widget_select_catalogue_table",
     "get_selected_catalogue_table",
     "load_catalogue_profile_rows",
@@ -108,7 +106,7 @@ def _template_called_fabricops_functions() -> set[str]:
 
 def test_root_exports_only_approved_v1_template_callables():
     assert set(fabricops_kit.__all__) == APPROVED_V1_CALLABLES
-    assert len(fabricops_kit.__all__) == 28
+    assert len(fabricops_kit.__all__) == 26
     assert len(fabricops_kit.__all__) < 71
     for name in fabricops_kit.__all__:
         assert callable(getattr(fabricops_kit, name))
@@ -144,3 +142,25 @@ def test_notebook_templates_call_only_approved_v1_surface():
     called = _template_called_fabricops_functions()
     assert called <= APPROVED_V1_CALLABLES
     assert called.isdisjoint(REMOVED_LEGACY_ALIASES)
+
+
+def test_unfinished_handover_module_is_not_part_of_v1_surface():
+    root = Path(__file__).parents[2]
+    deleted_symbols = {"build" + "_handover", "render" + "_handover_markdown"}
+
+    assert not (root / "src" / "fabricops_kit" / "handover.py").exists()
+    for name in deleted_symbols:
+        assert name not in fabricops_kit.__all__
+        assert not hasattr(fabricops_kit, name)
+
+    scanned_suffixes = {".py", ".md", ".yml", ".yaml", ".json", ".ipynb"}
+    offenders: list[str] = []
+    for base in [root / "src", root / "templates", root / "docs"]:
+        for path in base.rglob("*"):
+            if not path.is_file() or path.suffix not in scanned_suffixes:
+                continue
+            text = path.read_text(encoding="utf-8")
+            for needle in ["fabricops_kit." + "handover", "_build" + "_handover_record", *deleted_symbols]:
+                if needle in text:
+                    offenders.append(f"{path.relative_to(root)} references {needle}")
+    assert offenders == []

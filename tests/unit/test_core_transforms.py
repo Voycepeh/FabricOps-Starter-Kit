@@ -9,7 +9,6 @@ from fabricops_kit.governance_review import (
     _build_dq_rule_records,
     _catalogue_table_options,
 )
-from fabricops_kit.handover import build_handover, render_handover_markdown
 
 pytestmark = pytest.mark.unit
 
@@ -51,7 +50,7 @@ def _profile_rows(run: str = "run-2") -> list[dict]:
     ]
 
 
-def test_profile_lineage_and_handover_helpers_return_notebook_ready_structures():
+def test_profile_and_lineage_helpers_return_notebook_ready_structures():
     profile = {"table_name": "orders", "row_count": 3, "columns": [{"column_name": "amount"}]}
     lineage = build_lineage_records(
         dataset_name="sales",
@@ -60,17 +59,9 @@ def test_profile_lineage_and_handover_helpers_return_notebook_ready_structures()
         target_table="orders",
         transformation_steps=[{"step": "clean", "description": "Clean source rows"}],
     )
-    summary = build_handover(
-        runtime_context={"run_id": "run-1"},
-        contract={"dataset": {"name": "orders"}},
-        source_profile=profile,
-        lineage_summary={"records": lineage},
-    )
-
     assert profile["table_name"] == "orders"
     assert profile["row_count"] == 3
     assert lineage[0]["target_table"] == "orders"
-    assert "orders" in render_handover_markdown(summary)
     assert lineage == [
         {
             "run_id": "run-1",

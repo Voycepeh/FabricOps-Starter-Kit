@@ -50,13 +50,6 @@
       "sidebar_include": true
     },
     {
-      "module_name": "handover",
-      "visibility": "public",
-      "module_summary": "Owns final handover assembly and notebook-friendly rendering/export.",
-      "sidebar_group": "4. Handover",
-      "sidebar_include": true
-    },
-    {
       "module_name": "metadata",
       "visibility": "public",
       "module_summary": "Owns metadata evidence persistence, stable keys, notebook registry, catalogue keys, and runtime audit helpers.",
@@ -402,32 +395,6 @@
       "callable_role": "callable",
       "template_notebook": "03_review",
       "template_segment": "Governance review"
-    },
-    {
-      "module_name": "handover",
-      "visibility": "public",
-      "module_summary": "Owns final handover assembly and notebook-friendly rendering/export.",
-      "sidebar_group": "4. Handover",
-      "sidebar_include": true,
-      "callable_name": "build_handover",
-      "callable_visibility": "public",
-      "callable_type": "callable",
-      "callable_role": "callable",
-      "template_notebook": "handover",
-      "template_segment": "Handover evidence"
-    },
-    {
-      "module_name": "handover",
-      "visibility": "public",
-      "module_summary": "Owns final handover assembly and notebook-friendly rendering/export.",
-      "sidebar_group": "4. Handover",
-      "sidebar_include": true,
-      "callable_name": "render_handover_markdown",
-      "callable_visibility": "public",
-      "callable_type": "callable",
-      "callable_role": "callable",
-      "template_notebook": "handover",
-      "template_segment": "Handover evidence"
     }
   ]
 }

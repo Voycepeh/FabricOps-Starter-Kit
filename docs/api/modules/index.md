@@ -11,5 +11,4 @@ Zero-callable modules are hidden unless explicitly allowlisted as major internal
 - [`fabric_input_output`](fabric_input_output.md)
 - [`data_lineage`](data_lineage.md)
 - [`drift`](drift.md)
-- [`handover`](handover.md)
 - [`metadata`](metadata.md)

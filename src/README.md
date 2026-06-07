@@ -5,7 +5,6 @@ This package keeps runtime logic in `src/fabricops_kit/` and publishes user-faci
 ## Public callable catalogue sources
 
 - **Public callable source of truth:** `__all__` in `src/fabricops_kit/__init__.py`.
-- **Workflow registry source:** `get_mvp_step_registry` in `src/fabricops_kit/handover.py` (canonical 10-step mapping and module ownership).
 - **Generated docs outputs:**
   - Step-first reference: `docs/reference/index.md`
   - Module catalogues: `docs/api/modules/*.md`

@@ -33,7 +33,6 @@ from .governance_review import (
     widget_review_dq_rules,
     widget_select_catalogue_table,
 )
-from .handover import build_handover, render_handover_markdown
 
 
 def _load_package_version() -> str:
@@ -71,8 +70,6 @@ __all__ = [
     "monitor_data_changes",
     "stop_if_failed",
     "build_lineage_records",
-    "build_handover",
-    "render_handover_markdown",
     "widget_select_catalogue_table",
     "get_selected_catalogue_table",
     "load_catalogue_profile_rows",

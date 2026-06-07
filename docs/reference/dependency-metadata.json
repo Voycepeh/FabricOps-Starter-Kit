@@ -2982,76 +2982,6 @@
       ],
       "internal_helper_count": 2
     },
-    "fabricops_kit.handover._build_handover_record": {
-      "qualified_name": "fabricops_kit.handover._build_handover_record",
-      "short_name": "_build_handover_record",
-      "module": "handover",
-      "callable": "_build_handover_record",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/handover/_build_handover_record/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.handover._status_of",
-        "fabricops_kit.handover.render_handover_markdown"
-      ],
-      "calls_count": 2,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [
-        "fabricops_kit.handover._status_of"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.handover._status_of": {
-      "qualified_name": "fabricops_kit.handover._status_of",
-      "short_name": "_status_of",
-      "module": "handover",
-      "callable": "_status_of",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/handover/_status_of/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.handover._build_handover_record",
-        "fabricops_kit.handover.render_handover_markdown"
-      ],
-      "used_by_count": 2,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.handover.build_handover": {
-      "qualified_name": "fabricops_kit.handover.build_handover",
-      "short_name": "build_handover",
-      "module": "handover",
-      "callable": "build_handover",
-      "docs_url": "/FabricOps-Starter-Kit/reference/build_handover/",
-      "classification": "callable",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.handover.render_handover_markdown": {
-      "qualified_name": "fabricops_kit.handover.render_handover_markdown",
-      "short_name": "render_handover_markdown",
-      "module": "handover",
-      "callable": "render_handover_markdown",
-      "docs_url": "/FabricOps-Starter-Kit/reference/render_handover_markdown/",
-      "classification": "callable",
-      "calls": [
-        "fabricops_kit.handover._status_of"
-      ],
-      "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.handover._build_handover_record"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [
-        "fabricops_kit.handover._status_of"
-      ],
-      "internal_helper_count": 1
-    },
     "fabricops_kit.metadata._build_dq_rule_key": {
       "qualified_name": "fabricops_kit.metadata._build_dq_rule_key",
       "short_name": "_build_dq_rule_key",
@@ -3527,14 +3457,6 @@
       ],
       "outbound_count": 3,
       "inbound_count": 1
-    },
-    "handover": {
-      "callable_count": 2,
-      "internal_count": 2,
-      "outbound_modules": [],
-      "inbound_modules": [],
-      "outbound_count": 0,
-      "inbound_count": 0
     },
     "metadata": {
       "callable_count": 0,

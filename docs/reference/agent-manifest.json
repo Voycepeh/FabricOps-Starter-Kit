@@ -2274,60 +2274,6 @@
     "summary": "Render a searchable selector for latest successful catalogue profiles."
   },
   {
-    "name": "_build_handover_record",
-    "qualified_name": "fabricops_kit.handover._build_handover_record",
-    "module": "handover",
-    "type": "internal",
-    "role": "internal",
-    "inbound": [],
-    "outbound": [
-      "fabricops_kit.handover._status_of",
-      "fabricops_kit.handover.render_handover_markdown"
-    ],
-    "source_file": "src/fabricops_kit/handover.py",
-    "summary": "No summary available."
-  },
-  {
-    "name": "_status_of",
-    "qualified_name": "fabricops_kit.handover._status_of",
-    "module": "handover",
-    "type": "internal",
-    "role": "internal",
-    "inbound": [
-      "fabricops_kit.handover._build_handover_record",
-      "fabricops_kit.handover.render_handover_markdown"
-    ],
-    "outbound": [],
-    "source_file": "src/fabricops_kit/handover.py",
-    "summary": "No summary available."
-  },
-  {
-    "name": "build_handover",
-    "qualified_name": "fabricops_kit.handover.build_handover",
-    "module": "handover",
-    "type": "callable",
-    "role": "callable",
-    "inbound": [],
-    "outbound": [],
-    "source_file": "src/fabricops_kit/handover.py",
-    "summary": "Assemble final handover evidence for reviewed notebook work."
-  },
-  {
-    "name": "render_handover_markdown",
-    "qualified_name": "fabricops_kit.handover.render_handover_markdown",
-    "module": "handover",
-    "type": "callable",
-    "role": "callable",
-    "inbound": [
-      "fabricops_kit.handover._build_handover_record"
-    ],
-    "outbound": [
-      "fabricops_kit.handover._status_of"
-    ],
-    "source_file": "src/fabricops_kit/handover.py",
-    "summary": "Render handover evidence as notebook-friendly Markdown."
-  },
-  {
     "name": "_build_dq_rule_key",
     "qualified_name": "fabricops_kit.metadata._build_dq_rule_key",
     "module": "metadata",

@@ -2423,64 +2423,6 @@
     "summary": "Render a searchable selector for latest successful catalogue profiles."
   },
   {
-    "id": "fabricops_kit.handover._build_handover_record",
-    "name": "_build_handover_record",
-    "qualified_name": "fabricops_kit.handover._build_handover_record",
-    "module": "handover",
-    "classification": "Internal",
-    "inbound": [],
-    "outbound": [
-      "fabricops_kit.handover._status_of",
-      "fabricops_kit.handover.render_handover_markdown"
-    ],
-    "source_path": "src/fabricops_kit/handover.py",
-    "docs_path": "reference/internal/handover__build_handover_record.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.handover._status_of",
-    "name": "_status_of",
-    "qualified_name": "fabricops_kit.handover._status_of",
-    "module": "handover",
-    "classification": "Internal",
-    "inbound": [
-      "fabricops_kit.handover._build_handover_record",
-      "fabricops_kit.handover.render_handover_markdown"
-    ],
-    "outbound": [],
-    "source_path": "src/fabricops_kit/handover.py",
-    "docs_path": "reference/internal/handover__status_of.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.handover.build_handover",
-    "name": "build_handover",
-    "qualified_name": "fabricops_kit.handover.build_handover",
-    "module": "handover",
-    "classification": "Callable",
-    "inbound": [],
-    "outbound": [],
-    "source_path": "src/fabricops_kit/handover.py",
-    "docs_path": "reference/build_handover.md",
-    "summary": "Assemble final handover evidence for reviewed notebook work."
-  },
-  {
-    "id": "fabricops_kit.handover.render_handover_markdown",
-    "name": "render_handover_markdown",
-    "qualified_name": "fabricops_kit.handover.render_handover_markdown",
-    "module": "handover",
-    "classification": "Callable",
-    "inbound": [
-      "fabricops_kit.handover._build_handover_record"
-    ],
-    "outbound": [
-      "fabricops_kit.handover._status_of"
-    ],
-    "source_path": "src/fabricops_kit/handover.py",
-    "docs_path": "reference/render_handover_markdown.md",
-    "summary": "Render handover evidence as notebook-friendly Markdown."
-  },
-  {
     "id": "fabricops_kit.metadata._build_dq_rule_key",
     "name": "_build_dq_rule_key",
     "qualified_name": "fabricops_kit.metadata._build_dq_rule_key",
