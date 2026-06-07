@@ -16,13 +16,12 @@ No summary available.
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
 - Source reference: <a href="../../api/modules/governance_review/#_value">Module source anchor</a>
-- Inbound references count: 7
+- Inbound references count: 6
 - Outbound references count: 0
 
 ## Inbound references
-- <a href="../internal/governance_review/_build_classification_records/"><code>fabricops_kit.governance_review._build_classification_records</code></a>
-- <a href="../internal/governance_review/_build_column_context_records/"><code>fabricops_kit.governance_review._build_column_context_records</code></a>
-- <a href="../internal/governance_review/_build_dq_rule_records/"><code>fabricops_kit.governance_review._build_dq_rule_records</code></a>
+- <a href="../internal/governance_review/_approved_column_identity/"><code>fabricops_kit.governance_review._approved_column_identity</code></a>
+- <a href="../internal/governance_review/_approved_review_context/"><code>fabricops_kit.governance_review._approved_review_context</code></a>
 - <a href="../internal/governance_review/_catalogue_table_options/"><code>fabricops_kit.governance_review._catalogue_table_options</code></a>
 - <a href="../internal/governance_review/_display_review_guidance/"><code>fabricops_kit.governance_review._display_review_guidance</code></a>
 - <a href="../internal/governance_review/_is_success/"><code>fabricops_kit.governance_review._is_success</code></a>

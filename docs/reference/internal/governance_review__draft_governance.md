@@ -17,6 +17,7 @@ No summary available.
 - Source file path: `src/fabricops_kit/governance_review.py`
 - Source reference: <a href="../../api/modules/governance_review/#_draft_governance">Module source anchor</a>
 - Inbound references count: 0
-- Outbound references count: 0
+- Outbound references count: 1
 
-_No inbound or outbound references detected._
+## Outbound references
+- <a href="../internal/governance_review/_run_fabric_ai_drafting/"><code>fabricops_kit.governance_review._run_fabric_ai_drafting</code></a>

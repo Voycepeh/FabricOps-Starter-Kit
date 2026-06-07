@@ -16,13 +16,11 @@ No summary available.
 - Related module: `metadata`
 - Source file path: `src/fabricops_kit/metadata.py`
 - Source reference: <a href="../../api/modules/metadata/#_build_metadata_table_key">Module source anchor</a>
-- Inbound references count: 5
+- Inbound references count: 3
 - Outbound references count: 1
 
 ## Inbound references
-- <a href="../internal/governance_review/_build_classification_records/"><code>fabricops_kit.governance_review._build_classification_records</code></a>
-- <a href="../internal/governance_review/_build_column_context_records/"><code>fabricops_kit.governance_review._build_column_context_records</code></a>
-- <a href="../internal/governance_review/_build_dq_rule_records/"><code>fabricops_kit.governance_review._build_dq_rule_records</code></a>
+- <a href="../internal/governance_review/_approved_column_identity/"><code>fabricops_kit.governance_review._approved_column_identity</code></a>
 - <a href="../internal/governance_review/_catalogue_table_options/"><code>fabricops_kit.governance_review._catalogue_table_options</code></a>
 - <a href="../load_catalogue_profile_rows/"><code>fabricops_kit.governance_review.load_catalogue_profile_rows</code></a>
 
