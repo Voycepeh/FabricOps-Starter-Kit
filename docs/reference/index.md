@@ -1050,9 +1050,9 @@ Use the finder below to look up callable and internal FabricOps functions.
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_list_data_stewards</code></li></ul></details>
   </div>
 </article>
-<article id="governance_review-_latest_dq_rule_versions" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_latest_dq_rule_versions" data-callable-module="governance_review" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Resolve latest DQ metadata rows using current v1 fields with legacy fallback.">
+<article id="governance_review-_latest_dq_rule_versions" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_latest_dq_rule_versions" data-callable-module="governance_review" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Resolve latest DQ metadata rows using the current v1 metadata shape.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/governance_review__latest_dq_rule_versions/"><code>_latest_dq_rule_versions</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Resolve latest DQ metadata rows using current v1 fields with legacy fallback.</p>
+  <p class="reference-catalogue-item-purpose">Resolve latest DQ metadata rows using the current v1 metadata shape.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_spark_sql_helpers</code></li></ul></details>

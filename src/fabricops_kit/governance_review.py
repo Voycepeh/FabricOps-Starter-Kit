@@ -682,11 +682,11 @@ def _validate_dq_rules(rules: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 
 def _latest_dq_rule_versions(metadata_df, table_name: str):
-    """Resolve latest DQ metadata rows using current v1 fields with legacy fallback."""
+    """Resolve latest DQ metadata rows using the current v1 metadata shape."""
     _, F, Window = _spark_sql_helpers()
     columns = set(getattr(metadata_df, "columns", []))
     partition_cols = [name for name in ("rule_key", "rule_id", "column_name", "rule_type") if name in columns]
-    order_cols = [name for name in ("approved_at", "_committed_at", "action_ts", "action_type", "approved_by", "_committed_by", "action_by", "rule_source", "rule_json") if name in columns]
+    order_cols = [name for name in ("approved_at", "_committed_at", "action_type", "approved_by", "_committed_by") if name in columns]
     if not partition_cols:
         raise ValueError("DQ metadata must include rule_key or rule identity columns.")
     scoped = metadata_df.filter(F.col("table_name") == table_name) if "table_name" in columns else metadata_df
