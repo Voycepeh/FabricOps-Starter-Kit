@@ -1569,6 +1569,7 @@ def main() -> None:
             related_lines = _related_function_links(related_public, node_by_qn, docs_metadata)
             implementation_lines = _related_function_links(implementation_related, node_by_qn, docs_metadata)
             human_use_when = _documented_text(metadata.get("use_when"), metadata.get("purpose"), purpose)
+            human_use_bullets = _bullet_lines("\n".join(metadata["when_to_use"])) if metadata.get("when_to_use") else _bullet_lines(human_use_when)
             human_do_not_use = _documented_text(metadata.get("do_not_use_when"))
             function_manifest_lines = [
                 f"- Fully qualified function name: `{qn}`",
@@ -1633,11 +1634,11 @@ def main() -> None:
                 "",
                 "## What this is for",
                 "",
-                _documented_text(metadata.get("purpose"), metadata.get("use_when"), purpose),
+                _documented_text(metadata.get("purpose"), purpose),
                 "",
                 "## When to use it",
                 "",
-                *_bullet_lines(human_use_when),
+                *human_use_bullets,
                 "",
                 "## When not to use it",
                 "",
@@ -1686,8 +1687,6 @@ def main() -> None:
                     [_code_block(source_block) if source_block else PLACEHOLDER],
                     class_name="reference-source-details",
                 ),
-                "",
-                "## AI / machine-readable metadata",
                 "",
                 *markdown_details(
                     "AI / machine-readable metadata — skip this if you are reading the docs normally",

@@ -4,7 +4,7 @@ Build source-to-target lineage evidence records for a pipeline run.
 
 ## What this is for
 
-Use in pipeline notebooks to build source-to-target lineage evidence rows for a completed transformation run.
+Build source-to-target lineage evidence records for a pipeline run.
 
 ## When to use it
 
@@ -81,7 +81,7 @@ Pure record-building helper; it does not write metadata, tables, or files.
 ## Source
 
 - Source file path: `src/fabricops_kit/data_lineage.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/data_lineage.py#L209-L230">View build_lineage_records on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/data_lineage.py#L209-L230">View build_lineage_records on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -112,8 +112,6 @@ def build_lineage_records(*, dataset_name: str, run_id: str, source_tables: list
 ```
 
 </details>
-
-## AI / machine-readable metadata
 
 <details class="reference-metadata-details">
 <summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
@@ -152,7 +150,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/data_lineage.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/data_lineage.py#L209-L230">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/data_lineage.py#L209-L230</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/data_lineage.py#L209-L230">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/data_lineage.py#L209-L230</a>
 - Start line: `209`
 - End line: `230`
 - Signature:

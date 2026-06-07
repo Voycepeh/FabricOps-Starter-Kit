@@ -4,7 +4,7 @@ Read a Parquet path from a configured Fabric lakehouse Files path.
 
 ## What this is for
 
-Use when reading a Parquet file or path from a configured Fabric lakehouse Files path.
+Read a Parquet path from a configured Fabric lakehouse Files path.
 
 ## When to use it
 
@@ -97,7 +97,7 @@ Reads from lakehouse Files and may create a local timestamp-converted fallback f
 ## Source
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/fabric_input_output.py#L507-L629">View read_lakehouse_parquet on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/fabric_input_output.py#L507-L629">View read_lakehouse_parquet on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -230,8 +230,6 @@ def read_lakehouse_parquet(config, env, target, relative_path, verbose=True, spa
 
 </details>
 
-## AI / machine-readable metadata
-
 <details class="reference-metadata-details">
 <summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
 
@@ -272,7 +270,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/fabric_input_output.py#L507-L629">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/fabric_input_output.py#L507-L629</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/fabric_input_output.py#L507-L629">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/fabric_input_output.py#L507-L629</a>
 - Start line: `507`
 - End line: `629`
 - Signature:

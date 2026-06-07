@@ -4,7 +4,7 @@ Read a table from a configured Fabric lakehouse target.
 
 ## What this is for
 
-Use when reading a Delta table from a configured Fabric lakehouse target.
+Read a table from a configured Fabric lakehouse target.
 
 ## When to use it
 
@@ -100,7 +100,7 @@ Reads from a lakehouse table; it does not write metadata, tables, or files.
 ## Source
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/fabric_input_output.py#L133-L178">View read_lakehouse_table on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/fabric_input_output.py#L133-L178">View read_lakehouse_table on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -156,8 +156,6 @@ def read_lakehouse_table(config, env, target, table, spark_session=None):
 
 </details>
 
-## AI / machine-readable metadata
-
 <details class="reference-metadata-details">
 <summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
 
@@ -204,7 +202,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/fabric_input_output.py#L133-L178">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/fabric_input_output.py#L133-L178</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/fabric_input_output.py#L133-L178">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/fabric_input_output.py#L133-L178</a>
 - Start line: `133`
 - End line: `178`
 - Signature:

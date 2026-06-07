@@ -17,6 +17,7 @@ class PublicSymbolDocMetadata(TypedDict):
     purpose: NotRequired[str]
     summary_override: str | None
     use_when: NotRequired[str]
+    when_to_use: NotRequired[list[str]]
     do_not_use_when: NotRequired[str]
     parameters: NotRequired[str | dict[str, str] | list[str]]
     returns: NotRequired[str]
@@ -136,12 +137,16 @@ PUBLIC_SYMBOL_DOCS: list[PublicSymbolDocMetadata] = [{'kind': 'function',
   'module': 'config',
   'function_type': 'callable',
   'summary_override': 'Shared environment setup and runtime validation for notebook templates.',
+  'purpose': 'Prepare a FabricOps notebook by validating configuration, resolving environment targets, and returning reusable runtime context.',
   'symbol_name': 'setup_notebook',
   'template_notebook': '00_env_config',
   'template_segment': 'Environment bootstrap',
   'use_when': 'Use at the start of 00_env_config or a notebook template to validate FabricOps '
               'configuration, resolve required targets, and capture runtime context before other '
               'helpers run.',
+  'when_to_use': ['Starting a FabricOps notebook from 00_env_config',
+                  'Validating configured environment targets before downstream helpers run',
+                  'Capturing runtime metadata for later lineage, review, or handover steps'],
   'do_not_use_when': 'Do not use as a replacement for metadata table setup or per-table governance '
                      'writes; call setup_metadata_tables for metadata storage preparation.',
   'parameters': 'config, env, optional required_targets, notebook_name, run_id_prefix, and '

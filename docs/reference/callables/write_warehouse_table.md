@@ -4,7 +4,7 @@ Write a DataFrame to a configured Fabric warehouse target.
 
 ## What this is for
 
-Use when publishing a Spark DataFrame to a configured Fabric warehouse table.
+Write a DataFrame to a configured Fabric warehouse target.
 
 ## When to use it
 
@@ -99,7 +99,7 @@ Writes data to a Fabric warehouse table using the selected mode.
 ## Source
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/fabric_input_output.py#L385-L449">View write_warehouse_table on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/fabric_input_output.py#L385-L449">View write_warehouse_table on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -174,8 +174,6 @@ def write_warehouse_table(df, config, env, target, schema, table, mode="append")
 
 </details>
 
-## AI / machine-readable metadata
-
 <details class="reference-metadata-details">
 <summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
 
@@ -213,7 +211,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/fabric_input_output.py#L385-L449">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/fabric_input_output.py#L385-L449</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/fabric_input_output.py#L385-L449">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/fabric_input_output.py#L385-L449</a>
 - Start line: `385`
 - End line: `449`
 - Signature:

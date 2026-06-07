@@ -4,7 +4,7 @@ Read an Excel file from a configured Fabric lakehouse Files path.
 
 ## What this is for
 
-Use when reading .xlsx files from a configured Fabric lakehouse Files path, especially small reference files, mapping tables, or manually maintained business inputs.
+Read an Excel file from a configured Fabric lakehouse Files path.
 
 ## When to use it
 
@@ -96,7 +96,7 @@ Reads from lakehouse Files through a temporary local Excel file; it does not wri
 ## Source
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/fabric_input_output.py#L632-L719">View read_lakehouse_excel on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/fabric_input_output.py#L632-L719">View read_lakehouse_excel on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -194,8 +194,6 @@ def read_lakehouse_excel(config, env, target, relative_path, sheet_name=0, spark
 
 </details>
 
-## AI / machine-readable metadata
-
 <details class="reference-metadata-details">
 <summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
 
@@ -235,7 +233,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/fabric_input_output.py#L632-L719">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/fabric_input_output.py#L632-L719</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/fabric_input_output.py#L632-L719">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/fabric_input_output.py#L632-L719</a>
 - Start line: `632`
 - End line: `719`
 - Signature:

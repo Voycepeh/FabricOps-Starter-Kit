@@ -4,7 +4,7 @@ Persist approved table-governance context, DQ-rule, and classification evidence 
 
 ## What this is for
 
-Use in 03_review after human approval to persist approved column context, DQ rules, and classification evidence for a profiled table.
+Persist approved table-governance context, DQ-rule, and classification evidence in one v1 commit action.
 
 ## When to use it
 
@@ -112,7 +112,7 @@ Writes approved governance metadata records to configured metadata tables.
 ## Source
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/governance_review.py#L509-L589">View record_table_governance on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/governance_review.py#L509-L589">View record_table_governance on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -203,8 +203,6 @@ def record_table_governance(
 
 </details>
 
-## AI / machine-readable metadata
-
 <details class="reference-metadata-details">
 <summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
 
@@ -245,7 +243,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/governance_review.py#L509-L589">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/governance_review.py#L509-L589</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/governance_review.py#L509-L589">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/governance_review.py#L509-L589</a>
 - Start line: `509`
 - End line: `589`
 - Signature:

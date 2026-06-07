@@ -4,7 +4,7 @@ Profile a source or target DataFrame for schema, quality, and catalogue evidence
 
 ## What this is for
 
-Use to create schema, null, distinct, min/max, and optional distribution evidence from a Spark DataFrame.
+Profile a source or target DataFrame for schema, quality, and catalogue evidence.
 
 ## When to use it
 
@@ -112,7 +112,7 @@ Computes profiling aggregations on the provided DataFrame; it does not write met
 ## Source
 
 - Source file path: `src/fabricops_kit/data_profiling.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/data_profiling.py#L213-L327">View profile_dataframe on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/data_profiling.py#L213-L327">View profile_dataframe on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -237,8 +237,6 @@ def profile_dataframe(
 
 </details>
 
-## AI / machine-readable metadata
-
 <details class="reference-metadata-details">
 <summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
 
@@ -279,7 +277,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/data_profiling.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/data_profiling.py#L213-L327">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/data_profiling.py#L213-L327</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/data_profiling.py#L213-L327">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/data_profiling.py#L213-L327</a>
 - Start line: `213`
 - End line: `327`
 - Signature:

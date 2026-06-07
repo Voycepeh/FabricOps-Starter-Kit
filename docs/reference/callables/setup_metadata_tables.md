@@ -4,7 +4,7 @@ Create or validate all FabricOps metadata tables through one setup action.
 
 ## What this is for
 
-Use after setup_notebook in 00_env_config to create or validate the FabricOps metadata tables required by agreement, profiling, lineage, drift, and governance workflows.
+Create or validate all FabricOps metadata tables through one setup action.
 
 ## When to use it
 
@@ -86,7 +86,7 @@ Creates or validates FabricOps metadata tables in the configured metadata lakeho
 ## Source
 
 - Source file path: `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/config.py#L707-L758">View setup_metadata_tables on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/config.py#L707-L758">View setup_metadata_tables on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -148,8 +148,6 @@ def setup_metadata_tables(
 
 </details>
 
-## AI / machine-readable metadata
-
 <details class="reference-metadata-details">
 <summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
 
@@ -189,7 +187,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/config.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/config.py#L707-L758">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/config.py#L707-L758</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/config.py#L707-L758">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/config.py#L707-L758</a>
 - Start line: `707`
 - End line: `758`
 - Signature:

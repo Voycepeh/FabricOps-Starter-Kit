@@ -4,7 +4,7 @@ Profile data, compare against the approved baseline, and return a drift guardrai
 
 ## What this is for
 
-Use in 02_pipeline to compare current profile evidence with an approved or previous baseline and produce a data-change guardrail result.
+Profile data, compare against the approved baseline, and return a drift guardrail result.
 
 ## When to use it
 
@@ -120,7 +120,7 @@ Reads baseline profile metadata and computes current profile evidence; it does n
 ## Source
 
 - Source file path: `src/fabricops_kit/drift.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/drift.py#L582-L671">View monitor_data_changes on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/drift.py#L582-L671">View monitor_data_changes on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -220,8 +220,6 @@ def monitor_data_changes(
 
 </details>
 
-## AI / machine-readable metadata
-
 <details class="reference-metadata-details">
 <summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
 
@@ -264,7 +262,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/drift.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/drift.py#L582-L671">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/drift.py#L582-L671</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/drift.py#L582-L671">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/drift.py#L582-L671</a>
 - Start line: `582`
 - End line: `671`
 - Signature:

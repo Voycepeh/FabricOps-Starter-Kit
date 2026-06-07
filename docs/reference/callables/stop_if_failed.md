@@ -4,7 +4,7 @@ Stop a notebook only when a schema or data-change guardrail result blocks contin
 
 ## What this is for
 
-Use after schema, drift, or DQ guardrail helpers to stop the notebook when can_continue is false.
+Stop a notebook only when a schema or data-change guardrail result blocks continuation.
 
 ## When to use it
 
@@ -70,7 +70,7 @@ May terminate notebook execution through Fabric notebook utilities or raise an e
 ## Source
 
 - Source file path: `src/fabricops_kit/drift.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/drift.py#L674-L694">View stop_if_failed on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/drift.py#L674-L694">View stop_if_failed on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -100,8 +100,6 @@ def stop_if_failed(result) -> None:
 ```
 
 </details>
-
-## AI / machine-readable metadata
 
 <details class="reference-metadata-details">
 <summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
@@ -140,7 +138,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/drift.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/drift.py#L674-L694">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/drift.py#L674-L694</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/drift.py#L674-L694">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/drift.py#L674-L694</a>
 - Start line: `674`
 - End line: `694`
 - Signature:

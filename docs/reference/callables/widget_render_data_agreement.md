@@ -78,7 +78,7 @@ Not documented yet
 ## Source
 
 - Source file path: `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/data_agreement.py#L1518-L1535">View widget_render_data_agreement on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/data_agreement.py#L1518-L1535">View widget_render_data_agreement on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -105,8 +105,6 @@ def widget_render_data_agreement(config: Any, env_name: str, *, spark: Any) -> d
 ```
 
 </details>
-
-## AI / machine-readable metadata
 
 <details class="reference-metadata-details">
 <summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
@@ -151,7 +149,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/data_agreement.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/data_agreement.py#L1518-L1535">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/data_agreement.py#L1518-L1535</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/data_agreement.py#L1518-L1535">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/data_agreement.py#L1518-L1535</a>
 - Start line: `1518`
 - End line: `1535`
 - Signature:

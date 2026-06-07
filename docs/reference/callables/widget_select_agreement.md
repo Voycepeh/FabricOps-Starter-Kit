@@ -4,7 +4,7 @@ Render an agreement selector and optionally register the active notebook.
 
 ## What this is for
 
-Use in 02_pipeline or 99_explore notebooks to let a user select an approved data agreement before reading, profiling, or writing governed data.
+Render an agreement selector and optionally register the active notebook.
 
 ## When to use it
 
@@ -120,7 +120,7 @@ Displays an IPython widget and may register the active notebook selection in met
 ## Source
 
 - Source file path: `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/data_agreement.py#L856-L1080">View widget_select_agreement on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/data_agreement.py#L856-L1080">View widget_select_agreement on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -355,8 +355,6 @@ def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None 
 
 </details>
 
-## AI / machine-readable metadata
-
 <details class="reference-metadata-details">
 <summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
 
@@ -400,7 +398,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/data_agreement.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/data_agreement.py#L856-L1080">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/data_agreement.py#L856-L1080</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/data_agreement.py#L856-L1080">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/data_agreement.py#L856-L1080</a>
 - Start line: `856`
 - End line: `1080`
 - Signature:

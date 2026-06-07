@@ -47,7 +47,9 @@ def _section_text(page_text: str, section: str) -> str:
     marker = f"## {section}\n"
     assert marker in page_text
     after = page_text.split(marker, 1)[1]
-    return after.split("\n## ", 1)[0].strip()
+    section = after.split("\n## ", 1)[0]
+    section = section.split("\n<details class=\"reference-metadata-details\">", 1)[0]
+    return section.strip()
 
 
 def test_reference_ai_manifest_files_exist_and_are_valid_json() -> None:
@@ -74,7 +76,7 @@ def test_every_callable_page_has_ai_reference_sections() -> None:
         assert "## When to use it" in text, page
         assert "## Side effects" in text, page
         assert "## Source" in text, page
-        assert "## AI / machine-readable metadata" in text, page
+        assert "## AI / machine-readable metadata" not in text, page
         assert "<summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>" in text, page
 
 
@@ -163,9 +165,13 @@ def test_setup_notebook_reference_uses_human_first_source_documentation() -> Non
     assert "../../api/modules/config/#setup_notebook" not in text
     assert "src/fabricops_kit/config.py#L595" in text
     assert "## Example\n\n```python\ncontext = setup_notebook" in text
-    first_metadata = text.index("## AI / machine-readable metadata")
+    first_metadata = text.index("<summary>AI / machine-readable metadata")
     for marker in ("## What this is for", "## When to use it", "## When not to use it", "## Example"):
         assert text.index(marker) < first_metadata
+    assert "## AI / machine-readable metadata" not in text
+    assert "- Starting a FabricOps notebook from 00_env_config" in text
+    assert "- Validating configured environment targets before downstream helpers run" in text
+    assert "- Capturing runtime metadata for later lineage, review, or handover steps" in text
     assert "## Inputs" in text
     assert "Parameter" in text
     assert "Required" in text
