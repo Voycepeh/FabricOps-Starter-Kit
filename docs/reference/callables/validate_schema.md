@@ -9,15 +9,16 @@ Public callable helper intended for notebook authors.
 
 ## When to use this
 
-Validate a DataFrame schema using strict, allow-new-columns, or monitor-only presets.
+Use before writes to compare a DataFrame schema against an expected schema with strict, allow-new-columns, or monitor-only behavior.
 
 ## When not to use this
 
-Not documented yet
+Do not use for data-value drift, DQ-rule enforcement, or metadata persistence.
 
 ## Quick example
 
-Not documented yet
+schema_result = validate_schema(df, {"order_id": "string"}, preset="allow_new_columns")
+stop_if_failed(schema_result)
 
 ## Signature
 
@@ -27,43 +28,37 @@ def validate_schema(dataframe, expected_schema: dict[str, str], *, preset: str='
 
 ## Parameters
 
-dataframe : Any
-    Spark, pandas, or dataframe-like object with schema metadata.
-expected_schema : dict[str, str]
-    Mapping of required column names to expected datatype strings.
-preset : {"strict", "allow_new_columns", "monitor_only"}, default="strict"
-    Schema validation intent. ``strict`` blocks missing columns, datatype
-    changes, and unexpected columns. ``allow_new_columns`` blocks missing
-    columns and datatype changes while reporting additional columns as a
-    warning. ``monitor_only`` reports all differences without blocking.
+dataframe, expected_schema mapping, and preset controlling blocking behavior.
 
 ## Returns
 
-dict
-    Standard guardrail result with ``status``, ``can_continue``,
-    ``checks``, and ``message`` plus detailed schema difference fields.
+Guardrail result dictionary with status, can_continue, checks, message, and schema difference details.
 
 ## Raises
 
-ValueError
-    If ``preset`` is not one of the supported schema presets.
+ValueError when preset is not one of the supported schema presets.
 
 ## Side effects
 
-Not documented yet
+Inspects DataFrame schema only; it does not write metadata, tables, or files.
 
 ## FabricOps context
 
-Starter template: `02_pipeline`; segment: `Schema validation`.
+Use in 02_pipeline before write helpers so schema guardrails run before publishing data.
 
 ## AI implementation contract
 
-Not documented yet
+- **required_context:** Use in 02_pipeline before write helpers so schema guardrails run before publishing data.
+- **inputs:** dataframe, expected_schema mapping, and preset controlling blocking behavior.
+- **output:** Guardrail result dictionary with status, can_continue, checks, message, and schema difference details.
+- **side_effects:** Inspects DataFrame schema only; it does not write metadata, tables, or files.
+- **failure_modes:** ValueError when preset is not one of the supported schema presets.
+- **verification:** Verify can_continue before calling write helpers and pass the result to stop_if_failed when blocking behavior is required.
 
 ## Related functions
 
-- <a href="../internal/drift__actual_schema/"><code>fabricops_kit.drift._actual_schema</code></a>
-- <a href="../internal/drift__normalize_datatype/"><code>fabricops_kit.drift._normalize_datatype</code></a>
+- <a href="../monitor_data_changes/"><code>fabricops_kit.drift.monitor_data_changes</code></a>
+- <a href="../stop_if_failed/"><code>fabricops_kit.drift.stop_if_failed</code></a>
 
 ## Source and tests
 

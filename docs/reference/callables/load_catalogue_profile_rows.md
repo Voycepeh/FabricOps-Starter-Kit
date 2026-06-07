@@ -47,7 +47,12 @@ Starter template: `03_review`; segment: `Governance review`.
 
 ## AI implementation contract
 
-Not documented yet
+- **required_context:** Starter template: `03_review`; segment: `Governance review`.
+- **inputs:** Not documented yet
+- **output:** Not documented yet
+- **side_effects:** Not documented yet
+- **failure_modes:** Not documented yet
+- **verification:** Not documented yet
 
 ## Related functions
 

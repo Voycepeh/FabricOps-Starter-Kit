@@ -9,15 +9,16 @@ Public callable helper intended for notebook authors.
 
 ## When to use this
 
-Render an agreement selector and optionally register the active notebook.
+Use in 02_pipeline or 99_explore notebooks to let a user select an approved data agreement before reading, profiling, or writing governed data.
 
 ## When not to use this
 
-Not documented yet
+Do not use when an agreement has already been programmatically selected and validated, or for catalogue table review selection in 03_review.
 
 ## Quick example
 
-Not documented yet
+widget_select_agreement(CONFIG, env="Sandbox", spark_session=spark)
+agreement = get_selected_agreement()
 
 ## Signature
 
@@ -27,53 +28,37 @@ def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None=
 
 ## Parameters
 
-agreement_rows_or_config : FrameworkConfig or iterable
-    Pass ``CONFIG`` in normal notebooks, or provide preloaded agreement
-    rows when the caller already has them available.
-env_name : str, optional
-    Environment key used to load agreements when ``CONFIG`` is supplied.
-spark_session : pyspark.sql.SparkSession, optional
-    Fabric Spark session used for configured metadata-table reads.
-register_notebook : bool, default=False
-    When True, render registration status and a button that links the
-    current notebook to the selected agreement.
-notebook_type, environment_name, dataset_name, table_name, topic, pipeline_name : str, optional
-    Workflow metadata passed to ``_register_current_notebook`` when
-    ``register_notebook`` is enabled.
+config, env, optional spark_session, and notebook registration options for loading agreement choices from metadata.
 
 ## Returns
 
-ipywidgets.Select
-    Displayed searchable latest-version agreement selector control. Its
-    ``value`` remains the stable ``agreement_id`` for existing callers.
-    When registration is enabled, registration widgets are attached as
-    attributes on the selector for advanced notebook automation.
+Interactive widget state; call get_selected_agreement to retrieve the selected agreement record.
 
 ## Raises
 
-Not documented yet
+Raises metadata read, widget dependency, or configuration errors when agreement metadata cannot be loaded.
 
 ## Side effects
 
-Not documented yet
+Displays an IPython widget and may register the active notebook selection in metadata when requested.
 
 ## FabricOps context
 
-Starter template: `02_pipeline / optional 99_explore`; segment: `Agreement selection`.
+Requires agreement metadata created through 01_agreement and metadata routing from 00_env_config.
 
 ## AI implementation contract
 
-Not documented yet
+- **required_context:** Requires agreement metadata created through 01_agreement and metadata routing from 00_env_config.
+- **inputs:** config, env, optional spark_session, and notebook registration options for loading agreement choices from metadata.
+- **output:** Interactive widget state; call get_selected_agreement to retrieve the selected agreement record.
+- **side_effects:** Displays an IPython widget and may register the active notebook selection in metadata when requested.
+- **failure_modes:** Raises metadata read, widget dependency, or configuration errors when agreement metadata cannot be loaded.
+- **verification:** Verify the user selected an agreement and call get_selected_agreement before generating pipeline code that depends on agreement context.
 
 ## Related functions
 
-- <a href="../internal/data_agreement__html_escape/"><code>fabricops_kit.data_agreement._html_escape</code></a>
-- <a href="../internal/data_agreement__latest_agreement_versions/"><code>fabricops_kit.data_agreement._latest_agreement_versions</code></a>
-- <a href="../internal/data_agreement__list_data_agreements/"><code>fabricops_kit.data_agreement._list_data_agreements</code></a>
-- <a href="../internal/data_agreement__render_searchable_selector/"><code>fabricops_kit.data_agreement._render_searchable_selector</code></a>
-- <a href="../internal/data_agreement__require_ipywidgets/"><code>fabricops_kit.data_agreement._require_ipywidgets</code></a>
-- <a href="../internal/metadata__current_notebook_active_registrations/"><code>fabricops_kit.metadata._current_notebook_active_registrations</code></a>
-- <a href="../internal/metadata__register_current_notebook/"><code>fabricops_kit.metadata._register_current_notebook</code></a>
+- <a href="../get_selected_agreement/"><code>fabricops_kit.data_agreement.get_selected_agreement</code></a>
+- <a href="../setup_metadata_tables/"><code>fabricops_kit.config.setup_metadata_tables</code></a>
 
 ## Source and tests
 

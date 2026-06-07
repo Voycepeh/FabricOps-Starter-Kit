@@ -57,7 +57,22 @@ Starter template: `01_agreement`; segment: `Agreement intake`.
 
 ## AI implementation contract
 
-Not documented yet
+- **required_context:** Starter template: `01_agreement`; segment: `Agreement intake`.
+- **inputs:** config : FrameworkConfig or dict
+    Configuration containing agreement metadata routing and evidence table
+    settings.
+env_name : str
+    Environment key configured by ``00_env_config``.
+spark : pyspark.sql.SparkSession
+    Fabric Spark session used for metadata reads, file writes, and
+    append-only evidence metadata writes.
+- **output:** dict[str, Any]
+    Rendered controls for selecting an agreement version, pasting
+    metadata lakehouse evidence file paths, refreshing agreement options,
+    and saving evidence metadata rows.
+- **side_effects:** Not documented yet
+- **failure_modes:** Not documented yet
+- **verification:** Not documented yet
 
 ## Related functions
 

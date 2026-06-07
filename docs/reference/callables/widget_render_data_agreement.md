@@ -53,7 +53,18 @@ Starter template: `01_agreement`; segment: `Agreement intake`.
 
 ## AI implementation contract
 
-Not documented yet
+- **required_context:** Starter template: `01_agreement`; segment: `Agreement intake`.
+- **inputs:** config : FrameworkConfig or dict
+    Configuration containing agreement widget fields and metadata routing.
+env_name : str
+    Environment key configured by ``00_env_config``.
+spark : pyspark.sql.SparkSession
+    Fabric Spark session used for metadata reads and append-only writes.
+- **output:** dict[str, Any]
+    Rendered controls, including read-only generated-identifier context.
+- **side_effects:** Not documented yet
+- **failure_modes:** Not documented yet
+- **verification:** Not documented yet
 
 ## Related functions
 

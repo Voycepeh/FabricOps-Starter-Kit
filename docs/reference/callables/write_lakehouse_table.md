@@ -9,15 +9,15 @@ Public callable helper intended for notebook authors.
 
 ## When to use this
 
-Write a DataFrame to a configured Fabric lakehouse target.
+Use when publishing a Spark DataFrame to a configured Fabric lakehouse table.
 
 ## When not to use this
 
-Not documented yet
+Do not use for metadata evidence tables unless the helper explicitly routes metadata, and do not use for warehouse tables.
 
 ## Quick example
 
-Not documented yet
+write_lakehouse_table(curated_df, CONFIG, env="Sandbox", target="Unified", table="orders_curated", mode="overwrite")
 
 ## Signature
 
@@ -27,57 +27,38 @@ def write_lakehouse_table(df, config, env, target, table, mode='append', partiti
 
 ## Parameters
 
-df : pyspark.sql.DataFrame
-    Spark DataFrame to write.
-config : FrameworkConfig | dict
-    FabricOps FrameworkConfig or compatible config object.
-env : str
-    Environment key such as `"dev"`.
-target : str
-    Logical target name such as `"source"` or `"unified"`.
-table : str
-    Target table name under the lakehouse `Tables` area.
-mode : str, default "append"
-    Spark write mode. Supported values are `"append"`, `"overwrite"`,
-    `"errorifexists"`, and `"ignore"`.
-partition_by : str or list[str], optional
-    Column or columns used to physically partition the Delta table.
-repartition_by : int, str, list, or tuple, optional
-    Optional repartitioning before write.
-overwrite_schema : bool, default True
-    Whether to set Spark Delta `overwriteSchema=true` before saving.
+df, config, env, target, table, optional schema, mode, and partitioning/write options.
 
 ## Returns
 
-None
-    The DataFrame is written to the target Delta table path.
+None; the DataFrame is written to the configured lakehouse table.
 
 ## Raises
 
-ValueError
-    If `table` is missing, `mode` is invalid, or the resolved target is not a lakehouse.
+Raises configuration, Spark, or write errors when the target cannot be resolved or the write fails.
 
 ## Side effects
 
-Not documented yet
+Writes data to a Fabric lakehouse table using the selected write mode.
 
 ## FabricOps context
 
-Starter template: `02_pipeline`; segment: `Fabric IO`.
+Requires the FrameworkConfig or compatible CONFIG from 00_env_config plus the intended env name; never hardcode Fabric workspace or item identifiers.
 
 ## AI implementation contract
 
-Not documented yet
+- **required_context:** Requires the FrameworkConfig or compatible CONFIG from 00_env_config plus the intended env name; never hardcode Fabric workspace or item identifiers.
+- **inputs:** df, config, env, target, table, optional schema, mode, and partitioning/write options.
+- **output:** None; the DataFrame is written to the configured lakehouse table.
+- **side_effects:** Writes data to a Fabric lakehouse table using the selected write mode.
+- **failure_modes:** Raises configuration, Spark, or write errors when the target cannot be resolved or the write fails.
+- **verification:** Verify upstream guardrails passed, confirm target routing from CONFIG, and check the intended write mode before generating code that calls this helper.
 
 ## Related functions
 
-- <a href="../internal/data_agreement__ensure_metadata_tables/"><code>fabricops_kit.data_agreement._ensure_metadata_tables</code></a>
-- <a href="../internal/data_agreement__write_row/"><code>fabricops_kit.data_agreement._write_row</code></a>
-- <a href="../internal/governance_review__setup_governance_metadata_tables/"><code>fabricops_kit.governance_review._setup_governance_metadata_tables</code></a>
-- <a href="../record_table_governance/"><code>fabricops_kit.governance_review.record_table_governance</code></a>
-- <a href="../internal/metadata__register_current_notebook/"><code>fabricops_kit.metadata._register_current_notebook</code></a>
-- <a href="../internal/metadata__setup_notebook_registry_table/"><code>fabricops_kit.metadata._setup_notebook_registry_table</code></a>
-- <a href="../internal/config__get_store/"><code>fabricops_kit.config._get_store</code></a>
+- <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a>
+- <a href="../write_warehouse_table/"><code>fabricops_kit.fabric_input_output.write_warehouse_table</code></a>
+- <a href="../stop_if_failed/"><code>fabricops_kit.drift.stop_if_failed</code></a>
 
 ## Source and tests
 

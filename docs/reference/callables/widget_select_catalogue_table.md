@@ -53,7 +53,18 @@ Starter template: `03_review`; segment: `Governance review`.
 
 ## AI implementation contract
 
-Not documented yet
+- **required_context:** Starter template: `03_review`; segment: `Governance review`.
+- **inputs:** config : FrameworkConfig or dict
+    Runtime config containing the metadata lakehouse route.
+env : str
+    Environment used to read ``METADATA_DATA_CATALOGUE``.
+spark_session : pyspark.sql.SparkSession
+    Spark session used for the catalogue read.
+- **output:** ipywidgets.Combobox
+    Searchable selector whose value stores stable JSON identity.
+- **side_effects:** Not documented yet
+- **failure_modes:** Not documented yet
+- **verification:** Not documented yet
 
 ## Related functions
 

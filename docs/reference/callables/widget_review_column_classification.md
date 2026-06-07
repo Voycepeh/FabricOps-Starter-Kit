@@ -50,7 +50,15 @@ Starter template: `03_review`; segment: `Governance review`.
 
 ## AI implementation contract
 
-Not documented yet
+- **required_context:** Starter template: `03_review`; segment: `Governance review`.
+- **inputs:** profile_rows : list of dict
+    Selected column profile evidence from ``load_catalogue_profile_rows``.
+- **output:** list[dict[str, Any]]
+    Empty editable review list. Add approved classification dictionaries
+    before calling ``record_table_governance``.
+- **side_effects:** Not documented yet
+- **failure_modes:** Not documented yet
+- **verification:** Not documented yet
 
 ## Related functions
 

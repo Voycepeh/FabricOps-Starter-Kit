@@ -50,7 +50,15 @@ Starter template: `03_review`; segment: `Governance review`.
 
 ## AI implementation contract
 
-Not documented yet
+- **required_context:** Starter template: `03_review`; segment: `Governance review`.
+- **inputs:** table_selector : ipywidgets.Combobox, optional
+    Selector returned by ``widget_select_catalogue_table``. Passing it is
+    optional because the widget also maintains module-level selection state.
+- **output:** dict[str, Any]
+    Stable table identity used by ``load_catalogue_profile_rows``.
+- **side_effects:** Not documented yet
+- **failure_modes:** Not documented yet
+- **verification:** Not documented yet
 
 ## Related functions
 

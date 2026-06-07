@@ -9,15 +9,15 @@ Public callable helper intended for notebook authors.
 
 ## When to use this
 
-Write a DataFrame to a configured Fabric warehouse target.
+Use when publishing a Spark DataFrame to a configured Fabric warehouse table.
 
 ## When not to use this
 
-Not documented yet
+Do not use for lakehouse table writes, lakehouse Files writes, or metadata evidence writes.
 
 ## Quick example
 
-Not documented yet
+write_warehouse_table(serving_df, CONFIG, env="Sandbox", target="Warehouse", schema="dbo", table="orders_serving", mode="append")
 
 ## Signature
 
@@ -27,49 +27,38 @@ def write_warehouse_table(df, config, env, target, schema, table, mode='append')
 
 ## Parameters
 
-df : pyspark.sql.DataFrame
-    Spark DataFrame to write.
-config : FrameworkConfig | dict
-    FabricOps FrameworkConfig or compatible config object.
-env : str
-    Environment name in the config mapping, for example `"Sandbox"` or `"DE"`.
-target : str
-    Warehouse target name under the selected environment, for example
-    `"Warehouse"` or `"wh_Bronze"`.
-schema : str
-    Warehouse schema name, for example `"dbo"`.
-table : str
-    Warehouse table name.
-mode : str, default "append"
-    Spark write mode, for example `"append"` or `"overwrite"`.
+df, config, env, target, schema, table, and write mode.
 
 ## Returns
 
-None
-    The DataFrame is written to the target warehouse table.
+None; the DataFrame is written to the configured warehouse table.
 
 ## Raises
 
-RuntimeError
-    If the Microsoft Fabric Spark connector is unavailable.
-ValueError
-    If the selected environment or target is missing from the config.
+Raises configuration, Spark connector, or warehouse write errors when the target/table cannot be written.
 
 ## Side effects
 
-Not documented yet
+Writes data to a Fabric warehouse table using the selected mode.
 
 ## FabricOps context
 
-Starter template: `02_pipeline`; segment: `Fabric IO`.
+Requires the FrameworkConfig or compatible CONFIG from 00_env_config plus the intended env name; never hardcode Fabric workspace or item identifiers.
 
 ## AI implementation contract
 
-Not documented yet
+- **required_context:** Requires the FrameworkConfig or compatible CONFIG from 00_env_config plus the intended env name; never hardcode Fabric workspace or item identifiers.
+- **inputs:** df, config, env, target, schema, table, and write mode.
+- **output:** None; the DataFrame is written to the configured warehouse table.
+- **side_effects:** Writes data to a Fabric warehouse table using the selected mode.
+- **failure_modes:** Raises configuration, Spark connector, or warehouse write errors when the target/table cannot be written.
+- **verification:** Verify guardrails passed, confirm schema/table routing from CONFIG, and check the intended write mode before calling.
 
 ## Related functions
 
-- <a href="../internal/config__get_store/"><code>fabricops_kit.config._get_store</code></a>
+- <a href="../read_warehouse_table/"><code>fabricops_kit.fabric_input_output.read_warehouse_table</code></a>
+- <a href="../write_lakehouse_table/"><code>fabricops_kit.fabric_input_output.write_lakehouse_table</code></a>
+- <a href="../stop_if_failed/"><code>fabricops_kit.drift.stop_if_failed</code></a>
 
 ## Source and tests
 

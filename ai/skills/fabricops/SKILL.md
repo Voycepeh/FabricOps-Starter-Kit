@@ -19,6 +19,7 @@ Start with the existing generated function reference system. Do not replace it w
 - Do not hardcode Fabric workspace IDs or item IDs unless explicitly provided by the user.
 - Do not bypass metadata evidence when governance workflows require it.
 - Check side effects before using a function.
+- Treat `Not documented yet` as incomplete guidance; inspect source code, docstrings, and generated manifests before generating code.
 - Use callable pages for notebook authoring.
 - Use internal pages only for package maintenance.
 - Update docs and tests together when changing public APIs, generated reference behavior, or notebook-facing guidance.

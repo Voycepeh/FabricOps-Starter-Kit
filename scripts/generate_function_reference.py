@@ -537,6 +537,28 @@ def _code_block(text: str) -> str:
     return f"```python\n{text}\n```"
 
 
+def _ai_contract_block(
+    *,
+    required_context: str,
+    inputs: str,
+    output: str,
+    side_effects: str,
+    failure_modes: str,
+    verification: str,
+) -> str:
+    """Render a compact structured AI implementation contract."""
+    return "\n".join(
+        [
+            f"- **required_context:** {required_context}",
+            f"- **inputs:** {inputs}",
+            f"- **output:** {output}",
+            f"- **side_effects:** {side_effects}",
+            f"- **failure_modes:** {failure_modes}",
+            f"- **verification:** {verification}",
+        ]
+    )
+
+
 def _related_function_links(
     related: list[str],
     node_by_qn: dict[str, dict[str, Any]],
@@ -1374,6 +1396,25 @@ def main() -> None:
         metadata_related = list(metadata.get("related_functions", []))
         relationship_related = [*used_by, *deps]
         related_for_page = metadata_related or relationship_related
+        rendered_parameters = _documented_text(metadata.get("parameters"), doc_sections.get("parameters"))
+        rendered_returns = _documented_text(metadata.get("returns"), doc_sections.get("returns"))
+        rendered_raises = _documented_text(metadata.get("raises"), doc_sections.get("raises"))
+        rendered_side_effects = _documented_text(metadata.get("side_effects"))
+        rendered_fabric_context = _documented_text(
+            metadata.get("fabric_context"),
+            f"Starter template: `{metadata.get('template_notebook')}`; segment: `{metadata.get('template_segment')}`."
+            if metadata.get("template_notebook")
+            else None,
+        )
+        rendered_ai_verification = _documented_text(metadata.get("ai_verification"))
+        rendered_ai_contract = _ai_contract_block(
+            required_context=rendered_fabric_context,
+            inputs=rendered_parameters,
+            output=rendered_returns,
+            side_effects=rendered_side_effects,
+            failure_modes=rendered_raises,
+            verification=rendered_ai_verification,
+        )
 
         def _fmt_links(items: list[str]) -> list[str]:
             out = []
@@ -1417,27 +1458,27 @@ def main() -> None:
                 "",
                 "## Parameters",
                 "",
-                _documented_text(metadata.get("parameters"), doc_sections.get("parameters")),
+                rendered_parameters,
                 "",
                 "## Returns",
                 "",
-                _documented_text(metadata.get("returns"), doc_sections.get("returns")),
+                rendered_returns,
                 "",
                 "## Raises",
                 "",
-                _documented_text(metadata.get("raises"), doc_sections.get("raises")),
+                rendered_raises,
                 "",
                 "## Side effects",
                 "",
-                _documented_text(metadata.get("side_effects")),
+                rendered_side_effects,
                 "",
                 "## FabricOps context",
                 "",
-                _documented_text(metadata.get("fabric_context"), f"Starter template: `{metadata.get('template_notebook')}`; segment: `{metadata.get('template_segment')}`." if metadata.get("template_notebook") else None),
+                rendered_fabric_context,
                 "",
                 "## AI implementation contract",
                 "",
-                _documented_text(metadata.get("ai_verification")),
+                rendered_ai_contract,
                 "",
                 "## Related functions",
                 "",
@@ -1497,7 +1538,7 @@ def main() -> None:
                 "",
                 "## Side effects",
                 "",
-                _documented_text(metadata.get("side_effects")),
+                rendered_side_effects,
                 "",
                 "## Maintainer notes",
                 "",
@@ -1545,13 +1586,13 @@ def main() -> None:
             "summary": purpose,
             "use_when": _documented_text(metadata.get("use_when"), metadata.get("purpose"), purpose) if node["exported"] else PLACEHOLDER,
             "do_not_use_when": _documented_text(metadata.get("do_not_use_when")),
-            "required_context": _documented_text(metadata.get("fabric_context")),
-            "inputs": _documented_text(metadata.get("parameters"), doc_sections.get("parameters")),
-            "output": _documented_text(metadata.get("returns"), doc_sections.get("returns")),
-            "side_effects": _documented_text(metadata.get("side_effects")),
-            "failure_modes": _documented_text(metadata.get("raises"), doc_sections.get("raises")),
+            "required_context": rendered_fabric_context,
+            "inputs": rendered_parameters,
+            "output": rendered_returns,
+            "side_effects": rendered_side_effects,
+            "failure_modes": rendered_raises,
             "preferred_example": _documented_text(metadata.get("preferred_example")),
-            "verification": _documented_text(metadata.get("ai_verification")),
+            "verification": rendered_ai_verification,
             "related_functions": metadata_related or [item.split(".")[-1] for item in relationship_related],
         })
     AGENT_MANIFEST_PATH.write_text(json.dumps(agent_manifest, indent=2) + "\n", encoding="utf-8")

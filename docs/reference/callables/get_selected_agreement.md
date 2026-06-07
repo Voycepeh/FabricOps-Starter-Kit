@@ -9,15 +9,16 @@ Public callable helper intended for notebook authors.
 
 ## When to use this
 
-Return the agreement selected by widget_select_agreement.
+Use immediately after widget_select_agreement to retrieve the selected agreement record for pipeline logic and evidence binding.
 
 ## When not to use this
 
-Not documented yet
+Do not use before rendering and completing widget_select_agreement, or as a substitute for querying all agreement metadata.
 
 ## Quick example
 
-Not documented yet
+agreement = get_selected_agreement()
+dataset_name = agreement["dataset_name"]
 
 ## Signature
 
@@ -27,33 +28,36 @@ def get_selected_agreement() -> dict[str, Any]
 
 ## Parameters
 
-Not documented yet
+No required parameters; reads the current in-memory widget selection state.
 
 ## Returns
 
-dict[str, Any]
-    Selected latest-version agreement row.
+Selected agreement dictionary for the active notebook session.
 
 ## Raises
 
-RuntimeError
-    If no selector has established a selected agreement.
+Raises an error when no agreement has been selected in the current session.
 
 ## Side effects
 
-Not documented yet
+Reads session/widget state only; it does not write metadata, tables, or files.
 
 ## FabricOps context
 
-Starter template: `02_pipeline`; segment: `Agreement selection`.
+Depends on a prior widget_select_agreement call in the same notebook session and agreement metadata loaded via 00_env_config routing.
 
 ## AI implementation contract
 
-Not documented yet
+- **required_context:** Depends on a prior widget_select_agreement call in the same notebook session and agreement metadata loaded via 00_env_config routing.
+- **inputs:** No required parameters; reads the current in-memory widget selection state.
+- **output:** Selected agreement dictionary for the active notebook session.
+- **side_effects:** Reads session/widget state only; it does not write metadata, tables, or files.
+- **failure_modes:** Raises an error when no agreement has been selected in the current session.
+- **verification:** Verify the returned agreement has the expected dataset/table identifiers before using it to drive reads, writes, or governance evidence.
 
 ## Related functions
 
-Not documented yet
+- <a href="../widget_select_agreement/"><code>fabricops_kit.data_agreement.widget_select_agreement</code></a>
 
 ## Source and tests
 

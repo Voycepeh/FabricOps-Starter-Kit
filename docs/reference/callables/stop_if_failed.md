@@ -9,15 +9,16 @@ Public callable helper intended for notebook authors.
 
 ## When to use this
 
-Stop a notebook only when a schema or data-change guardrail result blocks continuation.
+Use after schema, drift, or DQ guardrail helpers to stop the notebook when can_continue is false.
 
 ## When not to use this
 
-Not documented yet
+Do not use for informational warnings that should not block execution, or before a guardrail result exists.
 
 ## Quick example
 
-Not documented yet
+schema_result = validate_schema(df, expected_schema)
+stop_if_failed(schema_result)
 
 ## Signature
 
@@ -27,34 +28,38 @@ def stop_if_failed(result) -> None
 
 ## Parameters
 
-result : dict
-    Direct schema result, direct data-change result, or the wrapper returned
-    by :func:`monitor_data_changes`.
+guardrail result dictionary and optional message/runtime controls.
 
 ## Returns
 
-Not documented yet
+None when execution may continue; otherwise raises or exits according to runtime behavior.
 
 ## Raises
 
-SchemaDriftError
-    If the resolved result has ``can_continue=False``.
+Raises RuntimeError outside Fabric notebook exit handling when a failed guardrail must stop execution.
 
 ## Side effects
 
-Not documented yet
+May terminate notebook execution through Fabric notebook utilities or raise an exception.
 
 ## FabricOps context
 
-Starter template: `02_pipeline`; segment: `Guardrail enforcement`.
+Use in 02_pipeline after validate_schema, monitor_data_changes, or enforce_dq_rules and before write helpers.
 
 ## AI implementation contract
 
-Not documented yet
+- **required_context:** Use in 02_pipeline after validate_schema, monitor_data_changes, or enforce_dq_rules and before write helpers.
+- **inputs:** guardrail result dictionary and optional message/runtime controls.
+- **output:** None when execution may continue; otherwise raises or exits according to runtime behavior.
+- **side_effects:** May terminate notebook execution through Fabric notebook utilities or raise an exception.
+- **failure_modes:** Raises RuntimeError outside Fabric notebook exit handling when a failed guardrail must stop execution.
+- **verification:** Verify the guardrail result shape includes status/can_continue/message before passing it to stop_if_failed.
 
 ## Related functions
 
-- <a href="../internal/drift_SchemaDriftError/"><code>fabricops_kit.drift.SchemaDriftError</code></a>
+- <a href="../validate_schema/"><code>fabricops_kit.drift.validate_schema</code></a>
+- <a href="../monitor_data_changes/"><code>fabricops_kit.drift.monitor_data_changes</code></a>
+- <a href="../enforce_dq_rules/"><code>fabricops_kit.governance_review.enforce_dq_rules</code></a>
 
 ## Source and tests
 

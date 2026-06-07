@@ -9,15 +9,15 @@ Public callable helper intended for notebook authors.
 
 ## When to use this
 
-Shared environment setup and runtime validation for notebook templates.
+Use at the start of 00_env_config or a notebook template to validate FabricOps configuration, resolve required targets, and capture runtime context before other helpers run.
 
 ## When not to use this
 
-Not documented yet
+Do not use as a replacement for metadata table setup or per-table governance writes; call setup_metadata_tables for metadata storage preparation.
 
 ## Quick example
 
-Not documented yet
+context = setup_notebook(CONFIG, env="Sandbox", required_targets=["Source", "Unified"], notebook_name="00_env_config")
 
 ## Signature
 
@@ -27,53 +27,36 @@ def setup_notebook(config: FrameworkConfig | dict[str, Any], env: str='Sandbox',
 
 ## Parameters
 
-config : FrameworkConfig | dict[str, Any]
-    Framework configuration object or compatible mapping. The setup flow
-    validates required sections and configured Fabric targets before
-    running readiness checks.
-env : str, default="Sandbox"
-    Environment key used to resolve target paths.
-required_targets : list[str] | None, optional
-    Target names that must resolve for ``env``. Defaults to
-    ``["Source", "Unified"]``.
-notebook_name : str | None, optional
-    Explicit notebook name used for runtime metadata and naming checks.
-run_id_prefix : str, default="run"
-    Prefix used when a Fabric runtime run identifier is unavailable.
-local_fallback_name : str | None, optional
-    Notebook name used when neither ``notebook_name`` nor Fabric runtime
-    context provides one.
+config, env, optional required_targets, notebook_name, run_id_prefix, and local_fallback_name that define the runtime setup context.
 
 ## Returns
 
-NotebookSetupContext
-    Validated runtime context with resolved paths, smoke-check results,
-    runtime metadata, and overall readiness status.
+NotebookSetupContext with resolved configuration paths, runtime metadata, smoke-check results, and readiness status.
 
 ## Raises
 
-ValueError
-    Raised when config sections are invalid or required targets cannot be
-    resolved for the selected environment.
+ValueError for invalid configuration sections, missing required paths, or unresolved required targets.
 
 ## Side effects
 
-Not documented yet
+Runs configuration validation and Fabric readiness checks; it does not write FabricOps metadata tables.
 
 ## FabricOps context
 
-Starter template: `00_env_config`; segment: `Environment bootstrap`.
+Requires the FrameworkConfig or compatible CONFIG from 00_env_config plus the intended env name; never hardcode Fabric workspace or item identifiers.
 
 ## AI implementation contract
 
-Not documented yet
+- **required_context:** Requires the FrameworkConfig or compatible CONFIG from 00_env_config plus the intended env name; never hardcode Fabric workspace or item identifiers.
+- **inputs:** config, env, optional required_targets, notebook_name, run_id_prefix, and local_fallback_name that define the runtime setup context.
+- **output:** NotebookSetupContext with resolved configuration paths, runtime metadata, smoke-check results, and readiness status.
+- **side_effects:** Runs configuration validation and Fabric readiness checks; it does not write FabricOps metadata tables.
+- **failure_modes:** ValueError for invalid configuration sections, missing required paths, or unresolved required targets.
+- **verification:** Verify the returned context is ready before generating downstream notebook code and confirm required targets resolve for the selected env.
 
 ## Related functions
 
-- <a href="../internal/config_NotebookSetupContext/"><code>fabricops_kit.config.NotebookSetupContext</code></a>
-- <a href="../internal/config__get_store/"><code>fabricops_kit.config._get_store</code></a>
-- <a href="../internal/config__run_config_smoke_tests/"><code>fabricops_kit.config._run_config_smoke_tests</code></a>
-- <a href="../internal/config__validate_framework_config/"><code>fabricops_kit.config._validate_framework_config</code></a>
+- <a href="../setup_metadata_tables/"><code>fabricops_kit.config.setup_metadata_tables</code></a>
 
 ## Source and tests
 

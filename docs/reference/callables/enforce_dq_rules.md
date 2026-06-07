@@ -9,15 +9,16 @@ Public callable helper intended for notebook authors.
 
 ## When to use this
 
-Enforce approved active DQ rules as a target-write guardrail without filtering rows.
+Use before target writes to enforce active approved DQ rules for a dataset/table as a pipeline guardrail.
 
 ## When not to use this
 
-Not documented yet
+Do not use to filter bad rows, author new DQ rules, or bypass governance review approval.
 
 ## Quick example
 
-Not documented yet
+dq_result = enforce_dq_rules(df, CONFIG, env, dataset_name, table_name, spark_session=spark)
+stop_if_failed(dq_result)
 
 ## Signature
 
@@ -27,60 +28,37 @@ def enforce_dq_rules(dataframe, config, env, dataset_name, table_name, *, spark_
 
 ## Parameters
 
-dataframe : Any
-    Spark DataFrame to evaluate before the target write. The full DataFrame
-    is never filtered or split by this helper.
-config : FrameworkConfig or dict
-    Runtime configuration containing the configured metadata lakehouse
-    route from ``00_env_config``.
-env : str
-    Environment name used to read ``METADATA_DQ_RULES`` from the configured
-    metadata target.
-dataset_name : str
-    Dataset identifier used with ``table_name`` to scope approved DQ rules
-    when those columns exist in the metadata table.
-table_name : str
-    Target table name whose approved active DQ rules should be enforced.
-spark_session : pyspark.sql.SparkSession, optional
-    Spark session used to read metadata when required by the configured
-    storage helper.
+dataframe, config, env, dataset_name, table_name, and optional spark_session.
 
 ## Returns
 
-dict
-    Guardrail result with ``status``, ``can_continue``, ``checks``, and
-    ``message``. The result also carries the full tagged ``dataframe`` and
-    aggregate ``summary`` fields for the existing catalogue evidence path.
-    Error-severity rule failures return ``status='failed'`` and
-    ``can_continue=False``. Warning-severity failures return
-    ``status='warning'`` and ``can_continue=True``. Passing or absent rules
-    return ``status='passed'`` and ``can_continue=True``.
+Guardrail result dictionary with status, can_continue, checks, message, tagged dataframe, and summary fields.
 
 ## Raises
 
-Not documented yet
+Raises configuration, metadata-read, or Spark expression errors when approved rules cannot be loaded or evaluated.
 
 ## Side effects
 
-Not documented yet
+Reads approved DQ-rule metadata and evaluates checks against the DataFrame; it does not filter the DataFrame or write target data.
 
 ## FabricOps context
 
-Starter template: `02_pipeline`; segment: `DQ guardrails`.
+Requires active approved DQ-rule evidence in the configured metadata target from 03_review governance workflows.
 
 ## AI implementation contract
 
-Not documented yet
+- **required_context:** Requires active approved DQ-rule evidence in the configured metadata target from 03_review governance workflows.
+- **inputs:** dataframe, config, env, dataset_name, table_name, and optional spark_session.
+- **output:** Guardrail result dictionary with status, can_continue, checks, message, tagged dataframe, and summary fields.
+- **side_effects:** Reads approved DQ-rule metadata and evaluates checks against the DataFrame; it does not filter the DataFrame or write target data.
+- **failure_modes:** Raises configuration, metadata-read, or Spark expression errors when approved rules cannot be loaded or evaluated.
+- **verification:** Verify approved metadata exists, inspect status/can_continue, and call stop_if_failed before writing when blocking failures occur.
 
 ## Related functions
 
-- <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a>
-- <a href="../internal/governance_review__dq_failed_row_count/"><code>fabricops_kit.governance_review._dq_failed_row_count</code></a>
-- <a href="../internal/governance_review__dq_summary/"><code>fabricops_kit.governance_review._dq_summary</code></a>
-- <a href="../internal/governance_review__dq_tagged_dataframe/"><code>fabricops_kit.governance_review._dq_tagged_dataframe</code></a>
-- <a href="../internal/governance_review__load_active_dq_rules/"><code>fabricops_kit.governance_review._load_active_dq_rules</code></a>
-- <a href="../internal/governance_review__run_dq_guardrail_checks/"><code>fabricops_kit.governance_review._run_dq_guardrail_checks</code></a>
-- <a href="../internal/governance_review__summarize_dq_guardrail/"><code>fabricops_kit.governance_review._summarize_dq_guardrail</code></a>
+- <a href="../record_table_governance/"><code>fabricops_kit.governance_review.record_table_governance</code></a>
+- <a href="../stop_if_failed/"><code>fabricops_kit.drift.stop_if_failed</code></a>
 
 ## Source and tests
 

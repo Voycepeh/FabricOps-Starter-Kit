@@ -9,15 +9,15 @@ Public callable helper intended for notebook authors.
 
 ## When to use this
 
-Read a table from a configured Fabric warehouse target.
+Use when reading a table from a configured Fabric warehouse target.
 
 ## When not to use this
 
-Not documented yet
+Do not use for lakehouse Delta tables or lakehouse Files CSV, Parquet, or Excel paths.
 
 ## Quick example
 
-Not documented yet
+df = read_warehouse_table(CONFIG, env="Sandbox", target="Warehouse", schema="dbo", table="orders", spark_session=spark)
 
 ## Signature
 
@@ -27,49 +27,37 @@ def read_warehouse_table(config, env, target, schema, table, spark_session=None)
 
 ## Parameters
 
-config : FrameworkConfig | dict
-    FabricOps FrameworkConfig or compatible config object.
-env : str
-    Environment name in the config mapping, for example `"Sandbox"` or `"DE"`.
-target : str
-    Warehouse target name under the selected environment, for example
-    `"Warehouse"` or `"wh_Bronze"`.
-schema : str
-    Warehouse schema name, for example `"dbo"`.
-table : str
-    Warehouse table name.
-spark_session : object, optional
-    Spark session to use. If omitted, the helper uses the notebook global
-    `spark`.
+config, env, target, schema, table, optional verbose flag, and optional spark_session.
 
 ## Returns
 
-pyspark.sql.DataFrame
-    Spark DataFrame loaded from the Fabric warehouse table.
+Spark DataFrame loaded from the configured warehouse table.
 
 ## Raises
 
-RuntimeError
-    If the Microsoft Fabric Spark connector is unavailable.
-ValueError
-    If the selected environment or target is missing from the config.
+Raises configuration, Spark SQL, or warehouse-read errors when the target/table cannot be resolved/read.
 
 ## Side effects
 
-Not documented yet
+Reads from a warehouse table; it does not write metadata, tables, or files.
 
 ## FabricOps context
 
-Starter template: `02_pipeline / optional 99_explore`; segment: `Fabric IO`.
+Requires the FrameworkConfig or compatible CONFIG from 00_env_config plus the intended env name; never hardcode Fabric workspace or item identifiers.
 
 ## AI implementation contract
 
-Not documented yet
+- **required_context:** Requires the FrameworkConfig or compatible CONFIG from 00_env_config plus the intended env name; never hardcode Fabric workspace or item identifiers.
+- **inputs:** config, env, target, schema, table, optional verbose flag, and optional spark_session.
+- **output:** Spark DataFrame loaded from the configured warehouse table.
+- **side_effects:** Reads from a warehouse table; it does not write metadata, tables, or files.
+- **failure_modes:** Raises configuration, Spark SQL, or warehouse-read errors when the target/table cannot be resolved/read.
+- **verification:** Verify the warehouse target/schema/table are configured and inspect the resulting DataFrame schema before downstream use.
 
 ## Related functions
 
-- <a href="../internal/config__get_store/"><code>fabricops_kit.config._get_store</code></a>
-- <a href="../internal/fabric_input_output__get_spark/"><code>fabricops_kit.fabric_input_output._get_spark</code></a>
+- <a href="../write_warehouse_table/"><code>fabricops_kit.fabric_input_output.write_warehouse_table</code></a>
+- <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a>
 
 ## Source and tests
 

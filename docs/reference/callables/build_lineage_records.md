@@ -9,15 +9,15 @@ Public callable helper intended for notebook authors.
 
 ## When to use this
 
-Build source-to-target lineage evidence records for a pipeline run.
+Use in pipeline notebooks to build source-to-target lineage evidence rows for a completed transformation run.
 
 ## When not to use this
 
-Not documented yet
+Do not use to scan notebooks automatically or persist metadata; it only builds records from supplied lineage inputs.
 
 ## Quick example
 
-Not documented yet
+lineage_rows = build_lineage_records(dataset_name=dataset_name, run_id=run_id, source_tables=["source.orders"], target_table="unified.orders", transformation_steps=[{"step": "clean_orders"}])
 
 ## Signature
 
@@ -27,41 +27,37 @@ def build_lineage_records(*, dataset_name: str, run_id: str, source_tables: list
 
 ## Parameters
 
-dataset_name : str
-    Dataset identifier for all output rows.
-run_id : str
-    Unique run identifier.
-source_tables : list of str
-    Source table names captured for the run.
-target_table : str
-    Target table name produced by the run.
-transformation_steps : list of dict
-    Transformation step dictionaries to merge into each output row.
+dataset_name, run_id, source_tables, target_table, and transformation_steps.
 
 ## Returns
 
-list of dict
-    Row dictionaries suitable for metadata persistence.
+List of lineage record dictionaries suitable for metadata persistence.
 
 ## Raises
 
-Not documented yet
+Raises normal Python errors if required lineage inputs are missing or malformed.
 
 ## Side effects
 
-Not documented yet
+Pure record-building helper; it does not write metadata, tables, or files.
 
 ## FabricOps context
 
-Starter template: `02_pipeline`; segment: `Lineage evidence`.
+Use with run context from 00_env_config and persist through configured metadata routing when lineage evidence is required.
 
 ## AI implementation contract
 
-Not documented yet
+- **required_context:** Use with run context from 00_env_config and persist through configured metadata routing when lineage evidence is required.
+- **inputs:** dataset_name, run_id, source_tables, target_table, and transformation_steps.
+- **output:** List of lineage record dictionaries suitable for metadata persistence.
+- **side_effects:** Pure record-building helper; it does not write metadata, tables, or files.
+- **failure_modes:** Raises normal Python errors if required lineage inputs are missing or malformed.
+- **verification:** Verify each source table, target table, transformation step, dataset_name, and run_id are populated before persisting lineage records.
 
 ## Related functions
 
-Not documented yet
+- <a href="../setup_notebook/"><code>fabricops_kit.config.setup_notebook</code></a>
+- <a href="../write_lakehouse_table/"><code>fabricops_kit.fabric_input_output.write_lakehouse_table</code></a>
 
 ## Source and tests
 

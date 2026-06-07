@@ -9,15 +9,15 @@ Public callable helper intended for notebook authors.
 
 ## When to use this
 
-Persist approved table-governance context, DQ-rule, and classification evidence in one v1 commit action.
+Use in 03_review after human approval to persist approved column context, DQ rules, and classification evidence for a profiled table.
 
 ## When not to use this
 
-Not documented yet
+Do not use to draft governance recommendations, bypass review approval, or write unapproved rows.
 
 ## Quick example
 
-Not documented yet
+written = record_table_governance(CONFIG, env, profile_rows, spark_session=spark, context_reviews=context_rows, dq_rule_reviews=dq_rows, classification_reviews=classification_rows, approved_by="reviewer")
 
 ## Signature
 
@@ -27,52 +27,38 @@ def record_table_governance(config: Any, env: str, profile_rows: list[dict[str, 
 
 ## Parameters
 
-config : FrameworkConfig or dict
-    Shared ``00_env_config`` configuration that routes metadata writes to
-    the configured metadata lakehouse target.
-env : str
-    Environment key in ``config``.
-profile_rows : list of dict
-    Column-profile rows loaded for the selected catalogue table.
-spark_session : pyspark.sql.SparkSession
-    Spark session used to create DataFrames for metadata writes.
-context_reviews, dq_rule_reviews, classification_reviews : list of dict, optional
-    Human-approved rows from the governance review workflow. Only rows with
-    ``review_status="approved"`` and ``commit=True`` are written.
-approved_by : str, optional
-    Reviewer identity to stamp on records. When omitted, runtime defaults
-    are used.
-mode : str, default "append"
-    Write mode for metadata table commits.
+config, env, profile_rows, spark_session, optional approved context/DQ/classification review rows, approved_by, and mode.
 
 ## Returns
 
-dict[str, list[dict[str, Any]]]
-    Records written for ``column_context``, ``dq_rules``, and
-    ``column_classification``.
+Dictionary of records written for column_context, dq_rules, and column_classification.
 
 ## Raises
 
-Not documented yet
+Raises configuration, validation, Spark, or metadata-write errors when approved records cannot be built or persisted.
 
 ## Side effects
 
-Not documented yet
+Writes approved governance metadata records to configured metadata tables.
 
 ## FabricOps context
 
-Starter template: `03_review`; segment: `Governance review`.
+Requires 03_review profile rows and 00_env_config metadata routing; governance metadata must be written to the configured metadata target.
 
 ## AI implementation contract
 
-Not documented yet
+- **required_context:** Requires 03_review profile rows and 00_env_config metadata routing; governance metadata must be written to the configured metadata target.
+- **inputs:** config, env, profile_rows, spark_session, optional approved context/DQ/classification review rows, approved_by, and mode.
+- **output:** Dictionary of records written for column_context, dq_rules, and column_classification.
+- **side_effects:** Writes approved governance metadata records to configured metadata tables.
+- **failure_modes:** Raises configuration, validation, Spark, or metadata-write errors when approved records cannot be built or persisted.
+- **verification:** Verify review_status is approved and commit is true for intended rows before calling; confirm returned record groups match expected approvals.
 
 ## Related functions
 
-- <a href="../write_lakehouse_table/"><code>fabricops_kit.fabric_input_output.write_lakehouse_table</code></a>
-- <a href="../internal/governance_review__build_classification_records/"><code>fabricops_kit.governance_review._build_classification_records</code></a>
-- <a href="../internal/governance_review__build_column_context_records/"><code>fabricops_kit.governance_review._build_column_context_records</code></a>
-- <a href="../internal/governance_review__build_dq_rule_records/"><code>fabricops_kit.governance_review._build_dq_rule_records</code></a>
+- <a href="../load_catalogue_profile_rows/"><code>fabricops_kit.governance_review.load_catalogue_profile_rows</code></a>
+- <a href="../enforce_dq_rules/"><code>fabricops_kit.governance_review.enforce_dq_rules</code></a>
+- <a href="../setup_metadata_tables/"><code>fabricops_kit.config.setup_metadata_tables</code></a>
 
 ## Source and tests
 
