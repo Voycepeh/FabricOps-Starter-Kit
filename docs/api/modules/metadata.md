@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 0</span><span class="reference-chip">Internal helpers: 31</span><span class="reference-chip">Outbound: 1</span><span class="reference-chip">Inbound: 3</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 0</span><span class="reference-chip">Internal helpers: 18</span><span class="reference-chip">Outbound: 1</span><span class="reference-chip">Inbound: 3</span></div>
 
 ## Module purpose
 
@@ -40,7 +40,7 @@ Owns metadata evidence persistence, stable keys, notebook registry, catalogue ke
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>31</td>
+      <td>18</td>
     </tr>
     <tr>
       <td>Inbound module count</td>
@@ -98,10 +98,6 @@ No public exports in this module.
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/metadata/_build_evidence_row/"><code>_build_evidence_row</code></a></td>
-      <td>—</td>
-    </tr>
-    <tr>
       <td><a href="../../reference/internal/metadata/_build_metadata_column_key/"><code>_build_metadata_column_key</code></a></td>
       <td>—</td>
     </tr>
@@ -118,14 +114,6 @@ No public exports in this module.
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/metadata/_column_context_rows_for_spark/"><code>_column_context_rows_for_spark</code></a></td>
-      <td>—</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/internal/metadata/_column_names/"><code>_column_names</code></a></td>
-      <td>—</td>
-    </tr>
-    <tr>
       <td><a href="../../reference/internal/metadata/_context_get/"><code>_context_get</code></a></td>
       <td>—</td>
     </tr>
@@ -134,39 +122,11 @@ No public exports in this module.
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/metadata/_default_evidence_types/"><code>_default_evidence_types</code></a></td>
-      <td>—</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/internal/metadata/_extract_columns_from_profile/"><code>_extract_columns_from_profile</code></a></td>
-      <td>—</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/internal/metadata/_get_notebook_registry_schema/"><code>_get_notebook_registry_schema</code></a></td>
-      <td>—</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/internal/metadata/_key_part/"><code>_key_part</code></a></td>
-      <td>—</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/internal/metadata/_latest_registration_events/"><code>_latest_registration_events</code></a></td>
-      <td>—</td>
-    </tr>
-    <tr>
       <td><a href="../../reference/internal/metadata/_load_notebook_registry/"><code>_load_notebook_registry</code></a></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/metadata/_normalise_records_by_column/"><code>_normalise_records_by_column</code></a></td>
-      <td>—</td>
-    </tr>
-    <tr>
       <td><a href="../../reference/internal/metadata/_notebook_registration_key/"><code>_notebook_registration_key</code></a></td>
-      <td>—</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/internal/metadata/_notebook_registry_base_schema/"><code>_notebook_registry_base_schema</code></a></td>
       <td>—</td>
     </tr>
     <tr>
@@ -186,6 +146,10 @@ No public exports in this module.
       <td>—</td>
     </tr>
     <tr>
+      <td><a href="../../reference/internal/metadata/_rows_for_spark/"><code>_rows_for_spark</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
       <td><a href="../../reference/internal/metadata/_runtime_context/"><code>_runtime_context</code></a></td>
       <td>—</td>
     </tr>
@@ -198,23 +162,7 @@ No public exports in this module.
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/metadata/_sha256_key/"><code>_sha256_key</code></a></td>
-      <td>—</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/internal/metadata/_write_column_business_context/"><code>_write_column_business_context</code></a></td>
-      <td>—</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/internal/metadata/_write_column_governance_context/"><code>_write_column_governance_context</code></a></td>
-      <td>—</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/internal/metadata/_write_metadata_rows/"><code>_write_metadata_rows</code></a></td>
-      <td>—</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/internal/metadata/_write_metadata_rows_legacy/"><code>_write_metadata_rows_legacy</code></a></td>
+      <td><a href="../../reference/internal/metadata/_stable_metadata_key/"><code>_stable_metadata_key</code></a></td>
       <td>—</td>
     </tr>
   </tbody>
@@ -226,22 +174,17 @@ No public exports in this module.
 <li>
 <a class="reference-chip" href="#_build_dq_rule_key"><code>_build_dq_rule_key</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_sha256_key"><code>_sha256_key</code></a>
-</li>
-<li>
-<a class="reference-chip" href="#_build_evidence_row"><code>_build_evidence_row</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_now_utc_iso"><code>_now_utc_iso</code></a>
+<a class="reference-chip" href="#_stable_metadata_key"><code>_stable_metadata_key</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_build_metadata_column_key"><code>_build_metadata_column_key</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_sha256_key"><code>_sha256_key</code></a>
+<a class="reference-chip" href="#_stable_metadata_key"><code>_stable_metadata_key</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_build_metadata_table_key"><code>_build_metadata_table_key</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_sha256_key"><code>_sha256_key</code></a>
+<a class="reference-chip" href="#_stable_metadata_key"><code>_stable_metadata_key</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_build_runtime_audit_fields"><code>_build_runtime_audit_fields</code></a>
@@ -249,14 +192,6 @@ No public exports in this module.
 <a class="reference-chip" href="#_context_get"><code>_context_get</code></a>, <a class="reference-chip" href="#_runtime_context"><code>_runtime_context</code></a>, <a class="reference-chip" href="#_safe_str"><code>_safe_str</code></a>
 </li>
 <li>
-<a class="reference-chip" href="#_coerce_row_dicts"><code>_coerce_row_dicts</code></a>
-</li>
-<li>
-<a class="reference-chip" href="#_column_context_rows_for_spark"><code>_column_context_rows_for_spark</code></a>
-</li>
-<li>
-<a class="reference-chip" href="#_column_names"><code>_column_names</code></a>
- <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_coerce_row_dicts"><code>_coerce_row_dicts</code></a>
 </li>
 <li>
@@ -268,35 +203,12 @@ No public exports in this module.
 <a class="reference-chip" href="#_context_get"><code>_context_get</code></a>, <a class="reference-chip" href="#_load_notebook_registry"><code>_load_notebook_registry</code></a>, <a class="reference-chip" href="#_runtime_context"><code>_runtime_context</code></a>, <a class="reference-chip" href="#_safe_str"><code>_safe_str</code></a>
 </li>
 <li>
-<a class="reference-chip" href="#_default_evidence_types"><code>_default_evidence_types</code></a>
-</li>
-<li>
-<a class="reference-chip" href="#_extract_columns_from_profile"><code>_extract_columns_from_profile</code></a>
-</li>
-<li>
-<a class="reference-chip" href="#_get_notebook_registry_schema"><code>_get_notebook_registry_schema</code></a>
-</li>
-<li>
-<a class="reference-chip" href="#_key_part"><code>_key_part</code></a>
-</li>
-<li>
-<a class="reference-chip" href="#_latest_registration_events"><code>_latest_registration_events</code></a>
+<a class="reference-chip" href="#_load_notebook_registry"><code>_load_notebook_registry</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_notebook_registration_key"><code>_notebook_registration_key</code></a>, <a class="reference-chip" href="#_registry_rows_with_defaults"><code>_registry_rows_with_defaults</code></a>
 </li>
 <li>
-<a class="reference-chip" href="#_load_notebook_registry"><code>_load_notebook_registry</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_latest_registration_events"><code>_latest_registration_events</code></a>, <a class="reference-chip" href="#_registry_rows_with_defaults"><code>_registry_rows_with_defaults</code></a>
-</li>
-<li>
-<a class="reference-chip" href="#_normalise_records_by_column"><code>_normalise_records_by_column</code></a>
-</li>
-<li>
 <a class="reference-chip" href="#_notebook_registration_key"><code>_notebook_registration_key</code></a>
-</li>
-<li>
-<a class="reference-chip" href="#_notebook_registry_base_schema"><code>_notebook_registry_base_schema</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_now_utc_iso"><code>_now_utc_iso</code></a>
@@ -304,7 +216,7 @@ No public exports in this module.
 <li>
 <a class="reference-chip" href="#_register_current_notebook"><code>_register_current_notebook</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_column_context_rows_for_spark"><code>_column_context_rows_for_spark</code></a>, <a class="reference-chip" href="#_context_get"><code>_context_get</code></a>, <a class="reference-chip" href="#_notebook_registration_key"><code>_notebook_registration_key</code></a>, <a class="reference-chip" href="#_runtime_context"><code>_runtime_context</code></a>, <a class="reference-chip" href="#_safe_str"><code>_safe_str</code></a>, <a class="reference-chip" href="#_write_metadata_rows_legacy"><code>_write_metadata_rows_legacy</code></a>
+<a class="reference-chip" href="#_context_get"><code>_context_get</code></a>, <a class="reference-chip" href="#_notebook_registration_key"><code>_notebook_registration_key</code></a>, <a class="reference-chip" href="#_rows_for_spark"><code>_rows_for_spark</code></a>, <a class="reference-chip" href="#_runtime_context"><code>_runtime_context</code></a>, <a class="reference-chip" href="#_safe_str"><code>_safe_str</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_registry_rows_with_defaults"><code>_registry_rows_with_defaults</code></a>
@@ -317,6 +229,9 @@ No public exports in this module.
 <a class="reference-chip" href="#_context_get"><code>_context_get</code></a>, <a class="reference-chip" href="#_runtime_context"><code>_runtime_context</code></a>
 </li>
 <li>
+<a class="reference-chip" href="#_rows_for_spark"><code>_rows_for_spark</code></a>
+</li>
+<li>
 <a class="reference-chip" href="#_runtime_context"><code>_runtime_context</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_context_get"><code>_context_get</code></a>
@@ -327,30 +242,10 @@ No public exports in this module.
 <li>
 <a class="reference-chip" href="#_setup_notebook_registry_table"><code>_setup_notebook_registry_table</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_coerce_row_dicts"><code>_coerce_row_dicts</code></a>, <a class="reference-chip" href="#_column_context_rows_for_spark"><code>_column_context_rows_for_spark</code></a>, <a class="reference-chip" href="#_column_names"><code>_column_names</code></a>, <a class="reference-chip" href="#_get_notebook_registry_schema"><code>_get_notebook_registry_schema</code></a>, <a class="reference-chip" href="#_notebook_registration_key"><code>_notebook_registration_key</code></a>, <a class="reference-chip" href="#_safe_str"><code>_safe_str</code></a>
+<a class="reference-chip" href="#_coerce_row_dicts"><code>_coerce_row_dicts</code></a>, <a class="reference-chip" href="#_registry_rows_with_defaults"><code>_registry_rows_with_defaults</code></a>, <a class="reference-chip" href="#_rows_for_spark"><code>_rows_for_spark</code></a>
 </li>
 <li>
-<a class="reference-chip" href="#_sha256_key"><code>_sha256_key</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_key_part"><code>_key_part</code></a>
-</li>
-<li>
-<a class="reference-chip" href="#_write_column_business_context"><code>_write_column_business_context</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_write_metadata_rows"><code>_write_metadata_rows</code></a>
-</li>
-<li>
-<a class="reference-chip" href="#_write_column_governance_context"><code>_write_column_governance_context</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_write_metadata_rows"><code>_write_metadata_rows</code></a>
-</li>
-<li>
-<a class="reference-chip" href="#_write_metadata_rows"><code>_write_metadata_rows</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_column_context_rows_for_spark"><code>_column_context_rows_for_spark</code></a>, <a class="reference-chip" href="#_write_metadata_rows_legacy"><code>_write_metadata_rows_legacy</code></a>
-</li>
-<li>
-<a class="reference-chip" href="#_write_metadata_rows_legacy"><code>_write_metadata_rows_legacy</code></a>
+<a class="reference-chip" href="#_stable_metadata_key"><code>_stable_metadata_key</code></a>
 </li>
 </ul>
 </details>
