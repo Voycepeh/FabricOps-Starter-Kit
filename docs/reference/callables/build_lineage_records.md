@@ -2,13 +2,17 @@
 
 Build source-to-target lineage evidence records for a pipeline run.
 
-## Use this when
+## What this is for
 
 Use in pipeline notebooks to build source-to-target lineage evidence rows for a completed transformation run.
 
-## Do not use this for
+## When to use it
 
-Do not use to scan notebooks automatically or persist metadata; it only builds records from supplied lineage inputs.
+- Use in pipeline notebooks to build source-to-target lineage evidence rows for a completed transformation run.
+
+## When not to use it
+
+- Do not use to scan notebooks automatically or persist metadata; it only builds records from supplied lineage inputs.
 
 ## Example
 
@@ -24,47 +28,38 @@ lineage_rows = build_lineage_records(dataset_name=dataset_name, run_id=run_id, s
     <tr>
       <th>Parameter</th>
       <th>Required</th>
-      <th>What it means</th>
+      <th>Meaning</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td data-label="Parameter"><code>dataset_name</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="What it means">Dataset identifier for all output rows.</td>
+      <td data-label="Meaning">Dataset identifier for all output rows.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>run_id</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="What it means">Unique run identifier.</td>
+      <td data-label="Meaning">Unique run identifier.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>source_tables</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="What it means">Source table names captured for the run.</td>
+      <td data-label="Meaning">Source table names captured for the run.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>target_table</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="What it means">Target table name produced by the run.</td>
+      <td data-label="Meaning">Target table name produced by the run.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>transformation_steps</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="What it means">Transformation step dictionaries to merge into each output row.</td>
+      <td data-label="Meaning">Transformation step dictionaries to merge into each output row.</td>
     </tr>
   </tbody>
 </table>
 </div>
-
-<details class="reference-signature-details">
-<summary>Full signature</summary>
-
-```python
-def build_lineage_records(*, dataset_name: str, run_id: str, source_tables: list[str], target_table: str, transformation_steps: list[dict]) -> list[dict]
-```
-
-</details>
 
 ## Output
 
@@ -83,51 +78,10 @@ Pure record-building helper; it does not write metadata, tables, or files.
 - <a href="../setup_notebook/"><code>fabricops_kit.config.setup_notebook</code></a>
 - <a href="../write_lakehouse_table/"><code>fabricops_kit.fabric_input_output.write_lakehouse_table</code></a>
 
-<details class="reference-metadata-details">
-<summary>AI implementation contract</summary>
+## Source
 
-These fields are generated for agents and maintainers, not for quick-start reading.
-
-- **required_context:** Use with run context from 00_env_config and persist through configured metadata routing when lineage evidence is required.
-- **inputs:** dataset_name, run_id, source_tables, target_table, and transformation_steps.
-- **output:** List of lineage record dictionaries suitable for metadata persistence.
-- **side_effects:** Pure record-building helper; it does not write metadata, tables, or files.
-- **failure_modes:** Raises normal Python errors if required lineage inputs are missing or malformed.
-- **verification:** Verify each source table, target table, transformation step, dataset_name, and run_id are populated before persisting lineage records.
-
-</details>
-
-<details class="reference-metadata-details">
-<summary>Function manifest</summary>
-
-- Fully qualified function name: `fabricops_kit.data_lineage.build_lineage_records`
-- Short name: `build_lineage_records`
-- Module: `data_lineage`
-- Classification: Callable
-- Related module: `data_lineage`
 - Source file path: `src/fabricops_kit/data_lineage.py`
-- Source line: `209`
-- Inbound references count: 0
-- Outbound references count: 0
-
-</details>
-
-<details class="reference-metadata-details">
-<summary>Raw inbound and outbound references</summary>
-
-### Inbound references
-
-Not documented yet
-
-### Outbound references
-
-Not documented yet
-
-</details>
-
-## Source code
-
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/5b6a5693130e525f919566c2115ac67da9c6faef/src/fabricops_kit/data_lineage.py#L209-L230">View build_lineage_records on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/data_lineage.py#L209-L230">View build_lineage_records on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -156,5 +110,66 @@ def build_lineage_records(*, dataset_name: str, run_id: str, source_tables: list
     """
     return [{"run_id": run_id, "dataset_name": dataset_name, "source_tables": source_tables, "target_table": target_table, **s} for s in transformation_steps]
 ```
+
+</details>
+
+## AI / machine-readable metadata
+
+<details class="reference-metadata-details">
+<summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
+
+These generated fields are for automation, AI agents, maintainers, and doc tooling. Skip this block when reading the docs normally.
+
+### Function manifest
+
+- Fully qualified function name: `fabricops_kit.data_lineage.build_lineage_records`
+- Short name: `build_lineage_records`
+- Module: `data_lineage`
+- Classification: Callable
+- Related module: `data_lineage`
+- Source file path: `src/fabricops_kit/data_lineage.py`
+- Source line: `209`
+- Inbound references count: 0
+- Outbound references count: 0
+
+### AI implementation contract
+
+- **required_context:** Use with run context from 00_env_config and persist through configured metadata routing when lineage evidence is required.
+- **inputs:** dataset_name, run_id, source_tables, target_table, and transformation_steps.
+- **output:** List of lineage record dictionaries suitable for metadata persistence.
+- **side_effects:** Pure record-building helper; it does not write metadata, tables, or files.
+- **failure_modes:** Raises normal Python errors if required lineage inputs are missing or malformed.
+- **verification:** Verify each source table, target table, transformation step, dataset_name, and run_id are populated before persisting lineage records.
+
+### Inbound references
+
+Not documented yet
+
+### Outbound references
+
+Not documented yet
+
+### Raw source metadata
+
+- Source file path: `src/fabricops_kit/data_lineage.py`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/data_lineage.py#L209-L230">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/data_lineage.py#L209-L230</a>
+- Start line: `209`
+- End line: `230`
+- Signature:
+
+```python
+def build_lineage_records(*, dataset_name: str, run_id: str, source_tables: list[str], target_table: str, transformation_steps: list[dict]) -> list[dict]
+```
+
+### Internal relationship graph
+
+### Public related functions
+
+- <a href="../setup_notebook/"><code>fabricops_kit.config.setup_notebook</code></a>
+- <a href="../write_lakehouse_table/"><code>fabricops_kit.fabric_input_output.write_lakehouse_table</code></a>
+
+### Internal implementation helpers
+
+Not documented yet
 
 </details>

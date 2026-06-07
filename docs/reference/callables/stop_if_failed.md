@@ -2,13 +2,17 @@
 
 Stop a notebook only when a schema or data-change guardrail result blocks continuation.
 
-## Use this when
+## What this is for
 
 Use after schema, drift, or DQ guardrail helpers to stop the notebook when can_continue is false.
 
-## Do not use this for
+## When to use it
 
-Do not use for informational warnings that should not block execution, or before a guardrail result exists.
+- Use after schema, drift, or DQ guardrail helpers to stop the notebook when can_continue is false.
+
+## When not to use it
+
+- Do not use for informational warnings that should not block execution, or before a guardrail result exists.
 
 ## Example
 
@@ -25,27 +29,18 @@ stop_if_failed(schema_result)
     <tr>
       <th>Parameter</th>
       <th>Required</th>
-      <th>What it means</th>
+      <th>Meaning</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td data-label="Parameter"><code>result</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="What it means">Direct schema result, direct data-change result, or the wrapper returned by :func:`monitor_data_changes`.</td>
+      <td data-label="Meaning">Direct schema result, direct data-change result, or the wrapper returned by :func:`monitor_data_changes`.</td>
     </tr>
   </tbody>
 </table>
 </div>
-
-<details class="reference-signature-details">
-<summary>Full signature</summary>
-
-```python
-def stop_if_failed(result) -> None
-```
-
-</details>
 
 ## Output
 
@@ -72,51 +67,10 @@ May terminate notebook execution through Fabric notebook utilities or raise an e
 
 </details>
 
-<details class="reference-metadata-details">
-<summary>AI implementation contract</summary>
+## Source
 
-These fields are generated for agents and maintainers, not for quick-start reading.
-
-- **required_context:** Use in 02_pipeline after validate_schema, monitor_data_changes, or enforce_dq_rules and before write helpers.
-- **inputs:** guardrail result dictionary and optional message/runtime controls.
-- **output:** None when execution may continue; otherwise raises or exits according to runtime behavior.
-- **side_effects:** May terminate notebook execution through Fabric notebook utilities or raise an exception.
-- **failure_modes:** Raises RuntimeError outside Fabric notebook exit handling when a failed guardrail must stop execution.
-- **verification:** Verify the guardrail result shape includes status/can_continue/message before passing it to stop_if_failed.
-
-</details>
-
-<details class="reference-metadata-details">
-<summary>Function manifest</summary>
-
-- Fully qualified function name: `fabricops_kit.drift.stop_if_failed`
-- Short name: `stop_if_failed`
-- Module: `drift`
-- Classification: Callable
-- Related module: `drift`
 - Source file path: `src/fabricops_kit/drift.py`
-- Source line: `674`
-- Inbound references count: 0
-- Outbound references count: 1
-
-</details>
-
-<details class="reference-metadata-details">
-<summary>Raw inbound and outbound references</summary>
-
-### Inbound references
-
-Not documented yet
-
-### Outbound references
-
-- <a href="../internal/drift_SchemaDriftError/"><code>fabricops_kit.drift.SchemaDriftError</code></a>
-
-</details>
-
-## Source code
-
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/5b6a5693130e525f919566c2115ac67da9c6faef/src/fabricops_kit/drift.py#L674-L694">View stop_if_failed on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/drift.py#L674-L694">View stop_if_failed on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -144,5 +98,67 @@ def stop_if_failed(result) -> None:
     detail = resolved.get("message") or resolved.get("summary") or "Guardrail blocked execution."
     raise SchemaDriftError(f"Guardrail blocked execution with status: {status}. {detail}")
 ```
+
+</details>
+
+## AI / machine-readable metadata
+
+<details class="reference-metadata-details">
+<summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
+
+These generated fields are for automation, AI agents, maintainers, and doc tooling. Skip this block when reading the docs normally.
+
+### Function manifest
+
+- Fully qualified function name: `fabricops_kit.drift.stop_if_failed`
+- Short name: `stop_if_failed`
+- Module: `drift`
+- Classification: Callable
+- Related module: `drift`
+- Source file path: `src/fabricops_kit/drift.py`
+- Source line: `674`
+- Inbound references count: 0
+- Outbound references count: 1
+
+### AI implementation contract
+
+- **required_context:** Use in 02_pipeline after validate_schema, monitor_data_changes, or enforce_dq_rules and before write helpers.
+- **inputs:** guardrail result dictionary and optional message/runtime controls.
+- **output:** None when execution may continue; otherwise raises or exits according to runtime behavior.
+- **side_effects:** May terminate notebook execution through Fabric notebook utilities or raise an exception.
+- **failure_modes:** Raises RuntimeError outside Fabric notebook exit handling when a failed guardrail must stop execution.
+- **verification:** Verify the guardrail result shape includes status/can_continue/message before passing it to stop_if_failed.
+
+### Inbound references
+
+Not documented yet
+
+### Outbound references
+
+- <a href="../internal/drift_SchemaDriftError/"><code>fabricops_kit.drift.SchemaDriftError</code></a>
+
+### Raw source metadata
+
+- Source file path: `src/fabricops_kit/drift.py`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/drift.py#L674-L694">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/drift.py#L674-L694</a>
+- Start line: `674`
+- End line: `694`
+- Signature:
+
+```python
+def stop_if_failed(result) -> None
+```
+
+### Internal relationship graph
+
+### Public related functions
+
+- <a href="../validate_schema/"><code>fabricops_kit.drift.validate_schema</code></a>
+- <a href="../monitor_data_changes/"><code>fabricops_kit.drift.monitor_data_changes</code></a>
+- <a href="../enforce_dq_rules/"><code>fabricops_kit.governance_review.enforce_dq_rules</code></a>
+
+### Internal implementation helpers
+
+- <a href="../internal/drift_SchemaDriftError/"><code>fabricops_kit.drift.SchemaDriftError</code></a>
 
 </details>

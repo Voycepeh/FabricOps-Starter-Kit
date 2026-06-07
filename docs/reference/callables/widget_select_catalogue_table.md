@@ -2,13 +2,17 @@
 
 Render a searchable selector for latest successful catalogue profiles.
 
-## Use this when
+## What this is for
 
 Render a searchable selector for latest successful catalogue profiles.
 
-## Do not use this for
+## When to use it
 
-Not documented yet
+- Render a searchable selector for latest successful catalogue profiles.
+
+## When not to use it
+
+- Not documented yet
 
 ## Example
 
@@ -24,37 +28,28 @@ Not documented yet
     <tr>
       <th>Parameter</th>
       <th>Required</th>
-      <th>What it means</th>
+      <th>Meaning</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td data-label="Parameter"><code>config</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="What it means">Runtime config containing the metadata lakehouse route.</td>
+      <td data-label="Meaning">Runtime config containing the metadata lakehouse route.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>env</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="What it means">Environment used to read ``METADATA_DATA_CATALOGUE``.</td>
+      <td data-label="Meaning">Environment used to read ``METADATA_DATA_CATALOGUE``.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>spark_session</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="What it means">Spark session used for the catalogue read.</td>
+      <td data-label="Meaning">Spark session used for the catalogue read.</td>
     </tr>
   </tbody>
 </table>
 </div>
-
-<details class="reference-signature-details">
-<summary>Full signature</summary>
-
-```python
-def widget_select_catalogue_table(config: Any, env: str, *, spark_session: Any)
-```
-
-</details>
 
 ## Output
 
@@ -81,59 +76,10 @@ Not documented yet
 
 </details>
 
-<details class="reference-metadata-details">
-<summary>AI implementation contract</summary>
+## Source
 
-These fields are generated for agents and maintainers, not for quick-start reading.
-
-- **required_context:** Starter template: `03_review`; segment: `Governance review`.
-- **inputs:** config : FrameworkConfig or dict
-    Runtime config containing the metadata lakehouse route.
-env : str
-    Environment used to read ``METADATA_DATA_CATALOGUE``.
-spark_session : pyspark.sql.SparkSession
-    Spark session used for the catalogue read.
-- **output:** ipywidgets.Combobox
-    Searchable selector whose value stores stable JSON identity.
-- **side_effects:** Not documented yet
-- **failure_modes:** Not documented yet
-- **verification:** Not documented yet
-
-</details>
-
-<details class="reference-metadata-details">
-<summary>Function manifest</summary>
-
-- Fully qualified function name: `fabricops_kit.governance_review.widget_select_catalogue_table`
-- Short name: `widget_select_catalogue_table`
-- Module: `governance_review`
-- Classification: Callable
-- Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
-- Source line: `288`
-- Inbound references count: 0
-- Outbound references count: 3
-
-</details>
-
-<details class="reference-metadata-details">
-<summary>Raw inbound and outbound references</summary>
-
-### Inbound references
-
-Not documented yet
-
-### Outbound references
-
-- <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a>
-- <a href="../internal/governance_review__catalogue_table_options/"><code>fabricops_kit.governance_review._catalogue_table_options</code></a>
-- <a href="../internal/governance_review__coerce_rows/"><code>fabricops_kit.governance_review._coerce_rows</code></a>
-
-</details>
-
-## Source code
-
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/5b6a5693130e525f919566c2115ac67da9c6faef/src/fabricops_kit/governance_review.py#L288-L329">View widget_select_catalogue_table on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/governance_review.py#L288-L329">View widget_select_catalogue_table on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -182,5 +128,74 @@ def widget_select_catalogue_table(config: Any, env: str, *, spark_session: Any):
     ip.display(widgets.VBox([combo, context]))
     return combo
 ```
+
+</details>
+
+## AI / machine-readable metadata
+
+<details class="reference-metadata-details">
+<summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
+
+These generated fields are for automation, AI agents, maintainers, and doc tooling. Skip this block when reading the docs normally.
+
+### Function manifest
+
+- Fully qualified function name: `fabricops_kit.governance_review.widget_select_catalogue_table`
+- Short name: `widget_select_catalogue_table`
+- Module: `governance_review`
+- Classification: Callable
+- Related module: `governance_review`
+- Source file path: `src/fabricops_kit/governance_review.py`
+- Source line: `288`
+- Inbound references count: 0
+- Outbound references count: 3
+
+### AI implementation contract
+
+- **required_context:** Starter template: `03_review`; segment: `Governance review`.
+- **inputs:** config : FrameworkConfig or dict
+    Runtime config containing the metadata lakehouse route.
+env : str
+    Environment used to read ``METADATA_DATA_CATALOGUE``.
+spark_session : pyspark.sql.SparkSession
+    Spark session used for the catalogue read.
+- **output:** ipywidgets.Combobox
+    Searchable selector whose value stores stable JSON identity.
+- **side_effects:** Not documented yet
+- **failure_modes:** Not documented yet
+- **verification:** Not documented yet
+
+### Inbound references
+
+Not documented yet
+
+### Outbound references
+
+- <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a>
+- <a href="../internal/governance_review__catalogue_table_options/"><code>fabricops_kit.governance_review._catalogue_table_options</code></a>
+- <a href="../internal/governance_review__coerce_rows/"><code>fabricops_kit.governance_review._coerce_rows</code></a>
+
+### Raw source metadata
+
+- Source file path: `src/fabricops_kit/governance_review.py`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/governance_review.py#L288-L329">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/governance_review.py#L288-L329</a>
+- Start line: `288`
+- End line: `329`
+- Signature:
+
+```python
+def widget_select_catalogue_table(config: Any, env: str, *, spark_session: Any)
+```
+
+### Internal relationship graph
+
+### Public related functions
+
+- <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a>
+
+### Internal implementation helpers
+
+- <a href="../internal/governance_review__catalogue_table_options/"><code>fabricops_kit.governance_review._catalogue_table_options</code></a>
+- <a href="../internal/governance_review__coerce_rows/"><code>fabricops_kit.governance_review._coerce_rows</code></a>
 
 </details>

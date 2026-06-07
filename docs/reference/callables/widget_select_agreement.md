@@ -2,13 +2,17 @@
 
 Render an agreement selector and optionally register the active notebook.
 
-## Use this when
+## What this is for
 
 Use in 02_pipeline or 99_explore notebooks to let a user select an approved data agreement before reading, profiling, or writing governed data.
 
-## Do not use this for
+## When to use it
 
-Do not use when an agreement has already been programmatically selected and validated, or for catalogue table review selection in 03_review.
+- Use in 02_pipeline or 99_explore notebooks to let a user select an approved data agreement before reading, profiling, or writing governed data.
+
+## When not to use it
+
+- Do not use when an agreement has already been programmatically selected and validated, or for catalogue table review selection in 03_review.
 
 ## Example
 
@@ -25,72 +29,63 @@ agreement = get_selected_agreement()
     <tr>
       <th>Parameter</th>
       <th>Required</th>
-      <th>What it means</th>
+      <th>Meaning</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td data-label="Parameter"><code>agreement_rows_or_config</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="What it means">Pass ``CONFIG`` in normal notebooks, or provide preloaded agreement rows when the caller already has them available.</td>
+      <td data-label="Meaning">Pass ``CONFIG`` in normal notebooks, or provide preloaded agreement rows when the caller already has them available.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>env_name</code></td>
       <td data-label="Required">No</td>
-      <td data-label="What it means">Environment key used to load agreements when ``CONFIG`` is supplied.</td>
+      <td data-label="Meaning">Environment key used to load agreements when ``CONFIG`` is supplied.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>spark_session</code></td>
       <td data-label="Required">No</td>
-      <td data-label="What it means">Fabric Spark session used for configured metadata-table reads.</td>
+      <td data-label="Meaning">Fabric Spark session used for configured metadata-table reads.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>register_notebook</code></td>
       <td data-label="Required">No</td>
-      <td data-label="What it means">When True, render registration status and a button that links the current notebook to the selected agreement.</td>
+      <td data-label="Meaning">When True, render registration status and a button that links the current notebook to the selected agreement.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>notebook_type</code></td>
       <td data-label="Required">No</td>
-      <td data-label="What it means">Workflow metadata passed to ``_register_current_notebook`` when ``register_notebook`` is enabled.</td>
+      <td data-label="Meaning">Workflow metadata passed to ``_register_current_notebook`` when ``register_notebook`` is enabled.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>environment_name</code></td>
       <td data-label="Required">No</td>
-      <td data-label="What it means">Not documented yet</td>
+      <td data-label="Meaning">Not documented yet</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>dataset_name</code></td>
       <td data-label="Required">No</td>
-      <td data-label="What it means">Not documented yet</td>
+      <td data-label="Meaning">Not documented yet</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>table_name</code></td>
       <td data-label="Required">No</td>
-      <td data-label="What it means">Not documented yet</td>
+      <td data-label="Meaning">Not documented yet</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>topic</code></td>
       <td data-label="Required">No</td>
-      <td data-label="What it means">Not documented yet</td>
+      <td data-label="Meaning">Not documented yet</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>pipeline_name</code></td>
       <td data-label="Required">No</td>
-      <td data-label="What it means">Not documented yet</td>
+      <td data-label="Meaning">Not documented yet</td>
     </tr>
   </tbody>
 </table>
 </div>
-
-<details class="reference-signature-details">
-<summary>Full signature</summary>
-
-```python
-def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None=None, *, spark_session: Any=None, register_notebook: bool=False, notebook_type: str | None=None, environment_name: str | None=None, dataset_name: str | None=None, table_name: str | None=None, topic: str | None=None, pipeline_name: str | None=None) -> Any
-```
-
-</details>
 
 ## Output
 
@@ -122,57 +117,10 @@ Displays an IPython widget and may register the active notebook selection in met
 
 </details>
 
-<details class="reference-metadata-details">
-<summary>AI implementation contract</summary>
+## Source
 
-These fields are generated for agents and maintainers, not for quick-start reading.
-
-- **required_context:** Requires agreement metadata created through 01_agreement and metadata routing from 00_env_config.
-- **inputs:** config, env, optional spark_session, and notebook registration options for loading agreement choices from metadata.
-- **output:** Interactive widget state; call get_selected_agreement to retrieve the selected agreement record.
-- **side_effects:** Displays an IPython widget and may register the active notebook selection in metadata when requested.
-- **failure_modes:** Raises metadata read, widget dependency, or configuration errors when agreement metadata cannot be loaded.
-- **verification:** Verify the user selected an agreement and call get_selected_agreement before generating pipeline code that depends on agreement context.
-
-</details>
-
-<details class="reference-metadata-details">
-<summary>Function manifest</summary>
-
-- Fully qualified function name: `fabricops_kit.data_agreement.widget_select_agreement`
-- Short name: `widget_select_agreement`
-- Module: `data_agreement`
-- Classification: Callable
-- Related module: `data_agreement`
 - Source file path: `src/fabricops_kit/data_agreement.py`
-- Source line: `856`
-- Inbound references count: 0
-- Outbound references count: 7
-
-</details>
-
-<details class="reference-metadata-details">
-<summary>Raw inbound and outbound references</summary>
-
-### Inbound references
-
-Not documented yet
-
-### Outbound references
-
-- <a href="../internal/data_agreement__html_escape/"><code>fabricops_kit.data_agreement._html_escape</code></a>
-- <a href="../internal/data_agreement__latest_agreement_versions/"><code>fabricops_kit.data_agreement._latest_agreement_versions</code></a>
-- <a href="../internal/data_agreement__list_data_agreements/"><code>fabricops_kit.data_agreement._list_data_agreements</code></a>
-- <a href="../internal/data_agreement__render_searchable_selector/"><code>fabricops_kit.data_agreement._render_searchable_selector</code></a>
-- <a href="../internal/data_agreement__require_ipywidgets/"><code>fabricops_kit.data_agreement._require_ipywidgets</code></a>
-- <a href="../internal/metadata__current_notebook_active_registrations/"><code>fabricops_kit.metadata._current_notebook_active_registrations</code></a>
-- <a href="../internal/metadata__register_current_notebook/"><code>fabricops_kit.metadata._register_current_notebook</code></a>
-
-</details>
-
-## Source code
-
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/5b6a5693130e525f919566c2115ac67da9c6faef/src/fabricops_kit/data_agreement.py#L856-L1080">View widget_select_agreement on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/data_agreement.py#L856-L1080">View widget_select_agreement on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -404,5 +352,78 @@ def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None 
     ip.display(selector.container)
     return selector
 ```
+
+</details>
+
+## AI / machine-readable metadata
+
+<details class="reference-metadata-details">
+<summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
+
+These generated fields are for automation, AI agents, maintainers, and doc tooling. Skip this block when reading the docs normally.
+
+### Function manifest
+
+- Fully qualified function name: `fabricops_kit.data_agreement.widget_select_agreement`
+- Short name: `widget_select_agreement`
+- Module: `data_agreement`
+- Classification: Callable
+- Related module: `data_agreement`
+- Source file path: `src/fabricops_kit/data_agreement.py`
+- Source line: `856`
+- Inbound references count: 0
+- Outbound references count: 7
+
+### AI implementation contract
+
+- **required_context:** Requires agreement metadata created through 01_agreement and metadata routing from 00_env_config.
+- **inputs:** config, env, optional spark_session, and notebook registration options for loading agreement choices from metadata.
+- **output:** Interactive widget state; call get_selected_agreement to retrieve the selected agreement record.
+- **side_effects:** Displays an IPython widget and may register the active notebook selection in metadata when requested.
+- **failure_modes:** Raises metadata read, widget dependency, or configuration errors when agreement metadata cannot be loaded.
+- **verification:** Verify the user selected an agreement and call get_selected_agreement before generating pipeline code that depends on agreement context.
+
+### Inbound references
+
+Not documented yet
+
+### Outbound references
+
+- <a href="../internal/data_agreement__html_escape/"><code>fabricops_kit.data_agreement._html_escape</code></a>
+- <a href="../internal/data_agreement__latest_agreement_versions/"><code>fabricops_kit.data_agreement._latest_agreement_versions</code></a>
+- <a href="../internal/data_agreement__list_data_agreements/"><code>fabricops_kit.data_agreement._list_data_agreements</code></a>
+- <a href="../internal/data_agreement__render_searchable_selector/"><code>fabricops_kit.data_agreement._render_searchable_selector</code></a>
+- <a href="../internal/data_agreement__require_ipywidgets/"><code>fabricops_kit.data_agreement._require_ipywidgets</code></a>
+- <a href="../internal/metadata__current_notebook_active_registrations/"><code>fabricops_kit.metadata._current_notebook_active_registrations</code></a>
+- <a href="../internal/metadata__register_current_notebook/"><code>fabricops_kit.metadata._register_current_notebook</code></a>
+
+### Raw source metadata
+
+- Source file path: `src/fabricops_kit/data_agreement.py`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/data_agreement.py#L856-L1080">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/data_agreement.py#L856-L1080</a>
+- Start line: `856`
+- End line: `1080`
+- Signature:
+
+```python
+def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None=None, *, spark_session: Any=None, register_notebook: bool=False, notebook_type: str | None=None, environment_name: str | None=None, dataset_name: str | None=None, table_name: str | None=None, topic: str | None=None, pipeline_name: str | None=None) -> Any
+```
+
+### Internal relationship graph
+
+### Public related functions
+
+- <a href="../get_selected_agreement/"><code>fabricops_kit.data_agreement.get_selected_agreement</code></a>
+- <a href="../setup_metadata_tables/"><code>fabricops_kit.config.setup_metadata_tables</code></a>
+
+### Internal implementation helpers
+
+- <a href="../internal/data_agreement__html_escape/"><code>fabricops_kit.data_agreement._html_escape</code></a>
+- <a href="../internal/data_agreement__latest_agreement_versions/"><code>fabricops_kit.data_agreement._latest_agreement_versions</code></a>
+- <a href="../internal/data_agreement__list_data_agreements/"><code>fabricops_kit.data_agreement._list_data_agreements</code></a>
+- <a href="../internal/data_agreement__render_searchable_selector/"><code>fabricops_kit.data_agreement._render_searchable_selector</code></a>
+- <a href="../internal/data_agreement__require_ipywidgets/"><code>fabricops_kit.data_agreement._require_ipywidgets</code></a>
+- <a href="../internal/metadata__current_notebook_active_registrations/"><code>fabricops_kit.metadata._current_notebook_active_registrations</code></a>
+- <a href="../internal/metadata__register_current_notebook/"><code>fabricops_kit.metadata._register_current_notebook</code></a>
 
 </details>

@@ -2,13 +2,17 @@
 
 Create or validate all FabricOps metadata tables through one setup action.
 
-## Use this when
+## What this is for
 
 Use after setup_notebook in 00_env_config to create or validate the FabricOps metadata tables required by agreement, profiling, lineage, drift, and governance workflows.
 
-## Do not use this for
+## When to use it
 
-Do not use for writing business data or pipeline target tables; use write_lakehouse_table or write_warehouse_table for data outputs.
+- Use after setup_notebook in 00_env_config to create or validate the FabricOps metadata tables required by agreement, profiling, lineage, drift, and governance workflows.
+
+## When not to use it
+
+- Do not use for writing business data or pipeline target tables; use write_lakehouse_table or write_warehouse_table for data outputs.
 
 ## Example
 
@@ -24,42 +28,33 @@ setup_metadata_tables(CONFIG, env="Sandbox", spark_session=spark)
     <tr>
       <th>Parameter</th>
       <th>Required</th>
-      <th>What it means</th>
+      <th>Meaning</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td data-label="Parameter"><code>spark</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="What it means">Fabric Spark session used by the table setup helpers.</td>
+      <td data-label="Meaning">Fabric Spark session used by the table setup helpers.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>config</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="What it means">Shared ``00_env_config`` configuration containing the metadata target.</td>
+      <td data-label="Meaning">Shared ``00_env_config`` configuration containing the metadata target.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>env</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="What it means">Environment key to prepare.</td>
+      <td data-label="Meaning">Environment key to prepare.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>require_active_steward</code></td>
       <td data-label="Required">No</td>
-      <td data-label="What it means">Forwarded to the agreement metadata setup to optionally require an active steward before returning success.</td>
+      <td data-label="Meaning">Forwarded to the agreement metadata setup to optionally require an active steward before returning success.</td>
     </tr>
   </tbody>
 </table>
 </div>
-
-<details class="reference-signature-details">
-<summary>Full signature</summary>
-
-```python
-def setup_metadata_tables(*, spark: Any, config: FrameworkConfig | dict[str, Any], env: str, require_active_steward: bool=False) -> dict[str, Any]
-```
-
-</details>
 
 ## Output
 
@@ -88,53 +83,10 @@ Creates or validates FabricOps metadata tables in the configured metadata lakeho
 
 </details>
 
-<details class="reference-metadata-details">
-<summary>AI implementation contract</summary>
+## Source
 
-These fields are generated for agents and maintainers, not for quick-start reading.
-
-- **required_context:** Requires the metadata target from 00_env_config; metadata tables must be routed through CONFIG.path_config paths for the selected env.
-- **inputs:** config, env, optional spark_session, and mode/check options used to prepare metadata storage through configured metadata routing.
-- **output:** Setup result describing metadata table creation or validation status.
-- **side_effects:** Creates or validates FabricOps metadata tables in the configured metadata lakehouse target.
-- **failure_modes:** Raises configuration, Spark, or storage errors when metadata routing or table preparation fails.
-- **verification:** Verify metadata setup completes before recommending agreement, profiling, lineage, drift, or governance workflows that persist evidence.
-
-</details>
-
-<details class="reference-metadata-details">
-<summary>Function manifest</summary>
-
-- Fully qualified function name: `fabricops_kit.config.setup_metadata_tables`
-- Short name: `setup_metadata_tables`
-- Module: `config`
-- Classification: Callable
-- Related module: `config`
 - Source file path: `src/fabricops_kit/config.py`
-- Source line: `707`
-- Inbound references count: 0
-- Outbound references count: 4
-
-</details>
-
-<details class="reference-metadata-details">
-<summary>Raw inbound and outbound references</summary>
-
-### Inbound references
-
-Not documented yet
-
-### Outbound references
-
-- <a href="../internal/data_agreement__setup_data_agreement_tables/"><code>fabricops_kit.data_agreement._setup_data_agreement_tables</code></a>
-- <a href="../internal/governance_review__setup_governance_metadata_tables/"><code>fabricops_kit.governance_review._setup_governance_metadata_tables</code></a>
-- <a href="../internal/metadata__setup_notebook_registry_table/"><code>fabricops_kit.metadata._setup_notebook_registry_table</code></a>
-
-</details>
-
-## Source code
-
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/5b6a5693130e525f919566c2115ac67da9c6faef/src/fabricops_kit/config.py#L707-L758">View setup_metadata_tables on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/config.py#L707-L758">View setup_metadata_tables on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -193,5 +145,71 @@ def setup_metadata_tables(
         "governance": governance,
     }
 ```
+
+</details>
+
+## AI / machine-readable metadata
+
+<details class="reference-metadata-details">
+<summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
+
+These generated fields are for automation, AI agents, maintainers, and doc tooling. Skip this block when reading the docs normally.
+
+### Function manifest
+
+- Fully qualified function name: `fabricops_kit.config.setup_metadata_tables`
+- Short name: `setup_metadata_tables`
+- Module: `config`
+- Classification: Callable
+- Related module: `config`
+- Source file path: `src/fabricops_kit/config.py`
+- Source line: `707`
+- Inbound references count: 0
+- Outbound references count: 4
+
+### AI implementation contract
+
+- **required_context:** Requires the metadata target from 00_env_config; metadata tables must be routed through CONFIG.path_config paths for the selected env.
+- **inputs:** config, env, optional spark_session, and mode/check options used to prepare metadata storage through configured metadata routing.
+- **output:** Setup result describing metadata table creation or validation status.
+- **side_effects:** Creates or validates FabricOps metadata tables in the configured metadata lakehouse target.
+- **failure_modes:** Raises configuration, Spark, or storage errors when metadata routing or table preparation fails.
+- **verification:** Verify metadata setup completes before recommending agreement, profiling, lineage, drift, or governance workflows that persist evidence.
+
+### Inbound references
+
+Not documented yet
+
+### Outbound references
+
+- <a href="../internal/data_agreement__setup_data_agreement_tables/"><code>fabricops_kit.data_agreement._setup_data_agreement_tables</code></a>
+- <a href="../internal/governance_review__setup_governance_metadata_tables/"><code>fabricops_kit.governance_review._setup_governance_metadata_tables</code></a>
+- <a href="../internal/metadata__setup_notebook_registry_table/"><code>fabricops_kit.metadata._setup_notebook_registry_table</code></a>
+
+### Raw source metadata
+
+- Source file path: `src/fabricops_kit/config.py`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/config.py#L707-L758">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/config.py#L707-L758</a>
+- Start line: `707`
+- End line: `758`
+- Signature:
+
+```python
+def setup_metadata_tables(*, spark: Any, config: FrameworkConfig | dict[str, Any], env: str, require_active_steward: bool=False) -> dict[str, Any]
+```
+
+### Internal relationship graph
+
+### Public related functions
+
+- <a href="../setup_notebook/"><code>fabricops_kit.config.setup_notebook</code></a>
+- <a href="../record_table_governance/"><code>fabricops_kit.governance_review.record_table_governance</code></a>
+
+### Internal implementation helpers
+
+- <a href="../internal/data_agreement__setup_data_agreement_tables/"><code>fabricops_kit.data_agreement._setup_data_agreement_tables</code></a>
+- `fabricops_kit.data_agreement.get`
+- <a href="../internal/governance_review__setup_governance_metadata_tables/"><code>fabricops_kit.governance_review._setup_governance_metadata_tables</code></a>
+- <a href="../internal/metadata__setup_notebook_registry_table/"><code>fabricops_kit.metadata._setup_notebook_registry_table</code></a>
 
 </details>

@@ -27,10 +27,10 @@ CORE_CALLABLES = {
     "record_table_governance",
 }
 CORE_PAGE_SECTIONS = (
-    "Do not use this for",
+    "When not to use it",
     "Example",
     "Side effects",
-    "Source code",
+    "Source",
 )
 CORE_AGENT_FIELDS = (
     "use_when",
@@ -70,10 +70,12 @@ def test_every_callable_page_has_ai_reference_sections() -> None:
     assert callable_pages
     for page in callable_pages:
         text = page.read_text(encoding="utf-8")
-        assert "## Use this when" in text, page
+        assert "## What this is for" in text, page
+        assert "## When to use it" in text, page
         assert "## Side effects" in text, page
-        assert "## Source code" in text, page
-        assert '<summary>AI implementation contract</summary>' in text, page
+        assert "## Source" in text, page
+        assert "## AI / machine-readable metadata" in text, page
+        assert "<summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>" in text, page
 
 
 def test_core_callable_pages_have_non_placeholder_ai_guidance() -> None:
@@ -119,29 +121,40 @@ def test_github_source_url_uses_configured_source_ref(monkeypatch) -> None:
     )
 
 
-def test_callable_pages_include_source_code_section_and_github_source_link() -> None:
+def test_callable_pages_include_source_section_and_github_source_link() -> None:
     callable_pages = sorted((REFERENCE_DIR / "callables").glob("*.md"))
 
     assert callable_pages
     for page in callable_pages:
         text = page.read_text(encoding="utf-8")
-        assert "## Source code" in text, page
+        assert "## Source" in text, page
         assert "Show source code" in text, page
         assert "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/" in text, page
         assert "/src/fabricops_kit/" in text, page
         assert "#L" in text, page
 
 
-def test_callable_pages_collapse_function_manifest_metadata() -> None:
+def test_callable_pages_collapse_ai_machine_metadata() -> None:
     callable_pages = sorted((REFERENCE_DIR / "callables").glob("*.md"))
 
     assert callable_pages
     for page in callable_pages:
         text = page.read_text(encoding="utf-8")
-        assert "## Function manifest" not in text, page
-        assert "<summary>Function manifest</summary>" in text, page
+        assert "\n## Function manifest" not in text, page
+        assert "\n## AI implementation contract" not in text, page
         assert "\n## Inbound references" not in text, page
         assert "\n## Outbound references" not in text, page
+        assert "<details" in text, page
+        assert "<details open" not in text, page
+        assert "<summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>" in text, page
+        metadata_start = text.index("<summary>AI / machine-readable metadata")
+        metadata_end = text.index("</details>", metadata_start)
+        metadata = text[metadata_start:metadata_end]
+        assert "### Function manifest" in metadata, page
+        assert "### AI implementation contract" in metadata, page
+        assert "### Inbound references" in metadata, page
+        assert "### Outbound references" in metadata, page
+        assert "### Raw source metadata" in metadata, page
 
 
 def test_setup_notebook_reference_uses_human_first_source_documentation() -> None:
@@ -150,7 +163,11 @@ def test_setup_notebook_reference_uses_human_first_source_documentation() -> Non
     assert "../../api/modules/config/#setup_notebook" not in text
     assert "src/fabricops_kit/config.py#L595" in text
     assert "## Example\n\n```python\ncontext = setup_notebook" in text
+    first_metadata = text.index("## AI / machine-readable metadata")
+    for marker in ("## What this is for", "## When to use it", "## When not to use it", "## Example"):
+        assert text.index(marker) < first_metadata
     assert "## Inputs" in text
     assert "Parameter" in text
     assert "Required" in text
-    assert "What it means" in text
+    assert "Meaning" in text
+    assert "Show source code" in text

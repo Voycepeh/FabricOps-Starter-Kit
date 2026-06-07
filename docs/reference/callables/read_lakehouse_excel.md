@@ -2,13 +2,17 @@
 
 Read an Excel file from a configured Fabric lakehouse Files path.
 
-## Use this when
+## What this is for
 
 Use when reading .xlsx files from a configured Fabric lakehouse Files path, especially small reference files, mapping tables, or manually maintained business inputs.
 
-## Do not use this for
+## When to use it
 
-Do not use for Delta tables, CSV files, Parquet files, or warehouse SQL tables.
+- Use when reading .xlsx files from a configured Fabric lakehouse Files path, especially small reference files, mapping tables, or manually maintained business inputs.
+
+## When not to use it
+
+- Do not use for Delta tables, CSV files, Parquet files, or warehouse SQL tables.
 
 ## Example
 
@@ -24,52 +28,43 @@ mapping_df = read_lakehouse_excel(CONFIG, env="Sandbox", target="Source", relati
     <tr>
       <th>Parameter</th>
       <th>Required</th>
-      <th>What it means</th>
+      <th>Meaning</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td data-label="Parameter"><code>config</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="What it means">FabricOps FrameworkConfig or compatible config object.</td>
+      <td data-label="Meaning">FabricOps FrameworkConfig or compatible config object.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>env</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="What it means">Environment key such as `&quot;dev&quot;`.</td>
+      <td data-label="Meaning">Environment key such as `&quot;dev&quot;`.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>target</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="What it means">Logical target name such as `&quot;source&quot;` or `&quot;unified&quot;`.</td>
+      <td data-label="Meaning">Logical target name such as `&quot;source&quot;` or `&quot;unified&quot;`.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>relative_path</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="What it means">Path to the Excel file relative to the lakehouse ``Files`` area, for example ``&quot;reference/faculty_mapping.xlsx&quot;``. A leading ``&quot;Files/&quot;`` prefix is accepted for consistency with notebook examples and is normalized away before the lakehouse path is resolved.</td>
+      <td data-label="Meaning">Path to the Excel file relative to the lakehouse ``Files`` area, for example ``&quot;reference/faculty_mapping.xlsx&quot;``. A leading ``&quot;Files/&quot;`` prefix is accepted for consistency with notebook examples and is normalized away before the lakehouse path is resolved.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>sheet_name</code></td>
       <td data-label="Required">No</td>
-      <td data-label="What it means">Worksheet name or index to read. Defaults to the first worksheet.</td>
+      <td data-label="Meaning">Worksheet name or index to read. Defaults to the first worksheet.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>spark_session</code></td>
       <td data-label="Required">No</td>
-      <td data-label="What it means">Spark session to use. If omitted, the helper uses the notebook global `spark`. **read_excel_kwargs Additional keyword arguments passed directly to :func:`pandas.read_excel`. Common options include ``skiprows`` for title rows above the real header, ``header`` for custom header-row selection, ``usecols`` for column filtering, ``dtype`` for mixed-type columns, and ``nrows`` for sampling or bounded reads.</td>
+      <td data-label="Meaning">Spark session to use. If omitted, the helper uses the notebook global `spark`. **read_excel_kwargs Additional keyword arguments passed directly to :func:`pandas.read_excel`. Common options include ``skiprows`` for title rows above the real header, ``header`` for custom header-row selection, ``usecols`` for column filtering, ``dtype`` for mixed-type columns, and ``nrows`` for sampling or bounded reads.</td>
     </tr>
   </tbody>
 </table>
 </div>
-
-<details class="reference-signature-details">
-<summary>Full signature</summary>
-
-```python
-def read_lakehouse_excel(config, env, target, relative_path, sheet_name=0, spark_session=None, **read_excel_kwargs)
-```
-
-</details>
 
 ## Output
 
@@ -98,53 +93,10 @@ Reads from lakehouse Files through a temporary local Excel file; it does not wri
 
 </details>
 
-<details class="reference-metadata-details">
-<summary>AI implementation contract</summary>
+## Source
 
-These fields are generated for agents and maintainers, not for quick-start reading.
-
-- **required_context:** Requires 00_env_config config/env/target context for resolving the configured lakehouse Files path.
-- **inputs:** config, env, target, relative_path, optional sheet_name, optional spark_session, and pandas read_excel keyword arguments.
-- **output:** Spark DataFrame converted from the selected Excel worksheet.
-- **side_effects:** Reads from lakehouse Files through a temporary local Excel file; it does not write metadata, tables, or files.
-- **failure_modes:** Raises ValueError for invalid or non-Excel paths and Fabric/Spark/pandas errors when the file cannot be read.
-- **verification:** Verify the DataFrame row count and schema after reading, and confirm the Excel file is appropriate for a small reference-style input.
-
-</details>
-
-<details class="reference-metadata-details">
-<summary>Function manifest</summary>
-
-- Fully qualified function name: `fabricops_kit.fabric_input_output.read_lakehouse_excel`
-- Short name: `read_lakehouse_excel`
-- Module: `fabric_input_output`
-- Classification: Callable
-- Related module: `fabric_input_output`
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- Source line: `632`
-- Inbound references count: 0
-- Outbound references count: 3
-
-</details>
-
-<details class="reference-metadata-details">
-<summary>Raw inbound and outbound references</summary>
-
-### Inbound references
-
-Not documented yet
-
-### Outbound references
-
-- <a href="../internal/config__get_store/"><code>fabricops_kit.config._get_store</code></a>
-- <a href="../internal/fabric_input_output__get_spark/"><code>fabricops_kit.fabric_input_output._get_spark</code></a>
-- <a href="../internal/fabric_input_output__lakehouse_file_path/"><code>fabricops_kit.fabric_input_output._lakehouse_file_path</code></a>
-
-</details>
-
-## Source code
-
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/5b6a5693130e525f919566c2115ac67da9c6faef/src/fabricops_kit/fabric_input_output.py#L632-L719">View read_lakehouse_excel on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/fabric_input_output.py#L632-L719">View read_lakehouse_excel on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -239,5 +191,71 @@ def read_lakehouse_excel(config, env, target, relative_path, sheet_name=0, spark
     pandas_df = pd.read_excel(temp_file_path, sheet_name=sheet_name, **read_excel_kwargs)
     return spark_obj.createDataFrame(pandas_df)
 ```
+
+</details>
+
+## AI / machine-readable metadata
+
+<details class="reference-metadata-details">
+<summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
+
+These generated fields are for automation, AI agents, maintainers, and doc tooling. Skip this block when reading the docs normally.
+
+### Function manifest
+
+- Fully qualified function name: `fabricops_kit.fabric_input_output.read_lakehouse_excel`
+- Short name: `read_lakehouse_excel`
+- Module: `fabric_input_output`
+- Classification: Callable
+- Related module: `fabric_input_output`
+- Source file path: `src/fabricops_kit/fabric_input_output.py`
+- Source line: `632`
+- Inbound references count: 0
+- Outbound references count: 3
+
+### AI implementation contract
+
+- **required_context:** Requires 00_env_config config/env/target context for resolving the configured lakehouse Files path.
+- **inputs:** config, env, target, relative_path, optional sheet_name, optional spark_session, and pandas read_excel keyword arguments.
+- **output:** Spark DataFrame converted from the selected Excel worksheet.
+- **side_effects:** Reads from lakehouse Files through a temporary local Excel file; it does not write metadata, tables, or files.
+- **failure_modes:** Raises ValueError for invalid or non-Excel paths and Fabric/Spark/pandas errors when the file cannot be read.
+- **verification:** Verify the DataFrame row count and schema after reading, and confirm the Excel file is appropriate for a small reference-style input.
+
+### Inbound references
+
+Not documented yet
+
+### Outbound references
+
+- <a href="../internal/config__get_store/"><code>fabricops_kit.config._get_store</code></a>
+- <a href="../internal/fabric_input_output__get_spark/"><code>fabricops_kit.fabric_input_output._get_spark</code></a>
+- <a href="../internal/fabric_input_output__lakehouse_file_path/"><code>fabricops_kit.fabric_input_output._lakehouse_file_path</code></a>
+
+### Raw source metadata
+
+- Source file path: `src/fabricops_kit/fabric_input_output.py`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/fabric_input_output.py#L632-L719">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/fabric_input_output.py#L632-L719</a>
+- Start line: `632`
+- End line: `719`
+- Signature:
+
+```python
+def read_lakehouse_excel(config, env, target, relative_path, sheet_name=0, spark_session=None, **read_excel_kwargs)
+```
+
+### Internal relationship graph
+
+### Public related functions
+
+- <a href="../read_lakehouse_csv/"><code>fabricops_kit.fabric_input_output.read_lakehouse_csv</code></a>
+- <a href="../read_lakehouse_parquet/"><code>fabricops_kit.fabric_input_output.read_lakehouse_parquet</code></a>
+- <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a>
+
+### Internal implementation helpers
+
+- <a href="../internal/config__get_store/"><code>fabricops_kit.config._get_store</code></a>
+- <a href="../internal/fabric_input_output__get_spark/"><code>fabricops_kit.fabric_input_output._get_spark</code></a>
+- <a href="../internal/fabric_input_output__lakehouse_file_path/"><code>fabricops_kit.fabric_input_output._lakehouse_file_path</code></a>
 
 </details>

@@ -2,13 +2,17 @@
 
 Validate a DataFrame schema using strict, allow-new-columns, or monitor-only presets.
 
-## Use this when
+## What this is for
 
 Use before writes to compare a DataFrame schema against an expected schema with strict, allow-new-columns, or monitor-only behavior.
 
-## Do not use this for
+## When to use it
 
-Do not use for data-value drift, DQ-rule enforcement, or metadata persistence.
+- Use before writes to compare a DataFrame schema against an expected schema with strict, allow-new-columns, or monitor-only behavior.
+
+## When not to use it
+
+- Do not use for data-value drift, DQ-rule enforcement, or metadata persistence.
 
 ## Example
 
@@ -25,37 +29,28 @@ stop_if_failed(schema_result)
     <tr>
       <th>Parameter</th>
       <th>Required</th>
-      <th>What it means</th>
+      <th>Meaning</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td data-label="Parameter"><code>dataframe</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="What it means">Spark, pandas, or dataframe-like object with schema metadata.</td>
+      <td data-label="Meaning">Spark, pandas, or dataframe-like object with schema metadata.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>expected_schema</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="What it means">Mapping of required column names to expected datatype strings.</td>
+      <td data-label="Meaning">Mapping of required column names to expected datatype strings.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>preset</code></td>
       <td data-label="Required">No</td>
-      <td data-label="What it means">Schema validation intent. ``strict`` blocks missing columns, datatype changes, and unexpected columns. ``allow_new_columns`` blocks missing columns and datatype changes while reporting additional columns as a warning. ``monitor_only`` reports all differences without blocking.</td>
+      <td data-label="Meaning">Schema validation intent. ``strict`` blocks missing columns, datatype changes, and unexpected columns. ``allow_new_columns`` blocks missing columns and datatype changes while reporting additional columns as a warning. ``monitor_only`` reports all differences without blocking.</td>
     </tr>
   </tbody>
 </table>
 </div>
-
-<details class="reference-signature-details">
-<summary>Full signature</summary>
-
-```python
-def validate_schema(dataframe, expected_schema: dict[str, str], *, preset: str='strict') -> dict
-```
-
-</details>
 
 ## Output
 
@@ -82,52 +77,10 @@ Inspects DataFrame schema only; it does not write metadata, tables, or files.
 
 </details>
 
-<details class="reference-metadata-details">
-<summary>AI implementation contract</summary>
+## Source
 
-These fields are generated for agents and maintainers, not for quick-start reading.
-
-- **required_context:** Use in 02_pipeline before write helpers so schema guardrails run before publishing data.
-- **inputs:** dataframe, expected_schema mapping, and preset controlling blocking behavior.
-- **output:** Guardrail result dictionary with status, can_continue, checks, message, and schema difference details.
-- **side_effects:** Inspects DataFrame schema only; it does not write metadata, tables, or files.
-- **failure_modes:** ValueError when preset is not one of the supported schema presets.
-- **verification:** Verify can_continue before calling write helpers and pass the result to stop_if_failed when blocking behavior is required.
-
-</details>
-
-<details class="reference-metadata-details">
-<summary>Function manifest</summary>
-
-- Fully qualified function name: `fabricops_kit.drift.validate_schema`
-- Short name: `validate_schema`
-- Module: `drift`
-- Classification: Callable
-- Related module: `drift`
 - Source file path: `src/fabricops_kit/drift.py`
-- Source line: `96`
-- Inbound references count: 0
-- Outbound references count: 2
-
-</details>
-
-<details class="reference-metadata-details">
-<summary>Raw inbound and outbound references</summary>
-
-### Inbound references
-
-Not documented yet
-
-### Outbound references
-
-- <a href="../internal/drift__actual_schema/"><code>fabricops_kit.drift._actual_schema</code></a>
-- <a href="../internal/drift__normalize_datatype/"><code>fabricops_kit.drift._normalize_datatype</code></a>
-
-</details>
-
-## Source code
-
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/5b6a5693130e525f919566c2115ac67da9c6faef/src/fabricops_kit/drift.py#L96-L185">View validate_schema on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/drift.py#L96-L185">View validate_schema on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -224,5 +177,68 @@ def validate_schema(dataframe, expected_schema: dict[str, str], *, preset: str =
         "preset": normalized_preset,
     }
 ```
+
+</details>
+
+## AI / machine-readable metadata
+
+<details class="reference-metadata-details">
+<summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
+
+These generated fields are for automation, AI agents, maintainers, and doc tooling. Skip this block when reading the docs normally.
+
+### Function manifest
+
+- Fully qualified function name: `fabricops_kit.drift.validate_schema`
+- Short name: `validate_schema`
+- Module: `drift`
+- Classification: Callable
+- Related module: `drift`
+- Source file path: `src/fabricops_kit/drift.py`
+- Source line: `96`
+- Inbound references count: 0
+- Outbound references count: 2
+
+### AI implementation contract
+
+- **required_context:** Use in 02_pipeline before write helpers so schema guardrails run before publishing data.
+- **inputs:** dataframe, expected_schema mapping, and preset controlling blocking behavior.
+- **output:** Guardrail result dictionary with status, can_continue, checks, message, and schema difference details.
+- **side_effects:** Inspects DataFrame schema only; it does not write metadata, tables, or files.
+- **failure_modes:** ValueError when preset is not one of the supported schema presets.
+- **verification:** Verify can_continue before calling write helpers and pass the result to stop_if_failed when blocking behavior is required.
+
+### Inbound references
+
+Not documented yet
+
+### Outbound references
+
+- <a href="../internal/drift__actual_schema/"><code>fabricops_kit.drift._actual_schema</code></a>
+- <a href="../internal/drift__normalize_datatype/"><code>fabricops_kit.drift._normalize_datatype</code></a>
+
+### Raw source metadata
+
+- Source file path: `src/fabricops_kit/drift.py`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/drift.py#L96-L185">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/drift.py#L96-L185</a>
+- Start line: `96`
+- End line: `185`
+- Signature:
+
+```python
+def validate_schema(dataframe, expected_schema: dict[str, str], *, preset: str='strict') -> dict
+```
+
+### Internal relationship graph
+
+### Public related functions
+
+- <a href="../monitor_data_changes/"><code>fabricops_kit.drift.monitor_data_changes</code></a>
+- <a href="../stop_if_failed/"><code>fabricops_kit.drift.stop_if_failed</code></a>
+
+### Internal implementation helpers
+
+- <a href="../internal/drift__actual_schema/"><code>fabricops_kit.drift._actual_schema</code></a>
+- <a href="../internal/drift__normalize_datatype/"><code>fabricops_kit.drift._normalize_datatype</code></a>
 
 </details>

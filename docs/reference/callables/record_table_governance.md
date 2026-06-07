@@ -2,13 +2,17 @@
 
 Persist approved table-governance context, DQ-rule, and classification evidence in one v1 commit action.
 
-## Use this when
+## What this is for
 
 Use in 03_review after human approval to persist approved column context, DQ rules, and classification evidence for a profiled table.
 
-## Do not use this for
+## When to use it
 
-Do not use to draft governance recommendations, bypass review approval, or write unapproved rows.
+- Use in 03_review after human approval to persist approved column context, DQ rules, and classification evidence for a profiled table.
+
+## When not to use it
+
+- Do not use to draft governance recommendations, bypass review approval, or write unapproved rows.
 
 ## Example
 
@@ -24,67 +28,58 @@ written = record_table_governance(CONFIG, env, profile_rows, spark_session=spark
     <tr>
       <th>Parameter</th>
       <th>Required</th>
-      <th>What it means</th>
+      <th>Meaning</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td data-label="Parameter"><code>config</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="What it means">Shared ``00_env_config`` configuration that routes metadata writes to the configured metadata lakehouse target.</td>
+      <td data-label="Meaning">Shared ``00_env_config`` configuration that routes metadata writes to the configured metadata lakehouse target.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>env</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="What it means">Environment key in ``config``.</td>
+      <td data-label="Meaning">Environment key in ``config``.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>profile_rows</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="What it means">Column-profile rows loaded for the selected catalogue table.</td>
+      <td data-label="Meaning">Column-profile rows loaded for the selected catalogue table.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>spark_session</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="What it means">Spark session used to create DataFrames for metadata writes.</td>
+      <td data-label="Meaning">Spark session used to create DataFrames for metadata writes.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>context_reviews</code></td>
       <td data-label="Required">No</td>
-      <td data-label="What it means">Human-approved rows from the governance review workflow. Only rows with ``review_status=&quot;approved&quot;`` and ``commit=True`` are written.</td>
+      <td data-label="Meaning">Human-approved rows from the governance review workflow. Only rows with ``review_status=&quot;approved&quot;`` and ``commit=True`` are written.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>dq_rule_reviews</code></td>
       <td data-label="Required">No</td>
-      <td data-label="What it means">Not documented yet</td>
+      <td data-label="Meaning">Not documented yet</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>classification_reviews</code></td>
       <td data-label="Required">No</td>
-      <td data-label="What it means">Not documented yet</td>
+      <td data-label="Meaning">Not documented yet</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>approved_by</code></td>
       <td data-label="Required">No</td>
-      <td data-label="What it means">Reviewer identity to stamp on records. When omitted, runtime defaults are used.</td>
+      <td data-label="Meaning">Reviewer identity to stamp on records. When omitted, runtime defaults are used.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>mode</code></td>
       <td data-label="Required">No</td>
-      <td data-label="What it means">Write mode for metadata table commits.</td>
+      <td data-label="Meaning">Write mode for metadata table commits.</td>
     </tr>
   </tbody>
 </table>
 </div>
-
-<details class="reference-signature-details">
-<summary>Full signature</summary>
-
-```python
-def record_table_governance(config: Any, env: str, profile_rows: list[dict[str, Any]], *, spark_session: Any, context_reviews: list[dict[str, Any]] | None=None, dq_rule_reviews: list[dict[str, Any]] | None=None, classification_reviews: list[dict[str, Any]] | None=None, approved_by: str | None=None, mode: str='append') -> dict[str, list[dict[str, Any]]]
-```
-
-</details>
 
 ## Output
 
@@ -114,54 +109,10 @@ Writes approved governance metadata records to configured metadata tables.
 
 </details>
 
-<details class="reference-metadata-details">
-<summary>AI implementation contract</summary>
+## Source
 
-These fields are generated for agents and maintainers, not for quick-start reading.
-
-- **required_context:** Requires 03_review profile rows and 00_env_config metadata routing; governance metadata must be written to the configured metadata target.
-- **inputs:** config, env, profile_rows, spark_session, optional approved context/DQ/classification review rows, approved_by, and mode.
-- **output:** Dictionary of records written for column_context, dq_rules, and column_classification.
-- **side_effects:** Writes approved governance metadata records to configured metadata tables.
-- **failure_modes:** Raises configuration, validation, Spark, or metadata-write errors when approved records cannot be built or persisted.
-- **verification:** Verify review_status is approved and commit is true for intended rows before calling; confirm returned record groups match expected approvals.
-
-</details>
-
-<details class="reference-metadata-details">
-<summary>Function manifest</summary>
-
-- Fully qualified function name: `fabricops_kit.governance_review.record_table_governance`
-- Short name: `record_table_governance`
-- Module: `governance_review`
-- Classification: Callable
-- Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
-- Source line: `509`
-- Inbound references count: 0
-- Outbound references count: 4
-
-</details>
-
-<details class="reference-metadata-details">
-<summary>Raw inbound and outbound references</summary>
-
-### Inbound references
-
-Not documented yet
-
-### Outbound references
-
-- <a href="../write_lakehouse_table/"><code>fabricops_kit.fabric_input_output.write_lakehouse_table</code></a>
-- <a href="../internal/governance_review__build_classification_records/"><code>fabricops_kit.governance_review._build_classification_records</code></a>
-- <a href="../internal/governance_review__build_column_context_records/"><code>fabricops_kit.governance_review._build_column_context_records</code></a>
-- <a href="../internal/governance_review__build_dq_rule_records/"><code>fabricops_kit.governance_review._build_dq_rule_records</code></a>
-
-</details>
-
-## Source code
-
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/5b6a5693130e525f919566c2115ac67da9c6faef/src/fabricops_kit/governance_review.py#L509-L589">View record_table_governance on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/governance_review.py#L509-L589">View record_table_governance on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -249,5 +200,73 @@ def record_table_governance(
         "column_classification": classification_records,
     }
 ```
+
+</details>
+
+## AI / machine-readable metadata
+
+<details class="reference-metadata-details">
+<summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
+
+These generated fields are for automation, AI agents, maintainers, and doc tooling. Skip this block when reading the docs normally.
+
+### Function manifest
+
+- Fully qualified function name: `fabricops_kit.governance_review.record_table_governance`
+- Short name: `record_table_governance`
+- Module: `governance_review`
+- Classification: Callable
+- Related module: `governance_review`
+- Source file path: `src/fabricops_kit/governance_review.py`
+- Source line: `509`
+- Inbound references count: 0
+- Outbound references count: 4
+
+### AI implementation contract
+
+- **required_context:** Requires 03_review profile rows and 00_env_config metadata routing; governance metadata must be written to the configured metadata target.
+- **inputs:** config, env, profile_rows, spark_session, optional approved context/DQ/classification review rows, approved_by, and mode.
+- **output:** Dictionary of records written for column_context, dq_rules, and column_classification.
+- **side_effects:** Writes approved governance metadata records to configured metadata tables.
+- **failure_modes:** Raises configuration, validation, Spark, or metadata-write errors when approved records cannot be built or persisted.
+- **verification:** Verify review_status is approved and commit is true for intended rows before calling; confirm returned record groups match expected approvals.
+
+### Inbound references
+
+Not documented yet
+
+### Outbound references
+
+- <a href="../write_lakehouse_table/"><code>fabricops_kit.fabric_input_output.write_lakehouse_table</code></a>
+- <a href="../internal/governance_review__build_classification_records/"><code>fabricops_kit.governance_review._build_classification_records</code></a>
+- <a href="../internal/governance_review__build_column_context_records/"><code>fabricops_kit.governance_review._build_column_context_records</code></a>
+- <a href="../internal/governance_review__build_dq_rule_records/"><code>fabricops_kit.governance_review._build_dq_rule_records</code></a>
+
+### Raw source metadata
+
+- Source file path: `src/fabricops_kit/governance_review.py`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/governance_review.py#L509-L589">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/governance_review.py#L509-L589</a>
+- Start line: `509`
+- End line: `589`
+- Signature:
+
+```python
+def record_table_governance(config: Any, env: str, profile_rows: list[dict[str, Any]], *, spark_session: Any, context_reviews: list[dict[str, Any]] | None=None, dq_rule_reviews: list[dict[str, Any]] | None=None, classification_reviews: list[dict[str, Any]] | None=None, approved_by: str | None=None, mode: str='append') -> dict[str, list[dict[str, Any]]]
+```
+
+### Internal relationship graph
+
+### Public related functions
+
+- <a href="../load_catalogue_profile_rows/"><code>fabricops_kit.governance_review.load_catalogue_profile_rows</code></a>
+- <a href="../enforce_dq_rules/"><code>fabricops_kit.governance_review.enforce_dq_rules</code></a>
+- <a href="../setup_metadata_tables/"><code>fabricops_kit.config.setup_metadata_tables</code></a>
+
+### Internal implementation helpers
+
+- <a href="../write_lakehouse_table/"><code>fabricops_kit.fabric_input_output.write_lakehouse_table</code></a>
+- <a href="../internal/governance_review__build_classification_records/"><code>fabricops_kit.governance_review._build_classification_records</code></a>
+- <a href="../internal/governance_review__build_column_context_records/"><code>fabricops_kit.governance_review._build_column_context_records</code></a>
+- <a href="../internal/governance_review__build_dq_rule_records/"><code>fabricops_kit.governance_review._build_dq_rule_records</code></a>
 
 </details>

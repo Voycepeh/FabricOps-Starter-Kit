@@ -2,13 +2,17 @@
 
 Profile data, compare against the approved baseline, and return a drift guardrail result.
 
-## Use this when
+## What this is for
 
 Use in 02_pipeline to compare current profile evidence with an approved or previous baseline and produce a data-change guardrail result.
 
-## Do not use this for
+## When to use it
 
-Do not use for simple schema validation or DQ-rule enforcement; use validate_schema or enforce_dq_rules for those checks.
+- Use in 02_pipeline to compare current profile evidence with an approved or previous baseline and produce a data-change guardrail result.
+
+## When not to use it
+
+- Do not use for simple schema validation or DQ-rule enforcement; use validate_schema or enforce_dq_rules for those checks.
 
 ## Example
 
@@ -25,72 +29,63 @@ stop_if_failed(drift_result)
     <tr>
       <th>Parameter</th>
       <th>Required</th>
-      <th>What it means</th>
+      <th>Meaning</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td data-label="Parameter"><code>spark</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="What it means">Spark session used to load existing profile metadata.</td>
+      <td data-label="Meaning">Spark session used to load existing profile metadata.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>dataframe</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="What it means">Spark DataFrame to profile.</td>
+      <td data-label="Meaning">Spark DataFrame to profile.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>metadata_table</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="What it means">Existing metadata table containing profile evidence rows.</td>
+      <td data-label="Meaning">Existing metadata table containing profile evidence rows.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>dataset_name</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="What it means">Dataset identifier used to select matching baseline profiles.</td>
+      <td data-label="Meaning">Dataset identifier used to select matching baseline profiles.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>table_name</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="What it means">Source or target table name used to select matching baseline profiles.</td>
+      <td data-label="Meaning">Source or target table name used to select matching baseline profiles.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>stage</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="What it means">Pipeline stage being monitored. Source and target baselines are selected independently.</td>
+      <td data-label="Meaning">Pipeline stage being monitored. Source and target baselines are selected independently.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>preset</code></td>
       <td data-label="Required">No</td>
-      <td data-label="What it means">Data-change monitoring intent. ``changing_data`` compares with the latest successful profile and may block, ``fixed_data`` compares with an approved baseline and may block, ``monitor_changing_data`` compares with the latest successful profile without blocking, and ``monitor_fixed_data`` compares with an approved baseline without blocking. Presets determine baseline and enforcement behavior; ``policy_overrides`` adjusts thresholds only.</td>
+      <td data-label="Meaning">Data-change monitoring intent. ``changing_data`` compares with the latest successful profile and may block, ``fixed_data`` compares with an approved baseline and may block, ``monitor_changing_data`` compares with the latest successful profile without blocking, and ``monitor_fixed_data`` compares with an approved baseline without blocking. Presets determine baseline and enforcement behavior; ``policy_overrides`` adjusts thresholds only.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>exclude_run_id</code></td>
       <td data-label="Required">No</td>
-      <td data-label="What it means">Current run identifier to exclude from baseline lookup.</td>
+      <td data-label="Meaning">Current run identifier to exclude from baseline lookup.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>distribution_columns</code></td>
       <td data-label="Required">No</td>
-      <td data-label="What it means">Optional allow-list of columns for distribution comparisons.</td>
+      <td data-label="Meaning">Optional allow-list of columns for distribution comparisons.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>policy_overrides</code></td>
       <td data-label="Required">No</td>
-      <td data-label="What it means">Threshold policy overrides merged with the selected preset defaults. Overrides may adjust thresholds only; presets retain control of baseline selection and blocking behaviour.</td>
+      <td data-label="Meaning">Threshold policy overrides merged with the selected preset defaults. Overrides may adjust thresholds only; presets retain control of baseline selection and blocking behaviour.</td>
     </tr>
   </tbody>
 </table>
 </div>
-
-<details class="reference-signature-details">
-<summary>Full signature</summary>
-
-```python
-def monitor_data_changes(spark, dataframe, metadata_table: str, dataset_name: str, table_name: str, *, stage: str, preset: str='changing_data', exclude_run_id: str | None=None, distribution_columns: list[str] | set[str] | tuple[str, ...] | None=None, policy_overrides: dict | None=None) -> dict
-```
-
-</details>
 
 ## Output
 
@@ -122,56 +117,10 @@ Reads baseline profile metadata and computes current profile evidence; it does n
 
 </details>
 
-<details class="reference-metadata-details">
-<summary>AI implementation contract</summary>
+## Source
 
-These fields are generated for agents and maintainers, not for quick-start reading.
-
-- **required_context:** Requires profile metadata routed through the configured 00_env_config metadata target and a valid source/target stage.
-- **inputs:** spark, dataframe, metadata_table, dataset_name, table_name, required stage, preset, optional exclude_run_id, distribution columns, and policy overrides.
-- **output:** Guardrail result dictionary with status, can_continue, message, current profile, baseline details, and drift checks.
-- **side_effects:** Reads baseline profile metadata and computes current profile evidence; it does not write target data.
-- **failure_modes:** Raises Spark or metadata-read errors when baseline profile evidence cannot be loaded or compared.
-- **verification:** Verify baseline selection, status, and can_continue before allowing downstream writes or calling stop_if_failed.
-
-</details>
-
-<details class="reference-metadata-details">
-<summary>Function manifest</summary>
-
-- Fully qualified function name: `fabricops_kit.drift.monitor_data_changes`
-- Short name: `monitor_data_changes`
-- Module: `drift`
-- Classification: Callable
-- Related module: `drift`
 - Source file path: `src/fabricops_kit/drift.py`
-- Source line: `582`
-- Inbound references count: 0
-- Outbound references count: 6
-
-</details>
-
-<details class="reference-metadata-details">
-<summary>Raw inbound and outbound references</summary>
-
-### Inbound references
-
-Not documented yet
-
-### Outbound references
-
-- <a href="../profile_dataframe/"><code>fabricops_kit.data_profiling.profile_dataframe</code></a>
-- <a href="../internal/drift__baseline_distribution_args/"><code>fabricops_kit.drift._baseline_distribution_args</code></a>
-- <a href="../internal/drift__check_profile_drift/"><code>fabricops_kit.drift._check_profile_drift</code></a>
-- <a href="../internal/drift__data_change_preset_config/"><code>fabricops_kit.drift._data_change_preset_config</code></a>
-- <a href="../internal/drift__load_latest_profile/"><code>fabricops_kit.drift._load_latest_profile</code></a>
-- <a href="../internal/drift__normalize_profile/"><code>fabricops_kit.drift._normalize_profile</code></a>
-
-</details>
-
-## Source code
-
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/5b6a5693130e525f919566c2115ac67da9c6faef/src/fabricops_kit/drift.py#L582-L671">View monitor_data_changes on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/drift.py#L582-L671">View monitor_data_changes on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -268,5 +217,77 @@ def monitor_data_changes(
     result = {**result, "preset": config["preset"], "baseline_mode": config["baseline_mode"], "policy": config["policy"]}
     return {"profile": current_profile_df, "profile_payload": current_profile, "baseline": baseline_profile, "result": result}
 ```
+
+</details>
+
+## AI / machine-readable metadata
+
+<details class="reference-metadata-details">
+<summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
+
+These generated fields are for automation, AI agents, maintainers, and doc tooling. Skip this block when reading the docs normally.
+
+### Function manifest
+
+- Fully qualified function name: `fabricops_kit.drift.monitor_data_changes`
+- Short name: `monitor_data_changes`
+- Module: `drift`
+- Classification: Callable
+- Related module: `drift`
+- Source file path: `src/fabricops_kit/drift.py`
+- Source line: `582`
+- Inbound references count: 0
+- Outbound references count: 6
+
+### AI implementation contract
+
+- **required_context:** Requires profile metadata routed through the configured 00_env_config metadata target and a valid source/target stage.
+- **inputs:** spark, dataframe, metadata_table, dataset_name, table_name, required stage, preset, optional exclude_run_id, distribution columns, and policy overrides.
+- **output:** Guardrail result dictionary with status, can_continue, message, current profile, baseline details, and drift checks.
+- **side_effects:** Reads baseline profile metadata and computes current profile evidence; it does not write target data.
+- **failure_modes:** Raises Spark or metadata-read errors when baseline profile evidence cannot be loaded or compared.
+- **verification:** Verify baseline selection, status, and can_continue before allowing downstream writes or calling stop_if_failed.
+
+### Inbound references
+
+Not documented yet
+
+### Outbound references
+
+- <a href="../profile_dataframe/"><code>fabricops_kit.data_profiling.profile_dataframe</code></a>
+- <a href="../internal/drift__baseline_distribution_args/"><code>fabricops_kit.drift._baseline_distribution_args</code></a>
+- <a href="../internal/drift__check_profile_drift/"><code>fabricops_kit.drift._check_profile_drift</code></a>
+- <a href="../internal/drift__data_change_preset_config/"><code>fabricops_kit.drift._data_change_preset_config</code></a>
+- <a href="../internal/drift__load_latest_profile/"><code>fabricops_kit.drift._load_latest_profile</code></a>
+- <a href="../internal/drift__normalize_profile/"><code>fabricops_kit.drift._normalize_profile</code></a>
+
+### Raw source metadata
+
+- Source file path: `src/fabricops_kit/drift.py`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/drift.py#L582-L671">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/drift.py#L582-L671</a>
+- Start line: `582`
+- End line: `671`
+- Signature:
+
+```python
+def monitor_data_changes(spark, dataframe, metadata_table: str, dataset_name: str, table_name: str, *, stage: str, preset: str='changing_data', exclude_run_id: str | None=None, distribution_columns: list[str] | set[str] | tuple[str, ...] | None=None, policy_overrides: dict | None=None) -> dict
+```
+
+### Internal relationship graph
+
+### Public related functions
+
+- <a href="../profile_dataframe/"><code>fabricops_kit.data_profiling.profile_dataframe</code></a>
+- <a href="../validate_schema/"><code>fabricops_kit.drift.validate_schema</code></a>
+- <a href="../stop_if_failed/"><code>fabricops_kit.drift.stop_if_failed</code></a>
+
+### Internal implementation helpers
+
+- <a href="../profile_dataframe/"><code>fabricops_kit.data_profiling.profile_dataframe</code></a>
+- <a href="../internal/drift__baseline_distribution_args/"><code>fabricops_kit.drift._baseline_distribution_args</code></a>
+- <a href="../internal/drift__check_profile_drift/"><code>fabricops_kit.drift._check_profile_drift</code></a>
+- <a href="../internal/drift__data_change_preset_config/"><code>fabricops_kit.drift._data_change_preset_config</code></a>
+- <a href="../internal/drift__load_latest_profile/"><code>fabricops_kit.drift._load_latest_profile</code></a>
+- <a href="../internal/drift__normalize_profile/"><code>fabricops_kit.drift._normalize_profile</code></a>
 
 </details>

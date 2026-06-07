@@ -2,13 +2,17 @@
 
 Read a table from a configured Fabric lakehouse target.
 
-## Use this when
+## What this is for
 
 Use when reading a Delta table from a configured Fabric lakehouse target.
 
-## Do not use this for
+## When to use it
 
-Do not use for lakehouse Files CSV, Parquet, or Excel paths, or for warehouse SQL tables.
+- Use when reading a Delta table from a configured Fabric lakehouse target.
+
+## When not to use it
+
+- Do not use for lakehouse Files CSV, Parquet, or Excel paths, or for warehouse SQL tables.
 
 ## Example
 
@@ -24,47 +28,38 @@ df = read_lakehouse_table(CONFIG, env="Sandbox", target="Source", table="orders"
     <tr>
       <th>Parameter</th>
       <th>Required</th>
-      <th>What it means</th>
+      <th>Meaning</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td data-label="Parameter"><code>config</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="What it means">FabricOps FrameworkConfig or compatible config object.</td>
+      <td data-label="Meaning">FabricOps FrameworkConfig or compatible config object.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>env</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="What it means">Environment key such as `&quot;dev&quot;`.</td>
+      <td data-label="Meaning">Environment key such as `&quot;dev&quot;`.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>target</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="What it means">Logical target name such as `&quot;source&quot;` or `&quot;unified&quot;`.</td>
+      <td data-label="Meaning">Logical target name such as `&quot;source&quot;` or `&quot;unified&quot;`.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>table</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="What it means">Table name under the lakehouse `Tables` area.</td>
+      <td data-label="Meaning">Table name under the lakehouse `Tables` area.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>spark_session</code></td>
       <td data-label="Required">No</td>
-      <td data-label="What it means">Spark session to use. If omitted, the helper uses the notebook global `spark`.</td>
+      <td data-label="Meaning">Spark session to use. If omitted, the helper uses the notebook global `spark`.</td>
     </tr>
   </tbody>
 </table>
 </div>
-
-<details class="reference-signature-details">
-<summary>Full signature</summary>
-
-```python
-def read_lakehouse_table(config, env, target, table, spark_session=None)
-```
-
-</details>
 
 ## Output
 
@@ -102,60 +97,10 @@ Reads from a lakehouse table; it does not write metadata, tables, or files.
 
 </details>
 
-<details class="reference-metadata-details">
-<summary>AI implementation contract</summary>
+## Source
 
-These fields are generated for agents and maintainers, not for quick-start reading.
-
-- **required_context:** Requires the FrameworkConfig or compatible CONFIG from 00_env_config plus the intended env name; never hardcode Fabric workspace or item identifiers.
-- **inputs:** config, env, target, table, optional schema, verbose flag, and spark_session.
-- **output:** Spark DataFrame loaded from the configured lakehouse table.
-- **side_effects:** Reads from a lakehouse table; it does not write metadata, tables, or files.
-- **failure_modes:** Raises configuration, Spark, or table-read errors when the target or table cannot be resolved/read.
-- **verification:** Verify the target/table name comes from CONFIG and check the returned DataFrame schema or row count before downstream transformations.
-
-</details>
-
-<details class="reference-metadata-details">
-<summary>Function manifest</summary>
-
-- Fully qualified function name: `fabricops_kit.fabric_input_output.read_lakehouse_table`
-- Short name: `read_lakehouse_table`
-- Module: `fabric_input_output`
-- Classification: Callable
-- Related module: `fabric_input_output`
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- Source line: `133`
-- Inbound references count: 9
-- Outbound references count: 2
-
-</details>
-
-<details class="reference-metadata-details">
-<summary>Raw inbound and outbound references</summary>
-
-### Inbound references
-
-- <a href="../internal/data_agreement__ensure_metadata_tables/"><code>fabricops_kit.data_agreement._ensure_metadata_tables</code></a>
-- <a href="../internal/data_agreement__list_all_data_agreement_rows/"><code>fabricops_kit.data_agreement._list_all_data_agreement_rows</code></a>
-- <a href="../internal/data_agreement__list_data_stewards/"><code>fabricops_kit.data_agreement._list_data_stewards</code></a>
-- <a href="../internal/governance_review__setup_governance_metadata_tables/"><code>fabricops_kit.governance_review._setup_governance_metadata_tables</code></a>
-- <a href="../enforce_dq_rules/"><code>fabricops_kit.governance_review.enforce_dq_rules</code></a>
-- <a href="../load_catalogue_profile_rows/"><code>fabricops_kit.governance_review.load_catalogue_profile_rows</code></a>
-- <a href="../widget_select_catalogue_table/"><code>fabricops_kit.governance_review.widget_select_catalogue_table</code></a>
-- <a href="../internal/metadata__load_notebook_registry/"><code>fabricops_kit.metadata._load_notebook_registry</code></a>
-- <a href="../internal/metadata__setup_notebook_registry_table/"><code>fabricops_kit.metadata._setup_notebook_registry_table</code></a>
-
-### Outbound references
-
-- <a href="../internal/config__get_store/"><code>fabricops_kit.config._get_store</code></a>
-- <a href="../internal/fabric_input_output__get_spark/"><code>fabricops_kit.fabric_input_output._get_spark</code></a>
-
-</details>
-
-## Source code
-
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/5b6a5693130e525f919566c2115ac67da9c6faef/src/fabricops_kit/fabric_input_output.py#L133-L178">View read_lakehouse_table on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/fabric_input_output.py#L133-L178">View read_lakehouse_table on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -208,5 +153,87 @@ def read_lakehouse_table(config, env, target, table, spark_session=None):
     path = f"{store.root.rstrip('/')}/Tables/{table}"
     return spark_obj.read.format("delta").load(path)
 ```
+
+</details>
+
+## AI / machine-readable metadata
+
+<details class="reference-metadata-details">
+<summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
+
+These generated fields are for automation, AI agents, maintainers, and doc tooling. Skip this block when reading the docs normally.
+
+### Function manifest
+
+- Fully qualified function name: `fabricops_kit.fabric_input_output.read_lakehouse_table`
+- Short name: `read_lakehouse_table`
+- Module: `fabric_input_output`
+- Classification: Callable
+- Related module: `fabric_input_output`
+- Source file path: `src/fabricops_kit/fabric_input_output.py`
+- Source line: `133`
+- Inbound references count: 9
+- Outbound references count: 2
+
+### AI implementation contract
+
+- **required_context:** Requires the FrameworkConfig or compatible CONFIG from 00_env_config plus the intended env name; never hardcode Fabric workspace or item identifiers.
+- **inputs:** config, env, target, table, optional schema, verbose flag, and spark_session.
+- **output:** Spark DataFrame loaded from the configured lakehouse table.
+- **side_effects:** Reads from a lakehouse table; it does not write metadata, tables, or files.
+- **failure_modes:** Raises configuration, Spark, or table-read errors when the target or table cannot be resolved/read.
+- **verification:** Verify the target/table name comes from CONFIG and check the returned DataFrame schema or row count before downstream transformations.
+
+### Inbound references
+
+- <a href="../internal/data_agreement__ensure_metadata_tables/"><code>fabricops_kit.data_agreement._ensure_metadata_tables</code></a>
+- <a href="../internal/data_agreement__list_all_data_agreement_rows/"><code>fabricops_kit.data_agreement._list_all_data_agreement_rows</code></a>
+- <a href="../internal/data_agreement__list_data_stewards/"><code>fabricops_kit.data_agreement._list_data_stewards</code></a>
+- <a href="../internal/governance_review__setup_governance_metadata_tables/"><code>fabricops_kit.governance_review._setup_governance_metadata_tables</code></a>
+- <a href="../enforce_dq_rules/"><code>fabricops_kit.governance_review.enforce_dq_rules</code></a>
+- <a href="../load_catalogue_profile_rows/"><code>fabricops_kit.governance_review.load_catalogue_profile_rows</code></a>
+- <a href="../widget_select_catalogue_table/"><code>fabricops_kit.governance_review.widget_select_catalogue_table</code></a>
+- <a href="../internal/metadata__load_notebook_registry/"><code>fabricops_kit.metadata._load_notebook_registry</code></a>
+- <a href="../internal/metadata__setup_notebook_registry_table/"><code>fabricops_kit.metadata._setup_notebook_registry_table</code></a>
+
+### Outbound references
+
+- <a href="../internal/config__get_store/"><code>fabricops_kit.config._get_store</code></a>
+- <a href="../internal/fabric_input_output__get_spark/"><code>fabricops_kit.fabric_input_output._get_spark</code></a>
+
+### Raw source metadata
+
+- Source file path: `src/fabricops_kit/fabric_input_output.py`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/fabric_input_output.py#L133-L178">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/fabric_input_output.py#L133-L178</a>
+- Start line: `133`
+- End line: `178`
+- Signature:
+
+```python
+def read_lakehouse_table(config, env, target, table, spark_session=None)
+```
+
+### Internal relationship graph
+
+### Public related functions
+
+- <a href="../write_lakehouse_table/"><code>fabricops_kit.fabric_input_output.write_lakehouse_table</code></a>
+- <a href="../read_lakehouse_csv/"><code>fabricops_kit.fabric_input_output.read_lakehouse_csv</code></a>
+- <a href="../read_lakehouse_parquet/"><code>fabricops_kit.fabric_input_output.read_lakehouse_parquet</code></a>
+- <a href="../read_lakehouse_excel/"><code>fabricops_kit.fabric_input_output.read_lakehouse_excel</code></a>
+
+### Internal implementation helpers
+
+- <a href="../internal/data_agreement__ensure_metadata_tables/"><code>fabricops_kit.data_agreement._ensure_metadata_tables</code></a>
+- <a href="../internal/data_agreement__list_all_data_agreement_rows/"><code>fabricops_kit.data_agreement._list_all_data_agreement_rows</code></a>
+- <a href="../internal/data_agreement__list_data_stewards/"><code>fabricops_kit.data_agreement._list_data_stewards</code></a>
+- <a href="../internal/governance_review__setup_governance_metadata_tables/"><code>fabricops_kit.governance_review._setup_governance_metadata_tables</code></a>
+- <a href="../enforce_dq_rules/"><code>fabricops_kit.governance_review.enforce_dq_rules</code></a>
+- <a href="../load_catalogue_profile_rows/"><code>fabricops_kit.governance_review.load_catalogue_profile_rows</code></a>
+- <a href="../widget_select_catalogue_table/"><code>fabricops_kit.governance_review.widget_select_catalogue_table</code></a>
+- <a href="../internal/metadata__load_notebook_registry/"><code>fabricops_kit.metadata._load_notebook_registry</code></a>
+- <a href="../internal/metadata__setup_notebook_registry_table/"><code>fabricops_kit.metadata._setup_notebook_registry_table</code></a>
+- <a href="../internal/config__get_store/"><code>fabricops_kit.config._get_store</code></a>
+- <a href="../internal/fabric_input_output__get_spark/"><code>fabricops_kit.fabric_input_output._get_spark</code></a>
 
 </details>

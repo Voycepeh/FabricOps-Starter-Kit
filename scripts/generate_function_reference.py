@@ -646,6 +646,17 @@ def _code_block(text: str) -> str:
     return f"```python\n{text}\n```"
 
 
+def _bullet_lines(text: str) -> list[str]:
+    """Return short markdown bullets for human-facing guidance text."""
+    cleaned = text.strip()
+    if not cleaned:
+        return [f"- {PLACEHOLDER}"]
+    lines = [line.strip() for line in cleaned.splitlines() if line.strip()]
+    if len(lines) > 1:
+        return [line if line.startswith(("- ", "* ")) else f"- {line}" for line in lines]
+    return [cleaned if cleaned.startswith(("- ", "* ")) else f"- {cleaned}"]
+
+
 def _ai_contract_block(
     *,
     required_context: str,
@@ -1549,7 +1560,7 @@ def main() -> None:
                 for row in parameter_rows
             ]
             input_table = render_html_table(
-                ["Parameter", "Required", "What it means"],
+                ["Parameter", "Required", "Meaning"],
                 input_rows or [["—", "—", PLACEHOLDER]],
                 table_class="reference-function-table",
             )
@@ -1557,23 +1568,80 @@ def main() -> None:
             implementation_related = [item for item in relationship_related if item not in related_public]
             related_lines = _related_function_links(related_public, node_by_qn, docs_metadata)
             implementation_lines = _related_function_links(implementation_related, node_by_qn, docs_metadata)
-            signature_details = markdown_details(
-                "Full signature",
-                [_code_block(signature) if signature else PLACEHOLDER],
-                class_name="reference-signature-details",
-            )
+            human_use_when = _documented_text(metadata.get("use_when"), metadata.get("purpose"), purpose)
+            human_do_not_use = _documented_text(metadata.get("do_not_use_when"))
+            function_manifest_lines = [
+                f"- Fully qualified function name: `{qn}`",
+                f"- Short name: `{short_name}`",
+                f"- Module: `{module_name}`",
+                "- Classification: Callable",
+                f"- Related module: `{rel_module}`",
+                f"- Source file path: `{source_path}`",
+                f"- Source line: `{source_start_line}`",
+                f"- Inbound references count: {len(used_by)}",
+                f"- Outbound references count: {len(deps)}",
+            ]
+            raw_source_metadata_lines = [
+                f"- Source file path: `{source_path}`",
+                f'- GitHub source URL: <a href="{source_ref}">{source_ref}</a>',
+                f"- Start line: `{source_start_line}`",
+                f"- End line: `{source_end_line}`",
+                "- Signature:",
+                "",
+                _code_block(signature) if signature else PLACEHOLDER,
+            ]
+            internal_relationship_graph_lines = [
+                "### Public related functions",
+                "",
+                *(related_lines if related_lines else [PLACEHOLDER]),
+                "",
+                "### Internal implementation helpers",
+                "",
+                *(implementation_lines if implementation_lines else [PLACEHOLDER]),
+            ]
+            machine_metadata_lines = [
+                "These generated fields are for automation, AI agents, maintainers, and doc tooling. Skip this block when reading the docs normally.",
+                "",
+                "### Function manifest",
+                "",
+                *function_manifest_lines,
+                "",
+                "### AI implementation contract",
+                "",
+                rendered_ai_contract,
+                "",
+                "### Inbound references",
+                "",
+                *(_fmt_links(used_by) if used_by else [PLACEHOLDER]),
+                "",
+                "### Outbound references",
+                "",
+                *(_fmt_links(deps) if deps else [PLACEHOLDER]),
+                "",
+                "### Raw source metadata",
+                "",
+                *raw_source_metadata_lines,
+                "",
+                "### Internal relationship graph",
+                "",
+                *internal_relationship_graph_lines,
+            ]
             lines = [
                 f"# {short_name}",
                 "",
                 purpose,
                 "",
-                "## Use this when",
+                "## What this is for",
                 "",
-                _documented_text(metadata.get("use_when"), metadata.get("purpose"), purpose),
+                _documented_text(metadata.get("purpose"), metadata.get("use_when"), purpose),
                 "",
-                "## Do not use this for",
+                "## When to use it",
                 "",
-                _documented_text(metadata.get("do_not_use_when")),
+                *_bullet_lines(human_use_when),
+                "",
+                "## When not to use it",
+                "",
+                *_bullet_lines(human_do_not_use),
                 "",
                 "## Example",
                 "",
@@ -1584,8 +1652,6 @@ def main() -> None:
                 '<div class="module-table-scroll reference-input-table">',
                 *input_table,
                 "</div>",
-                "",
-                *signature_details,
                 "",
                 "## Output",
                 "",
@@ -1610,54 +1676,23 @@ def main() -> None:
                 ])
             lines.extend([
                 "",
-                *markdown_details(
-                    "AI implementation contract",
-                    [
-                        "These fields are generated for agents and maintainers, not for quick-start reading.",
-                        "",
-                        rendered_ai_contract,
-                    ],
-                    class_name="reference-metadata-details",
-                ),
+                "## Source",
                 "",
-                *markdown_details(
-                    "Function manifest",
-                    [
-                        f"- Fully qualified function name: `{qn}`",
-                        f"- Short name: `{short_name}`",
-                        f"- Module: `{module_name}`",
-                        "- Classification: Callable",
-                        f"- Related module: `{rel_module}`",
-                        f"- Source file path: `{source_path}`",
-                        f"- Source line: `{source_start_line}`",
-                        f"- Inbound references count: {len(used_by)}",
-                        f"- Outbound references count: {len(deps)}",
-                    ],
-                    class_name="reference-metadata-details",
-                ),
-                "",
-                *markdown_details(
-                    "Raw inbound and outbound references",
-                    [
-                        "### Inbound references",
-                        "",
-                        *(_fmt_links(used_by) if used_by else [PLACEHOLDER]),
-                        "",
-                        "### Outbound references",
-                        "",
-                        *(_fmt_links(deps) if deps else [PLACEHOLDER]),
-                    ],
-                    class_name="reference-metadata-details",
-                ),
-                "",
-                "## Source code",
-                "",
-                f'<a class="reference-source-link" href="{source_ref}">View {short_name} on GitHub</a>',
+                f"- Source file path: `{source_path}`",
+                f'- <a class="reference-source-link" href="{source_ref}">View {short_name} on GitHub</a>',
                 "",
                 *markdown_details(
                     "Show source code",
                     [_code_block(source_block) if source_block else PLACEHOLDER],
                     class_name="reference-source-details",
+                ),
+                "",
+                "## AI / machine-readable metadata",
+                "",
+                *markdown_details(
+                    "AI / machine-readable metadata — skip this if you are reading the docs normally",
+                    machine_metadata_lines,
+                    class_name="reference-metadata-details",
                 ),
             ])
         else:

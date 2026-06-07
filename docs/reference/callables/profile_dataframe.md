@@ -2,13 +2,17 @@
 
 Profile a source or target DataFrame for schema, quality, and catalogue evidence.
 
-## Use this when
+## What this is for
 
 Use to create schema, null, distinct, min/max, and optional distribution evidence from a Spark DataFrame.
 
-## Do not use this for
+## When to use it
 
-Do not use as a data-quality enforcement step or as a persistence helper; it builds profile rows but does not approve governance evidence.
+- Use to create schema, null, distinct, min/max, and optional distribution evidence from a Spark DataFrame.
+
+## When not to use it
+
+- Do not use as a data-quality enforcement step or as a persistence helper; it builds profile rows but does not approve governance evidence.
 
 ## Example
 
@@ -24,67 +28,58 @@ profile_rows_df = profile_dataframe(df, table_name="orders", include_distributio
     <tr>
       <th>Parameter</th>
       <th>Required</th>
-      <th>What it means</th>
+      <th>Meaning</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td data-label="Parameter"><code>df</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="What it means">Spark DataFrame to profile.</td>
+      <td data-label="Meaning">Spark DataFrame to profile.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>table_name</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="What it means">Logical table name written into each profile row.</td>
+      <td data-label="Meaning">Logical table name written into each profile row.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>exclude_columns</code></td>
       <td data-label="Required">No</td>
-      <td data-label="What it means">Additional columns to skip, on top of the standard technical columns.</td>
+      <td data-label="Meaning">Additional columns to skip, on top of the standard technical columns.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>run_timestamp_timezone</code></td>
       <td data-label="Required">No</td>
-      <td data-label="What it means">Time zone used for the ``RUN_TIMESTAMP`` evidence field.</td>
+      <td data-label="Meaning">Time zone used for the ``RUN_TIMESTAMP`` evidence field.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>include_distributions</code></td>
       <td data-label="Required">No</td>
-      <td data-label="What it means">When true, add lightweight distribution summaries for suitable numeric and categorical columns. The default preserves the existing lightweight profile shape and behavior.</td>
+      <td data-label="Meaning">When true, add lightweight distribution summaries for suitable numeric and categorical columns. The default preserves the existing lightweight profile shape and behavior.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>distribution_columns</code></td>
       <td data-label="Required">No</td>
-      <td data-label="What it means">Optional allow-list of important columns for distribution summaries. ``None`` profiles every suitable business column.</td>
+      <td data-label="Meaning">Optional allow-list of important columns for distribution summaries. ``None`` profiles every suitable business column.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>distribution_bin_edges</code></td>
       <td data-label="Required">No</td>
-      <td data-label="What it means">Optional numeric bin edges keyed by column name. Pass baseline edges to make the current profile directly comparable with a previous profile.</td>
+      <td data-label="Meaning">Optional numeric bin edges keyed by column name. Pass baseline edges to make the current profile directly comparable with a previous profile.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>categorical_categories</code></td>
       <td data-label="Required">No</td>
-      <td data-label="What it means">Optional baseline category vocabulary keyed by column name. When supplied, those categories are counted explicitly and all other non-null values are rolled into ``other_count`` so the current profile remains comparable with the baseline.</td>
+      <td data-label="Meaning">Optional baseline category vocabulary keyed by column name. When supplied, those categories are counted explicitly and all other non-null values are rolled into ``other_count`` so the current profile remains comparable with the baseline.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>categorical_top_n</code></td>
       <td data-label="Required">No</td>
-      <td data-label="What it means">Maximum number of non-null category values to keep per categorical column before rolling the remainder into ``other_count``.</td>
+      <td data-label="Meaning">Maximum number of non-null category values to keep per categorical column before rolling the remainder into ``other_count``.</td>
     </tr>
   </tbody>
 </table>
 </div>
-
-<details class="reference-signature-details">
-<summary>Full signature</summary>
-
-```python
-def profile_dataframe(df, table_name: str, *, exclude_columns=None, run_timestamp_timezone='Asia/Singapore', include_distributions: bool=False, distribution_columns: list[str] | set[str] | tuple[str, ...] | None=None, distribution_bin_edges: dict[str, list[float]] | None=None, categorical_categories: dict[str, list[str]] | None=None, categorical_top_n: int=20)
-```
-
-</details>
 
 ## Output
 
@@ -114,54 +109,10 @@ Computes profiling aggregations on the provided DataFrame; it does not write met
 
 </details>
 
-<details class="reference-metadata-details">
-<summary>AI implementation contract</summary>
+## Source
 
-These fields are generated for agents and maintainers, not for quick-start reading.
-
-- **required_context:** Use after reading source/target data and before metadata persistence or governance review workflows that need profile evidence.
-- **inputs:** df, table_name, optional exclude_columns, timezone, distribution options, bin edges, category baselines, and top-N settings.
-- **output:** Spark DataFrame containing one profile row per eligible business column.
-- **side_effects:** Computes profiling aggregations on the provided DataFrame; it does not write metadata, tables, or files.
-- **failure_modes:** Raises Spark/DataFrame errors when profiling expressions cannot be evaluated.
-- **verification:** Verify the profile row count matches expected business columns and inspect key schema/profile fields before writing evidence.
-
-</details>
-
-<details class="reference-metadata-details">
-<summary>Function manifest</summary>
-
-- Fully qualified function name: `fabricops_kit.data_profiling.profile_dataframe`
-- Short name: `profile_dataframe`
-- Module: `data_profiling`
-- Classification: Callable
-- Related module: `data_profiling`
 - Source file path: `src/fabricops_kit/data_profiling.py`
-- Source line: `213`
-- Inbound references count: 2
-- Outbound references count: 3
-
-</details>
-
-<details class="reference-metadata-details">
-<summary>Raw inbound and outbound references</summary>
-
-### Inbound references
-
-- <a href="../monitor_data_changes/"><code>fabricops_kit.drift.monitor_data_changes</code></a>
-- <a href="../internal/governance_review__prepare_dq_profile_input_rows/"><code>fabricops_kit.governance_review._prepare_dq_profile_input_rows</code></a>
-
-### Outbound references
-
-- <a href="../internal/data_profiling__build_distribution_summaries/"><code>fabricops_kit.data_profiling._build_distribution_summaries</code></a>
-- <a href="../internal/data_profiling__get_profiled_columns/"><code>fabricops_kit.data_profiling._get_profiled_columns</code></a>
-- <a href="../internal/data_profiling__is_min_max_supported_type/"><code>fabricops_kit.data_profiling._is_min_max_supported_type</code></a>
-
-</details>
-
-## Source code
-
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/5b6a5693130e525f919566c2115ac67da9c6faef/src/fabricops_kit/data_profiling.py#L213-L327">View profile_dataframe on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/data_profiling.py#L213-L327">View profile_dataframe on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -283,5 +234,73 @@ def profile_dataframe(
         out = out.unionByName(next_row)
     return out
 ```
+
+</details>
+
+## AI / machine-readable metadata
+
+<details class="reference-metadata-details">
+<summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
+
+These generated fields are for automation, AI agents, maintainers, and doc tooling. Skip this block when reading the docs normally.
+
+### Function manifest
+
+- Fully qualified function name: `fabricops_kit.data_profiling.profile_dataframe`
+- Short name: `profile_dataframe`
+- Module: `data_profiling`
+- Classification: Callable
+- Related module: `data_profiling`
+- Source file path: `src/fabricops_kit/data_profiling.py`
+- Source line: `213`
+- Inbound references count: 2
+- Outbound references count: 3
+
+### AI implementation contract
+
+- **required_context:** Use after reading source/target data and before metadata persistence or governance review workflows that need profile evidence.
+- **inputs:** df, table_name, optional exclude_columns, timezone, distribution options, bin edges, category baselines, and top-N settings.
+- **output:** Spark DataFrame containing one profile row per eligible business column.
+- **side_effects:** Computes profiling aggregations on the provided DataFrame; it does not write metadata, tables, or files.
+- **failure_modes:** Raises Spark/DataFrame errors when profiling expressions cannot be evaluated.
+- **verification:** Verify the profile row count matches expected business columns and inspect key schema/profile fields before writing evidence.
+
+### Inbound references
+
+- <a href="../monitor_data_changes/"><code>fabricops_kit.drift.monitor_data_changes</code></a>
+- <a href="../internal/governance_review__prepare_dq_profile_input_rows/"><code>fabricops_kit.governance_review._prepare_dq_profile_input_rows</code></a>
+
+### Outbound references
+
+- <a href="../internal/data_profiling__build_distribution_summaries/"><code>fabricops_kit.data_profiling._build_distribution_summaries</code></a>
+- <a href="../internal/data_profiling__get_profiled_columns/"><code>fabricops_kit.data_profiling._get_profiled_columns</code></a>
+- <a href="../internal/data_profiling__is_min_max_supported_type/"><code>fabricops_kit.data_profiling._is_min_max_supported_type</code></a>
+
+### Raw source metadata
+
+- Source file path: `src/fabricops_kit/data_profiling.py`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/data_profiling.py#L213-L327">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/data_profiling.py#L213-L327</a>
+- Start line: `213`
+- End line: `327`
+- Signature:
+
+```python
+def profile_dataframe(df, table_name: str, *, exclude_columns=None, run_timestamp_timezone='Asia/Singapore', include_distributions: bool=False, distribution_columns: list[str] | set[str] | tuple[str, ...] | None=None, distribution_bin_edges: dict[str, list[float]] | None=None, categorical_categories: dict[str, list[str]] | None=None, categorical_top_n: int=20)
+```
+
+### Internal relationship graph
+
+### Public related functions
+
+- <a href="../monitor_data_changes/"><code>fabricops_kit.drift.monitor_data_changes</code></a>
+- <a href="../record_table_governance/"><code>fabricops_kit.governance_review.record_table_governance</code></a>
+
+### Internal implementation helpers
+
+- <a href="../monitor_data_changes/"><code>fabricops_kit.drift.monitor_data_changes</code></a>
+- <a href="../internal/governance_review__prepare_dq_profile_input_rows/"><code>fabricops_kit.governance_review._prepare_dq_profile_input_rows</code></a>
+- <a href="../internal/data_profiling__build_distribution_summaries/"><code>fabricops_kit.data_profiling._build_distribution_summaries</code></a>
+- <a href="../internal/data_profiling__get_profiled_columns/"><code>fabricops_kit.data_profiling._get_profiled_columns</code></a>
+- <a href="../internal/data_profiling__is_min_max_supported_type/"><code>fabricops_kit.data_profiling._is_min_max_supported_type</code></a>
 
 </details>

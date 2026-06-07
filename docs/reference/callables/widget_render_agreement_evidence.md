@@ -2,13 +2,17 @@
 
 Render the standalone agreement-evidence widget.
 
-## Use this when
+## What this is for
 
 Render the standalone agreement-evidence widget.
 
-## Do not use this for
+## When to use it
 
-Not documented yet
+- Render the standalone agreement-evidence widget.
+
+## When not to use it
+
+- Not documented yet
 
 ## Example
 
@@ -24,37 +28,28 @@ Not documented yet
     <tr>
       <th>Parameter</th>
       <th>Required</th>
-      <th>What it means</th>
+      <th>Meaning</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td data-label="Parameter"><code>config</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="What it means">Configuration containing agreement metadata routing and evidence table settings.</td>
+      <td data-label="Meaning">Configuration containing agreement metadata routing and evidence table settings.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>env_name</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="What it means">Environment key configured by ``00_env_config``.</td>
+      <td data-label="Meaning">Environment key configured by ``00_env_config``.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>spark</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="What it means">Fabric Spark session used for metadata reads, file writes, and append-only evidence metadata writes.</td>
+      <td data-label="Meaning">Fabric Spark session used for metadata reads, file writes, and append-only evidence metadata writes.</td>
     </tr>
   </tbody>
 </table>
 </div>
-
-<details class="reference-signature-details">
-<summary>Full signature</summary>
-
-```python
-def widget_render_agreement_evidence(config: Any, env_name: str, *, spark: Any) -> dict[str, Any]
-```
-
-</details>
 
 ## Output
 
@@ -82,61 +77,10 @@ Not documented yet
 
 </details>
 
-<details class="reference-metadata-details">
-<summary>AI implementation contract</summary>
+## Source
 
-These fields are generated for agents and maintainers, not for quick-start reading.
-
-- **required_context:** Starter template: `01_agreement`; segment: `Agreement intake`.
-- **inputs:** config : FrameworkConfig or dict
-    Configuration containing agreement metadata routing and evidence table
-    settings.
-env_name : str
-    Environment key configured by ``00_env_config``.
-spark : pyspark.sql.SparkSession
-    Fabric Spark session used for metadata reads, file writes, and
-    append-only evidence metadata writes.
-- **output:** dict[str, Any]
-    Rendered controls for selecting an agreement version, pasting
-    metadata lakehouse evidence file paths, refreshing agreement options,
-    and saving evidence metadata rows.
-- **side_effects:** Not documented yet
-- **failure_modes:** Not documented yet
-- **verification:** Not documented yet
-
-</details>
-
-<details class="reference-metadata-details">
-<summary>Function manifest</summary>
-
-- Fully qualified function name: `fabricops_kit.data_agreement.widget_render_agreement_evidence`
-- Short name: `widget_render_agreement_evidence`
-- Module: `data_agreement`
-- Classification: Callable
-- Related module: `data_agreement`
 - Source file path: `src/fabricops_kit/data_agreement.py`
-- Source line: `1462`
-- Inbound references count: 0
-- Outbound references count: 1
-
-</details>
-
-<details class="reference-metadata-details">
-<summary>Raw inbound and outbound references</summary>
-
-### Inbound references
-
-Not documented yet
-
-### Outbound references
-
-- <a href="../internal/data_agreement__render_agreement_evidence_widget/"><code>fabricops_kit.data_agreement._render_agreement_evidence_widget</code></a>
-
-</details>
-
-## Source code
-
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/5b6a5693130e525f919566c2115ac67da9c6faef/src/fabricops_kit/data_agreement.py#L1462-L1495">View widget_render_agreement_evidence on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/data_agreement.py#L1462-L1495">View widget_render_agreement_evidence on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -177,5 +121,75 @@ def widget_render_agreement_evidence(config: Any, env_name: str, *, spark: Any) 
         env_name=env_name,
     )
 ```
+
+</details>
+
+## AI / machine-readable metadata
+
+<details class="reference-metadata-details">
+<summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
+
+These generated fields are for automation, AI agents, maintainers, and doc tooling. Skip this block when reading the docs normally.
+
+### Function manifest
+
+- Fully qualified function name: `fabricops_kit.data_agreement.widget_render_agreement_evidence`
+- Short name: `widget_render_agreement_evidence`
+- Module: `data_agreement`
+- Classification: Callable
+- Related module: `data_agreement`
+- Source file path: `src/fabricops_kit/data_agreement.py`
+- Source line: `1462`
+- Inbound references count: 0
+- Outbound references count: 1
+
+### AI implementation contract
+
+- **required_context:** Starter template: `01_agreement`; segment: `Agreement intake`.
+- **inputs:** config : FrameworkConfig or dict
+    Configuration containing agreement metadata routing and evidence table
+    settings.
+env_name : str
+    Environment key configured by ``00_env_config``.
+spark : pyspark.sql.SparkSession
+    Fabric Spark session used for metadata reads, file writes, and
+    append-only evidence metadata writes.
+- **output:** dict[str, Any]
+    Rendered controls for selecting an agreement version, pasting
+    metadata lakehouse evidence file paths, refreshing agreement options,
+    and saving evidence metadata rows.
+- **side_effects:** Not documented yet
+- **failure_modes:** Not documented yet
+- **verification:** Not documented yet
+
+### Inbound references
+
+Not documented yet
+
+### Outbound references
+
+- <a href="../internal/data_agreement__render_agreement_evidence_widget/"><code>fabricops_kit.data_agreement._render_agreement_evidence_widget</code></a>
+
+### Raw source metadata
+
+- Source file path: `src/fabricops_kit/data_agreement.py`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/data_agreement.py#L1462-L1495">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/data_agreement.py#L1462-L1495</a>
+- Start line: `1462`
+- End line: `1495`
+- Signature:
+
+```python
+def widget_render_agreement_evidence(config: Any, env_name: str, *, spark: Any) -> dict[str, Any]
+```
+
+### Internal relationship graph
+
+### Public related functions
+
+Not documented yet
+
+### Internal implementation helpers
+
+- <a href="../internal/data_agreement__render_agreement_evidence_widget/"><code>fabricops_kit.data_agreement._render_agreement_evidence_widget</code></a>
 
 </details>

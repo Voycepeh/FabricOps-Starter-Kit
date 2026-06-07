@@ -2,13 +2,17 @@
 
 Read a Parquet path from a configured Fabric lakehouse Files path.
 
-## Use this when
+## What this is for
 
 Use when reading a Parquet file or path from a configured Fabric lakehouse Files path.
 
-## Do not use this for
+## When to use it
 
-Do not use for Delta tables, CSV files, Excel files, or warehouse SQL tables.
+- Use when reading a Parquet file or path from a configured Fabric lakehouse Files path.
+
+## When not to use it
+
+- Do not use for Delta tables, CSV files, Excel files, or warehouse SQL tables.
 
 ## Example
 
@@ -24,52 +28,43 @@ df = read_lakehouse_parquet(CONFIG, env="Sandbox", target="Source", relative_pat
     <tr>
       <th>Parameter</th>
       <th>Required</th>
-      <th>What it means</th>
+      <th>Meaning</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td data-label="Parameter"><code>config</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="What it means">FabricOps FrameworkConfig or compatible config object.</td>
+      <td data-label="Meaning">FabricOps FrameworkConfig or compatible config object.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>env</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="What it means">Environment key such as `&quot;dev&quot;`.</td>
+      <td data-label="Meaning">Environment key such as `&quot;dev&quot;`.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>target</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="What it means">Logical target name such as `&quot;source&quot;` or `&quot;unified&quot;`.</td>
+      <td data-label="Meaning">Logical target name such as `&quot;source&quot;` or `&quot;unified&quot;`.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>relative_path</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="What it means">Path to the Parquet file under the lakehouse `Files/` folder, without the leading `&quot;Files/&quot;`. For example: `&quot;raw/orders/orders_2026.parquet&quot;`.</td>
+      <td data-label="Meaning">Path to the Parquet file under the lakehouse `Files/` folder, without the leading `&quot;Files/&quot;`. For example: `&quot;raw/orders/orders_2026.parquet&quot;`.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>verbose</code></td>
       <td data-label="Required">No</td>
-      <td data-label="What it means">Whether to print read and fallback progress.</td>
+      <td data-label="Meaning">Whether to print read and fallback progress.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>spark_session</code></td>
       <td data-label="Required">No</td>
-      <td data-label="What it means">Spark session to use. If omitted, the helper uses the notebook global `spark`.</td>
+      <td data-label="Meaning">Spark session to use. If omitted, the helper uses the notebook global `spark`.</td>
     </tr>
   </tbody>
 </table>
 </div>
-
-<details class="reference-signature-details">
-<summary>Full signature</summary>
-
-```python
-def read_lakehouse_parquet(config, env, target, relative_path, verbose=True, spark_session=None)
-```
-
-</details>
 
 ## Output
 
@@ -99,54 +94,10 @@ Reads from lakehouse Files and may create a local timestamp-converted fallback f
 
 </details>
 
-<details class="reference-metadata-details">
-<summary>AI implementation contract</summary>
+## Source
 
-These fields are generated for agents and maintainers, not for quick-start reading.
-
-- **required_context:** Requires the FrameworkConfig or compatible CONFIG from 00_env_config plus the intended env name; never hardcode Fabric workspace or item identifiers.
-- **inputs:** config, env, target, relative_path, verbose flag, and optional spark_session.
-- **output:** Spark DataFrame loaded from the original Parquet path or timestamp-converted fallback path.
-- **side_effects:** Reads from lakehouse Files and may create a local timestamp-converted fallback for single-file Parquet precision issues; it does not write metadata tables.
-- **failure_modes:** Raises ValueError for invalid relative paths and Spark/read errors when the Parquet path cannot be loaded.
-- **verification:** Verify the file path is a lakehouse Files Parquet path and check row count/schema after reading.
-
-</details>
-
-<details class="reference-metadata-details">
-<summary>Function manifest</summary>
-
-- Fully qualified function name: `fabricops_kit.fabric_input_output.read_lakehouse_parquet`
-- Short name: `read_lakehouse_parquet`
-- Module: `fabric_input_output`
-- Classification: Callable
-- Related module: `fabric_input_output`
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- Source line: `507`
-- Inbound references count: 0
-- Outbound references count: 4
-
-</details>
-
-<details class="reference-metadata-details">
-<summary>Raw inbound and outbound references</summary>
-
-### Inbound references
-
-Not documented yet
-
-### Outbound references
-
-- <a href="../internal/config__get_store/"><code>fabricops_kit.config._get_store</code></a>
-- <a href="../internal/fabric_input_output__convert_single_parquet_ns_to_us/"><code>fabricops_kit.fabric_input_output._convert_single_parquet_ns_to_us</code></a>
-- <a href="../internal/fabric_input_output__get_spark/"><code>fabricops_kit.fabric_input_output._get_spark</code></a>
-- <a href="../internal/fabric_input_output__lakehouse_file_path/"><code>fabricops_kit.fabric_input_output._lakehouse_file_path</code></a>
-
-</details>
-
-## Source code
-
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/5b6a5693130e525f919566c2115ac67da9c6faef/src/fabricops_kit/fabric_input_output.py#L507-L629">View read_lakehouse_parquet on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/fabric_input_output.py#L507-L629">View read_lakehouse_parquet on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -276,5 +227,73 @@ def read_lakehouse_parquet(config, env, target, relative_path, verbose=True, spa
 
     raise RuntimeError("Failed to read from both original and _tsus Parquet paths.")
 ```
+
+</details>
+
+## AI / machine-readable metadata
+
+<details class="reference-metadata-details">
+<summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
+
+These generated fields are for automation, AI agents, maintainers, and doc tooling. Skip this block when reading the docs normally.
+
+### Function manifest
+
+- Fully qualified function name: `fabricops_kit.fabric_input_output.read_lakehouse_parquet`
+- Short name: `read_lakehouse_parquet`
+- Module: `fabric_input_output`
+- Classification: Callable
+- Related module: `fabric_input_output`
+- Source file path: `src/fabricops_kit/fabric_input_output.py`
+- Source line: `507`
+- Inbound references count: 0
+- Outbound references count: 4
+
+### AI implementation contract
+
+- **required_context:** Requires the FrameworkConfig or compatible CONFIG from 00_env_config plus the intended env name; never hardcode Fabric workspace or item identifiers.
+- **inputs:** config, env, target, relative_path, verbose flag, and optional spark_session.
+- **output:** Spark DataFrame loaded from the original Parquet path or timestamp-converted fallback path.
+- **side_effects:** Reads from lakehouse Files and may create a local timestamp-converted fallback for single-file Parquet precision issues; it does not write metadata tables.
+- **failure_modes:** Raises ValueError for invalid relative paths and Spark/read errors when the Parquet path cannot be loaded.
+- **verification:** Verify the file path is a lakehouse Files Parquet path and check row count/schema after reading.
+
+### Inbound references
+
+Not documented yet
+
+### Outbound references
+
+- <a href="../internal/config__get_store/"><code>fabricops_kit.config._get_store</code></a>
+- <a href="../internal/fabric_input_output__convert_single_parquet_ns_to_us/"><code>fabricops_kit.fabric_input_output._convert_single_parquet_ns_to_us</code></a>
+- <a href="../internal/fabric_input_output__get_spark/"><code>fabricops_kit.fabric_input_output._get_spark</code></a>
+- <a href="../internal/fabric_input_output__lakehouse_file_path/"><code>fabricops_kit.fabric_input_output._lakehouse_file_path</code></a>
+
+### Raw source metadata
+
+- Source file path: `src/fabricops_kit/fabric_input_output.py`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/fabric_input_output.py#L507-L629">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/fabric_input_output.py#L507-L629</a>
+- Start line: `507`
+- End line: `629`
+- Signature:
+
+```python
+def read_lakehouse_parquet(config, env, target, relative_path, verbose=True, spark_session=None)
+```
+
+### Internal relationship graph
+
+### Public related functions
+
+- <a href="../read_lakehouse_csv/"><code>fabricops_kit.fabric_input_output.read_lakehouse_csv</code></a>
+- <a href="../read_lakehouse_excel/"><code>fabricops_kit.fabric_input_output.read_lakehouse_excel</code></a>
+- <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a>
+
+### Internal implementation helpers
+
+- <a href="../internal/config__get_store/"><code>fabricops_kit.config._get_store</code></a>
+- <a href="../internal/fabric_input_output__convert_single_parquet_ns_to_us/"><code>fabricops_kit.fabric_input_output._convert_single_parquet_ns_to_us</code></a>
+- <a href="../internal/fabric_input_output__get_spark/"><code>fabricops_kit.fabric_input_output._get_spark</code></a>
+- <a href="../internal/fabric_input_output__lakehouse_file_path/"><code>fabricops_kit.fabric_input_output._lakehouse_file_path</code></a>
 
 </details>

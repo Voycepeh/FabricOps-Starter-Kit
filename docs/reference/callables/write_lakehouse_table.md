@@ -2,13 +2,17 @@
 
 Write a DataFrame to a configured Fabric lakehouse target.
 
-## Use this when
+## What this is for
 
 Use when publishing a Spark DataFrame to a configured Fabric lakehouse table.
 
-## Do not use this for
+## When to use it
 
-Do not use for metadata evidence tables unless the helper explicitly routes metadata, and do not use for warehouse tables.
+- Use when publishing a Spark DataFrame to a configured Fabric lakehouse table.
+
+## When not to use it
+
+- Do not use for metadata evidence tables unless the helper explicitly routes metadata, and do not use for warehouse tables.
 
 ## Example
 
@@ -24,67 +28,58 @@ write_lakehouse_table(curated_df, CONFIG, env="Sandbox", target="Unified", table
     <tr>
       <th>Parameter</th>
       <th>Required</th>
-      <th>What it means</th>
+      <th>Meaning</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td data-label="Parameter"><code>df</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="What it means">Spark DataFrame to write.</td>
+      <td data-label="Meaning">Spark DataFrame to write.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>config</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="What it means">FabricOps FrameworkConfig or compatible config object.</td>
+      <td data-label="Meaning">FabricOps FrameworkConfig or compatible config object.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>env</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="What it means">Environment key such as `&quot;dev&quot;`.</td>
+      <td data-label="Meaning">Environment key such as `&quot;dev&quot;`.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>target</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="What it means">Logical target name such as `&quot;source&quot;` or `&quot;unified&quot;`.</td>
+      <td data-label="Meaning">Logical target name such as `&quot;source&quot;` or `&quot;unified&quot;`.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>table</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="What it means">Target table name under the lakehouse `Tables` area.</td>
+      <td data-label="Meaning">Target table name under the lakehouse `Tables` area.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>mode</code></td>
       <td data-label="Required">No</td>
-      <td data-label="What it means">Spark write mode. Supported values are `&quot;append&quot;`, `&quot;overwrite&quot;`, `&quot;errorifexists&quot;`, and `&quot;ignore&quot;`.</td>
+      <td data-label="Meaning">Spark write mode. Supported values are `&quot;append&quot;`, `&quot;overwrite&quot;`, `&quot;errorifexists&quot;`, and `&quot;ignore&quot;`.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>partition_by</code></td>
       <td data-label="Required">No</td>
-      <td data-label="What it means">Column or columns used to physically partition the Delta table.</td>
+      <td data-label="Meaning">Column or columns used to physically partition the Delta table.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>repartition_by</code></td>
       <td data-label="Required">No</td>
-      <td data-label="What it means">Optional repartitioning before write.</td>
+      <td data-label="Meaning">Optional repartitioning before write.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>overwrite_schema</code></td>
       <td data-label="Required">No</td>
-      <td data-label="What it means">Whether to set Spark Delta `overwriteSchema=true` before saving.</td>
+      <td data-label="Meaning">Whether to set Spark Delta `overwriteSchema=true` before saving.</td>
     </tr>
   </tbody>
 </table>
 </div>
-
-<details class="reference-signature-details">
-<summary>Full signature</summary>
-
-```python
-def write_lakehouse_table(df, config, env, target, table, mode='append', partition_by=None, repartition_by=None, overwrite_schema=True)
-```
-
-</details>
 
 ## Output
 
@@ -117,56 +112,10 @@ Writes data to a Fabric lakehouse table using the selected write mode.
 
 </details>
 
-<details class="reference-metadata-details">
-<summary>AI implementation contract</summary>
+## Source
 
-These fields are generated for agents and maintainers, not for quick-start reading.
-
-- **required_context:** Requires the FrameworkConfig or compatible CONFIG from 00_env_config plus the intended env name; never hardcode Fabric workspace or item identifiers.
-- **inputs:** df, config, env, target, table, optional schema, mode, and partitioning/write options.
-- **output:** None; the DataFrame is written to the configured lakehouse table.
-- **side_effects:** Writes data to a Fabric lakehouse table using the selected write mode.
-- **failure_modes:** Raises configuration, Spark, or write errors when the target cannot be resolved or the write fails.
-- **verification:** Verify upstream guardrails passed, confirm target routing from CONFIG, and check the intended write mode before generating code that calls this helper.
-
-</details>
-
-<details class="reference-metadata-details">
-<summary>Function manifest</summary>
-
-- Fully qualified function name: `fabricops_kit.fabric_input_output.write_lakehouse_table`
-- Short name: `write_lakehouse_table`
-- Module: `fabric_input_output`
-- Classification: Callable
-- Related module: `fabric_input_output`
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- Source line: `181`
-- Inbound references count: 6
-- Outbound references count: 1
-
-</details>
-
-<details class="reference-metadata-details">
-<summary>Raw inbound and outbound references</summary>
-
-### Inbound references
-
-- <a href="../internal/data_agreement__ensure_metadata_tables/"><code>fabricops_kit.data_agreement._ensure_metadata_tables</code></a>
-- <a href="../internal/data_agreement__write_row/"><code>fabricops_kit.data_agreement._write_row</code></a>
-- <a href="../internal/governance_review__setup_governance_metadata_tables/"><code>fabricops_kit.governance_review._setup_governance_metadata_tables</code></a>
-- <a href="../record_table_governance/"><code>fabricops_kit.governance_review.record_table_governance</code></a>
-- <a href="../internal/metadata__register_current_notebook/"><code>fabricops_kit.metadata._register_current_notebook</code></a>
-- <a href="../internal/metadata__setup_notebook_registry_table/"><code>fabricops_kit.metadata._setup_notebook_registry_table</code></a>
-
-### Outbound references
-
-- <a href="../internal/config__get_store/"><code>fabricops_kit.config._get_store</code></a>
-
-</details>
-
-## Source code
-
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/5b6a5693130e525f919566c2115ac67da9c6faef/src/fabricops_kit/fabric_input_output.py#L181-L275">View write_lakehouse_table on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/fabric_input_output.py#L181-L275">View write_lakehouse_table on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -268,5 +217,78 @@ def write_lakehouse_table(
 
     writer.save(path)
 ```
+
+</details>
+
+## AI / machine-readable metadata
+
+<details class="reference-metadata-details">
+<summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
+
+These generated fields are for automation, AI agents, maintainers, and doc tooling. Skip this block when reading the docs normally.
+
+### Function manifest
+
+- Fully qualified function name: `fabricops_kit.fabric_input_output.write_lakehouse_table`
+- Short name: `write_lakehouse_table`
+- Module: `fabric_input_output`
+- Classification: Callable
+- Related module: `fabric_input_output`
+- Source file path: `src/fabricops_kit/fabric_input_output.py`
+- Source line: `181`
+- Inbound references count: 6
+- Outbound references count: 1
+
+### AI implementation contract
+
+- **required_context:** Requires the FrameworkConfig or compatible CONFIG from 00_env_config plus the intended env name; never hardcode Fabric workspace or item identifiers.
+- **inputs:** df, config, env, target, table, optional schema, mode, and partitioning/write options.
+- **output:** None; the DataFrame is written to the configured lakehouse table.
+- **side_effects:** Writes data to a Fabric lakehouse table using the selected write mode.
+- **failure_modes:** Raises configuration, Spark, or write errors when the target cannot be resolved or the write fails.
+- **verification:** Verify upstream guardrails passed, confirm target routing from CONFIG, and check the intended write mode before generating code that calls this helper.
+
+### Inbound references
+
+- <a href="../internal/data_agreement__ensure_metadata_tables/"><code>fabricops_kit.data_agreement._ensure_metadata_tables</code></a>
+- <a href="../internal/data_agreement__write_row/"><code>fabricops_kit.data_agreement._write_row</code></a>
+- <a href="../internal/governance_review__setup_governance_metadata_tables/"><code>fabricops_kit.governance_review._setup_governance_metadata_tables</code></a>
+- <a href="../record_table_governance/"><code>fabricops_kit.governance_review.record_table_governance</code></a>
+- <a href="../internal/metadata__register_current_notebook/"><code>fabricops_kit.metadata._register_current_notebook</code></a>
+- <a href="../internal/metadata__setup_notebook_registry_table/"><code>fabricops_kit.metadata._setup_notebook_registry_table</code></a>
+
+### Outbound references
+
+- <a href="../internal/config__get_store/"><code>fabricops_kit.config._get_store</code></a>
+
+### Raw source metadata
+
+- Source file path: `src/fabricops_kit/fabric_input_output.py`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/fabric_input_output.py#L181-L275">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/fabric_input_output.py#L181-L275</a>
+- Start line: `181`
+- End line: `275`
+- Signature:
+
+```python
+def write_lakehouse_table(df, config, env, target, table, mode='append', partition_by=None, repartition_by=None, overwrite_schema=True)
+```
+
+### Internal relationship graph
+
+### Public related functions
+
+- <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a>
+- <a href="../write_warehouse_table/"><code>fabricops_kit.fabric_input_output.write_warehouse_table</code></a>
+- <a href="../stop_if_failed/"><code>fabricops_kit.drift.stop_if_failed</code></a>
+
+### Internal implementation helpers
+
+- <a href="../internal/data_agreement__ensure_metadata_tables/"><code>fabricops_kit.data_agreement._ensure_metadata_tables</code></a>
+- <a href="../internal/data_agreement__write_row/"><code>fabricops_kit.data_agreement._write_row</code></a>
+- <a href="../internal/governance_review__setup_governance_metadata_tables/"><code>fabricops_kit.governance_review._setup_governance_metadata_tables</code></a>
+- <a href="../record_table_governance/"><code>fabricops_kit.governance_review.record_table_governance</code></a>
+- <a href="../internal/metadata__register_current_notebook/"><code>fabricops_kit.metadata._register_current_notebook</code></a>
+- <a href="../internal/metadata__setup_notebook_registry_table/"><code>fabricops_kit.metadata._setup_notebook_registry_table</code></a>
+- <a href="../internal/config__get_store/"><code>fabricops_kit.config._get_store</code></a>
 
 </details>

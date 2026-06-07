@@ -2,13 +2,17 @@
 
 Enforce approved active DQ rules as a target-write guardrail without filtering rows.
 
-## Use this when
+## What this is for
 
 Use before target writes to enforce active approved DQ rules for a dataset/table as a pipeline guardrail.
 
-## Do not use this for
+## When to use it
 
-Do not use to filter bad rows, author new DQ rules, or bypass governance review approval.
+- Use before target writes to enforce active approved DQ rules for a dataset/table as a pipeline guardrail.
+
+## When not to use it
+
+- Do not use to filter bad rows, author new DQ rules, or bypass governance review approval.
 
 ## Example
 
@@ -25,52 +29,43 @@ stop_if_failed(dq_result)
     <tr>
       <th>Parameter</th>
       <th>Required</th>
-      <th>What it means</th>
+      <th>Meaning</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td data-label="Parameter"><code>dataframe</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="What it means">Spark DataFrame to evaluate before the target write. The full DataFrame is never filtered or split by this helper.</td>
+      <td data-label="Meaning">Spark DataFrame to evaluate before the target write. The full DataFrame is never filtered or split by this helper.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>config</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="What it means">Runtime configuration containing the configured metadata lakehouse route from ``00_env_config``.</td>
+      <td data-label="Meaning">Runtime configuration containing the configured metadata lakehouse route from ``00_env_config``.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>env</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="What it means">Environment name used to read ``METADATA_DQ_RULES`` from the configured metadata target.</td>
+      <td data-label="Meaning">Environment name used to read ``METADATA_DQ_RULES`` from the configured metadata target.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>dataset_name</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="What it means">Dataset identifier used with ``table_name`` to scope approved DQ rules when those columns exist in the metadata table.</td>
+      <td data-label="Meaning">Dataset identifier used with ``table_name`` to scope approved DQ rules when those columns exist in the metadata table.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>table_name</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="What it means">Target table name whose approved active DQ rules should be enforced.</td>
+      <td data-label="Meaning">Target table name whose approved active DQ rules should be enforced.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>spark_session</code></td>
       <td data-label="Required">No</td>
-      <td data-label="What it means">Spark session used to read metadata when required by the configured storage helper.</td>
+      <td data-label="Meaning">Spark session used to read metadata when required by the configured storage helper.</td>
     </tr>
   </tbody>
 </table>
 </div>
-
-<details class="reference-signature-details">
-<summary>Full signature</summary>
-
-```python
-def enforce_dq_rules(dataframe, config, env, dataset_name, table_name, *, spark_session=None) -> dict
-```
-
-</details>
 
 ## Output
 
@@ -102,57 +97,10 @@ Reads approved DQ-rule metadata and evaluates checks against the DataFrame; it d
 
 </details>
 
-<details class="reference-metadata-details">
-<summary>AI implementation contract</summary>
+## Source
 
-These fields are generated for agents and maintainers, not for quick-start reading.
-
-- **required_context:** Requires active approved DQ-rule evidence in the configured metadata target from 03_review governance workflows.
-- **inputs:** dataframe, config, env, dataset_name, table_name, and optional spark_session.
-- **output:** Guardrail result dictionary with status, can_continue, checks, message, tagged dataframe, and summary fields.
-- **side_effects:** Reads approved DQ-rule metadata and evaluates checks against the DataFrame; it does not filter the DataFrame or write target data.
-- **failure_modes:** Raises configuration, metadata-read, or Spark expression errors when approved rules cannot be loaded or evaluated.
-- **verification:** Verify approved metadata exists, inspect status/can_continue, and call stop_if_failed before writing when blocking failures occur.
-
-</details>
-
-<details class="reference-metadata-details">
-<summary>Function manifest</summary>
-
-- Fully qualified function name: `fabricops_kit.governance_review.enforce_dq_rules`
-- Short name: `enforce_dq_rules`
-- Module: `governance_review`
-- Classification: Callable
-- Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
-- Source line: `886`
-- Inbound references count: 0
-- Outbound references count: 7
-
-</details>
-
-<details class="reference-metadata-details">
-<summary>Raw inbound and outbound references</summary>
-
-### Inbound references
-
-Not documented yet
-
-### Outbound references
-
-- <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a>
-- <a href="../internal/governance_review__dq_failed_row_count/"><code>fabricops_kit.governance_review._dq_failed_row_count</code></a>
-- <a href="../internal/governance_review__dq_summary/"><code>fabricops_kit.governance_review._dq_summary</code></a>
-- <a href="../internal/governance_review__dq_tagged_dataframe/"><code>fabricops_kit.governance_review._dq_tagged_dataframe</code></a>
-- <a href="../internal/governance_review__load_active_dq_rules/"><code>fabricops_kit.governance_review._load_active_dq_rules</code></a>
-- <a href="../internal/governance_review__run_dq_guardrail_checks/"><code>fabricops_kit.governance_review._run_dq_guardrail_checks</code></a>
-- <a href="../internal/governance_review__summarize_dq_guardrail/"><code>fabricops_kit.governance_review._summarize_dq_guardrail</code></a>
-
-</details>
-
-## Source code
-
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/5b6a5693130e525f919566c2115ac67da9c6faef/src/fabricops_kit/governance_review.py#L886-L943">View enforce_dq_rules on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/governance_review.py#L886-L943">View enforce_dq_rules on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -217,5 +165,78 @@ def enforce_dq_rules(
     result["summary"] = _dq_summary(checks, total_count, failed_row_count)
     return result
 ```
+
+</details>
+
+## AI / machine-readable metadata
+
+<details class="reference-metadata-details">
+<summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
+
+These generated fields are for automation, AI agents, maintainers, and doc tooling. Skip this block when reading the docs normally.
+
+### Function manifest
+
+- Fully qualified function name: `fabricops_kit.governance_review.enforce_dq_rules`
+- Short name: `enforce_dq_rules`
+- Module: `governance_review`
+- Classification: Callable
+- Related module: `governance_review`
+- Source file path: `src/fabricops_kit/governance_review.py`
+- Source line: `886`
+- Inbound references count: 0
+- Outbound references count: 7
+
+### AI implementation contract
+
+- **required_context:** Requires active approved DQ-rule evidence in the configured metadata target from 03_review governance workflows.
+- **inputs:** dataframe, config, env, dataset_name, table_name, and optional spark_session.
+- **output:** Guardrail result dictionary with status, can_continue, checks, message, tagged dataframe, and summary fields.
+- **side_effects:** Reads approved DQ-rule metadata and evaluates checks against the DataFrame; it does not filter the DataFrame or write target data.
+- **failure_modes:** Raises configuration, metadata-read, or Spark expression errors when approved rules cannot be loaded or evaluated.
+- **verification:** Verify approved metadata exists, inspect status/can_continue, and call stop_if_failed before writing when blocking failures occur.
+
+### Inbound references
+
+Not documented yet
+
+### Outbound references
+
+- <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a>
+- <a href="../internal/governance_review__dq_failed_row_count/"><code>fabricops_kit.governance_review._dq_failed_row_count</code></a>
+- <a href="../internal/governance_review__dq_summary/"><code>fabricops_kit.governance_review._dq_summary</code></a>
+- <a href="../internal/governance_review__dq_tagged_dataframe/"><code>fabricops_kit.governance_review._dq_tagged_dataframe</code></a>
+- <a href="../internal/governance_review__load_active_dq_rules/"><code>fabricops_kit.governance_review._load_active_dq_rules</code></a>
+- <a href="../internal/governance_review__run_dq_guardrail_checks/"><code>fabricops_kit.governance_review._run_dq_guardrail_checks</code></a>
+- <a href="../internal/governance_review__summarize_dq_guardrail/"><code>fabricops_kit.governance_review._summarize_dq_guardrail</code></a>
+
+### Raw source metadata
+
+- Source file path: `src/fabricops_kit/governance_review.py`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/governance_review.py#L886-L943">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/governance_review.py#L886-L943</a>
+- Start line: `886`
+- End line: `943`
+- Signature:
+
+```python
+def enforce_dq_rules(dataframe, config, env, dataset_name, table_name, *, spark_session=None) -> dict
+```
+
+### Internal relationship graph
+
+### Public related functions
+
+- <a href="../record_table_governance/"><code>fabricops_kit.governance_review.record_table_governance</code></a>
+- <a href="../stop_if_failed/"><code>fabricops_kit.drift.stop_if_failed</code></a>
+
+### Internal implementation helpers
+
+- <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a>
+- <a href="../internal/governance_review__dq_failed_row_count/"><code>fabricops_kit.governance_review._dq_failed_row_count</code></a>
+- <a href="../internal/governance_review__dq_summary/"><code>fabricops_kit.governance_review._dq_summary</code></a>
+- <a href="../internal/governance_review__dq_tagged_dataframe/"><code>fabricops_kit.governance_review._dq_tagged_dataframe</code></a>
+- <a href="../internal/governance_review__load_active_dq_rules/"><code>fabricops_kit.governance_review._load_active_dq_rules</code></a>
+- <a href="../internal/governance_review__run_dq_guardrail_checks/"><code>fabricops_kit.governance_review._run_dq_guardrail_checks</code></a>
+- <a href="../internal/governance_review__summarize_dq_guardrail/"><code>fabricops_kit.governance_review._summarize_dq_guardrail</code></a>
 
 </details>

@@ -2,13 +2,17 @@
 
 Render standalone DQ-rule review guidance for selected profile rows.
 
-## Use this when
+## What this is for
 
 Render standalone DQ-rule review guidance for selected profile rows.
 
-## Do not use this for
+## When to use it
 
-Not documented yet
+- Render standalone DQ-rule review guidance for selected profile rows.
+
+## When not to use it
+
+- Not documented yet
 
 ## Example
 
@@ -24,27 +28,18 @@ Not documented yet
     <tr>
       <th>Parameter</th>
       <th>Required</th>
-      <th>What it means</th>
+      <th>Meaning</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td data-label="Parameter"><code>profile_rows</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="What it means">Selected column profile evidence from ``load_catalogue_profile_rows``.</td>
+      <td data-label="Meaning">Selected column profile evidence from ``load_catalogue_profile_rows``.</td>
     </tr>
   </tbody>
 </table>
 </div>
-
-<details class="reference-signature-details">
-<summary>Full signature</summary>
-
-```python
-def widget_review_dq_rules(profile_rows: list[dict[str, Any]]) -> list[dict[str, Any]]
-```
-
-</details>
 
 ## Output
 
@@ -71,54 +66,10 @@ Not documented yet
 
 </details>
 
-<details class="reference-metadata-details">
-<summary>AI implementation contract</summary>
+## Source
 
-These fields are generated for agents and maintainers, not for quick-start reading.
-
-- **required_context:** Starter template: `03_review`; segment: `Governance review`.
-- **inputs:** profile_rows : list of dict
-    Selected column profile evidence from ``load_catalogue_profile_rows``.
-- **output:** list[dict[str, Any]]
-    Empty editable review list. Add approved rule dictionaries before
-    calling ``record_table_governance``.
-- **side_effects:** Not documented yet
-- **failure_modes:** Not documented yet
-- **verification:** Not documented yet
-
-</details>
-
-<details class="reference-metadata-details">
-<summary>Function manifest</summary>
-
-- Fully qualified function name: `fabricops_kit.governance_review.widget_review_dq_rules`
-- Short name: `widget_review_dq_rules`
-- Module: `governance_review`
-- Classification: Callable
-- Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
-- Source line: `467`
-- Inbound references count: 0
-- Outbound references count: 1
-
-</details>
-
-<details class="reference-metadata-details">
-<summary>Raw inbound and outbound references</summary>
-
-### Inbound references
-
-Not documented yet
-
-### Outbound references
-
-- <a href="../internal/governance_review__display_review_guidance/"><code>fabricops_kit.governance_review._display_review_guidance</code></a>
-
-</details>
-
-## Source code
-
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/5b6a5693130e525f919566c2115ac67da9c6faef/src/fabricops_kit/governance_review.py#L467-L485">View widget_review_dq_rules on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/governance_review.py#L467-L485">View widget_review_dq_rules on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -144,5 +95,68 @@ def widget_review_dq_rules(profile_rows: list[dict[str, Any]]) -> list[dict[str,
         "Author human-approved DQ rules for selected columns. These records are governance evidence and are not automatically enforced by 02_pipeline.",
     )
 ```
+
+</details>
+
+## AI / machine-readable metadata
+
+<details class="reference-metadata-details">
+<summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
+
+These generated fields are for automation, AI agents, maintainers, and doc tooling. Skip this block when reading the docs normally.
+
+### Function manifest
+
+- Fully qualified function name: `fabricops_kit.governance_review.widget_review_dq_rules`
+- Short name: `widget_review_dq_rules`
+- Module: `governance_review`
+- Classification: Callable
+- Related module: `governance_review`
+- Source file path: `src/fabricops_kit/governance_review.py`
+- Source line: `467`
+- Inbound references count: 0
+- Outbound references count: 1
+
+### AI implementation contract
+
+- **required_context:** Starter template: `03_review`; segment: `Governance review`.
+- **inputs:** profile_rows : list of dict
+    Selected column profile evidence from ``load_catalogue_profile_rows``.
+- **output:** list[dict[str, Any]]
+    Empty editable review list. Add approved rule dictionaries before
+    calling ``record_table_governance``.
+- **side_effects:** Not documented yet
+- **failure_modes:** Not documented yet
+- **verification:** Not documented yet
+
+### Inbound references
+
+Not documented yet
+
+### Outbound references
+
+- <a href="../internal/governance_review__display_review_guidance/"><code>fabricops_kit.governance_review._display_review_guidance</code></a>
+
+### Raw source metadata
+
+- Source file path: `src/fabricops_kit/governance_review.py`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/governance_review.py#L467-L485">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c16c62a2fd27c5a88a51c78e285c4b6e922580a/src/fabricops_kit/governance_review.py#L467-L485</a>
+- Start line: `467`
+- End line: `485`
+- Signature:
+
+```python
+def widget_review_dq_rules(profile_rows: list[dict[str, Any]]) -> list[dict[str, Any]]
+```
+
+### Internal relationship graph
+
+### Public related functions
+
+Not documented yet
+
+### Internal implementation helpers
+
+- <a href="../internal/governance_review__display_review_guidance/"><code>fabricops_kit.governance_review._display_review_guidance</code></a>
 
 </details>
