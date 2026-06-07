@@ -8,7 +8,6 @@ FabricOps Starter Kit helps teams quickly bootstrap governed Fabric notebook del
 
 FabricOps works best when shared metadata (data about the actual data) is kept separate from the actual data itself .
 
-A common setup uses three Fabric workspaces:
 ![FabricOps Starter Kit operating model with Governance, Engineering Dev, and Engineering Prod workspaces](../assets/fabricops-operating-model-overview.png)
 
 | Workspace | Typical items | Purpose |
