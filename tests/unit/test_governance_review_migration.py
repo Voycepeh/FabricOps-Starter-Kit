@@ -18,6 +18,7 @@ DELETED_MODULE_SUFFIXES = (
     "_utils",
     "versioning",
     "docs_metadata",
+    "handover",
 )
 DELETED_MODULE_IMPORTS = tuple(f"fabricops_kit.{suffix}" for suffix in DELETED_MODULE_SUFFIXES)
 
@@ -41,8 +42,6 @@ EXPECTED_V1_CALLABLES = [
     "monitor_data_changes",
     "stop_if_failed",
     "build_lineage_records",
-    "build_handover",
-    "render_handover_markdown",
     "widget_select_catalogue_table",
     "get_selected_catalogue_table",
     "load_catalogue_profile_rows",

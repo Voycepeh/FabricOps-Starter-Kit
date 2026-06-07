@@ -32,7 +32,6 @@ PUBLIC_MODULE_PREFERRED_NAMES = {
     "fabric_input_output": "fabric_input_output",
     "data_lineage": "data_lineage",
     "drift": "drift",
-    "handover": "handover",
     "metadata": "metadata",
 }
 MAJOR_IMPLEMENTATION_MODULE_ORDER = [
@@ -43,7 +42,6 @@ MAJOR_IMPLEMENTATION_MODULE_ORDER = [
     "fabric_input_output",
     "data_lineage",
     "drift",
-    "handover",
     "metadata",
 ]
 MAJOR_IMPLEMENTATION_MODULES = set(MAJOR_IMPLEMENTATION_MODULE_ORDER)
@@ -73,8 +71,6 @@ V1_CALLABLES = {
     "monitor_data_changes",
     "stop_if_failed",
     "build_lineage_records",
-    "build_handover",
-    "render_handover_markdown",
     "widget_select_catalogue_table",
     "get_selected_catalogue_table",
     "load_catalogue_profile_rows",

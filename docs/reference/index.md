@@ -33,15 +33,6 @@ Use the finder below to look up callable and internal FabricOps functions.
 ## Functions
 
 <div class="reference-catalogue-list">
-<article id="handover-build_handover" class="reference-catalogue-item" data-callable-row="true" data-callable-name="build_handover" data-callable-module="handover" data-callable-starter-path="—" data-function-type="callable" data-callable-purpose="Assemble final handover evidence for reviewed notebook work.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/build_handover/"><code>build_handover</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Assemble final handover evidence for reviewed notebook work.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/handover/" title="Open handover module page" aria-label="Open handover module page">handover</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
-
-
-  </div>
-</article>
 <article id="data_lineage-build_lineage_records" class="reference-catalogue-item" data-callable-row="true" data-callable-name="build_lineage_records" data-callable-module="data_lineage" data-callable-starter-path="02_pipeline" data-function-type="callable" data-callable-purpose="Build source-to-target lineage evidence records for a pipeline run.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/build_lineage_records/"><code>build_lineage_records</code></a></h3>
   <p class="reference-catalogue-item-purpose">Build source-to-target lineage evidence records for a pipeline run.</p>
@@ -148,15 +139,6 @@ Use the finder below to look up callable and internal FabricOps functions.
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 4</span></summary><ul><li><code>write_lakehouse_table</code></li><li><code>_build_classification_records</code></li><li><code>_build_column_context_records</code></li><li><code>_build_dq_rule_records</code></li></ul></details>
 
-  </div>
-</article>
-<article id="handover-render_handover_markdown" class="reference-catalogue-item" data-callable-row="true" data-callable-name="render_handover_markdown" data-callable-module="handover" data-callable-starter-path="—" data-function-type="callable" data-callable-purpose="Render handover evidence as notebook-friendly Markdown.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/render_handover_markdown/"><code>render_handover_markdown</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Render handover evidence as notebook-friendly Markdown.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/handover/" title="Open handover module page" aria-label="Open handover module page">handover</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_status_of</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_build_handover_record</code></li></ul></details>
   </div>
 </article>
 <article id="config-setup_metadata_tables" class="reference-catalogue-item" data-callable-row="true" data-callable-name="setup_metadata_tables" data-callable-module="config" data-callable-starter-path="00_env_config" data-function-type="callable" data-callable-purpose="Create or validate all FabricOps metadata tables through one setup action.">
@@ -400,15 +382,6 @@ Use the finder below to look up callable and internal FabricOps functions.
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 5</span></summary><ul><li><code>_approved_column_identity</code></li><li><code>_approved_review_context</code></li><li><code>_canonical_dq_rule_type</code></li><li><code>_json</code></li><li><code>_build_dq_rule_key</code></li></ul></details>
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>record_table_governance</code></li></ul></details>
-  </div>
-</article>
-<article id="handover-_build_handover_record" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_build_handover_record" data-callable-module="handover" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Execute the `_build_handover_record` workflow step in FabricOps.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/handover__build_handover_record/"><code>_build_handover_record</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Execute the `_build_handover_record` workflow step in FabricOps.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/handover/" title="Open handover module page" aria-label="Open handover module page">handover</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>_status_of</code></li><li><code>render_handover_markdown</code></li></ul></details>
-
   </div>
 </article>
 <article id="data_lineage-_build_lineage_records" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_build_lineage_records" data-callable-module="data_lineage" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Build metadata-ready lineage rows from validated lineage steps.">
@@ -1354,15 +1327,6 @@ Use the finder below to look up callable and internal FabricOps functions.
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 3</span></summary><ul><li><code>_require_ipywidgets</code></li><li><code>_to_bool</code></li><li><code>_widget_common</code></li></ul></details>
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_render_maintenance_widget</code></li></ul></details>
-  </div>
-</article>
-<article id="handover-_status_of" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_status_of" data-callable-module="handover" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Internal helper used by the package.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/handover__status_of/"><code>_status_of</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Internal helper used by the package.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/handover/" title="Open handover module page" aria-label="Open handover module page">handover</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
-
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 2</span></summary><ul><li><code>_build_handover_record</code></li><li><code>render_handover_markdown</code></li></ul></details>
   </div>
 </article>
 <article id="data_agreement-_to_bool" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_to_bool" data-callable-module="data_agreement" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Normalize common notebook and metadata boolean representations.">
