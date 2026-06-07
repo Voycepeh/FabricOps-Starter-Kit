@@ -3,7 +3,7 @@
 This module is the workflow entrypoint for establishing the ``00_env_config``
 contract, standard environment path definitions, notebook prefix policies, AI
 prompt templates, and smoke-check validation before data movement starts.
-Use it early in a Fabric run so downstream IO, quality, lineage, and handover
+Use it early in a Fabric run so downstream IO, quality, lineage, and review
 steps execute with explicit, validated runtime context.
 """
 
@@ -75,7 +75,6 @@ class AIPromptConfig:
     governance_personal_identifier_prompt_template: str = ""
     governance_candidate_prompt_template: str = ""
     governance_review_prompt_template: str = ""
-    handover_summary_prompt_template: str = ""
 
     def __post_init__(self) -> None:
         for label, value in {
@@ -84,7 +83,6 @@ class AIPromptConfig:
             "governance_personal_identifier_prompt_template": self.governance_personal_identifier_prompt_template,
             "governance_candidate_prompt_template": self.governance_candidate_prompt_template,
             "governance_review_prompt_template": self.governance_review_prompt_template,
-            "handover_summary_prompt_template": self.handover_summary_prompt_template,
         }.items():
             if not isinstance(value, str) or not value.strip():
                 raise ValueError(f"{label} must be a non-empty string.")
@@ -252,7 +250,7 @@ class LineageConfig:
     Parameters
     ----------
     capture_ai_summaries : bool, default=True
-        Whether AI-generated summaries should be retained in lineage artifacts.
+        Whether AI-generated summaries should be stored in lineage artifacts.
     capture_transformation_steps : bool, default=True
         Whether transformation-level steps should be included in lineage
         capture payloads.
@@ -292,7 +290,7 @@ class FrameworkConfig:
     >>> cfg = FrameworkConfig(
     ...     path_config=PathConfig(paths={"dev": {"source": object()}}),
     ...     notebook_runtime_config=NotebookRuntimeConfig(("00_",)),
-    ...     ai_prompt_config=AIPromptConfig("dq", "gov", "handover"),
+    ...     ai_prompt_config=AIPromptConfig("context", "dq", "personal", "candidate", "review"),
     ...     quality_config=QualityConfig(),
     ...     governance_config=GovernanceConfig(),
     ...     lineage_config=LineageConfig(),
@@ -881,7 +879,7 @@ def _validate_dataset_contract(contract: dict, schema_path: str | Path | None = 
     -------
     list of str
         Validation error messages using normalized property paths that are
-        suitable for notebook run summaries and handover logs.
+        suitable for notebook run summaries and review logs.
 
     Notes
     -----

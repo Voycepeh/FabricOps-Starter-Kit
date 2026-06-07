@@ -1,7 +1,7 @@
 # How FabricOps Works
 
 FabricOps Starter Kit is a lightweight way to run governed, quality-checked, AI-ready notebooks in Microsoft Fabric.
-It gives teams a practical notebook path for agreeing what to build, running a repeatable pipeline, recording metadata evidence, and reviewing that evidence before handover.
+It gives teams a practical notebook path for agreeing what to build, running a repeatable pipeline, recording metadata evidence, and reviewing that evidence before operational support.
 
 FabricOps is not a full governance platform or a standalone data quality product. It is a starter kit that helps Fabric notebooks stay understandable, reusable, and easier to support.
 
@@ -11,7 +11,7 @@ FabricOps is not a full governance platform or a standalone data quality product
 flowchart LR
     ENV["00_env_config<br/>Environment config<br/>Configures paths and metadata routing"] --> DA["01_agreement<br/>Agreement<br/>Defines what should be built, who owns it,<br/>what rules apply, and what readiness means"]
     DA --> PC["02_pipeline<br/>Pipeline<br/>Builds, transforms, validates,<br/>and publishes the data product"]
-    PC --> REV["03_review<br/>Review<br/>Checks evidence, metadata, ownership,<br/>rules, readiness, and handover quality"]
+    PC --> REV["03_review<br/>Review<br/>Checks evidence, metadata, ownership,<br/>rules, and readiness"]
     EXP["99_explore<br/>Optional support<br/>Discovery, profiling, troubleshooting,<br/>investigation, and ad hoc analysis"] -. supports .-> DA
     EXP -. supports .-> PC
     EXP -. supports .-> REV
@@ -36,7 +36,7 @@ A common setup uses three Fabric workspaces:
 
 | Workspace | Typical items | Purpose |
 | --- | --- | --- |
-| Governance workspace | `metadata_lakehouse` | Stores agreements, metadata evidence, reviewed metadata, and handover support material. |
+| Governance workspace | `metadata_lakehouse` | Stores agreements, metadata evidence, and reviewed metadata for support. |
 | Engineering Dev workspace | `source_lakehouse`, `unified_lakehouse`, `product_warehouse` | Develops and tests `02_pipeline` notebooks before production. |
 | Engineering Prod workspace | `source_lakehouse`, `unified_lakehouse`, `product_warehouse` | Runs approved production `02_pipeline` notebooks and publishes production outputs. |
 

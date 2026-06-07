@@ -19,7 +19,7 @@ def _code(path: str) -> str:
     return "\n".join(cells)
 
 
-def test_production_and_governance_templates_cover_output_handover_and_review_flows():
+def test_production_and_governance_templates_cover_output_summary_and_review_flows():
     production = _code("02_pipeline.ipynb")
     governance = _code("03_review.ipynb")
 

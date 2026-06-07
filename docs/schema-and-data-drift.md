@@ -25,7 +25,7 @@ The important boundary is that `02_pipeline` owns blocking behavior. `03_review`
 | Before transform | Check the source schema and source profile. | Catch unexpected input changes early. |
 | During transform | Apply deterministic business logic. | Keep the output repeatable. |
 | Before write | Check the target schema and target profile. | Avoid publishing unexpected output changes. |
-| After successful checks | Write outputs and metadata evidence. | Keep review and handover grounded in what actually ran. |
+| After successful checks | Write outputs and metadata evidence. | Keep review and support grounded in what actually ran. |
 
 ## Compact starter pattern
 

@@ -15,7 +15,7 @@ templates/notebooks/
 | `00_env_config` | Platform or engineering lead | Configure Fabric paths, runtime defaults, and metadata tables for an environment. | Other notebooks know where to read, write, and store metadata. |
 | `01_agreement` | Data steward or product owner | Capture the agreed purpose, owner, steward, and supporting agreement evidence. | A clear agreement exists before build work is treated as production-ready. |
 | `02_pipeline` | Data engineer | Build the data product, run guardrails, write outputs, and record metadata evidence. | A repeatable pipeline produces data and evidence for review. |
-| `03_review` | Governance reviewer or data steward | Review catalogue evidence and approve business context, DQ expectations, sensitivity, and classification. | Reviewed metadata is available for handover and possible future pipeline use. |
+| `03_review` | Governance reviewer or data steward | Review catalogue evidence and approve business context, DQ expectations, sensitivity, and classification. | Reviewed metadata is available for support and later pipeline use when engineers wire it in. |
 | `99_explore` | Analyst or engineer | Optional discovery, profiling, troubleshooting, or ad hoc investigation. | Findings can inform agreement, pipeline, or review work, but this is not a required step. |
 
 ## Role-based notebook flow
@@ -108,7 +108,7 @@ Common uses include:
 | Paths and metadata table setup | `00_env_config` | Keeps environment routing explicit and repeatable. |
 | Agreement and steward metadata | `01_agreement` | Captures the agreed purpose and owner. |
 | Output data and blocking behavior | `02_pipeline` | The pipeline decides when to warn, stop, or write. |
-| Metadata evidence | `02_pipeline` | Profiles, lineage, and run context support review and handover. |
+| Metadata evidence | `02_pipeline` | Profiles, lineage, and run context support review and operations. |
 | Reviewed metadata | `03_review` | Human-approved context, DQ expectations, sensitivity, and classification. |
 | Optional investigation | `99_explore` | Helps answer questions without becoming a required delivery step. |
 

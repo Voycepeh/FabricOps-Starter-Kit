@@ -48,7 +48,7 @@ The following previous public/exported functions were removed from the v1 callab
 - Low-level metadata and registry helpers: `register_current_notebook`, `load_notebook_registry`, `get_notebook_registry_schema`, `build_runtime_audit_fields`, `current_notebook_active_registrations`.
 - Version/banner helpers: `get_package_version`, `get_docs_version`, `get_docs_url`, `get_release_notes_url`, `print_runtime_banner`.
 - Advanced drift/incremental helpers and low-level row/key builders: `check_partition_drift`, `build_and_write_partition_snapshot`, `load_latest_partition_snapshot`, `summarize_drift_results`, `build_drift_evidence_record`, `prepare_drift_baselines`, `default_incremental_safety_policy`, `build_partition_snapshot`, `compare_partition_snapshots`, `assert_incremental_safe`, `build_incremental_safety_records`, `build_evidence_row`, `build_metadata_table_key`, `build_metadata_column_key`, `build_dq_rule_key`, `build_profile_summary`, `latest_by_column`, `build_column_context_records`, `build_dq_rule_records`, `build_classification_records`, `commit_column_context`, `commit_dq_rules`, `commit_column_classification`.
-- Optional/internal utilities: `catalogue_table_options`, `get_governance_metadata_schemas`, `optional_ai_generate_response`, `default_evidence_types`, `normalise_records_by_column`, `column_context_rows_for_spark`, `write_metadata_rows`, `detect_dataframe_engine`, `check_naming_convention`, `seed_minimal_sample_source_table`, `load_dataset_contract`, `validate_dataset_contract`, `assert_valid_dataset_contract`, `load_and_validate_dataset_contract`, `build_lineage_handover_markdown`.
+- Optional/internal utilities: `catalogue_table_options`, `get_governance_metadata_schemas`, `optional_ai_generate_response`, `default_evidence_types`, `normalise_records_by_column`, `column_context_rows_for_spark`, `write_metadata_rows`, `detect_dataframe_engine`, `check_naming_convention`, `seed_minimal_sample_source_table`, `load_dataset_contract`, `validate_dataset_contract`, `assert_valid_dataset_contract`, and `load_and_validate_dataset_contract`.
 
 ## Merged functions
 
@@ -73,8 +73,8 @@ Non-v1 helpers that are still needed internally now use leading-underscore names
 
 ## Deleted modules
 
-None. Existing modules remain because they still contain internal implementation used by the v1 workflow or preserve module organization for future source maintenance.
+The obsolete `handover`, `business_context`, `data_governance`, `data_quality`, `versioning`, and `_utils` modules are not active v1 implementation modules. Their remaining behavior is either folded into active modules or intentionally absent from the public v1 surface.
 
 ## Rationale
 
-The v1 surface keeps one high-level function per backend user action while preserving smaller standalone widget cells for Fabric stability. Notebook users configure schemas and drift thresholds directly in templates, call `validate_schema` and `monitor_data_changes`, and use `stop_if_failed` only to stop on those guardrail result objects. Low-level coercion, key generation, row building, Spark conversion, docs metadata, and compatibility aliases are internal implementation details rather than notebook-template callables.
+The v1 surface keeps one high-level function per backend user action while preserving smaller standalone widget cells for Fabric stability. Notebook users configure schemas and drift thresholds directly in templates, call `validate_schema` and `monitor_data_changes`, and use `stop_if_failed` only to stop on those guardrail result objects. Low-level coercion, key generation, row building, Spark conversion, docs metadata, and non-template helpers are internal implementation details rather than notebook-template callables.

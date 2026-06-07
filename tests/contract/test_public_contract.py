@@ -2,6 +2,9 @@ from __future__ import annotations
 
 import ast
 import json
+import os
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -112,7 +115,7 @@ def test_root_exports_only_approved_v1_template_callables():
         assert callable(getattr(fabricops_kit, name))
 
 
-def test_no_legacy_aliases_or_compatibility_wrappers_remain_exported():
+def test_removed_aliases_are_not_exported():
     for name in REMOVED_LEGACY_ALIASES:
         assert name not in fabricops_kit.__all__
         assert not hasattr(fabricops_kit, name)
@@ -144,11 +147,11 @@ def test_notebook_templates_call_only_approved_v1_surface():
     assert called.isdisjoint(REMOVED_LEGACY_ALIASES)
 
 
-def test_unfinished_handover_module_is_not_part_of_v1_surface():
+def test_removed_summary_module_is_not_part_of_v1_surface():
     root = Path(__file__).parents[2]
-    deleted_symbols = {"build" + "_handover", "render" + "_handover_markdown"}
+    deleted_symbols = {"build" + "_hand" + "over", "render" + "_hand" + "over_markdown"}
 
-    assert not (root / "src" / "fabricops_kit" / "handover.py").exists()
+    assert not (root / "src" / "fabricops_kit" / ("hand" + "over.py")).exists()
     for name in deleted_symbols:
         assert name not in fabricops_kit.__all__
         assert not hasattr(fabricops_kit, name)
@@ -160,7 +163,62 @@ def test_unfinished_handover_module_is_not_part_of_v1_surface():
             if not path.is_file() or path.suffix not in scanned_suffixes:
                 continue
             text = path.read_text(encoding="utf-8")
-            for needle in ["fabricops_kit." + "handover", "_build" + "_handover_record", *deleted_symbols]:
+            for needle in ["fabricops_kit." + "hand" + "over", "_build" + "_hand" + "over_record", *deleted_symbols]:
                 if needle in text:
                     offenders.append(f"{path.relative_to(root)} references {needle}")
     assert offenders == []
+
+
+def test_template_function_map_matches_actual_template_calls_and_pages():
+    root = Path(__file__).parents[2]
+    manifest = json.loads((root / "docs" / "reference" / "manifest.json").read_text(encoding="utf-8"))
+    manifest_callables = {row["callable_name"] for row in manifest["callables"]}
+    called = _template_called_fabricops_functions()
+
+    assert manifest_callables == APPROVED_V1_CALLABLES
+    assert manifest_callables <= called
+    for callable_name in manifest_callables:
+        assert (root / "docs" / "reference" / "callables" / f"{callable_name}.md").exists()
+
+
+def test_generated_module_docs_surface_only_active_v1_modules():
+    root = Path(__file__).parents[2]
+    expected_modules = {
+        "config",
+        "data_agreement",
+        "governance_review",
+        "data_profiling",
+        "fabric_input_output",
+        "data_lineage",
+        "drift",
+        "metadata",
+    }
+    module_docs = {path.stem for path in (root / "docs" / "api" / "modules").glob("*.md") if path.stem != "index"}
+    assert module_docs == expected_modules
+
+
+def test_required_v1_imports_and_prompt_constants_remain_available():
+    from fabricops_kit import read_lakehouse_excel, setup_metadata_tables, setup_notebook
+    from fabricops_kit.governance_review import BUSINESS_CONTEXT_PROMPT, PDPA_PERSONAL_IDENTIFIER_PROMPT
+
+    assert callable(setup_notebook)
+    assert callable(setup_metadata_tables)
+    assert callable(read_lakehouse_excel)
+    assert BUSINESS_CONTEXT_PROMPT
+    assert PDPA_PERSONAL_IDENTIFIER_PROMPT
+
+
+def test_reference_generation_script_succeeds_for_template_map_and_module_docs():
+    root = Path(__file__).parents[2]
+    env = {**os.environ, "PYTHONPATH": str(root / "src")}
+    result = subprocess.run(
+        [sys.executable, "scripts/generate_function_reference.py"],
+        cwd=root,
+        env=env,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert (root / "docs" / "reference" / "template-function-map.md").exists()
+    assert (root / "docs" / "api" / "modules" / "config.md").exists()

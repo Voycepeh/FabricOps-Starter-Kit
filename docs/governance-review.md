@@ -50,7 +50,7 @@ AI suggestions are based on the available catalogue profile data. If profile evi
 | DQ expectations | `METADATA_DQ_RULES` | Human-reviewed rules or expectations that a pipeline can later implement. |
 | Sensitivity and classification | `METADATA_COLUMN_CLASSIFICATION` | Human-approved handling, sensitivity, PII, or classification labels, including fields such as approved PII classification, confidentiality label, handling requirement, and masking requirement. |
 
-These outputs are reviewed metadata. They support handover, support, documentation, visibility, and later pipeline guardrails when engineering chooses to implement them.
+These outputs are reviewed metadata. They support review, support, documentation, visibility, and later pipeline guardrails when engineering chooses to implement them.
 
 ## Human review workflow
 
@@ -80,7 +80,7 @@ The same idea can apply to other reviewed metadata:
 
 | Reviewed metadata | Possible later `02_pipeline` use |
 | --- | --- |
-| Business context | Include approved descriptions in handover output or downstream documentation evidence. |
+| Business context | Include approved descriptions in downstream documentation or support evidence. |
 | DQ expectations | Run checks that warn, block, or record evidence. |
 | Sensitivity and classification | Record handling context or support checks that an engineer intentionally adds. |
 

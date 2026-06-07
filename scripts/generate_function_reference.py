@@ -18,7 +18,6 @@ DEPENDENCY_METADATA_PATH = ROOT / "docs" / "reference" / "dependency-metadata.js
 CALL_GRAPH_PAGE_PATH = ROOT / "docs" / "reference" / "call-graph.md"
 CALLABLE_REFERENCE_DIR = ROOT / "docs" / "reference" / "callables"
 INTERNAL_REFERENCE_DIR = ROOT / "docs" / "reference" / "internal"
-FUNCTION_USAGE_OVERRIDES_PATH = ROOT / "docs" / "reference" / "function_usage.yml"
 MANIFEST_PATH = ROOT / "docs" / "reference" / "manifest.json"
 AGENT_MANIFEST_PATH = ROOT / "docs" / "reference" / "agent-manifest.json"
 FUNCTION_MANIFEST_PATH = ROOT / "docs" / "reference" / "function-manifest.json"
@@ -262,10 +261,8 @@ def build_callable_graph(
         for callable_name in sorted(set(functions) | set(classes)):
             role = str(
                 docs_metadata.get(callable_name, {}).get("function_type")
-                or docs_metadata.get(callable_name, {}).get("role", "internal")
+                or "internal"
             ).lower()
-            if role in {"essential", "optional"}:
-                role = "callable"
             exported = callable_name in exported_names
             if not exported and role not in {"callable", "internal"}:
                 role = "internal"
@@ -631,15 +628,10 @@ def main() -> None:
             _assert_non_placeholder_summary(symbol.name, "summary", symbol.summary)
         if enforce_placeholder_guard and symbol.purpose and symbol.purpose != "—":
             _assert_non_placeholder_summary(symbol.name, "purpose", symbol.purpose)
-        symbol_role = meta.get("function_type") or meta.get("role")
+        symbol_role = meta.get("function_type")
         if not symbol_role:
             raise RuntimeError(f"Missing explicit function_type for {symbol.name} in PUBLIC_SYMBOL_DOCS")
         symbol.role = str(symbol_role).lower()
-        # Backward-compatible input support: older metadata used essential/optional
-        # roles for public functions. The generated catalogue now exposes the
-        # clearer callable/internal function type model.
-        if symbol.role in {"essential", "optional"}:
-            symbol.role = "callable"
         if symbol.role not in {"callable", "internal"}:
             raise RuntimeError(f"Invalid function type {symbol.role!r} for {symbol.name}; expected callable/internal")
         if symbol.role == "internal" and not symbol.name.startswith("_"):
@@ -913,7 +905,7 @@ def main() -> None:
                     raise RuntimeError(f"Missing callable table link for {module}.{s.name}")
                 if f"../../api/reference/{module}/{s.name}.md" in "\n".join(lines):
                     raise RuntimeError(
-                        f"Found deprecated module-path public link for {module}.{s.name}; expected public reference slug path."
+                        f"Found obsolete module-path public link for {module}.{s.name}; expected public reference slug path."
                     )
         for helper in internal_fns:
             helper_target = internal_helper_link(actual_module, helper)
@@ -1138,13 +1130,11 @@ def main() -> None:
     ref = [
         "# Function Reference",
         "",
-        "Use this page as a function lookup after you understand the notebook flow.",
+        "Use this page as a function lookup after you understand the notebook flow. The default catalogue shows public v1 callables that notebook authors can import from the package root; the Template Function Map shows where those callables are used in starter templates; Implementation Modules show the active source modules that maintainers debug and extend.",
         "",
         "- Use [Template Function Map](template-function-map.md) to see what notebook users call from the starter notebook templates.",
         "- Use the Function catalogue below to browse the public v1 callables by default; enable Internal for package helpers.",
         "- Use Implementation Modules only when debugging or maintaining current major source boundaries; they do not document every `.py` file.",
-        "",
-        "> Graph exploration is intentionally deferred. Future PR may use Neo4j or a proper graph backend.",
         "",
     ]
 
@@ -1152,13 +1142,13 @@ def main() -> None:
         [
             "## Find a function",
             "",
-            "Use the finder below to look up callable and internal FabricOps functions.",
+            "Use the finder below to look up public callables and internal support functions from active v1 modules.",
             "",
             '<div class="callable-finder" data-callable-finder>',
             '  <label class="callable-finder-label" for="callable-finder-input">Search functions</label>',
             '  <input id="callable-finder-input" class="callable-finder-input" type="search" placeholder="Search functions" aria-describedby="callable-finder-help callable-finder-status callable-finder-examples" autocomplete="off">',
             '  <p id="callable-finder-help" class="callable-finder-help">Search by function name, module, function type, starter path, or description.</p>',
-            '  <p id="callable-finder-examples" class="callable-finder-examples">Try: <span class="callable-finder-chip">csv</span> <span class="callable-finder-chip">data_quality</span> <span class="callable-finder-chip">quarantine</span></p>',
+            '  <p id="callable-finder-examples" class="callable-finder-examples">Try: <span class="callable-finder-chip">csv</span> <span class="callable-finder-chip">dq_rules</span> <span class="callable-finder-chip">quarantine</span></p>',
             '  <p id="callable-finder-status" class="callable-finder-status" aria-live="polite">Showing callable functions.</p>',
             '  <fieldset class="callable-type-filters">',
             '    <legend>Function type filters</legend>',

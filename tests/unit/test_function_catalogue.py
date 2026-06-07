@@ -20,7 +20,7 @@ def test_function_catalogue_uses_callable_internal_filters() -> None:
     page = _reference_index()
 
     assert "## Find a function" in page
-    assert "Use the finder below to look up callable and internal FabricOps functions." in page
+    assert "Use the finder below to look up public callables and internal support functions from active v1 modules." in page
     assert "Search functions" in page
     assert 'placeholder="Search functions"' in page
     assert "Function type filters" in page

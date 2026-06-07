@@ -1,6 +1,6 @@
 # Metadata tables
 
-FabricOps metadata tables live in the Governance workspace `metadata_lakehouse`. They coordinate the notebook workflow and keep metadata evidence available for review, handover, and future visibility.
+FabricOps metadata tables live in the Governance workspace `metadata_lakehouse`. They coordinate the notebook workflow and keep metadata evidence available for review, support, and visibility.
 
 `00_env_config` creates every active metadata table on first run and validates the expected schemas on later runs. Most users should not create or edit these schemas by hand.
 
@@ -275,7 +275,6 @@ Fabric Delta tables do not enforce primary and foreign keys. FabricOps still use
 | `lower_bound` | Optional minimum value. |
 | `upper_bound` | Optional maximum value. |
 | `regex_pattern` | Optional regular expression. |
-| `rule_json` | Executable rule payload. |
 | `status` | Review status. |
 | `is_active` | Active rule state. |
 | `action_type` | Lifecycle action. |
@@ -307,7 +306,7 @@ Fabric Delta tables do not enforce primary and foreign keys. FabricOps still use
 | `approval_status` | Review state. |
 | `ai_suggestion_json` | Optional full AI suggestion payload. |
 
-**Workflow connection:** classification supports review, handover, and future visibility. It does not enforce masking or access behavior unless a later `02_pipeline` or access process is built to use it. Includes the standard runtime audit columns.
+**Workflow connection:** classification supports review and support visibility. It does not enforce masking or access behavior unless a later `02_pipeline` or access process is built to use it. Includes the standard runtime audit columns.
 
 ## Important boundaries
 

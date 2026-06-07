@@ -63,7 +63,7 @@ markers = [
 
 [tool.ruff]
 line-length = 120
-extend-exclude = ["examples/notebooks", "templates/notebooks"]
+extend-exclude = ["templates/notebooks"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I"]

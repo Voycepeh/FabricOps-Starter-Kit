@@ -697,7 +697,7 @@ def _latest_dq_rule_versions(metadata_df, table_name: str):
 
 
 def _load_active_dq_rules(metadata_df, table_name: str) -> list[dict[str, Any]]:
-    """Load active DQ rules from current v1 metadata, falling back to legacy rule_json."""
+    """Load active DQ rules from current v1 metadata rows."""
     _, F, _ = _spark_sql_helpers()
     columns = set(getattr(metadata_df, "columns", []))
     latest = _latest_dq_rule_versions(metadata_df, table_name)
@@ -710,9 +710,6 @@ def _load_active_dq_rules(metadata_df, table_name: str) -> list[dict[str, Any]]:
 
     rules: list[dict[str, Any]] = []
     for row in _coerce_rows(latest.collect()):
-        if row.get("rule_json"):
-            rules.append(json.loads(row["rule_json"]))
-            continue
         params_raw = row.get("rule_parameters_json") or "{}"
         try:
             params = json.loads(params_raw) if isinstance(params_raw, str) else dict(params_raw)
