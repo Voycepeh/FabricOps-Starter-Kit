@@ -1424,18 +1424,6 @@
     "summary": "Profile a source or target DataFrame for schema, quality, and catalogue evidence."
   },
   {
-    "id": "fabricops_kit.drift.IncrementalSafetyError",
-    "name": "IncrementalSafetyError",
-    "qualified_name": "fabricops_kit.drift.IncrementalSafetyError",
-    "module": "drift",
-    "classification": "Internal",
-    "inbound": [],
-    "outbound": [],
-    "source_path": "src/fabricops_kit/drift.py",
-    "docs_path": "reference/internal/drift_IncrementalSafetyError.md",
-    "summary": "No summary available."
-  },
-  {
     "id": "fabricops_kit.drift.SchemaDriftError",
     "name": "SchemaDriftError",
     "qualified_name": "fabricops_kit.drift.SchemaDriftError",
@@ -1447,18 +1435,6 @@
     "outbound": [],
     "source_path": "src/fabricops_kit/drift.py",
     "docs_path": "reference/internal/drift_SchemaDriftError.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.drift.UnsupportedDataFrameEngineError",
-    "name": "UnsupportedDataFrameEngineError",
-    "qualified_name": "fabricops_kit.drift.UnsupportedDataFrameEngineError",
-    "module": "drift",
-    "classification": "Internal",
-    "inbound": [],
-    "outbound": [],
-    "source_path": "src/fabricops_kit/drift.py",
-    "docs_path": "reference/internal/drift_UnsupportedDataFrameEngineError.md",
     "summary": "No summary available."
   },
   {

@@ -1747,20 +1747,6 @@
       ],
       "internal_helper_count": 3
     },
-    "fabricops_kit.drift.IncrementalSafetyError": {
-      "qualified_name": "fabricops_kit.drift.IncrementalSafetyError",
-      "short_name": "IncrementalSafetyError",
-      "module": "drift",
-      "callable": "IncrementalSafetyError",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/drift/IncrementalSafetyError/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
     "fabricops_kit.drift.SchemaDriftError": {
       "qualified_name": "fabricops_kit.drift.SchemaDriftError",
       "short_name": "SchemaDriftError",
@@ -1774,20 +1760,6 @@
         "fabricops_kit.drift.stop_if_failed"
       ],
       "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.drift.UnsupportedDataFrameEngineError": {
-      "qualified_name": "fabricops_kit.drift.UnsupportedDataFrameEngineError",
-      "short_name": "UnsupportedDataFrameEngineError",
-      "module": "drift",
-      "callable": "UnsupportedDataFrameEngineError",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/drift/UnsupportedDataFrameEngineError/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [],
-      "used_by_count": 0,
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },

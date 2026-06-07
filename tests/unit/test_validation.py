@@ -129,12 +129,5 @@ def test_drift_public_surface_keeps_compatibility_exceptions_unexported():
     }
 
     assert exported_from_drift == public_drift_callables
-    assert "UnsupportedDataFrameEngineError" not in fabricops_kit.__all__
-    assert "IncrementalSafetyError" not in fabricops_kit.__all__
-    assert not hasattr(fabricops_kit, "UnsupportedDataFrameEngineError")
-    assert not hasattr(fabricops_kit, "IncrementalSafetyError")
-
-    assert issubclass(drift.UnsupportedDataFrameEngineError, ValueError)
-    assert issubclass(drift.IncrementalSafetyError, Exception)
     assert not hasattr(drift, "_check_partition_drift")
     assert not hasattr(drift, "_build_partition_snapshot")

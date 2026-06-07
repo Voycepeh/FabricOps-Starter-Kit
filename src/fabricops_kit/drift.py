@@ -23,28 +23,6 @@ class SchemaDriftError(Exception):
     """
 
 
-class UnsupportedDataFrameEngineError(ValueError):
-    """Compatibility error for unsupported dataframe engine detection.
-
-    Notes
-    -----
-    Advanced dataframe-engine helper paths were removed from the v1 drift
-    guardrail flow, but the exception remains import-compatible for callers
-    and generated references that documented the internal type before v1.0.0.
-    """
-
-
-class IncrementalSafetyError(Exception):
-    """Compatibility error for removed incremental partition safety helpers.
-
-    Notes
-    -----
-    Incremental partition safety helper paths were removed because they are not
-    active in the public v1 guardrail flow. The exception remains available for
-    compatibility with previously documented internal imports.
-    """
-
-
 def _normalize_datatype(data_type) -> str:
     raw = str(data_type).strip().lower()
     raw = re.sub(r"\s+", "", raw)
