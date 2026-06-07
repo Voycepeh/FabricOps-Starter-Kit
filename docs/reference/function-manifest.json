@@ -2592,24 +2592,10 @@
       "fabricops_kit.governance_review._build_dq_rule_records"
     ],
     "outbound": [
-      "fabricops_kit.metadata._sha256_key"
+      "fabricops_kit.metadata._stable_metadata_key"
     ],
     "source_path": "src/fabricops_kit/metadata.py",
     "docs_path": "reference/internal/metadata__build_dq_rule_key.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.metadata._build_evidence_row",
-    "name": "_build_evidence_row",
-    "qualified_name": "fabricops_kit.metadata._build_evidence_row",
-    "module": "metadata",
-    "classification": "Internal",
-    "inbound": [],
-    "outbound": [
-      "fabricops_kit.metadata._now_utc_iso"
-    ],
-    "source_path": "src/fabricops_kit/metadata.py",
-    "docs_path": "reference/internal/metadata__build_evidence_row.md",
     "summary": "No summary available."
   },
   {
@@ -2622,7 +2608,7 @@
       "fabricops_kit.governance_review._approved_column_identity"
     ],
     "outbound": [
-      "fabricops_kit.metadata._sha256_key"
+      "fabricops_kit.metadata._stable_metadata_key"
     ],
     "source_path": "src/fabricops_kit/metadata.py",
     "docs_path": "reference/internal/metadata__build_metadata_column_key.md",
@@ -2640,7 +2626,7 @@
       "fabricops_kit.governance_review.load_catalogue_profile_rows"
     ],
     "outbound": [
-      "fabricops_kit.metadata._sha256_key"
+      "fabricops_kit.metadata._stable_metadata_key"
     ],
     "source_path": "src/fabricops_kit/metadata.py",
     "docs_path": "reference/internal/metadata__build_metadata_table_key.md",
@@ -2674,45 +2660,12 @@
     "module": "metadata",
     "classification": "Internal",
     "inbound": [
-      "fabricops_kit.metadata._column_names",
       "fabricops_kit.metadata._registry_rows_with_defaults",
       "fabricops_kit.metadata._setup_notebook_registry_table"
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/metadata.py",
     "docs_path": "reference/internal/metadata__coerce_row_dicts.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.metadata._column_context_rows_for_spark",
-    "name": "_column_context_rows_for_spark",
-    "qualified_name": "fabricops_kit.metadata._column_context_rows_for_spark",
-    "module": "metadata",
-    "classification": "Internal",
-    "inbound": [
-      "fabricops_kit.metadata._register_current_notebook",
-      "fabricops_kit.metadata._setup_notebook_registry_table",
-      "fabricops_kit.metadata._write_metadata_rows"
-    ],
-    "outbound": [],
-    "source_path": "src/fabricops_kit/metadata.py",
-    "docs_path": "reference/internal/metadata__column_context_rows_for_spark.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.metadata._column_names",
-    "name": "_column_names",
-    "qualified_name": "fabricops_kit.metadata._column_names",
-    "module": "metadata",
-    "classification": "Internal",
-    "inbound": [
-      "fabricops_kit.metadata._setup_notebook_registry_table"
-    ],
-    "outbound": [
-      "fabricops_kit.metadata._coerce_row_dicts"
-    ],
-    "source_path": "src/fabricops_kit/metadata.py",
-    "docs_path": "reference/internal/metadata__column_names.md",
     "summary": "No summary available."
   },
   {
@@ -2753,75 +2706,6 @@
     "summary": "No summary available."
   },
   {
-    "id": "fabricops_kit.metadata._default_evidence_types",
-    "name": "_default_evidence_types",
-    "qualified_name": "fabricops_kit.metadata._default_evidence_types",
-    "module": "metadata",
-    "classification": "Internal",
-    "inbound": [],
-    "outbound": [],
-    "source_path": "src/fabricops_kit/metadata.py",
-    "docs_path": "reference/internal/metadata__default_evidence_types.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.metadata._extract_columns_from_profile",
-    "name": "_extract_columns_from_profile",
-    "qualified_name": "fabricops_kit.metadata._extract_columns_from_profile",
-    "module": "metadata",
-    "classification": "Internal",
-    "inbound": [],
-    "outbound": [],
-    "source_path": "src/fabricops_kit/metadata.py",
-    "docs_path": "reference/internal/metadata__extract_columns_from_profile.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.metadata._get_notebook_registry_schema",
-    "name": "_get_notebook_registry_schema",
-    "qualified_name": "fabricops_kit.metadata._get_notebook_registry_schema",
-    "module": "metadata",
-    "classification": "Internal",
-    "inbound": [
-      "fabricops_kit.metadata._setup_notebook_registry_table"
-    ],
-    "outbound": [],
-    "source_path": "src/fabricops_kit/metadata.py",
-    "docs_path": "reference/internal/metadata__get_notebook_registry_schema.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.metadata._key_part",
-    "name": "_key_part",
-    "qualified_name": "fabricops_kit.metadata._key_part",
-    "module": "metadata",
-    "classification": "Internal",
-    "inbound": [
-      "fabricops_kit.metadata._sha256_key"
-    ],
-    "outbound": [],
-    "source_path": "src/fabricops_kit/metadata.py",
-    "docs_path": "reference/internal/metadata__key_part.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.metadata._latest_registration_events",
-    "name": "_latest_registration_events",
-    "qualified_name": "fabricops_kit.metadata._latest_registration_events",
-    "module": "metadata",
-    "classification": "Internal",
-    "inbound": [
-      "fabricops_kit.metadata._load_notebook_registry"
-    ],
-    "outbound": [
-      "fabricops_kit.metadata._notebook_registration_key",
-      "fabricops_kit.metadata._registry_rows_with_defaults"
-    ],
-    "source_path": "src/fabricops_kit/metadata.py",
-    "docs_path": "reference/internal/metadata__latest_registration_events.md",
-    "summary": "No summary available."
-  },
-  {
     "id": "fabricops_kit.metadata._load_notebook_registry",
     "name": "_load_notebook_registry",
     "qualified_name": "fabricops_kit.metadata._load_notebook_registry",
@@ -2832,23 +2716,11 @@
     ],
     "outbound": [
       "fabricops_kit.fabric_input_output.read_lakehouse_table",
-      "fabricops_kit.metadata._latest_registration_events",
+      "fabricops_kit.metadata._notebook_registration_key",
       "fabricops_kit.metadata._registry_rows_with_defaults"
     ],
     "source_path": "src/fabricops_kit/metadata.py",
     "docs_path": "reference/internal/metadata__load_notebook_registry.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.metadata._normalise_records_by_column",
-    "name": "_normalise_records_by_column",
-    "qualified_name": "fabricops_kit.metadata._normalise_records_by_column",
-    "module": "metadata",
-    "classification": "Internal",
-    "inbound": [],
-    "outbound": [],
-    "source_path": "src/fabricops_kit/metadata.py",
-    "docs_path": "reference/internal/metadata__normalise_records_by_column.md",
     "summary": "No summary available."
   },
   {
@@ -2858,26 +2730,13 @@
     "module": "metadata",
     "classification": "Internal",
     "inbound": [
-      "fabricops_kit.metadata._latest_registration_events",
+      "fabricops_kit.metadata._load_notebook_registry",
       "fabricops_kit.metadata._register_current_notebook",
-      "fabricops_kit.metadata._registry_rows_with_defaults",
-      "fabricops_kit.metadata._setup_notebook_registry_table"
+      "fabricops_kit.metadata._registry_rows_with_defaults"
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/metadata.py",
     "docs_path": "reference/internal/metadata__notebook_registration_key.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.metadata._notebook_registry_base_schema",
-    "name": "_notebook_registry_base_schema",
-    "qualified_name": "fabricops_kit.metadata._notebook_registry_base_schema",
-    "module": "metadata",
-    "classification": "Internal",
-    "inbound": [],
-    "outbound": [],
-    "source_path": "src/fabricops_kit/metadata.py",
-    "docs_path": "reference/internal/metadata__notebook_registry_base_schema.md",
     "summary": "No summary available."
   },
   {
@@ -2887,8 +2746,7 @@
     "module": "metadata",
     "classification": "Internal",
     "inbound": [
-      "fabricops_kit.governance_review._approved_review_context",
-      "fabricops_kit.metadata._build_evidence_row"
+      "fabricops_kit.governance_review._approved_review_context"
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/metadata.py",
@@ -2906,12 +2764,11 @@
     ],
     "outbound": [
       "fabricops_kit.fabric_input_output.write_lakehouse_table",
-      "fabricops_kit.metadata._column_context_rows_for_spark",
       "fabricops_kit.metadata._context_get",
       "fabricops_kit.metadata._notebook_registration_key",
+      "fabricops_kit.metadata._rows_for_spark",
       "fabricops_kit.metadata._runtime_context",
-      "fabricops_kit.metadata._safe_str",
-      "fabricops_kit.metadata._write_metadata_rows_legacy"
+      "fabricops_kit.metadata._safe_str"
     ],
     "source_path": "src/fabricops_kit/metadata.py",
     "docs_path": "reference/internal/metadata__register_current_notebook.md",
@@ -2924,8 +2781,8 @@
     "module": "metadata",
     "classification": "Internal",
     "inbound": [
-      "fabricops_kit.metadata._latest_registration_events",
-      "fabricops_kit.metadata._load_notebook_registry"
+      "fabricops_kit.metadata._load_notebook_registry",
+      "fabricops_kit.metadata._setup_notebook_registry_table"
     ],
     "outbound": [
       "fabricops_kit.metadata._coerce_row_dicts",
@@ -2951,6 +2808,21 @@
     ],
     "source_path": "src/fabricops_kit/metadata.py",
     "docs_path": "reference/internal/metadata__resolve_action_by.md",
+    "summary": "No summary available."
+  },
+  {
+    "id": "fabricops_kit.metadata._rows_for_spark",
+    "name": "_rows_for_spark",
+    "qualified_name": "fabricops_kit.metadata._rows_for_spark",
+    "module": "metadata",
+    "classification": "Internal",
+    "inbound": [
+      "fabricops_kit.metadata._register_current_notebook",
+      "fabricops_kit.metadata._setup_notebook_registry_table"
+    ],
+    "outbound": [],
+    "source_path": "src/fabricops_kit/metadata.py",
+    "docs_path": "reference/internal/metadata__rows_for_spark.md",
     "summary": "No summary available."
   },
   {
@@ -2982,8 +2854,7 @@
       "fabricops_kit.metadata._build_runtime_audit_fields",
       "fabricops_kit.metadata._current_notebook_active_registrations",
       "fabricops_kit.metadata._register_current_notebook",
-      "fabricops_kit.metadata._registry_rows_with_defaults",
-      "fabricops_kit.metadata._setup_notebook_registry_table"
+      "fabricops_kit.metadata._registry_rows_with_defaults"
     ],
     "outbound": [],
     "source_path": "src/fabricops_kit/metadata.py",
@@ -3003,20 +2874,17 @@
       "fabricops_kit.fabric_input_output.read_lakehouse_table",
       "fabricops_kit.fabric_input_output.write_lakehouse_table",
       "fabricops_kit.metadata._coerce_row_dicts",
-      "fabricops_kit.metadata._column_context_rows_for_spark",
-      "fabricops_kit.metadata._column_names",
-      "fabricops_kit.metadata._get_notebook_registry_schema",
-      "fabricops_kit.metadata._notebook_registration_key",
-      "fabricops_kit.metadata._safe_str"
+      "fabricops_kit.metadata._registry_rows_with_defaults",
+      "fabricops_kit.metadata._rows_for_spark"
     ],
     "source_path": "src/fabricops_kit/metadata.py",
     "docs_path": "reference/internal/metadata__setup_notebook_registry_table.md",
     "summary": "No summary available."
   },
   {
-    "id": "fabricops_kit.metadata._sha256_key",
-    "name": "_sha256_key",
-    "qualified_name": "fabricops_kit.metadata._sha256_key",
+    "id": "fabricops_kit.metadata._stable_metadata_key",
+    "name": "_stable_metadata_key",
+    "qualified_name": "fabricops_kit.metadata._stable_metadata_key",
     "module": "metadata",
     "classification": "Internal",
     "inbound": [
@@ -3024,72 +2892,9 @@
       "fabricops_kit.metadata._build_metadata_column_key",
       "fabricops_kit.metadata._build_metadata_table_key"
     ],
-    "outbound": [
-      "fabricops_kit.metadata._key_part"
-    ],
-    "source_path": "src/fabricops_kit/metadata.py",
-    "docs_path": "reference/internal/metadata__sha256_key.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.metadata._write_column_business_context",
-    "name": "_write_column_business_context",
-    "qualified_name": "fabricops_kit.metadata._write_column_business_context",
-    "module": "metadata",
-    "classification": "Internal",
-    "inbound": [],
-    "outbound": [
-      "fabricops_kit.metadata._write_metadata_rows"
-    ],
-    "source_path": "src/fabricops_kit/metadata.py",
-    "docs_path": "reference/internal/metadata__write_column_business_context.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.metadata._write_column_governance_context",
-    "name": "_write_column_governance_context",
-    "qualified_name": "fabricops_kit.metadata._write_column_governance_context",
-    "module": "metadata",
-    "classification": "Internal",
-    "inbound": [],
-    "outbound": [
-      "fabricops_kit.metadata._write_metadata_rows"
-    ],
-    "source_path": "src/fabricops_kit/metadata.py",
-    "docs_path": "reference/internal/metadata__write_column_governance_context.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.metadata._write_metadata_rows",
-    "name": "_write_metadata_rows",
-    "qualified_name": "fabricops_kit.metadata._write_metadata_rows",
-    "module": "metadata",
-    "classification": "Internal",
-    "inbound": [
-      "fabricops_kit.metadata._write_column_business_context",
-      "fabricops_kit.metadata._write_column_governance_context"
-    ],
-    "outbound": [
-      "fabricops_kit.metadata._column_context_rows_for_spark",
-      "fabricops_kit.metadata._write_metadata_rows_legacy"
-    ],
-    "source_path": "src/fabricops_kit/metadata.py",
-    "docs_path": "reference/internal/metadata__write_metadata_rows.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.metadata._write_metadata_rows_legacy",
-    "name": "_write_metadata_rows_legacy",
-    "qualified_name": "fabricops_kit.metadata._write_metadata_rows_legacy",
-    "module": "metadata",
-    "classification": "Internal",
-    "inbound": [
-      "fabricops_kit.metadata._register_current_notebook",
-      "fabricops_kit.metadata._write_metadata_rows"
-    ],
     "outbound": [],
     "source_path": "src/fabricops_kit/metadata.py",
-    "docs_path": "reference/internal/metadata__write_metadata_rows_legacy.md",
+    "docs_path": "reference/internal/metadata__stable_metadata_key.md",
     "summary": "No summary available."
   }
 ]

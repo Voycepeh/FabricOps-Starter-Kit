@@ -20,8 +20,8 @@ No summary available.
 - Outbound references count: 3
 
 ## Inbound references
-- <a href="../internal/metadata/_latest_registration_events/"><code>fabricops_kit.metadata._latest_registration_events</code></a>
 - <a href="../internal/metadata/_load_notebook_registry/"><code>fabricops_kit.metadata._load_notebook_registry</code></a>
+- <a href="../internal/metadata/_setup_notebook_registry_table/"><code>fabricops_kit.metadata._setup_notebook_registry_table</code></a>
 
 ## Outbound references
 - <a href="../internal/metadata/_coerce_row_dicts/"><code>fabricops_kit.metadata._coerce_row_dicts</code></a>
