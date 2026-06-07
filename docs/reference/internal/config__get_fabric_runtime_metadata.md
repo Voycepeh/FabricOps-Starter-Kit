@@ -16,9 +16,8 @@ No summary available.
 - Related module: `config`
 - Source file path: `src/fabricops_kit/config.py`
 - Source reference: <a href="../../api/modules/config/#_get_fabric_runtime_metadata">Module source anchor</a>
-- Inbound references count: 2
+- Inbound references count: 1
 - Outbound references count: 0
 
 ## Inbound references
-- <a href="../internal/config/_bootstrap_fabric_env/"><code>fabricops_kit.config._bootstrap_fabric_env</code></a>
 - <a href="../internal/config/_run_config_smoke_tests/"><code>fabricops_kit.config._run_config_smoke_tests</code></a>

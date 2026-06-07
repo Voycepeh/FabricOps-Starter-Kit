@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 2</span><span class="reference-chip">Internal helpers: 17</span><span class="reference-chip">Outbound: 3</span><span class="reference-chip">Inbound: 2</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 2</span><span class="reference-chip">Internal helpers: 13</span><span class="reference-chip">Outbound: 3</span><span class="reference-chip">Inbound: 2</span></div>
 
 ## Module purpose
 
@@ -40,7 +40,7 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>17</td>
+      <td>13</td>
     </tr>
     <tr>
       <td>Inbound module count</td>
@@ -137,19 +137,7 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/config/_bootstrap_fabric_env/"><code>_bootstrap_fabric_env</code></a></td>
-      <td>—</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/internal/config/_check_fabric_ai_functions_available/"><code>_check_fabric_ai_functions_available</code></a></td>
-      <td>—</td>
-    </tr>
-    <tr>
       <td><a href="../../reference/internal/config/_check_spark_session/"><code>_check_spark_session</code></a></td>
-      <td>—</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/internal/config/_configure_fabric_ai_functions/"><code>_configure_fabric_ai_functions</code></a></td>
       <td>—</td>
     </tr>
     <tr>
@@ -181,10 +169,6 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/config/_normalize_name/"><code>_normalize_name</code></a></td>
-      <td>—</td>
-    </tr>
-    <tr>
       <td><a href="../../reference/internal/config/_run_config_smoke_tests/"><code>_run_config_smoke_tests</code></a></td>
       <td><a href="../../reference/setup_notebook/"><code>setup_notebook</code></a></td>
     </tr>
@@ -212,18 +196,7 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
 <a class="reference-chip" href="#_validate_dataset_contract"><code>_validate_dataset_contract</code></a>
 </li>
 <li>
-<a class="reference-chip" href="#_bootstrap_fabric_env"><code>_bootstrap_fabric_env</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_get_fabric_runtime_metadata"><code>_get_fabric_runtime_metadata</code></a>, <a class="reference-chip" href="#_get_store"><code>_get_store</code></a>, <a class="reference-chip" href="#_run_config_smoke_tests"><code>_run_config_smoke_tests</code></a>, <a class="reference-chip" href="#_validate_framework_config"><code>_validate_framework_config</code></a>
-</li>
-<li>
-<a class="reference-chip" href="#_check_fabric_ai_functions_available"><code>_check_fabric_ai_functions_available</code></a>
-</li>
-<li>
 <a class="reference-chip" href="#_check_spark_session"><code>_check_spark_session</code></a>
-</li>
-<li>
-<a class="reference-chip" href="#_configure_fabric_ai_functions"><code>_configure_fabric_ai_functions</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_default_schema_text"><code>_default_schema_text</code></a>
@@ -251,9 +224,6 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
 <a class="reference-chip" href="#_default_schema_text"><code>_default_schema_text</code></a>
 </li>
 <li>
-<a class="reference-chip" href="#_normalize_name"><code>_normalize_name</code></a>
-</li>
-<li>
 <a class="reference-chip" href="#_run_config_smoke_tests"><code>_run_config_smoke_tests</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_check_spark_session"><code>_check_spark_session</code></a>, <a class="reference-chip" href="#_get_fabric_runtime_metadata"><code>_get_fabric_runtime_metadata</code></a>, <a class="reference-chip" href="#_get_store"><code>_get_store</code></a>, <a class="reference-chip" href="#_validate_notebook_name"><code>_validate_notebook_name</code></a>
@@ -268,8 +238,6 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
 </li>
 <li>
 <a class="reference-chip" href="#_validate_notebook_name"><code>_validate_notebook_name</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_normalize_name"><code>_normalize_name</code></a>
 </li>
 </ul>
 </details>

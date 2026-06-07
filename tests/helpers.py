@@ -35,6 +35,7 @@ def framework_config() -> FrameworkConfig:
                 "dev": {
                     "source": store("lakehouse", name="lh_source_dev"),
                     "unified": store("lakehouse", name="lh_unified_dev"),
+                    "product": store("warehouse", name="wh_product_dev"),
                     "metadata": store("lakehouse", name="lh_metadata_dev"),
                     "warehouse": store("warehouse", name="wh_product_dev"),
                 }
@@ -79,7 +80,9 @@ def agreement_config(*, metadata_tables: dict[str, str] | None = None) -> Simple
                     "approved_usage_external",
                     "approved_usage_research",
                 ],
-                "custom_fields": [{"key": "consumer_group", "label": "Consumer group", "type": "select", "options": ["ODI"]}],
+                "custom_fields": [
+                    {"key": "consumer_group", "label": "Consumer group", "type": "select", "options": ["ODI"]}
+                ],
             },
             steward_role_options=["Data Owner", "Data Steward", "Governance Reviewer"],
         ),

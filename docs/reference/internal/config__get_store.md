@@ -16,11 +16,10 @@ No summary available.
 - Related module: `config`
 - Source file path: `src/fabricops_kit/config.py`
 - Source reference: <a href="../../api/modules/config/#_get_store">Module source anchor</a>
-- Inbound references count: 10
+- Inbound references count: 9
 - Outbound references count: 0
 
 ## Inbound references
-- <a href="../internal/config/_bootstrap_fabric_env/"><code>fabricops_kit.config._bootstrap_fabric_env</code></a>
 - <a href="../internal/config/_run_config_smoke_tests/"><code>fabricops_kit.config._run_config_smoke_tests</code></a>
 - <a href="../setup_notebook/"><code>fabricops_kit.config.setup_notebook</code></a>
 - <a href="../read_lakehouse_csv/"><code>fabricops_kit.fabric_input_output.read_lakehouse_csv</code></a>

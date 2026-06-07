@@ -348,15 +348,6 @@ Use the finder below to look up callable and internal FabricOps functions.
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>monitor_data_changes</code></li></ul></details>
   </div>
 </article>
-<article id="config-_bootstrap_fabric_env" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_bootstrap_fabric_env" data-callable-module="config" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Bootstrap 00_env_config environment readiness for FabricOps notebooks.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/config__bootstrap_fabric_env/"><code>_bootstrap_fabric_env</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Bootstrap 00_env_config environment readiness for FabricOps notebooks.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/config/" title="Open config module page" aria-label="Open config module page">config</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 5</span></summary><ul><li><code>ConfigBootstrapResult</code></li><li><code>_get_fabric_runtime_metadata</code></li><li><code>_get_store</code></li><li><code>_run_config_smoke_tests</code></li><li><code>_validate_framework_config</code></li></ul></details>
-
-  </div>
-</article>
 <article id="data_profiling-_build_categorical_distribution" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_build_categorical_distribution" data-callable-module="data_profiling" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Internal helper used by the package.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/data_profiling__build_categorical_distribution/"><code>_build_categorical_distribution</code></a></h3>
   <p class="reference-catalogue-item-purpose">Internal helper used by the package.</p>
@@ -501,15 +492,6 @@ Use the finder below to look up callable and internal FabricOps functions.
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_check_profile_drift</code></li></ul></details>
   </div>
 </article>
-<article id="config-_check_fabric_ai_functions_available" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_check_fabric_ai_functions_available" data-callable-module="config" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Check whether Fabric AI Functions can be imported in the current runtime.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/config__check_fabric_ai_functions_available/"><code>_check_fabric_ai_functions_available</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Check whether Fabric AI Functions can be imported in the current runtime.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/config/" title="Open config module page" aria-label="Open config module page">config</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
-
-
-  </div>
-</article>
 <article id="fabric_input_output-_check_naming_convention" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_check_naming_convention" data-callable-module="fabric_input_output" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Check whether a Fabric notebook name starts with an allowed prefix.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/fabric_input_output__check_naming_convention/"><code>_check_naming_convention</code></a></h3>
   <p class="reference-catalogue-item-purpose">Check whether a Fabric notebook name starts with an allowed prefix.</p>
@@ -580,15 +562,6 @@ Use the finder below to look up callable and internal FabricOps functions.
   <div class="reference-catalogue-item-counts">
 
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 8</span></summary><ul><li><code>_create_or_update_data_agreement</code></li><li><code>_create_or_update_data_steward</code></li><li><code>_ensure_metadata_tables</code></li><li><code>_get_widget_visible_fields</code></li><li><code>_list_all_data_agreement_rows</code></li><li><code>_list_data_stewards</code></li><li><code>_render_maintenance_widget</code></li><li><code>_save_agreement_evidence_records</code></li></ul></details>
-  </div>
-</article>
-<article id="config-_configure_fabric_ai_functions" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_configure_fabric_ai_functions" data-callable-module="config" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Apply optional default Fabric AI Function configuration.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/config__configure_fabric_ai_functions/"><code>_configure_fabric_ai_functions</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Apply optional default Fabric AI Function configuration.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/config/" title="Open config module page" aria-label="Open config module page">config</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
-
-
   </div>
 </article>
 <article id="metadata-_context_get" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_context_get" data-callable-module="metadata" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Internal helper used by the package.">
@@ -786,7 +759,7 @@ Use the finder below to look up callable and internal FabricOps functions.
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/config/" title="Open config module page" aria-label="Open config module page">config</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
 
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 2</span></summary><ul><li><code>_bootstrap_fabric_env</code></li><li><code>_run_config_smoke_tests</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_run_config_smoke_tests</code></li></ul></details>
   </div>
 </article>
 <article id="governance_review-_get_governance_metadata_schemas" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_get_governance_metadata_schemas" data-callable-module="governance_review" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Return typed Spark schemas prepared by ``00_env_config`` for governance.">
@@ -831,7 +804,7 @@ Use the finder below to look up callable and internal FabricOps functions.
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/config/" title="Open config module page" aria-label="Open config module page">config</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
 
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 10</span></summary><ul><li><code>_bootstrap_fabric_env</code></li><li><code>_run_config_smoke_tests</code></li><li><code>setup_notebook</code></li><li><code>read_lakehouse_csv</code></li><li><code>read_lakehouse_excel</code></li><li><code>read_lakehouse_parquet</code></li><li><code>read_lakehouse_table</code></li><li><code>read_warehouse_table</code></li><li><code>write_lakehouse_table</code></li><li><code>write_warehouse_table</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 9</span></summary><ul><li><code>_run_config_smoke_tests</code></li><li><code>setup_notebook</code></li><li><code>read_lakehouse_csv</code></li><li><code>read_lakehouse_excel</code></li><li><code>read_lakehouse_parquet</code></li><li><code>read_lakehouse_table</code></li><li><code>read_warehouse_table</code></li><li><code>write_lakehouse_table</code></li><li><code>write_warehouse_table</code></li></ul></details>
   </div>
 </article>
 <article id="data_agreement-_get_widget_visible_fields" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_get_widget_visible_fields" data-callable-module="data_agreement" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Return configured editable columns without backend audit fields.">
@@ -1023,15 +996,6 @@ Use the finder below to look up callable and internal FabricOps functions.
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 2</span></summary><ul><li><code>_actual_schema</code></li><li><code>validate_schema</code></li></ul></details>
   </div>
 </article>
-<article id="config-_normalize_name" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_normalize_name" data-callable-module="config" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Internal helper used by the package.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/config__normalize_name/"><code>_normalize_name</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Internal helper used by the package.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/config/" title="Open config module page" aria-label="Open config module page">config</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
-
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_validate_notebook_name</code></li></ul></details>
-  </div>
-</article>
 <article id="drift-_normalize_profile" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_normalize_profile" data-callable-module="drift" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Internal helper used by the package.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/drift__normalize_profile/"><code>_normalize_profile</code></a></h3>
   <p class="reference-catalogue-item-purpose">Internal helper used by the package.</p>
@@ -1218,7 +1182,7 @@ Use the finder below to look up callable and internal FabricOps functions.
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/config/" title="Open config module page" aria-label="Open config module page">config</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 5</span></summary><ul><li><code>ConfigSmokeCheckResult</code></li><li><code>_check_spark_session</code></li><li><code>_get_fabric_runtime_metadata</code></li><li><code>_get_store</code></li><li><code>_validate_notebook_name</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 2</span></summary><ul><li><code>_bootstrap_fabric_env</code></li><li><code>setup_notebook</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>setup_notebook</code></li></ul></details>
   </div>
 </article>
 <article id="governance_review-_run_dq_rules" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_run_dq_rules" data-callable-module="governance_review" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Run DQ rules and return rule-level PASS/FAIL evidence.">
@@ -1443,7 +1407,7 @@ Use the finder below to look up callable and internal FabricOps functions.
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/config/" title="Open config module page" aria-label="Open config module page">config</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>FrameworkConfig</code></li><li><code>keys</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 2</span></summary><ul><li><code>_bootstrap_fabric_env</code></li><li><code>setup_notebook</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>setup_notebook</code></li></ul></details>
   </div>
 </article>
 <article id="data_lineage-_validate_lineage_steps" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_validate_lineage_steps" data-callable-module="data_lineage" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Validate lineage step structure and flag records requiring human review.">
@@ -1460,7 +1424,7 @@ Use the finder below to look up callable and internal FabricOps functions.
   <p class="reference-catalogue-item-purpose">Internal helper used by the package.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/config/" title="Open config module page" aria-label="Open config module page">config</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_normalize_name</code></li></ul></details>
+
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_run_config_smoke_tests</code></li></ul></details>
   </div>
 </article>

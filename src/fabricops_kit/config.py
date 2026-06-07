@@ -51,7 +51,13 @@ class PathConfig:
 class NotebookRuntimeConfig:
     """Runtime options used by notebook-oriented helpers."""
 
-    allowed_notebook_prefixes: tuple[str, ...] = ("00_env_config", "01_agreement", "02_pipeline", "03_review", "99_explore")
+    allowed_notebook_prefixes: tuple[str, ...] = (
+        "00_env_config",
+        "01_agreement",
+        "02_pipeline",
+        "03_review",
+        "99_explore",
+    )
 
     def __post_init__(self) -> None:
         prefixes = tuple(prefix.strip() for prefix in self.allowed_notebook_prefixes if str(prefix).strip())
@@ -84,7 +90,6 @@ class AIPromptConfig:
                 raise ValueError(f"{label} must be a non-empty string.")
 
 
-
 DEFAULT_BUSINESS_CONTEXT_PROMPT_TEMPLATE = """
 Infer business meaning only for one column. Do not classify personal data.
 Use table_name={table_name}, table_context={table_context}, column_name={column_name}, data_type={data_type},
@@ -92,88 +97,6 @@ row_count={row_count}, null_count={null_count}, distinct_count={distinct_count},
 Return only Python dict:
 BUSINESS_CONTEXT = {"column_name": "name", "business_context": "clear business meaning", "notes": "optional reviewer note"}
 """.strip()
-
-DEFAULT_DQ_RULE_SUGGESTION_PROMPT_TEMPLATE = """
-You are helping draft candidate FabricOps data quality rules for a pipeline contract notebook.
-
-These suggestions are advisory only.
-A human engineer, data steward, or governance reviewer must approve them before enforcement.
-
-Use only these FabricOps rule_type values:
-
-1. not_null
-   Use when a column must be populated.
-   Required fields:
-   rule_id, rule_type, columns, severity, description
-
-2. unique_key
-   Use when one or more columns define the business grain and must be unique.
-   Required fields:
-   rule_id, rule_type, columns, severity, description
-
-3. accepted_values
-   Use when a column should only contain known business values.
-   Required fields:
-   rule_id, rule_type, columns, allowed_values, severity, description
-
-4. value_range
-   Use when a numeric, date, or timestamp column should stay within a sensible range.
-   Required fields:
-   rule_id, rule_type, columns, lower_bound or upper_bound, severity, description
-
-5. regex_format
-   Use when a string column should match a known format such as email, code, phone, postal code, or ID.
-   Required fields:
-   rule_id, rule_type, columns, regex_pattern, severity, description
-
-Heuristics:
-- Suggest not_null when null_count is 0 or when the column name looks mandatory, such as id, key, date, code, status, amount, or name.
-- Suggest unique_key only when distinct_count is close to row_count and the column name looks like an identifier or business key.
-- Suggest accepted_values when distinct_count is small and the observed values look like business categories.
-- Suggest value_range only when lower_bound and upper_bound are available and the range is business meaningful.
-- Suggest regex_format only for clear format columns such as email, phone, postal_code, programme_code, course_code, invoice_number, or staff_id.
-- Use severity="error" only for rules that should block the pipeline.
-- Use severity="warning" for rules that should be reviewed but should not block the pipeline.
-- Do not suggest unsupported rule types.
-- Do not return Great Expectations, Deequ, DQX, SQL, or pseudocode syntax.
-
-Return only a Python dictionary named DQ_RULES using this shape:
-
-DQ_RULES = {
-    "{table_name}": [
-        {
-            "rule_id": "lower_snake_case_rule_id",
-            "rule_type": "one_supported_rule_type",
-            "columns": ["column_name"],
-            "severity": "error_or_warning",
-            "description": "Plain business explanation."
-        }
-    ]
-}
-
-For accepted_values, include allowed_values.
-For value_range, include lower_bound and/or upper_bound.
-For regex_format, include regex_pattern.
-
-Table name:
-{table_name}
-
-Column profile row:
-Column name: {column_name}
-Data type: {data_type}
-Row count: {row_count}
-Null count: {null_count}
-Null percent: {null_percent}
-Distinct count: {distinct_count}
-Distinct percent: {distinct_percent}
-Minimum value: {min_value}
-Maximum value: {max_value}
-Observed values sample: {observed_values_sample}
-
-Approved business context:
-{approved_business_context}
-"""
-DEFAULT_DQ_RULE_CANDIDATE_TEMPLATE = DEFAULT_DQ_RULE_SUGGESTION_PROMPT_TEMPLATE
 
 DEFAULT_GOVERNANCE_PERSONAL_IDENTIFIER_PROMPT_TEMPLATE = """
 Use approved_business_context as evidence. Classify personal identifier status separately from business context.
@@ -183,27 +106,6 @@ Return only JSON dict with keys:
 column_name, ai_suggested_personal_identifier_classification, confidentiality_label, evidence, reasoning.
 """.strip()
 
-DEFAULT_GOVERNANCE_CANDIDATE_TEMPLATE = (
-    "Generate governance label suggestions from profile metadata. "
-    "Return JSON only with: table_name, column_name, candidate_label, reason, evidence, needs_human_review. "
-    "Allowed candidate_label: public, internal, confidential_candidate, restricted_candidate, unknown. "
-    "Suggestions are for human review and are not deterministic enforcement. "
-    "Dataset name: {dataset_name}. Business context: {business_context}. "
-    "Row profile fields: table_name={table_name}, column_name={column_name}, data_type={data_type}, profile_summary={profile_summary}."
-)
-DEFAULT_GOVERNANCE_REVIEW_TEMPLATE = (
-    "Use business_context={business_context}, approved_usage={approved_usage}, dataset_context={dataset_context}, "
-    "profile_context={profile_context}, glossary_context={glossary_context}, steward_notes={steward_notes}. "
-    "Return JSON rows with suggestion_type,target_column,approved_label,business_reason,evidence,confidence."
-)
-
-DEFAULT_HANDOVER_SUMMARY_TEMPLATE = (
-    "Generate handover summary suggestions. "
-    "Return JSON only with: pipeline_summary, important_transformations, business_reason, handover_notes, risks_or_open_questions. "
-    "Suggestions are for human review and are not deterministic enforcement. "
-    "Business context: {business_context}. "
-    "Row summary field: summary={summary}."
-)
 
 @dataclass(frozen=True)
 class QualityConfig:
@@ -255,7 +157,6 @@ class GovernanceConfig:
         object.__setattr__(self, "sensitivity_rules", dict(self.sensitivity_rules or {}))
 
 
-
 DEFAULT_STEWARD_ROLE_OPTIONS = [
     "Data Owner",
     "Data Steward",
@@ -263,6 +164,7 @@ DEFAULT_STEWARD_ROLE_OPTIONS = [
     "Governance Reviewer",
     "Business Approver",
 ]
+
 
 @dataclass(frozen=True)
 class DataAgreementConfig:
@@ -281,25 +183,42 @@ class DataAgreementConfig:
         ``steward_role`` dropdown.
     """
 
-    metadata_tables: dict[str, str] = field(default_factory=lambda: {
-        "data_steward": "METADATA_DATA_STEWARD",
-        "data_agreement": "METADATA_DATA_AGREEMENT",
-        "data_agreement_evidence": "METADATA_DATA_AGREEMENT_EVIDENCE",
-    })
-    data_steward_widget: dict[str, Any] = field(default_factory=lambda: {
-        "visible_columns": [
-            "steward_name", "steward_role", "contact", "effective_from", "effective_to",
-        ],
-        "custom_fields": [],
-    })
-    data_agreement_widget: dict[str, Any] = field(default_factory=lambda: {
-        "visible_columns": [
-            "agreement_name", "domain", "steward_id", "recipient", "start_date",
-            "expiry_date", "business_purpose", "approved_usage_internal",
-            "approved_usage_external", "approved_usage_research",
-        ],
-        "custom_fields": [],
-    })
+    metadata_tables: dict[str, str] = field(
+        default_factory=lambda: {
+            "data_steward": "METADATA_DATA_STEWARD",
+            "data_agreement": "METADATA_DATA_AGREEMENT",
+            "data_agreement_evidence": "METADATA_DATA_AGREEMENT_EVIDENCE",
+        }
+    )
+    data_steward_widget: dict[str, Any] = field(
+        default_factory=lambda: {
+            "visible_columns": [
+                "steward_name",
+                "steward_role",
+                "contact",
+                "effective_from",
+                "effective_to",
+            ],
+            "custom_fields": [],
+        }
+    )
+    data_agreement_widget: dict[str, Any] = field(
+        default_factory=lambda: {
+            "visible_columns": [
+                "agreement_name",
+                "domain",
+                "steward_id",
+                "recipient",
+                "start_date",
+                "expiry_date",
+                "business_purpose",
+                "approved_usage_internal",
+                "approved_usage_external",
+                "approved_usage_research",
+            ],
+            "custom_fields": [],
+        }
+    )
     steward_role_options: list[str] = field(default_factory=lambda: list(DEFAULT_STEWARD_ROLE_OPTIONS))
 
     def __post_init__(self) -> None:
@@ -399,17 +318,6 @@ class ConfigSmokeCheckResult:
     name: str
     status: str
     message: str
-
-
-@dataclass(frozen=True)
-class ConfigBootstrapResult:
-    """Structured output returned by :func:`bootstrap_fabric_env`."""
-
-    environment: str
-    paths: dict[str, Any]
-    runtime_metadata: dict[str, Any]
-    smoke_test_results: list[ConfigSmokeCheckResult]
-    readiness_status: str
 
 
 @dataclass(frozen=True)
@@ -527,7 +435,6 @@ def _validate_framework_config(config: FrameworkConfig | dict[str, Any]) -> Fram
     return normalized
 
 
-
 def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any:
     """Resolve a configured Fabric path for an environment and target.
 
@@ -560,20 +467,19 @@ def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: st
     paths = config.path_config.paths if isinstance(config, FrameworkConfig) else config.paths
     if env not in paths:
         available_envs = ", ".join(sorted(paths.keys())) or "<none>"
-        raise ValueError(f"Environment '{env}' was not found in Fabric config. Available environments: {available_envs}.")
+        raise ValueError(
+            f"Environment '{env}' was not found in Fabric config. Available environments: {available_envs}."
+        )
     if target not in paths[env]:
         available_targets = ", ".join(sorted(paths[env].keys())) or "<none>"
-        raise ValueError(f"Target '{target}' was not found under environment '{env}'. Available targets: {available_targets}.")
+        raise ValueError(
+            f"Target '{target}' was not found under environment '{env}'. Available targets: {available_targets}."
+        )
     return paths[env][target]
 
 
-
-def _normalize_name(value: str) -> str:
-    return "_".join(str(value or "").strip().lower().split())
-
-
 def _validate_notebook_name(notebook_name: str, config: FrameworkConfig | None = None) -> list[str]:
-    name = _normalize_name(notebook_name)
+    name = "_".join(str(notebook_name or "").strip().lower().split())
     patterns = [
         r"^00_env_config$",
         r"^01_agreement(?:_[a-z0-9_]+)?$",
@@ -643,7 +549,11 @@ def _run_config_smoke_tests(
 
     runtime_meta = _get_fabric_runtime_metadata(notebook_name=notebook_name)
     runtime_status = "pass" if runtime_meta.get("runtime_available") else "skipped"
-    runtime_message = "Fabric runtime context is readable." if runtime_meta.get("runtime_available") else "notebookutils.runtime unavailable outside Fabric runtime."
+    runtime_message = (
+        "Fabric runtime context is readable."
+        if runtime_meta.get("runtime_available")
+        else "notebookutils.runtime unavailable outside Fabric runtime."
+    )
     results.append(ConfigSmokeCheckResult("fabric_runtime_context", runtime_status, runtime_message))
     try:
         for target in required_targets:
@@ -652,7 +562,11 @@ def _run_config_smoke_tests(
             if missing:
                 results.append(ConfigSmokeCheckResult(f"path:{target}", "fail", f"Missing required fields: {missing}"))
             elif p.kind == "lakehouse" and str(p.root).startswith("abfss://"):
-                results.append(ConfigSmokeCheckResult(f"path:{target}", "pass", "Lakehouse store is populated and ABFSS root is derivable."))
+                results.append(
+                    ConfigSmokeCheckResult(
+                        f"path:{target}", "pass", "Lakehouse store is populated and ABFSS root is derivable."
+                    )
+                )
             else:
                 results.append(ConfigSmokeCheckResult(f"path:{target}", "pass", "Store is populated."))
     except Exception as exc:
@@ -660,95 +574,24 @@ def _run_config_smoke_tests(
 
     if notebook_name:
         errors = _validate_notebook_name(notebook_name, config=config)
-        results.append(ConfigSmokeCheckResult("notebook_naming", "pass" if not errors else "fail", "; ".join(errors) or "Notebook name is valid."))
+        results.append(
+            ConfigSmokeCheckResult(
+                "notebook_naming", "pass" if not errors else "fail", "; ".join(errors) or "Notebook name is valid."
+            )
+        )
     else:
         results.append(ConfigSmokeCheckResult("notebook_naming", "skipped", "Notebook name check skipped."))
 
     if check_io_import:
         try:
             from .fabric_input_output import read_lakehouse_table  # noqa: F401
+
             results.append(ConfigSmokeCheckResult("fabric_io_import", "pass", "fabric_io helpers are importable."))
         except Exception as exc:
             results.append(ConfigSmokeCheckResult("fabric_io_import", "fail", str(exc)))
     else:
         results.append(ConfigSmokeCheckResult("fabric_io_import", "skipped", "IO import check disabled."))
     return results
-
-
-def _bootstrap_fabric_env(
-    env: str = "Sandbox",
-    required_targets: list[str] | None = None,
-    smoke_test: bool = True,
-    config: FrameworkConfig | dict[str, Any] | None = None,
-    notebook_name: str | None = None,
-) -> ConfigBootstrapResult:
-    """Bootstrap 00_env_config environment readiness for FabricOps notebooks.
-
-    This is a one-call bootstrap helper used at the start of a FabricOps run.
-    It validates/loads configuration, resolves required environment targets,
-    gathers runtime metadata and optionally executes smoke
-    checks before quality/governance/lineage workflows continue.
-
-    Parameters
-    ----------
-    env : str, default="Sandbox"
-        Environment key to bootstrap from ``path_config``.
-    required_targets : list[str] | None, optional
-        Target names that must resolve for the selected environment. Defaults
-        to ``["Source", "Unified"]``.
-    smoke_test : bool, default=True
-        Whether to execute :func:`run_config_smoke_tests`.
-    config : FrameworkConfig | dict[str, Any] | None, optional
-        Framework configuration object or compatible mapping.
-    notebook_name : str | None, optional
-        Notebook name used in runtime metadata and naming checks.
-
-    Returns
-    -------
-    ConfigBootstrapResult
-        Structured bootstrap result containing resolved paths, runtime metadata,
-        smoke-check results, and overall readiness status.
-
-    Raises
-    ------
-    ValueError
-        Raised when ``config`` is missing or fails configuration/path
-        validation.
-
-    Notes
-    -----
-    Side effects are limited to runtime/import checks. The helper does not
-    create Fabric assets or write persistent state.
-
-    Examples
-    --------
-    >>> result = _bootstrap_fabric_env(config=my_config, env="Sandbox", notebook_name="00_env_config")
-    >>> result.readiness_status in {"ready", "not_ready"}
-    True
-    """
-    normalized = _validate_framework_config(config) if config is not None else None
-    if normalized is None:
-        raise ValueError("config is required for bootstrap_fabric_env.")
-    required_targets = required_targets or ["Source", "Unified"]
-    resolved_paths = {target: _get_store(config=normalized, env=env, target=target) for target in required_targets}
-    runtime_meta = _get_fabric_runtime_metadata(notebook_name=notebook_name)
-    smoke = _run_config_smoke_tests(
-        normalized,
-        env=env,
-        required_targets=required_targets,
-        check_io_import=False,
-        notebook_name=notebook_name,
-    ) if smoke_test else []
-    status = "ready" if all(r.status in {"pass", "skipped", "warn"} for r in smoke) else "not_ready"
-    return ConfigBootstrapResult(
-        environment=env,
-        paths=resolved_paths,
-        runtime_metadata=runtime_meta,
-        smoke_test_results=smoke,
-        readiness_status=status,
-    )
-
-
 
 
 def setup_notebook(
@@ -810,6 +653,7 @@ def setup_notebook(
     context = None
     try:
         import notebookutils.runtime as nb_runtime  # type: ignore
+
         context = getattr(nb_runtime, "context", None)
     except Exception:
         context = None
@@ -829,7 +673,10 @@ def setup_notebook(
 
     resolved_notebook_name = notebook_name or ctx("currentNotebookName") or local_fallback_name
     user_name = ctx("userName") or ctx("userId") or "unknown"
-    run_id = ctx("currentRunId") or f"{run_id_prefix}_{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}_{uuid4().hex[:8]}"
+    run_id = (
+        ctx("currentRunId")
+        or f"{run_id_prefix}_{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}_{uuid4().hex[:8]}"
+    )
 
     runtime_meta = {
         "notebook_name": resolved_notebook_name,
@@ -844,7 +691,9 @@ def setup_notebook(
         "runtime_available": context is not None,
     }
 
-    checks = _run_config_smoke_tests(config=normalized, env=env, required_targets=required_targets, notebook_name=resolved_notebook_name)
+    checks = _run_config_smoke_tests(
+        config=normalized, env=env, required_targets=required_targets, notebook_name=resolved_notebook_name
+    )
     readiness_status = "ready" if all(r.status in {"pass", "warn", "skipped"} for r in checks) else "not_ready"
 
     return NotebookSetupContext(
@@ -913,58 +762,6 @@ def setup_metadata_tables(
         "governance": governance,
     }
 
-def _check_fabric_ai_functions_available() -> dict[str, Any]:
-    """Check whether Fabric AI Functions can be imported in the current runtime."""
-    try:
-        import synapse.ml.spark.aifunc as _aifunc  # noqa: F401
-        return {
-            "available": True,
-            "runtime": "fabric_pyspark",
-            "message": "Microsoft Fabric AI Functions import check passed.",
-        }
-    except Exception as exc:  # pragma: no cover
-        return {
-            "available": False,
-            "runtime": "local_or_unknown",
-            "message": (
-                "Microsoft Fabric AI Functions are unavailable. "
-                "Require Fabric PySpark runtime and feature enablement. "
-                f"Import error: {exc}"
-            ),
-        }
-
-
-def _configure_fabric_ai_functions(
-    deployment_name: str | None = None,
-    temperature: float = 0.0,
-) -> dict[str, Any]:
-    """Apply optional default Fabric AI Function configuration."""
-    try:
-        import synapse.ml.spark.aifunc as aifunc
-    except Exception as exc:  # pragma: no cover
-        return {
-            "available": False,
-            "configured": False,
-            "message": f"Microsoft Fabric AI Functions are unavailable. Import error: {exc}",
-        }
-
-    conf = getattr(aifunc, "default_conf", None)
-    if conf is None:
-        return {
-            "available": True,
-            "configured": False,
-            "message": "aifunc.default_conf is not available in this runtime.",
-        }
-    if deployment_name and hasattr(conf, "set_deployment_name"):
-        conf.set_deployment_name(deployment_name)
-    if hasattr(conf, "set_temperature"):
-        conf.set_temperature(float(temperature))
-    return {
-        "available": True,
-        "configured": True,
-        "message": "Microsoft Fabric AI Functions default configuration applied.",
-    }
-
 
 def _check_spark_session() -> tuple[bool, str]:
     """Check whether a Spark session is available."""
@@ -988,6 +785,7 @@ def _get_fabric_runtime_metadata(notebook_name: str | None = None) -> dict[str, 
         metadata["runtime_available"] = True
         context = getattr(nb_runtime, "context", None)
         if context is not None:
+
             def _ctx_value(*keys: str) -> Any:
                 for key in keys:
                     if hasattr(context, key):
@@ -1005,7 +803,9 @@ def _get_fabric_runtime_metadata(notebook_name: str | None = None) -> dict[str, 
                             return value
                 return None
 
-            metadata["notebook_name"] = metadata["notebook_name"] or _ctx_value("currentNotebookName", "current_notebook_name")
+            metadata["notebook_name"] = metadata["notebook_name"] or _ctx_value(
+                "currentNotebookName", "current_notebook_name"
+            )
             metadata["workspace_name"] = _ctx_value("currentWorkspaceName", "workspaceName", "workspace_name")
             metadata["user_name"] = _ctx_value("userName", "user_name")
     except Exception:
@@ -1014,13 +814,11 @@ def _get_fabric_runtime_metadata(notebook_name: str | None = None) -> dict[str, 
 
 
 def _default_schema_text() -> str:
-    return (
-        files("fabricops_kit.schemas")
-        .joinpath("dataset_contract.schema.json")
-        .read_text(encoding="utf-8")
-    )
+    return files("fabricops_kit.schemas").joinpath("dataset_contract.schema.json").read_text(encoding="utf-8")
+
 
 # dataset-contract helpers unchanged
+
 
 def _format_error_path(error_path: list[object], message: str, validator: str) -> str:
     parts = [str(part) for part in error_path]
@@ -1031,6 +829,7 @@ def _format_error_path(error_path: list[object], message: str, validator: str) -
             missing_property = match.group(1)
             return f"{base_path}.{missing_property}" if base_path else missing_property
     return base_path or "$"
+
 
 def _load_dataset_contract(path: str | Path) -> dict:
     """Load a dataset contract YAML file into a dictionary.
@@ -1062,11 +861,13 @@ def _load_dataset_contract(path: str | Path) -> dict:
         return {"value": loaded}
     return loaded
 
+
 def _load_schema(schema_path: str | Path | None = None) -> dict:
     if schema_path is None:
         return yaml.safe_load(_default_schema_text())
     with Path(schema_path).open("r", encoding="utf-8") as handle:
         return yaml.safe_load(handle)
+
 
 def _validate_dataset_contract(contract: dict, schema_path: str | Path | None = None) -> list[str]:
     """Validate a loaded dataset contract against the JSON schema.
@@ -1093,7 +894,10 @@ def _validate_dataset_contract(contract: dict, schema_path: str | Path | None = 
     schema = _load_schema(schema_path=schema_path)
     validator = Draft202012Validator(schema)
     errors = sorted(validator.iter_errors(contract), key=lambda error: (list(error.path), error.message))
-    return [f"{_format_error_path(list(error.path), error.message, error.validator)}: {error.message}" for error in errors]
+    return [
+        f"{_format_error_path(list(error.path), error.message, error.validator)}: {error.message}" for error in errors
+    ]
+
 
 def _assert_valid_dataset_contract(contract: dict, schema_path: str | Path | None = None) -> None:
     """Raise when a dataset contract violates the expected schema.
@@ -1114,9 +918,14 @@ def _assert_valid_dataset_contract(contract: dict, schema_path: str | Path | Non
     """
     errors = _validate_dataset_contract(contract, schema_path=schema_path)
     if errors:
-        raise DatasetContractValidationError("Dataset contract validation failed:\n" + "\n".join(f"- {e}" for e in errors))
+        raise DatasetContractValidationError(
+            "Dataset contract validation failed:\n" + "\n".join(f"- {e}" for e in errors)
+        )
 
-def _load_and_validate_dataset_contract(path: str | Path, schema_path: str | Path | None = None) -> tuple[dict, list[str]]:
+
+def _load_and_validate_dataset_contract(
+    path: str | Path, schema_path: str | Path | None = None
+) -> tuple[dict, list[str]]:
     """Load a dataset contract file and return schema validation findings.
 
     Parameters
