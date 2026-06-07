@@ -600,7 +600,6 @@ def setup_notebook(
     required_targets: list[str] | None = None,
     notebook_name: str | None = None,
     run_id_prefix: str = "run",
-    configure_ai: bool = False,
     local_fallback_name: str | None = None,
 ) -> NotebookSetupContext:
     """Run consolidated FabricOps startup for delivery and optional support notebooks.
@@ -620,8 +619,6 @@ def setup_notebook(
         Explicit notebook name used for runtime metadata and naming checks.
     run_id_prefix : str, default="run"
         Prefix used when a Fabric runtime run identifier is unavailable.
-    configure_ai : bool, default=False
-        Reserved notebook setup option retained for caller compatibility.
     local_fallback_name : str | None, optional
         Notebook name used when neither ``notebook_name`` nor Fabric runtime
         context provides one.
