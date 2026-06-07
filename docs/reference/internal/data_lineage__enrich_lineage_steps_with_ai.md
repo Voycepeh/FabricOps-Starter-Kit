@@ -3,9 +3,43 @@
 **Module:** `data_lineage`  
 **Classification:** Internal
 
+## Status
+
+Internal helper used by the package implementation.
+
+## Function type: Internal helper
+
+Internal helper
+
+## Direct use: No
+
+Do not call this helper directly from notebooks; use the public callable helpers instead.
+
+## Used by
+
+Not documented yet
+
 ## Purpose
 
-No summary available.
+Optionally enrich deterministic lineage steps using an AI helper callable.
+
+## Signature if available
+
+```python
+def _enrich_lineage_steps_with_ai(lineage_steps: list[dict[str, Any]], ai_helper: Any | None=None) -> dict[str, Any]
+```
+
+## Side effects
+
+Not documented yet
+
+## Maintainer notes
+
+Maintain this helper through the owning implementation module and keep generated references in sync.
+
+## AI implementation contract
+
+Use internal pages only for package maintenance. Prefer public callable pages when authoring notebooks.
 
 ## Function manifest
 

@@ -6,6 +6,16 @@ Use this page as a function lookup after you understand the notebook flow. The d
 - Use the Function catalogue below to browse the public v1 callables by default; enable Internal for package helpers.
 - Use Implementation Modules only when debugging or maintaining current major source boundaries; they do not document every `.py` file.
 
+## How to use this reference
+
+- **Callable helpers** are public v1 functions intended for notebook authors and human operators.
+- **Internal helpers** document package support functions for transparency; use them for maintenance, not direct notebook calls.
+- **Implementation modules** show source ownership, module-level dependencies, and helper relationships for maintainers.
+- **Function manifests** (`manifest.json` and `function-manifest.json`) provide machine-readable callable/module inventory for checks and automation.
+- **Agent manifest** (`agent-manifest.json`) adds AI-oriented execution fields for planning, side-effect checks, and verification.
+- **AI implementation contracts** on callable/internal pages summarize expectations agents must satisfy before using or changing a function.
+- **Skill file** (`ai/skills/fabricops/SKILL.md`) gives agents repo-specific rules and points them to these generated references.
+
 ## Find a function
 
 Use the finder below to look up public callables and internal support functions from active v1 modules.

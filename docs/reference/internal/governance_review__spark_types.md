@@ -3,9 +3,44 @@
 **Module:** `governance_review`  
 **Classification:** Internal
 
+## Status
+
+Internal helper used by the package implementation.
+
+## Function type: Internal helper
+
+Internal helper
+
+## Direct use: No
+
+Do not call this helper directly from notebooks; use the public callable helpers instead.
+
+## Used by
+
+- <a href="../internal/governance_review__get_governance_metadata_schemas/"><code>fabricops_kit.governance_review._get_governance_metadata_schemas</code></a>
+- <a href="../internal/governance_review__schema/"><code>fabricops_kit.governance_review._schema</code></a>
+
 ## Purpose
 
-No summary available.
+Return Spark SQL type classes lazily so package import stays lightweight.
+
+## Signature if available
+
+```python
+def _spark_types()
+```
+
+## Side effects
+
+Not documented yet
+
+## Maintainer notes
+
+Maintain this helper through the owning implementation module and keep generated references in sync.
+
+## AI implementation contract
+
+Use internal pages only for package maintenance. Prefer public callable pages when authoring notebooks.
 
 ## Function manifest
 
@@ -20,5 +55,5 @@ No summary available.
 - Outbound references count: 0
 
 ## Inbound references
-- <a href="../internal/governance_review/_get_governance_metadata_schemas/"><code>fabricops_kit.governance_review._get_governance_metadata_schemas</code></a>
-- <a href="../internal/governance_review/_schema/"><code>fabricops_kit.governance_review._schema</code></a>
+- <a href="../internal/governance_review__get_governance_metadata_schemas/"><code>fabricops_kit.governance_review._get_governance_metadata_schemas</code></a>
+- <a href="../internal/governance_review__schema/"><code>fabricops_kit.governance_review._schema</code></a>

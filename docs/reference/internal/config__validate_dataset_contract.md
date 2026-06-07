@@ -3,9 +3,44 @@
 **Module:** `config`  
 **Classification:** Internal
 
+## Status
+
+Internal helper used by the package implementation.
+
+## Function type: Internal helper
+
+Internal helper
+
+## Direct use: No
+
+Do not call this helper directly from notebooks; use the public callable helpers instead.
+
+## Used by
+
+- <a href="../internal/config__assert_valid_dataset_contract/"><code>fabricops_kit.config._assert_valid_dataset_contract</code></a>
+- <a href="../internal/config__load_and_validate_dataset_contract/"><code>fabricops_kit.config._load_and_validate_dataset_contract</code></a>
+
 ## Purpose
 
-No summary available.
+Validate a loaded dataset contract against the JSON schema.
+
+## Signature if available
+
+```python
+def _validate_dataset_contract(contract: dict, schema_path: str | Path | None=None) -> list[str]
+```
+
+## Side effects
+
+Not documented yet
+
+## Maintainer notes
+
+Maintain this helper through the owning implementation module and keep generated references in sync.
+
+## AI implementation contract
+
+Use internal pages only for package maintenance. Prefer public callable pages when authoring notebooks.
 
 ## Function manifest
 
@@ -20,9 +55,9 @@ No summary available.
 - Outbound references count: 2
 
 ## Inbound references
-- <a href="../internal/config/_assert_valid_dataset_contract/"><code>fabricops_kit.config._assert_valid_dataset_contract</code></a>
-- <a href="../internal/config/_load_and_validate_dataset_contract/"><code>fabricops_kit.config._load_and_validate_dataset_contract</code></a>
+- <a href="../internal/config__assert_valid_dataset_contract/"><code>fabricops_kit.config._assert_valid_dataset_contract</code></a>
+- <a href="../internal/config__load_and_validate_dataset_contract/"><code>fabricops_kit.config._load_and_validate_dataset_contract</code></a>
 
 ## Outbound references
-- <a href="../internal/config/_format_error_path/"><code>fabricops_kit.config._format_error_path</code></a>
-- <a href="../internal/config/_load_schema/"><code>fabricops_kit.config._load_schema</code></a>
+- <a href="../internal/config__format_error_path/"><code>fabricops_kit.config._format_error_path</code></a>
+- <a href="../internal/config__load_schema/"><code>fabricops_kit.config._load_schema</code></a>

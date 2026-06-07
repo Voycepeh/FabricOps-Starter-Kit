@@ -8,7 +8,17 @@
     "inbound": [],
     "outbound": [],
     "source_file": "src/fabricops_kit/config.py",
-    "summary": "No summary available."
+    "summary": "Prompt templates used by AI-assisted framework workflows.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": []
   },
   {
     "name": "ConfigSmokeCheckResult",
@@ -21,7 +31,19 @@
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/config.py",
-    "summary": "No summary available."
+    "summary": "Represent one readiness or smoke-test check.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_run_config_smoke_tests"
+    ]
   },
   {
     "name": "DataAgreementConfig",
@@ -32,7 +54,17 @@
     "inbound": [],
     "outbound": [],
     "source_file": "src/fabricops_kit/config.py",
-    "summary": "No summary available."
+    "summary": "Editable ``01_agreement`` table names and widget definitions.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "metadata_tables : dict[str, str]\n    Lightweight metadata table names prepared by ``00_env_config``.\ndata_steward_widget, data_agreement_widget : dict[str, Any]\n    Visible standard columns and organization-specific ``custom_fields``.\n    Custom fields are rendered dynamically and persisted in\n    ``custom_fields_json`` instead of becoming physical table columns.\nsteward_role_options : list[str]\n    Controlled Data Steward role labels rendered by ``01_agreement`` as the\n    ``steward_role`` dropdown.",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": []
   },
   {
     "name": "DatasetContractValidationError",
@@ -45,7 +77,19 @@
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/config.py",
-    "summary": "No summary available."
+    "summary": "Raised when dataset-contract validation fails.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_assert_valid_dataset_contract"
+    ]
   },
   {
     "name": "FrameworkConfig",
@@ -58,7 +102,19 @@
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/config.py",
-    "summary": "No summary available."
+    "summary": "Top-level framework configuration object.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "path_config : PathConfig\n    Environment and target routing definitions.\nnotebook_runtime_config : NotebookRuntimeConfig\n    Notebook naming policy and runtime validation options.\nai_prompt_config : AIPromptConfig\n    AI prompt templates used across framework workflows.\nquality_config : QualityConfig\n    Default quality-policy settings.\ngovernance_config : GovernanceConfig\n    Default governance-policy settings.\nreview_workflow_config : ReviewWorkflowConfig\n    Notebook-native review, approval, and metadata destination settings.\nlineage_config : LineageConfig\n    Default lineage capture behavior.",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_validate_framework_config"
+    ]
   },
   {
     "name": "GovernanceConfig",
@@ -69,7 +125,17 @@
     "inbound": [],
     "outbound": [],
     "source_file": "src/fabricops_kit/config.py",
-    "summary": "No summary available."
+    "summary": "Default governance-policy options for metadata/classification checks.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "required_classification : bool, default=True\n    Whether governed datasets are expected to carry classification metadata.\nsensitivity_rules : dict[str, str]\n    Mapping of rule keys to expected sensitivity labels used by governance\n    notebook checks and reporting summaries.",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": []
   },
   {
     "name": "LineageConfig",
@@ -80,7 +146,17 @@
     "inbound": [],
     "outbound": [],
     "source_file": "src/fabricops_kit/config.py",
-    "summary": "No summary available."
+    "summary": "Default lineage-capture behavior for pipeline traceability.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "capture_ai_summaries : bool, default=True\n    Whether AI-generated summaries should be stored in lineage artifacts.\ncapture_transformation_steps : bool, default=True\n    Whether transformation-level steps should be included in lineage\n    capture payloads.",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": []
   },
   {
     "name": "NotebookRuntimeConfig",
@@ -91,7 +167,17 @@
     "inbound": [],
     "outbound": [],
     "source_file": "src/fabricops_kit/config.py",
-    "summary": "No summary available."
+    "summary": "Runtime options used by notebook-oriented helpers.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": []
   },
   {
     "name": "NotebookSetupContext",
@@ -104,7 +190,19 @@
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/config.py",
-    "summary": "No summary available."
+    "summary": "Consolidated startup context returned by :func:`setup_notebook`.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "run_id : str\n    Unique run identifier generated for this notebook startup.\nnotebook_name : str | None\n    Notebook name resolved from runtime context or caller input.\nworkspace_name : str | None\n    Fabric workspace name when runtime context is available.\nuser_name : str | None\n    Active Fabric user name when runtime context is available.\nenvironment : str\n    Selected environment key used for path resolution.\npaths : dict[str, Any]\n    Resolved environment target mappings keyed by target name.\nvalidation_results : list[ConfigSmokeCheckResult]\n    Startup validation checks executed during setup.\nruntime_metadata : dict[str, Any]\n    Raw runtime metadata for troubleshooting and logging.\nreadiness_status : str\n    Overall readiness status derived from validation checks.",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "setup_notebook"
+    ]
   },
   {
     "name": "PathConfig",
@@ -115,7 +213,17 @@
     "inbound": [],
     "outbound": [],
     "source_file": "src/fabricops_kit/config.py",
-    "summary": "No summary available."
+    "summary": "Environment-to-target mapping used for lakehouse/warehouse routing.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "paths : dict[str, dict[str, Any]]\n    Mapping from environment name (for example ``\"dev\"``) to one or more\n    target names and their configured Housepath-like objects.",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": []
   },
   {
     "name": "QualityConfig",
@@ -126,7 +234,17 @@
     "inbound": [],
     "outbound": [],
     "source_file": "src/fabricops_kit/config.py",
-    "summary": "No summary available."
+    "summary": "Default quality-policy options for FabricOps validation stages.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "default_severity : str, default=\"warning\"\n    Baseline severity label applied when rule-level severity is not set.\nfail_on_critical : bool, default=True\n    Whether critical findings should mark the run as failed in downstream\n    orchestration decisions.\nquarantine_on_failure : bool, default=False\n    Whether failed records should be routed to a quarantine path when that\n    workflow is enabled by runtime helpers.",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": []
   },
   {
     "name": "ReviewWorkflowConfig",
@@ -137,7 +255,17 @@
     "inbound": [],
     "outbound": [],
     "source_file": "src/fabricops_kit/config.py",
-    "summary": "No summary available."
+    "summary": "Notebook-table review settings for DQ and governance suggestion approval.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": []
   },
   {
     "name": "_assert_valid_dataset_contract",
@@ -151,7 +279,20 @@
       "fabricops_kit.config._validate_dataset_contract"
     ],
     "source_file": "src/fabricops_kit/config.py",
-    "summary": "No summary available."
+    "summary": "Raise when a dataset contract violates the expected schema.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "contract : dict\n    Contract content to validate before executing ingestion, quality, and\n    metadata stages.\nschema_path : str or Path or None, default=None\n    Optional custom schema location. The built-in schema is used when this\n    value is ``None``.",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "DatasetContractValidationError\n    Raised when one or more validation issues are found.",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "DatasetContractValidationError",
+      "_validate_dataset_contract"
+    ]
   },
   {
     "name": "_check_spark_session",
@@ -164,7 +305,19 @@
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/config.py",
-    "summary": "No summary available."
+    "summary": "Check whether a Spark session is available.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_run_config_smoke_tests"
+    ]
   },
   {
     "name": "_default_schema_text",
@@ -177,7 +330,19 @@
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/config.py",
-    "summary": "No summary available."
+    "summary": "No summary available.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_load_schema"
+    ]
   },
   {
     "name": "_format_error_path",
@@ -190,7 +355,19 @@
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/config.py",
-    "summary": "No summary available."
+    "summary": "No summary available.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_validate_dataset_contract"
+    ]
   },
   {
     "name": "_get_fabric_runtime_metadata",
@@ -203,7 +380,19 @@
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/config.py",
-    "summary": "No summary available."
+    "summary": "Best-effort retrieval of Fabric runtime metadata.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_run_config_smoke_tests"
+    ]
   },
   {
     "name": "_get_store",
@@ -224,7 +413,27 @@
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/config.py",
-    "summary": "No summary available."
+    "summary": "Resolve a configured Fabric path for an environment and target.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "env : str\n    Environment key such as ``Sandbox``, ``DE``, or ``Prod``.\ntarget : str\n    Target key such as ``Source``, ``Unified``, ``Product``, or ``Warehouse``.\nconfig : FrameworkConfig | PathConfig | None\n    Configuration that contains environment-to-target path mappings.",
+    "output": "Any\n    FabricStore object with ``workspace_id``, ``house_id``, ``house_name``, and ``root``.",
+    "side_effects": "Not documented yet",
+    "failure_modes": "ValueError\n    If config is missing, or if the environment/target mapping does not exist.",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_run_config_smoke_tests",
+      "setup_notebook",
+      "read_lakehouse_csv",
+      "read_lakehouse_excel",
+      "read_lakehouse_parquet",
+      "read_lakehouse_table",
+      "read_warehouse_table",
+      "write_lakehouse_table",
+      "write_warehouse_table"
+    ]
   },
   {
     "name": "_load_and_validate_dataset_contract",
@@ -238,7 +447,20 @@
       "fabricops_kit.config._validate_dataset_contract"
     ],
     "source_file": "src/fabricops_kit/config.py",
-    "summary": "No summary available."
+    "summary": "Load a dataset contract file and return schema validation findings.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "path : str or Path\n    Contract YAML path used by a Fabric notebook or pipeline run.\nschema_path : str or Path or None, default=None\n    Optional schema override for custom contract extensions.",
+    "output": "tuple of (dict, list of str)\n    Loaded contract payload and a list of validation errors.",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_load_dataset_contract",
+      "_validate_dataset_contract"
+    ]
   },
   {
     "name": "_load_dataset_contract",
@@ -251,7 +473,19 @@
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/config.py",
-    "summary": "No summary available."
+    "summary": "Load a dataset contract YAML file into a dictionary.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "path : str or Path\n    Path to a dataset-contract file, typically versioned beside pipeline\n    notebooks or in a shared config folder.",
+    "output": "dict\n    Parsed contract content. Empty files return ``{}``; non-mapping YAML\n    values are wrapped as ``{\"value\": <loaded_value>}`` for safer handling.",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_load_and_validate_dataset_contract"
+    ]
   },
   {
     "name": "_load_schema",
@@ -266,7 +500,20 @@
       "fabricops_kit.config._default_schema_text"
     ],
     "source_file": "src/fabricops_kit/config.py",
-    "summary": "No summary available."
+    "summary": "No summary available.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_validate_dataset_contract",
+      "_default_schema_text"
+    ]
   },
   {
     "name": "_run_config_smoke_tests",
@@ -285,7 +532,24 @@
       "fabricops_kit.config._validate_notebook_name"
     ],
     "source_file": "src/fabricops_kit/config.py",
-    "summary": "No summary available."
+    "summary": "Run 00_env_config readiness smoke checks for configuration bootstrap.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "config : FrameworkConfig\n    Validated framework configuration to evaluate.\nenv : str, default=\"Sandbox\"\n    Environment key used when resolving required target paths.\nrequired_targets : list[str] | None, optional\n    Required targets expected in ``config.path_config``. Defaults to\n    ``[\"Source\", \"Unified\"]`` when not provided.\ncheck_io_import : bool, default=False\n    Whether to test importability of ``fabric_input_output`` helpers.\nnotebook_name : str | None, optional\n    Notebook name to validate against configured naming prefixes.",
+    "output": "list[ConfigSmokeCheckResult]\n    Ordered check results with ``pass``, ``warn``, ``fail``, or ``skipped``\n    statuses for each readiness dimension.",
+    "side_effects": "Not documented yet",
+    "failure_modes": "ValueError\n    Propagated from config/path validation helpers when required targets or\n    configured environments are invalid.",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "setup_notebook",
+      "ConfigSmokeCheckResult",
+      "_check_spark_session",
+      "_get_fabric_runtime_metadata",
+      "_get_store",
+      "_validate_notebook_name"
+    ]
   },
   {
     "name": "_validate_dataset_contract",
@@ -302,7 +566,22 @@
       "fabricops_kit.config._load_schema"
     ],
     "source_file": "src/fabricops_kit/config.py",
-    "summary": "No summary available."
+    "summary": "Validate a loaded dataset contract against the JSON schema.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "contract : dict\n    Dataset contract content produced by :func:`_load_dataset_contract`.\nschema_path : str or Path or None, default=None\n    Optional custom schema location. When omitted, the packaged FabricOps\n    dataset-contract schema is used.",
+    "output": "list of str\n    Validation error messages using normalized property paths that are\n    suitable for notebook run summaries and review logs.",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_assert_valid_dataset_contract",
+      "_load_and_validate_dataset_contract",
+      "_format_error_path",
+      "_load_schema"
+    ]
   },
   {
     "name": "_validate_framework_config",
@@ -318,7 +597,21 @@
       "fabricops_kit.config.keys"
     ],
     "source_file": "src/fabricops_kit/config.py",
-    "summary": "No summary available."
+    "summary": "Validate and normalize framework configuration input.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "config : FrameworkConfig | dict[str, Any]\n    Existing framework config object or compatible mapping containing all\n    required component configs.",
+    "output": "FrameworkConfig\n    Normalized, validated framework config object.",
+    "side_effects": "Not documented yet",
+    "failure_modes": "ValueError\n    Raised when required sections are missing, component types are invalid,\n    or configured path targets are incomplete.",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "setup_notebook",
+      "FrameworkConfig",
+      "keys"
+    ]
   },
   {
     "name": "_validate_notebook_name",
@@ -331,7 +624,19 @@
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/config.py",
-    "summary": "No summary available."
+    "summary": "No summary available.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_run_config_smoke_tests"
+    ]
   },
   {
     "name": "setup_metadata_tables",
@@ -347,7 +652,22 @@
       "fabricops_kit.metadata._setup_notebook_registry_table"
     ],
     "source_file": "src/fabricops_kit/config.py",
-    "summary": "Create or validate all FabricOps metadata tables through one setup action."
+    "summary": "Create or validate all FabricOps metadata tables through one setup action.",
+    "use_when": "Create or validate all FabricOps metadata tables through one setup action.",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "spark : pyspark.sql.SparkSession\n    Fabric Spark session used by the table setup helpers.\nconfig : FrameworkConfig or dict\n    Shared ``00_env_config`` configuration containing the metadata target.\nenv : str\n    Environment key to prepare.\nrequire_active_steward : bool, default=False\n    Forwarded to the agreement metadata setup to optionally require an\n    active steward before returning success.",
+    "output": "dict[str, Any]\n    Combined setup summary keyed by ``data_agreement``,\n    ``notebook_registry``, and ``governance``.",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_setup_data_agreement_tables",
+      "get",
+      "_setup_governance_metadata_tables",
+      "_setup_notebook_registry_table"
+    ]
   },
   {
     "name": "setup_notebook",
@@ -363,7 +683,22 @@
       "fabricops_kit.config._validate_framework_config"
     ],
     "source_file": "src/fabricops_kit/config.py",
-    "summary": "Shared environment setup and runtime validation for notebook templates."
+    "summary": "Shared environment setup and runtime validation for notebook templates.",
+    "use_when": "Shared environment setup and runtime validation for notebook templates.",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "config : FrameworkConfig | dict[str, Any]\n    Framework configuration object or compatible mapping. The setup flow\n    validates required sections and configured Fabric targets before\n    running readiness checks.\nenv : str, default=\"Sandbox\"\n    Environment key used to resolve target paths.\nrequired_targets : list[str] | None, optional\n    Target names that must resolve for ``env``. Defaults to\n    ``[\"Source\", \"Unified\"]``.\nnotebook_name : str | None, optional\n    Explicit notebook name used for runtime metadata and naming checks.\nrun_id_prefix : str, default=\"run\"\n    Prefix used when a Fabric runtime run identifier is unavailable.\nlocal_fallback_name : str | None, optional\n    Notebook name used when neither ``notebook_name`` nor Fabric runtime\n    context provides one.",
+    "output": "NotebookSetupContext\n    Validated runtime context with resolved paths, smoke-check results,\n    runtime metadata, and overall readiness status.",
+    "side_effects": "Not documented yet",
+    "failure_modes": "ValueError\n    Raised when config sections are invalid or required targets cannot be\n    resolved for the selected environment.",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "NotebookSetupContext",
+      "_get_store",
+      "_run_config_smoke_tests",
+      "_validate_framework_config"
+    ]
   },
   {
     "name": "_active_steward",
@@ -379,7 +714,21 @@
       "fabricops_kit.data_agreement._to_bool"
     ],
     "source_file": "src/fabricops_kit/data_agreement.py",
-    "summary": "No summary available."
+    "summary": "No summary available.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_create_or_update_data_steward",
+      "_list_data_stewards",
+      "_to_bool"
+    ]
   },
   {
     "name": "_agreement_identity_text",
@@ -394,7 +743,20 @@
       "fabricops_kit.data_agreement._next_minor_version"
     ],
     "source_file": "src/fabricops_kit/data_agreement.py",
-    "summary": "No summary available."
+    "summary": "Return read-only agreement version context for the notebook form.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_render_maintenance_widget",
+      "_next_minor_version"
+    ]
   },
   {
     "name": "_business_agreement_snapshot",
@@ -410,7 +772,21 @@
       "fabricops_kit.data_agreement._serialize_custom_fields"
     ],
     "source_file": "src/fabricops_kit/data_agreement.py",
-    "summary": "No summary available."
+    "summary": "Return user-facing agreement values used to detect business changes.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_create_or_update_data_agreement",
+      "_deserialize_custom_fields",
+      "_serialize_custom_fields"
+    ]
   },
   {
     "name": "_coerce_row_dicts",
@@ -426,7 +802,22 @@
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/data_agreement.py",
-    "summary": "No summary available."
+    "summary": "No summary available.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_ensure_metadata_tables",
+      "_latest_agreement_versions",
+      "_latest_by_key",
+      "_list_all_data_agreement_rows"
+    ]
   },
   {
     "name": "_collect_custom_fields",
@@ -442,7 +833,21 @@
       "fabricops_kit.data_agreement._to_iso_date"
     ],
     "source_file": "src/fabricops_kit/data_agreement.py",
-    "summary": "No summary available."
+    "summary": "Collect and validate configured custom-field widget values.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "config : list[dict[str, Any]] or dict[str, Any]\n    Custom-field definitions or widget config.\nwidgets_by_key : dict[str, ipywidgets.Widget]\n    Rendered custom widgets keyed by configured field key.",
+    "output": "dict[str, Any]\n    JSON-ready custom values.",
+    "side_effects": "Not documented yet",
+    "failure_modes": "ValueError\n    If a required configured field is blank.",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_render_maintenance_widget",
+      "get",
+      "_to_iso_date"
+    ]
   },
   {
     "name": "_config_value",
@@ -462,7 +867,26 @@
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/data_agreement.py",
-    "summary": "No summary available."
+    "summary": "No summary available.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_create_or_update_data_agreement",
+      "_create_or_update_data_steward",
+      "_ensure_metadata_tables",
+      "_get_widget_visible_fields",
+      "_list_all_data_agreement_rows",
+      "_list_data_stewards",
+      "_render_maintenance_widget",
+      "_save_agreement_evidence_records"
+    ]
   },
   {
     "name": "_create_or_update_data_agreement",
@@ -487,7 +911,30 @@
       "fabricops_kit.metadata._build_runtime_audit_fields"
     ],
     "source_file": "src/fabricops_kit/data_agreement.py",
-    "summary": "No summary available."
+    "summary": "Append a new agreement or a new semantic version of an existing one.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_render_maintenance_widget",
+      "_business_agreement_snapshot",
+      "_config_value",
+      "_generate_agreement_id",
+      "_list_all_data_agreement_rows",
+      "_list_data_stewards",
+      "_next_minor_version",
+      "_parse_contract_version",
+      "_parse_iso_date",
+      "_serialize_custom_fields",
+      "_write_row",
+      "_build_runtime_audit_fields"
+    ]
   },
   {
     "name": "_create_or_update_data_steward",
@@ -509,7 +956,27 @@
       "fabricops_kit.metadata._build_runtime_audit_fields"
     ],
     "source_file": "src/fabricops_kit/data_agreement.py",
-    "summary": "No summary available."
+    "summary": "Append a created or updated steward assignment with runtime audit fields.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "spark : pyspark.sql.SparkSession\n    Fabric Spark session.\nconfig : FrameworkConfig or dict\n    Metadata configuration.\nenv_name : str\n    Configured environment key.\nvalues : dict[str, Any]\n    User-facing steward values. Reusing ``steward_id`` appends an update;\n    omitting it creates a backend-generated stable steward identifier.\ncustom_fields : dict[str, Any], optional\n    Organization-specific configured values.",
+    "output": "dict[str, Any]\n    Appended steward row.",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_render_maintenance_widget",
+      "_active_steward",
+      "_config_value",
+      "_generate_steward_id",
+      "_parse_iso_date",
+      "_serialize_custom_fields",
+      "_to_bool",
+      "_write_row",
+      "_build_runtime_audit_fields"
+    ]
   },
   {
     "name": "_deserialize_custom_fields",
@@ -523,7 +990,20 @@
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/data_agreement.py",
-    "summary": "No summary available."
+    "summary": "Deserialize stored custom-field JSON for widget display.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "custom_fields_json : Any\n    JSON object text, an existing mapping, or a blank value.",
+    "output": "dict[str, Any]\n    Parsed custom field values. Blank input produces an empty mapping.",
+    "side_effects": "Not documented yet",
+    "failure_modes": "ValueError\n    If non-blank text is not a JSON object.",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_business_agreement_snapshot",
+      "_render_maintenance_widget"
+    ]
   },
   {
     "name": "_ensure_metadata_tables",
@@ -541,7 +1021,23 @@
       "fabricops_kit.fabric_input_output.write_lakehouse_table"
     ],
     "source_file": "src/fabricops_kit/data_agreement.py",
-    "summary": "No summary available."
+    "summary": "Idempotently create or validate lightweight ``01_agreement`` metadata tables.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "config : FrameworkConfig or dict\n    Configured metadata lakehouse route from ``00_env_config``.\nenv_name : str\n    Environment key configured by ``00_env_config``.\nspark : pyspark.sql.SparkSession\n    Fabric Spark session used to create empty Delta tables when missing.",
+    "output": "dict[str, Any]\n    Setup summary with checked table names.",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_setup_data_agreement_tables",
+      "_coerce_row_dicts",
+      "_config_value",
+      "read_lakehouse_table",
+      "write_lakehouse_table"
+    ]
   },
   {
     "name": "_generate_agreement_id",
@@ -554,7 +1050,19 @@
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/data_agreement.py",
-    "summary": "No summary available."
+    "summary": "No summary available.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_create_or_update_data_agreement"
+    ]
   },
   {
     "name": "_generate_steward_id",
@@ -567,7 +1075,19 @@
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/data_agreement.py",
-    "summary": "No summary available."
+    "summary": "Generate a stable public-safe steward identifier from business fields.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_create_or_update_data_steward"
+    ]
   },
   {
     "name": "_get_notebookutils",
@@ -580,7 +1100,19 @@
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/data_agreement.py",
-    "summary": "No summary available."
+    "summary": "Return a notebookutils-like object when the Fabric runtime exposes one.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_prepare_evidence_file_references"
+    ]
   },
   {
     "name": "_get_widget_visible_fields",
@@ -595,7 +1127,20 @@
       "fabricops_kit.data_agreement._config_value"
     ],
     "source_file": "src/fabricops_kit/data_agreement.py",
-    "summary": "No summary available."
+    "summary": "Return configured editable columns without backend audit fields.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "config : FrameworkConfig or dict\n    Environment configuration containing widget settings.\nkind : {\"data_steward_widget\", \"data_agreement_widget\"}\n    Widget configuration section to inspect.",
+    "output": "list[str]\n    Safe editable fields. Technical audit fields are always excluded.",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_render_maintenance_widget",
+      "_config_value"
+    ]
   },
   {
     "name": "_html_escape",
@@ -609,7 +1154,20 @@
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/data_agreement.py",
-    "summary": "No summary available."
+    "summary": "Return display-safe HTML text for notebook context snippets.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_render_searchable_selector",
+      "widget_select_agreement"
+    ]
   },
   {
     "name": "_latest_agreement_versions",
@@ -626,7 +1184,22 @@
       "fabricops_kit.data_agreement._parse_contract_version"
     ],
     "source_file": "src/fabricops_kit/data_agreement.py",
-    "summary": "No summary available."
+    "summary": "Return the latest semantic version for each stable agreement ID.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_list_data_agreements",
+      "widget_select_agreement",
+      "_coerce_row_dicts",
+      "_parse_contract_version"
+    ]
   },
   {
     "name": "_latest_by_key",
@@ -641,7 +1214,20 @@
       "fabricops_kit.data_agreement._coerce_row_dicts"
     ],
     "source_file": "src/fabricops_kit/data_agreement.py",
-    "summary": "No summary available."
+    "summary": "No summary available.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_list_data_stewards",
+      "_coerce_row_dicts"
+    ]
   },
   {
     "name": "_list_all_data_agreement_rows",
@@ -660,7 +1246,24 @@
       "fabricops_kit.fabric_input_output.read_lakehouse_table"
     ],
     "source_file": "src/fabricops_kit/data_agreement.py",
-    "summary": "No summary available."
+    "summary": "List all append-only agreement rows from the metadata lakehouse.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_create_or_update_data_agreement",
+      "_list_data_agreements",
+      "_render_agreement_evidence_widget",
+      "_coerce_row_dicts",
+      "_config_value",
+      "read_lakehouse_table"
+    ]
   },
   {
     "name": "_list_data_agreements",
@@ -677,7 +1280,22 @@
       "fabricops_kit.data_agreement._list_all_data_agreement_rows"
     ],
     "source_file": "src/fabricops_kit/data_agreement.py",
-    "summary": "No summary available."
+    "summary": "List latest versioned agreements from the configured metadata lakehouse.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_render_maintenance_widget",
+      "widget_select_agreement",
+      "_latest_agreement_versions",
+      "_list_all_data_agreement_rows"
+    ]
   },
   {
     "name": "_list_data_stewards",
@@ -697,7 +1315,25 @@
       "fabricops_kit.fabric_input_output.read_lakehouse_table"
     ],
     "source_file": "src/fabricops_kit/data_agreement.py",
-    "summary": "No summary available."
+    "summary": "List latest append-only steward rows from the metadata lakehouse.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "config : FrameworkConfig or dict\n    Metadata lakehouse configuration.\nenv_name : str\n    Configured environment key.\nspark_session : pyspark.sql.SparkSession, optional\n    Fabric Spark session.\nactive_only : bool, default=True\n    Return only currently effective active steward assignments.\nmissing_ok : bool, default=False\n    Return an empty list when the table is not available.",
+    "output": "list[dict[str, Any]]\n    Latest steward rows sorted by stable ID.",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_create_or_update_data_agreement",
+      "_render_maintenance_widget",
+      "_setup_data_agreement_tables",
+      "_active_steward",
+      "_config_value",
+      "_latest_by_key",
+      "read_lakehouse_table"
+    ]
   },
   {
     "name": "_next_minor_version",
@@ -713,7 +1349,21 @@
       "fabricops_kit.data_agreement._parse_contract_version"
     ],
     "source_file": "src/fabricops_kit/data_agreement.py",
-    "summary": "No summary available."
+    "summary": "Return the next minor contract version, defaulting to ``1.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_agreement_identity_text",
+      "_create_or_update_data_agreement",
+      "_parse_contract_version"
+    ]
   },
   {
     "name": "_parse_contract_version",
@@ -728,7 +1378,21 @@
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/data_agreement.py",
-    "summary": "No summary available."
+    "summary": "Parse a semantic contract version into a comparable tuple.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_create_or_update_data_agreement",
+      "_latest_agreement_versions",
+      "_next_minor_version"
+    ]
   },
   {
     "name": "_parse_iso_date",
@@ -742,7 +1406,20 @@
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/data_agreement.py",
-    "summary": "No summary available."
+    "summary": "Return an ISO date string or raise a clear intake validation error.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_create_or_update_data_agreement",
+      "_create_or_update_data_steward"
+    ]
   },
   {
     "name": "_prepare_evidence_file_references",
@@ -757,7 +1434,20 @@
       "fabricops_kit.data_agreement._get_notebookutils"
     ],
     "source_file": "src/fabricops_kit/data_agreement.py",
-    "summary": "No summary available."
+    "summary": "Parse and validate manually supplied evidence file paths before writes.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_save_agreement_evidence_records",
+      "_get_notebookutils"
+    ]
   },
   {
     "name": "_render_agreement_evidence_widget",
@@ -776,7 +1466,24 @@
       "fabricops_kit.data_agreement._widget_common"
     ],
     "source_file": "src/fabricops_kit/data_agreement.py",
-    "summary": "No summary available."
+    "summary": "Render optional agreement evidence upload controls.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "widget_render_agreement_evidence",
+      "_list_all_data_agreement_rows",
+      "_render_searchable_selector",
+      "_require_ipywidgets",
+      "_save_agreement_evidence_records",
+      "_widget_common"
+    ]
   },
   {
     "name": "_render_custom_fields",
@@ -794,7 +1501,23 @@
       "fabricops_kit.data_agreement._widget_common"
     ],
     "source_file": "src/fabricops_kit/data_agreement.py",
-    "summary": "No summary available."
+    "summary": "Create widgets for configured organization-specific fields.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "config : list[dict[str, Any]] or dict[str, Any]\n    Custom-field definitions or a widget config containing ``custom_fields``.\nvalues : dict[str, Any], optional\n    Previously stored values used to prefill update forms.",
+    "output": "dict[str, ipywidgets.Widget]\n    Widgets keyed by custom-field key.",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_render_maintenance_widget",
+      "get",
+      "_require_ipywidgets",
+      "_to_bool",
+      "_widget_common"
+    ]
   },
   {
     "name": "_render_maintenance_widget",
@@ -824,7 +1547,35 @@
       "fabricops_kit.data_agreement._to_iso_date"
     ],
     "source_file": "src/fabricops_kit/data_agreement.py",
-    "summary": "No summary available."
+    "summary": "No summary available.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "widget_render_data_agreement",
+      "widget_render_data_steward",
+      "_agreement_identity_text",
+      "_collect_custom_fields",
+      "_config_value",
+      "_create_or_update_data_agreement",
+      "_create_or_update_data_steward",
+      "_deserialize_custom_fields",
+      "_get_widget_visible_fields",
+      "_list_data_agreements",
+      "_list_data_stewards",
+      "_render_custom_fields",
+      "_render_searchable_selector",
+      "_require_ipywidgets",
+      "_standard_widget",
+      "_to_bool",
+      "_to_iso_date"
+    ]
   },
   {
     "name": "_render_searchable_selector",
@@ -842,7 +1593,23 @@
       "fabricops_kit.data_agreement._widget_common"
     ],
     "source_file": "src/fabricops_kit/data_agreement.py",
-    "summary": "No summary available."
+    "summary": "Render a table-backed selector with search and stable-value tracking.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_render_agreement_evidence_widget",
+      "_render_maintenance_widget",
+      "widget_select_agreement",
+      "_html_escape",
+      "_widget_common"
+    ]
   },
   {
     "name": "_require_ipywidgets",
@@ -859,7 +1626,23 @@
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/data_agreement.py",
-    "summary": "No summary available."
+    "summary": "Return ipywidgets or raise an actionable optional-dependency error.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_render_agreement_evidence_widget",
+      "_render_custom_fields",
+      "_render_maintenance_widget",
+      "_standard_widget",
+      "widget_select_agreement"
+    ]
   },
   {
     "name": "_save_agreement_evidence_records",
@@ -877,7 +1660,23 @@
       "fabricops_kit.metadata._build_runtime_audit_fields"
     ],
     "source_file": "src/fabricops_kit/data_agreement.py",
-    "summary": "No summary available."
+    "summary": "Append manually uploaded evidence file-reference metadata rows.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_render_agreement_evidence_widget",
+      "_config_value",
+      "_prepare_evidence_file_references",
+      "_write_row",
+      "_build_runtime_audit_fields"
+    ]
   },
   {
     "name": "_serialize_custom_fields",
@@ -892,7 +1691,21 @@
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/data_agreement.py",
-    "summary": "No summary available."
+    "summary": "Serialize organization-specific intake values to deterministic JSON.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "values : dict[str, Any] or None\n    Extra values collected from configured custom fields.",
+    "output": "str\n    JSON object text suitable for ``custom_fields_json``.",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_business_agreement_snapshot",
+      "_create_or_update_data_agreement",
+      "_create_or_update_data_steward"
+    ]
   },
   {
     "name": "_setup_data_agreement_tables",
@@ -908,7 +1721,21 @@
       "fabricops_kit.data_agreement._list_data_stewards"
     ],
     "source_file": "src/fabricops_kit/data_agreement.py",
-    "summary": "No summary available."
+    "summary": "Prepare intake tables and report whether agreement intake has a steward.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "spark : pyspark.sql.SparkSession\n    Fabric Spark session used for idempotent table setup.\nconfig : FrameworkConfig or dict\n    Configuration containing the metadata lakehouse route and table names.\nenv : str\n    Environment key configured by ``00_env_config``.\nrequire_active_steward : bool, default=False\n    Raise when no active steward exists instead of returning ``not_ready``.",
+    "output": "dict[str, Any]\n    Setup status, checked tables, created tables, message, and active count.",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "setup_metadata_tables",
+      "_ensure_metadata_tables",
+      "_list_data_stewards"
+    ]
   },
   {
     "name": "_standard_widget",
@@ -925,7 +1752,22 @@
       "fabricops_kit.data_agreement._widget_common"
     ],
     "source_file": "src/fabricops_kit/data_agreement.py",
-    "summary": "No summary available."
+    "summary": "No summary available.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_render_maintenance_widget",
+      "_require_ipywidgets",
+      "_to_bool",
+      "_widget_common"
+    ]
   },
   {
     "name": "_to_bool",
@@ -942,7 +1784,23 @@
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/data_agreement.py",
-    "summary": "No summary available."
+    "summary": "Normalize common notebook and metadata boolean representations.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_active_steward",
+      "_create_or_update_data_steward",
+      "_render_custom_fields",
+      "_render_maintenance_widget",
+      "_standard_widget"
+    ]
   },
   {
     "name": "_to_iso_date",
@@ -956,7 +1814,20 @@
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/data_agreement.py",
-    "summary": "No summary available."
+    "summary": "No summary available.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_collect_custom_fields",
+      "_render_maintenance_widget"
+    ]
   },
   {
     "name": "_widget_common",
@@ -972,7 +1843,22 @@
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/data_agreement.py",
-    "summary": "No summary available."
+    "summary": "Return common style and layout keyword arguments for form controls.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_render_agreement_evidence_widget",
+      "_render_custom_fields",
+      "_render_searchable_selector",
+      "_standard_widget"
+    ]
   },
   {
     "name": "_write_row",
@@ -989,7 +1875,22 @@
       "fabricops_kit.fabric_input_output.write_lakehouse_table"
     ],
     "source_file": "src/fabricops_kit/data_agreement.py",
-    "summary": "No summary available."
+    "summary": "No summary available.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_create_or_update_data_agreement",
+      "_create_or_update_data_steward",
+      "_save_agreement_evidence_records",
+      "write_lakehouse_table"
+    ]
   },
   {
     "name": "get_selected_agreement",
@@ -1000,7 +1901,17 @@
     "inbound": [],
     "outbound": [],
     "source_file": "src/fabricops_kit/data_agreement.py",
-    "summary": "Return the agreement selected by widget_select_agreement."
+    "summary": "Return the agreement selected by widget_select_agreement.",
+    "use_when": "Return the agreement selected by widget_select_agreement.",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "dict[str, Any]\n    Selected latest-version agreement row.",
+    "side_effects": "Not documented yet",
+    "failure_modes": "RuntimeError\n    If no selector has established a selected agreement.",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": []
   },
   {
     "name": "widget_render_agreement_evidence",
@@ -1013,7 +1924,19 @@
       "fabricops_kit.data_agreement._render_agreement_evidence_widget"
     ],
     "source_file": "src/fabricops_kit/data_agreement.py",
-    "summary": "Render the standalone agreement-evidence widget."
+    "summary": "Render the standalone agreement-evidence widget.",
+    "use_when": "Render the standalone agreement-evidence widget.",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "config : FrameworkConfig or dict\n    Configuration containing agreement metadata routing and evidence table\n    settings.\nenv_name : str\n    Environment key configured by ``00_env_config``.\nspark : pyspark.sql.SparkSession\n    Fabric Spark session used for metadata reads, file writes, and\n    append-only evidence metadata writes.",
+    "output": "dict[str, Any]\n    Rendered controls for selecting an agreement version, pasting\n    metadata lakehouse evidence file paths, refreshing agreement options,\n    and saving evidence metadata rows.",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_render_agreement_evidence_widget"
+    ]
   },
   {
     "name": "widget_render_data_agreement",
@@ -1026,7 +1949,19 @@
       "fabricops_kit.data_agreement._render_maintenance_widget"
     ],
     "source_file": "src/fabricops_kit/data_agreement.py",
-    "summary": "Render the standalone data-agreement intake widget."
+    "summary": "Render the standalone data-agreement intake widget.",
+    "use_when": "Render the standalone data-agreement intake widget.",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "config : FrameworkConfig or dict\n    Configuration containing agreement widget fields and metadata routing.\nenv_name : str\n    Environment key configured by ``00_env_config``.\nspark : pyspark.sql.SparkSession\n    Fabric Spark session used for metadata reads and append-only writes.",
+    "output": "dict[str, Any]\n    Rendered controls, including read-only generated-identifier context.",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_render_maintenance_widget"
+    ]
   },
   {
     "name": "widget_render_data_steward",
@@ -1039,7 +1974,19 @@
       "fabricops_kit.data_agreement._render_maintenance_widget"
     ],
     "source_file": "src/fabricops_kit/data_agreement.py",
-    "summary": "Render the standalone data-steward intake widget."
+    "summary": "Render the standalone data-steward intake widget.",
+    "use_when": "Render the standalone data-steward intake widget.",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "config : FrameworkConfig or dict\n    Configuration containing steward widget fields and metadata routing.\nenv_name : str\n    Environment key configured by ``00_env_config``.\nspark : pyspark.sql.SparkSession\n    Fabric Spark session used for metadata reads and append-only writes.",
+    "output": "dict[str, Any]\n    Rendered widget controls keyed for notebook customization.",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_render_maintenance_widget"
+    ]
   },
   {
     "name": "widget_select_agreement",
@@ -1058,7 +2005,25 @@
       "fabricops_kit.metadata._register_current_notebook"
     ],
     "source_file": "src/fabricops_kit/data_agreement.py",
-    "summary": "Render an agreement selector and optionally register the active notebook."
+    "summary": "Render an agreement selector and optionally register the active notebook.",
+    "use_when": "Render an agreement selector and optionally register the active notebook.",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "agreement_rows_or_config : FrameworkConfig or iterable\n    Pass ``CONFIG`` in normal notebooks, or provide preloaded agreement\n    rows when the caller already has them available.\nenv_name : str, optional\n    Environment key used to load agreements when ``CONFIG`` is supplied.\nspark_session : pyspark.sql.SparkSession, optional\n    Fabric Spark session used for configured metadata-table reads.\nregister_notebook : bool, default=False\n    When True, render registration status and a button that links the\n    current notebook to the selected agreement.\nnotebook_type, environment_name, dataset_name, table_name, topic, pipeline_name : str, optional\n    Workflow metadata passed to ``_register_current_notebook`` when\n    ``register_notebook`` is enabled.",
+    "output": "ipywidgets.Select\n    Displayed searchable latest-version agreement selector control. Its\n    ``value`` remains the stable ``agreement_id`` for existing callers.\n    When registration is enabled, registration widgets are attached as\n    attributes on the selector for advanced notebook automation.",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_html_escape",
+      "_latest_agreement_versions",
+      "_list_data_agreements",
+      "_render_searchable_selector",
+      "_require_ipywidgets",
+      "_current_notebook_active_registrations",
+      "_register_current_notebook"
+    ]
   },
   {
     "name": "_build_lineage_records",
@@ -1071,7 +2036,19 @@
       "fabricops_kit.data_lineage._validate_lineage_steps"
     ],
     "source_file": "src/fabricops_kit/data_lineage.py",
-    "summary": "No summary available."
+    "summary": "Build metadata-ready lineage rows from validated lineage steps.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "dataset_name : str\n    Dataset identifier associated with the lineage rows.\nlineage_steps : list of dict\n    Validated lineage step dictionaries.\nrun_id : str or None, default=None\n    Optional run identifier.\nnotebook_name : str or None, default=None\n    Optional notebook name.\nworkspace_name : str or None, default=None\n    Optional workspace display name.\ncreated_by : str or None, default=None\n    Optional creator identity.",
+    "output": "list of dict\n    Lineage rows suitable for metadata persistence.",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_validate_lineage_steps"
+    ]
   },
   {
     "name": "_enrich_lineage_steps_with_ai",
@@ -1082,7 +2059,17 @@
     "inbound": [],
     "outbound": [],
     "source_file": "src/fabricops_kit/data_lineage.py",
-    "summary": "No summary available."
+    "summary": "Optionally enrich deterministic lineage steps using an AI helper callable.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "lineage_steps : list of dict of str to Any\n    Deterministic lineage step dictionaries.\nai_helper : Any or None, default=None\n    Callable that accepts lineage steps and returns enriched steps.",
+    "output": "dict of str to Any\n    Enrichment payload containing steps, AI usage flag, fallback prompt, and notes.",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": []
   },
   {
     "name": "_flatten_chain",
@@ -1095,7 +2082,19 @@
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/data_lineage.py",
-    "summary": "No summary available."
+    "summary": "No summary available.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_scan_notebook_lineage"
+    ]
   },
   {
     "name": "_resolve_write_target",
@@ -1108,7 +2107,19 @@
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/data_lineage.py",
-    "summary": "No summary available."
+    "summary": "No summary available.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_scan_notebook_lineage"
+    ]
   },
   {
     "name": "_scan_notebook_cells",
@@ -1121,7 +2132,19 @@
       "fabricops_kit.data_lineage._scan_notebook_lineage"
     ],
     "source_file": "src/fabricops_kit/data_lineage.py",
-    "summary": "No summary available."
+    "summary": "Scan multiple notebook cells and append cell references to lineage steps.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "cells : list of str\n    Cell source strings in notebook execution order.",
+    "output": "list of dict of str to Any\n    Combined lineage steps with ``cell:<index>`` entries in ``code_refs``.",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_scan_notebook_lineage"
+    ]
   },
   {
     "name": "_scan_notebook_lineage",
@@ -1137,7 +2160,21 @@
       "fabricops_kit.data_lineage._resolve_write_target"
     ],
     "source_file": "src/fabricops_kit/data_lineage.py",
-    "summary": "No summary available."
+    "summary": "Extract deterministic lineage steps from notebook code using AST parsing.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "code : str\n    Python notebook source code to analyze.",
+    "output": "list of dict of str to Any\n    Ordered lineage step dictionaries inferred from read, transform, and write calls.",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_scan_notebook_cells",
+      "_flatten_chain",
+      "_resolve_write_target"
+    ]
   },
   {
     "name": "_validate_lineage_steps",
@@ -1150,7 +2187,19 @@
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/data_lineage.py",
-    "summary": "No summary available."
+    "summary": "Validate lineage step structure and flag records requiring human review.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "lineage_steps : Any\n    Candidate lineage payload, expected to be a list of dictionaries.",
+    "output": "dict of str to Any\n    Validation result with ``is_valid``, ``errors``, ``warnings``, and ``review_required``.",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_build_lineage_records"
+    ]
   },
   {
     "name": "build_lineage_records",
@@ -1161,7 +2210,17 @@
     "inbound": [],
     "outbound": [],
     "source_file": "src/fabricops_kit/data_lineage.py",
-    "summary": "Build source-to-target lineage evidence records for a pipeline run."
+    "summary": "Build source-to-target lineage evidence records for a pipeline run.",
+    "use_when": "Build source-to-target lineage evidence records for a pipeline run.",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "dataset_name : str\n    Dataset identifier for all output rows.\nrun_id : str\n    Unique run identifier.\nsource_tables : list of str\n    Source table names captured for the run.\ntarget_table : str\n    Target table name produced by the run.\ntransformation_steps : list of dict\n    Transformation step dictionaries to merge into each output row.",
+    "output": "list of dict\n    Row dictionaries suitable for metadata persistence.",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": []
   },
   {
     "name": "_build_categorical_distribution",
@@ -1174,7 +2233,19 @@
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/data_profiling.py",
-    "summary": "No summary available."
+    "summary": "No summary available.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_build_distribution_summaries"
+    ]
   },
   {
     "name": "_build_distribution_summaries",
@@ -1191,7 +2262,22 @@
       "fabricops_kit.data_profiling._numeric_bin_edges"
     ],
     "source_file": "src/fabricops_kit/data_profiling.py",
-    "summary": "No summary available."
+    "summary": "No summary available.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "profile_dataframe",
+      "_build_categorical_distribution",
+      "_build_numeric_distribution",
+      "_numeric_bin_edges"
+    ]
   },
   {
     "name": "_build_numeric_distribution",
@@ -1204,7 +2290,19 @@
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/data_profiling.py",
-    "summary": "No summary available."
+    "summary": "No summary available.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_build_distribution_summaries"
+    ]
   },
   {
     "name": "_get_profiled_columns",
@@ -1217,7 +2315,19 @@
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/data_profiling.py",
-    "summary": "No summary available."
+    "summary": "Return non-technical column names from a Spark DataFrame.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "df : Any\n    Spark DataFrame-like object with a ``dtypes`` attribute.\nexclude_columns : list[str] | set[str] | None, optional\n    Additional columns to exclude from profiling.",
+    "output": "list[str]\n    Eligible business columns to profile.",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "profile_dataframe"
+    ]
   },
   {
     "name": "_is_min_max_supported_type",
@@ -1230,7 +2340,19 @@
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/data_profiling.py",
-    "summary": "No summary available."
+    "summary": "Return whether min/max aggregation is safe for a Spark type string.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "profile_dataframe"
+    ]
   },
   {
     "name": "_numeric_bin_edges",
@@ -1243,7 +2365,19 @@
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/data_profiling.py",
-    "summary": "No summary available."
+    "summary": "No summary available.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_build_distribution_summaries"
+    ]
   },
   {
     "name": "profile_dataframe",
@@ -1261,7 +2395,23 @@
       "fabricops_kit.data_profiling._is_min_max_supported_type"
     ],
     "source_file": "src/fabricops_kit/data_profiling.py",
-    "summary": "Profile a source or target DataFrame for schema, quality, and catalogue evidence."
+    "summary": "Profile a source or target DataFrame for schema, quality, and catalogue evidence.",
+    "use_when": "Profile a source or target DataFrame for schema, quality, and catalogue evidence.",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "df : Any\n    Spark DataFrame to profile.\ntable_name : str\n    Logical table name written into each profile row.\nexclude_columns : list[str] or set[str], optional\n    Additional columns to skip, on top of the standard technical columns.\nrun_timestamp_timezone : str, default=\"Asia/Singapore\"\n    Time zone used for the ``RUN_TIMESTAMP`` evidence field.\ninclude_distributions : bool, default=False\n    When true, add lightweight distribution summaries for suitable numeric\n    and categorical columns. The default preserves the existing lightweight\n    profile shape and behavior.\ndistribution_columns : list[str] or set[str] or tuple[str, ...], optional\n    Optional allow-list of important columns for distribution summaries.\n    ``None`` profiles every suitable business column.\ndistribution_bin_edges : dict[str, list[float]], optional\n    Optional numeric bin edges keyed by column name. Pass baseline edges to\n    make the current profile directly comparable with a previous profile.\ncategorical_categories : dict[str, list[str]], optional\n    Optional baseline category vocabulary keyed by column name. When\n    supplied, those categories are counted explicitly and all other non-null\n    values are rolled into ``other_count`` so the current profile remains\n    comparable with the baseline.\ncategorical_top_n : int, default=20\n    Maximum number of non-null category values to keep per categorical\n    column before rolling the remainder into ``other_count``.",
+    "output": "Any\n    Spark DataFrame containing one profile row per eligible business\n    column. Existing columns are preserved; distribution-enabled runs also\n    include ``DISTRIBUTION_TYPE`` and ``DISTRIBUTION_JSON``.",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "monitor_data_changes",
+      "_prepare_dq_profile_input_rows",
+      "_build_distribution_summaries",
+      "_get_profiled_columns",
+      "_is_min_max_supported_type"
+    ]
   },
   {
     "name": "SchemaDriftError",
@@ -1274,7 +2424,19 @@
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/drift.py",
-    "summary": "No summary available."
+    "summary": "Raised when a schema check is configured to fail on drift.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "stop_if_failed"
+    ]
   },
   {
     "name": "_actual_schema",
@@ -1289,7 +2451,20 @@
       "fabricops_kit.drift._normalize_datatype"
     ],
     "source_file": "src/fabricops_kit/drift.py",
-    "summary": "No summary available."
+    "summary": "No summary available.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "validate_schema",
+      "_normalize_datatype"
+    ]
   },
   {
     "name": "_baseline_distribution_args",
@@ -1304,7 +2479,20 @@
       "fabricops_kit.drift._normalize_profile"
     ],
     "source_file": "src/fabricops_kit/drift.py",
-    "summary": "No summary available."
+    "summary": "No summary available.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "monitor_data_changes",
+      "_normalize_profile"
+    ]
   },
   {
     "name": "_categorical_distance",
@@ -1317,7 +2505,19 @@
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/drift.py",
-    "summary": "No summary available."
+    "summary": "No summary available.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_check_profile_drift"
+    ]
   },
   {
     "name": "_check_profile_drift",
@@ -1334,7 +2534,22 @@
       "fabricops_kit.drift._numeric_psi"
     ],
     "source_file": "src/fabricops_kit/drift.py",
-    "summary": "No summary available."
+    "summary": "Compare profile metrics against a baseline profile and drift thresholds.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "current_profile : dict or Spark DataFrame or list[dict]\n    Current profile payload. Spark profile DataFrames and collected profile\n    rows are normalized into the existing dictionary shape.\nbaseline_profile : dict or Spark DataFrame or list[dict] or None, optional\n    Previous successful profile for the same dataset, table, and source or\n    target stage. ``None`` returns a non-blocking ``no_baseline`` result.\npolicy : dict, optional\n    Threshold overrides. Unspecified values fall back to\n    :func:`monitor_data_changes`.",
+    "output": "dict\n    Result with ``status``, ``can_continue``, ``checks``, and ``message``.\n    Status is ``passed``, ``warning``, ``failed``, or ``no_baseline``.",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "monitor_data_changes",
+      "_categorical_distance",
+      "_normalize_profile",
+      "_numeric_psi"
+    ]
   },
   {
     "name": "_data_change_preset_config",
@@ -1347,7 +2562,19 @@
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/drift.py",
-    "summary": "No summary available."
+    "summary": "No summary available.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "monitor_data_changes"
+    ]
   },
   {
     "name": "_is_missing_table_error",
@@ -1360,7 +2587,19 @@
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/drift.py",
-    "summary": "No summary available."
+    "summary": "No summary available.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_load_latest_profile"
+    ]
   },
   {
     "name": "_load_latest_profile",
@@ -1376,7 +2615,21 @@
       "fabricops_kit.drift._normalize_profile"
     ],
     "source_file": "src/fabricops_kit/drift.py",
-    "summary": "No summary available."
+    "summary": "Load an explicit profile-drift baseline from profile metadata rows.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "spark : Any\n    Spark session used to query the existing profile metadata table.\nmetadata_table : str\n    Existing profile metadata table, such as\n    ``METADATA_DATA_CATALOGUE``.\ndataset_name : str\n    Dataset name to match.\ntable_name : str\n    Profiled source or target table name to match.\nprofile_stage : {\"source\", \"target\"}\n    Profile stage to match. Existing ``EVIDENCE_ROLE`` values such as\n    ``source_profile`` and ``output_profile`` are supported.\nexclude_run_id : str, optional\n    Current run identifier to exclude from baseline selection.\nbaseline_mode : {\"latest_successful\", \"approved\"}, default=\"latest_successful\"\n    Baseline selection mode. ``latest_successful`` selects the latest\n    previous row marked ``PROFILE_STATUS = successful`` when that field is\n    present. ``approved`` selects rows marked ``BASELINE_STATUS = approved``\n    and never falls back to latest previous evidence.",
+    "output": "dict or None\n    Normalized profile dictionary for the latest matching previous profile,\n    or ``None`` when no baseline exists.",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "monitor_data_changes",
+      "_is_missing_table_error",
+      "_normalize_profile"
+    ]
   },
   {
     "name": "_normalize_datatype",
@@ -1390,7 +2643,20 @@
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/drift.py",
-    "summary": "No summary available."
+    "summary": "No summary available.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_actual_schema",
+      "validate_schema"
+    ]
   },
   {
     "name": "_normalize_profile",
@@ -1409,7 +2675,24 @@
       "fabricops_kit.drift._normalize_profile"
     ],
     "source_file": "src/fabricops_kit/drift.py",
-    "summary": "No summary available."
+    "summary": "No summary available.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_baseline_distribution_args",
+      "_check_profile_drift",
+      "_load_latest_profile",
+      "_normalize_profile",
+      "monitor_data_changes",
+      "_normalize_profile"
+    ]
   },
   {
     "name": "_numeric_psi",
@@ -1422,7 +2705,19 @@
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/drift.py",
-    "summary": "No summary available."
+    "summary": "No summary available.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_check_profile_drift"
+    ]
   },
   {
     "name": "monitor_data_changes",
@@ -1440,7 +2735,24 @@
       "fabricops_kit.drift._normalize_profile"
     ],
     "source_file": "src/fabricops_kit/drift.py",
-    "summary": "Profile data, compare against the approved baseline, and return a drift guardrail result."
+    "summary": "Profile data, compare against the approved baseline, and return a drift guardrail result.",
+    "use_when": "Profile data, compare against the approved baseline, and return a drift guardrail result.",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "spark : Any\n    Spark session used to load existing profile metadata.\ndataframe : Any\n    Spark DataFrame to profile.\nmetadata_table : str\n    Existing metadata table containing profile evidence rows.\ndataset_name : str\n    Dataset identifier used to select matching baseline profiles.\ntable_name : str\n    Source or target table name used to select matching baseline profiles.\nstage : {\"source\", \"target\"}\n    Pipeline stage being monitored. Source and target baselines are selected\n    independently.\npreset : {\"changing_data\", \"fixed_data\", \"monitor_changing_data\", \"monitor_fixed_data\"}, default=\"changing_data\"\n    Data-change monitoring intent. ``changing_data`` compares with the\n    latest successful profile and may block, ``fixed_data`` compares with\n    an approved baseline and may block, ``monitor_changing_data`` compares\n    with the latest successful profile without blocking, and\n    ``monitor_fixed_data`` compares with an approved baseline without\n    blocking. Presets determine baseline and enforcement behavior;\n    ``policy_overrides`` adjusts thresholds only.\nexclude_run_id : str, optional\n    Current run identifier to exclude from baseline lookup.\ndistribution_columns : list[str] or set[str] or tuple[str, ...], optional\n    Optional allow-list of columns for distribution comparisons.\npolicy_overrides : dict, optional\n    Threshold policy overrides merged with the selected preset defaults.\n    Overrides may adjust thresholds only; presets retain control of\n    baseline selection and blocking behaviour.",
+    "output": "dict\n    Wrapper containing ``profile`` for the current profile, ``baseline`` for\n    the selected baseline profile, and ``result`` for the drift decision.",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "profile_dataframe",
+      "_baseline_distribution_args",
+      "_check_profile_drift",
+      "_data_change_preset_config",
+      "_load_latest_profile",
+      "_normalize_profile"
+    ]
   },
   {
     "name": "stop_if_failed",
@@ -1453,7 +2765,19 @@
       "fabricops_kit.drift.SchemaDriftError"
     ],
     "source_file": "src/fabricops_kit/drift.py",
-    "summary": "Stop a notebook only when a schema or data-change guardrail result blocks continuation."
+    "summary": "Stop a notebook only when a schema or data-change guardrail result blocks continuation.",
+    "use_when": "Stop a notebook only when a schema or data-change guardrail result blocks continuation.",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "result : dict\n    Direct schema result, direct data-change result, or the wrapper returned\n    by :func:`monitor_data_changes`.",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "SchemaDriftError\n    If the resolved result has ``can_continue=False``.",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "SchemaDriftError"
+    ]
   },
   {
     "name": "validate_schema",
@@ -1467,7 +2791,20 @@
       "fabricops_kit.drift._normalize_datatype"
     ],
     "source_file": "src/fabricops_kit/drift.py",
-    "summary": "Validate a DataFrame schema using strict, allow-new-columns, or monitor-only presets."
+    "summary": "Validate a DataFrame schema using strict, allow-new-columns, or monitor-only presets.",
+    "use_when": "Validate a DataFrame schema using strict, allow-new-columns, or monitor-only presets.",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "dataframe : Any\n    Spark, pandas, or dataframe-like object with schema metadata.\nexpected_schema : dict[str, str]\n    Mapping of required column names to expected datatype strings.\npreset : {\"strict\", \"allow_new_columns\", \"monitor_only\"}, default=\"strict\"\n    Schema validation intent. ``strict`` blocks missing columns, datatype\n    changes, and unexpected columns. ``allow_new_columns`` blocks missing\n    columns and datatype changes while reporting additional columns as a\n    warning. ``monitor_only`` reports all differences without blocking.",
+    "output": "dict\n    Standard guardrail result with ``status``, ``can_continue``,\n    ``checks``, and ``message`` plus detailed schema difference fields.",
+    "side_effects": "Not documented yet",
+    "failure_modes": "ValueError\n    If ``preset`` is not one of the supported schema presets.",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_actual_schema",
+      "_normalize_datatype"
+    ]
   },
   {
     "name": "FabricStore",
@@ -1478,7 +2815,17 @@
     "inbound": [],
     "outbound": [],
     "source_file": "src/fabricops_kit/fabric_input_output.py",
-    "summary": "No summary available."
+    "summary": "Fabric lakehouse or warehouse connection details.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": []
   },
   {
     "name": "_convert_single_parquet_ns_to_us",
@@ -1491,7 +2838,19 @@
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/fabric_input_output.py",
-    "summary": "No summary available."
+    "summary": "Convert one Parquet file from nanosecond to microsecond timestamps.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "local_in_path : str\n    Local input path to the original Parquet file.\nlocal_out_path : str\n    Local output path for the converted Parquet file.\nverbose : bool, default True\n    Whether to print conversion progress.",
+    "output": "None\n    The converted Parquet file is written to `local_out_path`.",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "read_lakehouse_parquet"
+    ]
   },
   {
     "name": "_get_spark",
@@ -1508,7 +2867,23 @@
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/fabric_input_output.py",
-    "summary": "No summary available."
+    "summary": "Return an explicit Spark session or the active notebook global `spark`.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "spark_session : object, optional\n    Spark session to use instead of the notebook global `spark`.",
+    "output": "object\n    Spark session object.",
+    "side_effects": "Not documented yet",
+    "failure_modes": "RuntimeError\n    If no Spark session is passed and no global `spark` object exists.",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "read_lakehouse_csv",
+      "read_lakehouse_excel",
+      "read_lakehouse_parquet",
+      "read_lakehouse_table",
+      "read_warehouse_table"
+    ]
   },
   {
     "name": "_lakehouse_file_path",
@@ -1523,7 +2898,21 @@
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/fabric_input_output.py",
-    "summary": "No summary available."
+    "summary": "Return an ABFSS path under a configured lakehouse Files area.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "read_lakehouse_csv",
+      "read_lakehouse_excel",
+      "read_lakehouse_parquet"
+    ]
   },
   {
     "name": "read_lakehouse_csv",
@@ -1538,7 +2927,21 @@
       "fabricops_kit.fabric_input_output._lakehouse_file_path"
     ],
     "source_file": "src/fabricops_kit/fabric_input_output.py",
-    "summary": "Read a CSV file from a configured Fabric lakehouse Files path."
+    "summary": "Read a CSV file from a configured Fabric lakehouse Files path.",
+    "use_when": "Read a CSV file from a configured Fabric lakehouse Files path.",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "config : FrameworkConfig | dict\n    FabricOps FrameworkConfig or compatible config object.\nenv : str\n    Environment key such as `\"dev\"`.\ntarget : str\n    Logical target name such as `\"source\"` or `\"unified\"`.\nrelative_path : str\n    Path to the CSV file or folder under the lakehouse root, for example\n    `\"Files/raw/orders.csv\"` or `\"Files/raw/orders/\"`.\nspark_session : object, optional\n    Spark session to use. If omitted, the helper uses the notebook global\n    `spark`.\nheader : bool, default True\n    Whether the first row of the CSV file contains column names.",
+    "output": "pyspark.sql.DataFrame\n    Spark DataFrame loaded from the CSV path.",
+    "side_effects": "Not documented yet",
+    "failure_modes": "ValueError\n    If `relative_path` is missing or the resolved target is not a lakehouse.\nRuntimeError\n    If no Spark session is available.",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_get_store",
+      "_get_spark",
+      "_lakehouse_file_path"
+    ]
   },
   {
     "name": "read_lakehouse_excel",
@@ -1553,7 +2956,21 @@
       "fabricops_kit.fabric_input_output._lakehouse_file_path"
     ],
     "source_file": "src/fabricops_kit/fabric_input_output.py",
-    "summary": "Read an Excel file from a configured Fabric lakehouse Files path."
+    "summary": "Read an Excel file from a configured Fabric lakehouse Files path.",
+    "use_when": "Read an Excel file from a configured Fabric lakehouse Files path.",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "config : FrameworkConfig | dict\n    FabricOps FrameworkConfig or compatible config object.\nenv : str\n    Environment key such as `\"dev\"`.\ntarget : str\n    Logical target name such as `\"source\"` or `\"unified\"`.\nrelative_path : str\n    Path to the Excel file relative to the lakehouse ``Files`` area, for\n    example ``\"reference/faculty_mapping.xlsx\"``. A leading ``\"Files/\"``\n    prefix is accepted for consistency with notebook examples and is\n    normalized away before the lakehouse path is resolved.\nsheet_name : str or int, default 0\n    Worksheet name or index to read. Defaults to the first worksheet.\nspark_session : object, optional\n    Spark session to use. If omitted, the helper uses the notebook global\n    `spark`.\n**read_excel_kwargs\n    Additional keyword arguments passed directly to\n    :func:`pandas.read_excel`. Common options include ``skiprows`` for\n    title rows above the real header, ``header`` for custom header-row\n    selection, ``usecols`` for column filtering, ``dtype`` for mixed-type\n    columns, and ``nrows`` for sampling or bounded reads.",
+    "output": "pyspark.sql.DataFrame\n    Spark DataFrame converted from the selected Excel worksheet.",
+    "side_effects": "Not documented yet",
+    "failure_modes": "ValueError\n    If `relative_path` is missing or the resolved target is not a lakehouse.\nFileNotFoundError\n    If the Excel file cannot be found at the resolved lakehouse path.\nRuntimeError\n    If no Spark session is available.",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_get_store",
+      "_get_spark",
+      "_lakehouse_file_path"
+    ]
   },
   {
     "name": "read_lakehouse_parquet",
@@ -1569,7 +2986,22 @@
       "fabricops_kit.fabric_input_output._lakehouse_file_path"
     ],
     "source_file": "src/fabricops_kit/fabric_input_output.py",
-    "summary": "Read a Parquet path from a configured Fabric lakehouse Files path."
+    "summary": "Read a Parquet path from a configured Fabric lakehouse Files path.",
+    "use_when": "Read a Parquet path from a configured Fabric lakehouse Files path.",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "config : FrameworkConfig | dict\n    FabricOps FrameworkConfig or compatible config object.\nenv : str\n    Environment key such as `\"dev\"`.\ntarget : str\n    Logical target name such as `\"source\"` or `\"unified\"`.\nrelative_path : str\n    Path to the Parquet file under the lakehouse `Files/` folder, without\n    the leading `\"Files/\"`. For example:\n    `\"raw/orders/orders_2026.parquet\"`.\nverbose : bool, default True\n    Whether to print read and fallback progress.\nspark_session : object, optional\n    Spark session to use. If omitted, the helper uses the notebook global\n    `spark`.",
+    "output": "pyspark.sql.DataFrame\n    Spark DataFrame loaded from the original or converted Parquet path.",
+    "side_effects": "Not documented yet",
+    "failure_modes": "ValueError\n    If `relative_path` is not a nested file path.\nRuntimeError\n    If neither the original path nor the converted fallback path can be\n    read successfully.",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_get_store",
+      "_convert_single_parquet_ns_to_us",
+      "_get_spark",
+      "_lakehouse_file_path"
+    ]
   },
   {
     "name": "read_lakehouse_table",
@@ -1593,7 +3025,29 @@
       "fabricops_kit.fabric_input_output._get_spark"
     ],
     "source_file": "src/fabricops_kit/fabric_input_output.py",
-    "summary": "Read a table from a configured Fabric lakehouse target."
+    "summary": "Read a table from a configured Fabric lakehouse target.",
+    "use_when": "Read a table from a configured Fabric lakehouse target.",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "config : FrameworkConfig | dict\n    FabricOps FrameworkConfig or compatible config object.\nenv : str\n    Environment key such as `\"dev\"`.\ntarget : str\n    Logical target name such as `\"source\"` or `\"unified\"`.\ntable : str\n    Table name under the lakehouse `Tables` area.\nspark_session : object, optional\n    Spark session to use. If omitted, the helper uses the notebook global\n    `spark`.",
+    "output": "pyspark.sql.DataFrame\n    Spark DataFrame loaded from the Delta table.",
+    "side_effects": "Not documented yet",
+    "failure_modes": "ValueError\n    If `table` is missing or the resolved target is not a lakehouse.\nRuntimeError\n    If no Spark session is available.",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_ensure_metadata_tables",
+      "_list_all_data_agreement_rows",
+      "_list_data_stewards",
+      "_setup_governance_metadata_tables",
+      "enforce_dq_rules",
+      "load_catalogue_profile_rows",
+      "widget_select_catalogue_table",
+      "_load_notebook_registry",
+      "_setup_notebook_registry_table",
+      "_get_store",
+      "_get_spark"
+    ]
   },
   {
     "name": "read_warehouse_table",
@@ -1607,7 +3061,20 @@
       "fabricops_kit.fabric_input_output._get_spark"
     ],
     "source_file": "src/fabricops_kit/fabric_input_output.py",
-    "summary": "Read a table from a configured Fabric warehouse target."
+    "summary": "Read a table from a configured Fabric warehouse target.",
+    "use_when": "Read a table from a configured Fabric warehouse target.",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "config : FrameworkConfig | dict\n    FabricOps FrameworkConfig or compatible config object.\nenv : str\n    Environment name in the config mapping, for example `\"Sandbox\"` or `\"DE\"`.\ntarget : str\n    Warehouse target name under the selected environment, for example\n    `\"Warehouse\"` or `\"wh_Bronze\"`.\nschema : str\n    Warehouse schema name, for example `\"dbo\"`.\ntable : str\n    Warehouse table name.\nspark_session : object, optional\n    Spark session to use. If omitted, the helper uses the notebook global\n    `spark`.",
+    "output": "pyspark.sql.DataFrame\n    Spark DataFrame loaded from the Fabric warehouse table.",
+    "side_effects": "Not documented yet",
+    "failure_modes": "RuntimeError\n    If the Microsoft Fabric Spark connector is unavailable.\nValueError\n    If the selected environment or target is missing from the config.",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_get_store",
+      "_get_spark"
+    ]
   },
   {
     "name": "write_lakehouse_table",
@@ -1627,7 +3094,25 @@
       "fabricops_kit.config._get_store"
     ],
     "source_file": "src/fabricops_kit/fabric_input_output.py",
-    "summary": "Write a DataFrame to a configured Fabric lakehouse target."
+    "summary": "Write a DataFrame to a configured Fabric lakehouse target.",
+    "use_when": "Write a DataFrame to a configured Fabric lakehouse target.",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "df : pyspark.sql.DataFrame\n    Spark DataFrame to write.\nconfig : FrameworkConfig | dict\n    FabricOps FrameworkConfig or compatible config object.\nenv : str\n    Environment key such as `\"dev\"`.\ntarget : str\n    Logical target name such as `\"source\"` or `\"unified\"`.\ntable : str\n    Target table name under the lakehouse `Tables` area.\nmode : str, default \"append\"\n    Spark write mode. Supported values are `\"append\"`, `\"overwrite\"`,\n    `\"errorifexists\"`, and `\"ignore\"`.\npartition_by : str or list[str], optional\n    Column or columns used to physically partition the Delta table.\nrepartition_by : int, str, list, or tuple, optional\n    Optional repartitioning before write.\noverwrite_schema : bool, default True\n    Whether to set Spark Delta `overwriteSchema=true` before saving.",
+    "output": "None\n    The DataFrame is written to the target Delta table path.",
+    "side_effects": "Not documented yet",
+    "failure_modes": "ValueError\n    If `table` is missing, `mode` is invalid, or the resolved target is not a lakehouse.",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_ensure_metadata_tables",
+      "_write_row",
+      "_setup_governance_metadata_tables",
+      "record_table_governance",
+      "_register_current_notebook",
+      "_setup_notebook_registry_table",
+      "_get_store"
+    ]
   },
   {
     "name": "write_warehouse_table",
@@ -1640,7 +3125,19 @@
       "fabricops_kit.config._get_store"
     ],
     "source_file": "src/fabricops_kit/fabric_input_output.py",
-    "summary": "Write a DataFrame to a configured Fabric warehouse target."
+    "summary": "Write a DataFrame to a configured Fabric warehouse target.",
+    "use_when": "Write a DataFrame to a configured Fabric warehouse target.",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "df : pyspark.sql.DataFrame\n    Spark DataFrame to write.\nconfig : FrameworkConfig | dict\n    FabricOps FrameworkConfig or compatible config object.\nenv : str\n    Environment name in the config mapping, for example `\"Sandbox\"` or `\"DE\"`.\ntarget : str\n    Warehouse target name under the selected environment, for example\n    `\"Warehouse\"` or `\"wh_Bronze\"`.\nschema : str\n    Warehouse schema name, for example `\"dbo\"`.\ntable : str\n    Warehouse table name.\nmode : str, default \"append\"\n    Spark write mode, for example `\"append\"` or `\"overwrite\"`.",
+    "output": "None\n    The DataFrame is written to the target warehouse table.",
+    "side_effects": "Not documented yet",
+    "failure_modes": "RuntimeError\n    If the Microsoft Fabric Spark connector is unavailable.\nValueError\n    If the selected environment or target is missing from the config.",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_get_store"
+    ]
   },
   {
     "name": "DQEnforcementResult",
@@ -1653,7 +3150,19 @@
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/governance_review.py",
-    "summary": "No summary available."
+    "summary": "Structured DQ enforcement outputs produced by internal DQ helpers.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_enforce_dq"
+    ]
   },
   {
     "name": "_approved_column_identity",
@@ -1672,7 +3181,24 @@
       "fabricops_kit.metadata._build_metadata_table_key"
     ],
     "source_file": "src/fabricops_kit/governance_review.py",
-    "summary": "No summary available."
+    "summary": "No summary available.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_build_classification_records",
+      "_build_column_context_records",
+      "_build_dq_rule_records",
+      "_value",
+      "_build_metadata_column_key",
+      "_build_metadata_table_key"
+    ]
   },
   {
     "name": "_approved_review_context",
@@ -1692,7 +3218,25 @@
       "fabricops_kit.metadata._resolve_action_by"
     ],
     "source_file": "src/fabricops_kit/governance_review.py",
-    "summary": "No summary available."
+    "summary": "No summary available.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_build_classification_records",
+      "_build_column_context_records",
+      "_build_dq_rule_records",
+      "_value",
+      "_build_runtime_audit_fields",
+      "_now_utc_iso",
+      "_resolve_action_by"
+    ]
   },
   {
     "name": "_build_classification_records",
@@ -1709,7 +3253,22 @@
       "fabricops_kit.governance_review._json"
     ],
     "source_file": "src/fabricops_kit/governance_review.py",
-    "summary": "No summary available."
+    "summary": "Build append-only approved sensitivity and PII classification records.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "record_table_governance",
+      "_approved_column_identity",
+      "_approved_review_context",
+      "_json"
+    ]
   },
   {
     "name": "_build_column_context_records",
@@ -1726,7 +3285,22 @@
       "fabricops_kit.governance_review._json"
     ],
     "source_file": "src/fabricops_kit/governance_review.py",
-    "summary": "No summary available."
+    "summary": "Build append-only approved business-context records from explicit reviews.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "record_table_governance",
+      "_approved_column_identity",
+      "_approved_review_context",
+      "_json"
+    ]
   },
   {
     "name": "_build_dq_rule_records",
@@ -1745,7 +3319,24 @@
       "fabricops_kit.metadata._build_dq_rule_key"
     ],
     "source_file": "src/fabricops_kit/governance_review.py",
-    "summary": "No summary available."
+    "summary": "Build append-only approved DQ-rule records without enforcing them.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "record_table_governance",
+      "_approved_column_identity",
+      "_approved_review_context",
+      "_canonical_dq_rule_type",
+      "_json",
+      "_build_dq_rule_key"
+    ]
   },
   {
     "name": "_canonical_dq_rule_type",
@@ -1761,7 +3352,22 @@
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/governance_review.py",
-    "summary": "No summary available."
+    "summary": "No summary available.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_build_dq_rule_records",
+      "_draft_dq_rules",
+      "_load_active_dq_rules",
+      "_validate_dq_rules"
+    ]
   },
   {
     "name": "_catalogue_table_options",
@@ -1778,7 +3384,22 @@
       "fabricops_kit.metadata._build_metadata_table_key"
     ],
     "source_file": "src/fabricops_kit/governance_review.py",
-    "summary": "No summary available."
+    "summary": "Return one option per logical table using its latest successful profile.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "catalogue_rows : iterable of dict\n    Rows from ``METADATA_DATA_CATALOGUE``.",
+    "output": "list[dict[str, Any]]\n    Stable table selections sorted by display label.",
+    "side_effects": "Not documented yet",
+    "failure_modes": "ValueError\n    If there are no catalogue rows or no successful profile rows.",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "widget_select_catalogue_table",
+      "_is_success",
+      "_value",
+      "_build_metadata_table_key"
+    ]
   },
   {
     "name": "_coerce_rows",
@@ -1795,7 +3416,23 @@
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/governance_review.py",
-    "summary": "No summary available."
+    "summary": "No summary available.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_extract_assignment_payload",
+      "_load_active_dq_rules",
+      "_setup_governance_metadata_tables",
+      "load_catalogue_profile_rows",
+      "widget_select_catalogue_table"
+    ]
   },
   {
     "name": "_display_review_guidance",
@@ -1812,7 +3449,22 @@
       "fabricops_kit.governance_review._value"
     ],
     "source_file": "src/fabricops_kit/governance_review.py",
-    "summary": "No summary available."
+    "summary": "No summary available.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "widget_review_column_classification",
+      "widget_review_column_context",
+      "widget_review_dq_rules",
+      "_value"
+    ]
   },
   {
     "name": "_dq_check_status",
@@ -1825,7 +3477,19 @@
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/governance_review.py",
-    "summary": "No summary available."
+    "summary": "No summary available.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_run_dq_guardrail_checks"
+    ]
   },
   {
     "name": "_dq_failed_expression",
@@ -1842,7 +3506,22 @@
       "fabricops_kit.governance_review._spark_sql_helpers"
     ],
     "source_file": "src/fabricops_kit/governance_review.py",
-    "summary": "No summary available."
+    "summary": "Build a Spark boolean expression identifying rows that fail one DQ rule.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_dq_failed_row_count",
+      "_dq_tagged_dataframe",
+      "_run_dq_guardrail_checks",
+      "_spark_sql_helpers"
+    ]
   },
   {
     "name": "_dq_failed_row_count",
@@ -1858,7 +3537,21 @@
       "fabricops_kit.governance_review._spark_sql_helpers"
     ],
     "source_file": "src/fabricops_kit/governance_review.py",
-    "summary": "No summary available."
+    "summary": "Return the count of rows that failed at least one DQ rule.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "enforce_dq_rules",
+      "_dq_failed_expression",
+      "_spark_sql_helpers"
+    ]
   },
   {
     "name": "_dq_summary",
@@ -1873,7 +3566,20 @@
       "fabricops_kit.governance_review._summarize_dq_guardrail"
     ],
     "source_file": "src/fabricops_kit/governance_review.py",
-    "summary": "No summary available."
+    "summary": "Build aggregate DQ fields for catalogue/profile evidence.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "enforce_dq_rules",
+      "_summarize_dq_guardrail"
+    ]
   },
   {
     "name": "_dq_tagged_dataframe",
@@ -1889,7 +3595,21 @@
       "fabricops_kit.governance_review._spark_sql_helpers"
     ],
     "source_file": "src/fabricops_kit/governance_review.py",
-    "summary": "No summary available."
+    "summary": "Return the full DataFrame tagged with warning-rule DQ columns.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "enforce_dq_rules",
+      "_dq_failed_expression",
+      "_spark_sql_helpers"
+    ]
   },
   {
     "name": "_draft_business_context",
@@ -1902,7 +3622,19 @@
       "fabricops_kit.governance_review._run_fabric_ai_drafting"
     ],
     "source_file": "src/fabricops_kit/governance_review.py",
-    "summary": "No summary available."
+    "summary": "Draft column business-context suggestions with Fabric AI.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_run_fabric_ai_drafting"
+    ]
   },
   {
     "name": "_draft_dq_rules",
@@ -1918,7 +3650,22 @@
       "fabricops_kit.governance_review._run_fabric_ai_drafting"
     ],
     "source_file": "src/fabricops_kit/governance_review.py",
-    "summary": "No summary available."
+    "summary": "Draft candidate DQ rules from metadata profiles or a raw DataFrame fallback.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_canonical_dq_rule_type",
+      "_extract_assignment_payload",
+      "_prepare_dq_profile_input_rows",
+      "_run_fabric_ai_drafting"
+    ]
   },
   {
     "name": "_draft_governance",
@@ -1931,7 +3678,19 @@
       "fabricops_kit.governance_review._run_fabric_ai_drafting"
     ],
     "source_file": "src/fabricops_kit/governance_review.py",
-    "summary": "No summary available."
+    "summary": "Draft sensitivity and PII classification suggestions with Fabric AI.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_run_fabric_ai_drafting"
+    ]
   },
   {
     "name": "_enforce_dq",
@@ -1948,7 +3707,23 @@
       "fabricops_kit.governance_review._validate_dq_rules"
     ],
     "source_file": "src/fabricops_kit/governance_review.py",
-    "summary": "No summary available."
+    "summary": "Enforce approved DQ rules and return structured deterministic outputs.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "DQEnforcementResult",
+      "_load_active_dq_rules",
+      "_run_dq_rules",
+      "_split_dq_rows",
+      "_validate_dq_rules"
+    ]
   },
   {
     "name": "_extract_assignment_payload",
@@ -1964,7 +3739,21 @@
       "fabricops_kit.governance_review._parse_ai_dict_response"
     ],
     "source_file": "src/fabricops_kit/governance_review.py",
-    "summary": "No summary available."
+    "summary": "Extract dictionary payloads from AI response rows with optional table-key narrowing.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_draft_dq_rules",
+      "_coerce_rows",
+      "_parse_ai_dict_response"
+    ]
   },
   {
     "name": "_get_governance_metadata_schemas",
@@ -1980,7 +3769,21 @@
       "fabricops_kit.governance_review._spark_types"
     ],
     "source_file": "src/fabricops_kit/governance_review.py",
-    "summary": "No summary available."
+    "summary": "Return typed Spark schemas prepared by ``00_env_config`` for governance.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "dict[str, pyspark.sql.types.StructType]\n    Physical metadata table names mapped to explicit nullable Spark schemas.",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_setup_governance_metadata_tables",
+      "_schema",
+      "_spark_types"
+    ]
   },
   {
     "name": "_is_success",
@@ -1996,7 +3799,21 @@
       "fabricops_kit.governance_review._value"
     ],
     "source_file": "src/fabricops_kit/governance_review.py",
-    "summary": "No summary available."
+    "summary": "No summary available.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_catalogue_table_options",
+      "load_catalogue_profile_rows",
+      "_value"
+    ]
   },
   {
     "name": "_is_table_not_found_error",
@@ -2009,7 +3826,19 @@
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/governance_review.py",
-    "summary": "No summary available."
+    "summary": "Return whether a Spark/read exception clearly means the table is absent.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_setup_governance_metadata_tables"
+    ]
   },
   {
     "name": "_json",
@@ -2024,7 +3853,21 @@
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/governance_review.py",
-    "summary": "No summary available."
+    "summary": "No summary available.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_build_classification_records",
+      "_build_column_context_records",
+      "_build_dq_rule_records"
+    ]
   },
   {
     "name": "_latest_dq_rule_versions",
@@ -2039,7 +3882,20 @@
       "fabricops_kit.governance_review._spark_sql_helpers"
     ],
     "source_file": "src/fabricops_kit/governance_review.py",
-    "summary": "No summary available."
+    "summary": "Resolve latest DQ metadata rows using the current v1 metadata shape.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_load_active_dq_rules",
+      "_spark_sql_helpers"
+    ]
   },
   {
     "name": "_load_active_dq_rules",
@@ -2059,7 +3915,25 @@
       "fabricops_kit.governance_review._validate_dq_rules"
     ],
     "source_file": "src/fabricops_kit/governance_review.py",
-    "summary": "No summary available."
+    "summary": "Load active DQ rules from current v1 metadata rows.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_enforce_dq",
+      "enforce_dq_rules",
+      "_canonical_dq_rule_type",
+      "_coerce_rows",
+      "_latest_dq_rule_versions",
+      "_spark_sql_helpers",
+      "_validate_dq_rules"
+    ]
   },
   {
     "name": "_parse_ai_dict_response",
@@ -2072,7 +3946,19 @@
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/governance_review.py",
-    "summary": "No summary available."
+    "summary": "Parse JSON/Python-dict AI response text into a dictionary.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_extract_assignment_payload"
+    ]
   },
   {
     "name": "_prepare_dq_profile_input_rows",
@@ -2088,7 +3974,21 @@
       "fabricops_kit.governance_review._spark_sql_helpers"
     ],
     "source_file": "src/fabricops_kit/governance_review.py",
-    "summary": "No summary available."
+    "summary": "Prepare DQ prompt profile rows from a profile DataFrame or raw DataFrame.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_draft_dq_rules",
+      "profile_dataframe",
+      "_spark_sql_helpers"
+    ]
   },
   {
     "name": "_run_dq_guardrail_checks",
@@ -2106,7 +4006,23 @@
       "fabricops_kit.governance_review._validate_dq_rules"
     ],
     "source_file": "src/fabricops_kit/governance_review.py",
-    "summary": "No summary available."
+    "summary": "Run DQ rules and return notebook guardrail check dictionaries.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "enforce_dq_rules",
+      "_dq_check_status",
+      "_dq_failed_expression",
+      "_spark_sql_helpers",
+      "_validate_dq_rules"
+    ]
   },
   {
     "name": "_run_dq_rules",
@@ -2123,7 +4039,22 @@
       "fabricops_kit.governance_review._validate_dq_rules"
     ],
     "source_file": "src/fabricops_kit/governance_review.py",
-    "summary": "No summary available."
+    "summary": "Run DQ rules and return rule-level PASS/FAIL evidence.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_enforce_dq",
+      "_spark_sql_helpers",
+      "_split_dq_rows",
+      "_validate_dq_rules"
+    ]
   },
   {
     "name": "_run_fabric_ai_drafting",
@@ -2138,7 +4069,21 @@
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/governance_review.py",
-    "summary": "No summary available."
+    "summary": "Run Fabric AI prompt drafting against prepared profile rows.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_draft_business_context",
+      "_draft_dq_rules",
+      "_draft_governance"
+    ]
   },
   {
     "name": "_schema",
@@ -2153,7 +4098,20 @@
       "fabricops_kit.governance_review._spark_types"
     ],
     "source_file": "src/fabricops_kit/governance_review.py",
-    "summary": "No summary available."
+    "summary": "No summary available.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_get_governance_metadata_schemas",
+      "_spark_types"
+    ]
   },
   {
     "name": "_schema_field_names",
@@ -2166,7 +4124,19 @@
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/governance_review.py",
-    "summary": "No summary available."
+    "summary": "No summary available.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_setup_governance_metadata_tables"
+    ]
   },
   {
     "name": "_setup_governance_metadata_tables",
@@ -2186,7 +4156,25 @@
       "fabricops_kit.governance_review._schema_field_names"
     ],
     "source_file": "src/fabricops_kit/governance_review.py",
-    "summary": "No summary available."
+    "summary": "Create or validate governance metadata tables via the configured route.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "spark : pyspark.sql.SparkSession\n    Spark session used to create empty metadata tables when missing.\nconfig : FrameworkConfig or dict\n    ``00_env_config`` configuration that contains the ``metadata`` target.\nenv : str\n    Environment key to prepare.",
+    "output": "dict[str, Any]\n    Setup status, checked tables, and newly created tables.",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "setup_metadata_tables",
+      "read_lakehouse_table",
+      "write_lakehouse_table",
+      "_coerce_rows",
+      "_get_governance_metadata_schemas",
+      "_is_table_not_found_error",
+      "_schema_field_names"
+    ]
   },
   {
     "name": "_spark_sql_helpers",
@@ -2207,7 +4195,27 @@
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/governance_review.py",
-    "summary": "No summary available."
+    "summary": "Return Spark SQL helper modules lazily for DQ runtime helpers.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_dq_failed_expression",
+      "_dq_failed_row_count",
+      "_dq_tagged_dataframe",
+      "_latest_dq_rule_versions",
+      "_load_active_dq_rules",
+      "_prepare_dq_profile_input_rows",
+      "_run_dq_guardrail_checks",
+      "_run_dq_rules",
+      "_split_dq_rows"
+    ]
   },
   {
     "name": "_spark_types",
@@ -2221,7 +4229,20 @@
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/governance_review.py",
-    "summary": "No summary available."
+    "summary": "Return Spark SQL type classes lazily so package import stays lightweight.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_get_governance_metadata_schemas",
+      "_schema"
+    ]
   },
   {
     "name": "_split_dq_rows",
@@ -2238,7 +4259,22 @@
       "fabricops_kit.governance_review._validate_dq_rules"
     ],
     "source_file": "src/fabricops_kit/governance_review.py",
-    "summary": "No summary available."
+    "summary": "Split source rows into valid rows, quarantine rows, and failure evidence.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_enforce_dq",
+      "_run_dq_rules",
+      "_spark_sql_helpers",
+      "_validate_dq_rules"
+    ]
   },
   {
     "name": "_summarize_dq_guardrail",
@@ -2252,7 +4288,20 @@
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/governance_review.py",
-    "summary": "No summary available."
+    "summary": "No summary available.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_dq_summary",
+      "enforce_dq_rules"
+    ]
   },
   {
     "name": "_validate_dq_rules",
@@ -2271,7 +4320,24 @@
       "fabricops_kit.governance_review._canonical_dq_rule_type"
     ],
     "source_file": "src/fabricops_kit/governance_review.py",
-    "summary": "No summary available."
+    "summary": "Validate canonical DQ rules before loading or enforcement.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_enforce_dq",
+      "_load_active_dq_rules",
+      "_run_dq_guardrail_checks",
+      "_run_dq_rules",
+      "_split_dq_rows",
+      "_canonical_dq_rule_type"
+    ]
   },
   {
     "name": "_value",
@@ -2289,7 +4355,24 @@
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/governance_review.py",
-    "summary": "No summary available."
+    "summary": "No summary available.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_approved_column_identity",
+      "_approved_review_context",
+      "_catalogue_table_options",
+      "_display_review_guidance",
+      "_is_success",
+      "load_catalogue_profile_rows"
+    ]
   },
   {
     "name": "enforce_dq_rules",
@@ -2308,7 +4391,25 @@
       "fabricops_kit.governance_review._summarize_dq_guardrail"
     ],
     "source_file": "src/fabricops_kit/governance_review.py",
-    "summary": "Enforce approved active DQ rules as a target-write guardrail without filtering rows."
+    "summary": "Enforce approved active DQ rules as a target-write guardrail without filtering rows.",
+    "use_when": "Enforce approved active DQ rules as a target-write guardrail without filtering rows.",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "dataframe : Any\n    Spark DataFrame to evaluate before the target write. The full DataFrame\n    is never filtered or split by this helper.\nconfig : FrameworkConfig or dict\n    Runtime configuration containing the configured metadata lakehouse\n    route from ``00_env_config``.\nenv : str\n    Environment name used to read ``METADATA_DQ_RULES`` from the configured\n    metadata target.\ndataset_name : str\n    Dataset identifier used with ``table_name`` to scope approved DQ rules\n    when those columns exist in the metadata table.\ntable_name : str\n    Target table name whose approved active DQ rules should be enforced.\nspark_session : pyspark.sql.SparkSession, optional\n    Spark session used to read metadata when required by the configured\n    storage helper.",
+    "output": "dict\n    Guardrail result with ``status``, ``can_continue``, ``checks``, and\n    ``message``. The result also carries the full tagged ``dataframe`` and\n    aggregate ``summary`` fields for the existing catalogue evidence path.\n    Error-severity rule failures return ``status='failed'`` and\n    ``can_continue=False``. Warning-severity failures return\n    ``status='warning'`` and ``can_continue=True``. Passing or absent rules\n    return ``status='passed'`` and ``can_continue=True``.",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "read_lakehouse_table",
+      "_dq_failed_row_count",
+      "_dq_summary",
+      "_dq_tagged_dataframe",
+      "_load_active_dq_rules",
+      "_run_dq_guardrail_checks",
+      "_summarize_dq_guardrail"
+    ]
   },
   {
     "name": "get_selected_catalogue_table",
@@ -2319,7 +4420,17 @@
     "inbound": [],
     "outbound": [],
     "source_file": "src/fabricops_kit/governance_review.py",
-    "summary": "Return the table selected by widget_select_catalogue_table."
+    "summary": "Return the table selected by widget_select_catalogue_table.",
+    "use_when": "Return the table selected by widget_select_catalogue_table.",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "table_selector : ipywidgets.Combobox, optional\n    Selector returned by ``widget_select_catalogue_table``. Passing it is\n    optional because the widget also maintains module-level selection state.",
+    "output": "dict[str, Any]\n    Stable table identity used by ``load_catalogue_profile_rows``.",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": []
   },
   {
     "name": "load_catalogue_profile_rows",
@@ -2336,7 +4447,23 @@
       "fabricops_kit.metadata._build_metadata_table_key"
     ],
     "source_file": "src/fabricops_kit/governance_review.py",
-    "summary": "Load column profile rows for the selected catalogue table."
+    "summary": "Load column profile rows for the selected catalogue table.",
+    "use_when": "Load column profile rows for the selected catalogue table.",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "read_lakehouse_table",
+      "_coerce_rows",
+      "_is_success",
+      "_value",
+      "_build_metadata_table_key"
+    ]
   },
   {
     "name": "record_table_governance",
@@ -2352,7 +4479,22 @@
       "fabricops_kit.governance_review._build_dq_rule_records"
     ],
     "source_file": "src/fabricops_kit/governance_review.py",
-    "summary": "Persist approved table-governance context, DQ-rule, and classification evidence in one v1 commit action."
+    "summary": "Persist approved table-governance context, DQ-rule, and classification evidence in one v1 commit action.",
+    "use_when": "Persist approved table-governance context, DQ-rule, and classification evidence in one v1 commit action.",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "config : FrameworkConfig or dict\n    Shared ``00_env_config`` configuration that routes metadata writes to\n    the configured metadata lakehouse target.\nenv : str\n    Environment key in ``config``.\nprofile_rows : list of dict\n    Column-profile rows loaded for the selected catalogue table.\nspark_session : pyspark.sql.SparkSession\n    Spark session used to create DataFrames for metadata writes.\ncontext_reviews, dq_rule_reviews, classification_reviews : list of dict, optional\n    Human-approved rows from the governance review workflow. Only rows with\n    ``review_status=\"approved\"`` and ``commit=True`` are written.\napproved_by : str, optional\n    Reviewer identity to stamp on records. When omitted, runtime defaults\n    are used.\nmode : str, default \"append\"\n    Write mode for metadata table commits.",
+    "output": "dict[str, list[dict[str, Any]]]\n    Records written for ``column_context``, ``dq_rules``, and\n    ``column_classification``.",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "write_lakehouse_table",
+      "_build_classification_records",
+      "_build_column_context_records",
+      "_build_dq_rule_records"
+    ]
   },
   {
     "name": "widget_review_column_classification",
@@ -2365,7 +4507,19 @@
       "fabricops_kit.governance_review._display_review_guidance"
     ],
     "source_file": "src/fabricops_kit/governance_review.py",
-    "summary": "Render standalone sensitivity and PII classification review guidance for selected profile rows."
+    "summary": "Render standalone sensitivity and PII classification review guidance for selected profile rows.",
+    "use_when": "Render standalone sensitivity and PII classification review guidance for selected profile rows.",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "profile_rows : list of dict\n    Selected column profile evidence from ``load_catalogue_profile_rows``.",
+    "output": "list[dict[str, Any]]\n    Empty editable review list. Add approved classification dictionaries\n    before calling ``record_table_governance``.",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_display_review_guidance"
+    ]
   },
   {
     "name": "widget_review_column_context",
@@ -2378,7 +4532,19 @@
       "fabricops_kit.governance_review._display_review_guidance"
     ],
     "source_file": "src/fabricops_kit/governance_review.py",
-    "summary": "Render standalone business-context review guidance for selected profile rows."
+    "summary": "Render standalone business-context review guidance for selected profile rows.",
+    "use_when": "Render standalone business-context review guidance for selected profile rows.",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "profile_rows : list of dict\n    Selected column profile evidence from ``load_catalogue_profile_rows``.",
+    "output": "list[dict[str, Any]]\n    Empty editable review list. Add approved context rows before calling\n    ``record_table_governance``.",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_display_review_guidance"
+    ]
   },
   {
     "name": "widget_review_dq_rules",
@@ -2391,7 +4557,19 @@
       "fabricops_kit.governance_review._display_review_guidance"
     ],
     "source_file": "src/fabricops_kit/governance_review.py",
-    "summary": "Render standalone DQ-rule review guidance for selected profile rows."
+    "summary": "Render standalone DQ-rule review guidance for selected profile rows.",
+    "use_when": "Render standalone DQ-rule review guidance for selected profile rows.",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "profile_rows : list of dict\n    Selected column profile evidence from ``load_catalogue_profile_rows``.",
+    "output": "list[dict[str, Any]]\n    Empty editable review list. Add approved rule dictionaries before\n    calling ``record_table_governance``.",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_display_review_guidance"
+    ]
   },
   {
     "name": "widget_select_catalogue_table",
@@ -2406,7 +4584,21 @@
       "fabricops_kit.governance_review._coerce_rows"
     ],
     "source_file": "src/fabricops_kit/governance_review.py",
-    "summary": "Render a searchable selector for latest successful catalogue profiles."
+    "summary": "Render a searchable selector for latest successful catalogue profiles.",
+    "use_when": "Render a searchable selector for latest successful catalogue profiles.",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "config : FrameworkConfig or dict\n    Runtime config containing the metadata lakehouse route.\nenv : str\n    Environment used to read ``METADATA_DATA_CATALOGUE``.\nspark_session : pyspark.sql.SparkSession\n    Spark session used for the catalogue read.",
+    "output": "ipywidgets.Combobox\n    Searchable selector whose value stores stable JSON identity.",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "read_lakehouse_table",
+      "_catalogue_table_options",
+      "_coerce_rows"
+    ]
   },
   {
     "name": "_build_dq_rule_key",
@@ -2421,7 +4613,20 @@
       "fabricops_kit.metadata._stable_metadata_key"
     ],
     "source_file": "src/fabricops_kit/metadata.py",
-    "summary": "No summary available."
+    "summary": "No summary available.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_build_dq_rule_records",
+      "_stable_metadata_key"
+    ]
   },
   {
     "name": "_build_metadata_column_key",
@@ -2436,7 +4641,20 @@
       "fabricops_kit.metadata._stable_metadata_key"
     ],
     "source_file": "src/fabricops_kit/metadata.py",
-    "summary": "No summary available."
+    "summary": "No summary available.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_approved_column_identity",
+      "_stable_metadata_key"
+    ]
   },
   {
     "name": "_build_metadata_table_key",
@@ -2453,7 +4671,22 @@
       "fabricops_kit.metadata._stable_metadata_key"
     ],
     "source_file": "src/fabricops_kit/metadata.py",
-    "summary": "No summary available."
+    "summary": "No summary available.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_approved_column_identity",
+      "_catalogue_table_options",
+      "load_catalogue_profile_rows",
+      "_stable_metadata_key"
+    ]
   },
   {
     "name": "_build_runtime_audit_fields",
@@ -2473,7 +4706,25 @@
       "fabricops_kit.metadata._safe_str"
     ],
     "source_file": "src/fabricops_kit/metadata.py",
-    "summary": "No summary available."
+    "summary": "Build reusable framework-managed audit fields for metadata-table rows.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "config : FrameworkConfig | dict, optional\n    Framework config containing ``path_config.paths[env][\"metadata\"]``.\nenv : str, optional\n    Environment key paired with ``config``.\ntimestamp_field, user_field, workspace_field, notebook_field : str\n    Output keys for timestamp, user, workspace, and notebook audit values.\nmetadata_lakehouse_field, activity_field : str\n    Output keys for metadata lakehouse and Fabric activity audit values.\ncommitted_by, committed_at : str, optional\n    Deterministic audit overrides. When omitted, values resolve from Fabric\n    runtime context and the current UTC timestamp.\nruntime_context : dict[str, Any], optional\n    Values merged over :func:`_runtime_context`, primarily for tests or\n    controlled notebook overrides.",
+    "output": "dict[str, str]\n    Framework-managed metadata audit values keyed by the supplied field\n    names.",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_create_or_update_data_agreement",
+      "_create_or_update_data_steward",
+      "_save_agreement_evidence_records",
+      "_approved_review_context",
+      "_context_get",
+      "_runtime_context",
+      "_safe_str"
+    ]
   },
   {
     "name": "_coerce_row_dicts",
@@ -2487,7 +4738,20 @@
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/metadata.py",
-    "summary": "No summary available."
+    "summary": "No summary available.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_registry_rows_with_defaults",
+      "_setup_notebook_registry_table"
+    ]
   },
   {
     "name": "_context_get",
@@ -2504,7 +4768,23 @@
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/metadata.py",
-    "summary": "No summary available."
+    "summary": "No summary available.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_build_runtime_audit_fields",
+      "_current_notebook_active_registrations",
+      "_register_current_notebook",
+      "_resolve_action_by",
+      "_runtime_context"
+    ]
   },
   {
     "name": "_current_notebook_active_registrations",
@@ -2522,7 +4802,23 @@
       "fabricops_kit.metadata._safe_str"
     ],
     "source_file": "src/fabricops_kit/metadata.py",
-    "summary": "No summary available."
+    "summary": "Return active agreement registrations for the running notebook.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "spark : pyspark.sql.SparkSession\n    Fabric Spark session used to read the metadata table.\nconfig : FrameworkConfig or dict\n    Metadata route configuration from ``00_env_config``.\nenv : str\n    Environment key paired with ``config``.\nmetadata_table : str, default=NOTEBOOK_REGISTRY_TABLE\n    Physical notebook registry table name.\nnotebook_type, environment_name, registration_role : str, optional\n    Optional filters for notebook phase, environment, and primary versus\n    additional registration role.\nmissing_ok : bool, default=True\n    Return an empty list when the registry cannot be read.",
+    "output": "list[dict[str, Any]]\n    Active latest registration rows for the current notebook runtime.",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "widget_select_agreement",
+      "_context_get",
+      "_load_notebook_registry",
+      "_runtime_context",
+      "_safe_str"
+    ]
   },
   {
     "name": "_load_notebook_registry",
@@ -2539,7 +4835,22 @@
       "fabricops_kit.metadata._registry_rows_with_defaults"
     ],
     "source_file": "src/fabricops_kit/metadata.py",
-    "summary": "No summary available."
+    "summary": "No summary available.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_current_notebook_active_registrations",
+      "read_lakehouse_table",
+      "_notebook_registration_key",
+      "_registry_rows_with_defaults"
+    ]
   },
   {
     "name": "_notebook_registration_key",
@@ -2554,7 +4865,21 @@
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/metadata.py",
-    "summary": "No summary available."
+    "summary": "No summary available.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_load_notebook_registry",
+      "_register_current_notebook",
+      "_registry_rows_with_defaults"
+    ]
   },
   {
     "name": "_now_utc_iso",
@@ -2567,7 +4892,19 @@
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/metadata.py",
-    "summary": "No summary available."
+    "summary": "No summary available.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_approved_review_context"
+    ]
   },
   {
     "name": "_register_current_notebook",
@@ -2587,7 +4924,25 @@
       "fabricops_kit.metadata._safe_str"
     ],
     "source_file": "src/fabricops_kit/metadata.py",
-    "summary": "No summary available."
+    "summary": "Append a runtime notebook registration row.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "spark : pyspark.sql.SparkSession\n    Fabric Spark session used to append the registration row.\nconfig : FrameworkConfig or dict, optional\n    Recommended metadata route configuration from ``00_env_config``. When\n    paired with ``env``, the row is written through\n    ``write_lakehouse_table(df, config, env, \"metadata\", metadata_table)``.\nenv : str, optional\n    Environment key paired with ``config`` for metadata lakehouse routing.\nagreement_id : str\n    Agreement identifier this notebook supports.\nnotebook_type : str\n    Notebook family or workflow phase. When blank, the value is inferred\n    from the current notebook name prefix.\nenvironment_name, dataset_name, table_name, topic, pipeline_name : str, optional\n    Optional workflow context recorded with the notebook registration.\ncontract_version : str, optional\n    Agreement contract version selected when the notebook was registered.\nregistration_role : {\"primary\", \"additional\"}, default=\"primary\"\n    Whether the row represents the notebook's user-facing active agreement\n    or an additional audit link.\nregistration_status : {\"active\", \"superseded\"}, default=\"active\"\n    Current registration event state. Superseded rows are retained for audit\n    and ignored by active-registration helpers.\nregistration_id : str, optional\n    Stable registration identifier. When omitted, a deterministic identifier\n    is generated from the notebook and agreement identity.\nsuperseded_at, superseded_by_registration_id : str, optional\n    Audit values populated when a prior registration is superseded.\nmetadata_table : str, default=NOTEBOOK_REGISTRY_TABLE\n    Physical notebook registry table name.",
+    "output": "dict[str, str]\n    Registration row matching :data:`NOTEBOOK_REGISTRY_FIELDS`.",
+    "side_effects": "Not documented yet",
+    "failure_modes": "ValueError\n    If the recommended ``config``/``env`` route is not provided.",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "widget_select_agreement",
+      "write_lakehouse_table",
+      "_context_get",
+      "_notebook_registration_key",
+      "_rows_for_spark",
+      "_runtime_context",
+      "_safe_str"
+    ]
   },
   {
     "name": "_registry_rows_with_defaults",
@@ -2605,7 +4960,23 @@
       "fabricops_kit.metadata._safe_str"
     ],
     "source_file": "src/fabricops_kit/metadata.py",
-    "summary": "No summary available."
+    "summary": "No summary available.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_load_notebook_registry",
+      "_setup_notebook_registry_table",
+      "_coerce_row_dicts",
+      "_notebook_registration_key",
+      "_safe_str"
+    ]
   },
   {
     "name": "_resolve_action_by",
@@ -2621,7 +4992,21 @@
       "fabricops_kit.metadata._runtime_context"
     ],
     "source_file": "src/fabricops_kit/metadata.py",
-    "summary": "No summary available."
+    "summary": "No summary available.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_approved_review_context",
+      "_context_get",
+      "_runtime_context"
+    ]
   },
   {
     "name": "_rows_for_spark",
@@ -2635,7 +5020,20 @@
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/metadata.py",
-    "summary": "No summary available."
+    "summary": "No summary available.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_register_current_notebook",
+      "_setup_notebook_registry_table"
+    ]
   },
   {
     "name": "_runtime_context",
@@ -2653,7 +5051,23 @@
       "fabricops_kit.metadata._context_get"
     ],
     "source_file": "src/fabricops_kit/metadata.py",
-    "summary": "No summary available."
+    "summary": "No summary available.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_build_runtime_audit_fields",
+      "_current_notebook_active_registrations",
+      "_register_current_notebook",
+      "_resolve_action_by",
+      "_context_get"
+    ]
   },
   {
     "name": "_safe_str",
@@ -2669,7 +5083,22 @@
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/metadata.py",
-    "summary": "No summary available."
+    "summary": "No summary available.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_build_runtime_audit_fields",
+      "_current_notebook_active_registrations",
+      "_register_current_notebook",
+      "_registry_rows_with_defaults"
+    ]
   },
   {
     "name": "_setup_notebook_registry_table",
@@ -2688,7 +5117,24 @@
       "fabricops_kit.metadata._rows_for_spark"
     ],
     "source_file": "src/fabricops_kit/metadata.py",
-    "summary": "No summary available."
+    "summary": "Create or validate the notebook registry metadata table.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "spark : pyspark.sql.SparkSession\n    Fabric Spark session used to create an empty table when the registry is\n    missing.\nconfig : FrameworkConfig or dict\n    Configuration containing the metadata lakehouse route from\n    ``00_env_config``.\nenv : str\n    Environment key configured by ``00_env_config``.\nmetadata_table : str, default=NOTEBOOK_REGISTRY_TABLE\n    Physical metadata table name to prepare.",
+    "output": "dict[str, Any]\n    Setup status, checked table, schema, and whether the table was created.",
+    "side_effects": "Not documented yet",
+    "failure_modes": "ValueError\n    If an existing table is missing required registry columns.",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "setup_metadata_tables",
+      "read_lakehouse_table",
+      "write_lakehouse_table",
+      "_coerce_row_dicts",
+      "_registry_rows_with_defaults",
+      "_rows_for_spark"
+    ]
   },
   {
     "name": "_stable_metadata_key",
@@ -2703,6 +5149,20 @@
     ],
     "outbound": [],
     "source_file": "src/fabricops_kit/metadata.py",
-    "summary": "No summary available."
+    "summary": "No summary available.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_build_dq_rule_key",
+      "_build_metadata_column_key",
+      "_build_metadata_table_key"
+    ]
   }
 ]

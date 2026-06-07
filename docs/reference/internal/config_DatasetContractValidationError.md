@@ -3,9 +3,43 @@
 **Module:** `config`  
 **Classification:** Internal
 
+## Status
+
+Internal helper used by the package implementation.
+
+## Function type: Internal helper
+
+Internal helper
+
+## Direct use: No
+
+Do not call this helper directly from notebooks; use the public callable helpers instead.
+
+## Used by
+
+- <a href="../internal/config__assert_valid_dataset_contract/"><code>fabricops_kit.config._assert_valid_dataset_contract</code></a>
+
 ## Purpose
 
-No summary available.
+Raised when dataset-contract validation fails.
+
+## Signature if available
+
+```python
+class DatasetContractValidationError(Exception)
+```
+
+## Side effects
+
+Not documented yet
+
+## Maintainer notes
+
+Maintain this helper through the owning implementation module and keep generated references in sync.
+
+## AI implementation contract
+
+Use internal pages only for package maintenance. Prefer public callable pages when authoring notebooks.
 
 ## Function manifest
 
@@ -20,4 +54,4 @@ No summary available.
 - Outbound references count: 0
 
 ## Inbound references
-- <a href="../internal/config/_assert_valid_dataset_contract/"><code>fabricops_kit.config._assert_valid_dataset_contract</code></a>
+- <a href="../internal/config__assert_valid_dataset_contract/"><code>fabricops_kit.config._assert_valid_dataset_contract</code></a>

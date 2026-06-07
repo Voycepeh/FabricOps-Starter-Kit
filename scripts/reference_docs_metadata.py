@@ -16,6 +16,16 @@ class PublicSymbolDocMetadata(TypedDict):
     function_type: NotRequired[str]
     purpose: NotRequired[str]
     summary_override: str | None
+    use_when: NotRequired[str]
+    do_not_use_when: NotRequired[str]
+    parameters: NotRequired[str | dict[str, str] | list[str]]
+    returns: NotRequired[str]
+    raises: NotRequired[str | dict[str, str] | list[str]]
+    side_effects: NotRequired[str | list[str]]
+    fabric_context: NotRequired[str]
+    ai_verification: NotRequired[str | list[str]]
+    preferred_example: NotRequired[str]
+    related_functions: NotRequired[list[str]]
 
 
 

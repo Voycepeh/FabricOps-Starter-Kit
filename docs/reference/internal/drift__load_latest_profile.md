@@ -3,9 +3,43 @@
 **Module:** `drift`  
 **Classification:** Internal
 
+## Status
+
+Internal helper used by the package implementation.
+
+## Function type: Internal helper
+
+Internal helper
+
+## Direct use: No
+
+Do not call this helper directly from notebooks; use the public callable helpers instead.
+
+## Used by
+
+- <a href="../monitor_data_changes/"><code>fabricops_kit.drift.monitor_data_changes</code></a>
+
 ## Purpose
 
-No summary available.
+Load an explicit profile-drift baseline from profile metadata rows.
+
+## Signature if available
+
+```python
+def _load_latest_profile(spark, metadata_table: str, dataset_name: str, table_name: str, profile_stage: str, exclude_run_id: str | None=None, baseline_mode: str='latest_successful') -> dict | None
+```
+
+## Side effects
+
+Not documented yet
+
+## Maintainer notes
+
+Maintain this helper through the owning implementation module and keep generated references in sync.
+
+## AI implementation contract
+
+Use internal pages only for package maintenance. Prefer public callable pages when authoring notebooks.
 
 ## Function manifest
 
@@ -23,5 +57,5 @@ No summary available.
 - <a href="../monitor_data_changes/"><code>fabricops_kit.drift.monitor_data_changes</code></a>
 
 ## Outbound references
-- <a href="../internal/drift/_is_missing_table_error/"><code>fabricops_kit.drift._is_missing_table_error</code></a>
-- <a href="../internal/drift/_normalize_profile/"><code>fabricops_kit.drift._normalize_profile</code></a>
+- <a href="../internal/drift__is_missing_table_error/"><code>fabricops_kit.drift._is_missing_table_error</code></a>
+- <a href="../internal/drift__normalize_profile/"><code>fabricops_kit.drift._normalize_profile</code></a>

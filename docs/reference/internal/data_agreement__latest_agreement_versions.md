@@ -3,9 +3,44 @@
 **Module:** `data_agreement`  
 **Classification:** Internal
 
+## Status
+
+Internal helper used by the package implementation.
+
+## Function type: Internal helper
+
+Internal helper
+
+## Direct use: No
+
+Do not call this helper directly from notebooks; use the public callable helpers instead.
+
+## Used by
+
+- <a href="../internal/data_agreement__list_data_agreements/"><code>fabricops_kit.data_agreement._list_data_agreements</code></a>
+- <a href="../widget_select_agreement/"><code>fabricops_kit.data_agreement.widget_select_agreement</code></a>
+
 ## Purpose
 
-No summary available.
+Return the latest semantic version for each stable agreement ID.
+
+## Signature if available
+
+```python
+def _latest_agreement_versions(rows: Any) -> list[dict[str, Any]]
+```
+
+## Side effects
+
+Not documented yet
+
+## Maintainer notes
+
+Maintain this helper through the owning implementation module and keep generated references in sync.
+
+## AI implementation contract
+
+Use internal pages only for package maintenance. Prefer public callable pages when authoring notebooks.
 
 ## Function manifest
 
@@ -20,9 +55,9 @@ No summary available.
 - Outbound references count: 2
 
 ## Inbound references
-- <a href="../internal/data_agreement/_list_data_agreements/"><code>fabricops_kit.data_agreement._list_data_agreements</code></a>
+- <a href="../internal/data_agreement__list_data_agreements/"><code>fabricops_kit.data_agreement._list_data_agreements</code></a>
 - <a href="../widget_select_agreement/"><code>fabricops_kit.data_agreement.widget_select_agreement</code></a>
 
 ## Outbound references
-- <a href="../internal/data_agreement/_coerce_row_dicts/"><code>fabricops_kit.data_agreement._coerce_row_dicts</code></a>
-- <a href="../internal/data_agreement/_parse_contract_version/"><code>fabricops_kit.data_agreement._parse_contract_version</code></a>
+- <a href="../internal/data_agreement__coerce_row_dicts/"><code>fabricops_kit.data_agreement._coerce_row_dicts</code></a>
+- <a href="../internal/data_agreement__parse_contract_version/"><code>fabricops_kit.data_agreement._parse_contract_version</code></a>

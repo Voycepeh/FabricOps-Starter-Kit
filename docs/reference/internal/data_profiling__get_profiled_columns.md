@@ -3,9 +3,43 @@
 **Module:** `data_profiling`  
 **Classification:** Internal
 
+## Status
+
+Internal helper used by the package implementation.
+
+## Function type: Internal helper
+
+Internal helper
+
+## Direct use: No
+
+Do not call this helper directly from notebooks; use the public callable helpers instead.
+
+## Used by
+
+- <a href="../profile_dataframe/"><code>fabricops_kit.data_profiling.profile_dataframe</code></a>
+
 ## Purpose
 
-No summary available.
+Return non-technical column names from a Spark DataFrame.
+
+## Signature if available
+
+```python
+def _get_profiled_columns(df, exclude_columns: list[str] | set[str] | None=None) -> list[str]
+```
+
+## Side effects
+
+Not documented yet
+
+## Maintainer notes
+
+Maintain this helper through the owning implementation module and keep generated references in sync.
+
+## AI implementation contract
+
+Use internal pages only for package maintenance. Prefer public callable pages when authoring notebooks.
 
 ## Function manifest
 

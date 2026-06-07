@@ -107,6 +107,38 @@ def _assert_non_placeholder_summary(symbol_name: str, field_name: str, text: str
         raise RuntimeError(f"{symbol_name} has placeholder {field_name}: {normalized}")
 
 
+def _signature_from_node(node: ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef) -> str:
+    """Return a compact source signature for a function or class."""
+    if isinstance(node, ast.ClassDef):
+        bases = [ast.unparse(base) for base in node.bases]
+        return f"class {node.name}({', '.join(bases)})" if bases else f"class {node.name}"
+    prefix = "async def" if isinstance(node, ast.AsyncFunctionDef) else "def"
+    returns = f" -> {ast.unparse(node.returns)}" if node.returns is not None else ""
+    return f"{prefix} {node.name}({ast.unparse(node.args)}){returns}"
+
+
+def _docstring_sections(doc: str | None) -> dict[str, str]:
+    """Extract simple NumPy-style docstring sections without changing behavior."""
+    if not doc:
+        return {}
+    lines = doc.strip().splitlines()
+    sections: dict[str, list[str]] = {}
+    current: str | None = None
+    index = 0
+    while index < len(lines):
+        line = lines[index].strip()
+        next_line = lines[index + 1].strip() if index + 1 < len(lines) else ""
+        if line and next_line and set(next_line) <= {"-"} and len(next_line) >= 3:
+            current = line.lower().replace(" ", "_")
+            sections[current] = []
+            index += 2
+            continue
+        if current is not None:
+            sections[current].append(lines[index].rstrip())
+        index += 1
+    return {key: "\n".join(value).strip() for key, value in sections.items() if "\n".join(value).strip()}
+
+
 def parse_module(path: Path) -> dict[str, Any]:
     tree = ast.parse(path.read_text(encoding="utf-8"))
     functions: dict[str, str] = {}
@@ -114,9 +146,14 @@ def parse_module(path: Path) -> dict[str, Any]:
     constants: dict[str, str] = {}
     calls: dict[str, set[str]] = {}
     used_by: dict[str, set[str]] = {}
+    signatures: dict[str, str] = {}
+    doc_sections: dict[str, dict[str, str]] = {}
     for node in tree.body:
-        if isinstance(node, ast.FunctionDef):
-            functions[node.name] = first_sentence(ast.get_docstring(node))
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            doc = ast.get_docstring(node)
+            functions[node.name] = first_sentence(doc)
+            signatures[node.name] = _signature_from_node(node)
+            doc_sections[node.name] = _docstring_sections(doc)
             called = set()
             for child in ast.walk(node):
                 if isinstance(child, ast.Call):
@@ -126,7 +163,10 @@ def parse_module(path: Path) -> dict[str, Any]:
                         called.add(child.func.attr)
             calls[node.name] = called
         elif isinstance(node, ast.ClassDef):
-            classes[node.name] = first_sentence(ast.get_docstring(node))
+            doc = ast.get_docstring(node)
+            classes[node.name] = first_sentence(doc)
+            signatures[node.name] = _signature_from_node(node)
+            doc_sections[node.name] = _docstring_sections(doc)
         elif isinstance(node, ast.Assign):
             for target in node.targets:
                 if isinstance(target, ast.Name) and target.id.isupper():
@@ -140,7 +180,7 @@ def parse_module(path: Path) -> dict[str, Any]:
         for callee in names:
             if callee in callees:
                 used_by.setdefault(callee, set()).add(caller)
-    return {"functions": functions, "classes": classes, "constants": constants, "calls": calls, "used_by": used_by}
+    return {"functions": functions, "classes": classes, "constants": constants, "calls": calls, "used_by": used_by, "signatures": signatures, "doc_sections": doc_sections}
 
 
 def parse_import_aliases(nodes: list[ast.stmt]) -> tuple[dict[str, str], dict[str, str]]:
@@ -467,6 +507,62 @@ def html_escape(text: str) -> str:
 def function_chip(name: str, href: str) -> str:
     """Return a clickable function chip for generated docs tables."""
     return f'<a class="function-chip" href="{html_escape(href)}"><code>{html_escape(name)}</code></a>'
+
+
+PLACEHOLDER = "Not documented yet"
+
+
+def _metadata_text(value: Any) -> str:
+    """Render metadata values as markdown-friendly text."""
+    if value is None or value == "":
+        return PLACEHOLDER
+    if isinstance(value, dict):
+        return "\n".join(f"- `{key}`: {item}" for key, item in value.items()) or PLACEHOLDER
+    if isinstance(value, list):
+        return "\n".join(f"- {item}" for item in value) or PLACEHOLDER
+    return str(value)
+
+
+def _documented_text(*values: Any) -> str:
+    """Return the first documented text value or a standard placeholder."""
+    for value in values:
+        text = _metadata_text(value)
+        if text != PLACEHOLDER:
+            return text
+    return PLACEHOLDER
+
+
+def _code_block(text: str) -> str:
+    """Return a fenced Python block for generated reference pages."""
+    return f"```python\n{text}\n```"
+
+
+def _related_function_links(
+    related: list[str],
+    node_by_qn: dict[str, dict[str, Any]],
+    docs_metadata: dict[str, dict[str, Any]],
+) -> list[str]:
+    """Render related function links for callable and internal pages."""
+    rows: list[str] = []
+    for item in related:
+        qn = item if item.startswith(f"{PACKAGE_NAME}.") else next(
+            (candidate_qn for candidate_qn, candidate_node in node_by_qn.items() if candidate_node["callable_name"] == item),
+            item,
+        )
+        node = node_by_qn.get(qn)
+        label = qn
+        if node and node.get("exported"):
+            href = f"../{node['callable_name']}/"
+        elif node:
+            href = f"../internal/{node['module_name']}_{node['callable_name']}/"
+        elif item in docs_metadata:
+            href = f"../{item}/"
+            label = item
+        else:
+            rows.append(f"- `{label}`")
+            continue
+        rows.append(f'- <a href="{href}"><code>{label}</code></a>')
+    return rows
 
 
 def function_chip_wrap(chips: list[str]) -> str:
@@ -1137,6 +1233,16 @@ def main() -> None:
         "- Use the Function catalogue below to browse the public v1 callables by default; enable Internal for package helpers.",
         "- Use Implementation Modules only when debugging or maintaining current major source boundaries; they do not document every `.py` file.",
         "",
+        "## How to use this reference",
+        "",
+        "- **Callable helpers** are public v1 functions intended for notebook authors and human operators.",
+        "- **Internal helpers** document package support functions for transparency; use them for maintenance, not direct notebook calls.",
+        "- **Implementation modules** show source ownership, module-level dependencies, and helper relationships for maintainers.",
+        "- **Function manifests** (`manifest.json` and `function-manifest.json`) provide machine-readable callable/module inventory for checks and automation.",
+        "- **Agent manifest** (`agent-manifest.json`) adds AI-oriented execution fields for planning, side-effect checks, and verification.",
+        "- **AI implementation contracts** on callable/internal pages summarize expectations agents must satisfy before using or changing a function.",
+        "- **Skill file** (`ai/skills/fabricops/SKILL.md`) gives agents repo-specific rules and points them to these generated references.",
+        "",
     ]
 
     ref.extend(
@@ -1249,31 +1355,171 @@ def main() -> None:
     function_manifest: list[dict[str, Any]] = []
     for qn, node in sorted(node_by_qn.items()):
         short_name = node["callable_name"]
+        module_name = node["module_name"]
         deps = sorted(set(calls_by_qn.get(qn, [])))
         used_by = sorted(set(used_by_qn.get(qn, [])))
-        summary = docs_metadata.get(short_name, {}).get("summary_override") or ""
+        metadata = docs_metadata.get(short_name, {})
+        module_info = module_data[module_name]
+        doc_sections = module_info.get("doc_sections", {}).get(short_name, {})
+        signature = module_info.get("signatures", {}).get(short_name, "")
+        summary = metadata.get("summary_override") or ""
         docs_path = (
-            f"reference/{short_name}.md" if node["exported"] else f"reference/internal/{node['module_name']}_{short_name}.md"
+            f"reference/{short_name}.md" if node["exported"] else f"reference/internal/{module_name}_{short_name}.md"
         )
-        source_path = f"src/fabricops_kit/{node['module_name']}.py"
-        source_ref = f"../../api/modules/{node['module_name']}/#{short_name}"
+        source_path = f"src/fabricops_kit/{module_name}.py"
+        source_ref = f"../../api/modules/{module_name}/#{short_name}"
         classification = "Callable" if node.get("role") == "callable" else "Internal"
-        purpose = summary or "No summary available."
-        rel_module = canonical_public_module(node['module_name'])
+        purpose = summary or module_info["functions"].get(short_name) or module_info["classes"].get(short_name) or "No summary available."
+        rel_module = canonical_public_module(module_name)
+        metadata_related = list(metadata.get("related_functions", []))
+        relationship_related = [*used_by, *deps]
+        related_for_page = metadata_related or relationship_related
 
         def _fmt_links(items: list[str]) -> list[str]:
-            out=[]
-            for i in items:
-                n=node_by_qn.get(i,{})
-                if not n: continue
-                if n.get('exported'):
-                    href=f"../{n['callable_name']}/"
+            out = []
+            for item in items:
+                n = node_by_qn.get(item, {})
+                if not n:
+                    continue
+                if n.get("exported"):
+                    href = f"../{n['callable_name']}/"
                 else:
-                    href=f"../internal/{n['module_name']}/{n['callable_name']}/"
-                out.append(f'- <a href="{href}"><code>{i}</code></a>')
+                    href = f"../internal/{n['module_name']}_{n['callable_name']}/"
+                out.append(f'- <a href="{href}"><code>{item}</code></a>')
             return out
 
-        lines=[f"# {short_name}","",f"**Module:** `{node['module_name']}`  ",f"**Classification:** {classification}","","## Purpose","",purpose,"","## Function manifest","",'- Fully qualified function name: '+f'`{qn}`','- Short name: '+f'`{short_name}`','- Module: '+f'`{node["module_name"]}`','- Classification: '+classification,'- Related module: '+f'`{rel_module}`','- Source file path: '+f'`{source_path}`',f'- Source reference: <a href="{source_ref}">Module source anchor</a>',f'- Inbound references count: {len(used_by)}',f'- Outbound references count: {len(deps)}']
+        if node["exported"]:
+            lines = [
+                f"# {short_name}",
+                "",
+                f"**Module:** `{module_name}`  ",
+                "**Classification:** Callable",
+                "",
+                "## Status",
+                "",
+                "Public callable helper intended for notebook authors.",
+                "",
+                "## When to use this",
+                "",
+                _documented_text(metadata.get("use_when"), metadata.get("purpose"), purpose),
+                "",
+                "## When not to use this",
+                "",
+                _documented_text(metadata.get("do_not_use_when")),
+                "",
+                "## Quick example",
+                "",
+                _documented_text(metadata.get("preferred_example")),
+                "",
+                "## Signature",
+                "",
+                _code_block(signature) if signature else PLACEHOLDER,
+                "",
+                "## Parameters",
+                "",
+                _documented_text(metadata.get("parameters"), doc_sections.get("parameters")),
+                "",
+                "## Returns",
+                "",
+                _documented_text(metadata.get("returns"), doc_sections.get("returns")),
+                "",
+                "## Raises",
+                "",
+                _documented_text(metadata.get("raises"), doc_sections.get("raises")),
+                "",
+                "## Side effects",
+                "",
+                _documented_text(metadata.get("side_effects")),
+                "",
+                "## FabricOps context",
+                "",
+                _documented_text(metadata.get("fabric_context"), f"Starter template: `{metadata.get('template_notebook')}`; segment: `{metadata.get('template_segment')}`." if metadata.get("template_notebook") else None),
+                "",
+                "## AI implementation contract",
+                "",
+                _documented_text(metadata.get("ai_verification")),
+                "",
+                "## Related functions",
+                "",
+            ]
+            related_lines = _related_function_links(related_for_page, node_by_qn, docs_metadata)
+            lines.extend(related_lines if related_lines else [PLACEHOLDER])
+            lines.extend([
+                "",
+                "## Source and tests",
+                "",
+                f"- Source file path: `{source_path}`",
+                f'- Source reference: <a href="{source_ref}">Module source anchor</a>',
+                "- Tests: Not documented yet",
+                "",
+                "## Function manifest",
+                "",
+                f"- Fully qualified function name: `{qn}`",
+                f"- Short name: `{short_name}`",
+                f"- Module: `{module_name}`",
+                "- Classification: Callable",
+                f"- Related module: `{rel_module}`",
+                f"- Inbound references count: {len(used_by)}",
+                f"- Outbound references count: {len(deps)}",
+            ])
+        else:
+            lines = [
+                f"# {short_name}",
+                "",
+                f"**Module:** `{module_name}`  ",
+                "**Classification:** Internal",
+                "",
+                "## Status",
+                "",
+                "Internal helper used by the package implementation.",
+                "",
+                "## Function type: Internal helper",
+                "",
+                "Internal helper",
+                "",
+                "## Direct use: No",
+                "",
+                "Do not call this helper directly from notebooks; use the public callable helpers instead.",
+                "",
+                "## Used by",
+                "",
+            ]
+            lines.extend(_fmt_links(used_by) if used_by else [PLACEHOLDER])
+            lines.extend([
+                "",
+                "## Purpose",
+                "",
+                purpose,
+                "",
+                "## Signature if available",
+                "",
+                _code_block(signature) if signature else PLACEHOLDER,
+                "",
+                "## Side effects",
+                "",
+                _documented_text(metadata.get("side_effects")),
+                "",
+                "## Maintainer notes",
+                "",
+                "Maintain this helper through the owning implementation module and keep generated references in sync.",
+                "",
+                "## AI implementation contract",
+                "",
+                _documented_text(metadata.get("ai_verification"), "Use internal pages only for package maintenance. Prefer public callable pages when authoring notebooks."),
+                "",
+                "## Function manifest",
+                "",
+                f"- Fully qualified function name: `{qn}`",
+                f"- Short name: `{short_name}`",
+                f"- Module: `{module_name}`",
+                "- Classification: Internal",
+                f"- Related module: `{rel_module}`",
+                f"- Source file path: `{source_path}`",
+                f'- Source reference: <a href="{source_ref}">Module source anchor</a>',
+                f"- Inbound references count: {len(used_by)}",
+                f"- Outbound references count: {len(deps)}",
+            ])
+
         if used_by:
             lines.extend(["", "## Inbound references", *(_fmt_links(used_by))])
         if deps:
@@ -1284,10 +1530,30 @@ def main() -> None:
         if node["exported"]:
             (CALLABLE_REFERENCE_DIR / f"{short_name}.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
         else:
-            (INTERNAL_REFERENCE_DIR / f"{node['module_name']}_{short_name}.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+            (INTERNAL_REFERENCE_DIR / f"{module_name}_{short_name}.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
-        function_manifest.append({"id": qn, "name": short_name, "qualified_name": qn, "module": node["module_name"], "classification": classification, "inbound": used_by, "outbound": deps, "source_path": source_path, "docs_path": docs_path, "summary": purpose})
-        agent_manifest.append({"name": short_name, "qualified_name": qn, "module": node["module_name"], "type": "callable" if node["exported"] else "internal", "role": node.get("role", "internal"), "inbound": used_by, "outbound": deps, "source_file": source_path, "summary": purpose})
+        function_manifest.append({"id": qn, "name": short_name, "qualified_name": qn, "module": module_name, "classification": classification, "inbound": used_by, "outbound": deps, "source_path": source_path, "docs_path": docs_path, "summary": purpose})
+        agent_manifest.append({
+            "name": short_name,
+            "qualified_name": qn,
+            "module": module_name,
+            "type": "callable" if node["exported"] else "internal",
+            "role": node.get("role", "internal"),
+            "inbound": used_by,
+            "outbound": deps,
+            "source_file": source_path,
+            "summary": purpose,
+            "use_when": _documented_text(metadata.get("use_when"), metadata.get("purpose"), purpose) if node["exported"] else PLACEHOLDER,
+            "do_not_use_when": _documented_text(metadata.get("do_not_use_when")),
+            "required_context": _documented_text(metadata.get("fabric_context")),
+            "inputs": _documented_text(metadata.get("parameters"), doc_sections.get("parameters")),
+            "output": _documented_text(metadata.get("returns"), doc_sections.get("returns")),
+            "side_effects": _documented_text(metadata.get("side_effects")),
+            "failure_modes": _documented_text(metadata.get("raises"), doc_sections.get("raises")),
+            "preferred_example": _documented_text(metadata.get("preferred_example")),
+            "verification": _documented_text(metadata.get("ai_verification")),
+            "related_functions": metadata_related or [item.split(".")[-1] for item in relationship_related],
+        })
     AGENT_MANIFEST_PATH.write_text(json.dumps(agent_manifest, indent=2) + "\n", encoding="utf-8")
     FUNCTION_MANIFEST_PATH.write_text(json.dumps(function_manifest, indent=2) + "\n", encoding="utf-8")
 
