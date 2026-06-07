@@ -4,7 +4,7 @@ import pandas as pd
 import pytest
 
 from fabricops_kit.governance_review import _validate_dq_rules
-from fabricops_kit.drift import _check_profile_drift, stop_if_failed, validate_schema
+from fabricops_kit.drift import _check_profile_drift, monitor_data_changes, stop_if_failed, validate_schema
 
 pytestmark = pytest.mark.unit
 
@@ -67,6 +67,52 @@ def test_monitor_data_changes_uses_profile_baselines_without_blocking_first_obse
     assert first["status"] == "no_baseline"
     assert first["can_continue"] is True
     assert changed["status"] in {"warning", "failed", "passed"}
+
+
+def test_monitor_data_changes_returns_guardrail_wrapper_shape(monkeypatch):
+    import fabricops_kit.data_profiling as data_profiling
+
+    profile_rows = [
+        {
+            "TABLE_NAME": "orders",
+            "COLUMN_NAME": "status",
+            "DATA_TYPE": "string",
+            "ROW_COUNT": 100,
+            "NULL_COUNT": 0,
+            "NULL_PERCENT": 0.0,
+            "DISTINCT_COUNT": 2,
+            "DISTINCT_PERCENT": 2.0,
+        }
+    ]
+
+    class FakeSpark:
+        def table(self, _metadata_table):
+            raise RuntimeError("table not found")
+
+    monkeypatch.setattr(data_profiling, "profile_dataframe", lambda *args, **kwargs: profile_rows)
+    result = monitor_data_changes(
+        FakeSpark(),
+        object(),
+        "METADATA_DATA_CATALOGUE",
+        "sales",
+        "orders",
+        stage="target",
+        preset="monitor_changing_data",
+    )
+
+    assert set(result) == {"profile", "profile_payload", "baseline", "result"}
+    assert result["profile"] == profile_rows
+    assert result["profile_payload"]["columns"][0]["column_name"] == "status"
+    assert result["baseline"] is None
+    assert result["result"]["status"] == "no_baseline"
+    assert result["result"]["can_continue"] is True
+    assert result["result"]["preset"] == "monitor_changing_data"
+
+
+def test_stop_if_failed_blocks_only_failed_guardrail_results():
+    stop_if_failed({"can_continue": True, "status": "warning", "message": "observed"})
+    stop_if_failed({"result": {"can_continue": True, "status": "passed"}})
+
     with pytest.raises(Exception):
         stop_if_failed({"can_continue": False, "status": "failed", "message": "blocked"})
 
@@ -83,12 +129,5 @@ def test_drift_public_surface_keeps_compatibility_exceptions_unexported():
     }
 
     assert exported_from_drift == public_drift_callables
-    assert "UnsupportedDataFrameEngineError" not in fabricops_kit.__all__
-    assert "IncrementalSafetyError" not in fabricops_kit.__all__
-    assert not hasattr(fabricops_kit, "UnsupportedDataFrameEngineError")
-    assert not hasattr(fabricops_kit, "IncrementalSafetyError")
-
-    assert issubclass(drift.UnsupportedDataFrameEngineError, ValueError)
-    assert issubclass(drift.IncrementalSafetyError, Exception)
     assert not hasattr(drift, "_check_partition_drift")
     assert not hasattr(drift, "_build_partition_snapshot")

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from fabricops_kit.data_lineage import _build_lineage_handover_markdown, build_lineage_records
+from fabricops_kit.data_lineage import build_lineage_records
 from fabricops_kit.governance_review import (
     _build_classification_records,
     _build_column_context_records,
@@ -71,7 +71,16 @@ def test_profile_lineage_and_handover_helpers_return_notebook_ready_structures()
     assert profile["row_count"] == 3
     assert lineage[0]["target_table"] == "orders"
     assert "orders" in render_handover_markdown(summary)
-    assert "orders" in _build_lineage_handover_markdown({"records": lineage})
+    assert lineage == [
+        {
+            "run_id": "run-1",
+            "dataset_name": "sales",
+            "source_tables": ["raw_orders"],
+            "target_table": "orders",
+            "step": "clean",
+            "description": "Clean source rows",
+        }
+    ]
 
 
 def test_governance_review_builders_commit_only_human_approved_records():

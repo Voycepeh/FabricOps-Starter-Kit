@@ -20,4 +20,4 @@ No summary available.
 - Outbound references count: 1
 
 ## Outbound references
-- <a href="../internal/data_lineage/_build_lineage_record_from_steps/"><code>fabricops_kit.data_lineage._build_lineage_record_from_steps</code></a>
+- <a href="../internal/data_lineage/_validate_lineage_steps/"><code>fabricops_kit.data_lineage._validate_lineage_steps</code></a>

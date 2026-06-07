@@ -1484,40 +1484,6 @@
       ],
       "internal_helper_count": 5
     },
-    "fabricops_kit.data_lineage._build_lineage_handover_markdown": {
-      "qualified_name": "fabricops_kit.data_lineage._build_lineage_handover_markdown",
-      "short_name": "_build_lineage_handover_markdown",
-      "module": "data_lineage",
-      "callable": "_build_lineage_handover_markdown",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_lineage/_build_lineage_handover_markdown/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.data_lineage._build_lineage_record_from_steps": {
-      "qualified_name": "fabricops_kit.data_lineage._build_lineage_record_from_steps",
-      "short_name": "_build_lineage_record_from_steps",
-      "module": "data_lineage",
-      "callable": "_build_lineage_record_from_steps",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_lineage/_build_lineage_record_from_steps/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.data_lineage._validate_lineage_steps"
-      ],
-      "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.data_lineage._build_lineage_records"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [
-        "fabricops_kit.data_lineage._validate_lineage_steps"
-      ],
-      "internal_helper_count": 1
-    },
     "fabricops_kit.data_lineage._build_lineage_records": {
       "qualified_name": "fabricops_kit.data_lineage._build_lineage_records",
       "short_name": "_build_lineage_records",
@@ -1526,31 +1492,15 @@
       "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_lineage/_build_lineage_records/",
       "classification": "internal",
       "calls": [
-        "fabricops_kit.data_lineage._build_lineage_record_from_steps"
+        "fabricops_kit.data_lineage._validate_lineage_steps"
       ],
       "calls_count": 1,
       "used_by": [],
       "used_by_count": 0,
       "internal_helpers_used": [
-        "fabricops_kit.data_lineage._build_lineage_record_from_steps"
+        "fabricops_kit.data_lineage._validate_lineage_steps"
       ],
       "internal_helper_count": 1
-    },
-    "fabricops_kit.data_lineage._call_name": {
-      "qualified_name": "fabricops_kit.data_lineage._call_name",
-      "short_name": "_call_name",
-      "module": "data_lineage",
-      "callable": "_call_name",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_lineage/_call_name/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.data_lineage._scan_notebook_lineage"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
     },
     "fabricops_kit.data_lineage._enrich_lineage_steps_with_ai": {
       "qualified_name": "fabricops_kit.data_lineage._enrich_lineage_steps_with_ai",
@@ -1559,30 +1509,10 @@
       "callable": "_enrich_lineage_steps_with_ai",
       "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_lineage/_enrich_lineage_steps_with_ai/",
       "classification": "internal",
-      "calls": [
-        "fabricops_kit.data_lineage._fallback_copilot_lineage_prompt"
-      ],
-      "calls_count": 1,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [
-        "fabricops_kit.data_lineage._fallback_copilot_lineage_prompt"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.data_lineage._fallback_copilot_lineage_prompt": {
-      "qualified_name": "fabricops_kit.data_lineage._fallback_copilot_lineage_prompt",
-      "short_name": "_fallback_copilot_lineage_prompt",
-      "module": "data_lineage",
-      "callable": "_fallback_copilot_lineage_prompt",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_lineage/_fallback_copilot_lineage_prompt/",
-      "classification": "internal",
       "calls": [],
       "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.data_lineage._enrich_lineage_steps_with_ai"
-      ],
-      "used_by_count": 1,
+      "used_by": [],
+      "used_by_count": 0,
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
@@ -1593,49 +1523,12 @@
       "callable": "_flatten_chain",
       "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_lineage/_flatten_chain/",
       "classification": "internal",
-      "calls": [
-        "fabricops_kit.data_lineage._name"
-      ],
-      "calls_count": 1,
+      "calls": [],
+      "calls_count": 0,
       "used_by": [
         "fabricops_kit.data_lineage._scan_notebook_lineage"
       ],
       "used_by_count": 1,
-      "internal_helpers_used": [
-        "fabricops_kit.data_lineage._name"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.data_lineage._literal": {
-      "qualified_name": "fabricops_kit.data_lineage._literal",
-      "short_name": "_literal",
-      "module": "data_lineage",
-      "callable": "_literal",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_lineage/_literal/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.data_lineage._resolve_write_target"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.data_lineage._name": {
-      "qualified_name": "fabricops_kit.data_lineage._name",
-      "short_name": "_name",
-      "module": "data_lineage",
-      "callable": "_name",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_lineage/_name/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.data_lineage._flatten_chain",
-        "fabricops_kit.data_lineage._scan_notebook_lineage"
-      ],
-      "used_by_count": 2,
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
@@ -1646,18 +1539,14 @@
       "callable": "_resolve_write_target",
       "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_lineage/_resolve_write_target/",
       "classification": "internal",
-      "calls": [
-        "fabricops_kit.data_lineage._literal"
-      ],
-      "calls_count": 1,
+      "calls": [],
+      "calls_count": 0,
       "used_by": [
         "fabricops_kit.data_lineage._scan_notebook_lineage"
       ],
       "used_by_count": 1,
-      "internal_helpers_used": [
-        "fabricops_kit.data_lineage._literal"
-      ],
-      "internal_helper_count": 1
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
     },
     "fabricops_kit.data_lineage._scan_notebook_cells": {
       "qualified_name": "fabricops_kit.data_lineage._scan_notebook_cells",
@@ -1685,41 +1574,19 @@
       "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_lineage/_scan_notebook_lineage/",
       "classification": "internal",
       "calls": [
-        "fabricops_kit.data_lineage._call_name",
         "fabricops_kit.data_lineage._flatten_chain",
-        "fabricops_kit.data_lineage._name",
-        "fabricops_kit.data_lineage._resolve_write_target",
-        "fabricops_kit.data_lineage._step"
+        "fabricops_kit.data_lineage._resolve_write_target"
       ],
-      "calls_count": 5,
+      "calls_count": 2,
       "used_by": [
         "fabricops_kit.data_lineage._scan_notebook_cells"
       ],
       "used_by_count": 1,
       "internal_helpers_used": [
-        "fabricops_kit.data_lineage._call_name",
         "fabricops_kit.data_lineage._flatten_chain",
-        "fabricops_kit.data_lineage._name",
-        "fabricops_kit.data_lineage._resolve_write_target",
-        "fabricops_kit.data_lineage._step"
+        "fabricops_kit.data_lineage._resolve_write_target"
       ],
-      "internal_helper_count": 5
-    },
-    "fabricops_kit.data_lineage._step": {
-      "qualified_name": "fabricops_kit.data_lineage._step",
-      "short_name": "_step",
-      "module": "data_lineage",
-      "callable": "_step",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_lineage/_step/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.data_lineage._scan_notebook_lineage"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
+      "internal_helper_count": 2
     },
     "fabricops_kit.data_lineage._validate_lineage_steps": {
       "qualified_name": "fabricops_kit.data_lineage._validate_lineage_steps",
@@ -1731,7 +1598,7 @@
       "calls": [],
       "calls_count": 0,
       "used_by": [
-        "fabricops_kit.data_lineage._build_lineage_record_from_steps"
+        "fabricops_kit.data_lineage._build_lineage_records"
       ],
       "used_by_count": 1,
       "internal_helpers_used": [],
@@ -1777,11 +1644,9 @@
       "calls": [
         "fabricops_kit.data_profiling._build_categorical_distribution",
         "fabricops_kit.data_profiling._build_numeric_distribution",
-        "fabricops_kit.data_profiling._is_categorical_type",
-        "fabricops_kit.data_profiling._is_numeric_type",
         "fabricops_kit.data_profiling._numeric_bin_edges"
       ],
-      "calls_count": 5,
+      "calls_count": 3,
       "used_by": [
         "fabricops_kit.data_profiling.profile_dataframe"
       ],
@@ -1789,11 +1654,9 @@
       "internal_helpers_used": [
         "fabricops_kit.data_profiling._build_categorical_distribution",
         "fabricops_kit.data_profiling._build_numeric_distribution",
-        "fabricops_kit.data_profiling._is_categorical_type",
-        "fabricops_kit.data_profiling._is_numeric_type",
         "fabricops_kit.data_profiling._numeric_bin_edges"
       ],
-      "internal_helper_count": 5
+      "internal_helper_count": 3
     },
     "fabricops_kit.data_profiling._build_numeric_distribution": {
       "qualified_name": "fabricops_kit.data_profiling._build_numeric_distribution",
@@ -1802,33 +1665,12 @@
       "callable": "_build_numeric_distribution",
       "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_profiling/_build_numeric_distribution/",
       "classification": "internal",
-      "calls": [
-        "fabricops_kit.data_profiling._dedupe_edges"
-      ],
-      "calls_count": 1,
+      "calls": [],
+      "calls_count": 0,
       "used_by": [
         "fabricops_kit.data_profiling._build_distribution_summaries"
       ],
       "used_by_count": 1,
-      "internal_helpers_used": [
-        "fabricops_kit.data_profiling._dedupe_edges"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.data_profiling._dedupe_edges": {
-      "qualified_name": "fabricops_kit.data_profiling._dedupe_edges",
-      "short_name": "_dedupe_edges",
-      "module": "data_profiling",
-      "callable": "_dedupe_edges",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_profiling/_dedupe_edges/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.data_profiling._build_numeric_distribution",
-        "fabricops_kit.data_profiling._numeric_bin_edges"
-      ],
-      "used_by_count": 2,
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
@@ -1843,22 +1685,6 @@
       "calls_count": 0,
       "used_by": [
         "fabricops_kit.data_profiling.profile_dataframe"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.data_profiling._is_categorical_type": {
-      "qualified_name": "fabricops_kit.data_profiling._is_categorical_type",
-      "short_name": "_is_categorical_type",
-      "module": "data_profiling",
-      "callable": "_is_categorical_type",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_profiling/_is_categorical_type/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.data_profiling._build_distribution_summaries"
       ],
       "used_by_count": 1,
       "internal_helpers_used": [],
@@ -1880,12 +1706,12 @@
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
-    "fabricops_kit.data_profiling._is_numeric_type": {
-      "qualified_name": "fabricops_kit.data_profiling._is_numeric_type",
-      "short_name": "_is_numeric_type",
+    "fabricops_kit.data_profiling._numeric_bin_edges": {
+      "qualified_name": "fabricops_kit.data_profiling._numeric_bin_edges",
+      "short_name": "_numeric_bin_edges",
       "module": "data_profiling",
-      "callable": "_is_numeric_type",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_profiling/_is_numeric_type/",
+      "callable": "_numeric_bin_edges",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_profiling/_numeric_bin_edges/",
       "classification": "internal",
       "calls": [],
       "calls_count": 0,
@@ -1895,26 +1721,6 @@
       "used_by_count": 1,
       "internal_helpers_used": [],
       "internal_helper_count": 0
-    },
-    "fabricops_kit.data_profiling._numeric_bin_edges": {
-      "qualified_name": "fabricops_kit.data_profiling._numeric_bin_edges",
-      "short_name": "_numeric_bin_edges",
-      "module": "data_profiling",
-      "callable": "_numeric_bin_edges",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/data_profiling/_numeric_bin_edges/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.data_profiling._dedupe_edges"
-      ],
-      "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.data_profiling._build_distribution_summaries"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [
-        "fabricops_kit.data_profiling._dedupe_edges"
-      ],
-      "internal_helper_count": 1
     },
     "fabricops_kit.data_profiling.profile_dataframe": {
       "qualified_name": "fabricops_kit.data_profiling.profile_dataframe",
@@ -1941,20 +1747,6 @@
       ],
       "internal_helper_count": 3
     },
-    "fabricops_kit.drift.IncrementalSafetyError": {
-      "qualified_name": "fabricops_kit.drift.IncrementalSafetyError",
-      "short_name": "IncrementalSafetyError",
-      "module": "drift",
-      "callable": "IncrementalSafetyError",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/drift/IncrementalSafetyError/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
     "fabricops_kit.drift.SchemaDriftError": {
       "qualified_name": "fabricops_kit.drift.SchemaDriftError",
       "short_name": "SchemaDriftError",
@@ -1968,20 +1760,6 @@
         "fabricops_kit.drift.stop_if_failed"
       ],
       "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.drift.UnsupportedDataFrameEngineError": {
-      "qualified_name": "fabricops_kit.drift.UnsupportedDataFrameEngineError",
-      "short_name": "UnsupportedDataFrameEngineError",
-      "module": "drift",
-      "callable": "UnsupportedDataFrameEngineError",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/drift/UnsupportedDataFrameEngineError/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [],
-      "used_by_count": 0,
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
@@ -2002,6 +1780,26 @@
       "used_by_count": 1,
       "internal_helpers_used": [
         "fabricops_kit.drift._normalize_datatype"
+      ],
+      "internal_helper_count": 1
+    },
+    "fabricops_kit.drift._baseline_distribution_args": {
+      "qualified_name": "fabricops_kit.drift._baseline_distribution_args",
+      "short_name": "_baseline_distribution_args",
+      "module": "drift",
+      "callable": "_baseline_distribution_args",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/drift/_baseline_distribution_args/",
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.drift._normalize_profile"
+      ],
+      "calls_count": 1,
+      "used_by": [
+        "fabricops_kit.drift.monitor_data_changes"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [
+        "fabricops_kit.drift._normalize_profile"
       ],
       "internal_helper_count": 1
     },
@@ -2060,46 +1858,6 @@
       "used_by_count": 1,
       "internal_helpers_used": [],
       "internal_helper_count": 0
-    },
-    "fabricops_kit.drift._extract_categorical_distribution_categories": {
-      "qualified_name": "fabricops_kit.drift._extract_categorical_distribution_categories",
-      "short_name": "_extract_categorical_distribution_categories",
-      "module": "drift",
-      "callable": "_extract_categorical_distribution_categories",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/drift/_extract_categorical_distribution_categories/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.drift._normalize_profile"
-      ],
-      "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.drift.monitor_data_changes"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [
-        "fabricops_kit.drift._normalize_profile"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.drift._extract_numeric_distribution_bin_edges": {
-      "qualified_name": "fabricops_kit.drift._extract_numeric_distribution_bin_edges",
-      "short_name": "_extract_numeric_distribution_bin_edges",
-      "module": "drift",
-      "callable": "_extract_numeric_distribution_bin_edges",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/drift/_extract_numeric_distribution_bin_edges/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.drift._normalize_profile"
-      ],
-      "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.drift.monitor_data_changes"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [
-        "fabricops_kit.drift._normalize_profile"
-      ],
-      "internal_helper_count": 1
     },
     "fabricops_kit.drift._is_missing_table_error": {
       "qualified_name": "fabricops_kit.drift._is_missing_table_error",
@@ -2164,26 +1922,21 @@
       "docs_url": "/FabricOps-Starter-Kit/reference/internal/drift/_normalize_profile/",
       "classification": "internal",
       "calls": [
-        "fabricops_kit.drift._normalize_profile",
-        "fabricops_kit.drift._parse_distribution",
-        "fabricops_kit.drift._row_get"
+        "fabricops_kit.drift._normalize_profile"
       ],
-      "calls_count": 3,
+      "calls_count": 1,
       "used_by": [
+        "fabricops_kit.drift._baseline_distribution_args",
         "fabricops_kit.drift._check_profile_drift",
-        "fabricops_kit.drift._extract_categorical_distribution_categories",
-        "fabricops_kit.drift._extract_numeric_distribution_bin_edges",
         "fabricops_kit.drift._load_latest_profile",
         "fabricops_kit.drift._normalize_profile",
         "fabricops_kit.drift.monitor_data_changes"
       ],
-      "used_by_count": 6,
+      "used_by_count": 5,
       "internal_helpers_used": [
-        "fabricops_kit.drift._normalize_profile",
-        "fabricops_kit.drift._parse_distribution",
-        "fabricops_kit.drift._row_get"
+        "fabricops_kit.drift._normalize_profile"
       ],
-      "internal_helper_count": 3
+      "internal_helper_count": 1
     },
     "fabricops_kit.drift._numeric_psi": {
       "qualified_name": "fabricops_kit.drift._numeric_psi",
@@ -2192,62 +1945,10 @@
       "callable": "_numeric_psi",
       "docs_url": "/FabricOps-Starter-Kit/reference/internal/drift/_numeric_psi/",
       "classification": "internal",
-      "calls": [
-        "fabricops_kit.drift._proportions"
-      ],
-      "calls_count": 1,
+      "calls": [],
+      "calls_count": 0,
       "used_by": [
         "fabricops_kit.drift._check_profile_drift"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [
-        "fabricops_kit.drift._proportions"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.drift._parse_distribution": {
-      "qualified_name": "fabricops_kit.drift._parse_distribution",
-      "short_name": "_parse_distribution",
-      "module": "drift",
-      "callable": "_parse_distribution",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/drift/_parse_distribution/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.drift._normalize_profile"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.drift._proportions": {
-      "qualified_name": "fabricops_kit.drift._proportions",
-      "short_name": "_proportions",
-      "module": "drift",
-      "callable": "_proportions",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/drift/_proportions/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.drift._numeric_psi"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.drift._row_get": {
-      "qualified_name": "fabricops_kit.drift._row_get",
-      "short_name": "_row_get",
-      "module": "drift",
-      "callable": "_row_get",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/drift/_row_get/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.drift._normalize_profile"
       ],
       "used_by_count": 1,
       "internal_helpers_used": [],
@@ -2262,25 +1963,23 @@
       "classification": "callable",
       "calls": [
         "fabricops_kit.data_profiling.profile_dataframe",
+        "fabricops_kit.drift._baseline_distribution_args",
         "fabricops_kit.drift._check_profile_drift",
         "fabricops_kit.drift._data_change_preset_config",
-        "fabricops_kit.drift._extract_categorical_distribution_categories",
-        "fabricops_kit.drift._extract_numeric_distribution_bin_edges",
         "fabricops_kit.drift._load_latest_profile",
         "fabricops_kit.drift._normalize_profile"
       ],
-      "calls_count": 7,
+      "calls_count": 6,
       "used_by": [],
       "used_by_count": 0,
       "internal_helpers_used": [
+        "fabricops_kit.drift._baseline_distribution_args",
         "fabricops_kit.drift._check_profile_drift",
         "fabricops_kit.drift._data_change_preset_config",
-        "fabricops_kit.drift._extract_categorical_distribution_categories",
-        "fabricops_kit.drift._extract_numeric_distribution_bin_edges",
         "fabricops_kit.drift._load_latest_profile",
         "fabricops_kit.drift._normalize_profile"
       ],
-      "internal_helper_count": 6
+      "internal_helper_count": 5
     },
     "fabricops_kit.drift.stop_if_failed": {
       "qualified_name": "fabricops_kit.drift.stop_if_failed",
@@ -4139,7 +3838,7 @@
     },
     "data_lineage": {
       "callable_count": 1,
-      "internal_count": 14,
+      "internal_count": 7,
       "outbound_modules": [],
       "inbound_modules": [],
       "outbound_count": 0,
@@ -4147,7 +3846,7 @@
     },
     "data_profiling": {
       "callable_count": 1,
-      "internal_count": 9,
+      "internal_count": 6,
       "outbound_modules": [],
       "inbound_modules": [
         "drift",
@@ -4158,7 +3857,7 @@
     },
     "drift": {
       "callable_count": 3,
-      "internal_count": 14,
+      "internal_count": 10,
       "outbound_modules": [
         "data_profiling"
       ],

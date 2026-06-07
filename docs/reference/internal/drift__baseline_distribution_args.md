@@ -1,4 +1,4 @@
-# _extract_categorical_distribution_categories
+# _baseline_distribution_args
 
 **Module:** `drift`  
 **Classification:** Internal
@@ -9,13 +9,13 @@ No summary available.
 
 ## Function manifest
 
-- Fully qualified function name: `fabricops_kit.drift._extract_categorical_distribution_categories`
-- Short name: `_extract_categorical_distribution_categories`
+- Fully qualified function name: `fabricops_kit.drift._baseline_distribution_args`
+- Short name: `_baseline_distribution_args`
 - Module: `drift`
 - Classification: Internal
 - Related module: `drift`
 - Source file path: `src/fabricops_kit/drift.py`
-- Source reference: <a href="../../api/modules/drift/#_extract_categorical_distribution_categories">Module source anchor</a>
+- Source reference: <a href="../../api/modules/drift/#_baseline_distribution_args">Module source anchor</a>
 - Inbound references count: 1
 - Outbound references count: 1
 

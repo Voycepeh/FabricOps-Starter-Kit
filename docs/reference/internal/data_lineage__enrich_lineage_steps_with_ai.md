@@ -17,7 +17,6 @@ No summary available.
 - Source file path: `src/fabricops_kit/data_lineage.py`
 - Source reference: <a href="../../api/modules/data_lineage/#_enrich_lineage_steps_with_ai">Module source anchor</a>
 - Inbound references count: 0
-- Outbound references count: 1
+- Outbound references count: 0
 
-## Outbound references
-- <a href="../internal/data_lineage/_fallback_copilot_lineage_prompt/"><code>fabricops_kit.data_lineage._fallback_copilot_lineage_prompt</code></a>
+_No inbound or outbound references detected._
