@@ -27,10 +27,10 @@ CORE_CALLABLES = {
     "record_table_governance",
 }
 CORE_PAGE_SECTIONS = (
-    "When not to use this",
-    "Quick example",
+    "Do not use this for",
+    "Example",
     "Side effects",
-    "AI implementation contract",
+    "Source code",
 )
 CORE_AGENT_FIELDS = (
     "use_when",
@@ -70,9 +70,10 @@ def test_every_callable_page_has_ai_reference_sections() -> None:
     assert callable_pages
     for page in callable_pages:
         text = page.read_text(encoding="utf-8")
-        assert "## Status" in text, page
+        assert "## Use this when" in text, page
         assert "## Side effects" in text, page
-        assert "## AI implementation contract" in text, page
+        assert "## Source code" in text, page
+        assert '<summary>AI implementation contract</summary>' in text, page
 
 
 def test_core_callable_pages_have_non_placeholder_ai_guidance() -> None:
@@ -105,3 +106,40 @@ def test_every_internal_page_marks_direct_use_as_no() -> None:
     for page in internal_pages:
         text = page.read_text(encoding="utf-8")
         assert "## Direct use: No" in text, page
+
+
+def test_callable_pages_include_source_code_section_and_github_source_link() -> None:
+    callable_pages = sorted((REFERENCE_DIR / "callables").glob("*.md"))
+
+    assert callable_pages
+    for page in callable_pages:
+        text = page.read_text(encoding="utf-8")
+        assert "## Source code" in text, page
+        assert "Show source code" in text, page
+        assert "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/" in text, page
+        assert "/src/fabricops_kit/" in text, page
+        assert "#L" in text, page
+
+
+def test_callable_pages_collapse_function_manifest_metadata() -> None:
+    callable_pages = sorted((REFERENCE_DIR / "callables").glob("*.md"))
+
+    assert callable_pages
+    for page in callable_pages:
+        text = page.read_text(encoding="utf-8")
+        assert "## Function manifest" not in text, page
+        assert "<summary>Function manifest</summary>" in text, page
+        assert "\n## Inbound references" not in text, page
+        assert "\n## Outbound references" not in text, page
+
+
+def test_setup_notebook_reference_uses_human_first_source_documentation() -> None:
+    text = (REFERENCE_DIR / "callables" / "setup_notebook.md").read_text(encoding="utf-8")
+
+    assert "../../api/modules/config/#setup_notebook" not in text
+    assert "src/fabricops_kit/config.py#L595" in text
+    assert "## Example\n\n```python\ncontext = setup_notebook" in text
+    assert "## Inputs" in text
+    assert "Parameter" in text
+    assert "Required" in text
+    assert "What it means" in text

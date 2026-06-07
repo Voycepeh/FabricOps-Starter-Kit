@@ -1,35 +1,67 @@
 # setup_metadata_tables
 
-**Module:** `config`  
-**Classification:** Callable
+Create or validate all FabricOps metadata tables through one setup action.
 
-## Status
-
-Public callable helper intended for notebook authors.
-
-## When to use this
+## Use this when
 
 Use after setup_notebook in 00_env_config to create or validate the FabricOps metadata tables required by agreement, profiling, lineage, drift, and governance workflows.
 
-## When not to use this
+## Do not use this for
 
 Do not use for writing business data or pipeline target tables; use write_lakehouse_table or write_warehouse_table for data outputs.
 
-## Quick example
+## Example
 
+```python
 setup_metadata_tables(CONFIG, env="Sandbox", spark_session=spark)
+```
 
-## Signature
+## Inputs
+
+<div class="module-table-scroll reference-input-table">
+<table class="reference-function-table">
+  <thead>
+    <tr>
+      <th>Parameter</th>
+      <th>Required</th>
+      <th>What it means</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td data-label="Parameter"><code>spark</code></td>
+      <td data-label="Required">Yes</td>
+      <td data-label="What it means">Fabric Spark session used by the table setup helpers.</td>
+    </tr>
+    <tr>
+      <td data-label="Parameter"><code>config</code></td>
+      <td data-label="Required">Yes</td>
+      <td data-label="What it means">Shared ``00_env_config`` configuration containing the metadata target.</td>
+    </tr>
+    <tr>
+      <td data-label="Parameter"><code>env</code></td>
+      <td data-label="Required">Yes</td>
+      <td data-label="What it means">Environment key to prepare.</td>
+    </tr>
+    <tr>
+      <td data-label="Parameter"><code>require_active_steward</code></td>
+      <td data-label="Required">No</td>
+      <td data-label="What it means">Forwarded to the agreement metadata setup to optionally require an active steward before returning success.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<details class="reference-signature-details">
+<summary>Full signature</summary>
 
 ```python
 def setup_metadata_tables(*, spark: Any, config: FrameworkConfig | dict[str, Any], env: str, require_active_steward: bool=False) -> dict[str, Any]
 ```
 
-## Parameters
+</details>
 
-config, env, optional spark_session, and mode/check options used to prepare metadata storage through configured metadata routing.
-
-## Returns
+## Output
 
 Setup result describing metadata table creation or validation status.
 
@@ -41,11 +73,25 @@ Raises configuration, Spark, or storage errors when metadata routing or table pr
 
 Creates or validates FabricOps metadata tables in the configured metadata lakehouse target.
 
-## FabricOps context
+## Related functions
 
-Requires the metadata target from 00_env_config; metadata tables must be routed through CONFIG.path_config paths for the selected env.
+- <a href="../setup_notebook/"><code>fabricops_kit.config.setup_notebook</code></a>
+- <a href="../record_table_governance/"><code>fabricops_kit.governance_review.record_table_governance</code></a>
 
-## AI implementation contract
+<details class="reference-implementation-details">
+<summary>Implementation details</summary>
+
+- <a href="../internal/data_agreement__setup_data_agreement_tables/"><code>fabricops_kit.data_agreement._setup_data_agreement_tables</code></a>
+- `fabricops_kit.data_agreement.get`
+- <a href="../internal/governance_review__setup_governance_metadata_tables/"><code>fabricops_kit.governance_review._setup_governance_metadata_tables</code></a>
+- <a href="../internal/metadata__setup_notebook_registry_table/"><code>fabricops_kit.metadata._setup_notebook_registry_table</code></a>
+
+</details>
+
+<details class="reference-metadata-details">
+<summary>AI implementation contract</summary>
+
+These fields are generated for agents and maintainers, not for quick-start reading.
 
 - **required_context:** Requires the metadata target from 00_env_config; metadata tables must be routed through CONFIG.path_config paths for the selected env.
 - **inputs:** config, env, optional spark_session, and mode/check options used to prepare metadata storage through configured metadata routing.
@@ -54,28 +100,98 @@ Requires the metadata target from 00_env_config; metadata tables must be routed 
 - **failure_modes:** Raises configuration, Spark, or storage errors when metadata routing or table preparation fails.
 - **verification:** Verify metadata setup completes before recommending agreement, profiling, lineage, drift, or governance workflows that persist evidence.
 
-## Related functions
+</details>
 
-- <a href="../setup_notebook/"><code>fabricops_kit.config.setup_notebook</code></a>
-- <a href="../record_table_governance/"><code>fabricops_kit.governance_review.record_table_governance</code></a>
-
-## Source and tests
-
-- Source file path: `src/fabricops_kit/config.py`
-- Source reference: <a href="../../api/modules/config/#setup_metadata_tables">Module source anchor</a>
-- Tests: Not documented yet
-
-## Function manifest
+<details class="reference-metadata-details">
+<summary>Function manifest</summary>
 
 - Fully qualified function name: `fabricops_kit.config.setup_metadata_tables`
 - Short name: `setup_metadata_tables`
 - Module: `config`
 - Classification: Callable
 - Related module: `config`
+- Source file path: `src/fabricops_kit/config.py`
+- Source line: `707`
 - Inbound references count: 0
 - Outbound references count: 4
 
-## Outbound references
+</details>
+
+<details class="reference-metadata-details">
+<summary>Raw inbound and outbound references</summary>
+
+### Inbound references
+
+Not documented yet
+
+### Outbound references
+
 - <a href="../internal/data_agreement__setup_data_agreement_tables/"><code>fabricops_kit.data_agreement._setup_data_agreement_tables</code></a>
 - <a href="../internal/governance_review__setup_governance_metadata_tables/"><code>fabricops_kit.governance_review._setup_governance_metadata_tables</code></a>
 - <a href="../internal/metadata__setup_notebook_registry_table/"><code>fabricops_kit.metadata._setup_notebook_registry_table</code></a>
+
+</details>
+
+## Source code
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L707-L758">View setup_metadata_tables on GitHub</a>
+
+<details class="reference-source-details">
+<summary>Show source code</summary>
+
+```python
+def setup_metadata_tables(
+    *,
+    spark: Any,
+    config: FrameworkConfig | dict[str, Any],
+    env: str,
+    require_active_steward: bool = False,
+) -> dict[str, Any]:
+    """Prepare all FabricOps metadata tables for the configured environment.
+
+    Parameters
+    ----------
+    spark : pyspark.sql.SparkSession
+        Fabric Spark session used by the table setup helpers.
+    config : FrameworkConfig or dict
+        Shared ``00_env_config`` configuration containing the metadata target.
+    env : str
+        Environment key to prepare.
+    require_active_steward : bool, default=False
+        Forwarded to the agreement metadata setup to optionally require an
+        active steward before returning success.
+
+    Returns
+    -------
+    dict[str, Any]
+        Combined setup summary keyed by ``data_agreement``,
+        ``notebook_registry``, and ``governance``.
+
+    Notes
+    -----
+    This is the v1 notebook setup action for metadata provisioning. It keeps
+    ``00_env_config`` simple while delegating to internal helpers that route all
+    metadata reads and writes through the configured metadata lakehouse target.
+    """
+    from fabricops_kit.data_agreement import _setup_data_agreement_tables
+    from fabricops_kit.governance_review import _setup_governance_metadata_tables
+    from fabricops_kit.metadata import _setup_notebook_registry_table
+
+    data_agreement = _setup_data_agreement_tables(
+        spark=spark,
+        config=config,
+        env=env,
+        require_active_steward=require_active_steward,
+    )
+    notebook_registry = _setup_notebook_registry_table(spark=spark, config=config, env=env)
+    governance = _setup_governance_metadata_tables(spark=spark, config=config, env=env)
+    statuses = [data_agreement.get("status"), notebook_registry.get("status"), governance.get("status")]
+    return {
+        "status": "ready" if all(status == "ready" for status in statuses) else "not_ready",
+        "data_agreement": data_agreement,
+        "notebook_registry": notebook_registry,
+        "governance": governance,
+    }
+```
+
+</details>

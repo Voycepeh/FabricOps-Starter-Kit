@@ -49,7 +49,7 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 - Classification: Internal
 - Related module: `data_lineage`
 - Source file path: `src/fabricops_kit/data_lineage.py`
-- Source reference: <a href="../../api/modules/data_lineage/#_resolve_write_target">Module source anchor</a>
+- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_lineage.py#L21-L33">View source on GitHub</a>
 - Inbound references count: 1
 - Outbound references count: 0
 

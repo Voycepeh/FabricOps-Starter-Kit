@@ -1,35 +1,92 @@
 # profile_dataframe
 
-**Module:** `data_profiling`  
-**Classification:** Callable
+Profile a source or target DataFrame for schema, quality, and catalogue evidence.
 
-## Status
-
-Public callable helper intended for notebook authors.
-
-## When to use this
+## Use this when
 
 Use to create schema, null, distinct, min/max, and optional distribution evidence from a Spark DataFrame.
 
-## When not to use this
+## Do not use this for
 
 Do not use as a data-quality enforcement step or as a persistence helper; it builds profile rows but does not approve governance evidence.
 
-## Quick example
+## Example
 
+```python
 profile_rows_df = profile_dataframe(df, table_name="orders", include_distributions=True, distribution_columns=["status"] )
+```
 
-## Signature
+## Inputs
+
+<div class="module-table-scroll reference-input-table">
+<table class="reference-function-table">
+  <thead>
+    <tr>
+      <th>Parameter</th>
+      <th>Required</th>
+      <th>What it means</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td data-label="Parameter"><code>df</code></td>
+      <td data-label="Required">Yes</td>
+      <td data-label="What it means">Spark DataFrame to profile.</td>
+    </tr>
+    <tr>
+      <td data-label="Parameter"><code>table_name</code></td>
+      <td data-label="Required">Yes</td>
+      <td data-label="What it means">Logical table name written into each profile row.</td>
+    </tr>
+    <tr>
+      <td data-label="Parameter"><code>exclude_columns</code></td>
+      <td data-label="Required">No</td>
+      <td data-label="What it means">Additional columns to skip, on top of the standard technical columns.</td>
+    </tr>
+    <tr>
+      <td data-label="Parameter"><code>run_timestamp_timezone</code></td>
+      <td data-label="Required">No</td>
+      <td data-label="What it means">Time zone used for the ``RUN_TIMESTAMP`` evidence field.</td>
+    </tr>
+    <tr>
+      <td data-label="Parameter"><code>include_distributions</code></td>
+      <td data-label="Required">No</td>
+      <td data-label="What it means">When true, add lightweight distribution summaries for suitable numeric and categorical columns. The default preserves the existing lightweight profile shape and behavior.</td>
+    </tr>
+    <tr>
+      <td data-label="Parameter"><code>distribution_columns</code></td>
+      <td data-label="Required">No</td>
+      <td data-label="What it means">Optional allow-list of important columns for distribution summaries. ``None`` profiles every suitable business column.</td>
+    </tr>
+    <tr>
+      <td data-label="Parameter"><code>distribution_bin_edges</code></td>
+      <td data-label="Required">No</td>
+      <td data-label="What it means">Optional numeric bin edges keyed by column name. Pass baseline edges to make the current profile directly comparable with a previous profile.</td>
+    </tr>
+    <tr>
+      <td data-label="Parameter"><code>categorical_categories</code></td>
+      <td data-label="Required">No</td>
+      <td data-label="What it means">Optional baseline category vocabulary keyed by column name. When supplied, those categories are counted explicitly and all other non-null values are rolled into ``other_count`` so the current profile remains comparable with the baseline.</td>
+    </tr>
+    <tr>
+      <td data-label="Parameter"><code>categorical_top_n</code></td>
+      <td data-label="Required">No</td>
+      <td data-label="What it means">Maximum number of non-null category values to keep per categorical column before rolling the remainder into ``other_count``.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<details class="reference-signature-details">
+<summary>Full signature</summary>
 
 ```python
 def profile_dataframe(df, table_name: str, *, exclude_columns=None, run_timestamp_timezone='Asia/Singapore', include_distributions: bool=False, distribution_columns: list[str] | set[str] | tuple[str, ...] | None=None, distribution_bin_edges: dict[str, list[float]] | None=None, categorical_categories: dict[str, list[str]] | None=None, categorical_top_n: int=20)
 ```
 
-## Parameters
+</details>
 
-df, table_name, optional exclude_columns, timezone, distribution options, bin edges, category baselines, and top-N settings.
-
-## Returns
+## Output
 
 Spark DataFrame containing one profile row per eligible business column.
 
@@ -41,11 +98,26 @@ Raises Spark/DataFrame errors when profiling expressions cannot be evaluated.
 
 Computes profiling aggregations on the provided DataFrame; it does not write metadata, tables, or files.
 
-## FabricOps context
+## Related functions
 
-Use after reading source/target data and before metadata persistence or governance review workflows that need profile evidence.
+- <a href="../monitor_data_changes/"><code>fabricops_kit.drift.monitor_data_changes</code></a>
+- <a href="../record_table_governance/"><code>fabricops_kit.governance_review.record_table_governance</code></a>
 
-## AI implementation contract
+<details class="reference-implementation-details">
+<summary>Implementation details</summary>
+
+- <a href="../monitor_data_changes/"><code>fabricops_kit.drift.monitor_data_changes</code></a>
+- <a href="../internal/governance_review__prepare_dq_profile_input_rows/"><code>fabricops_kit.governance_review._prepare_dq_profile_input_rows</code></a>
+- <a href="../internal/data_profiling__build_distribution_summaries/"><code>fabricops_kit.data_profiling._build_distribution_summaries</code></a>
+- <a href="../internal/data_profiling__get_profiled_columns/"><code>fabricops_kit.data_profiling._get_profiled_columns</code></a>
+- <a href="../internal/data_profiling__is_min_max_supported_type/"><code>fabricops_kit.data_profiling._is_min_max_supported_type</code></a>
+
+</details>
+
+<details class="reference-metadata-details">
+<summary>AI implementation contract</summary>
+
+These fields are generated for agents and maintainers, not for quick-start reading.
 
 - **required_context:** Use after reading source/target data and before metadata persistence or governance review workflows that need profile evidence.
 - **inputs:** df, table_name, optional exclude_columns, timezone, distribution options, bin edges, category baselines, and top-N settings.
@@ -54,32 +126,162 @@ Use after reading source/target data and before metadata persistence or governan
 - **failure_modes:** Raises Spark/DataFrame errors when profiling expressions cannot be evaluated.
 - **verification:** Verify the profile row count matches expected business columns and inspect key schema/profile fields before writing evidence.
 
-## Related functions
+</details>
 
-- <a href="../monitor_data_changes/"><code>fabricops_kit.drift.monitor_data_changes</code></a>
-- <a href="../record_table_governance/"><code>fabricops_kit.governance_review.record_table_governance</code></a>
-
-## Source and tests
-
-- Source file path: `src/fabricops_kit/data_profiling.py`
-- Source reference: <a href="../../api/modules/data_profiling/#profile_dataframe">Module source anchor</a>
-- Tests: Not documented yet
-
-## Function manifest
+<details class="reference-metadata-details">
+<summary>Function manifest</summary>
 
 - Fully qualified function name: `fabricops_kit.data_profiling.profile_dataframe`
 - Short name: `profile_dataframe`
 - Module: `data_profiling`
 - Classification: Callable
 - Related module: `data_profiling`
+- Source file path: `src/fabricops_kit/data_profiling.py`
+- Source line: `213`
 - Inbound references count: 2
 - Outbound references count: 3
 
-## Inbound references
+</details>
+
+<details class="reference-metadata-details">
+<summary>Raw inbound and outbound references</summary>
+
+### Inbound references
+
 - <a href="../monitor_data_changes/"><code>fabricops_kit.drift.monitor_data_changes</code></a>
 - <a href="../internal/governance_review__prepare_dq_profile_input_rows/"><code>fabricops_kit.governance_review._prepare_dq_profile_input_rows</code></a>
 
-## Outbound references
+### Outbound references
+
 - <a href="../internal/data_profiling__build_distribution_summaries/"><code>fabricops_kit.data_profiling._build_distribution_summaries</code></a>
 - <a href="../internal/data_profiling__get_profiled_columns/"><code>fabricops_kit.data_profiling._get_profiled_columns</code></a>
 - <a href="../internal/data_profiling__is_min_max_supported_type/"><code>fabricops_kit.data_profiling._is_min_max_supported_type</code></a>
+
+</details>
+
+## Source code
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L213-L327">View profile_dataframe on GitHub</a>
+
+<details class="reference-source-details">
+<summary>Show source code</summary>
+
+```python
+def profile_dataframe(
+    df,
+    table_name: str,
+    *,
+    exclude_columns=None,
+    run_timestamp_timezone="Asia/Singapore",
+    include_distributions: bool = False,
+    distribution_columns: list[str] | set[str] | tuple[str, ...] | None = None,
+    distribution_bin_edges: dict[str, list[float]] | None = None,
+    categorical_categories: dict[str, list[str]] | None = None,
+    categorical_top_n: int = 20,
+):
+    """Build canonical DQ-ready profiling rows from a Spark DataFrame.
+
+    Parameters
+    ----------
+    df : Any
+        Spark DataFrame to profile.
+    table_name : str
+        Logical table name written into each profile row.
+    exclude_columns : list[str] or set[str], optional
+        Additional columns to skip, on top of the standard technical columns.
+    run_timestamp_timezone : str, default="Asia/Singapore"
+        Time zone used for the ``RUN_TIMESTAMP`` evidence field.
+    include_distributions : bool, default=False
+        When true, add lightweight distribution summaries for suitable numeric
+        and categorical columns. The default preserves the existing lightweight
+        profile shape and behavior.
+    distribution_columns : list[str] or set[str] or tuple[str, ...], optional
+        Optional allow-list of important columns for distribution summaries.
+        ``None`` profiles every suitable business column.
+    distribution_bin_edges : dict[str, list[float]], optional
+        Optional numeric bin edges keyed by column name. Pass baseline edges to
+        make the current profile directly comparable with a previous profile.
+    categorical_categories : dict[str, list[str]], optional
+        Optional baseline category vocabulary keyed by column name. When
+        supplied, those categories are counted explicitly and all other non-null
+        values are rolled into ``other_count`` so the current profile remains
+        comparable with the baseline.
+    categorical_top_n : int, default=20
+        Maximum number of non-null category values to keep per categorical
+        column before rolling the remainder into ``other_count``.
+
+    Returns
+    -------
+    Any
+        Spark DataFrame containing one profile row per eligible business
+        column. Existing columns are preserved; distribution-enabled runs also
+        include ``DISTRIBUTION_TYPE`` and ``DISTRIBUTION_JSON``.
+
+    Notes
+    -----
+    Distribution profiling only collects aggregated Spark results such as
+    quantiles, bucket counts, and grouped category counts. It does not collect
+    complete datasets to the driver.
+    """
+    from pyspark.sql import functions as F
+
+    eligible_columns = _get_profiled_columns(df, exclude_columns=exclude_columns)
+    if not eligible_columns:
+        raise ValueError("No eligible non-technical columns found for metadata profiling.")
+
+    dtype_map = dict(df.dtypes)
+    row_count = int(df.count())
+    distributions = _build_distribution_summaries(
+        df,
+        eligible_columns,
+        dtype_map,
+        include_distributions=include_distributions,
+        distribution_columns=distribution_columns,
+        distribution_bin_edges=distribution_bin_edges,
+        categorical_categories=categorical_categories,
+        categorical_top_n=categorical_top_n,
+    )
+
+    agg_exprs = []
+    for column_name in eligible_columns:
+        agg_exprs.append(F.sum(F.col(column_name).isNull().cast("int")).alias(f"{column_name}_NULL_COUNT"))
+        agg_exprs.append(F.countDistinct(F.col(column_name)).alias(f"{column_name}_DISTINCT_COUNT"))
+        if _is_min_max_supported_type(dtype_map[column_name]):
+            agg_exprs.append(F.min(F.col(column_name)).alias(f"{column_name}_MIN"))
+            agg_exprs.append(F.max(F.col(column_name)).alias(f"{column_name}_MAX"))
+
+    agg_df = df.agg(*agg_exprs)
+    denominator = F.lit(row_count if row_count > 0 else 1).cast("double")
+
+    rows = []
+    for column_name in eligible_columns:
+        select_exprs = [
+            F.lit(table_name).alias("TABLE_NAME"),
+            F.from_utc_timestamp(F.current_timestamp(), run_timestamp_timezone).alias("RUN_TIMESTAMP"),
+            F.lit(column_name).alias("COLUMN_NAME"),
+            F.lit(dtype_map[column_name]).alias("DATA_TYPE"),
+            F.lit(row_count).alias("ROW_COUNT"),
+            F.coalesce(F.col(f"{column_name}_NULL_COUNT"), F.lit(0)).cast("long").alias("NULL_COUNT"),
+            F.round((F.coalesce(F.col(f"{column_name}_NULL_COUNT"), F.lit(0)).cast("double") / denominator) * 100, 3).alias("NULL_PERCENT"),
+            F.coalesce(F.col(f"{column_name}_DISTINCT_COUNT"), F.lit(0)).cast("long").alias("DISTINCT_COUNT"),
+            F.round((F.coalesce(F.col(f"{column_name}_DISTINCT_COUNT"), F.lit(0)).cast("double") / denominator) * 100, 3).alias("DISTINCT_PERCENT"),
+            F.col(f"{column_name}_MIN").cast("string").alias("MIN_VALUE") if f"{column_name}_MIN" in agg_df.columns else F.lit(None).cast("string").alias("MIN_VALUE"),
+            F.col(f"{column_name}_MAX").cast("string").alias("MAX_VALUE") if f"{column_name}_MAX" in agg_df.columns else F.lit(None).cast("string").alias("MAX_VALUE"),
+        ]
+        if include_distributions:
+            distribution_type, distribution_payload = distributions.get(column_name, (None, None))
+            select_exprs.extend(
+                [
+                    F.lit(distribution_type).cast("string").alias("DISTRIBUTION_TYPE"),
+                    F.lit(json.dumps(distribution_payload, sort_keys=True) if distribution_payload is not None else None).cast("string").alias("DISTRIBUTION_JSON"),
+                ]
+            )
+        rows.append(agg_df.select(*select_exprs))
+
+    out = rows[0]
+    for next_row in rows[1:]:
+        out = out.unionByName(next_row)
+    return out
+```
+
+</details>

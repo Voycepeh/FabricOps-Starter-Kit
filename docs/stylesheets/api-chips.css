@@ -683,3 +683,76 @@
 .lifecycle-stage-table table {
   min-width: 44rem;
 }
+
+.md-typeset .reference-signature-details,
+.md-typeset .reference-implementation-details,
+.md-typeset .reference-metadata-details,
+.md-typeset .reference-source-details {
+  margin: 0.85rem 0 1rem;
+  max-width: 100%;
+}
+
+.md-typeset .reference-signature-details summary,
+.md-typeset .reference-implementation-details summary,
+.md-typeset .reference-metadata-details summary,
+.md-typeset .reference-source-details summary {
+  cursor: pointer;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.md-typeset .reference-source-link {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.md-typeset .reference-input-table {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.md-typeset .reference-input-table table {
+  min-width: min(42rem, 100%);
+}
+
+.md-typeset .reference-input-table td,
+.md-typeset .reference-input-table th {
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+
+.md-typeset .reference-source-details .highlight pre,
+.md-typeset .reference-source-details pre,
+.md-typeset .reference-signature-details .highlight pre,
+.md-typeset .reference-signature-details pre {
+  max-width: 100%;
+  overflow-x: auto;
+  white-space: pre;
+}
+
+.md-typeset h1 code,
+.md-typeset h2 code,
+.md-typeset h3 code,
+.md-typeset .reference-function-table code,
+.md-typeset .reference-metadata-details code,
+.md-typeset .reference-implementation-details code {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+@media screen and (max-width: 760px) {
+  .md-typeset .reference-signature-details,
+  .md-typeset .reference-implementation-details,
+  .md-typeset .reference-metadata-details,
+  .md-typeset .reference-source-details {
+    font-size: 0.82rem;
+  }
+
+  .md-typeset .reference-source-details .highlight pre,
+  .md-typeset .reference-source-details pre,
+  .md-typeset .reference-signature-details .highlight pre,
+  .md-typeset .reference-signature-details pre {
+    font-size: 0.72rem;
+    line-height: 1.35;
+  }
+}

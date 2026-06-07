@@ -49,7 +49,7 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 - Classification: Internal
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
-- Source reference: <a href="../../api/modules/governance_review/#_is_table_not_found_error">Module source anchor</a>
+- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L149-L169">View source on GitHub</a>
 - Inbound references count: 1
 - Outbound references count: 0
 

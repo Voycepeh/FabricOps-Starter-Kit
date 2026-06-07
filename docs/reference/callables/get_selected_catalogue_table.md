@@ -1,37 +1,52 @@
 # get_selected_catalogue_table
 
-**Module:** `governance_review`  
-**Classification:** Callable
+Return the table selected by widget_select_catalogue_table.
 
-## Status
-
-Public callable helper intended for notebook authors.
-
-## When to use this
+## Use this when
 
 Return the table selected by widget_select_catalogue_table.
 
-## When not to use this
+## Do not use this for
 
 Not documented yet
 
-## Quick example
+## Example
 
+```python
 Not documented yet
+```
 
-## Signature
+## Inputs
+
+<div class="module-table-scroll reference-input-table">
+<table class="reference-function-table">
+  <thead>
+    <tr>
+      <th>Parameter</th>
+      <th>Required</th>
+      <th>What it means</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td data-label="Parameter"><code>table_selector</code></td>
+      <td data-label="Required">No</td>
+      <td data-label="What it means">Selector returned by ``widget_select_catalogue_table``. Passing it is optional because the widget also maintains module-level selection state.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<details class="reference-signature-details">
+<summary>Full signature</summary>
 
 ```python
 def get_selected_catalogue_table(table_selector: Any | None=None) -> dict[str, Any]
 ```
 
-## Parameters
+</details>
 
-table_selector : ipywidgets.Combobox, optional
-    Selector returned by ``widget_select_catalogue_table``. Passing it is
-    optional because the widget also maintains module-level selection state.
-
-## Returns
+## Output
 
 dict[str, Any]
     Stable table identity used by ``load_catalogue_profile_rows``.
@@ -44,11 +59,14 @@ Not documented yet
 
 Not documented yet
 
-## FabricOps context
+## Related functions
 
-Starter template: `03_review`; segment: `Governance review`.
+Not documented yet
 
-## AI implementation contract
+<details class="reference-metadata-details">
+<summary>AI implementation contract</summary>
+
+These fields are generated for agents and maintainers, not for quick-start reading.
 
 - **required_context:** Starter template: `03_review`; segment: `Governance review`.
 - **inputs:** table_selector : ipywidgets.Combobox, optional
@@ -60,24 +78,69 @@ Starter template: `03_review`; segment: `Governance review`.
 - **failure_modes:** Not documented yet
 - **verification:** Not documented yet
 
-## Related functions
+</details>
 
-Not documented yet
-
-## Source and tests
-
-- Source file path: `src/fabricops_kit/governance_review.py`
-- Source reference: <a href="../../api/modules/governance_review/#get_selected_catalogue_table">Module source anchor</a>
-- Tests: Not documented yet
-
-## Function manifest
+<details class="reference-metadata-details">
+<summary>Function manifest</summary>
 
 - Fully qualified function name: `fabricops_kit.governance_review.get_selected_catalogue_table`
 - Short name: `get_selected_catalogue_table`
 - Module: `governance_review`
 - Classification: Callable
 - Related module: `governance_review`
+- Source file path: `src/fabricops_kit/governance_review.py`
+- Source line: `261`
 - Inbound references count: 0
 - Outbound references count: 0
 
-_No inbound or outbound references detected._
+</details>
+
+<details class="reference-metadata-details">
+<summary>Raw inbound and outbound references</summary>
+
+### Inbound references
+
+Not documented yet
+
+### Outbound references
+
+Not documented yet
+
+</details>
+
+## Source code
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L261-L285">View get_selected_catalogue_table on GitHub</a>
+
+<details class="reference-source-details">
+<summary>Show source code</summary>
+
+```python
+def get_selected_catalogue_table(table_selector: Any | None = None) -> dict[str, Any]:
+    """Return the catalogue table selected by ``widget_select_catalogue_table``.
+
+    Parameters
+    ----------
+    table_selector : ipywidgets.Combobox, optional
+        Selector returned by ``widget_select_catalogue_table``. Passing it is
+        optional because the widget also maintains module-level selection state.
+
+    Returns
+    -------
+    dict[str, Any]
+        Stable table identity used by ``load_catalogue_profile_rows``.
+    """
+    if _SELECTED_CATALOGUE_TABLE is not None:
+        return dict(_SELECTED_CATALOGUE_TABLE)
+    raw_value = getattr(table_selector, "value", None) if table_selector is not None else None
+    if raw_value:
+        try:
+            parsed = json.loads(str(raw_value))
+            if isinstance(parsed, dict):
+                return dict(parsed)
+        except json.JSONDecodeError:
+            pass
+    raise ValueError("No catalogue table has been selected. Run widget_select_catalogue_table first.")
+```
+
+</details>

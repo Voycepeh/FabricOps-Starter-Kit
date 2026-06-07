@@ -49,7 +49,7 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 - Classification: Internal
 - Related module: `config`
 - Source file path: `src/fabricops_kit/config.py`
-- Source reference: <a href="../../api/modules/config/#_load_dataset_contract">Module source anchor</a>
+- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L829-L857">View source on GitHub</a>
 - Inbound references count: 1
 - Outbound references count: 0
 

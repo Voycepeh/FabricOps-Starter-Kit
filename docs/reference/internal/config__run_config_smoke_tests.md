@@ -49,7 +49,7 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 - Classification: Internal
 - Related module: `config`
 - Source file path: `src/fabricops_kit/config.py`
-- Source reference: <a href="../../api/modules/config/#_run_config_smoke_tests">Module source anchor</a>
+- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L493-L592">View source on GitHub</a>
 - Inbound references count: 1
 - Outbound references count: 5
 

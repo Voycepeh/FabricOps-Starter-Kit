@@ -50,7 +50,7 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 - Classification: Internal
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
-- Source reference: <a href="../../api/modules/governance_review/#_load_active_dq_rules">Module source anchor</a>
+- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L704-L738">View source on GitHub</a>
 - Inbound references count: 2
 - Outbound references count: 5
 
