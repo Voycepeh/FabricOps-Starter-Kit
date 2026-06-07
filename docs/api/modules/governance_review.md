@@ -14,7 +14,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module purpose
 
-Owns table-scoped 03_review catalogue selection, business context review, AI-assisted business context drafting, DQ review and internal enforcement helpers, classification review, AI-assisted sensitivity/PII drafting, and approved metadata commit through record_table_governance.
+Owns table-scoped 03_review catalogue selection, business context review, DQ-rule review guidance, classification review, AI-assisted internal drafting helpers, and approved metadata commit through record_table_governance.
 
 ## Module manifest
 
@@ -32,7 +32,7 @@ Owns table-scoped 03_review catalogue selection, business context review, AI-ass
     </tr>
     <tr>
       <td>Module purpose</td>
-      <td>Owns table-scoped 03_review catalogue selection, business context review, AI-assisted business context drafting, DQ review and internal enforcement helpers, classification review, AI-assisted sensitivity/PII drafting, and approved metadata commit through record_table_governance.</td>
+      <td>Owns table-scoped 03_review catalogue selection, business context review, DQ-rule review guidance, classification review, AI-assisted internal drafting helpers, and approved metadata commit through record_table_governance.</td>
     </tr>
     <tr>
       <td>Public callable count</td>

@@ -9,7 +9,7 @@ import mkdocs_gen_files
 PACKAGE = "fabricops_kit"
 PKG_DIR = Path(__file__).resolve().parents[1] / "src" / PACKAGE
 DOCS_METADATA_PATH = Path(__file__).resolve().parents[1] / "scripts" / "reference_docs_metadata.py"
-SKIPPED_PACKAGE_MODULE_FILES = {"__init__.py", "docs_metadata.py"}
+SKIPPED_PACKAGE_MODULE_FILES = {"__init__.py"}
 NOISE_ATTRS = {"append", "clear", "get", "items", "on_click"}
 NOISE_CALLS = {
     "json.dumps",
@@ -208,7 +208,7 @@ for row in sorted(public_symbol_docs, key=lambda item: item["symbol_name"]):
 
         outbound_count = int(dep.get("calls_count", len(calls)))
         inbound_count = int(dep.get("used_by_count", len(referenced_by)))
-        classification = str(dep.get("classification", row.get("role", "optional"))).capitalize()
+        classification = str(dep.get("classification", row.get("function_type", "callable"))).capitalize()
 
         fd.write('<p class="reference-page-meta">')
         fd.write(f'Module: {_module_link(module_name)}')

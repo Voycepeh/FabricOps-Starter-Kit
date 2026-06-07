@@ -1,22 +1,20 @@
 # Function Reference
 
-Use this page as a function lookup after you understand the notebook flow.
+Use this page as a function lookup after you understand the notebook flow. The default catalogue shows public v1 callables that notebook authors can import from the package root; the Template Function Map shows where those callables are used in starter templates; Implementation Modules show the active source modules that maintainers debug and extend.
 
 - Use [Template Function Map](template-function-map.md) to see what notebook users call from the starter notebook templates.
 - Use the Function catalogue below to browse the public v1 callables by default; enable Internal for package helpers.
 - Use Implementation Modules only when debugging or maintaining current major source boundaries; they do not document every `.py` file.
 
-> Graph exploration is intentionally deferred. Future PR may use Neo4j or a proper graph backend.
-
 ## Find a function
 
-Use the finder below to look up callable and internal FabricOps functions.
+Use the finder below to look up public callables and internal support functions from active v1 modules.
 
 <div class="callable-finder" data-callable-finder>
   <label class="callable-finder-label" for="callable-finder-input">Search functions</label>
   <input id="callable-finder-input" class="callable-finder-input" type="search" placeholder="Search functions" aria-describedby="callable-finder-help callable-finder-status callable-finder-examples" autocomplete="off">
   <p id="callable-finder-help" class="callable-finder-help">Search by function name, module, function type, starter path, or description.</p>
-  <p id="callable-finder-examples" class="callable-finder-examples">Try: <span class="callable-finder-chip">csv</span> <span class="callable-finder-chip">data_quality</span> <span class="callable-finder-chip">quarantine</span></p>
+  <p id="callable-finder-examples" class="callable-finder-examples">Try: <span class="callable-finder-chip">csv</span> <span class="callable-finder-chip">dq_rules</span> <span class="callable-finder-chip">quarantine</span></p>
   <p id="callable-finder-status" class="callable-finder-status" aria-live="polite">Showing callable functions.</p>
   <fieldset class="callable-type-filters">
     <legend>Function type filters</legend>
@@ -888,9 +886,9 @@ Use the finder below to look up callable and internal FabricOps functions.
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 3</span></summary><ul><li><code>_create_or_update_data_agreement</code></li><li><code>_render_maintenance_widget</code></li><li><code>_setup_data_agreement_tables</code></li></ul></details>
   </div>
 </article>
-<article id="governance_review-_load_active_dq_rules" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_load_active_dq_rules" data-callable-module="governance_review" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Load active DQ rules from current v1 metadata, falling back to legacy rule_json.">
+<article id="governance_review-_load_active_dq_rules" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_load_active_dq_rules" data-callable-module="governance_review" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Load active DQ rules from current v1 metadata rows.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/governance_review__load_active_dq_rules/"><code>_load_active_dq_rules</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Load active DQ rules from current v1 metadata, falling back to legacy rule_json.</p>
+  <p class="reference-catalogue-item-purpose">Load active DQ rules from current v1 metadata rows.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 5</span></summary><ul><li><code>_canonical_dq_rule_type</code></li><li><code>_coerce_rows</code></li><li><code>_latest_dq_rule_versions</code></li><li><code>_spark_sql_helpers</code></li><li><code>_validate_dq_rules</code></li></ul></details>

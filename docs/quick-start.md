@@ -2,7 +2,7 @@
 
 Use this page to run the FabricOps Starter Kit in Microsoft Fabric and complete the first governed notebook flow.
 
-FabricOps is designed to stay lightweight. The kit does not ask teams to introduce a separate platform, ticketing workflow, or governance tool before they can start. Instead, it uses Fabric workspaces, lakehouses, notebooks, and shared metadata tables to make the delivery process traceable from the first data agreement to production handover.
+FabricOps is designed to stay lightweight. The kit does not ask teams to introduce a separate platform, ticketing workflow, or governance tool before they can start. Instead, it uses Fabric workspaces, lakehouses, notebooks, and shared metadata tables to make the delivery process traceable from the first data agreement through production review.
 
 By the end of this quick start, you should have:
 
@@ -19,7 +19,7 @@ Start with one Governance workspace and one Engineering workspace. **Alternative
 
 | Workspace                  | Required items                                               | Purpose                                                                                                                               |
 | -------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
-| Governance workspace       | `metadata_lakehouse`                                         | Stores shared metadata, notebook registration, agreements, profiles, reviewed DQ expectations, classifications, lineage, and handover evidence. |
+| Governance workspace       | `metadata_lakehouse`                                         | Stores shared metadata, notebook registration, agreements, profiles, reviewed DQ expectations, classifications, and lineage evidence. |
 | Engineering workspace  | `source_lakehouse`, `unified_lakehouse`, `product_warehouse` | Used by data analysts, engineers, and pipeline contributors to build and test the governed flow.                                      |
 
 ## Once you have the workspace and lakehouses & warehouses set up follow these 5 steps
@@ -55,9 +55,9 @@ Start with one Governance workspace and one Engineering workspace. **Alternative
 
 The notebooks are intentionally separated by role. Each template produces metadata or outputs that the next role can reuse.
 
-![Role-based notebook workflow from environment configuration through AI-assisted handover](assets/fabricops-role-workflow.png){ .full-width }
+![Role-based notebook workflow from environment configuration through governed review](assets/fabricops-role-workflow.png){ .full-width }
 
-Role-based notebook workflow for configuration, agreement capture, pipeline build, review, optional exploration support, enforcement, and handover.
+Role-based notebook workflow for configuration, agreement capture, pipeline build, review, optional exploration support, and guardrails.
 
 Run the required delivery templates in this order:
 
@@ -66,9 +66,9 @@ Run the required delivery templates in this order:
 | 1 | `00_env_config` | Defines environment-specific paths, lakehouses, warehouse targets, and governance metadata routing. |
 | 2 | `01_agreement` | Defines what should be built, who owns it, what rules apply, and what readiness means. |
 | 3 | `02_pipeline` | Builds repeatable transformations, validates source and target data, publishes outputs, records runtime audit columns, captures lineage, and writes profiles. |
-| 4 | `03_review` | Checks evidence, metadata, ownership, rules, readiness, and handover quality. |
+| 4 | `03_review` | Checks evidence, metadata, ownership, rules, and readiness. |
 | 5 | Rerun `02_pipeline` when needed | Applies approved review metadata in the production pipeline when explicit enforcement has been implemented. |
-| 6 | Production handover | Stores the production notebook export and generates handover evidence for support and review. |
+| 6 | Operational support | Use the production notebook export plus FabricOps metadata evidence for support and review. |
 
 Optional support:
 
@@ -87,16 +87,16 @@ After the first full run, the flow should replace tribal knowledge with metadata
 | What transformations created the output?          | Pipeline registration, lineage, and output metadata captured in `02_pipeline`.                    |
 | Which expectations and classifications were reviewed? | Governance metadata from `03_review`.                                                     |
 | Which production guardrails ran?                  | Evidence from `02_pipeline` schema checks, data-change monitoring, notebook-defined checks, output writes, lineage, and run summaries. |
-| What should be handed over to production support? | Stored production notebook export, generated handover summary, manifest, and support notes. |
+| What should support use after production? | Stored production notebook export, metadata evidence, run summaries, and support notes. |
 
-The goal is that support, review, and handover should no longer depend on memory or side conversations. The metadata should explain who owns the data, how it was transformed, which controls were approved, what evidence exists from the production run, and which optional exploration notes support troubleshooting when `99_explore` was used.
+The goal is that support and review should no longer depend on memory or side conversations. The metadata should explain who owns the data, how it was transformed, which controls were approved, what evidence exists from the production run, and which optional exploration notes support troubleshooting when `99_explore` was used.
 
 
 ## Next reads
 
 | Page                                          | Why read it                                                                                               |
 | --------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| [How FabricOps Works](how-fabricops-works/index.md) | Start with the v1.0.0 metadata-backed notebook workflow, production guardrails, governance review, and handover story. |
+| [How FabricOps Works](how-fabricops-works/index.md) | Start with the v1.0.0 metadata-backed notebook workflow, production guardrails, governance review, and support story. |
 | [Production Guardrails Workflow](schema-and-data-drift.md) | Learn how `02_pipeline` owns production guardrails and run evidence. |
 | [Governance Review Workflow](governance-review.md) | Learn how `03_review` reviews profile evidence and commits governance metadata. |
 | [Function Reference](reference/index.md)   | Review the reusable helper APIs used by the notebook templates.                                           |

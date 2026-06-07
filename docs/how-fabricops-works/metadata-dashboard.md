@@ -6,7 +6,7 @@ Read [How FabricOps Works](index.md) first for the notebook workflow.
 
 ## Current v1.0.0 foundation
 
-Today, the notebooks create metadata that can already support review and handover:
+Today, the notebooks create metadata that can already support review and operations:
 
 - `01_agreement` captures agreement, steward, and supporting evidence.
 - `02_pipeline` writes profiles, lineage, guardrail results, output context, and run metadata evidence.
@@ -23,7 +23,7 @@ A future dashboard should make collected metadata easier to browse. It should no
 | Agreement overview | Show agreement status, owner, steward, and evidence coverage. |
 | Pipeline evidence | Show recent `02_pipeline` profiles, lineage, guardrail results, and run context. |
 | Governance review | Show reviewed metadata from `03_review`. |
-| Handover readiness | Show whether enough evidence exists for support and handover. |
+| Support readiness | Show whether enough evidence exists for support and review. |
 
 ## Design principle
 

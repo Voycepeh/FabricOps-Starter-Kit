@@ -13,10 +13,7 @@ class PublicSymbolDocMetadata(TypedDict):
     kind: str
     template_notebook: str
     template_segment: str
-    workflow_step: NotRequired[int | str | None]  # Deprecated: retained for backward compatibility only.
-    # Preferred function type for the catalogue. `role` is still accepted by the generator for older metadata.
     function_type: NotRequired[str]
-    role: NotRequired[str]
     purpose: NotRequired[str]
     summary_override: str | None
 
@@ -43,7 +40,7 @@ MODULE_DOCS_METADATA: list[ModuleDocMetadata] = [
     {"module_name": "data_lineage", "visibility": "public", "module_summary": "Owns source-to-target lineage and transformation evidence.", "sidebar_group": "3. Data engineer", "sidebar_include": True},
     {"module_name": "drift", "visibility": "public", "module_summary": "Owns schema/profile/data drift checks as engineering guardrails during pipeline runs.", "sidebar_group": "3. Data engineer", "sidebar_include": True},
     {"module_name": "metadata", "visibility": "public", "module_summary": "Owns metadata evidence persistence, stable keys, notebook registry, catalogue keys, and runtime audit helpers.", "sidebar_group": "5. Metadata store", "sidebar_include": True},
-    {"module_name": "governance_review", "visibility": "public", "module_summary": "Owns table-scoped 03_review catalogue selection, business context review, AI-assisted business context drafting, DQ review and internal enforcement helpers, classification review, AI-assisted sensitivity/PII drafting, and approved metadata commit through record_table_governance.", "sidebar_group": "1. Governance steward", "sidebar_include": True},
+    {"module_name": "governance_review", "visibility": "public", "module_summary": "Owns table-scoped 03_review catalogue selection, business context review, DQ-rule review guidance, classification review, AI-assisted internal drafting helpers, and approved metadata commit through record_table_governance.", "sidebar_group": "1. Governance steward", "sidebar_include": True},
     {"module_name": "ai", "visibility": "internal", "module_summary": "Internal AI utility surface used by workflow-facing public functions.", "sidebar_group": "Internal", "sidebar_include": False},
     {"module_name": "schemas", "visibility": "internal", "module_summary": "Internal schema artifacts used for validation and contracts.", "sidebar_group": "Internal", "sidebar_include": False},
 ]

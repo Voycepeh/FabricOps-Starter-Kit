@@ -93,8 +93,6 @@ FIELD_LABELS = {
 _WIDGET_STYLE = {"description_width": "150px"}
 _WIDGET_LAYOUT_WIDTH = "600px"
 _TEXTAREA_HEIGHT = "80px"
-# Backward-compatible internal name retained for existing notebook customizations.
-_DATA_STEWARD_FIELDS = DATA_STEWARD_FIELDS
 _WIDGET_CONFIG_DEFAULTS = {
     "data_steward_widget": {"visible_columns": DATA_STEWARD_VISIBLE_FIELDS, "custom_fields": []},
     "data_agreement_widget": {"visible_columns": DATA_AGREEMENT_VISIBLE_FIELDS, "custom_fields": []},
@@ -424,7 +422,7 @@ def _ensure_metadata_tables(config: Any, env_name: str, *, spark: Any) -> dict[s
     Notes
     -----
     Metadata reads and writes always use the configured ``metadata`` target.
-    Existing tables with older schemas require a deliberate migration; this
+    Existing tables with different schemas require a deliberate migration; this
     helper does not destructively overwrite metadata.
     """
     metadata_tables = _config_value(config, "metadata_tables", {}) or {}
@@ -616,9 +614,9 @@ def _create_or_update_data_steward(*, spark: Any, config: Any, env_name: str, va
         for option in (_config_value(config, "steward_role_options", DEFAULT_STEWARD_ROLE_OPTIONS) or [])
         if str(option).strip()
     }
-    legacy_role = str(values.get("_legacy_steward_role") or "").strip()
+    existing_role = str(values.get("_existing_steward_role") or "").strip()
     selected_steward_id = str(values.get("steward_id") or "").strip()
-    if str(row["steward_role"]).strip() not in configured_roles and not (selected_steward_id and legacy_role and str(row["steward_role"]).strip() == legacy_role):
+    if str(row["steward_role"]).strip() not in configured_roles and not (selected_steward_id and existing_role and str(row["steward_role"]).strip() == existing_role):
         raise ValueError("steward_role must be one of the configured steward role options.")
     row["effective_from"] = _parse_iso_date(row.get("effective_from"), "effective_from")
     row["effective_to"] = _parse_iso_date(row.get("effective_to"), "effective_to")
@@ -861,8 +859,8 @@ def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None 
     Parameters
     ----------
     agreement_rows_or_config : FrameworkConfig or iterable
-        Pass ``CONFIG`` in normal notebooks, or provide existing rows for
-        compatibility with earlier custom notebooks.
+        Pass ``CONFIG`` in normal notebooks, or provide preloaded agreement
+        rows when the caller already has them available.
     env_name : str, optional
         Environment key used to load agreements when ``CONFIG`` is supplied.
     spark_session : pyspark.sql.SparkSession, optional
@@ -1057,10 +1055,10 @@ def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None 
                         active_rows.remove(previous)
                 active_rows.append(new_row)
                 active_primary_rows[:] = [new_row]
-                message = f"Replaced active registration with {selected_id} version {selected_version}. Previous registration history was retained."
+                message = f"Replaced active registration with {selected_id} version {selected_version}. Previous registration history remains in the audit trail."
             elif role == "additional":
                 active_rows.append(new_row)
-                message = f"Added additional agreement link to {selected_id} version {selected_version}. Existing primary registration was retained."
+                message = f"Added additional agreement link to {selected_id} version {selected_version}. Existing primary registration remains active."
             else:
                 active_rows.append(new_row)
                 active_primary_rows[:] = [new_row]
@@ -1258,7 +1256,7 @@ def _render_maintenance_widget(*, spark: Any, config: Any, env_name: str, kind: 
             identity_context.value = _agreement_identity_text(row if row else None)
 
     selected.observe(_populate, names="value")
-    # Keep lightweight test stubs and older custom notebooks that call the first
+    # Keep lightweight test stubs and custom notebooks that call the first
     # registered callback exercising the population path; real ipywidgets still
     # receives the same observers.
     callbacks = getattr(selected, "callbacks", None)
@@ -1283,7 +1281,7 @@ def _render_maintenance_widget(*, spark: Any, config: Any, env_name: str, kind: 
                 if is_steward:
                     if selected.value:
                         values["steward_id"] = selected.value
-                        values["_legacy_steward_role"] = row_lookup.get(selected.value, {}).get("steward_role", "")
+                        values["_existing_steward_role"] = row_lookup.get(selected.value, {}).get("steward_role", "")
                     row = _create_or_update_data_steward(spark=spark, config=config, env_name=env_name, values=values, custom_fields=extras)
                     _refresh_existing_options(row["steward_id"])
                     for callback in after_save_callbacks:

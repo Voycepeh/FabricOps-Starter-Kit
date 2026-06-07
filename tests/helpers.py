@@ -42,7 +42,7 @@ def framework_config() -> FrameworkConfig:
             }
         ),
         notebook_runtime_config=NotebookRuntimeConfig(),
-        ai_prompt_config=AIPromptConfig("context", "dq", "personal", "candidate", "review", "handover"),
+        ai_prompt_config=AIPromptConfig("context", "dq", "personal", "candidate", "review"),
         quality_config=QualityConfig(),
         governance_config=GovernanceConfig(),
         review_workflow_config=ReviewWorkflowConfig(),

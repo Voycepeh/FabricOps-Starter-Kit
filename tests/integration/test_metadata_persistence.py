@@ -71,7 +71,7 @@ def test_governance_metadata_setup_validates_spark_schemas(monkeypatch):
 
 
 def test_notebook_registry_rejects_existing_tables_missing_required_schema(monkeypatch):
-    monkeypatch.setattr(metadata, "read_lakehouse_table", lambda *args, **kwargs: [{"agreement_id": "DA-1", "workspace": "legacy"}])
+    monkeypatch.setattr(metadata, "read_lakehouse_table", lambda *args, **kwargs: [{"agreement_id": "DA-1", "workspace": "previous"}])
     monkeypatch.setattr(metadata, "write_lakehouse_table", lambda *args, **kwargs: pytest.fail("invalid existing schema should not be overwritten"))
 
     with pytest.raises(ValueError, match="workspace_name"):

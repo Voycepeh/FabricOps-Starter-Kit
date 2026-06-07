@@ -18,7 +18,7 @@ DELETED_MODULE_SUFFIXES = (
     "_utils",
     "versioning",
     "docs_metadata",
-    "handover",
+    "hand" + "over",
 )
 DELETED_MODULE_IMPORTS = tuple(f"fabricops_kit.{suffix}" for suffix in DELETED_MODULE_SUFFIXES)
 
@@ -56,18 +56,29 @@ def test_public_v1_callable_list_remains_unchanged():
     assert fabricops_kit.__all__ == EXPECTED_V1_CALLABLES
 
 
-def test_no_source_test_or_docs_imports_deleted_runtime_modules():
+def test_no_source_tests_docs_or_templates_reference_removed_modules_or_callables():
     root = Path(__file__).parents[2]
-    scanned_suffixes = {".py", ".md", ".yml", ".yaml", ".json"}
+    scanned_suffixes = {".py", ".md", ".yml", ".yaml", ".json", ".ipynb"}
+    removed_callables = (
+        "build" + "_hand" + "over",
+        "render" + "_hand" + "over_markdown",
+        "_build" + "_hand" + "over_record",
+        "_write_metadata_rows" + "_leg" + "acy",
+        "_get" + "_notebook_registry_schema",
+        "configure" + "_ai",
+        "Config" + "BootstrapResult",
+    )
+    removed_module_files = tuple(f"fabricops_kit/{suffix}.py" for suffix in DELETED_MODULE_SUFFIXES)
     offenders: list[str] = []
-    for base in [root / "src", root / "tests", root / "docs"]:
+    for base in [root / "src", root / "tests", root / "docs", root / "templates"]:
         for path in base.rglob("*"):
-            if not path.is_file() or path.suffix not in scanned_suffixes:
+            if path == Path(__file__) or not path.is_file() or path.suffix not in scanned_suffixes:
                 continue
             text = path.read_text(encoding="utf-8")
-            for deleted in DELETED_MODULE_IMPORTS:
-                if deleted in text:
-                    offenders.append(f"{path.relative_to(root)} imports {deleted}")
+            for deleted in (*DELETED_MODULE_IMPORTS, *removed_module_files, *removed_callables):
+                comparable_text = text.replace("\\", "/")
+                if deleted in comparable_text:
+                    offenders.append(f"{path.relative_to(root)} references {deleted}")
     assert offenders == []
 
 

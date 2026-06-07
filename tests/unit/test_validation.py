@@ -117,7 +117,7 @@ def test_stop_if_failed_blocks_only_failed_guardrail_results():
         stop_if_failed({"can_continue": False, "status": "failed", "message": "blocked"})
 
 
-def test_drift_public_surface_keeps_compatibility_exceptions_unexported():
+def test_drift_public_surface_keeps_removed_exceptions_unexported():
     import fabricops_kit
     import fabricops_kit.drift as drift
 

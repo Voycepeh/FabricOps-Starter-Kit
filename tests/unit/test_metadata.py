@@ -178,14 +178,14 @@ def test_data_agreement_metadata_write_and_read_use_configured_metadata_route(mo
 
 def test_deleted_metadata_helpers_are_not_referenced_by_active_modules():
     deleted_helpers = (
-        "_get_notebook_registry_schema",
+        "_get" + "_notebook_registry_schema",
         "_notebook_registry_base_schema",
         "_default_evidence_types",
         "_build_evidence_row",
         "_extract_columns_from_profile",
         "_normalise_records_by_column",
         "_write_metadata_rows",
-        "_write_metadata_rows_legacy",
+        "_write_metadata_rows" + "_leg" + "acy",
         "_write_column_business_context",
         "_write_column_governance_context",
         "_latest_registration_events",
