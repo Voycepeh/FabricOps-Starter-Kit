@@ -2,11 +2,18 @@
 
 from __future__ import annotations
 
+import ast
+from dataclasses import dataclass
+from datetime import datetime, timezone
 import importlib
 import json
+import re
+import uuid
 from typing import Any, Iterable
 
+from .config import DEFAULT_BUSINESS_CONTEXT_PROMPT_TEMPLATE, DEFAULT_GOVERNANCE_PERSONAL_IDENTIFIER_PROMPT_TEMPLATE
 from .fabric_input_output import read_lakehouse_table, write_lakehouse_table
+from .data_profiling import profile_dataframe
 from .metadata import _now_utc_iso, _resolve_action_by, _build_metadata_column_key, _build_metadata_table_key, _build_runtime_audit_fields, _build_dq_rule_key
 
 CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
@@ -18,6 +25,32 @@ SUCCESS_STATUSES = {"success", "succeeded", "passed", "complete", "completed", "
 DQ_RULE_TYPES = ["not_null", "unique", "accepted_values", "value_range", "regex", "datatype", "referential_integrity", "custom_expression"]
 SENSITIVITY_LABELS = ["public", "internal", "confidential", "restricted"]
 PERSONAL_DATA_CLASSIFICATIONS = ["not_personal_data", "direct_identifier", "indirect_identifier", "sensitive_personal_data", "unknown"]
+BUSINESS_CONTEXT_PROMPT = DEFAULT_BUSINESS_CONTEXT_PROMPT_TEMPLATE
+PDPA_PERSONAL_IDENTIFIER_PROMPT = DEFAULT_GOVERNANCE_PERSONAL_IDENTIFIER_PROMPT_TEMPLATE
+AI_SUGGESTABLE_DQ_RULE_TYPES = {"not_null", "unique_key", "accepted_values", "value_range", "regex_format"}
+COLUMN_BUSINESS_CONTEXT_FROM_WIDGET: list[dict[str, Any]] = []
+REJECTED_COLUMN_BUSINESS_CONTEXT_FROM_WIDGET: list[dict[str, Any]] = []
+_WIDGET_APPROVED_ROWS: list[dict[str, Any]] = []
+_WIDGET_REJECTED_ROWS: list[dict[str, Any]] = []
+APPROVED_RULES_FROM_WIDGET: list[dict[str, Any]] = []
+REJECTED_RULES_FROM_WIDGET: list[dict[str, Any]] = []
+DEACTIVATED_RULES_FROM_WIDGET: list[dict[str, Any]] = []
+KEPT_ACTIVE_RULES_FROM_WIDGET: list[dict[str, Any]] = []
+_DEFAULT_WIDGET_CONFIG = {
+    "confidentiality_labels": ["public", "confidential", "restricted"],
+    "personal_identifier_options": ["not_personal_data", "direct_identifier", "indirect_identifier", "unknown"],
+}
+
+
+@dataclass
+class DQEnforcementResult:
+    """Structured DQ enforcement outputs produced by internal DQ helpers."""
+
+    rules: list[dict[str, Any]]
+    rule_results: Any
+    valid_rows: Any
+    quarantine_rows: Any
+    failure_rows: Any
 
 _SELECTED_CATALOGUE_TABLE: dict[str, Any] | None = None
 
@@ -567,3 +600,413 @@ def record_table_governance(
         "dq_rules": dq_rule_records,
         "column_classification": classification_records,
     }
+
+
+def _spark_sql_helpers():
+    """Return Spark SQL helper modules lazily for DQ runtime helpers."""
+    try:
+        from pyspark.sql import SparkSession, functions as F
+        from pyspark.sql.window import Window
+    except Exception as exc:  # pragma: no cover - Fabric/runtime dependency guard
+        raise RuntimeError("DQ enforcement helpers require pyspark in the active runtime.") from exc
+    return SparkSession, F, Window
+
+
+def _prepare_business_context_profile_input(profile_rows: list[dict], table_name: str, table_context: str = "") -> list[dict]:
+    """Prepare profile rows for business-context AI drafting."""
+    out: list[dict[str, Any]] = []
+    for row in profile_rows or []:
+        out.append(
+            {
+                "table_name": table_name,
+                "table_context": table_context,
+                "column_name": row.get("column_name") or row.get("COLUMN_NAME"),
+                "data_type": row.get("data_type") or row.get("DATA_TYPE"),
+                "row_count": row.get("row_count") or row.get("ROW_COUNT"),
+                "null_count": row.get("null_count") or row.get("NULL_COUNT"),
+                "distinct_count": row.get("distinct_count") or row.get("DISTINCT_COUNT"),
+                "observed_values_sample": row.get("observed_values_sample") or row.get("OBSERVED_VALUES_SAMPLE") or "",
+            }
+        )
+    return out
+
+
+def _draft_business_context(prepared_profile_df, prompt_template: str = BUSINESS_CONTEXT_PROMPT, output_col: str = "ai_business_context_response"):
+    """Run Fabric AI to draft column business-context suggestions."""
+    ai = getattr(prepared_profile_df, "ai", None)
+    if ai is None or not hasattr(ai, "generate_response"):
+        raise RuntimeError("_draft_business_context requires Fabric DataFrame.ai.generate_response.")
+    return prepared_profile_df.ai.generate_response(prompt=prompt_template, is_prompt_template=True, output_col=output_col)
+
+
+def _parse_ai_dict_response(text: str) -> dict[str, Any]:
+    """Parse JSON/Python-dict AI response text into a dictionary."""
+    cleaned = str(text or "").strip()
+    if "=" in cleaned and cleaned.split("=", 1)[0].strip().isupper():
+        cleaned = cleaned.split("=", 1)[1].strip()
+    if not cleaned:
+        return {}
+    try:
+        obj = json.loads(cleaned)
+        return obj if isinstance(obj, dict) else {}
+    except Exception:
+        pass
+    try:
+        obj = ast.literal_eval(cleaned)
+        return obj if isinstance(obj, dict) else {}
+    except Exception:
+        return {}
+
+
+def _extract_column_business_context_suggestions(response_rows, response_col: str = "ai_business_context_response") -> list[dict[str, Any]]:
+    """Extract review-ready business-context suggestions from AI responses."""
+    out: list[dict[str, Any]] = []
+    for row in _coerce_rows(response_rows):
+        parsed = _parse_ai_dict_response(row.get(response_col) or row.get("response") or row.get("ai_response") or "")
+        if parsed:
+            out.append(parsed)
+    return out
+
+
+def _get_reviewed_business_context_rows(status: str = "approved") -> list[dict[str, Any]]:
+    """Return reviewed business-context rows from temporary widget state."""
+    normalized = str(status or "").strip().lower()
+    if normalized == "approved":
+        return list(COLUMN_BUSINESS_CONTEXT_FROM_WIDGET)
+    if normalized == "rejected":
+        return list(REJECTED_COLUMN_BUSINESS_CONTEXT_FROM_WIDGET)
+    raise ValueError("status must be 'approved' or 'rejected'.")
+
+
+def _build_governance_context(
+    business_context: str,
+    approved_usage: str,
+    dataset_context: str,
+    profile_context: str = "",
+    glossary_context: str = "",
+    steward_notes: str = "",
+) -> dict[str, str]:
+    """Build governance prompt context fields for AI classification drafting."""
+    return {
+        "business_context": business_context or "",
+        "approved_usage": approved_usage or "",
+        "dataset_context": dataset_context or "",
+        "profile_context": profile_context or "",
+        "glossary_context": glossary_context or "",
+        "steward_notes": steward_notes or "",
+    }
+
+
+def _prepare_governance_input(profile_rows: list[dict], table_name: str, column_contexts: list[dict]) -> list[dict]:
+    """Join approved business context into profile rows for governance AI suggestions."""
+    context_lookup = {r["column_name"]: r for r in column_contexts or [] if r.get("column_name")}
+    out: list[dict[str, Any]] = []
+    for row in profile_rows or []:
+        col = row.get("column_name") or row.get("COLUMN_NAME")
+        approved = (context_lookup.get(col) or {}).get("approved_business_context")
+        if approved:
+            out.append({**row, "table_name": table_name, "column_name": col, "approved_business_context": approved})
+    return out
+
+
+def _draft_governance(prepared_profile_df, prompt: str | None = None, output_col: str = "ai_governance_response"):
+    """Run Fabric AI to draft sensitivity and PII classification suggestions."""
+    ai = getattr(prepared_profile_df, "ai", None)
+    if ai is None or not hasattr(ai, "generate_response"):
+        raise RuntimeError("_draft_governance requires Fabric DataFrame.ai.generate_response.")
+    return prepared_profile_df.ai.generate_response(prompt=prompt or PDPA_PERSONAL_IDENTIFIER_PROMPT, is_prompt_template=True, output_col=output_col)
+
+
+def _extract_pii_suggestions(response_rows, response_col: str = "ai_governance_response") -> list[dict[str, Any]]:
+    """Extract sensitivity and personal-data suggestions from Spark/list response payloads."""
+    out: list[dict[str, Any]] = []
+    for row in _coerce_rows(response_rows):
+        parsed = _parse_ai_dict_response(row.get(response_col) or row.get("response") or "")
+        if parsed:
+            out.append(parsed)
+            continue
+        fallback = {
+            "column_name": row.get("column_name"),
+            "ai_suggested_personal_identifier_classification": row.get("ai_suggested_personal_identifier_classification", "unknown"),
+            "confidentiality_label": row.get("confidentiality_label", row.get("sensitivity_label", "confidential")),
+            "approved_business_context": row.get("approved_business_context", ""),
+        }
+        if fallback.get("column_name"):
+            out.append(fallback)
+    return out
+
+
+def _extract_governance_suggestions(response_rows, response_col: str = "ai_governance_response") -> list[dict[str, Any]]:
+    """Extract review-ready governance/classification suggestions from AI responses."""
+    return _extract_pii_suggestions(response_rows=response_rows, response_col=response_col)
+
+
+def _approved_widget_rows(agreement_context: dict[str, Any] | None = None, action_by: str | None = None) -> list[dict[str, Any]]:
+    """Return approved classification widget rows with approval context."""
+    context = dict(agreement_context or {})
+    approver = _resolve_action_by(action_by)
+    rows: list[dict[str, Any]] = []
+    for row in _WIDGET_APPROVED_ROWS:
+        merged = dict(row)
+        merged.update(context)
+        merged["status"] = "approved"
+        merged["approved_by"] = approver
+        rows.append(merged)
+    return rows
+
+
+def _parse_dq_rules_dict_from_text(text: str) -> dict[str, list[dict[str, Any]]]:
+    """Parse Fabric AI DQ_RULES response text into a table-keyed rule dictionary."""
+    cleaned = str(text or "").strip()
+    match = re.search(r"DQ_RULES\s*=\s*(\{.*\})", cleaned, flags=re.DOTALL)
+    payload = match.group(1) if match else cleaned
+    if not payload:
+        return {}
+    try:
+        parsed = json.loads(payload)
+    except Exception:
+        try:
+            parsed = ast.literal_eval(payload)
+        except Exception:
+            return {}
+    return parsed if isinstance(parsed, dict) else {}
+
+
+def _prepare_dq_profile_rows_with_context(profile_rows: list[dict], table_name: str, column_contexts: list[dict]) -> list[dict[str, Any]]:
+    """Join approved column business context into profile rows before DQ AI drafting."""
+    context_lookup = {r["column_name"]: r for r in column_contexts or [] if r.get("column_name")}
+    out: list[dict[str, Any]] = []
+    for row in profile_rows or []:
+        column_name = row.get("column_name") or row.get("COLUMN_NAME")
+        approved_ctx = (context_lookup.get(column_name) or {}).get("approved_business_context")
+        if approved_ctx:
+            out.append({**row, "table_name": table_name, "column_name": column_name, "approved_business_context": approved_ctx})
+    return out
+
+
+def _suggest_dq_rules_with_fabric_ai(prepared_profile_df, prompt_template: str, output_col: str = "ai_dq_response"):
+    """Run Fabric AI to draft DQ rules from prepared profile rows."""
+    ai = getattr(prepared_profile_df, "ai", None)
+    if ai is None or not hasattr(ai, "generate_response"):
+        raise RuntimeError("_suggest_dq_rules_with_fabric_ai requires Fabric DataFrame.ai.generate_response.")
+    return prepared_profile_df.ai.generate_response(prompt=prompt_template, is_prompt_template=True, output_col=output_col)
+
+
+def _extract_candidate_rules_from_responses(response_rows, table_name: str, response_col: str = "ai_dq_response") -> list[dict[str, Any]]:
+    """Extract deduplicated candidate DQ rules from AI response rows."""
+    candidates: list[dict[str, Any]] = []
+    rows = _coerce_rows(response_rows)
+    for row in rows:
+        text = row.get(response_col) or row.get("response") or ""
+        candidates.extend(_parse_dq_rules_dict_from_text(text).get(table_name, []))
+    by_id = {r.get("rule_id"): r for r in candidates if r.get("rule_id")}
+    return list(by_id.values())
+
+
+def _extract_dq_rules(response_rows, table_name: str, response_col: str = "response") -> list[dict[str, Any]]:
+    """Extract candidate DQ rules from a Spark DataFrame or list of AI response rows."""
+    return _extract_candidate_rules_from_responses(response_rows, table_name=table_name, response_col=response_col)
+
+
+def _approved_dq_rules_from_review_rows(review_rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Return approved canonical DQ rules from notebook review rows."""
+    approved: list[dict[str, Any]] = []
+    for row in review_rows or []:
+        if str(row.get("approval_status", "")).lower() != "approved":
+            continue
+        payload = row.get("proposed_rule_payload") or "{}"
+        approved.append(json.loads(payload) if isinstance(payload, str) else dict(payload))
+    return approved
+
+
+def _validate_dq_rules(rules: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Validate canonical DQ rules before loading or enforcement."""
+    if not isinstance(rules, list):
+        raise ValueError("DQ rules must be a list of dictionaries.")
+    required = {"rule_id", "rule_type", "columns", "severity", "description"}
+    for i, rule in enumerate(rules):
+        if not isinstance(rule, dict):
+            raise ValueError(f"DQ rule at index {i} must be a dictionary.")
+        missing = required.difference(rule)
+        if missing:
+            raise ValueError(f"DQ rule '{rule.get('rule_id', i)}' is missing fields: {sorted(missing)}")
+        if rule["rule_type"] not in AI_SUGGESTABLE_DQ_RULE_TYPES:
+            raise ValueError(f"DQ rule '{rule['rule_id']}' has unsupported rule_type '{rule['rule_type']}'.")
+        if str(rule["severity"]).lower() not in {"warning", "error"}:
+            raise ValueError(f"DQ rule '{rule['rule_id']}' severity must be warning or error.")
+        cols = rule.get("columns")
+        if not isinstance(cols, list) or not cols:
+            raise ValueError(f"DQ rule '{rule['rule_id']}' columns must be a non-empty list.")
+        if rule["rule_type"] in {"not_null", "accepted_values", "value_range", "regex_format"} and len(cols) != 1:
+            raise ValueError(f"DQ rule '{rule['rule_id']}' requires exactly one column.")
+        if rule["rule_type"] == "accepted_values" and "allowed_values" not in rule:
+            raise ValueError(f"DQ rule '{rule['rule_id']}' requires allowed_values.")
+        if rule["rule_type"] == "value_range" and "lower_bound" not in rule and "upper_bound" not in rule:
+            raise ValueError(f"DQ rule '{rule['rule_id']}' requires lower_bound or upper_bound.")
+        if rule["rule_type"] == "regex_format" and "regex_pattern" not in rule:
+            raise ValueError(f"DQ rule '{rule['rule_id']}' requires regex_pattern.")
+    return rules
+
+
+def _latest_dq_rule_versions(metadata_df, table_name: str):
+    """Resolve the latest DQ metadata row per rule key with deterministic ties."""
+    _, F, Window = _spark_sql_helpers()
+    w = Window.partitionBy("rule_key").orderBy(
+        F.col("action_ts").desc(),
+        F.col("action_type").desc(),
+        F.col("action_by").desc(),
+        F.col("rule_source").desc(),
+        F.col("rule_json").desc(),
+    )
+    return metadata_df.filter(F.col("table_name") == table_name).withColumn("_rn", F.row_number().over(w)).filter(F.col("_rn") == 1).drop("_rn")
+
+
+def _load_active_dq_rules(metadata_df, table_name: str) -> list[dict[str, Any]]:
+    """Load latest active approved DQ rule payloads from append-only metadata history."""
+    _, F, _ = _spark_sql_helpers()
+    rows = _latest_dq_rule_versions(metadata_df, table_name).filter(F.col("is_active") == True).select("rule_json").collect()
+    return [json.loads(r["rule_json"]) for r in rows]
+
+
+def _load_active_dq_rule_metadata(metadata_df, table_name: str):
+    """Return latest active DQ metadata rows for governance review screens."""
+    _, F, _ = _spark_sql_helpers()
+    return _latest_dq_rule_versions(metadata_df, table_name).filter(F.col("is_active") == True)
+
+
+def _split_dq_rows(df, rules: list[dict[str, Any]], dq_run_id: str | None = None, row_id_columns: list[str] | None = None):
+    """Split source rows into valid rows, quarantine rows, and failure evidence."""
+    _, F, Window = _spark_sql_helpers()
+    _validate_dq_rules(rules)
+    dq_run_id = dq_run_id or str(uuid.uuid4())
+    run_ts = datetime.now(timezone.utc).isoformat()
+    if row_id_columns:
+        df_with_ids = df.withColumn("dq_row_id", F.sha2(F.concat_ws("||", *[F.coalesce(F.col(c).cast("string"), F.lit("<NULL>")) for c in row_id_columns]), 256))
+    else:
+        df_with_ids = df.withColumn("dq_row_id", F.sha2(F.concat_ws("||", *[F.coalesce(F.col(c).cast("string"), F.lit("<NULL>")) for c in df.columns], F.monotonically_increasing_id().cast("string")), 256))
+    working = df_with_ids.withColumn("dq_run_id", F.lit(dq_run_id))
+    failure_dfs = []
+    for rule in rules:
+        rid, rtype, cols = str(rule["rule_id"]), str(rule["rule_type"]), rule["columns"]
+        col_name = cols[0] if cols else None
+        if rtype == "not_null":
+            failed = F.col(col_name).isNull() | (F.trim(F.col(col_name).cast("string")) == "")
+        elif rtype == "unique_key":
+            dup_col = f"__dq_duplicate_count_{rid}"
+            working = working.withColumn(dup_col, F.count(F.lit(1)).over(Window.partitionBy(*[F.col(c) for c in cols])))
+            failed = F.col(dup_col) > F.lit(1)
+        elif rtype == "accepted_values":
+            failed = F.col(col_name).isNotNull() & ~F.col(col_name).isin(rule["allowed_values"])
+        elif rtype == "value_range":
+            cond = F.lit(False)
+            if rule.get("lower_bound") is not None:
+                cond = cond | (F.col(col_name).cast("double") < F.lit(float(rule["lower_bound"])))
+            if rule.get("upper_bound") is not None:
+                cond = cond | (F.col(col_name).cast("double") > F.lit(float(rule["upper_bound"])))
+            failed = F.col(col_name).isNotNull() & cond
+        elif rtype == "regex_format":
+            failed = F.col(col_name).isNotNull() & ~F.col(col_name).rlike(rule["regex_pattern"])
+        else:
+            continue
+        failure_dfs.append(working.filter(F.coalesce(failed, F.lit(False))).select(F.col("dq_run_id"), F.col("dq_row_id"), F.lit(rid).alias("rule_id"), F.lit(rtype).alias("rule_type"), F.lit(",".join(cols)).alias("failed_columns"), F.lit(str(rule.get("severity", "warning"))).alias("severity"), F.lit(str(rule.get("description", ""))).alias("description"), F.lit(run_ts).alias("dq_failed_ts")))
+        if rtype == "unique_key":
+            working = working.drop(dup_col)
+    if not failure_dfs:
+        empty = df.sparkSession.createDataFrame([], "dq_run_id string, dq_row_id string, dq_quarantine_id string, rule_id string, rule_type string, failed_columns string, severity string, description string, dq_failed_ts string")
+        return working, working.limit(0), empty
+    failures = failure_dfs[0]
+    for failure_df in failure_dfs[1:]:
+        failures = failures.unionByName(failure_df)
+    quarantine_ids = failures.select("dq_run_id", "dq_row_id").distinct().withColumn("dq_quarantine_id", F.sha2(F.concat_ws("||", F.col("dq_run_id"), F.col("dq_row_id")), 256))
+    failures = failures.join(quarantine_ids, on=["dq_run_id", "dq_row_id"], how="left").select("dq_run_id", "dq_row_id", "dq_quarantine_id", "rule_id", "rule_type", "failed_columns", "severity", "description", "dq_failed_ts")
+    quarantine_rows = working.join(quarantine_ids, on=["dq_run_id", "dq_row_id"], how="inner").withColumn("dq_quarantine_ts", F.lit(run_ts))
+    valid_rows = working.join(quarantine_ids.select("dq_run_id", "dq_row_id"), on=["dq_run_id", "dq_row_id"], how="left_anti")
+    return valid_rows, quarantine_rows, failures
+
+
+def _run_dq_rules(df, table_name: str, rules: list[dict[str, Any]]):
+    """Run DQ rules and return rule-level PASS/FAIL evidence."""
+    _, F, _ = _spark_sql_helpers()
+    _validate_dq_rules(rules)
+    _, _, failures = _split_dq_rows(df, rules)
+    total = df.count()
+    failure_counts = {r["rule_id"]: int(r["failed_count"]) for r in failures.groupBy("rule_id").agg(F.count(F.lit(1)).alias("failed_count")).collect()}
+    rows = []
+    for rule in rules:
+        failed_count = failure_counts.get(rule["rule_id"], 0)
+        rows.append({"table_name": table_name, "rule_id": rule["rule_id"], "rule_type": rule["rule_type"], "columns": ",".join(rule["columns"]), "severity": str(rule["severity"]).lower(), "status": "PASS" if failed_count == 0 else "FAIL", "failed_count": int(failed_count), "total_count": int(total), "failed_percent": float(round((failed_count / total) * 100, 4)) if total else 0.0, "description": rule.get("description", ""), "run_timestamp": datetime.now(timezone.utc).isoformat()})
+    return df.sparkSession.createDataFrame(rows)
+
+
+def _assert_dq_passed(dq_result_df) -> None:
+    """Raise when any error-severity DQ rule failed."""
+    if dq_result_df.filter("lower(severity) = 'error' AND status = 'FAIL'").count() > 0:
+        raise ValueError("Data quality failed for error-severity rules.")
+
+
+def _prepare_dq_profile_input_rows(*, profile_df=None, df=None, table_name: str, business_context: str = ""):
+    """Prepare DQ prompt profile rows from a profile DataFrame or raw DataFrame."""
+    if (profile_df is None) == (df is None):
+        raise ValueError("Provide exactly one of profile_df or df.")
+    if profile_df is None:
+        profile_df = profile_dataframe(df, table_name=table_name)
+    cols = set(profile_df.columns)
+    if {"column_name", "data_type", "row_count", "null_count", "distinct_count"}.issubset(cols):
+        return profile_df
+    _, F, _ = _spark_sql_helpers()
+    return profile_df.select(
+        F.col("TABLE_NAME").alias("table_name"),
+        F.col("COLUMN_NAME").alias("column_name"),
+        F.col("DATA_TYPE").alias("data_type"),
+        F.col("ROW_COUNT").alias("row_count"),
+        F.col("NULL_COUNT").alias("null_count"),
+        F.col("NULL_PERCENT").alias("null_percent"),
+        F.col("DISTINCT_COUNT").alias("distinct_count"),
+        F.col("DISTINCT_PERCENT").alias("distinct_percent"),
+        F.col("MIN_VALUE").alias("min_value"),
+        F.col("MAX_VALUE").alias("max_value"),
+        F.lit("").alias("observed_values_sample"),
+        F.lit(business_context).alias("business_context"),
+        F.lit(datetime.now(timezone.utc).isoformat()).alias("profile_timestamp"),
+    )
+
+
+def _draft_dq_rules(*, profile_df=None, df=None, table_name: str, business_context: str = "", prompt_template: str | None = None, output_col: str = "response") -> list[dict[str, Any]]:
+    """Draft candidate DQ rules from metadata profiles or a raw DataFrame fallback."""
+    prepared = _prepare_dq_profile_input_rows(profile_df=profile_df, df=df, table_name=table_name, business_context=business_context)
+    responses = _suggest_dq_rules_with_fabric_ai(prepared, prompt_template=prompt_template or "", output_col=output_col)
+    return _extract_dq_rules(responses, table_name=table_name, response_col=output_col)
+
+
+def _enforce_dq(df, *, table_name: str, rules=None, metadata_df=None, row_id_columns: list[str] | None = None, dq_run_id: str | None = None) -> DQEnforcementResult:
+    """Enforce approved DQ rules and return structured deterministic outputs."""
+    if rules is None and metadata_df is None:
+        raise ValueError("Provide rules or metadata_df.")
+    active_rules = rules or _load_active_dq_rules(metadata_df, table_name=table_name)
+    _validate_dq_rules(active_rules)
+    rule_results = _run_dq_rules(df, table_name=table_name, rules=active_rules)
+    valid_rows, quarantine_rows, failure_rows = _split_dq_rows(df, active_rules, dq_run_id=dq_run_id, row_id_columns=row_id_columns)
+    return DQEnforcementResult(active_rules, rule_results, valid_rows, quarantine_rows, failure_rows)
+
+
+def _write_dq_rules(approved_rules, *, table_name: str, config: Any, env: str, metadata_table: str = "METADATA_DQ_RULES", action_by: str | None = None, rule_source: str = "ai_widget_approval", action_reason: str = "Approved after human review.", mode: str = "append"):
+    """Validate and persist approved DQ rules through the configured metadata target."""
+    _validate_dq_rules(approved_rules)
+    SparkSession, _, _ = _spark_sql_helpers()
+    spark = SparkSession.getActiveSession()
+    if spark is None:
+        raise ValueError("_write_dq_rules requires an active SparkSession.")
+    rows = []
+    ts = _now_utc_iso()
+    actor = _resolve_action_by(action_by)
+    for rule in approved_rules:
+        cols = rule.get("columns", [])
+        rows.append({"table_name": table_name, "rule_id": str(rule["rule_id"]), "rule_type": str(rule["rule_type"]), "columns": ",".join(cols), "rule_key": f"{table_name}|{rule['rule_id']}|{rule['rule_type']}|{','.join(cols)}", "is_active": True, "action_type": "approved", "action_by": actor, "action_ts": ts, "action_reason": action_reason, "rule_source": rule_source, "rule_json": json.dumps(rule)})
+    history_df = spark.createDataFrame(rows)
+    write_lakehouse_table(history_df, config, env, "metadata", metadata_table, mode=mode)
+    return history_df
+
+
+def _load_dq_rules(metadata_df, *, table_name: str) -> list[dict[str, Any]]:
+    """Backward-compatible internal alias for loading active approved DQ rules."""
+    return _load_active_dq_rules(metadata_df, table_name=table_name)

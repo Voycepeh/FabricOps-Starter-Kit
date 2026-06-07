@@ -3,7 +3,7 @@ from __future__ import annotations
 import pandas as pd
 import pytest
 
-from fabricops_kit.data_quality import _validate_dq_rules
+from fabricops_kit.governance_review import _validate_dq_rules
 from fabricops_kit.drift import _check_profile_drift, stop_if_failed, validate_schema
 
 pytestmark = pytest.mark.unit

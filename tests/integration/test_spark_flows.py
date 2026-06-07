@@ -4,7 +4,7 @@ import json
 
 import pytest
 
-from fabricops_kit.data_quality import _enforce_dq, _load_dq_rules
+from fabricops_kit.governance_review import _enforce_dq, _load_dq_rules
 from fabricops_kit.drift import validate_schema
 
 pytestmark = pytest.mark.spark

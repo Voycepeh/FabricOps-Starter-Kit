@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 0</span><span class="reference-chip">Internal helpers: 31</span><span class="reference-chip">Outbound: 1</span><span class="reference-chip">Inbound: 6</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 0</span><span class="reference-chip">Internal helpers: 31</span><span class="reference-chip">Outbound: 1</span><span class="reference-chip">Inbound: 3</span></div>
 
 ## Module purpose
 
@@ -44,7 +44,7 @@ Owns metadata evidence persistence, stable keys, notebook registry, catalogue ke
     </tr>
     <tr>
       <td>Inbound module count</td>
-      <td>6</td>
+      <td>3</td>
     </tr>
     <tr>
       <td>Outbound module count</td>
@@ -52,7 +52,7 @@ Owns metadata evidence persistence, stable keys, notebook registry, catalogue ke
     </tr>
     <tr>
       <td>External callers</td>
-      <td><code>business_context</code>, <code>config</code>, <code>data_agreement</code>, <code>data_governance</code>, <code>data_quality</code>, <code>governance_review</code></td>
+      <td><code>config</code>, <code>data_agreement</code>, <code>governance_review</code></td>
     </tr>
     <tr>
       <td>External callees</td>
@@ -357,23 +357,14 @@ No public exports in this module.
 
 ### External callers
 
-**business_context**
-<a class="reference-chip" href="../business_context/#_widget_review_business_context"><code>_widget_review_business_context</code></a>, <a class="reference-chip" href="../business_context/#_write_business_context"><code>_write_business_context</code></a>
-
 **config**
 <a class="reference-chip" href="../../reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a>
 
 **data_agreement**
 <a class="reference-chip" href="../data_agreement/#_create_or_update_data_agreement"><code>_create_or_update_data_agreement</code></a>, <a class="reference-chip" href="../data_agreement/#_create_or_update_data_steward"><code>_create_or_update_data_steward</code></a>, <a class="reference-chip" href="../data_agreement/#_save_agreement_evidence_records"><code>_save_agreement_evidence_records</code></a>, <a class="reference-chip" href="../../reference/widget_select_agreement/"><code>widget_select_agreement</code></a>
 
-**data_governance**
-<a class="reference-chip" href="../data_governance/#_approved_widget_rows"><code>_approved_widget_rows</code></a>, <a class="reference-chip" href="../data_governance/#_widget_review_governance"><code>_widget_review_governance</code></a>
-
-**data_quality**
-<a class="reference-chip" href="../data_quality/#_attach_rule_metadata_keys"><code>_attach_rule_metadata_keys</code></a>, <a class="reference-chip" href="../data_quality/#_build_dq_rule_deactivation_metadata_df"><code>_build_dq_rule_deactivation_metadata_df</code></a>, <a class="reference-chip" href="../data_quality/#_build_dq_rule_deactivations"><code>_build_dq_rule_deactivations</code></a>, <a class="reference-chip" href="../data_quality/#_build_dq_rule_history"><code>_build_dq_rule_history</code></a>, <a class="reference-chip" href="../data_quality/#_build_dq_rules_metadata_df"><code>_build_dq_rules_metadata_df</code></a>
-
 **governance_review**
-<a class="reference-chip" href="../governance_review/#_build_classification_records"><code>_build_classification_records</code></a>, <a class="reference-chip" href="../governance_review/#_build_column_context_records"><code>_build_column_context_records</code></a>, <a class="reference-chip" href="../governance_review/#_build_dq_rule_records"><code>_build_dq_rule_records</code></a>, <a class="reference-chip" href="../governance_review/#_catalogue_table_options"><code>_catalogue_table_options</code></a>, <a class="reference-chip" href="../../reference/load_catalogue_profile_rows/"><code>load_catalogue_profile_rows</code></a>
+<a class="reference-chip" href="../governance_review/#_approved_widget_rows"><code>_approved_widget_rows</code></a>, <a class="reference-chip" href="../governance_review/#_build_classification_records"><code>_build_classification_records</code></a>, <a class="reference-chip" href="../governance_review/#_build_column_context_records"><code>_build_column_context_records</code></a>, <a class="reference-chip" href="../governance_review/#_build_dq_rule_records"><code>_build_dq_rule_records</code></a>, <a class="reference-chip" href="../governance_review/#_catalogue_table_options"><code>_catalogue_table_options</code></a>, <a class="reference-chip" href="../governance_review/#_write_dq_rules"><code>_write_dq_rules</code></a>, <a class="reference-chip" href="../../reference/load_catalogue_profile_rows/"><code>load_catalogue_profile_rows</code></a>
 
 ### External callees
 
