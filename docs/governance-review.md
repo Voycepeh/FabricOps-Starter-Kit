@@ -81,10 +81,10 @@ The same idea can apply to other reviewed metadata:
 | Reviewed metadata | Possible later `02_pipeline` use |
 | --- | --- |
 | Business context | Include approved descriptions in downstream documentation or support evidence. |
-| DQ expectations | Run active approved DQ rules that warn or block before the target write. Warning failures continue and write the full dataset; error failures block. |
+| DQ expectations | Run active approved DQ rules that warn or block before the target write. Warning failures continue, tag rows, and write the full dataset; error failures block. |
 | Sensitivity and classification | Record handling context or support checks that an engineer intentionally adds. |
 
-The pipeline decides how reviewed metadata is used. For DQ rules, v1 uses severity: warning failures log a warning and continue, while error failures block through `stop_if_failed(...)`. The DQ guardrail does not quarantine rows, write row-level failure tables, filter invalid rows, send alerts, or partially write targets. Aggregated DQ results can feed dashboards and alerts later.
+The pipeline decides how reviewed metadata is used. For DQ rules, v1 uses severity: warning failures log a warning, add `_dq_check_status` and `_dq_failed_rules` to the full target dataset, and continue, while error failures block through `stop_if_failed(...)`. Aggregate DQ summary fields are stored with existing profiling/catalogue evidence. The DQ guardrail does not create DQ failure tables, quarantine tables, row-level metadata evidence, filtered writes, alert sends, or partial target writes. Aggregated DQ results can feed dashboards and alerts later.
 
 ## What this page is not
 

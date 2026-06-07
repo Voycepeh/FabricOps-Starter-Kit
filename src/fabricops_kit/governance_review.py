@@ -132,6 +132,7 @@ def _get_governance_metadata_schemas() -> dict[str, Any]:
         ("source_data_change_check", string), ("profile_baseline_mode", string), ("data_type", string), ("row_count", long), ("null_count", long), ("distinct_count", long),
         ("distribution_type", string), ("distribution_json", string), ("profiled_at", string), ("null_percent", double), ("distinct_percent", double), ("min_value", string), ("max_value", string),
         ("agreement_id", string), ("contract_version", string),
+        ("DQ_STATUS", string), ("DQ_RULE_COUNT", long), ("DQ_FAILED_RULE_COUNT", long), ("DQ_WARNING_RULE_COUNT", long), ("DQ_ERROR_RULE_COUNT", long), ("DQ_FAILED_ROW_COUNT", long), ("DQ_FAILED_ROW_PERCENT", double), ("DQ_CHECKED_AT", string),
         ("TABLE_NAME", string), ("RUN_TIMESTAMP", timestamp), ("COLUMN_NAME", string), ("DATA_TYPE", string), ("ROW_COUNT", long), ("NULL_COUNT", long), ("NULL_PERCENT", double), ("DISTINCT_COUNT", long), ("DISTINCT_PERCENT", double), ("MIN_VALUE", string), ("MAX_VALUE", string), ("DISTRIBUTION_TYPE", string), ("DISTRIBUTION_JSON", string),
         ("AGREEMENT_ID", string), ("AGREEMENT_CONTRACT_VERSION", string), ("NOTEBOOK_REGISTRY_ID", string), ("NOTEBOOK_ID", string), ("PROFILE_RUN_ID", string), ("ENVIRONMENT_NAME", string), ("DATASET_NAME", string), ("PIPELINE_NAME", string), ("EVIDENCE_ROLE", string), ("PROFILE_STAGE", string), ("PROFILE_STATUS", string), ("BASELINE_STATUS", string), ("SOURCE_SCHEMA_CHECK", string), ("TARGET_SCHEMA_CHECK", string), ("SOURCE_DATA_CHANGE_CHECK", string), ("TARGET_DATA_CHANGE_CHECK", string), ("SOURCE_CHANGE_SIGNAL_JSON", string), ("LAYER", string), ("ASSET_KIND", string), ("PROFILED_TABLE_NAME", string), ("PROFILED_ROW_COUNT", long),
         *audit,
@@ -810,6 +811,55 @@ def _run_dq_guardrail_checks(df, table_name: str, rules: list[dict[str, Any]]) -
     return checks
 
 
+def _dq_tagged_dataframe(df, rules: list[dict[str, Any]]):
+    """Return the full DataFrame tagged with warning-rule DQ columns."""
+    _, F, _ = _spark_sql_helpers()
+    warning_rules = [rule for rule in rules if str(rule.get("severity", "warning")).strip().lower() == "warning"]
+    failed_rule_columns = [
+        F.when(_dq_failed_expression(df, rule), F.lit(str(rule.get("rule_id") or "")))
+        for rule in warning_rules
+    ]
+    failed_rules = F.concat_ws(",", *failed_rule_columns) if failed_rule_columns else F.lit("")
+    return (
+        df.withColumn("_dq_failed_rules", failed_rules)
+        .withColumn(
+            "_dq_check_status",
+            F.when(F.col("_dq_failed_rules") == F.lit(""), F.lit("passed")).otherwise(F.lit("warning")),
+        )
+    )
+
+
+def _dq_failed_row_count(df, rules: list[dict[str, Any]]) -> int:
+    """Return the count of rows that failed at least one DQ rule."""
+    _, F, _ = _spark_sql_helpers()
+    if not rules:
+        return 0
+    failed_columns = [F.when(_dq_failed_expression(df, rule), F.lit(1)).otherwise(F.lit(0)) for rule in rules]
+    failed_row = failed_columns[0]
+    for column in failed_columns[1:]:
+        failed_row = failed_row + column
+    failed_rows = df.select(F.when(failed_row > F.lit(0), F.lit(1)).otherwise(F.lit(0)).alias("failed"))
+    return int(failed_rows.agg(F.sum("failed").alias("failed_count")).collect()[0]["failed_count"] or 0)
+
+
+def _dq_summary(checks: list[dict[str, Any]], total_count: int, failed_row_count: int) -> dict[str, Any]:
+    """Build aggregate DQ fields for catalogue/profile evidence."""
+    failed_checks = [check for check in checks if not bool(check.get("passed", False))]
+    warning_checks = [check for check in failed_checks if check.get("severity") == "warning"]
+    error_checks = [check for check in failed_checks if check.get("severity") == "error"]
+    status = _summarize_dq_guardrail(checks)["status"]
+    return {
+        "DQ_STATUS": status,
+        "DQ_RULE_COUNT": len(checks),
+        "DQ_FAILED_RULE_COUNT": len(failed_checks),
+        "DQ_WARNING_RULE_COUNT": len(warning_checks),
+        "DQ_ERROR_RULE_COUNT": len(error_checks),
+        "DQ_FAILED_ROW_COUNT": failed_row_count,
+        "DQ_FAILED_ROW_PERCENT": float(round((failed_row_count / total_count) * 100, 4)) if total_count else 0.0,
+        "DQ_CHECKED_AT": datetime.now(timezone.utc).isoformat(),
+    }
+
+
 def _summarize_dq_guardrail(checks: list[dict[str, Any]]) -> dict[str, Any]:
     if any(check.get("status") == "failed" for check in checks):
         status = "failed"
@@ -865,7 +915,9 @@ def enforce_dq_rules(
     -------
     dict
         Guardrail result with ``status``, ``can_continue``, ``checks``, and
-        ``message``. Error-severity rule failures return ``status='failed'`` and
+        ``message``. The result also carries the full tagged ``dataframe`` and
+        aggregate ``summary`` fields for the existing catalogue evidence path.
+        Error-severity rule failures return ``status='failed'`` and
         ``can_continue=False``. Warning-severity failures return
         ``status='warning'`` and ``can_continue=True``. Passing or absent rules
         return ``status='passed'`` and ``can_continue=True``.
@@ -880,7 +932,12 @@ def enforce_dq_rules(
     metadata_df = read_lakehouse_table(config, env, "metadata", DQ_RULES_TABLE, spark_session=spark_session)
     rules = _load_active_dq_rules(metadata_df, table_name=table_name, env_name=env, dataset_name=dataset_name)
     checks = _run_dq_guardrail_checks(dataframe, table_name=table_name, rules=rules) if rules else []
-    return _summarize_dq_guardrail(checks)
+    total_count = int(dataframe.count())
+    failed_row_count = _dq_failed_row_count(dataframe, rules) if rules else 0
+    result = _summarize_dq_guardrail(checks)
+    result["dataframe"] = _dq_tagged_dataframe(dataframe, rules)
+    result["summary"] = _dq_summary(checks, total_count, failed_row_count)
+    return result
 
 def _split_dq_rows(df, rules: list[dict[str, Any]], dq_run_id: str | None = None, row_id_columns: list[str] | None = None):
     """Split source rows into valid rows, quarantine rows, and failure evidence."""

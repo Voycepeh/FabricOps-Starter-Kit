@@ -17,10 +17,13 @@ Enforce approved active DQ rules as a target-write guardrail without filtering r
 - Source file path: `src/fabricops_kit/governance_review.py`
 - Source reference: <a href="../../api/modules/governance_review/#enforce_dq_rules">Module source anchor</a>
 - Inbound references count: 0
-- Outbound references count: 4
+- Outbound references count: 7
 
 ## Outbound references
 - <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a>
+- <a href="../internal/governance_review/_dq_failed_row_count/"><code>fabricops_kit.governance_review._dq_failed_row_count</code></a>
+- <a href="../internal/governance_review/_dq_summary/"><code>fabricops_kit.governance_review._dq_summary</code></a>
+- <a href="../internal/governance_review/_dq_tagged_dataframe/"><code>fabricops_kit.governance_review._dq_tagged_dataframe</code></a>
 - <a href="../internal/governance_review/_load_active_dq_rules/"><code>fabricops_kit.governance_review._load_active_dq_rules</code></a>
 - <a href="../internal/governance_review/_run_dq_guardrail_checks/"><code>fabricops_kit.governance_review._run_dq_guardrail_checks</code></a>
 - <a href="../internal/governance_review/_summarize_dq_guardrail/"><code>fabricops_kit.governance_review._summarize_dq_guardrail</code></a>

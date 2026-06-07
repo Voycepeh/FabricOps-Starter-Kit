@@ -24,6 +24,8 @@ _DEFAULT_PROFILE_EXCLUDE_COLUMNS = {
     "_record_loaded_timestamp",
     "_notebook_name",
     "_loaded_by",
+    "_dq_check_status",
+    "_dq_failed_rules",
     # Technical columns excluded from profile outputs.
     "_source_system",
     "_source_extract_timestamp",

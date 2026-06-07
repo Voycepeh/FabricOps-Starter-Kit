@@ -190,12 +190,12 @@ def test_enforce_dq_rules_returns_passed_when_no_active_rules(spark_session, mon
 
     result = enforce_dq_rules(df, object(), "dev", "sales", "orders", spark_session=spark_session)
 
-    assert result == {
-        "status": "passed",
-        "can_continue": True,
-        "checks": [],
-        "message": "No active approved DQ rules found.",
-    }
+    assert result["status"] == "passed"
+    assert result["can_continue"] is True
+    assert result["checks"] == []
+    assert result["message"] == "No active approved DQ rules found."
+    assert result["summary"]["DQ_RULE_COUNT"] == 0
+    assert {"_dq_check_status", "_dq_failed_rules"}.issubset(result["dataframe"].columns)
 
 
 def test_enforce_dq_rules_warning_failure_can_continue(spark_session, monkeypatch):
@@ -236,6 +236,78 @@ def test_enforce_dq_rules_warning_failure_can_continue(spark_session, monkeypatc
     assert result["checks"][0]["failed_count"] == 1
     assert result["checks"][0]["total_count"] == 1
     assert result["checks"][0]["failed_percent"] == 100.0
+
+
+
+def test_enforce_dq_rules_warning_failure_adds_technical_columns_and_preserves_rows(spark_session, monkeypatch):
+    import fabricops_kit.governance_review as governance
+
+    df = spark_session.createDataFrame(
+        [
+            {"order_id": "A", "status": "invalid", "amount": -1.0},
+            {"order_id": "B", "status": "active", "amount": 10.0},
+        ]
+    )
+    metadata_df = _dq_metadata_df(
+        spark_session,
+        [
+            {
+                "environment_name": "dev",
+                "dataset_name": "sales",
+                "table_name": "orders",
+                "rule_key": "orders|status_known",
+                "rule_id": "status_known",
+                "column_name": "status",
+                "rule_type": "accepted_values",
+                "rule_parameters_json": json.dumps({"allowed_values": ["active", "inactive"]}),
+                "severity": "warning",
+                "description": "Known status",
+                "is_active": True,
+                "review_status": "approved",
+                "approved_by": "reviewer@example.com",
+                "approved_at": "2026-01-03T00:00:00Z",
+                "action_type": "approved",
+                "_committed_at": "2026-01-03T00:00:01Z",
+                "_committed_by": "reviewer@example.com",
+            },
+            {
+                "environment_name": "dev",
+                "dataset_name": "sales",
+                "table_name": "orders",
+                "rule_key": "orders|amount_positive",
+                "rule_id": "amount_positive",
+                "column_name": "amount",
+                "rule_type": "value_range",
+                "rule_parameters_json": json.dumps({"lower_bound": 0}),
+                "severity": "warning",
+                "description": "Positive amount",
+                "is_active": True,
+                "review_status": "approved",
+                "approved_by": "reviewer@example.com",
+                "approved_at": "2026-01-03T00:00:00Z",
+                "action_type": "approved",
+                "_committed_at": "2026-01-03T00:00:01Z",
+                "_committed_by": "reviewer@example.com",
+            },
+        ],
+    )
+    monkeypatch.setattr(governance, "read_lakehouse_table", lambda *args, **kwargs: metadata_df)
+
+    result = enforce_dq_rules(df, object(), "dev", "sales", "orders", spark_session=spark_session)
+    tagged_rows = {row["order_id"]: row.asDict() for row in result["dataframe"].collect()}
+
+    assert result["status"] == "warning"
+    assert result["can_continue"] is True
+    assert result["dataframe"].count() == df.count()
+    assert tagged_rows["A"]["_dq_check_status"] == "warning"
+    assert set(tagged_rows["A"]["_dq_failed_rules"].split(",")) == {"status_known", "amount_positive"}
+    assert tagged_rows["B"]["_dq_check_status"] == "passed"
+    assert tagged_rows["B"]["_dq_failed_rules"] == ""
+    assert result["summary"]["DQ_FAILED_RULE_COUNT"] == 2
+    assert result["summary"]["DQ_WARNING_RULE_COUNT"] == 2
+    assert result["summary"]["DQ_ERROR_RULE_COUNT"] == 0
+    assert result["summary"]["DQ_FAILED_ROW_COUNT"] == 1
+    assert result["summary"]["DQ_FAILED_ROW_PERCENT"] == 50.0
 
 
 def test_enforce_dq_rules_error_failure_blocks(spark_session, monkeypatch):

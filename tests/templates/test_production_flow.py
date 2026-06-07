@@ -52,3 +52,5 @@ def test_production_template_enforces_dq_before_full_dataset_write():
     assert "failure_rows" not in production
     assert "df_output.filter" not in production
     assert "df_output.where" not in production
+    assert "df_output = dq_result[\"dataframe\"]" in production
+    assert "dq_summary=dq_result.get(\"summary\")" in production

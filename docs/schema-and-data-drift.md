@@ -59,11 +59,11 @@ Severity controls the result:
 | Rule outcome | Guardrail result | Pipeline behavior |
 | --- | --- | --- |
 | No rule failures | `passed`, `can_continue=True` | Continue and write the full target dataset. |
-| Warning-severity failure | `warning`, `can_continue=True` | Log the warning result and write the full target dataset. |
+| Warning-severity failure | `warning`, `can_continue=True` | Log the warning result, tag rows with `_dq_check_status` and `_dq_failed_rules`, and write the full target dataset. |
 | Error-severity failure | `failed`, `can_continue=False` | `stop_if_failed(...)` blocks before the target write. |
 | Mixed warning and error failures | `failed`, `can_continue=False` | Error severity wins and blocks before the target write. |
 
-FabricOps v1 keeps DQ enforcement intentionally simple. It does not quarantine rows, write row-level failure tables, filter invalid rows out of the target, send alerts, or perform partial target writes. Aggregated DQ guardrail results can feed dashboards and alerts later without changing the target write path.
+FabricOps v1 keeps DQ enforcement intentionally simple. It does not quarantine rows, write row-level failure tables, filter invalid rows out of the target, send alerts, or perform partial target writes. For warning-level failures, the written dataset keeps every row and adds `_dq_check_status` plus `_dq_failed_rules` so consumers can see warning-only row issues without losing data. Aggregate DQ summary fields such as `DQ_STATUS`, `DQ_RULE_COUNT`, `DQ_FAILED_RULE_COUNT`, `DQ_WARNING_RULE_COUNT`, `DQ_ERROR_RULE_COUNT`, `DQ_FAILED_ROW_COUNT`, `DQ_FAILED_ROW_PERCENT`, and `DQ_CHECKED_AT` are captured with the existing profiling/catalogue evidence path and can feed dashboards and alerts later without changing the target write path.
 
 ## Presets
 
@@ -94,6 +94,7 @@ When guardrails run, `02_pipeline` should record useful metadata evidence such a
 - profile results;
 - whether checks passed, warned, or failed;
 - aggregate DQ rule outcomes when approved active rules were evaluated;
+- warning-only DQ row tags in the target dataset through `_dq_check_status` and `_dq_failed_rules`;
 - source and target table context;
 - lineage and run context.
 

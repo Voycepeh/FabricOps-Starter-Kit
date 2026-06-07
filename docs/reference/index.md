@@ -45,7 +45,7 @@ Use the finder below to look up public callables and internal support functions 
   <p class="reference-catalogue-item-purpose">Enforce approved active DQ rules as a target-write guardrail without filtering rows.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 4</span></summary><ul><li><code>read_lakehouse_table</code></li><li><code>_load_active_dq_rules</code></li><li><code>_run_dq_guardrail_checks</code></li><li><code>_summarize_dq_guardrail</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 7</span></summary><ul><li><code>read_lakehouse_table</code></li><li><code>_dq_failed_row_count</code></li><li><code>_dq_summary</code></li><li><code>_dq_tagged_dataframe</code></li><li><code>_load_active_dq_rules</code></li><li><code>_run_dq_guardrail_checks</code></li><li><code>_summarize_dq_guardrail</code></li></ul></details>
 
   </div>
 </article>
@@ -631,7 +631,34 @@ Use the finder below to look up public callables and internal support functions 
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_spark_sql_helpers</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_run_dq_guardrail_checks</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 3</span></summary><ul><li><code>_dq_failed_row_count</code></li><li><code>_dq_tagged_dataframe</code></li><li><code>_run_dq_guardrail_checks</code></li></ul></details>
+  </div>
+</article>
+<article id="governance_review-_dq_failed_row_count" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_dq_failed_row_count" data-callable-module="governance_review" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Return the count of rows that failed at least one DQ rule.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/governance_review__dq_failed_row_count/"><code>_dq_failed_row_count</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Return the count of rows that failed at least one DQ rule.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>_dq_failed_expression</code></li><li><code>_spark_sql_helpers</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>enforce_dq_rules</code></li></ul></details>
+  </div>
+</article>
+<article id="governance_review-_dq_summary" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_dq_summary" data-callable-module="governance_review" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Build aggregate DQ fields for catalogue/profile evidence.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/governance_review__dq_summary/"><code>_dq_summary</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Build aggregate DQ fields for catalogue/profile evidence.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_summarize_dq_guardrail</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>enforce_dq_rules</code></li></ul></details>
+  </div>
+</article>
+<article id="governance_review-_dq_tagged_dataframe" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_dq_tagged_dataframe" data-callable-module="governance_review" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Return the full DataFrame tagged with warning-rule DQ columns.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/governance_review__dq_tagged_dataframe/"><code>_dq_tagged_dataframe</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Return the full DataFrame tagged with warning-rule DQ columns.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>_dq_failed_expression</code></li><li><code>_spark_sql_helpers</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>enforce_dq_rules</code></li></ul></details>
   </div>
 </article>
 <article id="governance_review-_draft_business_context" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_draft_business_context" data-callable-module="governance_review" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Draft column business-context suggestions with Fabric AI.">
@@ -1306,7 +1333,7 @@ Use the finder below to look up public callables and internal support functions 
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
 
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 7</span></summary><ul><li><code>_dq_failed_expression</code></li><li><code>_latest_dq_rule_versions</code></li><li><code>_load_active_dq_rules</code></li><li><code>_prepare_dq_profile_input_rows</code></li><li><code>_run_dq_guardrail_checks</code></li><li><code>_run_dq_rules</code></li><li><code>_split_dq_rows</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 9</span></summary><ul><li><code>_dq_failed_expression</code></li><li><code>_dq_failed_row_count</code></li><li><code>_dq_tagged_dataframe</code></li><li><code>_latest_dq_rule_versions</code></li><li><code>_load_active_dq_rules</code></li><li><code>_prepare_dq_profile_input_rows</code></li><li><code>_run_dq_guardrail_checks</code></li><li><code>_run_dq_rules</code></li><li><code>_split_dq_rows</code></li></ul></details>
   </div>
 </article>
 <article id="governance_review-_spark_types" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_spark_types" data-callable-module="governance_review" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Return Spark SQL type classes lazily so package import stays lightweight.">
@@ -1351,7 +1378,7 @@ Use the finder below to look up public callables and internal support functions 
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
 
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>enforce_dq_rules</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 2</span></summary><ul><li><code>_dq_summary</code></li><li><code>enforce_dq_rules</code></li></ul></details>
   </div>
 </article>
 <article id="data_agreement-_to_bool" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_to_bool" data-callable-module="data_agreement" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Normalize common notebook and metadata boolean representations.">
