@@ -7,7 +7,7 @@ Compact template-first lookup for the public helper functions used by each noteb
 <p class="template-function-purpose">Shared environment bootstrap and metadata table setup.</p>
 <div class="template-function-row">
 <span class="template-function-segment">Environment setup</span>
-<span class="function-chip-wrap"><a class="function-chip" href="../callables/setup_notebook/">setup_notebook</a><a class="function-chip" href="../callables/setup_metadata_tables/">setup_metadata_tables</a></span>
+<span class="function-chip-wrap"><a class="function-chip" href="../callables/setup_notebook/"><code>setup_notebook</code></a><a class="function-chip" href="../callables/setup_metadata_tables/"><code>setup_metadata_tables</code></a></span>
 </div>
 </section>
 
@@ -16,7 +16,7 @@ Compact template-first lookup for the public helper functions used by each noteb
 <p class="template-function-purpose">Standalone steward, agreement, and evidence widgets for Fabric stability.</p>
 <div class="template-function-row">
 <span class="template-function-segment">Agreement intake</span>
-<span class="function-chip-wrap"><a class="function-chip" href="../callables/widget_render_data_steward/">widget_render_data_steward</a><a class="function-chip" href="../callables/widget_render_data_agreement/">widget_render_data_agreement</a><a class="function-chip" href="../callables/widget_render_agreement_evidence/">widget_render_agreement_evidence</a></span>
+<span class="function-chip-wrap"><a class="function-chip" href="../callables/widget_render_data_steward/"><code>widget_render_data_steward</code></a><a class="function-chip" href="../callables/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a><a class="function-chip" href="../callables/widget_render_agreement_evidence/"><code>widget_render_agreement_evidence</code></a></span>
 </div>
 </section>
 
@@ -25,7 +25,7 @@ Compact template-first lookup for the public helper functions used by each noteb
 <p class="template-function-purpose">Explore approved agreement data and profile sources.</p>
 <div class="template-function-row">
 <span class="template-function-segment">Exploration</span>
-<span class="function-chip-wrap"><a class="function-chip" href="../callables/widget_select_agreement/">widget_select_agreement</a><a class="function-chip" href="../callables/read_lakehouse_table/">read_lakehouse_table</a><a class="function-chip" href="../callables/read_lakehouse_csv/">read_lakehouse_csv</a><a class="function-chip" href="../callables/read_lakehouse_parquet/">read_lakehouse_parquet</a><a class="function-chip" href="../callables/read_lakehouse_excel/">read_lakehouse_excel</a><a class="function-chip" href="../callables/read_warehouse_table/">read_warehouse_table</a><a class="function-chip" href="../callables/profile_dataframe/">profile_dataframe</a></span>
+<span class="function-chip-wrap"><a class="function-chip" href="../callables/widget_select_agreement/"><code>widget_select_agreement</code></a><a class="function-chip" href="../callables/read_lakehouse_table/"><code>read_lakehouse_table</code></a><a class="function-chip" href="../callables/read_lakehouse_csv/"><code>read_lakehouse_csv</code></a><a class="function-chip" href="../callables/read_lakehouse_parquet/"><code>read_lakehouse_parquet</code></a><a class="function-chip" href="../callables/read_lakehouse_excel/"><code>read_lakehouse_excel</code></a><a class="function-chip" href="../callables/read_warehouse_table/"><code>read_warehouse_table</code></a><a class="function-chip" href="../callables/profile_dataframe/"><code>profile_dataframe</code></a></span>
 </div>
 </section>
 
@@ -34,7 +34,7 @@ Compact template-first lookup for the public helper functions used by each noteb
 <p class="template-function-purpose">Production pipeline guardrails, IO, lineage, and publishing.</p>
 <div class="template-function-row">
 <span class="template-function-segment">Pipeline run</span>
-<span class="function-chip-wrap"><a class="function-chip" href="../callables/widget_select_agreement/">widget_select_agreement</a><a class="function-chip" href="../callables/get_selected_agreement/">get_selected_agreement</a><a class="function-chip" href="../callables/read_lakehouse_table/">read_lakehouse_table</a><a class="function-chip" href="../callables/read_lakehouse_csv/">read_lakehouse_csv</a><a class="function-chip" href="../callables/read_lakehouse_parquet/">read_lakehouse_parquet</a><a class="function-chip" href="../callables/read_lakehouse_excel/">read_lakehouse_excel</a><a class="function-chip" href="../callables/read_warehouse_table/">read_warehouse_table</a><a class="function-chip" href="../callables/validate_schema/">validate_schema</a><a class="function-chip" href="../callables/monitor_data_changes/">monitor_data_changes</a><a class="function-chip" href="../callables/stop_if_failed/">stop_if_failed</a><a class="function-chip" href="../callables/write_lakehouse_table/">write_lakehouse_table</a><a class="function-chip" href="../callables/write_warehouse_table/">write_warehouse_table</a><a class="function-chip" href="../callables/build_lineage_records/">build_lineage_records</a></span>
+<span class="function-chip-wrap"><a class="function-chip" href="../callables/widget_select_agreement/"><code>widget_select_agreement</code></a><a class="function-chip" href="../callables/get_selected_agreement/"><code>get_selected_agreement</code></a><a class="function-chip" href="../callables/read_lakehouse_table/"><code>read_lakehouse_table</code></a><a class="function-chip" href="../callables/read_lakehouse_csv/"><code>read_lakehouse_csv</code></a><a class="function-chip" href="../callables/read_lakehouse_parquet/"><code>read_lakehouse_parquet</code></a><a class="function-chip" href="../callables/read_lakehouse_excel/"><code>read_lakehouse_excel</code></a><a class="function-chip" href="../callables/read_warehouse_table/"><code>read_warehouse_table</code></a><a class="function-chip" href="../callables/validate_schema/"><code>validate_schema</code></a><a class="function-chip" href="../callables/monitor_data_changes/"><code>monitor_data_changes</code></a><a class="function-chip" href="../callables/stop_if_failed/"><code>stop_if_failed</code></a><a class="function-chip" href="../callables/write_lakehouse_table/"><code>write_lakehouse_table</code></a><a class="function-chip" href="../callables/write_warehouse_table/"><code>write_warehouse_table</code></a><a class="function-chip" href="../callables/build_lineage_records/"><code>build_lineage_records</code></a></span>
 </div>
 </section>
 
@@ -43,7 +43,7 @@ Compact template-first lookup for the public helper functions used by each noteb
 <p class="template-function-purpose">Table-scoped governance review and approved metadata recording.</p>
 <div class="template-function-row">
 <span class="template-function-segment">Governance review</span>
-<span class="function-chip-wrap"><a class="function-chip" href="../callables/widget_select_catalogue_table/">widget_select_catalogue_table</a><a class="function-chip" href="../callables/get_selected_catalogue_table/">get_selected_catalogue_table</a><a class="function-chip" href="../callables/load_catalogue_profile_rows/">load_catalogue_profile_rows</a><a class="function-chip" href="../callables/widget_review_column_context/">widget_review_column_context</a><a class="function-chip" href="../callables/widget_review_dq_rules/">widget_review_dq_rules</a><a class="function-chip" href="../callables/widget_review_column_classification/">widget_review_column_classification</a><a class="function-chip" href="../callables/record_table_governance/">record_table_governance</a></span>
+<span class="function-chip-wrap"><a class="function-chip" href="../callables/widget_select_catalogue_table/"><code>widget_select_catalogue_table</code></a><a class="function-chip" href="../callables/get_selected_catalogue_table/"><code>get_selected_catalogue_table</code></a><a class="function-chip" href="../callables/load_catalogue_profile_rows/"><code>load_catalogue_profile_rows</code></a><a class="function-chip" href="../callables/widget_review_column_context/"><code>widget_review_column_context</code></a><a class="function-chip" href="../callables/widget_review_dq_rules/"><code>widget_review_dq_rules</code></a><a class="function-chip" href="../callables/widget_review_column_classification/"><code>widget_review_column_classification</code></a><a class="function-chip" href="../callables/record_table_governance/"><code>record_table_governance</code></a></span>
 </div>
 </section>
 

@@ -20,8 +20,8 @@ Profile a source or target DataFrame for schema, quality, and catalogue evidence
 - Outbound references count: 3
 
 ## Inbound references
-- <a href="../internal/data_quality/_prepare_dq_profile_input_rows/"><code>fabricops_kit.data_quality._prepare_dq_profile_input_rows</code></a>
 - <a href="../monitor_data_changes/"><code>fabricops_kit.drift.monitor_data_changes</code></a>
+- <a href="../internal/governance_review/_prepare_dq_profile_input_rows/"><code>fabricops_kit.governance_review._prepare_dq_profile_input_rows</code></a>
 
 ## Outbound references
 - <a href="../internal/data_profiling/_build_distribution_summaries/"><code>fabricops_kit.data_profiling._build_distribution_summaries</code></a>

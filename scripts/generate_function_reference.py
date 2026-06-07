@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 PKG_DIR = ROOT / "src" / "fabricops_kit"
 PACKAGE_NAME = "fabricops_kit"
 INIT_PATH = PKG_DIR / "__init__.py"
-DOCS_METADATA_PATH = PKG_DIR / "docs_metadata.py"
+DOCS_METADATA_PATH = ROOT / "scripts" / "reference_docs_metadata.py"
 REFERENCE_PATH = ROOT / "docs" / "reference" / "index.md"
 MODULE_DIR = ROOT / "docs" / "api" / "modules"
 MKDOCS_PATH = ROOT / "mkdocs.yml"
@@ -26,18 +26,27 @@ TEMPLATE_FUNCTION_MAP_PATH = ROOT / "docs" / "reference" / "template-function-ma
 
 PUBLIC_MODULE_PREFERRED_NAMES = {
     "config": "config",
-    "fabric_input_output": "fabric_input_output",
-    "data_profiling": "data_profiling",
-    "data_quality": "data_quality",
-    "drift": "drift",
-    "data_governance": "data_governance",
-    "metadata": "metadata",
-    "data_lineage": "data_lineage",
-    "handover": "handover",
-    "technical_columns": "technical_columns",
-    "business_context": "business_context",
     "data_agreement": "data_agreement",
+    "governance_review": "governance_review",
+    "data_profiling": "data_profiling",
+    "fabric_input_output": "fabric_input_output",
+    "data_lineage": "data_lineage",
+    "drift": "drift",
+    "handover": "handover",
+    "metadata": "metadata",
 }
+MAJOR_IMPLEMENTATION_MODULE_ORDER = [
+    "config",
+    "data_agreement",
+    "governance_review",
+    "data_profiling",
+    "fabric_input_output",
+    "data_lineage",
+    "drift",
+    "handover",
+    "metadata",
+]
+MAJOR_IMPLEMENTATION_MODULES = set(MAJOR_IMPLEMENTATION_MODULE_ORDER)
 INTERNAL_MODULE_BLACKLIST = {"_utils"}
 INTERNAL_ALIAS_MODULES = {}
 
@@ -351,7 +360,7 @@ def parse_docs_metadata() -> dict[str, dict[str, Any]]:
                 seen.add(name)
                 out[name] = row
             return out
-    raise RuntimeError("Could not parse PUBLIC_SYMBOL_DOCS from docs_metadata.py")
+    raise RuntimeError("Could not parse PUBLIC_SYMBOL_DOCS from reference_docs_metadata.py")
 
 
 def parse_template_flow_docs() -> list[dict[str, Any]]:
@@ -363,7 +372,7 @@ def parse_template_flow_docs() -> list[dict[str, Any]]:
         is_annassign = isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name) and node.target.id == "TEMPLATE_FLOW_DOCS"
         if (is_assign or is_annassign) and node.value is not None:
             return ast.literal_eval(node.value)
-    raise RuntimeError("Could not parse TEMPLATE_FLOW_DOCS from docs_metadata.py")
+    raise RuntimeError("Could not parse TEMPLATE_FLOW_DOCS from reference_docs_metadata.py")
 
 
 def parse_module_docs_metadata() -> list[dict[str, Any]]:
@@ -375,7 +384,7 @@ def parse_module_docs_metadata() -> list[dict[str, Any]]:
         is_annassign = isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name) and node.target.id == "MODULE_DOCS_METADATA"
         if (is_assign or is_annassign) and node.value is not None:
             return ast.literal_eval(node.value)
-    raise RuntimeError("Could not parse MODULE_DOCS_METADATA from docs_metadata.py")
+    raise RuntimeError("Could not parse MODULE_DOCS_METADATA from reference_docs_metadata.py")
 
 
 def internal_helper_link(actual_module: str, helper: str) -> str:
@@ -580,14 +589,10 @@ def main() -> None:
         raise RuntimeError(f"__all__ must match curated V1_CALLABLES. Missing: {missing}; extra: {extra}")
     module_data = {p.stem: parse_module(p) for p in PKG_DIR.glob("*.py") if p.name != "__init__.py"}
 
-    discovered_modules = sorted(
-        p.stem
-        for p in PKG_DIR.glob("*.py")
-        if p.name not in {"__init__.py", "docs_metadata.py"} and p.stem not in INTERNAL_MODULE_BLACKLIST
-    )
+    source_modules = {p.stem for p in PKG_DIR.glob("*.py") if p.name != "__init__.py"}
+    discovered_modules = [module for module in MAJOR_IMPLEMENTATION_MODULE_ORDER if module in source_modules]
 
     docs_metadata = parse_docs_metadata()
-    usage_overrides = parse_simple_yaml(FUNCTION_USAGE_OVERRIDES_PATH) if FUNCTION_USAGE_OVERRIDES_PATH.exists() else {}
     template_flow_docs = parse_template_flow_docs()
     module_docs_metadata = parse_module_docs_metadata()
 
@@ -670,16 +675,17 @@ def main() -> None:
     def _module_name(qn: str) -> str:
         return qn.split(".")[-2]
     MODULE_DIR.mkdir(parents=True, exist_ok=True)
+    for generated_page in MODULE_DIR.glob("*.md"):
+        if generated_page.name != "index.md" and generated_page.stem not in MAJOR_IMPLEMENTATION_MODULES:
+            generated_page.unlink()
     module_manifest = {row["module_name"]: row for row in module_docs_metadata}
     discovered_doc_modules = [INTERNAL_ALIAS_MODULES.get(module, module) for module in discovered_modules]
     module_index_lines = [
         "# Implementation Module Catalogue",
         "",
-        "Implementation modules are source-level reference pages for package maintainers and internal helper traceability.",
+        "Implementation Modules document only current major source boundaries for package maintainers and internal helper traceability, not every `.py` file in `src/fabricops_kit`.",
         "",
-        "They are useful for debugging implementation details, but they are not the public v1 callable API. The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__all__` and is surfaced through the Function Reference catalogue.",
-        "",
-        "Short-form modules remain import-compatible aliases but are intentionally hidden from this user-facing catalogue.",
+        "Zero-callable modules are hidden unless explicitly allowlisted as major internal plumbing. `metadata` is allowlisted as shared internal plumbing because it owns metadata keys, audit fields, and persistence helpers used by multiple workflows. The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__all__` and is surfaced through the Function Reference catalogue.",
         "",
     ]
     all_doc_modules = discovered_doc_modules
@@ -757,7 +763,6 @@ def main() -> None:
             lines.extend(["## Module purpose", "", module_purpose, ""])
 
         recommended = sorted([s for s in public_in_module if s.role == "callable"], key=lambda x: x.name.lower())
-        advanced: list[Symbol] = []
         lines.extend(["## Module manifest", ""])
         manifest_rows = [
             ["Module name", f"<code>{module}</code>"],
@@ -1139,9 +1144,9 @@ def main() -> None:
         "",
         "Use this page as a function lookup after you understand the notebook flow.",
         "",
-        "- Use [Template Function Map](template-function-map.md) to see what notebook users actually call.",
-        "- Use the Function catalogue below to browse callable functions by default; enable Internal for package helpers.",
-        "- Use Implementation Modules only when debugging or maintaining the package internals.",
+        "- Use [Template Function Map](template-function-map.md) to see what notebook users call from the starter notebook templates.",
+        "- Use the Function catalogue below to browse the public v1 callables by default; enable Internal for package helpers.",
+        "- Use Implementation Modules only when debugging or maintaining current major source boundaries; they do not document every `.py` file.",
         "",
         "> Graph exploration is intentionally deferred. Future PR may use Neo4j or a proper graph backend.",
         "",

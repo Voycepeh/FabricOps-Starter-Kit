@@ -1,136 +1,5 @@
 [
   {
-    "id": "fabricops_kit._utils._to_jsonable",
-    "name": "_to_jsonable",
-    "qualified_name": "fabricops_kit._utils._to_jsonable",
-    "module": "_utils",
-    "classification": "Internal",
-    "inbound": [
-      "fabricops_kit._utils._to_jsonable"
-    ],
-    "outbound": [
-      "fabricops_kit._utils._to_jsonable"
-    ],
-    "source_path": "src/fabricops_kit/_utils.py",
-    "docs_path": "reference/internal/_utils__to_jsonable.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.business_context._draft_business_context",
-    "name": "_draft_business_context",
-    "qualified_name": "fabricops_kit.business_context._draft_business_context",
-    "module": "business_context",
-    "classification": "Internal",
-    "inbound": [],
-    "outbound": [],
-    "source_path": "src/fabricops_kit/business_context.py",
-    "docs_path": "reference/internal/business_context__draft_business_context.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.business_context._extract_column_business_context_suggestions",
-    "name": "_extract_column_business_context_suggestions",
-    "qualified_name": "fabricops_kit.business_context._extract_column_business_context_suggestions",
-    "module": "business_context",
-    "classification": "Internal",
-    "inbound": [
-      "fabricops_kit.business_context._extract_column_business_context_suggestions"
-    ],
-    "outbound": [
-      "fabricops_kit.business_context._extract_column_business_context_suggestions",
-      "fabricops_kit.business_context._parse_ai_dict_response"
-    ],
-    "source_path": "src/fabricops_kit/business_context.py",
-    "docs_path": "reference/internal/business_context__extract_column_business_context_suggestions.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.business_context._get_reviewed_business_context_rows",
-    "name": "_get_reviewed_business_context_rows",
-    "qualified_name": "fabricops_kit.business_context._get_reviewed_business_context_rows",
-    "module": "business_context",
-    "classification": "Internal",
-    "inbound": [],
-    "outbound": [],
-    "source_path": "src/fabricops_kit/business_context.py",
-    "docs_path": "reference/internal/business_context__get_reviewed_business_context_rows.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.business_context._parse_ai_dict_response",
-    "name": "_parse_ai_dict_response",
-    "qualified_name": "fabricops_kit.business_context._parse_ai_dict_response",
-    "module": "business_context",
-    "classification": "Internal",
-    "inbound": [
-      "fabricops_kit.business_context._extract_column_business_context_suggestions"
-    ],
-    "outbound": [],
-    "source_path": "src/fabricops_kit/business_context.py",
-    "docs_path": "reference/internal/business_context__parse_ai_dict_response.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.business_context._prepare_business_context_profile_input",
-    "name": "_prepare_business_context_profile_input",
-    "qualified_name": "fabricops_kit.business_context._prepare_business_context_profile_input",
-    "module": "business_context",
-    "classification": "Internal",
-    "inbound": [
-      "fabricops_kit.business_context._prepare_business_context_profile_input"
-    ],
-    "outbound": [
-      "fabricops_kit.business_context._prepare_business_context_profile_input"
-    ],
-    "source_path": "src/fabricops_kit/business_context.py",
-    "docs_path": "reference/internal/business_context__prepare_business_context_profile_input.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.business_context._require_ipywidgets",
-    "name": "_require_ipywidgets",
-    "qualified_name": "fabricops_kit.business_context._require_ipywidgets",
-    "module": "business_context",
-    "classification": "Internal",
-    "inbound": [
-      "fabricops_kit.business_context._widget_review_business_context"
-    ],
-    "outbound": [],
-    "source_path": "src/fabricops_kit/business_context.py",
-    "docs_path": "reference/internal/business_context__require_ipywidgets.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.business_context._widget_review_business_context",
-    "name": "_widget_review_business_context",
-    "qualified_name": "fabricops_kit.business_context._widget_review_business_context",
-    "module": "business_context",
-    "classification": "Internal",
-    "inbound": [],
-    "outbound": [
-      "fabricops_kit.business_context._require_ipywidgets",
-      "fabricops_kit.metadata._build_metadata_column_key",
-      "fabricops_kit.metadata._build_metadata_table_key"
-    ],
-    "source_path": "src/fabricops_kit/business_context.py",
-    "docs_path": "reference/internal/business_context__widget_review_business_context.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.business_context._write_business_context",
-    "name": "_write_business_context",
-    "qualified_name": "fabricops_kit.business_context._write_business_context",
-    "module": "business_context",
-    "classification": "Internal",
-    "inbound": [],
-    "outbound": [
-      "fabricops_kit.metadata._write_column_business_context"
-    ],
-    "source_path": "src/fabricops_kit/business_context.py",
-    "docs_path": "reference/internal/business_context__write_business_context.md",
-    "summary": "No summary available."
-  },
-  {
     "id": "fabricops_kit.config.AIPromptConfig",
     "name": "AIPromptConfig",
     "qualified_name": "fabricops_kit.config.AIPromptConfig",
@@ -1337,163 +1206,6 @@
     "summary": "Render an agreement selector and optionally register the active notebook."
   },
   {
-    "id": "fabricops_kit.data_governance._approved_widget_rows",
-    "name": "_approved_widget_rows",
-    "qualified_name": "fabricops_kit.data_governance._approved_widget_rows",
-    "module": "data_governance",
-    "classification": "Internal",
-    "inbound": [
-      "fabricops_kit.data_governance._write_governance"
-    ],
-    "outbound": [
-      "fabricops_kit.metadata._resolve_action_by"
-    ],
-    "source_path": "src/fabricops_kit/data_governance.py",
-    "docs_path": "reference/internal/data_governance__approved_widget_rows.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.data_governance._build_governance_context",
-    "name": "_build_governance_context",
-    "qualified_name": "fabricops_kit.data_governance._build_governance_context",
-    "module": "data_governance",
-    "classification": "Internal",
-    "inbound": [],
-    "outbound": [],
-    "source_path": "src/fabricops_kit/data_governance.py",
-    "docs_path": "reference/internal/data_governance__build_governance_context.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.data_governance._coerce_row_dicts",
-    "name": "_coerce_row_dicts",
-    "qualified_name": "fabricops_kit.data_governance._coerce_row_dicts",
-    "module": "data_governance",
-    "classification": "Internal",
-    "inbound": [
-      "fabricops_kit.data_governance._load_governance"
-    ],
-    "outbound": [],
-    "source_path": "src/fabricops_kit/data_governance.py",
-    "docs_path": "reference/internal/data_governance__coerce_row_dicts.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.data_governance._draft_governance",
-    "name": "_draft_governance",
-    "qualified_name": "fabricops_kit.data_governance._draft_governance",
-    "module": "data_governance",
-    "classification": "Internal",
-    "inbound": [],
-    "outbound": [],
-    "source_path": "src/fabricops_kit/data_governance.py",
-    "docs_path": "reference/internal/data_governance__draft_governance.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.data_governance._extract_governance_suggestions",
-    "name": "_extract_governance_suggestions",
-    "qualified_name": "fabricops_kit.data_governance._extract_governance_suggestions",
-    "module": "data_governance",
-    "classification": "Internal",
-    "inbound": [],
-    "outbound": [
-      "fabricops_kit.data_governance._extract_pii_suggestions"
-    ],
-    "source_path": "src/fabricops_kit/data_governance.py",
-    "docs_path": "reference/internal/data_governance__extract_governance_suggestions.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.data_governance._extract_pii_suggestions",
-    "name": "_extract_pii_suggestions",
-    "qualified_name": "fabricops_kit.data_governance._extract_pii_suggestions",
-    "module": "data_governance",
-    "classification": "Internal",
-    "inbound": [
-      "fabricops_kit.data_governance._extract_governance_suggestions"
-    ],
-    "outbound": [],
-    "source_path": "src/fabricops_kit/data_governance.py",
-    "docs_path": "reference/internal/data_governance__extract_pii_suggestions.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.data_governance._load_governance",
-    "name": "_load_governance",
-    "qualified_name": "fabricops_kit.data_governance._load_governance",
-    "module": "data_governance",
-    "classification": "Internal",
-    "inbound": [],
-    "outbound": [
-      "fabricops_kit.data_governance._coerce_row_dicts"
-    ],
-    "source_path": "src/fabricops_kit/data_governance.py",
-    "docs_path": "reference/internal/data_governance__load_governance.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.data_governance._prepare_governance_input",
-    "name": "_prepare_governance_input",
-    "qualified_name": "fabricops_kit.data_governance._prepare_governance_input",
-    "module": "data_governance",
-    "classification": "Internal",
-    "inbound": [
-      "fabricops_kit.data_governance._prepare_governance_input"
-    ],
-    "outbound": [
-      "fabricops_kit.data_governance._prepare_governance_input"
-    ],
-    "source_path": "src/fabricops_kit/data_governance.py",
-    "docs_path": "reference/internal/data_governance__prepare_governance_input.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.data_governance._undo_last_action",
-    "name": "_undo_last_action",
-    "qualified_name": "fabricops_kit.data_governance._undo_last_action",
-    "module": "data_governance",
-    "classification": "Internal",
-    "inbound": [
-      "fabricops_kit.data_governance._widget_review_governance"
-    ],
-    "outbound": [],
-    "source_path": "src/fabricops_kit/data_governance.py",
-    "docs_path": "reference/internal/data_governance__undo_last_action.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.data_governance._widget_review_governance",
-    "name": "_widget_review_governance",
-    "qualified_name": "fabricops_kit.data_governance._widget_review_governance",
-    "module": "data_governance",
-    "classification": "Internal",
-    "inbound": [],
-    "outbound": [
-      "fabricops_kit.data_governance._undo_last_action",
-      "fabricops_kit.metadata._build_metadata_column_key",
-      "fabricops_kit.metadata._build_metadata_table_key",
-      "fabricops_kit.metadata._now_utc_iso"
-    ],
-    "source_path": "src/fabricops_kit/data_governance.py",
-    "docs_path": "reference/internal/data_governance__widget_review_governance.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.data_governance._write_governance",
-    "name": "_write_governance",
-    "qualified_name": "fabricops_kit.data_governance._write_governance",
-    "module": "data_governance",
-    "classification": "Internal",
-    "inbound": [],
-    "outbound": [
-      "fabricops_kit.data_governance._approved_widget_rows"
-    ],
-    "source_path": "src/fabricops_kit/data_governance.py",
-    "docs_path": "reference/internal/data_governance__write_governance.md",
-    "summary": "No summary available."
-  },
-  {
     "id": "fabricops_kit.data_lineage._build_lineage_handover_markdown",
     "name": "_build_lineage_handover_markdown",
     "qualified_name": "fabricops_kit.data_lineage._build_lineage_handover_markdown",
@@ -1856,8 +1568,8 @@
     "module": "data_profiling",
     "classification": "Callable",
     "inbound": [
-      "fabricops_kit.data_quality._prepare_dq_profile_input_rows",
-      "fabricops_kit.drift.monitor_data_changes"
+      "fabricops_kit.drift.monitor_data_changes",
+      "fabricops_kit.governance_review._prepare_dq_profile_input_rows"
     ],
     "outbound": [
       "fabricops_kit.data_profiling._build_distribution_summaries",
@@ -1867,501 +1579,6 @@
     "source_path": "src/fabricops_kit/data_profiling.py",
     "docs_path": "reference/profile_dataframe.md",
     "summary": "Profile a source or target DataFrame for schema, quality, and catalogue evidence."
-  },
-  {
-    "id": "fabricops_kit.data_quality.DQEnforcementResult",
-    "name": "DQEnforcementResult",
-    "qualified_name": "fabricops_kit.data_quality.DQEnforcementResult",
-    "module": "data_quality",
-    "classification": "Internal",
-    "inbound": [
-      "fabricops_kit.data_quality._enforce_dq"
-    ],
-    "outbound": [],
-    "source_path": "src/fabricops_kit/data_quality.py",
-    "docs_path": "reference/internal/data_quality_DQEnforcementResult.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.data_quality._approved_dq_rules_from_review_rows",
-    "name": "_approved_dq_rules_from_review_rows",
-    "qualified_name": "fabricops_kit.data_quality._approved_dq_rules_from_review_rows",
-    "module": "data_quality",
-    "classification": "Internal",
-    "inbound": [],
-    "outbound": [],
-    "source_path": "src/fabricops_kit/data_quality.py",
-    "docs_path": "reference/internal/data_quality__approved_dq_rules_from_review_rows.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.data_quality._assert_dq_passed",
-    "name": "_assert_dq_passed",
-    "qualified_name": "fabricops_kit.data_quality._assert_dq_passed",
-    "module": "data_quality",
-    "classification": "Internal",
-    "inbound": [],
-    "outbound": [],
-    "source_path": "src/fabricops_kit/data_quality.py",
-    "docs_path": "reference/internal/data_quality__assert_dq_passed.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.data_quality._attach_rule_metadata_keys",
-    "name": "_attach_rule_metadata_keys",
-    "qualified_name": "fabricops_kit.data_quality._attach_rule_metadata_keys",
-    "module": "data_quality",
-    "classification": "Internal",
-    "inbound": [
-      "fabricops_kit.data_quality._get_dq_review_results"
-    ],
-    "outbound": [
-      "fabricops_kit.metadata._build_dq_rule_key",
-      "fabricops_kit.metadata._build_metadata_column_key",
-      "fabricops_kit.metadata._build_metadata_table_key"
-    ],
-    "source_path": "src/fabricops_kit/data_quality.py",
-    "docs_path": "reference/internal/data_quality__attach_rule_metadata_keys.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.data_quality._build_dq_rule_deactivation_metadata_df",
-    "name": "_build_dq_rule_deactivation_metadata_df",
-    "qualified_name": "fabricops_kit.data_quality._build_dq_rule_deactivation_metadata_df",
-    "module": "data_quality",
-    "classification": "Internal",
-    "inbound": [],
-    "outbound": [
-      "fabricops_kit.metadata._now_utc_iso",
-      "fabricops_kit.metadata._resolve_action_by"
-    ],
-    "source_path": "src/fabricops_kit/data_quality.py",
-    "docs_path": "reference/internal/data_quality__build_dq_rule_deactivation_metadata_df.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.data_quality._build_dq_rule_deactivations",
-    "name": "_build_dq_rule_deactivations",
-    "qualified_name": "fabricops_kit.data_quality._build_dq_rule_deactivations",
-    "module": "data_quality",
-    "classification": "Internal",
-    "inbound": [],
-    "outbound": [
-      "fabricops_kit.metadata._resolve_action_by"
-    ],
-    "source_path": "src/fabricops_kit/data_quality.py",
-    "docs_path": "reference/internal/data_quality__build_dq_rule_deactivations.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.data_quality._build_dq_rule_history",
-    "name": "_build_dq_rule_history",
-    "qualified_name": "fabricops_kit.data_quality._build_dq_rule_history",
-    "module": "data_quality",
-    "classification": "Internal",
-    "inbound": [
-      "fabricops_kit.data_quality._write_dq_rules"
-    ],
-    "outbound": [
-      "fabricops_kit.metadata._resolve_action_by"
-    ],
-    "source_path": "src/fabricops_kit/data_quality.py",
-    "docs_path": "reference/internal/data_quality__build_dq_rule_history.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.data_quality._build_dq_rules_metadata_df",
-    "name": "_build_dq_rules_metadata_df",
-    "qualified_name": "fabricops_kit.data_quality._build_dq_rules_metadata_df",
-    "module": "data_quality",
-    "classification": "Internal",
-    "inbound": [],
-    "outbound": [
-      "fabricops_kit.metadata._now_utc_iso",
-      "fabricops_kit.metadata._resolve_action_by"
-    ],
-    "source_path": "src/fabricops_kit/data_quality.py",
-    "docs_path": "reference/internal/data_quality__build_dq_rules_metadata_df.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.data_quality._draft_dq_rules",
-    "name": "_draft_dq_rules",
-    "qualified_name": "fabricops_kit.data_quality._draft_dq_rules",
-    "module": "data_quality",
-    "classification": "Internal",
-    "inbound": [],
-    "outbound": [
-      "fabricops_kit.data_quality._extract_dq_rules",
-      "fabricops_kit.data_quality._prepare_dq_profile_input_rows",
-      "fabricops_kit.data_quality._suggest_dq_rules"
-    ],
-    "source_path": "src/fabricops_kit/data_quality.py",
-    "docs_path": "reference/internal/data_quality__draft_dq_rules.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.data_quality._enforce_dq",
-    "name": "_enforce_dq",
-    "qualified_name": "fabricops_kit.data_quality._enforce_dq",
-    "module": "data_quality",
-    "classification": "Internal",
-    "inbound": [],
-    "outbound": [
-      "fabricops_kit.data_quality.DQEnforcementResult",
-      "fabricops_kit.data_quality._load_active_dq_rules",
-      "fabricops_kit.data_quality._run_dq_rules",
-      "fabricops_kit.data_quality._split_dq_rows",
-      "fabricops_kit.data_quality._validate_dq_rules"
-    ],
-    "source_path": "src/fabricops_kit/data_quality.py",
-    "docs_path": "reference/internal/data_quality__enforce_dq.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.data_quality._extract_candidate_rules_from_responses",
-    "name": "_extract_candidate_rules_from_responses",
-    "qualified_name": "fabricops_kit.data_quality._extract_candidate_rules_from_responses",
-    "module": "data_quality",
-    "classification": "Internal",
-    "inbound": [],
-    "outbound": [
-      "fabricops_kit.data_quality._extract_dq_rules",
-      "fabricops_kit.data_quality._parse_dq_rules_dict_from_text"
-    ],
-    "source_path": "src/fabricops_kit/data_quality.py",
-    "docs_path": "reference/internal/data_quality__extract_candidate_rules_from_responses.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.data_quality._extract_dq_rules",
-    "name": "_extract_dq_rules",
-    "qualified_name": "fabricops_kit.data_quality._extract_dq_rules",
-    "module": "data_quality",
-    "classification": "Internal",
-    "inbound": [
-      "fabricops_kit.data_quality._draft_dq_rules",
-      "fabricops_kit.data_quality._extract_candidate_rules_from_responses"
-    ],
-    "outbound": [
-      "fabricops_kit.data_quality._parse_dq_rules_dict_from_text"
-    ],
-    "source_path": "src/fabricops_kit/data_quality.py",
-    "docs_path": "reference/internal/data_quality__extract_dq_rules.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.data_quality._get_dq_review_results",
-    "name": "_get_dq_review_results",
-    "qualified_name": "fabricops_kit.data_quality._get_dq_review_results",
-    "module": "data_quality",
-    "classification": "Internal",
-    "inbound": [],
-    "outbound": [
-      "fabricops_kit.data_quality._attach_rule_metadata_keys"
-    ],
-    "source_path": "src/fabricops_kit/data_quality.py",
-    "docs_path": "reference/internal/data_quality__get_dq_review_results.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.data_quality._latest_dq_rule_versions",
-    "name": "_latest_dq_rule_versions",
-    "qualified_name": "fabricops_kit.data_quality._latest_dq_rule_versions",
-    "module": "data_quality",
-    "classification": "Internal",
-    "inbound": [
-      "fabricops_kit.data_quality._load_active_dq_rule_metadata",
-      "fabricops_kit.data_quality._load_active_dq_rules"
-    ],
-    "outbound": [],
-    "source_path": "src/fabricops_kit/data_quality.py",
-    "docs_path": "reference/internal/data_quality__latest_dq_rule_versions.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.data_quality._load_active_dq_rule_metadata",
-    "name": "_load_active_dq_rule_metadata",
-    "qualified_name": "fabricops_kit.data_quality._load_active_dq_rule_metadata",
-    "module": "data_quality",
-    "classification": "Internal",
-    "inbound": [],
-    "outbound": [
-      "fabricops_kit.data_quality._latest_dq_rule_versions"
-    ],
-    "source_path": "src/fabricops_kit/data_quality.py",
-    "docs_path": "reference/internal/data_quality__load_active_dq_rule_metadata.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.data_quality._load_active_dq_rules",
-    "name": "_load_active_dq_rules",
-    "qualified_name": "fabricops_kit.data_quality._load_active_dq_rules",
-    "module": "data_quality",
-    "classification": "Internal",
-    "inbound": [
-      "fabricops_kit.data_quality._enforce_dq",
-      "fabricops_kit.data_quality._load_dq_rules"
-    ],
-    "outbound": [
-      "fabricops_kit.data_quality._latest_dq_rule_versions"
-    ],
-    "source_path": "src/fabricops_kit/data_quality.py",
-    "docs_path": "reference/internal/data_quality__load_active_dq_rules.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.data_quality._load_dq_rules",
-    "name": "_load_dq_rules",
-    "qualified_name": "fabricops_kit.data_quality._load_dq_rules",
-    "module": "data_quality",
-    "classification": "Internal",
-    "inbound": [],
-    "outbound": [
-      "fabricops_kit.data_quality._load_active_dq_rules"
-    ],
-    "source_path": "src/fabricops_kit/data_quality.py",
-    "docs_path": "reference/internal/data_quality__load_dq_rules.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.data_quality._parse_dq_rules_dict_from_text",
-    "name": "_parse_dq_rules_dict_from_text",
-    "qualified_name": "fabricops_kit.data_quality._parse_dq_rules_dict_from_text",
-    "module": "data_quality",
-    "classification": "Internal",
-    "inbound": [
-      "fabricops_kit.data_quality._extract_candidate_rules_from_responses",
-      "fabricops_kit.data_quality._extract_dq_rules"
-    ],
-    "outbound": [],
-    "source_path": "src/fabricops_kit/data_quality.py",
-    "docs_path": "reference/internal/data_quality__parse_dq_rules_dict_from_text.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.data_quality._prepare_dq_profile_input_rows",
-    "name": "_prepare_dq_profile_input_rows",
-    "qualified_name": "fabricops_kit.data_quality._prepare_dq_profile_input_rows",
-    "module": "data_quality",
-    "classification": "Internal",
-    "inbound": [
-      "fabricops_kit.data_quality._draft_dq_rules"
-    ],
-    "outbound": [
-      "fabricops_kit.data_profiling.profile_dataframe"
-    ],
-    "source_path": "src/fabricops_kit/data_quality.py",
-    "docs_path": "reference/internal/data_quality__prepare_dq_profile_input_rows.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.data_quality._prepare_dq_profile_rows_with_context",
-    "name": "_prepare_dq_profile_rows_with_context",
-    "qualified_name": "fabricops_kit.data_quality._prepare_dq_profile_rows_with_context",
-    "module": "data_quality",
-    "classification": "Internal",
-    "inbound": [],
-    "outbound": [],
-    "source_path": "src/fabricops_kit/data_quality.py",
-    "docs_path": "reference/internal/data_quality__prepare_dq_profile_rows_with_context.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.data_quality._profile_for_dq",
-    "name": "_profile_for_dq",
-    "qualified_name": "fabricops_kit.data_quality._profile_for_dq",
-    "module": "data_quality",
-    "classification": "Internal",
-    "inbound": [],
-    "outbound": [],
-    "source_path": "src/fabricops_kit/data_quality.py",
-    "docs_path": "reference/internal/data_quality__profile_for_dq.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.data_quality._require_ipywidgets",
-    "name": "_require_ipywidgets",
-    "qualified_name": "fabricops_kit.data_quality._require_ipywidgets",
-    "module": "data_quality",
-    "classification": "Internal",
-    "inbound": [
-      "fabricops_kit.data_quality._widget_review_dq_rule_deactivations",
-      "fabricops_kit.data_quality._widget_review_dq_rules"
-    ],
-    "outbound": [],
-    "source_path": "src/fabricops_kit/data_quality.py",
-    "docs_path": "reference/internal/data_quality__require_ipywidgets.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.data_quality._run_dq_rules",
-    "name": "_run_dq_rules",
-    "qualified_name": "fabricops_kit.data_quality._run_dq_rules",
-    "module": "data_quality",
-    "classification": "Internal",
-    "inbound": [
-      "fabricops_kit.data_quality._enforce_dq"
-    ],
-    "outbound": [
-      "fabricops_kit.data_quality._split_dq_rows",
-      "fabricops_kit.data_quality._validate_dq_rules"
-    ],
-    "source_path": "src/fabricops_kit/data_quality.py",
-    "docs_path": "reference/internal/data_quality__run_dq_rules.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.data_quality._split_dq_rows",
-    "name": "_split_dq_rows",
-    "qualified_name": "fabricops_kit.data_quality._split_dq_rows",
-    "module": "data_quality",
-    "classification": "Internal",
-    "inbound": [
-      "fabricops_kit.data_quality._enforce_dq",
-      "fabricops_kit.data_quality._run_dq_rules"
-    ],
-    "outbound": [
-      "fabricops_kit.data_quality._validate_dq_rules"
-    ],
-    "source_path": "src/fabricops_kit/data_quality.py",
-    "docs_path": "reference/internal/data_quality__split_dq_rows.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.data_quality._suggest_dq_rules",
-    "name": "_suggest_dq_rules",
-    "qualified_name": "fabricops_kit.data_quality._suggest_dq_rules",
-    "module": "data_quality",
-    "classification": "Internal",
-    "inbound": [
-      "fabricops_kit.data_quality._draft_dq_rules"
-    ],
-    "outbound": [],
-    "source_path": "src/fabricops_kit/data_quality.py",
-    "docs_path": "reference/internal/data_quality__suggest_dq_rules.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.data_quality._suggest_dq_rules_with_fabric_ai",
-    "name": "_suggest_dq_rules_with_fabric_ai",
-    "qualified_name": "fabricops_kit.data_quality._suggest_dq_rules_with_fabric_ai",
-    "module": "data_quality",
-    "classification": "Internal",
-    "inbound": [],
-    "outbound": [],
-    "source_path": "src/fabricops_kit/data_quality.py",
-    "docs_path": "reference/internal/data_quality__suggest_dq_rules_with_fabric_ai.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.data_quality._validate_dq_rules",
-    "name": "_validate_dq_rules",
-    "qualified_name": "fabricops_kit.data_quality._validate_dq_rules",
-    "module": "data_quality",
-    "classification": "Internal",
-    "inbound": [
-      "fabricops_kit.data_quality._enforce_dq",
-      "fabricops_kit.data_quality._run_dq_rules",
-      "fabricops_kit.data_quality._split_dq_rows",
-      "fabricops_kit.data_quality._write_dq_rules"
-    ],
-    "outbound": [],
-    "source_path": "src/fabricops_kit/data_quality.py",
-    "docs_path": "reference/internal/data_quality__validate_dq_rules.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.data_quality._widget_review_dq_rule_deactivations",
-    "name": "_widget_review_dq_rule_deactivations",
-    "qualified_name": "fabricops_kit.data_quality._widget_review_dq_rule_deactivations",
-    "module": "data_quality",
-    "classification": "Internal",
-    "inbound": [],
-    "outbound": [
-      "fabricops_kit.data_quality._require_ipywidgets"
-    ],
-    "source_path": "src/fabricops_kit/data_quality.py",
-    "docs_path": "reference/internal/data_quality__widget_review_dq_rule_deactivations.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.data_quality._widget_review_dq_rules",
-    "name": "_widget_review_dq_rules",
-    "qualified_name": "fabricops_kit.data_quality._widget_review_dq_rules",
-    "module": "data_quality",
-    "classification": "Internal",
-    "inbound": [],
-    "outbound": [
-      "fabricops_kit.data_quality._require_ipywidgets"
-    ],
-    "source_path": "src/fabricops_kit/data_quality.py",
-    "docs_path": "reference/internal/data_quality__widget_review_dq_rules.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.data_quality._write_dq_rules",
-    "name": "_write_dq_rules",
-    "qualified_name": "fabricops_kit.data_quality._write_dq_rules",
-    "module": "data_quality",
-    "classification": "Internal",
-    "inbound": [],
-    "outbound": [
-      "fabricops_kit.data_quality._build_dq_rule_history",
-      "fabricops_kit.data_quality._validate_dq_rules",
-      "fabricops_kit.fabric_input_output.write_lakehouse_table"
-    ],
-    "source_path": "src/fabricops_kit/data_quality.py",
-    "docs_path": "reference/internal/data_quality__write_dq_rules.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.docs_metadata.ModuleDocMetadata",
-    "name": "ModuleDocMetadata",
-    "qualified_name": "fabricops_kit.docs_metadata.ModuleDocMetadata",
-    "module": "docs_metadata",
-    "classification": "Internal",
-    "inbound": [],
-    "outbound": [],
-    "source_path": "src/fabricops_kit/docs_metadata.py",
-    "docs_path": "reference/internal/docs_metadata_ModuleDocMetadata.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.docs_metadata.PublicSymbolDocMetadata",
-    "name": "PublicSymbolDocMetadata",
-    "qualified_name": "fabricops_kit.docs_metadata.PublicSymbolDocMetadata",
-    "module": "docs_metadata",
-    "classification": "Internal",
-    "inbound": [],
-    "outbound": [],
-    "source_path": "src/fabricops_kit/docs_metadata.py",
-    "docs_path": "reference/internal/docs_metadata_PublicSymbolDocMetadata.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.docs_metadata.TemplateFlowDocMetadata",
-    "name": "TemplateFlowDocMetadata",
-    "qualified_name": "fabricops_kit.docs_metadata.TemplateFlowDocMetadata",
-    "module": "docs_metadata",
-    "classification": "Internal",
-    "inbound": [],
-    "outbound": [],
-    "source_path": "src/fabricops_kit/docs_metadata.py",
-    "docs_path": "reference/internal/docs_metadata_TemplateFlowDocMetadata.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.docs_metadata.TemplateFlowSegmentMetadata",
-    "name": "TemplateFlowSegmentMetadata",
-    "qualified_name": "fabricops_kit.docs_metadata.TemplateFlowSegmentMetadata",
-    "module": "docs_metadata",
-    "classification": "Internal",
-    "inbound": [],
-    "outbound": [],
-    "source_path": "src/fabricops_kit/docs_metadata.py",
-    "docs_path": "reference/internal/docs_metadata_TemplateFlowSegmentMetadata.md",
-    "summary": "No summary available."
   },
   {
     "id": "fabricops_kit.drift.IncrementalSafetyError",
@@ -2853,9 +2070,9 @@
     "inbound": [
       "fabricops_kit.data_agreement._ensure_metadata_tables",
       "fabricops_kit.data_agreement._write_row",
-      "fabricops_kit.data_quality._write_dq_rules",
       "fabricops_kit.fabric_input_output._seed_minimal_sample_source_table",
       "fabricops_kit.governance_review._setup_governance_metadata_tables",
+      "fabricops_kit.governance_review._write_dq_rules",
       "fabricops_kit.governance_review.record_table_governance",
       "fabricops_kit.metadata._register_current_notebook",
       "fabricops_kit.metadata._setup_notebook_registry_table"
@@ -2880,6 +2097,58 @@
     "source_path": "src/fabricops_kit/fabric_input_output.py",
     "docs_path": "reference/write_warehouse_table.md",
     "summary": "Write a DataFrame to a configured Fabric warehouse target."
+  },
+  {
+    "id": "fabricops_kit.governance_review.DQEnforcementResult",
+    "name": "DQEnforcementResult",
+    "qualified_name": "fabricops_kit.governance_review.DQEnforcementResult",
+    "module": "governance_review",
+    "classification": "Internal",
+    "inbound": [
+      "fabricops_kit.governance_review._enforce_dq"
+    ],
+    "outbound": [],
+    "source_path": "src/fabricops_kit/governance_review.py",
+    "docs_path": "reference/internal/governance_review_DQEnforcementResult.md",
+    "summary": "No summary available."
+  },
+  {
+    "id": "fabricops_kit.governance_review._approved_dq_rules_from_review_rows",
+    "name": "_approved_dq_rules_from_review_rows",
+    "qualified_name": "fabricops_kit.governance_review._approved_dq_rules_from_review_rows",
+    "module": "governance_review",
+    "classification": "Internal",
+    "inbound": [],
+    "outbound": [],
+    "source_path": "src/fabricops_kit/governance_review.py",
+    "docs_path": "reference/internal/governance_review__approved_dq_rules_from_review_rows.md",
+    "summary": "No summary available."
+  },
+  {
+    "id": "fabricops_kit.governance_review._approved_widget_rows",
+    "name": "_approved_widget_rows",
+    "qualified_name": "fabricops_kit.governance_review._approved_widget_rows",
+    "module": "governance_review",
+    "classification": "Internal",
+    "inbound": [],
+    "outbound": [
+      "fabricops_kit.metadata._resolve_action_by"
+    ],
+    "source_path": "src/fabricops_kit/governance_review.py",
+    "docs_path": "reference/internal/governance_review__approved_widget_rows.md",
+    "summary": "No summary available."
+  },
+  {
+    "id": "fabricops_kit.governance_review._assert_dq_passed",
+    "name": "_assert_dq_passed",
+    "qualified_name": "fabricops_kit.governance_review._assert_dq_passed",
+    "module": "governance_review",
+    "classification": "Internal",
+    "inbound": [],
+    "outbound": [],
+    "source_path": "src/fabricops_kit/governance_review.py",
+    "docs_path": "reference/internal/governance_review__assert_dq_passed.md",
+    "summary": "No summary available."
   },
   {
     "id": "fabricops_kit.governance_review._build_classification_records",
@@ -2949,6 +2218,18 @@
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.governance_review._build_governance_context",
+    "name": "_build_governance_context",
+    "qualified_name": "fabricops_kit.governance_review._build_governance_context",
+    "module": "governance_review",
+    "classification": "Internal",
+    "inbound": [],
+    "outbound": [],
+    "source_path": "src/fabricops_kit/governance_review.py",
+    "docs_path": "reference/internal/governance_review__build_governance_context.md",
+    "summary": "No summary available."
+  },
+  {
     "id": "fabricops_kit.governance_review._catalogue_table_options",
     "name": "_catalogue_table_options",
     "qualified_name": "fabricops_kit.governance_review._catalogue_table_options",
@@ -2973,6 +2254,9 @@
     "module": "governance_review",
     "classification": "Internal",
     "inbound": [
+      "fabricops_kit.governance_review._extract_candidate_rules_from_responses",
+      "fabricops_kit.governance_review._extract_column_business_context_suggestions",
+      "fabricops_kit.governance_review._extract_pii_suggestions",
       "fabricops_kit.governance_review._setup_governance_metadata_tables",
       "fabricops_kit.governance_review.load_catalogue_profile_rows",
       "fabricops_kit.governance_review.widget_select_catalogue_table"
@@ -3001,6 +2285,143 @@
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.governance_review._draft_business_context",
+    "name": "_draft_business_context",
+    "qualified_name": "fabricops_kit.governance_review._draft_business_context",
+    "module": "governance_review",
+    "classification": "Internal",
+    "inbound": [],
+    "outbound": [],
+    "source_path": "src/fabricops_kit/governance_review.py",
+    "docs_path": "reference/internal/governance_review__draft_business_context.md",
+    "summary": "No summary available."
+  },
+  {
+    "id": "fabricops_kit.governance_review._draft_dq_rules",
+    "name": "_draft_dq_rules",
+    "qualified_name": "fabricops_kit.governance_review._draft_dq_rules",
+    "module": "governance_review",
+    "classification": "Internal",
+    "inbound": [],
+    "outbound": [
+      "fabricops_kit.governance_review._extract_dq_rules",
+      "fabricops_kit.governance_review._prepare_dq_profile_input_rows",
+      "fabricops_kit.governance_review._suggest_dq_rules_with_fabric_ai"
+    ],
+    "source_path": "src/fabricops_kit/governance_review.py",
+    "docs_path": "reference/internal/governance_review__draft_dq_rules.md",
+    "summary": "No summary available."
+  },
+  {
+    "id": "fabricops_kit.governance_review._draft_governance",
+    "name": "_draft_governance",
+    "qualified_name": "fabricops_kit.governance_review._draft_governance",
+    "module": "governance_review",
+    "classification": "Internal",
+    "inbound": [],
+    "outbound": [],
+    "source_path": "src/fabricops_kit/governance_review.py",
+    "docs_path": "reference/internal/governance_review__draft_governance.md",
+    "summary": "No summary available."
+  },
+  {
+    "id": "fabricops_kit.governance_review._enforce_dq",
+    "name": "_enforce_dq",
+    "qualified_name": "fabricops_kit.governance_review._enforce_dq",
+    "module": "governance_review",
+    "classification": "Internal",
+    "inbound": [],
+    "outbound": [
+      "fabricops_kit.governance_review.DQEnforcementResult",
+      "fabricops_kit.governance_review._load_active_dq_rules",
+      "fabricops_kit.governance_review._run_dq_rules",
+      "fabricops_kit.governance_review._split_dq_rows",
+      "fabricops_kit.governance_review._validate_dq_rules"
+    ],
+    "source_path": "src/fabricops_kit/governance_review.py",
+    "docs_path": "reference/internal/governance_review__enforce_dq.md",
+    "summary": "No summary available."
+  },
+  {
+    "id": "fabricops_kit.governance_review._extract_candidate_rules_from_responses",
+    "name": "_extract_candidate_rules_from_responses",
+    "qualified_name": "fabricops_kit.governance_review._extract_candidate_rules_from_responses",
+    "module": "governance_review",
+    "classification": "Internal",
+    "inbound": [
+      "fabricops_kit.governance_review._extract_dq_rules"
+    ],
+    "outbound": [
+      "fabricops_kit.governance_review._coerce_rows",
+      "fabricops_kit.governance_review._parse_dq_rules_dict_from_text"
+    ],
+    "source_path": "src/fabricops_kit/governance_review.py",
+    "docs_path": "reference/internal/governance_review__extract_candidate_rules_from_responses.md",
+    "summary": "No summary available."
+  },
+  {
+    "id": "fabricops_kit.governance_review._extract_column_business_context_suggestions",
+    "name": "_extract_column_business_context_suggestions",
+    "qualified_name": "fabricops_kit.governance_review._extract_column_business_context_suggestions",
+    "module": "governance_review",
+    "classification": "Internal",
+    "inbound": [],
+    "outbound": [
+      "fabricops_kit.governance_review._coerce_rows",
+      "fabricops_kit.governance_review._parse_ai_dict_response"
+    ],
+    "source_path": "src/fabricops_kit/governance_review.py",
+    "docs_path": "reference/internal/governance_review__extract_column_business_context_suggestions.md",
+    "summary": "No summary available."
+  },
+  {
+    "id": "fabricops_kit.governance_review._extract_dq_rules",
+    "name": "_extract_dq_rules",
+    "qualified_name": "fabricops_kit.governance_review._extract_dq_rules",
+    "module": "governance_review",
+    "classification": "Internal",
+    "inbound": [
+      "fabricops_kit.governance_review._draft_dq_rules"
+    ],
+    "outbound": [
+      "fabricops_kit.governance_review._extract_candidate_rules_from_responses"
+    ],
+    "source_path": "src/fabricops_kit/governance_review.py",
+    "docs_path": "reference/internal/governance_review__extract_dq_rules.md",
+    "summary": "No summary available."
+  },
+  {
+    "id": "fabricops_kit.governance_review._extract_governance_suggestions",
+    "name": "_extract_governance_suggestions",
+    "qualified_name": "fabricops_kit.governance_review._extract_governance_suggestions",
+    "module": "governance_review",
+    "classification": "Internal",
+    "inbound": [],
+    "outbound": [
+      "fabricops_kit.governance_review._extract_pii_suggestions"
+    ],
+    "source_path": "src/fabricops_kit/governance_review.py",
+    "docs_path": "reference/internal/governance_review__extract_governance_suggestions.md",
+    "summary": "No summary available."
+  },
+  {
+    "id": "fabricops_kit.governance_review._extract_pii_suggestions",
+    "name": "_extract_pii_suggestions",
+    "qualified_name": "fabricops_kit.governance_review._extract_pii_suggestions",
+    "module": "governance_review",
+    "classification": "Internal",
+    "inbound": [
+      "fabricops_kit.governance_review._extract_governance_suggestions"
+    ],
+    "outbound": [
+      "fabricops_kit.governance_review._coerce_rows",
+      "fabricops_kit.governance_review._parse_ai_dict_response"
+    ],
+    "source_path": "src/fabricops_kit/governance_review.py",
+    "docs_path": "reference/internal/governance_review__extract_pii_suggestions.md",
+    "summary": "No summary available."
+  },
+  {
     "id": "fabricops_kit.governance_review._get_governance_metadata_schemas",
     "name": "_get_governance_metadata_schemas",
     "qualified_name": "fabricops_kit.governance_review._get_governance_metadata_schemas",
@@ -3015,6 +2436,18 @@
     ],
     "source_path": "src/fabricops_kit/governance_review.py",
     "docs_path": "reference/internal/governance_review__get_governance_metadata_schemas.md",
+    "summary": "No summary available."
+  },
+  {
+    "id": "fabricops_kit.governance_review._get_reviewed_business_context_rows",
+    "name": "_get_reviewed_business_context_rows",
+    "qualified_name": "fabricops_kit.governance_review._get_reviewed_business_context_rows",
+    "module": "governance_review",
+    "classification": "Internal",
+    "inbound": [],
+    "outbound": [],
+    "source_path": "src/fabricops_kit/governance_review.py",
+    "docs_path": "reference/internal/governance_review__get_reviewed_business_context_rows.md",
     "summary": "No summary available."
   },
   {
@@ -3062,6 +2495,170 @@
     "outbound": [],
     "source_path": "src/fabricops_kit/governance_review.py",
     "docs_path": "reference/internal/governance_review__json.md",
+    "summary": "No summary available."
+  },
+  {
+    "id": "fabricops_kit.governance_review._latest_dq_rule_versions",
+    "name": "_latest_dq_rule_versions",
+    "qualified_name": "fabricops_kit.governance_review._latest_dq_rule_versions",
+    "module": "governance_review",
+    "classification": "Internal",
+    "inbound": [
+      "fabricops_kit.governance_review._load_active_dq_rule_metadata",
+      "fabricops_kit.governance_review._load_active_dq_rules"
+    ],
+    "outbound": [
+      "fabricops_kit.governance_review._spark_sql_helpers"
+    ],
+    "source_path": "src/fabricops_kit/governance_review.py",
+    "docs_path": "reference/internal/governance_review__latest_dq_rule_versions.md",
+    "summary": "No summary available."
+  },
+  {
+    "id": "fabricops_kit.governance_review._load_active_dq_rule_metadata",
+    "name": "_load_active_dq_rule_metadata",
+    "qualified_name": "fabricops_kit.governance_review._load_active_dq_rule_metadata",
+    "module": "governance_review",
+    "classification": "Internal",
+    "inbound": [],
+    "outbound": [
+      "fabricops_kit.governance_review._latest_dq_rule_versions",
+      "fabricops_kit.governance_review._spark_sql_helpers"
+    ],
+    "source_path": "src/fabricops_kit/governance_review.py",
+    "docs_path": "reference/internal/governance_review__load_active_dq_rule_metadata.md",
+    "summary": "No summary available."
+  },
+  {
+    "id": "fabricops_kit.governance_review._load_active_dq_rules",
+    "name": "_load_active_dq_rules",
+    "qualified_name": "fabricops_kit.governance_review._load_active_dq_rules",
+    "module": "governance_review",
+    "classification": "Internal",
+    "inbound": [
+      "fabricops_kit.governance_review._enforce_dq",
+      "fabricops_kit.governance_review._load_dq_rules"
+    ],
+    "outbound": [
+      "fabricops_kit.governance_review._latest_dq_rule_versions",
+      "fabricops_kit.governance_review._spark_sql_helpers"
+    ],
+    "source_path": "src/fabricops_kit/governance_review.py",
+    "docs_path": "reference/internal/governance_review__load_active_dq_rules.md",
+    "summary": "No summary available."
+  },
+  {
+    "id": "fabricops_kit.governance_review._load_dq_rules",
+    "name": "_load_dq_rules",
+    "qualified_name": "fabricops_kit.governance_review._load_dq_rules",
+    "module": "governance_review",
+    "classification": "Internal",
+    "inbound": [],
+    "outbound": [
+      "fabricops_kit.governance_review._load_active_dq_rules"
+    ],
+    "source_path": "src/fabricops_kit/governance_review.py",
+    "docs_path": "reference/internal/governance_review__load_dq_rules.md",
+    "summary": "No summary available."
+  },
+  {
+    "id": "fabricops_kit.governance_review._parse_ai_dict_response",
+    "name": "_parse_ai_dict_response",
+    "qualified_name": "fabricops_kit.governance_review._parse_ai_dict_response",
+    "module": "governance_review",
+    "classification": "Internal",
+    "inbound": [
+      "fabricops_kit.governance_review._extract_column_business_context_suggestions",
+      "fabricops_kit.governance_review._extract_pii_suggestions"
+    ],
+    "outbound": [],
+    "source_path": "src/fabricops_kit/governance_review.py",
+    "docs_path": "reference/internal/governance_review__parse_ai_dict_response.md",
+    "summary": "No summary available."
+  },
+  {
+    "id": "fabricops_kit.governance_review._parse_dq_rules_dict_from_text",
+    "name": "_parse_dq_rules_dict_from_text",
+    "qualified_name": "fabricops_kit.governance_review._parse_dq_rules_dict_from_text",
+    "module": "governance_review",
+    "classification": "Internal",
+    "inbound": [
+      "fabricops_kit.governance_review._extract_candidate_rules_from_responses"
+    ],
+    "outbound": [],
+    "source_path": "src/fabricops_kit/governance_review.py",
+    "docs_path": "reference/internal/governance_review__parse_dq_rules_dict_from_text.md",
+    "summary": "No summary available."
+  },
+  {
+    "id": "fabricops_kit.governance_review._prepare_business_context_profile_input",
+    "name": "_prepare_business_context_profile_input",
+    "qualified_name": "fabricops_kit.governance_review._prepare_business_context_profile_input",
+    "module": "governance_review",
+    "classification": "Internal",
+    "inbound": [],
+    "outbound": [],
+    "source_path": "src/fabricops_kit/governance_review.py",
+    "docs_path": "reference/internal/governance_review__prepare_business_context_profile_input.md",
+    "summary": "No summary available."
+  },
+  {
+    "id": "fabricops_kit.governance_review._prepare_dq_profile_input_rows",
+    "name": "_prepare_dq_profile_input_rows",
+    "qualified_name": "fabricops_kit.governance_review._prepare_dq_profile_input_rows",
+    "module": "governance_review",
+    "classification": "Internal",
+    "inbound": [
+      "fabricops_kit.governance_review._draft_dq_rules"
+    ],
+    "outbound": [
+      "fabricops_kit.data_profiling.profile_dataframe",
+      "fabricops_kit.governance_review._spark_sql_helpers"
+    ],
+    "source_path": "src/fabricops_kit/governance_review.py",
+    "docs_path": "reference/internal/governance_review__prepare_dq_profile_input_rows.md",
+    "summary": "No summary available."
+  },
+  {
+    "id": "fabricops_kit.governance_review._prepare_dq_profile_rows_with_context",
+    "name": "_prepare_dq_profile_rows_with_context",
+    "qualified_name": "fabricops_kit.governance_review._prepare_dq_profile_rows_with_context",
+    "module": "governance_review",
+    "classification": "Internal",
+    "inbound": [],
+    "outbound": [],
+    "source_path": "src/fabricops_kit/governance_review.py",
+    "docs_path": "reference/internal/governance_review__prepare_dq_profile_rows_with_context.md",
+    "summary": "No summary available."
+  },
+  {
+    "id": "fabricops_kit.governance_review._prepare_governance_input",
+    "name": "_prepare_governance_input",
+    "qualified_name": "fabricops_kit.governance_review._prepare_governance_input",
+    "module": "governance_review",
+    "classification": "Internal",
+    "inbound": [],
+    "outbound": [],
+    "source_path": "src/fabricops_kit/governance_review.py",
+    "docs_path": "reference/internal/governance_review__prepare_governance_input.md",
+    "summary": "No summary available."
+  },
+  {
+    "id": "fabricops_kit.governance_review._run_dq_rules",
+    "name": "_run_dq_rules",
+    "qualified_name": "fabricops_kit.governance_review._run_dq_rules",
+    "module": "governance_review",
+    "classification": "Internal",
+    "inbound": [
+      "fabricops_kit.governance_review._enforce_dq"
+    ],
+    "outbound": [
+      "fabricops_kit.governance_review._spark_sql_helpers",
+      "fabricops_kit.governance_review._split_dq_rows",
+      "fabricops_kit.governance_review._validate_dq_rules"
+    ],
+    "source_path": "src/fabricops_kit/governance_review.py",
+    "docs_path": "reference/internal/governance_review__run_dq_rules.md",
     "summary": "No summary available."
   },
   {
@@ -3116,6 +2713,26 @@
     "summary": "No summary available."
   },
   {
+    "id": "fabricops_kit.governance_review._spark_sql_helpers",
+    "name": "_spark_sql_helpers",
+    "qualified_name": "fabricops_kit.governance_review._spark_sql_helpers",
+    "module": "governance_review",
+    "classification": "Internal",
+    "inbound": [
+      "fabricops_kit.governance_review._latest_dq_rule_versions",
+      "fabricops_kit.governance_review._load_active_dq_rule_metadata",
+      "fabricops_kit.governance_review._load_active_dq_rules",
+      "fabricops_kit.governance_review._prepare_dq_profile_input_rows",
+      "fabricops_kit.governance_review._run_dq_rules",
+      "fabricops_kit.governance_review._split_dq_rows",
+      "fabricops_kit.governance_review._write_dq_rules"
+    ],
+    "outbound": [],
+    "source_path": "src/fabricops_kit/governance_review.py",
+    "docs_path": "reference/internal/governance_review__spark_sql_helpers.md",
+    "summary": "No summary available."
+  },
+  {
     "id": "fabricops_kit.governance_review._spark_types",
     "name": "_spark_types",
     "qualified_name": "fabricops_kit.governance_review._spark_types",
@@ -3128,6 +2745,55 @@
     "outbound": [],
     "source_path": "src/fabricops_kit/governance_review.py",
     "docs_path": "reference/internal/governance_review__spark_types.md",
+    "summary": "No summary available."
+  },
+  {
+    "id": "fabricops_kit.governance_review._split_dq_rows",
+    "name": "_split_dq_rows",
+    "qualified_name": "fabricops_kit.governance_review._split_dq_rows",
+    "module": "governance_review",
+    "classification": "Internal",
+    "inbound": [
+      "fabricops_kit.governance_review._enforce_dq",
+      "fabricops_kit.governance_review._run_dq_rules"
+    ],
+    "outbound": [
+      "fabricops_kit.governance_review._spark_sql_helpers",
+      "fabricops_kit.governance_review._validate_dq_rules"
+    ],
+    "source_path": "src/fabricops_kit/governance_review.py",
+    "docs_path": "reference/internal/governance_review__split_dq_rows.md",
+    "summary": "No summary available."
+  },
+  {
+    "id": "fabricops_kit.governance_review._suggest_dq_rules_with_fabric_ai",
+    "name": "_suggest_dq_rules_with_fabric_ai",
+    "qualified_name": "fabricops_kit.governance_review._suggest_dq_rules_with_fabric_ai",
+    "module": "governance_review",
+    "classification": "Internal",
+    "inbound": [
+      "fabricops_kit.governance_review._draft_dq_rules"
+    ],
+    "outbound": [],
+    "source_path": "src/fabricops_kit/governance_review.py",
+    "docs_path": "reference/internal/governance_review__suggest_dq_rules_with_fabric_ai.md",
+    "summary": "No summary available."
+  },
+  {
+    "id": "fabricops_kit.governance_review._validate_dq_rules",
+    "name": "_validate_dq_rules",
+    "qualified_name": "fabricops_kit.governance_review._validate_dq_rules",
+    "module": "governance_review",
+    "classification": "Internal",
+    "inbound": [
+      "fabricops_kit.governance_review._enforce_dq",
+      "fabricops_kit.governance_review._run_dq_rules",
+      "fabricops_kit.governance_review._split_dq_rows",
+      "fabricops_kit.governance_review._write_dq_rules"
+    ],
+    "outbound": [],
+    "source_path": "src/fabricops_kit/governance_review.py",
+    "docs_path": "reference/internal/governance_review__validate_dq_rules.md",
     "summary": "No summary available."
   },
   {
@@ -3148,6 +2814,24 @@
     "outbound": [],
     "source_path": "src/fabricops_kit/governance_review.py",
     "docs_path": "reference/internal/governance_review__value.md",
+    "summary": "No summary available."
+  },
+  {
+    "id": "fabricops_kit.governance_review._write_dq_rules",
+    "name": "_write_dq_rules",
+    "qualified_name": "fabricops_kit.governance_review._write_dq_rules",
+    "module": "governance_review",
+    "classification": "Internal",
+    "inbound": [],
+    "outbound": [
+      "fabricops_kit.fabric_input_output.write_lakehouse_table",
+      "fabricops_kit.governance_review._spark_sql_helpers",
+      "fabricops_kit.governance_review._validate_dq_rules",
+      "fabricops_kit.metadata._now_utc_iso",
+      "fabricops_kit.metadata._resolve_action_by"
+    ],
+    "source_path": "src/fabricops_kit/governance_review.py",
+    "docs_path": "reference/internal/governance_review__write_dq_rules.md",
     "summary": "No summary available."
   },
   {
@@ -3320,7 +3004,6 @@
     "module": "metadata",
     "classification": "Internal",
     "inbound": [
-      "fabricops_kit.data_quality._attach_rule_metadata_keys",
       "fabricops_kit.governance_review._build_dq_rule_records"
     ],
     "outbound": [
@@ -3351,9 +3034,6 @@
     "module": "metadata",
     "classification": "Internal",
     "inbound": [
-      "fabricops_kit.business_context._widget_review_business_context",
-      "fabricops_kit.data_governance._widget_review_governance",
-      "fabricops_kit.data_quality._attach_rule_metadata_keys",
       "fabricops_kit.governance_review._build_classification_records",
       "fabricops_kit.governance_review._build_column_context_records",
       "fabricops_kit.governance_review._build_dq_rule_records"
@@ -3372,9 +3052,6 @@
     "module": "metadata",
     "classification": "Internal",
     "inbound": [
-      "fabricops_kit.business_context._widget_review_business_context",
-      "fabricops_kit.data_governance._widget_review_governance",
-      "fabricops_kit.data_quality._attach_rule_metadata_keys",
       "fabricops_kit.governance_review._build_classification_records",
       "fabricops_kit.governance_review._build_column_context_records",
       "fabricops_kit.governance_review._build_dq_rule_records",
@@ -3631,12 +3308,10 @@
     "module": "metadata",
     "classification": "Internal",
     "inbound": [
-      "fabricops_kit.data_governance._widget_review_governance",
-      "fabricops_kit.data_quality._build_dq_rule_deactivation_metadata_df",
-      "fabricops_kit.data_quality._build_dq_rules_metadata_df",
       "fabricops_kit.governance_review._build_classification_records",
       "fabricops_kit.governance_review._build_column_context_records",
       "fabricops_kit.governance_review._build_dq_rule_records",
+      "fabricops_kit.governance_review._write_dq_rules",
       "fabricops_kit.metadata._build_evidence_row"
     ],
     "outbound": [],
@@ -3692,14 +3367,11 @@
     "module": "metadata",
     "classification": "Internal",
     "inbound": [
-      "fabricops_kit.data_governance._approved_widget_rows",
-      "fabricops_kit.data_quality._build_dq_rule_deactivation_metadata_df",
-      "fabricops_kit.data_quality._build_dq_rule_deactivations",
-      "fabricops_kit.data_quality._build_dq_rule_history",
-      "fabricops_kit.data_quality._build_dq_rules_metadata_df",
+      "fabricops_kit.governance_review._approved_widget_rows",
       "fabricops_kit.governance_review._build_classification_records",
       "fabricops_kit.governance_review._build_column_context_records",
-      "fabricops_kit.governance_review._build_dq_rule_records"
+      "fabricops_kit.governance_review._build_dq_rule_records",
+      "fabricops_kit.governance_review._write_dq_rules"
     ],
     "outbound": [
       "fabricops_kit.metadata._context_get",
@@ -3793,9 +3465,7 @@
     "qualified_name": "fabricops_kit.metadata._write_column_business_context",
     "module": "metadata",
     "classification": "Internal",
-    "inbound": [
-      "fabricops_kit.business_context._write_business_context"
-    ],
+    "inbound": [],
     "outbound": [
       "fabricops_kit.metadata._write_metadata_rows"
     ],
@@ -3848,86 +3518,6 @@
     "outbound": [],
     "source_path": "src/fabricops_kit/metadata.py",
     "docs_path": "reference/internal/metadata__write_metadata_rows_legacy.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.versioning._get_docs_url",
-    "name": "_get_docs_url",
-    "qualified_name": "fabricops_kit.versioning._get_docs_url",
-    "module": "versioning",
-    "classification": "Internal",
-    "inbound": [
-      "fabricops_kit.versioning._print_runtime_banner"
-    ],
-    "outbound": [
-      "fabricops_kit.versioning._get_docs_version"
-    ],
-    "source_path": "src/fabricops_kit/versioning.py",
-    "docs_path": "reference/internal/versioning__get_docs_url.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.versioning._get_docs_version",
-    "name": "_get_docs_version",
-    "qualified_name": "fabricops_kit.versioning._get_docs_version",
-    "module": "versioning",
-    "classification": "Internal",
-    "inbound": [
-      "fabricops_kit.versioning._get_docs_url"
-    ],
-    "outbound": [
-      "fabricops_kit.versioning._get_package_version"
-    ],
-    "source_path": "src/fabricops_kit/versioning.py",
-    "docs_path": "reference/internal/versioning__get_docs_version.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.versioning._get_package_version",
-    "name": "_get_package_version",
-    "qualified_name": "fabricops_kit.versioning._get_package_version",
-    "module": "versioning",
-    "classification": "Internal",
-    "inbound": [
-      "fabricops_kit.versioning._get_docs_version",
-      "fabricops_kit.versioning._get_release_notes_url",
-      "fabricops_kit.versioning._print_runtime_banner"
-    ],
-    "outbound": [],
-    "source_path": "src/fabricops_kit/versioning.py",
-    "docs_path": "reference/internal/versioning__get_package_version.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.versioning._get_release_notes_url",
-    "name": "_get_release_notes_url",
-    "qualified_name": "fabricops_kit.versioning._get_release_notes_url",
-    "module": "versioning",
-    "classification": "Internal",
-    "inbound": [
-      "fabricops_kit.versioning._print_runtime_banner"
-    ],
-    "outbound": [
-      "fabricops_kit.versioning._get_package_version"
-    ],
-    "source_path": "src/fabricops_kit/versioning.py",
-    "docs_path": "reference/internal/versioning__get_release_notes_url.md",
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit.versioning._print_runtime_banner",
-    "name": "_print_runtime_banner",
-    "qualified_name": "fabricops_kit.versioning._print_runtime_banner",
-    "module": "versioning",
-    "classification": "Internal",
-    "inbound": [],
-    "outbound": [
-      "fabricops_kit.versioning._get_docs_url",
-      "fabricops_kit.versioning._get_package_version",
-      "fabricops_kit.versioning._get_release_notes_url"
-    ],
-    "source_path": "src/fabricops_kit/versioning.py",
-    "docs_path": "reference/internal/versioning__print_runtime_banner.md",
     "summary": "No summary available."
   }
 ]

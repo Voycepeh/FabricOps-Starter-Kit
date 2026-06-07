@@ -16,11 +16,10 @@ No summary available.
 - Related module: `metadata`
 - Source file path: `src/fabricops_kit/metadata.py`
 - Source reference: <a href="../../api/modules/metadata/#_build_dq_rule_key">Module source anchor</a>
-- Inbound references count: 2
+- Inbound references count: 1
 - Outbound references count: 1
 
 ## Inbound references
-- <a href="../internal/data_quality/_attach_rule_metadata_keys/"><code>fabricops_kit.data_quality._attach_rule_metadata_keys</code></a>
 - <a href="../internal/governance_review/_build_dq_rule_records/"><code>fabricops_kit.governance_review._build_dq_rule_records</code></a>
 
 ## Outbound references
