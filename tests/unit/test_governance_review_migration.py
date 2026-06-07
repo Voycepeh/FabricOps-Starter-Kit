@@ -41,6 +41,7 @@ EXPECTED_V1_CALLABLES = [
     "validate_schema",
     "monitor_data_changes",
     "stop_if_failed",
+    "enforce_dq_rules",
     "build_lineage_records",
     "widget_select_catalogue_table",
     "get_selected_catalogue_table",
@@ -174,3 +175,11 @@ def test_record_table_governance_writes_context_dq_and_classification(monkeypatc
     assert result["column_context"][0]["business_context"] == "Order identifier"
     assert result["dq_rules"][0]["rule_id"] == "order_id_required"
     assert result["column_classification"][0]["sensitivity_label"] == "internal"
+
+
+
+def test_governance_metadata_schemas_do_not_add_dq_failure_tables():
+    schemas = governance._get_governance_metadata_schemas()
+
+    assert governance.DQ_RULES_TABLE in schemas
+    assert not any("FAILURE" in table or "QUARANTINE" in table for table in schemas)

@@ -23,3 +23,21 @@ def test_profile_dataframe_profiles_schema_nulls_distincts_min_and_max(spark_ses
     assert rows["amount"]["DISTINCT_COUNT"] == 2
     assert rows["amount"]["MIN_VALUE"] == "10.0"
     assert rows["amount"]["MAX_VALUE"] == "30.0"
+
+
+
+def test_profile_dataframe_excludes_dq_technical_columns(spark_session):
+    df = spark_session.createDataFrame(
+        [
+            {
+                "order_id": "A",
+                "amount": 10.0,
+                "_dq_check_status": "warning",
+                "_dq_failed_rules": "amount_positive",
+            }
+        ]
+    )
+
+    columns = {row["COLUMN_NAME"] for row in profile_dataframe(df, "orders").collect()}
+
+    assert columns == {"order_id", "amount"}

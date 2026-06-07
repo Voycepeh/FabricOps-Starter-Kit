@@ -74,17 +74,17 @@ In short:
 
 `03_review` does not enforce rules directly.
 
-Approved metadata becomes useful in later runs when `02_pipeline` reads or implements it. For example, a DQ expectation approved in `METADATA_DQ_RULES` can be loaded by `02_pipeline`, converted into a check, and configured to warn or block before output is written.
+Approved metadata becomes useful in later runs when `02_pipeline` reads or implements it. DQ expectations approved in `METADATA_DQ_RULES` are loaded by `02_pipeline` as aggregate guardrails before the target write.
 
 The same idea can apply to other reviewed metadata:
 
 | Reviewed metadata | Possible later `02_pipeline` use |
 | --- | --- |
 | Business context | Include approved descriptions in downstream documentation or support evidence. |
-| DQ expectations | Run checks that warn, block, or record evidence. |
+| DQ expectations | Run active approved DQ rules that warn or block before the target write. Warning failures continue, tag rows, and write the full dataset; error failures block. |
 | Sensitivity and classification | Record handling context or support checks that an engineer intentionally adds. |
 
-The pipeline decides whether approved metadata should warn, block, or simply record evidence. This keeps the operating model lightweight and avoids treating review metadata as automatic enforcement.
+The pipeline decides how reviewed metadata is used. For DQ rules, v1 uses severity: warning failures log a warning, add `_dq_check_status` and `_dq_failed_rules` to the full target dataset, and continue, while error failures block through `stop_if_failed(...)`. Aggregate DQ summary fields are stored with existing profiling/catalogue evidence. The DQ guardrail does not create DQ failure tables, quarantine tables, row-level metadata evidence, filtered writes, alert sends, or partial target writes. Aggregated DQ results can feed dashboards and alerts later.
 
 ## What this page is not
 
