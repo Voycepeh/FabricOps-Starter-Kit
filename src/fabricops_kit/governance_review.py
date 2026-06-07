@@ -1,4 +1,4 @@
-"""Table-scoped governance review helpers for ``04_gov`` notebooks."""
+"""Table-scoped governance review helpers for ``03_review`` notebooks."""
 
 from __future__ import annotations
 
@@ -201,7 +201,7 @@ def _setup_governance_metadata_tables(*, spark: Any, config: Any, env: str) -> d
         fields = _schema_field_names(schema)
         missing = [field for field in fields if field not in columns]
         if missing:
-            raise ValueError(f"{table_name} is missing required column(s): {', '.join(missing)}. Migrate the table before running 04_gov.")
+            raise ValueError(f"{table_name} is missing required column(s): {', '.join(missing)}. Migrate the table before running 03_review.")
     return {"status": "ready", "tables": list(schemas), "created_tables": created}
 
 
@@ -225,7 +225,7 @@ def _catalogue_table_options(catalogue_rows: Iterable[dict[str, Any]]) -> list[d
     """
     rows = [dict(r) for r in catalogue_rows or []]
     if not rows:
-        raise ValueError("METADATA_DATA_CATALOGUE has no rows. Run 03_pc profiling before 04_gov.")
+        raise ValueError("METADATA_DATA_CATALOGUE has no rows. Run 02_pipeline profiling before 03_review.")
     successes = [r for r in rows if _is_success(r)]
     if not successes:
         raise ValueError("METADATA_DATA_CATALOGUE has no successful profile evidence for governance review.")
@@ -443,7 +443,7 @@ def _display_review_guidance(title: str, profile_rows: list[dict[str, Any]], ins
 
 
 def widget_review_column_context(profile_rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Render standalone business-context review guidance for ``04_gov``.
+    """Render standalone business-context review guidance for ``03_review``.
 
     Parameters
     ----------
@@ -464,7 +464,7 @@ def widget_review_column_context(profile_rows: list[dict[str, Any]]) -> list[dic
 
 
 def widget_review_dq_rules(profile_rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Render standalone DQ-rule review guidance for ``04_gov``.
+    """Render standalone DQ-rule review guidance for ``03_review``.
 
     Parameters
     ----------
@@ -480,7 +480,7 @@ def widget_review_dq_rules(profile_rows: list[dict[str, Any]]) -> list[dict[str,
     return _display_review_guidance(
         "DQ rule review",
         profile_rows,
-        "Author human-approved DQ rules for selected columns. These records are governance evidence and are not automatically enforced by 03_pc.",
+        "Author human-approved DQ rules for selected columns. These records are governance evidence and are not automatically enforced by 02_pipeline.",
     )
 
 
@@ -547,7 +547,7 @@ def record_table_governance(
 
     Notes
     -----
-    This is the v1 governance commit action for ``04_gov`` notebooks. It merges
+    This is the v1 governance commit action for ``03_review`` notebooks. It merges
     the previous row-builder and per-table commit helpers into one explicit
     human approval step while preserving configured metadata lakehouse routing.
     """

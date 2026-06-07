@@ -1,7 +1,7 @@
 """Lightweight, config-driven steward and data-agreement intake for Fabric notebooks.
 
 The ``00_env_config`` notebook prepares steward, agreement, and evidence
-metadata tables plus widget configuration. The ``01_da`` notebook renders
+metadata tables plus widget configuration. The ``01_agreement`` notebook renders
 standalone steward, agreement, and optional evidence widgets. Intake tables
 are append-only and use framework-managed runtime audit columns.
 """
@@ -405,7 +405,7 @@ def _coerce_row_dicts(rows: Any) -> list[dict[str, Any]]:
 
 
 def _ensure_metadata_tables(config: Any, env_name: str, *, spark: Any) -> dict[str, Any]:
-    """Idempotently create or validate lightweight ``01_da`` metadata tables.
+    """Idempotently create or validate lightweight ``01_agreement`` metadata tables.
 
     Parameters
     ----------
@@ -446,7 +446,7 @@ def _ensure_metadata_tables(config: Any, env_name: str, *, spark: Any) -> dict[s
         columns = list(table.columns) if hasattr(table, "columns") else list(rows[0]) if rows else []
         missing = [field for field in fields if field not in columns]
         if missing:
-            raise ValueError(f"{table_name} is missing required column(s): {', '.join(missing)}. Migrate the table before rendering 01_da.")
+            raise ValueError(f"{table_name} is missing required column(s): {', '.join(missing)}. Migrate the table before rendering 01_agreement.")
     return {"status": "ready", "tables": list(table_schemas), "created_tables": created}
 
 
@@ -471,17 +471,17 @@ def _setup_data_agreement_tables(*, spark: Any, config: Any, env: str, require_a
 
     Notes
     -----
-    ``00_env_config`` calls this before ``01_da``. Missing tables are created
+    ``00_env_config`` calls this before ``01_agreement``. Missing tables are created
     empty; no fake steward rows are seeded.
     """
     summary = _ensure_metadata_tables(config, env, spark=spark)
     profiles = _list_data_stewards(config, env, spark_session=spark, active_only=True, missing_ok=True)
     summary["active_steward_count"] = len(profiles)
     if profiles:
-        summary["message"] = f"{DATA_STEWARD_TABLE} contains active steward rows. 01_da can render both intake widgets."
+        summary["message"] = f"{DATA_STEWARD_TABLE} contains active steward rows. 01_agreement can render both intake widgets."
     else:
         summary["status"] = "not_ready"
-        summary["message"] = f"{DATA_STEWARD_TABLE} has no active steward rows yet. Use the 01_da Data Steward widget to create one before saving an agreement."
+        summary["message"] = f"{DATA_STEWARD_TABLE} has no active steward rows yet. Use the 01_agreement Data Steward widget to create one before saving an agreement."
         if require_active_steward:
             raise ValueError(summary["message"])
     return summary
@@ -890,12 +890,12 @@ def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None 
         try:
             rows = _list_data_agreements(agreement_rows_or_config, env_name, spark_session=spark_session)
         except Exception as exc:
-            raise RuntimeError("No agreements found. Run 01_da first.") from exc
+            raise RuntimeError("No agreements found. Run 01_agreement first.") from exc
     else:
         rows = agreement_rows_or_config
     latest_rows = _latest_agreement_versions(rows)
     if not latest_rows:
-        raise ValueError("No agreements found. Save a data agreement in notebook 01_da first.")
+        raise ValueError("No agreements found. Save a data agreement in notebook 01_agreement first.")
     rows_by_id = {str(row.get("agreement_id") or "").strip(): row for row in latest_rows if str(row.get("agreement_id") or "").strip()}
 
     def _agreement_label(row: dict[str, Any]) -> str:
@@ -1484,7 +1484,7 @@ def widget_render_agreement_evidence(config: Any, env_name: str, *, spark: Any) 
 
     Notes
     -----
-    This public wrapper is intended for the separate-widget ``01_da`` layout.
+    This public wrapper is intended for the separate-widget ``01_agreement`` layout.
     Evidence files must be uploaded manually to the metadata lakehouse
     ``Files`` area first. The widget appends one file-reference row per
     pasted ``Files/...`` path to ``METADATA_DATA_AGREEMENT_EVIDENCE`` and

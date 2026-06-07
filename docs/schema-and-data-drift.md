@@ -1,16 +1,16 @@
 # Pipeline Guardrails
 
-`03_pc` owns pipeline guardrails. It pipes data from source to target, captures metadata, and enforces approved rules and classifications alongside schema and data drift guardrails.
+`02_pipeline` owns pipeline guardrails. It pipes data from source to target, captures metadata, and enforces approved rules and classifications alongside schema and data drift guardrails.
 
-Read [How FabricOps Works](how-fabricops-works/index.md) first for the full `01_da` → `03_pc` → `04_gov` → `03_pc` loop. This page focuses on the guardrail pattern inside `03_pc`.
+Read [How FabricOps Works](how-fabricops-works/index.md) first for the required `01_agreement` → `02_pipeline` → `03_review` delivery path. This page focuses on the guardrail pattern inside `02_pipeline`.
 
-Separate data contracts are not part of the current operating model. The checks that control pipeline behavior live in the relevant `03_pc` notebook and can use approved governance metadata from `04_gov` on later runs.
+Separate data contracts are not part of the current operating model. The checks that control pipeline behavior live in the relevant `02_pipeline` notebook and can use approved governance metadata from `03_review` on later runs.
 
 ![Schema and data-change guardrails showing source and target validation flow](assets/fabricops-schema-data-guardrails.png){ .full-width }
 
-## What `03_pc` owns
+## What `02_pipeline` owns
 
-A `03_pc` notebook should make its guardrails explicit before writing outputs:
+A `02_pipeline` notebook should make its guardrails explicit before writing outputs:
 
 - schema validation for expected columns and datatypes;
 - data-change monitoring for unusual row count, null, distinct, or distribution changes;
@@ -21,7 +21,7 @@ A `03_pc` notebook should make its guardrails explicit before writing outputs:
 - profile and lineage metadata;
 - run summaries for review.
 
-`04_gov` adds reviewed metadata. After a person approves that metadata, `03_pc` can use the approved rules and classifications during later pipeline runs.
+`03_review` adds reviewed metadata. After a person approves that metadata, `02_pipeline` can use the approved rules and classifications during later pipeline runs.
 
 ## Guardrail flow
 

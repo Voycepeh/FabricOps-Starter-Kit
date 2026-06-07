@@ -35,7 +35,7 @@ def test_dataset_contract_valid_and_invalid_paths_are_actionable():
 def test_setup_notebook_resolves_environment_paths_and_reports_invalid_targets(fake_notebookutils):
     config = framework_config()
 
-    context = setup_notebook(config=config, env="dev", required_targets=["source", "metadata"], notebook_name="02_ex_orders")
+    context = setup_notebook(config=config, env="dev", required_targets=["source", "metadata"], notebook_name="99_explore_orders")
 
     assert context.environment == "dev"
     assert set(context.paths) == {"source", "metadata"}

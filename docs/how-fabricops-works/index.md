@@ -1,6 +1,6 @@
 # How FabricOps Works
 
-FabricOps uses notebook templates and shared metadata to support a workflow from agreement, to pipeline, to governance review, then back into pipeline enforcement.
+FabricOps uses notebook templates and shared metadata to support a workflow from agreement, to pipeline, to review.
 
 FabricOps Starter Kit is not a full governance platform or a standalone data quality product. It gives Microsoft Fabric notebooks a shared pattern for pipeline metadata, guardrails, and review.
 
@@ -8,31 +8,35 @@ FabricOps Starter Kit is not a full governance platform or a standalone data qua
 
 ```mermaid
 flowchart LR
-    DA["01_da<br/>Agreement<br/>Captures agreement, steward, and context"] --> PC["03_pc<br/>Pipeline<br/>Pipes data from source to target<br/>Captures data profile, lineage, schema, and data drift"]
-    PC --> GOV["04_gov<br/>Governance Review<br/>Adds business context, data quality rules, sensitivity, and classification"]
-    GOV --> ENF["03_pc<br/>Pipeline Enforcement<br/>Enforces approved rules and classifications<br/>with schema and data drift guardrails"]
-    ENF --> PC
+    ENV["00_env_config<br/>Environment config<br/>Configures paths and metadata routing"] --> DA["01_agreement<br/>Agreement<br/>Defines what should be built, who owns it,<br/>what rules apply, and what readiness means"]
+    DA --> PC["02_pipeline<br/>Pipeline<br/>Builds, transforms, validates,<br/>and publishes the data product"]
+    PC --> REV["03_review<br/>Review<br/>Checks evidence, metadata, ownership,<br/>rules, readiness, and handover quality"]
+    EXP["99_explore<br/>Optional support<br/>Discovery, profiling, troubleshooting,<br/>investigation, and ad hoc analysis"] -. supports .-> DA
+    EXP -. supports .-> PC
+    EXP -. supports .-> REV
 ```
 
-The main loop is:
+The core delivery path is:
 
-1. `01_da` captures the agreement, steward, and context.
-2. `03_pc` pipes data from source to target while capturing key metadata like data profile, lineage, schema, and data drift details.
-3. `04_gov` uses that metadata to add business context, data quality rules, data sensitivity, and classification.
-4. Approved data quality rules, sensitivity rules, and classification rules are enforced in `03_pc` when the pipeline runs again, alongside schema and data drift guardrails.
+1. `01_agreement` defines what should be built, who owns it, what rules apply, and what readiness means.
+2. `02_pipeline` builds, transforms, validates, and publishes the data product while capturing key metadata like data profile, lineage, schema, and data drift details.
+3. `03_review` checks evidence, metadata, ownership, rules, readiness, and handover quality.
+
+`99_explore` supports optional discovery, profiling, troubleshooting, investigation, and ad hoc analysis. It is not required before Agreement, Pipeline, or Review.
 
 ## Notebook responsibilities
 
 | Notebook | Responsibility |
 | --- | --- |
-| `01_da` | Captures agreement, steward, and context. |
-| `03_pc` | Pipes data from source to target and captures key metadata. |
-| `04_gov` | Adds business context, data quality rules, sensitivity, and classification. |
-| `03_pc` rerun | Enforces approved rules and classifications with schema and data drift guardrails. |
+| `00_env_config` | Configures the environment and Fabric item paths. |
+| `01_agreement` | Defines what should be built, who owns it, what rules apply, and what readiness means. |
+| `02_pipeline` | Builds, transforms, validates, publishes, and captures key metadata. |
+| `03_review` | Checks evidence, metadata, ownership, rules, readiness, and handover quality. |
+| `99_explore` | Optional support for discovery, profiling, troubleshooting, investigation, and ad hoc analysis. |
 
-`00_env_config` supports environment setup. `02_ex` is an optional example or exploration notebook and is not part of the main target workflow.
+`99_explore` is optional support and is intentionally placed at the end of the sequence.
 
-## Metadata captured by `03_pc`
+## Metadata captured by `02_pipeline`
 
 - Data profile
 - Lineage
@@ -41,18 +45,18 @@ The main loop is:
 - Pipeline outputs
 - Run summary
 
-## Metadata enhanced by `04_gov`
+## Metadata enhanced by `03_review`
 
 - Business context
 - Data quality rules
 - Data sensitivity
 - Classification
 
-## Loop back into `03_pc`
+## Loop back into `02_pipeline`
 
-The workflow does not stop at governance review. Reviewed and approved governance metadata becomes part of later pipeline runs when `03_pc` reads or implements the approved rules and classifications.
+The workflow does not stop at governance review. Reviewed and approved governance metadata becomes part of later pipeline runs when `02_pipeline` reads or implements the approved rules and classifications.
 
-That keeps the review step connected to the pipeline: reviewers add context and rules, then `03_pc` uses the approved metadata with schema and data drift guardrails on later runs.
+That keeps the review step connected to the pipeline: reviewers add context and rules, then `02_pipeline` uses the approved metadata with schema and data drift guardrails on later runs.
 
 ## What to read next
 
@@ -61,6 +65,6 @@ That keeps the review step connected to the pipeline: reviewers add context and 
 | [Workspace Operating Model](workspace-operating-model.md) | Understand workspace separation and pipeline promotion. |
 | [Notebook Templates](notebook-templates.md) | Understand what each notebook template owns. |
 | [Metadata Tables](metadata-tables.md) | Understand what metadata is stored and where. |
-| [Pipeline Guardrails](../schema-and-data-drift.md) | Understand how `03_pc` checks schema, drift, and approved governance metadata. |
-| [Governance Review](../data-quality-rules-system.md) | Understand how `04_gov` adds reviewed governance metadata. |
+| [Pipeline Guardrails](../schema-and-data-drift.md) | Understand how `02_pipeline` checks schema, drift, and approved governance metadata. |
+| [Governance Review](../data-quality-rules-system.md) | Understand how `03_review` adds reviewed governance metadata. |
 | [Metadata Dashboard](metadata-dashboard.md) | Understand the planned visibility layer over collected metadata. |

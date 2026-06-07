@@ -20,7 +20,7 @@ def _code(path: str) -> str:
 
 
 def test_engineering_template_runs_supported_ingestion_quality_and_metadata_flow():
-    code = _code("02_ex_agreement_topic.ipynb")
+    code = _code("99_explore.ipynb")
 
     assert "%run 00_env_config" in code
     assert "widget_select_agreement" in code

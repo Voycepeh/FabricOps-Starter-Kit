@@ -23,8 +23,8 @@ Choose where to begin:
 | Page | Use it for |
 | --- | --- |
 | [Quick Start](quick-start.md) | Install the helper wheel, copy the templates, and run a Fabric smoke test. |
-| [How FabricOps Works](how-fabricops-works/index.md) | Understand the target workflow from agreement to pipeline enforcement. |
+| [How FabricOps Works](how-fabricops-works/index.md) | Understand the target delivery workflow from Agreement to Pipeline to Review. |
 | [Notebook Templates](how-fabricops-works/notebook-templates.md) | See what each notebook template is for. |
 | [Metadata Tables](how-fabricops-works/metadata-tables.md) | See what metadata the notebooks write and read. |
-| [Pipeline Guardrails](schema-and-data-drift.md) | Understand how `03_pc` checks schema, drift, and approved governance metadata. |
-| [Governance Review](data-quality-rules-system.md) | Understand how `04_gov` adds reviewed governance metadata. |
+| [Pipeline Guardrails](schema-and-data-drift.md) | Understand how `02_pipeline` checks schema, drift, and approved governance metadata. |
+| [Governance Review](data-quality-rules-system.md) | Understand how `03_review` adds reviewed governance metadata. |

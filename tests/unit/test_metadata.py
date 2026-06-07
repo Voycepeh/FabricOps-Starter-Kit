@@ -48,7 +48,7 @@ def test_notebook_registry_setup_and_registration_use_metadata_route(monkeypatch
             "currentWorkspaceId": "workspace-id",
             "currentWorkspaceName": "Workspace Name",
             "currentNotebookId": "notebook-id",
-            "currentNotebookName": "03_pc_orders_pipeline",
+            "currentNotebookName": "02_pipeline_orders_pipeline",
             "userName": "user@example.com",
             "userId": "user-id",
         },
@@ -61,7 +61,7 @@ def test_notebook_registry_setup_and_registration_use_metadata_route(monkeypatch
         config=framework_config(),
         env="dev",
         agreement_id="DA-1",
-        notebook_type="03_pc",
+        notebook_type="02_pipeline",
         environment_name="dev",
         dataset_name="orders",
         table_name="fact_orders",
@@ -83,9 +83,9 @@ def test_current_notebook_active_registrations_filters_current_runtime_rows(monk
             "registration_id": "r1",
             "registered_at": "2026-01-02T00:00:00Z",
             "notebook_id": "notebook-id",
-            "notebook_name": "03_pc_orders",
+            "notebook_name": "02_pipeline_orders",
             "registration_status": "active",
-            "notebook_type": "03_pc",
+            "notebook_type": "02_pipeline",
             "environment_name": "dev",
             "registration_role": "primary",
         },
@@ -94,9 +94,9 @@ def test_current_notebook_active_registrations_filters_current_runtime_rows(monk
             "registration_id": "r2",
             "registered_at": "2026-01-01T00:00:00Z",
             "notebook_id": "notebook-id",
-            "notebook_name": "03_pc_orders",
+            "notebook_name": "02_pipeline_orders",
             "registration_status": "superseded",
-            "notebook_type": "03_pc",
+            "notebook_type": "02_pipeline",
             "environment_name": "dev",
             "registration_role": "primary",
         },
@@ -105,9 +105,9 @@ def test_current_notebook_active_registrations_filters_current_runtime_rows(monk
             "registration_id": "r3",
             "registered_at": "2026-01-03T00:00:00Z",
             "notebook_id": "other",
-            "notebook_name": "03_pc_other",
+            "notebook_name": "02_pipeline_other",
             "registration_status": "active",
-            "notebook_type": "03_pc",
+            "notebook_type": "02_pipeline",
             "environment_name": "dev",
             "registration_role": "primary",
         },
@@ -116,12 +116,7 @@ def test_current_notebook_active_registrations_filters_current_runtime_rows(monk
     monkeypatch.setattr(metadata, "read_lakehouse_table", lambda *args, **kwargs: rows)
 
     active = metadata._current_notebook_active_registrations(
-        object(),
-        config=framework_config(),
-        env="dev",
-        notebook_type="03_pc",
-        environment_name="dev",
-        registration_role="primary",
+        object(), config=framework_config(), env="dev", notebook_type="02_pipeline", environment_name="dev", registration_role="primary"
     )
 
     assert len(active) == 1

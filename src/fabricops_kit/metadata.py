@@ -88,7 +88,7 @@ def _setup_notebook_registry_table(
     Notes
     -----
     This helper is separate from ``_setup_data_agreement_tables`` because the
-    registry is workflow-notebook bootstrap metadata, not ``01_da`` agreement
+    registry is workflow-notebook bootstrap metadata, not ``01_agreement`` agreement
     intake metadata. Reads and writes use the configured ``metadata`` target
     from ``00_env_config``.
     """

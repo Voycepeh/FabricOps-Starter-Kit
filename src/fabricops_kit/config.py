@@ -51,7 +51,7 @@ class PathConfig:
 class NotebookRuntimeConfig:
     """Runtime options used by notebook-oriented helpers."""
 
-    allowed_notebook_prefixes: tuple[str, ...] = ("00_env_config", "01_da_", "02_ex_", "03_pc_", "04_gov")
+    allowed_notebook_prefixes: tuple[str, ...] = ("00_env_config", "01_agreement", "02_pipeline", "03_review", "99_explore")
 
     def __post_init__(self) -> None:
         prefixes = tuple(prefix.strip() for prefix in self.allowed_notebook_prefixes if str(prefix).strip())
@@ -266,7 +266,7 @@ DEFAULT_STEWARD_ROLE_OPTIONS = [
 
 @dataclass(frozen=True)
 class DataAgreementConfig:
-    """Editable ``01_da`` table names and widget definitions.
+    """Editable ``01_agreement`` table names and widget definitions.
 
     Parameters
     ----------
@@ -277,7 +277,7 @@ class DataAgreementConfig:
         Custom fields are rendered dynamically and persisted in
         ``custom_fields_json`` instead of becoming physical table columns.
     steward_role_options : list[str]
-        Controlled Data Steward role labels rendered by ``01_da`` as the
+        Controlled Data Steward role labels rendered by ``01_agreement`` as the
         ``steward_role`` dropdown.
     """
 
@@ -576,10 +576,10 @@ def _validate_notebook_name(notebook_name: str, config: FrameworkConfig | None =
     name = _normalize_name(notebook_name)
     patterns = [
         r"^00_env_config$",
-        r"^01_da_[a-z0-9_]+$",
-        r"^02_ex_[a-z0-9_]+_[a-z0-9_]+$",
-        r"^03_pc_[a-z0-9_]+_[a-z0-9_]+$",
-        r"^04_gov[a-z0-9_]*$",
+        r"^01_agreement(?:_[a-z0-9_]+)?$",
+        r"^02_pipeline(?:_[a-z0-9_]+)?$",
+        r"^03_review(?:_[a-z0-9_]+)?$",
+        r"^99_explore(?:_[a-z0-9_]+)?$",
     ]
     if any(__import__("re").match(p, name) for p in patterns):
         return []
@@ -760,7 +760,7 @@ def setup_notebook(
     configure_ai: bool = False,
     local_fallback_name: str | None = None,
 ) -> NotebookSetupContext:
-    """Run consolidated FabricOps startup for exploration and pipeline notebooks.
+    """Run consolidated FabricOps startup for delivery and optional support notebooks.
 
     Parameters
     ----------

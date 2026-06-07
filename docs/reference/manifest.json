@@ -10,7 +10,7 @@
     {
       "module_name": "data_agreement",
       "visibility": "public",
-      "module_summary": "Owns agreement metadata capture, audited record building, metadata commit helpers, and agreement selection helpers used to anchor notebook workflows to approved business agreements. Standard notebooks create or check agreement metadata tables in `00_env_config`, render agreement intake in `01_da_<agreement>`, and bind downstream work with `widget_select_agreement(...)` and `get_selected_agreement()`.",
+      "module_summary": "Owns agreement metadata capture, audited record building, metadata commit helpers, and agreement selection helpers used to anchor notebook workflows to approved business agreements. Standard notebooks create or check agreement metadata tables in `00_env_config`, render agreement intake in `01_agreement`, and bind downstream work with `widget_select_agreement(...)` and `get_selected_agreement()`.",
       "sidebar_group": "1. Governance steward",
       "sidebar_include": true
     },
@@ -45,7 +45,7 @@
     {
       "module_name": "governance_review",
       "visibility": "public",
-      "module_summary": "Owns table-scoped 04_gov catalogue selection, business context review, AI-assisted business context drafting, DQ review and internal enforcement helpers, classification review, AI-assisted sensitivity/PII drafting, and approved metadata commit through record_table_governance.",
+      "module_summary": "Owns table-scoped 03_review catalogue selection, business context review, AI-assisted business context drafting, DQ review and internal enforcement helpers, classification review, AI-assisted sensitivity/PII drafting, and approved metadata commit through record_table_governance.",
       "sidebar_group": "1. Governance steward",
       "sidebar_include": true
     },
@@ -94,66 +94,66 @@
     {
       "module_name": "data_agreement",
       "visibility": "public",
-      "module_summary": "Owns agreement metadata capture, audited record building, metadata commit helpers, and agreement selection helpers used to anchor notebook workflows to approved business agreements. Standard notebooks create or check agreement metadata tables in `00_env_config`, render agreement intake in `01_da_<agreement>`, and bind downstream work with `widget_select_agreement(...)` and `get_selected_agreement()`.",
+      "module_summary": "Owns agreement metadata capture, audited record building, metadata commit helpers, and agreement selection helpers used to anchor notebook workflows to approved business agreements. Standard notebooks create or check agreement metadata tables in `00_env_config`, render agreement intake in `01_agreement`, and bind downstream work with `widget_select_agreement(...)` and `get_selected_agreement()`.",
       "sidebar_group": "1. Governance steward",
       "sidebar_include": true,
       "callable_name": "get_selected_agreement",
       "callable_visibility": "public",
       "callable_type": "callable",
       "callable_role": "callable",
-      "template_notebook": "03_pc_agreement_pipeline_template",
+      "template_notebook": "02_pipeline",
       "template_segment": "Agreement selection"
     },
     {
       "module_name": "data_agreement",
       "visibility": "public",
-      "module_summary": "Owns agreement metadata capture, audited record building, metadata commit helpers, and agreement selection helpers used to anchor notebook workflows to approved business agreements. Standard notebooks create or check agreement metadata tables in `00_env_config`, render agreement intake in `01_da_<agreement>`, and bind downstream work with `widget_select_agreement(...)` and `get_selected_agreement()`.",
+      "module_summary": "Owns agreement metadata capture, audited record building, metadata commit helpers, and agreement selection helpers used to anchor notebook workflows to approved business agreements. Standard notebooks create or check agreement metadata tables in `00_env_config`, render agreement intake in `01_agreement`, and bind downstream work with `widget_select_agreement(...)` and `get_selected_agreement()`.",
       "sidebar_group": "1. Governance steward",
       "sidebar_include": true,
       "callable_name": "widget_render_agreement_evidence",
       "callable_visibility": "public",
       "callable_type": "callable",
       "callable_role": "callable",
-      "template_notebook": "01_da_agreement_template",
+      "template_notebook": "01_agreement",
       "template_segment": "Agreement intake"
     },
     {
       "module_name": "data_agreement",
       "visibility": "public",
-      "module_summary": "Owns agreement metadata capture, audited record building, metadata commit helpers, and agreement selection helpers used to anchor notebook workflows to approved business agreements. Standard notebooks create or check agreement metadata tables in `00_env_config`, render agreement intake in `01_da_<agreement>`, and bind downstream work with `widget_select_agreement(...)` and `get_selected_agreement()`.",
+      "module_summary": "Owns agreement metadata capture, audited record building, metadata commit helpers, and agreement selection helpers used to anchor notebook workflows to approved business agreements. Standard notebooks create or check agreement metadata tables in `00_env_config`, render agreement intake in `01_agreement`, and bind downstream work with `widget_select_agreement(...)` and `get_selected_agreement()`.",
       "sidebar_group": "1. Governance steward",
       "sidebar_include": true,
       "callable_name": "widget_render_data_agreement",
       "callable_visibility": "public",
       "callable_type": "callable",
       "callable_role": "callable",
-      "template_notebook": "01_da_agreement_template",
+      "template_notebook": "01_agreement",
       "template_segment": "Agreement intake"
     },
     {
       "module_name": "data_agreement",
       "visibility": "public",
-      "module_summary": "Owns agreement metadata capture, audited record building, metadata commit helpers, and agreement selection helpers used to anchor notebook workflows to approved business agreements. Standard notebooks create or check agreement metadata tables in `00_env_config`, render agreement intake in `01_da_<agreement>`, and bind downstream work with `widget_select_agreement(...)` and `get_selected_agreement()`.",
+      "module_summary": "Owns agreement metadata capture, audited record building, metadata commit helpers, and agreement selection helpers used to anchor notebook workflows to approved business agreements. Standard notebooks create or check agreement metadata tables in `00_env_config`, render agreement intake in `01_agreement`, and bind downstream work with `widget_select_agreement(...)` and `get_selected_agreement()`.",
       "sidebar_group": "1. Governance steward",
       "sidebar_include": true,
       "callable_name": "widget_render_data_steward",
       "callable_visibility": "public",
       "callable_type": "callable",
       "callable_role": "callable",
-      "template_notebook": "01_da_agreement_template",
+      "template_notebook": "01_agreement",
       "template_segment": "Agreement intake"
     },
     {
       "module_name": "data_agreement",
       "visibility": "public",
-      "module_summary": "Owns agreement metadata capture, audited record building, metadata commit helpers, and agreement selection helpers used to anchor notebook workflows to approved business agreements. Standard notebooks create or check agreement metadata tables in `00_env_config`, render agreement intake in `01_da_<agreement>`, and bind downstream work with `widget_select_agreement(...)` and `get_selected_agreement()`.",
+      "module_summary": "Owns agreement metadata capture, audited record building, metadata commit helpers, and agreement selection helpers used to anchor notebook workflows to approved business agreements. Standard notebooks create or check agreement metadata tables in `00_env_config`, render agreement intake in `01_agreement`, and bind downstream work with `widget_select_agreement(...)` and `get_selected_agreement()`.",
       "sidebar_group": "1. Governance steward",
       "sidebar_include": true,
       "callable_name": "widget_select_agreement",
       "callable_visibility": "public",
       "callable_type": "callable",
       "callable_role": "callable",
-      "template_notebook": "02_ex/03_pc",
+      "template_notebook": "02_pipeline / optional 99_explore",
       "template_segment": "Agreement selection"
     },
     {
@@ -166,7 +166,7 @@
       "callable_visibility": "public",
       "callable_type": "callable",
       "callable_role": "callable",
-      "template_notebook": "03_pc_agreement_pipeline_template",
+      "template_notebook": "02_pipeline",
       "template_segment": "Lineage evidence"
     },
     {
@@ -179,7 +179,7 @@
       "callable_visibility": "public",
       "callable_type": "callable",
       "callable_role": "callable",
-      "template_notebook": "02_ex/03_pc",
+      "template_notebook": "02_pipeline / optional 99_explore",
       "template_segment": "Profiling"
     },
     {
@@ -192,7 +192,7 @@
       "callable_visibility": "public",
       "callable_type": "callable",
       "callable_role": "callable",
-      "template_notebook": "03_pc_agreement_pipeline_template",
+      "template_notebook": "02_pipeline",
       "template_segment": "Drift monitoring"
     },
     {
@@ -205,7 +205,7 @@
       "callable_visibility": "public",
       "callable_type": "callable",
       "callable_role": "callable",
-      "template_notebook": "03_pc_agreement_pipeline_template",
+      "template_notebook": "02_pipeline",
       "template_segment": "Guardrail enforcement"
     },
     {
@@ -218,7 +218,7 @@
       "callable_visibility": "public",
       "callable_type": "callable",
       "callable_role": "callable",
-      "template_notebook": "03_pc_agreement_pipeline_template",
+      "template_notebook": "02_pipeline",
       "template_segment": "Schema validation"
     },
     {
@@ -231,7 +231,7 @@
       "callable_visibility": "public",
       "callable_type": "callable",
       "callable_role": "callable",
-      "template_notebook": "02_ex/03_pc",
+      "template_notebook": "02_pipeline / optional 99_explore",
       "template_segment": "Fabric IO"
     },
     {
@@ -244,7 +244,7 @@
       "callable_visibility": "public",
       "callable_type": "callable",
       "callable_role": "callable",
-      "template_notebook": "02_ex/03_pc",
+      "template_notebook": "02_pipeline / optional 99_explore",
       "template_segment": "Fabric IO"
     },
     {
@@ -257,7 +257,7 @@
       "callable_visibility": "public",
       "callable_type": "callable",
       "callable_role": "callable",
-      "template_notebook": "02_ex/03_pc",
+      "template_notebook": "02_pipeline / optional 99_explore",
       "template_segment": "Fabric IO"
     },
     {
@@ -270,7 +270,7 @@
       "callable_visibility": "public",
       "callable_type": "callable",
       "callable_role": "callable",
-      "template_notebook": "02_ex/03_pc",
+      "template_notebook": "02_pipeline / optional 99_explore",
       "template_segment": "Fabric IO"
     },
     {
@@ -283,7 +283,7 @@
       "callable_visibility": "public",
       "callable_type": "callable",
       "callable_role": "callable",
-      "template_notebook": "02_ex/03_pc",
+      "template_notebook": "02_pipeline / optional 99_explore",
       "template_segment": "Fabric IO"
     },
     {
@@ -296,7 +296,7 @@
       "callable_visibility": "public",
       "callable_type": "callable",
       "callable_role": "callable",
-      "template_notebook": "03_pc_agreement_pipeline_template",
+      "template_notebook": "02_pipeline",
       "template_segment": "Fabric IO"
     },
     {
@@ -309,98 +309,98 @@
       "callable_visibility": "public",
       "callable_type": "callable",
       "callable_role": "callable",
-      "template_notebook": "03_pc_agreement_pipeline_template",
+      "template_notebook": "02_pipeline",
       "template_segment": "Fabric IO"
     },
     {
       "module_name": "governance_review",
       "visibility": "public",
-      "module_summary": "Owns table-scoped 04_gov catalogue selection, business context review, AI-assisted business context drafting, DQ review and internal enforcement helpers, classification review, AI-assisted sensitivity/PII drafting, and approved metadata commit through record_table_governance.",
+      "module_summary": "Owns table-scoped 03_review catalogue selection, business context review, AI-assisted business context drafting, DQ review and internal enforcement helpers, classification review, AI-assisted sensitivity/PII drafting, and approved metadata commit through record_table_governance.",
       "sidebar_group": "1. Governance steward",
       "sidebar_include": true,
       "callable_name": "get_selected_catalogue_table",
       "callable_visibility": "public",
       "callable_type": "callable",
       "callable_role": "callable",
-      "template_notebook": "04_gov_dataset_table",
+      "template_notebook": "03_review",
       "template_segment": "Governance review"
     },
     {
       "module_name": "governance_review",
       "visibility": "public",
-      "module_summary": "Owns table-scoped 04_gov catalogue selection, business context review, AI-assisted business context drafting, DQ review and internal enforcement helpers, classification review, AI-assisted sensitivity/PII drafting, and approved metadata commit through record_table_governance.",
+      "module_summary": "Owns table-scoped 03_review catalogue selection, business context review, AI-assisted business context drafting, DQ review and internal enforcement helpers, classification review, AI-assisted sensitivity/PII drafting, and approved metadata commit through record_table_governance.",
       "sidebar_group": "1. Governance steward",
       "sidebar_include": true,
       "callable_name": "load_catalogue_profile_rows",
       "callable_visibility": "public",
       "callable_type": "callable",
       "callable_role": "callable",
-      "template_notebook": "04_gov_dataset_table",
+      "template_notebook": "03_review",
       "template_segment": "Governance review"
     },
     {
       "module_name": "governance_review",
       "visibility": "public",
-      "module_summary": "Owns table-scoped 04_gov catalogue selection, business context review, AI-assisted business context drafting, DQ review and internal enforcement helpers, classification review, AI-assisted sensitivity/PII drafting, and approved metadata commit through record_table_governance.",
+      "module_summary": "Owns table-scoped 03_review catalogue selection, business context review, AI-assisted business context drafting, DQ review and internal enforcement helpers, classification review, AI-assisted sensitivity/PII drafting, and approved metadata commit through record_table_governance.",
       "sidebar_group": "1. Governance steward",
       "sidebar_include": true,
       "callable_name": "record_table_governance",
       "callable_visibility": "public",
       "callable_type": "callable",
       "callable_role": "callable",
-      "template_notebook": "04_gov_dataset_table",
+      "template_notebook": "03_review",
       "template_segment": "Governance review"
     },
     {
       "module_name": "governance_review",
       "visibility": "public",
-      "module_summary": "Owns table-scoped 04_gov catalogue selection, business context review, AI-assisted business context drafting, DQ review and internal enforcement helpers, classification review, AI-assisted sensitivity/PII drafting, and approved metadata commit through record_table_governance.",
+      "module_summary": "Owns table-scoped 03_review catalogue selection, business context review, AI-assisted business context drafting, DQ review and internal enforcement helpers, classification review, AI-assisted sensitivity/PII drafting, and approved metadata commit through record_table_governance.",
       "sidebar_group": "1. Governance steward",
       "sidebar_include": true,
       "callable_name": "widget_review_column_classification",
       "callable_visibility": "public",
       "callable_type": "callable",
       "callable_role": "callable",
-      "template_notebook": "04_gov_dataset_table",
+      "template_notebook": "03_review",
       "template_segment": "Governance review"
     },
     {
       "module_name": "governance_review",
       "visibility": "public",
-      "module_summary": "Owns table-scoped 04_gov catalogue selection, business context review, AI-assisted business context drafting, DQ review and internal enforcement helpers, classification review, AI-assisted sensitivity/PII drafting, and approved metadata commit through record_table_governance.",
+      "module_summary": "Owns table-scoped 03_review catalogue selection, business context review, AI-assisted business context drafting, DQ review and internal enforcement helpers, classification review, AI-assisted sensitivity/PII drafting, and approved metadata commit through record_table_governance.",
       "sidebar_group": "1. Governance steward",
       "sidebar_include": true,
       "callable_name": "widget_review_column_context",
       "callable_visibility": "public",
       "callable_type": "callable",
       "callable_role": "callable",
-      "template_notebook": "04_gov_dataset_table",
+      "template_notebook": "03_review",
       "template_segment": "Governance review"
     },
     {
       "module_name": "governance_review",
       "visibility": "public",
-      "module_summary": "Owns table-scoped 04_gov catalogue selection, business context review, AI-assisted business context drafting, DQ review and internal enforcement helpers, classification review, AI-assisted sensitivity/PII drafting, and approved metadata commit through record_table_governance.",
+      "module_summary": "Owns table-scoped 03_review catalogue selection, business context review, AI-assisted business context drafting, DQ review and internal enforcement helpers, classification review, AI-assisted sensitivity/PII drafting, and approved metadata commit through record_table_governance.",
       "sidebar_group": "1. Governance steward",
       "sidebar_include": true,
       "callable_name": "widget_review_dq_rules",
       "callable_visibility": "public",
       "callable_type": "callable",
       "callable_role": "callable",
-      "template_notebook": "04_gov_dataset_table",
+      "template_notebook": "03_review",
       "template_segment": "Governance review"
     },
     {
       "module_name": "governance_review",
       "visibility": "public",
-      "module_summary": "Owns table-scoped 04_gov catalogue selection, business context review, AI-assisted business context drafting, DQ review and internal enforcement helpers, classification review, AI-assisted sensitivity/PII drafting, and approved metadata commit through record_table_governance.",
+      "module_summary": "Owns table-scoped 03_review catalogue selection, business context review, AI-assisted business context drafting, DQ review and internal enforcement helpers, classification review, AI-assisted sensitivity/PII drafting, and approved metadata commit through record_table_governance.",
       "sidebar_group": "1. Governance steward",
       "sidebar_include": true,
       "callable_name": "widget_select_catalogue_table",
       "callable_visibility": "public",
       "callable_type": "callable",
       "callable_role": "callable",
-      "template_notebook": "04_gov_dataset_table",
+      "template_notebook": "03_review",
       "template_segment": "Governance review"
     },
     {

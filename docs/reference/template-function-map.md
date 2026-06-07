@@ -12,7 +12,7 @@ Compact template-first lookup for the public helper functions used by each noteb
 </section>
 
 <section class="template-function-group">
-<h2><code>01_da_agreement_template</code></h2>
+<h2><code>01_agreement</code></h2>
 <p class="template-function-purpose">Standalone steward, agreement, and evidence widgets for Fabric stability.</p>
 <div class="template-function-row">
 <span class="template-function-segment">Agreement intake</span>
@@ -21,16 +21,7 @@ Compact template-first lookup for the public helper functions used by each noteb
 </section>
 
 <section class="template-function-group">
-<h2><code>02_ex_agreement_topic</code></h2>
-<p class="template-function-purpose">Explore approved agreement data and profile sources.</p>
-<div class="template-function-row">
-<span class="template-function-segment">Exploration</span>
-<span class="function-chip-wrap"><a class="function-chip" href="../callables/widget_select_agreement/"><code>widget_select_agreement</code></a><a class="function-chip" href="../callables/read_lakehouse_table/"><code>read_lakehouse_table</code></a><a class="function-chip" href="../callables/read_lakehouse_csv/"><code>read_lakehouse_csv</code></a><a class="function-chip" href="../callables/read_lakehouse_parquet/"><code>read_lakehouse_parquet</code></a><a class="function-chip" href="../callables/read_lakehouse_excel/"><code>read_lakehouse_excel</code></a><a class="function-chip" href="../callables/read_warehouse_table/"><code>read_warehouse_table</code></a><a class="function-chip" href="../callables/profile_dataframe/"><code>profile_dataframe</code></a></span>
-</div>
-</section>
-
-<section class="template-function-group">
-<h2><code>03_pc_agreement_pipeline_template</code></h2>
+<h2><code>02_pipeline</code></h2>
 <p class="template-function-purpose">Production pipeline guardrails, IO, lineage, and publishing.</p>
 <div class="template-function-row">
 <span class="template-function-segment">Pipeline run</span>
@@ -39,11 +30,20 @@ Compact template-first lookup for the public helper functions used by each noteb
 </section>
 
 <section class="template-function-group">
-<h2><code>04_gov_dataset_table</code></h2>
+<h2><code>03_review</code></h2>
 <p class="template-function-purpose">Table-scoped governance review and approved metadata recording.</p>
 <div class="template-function-row">
 <span class="template-function-segment">Governance review</span>
 <span class="function-chip-wrap"><a class="function-chip" href="../callables/widget_select_catalogue_table/"><code>widget_select_catalogue_table</code></a><a class="function-chip" href="../callables/get_selected_catalogue_table/"><code>get_selected_catalogue_table</code></a><a class="function-chip" href="../callables/load_catalogue_profile_rows/"><code>load_catalogue_profile_rows</code></a><a class="function-chip" href="../callables/widget_review_column_context/"><code>widget_review_column_context</code></a><a class="function-chip" href="../callables/widget_review_dq_rules/"><code>widget_review_dq_rules</code></a><a class="function-chip" href="../callables/widget_review_column_classification/"><code>widget_review_column_classification</code></a><a class="function-chip" href="../callables/record_table_governance/"><code>record_table_governance</code></a></span>
+</div>
+</section>
+
+<section class="template-function-group">
+<h2><code>99_explore</code></h2>
+<p class="template-function-purpose">Optional discovery, profiling, troubleshooting, investigation, and ad hoc analysis support.</p>
+<div class="template-function-row">
+<span class="template-function-segment">Exploration</span>
+<span class="function-chip-wrap"><a class="function-chip" href="../callables/widget_select_agreement/"><code>widget_select_agreement</code></a><a class="function-chip" href="../callables/read_lakehouse_table/"><code>read_lakehouse_table</code></a><a class="function-chip" href="../callables/read_lakehouse_csv/"><code>read_lakehouse_csv</code></a><a class="function-chip" href="../callables/read_lakehouse_parquet/"><code>read_lakehouse_parquet</code></a><a class="function-chip" href="../callables/read_lakehouse_excel/"><code>read_lakehouse_excel</code></a><a class="function-chip" href="../callables/read_warehouse_table/"><code>read_warehouse_table</code></a><a class="function-chip" href="../callables/profile_dataframe/"><code>profile_dataframe</code></a></span>
 </div>
 </section>
 
