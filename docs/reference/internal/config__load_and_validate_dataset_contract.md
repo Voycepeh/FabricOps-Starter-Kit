@@ -3,9 +3,43 @@
 **Module:** `config`  
 **Classification:** Internal
 
+## Status
+
+Internal helper used by the package implementation.
+
+## Function type: Internal helper
+
+Internal helper
+
+## Direct use: No
+
+Do not call this helper directly from notebooks; use the public callable helpers instead.
+
+## Used by
+
+Not documented yet
+
 ## Purpose
 
-No summary available.
+Load a dataset contract file and return schema validation findings.
+
+## Signature if available
+
+```python
+def _load_and_validate_dataset_contract(path: str | Path, schema_path: str | Path | None=None) -> tuple[dict, list[str]]
+```
+
+## Side effects
+
+Not documented yet
+
+## Maintainer notes
+
+Maintain this helper through the owning implementation module and keep generated references in sync.
+
+## AI implementation contract
+
+Use internal pages only for package maintenance. Prefer public callable pages when authoring notebooks.
 
 ## Function manifest
 
@@ -20,5 +54,5 @@ No summary available.
 - Outbound references count: 2
 
 ## Outbound references
-- <a href="../internal/config/_load_dataset_contract/"><code>fabricops_kit.config._load_dataset_contract</code></a>
-- <a href="../internal/config/_validate_dataset_contract/"><code>fabricops_kit.config._validate_dataset_contract</code></a>
+- <a href="../internal/config__load_dataset_contract/"><code>fabricops_kit.config._load_dataset_contract</code></a>
+- <a href="../internal/config__validate_dataset_contract/"><code>fabricops_kit.config._validate_dataset_contract</code></a>

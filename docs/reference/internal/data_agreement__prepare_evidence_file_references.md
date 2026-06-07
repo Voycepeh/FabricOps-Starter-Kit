@@ -3,9 +3,43 @@
 **Module:** `data_agreement`  
 **Classification:** Internal
 
+## Status
+
+Internal helper used by the package implementation.
+
+## Function type: Internal helper
+
+Internal helper
+
+## Direct use: No
+
+Do not call this helper directly from notebooks; use the public callable helpers instead.
+
+## Used by
+
+- <a href="../internal/data_agreement__save_agreement_evidence_records/"><code>fabricops_kit.data_agreement._save_agreement_evidence_records</code></a>
+
 ## Purpose
 
-No summary available.
+Parse and validate manually supplied evidence file paths before writes.
+
+## Signature if available
+
+```python
+def _prepare_evidence_file_references(paths_value: Any) -> list[dict[str, str]]
+```
+
+## Side effects
+
+Not documented yet
+
+## Maintainer notes
+
+Maintain this helper through the owning implementation module and keep generated references in sync.
+
+## AI implementation contract
+
+Use internal pages only for package maintenance. Prefer public callable pages when authoring notebooks.
 
 ## Function manifest
 
@@ -20,7 +54,7 @@ No summary available.
 - Outbound references count: 1
 
 ## Inbound references
-- <a href="../internal/data_agreement/_save_agreement_evidence_records/"><code>fabricops_kit.data_agreement._save_agreement_evidence_records</code></a>
+- <a href="../internal/data_agreement__save_agreement_evidence_records/"><code>fabricops_kit.data_agreement._save_agreement_evidence_records</code></a>
 
 ## Outbound references
-- <a href="../internal/data_agreement/_get_notebookutils/"><code>fabricops_kit.data_agreement._get_notebookutils</code></a>
+- <a href="../internal/data_agreement__get_notebookutils/"><code>fabricops_kit.data_agreement._get_notebookutils</code></a>
