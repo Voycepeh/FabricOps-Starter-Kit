@@ -71,6 +71,6 @@ Do not copy development outputs into production. Production pipelines should rea
 | --- | --- |
 | [Notebook Templates](notebook-templates.md) | Choose the right notebook and understand the handoff between notebooks. |
 | [Metadata Tables](metadata-tables.md) | See the lightweight map of metadata tables and what each table is for. |
-| [Pipeline Guardrails](../schema-and-data-drift.md) | Understand the checks that `02_pipeline` can run before writing outputs. |
-| [Governance Review](../governance-review.md) | Understand what `03_review` adds and who approves reviewed metadata. |
+| [Pipeline Guardrails](schema-and-data-drift.md) | Understand the checks that `02_pipeline` can run before writing outputs. |
+| [Governance Review](governance-review.md) | Understand what `03_review` adds and who approves reviewed metadata. |
 | [Metadata Dashboard](metadata-dashboard.md) | Understand the planned post-v1.0.0 visibility layer. |
