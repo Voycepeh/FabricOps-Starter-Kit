@@ -19,7 +19,9 @@ write_lakehouse_table(
 )
 ```
 
-## Product-truth metadata model
+## Architecture
+
+![Shared FabricOps metadata model connecting governance and engineering notebooks](../assets/fabricops-metadata-model.png){ .full-width }
 
 | Metadata table | Main writer | Purpose |
 | --- | --- | --- |
@@ -36,9 +38,6 @@ write_lakehouse_table(
 
 `01_agreement` writes steward, agreement, and evidence metadata. `02_pipeline` writes registry, catalogue, lineage, profile, guardrail, and run evidence. `03_review` writes reviewed metadata such as column context, DQ expectations, sensitivity, and classification. `99_explore` can support investigation, but it is optional and is not a required gate.
 
-## Architecture
-
-![Shared FabricOps metadata model connecting governance and engineering notebooks](../assets/fabricops-metadata-model.png){ .full-width }
 
 ## Standard runtime audit columns
 
@@ -308,13 +307,5 @@ Fabric Delta tables do not enforce primary and foreign keys. FabricOps still use
 
 **Workflow connection:** classification supports review and support visibility. It does not enforce masking or access behavior unless a later `02_pipeline` or access process is built to use it. Includes the standard runtime audit columns.
 
-## Important boundaries
-
-- `metadata_lakehouse` is the shared metadata location configured by `00_env_config`.
-- `01_agreement` captures the agreed purpose, owner, steward, and supporting evidence.
-- `02_pipeline` records metadata evidence and owns guardrails.
-- `03_review` stores reviewed metadata after human approval.
-- Reviewed metadata does not enforce production behavior unless `02_pipeline` is built to use it.
-- Separate data contracts are not part of the current v1.0.0 operating model.
 
 Continue to [Metadata Dashboard](metadata-dashboard.md) to see the planned visibility layer over this metadata evidence.
