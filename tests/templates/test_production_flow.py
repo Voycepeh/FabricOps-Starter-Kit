@@ -72,8 +72,8 @@ def test_dq_section_prints_result_and_documents_simple_v1_behavior():
 def test_docs_and_templates_do_not_add_dq_failure_table_behavior():
     root = Path(__file__).parents[2]
     checked_paths = [
-        root / "docs" / "schema-and-data-drift.md",
-        root / "docs" / "governance-review.md",
+        root / "docs" / "how-fabricops-works" / "schema-and-data-drift.md",
+        root / "docs" / "how-fabricops-works" / "governance-review.md",
         root / "docs" / "how-fabricops-works" / "notebook-templates.md",
         root / "docs" / "how-fabricops-works" / "metadata-tables.md",
         root / "docs" / "quick-start.md",
