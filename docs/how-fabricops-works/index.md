@@ -1,9 +1,11 @@
 # How FabricOps Works
 
-FabricOps Starter Kit uses notebook templates and shared metadata to support governed, quality-checked, AI-ready notebooks in Microsoft Fabric.
-It is not a full governance platform or standalone data quality product; it gives Fabric notebooks a practical pattern for agreement, pipeline execution, review, promotion, and handover.
+FabricOps Starter Kit is a lightweight way to run governed, quality-checked, AI-ready notebooks in Microsoft Fabric.
+It gives teams a practical notebook path for agreeing what to build, running a repeatable pipeline, recording metadata evidence, and reviewing that evidence before handover.
 
-## Target workflow
+FabricOps is not a full governance platform or a standalone data quality product. It is a starter kit that helps Fabric notebooks stay understandable, reusable, and easier to support.
+
+## Normal workflow
 
 ```mermaid
 flowchart LR
@@ -15,98 +17,60 @@ flowchart LR
     EXP -. supports .-> REV
 ```
 
-The core delivery path is:
+Run the notebooks in this order for the standard path:
 
-1. `01_agreement` defines what should be built, who owns it, what rules apply, and what readiness means.
-2. `02_pipeline` builds, transforms, validates, publishes, and captures metadata such as profiling, lineage, schema, and drift details.
-3. `03_review` checks evidence, ownership, rules, readiness, and handover quality.
-
-`00_env_config` keeps paths and metadata routing explicit. `99_explore` supports discovery, profiling, troubleshooting, investigation, and ad hoc analysis, but it is not required before Agreement, Pipeline, or Review.
-
-## Recommended workspace operating model
-
-FabricOps Starter Kit is designed to stay self-contained within Microsoft Fabric while keeping governance metadata separate from development and production processing.
-The recommended setup uses three workspaces:
-
-| Workspace | Items | Purpose |
+| Step | Notebook | What it does |
 | --- | --- | --- |
-| Governance workspace | `metadata_lakehouse` | Owns shared metadata, approved agreements, steward records, governance review outputs, and production notebook evidence. |
-| Engineering Dev workspace | `source_lakehouse`, `unified_lakehouse`, `product_warehouse` | Supports exploration, profiling, transformation development, and proposed outputs. |
-| Engineering Prod workspace | `source_lakehouse`, `unified_lakehouse`, `product_warehouse` | Runs approved repeatable pipelines and publishes production outputs. |
+| 1 | `00_env_config` | Sets workspace paths, lakehouse and warehouse targets, and the `metadata_lakehouse` used by the other notebooks. |
+| 2 | `01_agreement` | Captures the agreed purpose, owner, steward, and supporting agreement evidence. |
+| 3 | `02_pipeline` | Builds the data product, applies pipeline guardrails, writes outputs, and records metadata evidence. |
+| 4 | `03_review` | Reviews the metadata evidence and saves reviewed metadata such as business context, DQ expectations, sensitivity, and classification. |
+| Optional | `99_explore` | Supports discovery or troubleshooting. It is not required for the normal workflow. |
+
+The core handoff is simple: `01_agreement` says what should be built, `02_pipeline` builds it and records evidence, and `03_review` adds approved context that people can trust.
+
+## Workspace model
+
+FabricOps works best when shared metadata is kept separate from development and production processing.
+A common setup uses three Fabric workspaces:
+
+| Workspace | Typical items | Purpose |
+| --- | --- | --- |
+| Governance workspace | `metadata_lakehouse` | Stores agreements, metadata evidence, reviewed metadata, and handover support material. |
+| Engineering Dev workspace | `source_lakehouse`, `unified_lakehouse`, `product_warehouse` | Develops and tests `02_pipeline` notebooks before production. |
+| Engineering Prod workspace | `source_lakehouse`, `unified_lakehouse`, `product_warehouse` | Runs approved production `02_pipeline` notebooks and publishes production outputs. |
 
 ![FabricOps Starter Kit operating model with Governance, Engineering Dev, and Engineering Prod workspaces](../assets/fabricops-operating-model-overview.png)
 
-## Workspace roles and responsibilities
+## Where metadata lives
 
-| Responsibility | Governance workspace | Engineering Dev workspace | Engineering Prod workspace |
-| -------------- | -------------------- | ------------------------- | -------------------------- |
-| Data Steward and agreement collection | `01_agreement` creates metadata. | `02_pipeline` consumes agreement metadata; optional `99_explore` may read it for support analysis. | `02_pipeline` consumes approved agreement metadata. |
-| Optional exploration support | Not a required delivery step. | `99_explore` supports discovery, profiling, troubleshooting, investigation, and ad hoc analysis. | Use only for controlled production troubleshooting when approved locally. |
-| Data transformation / pipeline | Not done here. | Development `02_pipeline`. | Production `02_pipeline`. |
-| Governance review | `03_review` creates review outputs. | `02_pipeline` creates profiled outputs for review; optional `99_explore` can support investigation. | `02_pipeline` creates production evidence for review and handover. |
+`00_env_config` defines where metadata tables live. The shared metadata target is the Governance workspace `metadata_lakehouse`.
 
-## Notebook responsibilities
+The notebooks use that metadata target to coordinate the workflow:
 
-| Notebook | Responsibility |
+- `01_agreement` writes agreement, steward, and agreement evidence records.
+- `02_pipeline` writes metadata evidence such as profiles, lineage, guardrail results, and notebook run context.
+- `03_review` writes reviewed metadata after human review.
+
+Most users should not manually create or maintain the metadata table schemas. `00_env_config` creates and validates the active metadata tables so the other notebooks can read and write them consistently.
+
+## Promotion and production use
+
+Keep production promotion lightweight:
+
+1. Build and test the production-ready `02_pipeline` in Engineering Dev.
+2. Promote the notebook to Engineering Prod.
+3. Run it with the production `00_env_config`.
+4. Let the production notebook create production outputs and production metadata evidence.
+
+Do not copy development outputs into production. Production pipelines should read production configuration and approved production metadata.
+
+## Which page should I read next?
+
+| Page | Use it when you want to... |
 | --- | --- |
-| `00_env_config` | Configures the environment, Fabric item paths, and metadata routing. |
-| `01_agreement` | Defines what should be built, who owns it, what rules apply, and what readiness means. |
-| `02_pipeline` | Builds, transforms, validates, publishes, and captures key metadata. |
-| `03_review` | Checks evidence, metadata, ownership, rules, readiness, and handover quality. |
-| `99_explore` | Optional support for discovery, profiling, troubleshooting, investigation, and ad hoc analysis. |
-
-## Promotion principle
-
-Production promotion should remain lightweight: promote the production-ready `02_pipeline` notebook from Engineering Dev to Engineering Prod, run it with the production `00_env_config`, and let the production notebook create production outputs in the production workspace.
-Do not copy development outputs into production.
-
-## What moves to production
-
-| Item | Promotion approach |
-| --- | --- |
-| `00_env_config` | Recreate or maintain separately in each environment. Do not blindly promote it. |
-| `02_pipeline` | Promote the production-ready transformation notebook from Engineering Dev to Engineering Prod. |
-| Approved metadata | Promote or recreate through a controlled process. |
-| Production outputs | Create by running the production notebook in Engineering Prod. |
-| Draft metadata, dev paths, unreviewed rules | Do not promote. |
-
-Production pipelines must read only production configuration and approved production metadata.
-
-## Store production notebook evidence
-
-Once a production `02_pipeline` is stable, store a copy of the final production notebook as a `.py` or `.ipynb` file in the Governance workspace metadata lakehouse file area.
-This keeps handover and support material grounded in the actual production implementation.
-
-Stored notebook evidence can support handover summaries, production support notes, data product explanations, and AI-assisted documentation drafts.
-Review generated material before publishing it; people remain accountable for the approved metadata, production notebook, and published documentation.
-
-## Metadata captured by `02_pipeline`
-
-- Data profile
-- Lineage
-- Schema details
-- Data drift details
-- Pipeline outputs
-- Run summary
-
-## Metadata enhanced by `03_review`
-
-- Business context
-- Data quality rules
-- Data sensitivity
-- Classification
-
-## Loop back into `02_pipeline`
-
-The workflow does not stop at governance review. Reviewed and approved governance metadata becomes part of later pipeline runs when `02_pipeline` reads or implements the approved rules and classifications.
-That keeps the review step connected to execution: reviewers add context and rules, then `02_pipeline` uses the approved metadata with schema and data drift guardrails on later runs.
-
-## What to read next
-
-| Page | Use it for |
-| --- | --- |
-| [Notebook Templates](notebook-templates.md) | Understand what each notebook template owns. |
-| [Metadata Tables](metadata-tables.md) | Understand what metadata is stored and where. |
-| [Pipeline Guardrails](../schema-and-data-drift.md) | Understand how `02_pipeline` checks schema, drift, and approved governance metadata. |
-| [Governance Review](../data-quality-rules-system.md) | Understand how `03_review` adds reviewed governance metadata. |
-| [Metadata Dashboard](metadata-dashboard.md) | Understand the planned visibility layer over collected metadata. |
+| [Notebook Templates](notebook-templates.md) | Choose the right notebook and understand the handoff between notebooks. |
+| [Metadata Tables](metadata-tables.md) | See the lightweight map of metadata tables and what each table is for. |
+| [Pipeline Guardrails](../schema-and-data-drift.md) | Understand the checks that `02_pipeline` can run before writing outputs. |
+| [Governance Review](../governance-review.md) | Understand what `03_review` adds and who approves reviewed metadata. |
+| [Metadata Dashboard](metadata-dashboard.md) | Understand the planned post-v1.0.0 visibility layer. |

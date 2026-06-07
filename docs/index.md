@@ -27,4 +27,4 @@ Choose where to begin:
 | [Notebook Templates](how-fabricops-works/notebook-templates.md) | See what each notebook template is for. |
 | [Metadata Tables](how-fabricops-works/metadata-tables.md) | See what metadata the notebooks write and read. |
 | [Pipeline Guardrails](schema-and-data-drift.md) | Understand how `02_pipeline` checks schema, drift, and approved governance metadata. |
-| [Governance Review](data-quality-rules-system.md) | Understand how `03_review` adds reviewed governance metadata. |
+| [Governance Review](governance-review.md) | Understand how `03_review` adds reviewed governance metadata. |

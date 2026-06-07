@@ -30,7 +30,7 @@ nav:
       - Notebook Templates: how-fabricops-works/notebook-templates.md
       - Metadata Tables: how-fabricops-works/metadata-tables.md
       - Pipeline Guardrails: schema-and-data-drift.md
-      - Governance Review: data-quality-rules-system.md
+      - Governance Review: governance-review.md
       - Metadata Dashboard: how-fabricops-works/metadata-dashboard.md
 
   - Maintainer Guide:

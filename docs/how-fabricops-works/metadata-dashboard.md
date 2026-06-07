@@ -1,44 +1,30 @@
 # Metadata Dashboard
 
-A full metadata dashboard is planned after v1.0.0. FabricOps v1.0.0 creates the metadata foundation, but it does not ship a complete dashboard experience.
+A full metadata dashboard is planned after v1.0.0. The current starter kit creates metadata evidence first, so teams have useful records before a dashboard exists.
 
-Read [How FabricOps Works](index.md) first. This page explains the future visibility layer that can sit over the metadata-backed notebook workflow.
+Read [How FabricOps Works](index.md) first for the notebook workflow.
 
-## v1.0.0 foundation
+## Current v1.0.0 foundation
 
-The v1.0.0 notebooks create useful metadata even without a complete dashboard:
+Today, the notebooks create metadata that can already support review and handover:
 
-- `01_agreement` captures agreement, steward, and evidence context.
-- The notebook registry records notebook participation.
-- `02_pipeline` writes profile evidence, lineage, output evidence, and run summaries.
-- `03_review` commits reviewed column context, DQ expectations, and classifications.
-
-This evidence can support handover and manual review today. A dashboard can make the same evidence easier to browse later.
+- `01_agreement` captures agreement, steward, and supporting evidence.
+- `02_pipeline` writes profiles, lineage, guardrail results, output context, and run metadata evidence.
+- `03_review` saves reviewed metadata such as business context, DQ expectations, sensitivity, and classification.
 
 ## Planned visibility layer
 
 ![FabricOps metadata dashboard wireframe](../assets/fabricops-metadata-dashboard.png){ .full-width }
 
-A future dashboard should be a visibility layer over collected metadata, not a separate source of truth.
+A future dashboard should make collected metadata easier to browse. It should not become the source of truth and it should not enforce production rules.
 
 | Planned view | Purpose |
 | --- | --- |
-| Agreement overview | Show agreement status, owner, steward, and coverage. |
-| Production evidence | Show recent `02_pipeline` profile, lineage, guardrail, output, and run-summary evidence. |
-| Governance review | Show reviewed column context, DQ expectations, and classifications from `03_review`. |
-| Handover readiness | Show whether enough evidence exists for support and operational handover. |
-
-## Planned after v1.0.0
-
-| Planned enhancement | Notes |
-| --- | --- |
-| Metadata dashboard visibility layer | Build a complete dashboard experience over collected metadata. |
-| Richer governance dashboard views | Improve views for classifications, DQ expectations, agreement coverage, and lineage. |
-| Optional metadata-driven DQ rule execution | Show execution results if future pipelines opt into metadata-driven rules. |
-| Rule promotion workflow | Show which reviewed expectations have been implemented as `02_pipeline` guardrails. |
-| Richer AI-assisted review | Surface AI suggestions and human approval status clearly. |
-| More complete operational monitoring | Add broader run health and support visibility. |
+| Agreement overview | Show agreement status, owner, steward, and evidence coverage. |
+| Pipeline evidence | Show recent `02_pipeline` profiles, lineage, guardrail results, and run context. |
+| Governance review | Show reviewed metadata from `03_review`. |
+| Handover readiness | Show whether enough evidence exists for support and handover. |
 
 ## Design principle
 
-Keep the metadata tables as the source of evidence. Any dashboard should report what the notebooks and reviewers recorded; it should not imply that dashboard views enforce production rules.
+Keep the metadata tables as the source of evidence. A dashboard should report what notebooks and reviewers recorded; it should not imply that dashboard views approve rules or block pipeline runs.

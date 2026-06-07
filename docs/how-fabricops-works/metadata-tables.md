@@ -1,12 +1,10 @@
 # Metadata tables
 
-The governance `metadata_lakehouse` is the shared coordination layer for FabricOps metadata.
+FabricOps metadata tables live in the Governance workspace `metadata_lakehouse`. They coordinate the notebook workflow and keep metadata evidence available for review, handover, and future visibility.
 
-On the first run, `00_env_config` creates every active metadata table with its expected schema. Later runs validate the existing schemas before any workflow notebook reads or writes metadata.
+`00_env_config` creates every active metadata table on first run and validates the expected schemas on later runs. Most users should not create or edit these schemas by hand.
 
-This avoids first-write schema inference and catches incompatible schema changes early.
-
-All metadata reads and writes use the configured metadata route:
+All workflow notebooks read and write metadata through the configured metadata route:
 
 ```python
 read_lakehouse_table(CONFIG, env_name, "metadata", "<table_name>")
@@ -23,341 +21,301 @@ write_lakehouse_table(
 
 ## Product-truth metadata model
 
-The active metadata model contains only the following tables:
+| Metadata table | Main writer | Purpose |
+| --- | --- | --- |
+| `METADATA_DATA_STEWARD` | `01_agreement` | Stores steward identities used during agreement intake. |
+| `METADATA_DATA_AGREEMENT` | `01_agreement` | Stores versioned data agreements and approved usage context. |
+| `METADATA_DATA_AGREEMENT_EVIDENCE` | `01_agreement` | Stores file references that support an agreement version. |
+| `METADATA_NOTEBOOK_REGISTRY` | `02_pipeline`, optional `99_explore` | Stores notebook-to-agreement relationships. |
+| `METADATA_DATA_LINEAGE_TABLE` | `02_pipeline` | Stores current table-level lineage evidence for a notebook. |
+| `METADATA_DATA_CATALOGUE` | `02_pipeline` | Stores table context, profile evidence, and guardrail context. |
+| `METADATA_DATA_ACCESS` | Access capture process | Stores table-level access assignments when captured. |
+| `METADATA_COLUMN_CONTEXT` | `03_review` | Stores reviewed business meaning for catalogue columns. |
+| `METADATA_DQ_RULES` | `03_review` | Stores reviewed DQ expectations as governance metadata. |
+| `METADATA_COLUMN_CLASSIFICATION` | `03_review` | Stores reviewed sensitivity and PII classifications. |
 
-| Metadata table                     | Main writer            | Purpose                                                                           |
-| ---------------------------------- | ---------------------- | --------------------------------------------------------------------------------- |
-| `METADATA_DATA_STEWARD`            | `01_agreement`                | Stores steward identities used during agreement intake.                           |
-| `METADATA_DATA_AGREEMENT`          | `01_agreement`                | Stores versioned data agreements and approved usage.                              |
-| `METADATA_DATA_AGREEMENT_EVIDENCE` | `01_agreement`                | Stores file references supporting an agreement version.                           |
-| `METADATA_NOTEBOOK_REGISTRY`       | `02_pipeline`, optional `99_explore`       | Stores active and historical relationships between notebooks and data agreements. |
-| `METADATA_DATA_LINEAGE_TABLE`      | `02_pipeline`                | Stores one current table-level lineage definition for each notebook.              |
-| `METADATA_DATA_CATALOGUE`          | `02_pipeline`                | Stores table context and column profiling evidence.                               |
-| `METADATA_DATA_ACCESS`             | Access capture process | Stores table-level access assignments.                                            |
-| `METADATA_COLUMN_CONTEXT`          | `03_review`               | Stores human-approved business meaning for catalogue columns.                     |
-| `METADATA_DQ_RULES`                | `03_review`               | Stores reviewed DQ expectations as governance metadata.                           |
-| `METADATA_COLUMN_CLASSIFICATION`   | `03_review`               | Stores human-approved sensitivity and PII classifications.                        |
-
-`03_review` reviews catalogue evidence from `METADATA_DATA_CATALOGUE` and commits approved governance metadata. It does not require a separate data agreement relationship for every reviewed table.
-
-Schema and data-change guardrails remain inside each `02_pipeline` notebook. Separate data contracts are not part of the v1.0.0 operating model.
-
-Metadata-driven DQ rule execution and classification enforcement are planned after v1.0.0. In v1.0.0, production enforcement comes from checks implemented in `02_pipeline`.
-
-## Standard runtime audit columns
-
-Metadata tables using the standard audit model include:
-
-| Column                     | Purpose                                 |
-| -------------------------- | --------------------------------------- |
-| `_committed_by`            | User or service that committed the row. |
-| `_committed_at`            | Commit timestamp.                       |
-| `_notebook_name`           | Notebook that committed the row.        |
-| `_workspace_name`          | Fabric workspace captured at runtime.   |
-| `_metadata_lakehouse_name` | Configured metadata lakehouse.          |
-| `_activity_id`             | Fabric activity identifier.             |
-
-These fields are generated by the shared runtime audit helper and are not repeated in every schema below.
-
-`METADATA_NOTEBOOK_REGISTRY` uses explicit notebook runtime fields because notebook identity is the subject of that table.
+`01_agreement` writes steward, agreement, and evidence metadata. `02_pipeline` writes registry, catalogue, lineage, profile, guardrail, and run evidence. `03_review` writes reviewed metadata such as column context, DQ expectations, sensitivity, and classification. `99_explore` can support investigation, but it is optional and is not a required gate.
 
 ## Architecture
 
 ![Shared FabricOps metadata model connecting governance and engineering notebooks](../assets/fabricops-metadata-model.png){ .full-width }
 
+## Standard runtime audit columns
+
+Most metadata tables include these audit columns. They show who wrote the row, from where, and when.
+
+| Column | Purpose |
+| --- | --- |
+| `_committed_by` | User or service that committed the row. |
+| `_committed_at` | Commit timestamp. |
+| `_notebook_name` | Notebook that committed the row. |
+| `_workspace_name` | Fabric workspace captured at runtime. |
+| `_metadata_lakehouse_name` | Configured metadata lakehouse. |
+| `_activity_id` | Fabric activity identifier. |
+
+These fields are generated by the shared runtime audit helper and are not repeated in every table section below. `METADATA_NOTEBOOK_REGISTRY` uses explicit notebook runtime fields because notebook identity is the subject of that table.
 
 ## Logical keys
 
-Fabric Delta tables do not enforce primary and foreign keys. The keys below are logical keys used for joins, validation and latest-record selection.
+Fabric Delta tables do not enforce primary and foreign keys. FabricOps still uses stable logical keys for joins, validation, and latest-record selection.
 
-| Metadata table                     | Logical primary key                                      | Foreign key                                                               |
-| ---------------------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------- |
-| `METADATA_DATA_STEWARD`            | `steward_id`                                             | None                                                                      |
-| `METADATA_DATA_AGREEMENT`          | `agreement_id`, `contract_version`                       | `steward_id` → `METADATA_DATA_STEWARD.steward_id`                         |
-| `METADATA_DATA_AGREEMENT_EVIDENCE` | `agreement_id`, `contract_version`, `file_path`          | `agreement_id`, `contract_version` → `METADATA_DATA_AGREEMENT`            |
-| `METADATA_NOTEBOOK_REGISTRY`       | `registration_id`                                        | `agreement_id`, `agreement_contract_version` → `METADATA_DATA_AGREEMENT`  |
-| `METADATA_DATA_LINEAGE_TABLE`      | `lineage_id`                                             | `notebook_id` → notebook identity stored in the registry                  |
-| `METADATA_DATA_CATALOGUE`          | `profile_run_id`, `profile_stage`, `metadata_column_key` | Source and target `metadata_table_key` values are referenced by lineage   |
-| `METADATA_DATA_ACCESS`             | `user_principal`, `table_id`, `granted_date`             | `table_id` → `METADATA_DATA_CATALOGUE.metadata_table_key`                 |
-| `METADATA_COLUMN_CONTEXT`          | `metadata_column_key`, `_committed_at`                   | `metadata_column_key` → `METADATA_DATA_CATALOGUE.metadata_column_key`     |
-| `METADATA_DQ_RULES`                | `rule_key`, `action_ts`                                  | `metadata_table_key` or `metadata_column_key` → `METADATA_DATA_CATALOGUE` |
-| `METADATA_COLUMN_CLASSIFICATION`   | `metadata_column_key`, `_committed_at`                   | `metadata_column_key` → `METADATA_DATA_CATALOGUE.metadata_column_key`     |
+| Metadata table | Logical primary key | Main relationship |
+| --- | --- | --- |
+| `METADATA_DATA_STEWARD` | `steward_id` | No parent table. |
+| `METADATA_DATA_AGREEMENT` | `agreement_id`, `contract_version` | `steward_id` links to `METADATA_DATA_STEWARD`. |
+| `METADATA_DATA_AGREEMENT_EVIDENCE` | `agreement_id`, `contract_version`, `file_path` | Links to one agreement version. |
+| `METADATA_NOTEBOOK_REGISTRY` | `registration_id` | Links notebooks to agreement versions. |
+| `METADATA_DATA_LINEAGE_TABLE` | `lineage_id` | Links lineage to notebook identity and catalogue table keys. |
+| `METADATA_DATA_CATALOGUE` | `profile_run_id`, `profile_stage`, `metadata_column_key` | Provides stable table and column keys used by review metadata. |
+| `METADATA_DATA_ACCESS` | `user_principal`, `table_id`, `granted_date` | `table_id` links to catalogue table keys. |
+| `METADATA_COLUMN_CONTEXT` | `metadata_column_key`, `_committed_at` | Links reviewed context to a catalogue column. |
+| `METADATA_DQ_RULES` | `rule_key`, `action_ts` | Links DQ expectations to catalogue table or column keys. |
+| `METADATA_COLUMN_CLASSIFICATION` | `metadata_column_key`, `_committed_at` | Links reviewed classification to a catalogue column. |
 
-## Table schemas
+## Table details
 
 ### `METADATA_DATA_STEWARD`
 
-Stores one append-only steward assignment or effective period.
+**For:** steward identities and effective periods used by `01_agreement`.
 
-| Column               | Purpose                                     |
-| -------------------- | ------------------------------------------- |
-| `steward_id`         | Stable generated steward identifier.        |
-| `steward_name`       | Steward display name.                       |
-| `steward_role`       | Controlled steward role.                    |
-| `contact`            | Steward contact details.                    |
-| `effective_from`     | Optional assignment start date.             |
-| `effective_to`       | Optional assignment end date.               |
-| `is_active`          | Backend-derived active status.              |
+| Column | Purpose |
+| --- | --- |
+| `steward_id` | Stable generated steward identifier. |
+| `steward_name` | Steward display name. |
+| `steward_role` | Controlled steward role. |
+| `contact` | Steward contact details. |
+| `effective_from` | Optional assignment start date. |
+| `effective_to` | Optional assignment end date. |
+| `is_active` | Backend-derived active status. |
 | `custom_fields_json` | Config-driven organisation-specific values. |
 
-Includes the standard runtime audit columns.
+**Workflow connection:** agreements reference stewards through `steward_id`. Includes the standard runtime audit columns.
 
 ### `METADATA_DATA_AGREEMENT`
 
-Stores one append-only row per agreement version.
+**For:** one append-only row per agreement version written by `01_agreement`.
 
-| Column                    | Purpose                                     |
-| ------------------------- | ------------------------------------------- |
-| `agreement_id`            | Stable generated agreement identifier.      |
-| `contract_version`        | Generated agreement version.                |
-| `steward_id`              | Reference to `METADATA_DATA_STEWARD`.       |
-| `agreement_name`          | Agreement display name.                     |
-| `domain`                  | Business or data domain.                    |
-| `recipient`               | Intended data recipient or consumer.        |
-| `start_date`              | Agreement start date.                       |
-| `expiry_date`             | Agreement expiry date.                      |
-| `business_purpose`        | Approved business purpose.                  |
-| `approved_usage_internal` | Approved internal usage.                    |
-| `approved_usage_external` | Approved external usage.                    |
-| `approved_usage_research` | Approved research usage.                    |
-| `custom_fields_json`      | Config-driven organisation-specific values. |
+| Column | Purpose |
+| --- | --- |
+| `agreement_id` | Stable generated agreement identifier. |
+| `contract_version` | Generated agreement version. |
+| `steward_id` | Reference to `METADATA_DATA_STEWARD`. |
+| `agreement_name` | Agreement display name. |
+| `domain` | Business or data domain. |
+| `recipient` | Intended data recipient or consumer. |
+| `start_date` | Agreement start date. |
+| `expiry_date` | Agreement expiry date. |
+| `business_purpose` | Approved business purpose. |
+| `approved_usage_internal` | Approved internal usage. |
+| `approved_usage_external` | Approved external usage. |
+| `approved_usage_research` | Approved research usage. |
+| `custom_fields_json` | Config-driven organisation-specific values. |
 
-Includes the standard runtime audit columns.
+**Workflow connection:** `02_pipeline` can link to agreement versions through the notebook registry. Includes the standard runtime audit columns.
 
 ### `METADATA_DATA_AGREEMENT_EVIDENCE`
 
-Stores one file reference per agreement version.
+**For:** supporting file references for an agreement version, written by `01_agreement`.
 
-| Column             | Purpose                                         |
-| ------------------ | ----------------------------------------------- |
-| `agreement_id`     | Referenced agreement.                           |
-| `contract_version` | Referenced agreement version.                   |
-| `file_path`        | Metadata lakehouse `Files/...` path.            |
-| `evidence_type`    | Evidence category selected by the user.         |
-| `file_name`        | File name derived from the submitted path.      |
-| `mime_type`        | MIME type derived from the file extension.      |
-| `file_size`        | File size collected when available.             |
-| `uploaded_at`      | Upload event timestamp generated by the widget. |
-| `uploaded_by`      | Uploading user generated by the widget.         |
+| Column | Purpose |
+| --- | --- |
+| `agreement_id` | Referenced agreement. |
+| `contract_version` | Referenced agreement version. |
+| `file_path` | Metadata lakehouse `Files/...` path. |
+| `evidence_type` | Evidence category selected by the user. |
+| `file_name` | File name derived from the submitted path. |
+| `mime_type` | MIME type derived from the file extension. |
+| `file_size` | File size collected when available. |
+| `uploaded_at` | Upload event timestamp generated by the widget. |
+| `uploaded_by` | Uploading user generated by the widget. |
 
-Includes the standard runtime audit columns.
+**Workflow connection:** agreement evidence helps reviewers and support teams understand why the agreement exists. Includes the standard runtime audit columns.
 
 ### `METADATA_NOTEBOOK_REGISTRY`
 
-Stores active and historical relationships between notebooks and data agreements.
+**For:** active and historical relationships between notebooks and data agreements. `02_pipeline` is the normal writer; optional `99_explore` can register support notebooks when useful.
 
-One notebook can have multiple active agreement relationships. One agreement can also be linked to multiple notebooks.
+| Column | Purpose |
+| --- | --- |
+| `registration_id` | Stable notebook-agreement relationship identifier. |
+| `agreement_id` | Agreement linked to the notebook. |
+| `agreement_contract_version` | Agreement version linked to the notebook. |
+| `registration_role` | Relationship role such as `primary` or `additional`. |
+| `registration_status` | `active`, `inactive` or `superseded`. |
+| `notebook_id` | Fabric notebook identifier. |
+| `notebook_name` | Fabric notebook name. |
+| `notebook_type` | Notebook family such as `02_pipeline` or optional `99_explore`. |
+| `workspace_id` | Fabric workspace identifier. |
+| `workspace_name` | Fabric workspace name. |
+| `notebook_url` | Fabric notebook URL. |
+| `environment_name` | Environment context. |
+| `dataset_name` | Dataset or data-product context. |
+| `table_name` | Optional table context. |
+| `topic` | Notebook topic. |
+| `pipeline_name` | Pipeline or workflow name. |
+| `user_name` | User who registered the relationship. |
+| `user_id` | Registering user identifier. |
+| `registered_at` | Registration timestamp. |
+| `superseded_at` | Supersession timestamp. |
+| `superseded_by_registration_id` | Replacement registration identifier. |
 
-| Column                          | Purpose                                              |
-| ------------------------------- | ---------------------------------------------------- |
-| `registration_id`               | Stable notebook-agreement relationship identifier.   |
-| `agreement_id`                  | Agreement linked to the notebook.                    |
-| `agreement_contract_version`    | Agreement version linked to the notebook.            |
-| `registration_role`             | Relationship role such as `primary` or `additional`. |
-| `registration_status`           | `active`, `inactive` or `superseded`.                |
-| `notebook_id`                   | Fabric notebook identifier.                          |
-| `notebook_name`                 | Fabric notebook name.                                |
-| `notebook_type`                 | Notebook family such as `02_pipeline` or optional `99_explore`.          |
-| `workspace_id`                  | Fabric workspace identifier.                         |
-| `workspace_name`                | Fabric workspace name.                               |
-| `notebook_url`                  | Fabric notebook URL.                                 |
-| `environment_name`              | Environment context.                                 |
-| `dataset_name`                  | Dataset or data-product context.                     |
-| `table_name`                    | Optional table context.                              |
-| `topic`                         | Notebook topic.                                      |
-| `pipeline_name`                 | Pipeline or workflow name.                           |
-| `user_name`                     | User who registered the relationship.                |
-| `user_id`                       | Registering user identifier.                         |
-| `registered_at`                 | Registration timestamp.                              |
-| `superseded_at`                 | Supersession timestamp.                              |
-| `superseded_by_registration_id` | Replacement registration identifier.                 |
-
-The registry stores only the notebook-to-agreement relationship. It does not store pipeline runs, lineage, profiles or governance decisions.
+**Workflow connection:** one notebook can link to multiple agreements, and one agreement can link to multiple notebooks. This table does not store pipeline runs, lineage, profiles, or reviewed metadata.
 
 ### `METADATA_DATA_LINEAGE_TABLE`
 
-Stores one current table-level lineage definition per notebook.
+**For:** current table-level lineage evidence written by `02_pipeline`.
 
-A lineage record can contain multiple source and target tables.
+| Column | Purpose |
+| --- | --- |
+| `lineage_id` | Stable lineage identifier. |
+| `notebook_id` | Notebook that owns the lineage definition. |
+| `environment_name` | Environment context. |
+| `dataset_name` | Dataset context. |
+| `pipeline_name` | Pipeline identity. |
+| `source_tables_json` | JSON list of source tables and stable table keys. |
+| `target_tables_json` | JSON list of target tables and stable table keys. |
+| `transformation_summary` | Human-readable transformation summary. |
+| `lineage_status` | `active` or `inactive`. |
+| `captured_at` | Lineage capture timestamp. |
+| `lineage_payload_json` | Optional extended lineage evidence. |
 
-| Column                   | Purpose                                           |
-| ------------------------ | ------------------------------------------------- |
-| `lineage_id`             | Stable lineage identifier.                        |
-| `notebook_id`            | Notebook that owns the lineage definition.        |
-| `environment_name`       | Environment context.                              |
-| `dataset_name`           | Dataset context.                                  |
-| `pipeline_name`          | Pipeline identity.                                |
-| `source_tables_json`     | JSON list of source tables and stable table keys. |
-| `target_tables_json`     | JSON list of target tables and stable table keys. |
-| `transformation_summary` | Human-readable transformation summary.            |
-| `lineage_status`         | `active` or `inactive`.                           |
-| `captured_at`            | Lineage capture timestamp.                        |
-| `lineage_payload_json`   | Optional extended lineage evidence.               |
-
-Use JSON arrays rather than delimited strings.
-
-Example:
-
-```json
-{
-  "sources": [
-    {
-      "metadata_table_key": "source-table-key",
-      "table_name": "raw_orders"
-    },
-    {
-      "metadata_table_key": "customer-table-key",
-      "table_name": "raw_customers"
-    }
-  ],
-  "targets": [
-    {
-      "metadata_table_key": "target-table-key",
-      "table_name": "fact_orders"
-    }
-  ]
-}
-```
-
-Lineage links to the catalogue through the `metadata_table_key` values in the source and target arrays.
+**Workflow connection:** lineage links to the catalogue through `metadata_table_key` values inside the source and target JSON arrays. A lineage record can include multiple source and target tables.
 
 ### `METADATA_DATA_CATALOGUE`
 
-Stores one row per profiled column per successful source or target profile run.
+**For:** table context, profile evidence, and guardrail context written by `02_pipeline` for each successful source or target profile run.
 
-It combines table context and column profiling evidence in one physical table.
+| Column | Purpose |
+| --- | --- |
+| `profile_run_id` | Unique pipeline execution identifier. |
+| `profile_stage` | `source` or `target`. |
+| `metadata_table_key` | Stable table identifier. |
+| `metadata_column_key` | Stable column identifier. |
+| `table_name` | Table name emitted by the profiling function. |
+| `column_name` | Profiled column name. |
+| `data_type` | Observed data type. |
+| `row_count` | Profiled row count. |
+| `null_count` | Observed null count. |
+| `null_percentage` | Observed null percentage. |
+| `distinct_count` | Observed distinct count. |
+| `distinct_percentage` | Observed distinct percentage. |
+| `min_value` | Observed minimum value where supported. |
+| `max_value` | Observed maximum value where supported. |
+| `distribution_type` | Distribution type generated for drift monitoring. |
+| `distribution_json` | Compact distribution evidence. |
+| `profiled_at` | Profiling timestamp. |
+| `notebook_id` | Producing Fabric notebook identifier. |
+| `environment_name` | Environment context. |
+| `dataset_name` | Dataset or data-product context. |
+| `pipeline_name` | Stable pipeline identity. |
+| `evidence_role` | Source-profile or output-profile role. |
+| `profile_status` | Profile status. |
+| `baseline_status` | `observed` or `approved`. |
+| `source_schema_check` | Source schema-check preset used by the pipeline. |
+| `target_schema_check` | Target schema-check preset used by the pipeline. |
+| `source_data_change_check` | Source data-change preset. |
+| `target_data_change_check` | Target data-change preset. |
+| `source_change_signal_json` | Optional source-change signal. |
+| `layer` | Source or target storage layer. |
+| `asset_kind` | Lakehouse, warehouse, CSV or Parquet. |
 
-| Column                      | Purpose                                           |
-| --------------------------- | ------------------------------------------------- |
-| `profile_run_id`            | Unique pipeline execution identifier.             |
-| `profile_stage`             | `source` or `target`.                             |
-| `metadata_table_key`        | Stable table identifier.                          |
-| `metadata_column_key`       | Stable column identifier.                         |
-| `table_name`                | Table name emitted by the profiling function.     |
-| `column_name`               | Profiled column name.                             |
-| `data_type`                 | Observed data type.                               |
-| `row_count`                 | Profiled row count.                               |
-| `null_count`                | Observed null count.                              |
-| `null_percentage`           | Observed null percentage.                         |
-| `distinct_count`            | Observed distinct count.                          |
-| `distinct_percentage`       | Observed distinct percentage.                     |
-| `min_value`                 | Observed minimum value where supported.           |
-| `max_value`                 | Observed maximum value where supported.           |
-| `distribution_type`         | Distribution type generated for drift monitoring. |
-| `distribution_json`         | Compact distribution evidence.                    |
-| `profiled_at`               | Profiling timestamp.                              |
-| `notebook_id`               | Producing Fabric notebook identifier.             |
-| `environment_name`          | Environment context.                              |
-| `dataset_name`              | Dataset or data-product context.                  |
-| `pipeline_name`             | Stable pipeline identity.                         |
-| `evidence_role`             | Source-profile or output-profile role.            |
-| `profile_status`            | Profile status.                                   |
-| `baseline_status`           | `observed` or `approved`.                         |
-| `source_schema_check`       | Source schema-check preset used by the pipeline.  |
-| `target_schema_check`       | Target schema-check preset used by the pipeline.  |
-| `source_data_change_check`  | Source data-change preset.                        |
-| `target_data_change_check`  | Target data-change preset.                        |
-| `source_change_signal_json` | Optional source-change signal.                    |
-| `layer`                     | Source or target storage layer.                   |
-| `asset_kind`                | Lakehouse, warehouse, CSV or Parquet.             |
-
-The catalogue does not require a direct agreement reference.
-
-Agreement context can be resolved through the notebook and its active registry relationships.
+**Workflow connection:** `03_review` uses catalogue evidence to select tables and columns for reviewed metadata. Agreement context can be resolved through the notebook registry rather than stored directly on each catalogue row.
 
 ### `METADATA_DATA_ACCESS`
 
-Stores table-level access assignments.
+**For:** table-level access assignments when a team chooses to capture them.
 
-| Column           | Purpose                                            |
-| ---------------- | -------------------------------------------------- |
-| `user_principal` | User or group receiving access.                    |
-| `table_id`       | Stable table identifier from the catalogue.        |
-| `table_name`     | Human-readable table name.                         |
-| `access_level`   | Assigned access level.                             |
-| `granted_date`   | Date access was granted.                           |
-| `expiry_date`    | Optional access expiry date.                       |
-| `active`         | Whether the access assignment is currently active. |
+| Column | Purpose |
+| --- | --- |
+| `user_principal` | User or group receiving access. |
+| `table_id` | Stable table identifier from the catalogue. |
+| `table_name` | Human-readable table name. |
+| `access_level` | Assigned access level. |
+| `granted_date` | Date access was granted. |
+| `expiry_date` | Optional access expiry date. |
+| `active` | Whether the access assignment is currently active. |
 
-Includes the standard runtime audit columns.
-
-One catalogue table can have many access-assignment rows.
+**Workflow connection:** one catalogue table can have many access-assignment rows. Includes the standard runtime audit columns.
 
 ### `METADATA_COLUMN_CONTEXT`
 
-Stores append-only human-reviewed business context for catalogue columns.
+**For:** human-reviewed business context for catalogue columns, written by `03_review`.
 
-| Column                | Purpose                                           |
-| --------------------- | ------------------------------------------------- |
-| `metadata_column_key` | Stable catalogue-column identifier.               |
-| `environment_name`    | Environment context.                              |
-| `dataset_name`        | Dataset context.                                  |
-| `table_name`          | Selected catalogue table.                         |
-| `column_name`         | Selected catalogue column.                        |
-| `business_context`    | Human-approved business meaning.                  |
-| `notes`               | Reviewer notes.                                   |
-| `review_status`       | Review state.                                     |
-| `ai_suggestion_json`  | Optional AI suggestion retained for traceability. |
+| Column | Purpose |
+| --- | --- |
+| `metadata_column_key` | Stable catalogue-column identifier. |
+| `environment_name` | Environment context. |
+| `dataset_name` | Dataset context. |
+| `table_name` | Selected catalogue table. |
+| `column_name` | Selected catalogue column. |
+| `business_context` | Human-approved business meaning. |
+| `notes` | Reviewer notes. |
+| `review_status` | Review state. |
+| `ai_suggestion_json` | Optional AI suggestion retained for traceability. |
 
-Includes the standard runtime audit columns.
-
-AI suggestions are not committed as approved metadata without human action.
+**Workflow connection:** AI suggestions are advisory. A person must approve reviewed metadata before it is treated as trusted context. Includes the standard runtime audit columns.
 
 ### `METADATA_DQ_RULES`
 
-Stores append-only human-reviewed DQ expectations.
+**For:** human-reviewed DQ expectations, written by `03_review`.
 
-| Column                | Purpose                                          |
-| --------------------- | ------------------------------------------------ |
-| `rule_key`            | Stable generated rule key.                       |
-| `rule_id`             | Human-readable rule identifier.                  |
-| `metadata_table_key`  | Stable table identifier for table-wide rules.    |
-| `metadata_column_key` | Stable column identifier where applicable.       |
-| `table_name`          | Selected table.                                  |
-| `column_name`         | Selected column where applicable.                |
-| `rule_type`           | Rule type.                                       |
-| `threshold`           | Optional warning or failure threshold.           |
-| `severity`            | Rule severity.                                   |
-| `description`         | Human-readable rule description.                 |
-| `allowed_values`      | Optional accepted values.                        |
-| `lower_bound`         | Optional minimum value.                          |
-| `upper_bound`         | Optional maximum value.                          |
-| `regex_pattern`       | Optional regular expression.                     |
-| `rule_json`           | Executable rule payload.                         |
-| `status`              | Review status.                                   |
-| `is_active`           | Active rule state.                               |
-| `action_type`         | Lifecycle action.                                |
-| `action_by`           | User generated by the rule workflow.             |
-| `action_ts`           | Action timestamp generated by the rule workflow. |
-| `action_reason`       | Reason for the action.                           |
-| `rule_source`         | Source of the rule or suggestion.                |
+| Column | Purpose |
+| --- | --- |
+| `rule_key` | Stable generated rule key. |
+| `rule_id` | Human-readable rule identifier. |
+| `metadata_table_key` | Stable table identifier for table-wide rules. |
+| `metadata_column_key` | Stable column identifier where applicable. |
+| `table_name` | Selected table. |
+| `column_name` | Selected column where applicable. |
+| `rule_type` | Rule type. |
+| `threshold` | Optional warning or failure threshold. |
+| `severity` | Rule severity. |
+| `description` | Human-readable rule description. |
+| `allowed_values` | Optional accepted values. |
+| `lower_bound` | Optional minimum value. |
+| `upper_bound` | Optional maximum value. |
+| `regex_pattern` | Optional regular expression. |
+| `rule_json` | Executable rule payload. |
+| `status` | Review status. |
+| `is_active` | Active rule state. |
+| `action_type` | Lifecycle action. |
+| `action_by` | User generated by the rule workflow. |
+| `action_ts` | Action timestamp generated by the rule workflow. |
+| `action_reason` | Reason for the action. |
+| `rule_source` | Source of the rule or suggestion. |
 
-Includes the standard runtime audit columns.
-
-Reviewed DQ expectations are stored in v1.0.0 as governance metadata. They are not automatically enforced unless implemented as checks in `02_pipeline`.
+**Workflow connection:** reviewed DQ expectations are governance metadata. They do not enforce anything unless `02_pipeline` intentionally implements them as guardrails. Includes the standard runtime audit columns.
 
 ### `METADATA_COLUMN_CLASSIFICATION`
 
-Stores append-only human-reviewed sensitivity and PII decisions.
+**For:** human-reviewed sensitivity and PII decisions, written by `03_review`.
 
-| Column                                            | Purpose                                        |
-| ------------------------------------------------- | ---------------------------------------------- |
-| `metadata_table_key`                              | Stable selected-table identifier.              |
-| `metadata_column_key`                             | Stable selected-column identifier.             |
-| `environment_name`                                | Environment context.                           |
-| `dataset_name`                                    | Dataset context.                               |
-| `table_name`                                      | Selected table.                                |
-| `column_name`                                     | Selected column.                               |
-| `ai_suggested_personal_identifier_classification` | Optional AI suggestion.                        |
-| `approved_personal_identifier_classification`     | Human-approved PII classification.             |
-| `confidentiality_label`                           | Human-approved sensitivity label.              |
-| `handling_requirement`                            | Approved handling instruction.                 |
-| `masking_requirement`                             | Approved masking instruction where applicable. |
-| `reviewer_notes`                                  | Human reviewer notes.                          |
-| `approval_status`                                 | Review state.                                  |
-| `ai_suggestion_json`                              | Optional full AI suggestion payload.           |
+| Column | Purpose |
+| --- | --- |
+| `metadata_table_key` | Stable selected-table identifier. |
+| `metadata_column_key` | Stable selected-column identifier. |
+| `environment_name` | Environment context. |
+| `dataset_name` | Dataset context. |
+| `table_name` | Selected table. |
+| `column_name` | Selected column. |
+| `ai_suggested_personal_identifier_classification` | Optional AI suggestion. |
+| `approved_personal_identifier_classification` | Human-approved PII classification. |
+| `confidentiality_label` | Human-approved sensitivity label. |
+| `handling_requirement` | Approved handling instruction. |
+| `masking_requirement` | Approved masking instruction where applicable. |
+| `reviewer_notes` | Human reviewer notes. |
+| `approval_status` | Review state. |
+| `ai_suggestion_json` | Optional full AI suggestion payload. |
 
-Includes the standard runtime audit columns.
+**Workflow connection:** classification supports review, handover, and future visibility. It does not enforce masking or access behavior unless a later `02_pipeline` or access process is built to use it. Includes the standard runtime audit columns.
 
-Continue to [Metadata Dashboard](metadata-dashboard.md) to see how the metadata becomes useful to people and tools.
+## Important boundaries
 
+- `metadata_lakehouse` is the shared metadata location configured by `00_env_config`.
+- `01_agreement` captures the agreed purpose, owner, steward, and supporting evidence.
+- `02_pipeline` records metadata evidence and owns guardrails.
+- `03_review` stores reviewed metadata after human approval.
+- Reviewed metadata does not enforce production behavior unless `02_pipeline` is built to use it.
+- Separate data contracts are not part of the current v1.0.0 operating model.
+
+Continue to [Metadata Dashboard](metadata-dashboard.md) to see the planned visibility layer over this metadata evidence.
