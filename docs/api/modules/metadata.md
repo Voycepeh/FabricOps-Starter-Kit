@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 0</span><span class="reference-chip">Internal helpers: 18</span><span class="reference-chip">Outbound: 1</span><span class="reference-chip">Inbound: 3</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 0</span><span class="reference-chip">Internal helpers: 18</span><span class="reference-chip">Outbound: 1</span><span class="reference-chip">Inbound: 4</span></div>
 
 ## Module purpose
 
@@ -44,7 +44,7 @@ Owns metadata evidence persistence, stable keys, notebook registry, catalogue ke
     </tr>
     <tr>
       <td>Inbound module count</td>
-      <td>3</td>
+      <td>4</td>
     </tr>
     <tr>
       <td>Outbound module count</td>
@@ -52,7 +52,7 @@ Owns metadata evidence persistence, stable keys, notebook registry, catalogue ke
     </tr>
     <tr>
       <td>External callers</td>
-      <td><code>config</code>, <code>data_agreement</code>, <code>governance_review</code></td>
+      <td><code>config</code>, <code>data_agreement</code>, <code>governance_review</code>, <code>pipeline</code></td>
     </tr>
     <tr>
       <td>External callees</td>
@@ -260,6 +260,9 @@ No public exports in this module.
 
 **governance_review**
 <a class="reference-chip" href="../governance_review/#_approved_column_identity"><code>_approved_column_identity</code></a>, <a class="reference-chip" href="../governance_review/#_approved_review_context"><code>_approved_review_context</code></a>, <a class="reference-chip" href="../governance_review/#_build_dq_rule_records"><code>_build_dq_rule_records</code></a>, <a class="reference-chip" href="../governance_review/#_catalogue_table_options"><code>_catalogue_table_options</code></a>, <a class="reference-chip" href="../../reference/load_catalogue_profile_rows/"><code>load_catalogue_profile_rows</code></a>
+
+**pipeline**
+<a class="reference-chip" href="../pipeline/#_runtime_audit_fields"><code>_runtime_audit_fields</code></a>, <a class="reference-chip" href="../../reference/write_catalogue_evidence/"><code>write_catalogue_evidence</code></a>, <a class="reference-chip" href="../../reference/write_pipeline_lineage/"><code>write_pipeline_lineage</code></a>
 
 ### External callees
 

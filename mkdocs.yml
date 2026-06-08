@@ -50,6 +50,7 @@ nav:
           - fabric_input_output: api/modules/fabric_input_output.md
           - data_lineage: api/modules/data_lineage.md
           - drift: api/modules/drift.md
+          - pipeline: api/modules/pipeline.md
           - metadata: api/modules/metadata.md
       # AUTO-GENERATED-MODULES-END
 

@@ -43,6 +43,16 @@ EXPECTED_V1_CALLABLES = [
     "stop_if_failed",
     "enforce_dq_rules",
     "build_lineage_records",
+    "read_pipeline_sources",
+    "profile_pipeline_datasets",
+    "run_schema_guardrails",
+    "run_data_drift_guardrails",
+    "run_dq_guardrails",
+    "write_catalogue_evidence",
+    "add_runtime_audit_columns",
+    "write_pipeline_targets",
+    "write_pipeline_lineage",
+    "write_pipeline_run_summary",
     "widget_select_catalogue_table",
     "get_selected_catalogue_table",
     "load_catalogue_profile_rows",
@@ -182,4 +192,6 @@ def test_governance_metadata_schemas_do_not_add_dq_failure_tables():
     schemas = governance._get_governance_metadata_schemas()
 
     assert governance.DQ_RULES_TABLE in schemas
+    assert governance.PIPELINE_RUNS_TABLE in schemas
+    assert "run_summary_json" in schemas[governance.PIPELINE_RUNS_TABLE].fieldNames()
     assert not any("FAILURE" in table or "QUARANTINE" in table for table in schemas)

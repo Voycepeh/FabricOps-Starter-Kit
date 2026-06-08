@@ -37,6 +37,7 @@ PUBLIC_MODULE_PREFERRED_NAMES = {
     "data_lineage": "data_lineage",
     "drift": "drift",
     "metadata": "metadata",
+    "pipeline": "pipeline",
 }
 MAJOR_IMPLEMENTATION_MODULE_ORDER = [
     "config",
@@ -47,6 +48,7 @@ MAJOR_IMPLEMENTATION_MODULE_ORDER = [
     "data_lineage",
     "drift",
     "metadata",
+    "pipeline",
 ]
 MAJOR_IMPLEMENTATION_MODULES = set(MAJOR_IMPLEMENTATION_MODULE_ORDER)
 INTERNAL_MODULE_BLACKLIST = {"_utils"}
@@ -76,6 +78,16 @@ V1_CALLABLES = {
     "stop_if_failed",
     "enforce_dq_rules",
     "build_lineage_records",
+    "read_pipeline_sources",
+    "profile_pipeline_datasets",
+    "run_schema_guardrails",
+    "run_data_drift_guardrails",
+    "run_dq_guardrails",
+    "write_catalogue_evidence",
+    "add_runtime_audit_columns",
+    "write_pipeline_targets",
+    "write_pipeline_lineage",
+    "write_pipeline_run_summary",
     "widget_select_catalogue_table",
     "get_selected_catalogue_table",
     "load_catalogue_profile_rows",

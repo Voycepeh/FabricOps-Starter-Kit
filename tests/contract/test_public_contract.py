@@ -34,6 +34,16 @@ APPROVED_V1_CALLABLES = {
     "stop_if_failed",
     "enforce_dq_rules",
     "build_lineage_records",
+    "read_pipeline_sources",
+    "profile_pipeline_datasets",
+    "run_schema_guardrails",
+    "run_data_drift_guardrails",
+    "run_dq_guardrails",
+    "write_catalogue_evidence",
+    "add_runtime_audit_columns",
+    "write_pipeline_targets",
+    "write_pipeline_lineage",
+    "write_pipeline_run_summary",
     "widget_select_catalogue_table",
     "get_selected_catalogue_table",
     "load_catalogue_profile_rows",
@@ -110,7 +120,7 @@ def _template_called_fabricops_functions() -> set[str]:
 
 def test_root_exports_only_approved_v1_template_callables():
     assert set(fabricops_kit.__all__) == APPROVED_V1_CALLABLES
-    assert len(fabricops_kit.__all__) == 27
+    assert len(fabricops_kit.__all__) == 37
     assert len(fabricops_kit.__all__) < 71
     for name in fabricops_kit.__all__:
         assert callable(getattr(fabricops_kit, name))
@@ -177,7 +187,8 @@ def test_template_function_map_matches_actual_template_calls_and_pages():
     called = _template_called_fabricops_functions()
 
     assert manifest_callables == APPROVED_V1_CALLABLES
-    assert manifest_callables <= called
+    assert called <= manifest_callables
+    assert {"read_pipeline_sources", "write_pipeline_targets", "write_pipeline_lineage", "write_pipeline_run_summary"} <= called
     for callable_name in manifest_callables:
         assert (root / "docs" / "reference" / "callables" / f"{callable_name}.md").exists()
 
@@ -193,6 +204,7 @@ def test_generated_module_docs_surface_only_active_v1_modules():
         "data_lineage",
         "drift",
         "metadata",
+        "pipeline",
     }
     module_docs = {path.stem for path in (root / "docs" / "api" / "modules").glob("*.md") if path.stem != "index"}
     assert module_docs == expected_modules

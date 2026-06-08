@@ -104,6 +104,7 @@ Guardrail result dictionary with status, can_continue, message, current profile,
 <details class="reference-implementation-details">
 <summary>Implementation details</summary>
 
+- <a href="../run_data_drift_guardrails/"><code>fabricops_kit.pipeline.run_data_drift_guardrails</code></a>
 - <a href="../profile_dataframe/"><code>fabricops_kit.data_profiling.profile_dataframe</code></a>
 - <a href="../internal/drift__baseline_distribution_args/"><code>fabricops_kit.drift._baseline_distribution_args</code></a>
 - <a href="../internal/drift__check_profile_drift/"><code>fabricops_kit.drift._check_profile_drift</code></a>
@@ -116,7 +117,7 @@ Guardrail result dictionary with status, can_continue, message, current profile,
 ## Source
 
 - Source file path: `src/fabricops_kit/drift.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d6fb0fb33beb9bd33597b485cb7d9af5e9bfe8fb/src/fabricops_kit/drift.py#L582-L671">View monitor_data_changes on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/01cad12186fe15942524ddfa6effa011f04aecb5/src/fabricops_kit/drift.py#L582-L671">View monitor_data_changes on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -230,7 +231,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Related module: `drift`
 - Source file path: `src/fabricops_kit/drift.py`
 - Source line: `582`
-- Inbound references count: 0
+- Inbound references count: 1
 - Outbound references count: 6
 
 ### AI implementation contract
@@ -244,7 +245,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 
 ### Inbound references
 
-Not documented yet
+- <a href="../run_data_drift_guardrails/"><code>fabricops_kit.pipeline.run_data_drift_guardrails</code></a>
 
 ### Outbound references
 
@@ -258,7 +259,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/drift.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d6fb0fb33beb9bd33597b485cb7d9af5e9bfe8fb/src/fabricops_kit/drift.py#L582-L671">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d6fb0fb33beb9bd33597b485cb7d9af5e9bfe8fb/src/fabricops_kit/drift.py#L582-L671</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/01cad12186fe15942524ddfa6effa011f04aecb5/src/fabricops_kit/drift.py#L582-L671">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/01cad12186fe15942524ddfa6effa011f04aecb5/src/fabricops_kit/drift.py#L582-L671</a>
 - Start line: `582`
 - End line: `671`
 - Signature:
@@ -277,6 +278,7 @@ def monitor_data_changes(spark, dataframe, metadata_table: str, dataset_name: st
 
 ### Internal implementation helpers
 
+- <a href="../run_data_drift_guardrails/"><code>fabricops_kit.pipeline.run_data_drift_guardrails</code></a>
 - <a href="../profile_dataframe/"><code>fabricops_kit.data_profiling.profile_dataframe</code></a>
 - <a href="../internal/drift__baseline_distribution_args/"><code>fabricops_kit.drift._baseline_distribution_args</code></a>
 - <a href="../internal/drift__check_profile_drift/"><code>fabricops_kit.drift._check_profile_drift</code></a>

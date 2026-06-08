@@ -63,7 +63,7 @@ Severity controls the result:
 | Error-severity failure | `failed`, `can_continue=False` | `stop_if_failed(...)` blocks before the target write. |
 | Mixed warning and error failures | `failed`, `can_continue=False` | Error severity wins and blocks before the target write. |
 
-FabricOps v1 keeps DQ enforcement intentionally simple. It does not write separate row-level failure metadata, filter invalid rows out of the target, send alerts, or perform partial target writes. For warning-level failures, the written dataset keeps every row and adds row-level technical annotations (`_dq_check_status` plus `_dq_failed_rules`) so consumers can see warning-only row issues without losing data; these annotations support catalogue/profile evidence without changing the guardrail blocking contract. Aggregate DQ summary fields such as `DQ_STATUS`, `DQ_RULE_COUNT`, `DQ_FAILED_RULE_COUNT`, `DQ_WARNING_RULE_COUNT`, `DQ_ERROR_RULE_COUNT`, `DQ_FAILED_ROW_COUNT`, `DQ_FAILED_ROW_PERCENT`, and `DQ_CHECKED_AT` are captured with the existing profiling/catalogue evidence path and can feed dashboards and alerts later without changing the target write path.
+FabricOps v1 keeps DQ enforcement intentionally simple. It does not write a separate invalid-row metadata dataset, filter invalid rows out of the target, send alerts, or perform partial target writes. For warning-level failures, the written dataset keeps every row and adds row-level technical annotations (`_dq_check_status` plus `_dq_failed_rules`) so consumers can see warning-only row issues without losing data; these annotations support catalogue/profile evidence without changing the guardrail blocking contract. Aggregate DQ summary fields such as `DQ_STATUS`, `DQ_RULE_COUNT`, `DQ_FAILED_RULE_COUNT`, `DQ_WARNING_RULE_COUNT`, `DQ_ERROR_RULE_COUNT`, `DQ_FAILED_ROW_COUNT`, `DQ_FAILED_ROW_PERCENT`, and `DQ_CHECKED_AT` are captured with the existing profiling/catalogue evidence path and can feed dashboards and alerts later without changing the target write path.
 
 ## Three pipeline guardrails
 
@@ -92,7 +92,7 @@ Start with monitor settings when the team is still learning the data. Move to bl
 
 ## Metadata evidence for review
 
-When guardrails run, `02_pipeline` should record useful metadata evidence such as:
+The thin `02_pipeline` template calls high-level FabricOps helpers for these steps, so users configure datasets and presets while reusable package code handles repeated guardrail plumbing. When guardrails run, `02_pipeline` records useful metadata evidence such as:
 
 - the schema that was checked;
 - profile results;
@@ -100,7 +100,8 @@ When guardrails run, `02_pipeline` should record useful metadata evidence such a
 - aggregate DQ rule outcomes when approved active rules were evaluated;
 - warning-only DQ row tags in the target dataset through `_dq_check_status` and `_dq_failed_rules`;
 - source and target table context;
-- lineage and run context.
+- lineage and run context;
+- runtime summary rows in `METADATA_PIPELINE_RUNS`.
 
 This evidence helps `03_review`, support teams, and future maintainers understand what the pipeline checked and why it did or did not write outputs.
 

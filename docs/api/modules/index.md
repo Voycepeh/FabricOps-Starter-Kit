@@ -12,3 +12,4 @@ Zero-callable modules are hidden unless explicitly allowlisted as major internal
 - [`data_lineage`](data_lineage.md)
 - [`drift`](drift.md)
 - [`metadata`](metadata.md)
+- [`pipeline`](pipeline.md)

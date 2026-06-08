@@ -55,6 +55,13 @@
       "module_summary": "Owns metadata evidence persistence, stable keys, notebook registry, catalogue keys, and runtime audit helpers.",
       "sidebar_group": "5. Metadata store",
       "sidebar_include": true
+    },
+    {
+      "module_name": "pipeline",
+      "visibility": "public",
+      "module_summary": "Owns thin 02_pipeline orchestration helpers for many-source reads, profiles, guardrails, catalogue evidence, target writes, lineage, and runtime summaries.",
+      "sidebar_group": "3. Data engineer",
+      "sidebar_include": true
     }
   ],
   "callables": [
@@ -408,6 +415,136 @@
       "callable_role": "callable",
       "template_notebook": "03_review",
       "template_segment": "Governance review"
+    },
+    {
+      "module_name": "pipeline",
+      "visibility": "public",
+      "module_summary": "Owns thin 02_pipeline orchestration helpers for many-source reads, profiles, guardrails, catalogue evidence, target writes, lineage, and runtime summaries.",
+      "sidebar_group": "3. Data engineer",
+      "sidebar_include": true,
+      "callable_name": "add_runtime_audit_columns",
+      "callable_visibility": "public",
+      "callable_type": "callable",
+      "callable_role": "callable",
+      "template_notebook": "02_pipeline",
+      "template_segment": "Target definitions"
+    },
+    {
+      "module_name": "pipeline",
+      "visibility": "public",
+      "module_summary": "Owns thin 02_pipeline orchestration helpers for many-source reads, profiles, guardrails, catalogue evidence, target writes, lineage, and runtime summaries.",
+      "sidebar_group": "3. Data engineer",
+      "sidebar_include": true,
+      "callable_name": "profile_pipeline_datasets",
+      "callable_visibility": "public",
+      "callable_type": "callable",
+      "callable_role": "callable",
+      "template_notebook": "02_pipeline",
+      "template_segment": "Profiling"
+    },
+    {
+      "module_name": "pipeline",
+      "visibility": "public",
+      "module_summary": "Owns thin 02_pipeline orchestration helpers for many-source reads, profiles, guardrails, catalogue evidence, target writes, lineage, and runtime summaries.",
+      "sidebar_group": "3. Data engineer",
+      "sidebar_include": true,
+      "callable_name": "read_pipeline_sources",
+      "callable_visibility": "public",
+      "callable_type": "callable",
+      "callable_role": "callable",
+      "template_notebook": "02_pipeline",
+      "template_segment": "Source reads"
+    },
+    {
+      "module_name": "pipeline",
+      "visibility": "public",
+      "module_summary": "Owns thin 02_pipeline orchestration helpers for many-source reads, profiles, guardrails, catalogue evidence, target writes, lineage, and runtime summaries.",
+      "sidebar_group": "3. Data engineer",
+      "sidebar_include": true,
+      "callable_name": "run_data_drift_guardrails",
+      "callable_visibility": "public",
+      "callable_type": "callable",
+      "callable_role": "callable",
+      "template_notebook": "02_pipeline",
+      "template_segment": "Data drift guardrails"
+    },
+    {
+      "module_name": "pipeline",
+      "visibility": "public",
+      "module_summary": "Owns thin 02_pipeline orchestration helpers for many-source reads, profiles, guardrails, catalogue evidence, target writes, lineage, and runtime summaries.",
+      "sidebar_group": "3. Data engineer",
+      "sidebar_include": true,
+      "callable_name": "run_dq_guardrails",
+      "callable_visibility": "public",
+      "callable_type": "callable",
+      "callable_role": "callable",
+      "template_notebook": "02_pipeline",
+      "template_segment": "DQ guardrails"
+    },
+    {
+      "module_name": "pipeline",
+      "visibility": "public",
+      "module_summary": "Owns thin 02_pipeline orchestration helpers for many-source reads, profiles, guardrails, catalogue evidence, target writes, lineage, and runtime summaries.",
+      "sidebar_group": "3. Data engineer",
+      "sidebar_include": true,
+      "callable_name": "run_schema_guardrails",
+      "callable_visibility": "public",
+      "callable_type": "callable",
+      "callable_role": "callable",
+      "template_notebook": "02_pipeline",
+      "template_segment": "Schema guardrails"
+    },
+    {
+      "module_name": "pipeline",
+      "visibility": "public",
+      "module_summary": "Owns thin 02_pipeline orchestration helpers for many-source reads, profiles, guardrails, catalogue evidence, target writes, lineage, and runtime summaries.",
+      "sidebar_group": "3. Data engineer",
+      "sidebar_include": true,
+      "callable_name": "write_catalogue_evidence",
+      "callable_visibility": "public",
+      "callable_type": "callable",
+      "callable_role": "callable",
+      "template_notebook": "02_pipeline",
+      "template_segment": "Catalogue evidence"
+    },
+    {
+      "module_name": "pipeline",
+      "visibility": "public",
+      "module_summary": "Owns thin 02_pipeline orchestration helpers for many-source reads, profiles, guardrails, catalogue evidence, target writes, lineage, and runtime summaries.",
+      "sidebar_group": "3. Data engineer",
+      "sidebar_include": true,
+      "callable_name": "write_pipeline_lineage",
+      "callable_visibility": "public",
+      "callable_type": "callable",
+      "callable_role": "callable",
+      "template_notebook": "02_pipeline",
+      "template_segment": "Lineage evidence"
+    },
+    {
+      "module_name": "pipeline",
+      "visibility": "public",
+      "module_summary": "Owns thin 02_pipeline orchestration helpers for many-source reads, profiles, guardrails, catalogue evidence, target writes, lineage, and runtime summaries.",
+      "sidebar_group": "3. Data engineer",
+      "sidebar_include": true,
+      "callable_name": "write_pipeline_run_summary",
+      "callable_visibility": "public",
+      "callable_type": "callable",
+      "callable_role": "callable",
+      "template_notebook": "02_pipeline",
+      "template_segment": "Runtime summary"
+    },
+    {
+      "module_name": "pipeline",
+      "visibility": "public",
+      "module_summary": "Owns thin 02_pipeline orchestration helpers for many-source reads, profiles, guardrails, catalogue evidence, target writes, lineage, and runtime summaries.",
+      "sidebar_group": "3. Data engineer",
+      "sidebar_include": true,
+      "callable_name": "write_pipeline_targets",
+      "callable_visibility": "public",
+      "callable_type": "callable",
+      "callable_role": "callable",
+      "template_notebook": "02_pipeline",
+      "template_segment": "Target writes"
     }
   ]
 }

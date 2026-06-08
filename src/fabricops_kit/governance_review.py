@@ -21,6 +21,7 @@ COLUMN_CONTEXT_TABLE = "METADATA_COLUMN_CONTEXT"
 DQ_RULES_TABLE = "METADATA_DQ_RULES"
 COLUMN_CLASSIFICATION_TABLE = "METADATA_COLUMN_CLASSIFICATION"
 LINEAGE_TABLE = "METADATA_DATA_LINEAGE_TABLE"
+PIPELINE_RUNS_TABLE = "METADATA_PIPELINE_RUNS"
 SUCCESS_STATUSES = {"success", "succeeded", "passed", "complete", "completed", "ok"}
 DQ_RULE_TYPES = ["not_null", "unique_key", "accepted_values", "value_range", "regex_format", "datatype", "referential_integrity", "custom_expression"]
 DQ_RULE_TYPE_ALIASES = {"unique": "unique_key", "regex": "regex_format"}
@@ -143,6 +144,7 @@ def _get_governance_metadata_schemas() -> dict[str, Any]:
         DQ_RULES_TABLE: _schema([("rule_key", string), ("rule_id", string), ("metadata_column_key", string), ("metadata_table_key", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("column_name", string), ("rule_type", string), ("rule_parameters_json", string), ("severity", string), ("description", string), ("is_active", boolean), ("review_status", string), ("approved_by", string), ("approved_at", string), ("ai_suggestion_json", string), ("action_type", string), *audit]),
         COLUMN_CLASSIFICATION_TABLE: _schema([("metadata_column_key", string), ("metadata_table_key", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("column_name", string), ("sensitivity_label", string), ("personal_data_classification", string), ("pii_identifier_type", string), ("handling_requirement", string), ("reasoning", string), ("review_status", string), ("approved_by", string), ("approved_at", string), ("ai_suggestion_json", string), *audit]),
         LINEAGE_TABLE: _schema([("lineage_id", string), ("dataset_name", string), ("run_id", string), ("source_table", string), ("target_table", string), ("source_table_key", string), ("target_table_key", string), ("transformation_steps_json", string), ("created_at", string), *audit]),
+        PIPELINE_RUNS_TABLE: _schema([("run_id", string), ("agreement_id", string), ("agreement_contract_version", string), ("notebook_registry_id", string), ("notebook_id", string), ("notebook_type", string), ("pipeline_name", string), ("environment_name", string), ("started_at", string), ("completed_at", string), ("status", string), ("source_count", long), ("target_count", long), ("source_guardrail_status", string), ("target_guardrail_status", string), ("dq_status", string), ("lineage_status", string), ("catalogue_status", string), ("message", string), ("run_summary_json", string), ("created_at", string)]),
     }
 
 

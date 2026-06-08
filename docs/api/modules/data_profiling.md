@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 1</span><span class="reference-chip">Internal helpers: 6</span><span class="reference-chip">Outbound: 0</span><span class="reference-chip">Inbound: 2</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 1</span><span class="reference-chip">Internal helpers: 6</span><span class="reference-chip">Outbound: 0</span><span class="reference-chip">Inbound: 3</span></div>
 
 ## Module purpose
 
@@ -44,7 +44,7 @@ Owns deterministic profiling evidence such as schema, nulls, distincts, min/max,
     </tr>
     <tr>
       <td>Inbound module count</td>
-      <td>2</td>
+      <td>3</td>
     </tr>
     <tr>
       <td>Outbound module count</td>
@@ -52,7 +52,7 @@ Owns deterministic profiling evidence such as schema, nulls, distincts, min/max,
     </tr>
     <tr>
       <td>External callers</td>
-      <td><code>drift</code>, <code>governance_review</code></td>
+      <td><code>drift</code>, <code>governance_review</code>, <code>pipeline</code></td>
     </tr>
     <tr>
       <td>External callees</td>
@@ -180,6 +180,9 @@ Owns deterministic profiling evidence such as schema, nulls, distincts, min/max,
 
 **governance_review**
 <a class="reference-chip" href="../governance_review/#_prepare_dq_profile_input_rows"><code>_prepare_dq_profile_input_rows</code></a>
+
+**pipeline**
+<a class="reference-chip" href="../../reference/profile_pipeline_datasets/"><code>profile_pipeline_datasets</code></a>
 
 ### External callees
 
