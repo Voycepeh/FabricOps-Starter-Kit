@@ -25,7 +25,7 @@ Run the notebooks in this order for the standard path: `01_agreement` , `02_pipe
 The notebooks use that metadata target to coordinate the workflow:
  `00_env_config` creates and validates the active metadata tables so the other notebooks can read and write them consistently.
 - `01_agreement` writes agreement, steward, and agreement evidence records.
-- `02_pipeline` writes data profiles, lineage, guardrail results, and notebook run context.
+- `02_pipeline` is a thin orchestration notebook that writes data profiles, catalogue evidence, lineage, guardrail results, and runtime summaries in `METADATA_PIPELINE_RUNS`.
 - `03_review` writes goverance reivewed rules like data quality, sensitivity, classification on the data profiled earlier.
 
 

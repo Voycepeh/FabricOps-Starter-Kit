@@ -42,11 +42,15 @@ Run in Engineering Dev and link it to one or more agreements when relevant.
 
 Run when engineering is ready to build or run the data product.
 
-It loads config, links to the agreement, reads sources, transforms data, writes outputs, and records catalogue evidence, lineage, profiles, schema checks, drift checks, and run context.
+It is a thin orchestration notebook. Users define source datasets, per-source schema/drift/DQ presets, a user-defined transformation section, target DataFrames, and per-target presets. The notebook calls existing FabricOps read, profiling, guardrail, DQ, and write helpers directly so normal pipeline operations stay visible; reusable evidence helpers hide catalogue enrichment, lineage capture, and runtime summary logging.
 
-It also enforces approved DQ rules from `METADATA_DQ_RULES` and approved classifications from `METADATA_COLUMN_CLASSIFICATION`.
+The template supports many sources and many targets. Source and target guardrail flows are symmetrical: schema checks, data drift checks, and approved active DQ rules from `METADATA_DQ_RULES` run per dataset using that dataset's configured preset.
 
-**Result:** repeatable transformations, output tables, lineage, schema guardrails, and drift guardrails are produced.
+See [Pipeline Guardrails](schema-and-data-drift.md) for the source/target guardrail flow and supported schema, drift, and DQ presets.
+
+Runtime evidence is stored in metadata. Profiles and DQ summaries are written to `METADATA_DATA_CATALOGUE`, many-to-many lineage is written to `METADATA_DATA_LINEAGE_TABLE`, and run summaries are written to `METADATA_PIPELINE_RUNS`.
+
+**Result:** repeatable transformations, output tables, catalogue evidence, lineage, runtime evidence, schema guardrails, drift guardrails, and DQ guardrails are produced without exposing implementation-heavy code in the notebook.
 
 ### `03_review`
 

@@ -6,17 +6,13 @@ Read [How FabricOps Works](index.md) first for the standard `01_agreement` → `
 
 ![Schema, data-change, and DQ guardrails showing source and target validation flow](../assets/fabricops-schema-data-guardrails.png){ .full-width }
 
-## What `02_pipeline` checks
+## Where guardrails run
 
-A typical `02_pipeline` can check:
+Source checks run before transformation. They validate source schema, compare source profiles with previous metadata evidence, and optionally evaluate approved active DQ rules for source tables.
 
-- source schema before transformations run;
-- source data changes against previous profile evidence;
-- transformed target schema before outputs are written;
-- target data changes before outputs are written;
-- approved active DQ rules from `METADATA_DQ_RULES` before outputs are written.
+Target checks run before publication. They validate transformed target schema, compare proposed target profiles with previous metadata evidence, and evaluate approved active DQ rules for target tables before outputs are written.
 
-The important boundary is that `02_pipeline` owns blocking behavior. `03_review` can approve DQ metadata, but those expectations become active only when `02_pipeline` loads them with `enforce_dq_rules`.
+The important boundary is that `02_pipeline` owns blocking behavior. `03_review` can approve DQ metadata, but those expectations become active only when `02_pipeline` loads them through the DQ guardrail helper.
 
 ## Guardrail flow
 
@@ -63,15 +59,13 @@ Severity controls the result:
 | Error-severity failure | `failed`, `can_continue=False` | `stop_if_failed(...)` blocks before the target write. |
 | Mixed warning and error failures | `failed`, `can_continue=False` | Error severity wins and blocks before the target write. |
 
-FabricOps v1 keeps DQ enforcement intentionally simple. It does not write separate row-level failure metadata, filter invalid rows out of the target, send alerts, or perform partial target writes. For warning-level failures, the written dataset keeps every row and adds row-level technical annotations (`_dq_check_status` plus `_dq_failed_rules`) so consumers can see warning-only row issues without losing data; these annotations support catalogue/profile evidence without changing the guardrail blocking contract. Aggregate DQ summary fields such as `DQ_STATUS`, `DQ_RULE_COUNT`, `DQ_FAILED_RULE_COUNT`, `DQ_WARNING_RULE_COUNT`, `DQ_ERROR_RULE_COUNT`, `DQ_FAILED_ROW_COUNT`, `DQ_FAILED_ROW_PERCENT`, and `DQ_CHECKED_AT` are captured with the existing profiling/catalogue evidence path and can feed dashboards and alerts later without changing the target write path.
+FabricOps v1 keeps DQ enforcement intentionally simple. It does not write a separate invalid-row metadata dataset, filter invalid rows out of the target, send alerts, or perform partial target writes. For warning-level failures, the written dataset keeps every row and adds row-level technical annotations (`_dq_check_status` plus `_dq_failed_rules`) so consumers can see warning-only row issues without losing data; these annotations support catalogue/profile evidence without changing the guardrail blocking contract. Aggregate DQ summary fields such as `DQ_STATUS`, `DQ_RULE_COUNT`, `DQ_FAILED_RULE_COUNT`, `DQ_WARNING_RULE_COUNT`, `DQ_ERROR_RULE_COUNT`, `DQ_FAILED_ROW_COUNT`, `DQ_FAILED_ROW_PERCENT`, and `DQ_CHECKED_AT` are captured with the existing profiling/catalogue evidence path and can feed dashboards and alerts later without changing the target write path.
 
 ## Three pipeline guardrails
 
 `02_pipeline` treats schema checks, data-change monitoring, and approved DQ rules as one guardrail family. Schema guardrails check structure, data-change guardrails compare profile movement, and DQ guardrails evaluate human-approved expectations from `METADATA_DQ_RULES`. Each guardrail returns a notebook result that can be printed for run evidence and passed to `stop_if_failed(...)` when it should block.
 
-## Presets
-
-### Schema presets
+## Schema presets
 
 | Preset | Use when | Behavior in plain language |
 | --- | --- | --- |
@@ -79,7 +73,7 @@ FabricOps v1 keeps DQ enforcement intentionally simple. It does not write separa
 | `allow_new_columns` | New fields are acceptable, but existing fields still matter. | Allow additional columns while still checking known columns. |
 | `monitor_only` | A team wants visibility before blocking runs. | Record schema differences without stopping the pipeline. |
 
-### Data-change presets
+## Data drift presets
 
 | Preset | Use when | Behavior in plain language |
 | --- | --- | --- |
@@ -90,9 +84,20 @@ FabricOps v1 keeps DQ enforcement intentionally simple. It does not write separa
 
 Start with monitor settings when the team is still learning the data. Move to blocking settings only when the expected behavior is clear.
 
+## DQ preset
+
+| Preset | Use when | Behavior in plain language |
+| --- | --- | --- |
+| `approved_rules` | The dataset should enforce DQ expectations approved in `03_review`. | Read active approved rules from `METADATA_DQ_RULES` and evaluate them as aggregate guardrails. |
+| `skip` | A dataset has no approved DQ expectations yet or should not run DQ checks in this notebook. | Return a skipped result and continue without loading DQ rules. |
+
+## How DQ rules are approved
+
+`03_review` writes approved active rules to `METADATA_DQ_RULES`. `02_pipeline` does not author DQ rules; users only choose `dq_preset` per source or target definition. When the preset is `approved_rules`, `02_pipeline` reads those approved active rules from the configured metadata lakehouse route and enforces them before downstream writes.
+
 ## Metadata evidence for review
 
-When guardrails run, `02_pipeline` should record useful metadata evidence such as:
+The thin `02_pipeline` template calls existing FabricOps helpers directly for reads, profiling, schema checks, data-change monitoring, DQ enforcement, blocking, and target writes. Users configure datasets and presets while reusable evidence helpers handle the noisier catalogue, lineage, and runtime metadata plumbing. When guardrails run, `02_pipeline` records useful metadata evidence such as:
 
 - the schema that was checked;
 - profile results;
@@ -100,7 +105,8 @@ When guardrails run, `02_pipeline` should record useful metadata evidence such a
 - aggregate DQ rule outcomes when approved active rules were evaluated;
 - warning-only DQ row tags in the target dataset through `_dq_check_status` and `_dq_failed_rules`;
 - source and target table context;
-- lineage and run context.
+- lineage and run context;
+- runtime summary rows in `METADATA_PIPELINE_RUNS`.
 
 This evidence helps `03_review`, support teams, and future maintainers understand what the pipeline checked and why it did or did not write outputs.
 

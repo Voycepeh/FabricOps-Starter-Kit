@@ -20,6 +20,8 @@ Do not call this helper directly from notebooks; use the public callable helpers
 - <a href="../internal/governance_review__approved_column_identity/"><code>fabricops_kit.governance_review._approved_column_identity</code></a>
 - <a href="../internal/governance_review__catalogue_table_options/"><code>fabricops_kit.governance_review._catalogue_table_options</code></a>
 - <a href="../load_catalogue_profile_rows/"><code>fabricops_kit.governance_review.load_catalogue_profile_rows</code></a>
+- <a href="../write_catalogue_evidence/"><code>fabricops_kit.pipeline.write_catalogue_evidence</code></a>
+- <a href="../write_pipeline_lineage/"><code>fabricops_kit.pipeline.write_pipeline_lineage</code></a>
 
 ## Purpose
 
@@ -51,14 +53,16 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 - Classification: Internal
 - Related module: `metadata`
 - Source file path: `src/fabricops_kit/metadata.py`
-- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d6fb0fb33beb9bd33597b485cb7d9af5e9bfe8fb/src/fabricops_kit/metadata.py#L148-L149">View source on GitHub</a>
-- Inbound references count: 3
+- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/769c8a7851b5cc8730434576fb06702a5a032f26/src/fabricops_kit/metadata.py#L148-L149">View source on GitHub</a>
+- Inbound references count: 5
 - Outbound references count: 1
 
 ## Inbound references
 - <a href="../internal/governance_review__approved_column_identity/"><code>fabricops_kit.governance_review._approved_column_identity</code></a>
 - <a href="../internal/governance_review__catalogue_table_options/"><code>fabricops_kit.governance_review._catalogue_table_options</code></a>
 - <a href="../load_catalogue_profile_rows/"><code>fabricops_kit.governance_review.load_catalogue_profile_rows</code></a>
+- <a href="../write_catalogue_evidence/"><code>fabricops_kit.pipeline.write_catalogue_evidence</code></a>
+- <a href="../write_pipeline_lineage/"><code>fabricops_kit.pipeline.write_pipeline_lineage</code></a>
 
 ## Outbound references
 - <a href="../internal/metadata__stable_metadata_key/"><code>fabricops_kit.metadata._stable_metadata_key</code></a>

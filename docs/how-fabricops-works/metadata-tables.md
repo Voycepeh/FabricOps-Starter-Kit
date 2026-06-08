@@ -31,12 +31,15 @@ write_lakehouse_table(
 | `METADATA_NOTEBOOK_REGISTRY` | `02_pipeline`, optional `99_explore` | Stores notebook-to-agreement relationships. |
 | `METADATA_DATA_LINEAGE_TABLE` | `02_pipeline` | Stores current table-level lineage evidence for a notebook. |
 | `METADATA_DATA_CATALOGUE` | `02_pipeline` | Stores table context, profile evidence, and guardrail context. |
+| `METADATA_PIPELINE_RUNS` | `02_pipeline` | Stores one runtime summary row per pipeline run, tied to agreement and notebook registry context. |
 | `METADATA_DATA_ACCESS` | Access capture process | Stores table-level access assignments when captured. |
 | `METADATA_COLUMN_CONTEXT` | `03_review` | Stores reviewed business meaning for catalogue columns. |
 | `METADATA_DQ_RULES` | `03_review` | Stores approved DQ expectations only; runtime DQ results stay with notebook guardrail output and existing catalogue/profile evidence. |
 | `METADATA_COLUMN_CLASSIFICATION` | `03_review` | Stores reviewed sensitivity and PII classifications. |
 
 `01_agreement` writes steward, agreement, and evidence metadata. `02_pipeline` writes registry, catalogue, lineage, profile, guardrail, and run evidence. `03_review` writes reviewed metadata such as column context, DQ expectations, sensitivity, and classification. `99_explore` can support investigation, but it is optional and is not a required gate.
+
+For how schema, data drift, and DQ presets produce this evidence, see [Pipeline Guardrails](schema-and-data-drift.md).
 
 
 ## Standard runtime audit columns
@@ -66,6 +69,7 @@ Fabric Delta tables do not enforce primary and foreign keys. FabricOps still use
 | `METADATA_NOTEBOOK_REGISTRY` | `registration_id` | Links notebooks to agreement versions. |
 | `METADATA_DATA_LINEAGE_TABLE` | `lineage_id` | Links lineage to notebook identity and catalogue table keys. |
 | `METADATA_DATA_CATALOGUE` | `profile_run_id`, `profile_stage`, `metadata_column_key` | Provides stable table and column keys used by review metadata. |
+| `METADATA_PIPELINE_RUNS` | `run_id` | Links runtime summaries to agreements, notebook registrations, catalogue evidence, and lineage rows. |
 | `METADATA_DATA_ACCESS` | `user_principal`, `table_id`, `granted_date` | `table_id` links to catalogue table keys. |
 | `METADATA_COLUMN_CONTEXT` | `metadata_column_key`, `_committed_at` | Links reviewed context to a catalogue column. |
 | `METADATA_DQ_RULES` | `rule_key`, `action_ts` | Links DQ expectations to catalogue table or column keys. |
@@ -219,6 +223,36 @@ Fabric Delta tables do not enforce primary and foreign keys. FabricOps still use
 | `asset_kind` | Lakehouse, warehouse, CSV or Parquet. |
 
 **Workflow connection:** `03_review` uses catalogue evidence to select tables and columns for reviewed metadata. Agreement context can be resolved through the notebook registry rather than stored directly on each catalogue row.
+
+### `METADATA_PIPELINE_RUNS`
+
+**For:** runtime evidence written by the thin `02_pipeline` orchestration template.
+
+This table stores one summary row per pipeline run. It is tied to the selected agreement and notebook registration so support teams can connect a run to catalogue evidence and lineage without reading notebook implementation code.
+
+| Column | Purpose |
+| --- | --- |
+| `run_id` | Runtime identifier from `setup_notebook` or the Fabric runtime. |
+| `agreement_id` | Selected data agreement identifier. |
+| `agreement_contract_version` | Agreement version used by the run. |
+| `notebook_registry_id` | Active notebook registration row associated with the selected agreement. |
+| `notebook_id` | Fabric notebook identifier when available. |
+| `notebook_type` | Notebook workflow type, usually `02_pipeline`. |
+| `pipeline_name` | User-friendly pipeline name. |
+| `environment_name` | Environment key from `00_env_config`. |
+| `started_at` | UTC timestamp captured when orchestration starts. |
+| `completed_at` | UTC timestamp captured when summary evidence is written. |
+| `status` | Overall pipeline status recorded by the notebook. |
+| `source_count` | Number of configured source definitions. |
+| `target_count` | Number of configured target definitions. |
+| `source_guardrail_status` | Roll-up status for source schema and drift guardrails. |
+| `target_guardrail_status` | Roll-up status for target schema and drift guardrails. |
+| `dq_status` | Roll-up status for source and target DQ guardrails. |
+| `lineage_status` | Status returned by lineage evidence writing. |
+| `catalogue_status` | Status returned by catalogue evidence writing. |
+| `message` | Human-readable run note. |
+| `run_summary_json` | JSON payload with guardrail results and source/target table lists. |
+| `created_at` | UTC timestamp when the metadata row was created. |
 
 ### `METADATA_DATA_ACCESS`
 

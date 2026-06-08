@@ -3,7 +3,7 @@
 ## Summary
 
 - Before callable count: **71** exported callable functions across essential and optional categories.
-- Revised after callable count: **26** curated v1 template callables.
+- Revised after callable count: **30** curated v1 template callables.
 - Definition: a callable is a function that a notebook template user actively calls in a template cell.
 - Source of truth: `src/fabricops_kit/__init__.py::__all__`, enforced by `tests/contract/test_public_contract.py` and mirrored in `scripts/generate_function_reference.py::V1_CALLABLES`.
 
@@ -27,14 +27,18 @@
 16. `validate_schema`
 17. `monitor_data_changes`
 18. `stop_if_failed`
-19. `build_lineage_records`
-20. `widget_select_catalogue_table`
-21. `get_selected_catalogue_table`
-22. `load_catalogue_profile_rows`
-23. `widget_review_column_context`
-24. `widget_review_dq_rules`
-25. `widget_review_column_classification`
-26. `record_table_governance`
+19. `enforce_dq_rules`
+20. `build_lineage_records`
+21. `write_catalogue_evidence`
+22. `write_pipeline_lineage`
+23. `write_pipeline_run_summary`
+24. `widget_select_catalogue_table`
+25. `get_selected_catalogue_table`
+26. `load_catalogue_profile_rows`
+27. `widget_review_column_context`
+28. `widget_review_dq_rules`
+29. `widget_review_column_classification`
+30. `record_table_governance`
 
 ## Deleted from the public callable surface
 
@@ -49,6 +53,10 @@ The following previous public/exported functions were removed from the v1 callab
 - Version/banner helpers: `get_package_version`, `get_docs_version`, `get_docs_url`, `get_release_notes_url`, `print_runtime_banner`.
 - Advanced drift/incremental helpers and low-level row/key builders: `check_partition_drift`, `build_and_write_partition_snapshot`, `load_latest_partition_snapshot`, `summarize_drift_results`, `build_drift_evidence_record`, `prepare_drift_baselines`, `default_incremental_safety_policy`, `build_partition_snapshot`, `compare_partition_snapshots`, `assert_incremental_safe`, `build_incremental_safety_records`, `build_evidence_row`, `build_metadata_table_key`, `build_metadata_column_key`, `build_dq_rule_key`, `build_profile_summary`, `latest_by_column`, `build_column_context_records`, `build_dq_rule_records`, `build_classification_records`, `commit_column_context`, `commit_dq_rules`, `commit_column_classification`.
 - Optional/internal utilities: `catalogue_table_options`, `get_governance_metadata_schemas`, `optional_ai_generate_response`, `default_evidence_types`, `normalise_records_by_column`, `column_context_rows_for_spark`, `write_metadata_rows`, `detect_dataframe_engine`, `check_naming_convention`, `seed_minimal_sample_source_table`, `load_dataset_contract`, `validate_dataset_contract`, `assert_valid_dataset_contract`, and `load_and_validate_dataset_contract`.
+
+## Added pipeline evidence helpers
+
+`02_pipeline` continues to use existing public read, profiling, guardrail, DQ, and write helpers directly. The added public pipeline helpers are limited to noisy metadata evidence tasks: catalogue evidence enrichment, many-to-many lineage persistence, and runtime summary logging.
 
 ## Merged functions
 

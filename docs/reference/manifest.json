@@ -55,6 +55,13 @@
       "module_summary": "Owns metadata evidence persistence, stable keys, notebook registry, catalogue keys, and runtime audit helpers.",
       "sidebar_group": "5. Metadata store",
       "sidebar_include": true
+    },
+    {
+      "module_name": "pipeline",
+      "visibility": "public",
+      "module_summary": "Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals, lineage persistence, and runtime summaries.",
+      "sidebar_group": "3. Data engineer",
+      "sidebar_include": true
     }
   ],
   "callables": [
@@ -408,6 +415,45 @@
       "callable_role": "callable",
       "template_notebook": "03_review",
       "template_segment": "Governance review"
+    },
+    {
+      "module_name": "pipeline",
+      "visibility": "public",
+      "module_summary": "Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals, lineage persistence, and runtime summaries.",
+      "sidebar_group": "3. Data engineer",
+      "sidebar_include": true,
+      "callable_name": "write_catalogue_evidence",
+      "callable_visibility": "public",
+      "callable_type": "callable",
+      "callable_role": "callable",
+      "template_notebook": "02_pipeline",
+      "template_segment": "Catalogue evidence"
+    },
+    {
+      "module_name": "pipeline",
+      "visibility": "public",
+      "module_summary": "Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals, lineage persistence, and runtime summaries.",
+      "sidebar_group": "3. Data engineer",
+      "sidebar_include": true,
+      "callable_name": "write_pipeline_lineage",
+      "callable_visibility": "public",
+      "callable_type": "callable",
+      "callable_role": "callable",
+      "template_notebook": "02_pipeline",
+      "template_segment": "Lineage evidence"
+    },
+    {
+      "module_name": "pipeline",
+      "visibility": "public",
+      "module_summary": "Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals, lineage persistence, and runtime summaries.",
+      "sidebar_group": "3. Data engineer",
+      "sidebar_include": true,
+      "callable_name": "write_pipeline_run_summary",
+      "callable_visibility": "public",
+      "callable_type": "callable",
+      "callable_role": "callable",
+      "template_notebook": "02_pipeline",
+      "template_segment": "Runtime summary"
     }
   ]
 }

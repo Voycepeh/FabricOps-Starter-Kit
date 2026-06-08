@@ -27,7 +27,9 @@ def test_production_and_governance_templates_cover_output_summary_and_review_flo
     assert "monitor_data_changes" in production
     assert "enforce_dq_rules" in production
     assert "write_lakehouse_table" in production or "write_warehouse_table" in production
-    assert "build_lineage_records" in production
+    assert "write_catalogue_evidence" in production
+    assert "write_pipeline_lineage" in production
+    assert "write_pipeline_run_summary" in production
     assert "run_summary" in production
     assert "widget_select_catalogue_table" in governance
     assert "widget_review_column_context" in governance
@@ -39,34 +41,32 @@ def test_production_and_governance_templates_cover_output_summary_and_review_flo
 def test_production_template_enforces_dq_before_full_dataset_write():
     production = _code("02_pipeline.ipynb")
 
-    dq_call = production.index("dq_result = enforce_dq_rules(")
-    dq_stop = production.index("stop_if_failed(dq_result)")
-    dq_print = production.index("dq_result", dq_call + 1)
-    dq_dataframe_assignment = production.index("df_output = dq_result[\"dataframe\"]")
-    lakehouse_write = production.index("write_lakehouse_table(df_output")
-    warehouse_write = production.index("write_warehouse_table(df_output")
+    source_dq_call = production.index("source_dq_results = {}")
+    target_dq_call = production.index("target_dq_results = {}")
+    target_dq_stop = production.index("stop_if_failed(target_dq_results[target_name])", target_dq_call)
+    target_dataframe_assignment = production.index('target_dfs[target_name] = target_dq_results[target_name]["dataframe"]')
+    target_write = production.index("target_write_status = {}")
 
-    assert dq_call < dq_print < dq_stop < dq_dataframe_assignment < lakehouse_write
-    assert dq_call < dq_stop < dq_dataframe_assignment < warehouse_write
+    assert source_dq_call < target_dq_call < target_dq_stop < target_dataframe_assignment < target_write
     assert "valid_rows" not in production
     assert "quarantine_rows" not in production
     assert "failure_rows" not in production
     assert "df_output.filter" not in production
     assert "df_output.where" not in production
-    assert "dq_summary=dq_result.get(\"summary\")" in production
+    assert "dq_results=target_dq_results" in production
 
 
 def test_dq_section_prints_result_and_documents_simple_v1_behavior():
     production = _code("02_pipeline.ipynb")
 
-    dq_call = production.index("dq_result = enforce_dq_rules(")
-    dq_print = production.index("print(dq_result)")
-    dq_stop = production.index("stop_if_failed(dq_result)")
+    dq_call = production.index("target_dq_results = {}")
+    dq_print = production.index("print(target_dq_results[target_name])", dq_call)
+    dq_stop = production.index("stop_if_failed(target_dq_results[target_name])", dq_call)
 
     assert dq_call < dq_print < dq_stop
     assert "Warning severity writes full data" in production
     assert "error severity stops before write" in production
-    assert "No quarantine/filtering in v1." in production
+    assert "No row filtering in v1." in production
 
 
 def test_docs_and_templates_do_not_add_dq_failure_table_behavior():

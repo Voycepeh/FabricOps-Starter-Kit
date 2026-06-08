@@ -24,6 +24,11 @@ from .fabric_input_output import (
     write_lakehouse_table,
     write_warehouse_table,
 )
+from .pipeline import (
+    write_catalogue_evidence,
+    write_pipeline_lineage,
+    write_pipeline_run_summary,
+)
 from .governance_review import (
     enforce_dq_rules,
     get_selected_catalogue_table,
@@ -72,6 +77,9 @@ __all__ = [
     "stop_if_failed",
     "enforce_dq_rules",
     "build_lineage_records",
+    "write_catalogue_evidence",
+    "write_pipeline_lineage",
+    "write_pipeline_run_summary",
     "widget_select_catalogue_table",
     "get_selected_catalogue_table",
     "load_catalogue_profile_rows",
