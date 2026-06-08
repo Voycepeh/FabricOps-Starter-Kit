@@ -48,8 +48,15 @@ def test_pipeline_notebook_uses_existing_public_apis_and_metadata_helpers():
     ]:
         assert removed_wrapper not in code
 
-    assert "SOURCE_DEFINITIONS" in code
-    assert "TARGET_DEFINITIONS" in code
+    assert "SOURCE_DEFINITIONS" not in code
+    assert "USE_SAMPLE_DATA" not in code
+    assert "sample_agreement_dataset" not in code
+    assert "Files/sample/minimal_source.csv" not in code
+    assert "SOURCE_DATASETS" in code
+    assert 'source_config["df"]' in code
+    assert "TARGET_DEFINITIONS" not in code
+    assert "TARGET_DATASETS" in code
+    assert 'target_config["df"]' in code
     assert "RUN_ID = RUN_CONTEXT.run_id" in code
     assert "RUN_CONTEXT.runtime_metadata.get" in code
     assert "SETUP." not in code
@@ -69,21 +76,22 @@ def test_pipeline_notebook_contains_expected_high_level_flow_sections():
         "## 1. Run `00_env_config`",
         "## 2. Import required functions",
         "## 3. Select data agreement and register notebook",
-        "## 4. Define and read many source datasets",
-        "## 5. Profile each source DataFrame",
-        "## 6. Check each source schema",
-        "## 7. Check each source for data drift",
-        "## 8. Check each source with DQ guardrails",
-        "## 9. Write source catalogue evidence",
-        "## 10. User-defined transformation section",
-        "## 11. Define target DataFrames and add audit columns",
-        "## 12. Check each target schema",
-        "## 13. Check each target for data drift",
-        "## 14. Check each target with DQ guardrails",
-        "## 15. Write target catalogue evidence",
-        "## 16. Write target tables",
-        "## 17. Capture many-to-many lineage",
-        "## 18. Write runtime summary",
+        "## 4. Read source data",
+        "## 5. Register source DataFrames with FabricOps guardrails",
+        "## 6. Profile each registered source DataFrame",
+        "## 7. Check each source schema",
+        "## 8. Check each source for data drift",
+        "## 9. Check each source with DQ guardrails",
+        "## 10. Write source catalogue evidence",
+        "## 11. Transform to target DataFrame",
+        "## 12. Register target outputs and add audit columns",
+        "## 13. Check each target schema",
+        "## 14. Check each target for data drift",
+        "## 15. Check each target with DQ guardrails",
+        "## 16. Write target catalogue evidence",
+        "## 17. Write target tables",
+        "## 18. Capture many-to-many lineage",
+        "## 19. Write runtime summary",
     ]
     for section in expected_sections:
         assert section in markdown
@@ -110,32 +118,57 @@ def test_pipeline_notebook_hides_manual_catalogue_and_lineage_plumbing():
 
 
 def test_pipeline_notebook_supports_many_sources_and_many_targets_by_definition():
-    _, code = _notebook_sources()
+    markdown, code = _notebook_sources()
 
-    assert "for source_name, source_definition in SOURCE_DEFINITIONS.items()" in code
-    assert "source_dfs[\"source_alias\"]" in code
-    assert code.index("raise ValueError(f\"Unsupported source kind") < code.index(
-        "df_minimal_source = source_dfs[\"minimal_source\"]"
-    )
-    assert "\ndf_minimal_source = source_dfs[\"minimal_source\"]" in code
-    assert "target_dfs = {" in code
+    assert "SOURCE_DEFINITIONS" not in code
+    assert "USE_SAMPLE_DATA" not in code
+    assert "DATASET_NAME = \"CHANGE_ME_dataset\"" in code
+    assert "Files/sample/minimal_source.csv" not in code
+    assert "df_minimal_source = read_lakehouse_table(" in code
+    assert "# df_minimal_source = read_lakehouse_csv(CONFIG, ENV_NAME, \"source\", \"Files/CHANGE_ME/source_file.csv\", spark_session=spark, header=True)" in code
+    assert "# df_minimal_source = read_warehouse_table(CONFIG, ENV_NAME, \"product\", \"dbo\", \"CHANGE_ME_source_table\", spark_session=spark)" in code
+    assert "SOURCE_DATASETS = {" in code
+    assert "\"df\": df_minimal_source" in code
+    assert "for source_name, source_config in SOURCE_DATASETS.items():" in code
+    assert "source_df = source_config[\"df\"]" in code
+    assert "source_evidence_definitions" in code
+    assert "source_definitions=source_evidence_definitions" in code
+    source_registration = code[code.index("SOURCE_DATASETS = {"):code.index("source_evidence_definitions = {")]
+    for loader_field in ["kind", "path", "layer", "table_name"]:
+        assert loader_field not in source_registration
+    assert "SOURCE_DATASETS[\"source_alias\"][\"df\"]" in code
+
+    assert "TARGET_DEFINITIONS" not in code
+    assert "TARGET_DATASETS = {" in code
+    assert "\"df\": df_minimal_target" in code
+    assert "for target_name, target_config in TARGET_DATASETS.items():" in code
+    assert "target_df = target_config[\"df\"]" in code
+    assert "target_evidence_definitions" in code
+    assert "target_definitions=target_evidence_definitions" in code
+    assert "target_name" in code
+    assert "\"target_name\": \"CHANGE_ME_target_table\"" in code
+    assert "target_layer" in code
+    assert "\"target_layer\": \"unified\",  # source | unified | product" in code
+    assert "Choose the target layer based on where this output should be written" in markdown
+    assert "write_mode" in code
     assert (
         code.index("target_profiles = {}")
-        < code.index("for target_name, target_df in target_dfs.items():", code.index("target_profiles = {}"))
+        < code.index("for target_name, target_config in TARGET_DATASETS.items():", code.index("target_profiles = {}"))
         < code.index("target_catalogue_status = write_catalogue_evidence(\n    target_profiles")
     )
     assert "\ntarget_catalogue_status = write_catalogue_evidence(\n    target_profiles" in code
-    audit_alias = code.index("\ndf_output = target_dfs[\"sample_output\"]", code.index("AUDIT_CREATED_AT"))
+    audit_alias = code.index("\ndf_minimal_target = TARGET_DATASETS[\"minimal_target\"][\"df\"]", code.index("AUDIT_CREATED_AT"))
     assert (
-        code.rindex("for target_name, target_df in target_dfs.items():", code.index("AUDIT_CREATED_AT"), audit_alias)
+        code.rindex("for target_name, target_config in TARGET_DATASETS.items():", code.index("AUDIT_CREATED_AT"), audit_alias)
         < audit_alias
     )
-    dq_alias = code.index("\ndf_output = target_dfs[\"sample_output\"]", code.index("target_dq_results = {}"))
+    dq_alias = code.index("\ndf_minimal_target = TARGET_DATASETS[\"minimal_target\"][\"df\"]", code.index("target_dq_results = {}"))
     assert (
-        code.rindex("for target_name, target_df in target_dfs.items():", code.index("target_dq_results = {}"), dq_alias)
+        code.rindex("for target_name, target_config in TARGET_DATASETS.items():", code.index("target_dq_results = {}"), dq_alias)
         < dq_alias
     )
     assert "Add more sources" in code
     assert "Add more targets" in code
     assert "\"sources\": [" in code
     assert "\"targets\": [" in code
+    assert "CHANGE_ME_source_table rows are transformed into CHANGE_ME_target_table" in code
