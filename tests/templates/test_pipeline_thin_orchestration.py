@@ -49,6 +49,9 @@ def test_pipeline_notebook_uses_existing_public_apis_and_metadata_helpers():
         assert removed_wrapper not in code
 
     assert "SOURCE_DEFINITIONS" not in code
+    assert "USE_SAMPLE_DATA" not in code
+    assert "sample_agreement_dataset" not in code
+    assert "Files/sample/minimal_source.csv" not in code
     assert "SOURCE_DATASETS" in code
     assert 'source_config["df"]' in code
     assert "TARGET_DEFINITIONS" not in code
@@ -118,6 +121,12 @@ def test_pipeline_notebook_supports_many_sources_and_many_targets_by_definition(
     markdown, code = _notebook_sources()
 
     assert "SOURCE_DEFINITIONS" not in code
+    assert "USE_SAMPLE_DATA" not in code
+    assert "DATASET_NAME = \"CHANGE_ME_dataset\"" in code
+    assert "Files/sample/minimal_source.csv" not in code
+    assert "df_minimal_source = read_lakehouse_table(" in code
+    assert "# df_minimal_source = read_lakehouse_csv(CONFIG, ENV_NAME, \"source\", \"Files/CHANGE_ME/source_file.csv\", spark_session=spark, header=True)" in code
+    assert "# df_minimal_source = read_warehouse_table(CONFIG, ENV_NAME, \"product\", \"dbo\", \"CHANGE_ME_source_table\", spark_session=spark)" in code
     assert "SOURCE_DATASETS = {" in code
     assert "\"df\": df_minimal_source" in code
     assert "for source_name, source_config in SOURCE_DATASETS.items():" in code
@@ -137,6 +146,7 @@ def test_pipeline_notebook_supports_many_sources_and_many_targets_by_definition(
     assert "target_evidence_definitions" in code
     assert "target_definitions=target_evidence_definitions" in code
     assert "target_name" in code
+    assert "\"target_name\": \"CHANGE_ME_target_table\"" in code
     assert "target_layer" in code
     assert "\"target_layer\": \"unified\",  # source | unified | product" in code
     assert "Choose the target layer based on where this output should be written" in markdown
@@ -161,3 +171,4 @@ def test_pipeline_notebook_supports_many_sources_and_many_targets_by_definition(
     assert "Add more targets" in code
     assert "\"sources\": [" in code
     assert "\"targets\": [" in code
+    assert "CHANGE_ME_source_table rows are transformed into CHANGE_ME_target_table" in code
