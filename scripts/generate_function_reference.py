@@ -3,7 +3,9 @@ from __future__ import annotations
 import ast
 from dataclasses import dataclass
 import json
+import os
 from pathlib import Path
+import subprocess
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -22,6 +24,9 @@ MANIFEST_PATH = ROOT / "docs" / "reference" / "manifest.json"
 AGENT_MANIFEST_PATH = ROOT / "docs" / "reference" / "agent-manifest.json"
 FUNCTION_MANIFEST_PATH = ROOT / "docs" / "reference" / "function-manifest.json"
 TEMPLATE_FUNCTION_MAP_PATH = ROOT / "docs" / "reference" / "template-function-map.md"
+GITHUB_REPO_URL = "https://github.com/Voycepeh/FabricOps-Starter-Kit"
+DEFAULT_SOURCE_REF = "main"
+
 
 PUBLIC_MODULE_PREFERRED_NAMES = {
     "config": "config",
@@ -139,8 +144,55 @@ def _docstring_sections(doc: str | None) -> dict[str, str]:
     return {key: "\n".join(value).strip() for key, value in sections.items() if "\n".join(value).strip()}
 
 
+
+def _parameter_descriptions(parameters_section: str) -> dict[str, str]:
+    """Return first-paragraph descriptions keyed by NumPy-style parameter name."""
+    descriptions: dict[str, list[str]] = {}
+    current: str | None = None
+    for raw_line in parameters_section.splitlines():
+        line = raw_line.rstrip()
+        stripped = line.strip()
+        if not stripped:
+            continue
+        if not line.startswith(" ") and " : " in line:
+            names = stripped.split(" : ", 1)[0].split(",")
+            current = names[0].strip()
+            descriptions[current] = []
+            continue
+        if current is not None:
+            descriptions[current].append(stripped)
+    return {name: " ".join(lines).strip() for name, lines in descriptions.items()}
+
+
+def _parameter_rows_from_node(node: ast.FunctionDef | ast.AsyncFunctionDef, parameters_section: str) -> list[dict[str, str]]:
+    """Return compact parameter metadata for generated callable input tables."""
+    descriptions = _parameter_descriptions(parameters_section)
+    positional = [arg for arg in [*node.args.posonlyargs, *node.args.args] if arg.arg not in {"self", "cls"}]
+    positional_required = len(positional) - len(node.args.defaults)
+    rows: list[dict[str, str]] = []
+    for index, arg in enumerate(positional):
+        rows.append(
+            {
+                "name": arg.arg,
+                "required": "Yes" if index < positional_required else "No",
+                "description": descriptions.get(arg.arg, PLACEHOLDER),
+            }
+        )
+    for arg, default in zip(node.args.kwonlyargs, node.args.kw_defaults):
+        rows.append(
+            {
+                "name": arg.arg,
+                "required": "Yes" if default is None else "No",
+                "description": descriptions.get(arg.arg, PLACEHOLDER),
+            }
+        )
+    return rows
+
+
 def parse_module(path: Path) -> dict[str, Any]:
-    tree = ast.parse(path.read_text(encoding="utf-8"))
+    source_text = path.read_text(encoding="utf-8")
+    source_lines = source_text.splitlines()
+    tree = ast.parse(source_text)
     functions: dict[str, str] = {}
     classes: dict[str, str] = {}
     constants: dict[str, str] = {}
@@ -148,12 +200,19 @@ def parse_module(path: Path) -> dict[str, Any]:
     used_by: dict[str, set[str]] = {}
     signatures: dict[str, str] = {}
     doc_sections: dict[str, dict[str, str]] = {}
+    source_locations: dict[str, dict[str, int]] = {}
+    source_blocks: dict[str, str] = {}
+    parameters: dict[str, list[dict[str, str]]] = {}
     for node in tree.body:
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
             doc = ast.get_docstring(node)
             functions[node.name] = first_sentence(doc)
             signatures[node.name] = _signature_from_node(node)
-            doc_sections[node.name] = _docstring_sections(doc)
+            sections = _docstring_sections(doc)
+            doc_sections[node.name] = sections
+            source_locations[node.name] = {"start_line": node.lineno, "end_line": getattr(node, "end_lineno", node.lineno)}
+            source_blocks[node.name] = "\n".join(source_lines[node.lineno - 1 : getattr(node, "end_lineno", node.lineno)])
+            parameters[node.name] = _parameter_rows_from_node(node, sections.get("parameters", ""))
             called = set()
             for child in ast.walk(node):
                 if isinstance(child, ast.Call):
@@ -166,7 +225,10 @@ def parse_module(path: Path) -> dict[str, Any]:
             doc = ast.get_docstring(node)
             classes[node.name] = first_sentence(doc)
             signatures[node.name] = _signature_from_node(node)
-            doc_sections[node.name] = _docstring_sections(doc)
+            sections = _docstring_sections(doc)
+            doc_sections[node.name] = sections
+            source_locations[node.name] = {"start_line": node.lineno, "end_line": getattr(node, "end_lineno", node.lineno)}
+            source_blocks[node.name] = "\n".join(source_lines[node.lineno - 1 : getattr(node, "end_lineno", node.lineno)])
         elif isinstance(node, ast.Assign):
             for target in node.targets:
                 if isinstance(target, ast.Name) and target.id.isupper():
@@ -180,7 +242,18 @@ def parse_module(path: Path) -> dict[str, Any]:
         for callee in names:
             if callee in callees:
                 used_by.setdefault(callee, set()).add(caller)
-    return {"functions": functions, "classes": classes, "constants": constants, "calls": calls, "used_by": used_by, "signatures": signatures, "doc_sections": doc_sections}
+    return {
+        "functions": functions,
+        "classes": classes,
+        "constants": constants,
+        "calls": calls,
+        "used_by": used_by,
+        "signatures": signatures,
+        "doc_sections": doc_sections,
+        "source_locations": source_locations,
+        "source_blocks": source_blocks,
+        "parameters": parameters,
+    }
 
 
 def parse_import_aliases(nodes: list[ast.stmt]) -> tuple[dict[str, str], dict[str, str]]:
@@ -487,11 +560,47 @@ def render_html_table(headers: list[str], rows: list[list[str]], *, table_class:
     for row in rows:
         lines.append("    <tr>")
         for idx, cell in enumerate(row):
-            label_attr = f' data-label="{html_escape(headers[idx])}"' if table_class == "reference-template-table" else ""
+            label_attr = f' data-label="{html_escape(headers[idx])}"' if table_class in {"reference-template-table", "reference-function-table"} else ""
             lines.append(f"      <td{label_attr}>{cell}</td>")
         lines.append("    </tr>")
     lines.extend(["  </tbody>", "</table>"])
     return lines
+
+
+def github_source_ref() -> str:
+    """Return the stable GitHub ref used by generated source links."""
+    for variable in ("GITHUB_SOURCE_REF", "FABRICOPS_SOURCE_REF"):
+        explicit_ref = os.environ.get(variable, "").strip()
+        if explicit_ref:
+            return explicit_ref
+    try:
+        commit_sha = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=ROOT,
+            text=True,
+            capture_output=True,
+            check=False,
+        ).stdout.strip()
+    except Exception:
+        commit_sha = ""
+    if commit_sha:
+        return commit_sha
+    return DEFAULT_SOURCE_REF
+
+
+def github_source_url(source_path: str, start_line: int | None = None, end_line: int | None = None) -> str:
+    """Return a GitHub blob URL for a source file and optional line span."""
+    anchor = ""
+    if start_line:
+        anchor = f"#L{start_line}"
+        if end_line and end_line != start_line:
+            anchor += f"-L{end_line}"
+    return f"{GITHUB_REPO_URL}/blob/{github_source_ref()}/{source_path}{anchor}"
+
+
+def markdown_details(summary: str, body_lines: list[str], *, class_name: str = "reference-detail") -> list[str]:
+    """Render a collapsed Markdown details block."""
+    return [f'<details class="{class_name}">', f"<summary>{html_escape(summary)}</summary>", "", *body_lines, "", "</details>"]
 
 
 def html_escape(text: str) -> str:
@@ -535,6 +644,17 @@ def _documented_text(*values: Any) -> str:
 def _code_block(text: str) -> str:
     """Return a fenced Python block for generated reference pages."""
     return f"```python\n{text}\n```"
+
+
+def _bullet_lines(text: str) -> list[str]:
+    """Return short markdown bullets for human-facing guidance text."""
+    cleaned = text.strip()
+    if not cleaned:
+        return [f"- {PLACEHOLDER}"]
+    lines = [line.strip() for line in cleaned.splitlines() if line.strip()]
+    if len(lines) > 1:
+        return [line if line.startswith(("- ", "* ")) else f"- {line}" for line in lines]
+    return [cleaned if cleaned.startswith(("- ", "* ")) else f"- {cleaned}"]
 
 
 def _ai_contract_block(
@@ -1389,7 +1509,12 @@ def main() -> None:
             f"reference/{short_name}.md" if node["exported"] else f"reference/internal/{module_name}_{short_name}.md"
         )
         source_path = f"src/fabricops_kit/{module_name}.py"
-        source_ref = f"../../api/modules/{module_name}/#{short_name}"
+        source_location = module_info.get("source_locations", {}).get(short_name, {})
+        source_start_line = source_location.get("start_line")
+        source_end_line = source_location.get("end_line")
+        source_ref = github_source_url(source_path, source_start_line, source_end_line)
+        source_block = module_info.get("source_blocks", {}).get(short_name, "")
+        parameter_rows = module_info.get("parameters", {}).get(short_name, [])
         classification = "Callable" if node.get("role") == "callable" else "Internal"
         purpose = summary or module_info["functions"].get(short_name) or module_info["classes"].get(short_name) or "No summary available."
         rel_module = canonical_public_module(module_name)
@@ -1430,78 +1555,140 @@ def main() -> None:
             return out
 
         if node["exported"]:
-            lines = [
-                f"# {short_name}",
-                "",
-                f"**Module:** `{module_name}`  ",
-                "**Classification:** Callable",
-                "",
-                "## Status",
-                "",
-                "Public callable helper intended for notebook authors.",
-                "",
-                "## When to use this",
-                "",
-                _documented_text(metadata.get("use_when"), metadata.get("purpose"), purpose),
-                "",
-                "## When not to use this",
-                "",
-                _documented_text(metadata.get("do_not_use_when")),
-                "",
-                "## Quick example",
-                "",
-                _documented_text(metadata.get("preferred_example")),
-                "",
-                "## Signature",
-                "",
-                _code_block(signature) if signature else PLACEHOLDER,
-                "",
-                "## Parameters",
-                "",
-                rendered_parameters,
-                "",
-                "## Returns",
-                "",
-                rendered_returns,
-                "",
-                "## Raises",
-                "",
-                rendered_raises,
-                "",
-                "## Side effects",
-                "",
-                rendered_side_effects,
-                "",
-                "## FabricOps context",
-                "",
-                rendered_fabric_context,
-                "",
-                "## AI implementation contract",
-                "",
-                rendered_ai_contract,
-                "",
-                "## Related functions",
-                "",
+            input_rows = [
+                [f"<code>{html_escape(row['name'])}</code>", row["required"], html_escape(row["description"])]
+                for row in parameter_rows
             ]
-            related_lines = _related_function_links(related_for_page, node_by_qn, docs_metadata)
-            lines.extend(related_lines if related_lines else [PLACEHOLDER])
-            lines.extend([
-                "",
-                "## Source and tests",
-                "",
-                f"- Source file path: `{source_path}`",
-                f'- Source reference: <a href="{source_ref}">Module source anchor</a>',
-                "- Tests: Not documented yet",
-                "",
-                "## Function manifest",
-                "",
+            input_table = render_html_table(
+                ["Parameter", "Required", "Meaning"],
+                input_rows or [["—", "—", PLACEHOLDER]],
+                table_class="reference-function-table",
+            )
+            related_public = [item for item in related_for_page if item in docs_metadata or node_by_qn.get(item, {}).get("exported")]
+            implementation_related = [item for item in relationship_related if item not in related_public]
+            related_lines = _related_function_links(related_public, node_by_qn, docs_metadata)
+            implementation_lines = _related_function_links(implementation_related, node_by_qn, docs_metadata)
+            human_use_when = _documented_text(metadata.get("use_when"), metadata.get("purpose"), purpose)
+            human_use_bullets = _bullet_lines("\n".join(metadata["when_to_use"])) if metadata.get("when_to_use") else _bullet_lines(human_use_when)
+            human_do_not_use = _documented_text(metadata.get("do_not_use_when"))
+            function_manifest_lines = [
                 f"- Fully qualified function name: `{qn}`",
                 f"- Short name: `{short_name}`",
                 f"- Module: `{module_name}`",
                 "- Classification: Callable",
                 f"- Related module: `{rel_module}`",
+                f"- Source file path: `{source_path}`",
+                f"- Source line: `{source_start_line}`",
                 f"- Inbound references count: {len(used_by)}",
                 f"- Outbound references count: {len(deps)}",
+            ]
+            raw_source_metadata_lines = [
+                f"- Source file path: `{source_path}`",
+                f'- GitHub source URL: <a href="{source_ref}">{source_ref}</a>',
+                f"- Start line: `{source_start_line}`",
+                f"- End line: `{source_end_line}`",
+                "- Signature:",
+                "",
+                _code_block(signature) if signature else PLACEHOLDER,
+            ]
+            internal_relationship_graph_lines = [
+                "### Public related functions",
+                "",
+                *(related_lines if related_lines else [PLACEHOLDER]),
+                "",
+                "### Internal implementation helpers",
+                "",
+                *(implementation_lines if implementation_lines else [PLACEHOLDER]),
+            ]
+            machine_metadata_lines = [
+                "These generated fields are for automation, AI agents, maintainers, and doc tooling. Skip this block when reading the docs normally.",
+                "",
+                "### Function manifest",
+                "",
+                *function_manifest_lines,
+                "",
+                "### AI implementation contract",
+                "",
+                rendered_ai_contract,
+                "",
+                "### Inbound references",
+                "",
+                *(_fmt_links(used_by) if used_by else [PLACEHOLDER]),
+                "",
+                "### Outbound references",
+                "",
+                *(_fmt_links(deps) if deps else [PLACEHOLDER]),
+                "",
+                "### Raw source metadata",
+                "",
+                *raw_source_metadata_lines,
+                "",
+                "### Internal relationship graph",
+                "",
+                *internal_relationship_graph_lines,
+            ]
+            lines = [
+                f"# {short_name}",
+                "",
+                purpose,
+                "",
+                "## What this is for and when to use it",
+                "",
+                _documented_text(metadata.get("purpose"), purpose),
+                "",
+                *human_use_bullets,
+                "",
+                "## When not to use it",
+                "",
+                *_bullet_lines(human_do_not_use),
+                "",
+                "## Example",
+                "",
+                _code_block(_documented_text(metadata.get("preferred_example"))),
+                "",
+                "## Inputs",
+                "",
+                '<div class="module-table-scroll reference-input-table">',
+                *input_table,
+                "</div>",
+                "",
+                "## Output",
+                "",
+                rendered_returns,
+                "",
+                "## Errors and side effects",
+                "",
+                f"**Errors:** {rendered_raises}",
+                "",
+                f"**Side effects:** {rendered_side_effects}",
+                "",
+                "## Related functions",
+                "",
+            ]
+            lines.extend(related_lines if related_lines else [PLACEHOLDER])
+            if implementation_lines:
+                lines.extend([
+                    "",
+                    *markdown_details("Implementation details", implementation_lines, class_name="reference-implementation-details"),
+                ])
+            lines.extend([
+                "",
+                "## Source",
+                "",
+                f"- Source file path: `{source_path}`",
+                f'- <a class="reference-source-link" href="{source_ref}">View {short_name} on GitHub</a>',
+                "",
+                *markdown_details(
+                    "Show source code",
+                    [_code_block(source_block) if source_block else PLACEHOLDER],
+                    class_name="reference-source-details",
+                ),
+                "",
+                *markdown_details(
+                    "AI / machine-readable metadata — skip this if you are reading the docs normally",
+                    machine_metadata_lines,
+                    class_name="reference-metadata-details",
+                ),
             ])
         else:
             lines = [
@@ -1556,24 +1743,25 @@ def main() -> None:
                 "- Classification: Internal",
                 f"- Related module: `{rel_module}`",
                 f"- Source file path: `{source_path}`",
-                f'- Source reference: <a href="{source_ref}">Module source anchor</a>',
+                f'- Source reference: <a href="{source_ref}">View source on GitHub</a>',
                 f"- Inbound references count: {len(used_by)}",
                 f"- Outbound references count: {len(deps)}",
             ])
 
-        if used_by:
-            lines.extend(["", "## Inbound references", *(_fmt_links(used_by))])
-        if deps:
-            lines.extend(["", "## Outbound references", *(_fmt_links(deps))])
-        if not used_by and not deps:
-            lines.extend(["", "_No inbound or outbound references detected._"])
+        if not node["exported"]:
+            if used_by:
+                lines.extend(["", "## Inbound references", *(_fmt_links(used_by))])
+            if deps:
+                lines.extend(["", "## Outbound references", *(_fmt_links(deps))])
+            if not used_by and not deps:
+                lines.extend(["", "_No inbound or outbound references detected._"])
 
         if node["exported"]:
             (CALLABLE_REFERENCE_DIR / f"{short_name}.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
         else:
             (INTERNAL_REFERENCE_DIR / f"{module_name}_{short_name}.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
-        function_manifest.append({"id": qn, "name": short_name, "qualified_name": qn, "module": module_name, "classification": classification, "inbound": used_by, "outbound": deps, "source_path": source_path, "docs_path": docs_path, "summary": purpose})
+        function_manifest.append({"id": qn, "name": short_name, "qualified_name": qn, "module": module_name, "classification": classification, "inbound": used_by, "outbound": deps, "source_path": source_path, "source_start_line": source_start_line, "source_end_line": source_end_line, "source_url": source_ref, "docs_path": docs_path, "summary": purpose})
         agent_manifest.append({
             "name": short_name,
             "qualified_name": qn,
@@ -1583,6 +1771,9 @@ def main() -> None:
             "inbound": used_by,
             "outbound": deps,
             "source_file": source_path,
+            "source_start_line": source_start_line,
+            "source_end_line": source_end_line,
+            "source_url": source_ref,
             "summary": purpose,
             "use_when": _documented_text(metadata.get("use_when"), metadata.get("purpose"), purpose) if node["exported"] else PLACEHOLDER,
             "do_not_use_when": _documented_text(metadata.get("do_not_use_when")),

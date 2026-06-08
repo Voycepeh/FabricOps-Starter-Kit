@@ -1,57 +1,125 @@
 # widget_render_data_agreement
 
-**Module:** `data_agreement`  
-**Classification:** Callable
+Render the standalone data-agreement intake widget.
 
-## Status
-
-Public callable helper intended for notebook authors.
-
-## When to use this
+## What this is for and when to use it
 
 Render the standalone data-agreement intake widget.
 
-## When not to use this
+- Render the standalone data-agreement intake widget.
 
-Not documented yet
+## When not to use it
 
-## Quick example
+- Not documented yet
 
-Not documented yet
-
-## Signature
+## Example
 
 ```python
-def widget_render_data_agreement(config: Any, env_name: str, *, spark: Any) -> dict[str, Any]
+Not documented yet
 ```
 
-## Parameters
+## Inputs
 
-config : FrameworkConfig or dict
-    Configuration containing agreement widget fields and metadata routing.
-env_name : str
-    Environment key configured by ``00_env_config``.
-spark : pyspark.sql.SparkSession
-    Fabric Spark session used for metadata reads and append-only writes.
+<div class="module-table-scroll reference-input-table">
+<table class="reference-function-table">
+  <thead>
+    <tr>
+      <th>Parameter</th>
+      <th>Required</th>
+      <th>Meaning</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td data-label="Parameter"><code>config</code></td>
+      <td data-label="Required">Yes</td>
+      <td data-label="Meaning">Configuration containing agreement widget fields and metadata routing.</td>
+    </tr>
+    <tr>
+      <td data-label="Parameter"><code>env_name</code></td>
+      <td data-label="Required">Yes</td>
+      <td data-label="Meaning">Environment key configured by ``00_env_config``.</td>
+    </tr>
+    <tr>
+      <td data-label="Parameter"><code>spark</code></td>
+      <td data-label="Required">Yes</td>
+      <td data-label="Meaning">Fabric Spark session used for metadata reads and append-only writes.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
 
-## Returns
+## Output
 
 dict[str, Any]
     Rendered controls, including read-only generated-identifier context.
 
-## Raises
+## Errors and side effects
+
+**Errors:** Not documented yet
+
+**Side effects:** Not documented yet
+
+## Related functions
 
 Not documented yet
 
-## Side effects
+<details class="reference-implementation-details">
+<summary>Implementation details</summary>
 
-Not documented yet
+- <a href="../internal/data_agreement__render_maintenance_widget/"><code>fabricops_kit.data_agreement._render_maintenance_widget</code></a>
 
-## FabricOps context
+</details>
 
-Starter template: `01_agreement`; segment: `Agreement intake`.
+## Source
 
-## AI implementation contract
+- Source file path: `src/fabricops_kit/data_agreement.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d6fb0fb33beb9bd33597b485cb7d9af5e9bfe8fb/src/fabricops_kit/data_agreement.py#L1518-L1535">View widget_render_data_agreement on GitHub</a>
+
+<details class="reference-source-details">
+<summary>Show source code</summary>
+
+```python
+def widget_render_data_agreement(config: Any, env_name: str, *, spark: Any) -> dict[str, Any]:
+    """Render append-only agreement create/update maintenance using active stewards.
+
+    Parameters
+    ----------
+    config : FrameworkConfig or dict
+        Configuration containing agreement widget fields and metadata routing.
+    env_name : str
+        Environment key configured by ``00_env_config``.
+    spark : pyspark.sql.SparkSession
+        Fabric Spark session used for metadata reads and append-only writes.
+
+    Returns
+    -------
+    dict[str, Any]
+        Rendered controls, including read-only generated-identifier context.
+    """
+    return _render_maintenance_widget(spark=spark, config=config, env_name=env_name, kind="data_agreement_widget")
+```
+
+</details>
+
+<details class="reference-metadata-details">
+<summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
+
+These generated fields are for automation, AI agents, maintainers, and doc tooling. Skip this block when reading the docs normally.
+
+### Function manifest
+
+- Fully qualified function name: `fabricops_kit.data_agreement.widget_render_data_agreement`
+- Short name: `widget_render_data_agreement`
+- Module: `data_agreement`
+- Classification: Callable
+- Related module: `data_agreement`
+- Source file path: `src/fabricops_kit/data_agreement.py`
+- Source line: `1518`
+- Inbound references count: 0
+- Outbound references count: 1
+
+### AI implementation contract
 
 - **required_context:** Starter template: `01_agreement`; segment: `Agreement intake`.
 - **inputs:** config : FrameworkConfig or dict
@@ -66,25 +134,34 @@ spark : pyspark.sql.SparkSession
 - **failure_modes:** Not documented yet
 - **verification:** Not documented yet
 
-## Related functions
+### Inbound references
+
+Not documented yet
+
+### Outbound references
 
 - <a href="../internal/data_agreement__render_maintenance_widget/"><code>fabricops_kit.data_agreement._render_maintenance_widget</code></a>
 
-## Source and tests
+### Raw source metadata
 
 - Source file path: `src/fabricops_kit/data_agreement.py`
-- Source reference: <a href="../../api/modules/data_agreement/#widget_render_data_agreement">Module source anchor</a>
-- Tests: Not documented yet
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d6fb0fb33beb9bd33597b485cb7d9af5e9bfe8fb/src/fabricops_kit/data_agreement.py#L1518-L1535">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d6fb0fb33beb9bd33597b485cb7d9af5e9bfe8fb/src/fabricops_kit/data_agreement.py#L1518-L1535</a>
+- Start line: `1518`
+- End line: `1535`
+- Signature:
 
-## Function manifest
+```python
+def widget_render_data_agreement(config: Any, env_name: str, *, spark: Any) -> dict[str, Any]
+```
 
-- Fully qualified function name: `fabricops_kit.data_agreement.widget_render_data_agreement`
-- Short name: `widget_render_data_agreement`
-- Module: `data_agreement`
-- Classification: Callable
-- Related module: `data_agreement`
-- Inbound references count: 0
-- Outbound references count: 1
+### Internal relationship graph
 
-## Outbound references
+### Public related functions
+
+Not documented yet
+
+### Internal implementation helpers
+
 - <a href="../internal/data_agreement__render_maintenance_widget/"><code>fabricops_kit.data_agreement._render_maintenance_widget</code></a>
+
+</details>
