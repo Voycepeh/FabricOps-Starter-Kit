@@ -606,24 +606,35 @@ def _review_governance_evidence(
 
     blockers: list[dict[str, str]] = []
     warnings: list[dict[str, str]] = []
+
+    def _append_once(items: list[dict[str, str]], *, code: str, message: str) -> None:
+        if not any(item.get("code") == code for item in items):
+            items.append({"code": code, "message": message})
+
     if not agreement_id:
-        blockers.append({"code": "missing_agreement_id", "message": "Catalogue evidence is not linked to an agreement."})
+        _append_once(blockers, code="missing_agreement_id", message="Catalogue evidence is not linked to an agreement.")
     elif not agreement_rows:
-        blockers.append({"code": "missing_agreement_metadata", "message": "No matching agreement metadata row was found."})
+        _append_once(blockers, code="missing_agreement_metadata", message="No matching agreement metadata row was found.")
     if latest_pipeline is None:
-        blockers.append({"code": "missing_pipeline_run", "message": "No matching pipeline run summary was found."})
+        _append_once(blockers, code="missing_pipeline_run", message="No matching pipeline run summary was found.")
     elif _status_is_failed(_value(latest_pipeline, "status")):
-        blockers.append({"code": "pipeline_failed", "message": "Latest pipeline run did not complete successfully."})
+        _append_once(blockers, code="pipeline_failed", message="Latest pipeline run did not complete successfully.")
 
     dq_statuses = {str(_value(row, "DQ_STATUS") or "").lower() for row in profile_rows}
     dq_error_count = sum(int(_value(row, "DQ_ERROR_RULE_COUNT", 0) or 0) for row in profile_rows)
     dq_failed_count = sum(int(_value(row, "DQ_FAILED_RULE_COUNT", 0) or 0) for row in profile_rows)
     if "failed" in dq_statuses or dq_error_count > 0:
-        blockers.append({"code": "dq_failed", "message": "Failed DQ evidence blocks approval."})
+        _append_once(blockers, code="dq_failed", message="Failed DQ evidence blocks approval.")
     elif "warning" in dq_statuses or dq_failed_count > 0:
-        warnings.append({"code": "dq_warning", "message": "DQ warning evidence requires remediation review."})
+        _append_once(warnings, code="dq_warning", message="DQ warning evidence requires remediation review.")
 
     if latest_pipeline is not None:
+        pipeline_dq_status = _value(latest_pipeline, "dq_status")
+        if _status_is_failed(pipeline_dq_status):
+            _append_once(blockers, code="dq_failed", message="Pipeline DQ status blocks approval.")
+        elif _status_is_warning(pipeline_dq_status):
+            _append_once(warnings, code="dq_warning", message="Pipeline DQ status requires remediation review.")
+
         for field in ("source_guardrail_status", "target_guardrail_status"):
             status = _value(latest_pipeline, field)
             if _status_is_failed(status):
