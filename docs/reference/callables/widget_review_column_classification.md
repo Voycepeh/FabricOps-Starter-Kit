@@ -65,7 +65,7 @@ Not documented yet
 ## Source
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/769c8a7851b5cc8730434576fb06702a5a032f26/src/fabricops_kit/governance_review.py#L490-L508">View widget_review_column_classification on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c7049e78d915b93903574ea792043a66ebe62cee/src/fabricops_kit/governance_review.py#L493-L511">View widget_review_column_classification on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -107,13 +107,13 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
-- Source line: `490`
+- Source line: `493`
 - Inbound references count: 0
 - Outbound references count: 1
 
 ### AI implementation contract
 
-- **required_context:** Starter template: `03_review`; segment: `Governance review`.
+- **required_context:** Starter template: `03_governance`; segment: `Governance review`.
 - **inputs:** profile_rows : list of dict
     Selected column profile evidence from ``load_catalogue_profile_rows``.
 - **output:** list[dict[str, Any]]
@@ -134,9 +134,9 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/769c8a7851b5cc8730434576fb06702a5a032f26/src/fabricops_kit/governance_review.py#L490-L508">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/769c8a7851b5cc8730434576fb06702a5a032f26/src/fabricops_kit/governance_review.py#L490-L508</a>
-- Start line: `490`
-- End line: `508`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c7049e78d915b93903574ea792043a66ebe62cee/src/fabricops_kit/governance_review.py#L493-L511">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c7049e78d915b93903574ea792043a66ebe62cee/src/fabricops_kit/governance_review.py#L493-L511</a>
+- Start line: `493`
+- End line: `511`
 - Signature:
 
 ```python

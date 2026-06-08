@@ -19,4 +19,4 @@ Next read: [Setup / Create Wheel](create-wheel.md), [Start](../quick-start.md), 
 ## First-run verification
 
 - Run `00_env_config` and confirm validation output.
-- Execute a minimal `01_agreement` → `02_pipeline` → `03_review` path to verify end-to-end metadata writes. Use `99_explore` only when optional discovery or troubleshooting is needed.
+- Execute a minimal `01_agreement` → `02_pipeline` → `03_governance` path to verify end-to-end metadata writes. Use `99_explore` only when optional discovery or troubleshooting is needed.

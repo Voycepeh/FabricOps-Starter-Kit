@@ -6,7 +6,7 @@ Persist approved table-governance context, DQ-rule, and classification evidence 
 
 Persist approved table-governance context, DQ-rule, and classification evidence in one v1 commit action.
 
-- Use in 03_review after human approval to persist approved column context, DQ rules, and classification evidence for a profiled table.
+- Use in 03_governance after human approval to persist approved column context, DQ rules, and classification evidence for a profiled table.
 
 ## When not to use it
 
@@ -71,6 +71,16 @@ written = record_table_governance(CONFIG, env, profile_rows, spark_session=spark
       <td data-label="Meaning">Reviewer identity to stamp on records. When omitted, runtime defaults are used.</td>
     </tr>
     <tr>
+      <td data-label="Parameter"><code>governance_selection</code></td>
+      <td data-label="Required">No</td>
+      <td data-label="Meaning">Catalogue selection used to re-read persisted evidence and write a final governance outcome row.</td>
+    </tr>
+    <tr>
+      <td data-label="Parameter"><code>write_governance_review</code></td>
+      <td data-label="Required">No</td>
+      <td data-label="Meaning">Whether to append a ``METADATA_GOVERNANCE_REVIEWS`` outcome row after checking agreement, pipeline, schema/profile, and DQ evidence.</td>
+    </tr>
+    <tr>
       <td data-label="Parameter"><code>mode</code></td>
       <td data-label="Required">No</td>
       <td data-label="Meaning">Write mode for metadata table commits.</td>
@@ -102,13 +112,14 @@ Dictionary of records written for column_context, dq_rules, and column_classific
 - <a href="../internal/governance_review__build_classification_records/"><code>fabricops_kit.governance_review._build_classification_records</code></a>
 - <a href="../internal/governance_review__build_column_context_records/"><code>fabricops_kit.governance_review._build_column_context_records</code></a>
 - <a href="../internal/governance_review__build_dq_rule_records/"><code>fabricops_kit.governance_review._build_dq_rule_records</code></a>
+- <a href="../internal/governance_review__review_governance_evidence/"><code>fabricops_kit.governance_review._review_governance_evidence</code></a>
 
 </details>
 
 ## Source
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/769c8a7851b5cc8730434576fb06702a5a032f26/src/fabricops_kit/governance_review.py#L511-L591">View record_table_governance on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c7049e78d915b93903574ea792043a66ebe62cee/src/fabricops_kit/governance_review.py#L671-L773">View record_table_governance on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -124,8 +135,10 @@ def record_table_governance(
     dq_rule_reviews: list[dict[str, Any]] | None = None,
     classification_reviews: list[dict[str, Any]] | None = None,
     approved_by: str | None = None,
+    governance_selection: dict[str, Any] | None = None,
+    write_governance_review: bool = False,
     mode: str = "append",
-) -> dict[str, list[dict[str, Any]]]:
+) -> dict[str, Any]:
     """Persist approved table-governance review evidence.
 
     Parameters
@@ -145,18 +158,24 @@ def record_table_governance(
     approved_by : str, optional
         Reviewer identity to stamp on records. When omitted, runtime defaults
         are used.
+    governance_selection : dict, optional
+        Catalogue selection used to re-read persisted evidence and write a final
+        governance outcome row.
+    write_governance_review : bool, default=False
+        Whether to append a ``METADATA_GOVERNANCE_REVIEWS`` outcome row after
+        checking agreement, pipeline, schema/profile, and DQ evidence.
     mode : str, default "append"
         Write mode for metadata table commits.
 
     Returns
     -------
-    dict[str, list[dict[str, Any]]]
+    dict[str, Any]
         Records written for ``column_context``, ``dq_rules``, and
-        ``column_classification``.
+        ``column_classification`` plus an optional ``governance_review`` outcome.
 
     Notes
     -----
-    This is the v1 governance commit action for ``03_review`` notebooks. It merges
+    This is the v1 governance commit action for ``03_governance`` notebooks. It merges
     the previous row-builder and per-table commit helpers into one explicit
     human approval step while preserving configured metadata lakehouse routing.
     """
@@ -190,10 +209,24 @@ def record_table_governance(
         if records:
             write_lakehouse_table(spark_session.createDataFrame(records), config, env, "metadata", table_name, mode=mode)
 
+    governance_review = None
+    if write_governance_review:
+        if governance_selection is None:
+            raise ValueError("governance_selection is required when write_governance_review=True.")
+        governance_review = _review_governance_evidence(
+            config,
+            env,
+            governance_selection,
+            spark_session=spark_session,
+            reviewed_by=approved_by,
+            mode=mode,
+        )
+
     return {
         "column_context": context_records,
         "dq_rules": dq_rule_records,
         "column_classification": classification_records,
+        "governance_review": governance_review,
     }
 ```
 
@@ -212,13 +245,13 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
-- Source line: `511`
+- Source line: `671`
 - Inbound references count: 0
-- Outbound references count: 4
+- Outbound references count: 5
 
 ### AI implementation contract
 
-- **required_context:** Requires 03_review profile rows and 00_env_config metadata routing; governance metadata must be written to the configured metadata target.
+- **required_context:** Requires 03_governance profile rows and 00_env_config metadata routing; governance metadata must be written to the configured metadata target.
 - **inputs:** config, env, profile_rows, spark_session, optional approved context/DQ/classification review rows, approved_by, and mode.
 - **output:** Dictionary of records written for column_context, dq_rules, and column_classification.
 - **side_effects:** Writes approved governance metadata records to configured metadata tables.
@@ -235,17 +268,18 @@ Not documented yet
 - <a href="../internal/governance_review__build_classification_records/"><code>fabricops_kit.governance_review._build_classification_records</code></a>
 - <a href="../internal/governance_review__build_column_context_records/"><code>fabricops_kit.governance_review._build_column_context_records</code></a>
 - <a href="../internal/governance_review__build_dq_rule_records/"><code>fabricops_kit.governance_review._build_dq_rule_records</code></a>
+- <a href="../internal/governance_review__review_governance_evidence/"><code>fabricops_kit.governance_review._review_governance_evidence</code></a>
 
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/769c8a7851b5cc8730434576fb06702a5a032f26/src/fabricops_kit/governance_review.py#L511-L591">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/769c8a7851b5cc8730434576fb06702a5a032f26/src/fabricops_kit/governance_review.py#L511-L591</a>
-- Start line: `511`
-- End line: `591`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c7049e78d915b93903574ea792043a66ebe62cee/src/fabricops_kit/governance_review.py#L671-L773">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c7049e78d915b93903574ea792043a66ebe62cee/src/fabricops_kit/governance_review.py#L671-L773</a>
+- Start line: `671`
+- End line: `773`
 - Signature:
 
 ```python
-def record_table_governance(config: Any, env: str, profile_rows: list[dict[str, Any]], *, spark_session: Any, context_reviews: list[dict[str, Any]] | None=None, dq_rule_reviews: list[dict[str, Any]] | None=None, classification_reviews: list[dict[str, Any]] | None=None, approved_by: str | None=None, mode: str='append') -> dict[str, list[dict[str, Any]]]
+def record_table_governance(config: Any, env: str, profile_rows: list[dict[str, Any]], *, spark_session: Any, context_reviews: list[dict[str, Any]] | None=None, dq_rule_reviews: list[dict[str, Any]] | None=None, classification_reviews: list[dict[str, Any]] | None=None, approved_by: str | None=None, governance_selection: dict[str, Any] | None=None, write_governance_review: bool=False, mode: str='append') -> dict[str, Any]
 ```
 
 ### Internal relationship graph
@@ -262,5 +296,6 @@ def record_table_governance(config: Any, env: str, profile_rows: list[dict[str, 
 - <a href="../internal/governance_review__build_classification_records/"><code>fabricops_kit.governance_review._build_classification_records</code></a>
 - <a href="../internal/governance_review__build_column_context_records/"><code>fabricops_kit.governance_review._build_column_context_records</code></a>
 - <a href="../internal/governance_review__build_dq_rule_records/"><code>fabricops_kit.governance_review._build_dq_rule_records</code></a>
+- <a href="../internal/governance_review__review_governance_evidence/"><code>fabricops_kit.governance_review._review_governance_evidence</code></a>
 
 </details>

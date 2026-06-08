@@ -33,7 +33,7 @@ Start with one Governance workspace and one Engineering workspace. **Alternative
 
 | Step | Do this | Expected result | Read more |
 | ---- | ------- | --------------- |---------- |
-| 2    | Copy the notebook templates from the GitHub `templates` folder and upload into Fabric. | You have editable copies of `00_env_config`, `01_agreement`, `02_pipeline`, `03_review`, and optional `99_explore`.                     | [Notebook Templates](how-fabricops-works/notebook-templates.md)          |
+| 2    | Copy the notebook templates from the GitHub `templates` folder and upload into Fabric. | You have editable copies of `00_env_config`, `01_agreement`, `02_pipeline`, `03_governance`, and optional `99_explore`.                     | [Notebook Templates](how-fabricops-works/notebook-templates.md)          |
 
 ![IMG](assets/fabric-example-workspace-setup.png)
 
@@ -68,7 +68,7 @@ Run the required delivery templates in this order:
 | 1 | `00_env_config` | Defines environment-specific paths, lakehouses, warehouse targets, and governance metadata routing. |
 | 2 | `01_agreement` | Defines what should be built, who owns it, what rules apply, and what readiness means. |
 | 3 | `02_pipeline` | Builds repeatable transformations, validates source and target data, enforces active approved DQ rules, publishes outputs, records runtime audit columns, captures lineage, and writes profiles. |
-| 4 | `03_review` | Checks evidence, metadata, ownership, rules, and readiness; approved DQ expectations are stored for the next pipeline run. |
+| 4 | `03_governance` | Checks evidence, metadata, ownership, rules, and readiness; approved DQ expectations are stored for the next pipeline run. |
 | 5 | Rerun `02_pipeline` when needed | Loads active approved DQ rules from `METADATA_DQ_RULES` and enforces them before the target write. |
 | 6 | Operational support | Use the production notebook export plus FabricOps metadata evidence for support and review. |
 
@@ -87,7 +87,7 @@ After the first full run, the flow should replace tribal knowledge with metadata
 | Who owns the data and what is it used for?        | Agreement and steward metadata captured in `01_agreement`.                                         |
 | What did the source look like during optional exploration? | Optional profiling, schema, and exploration notes captured in `99_explore`, when used.                            |
 | What transformations created the output?          | Pipeline registration, lineage, and output metadata captured in `02_pipeline`.                    |
-| Which expectations and classifications were reviewed? | Governance metadata from `03_review`.                                                     |
+| Which expectations and classifications were reviewed? | Governance metadata from `03_governance`.                                                     |
 | Which production guardrails ran?                  | Evidence from `02_pipeline` schema checks, data-change monitoring, notebook-defined checks, output writes, lineage, and run summaries. |
 | What should support use after production? | Stored production notebook export, metadata evidence, run summaries, and support notes. |
 
@@ -100,5 +100,5 @@ The goal is that support and review should no longer depend on memory or side co
 | --------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
 | [How FabricOps Works](how-fabricops-works/index.md) | Start with the v1.0.0 metadata-backed notebook workflow, production guardrails, governance review, and support story. |
 | [Production Guardrails Workflow](how-fabricops-works/schema-and-data-drift.md) | Learn how `02_pipeline` owns production guardrails and run evidence. |
-| [Governance Review Workflow](how-fabricops-works/governance-review.md) | Learn how `03_review` reviews profile evidence and commits governance metadata. |
+| [Governance Review Workflow](how-fabricops-works/governance-review.md) | Learn how `03_governance` reviews profile evidence and commits governance metadata. |
 | [Function Reference](reference/index.md)   | Review the reusable helper APIs used by the notebook templates.                                           |

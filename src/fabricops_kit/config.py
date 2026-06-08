@@ -55,7 +55,7 @@ class NotebookRuntimeConfig:
         "00_env_config",
         "01_agreement",
         "02_pipeline",
-        "03_review",
+        "03_governance",
         "99_explore",
     )
 
@@ -482,7 +482,7 @@ def _validate_notebook_name(notebook_name: str, config: FrameworkConfig | None =
         r"^00_env_config$",
         r"^01_agreement(?:_[a-z0-9_]+)?$",
         r"^02_pipeline(?:_[a-z0-9_]+)?$",
-        r"^03_review(?:_[a-z0-9_]+)?$",
+        r"^03_governance(?:_[a-z0-9_]+)?$",
         r"^99_explore(?:_[a-z0-9_]+)?$",
     ]
     if any(__import__("re").match(p, name) for p in patterns):

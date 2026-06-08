@@ -2,11 +2,11 @@
 
 Governance Review is where metadata evidence becomes reviewed metadata.
 
-`02_pipeline` records metadata evidence about source and target data. `03_review` uses that evidence to help reviewers add business context, DQ expectations, sensitivity, and classification. AI can help draft suggestions, but people approve the final values.
+`02_pipeline` records metadata evidence about source and target data. `03_governance` uses that evidence to help reviewers add business context, DQ expectations, sensitivity, and classification. AI can help draft suggestions, but people approve the final values.
 
-The boundary is simple: `03_review` owns review and approval. `02_pipeline` owns guardrails and enforcement. Approved DQ expectations become active only when `02_pipeline` runs `enforce_dq_rules` against active approved rows in `METADATA_DQ_RULES`.
+The boundary is simple: `03_governance` owns review and approval. `02_pipeline` owns guardrails and enforcement. Approved DQ expectations become active only when `02_pipeline` runs `enforce_dq_rules` against active approved rows in `METADATA_DQ_RULES`.
 
-Read [How FabricOps Works](index.md) first for the standard `01_agreement` → `02_pipeline` → `03_review` path. For pipeline blocking behavior, see [Pipeline Guardrails](schema-and-data-drift.md).
+Read [How FabricOps Works](index.md) first for the standard `01_agreement` → `02_pipeline` → `03_governance` path. For pipeline blocking behavior, see [Pipeline Guardrails](schema-and-data-drift.md).
 
 ![FabricOps governance review workflow](../assets/fabricops-goverance-review.png)
 
@@ -26,9 +26,9 @@ That same pattern now applies to more than DQ. Governance Review uses profile ev
 metadata evidence → AI suggestion → human review → reviewed metadata → later pipeline use
 ```
 
-## What `03_review` uses
+## What `03_governance` uses
 
-`03_review` reads metadata evidence created by `02_pipeline`, especially profile rows stored in `METADATA_DATA_CATALOGUE`.
+`03_governance` reads metadata evidence created by `02_pipeline`, especially profile rows stored in `METADATA_DATA_CATALOGUE`.
 
 That catalogue evidence can include:
 
@@ -56,7 +56,7 @@ These outputs are reviewed metadata. They support review, support, documentation
 
 ## Human review workflow
 
-The `03_review` widgets follow the same basic pattern for context, DQ expectations, sensitivity, and classification:
+The `03_governance` widgets follow the same basic pattern for context, DQ expectations, sensitivity, and classification:
 
 1. Load catalogue profile evidence from `METADATA_DATA_CATALOGUE`.
 2. Generate optional AI suggestions from the available evidence.
@@ -74,7 +74,7 @@ In short:
 
 ## How approved metadata returns to the pipeline
 
-`03_review` does not enforce rules directly.
+`03_governance` does not enforce rules directly.
 
 Approved metadata becomes useful in later runs when `02_pipeline` reads or implements it. DQ expectations approved in `METADATA_DQ_RULES` are loaded by `02_pipeline` as aggregate guardrails before the target write.
 

@@ -22,6 +22,8 @@ Do not call this helper directly from notebooks; use the public callable helpers
 - <a href="../internal/governance_review__catalogue_table_options/"><code>fabricops_kit.governance_review._catalogue_table_options</code></a>
 - <a href="../internal/governance_review__display_review_guidance/"><code>fabricops_kit.governance_review._display_review_guidance</code></a>
 - <a href="../internal/governance_review__is_success/"><code>fabricops_kit.governance_review._is_success</code></a>
+- <a href="../internal/governance_review__latest_row/"><code>fabricops_kit.governance_review._latest_row</code></a>
+- <a href="../internal/governance_review__review_governance_evidence/"><code>fabricops_kit.governance_review._review_governance_evidence</code></a>
 - <a href="../load_catalogue_profile_rows/"><code>fabricops_kit.governance_review.load_catalogue_profile_rows</code></a>
 
 ## Purpose
@@ -54,8 +56,8 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 - Classification: Internal
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
-- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/769c8a7851b5cc8730434576fb06702a5a032f26/src/fabricops_kit/governance_review.py#L56-L57">View source on GitHub</a>
-- Inbound references count: 6
+- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c7049e78d915b93903574ea792043a66ebe62cee/src/fabricops_kit/governance_review.py#L58-L59">View source on GitHub</a>
+- Inbound references count: 8
 - Outbound references count: 0
 
 ## Inbound references
@@ -64,4 +66,6 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 - <a href="../internal/governance_review__catalogue_table_options/"><code>fabricops_kit.governance_review._catalogue_table_options</code></a>
 - <a href="../internal/governance_review__display_review_guidance/"><code>fabricops_kit.governance_review._display_review_guidance</code></a>
 - <a href="../internal/governance_review__is_success/"><code>fabricops_kit.governance_review._is_success</code></a>
+- <a href="../internal/governance_review__latest_row/"><code>fabricops_kit.governance_review._latest_row</code></a>
+- <a href="../internal/governance_review__review_governance_evidence/"><code>fabricops_kit.governance_review._review_governance_evidence</code></a>
 - <a href="../load_catalogue_profile_rows/"><code>fabricops_kit.governance_review.load_catalogue_profile_rows</code></a>

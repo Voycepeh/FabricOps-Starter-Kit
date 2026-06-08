@@ -21,6 +21,7 @@ Do not call this helper directly from notebooks; use the public callable helpers
 - <a href="../internal/data_agreement__create_or_update_data_steward/"><code>fabricops_kit.data_agreement._create_or_update_data_steward</code></a>
 - <a href="../internal/data_agreement__save_agreement_evidence_records/"><code>fabricops_kit.data_agreement._save_agreement_evidence_records</code></a>
 - <a href="../internal/governance_review__approved_review_context/"><code>fabricops_kit.governance_review._approved_review_context</code></a>
+- <a href="../internal/governance_review__review_governance_evidence/"><code>fabricops_kit.governance_review._review_governance_evidence</code></a>
 - <a href="../internal/pipeline__runtime_audit_fields/"><code>fabricops_kit.pipeline._runtime_audit_fields</code></a>
 
 ## Purpose
@@ -53,8 +54,8 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 - Classification: Internal
 - Related module: `metadata`
 - Source file path: `src/fabricops_kit/metadata.py`
-- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/769c8a7851b5cc8730434576fb06702a5a032f26/src/fabricops_kit/metadata.py#L218-L288">View source on GitHub</a>
-- Inbound references count: 5
+- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c7049e78d915b93903574ea792043a66ebe62cee/src/fabricops_kit/metadata.py#L218-L288">View source on GitHub</a>
+- Inbound references count: 6
 - Outbound references count: 3
 
 ## Inbound references
@@ -62,6 +63,7 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 - <a href="../internal/data_agreement__create_or_update_data_steward/"><code>fabricops_kit.data_agreement._create_or_update_data_steward</code></a>
 - <a href="../internal/data_agreement__save_agreement_evidence_records/"><code>fabricops_kit.data_agreement._save_agreement_evidence_records</code></a>
 - <a href="../internal/governance_review__approved_review_context/"><code>fabricops_kit.governance_review._approved_review_context</code></a>
+- <a href="../internal/governance_review__review_governance_evidence/"><code>fabricops_kit.governance_review._review_governance_evidence</code></a>
 - <a href="../internal/pipeline__runtime_audit_fields/"><code>fabricops_kit.pipeline._runtime_audit_fields</code></a>
 
 ## Outbound references
