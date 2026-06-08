@@ -56,15 +56,46 @@ def _dq_summary_fields(dq_result: Mapping[str, Any] | None) -> dict[str, Any]:
     warning = [check for check in failed if str(check.get("severity", "")).lower() == "warning"]
     error = [check for check in failed if str(check.get("severity", "")).lower() != "warning"]
     return {
-        "DQ_STATUS": str((dq_result or {}).get("status") or "not_run"),
-        "DQ_RULE_COUNT": int(summary.get("rule_count", len(checks)) or 0),
-        "DQ_FAILED_RULE_COUNT": int(summary.get("failed_rule_count", len(failed)) or 0),
-        "DQ_WARNING_RULE_COUNT": int(summary.get("warning_rule_count", len(warning)) or 0),
-        "DQ_ERROR_RULE_COUNT": int(summary.get("error_rule_count", len(error)) or 0),
-        "DQ_FAILED_ROW_COUNT": int(summary.get("failed_row_count", 0) or 0),
-        "DQ_FAILED_ROW_PERCENT": float(summary.get("failed_row_percent", 0.0) or 0.0),
-        "DQ_CHECKED_AT": str(summary.get("checked_at") or _now_iso()),
+        "dq_status": str((dq_result or {}).get("status") or "not_run"),
+        "dq_rule_count": int(summary.get("rule_count", len(checks)) or 0),
+        "dq_failed_rule_count": int(summary.get("failed_rule_count", len(failed)) or 0),
+        "dq_warning_rule_count": int(summary.get("warning_rule_count", len(warning)) or 0),
+        "dq_error_rule_count": int(summary.get("error_rule_count", len(error)) or 0),
+        "dq_failed_row_count": int(summary.get("failed_row_count", 0) or 0),
+        "dq_failed_row_percent": float(summary.get("failed_row_percent", 0.0) or 0.0),
+        "dq_checked_at": str(summary.get("checked_at") or _now_iso()),
     }
+
+
+def _canonical_catalogue_profile_df(profile_df: Any):
+    """Return profile evidence using lowercase catalogue column names only."""
+    from pyspark.sql import functions as F
+
+    profile_columns = list(getattr(profile_df, "columns", []) or [])
+    by_lower = {str(column).lower(): column for column in profile_columns}
+    source_map = {
+        "table_name": ("table_name", "TABLE_NAME"),
+        "column_name": ("column_name", "COLUMN_NAME"),
+        "run_timestamp": ("run_timestamp", "RUN_TIMESTAMP"),
+        "data_type": ("data_type", "DATA_TYPE"),
+        "row_count": ("row_count", "ROW_COUNT"),
+        "null_count": ("null_count", "NULL_COUNT"),
+        "null_percent": ("null_percent", "NULL_PERCENT"),
+        "distinct_count": ("distinct_count", "DISTINCT_COUNT"),
+        "distinct_percent": ("distinct_percent", "DISTINCT_PERCENT"),
+        "min_value": ("min_value", "MIN_VALUE"),
+        "max_value": ("max_value", "MAX_VALUE"),
+        "distribution_type": ("distribution_type", "DISTRIBUTION_TYPE"),
+        "distribution_json": ("distribution_json", "DISTRIBUTION_JSON"),
+    }
+    expressions = []
+    for target, candidates in source_map.items():
+        source = next((candidate for candidate in candidates if candidate in profile_columns), None)
+        if source is None:
+            source = next((by_lower[candidate.lower()] for candidate in candidates if candidate.lower() in by_lower), None)
+        if source is not None:
+            expressions.append(F.col(source).alias(target))
+    return profile_df.select(*expressions) if expressions else profile_df
 
 
 def write_catalogue_evidence(
@@ -123,15 +154,10 @@ def write_catalogue_evidence(
         drift_result = dict((drift_results or {}).get(name) or {})
         schema_result = dict((schema_results or {}).get(name) or {})
         dq_fields = _dq_summary_fields((dq_results or {}).get(name))
-        row_count = None
-        if hasattr(profile_df, "select"):
-            try:
-                row_count = profile_df.select("ROW_COUNT").first()["ROW_COUNT"]
-            except Exception:
-                row_count = None
-        evidence = profile_df
+        evidence = _canonical_catalogue_profile_df(profile_df)
+        metadata_table_key = _build_metadata_table_key(env, dataset_name, table_name)
         additions = {
-            "metadata_table_key": _build_metadata_table_key(env, dataset_name, table_name),
+            "metadata_table_key": metadata_table_key,
             "environment_name": env,
             "dataset_name": dataset_name,
             "table_name": table_name,
@@ -142,37 +168,24 @@ def write_catalogue_evidence(
             "profile_stage": stage,
             "profile_status": "success",
             "baseline_status": str(drift_result.get("baseline_status", drift_result.get("status", ""))),
-            "source_data_change_check": str(definition.get("drift_preset", "")),
+            "source_data_change_check": str(definition.get("drift_preset", "")) if stage == "source" else "",
+            "target_data_change_check": str(definition.get("drift_preset", "")) if stage == "target" else "",
             "profile_baseline_mode": str(drift_result.get("baseline_mode", "")),
+            "profiled_at": _now_iso(),
             "agreement_id": agreement_id,
             "contract_version": agreement_contract_version,
-            "AGREEMENT_ID": agreement_id,
-            "AGREEMENT_CONTRACT_VERSION": agreement_contract_version,
-            "NOTEBOOK_REGISTRY_ID": notebook_registry_id,
-            "NOTEBOOK_ID": notebook_id,
-            "PROFILE_RUN_ID": run_id,
-            "ENVIRONMENT_NAME": env,
-            "DATASET_NAME": dataset_name,
-            "PIPELINE_NAME": pipeline_name,
-            "EVIDENCE_ROLE": str(definition.get("evidence_role", f"{stage}_profile")),
-            "PROFILE_STAGE": stage,
-            "PROFILE_STATUS": "success",
-            "BASELINE_STATUS": str(drift_result.get("status", "")),
-            "SOURCE_SCHEMA_CHECK": str(definition.get("schema_preset", "")) if stage == "source" else "",
-            "TARGET_SCHEMA_CHECK": str(definition.get("schema_preset", "")) if stage == "target" else "",
-            "SOURCE_DATA_CHANGE_CHECK": str(definition.get("drift_preset", "")) if stage == "source" else "",
-            "TARGET_DATA_CHANGE_CHECK": str(definition.get("drift_preset", "")) if stage == "target" else "",
-            "SOURCE_CHANGE_SIGNAL_JSON": json.dumps({"schema": schema_result, "drift": drift_result}, default=str, sort_keys=True),
-            "LAYER": str(definition.get("layer", "")),
-            "ASSET_KIND": str(definition.get("kind", "lakehouse")),
-            "PROFILED_TABLE_NAME": table_name,
-            "PROFILED_ROW_COUNT": row_count,
+            "notebook_registry_id": notebook_registry_id,
+            "notebook_id": notebook_id,
+            "evidence_role": str(definition.get("evidence_role", f"{stage}_profile")),
+            "source_schema_check": str(definition.get("schema_preset", "")) if stage == "source" else "",
+            "target_schema_check": str(definition.get("schema_preset", "")) if stage == "target" else "",
+            "source_change_signal_json": json.dumps({"schema": schema_result, "drift": drift_result}, default=str, sort_keys=True),
             **dq_fields,
             **audit,
         }
         for column, value in additions.items():
             evidence = evidence.withColumn(column, F.lit(value))
-        evidence = evidence.withColumn("metadata_column_key", F.concat_ws("::", F.lit(_build_metadata_table_key(env, dataset_name, table_name)), F.col("COLUMN_NAME")))
+        evidence = evidence.withColumn("metadata_column_key", F.concat_ws("::", F.lit(metadata_table_key), F.col("column_name")))
         write_lakehouse_table(evidence, config, env, "metadata", metadata_table, mode=mode)
         statuses[name] = "written"
     return statuses

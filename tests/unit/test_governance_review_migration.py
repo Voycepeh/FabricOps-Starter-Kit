@@ -181,6 +181,57 @@ def test_record_table_governance_writes_context_dq_and_classification(monkeypatc
 
 
 
+def test_governance_metadata_schemas_have_no_case_insensitive_duplicate_columns():
+    schemas = governance._get_governance_metadata_schemas()
+
+    for table_name, schema in schemas.items():
+        field_names = schema.fieldNames()
+        assert len(field_names) == len({name.lower() for name in field_names}), table_name
+
+
+def test_catalogue_schema_uses_lowercase_canonical_columns_only():
+    catalogue_fields = governance._get_governance_metadata_schemas()[governance.CATALOGUE_TABLE].fieldNames()
+
+    assert all(field == field.lower() for field in catalogue_fields)
+
+    duplicate_legacy_fields = {
+        "TABLE_NAME",
+        "COLUMN_NAME",
+        "ROW_COUNT",
+        "NULL_COUNT",
+        "AGREEMENT_ID",
+        "ENVIRONMENT_NAME",
+        "DATASET_NAME",
+        "PIPELINE_NAME",
+        "PROFILE_RUN_ID",
+    }
+    assert duplicate_legacy_fields.isdisjoint(catalogue_fields)
+    assert {
+        "table_name",
+        "column_name",
+        "row_count",
+        "null_count",
+        "agreement_id",
+        "environment_name",
+        "dataset_name",
+        "pipeline_name",
+        "profile_run_id",
+        "dq_status",
+        "source_schema_check",
+        "target_schema_check",
+    } <= set(catalogue_fields)
+
+
+def test_schema_field_validation_names_table_and_duplicate_logical_columns():
+    string = governance._spark_types()[3]()
+
+    with pytest.raises(ValueError, match="METADATA_DATA_CATALOGUE.*table_name.*table_name.*TABLE_NAME"):
+        governance._validate_schema_field_names(
+            governance.CATALOGUE_TABLE,
+            [("table_name", string), ("TABLE_NAME", string)],
+        )
+
+
 def test_governance_metadata_schemas_do_not_add_dq_failure_tables():
     schemas = governance._get_governance_metadata_schemas()
 

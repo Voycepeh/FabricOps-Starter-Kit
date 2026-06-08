@@ -460,39 +460,52 @@ def _load_latest_profile(spark, metadata_table: str, dataset_name: str, table_na
         stage_roles = [stage, f"{stage}_profile"]
         if stage == "target":
             stage_roles.append("output_profile")
+        columns_by_lower = {str(column).lower(): column for column in df.columns}
+
+        def catalogue_col(*names: str) -> str | None:
+            for name in names:
+                if name in df.columns:
+                    return name
+                if name.lower() in columns_by_lower:
+                    return columns_by_lower[name.lower()]
+            return None
+
         filters = []
-        if "DATASET_NAME" in df.columns:
-            filters.append(F.col("DATASET_NAME") == dataset_name)
-        if "PROFILED_TABLE_NAME" in df.columns:
-            filters.append(F.col("PROFILED_TABLE_NAME") == table_name)
-        elif "TABLE_NAME" in df.columns:
-            filters.append(F.col("TABLE_NAME") == table_name)
-        if "PROFILE_STAGE" in df.columns:
-            filters.append(F.lower(F.col("PROFILE_STAGE")).isin(stage_roles))
-        elif "EVIDENCE_ROLE" in df.columns:
-            filters.append(F.lower(F.col("EVIDENCE_ROLE")).isin(stage_roles))
+        dataset_col = catalogue_col("dataset_name", "DATASET_NAME")
+        table_col = catalogue_col("table_name", "PROFILED_TABLE_NAME", "TABLE_NAME")
+        stage_col = catalogue_col("profile_stage", "PROFILE_STAGE", "evidence_role", "EVIDENCE_ROLE")
+        baseline_col = catalogue_col("baseline_status", "BASELINE_STATUS")
+        profile_status_col = catalogue_col("profile_status", "PROFILE_STATUS")
+        profile_run_col = catalogue_col("profile_run_id", "PROFILE_RUN_ID")
+        run_timestamp_col = catalogue_col("run_timestamp", "RUN_TIMESTAMP", "profiled_at")
+        if dataset_col:
+            filters.append(F.col(dataset_col) == dataset_name)
+        if table_col:
+            filters.append(F.col(table_col) == table_name)
+        if stage_col:
+            filters.append(F.lower(F.col(stage_col)).isin(stage_roles))
         if mode == "approved":
-            if "BASELINE_STATUS" not in df.columns:
+            if not baseline_col:
                 return None
-            filters.append(F.lower(F.col("BASELINE_STATUS")) == "approved")
-        elif "PROFILE_STATUS" in df.columns:
-            filters.append(F.lower(F.col("PROFILE_STATUS")) == "successful")
-        if exclude_run_id and "PROFILE_RUN_ID" in df.columns:
-            filters.append(F.col("PROFILE_RUN_ID") != exclude_run_id)
+            filters.append(F.lower(F.col(baseline_col)) == "approved")
+        elif profile_status_col:
+            filters.append(F.lower(F.col(profile_status_col)).isin("success", "successful"))
+        if exclude_run_id and profile_run_col:
+            filters.append(F.col(profile_run_col) != exclude_run_id)
         for condition in filters:
             df = df.filter(condition)
-        if "PROFILE_RUN_ID" not in df.columns:
+        if not profile_run_col:
             rows = df.collect() if hasattr(df, "collect") else []
             return _normalize_profile(rows)
         order_columns = []
-        if "RUN_TIMESTAMP" in df.columns:
-            order_columns.append(F.col("RUN_TIMESTAMP").desc())
-        order_columns.append(F.col("PROFILE_RUN_ID").desc())
-        latest_runs = df.orderBy(*order_columns).select("PROFILE_RUN_ID").limit(1).collect()
+        if run_timestamp_col:
+            order_columns.append(F.col(run_timestamp_col).desc())
+        order_columns.append(F.col(profile_run_col).desc())
+        latest_runs = df.orderBy(*order_columns).select(profile_run_col).limit(1).collect()
         if not latest_runs:
             return None
-        latest_run_id = latest_runs[0]["PROFILE_RUN_ID"]
-        rows = df.filter(F.col("PROFILE_RUN_ID") == latest_run_id).collect()
+        latest_run_id = latest_runs[0][profile_run_col]
+        rows = df.filter(F.col(profile_run_col) == latest_run_id).collect()
         return _normalize_profile(rows)
     except Exception as exc:
         if _is_missing_table_error(exc):
