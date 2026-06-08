@@ -55,6 +55,12 @@ def test_pipeline_notebook_uses_existing_public_apis_and_metadata_helpers():
     assert "SETUP." not in code
     assert "LINEAGE_RELATIONSHIPS" in code
     assert "METADATA_PIPELINE_RUNS" in markdown
+    assert "imports existing FabricOps callables directly for reads, profiling, guardrails, and writes" in markdown
+    assert (
+        "Metadata evidence helpers are imported only where they hide catalogue, lineage, "
+        "and runtime-summary plumbing"
+        in markdown
+    )
 
 
 def test_pipeline_notebook_contains_expected_high_level_flow_sections():
@@ -108,9 +114,27 @@ def test_pipeline_notebook_supports_many_sources_and_many_targets_by_definition(
 
     assert "for source_name, source_definition in SOURCE_DEFINITIONS.items()" in code
     assert "source_dfs[\"source_alias\"]" in code
-    assert code.index("raise ValueError(f\"Unsupported source kind") < code.index("df_minimal_source = source_dfs[\"minimal_source\"]")
+    assert code.index("raise ValueError(f\"Unsupported source kind") < code.index(
+        "df_minimal_source = source_dfs[\"minimal_source\"]"
+    )
+    assert "\ndf_minimal_source = source_dfs[\"minimal_source\"]" in code
     assert "target_dfs = {" in code
-    assert code.index("target_profiles = {}") < code.index("for target_name, target_df in target_dfs.items():", code.index("target_profiles = {}")) < code.index("write_catalogue_evidence(\n    target_profiles")
+    assert (
+        code.index("target_profiles = {}")
+        < code.index("for target_name, target_df in target_dfs.items():", code.index("target_profiles = {}"))
+        < code.index("target_catalogue_status = write_catalogue_evidence(\n    target_profiles")
+    )
+    assert "\ntarget_catalogue_status = write_catalogue_evidence(\n    target_profiles" in code
+    audit_alias = code.index("\ndf_output = target_dfs[\"sample_output\"]", code.index("AUDIT_CREATED_AT"))
+    assert (
+        code.rindex("for target_name, target_df in target_dfs.items():", code.index("AUDIT_CREATED_AT"), audit_alias)
+        < audit_alias
+    )
+    dq_alias = code.index("\ndf_output = target_dfs[\"sample_output\"]", code.index("target_dq_results = {}"))
+    assert (
+        code.rindex("for target_name, target_df in target_dfs.items():", code.index("target_dq_results = {}"), dq_alias)
+        < dq_alias
+    )
     assert "Add more sources" in code
     assert "Add more targets" in code
     assert "\"sources\": [" in code
