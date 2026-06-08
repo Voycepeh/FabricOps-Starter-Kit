@@ -75,6 +75,7 @@ Fabric Delta tables do not enforce primary and foreign keys. FabricOps still use
 | `METADATA_COLUMN_CONTEXT` | `metadata_column_key`, `_committed_at` | Links reviewed context to a catalogue column. |
 | `METADATA_DQ_RULES` | `rule_key`, `action_ts` | Links DQ expectations to catalogue table or column keys. |
 | `METADATA_COLUMN_CLASSIFICATION` | `metadata_column_key`, `_committed_at` | Links reviewed classification to a catalogue column. |
+| `METADATA_GOVERNANCE_REVIEWS` | `review_id` | Links the final `03_governance` outcome to agreement, pipeline run, catalogue profile, blockers, warnings, and evidence-summary context. |
 
 ## Table details
 
@@ -341,6 +342,33 @@ This table stores one summary row per pipeline run. It is tied to the selected a
 | `ai_suggestion_json` | Optional full AI suggestion payload. |
 
 **Workflow connection:** classification supports review and support visibility. It does not enforce masking or access behavior unless a later `02_pipeline` or access process is built to use it. Includes the standard runtime audit columns.
+
+### `METADATA_GOVERNANCE_REVIEWS`
+
+**For:** final `03_governance` outcome rows that summarize whether a selected catalogue profile is approved, rejected, or needs remediation.
+
+| Column | Purpose |
+| --- | --- |
+| `review_id` | Unique review-event identifier for the final governance outcome row. |
+| `environment_name` | Environment key reviewed by `03_governance`. |
+| `dataset_name` | Dataset associated with the selected catalogue profile. |
+| `table_name` | Table associated with the selected catalogue profile. |
+| `metadata_table_key` | Stable catalogue table key tying the outcome to profile and review evidence. |
+| `profile_run_id` | Pipeline/profile run identifier selected from `METADATA_DATA_CATALOGUE`. |
+| `profile_stage` | Profile stage reviewed, such as source or target. |
+| `pipeline_run_id` | Pipeline run summary identifier from `METADATA_PIPELINE_RUNS`. |
+| `agreement_id` | Agreement identifier linked through the catalogue and pipeline evidence. |
+| `agreement_contract_version` | Agreement version reviewed for the outcome. |
+| `outcome` | Final governance decision, such as `approved`, `rejected`, or `needs_remediation`. |
+| `blocker_count` | Number of blocking findings that prevent approval. |
+| `warning_count` | Number of non-blocking warnings that require remediation review or follow-up. |
+| `blockers_json` | JSON array of blocker codes and messages, including missing agreement evidence or failed DQ evidence. |
+| `warnings_json` | JSON array of warning codes and messages, including warning DQ or surfaced schema/drift findings. |
+| `evidence_summary_json` | JSON summary of agreement rows, agreement evidence, profile column counts, prior runs, and latest pipeline evidence used for the decision. |
+| `reviewed_at` | UTC timestamp when the outcome row was written. |
+| `reviewed_by` | Reviewer identity resolved from the runtime or explicit reviewer input. |
+
+**Workflow connection:** `03_governance` writes one outcome row after reading metadata from the configured metadata lakehouse instead of relying on copied notebook-local state from `02_pipeline`. The row links the agreement version, pipeline run, selected catalogue profile, blocker and warning details, and reviewed evidence summary so support teams can understand why the output was approved, rejected, or marked as needing remediation. Includes the standard runtime audit columns.
 
 
 Continue to [Metadata Dashboard](metadata-dashboard.md) to see the planned visibility layer over this metadata evidence.
