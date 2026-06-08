@@ -30,6 +30,16 @@ Fabric-specific runtime-only changes should still be evaluated by their effect o
 4. Preserve useful existing history and do not invent entries that are not supported by repository history.
 5. Update `pyproject.toml` `[project].version` to the exact `X.Y.Z` value.
 
+## Refresh generated references
+
+Before tagging a release, refresh generated function references and manifests so the published API reference matches the release commit:
+
+```bash
+PYTHONPATH=src python scripts/generate_function_reference.py
+```
+
+Commit any resulting generated reference, module navigation, or manifest updates with the release-prep changes. Routine implementation-only PRs do not need this refresh unless they intentionally change the public API contract or reference catalogue.
+
 ## Local validation
 
 Run the same repository-compatible checks that CI and the release workflow run:

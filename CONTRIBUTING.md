@@ -22,7 +22,7 @@ Thank you for contributing to **FabricOps Starter Kit**. This guide is for human
 - Do not add duplicate modules for the same concern.
 - Do not introduce backward-compatibility shims unless explicitly requested.
 - Keep examples synthetic and tenant-safe (no private IDs, internal URLs, or production data).
-- For public APIs, expose only intentional user-facing callables and keep API docs generated from source metadata.
+- For public APIs, expose only intentional user-facing callables and keep API docs generated from source metadata when the public catalogue/reference is refreshed.
 
 ## 4) Documentation contribution rules
 
@@ -41,7 +41,8 @@ For new/changed public APIs under `src/fabricops_kit/`:
 - Describe actual behavior (no placeholders).
 - Keep notebook-friendly, public-safe examples.
 - For Fabric-specific behavior, state runtime assumptions (Fabric runtime requirements, PySpark expectations, optional dependencies).
-- If public functions are added/removed/renamed or registry mappings/docstrings change, regenerate reference docs:
+- Routine implementation fixes to existing functions do not require generated reference refreshes.
+- Regenerate reference docs only for public contract/catalogue/reference changes: release prep, public callable additions/removals/renames, `src/fabricops_kit/__init__.py::__all__` changes, callable/module ownership metadata changes, intentional public callable documentation/API contract changes, or an intentional published API reference refresh.
   - `PYTHONPATH=src python scripts/generate_function_reference.py`
 
 ## 6) Testing expectations
@@ -94,7 +95,7 @@ For changes that affect runtime behavior in Fabric:
 - Inspect current files before editing; prefer surgical diffs.
 - Do not do broad rewrites unless explicitly requested.
 - Keep names aligned with the current rebranded repo state.
-- When changing public APIs/docs relationships, update generated references and related docs in the same PR.
+- When making public contract/catalogue/reference changes, update generated references and related docs in the same PR; routine implementation-only fixes do not need reference churn.
 - Keep PR summaries explicit about what changed, why, and how it was validated.
 
 ## 9) What not to do
@@ -111,7 +112,7 @@ For changes that affect runtime behavior in Fabric:
 - [ ] Scope is small and focused.
 - [ ] No unnecessary renames/restructures/backward-compat shims.
 - [ ] Public API/docstring standards are met (NumPy-style, accurate, notebook-safe examples).
-- [ ] Generated function reference docs were updated if public API surface or mappings changed.
+- [ ] Generated function reference docs were updated only if public contract/catalogue/reference changes or release prep required it.
 - [ ] Docs/templates were updated where template or helper behavior changed.
 - [ ] Local checks were run with available repo commands, or skips are explained.
 - [ ] Fabric runtime validation steps were completed or explicitly marked N/A with reason.

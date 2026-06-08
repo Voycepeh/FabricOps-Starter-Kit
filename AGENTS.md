@@ -29,9 +29,11 @@ Canonical operating guide for Codex/agent contributions in this repository. Keep
 - Do not maintain duplicate manual callable/member lists across README/docs pages.
 - Public callable docs are sourced from `src/fabricops_kit/` docstrings plus source metadata.
 - `docs/reference/*`, `docs/api/modules/*`, and related navigation are generated artifacts.
-- Do not manually treat generated docs as source of truth; update generator/source metadata and regenerate.
+- Do not manually treat generated docs as source of truth; source code, docstrings, `__all__`, and reference metadata remain the source inputs.
+- Routine implementation changes to existing functions do not require running `scripts/generate_function_reference.py`.
+- Regenerate generated reference artifacts only when preparing a release, adding/removing/renaming public callables, changing `src/fabricops_kit/__init__.py::__all__`, changing callable/module ownership metadata, intentionally changing public callable documentation/API contracts, or intentionally refreshing the published API reference.
 
-When public API surface, `__all__`, module ownership, docstrings, or callable mappings change, regenerate reference docs in the same PR:
+To refresh generated references when required:
 
 ```bash
 PYTHONPATH=src python scripts/generate_function_reference.py
@@ -40,7 +42,7 @@ PYTHONPATH=src python scripts/generate_function_reference.py
 
 ## Generated reference symbols and artifacts
 
-Do not manually edit generated reference outputs as source of truth. Update source inputs/generator first, then regenerate.
+Do not manually edit generated reference outputs as source of truth. Update source inputs/generator first, then regenerate when a release or public API/reference change requires it.
 
 Generated artifacts:
 - `docs/reference/index.md`
@@ -112,13 +114,12 @@ Applies to all `METADATA_*` tables (including future additions).
 
 ## What to update when changing X
 
-### 1) `src/` public API change
+### 1) `src/` function or public API change
 
-- Update `src/fabricops_kit` public API docstrings (NumPy style).
-- Ensure intentional exports are in `src/fabricops_kit/__init__.py::__all__`.
-- Regenerate reference/module docs with:
-  - `PYTHONPATH=src python scripts/generate_function_reference.py`
-- Include generated docs updates in the same PR.
+- For routine implementation changes to existing functions, update tests/docs as needed; generated reference docs are not required.
+- For public contract/catalogue/reference changes, update `src/fabricops_kit` public API docstrings (NumPy style) and intentional exports in `src/fabricops_kit/__init__.py::__all__`.
+- Regenerate reference/module docs only for release prep, public callable additions/removals/renames, `__all__` changes, callable/module ownership metadata changes, intentional public callable documentation/API contract changes, or intentional published API reference refreshes.
+- Include generated docs updates in the same PR only when regeneration is required.
 
 ### 2) Docs-only change
 
