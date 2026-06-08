@@ -88,7 +88,6 @@ None; the DataFrame is written to the configured warehouse table.
 <details class="reference-implementation-details">
 <summary>Implementation details</summary>
 
-- <a href="../write_pipeline_targets/"><code>fabricops_kit.pipeline.write_pipeline_targets</code></a>
 - <a href="../internal/config__get_store/"><code>fabricops_kit.config._get_store</code></a>
 
 </details>
@@ -96,7 +95,7 @@ None; the DataFrame is written to the configured warehouse table.
 ## Source
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/01cad12186fe15942524ddfa6effa011f04aecb5/src/fabricops_kit/fabric_input_output.py#L385-L449">View write_warehouse_table on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/692f3e5f0ea66047651f28067ac9b1d375c9afc8/src/fabricops_kit/fabric_input_output.py#L385-L449">View write_warehouse_table on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -185,7 +184,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Related module: `fabric_input_output`
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
 - Source line: `385`
-- Inbound references count: 1
+- Inbound references count: 0
 - Outbound references count: 1
 
 ### AI implementation contract
@@ -199,7 +198,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 
 ### Inbound references
 
-- <a href="../write_pipeline_targets/"><code>fabricops_kit.pipeline.write_pipeline_targets</code></a>
+Not documented yet
 
 ### Outbound references
 
@@ -208,7 +207,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/01cad12186fe15942524ddfa6effa011f04aecb5/src/fabricops_kit/fabric_input_output.py#L385-L449">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/01cad12186fe15942524ddfa6effa011f04aecb5/src/fabricops_kit/fabric_input_output.py#L385-L449</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/692f3e5f0ea66047651f28067ac9b1d375c9afc8/src/fabricops_kit/fabric_input_output.py#L385-L449">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/692f3e5f0ea66047651f28067ac9b1d375c9afc8/src/fabricops_kit/fabric_input_output.py#L385-L449</a>
 - Start line: `385`
 - End line: `449`
 - Signature:
@@ -227,7 +226,6 @@ def write_warehouse_table(df, config, env, target, schema, table, mode='append')
 
 ### Internal implementation helpers
 
-- <a href="../write_pipeline_targets/"><code>fabricops_kit.pipeline.write_pipeline_targets</code></a>
 - <a href="../internal/config__get_store/"><code>fabricops_kit.config._get_store</code></a>
 
 </details>

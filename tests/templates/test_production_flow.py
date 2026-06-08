@@ -23,10 +23,10 @@ def test_production_and_governance_templates_cover_output_summary_and_review_flo
     production = _code("02_pipeline.ipynb")
     governance = _code("03_review.ipynb")
 
-    assert "run_schema_guardrails" in production
-    assert "run_data_drift_guardrails" in production
-    assert "run_dq_guardrails" in production
-    assert "write_pipeline_targets" in production
+    assert "validate_schema" in production
+    assert "monitor_data_changes" in production
+    assert "enforce_dq_rules" in production
+    assert "write_lakehouse_table" in production or "write_warehouse_table" in production
     assert "write_pipeline_lineage" in production
     assert "write_pipeline_run_summary" in production
     assert "run_summary" in production
@@ -40,11 +40,11 @@ def test_production_and_governance_templates_cover_output_summary_and_review_flo
 def test_production_template_enforces_dq_before_full_dataset_write():
     production = _code("02_pipeline.ipynb")
 
-    source_dq_call = production.index("source_dq_results = run_dq_guardrails(")
-    target_dq_call = production.index("target_dq_results = run_dq_guardrails(")
-    target_dq_stop = production.index("stop_if_failed(result)", target_dq_call)
-    target_dataframe_assignment = production.index('target_dfs[target_name] = result["dataframe"]')
-    target_write = production.index("target_write_status = write_pipeline_targets(")
+    source_dq_call = production.index("source_dq_results = {}")
+    target_dq_call = production.index("target_dq_results = {}")
+    target_dq_stop = production.index("stop_if_failed(target_dq_results[target_name])", target_dq_call)
+    target_dataframe_assignment = production.index('target_dfs[target_name] = target_dq_results[target_name]["dataframe"]')
+    target_write = production.index("target_write_status = {}")
 
     assert source_dq_call < target_dq_call < target_dq_stop < target_dataframe_assignment < target_write
     assert "valid_rows" not in production
@@ -58,9 +58,9 @@ def test_production_template_enforces_dq_before_full_dataset_write():
 def test_dq_section_prints_result_and_documents_simple_v1_behavior():
     production = _code("02_pipeline.ipynb")
 
-    dq_call = production.index("target_dq_results = run_dq_guardrails(")
-    dq_print = production.index("print(result)", dq_call)
-    dq_stop = production.index("stop_if_failed(result)", dq_call)
+    dq_call = production.index("target_dq_results = {}")
+    dq_print = production.index("print(target_dq_results[target_name])", dq_call)
+    dq_stop = production.index("stop_if_failed(target_dq_results[target_name])", dq_call)
 
     assert dq_call < dq_print < dq_stop
     assert "Warning severity writes full data" in production

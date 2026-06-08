@@ -17,7 +17,7 @@ Do not call this helper directly from notebooks; use the public callable helpers
 
 ## Used by
 
-- <a href="../write_catalogue_evidence/"><code>fabricops_kit.pipeline.write_catalogue_evidence</code></a>
+- <a href="../internal/pipeline__write_catalogue_evidence/"><code>fabricops_kit.pipeline._write_catalogue_evidence</code></a>
 
 ## Purpose
 
@@ -49,12 +49,12 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 - Classification: Internal
 - Related module: `pipeline`
 - Source file path: `src/fabricops_kit/pipeline.py`
-- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/01cad12186fe15942524ddfa6effa011f04aecb5/src/fabricops_kit/pipeline.py#L62-L77">View source on GitHub</a>
+- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/692f3e5f0ea66047651f28067ac9b1d375c9afc8/src/fabricops_kit/pipeline.py#L52-L67">View source on GitHub</a>
 - Inbound references count: 1
 - Outbound references count: 1
 
 ## Inbound references
-- <a href="../write_catalogue_evidence/"><code>fabricops_kit.pipeline.write_catalogue_evidence</code></a>
+- <a href="../internal/pipeline__write_catalogue_evidence/"><code>fabricops_kit.pipeline._write_catalogue_evidence</code></a>
 
 ## Outbound references
 - <a href="../internal/pipeline__now_iso/"><code>fabricops_kit.pipeline._now_iso</code></a>

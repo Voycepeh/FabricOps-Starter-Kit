@@ -42,7 +42,7 @@ Run in Engineering Dev and link it to one or more agreements when relevant.
 
 Run when engineering is ready to build or run the data product.
 
-It is a thin orchestration notebook. Users define source datasets, per-source schema/drift/DQ presets, a user-defined transformation section, target DataFrames, and per-target presets. Reusable FabricOps helpers handle source reads, profiling, guardrail execution, catalogue evidence enrichment, target writes, lineage capture, and runtime summary logging.
+It is a thin orchestration notebook. Users define source datasets, per-source schema/drift/DQ presets, a user-defined transformation section, target DataFrames, and per-target presets. The notebook calls existing FabricOps read, profiling, guardrail, DQ, and write helpers directly so normal pipeline operations stay visible; reusable evidence helpers hide catalogue enrichment, lineage capture, and runtime summary logging.
 
 The template supports many sources and many targets. Source and target guardrail flows are symmetrical: schema checks, data drift checks, and approved active DQ rules from `METADATA_DQ_RULES` run per dataset using that dataset's configured preset.
 

@@ -104,10 +104,9 @@ None; the DataFrame is written to the configured lakehouse table.
 - <a href="../record_table_governance/"><code>fabricops_kit.governance_review.record_table_governance</code></a>
 - <a href="../internal/metadata__register_current_notebook/"><code>fabricops_kit.metadata._register_current_notebook</code></a>
 - <a href="../internal/metadata__setup_notebook_registry_table/"><code>fabricops_kit.metadata._setup_notebook_registry_table</code></a>
-- <a href="../write_catalogue_evidence/"><code>fabricops_kit.pipeline.write_catalogue_evidence</code></a>
+- <a href="../internal/pipeline__write_catalogue_evidence/"><code>fabricops_kit.pipeline._write_catalogue_evidence</code></a>
 - <a href="../write_pipeline_lineage/"><code>fabricops_kit.pipeline.write_pipeline_lineage</code></a>
 - <a href="../write_pipeline_run_summary/"><code>fabricops_kit.pipeline.write_pipeline_run_summary</code></a>
-- <a href="../write_pipeline_targets/"><code>fabricops_kit.pipeline.write_pipeline_targets</code></a>
 - <a href="../internal/config__get_store/"><code>fabricops_kit.config._get_store</code></a>
 
 </details>
@@ -115,7 +114,7 @@ None; the DataFrame is written to the configured lakehouse table.
 ## Source
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/01cad12186fe15942524ddfa6effa011f04aecb5/src/fabricops_kit/fabric_input_output.py#L181-L275">View write_lakehouse_table on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/692f3e5f0ea66047651f28067ac9b1d375c9afc8/src/fabricops_kit/fabric_input_output.py#L181-L275">View write_lakehouse_table on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -234,7 +233,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Related module: `fabric_input_output`
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
 - Source line: `181`
-- Inbound references count: 10
+- Inbound references count: 9
 - Outbound references count: 1
 
 ### AI implementation contract
@@ -254,10 +253,9 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - <a href="../record_table_governance/"><code>fabricops_kit.governance_review.record_table_governance</code></a>
 - <a href="../internal/metadata__register_current_notebook/"><code>fabricops_kit.metadata._register_current_notebook</code></a>
 - <a href="../internal/metadata__setup_notebook_registry_table/"><code>fabricops_kit.metadata._setup_notebook_registry_table</code></a>
-- <a href="../write_catalogue_evidence/"><code>fabricops_kit.pipeline.write_catalogue_evidence</code></a>
+- <a href="../internal/pipeline__write_catalogue_evidence/"><code>fabricops_kit.pipeline._write_catalogue_evidence</code></a>
 - <a href="../write_pipeline_lineage/"><code>fabricops_kit.pipeline.write_pipeline_lineage</code></a>
 - <a href="../write_pipeline_run_summary/"><code>fabricops_kit.pipeline.write_pipeline_run_summary</code></a>
-- <a href="../write_pipeline_targets/"><code>fabricops_kit.pipeline.write_pipeline_targets</code></a>
 
 ### Outbound references
 
@@ -266,7 +264,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/01cad12186fe15942524ddfa6effa011f04aecb5/src/fabricops_kit/fabric_input_output.py#L181-L275">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/01cad12186fe15942524ddfa6effa011f04aecb5/src/fabricops_kit/fabric_input_output.py#L181-L275</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/692f3e5f0ea66047651f28067ac9b1d375c9afc8/src/fabricops_kit/fabric_input_output.py#L181-L275">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/692f3e5f0ea66047651f28067ac9b1d375c9afc8/src/fabricops_kit/fabric_input_output.py#L181-L275</a>
 - Start line: `181`
 - End line: `275`
 - Signature:
@@ -291,10 +289,9 @@ def write_lakehouse_table(df, config, env, target, table, mode='append', partiti
 - <a href="../record_table_governance/"><code>fabricops_kit.governance_review.record_table_governance</code></a>
 - <a href="../internal/metadata__register_current_notebook/"><code>fabricops_kit.metadata._register_current_notebook</code></a>
 - <a href="../internal/metadata__setup_notebook_registry_table/"><code>fabricops_kit.metadata._setup_notebook_registry_table</code></a>
-- <a href="../write_catalogue_evidence/"><code>fabricops_kit.pipeline.write_catalogue_evidence</code></a>
+- <a href="../internal/pipeline__write_catalogue_evidence/"><code>fabricops_kit.pipeline._write_catalogue_evidence</code></a>
 - <a href="../write_pipeline_lineage/"><code>fabricops_kit.pipeline.write_pipeline_lineage</code></a>
 - <a href="../write_pipeline_run_summary/"><code>fabricops_kit.pipeline.write_pipeline_run_summary</code></a>
-- <a href="../write_pipeline_targets/"><code>fabricops_kit.pipeline.write_pipeline_targets</code></a>
 - <a href="../internal/config__get_store/"><code>fabricops_kit.config._get_store</code></a>
 
 </details>

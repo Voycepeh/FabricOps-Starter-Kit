@@ -97,7 +97,7 @@ Start with monitor settings when the team is still learning the data. Move to bl
 
 ## Metadata evidence for review
 
-The thin `02_pipeline` template calls high-level FabricOps helpers for these steps, so users configure datasets and presets while reusable package code handles repeated guardrail plumbing. When guardrails run, `02_pipeline` records useful metadata evidence such as:
+The thin `02_pipeline` template calls existing FabricOps helpers directly for reads, profiling, schema checks, data-change monitoring, DQ enforcement, blocking, and target writes. Users configure datasets and presets while reusable evidence helpers handle the noisier catalogue, lineage, and runtime metadata plumbing. When guardrails run, `02_pipeline` records useful metadata evidence such as:
 
 - the schema that was checked;
 - profile results;

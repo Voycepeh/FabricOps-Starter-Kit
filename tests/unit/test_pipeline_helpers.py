@@ -19,8 +19,10 @@ class FakeSpark:
         return {"rows": rows, "schema": schema}
 
 
-def test_new_pipeline_helpers_are_exported():
-    expected = {
+def test_public_pipeline_helpers_are_exported_without_wrapper_bloat():
+    assert "write_pipeline_lineage" in fabricops_kit.__all__
+    assert "write_pipeline_run_summary" in fabricops_kit.__all__
+    for removed_name in {
         "read_pipeline_sources",
         "profile_pipeline_datasets",
         "run_schema_guardrails",
@@ -29,31 +31,9 @@ def test_new_pipeline_helpers_are_exported():
         "write_catalogue_evidence",
         "add_runtime_audit_columns",
         "write_pipeline_targets",
-        "write_pipeline_lineage",
-        "write_pipeline_run_summary",
-    }
-    assert expected <= set(fabricops_kit.__all__)
-    for name in expected:
-        assert callable(getattr(fabricops_kit, name))
-
-
-def test_read_pipeline_sources_supports_many_source_kinds(monkeypatch):
-    calls = []
-    monkeypatch.setattr(pipeline, "read_lakehouse_table", lambda config, env, layer, table, spark_session=None: calls.append(("lakehouse", layer, table)) or f"df_{table}")
-    monkeypatch.setattr(pipeline, "read_lakehouse_csv", lambda config, env, layer, path, spark_session=None, header=True: calls.append(("csv", layer, path, header)) or f"df_{path}")
-
-    sources = pipeline.read_pipeline_sources(
-        {
-            "orders": {"kind": "lakehouse", "layer": "source", "table_name": "orders"},
-            "customers": {"kind": "csv", "layer": "source", "path": "Files/customers.csv", "header": True},
-        },
-        config={},
-        env="dev",
-        spark_session=object(),
-    )
-
-    assert set(sources) == {"orders", "customers"}
-    assert calls == [("lakehouse", "source", "orders"), ("csv", "source", "Files/customers.csv", True)]
+    }:
+        assert removed_name not in fabricops_kit.__all__
+        assert not hasattr(fabricops_kit, removed_name)
 
 
 def test_write_pipeline_lineage_supports_many_to_many_relationships(monkeypatch):

@@ -21,22 +21,31 @@ def _notebook_sources() -> tuple[str, str]:
     return markdown, "\n".join(code_cells)
 
 
-def test_pipeline_notebook_uses_thin_high_level_helpers():
+def test_pipeline_notebook_uses_existing_public_apis_and_metadata_helpers():
     markdown, code = _notebook_sources()
 
     for helper in [
+        "read_lakehouse_csv",
+        "profile_dataframe",
+        "validate_schema",
+        "monitor_data_changes",
+        "enforce_dq_rules",
+        "stop_if_failed",
+        "write_lakehouse_table",
+        "write_pipeline_lineage",
+        "write_pipeline_run_summary",
+    ]:
+        assert helper in code
+    for removed_wrapper in [
         "read_pipeline_sources",
         "profile_pipeline_datasets",
         "run_schema_guardrails",
         "run_data_drift_guardrails",
         "run_dq_guardrails",
-        "write_catalogue_evidence",
         "add_runtime_audit_columns",
         "write_pipeline_targets",
-        "write_pipeline_lineage",
-        "write_pipeline_run_summary",
     ]:
-        assert helper in code
+        assert removed_wrapper not in code
 
     assert "SOURCE_DEFINITIONS" in code
     assert "TARGET_DEFINITIONS" in code
@@ -87,14 +96,14 @@ def test_pipeline_notebook_hides_manual_catalogue_and_lineage_plumbing():
     for snippet in forbidden_visible_plumbing:
         assert snippet not in code
 
-    assert code.count("write_catalogue_evidence(") == 2
+    assert code.count("_write_catalogue_evidence(") == 2
     assert code.count("write_pipeline_lineage(") == 1
 
 
 def test_pipeline_notebook_supports_many_sources_and_many_targets_by_definition():
     _, code = _notebook_sources()
 
-    assert "source_dfs = read_pipeline_sources(SOURCE_DEFINITIONS" in code
+    assert "for source_name, source_definition in SOURCE_DEFINITIONS.items()" in code
     assert "source_dfs[\"source_alias\"]" in code
     assert "target_dfs = {" in code
     assert "Add more sources" in code

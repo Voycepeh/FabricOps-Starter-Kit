@@ -99,7 +99,6 @@ Spark DataFrame containing one profile row per eligible business column.
 
 - <a href="../monitor_data_changes/"><code>fabricops_kit.drift.monitor_data_changes</code></a>
 - <a href="../internal/governance_review__prepare_dq_profile_input_rows/"><code>fabricops_kit.governance_review._prepare_dq_profile_input_rows</code></a>
-- <a href="../profile_pipeline_datasets/"><code>fabricops_kit.pipeline.profile_pipeline_datasets</code></a>
 - <a href="../internal/data_profiling__build_distribution_summaries/"><code>fabricops_kit.data_profiling._build_distribution_summaries</code></a>
 - <a href="../internal/data_profiling__get_profiled_columns/"><code>fabricops_kit.data_profiling._get_profiled_columns</code></a>
 - <a href="../internal/data_profiling__is_min_max_supported_type/"><code>fabricops_kit.data_profiling._is_min_max_supported_type</code></a>
@@ -109,7 +108,7 @@ Spark DataFrame containing one profile row per eligible business column.
 ## Source
 
 - Source file path: `src/fabricops_kit/data_profiling.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/01cad12186fe15942524ddfa6effa011f04aecb5/src/fabricops_kit/data_profiling.py#L213-L327">View profile_dataframe on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/692f3e5f0ea66047651f28067ac9b1d375c9afc8/src/fabricops_kit/data_profiling.py#L213-L327">View profile_dataframe on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -248,7 +247,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Related module: `data_profiling`
 - Source file path: `src/fabricops_kit/data_profiling.py`
 - Source line: `213`
-- Inbound references count: 3
+- Inbound references count: 2
 - Outbound references count: 3
 
 ### AI implementation contract
@@ -264,7 +263,6 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 
 - <a href="../monitor_data_changes/"><code>fabricops_kit.drift.monitor_data_changes</code></a>
 - <a href="../internal/governance_review__prepare_dq_profile_input_rows/"><code>fabricops_kit.governance_review._prepare_dq_profile_input_rows</code></a>
-- <a href="../profile_pipeline_datasets/"><code>fabricops_kit.pipeline.profile_pipeline_datasets</code></a>
 
 ### Outbound references
 
@@ -275,7 +273,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/data_profiling.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/01cad12186fe15942524ddfa6effa011f04aecb5/src/fabricops_kit/data_profiling.py#L213-L327">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/01cad12186fe15942524ddfa6effa011f04aecb5/src/fabricops_kit/data_profiling.py#L213-L327</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/692f3e5f0ea66047651f28067ac9b1d375c9afc8/src/fabricops_kit/data_profiling.py#L213-L327">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/692f3e5f0ea66047651f28067ac9b1d375c9afc8/src/fabricops_kit/data_profiling.py#L213-L327</a>
 - Start line: `213`
 - End line: `327`
 - Signature:
@@ -295,7 +293,6 @@ def profile_dataframe(df, table_name: str, *, exclude_columns=None, run_timestam
 
 - <a href="../monitor_data_changes/"><code>fabricops_kit.drift.monitor_data_changes</code></a>
 - <a href="../internal/governance_review__prepare_dq_profile_input_rows/"><code>fabricops_kit.governance_review._prepare_dq_profile_input_rows</code></a>
-- <a href="../profile_pipeline_datasets/"><code>fabricops_kit.pipeline.profile_pipeline_datasets</code></a>
 - <a href="../internal/data_profiling__build_distribution_summaries/"><code>fabricops_kit.data_profiling._build_distribution_summaries</code></a>
 - <a href="../internal/data_profiling__get_profiled_columns/"><code>fabricops_kit.data_profiling._get_profiled_columns</code></a>
 - <a href="../internal/data_profiling__is_min_max_supported_type/"><code>fabricops_kit.data_profiling._is_min_max_supported_type</code></a>

@@ -83,7 +83,6 @@ Spark DataFrame loaded from the original Parquet path or timestamp-converted fal
 <details class="reference-implementation-details">
 <summary>Implementation details</summary>
 
-- <a href="../read_pipeline_sources/"><code>fabricops_kit.pipeline.read_pipeline_sources</code></a>
 - <a href="../internal/config__get_store/"><code>fabricops_kit.config._get_store</code></a>
 - <a href="../internal/fabric_input_output__convert_single_parquet_ns_to_us/"><code>fabricops_kit.fabric_input_output._convert_single_parquet_ns_to_us</code></a>
 - <a href="../internal/fabric_input_output__get_spark/"><code>fabricops_kit.fabric_input_output._get_spark</code></a>
@@ -94,7 +93,7 @@ Spark DataFrame loaded from the original Parquet path or timestamp-converted fal
 ## Source
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/01cad12186fe15942524ddfa6effa011f04aecb5/src/fabricops_kit/fabric_input_output.py#L507-L629">View read_lakehouse_parquet on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/692f3e5f0ea66047651f28067ac9b1d375c9afc8/src/fabricops_kit/fabric_input_output.py#L507-L629">View read_lakehouse_parquet on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -241,7 +240,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Related module: `fabric_input_output`
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
 - Source line: `507`
-- Inbound references count: 1
+- Inbound references count: 0
 - Outbound references count: 4
 
 ### AI implementation contract
@@ -255,7 +254,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 
 ### Inbound references
 
-- <a href="../read_pipeline_sources/"><code>fabricops_kit.pipeline.read_pipeline_sources</code></a>
+Not documented yet
 
 ### Outbound references
 
@@ -267,7 +266,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/01cad12186fe15942524ddfa6effa011f04aecb5/src/fabricops_kit/fabric_input_output.py#L507-L629">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/01cad12186fe15942524ddfa6effa011f04aecb5/src/fabricops_kit/fabric_input_output.py#L507-L629</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/692f3e5f0ea66047651f28067ac9b1d375c9afc8/src/fabricops_kit/fabric_input_output.py#L507-L629">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/692f3e5f0ea66047651f28067ac9b1d375c9afc8/src/fabricops_kit/fabric_input_output.py#L507-L629</a>
 - Start line: `507`
 - End line: `629`
 - Signature:
@@ -286,7 +285,6 @@ def read_lakehouse_parquet(config, env, target, relative_path, verbose=True, spa
 
 ### Internal implementation helpers
 
-- <a href="../read_pipeline_sources/"><code>fabricops_kit.pipeline.read_pipeline_sources</code></a>
 - <a href="../internal/config__get_store/"><code>fabricops_kit.config._get_store</code></a>
 - <a href="../internal/fabric_input_output__convert_single_parquet_ns_to_us/"><code>fabricops_kit.fabric_input_output._convert_single_parquet_ns_to_us</code></a>
 - <a href="../internal/fabric_input_output__get_spark/"><code>fabricops_kit.fabric_input_output._get_spark</code></a>

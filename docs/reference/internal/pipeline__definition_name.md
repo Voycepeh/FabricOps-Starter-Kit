@@ -17,14 +17,9 @@ Do not call this helper directly from notebooks; use the public callable helpers
 
 ## Used by
 
-- <a href="../profile_pipeline_datasets/"><code>fabricops_kit.pipeline.profile_pipeline_datasets</code></a>
-- <a href="../read_pipeline_sources/"><code>fabricops_kit.pipeline.read_pipeline_sources</code></a>
-- <a href="../run_data_drift_guardrails/"><code>fabricops_kit.pipeline.run_data_drift_guardrails</code></a>
-- <a href="../run_dq_guardrails/"><code>fabricops_kit.pipeline.run_dq_guardrails</code></a>
-- <a href="../write_catalogue_evidence/"><code>fabricops_kit.pipeline.write_catalogue_evidence</code></a>
+- <a href="../internal/pipeline__write_catalogue_evidence/"><code>fabricops_kit.pipeline._write_catalogue_evidence</code></a>
 - <a href="../write_pipeline_lineage/"><code>fabricops_kit.pipeline.write_pipeline_lineage</code></a>
 - <a href="../write_pipeline_run_summary/"><code>fabricops_kit.pipeline.write_pipeline_run_summary</code></a>
-- <a href="../write_pipeline_targets/"><code>fabricops_kit.pipeline.write_pipeline_targets</code></a>
 
 ## Purpose
 
@@ -56,16 +51,11 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 - Classification: Internal
 - Related module: `pipeline`
 - Source file path: `src/fabricops_kit/pipeline.py`
-- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/01cad12186fe15942524ddfa6effa011f04aecb5/src/fabricops_kit/pipeline.py#L31-L32">View source on GitHub</a>
-- Inbound references count: 8
+- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/692f3e5f0ea66047651f28067ac9b1d375c9afc8/src/fabricops_kit/pipeline.py#L21-L22">View source on GitHub</a>
+- Inbound references count: 3
 - Outbound references count: 0
 
 ## Inbound references
-- <a href="../profile_pipeline_datasets/"><code>fabricops_kit.pipeline.profile_pipeline_datasets</code></a>
-- <a href="../read_pipeline_sources/"><code>fabricops_kit.pipeline.read_pipeline_sources</code></a>
-- <a href="../run_data_drift_guardrails/"><code>fabricops_kit.pipeline.run_data_drift_guardrails</code></a>
-- <a href="../run_dq_guardrails/"><code>fabricops_kit.pipeline.run_dq_guardrails</code></a>
-- <a href="../write_catalogue_evidence/"><code>fabricops_kit.pipeline.write_catalogue_evidence</code></a>
+- <a href="../internal/pipeline__write_catalogue_evidence/"><code>fabricops_kit.pipeline._write_catalogue_evidence</code></a>
 - <a href="../write_pipeline_lineage/"><code>fabricops_kit.pipeline.write_pipeline_lineage</code></a>
 - <a href="../write_pipeline_run_summary/"><code>fabricops_kit.pipeline.write_pipeline_run_summary</code></a>
-- <a href="../write_pipeline_targets/"><code>fabricops_kit.pipeline.write_pipeline_targets</code></a>
