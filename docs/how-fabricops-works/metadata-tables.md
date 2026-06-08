@@ -245,8 +245,8 @@ This table stores one summary row per pipeline run. It is tied to the selected a
 | `started_at` | UTC timestamp captured when orchestration starts. |
 | `completed_at` | UTC timestamp captured when summary evidence is written. |
 | `status` | Overall pipeline status recorded by the notebook. |
-| `source_count` | Number of configured source definitions. |
-| `target_count` | Number of configured target definitions. |
+| `source_count` | Number of registered source DataFrames. |
+| `target_count` | Number of registered target DataFrames. |
 | `source_guardrail_status` | Roll-up status for source schema and drift guardrails. |
 | `target_guardrail_status` | Roll-up status for target schema and drift guardrails. |
 | `dq_status` | Roll-up status for source and target DQ guardrails. |

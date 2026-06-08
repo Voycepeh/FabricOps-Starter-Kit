@@ -93,11 +93,11 @@ Start with monitor settings when the team is still learning the data. Move to bl
 
 ## How DQ rules are approved
 
-`03_governance` writes approved active rules to `METADATA_DQ_RULES`. `02_pipeline` does not author DQ rules; users only choose `dq_preset` per source or target definition. When the preset is `approved_rules`, `02_pipeline` reads those approved active rules from the configured metadata lakehouse route and enforces them before downstream writes.
+`03_governance` writes approved active rules to `METADATA_DQ_RULES`. `02_pipeline` does not author DQ rules; users read source DataFrames first, transform target DataFrames, and then choose `dq_preset` per registered source or target DataFrame. When the preset is `approved_rules`, `02_pipeline` reads those approved active rules from the configured metadata lakehouse route and enforces them before downstream writes.
 
 ## Metadata evidence for review
 
-The thin `02_pipeline` template calls existing FabricOps helpers directly for reads, profiling, schema checks, data-change monitoring, DQ enforcement, blocking, and target writes. Users configure datasets and presets while reusable evidence helpers handle the noisier catalogue, lineage, and runtime metadata plumbing. When guardrails run, `02_pipeline` records useful metadata evidence such as:
+The thin `02_pipeline` template lets users read source DataFrames directly with normal Spark code or FabricOps read helpers, transform target DataFrames, then calls existing FabricOps helpers for profiling, schema checks, data-change monitoring, DQ enforcement, blocking, and target writes. Users register existing DataFrames with guardrail presets while reusable evidence helpers handle the noisier catalogue, lineage, and runtime metadata plumbing. When guardrails run, `02_pipeline` records useful metadata evidence such as:
 
 - the schema that was checked;
 - profile results;
