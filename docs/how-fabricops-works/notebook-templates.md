@@ -46,6 +46,8 @@ It is a thin orchestration notebook. Users define source datasets, per-source sc
 
 The template supports many sources and many targets. Source and target guardrail flows are symmetrical: schema checks, data drift checks, and approved active DQ rules from `METADATA_DQ_RULES` run per dataset using that dataset's configured preset.
 
+See [Pipeline Guardrails](schema-and-data-drift.md) for the source/target guardrail flow and supported schema, drift, and DQ presets.
+
 Runtime evidence is stored in metadata. Profiles and DQ summaries are written to `METADATA_DATA_CATALOGUE`, many-to-many lineage is written to `METADATA_DATA_LINEAGE_TABLE`, and run summaries are written to `METADATA_PIPELINE_RUNS`.
 
 **Result:** repeatable transformations, output tables, catalogue evidence, lineage, runtime evidence, schema guardrails, drift guardrails, and DQ guardrails are produced without exposing implementation-heavy code in the notebook.

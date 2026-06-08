@@ -40,6 +40,9 @@ def test_pipeline_notebook_uses_thin_high_level_helpers():
 
     assert "SOURCE_DEFINITIONS" in code
     assert "TARGET_DEFINITIONS" in code
+    assert "RUN_ID = RUN_CONTEXT.run_id" in code
+    assert "RUN_CONTEXT.runtime_metadata.get" in code
+    assert "SETUP." not in code
     assert "LINEAGE_RELATIONSHIPS" in code
     assert "METADATA_PIPELINE_RUNS" in markdown
 

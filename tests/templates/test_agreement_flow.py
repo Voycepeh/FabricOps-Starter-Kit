@@ -28,6 +28,8 @@ def test_environment_and_agreement_templates_have_executable_public_workflow_cel
         ast.parse(_python_cell(cell))
     assert "CONFIG" in env_cells
     assert "setup_metadata_tables" in env_cells
+    assert "RUN_CONTEXT = setup_notebook" in env_cells
+    assert 'AGREEMENT_METADATA_SETUP = METADATA_TABLE_SETUP["data_agreement"]' in env_cells
     assert "widget_render_data_steward" in agreement_cells
     assert "widget_render_data_agreement" in agreement_cells
     assert "widget_render_agreement_evidence" in agreement_cells

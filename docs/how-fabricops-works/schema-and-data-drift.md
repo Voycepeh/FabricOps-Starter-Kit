@@ -6,17 +6,13 @@ Read [How FabricOps Works](index.md) first for the standard `01_agreement` → `
 
 ![Schema, data-change, and DQ guardrails showing source and target validation flow](../assets/fabricops-schema-data-guardrails.png){ .full-width }
 
-## What `02_pipeline` checks
+## Where guardrails run
 
-A typical `02_pipeline` can check:
+Source checks run before transformation. They validate source schema, compare source profiles with previous metadata evidence, and optionally evaluate approved active DQ rules for source tables.
 
-- source schema before transformations run;
-- source data changes against previous profile evidence;
-- transformed target schema before outputs are written;
-- target data changes before outputs are written;
-- approved active DQ rules from `METADATA_DQ_RULES` before outputs are written.
+Target checks run before publication. They validate transformed target schema, compare proposed target profiles with previous metadata evidence, and evaluate approved active DQ rules for target tables before outputs are written.
 
-The important boundary is that `02_pipeline` owns blocking behavior. `03_review` can approve DQ metadata, but those expectations become active only when `02_pipeline` loads them with `enforce_dq_rules`.
+The important boundary is that `02_pipeline` owns blocking behavior. `03_review` can approve DQ metadata, but those expectations become active only when `02_pipeline` loads them through the DQ guardrail helper.
 
 ## Guardrail flow
 
@@ -69,9 +65,7 @@ FabricOps v1 keeps DQ enforcement intentionally simple. It does not write a sepa
 
 `02_pipeline` treats schema checks, data-change monitoring, and approved DQ rules as one guardrail family. Schema guardrails check structure, data-change guardrails compare profile movement, and DQ guardrails evaluate human-approved expectations from `METADATA_DQ_RULES`. Each guardrail returns a notebook result that can be printed for run evidence and passed to `stop_if_failed(...)` when it should block.
 
-## Presets
-
-### Schema presets
+## Schema presets
 
 | Preset | Use when | Behavior in plain language |
 | --- | --- | --- |
@@ -79,7 +73,7 @@ FabricOps v1 keeps DQ enforcement intentionally simple. It does not write a sepa
 | `allow_new_columns` | New fields are acceptable, but existing fields still matter. | Allow additional columns while still checking known columns. |
 | `monitor_only` | A team wants visibility before blocking runs. | Record schema differences without stopping the pipeline. |
 
-### Data-change presets
+## Data drift presets
 
 | Preset | Use when | Behavior in plain language |
 | --- | --- | --- |
@@ -89,6 +83,17 @@ FabricOps v1 keeps DQ enforcement intentionally simple. It does not write a sepa
 | `monitor_fixed_data` | The team wants visibility on stable data before blocking. | Monitor stable-data expectations without stopping the run. |
 
 Start with monitor settings when the team is still learning the data. Move to blocking settings only when the expected behavior is clear.
+
+## DQ preset
+
+| Preset | Use when | Behavior in plain language |
+| --- | --- | --- |
+| `approved_rules` | The dataset should enforce DQ expectations approved in `03_review`. | Read active approved rules from `METADATA_DQ_RULES` and evaluate them as aggregate guardrails. |
+| `skip` | A dataset has no approved DQ expectations yet or should not run DQ checks in this notebook. | Return a skipped result and continue without loading DQ rules. |
+
+## How DQ rules are approved
+
+`03_review` writes approved active rules to `METADATA_DQ_RULES`. `02_pipeline` does not author DQ rules; users only choose `dq_preset` per source or target definition. When the preset is `approved_rules`, `02_pipeline` reads those approved active rules from the configured metadata lakehouse route and enforces them before downstream writes.
 
 ## Metadata evidence for review
 
