@@ -96,6 +96,26 @@ def test_setup_metadata_tables_delegates_v1_metadata_setup(monkeypatch):
     assert calls[2][1] == {"spark": spark, "config": config, "env": "dev"}
 
 
+def test_setup_metadata_tables_treats_clean_agreement_intake_as_bootstrap_ready(monkeypatch):
+    monkeypatch.setattr(
+        "fabricops_kit.data_agreement._setup_data_agreement_tables",
+        lambda **kwargs: {"status": "not_ready", "created_tables": ["METADATA_DATA_STEWARD"], "active_steward_count": 0},
+    )
+    monkeypatch.setattr(
+        "fabricops_kit.metadata._setup_notebook_registry_table",
+        lambda **kwargs: {"status": "ready", "created_tables": []},
+    )
+    monkeypatch.setattr(
+        "fabricops_kit.governance_review._setup_governance_metadata_tables",
+        lambda **kwargs: {"status": "ready", "created_tables": []},
+    )
+
+    result = setup_metadata_tables(spark=object(), config=framework_config(), env="dev")
+
+    assert result["status"] == "ready"
+    assert result["data_agreement"]["status"] == "not_ready"
+
+
 def test_governance_review_imports_current_prompt_constants():
     import fabricops_kit.governance_review as governance_review
 

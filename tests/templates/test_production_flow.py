@@ -34,6 +34,9 @@ def test_production_and_governance_templates_cover_output_summary_and_review_flo
     assert "widget_review_dq_rules" in governance
     assert "widget_review_column_classification" in governance
     assert "record_table_governance" in governance
+    assert "review_pipeline_run" in governance
+    assert "PIPELINE_RUN_TABLE" in production
+    assert "pipeline_run_write_status" in production
 
 
 def test_production_template_enforces_dq_before_full_dataset_write():

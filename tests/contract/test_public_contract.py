@@ -41,6 +41,7 @@ APPROVED_V1_CALLABLES = {
     "widget_review_dq_rules",
     "widget_review_column_classification",
     "record_table_governance",
+    "review_pipeline_run",
 }
 
 REMOVED_LEGACY_ALIASES = {
@@ -110,7 +111,7 @@ def _template_called_fabricops_functions() -> set[str]:
 
 def test_root_exports_only_approved_v1_template_callables():
     assert set(fabricops_kit.__all__) == APPROVED_V1_CALLABLES
-    assert len(fabricops_kit.__all__) == 27
+    assert len(fabricops_kit.__all__) == 28
     assert len(fabricops_kit.__all__) < 71
     for name in fabricops_kit.__all__:
         assert callable(getattr(fabricops_kit, name))

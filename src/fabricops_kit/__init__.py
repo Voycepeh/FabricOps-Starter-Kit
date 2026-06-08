@@ -29,6 +29,7 @@ from .governance_review import (
     get_selected_catalogue_table,
     load_catalogue_profile_rows,
     record_table_governance,
+    review_pipeline_run,
     widget_review_column_classification,
     widget_review_column_context,
     widget_review_dq_rules,
@@ -79,4 +80,5 @@ __all__ = [
     "widget_review_dq_rules",
     "widget_review_column_classification",
     "record_table_governance",
+    "review_pipeline_run",
 ]

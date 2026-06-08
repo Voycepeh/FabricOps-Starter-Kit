@@ -17,6 +17,7 @@ Do not call this helper directly from notebooks; use the public callable helpers
 
 ## Used by
 
+- <a href="../internal/governance_review__read_metadata_rows/"><code>fabricops_kit.governance_review._read_metadata_rows</code></a>
 - <a href="../internal/governance_review__setup_governance_metadata_tables/"><code>fabricops_kit.governance_review._setup_governance_metadata_tables</code></a>
 
 ## Purpose
@@ -50,8 +51,9 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
 - Source reference: <a href="../../api/modules/governance_review/#_is_table_not_found_error">Module source anchor</a>
-- Inbound references count: 1
+- Inbound references count: 2
 - Outbound references count: 0
 
 ## Inbound references
+- <a href="../internal/governance_review__read_metadata_rows/"><code>fabricops_kit.governance_review._read_metadata_rows</code></a>
 - <a href="../internal/governance_review__setup_governance_metadata_tables/"><code>fabricops_kit.governance_review._setup_governance_metadata_tables</code></a>

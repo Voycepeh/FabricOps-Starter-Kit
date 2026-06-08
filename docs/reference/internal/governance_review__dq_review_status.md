@@ -1,6 +1,6 @@
-# _resolve_action_by
+# _dq_review_status
 
-**Module:** `metadata`  
+**Module:** `governance_review`  
 **Classification:** Internal
 
 ## Status
@@ -17,7 +17,6 @@ Do not call this helper directly from notebooks; use the public callable helpers
 
 ## Used by
 
-- <a href="../internal/governance_review__approved_review_context/"><code>fabricops_kit.governance_review._approved_review_context</code></a>
 - <a href="../review_pipeline_run/"><code>fabricops_kit.governance_review.review_pipeline_run</code></a>
 
 ## Purpose
@@ -27,7 +26,7 @@ No summary available.
 ## Signature if available
 
 ```python
-def _resolve_action_by(action_by: str | None=None) -> str
+def _dq_review_status(*rows: dict[str, Any]) -> str
 ```
 
 ## Side effects
@@ -44,20 +43,19 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 
 ## Function manifest
 
-- Fully qualified function name: `fabricops_kit.metadata._resolve_action_by`
-- Short name: `_resolve_action_by`
-- Module: `metadata`
+- Fully qualified function name: `fabricops_kit.governance_review._dq_review_status`
+- Short name: `_dq_review_status`
+- Module: `governance_review`
 - Classification: Internal
-- Related module: `metadata`
-- Source file path: `src/fabricops_kit/metadata.py`
-- Source reference: <a href="../../api/modules/metadata/#_resolve_action_by">Module source anchor</a>
-- Inbound references count: 2
+- Related module: `governance_review`
+- Source file path: `src/fabricops_kit/governance_review.py`
+- Source reference: <a href="../../api/modules/governance_review/#_dq_review_status">Module source anchor</a>
+- Inbound references count: 1
 - Outbound references count: 2
 
 ## Inbound references
-- <a href="../internal/governance_review__approved_review_context/"><code>fabricops_kit.governance_review._approved_review_context</code></a>
 - <a href="../review_pipeline_run/"><code>fabricops_kit.governance_review.review_pipeline_run</code></a>
 
 ## Outbound references
-- <a href="../internal/metadata__context_get/"><code>fabricops_kit.metadata._context_get</code></a>
-- <a href="../internal/metadata__runtime_context/"><code>fabricops_kit.metadata._runtime_context</code></a>
+- <a href="../internal/governance_review__safe_int/"><code>fabricops_kit.governance_review._safe_int</code></a>
+- <a href="../internal/governance_review__status_from_guardrail/"><code>fabricops_kit.governance_review._status_from_guardrail</code></a>

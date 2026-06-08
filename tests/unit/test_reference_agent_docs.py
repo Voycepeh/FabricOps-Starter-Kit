@@ -25,6 +25,7 @@ CORE_CALLABLES = {
     "enforce_dq_rules",
     "build_lineage_records",
     "record_table_governance",
+    "review_pipeline_run",
 }
 CORE_PAGE_SECTIONS = (
     "When not to use this",

@@ -73,7 +73,7 @@ Requires the FrameworkConfig or compatible CONFIG from 00_env_config plus the in
 - Module: `fabric_input_output`
 - Classification: Callable
 - Related module: `fabric_input_output`
-- Inbound references count: 6
+- Inbound references count: 7
 - Outbound references count: 1
 
 ## Inbound references
@@ -81,6 +81,7 @@ Requires the FrameworkConfig or compatible CONFIG from 00_env_config plus the in
 - <a href="../internal/data_agreement__write_row/"><code>fabricops_kit.data_agreement._write_row</code></a>
 - <a href="../internal/governance_review__setup_governance_metadata_tables/"><code>fabricops_kit.governance_review._setup_governance_metadata_tables</code></a>
 - <a href="../record_table_governance/"><code>fabricops_kit.governance_review.record_table_governance</code></a>
+- <a href="../review_pipeline_run/"><code>fabricops_kit.governance_review.review_pipeline_run</code></a>
 - <a href="../internal/metadata__register_current_notebook/"><code>fabricops_kit.metadata._register_current_notebook</code></a>
 - <a href="../internal/metadata__setup_notebook_registry_table/"><code>fabricops_kit.metadata._setup_notebook_registry_table</code></a>
 

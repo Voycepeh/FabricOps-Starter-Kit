@@ -50,6 +50,7 @@ EXPECTED_V1_CALLABLES = [
     "widget_review_dq_rules",
     "widget_review_column_classification",
     "record_table_governance",
+    "review_pipeline_run",
 ]
 
 
@@ -182,4 +183,131 @@ def test_governance_metadata_schemas_do_not_add_dq_failure_tables():
     schemas = governance._get_governance_metadata_schemas()
 
     assert governance.DQ_RULES_TABLE in schemas
+    assert governance.PIPELINE_RUN_TABLE in schemas
+    assert governance.GOVERNANCE_REVIEW_TABLE in schemas
     assert not any("FAILURE" in table or "QUARANTINE" in table for table in schemas)
+
+
+def test_review_pipeline_run_reads_metadata_and_writes_clear_outcome(monkeypatch):
+    reads = {
+        governance.PIPELINE_RUN_TABLE: [
+            {
+                "run_id": "run-1",
+                "agreement_id": "DA-1",
+                "agreement_contract_version": "1.0.0",
+                "environment_name": "dev",
+                "dataset_name": "sales",
+                "pipeline_name": "orders_pipeline",
+                "target_table": "orders",
+                "completed_at": "2026-01-02T00:00:00+00:00",
+                "source_schema_status": "passed",
+                "target_schema_status": "passed",
+                "dq_status": "passed",
+                "dq_failed_rule_count": 0,
+            }
+        ],
+        "METADATA_DATA_AGREEMENT": [{"agreement_id": "DA-1", "contract_version": "1.0.0"}],
+        "METADATA_DATA_AGREEMENT_EVIDENCE": [],
+        governance.CATALOGUE_TABLE: [
+            {
+                "environment_name": "dev",
+                "dataset_name": "sales",
+                "table_name": "orders",
+                "profile_run_id": "run-1",
+                "profile_stage": "target",
+                "profile_status": "success",
+                "DQ_STATUS": "passed",
+                "DQ_FAILED_RULE_COUNT": 0,
+                "profiled_at": "2026-01-02T00:00:00+00:00",
+            }
+        ],
+        governance.LINEAGE_TABLE: [
+            {
+                "environment_name": "dev",
+                "dataset_name": "sales",
+                "target_table": "orders",
+                "run_id": "run-1",
+                "agreement_id": "DA-1",
+            }
+        ],
+    }
+    writes = []
+
+    def read_table(config, env, target, table, **kwargs):
+        assert (env, target) == ("dev", "metadata")
+        return reads.get(table, [])
+
+    def write_table(df, config, env, target, table, **kwargs):
+        writes.append((table, df.rows, env, target))
+
+    monkeypatch.setattr(governance, "read_lakehouse_table", read_table)
+    monkeypatch.setattr(governance, "write_lakehouse_table", write_table)
+
+    result = governance.review_pipeline_run(
+        framework_config(),
+        "dev",
+        spark_session=FakeSpark(),
+        dataset_name="sales",
+        target_table="orders",
+        reviewed_by="reviewer@example.com",
+    )
+
+    assert result["outcome"] == "approved"
+    assert result["run_id"] == "run-1"
+    assert result["agreement_evidence_status"] == "passed"
+    assert result["dq_evidence_status"] == "passed"
+    assert writes[0][0] == governance.GOVERNANCE_REVIEW_TABLE
+    assert writes[0][2:] == ("dev", "metadata")
+
+
+def test_review_pipeline_run_flags_missing_agreement_failed_dq_and_schema_drift(monkeypatch):
+    reads = {
+        governance.PIPELINE_RUN_TABLE: [
+            {
+                "run_id": "run-2",
+                "agreement_id": "DA-MISSING",
+                "environment_name": "dev",
+                "dataset_name": "sales",
+                "pipeline_name": "orders_pipeline",
+                "target_table": "orders",
+                "completed_at": "2026-01-03T00:00:00+00:00",
+                "target_schema_status": "failed",
+                "dq_status": "failed",
+                "dq_failed_rule_count": 1,
+                "dq_error_rule_count": 1,
+            }
+        ],
+        "METADATA_DATA_AGREEMENT": [],
+        "METADATA_DATA_AGREEMENT_EVIDENCE": [],
+        governance.CATALOGUE_TABLE: [
+            {
+                "environment_name": "dev",
+                "dataset_name": "sales",
+                "table_name": "orders",
+                "profile_run_id": "run-2",
+                "profile_stage": "target",
+                "profile_status": "success",
+                "DQ_STATUS": "failed",
+                "DQ_ERROR_RULE_COUNT": 1,
+            }
+        ],
+        governance.LINEAGE_TABLE: [],
+    }
+
+    monkeypatch.setattr(governance, "read_lakehouse_table", lambda config, env, target, table, **kwargs: reads.get(table, []))
+    monkeypatch.setattr(governance, "write_lakehouse_table", lambda *args, **kwargs: None)
+
+    result = governance.review_pipeline_run(
+        framework_config(),
+        "dev",
+        spark_session=FakeSpark(),
+        dataset_name="sales",
+        target_table="orders",
+        run_id="run-2",
+    )
+
+    assert result["outcome"] == "rejected"
+    assert result["agreement_evidence_status"] == "missing"
+    assert result["schema_evidence_status"] == "failed"
+    assert result["dq_evidence_status"] == "failed"
+    assert result["lineage_evidence_status"] == "missing"

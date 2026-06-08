@@ -22,7 +22,10 @@ Do not call this helper directly from notebooks; use the public callable helpers
 - <a href="../internal/governance_review__catalogue_table_options/"><code>fabricops_kit.governance_review._catalogue_table_options</code></a>
 - <a href="../internal/governance_review__display_review_guidance/"><code>fabricops_kit.governance_review._display_review_guidance</code></a>
 - <a href="../internal/governance_review__is_success/"><code>fabricops_kit.governance_review._is_success</code></a>
+- <a href="../internal/governance_review__latest_row/"><code>fabricops_kit.governance_review._latest_row</code></a>
+- <a href="../internal/governance_review__matches_identity/"><code>fabricops_kit.governance_review._matches_identity</code></a>
 - <a href="../load_catalogue_profile_rows/"><code>fabricops_kit.governance_review.load_catalogue_profile_rows</code></a>
+- <a href="../review_pipeline_run/"><code>fabricops_kit.governance_review.review_pipeline_run</code></a>
 
 ## Purpose
 
@@ -55,7 +58,7 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
 - Source reference: <a href="../../api/modules/governance_review/#_value">Module source anchor</a>
-- Inbound references count: 6
+- Inbound references count: 9
 - Outbound references count: 0
 
 ## Inbound references
@@ -64,4 +67,7 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 - <a href="../internal/governance_review__catalogue_table_options/"><code>fabricops_kit.governance_review._catalogue_table_options</code></a>
 - <a href="../internal/governance_review__display_review_guidance/"><code>fabricops_kit.governance_review._display_review_guidance</code></a>
 - <a href="../internal/governance_review__is_success/"><code>fabricops_kit.governance_review._is_success</code></a>
+- <a href="../internal/governance_review__latest_row/"><code>fabricops_kit.governance_review._latest_row</code></a>
+- <a href="../internal/governance_review__matches_identity/"><code>fabricops_kit.governance_review._matches_identity</code></a>
 - <a href="../load_catalogue_profile_rows/"><code>fabricops_kit.governance_review.load_catalogue_profile_rows</code></a>
+- <a href="../review_pipeline_run/"><code>fabricops_kit.governance_review.review_pipeline_run</code></a>

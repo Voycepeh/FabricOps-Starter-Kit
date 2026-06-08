@@ -749,9 +749,11 @@ def setup_metadata_tables(
     )
     notebook_registry = _setup_notebook_registry_table(spark=spark, config=config, env=env)
     governance = _setup_governance_metadata_tables(spark=spark, config=config, env=env)
-    statuses = [data_agreement.get("status"), notebook_registry.get("status"), governance.get("status")]
+    table_statuses = [notebook_registry.get("status"), governance.get("status")]
+    metadata_tables_ready = all(status == "ready" for status in table_statuses)
+    agreement_tables_ready = data_agreement.get("status") in {"ready", "not_ready"}
     return {
-        "status": "ready" if all(status == "ready" for status in statuses) else "not_ready",
+        "status": "ready" if metadata_tables_ready and agreement_tables_ready else "not_ready",
         "data_agreement": data_agreement,
         "notebook_registry": notebook_registry,
         "governance": governance,

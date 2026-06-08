@@ -15,12 +15,15 @@ from .config import DEFAULT_BUSINESS_CONTEXT_PROMPT_TEMPLATE, DEFAULT_GOVERNANCE
 from .fabric_input_output import read_lakehouse_table, write_lakehouse_table
 from .data_profiling import profile_dataframe
 from .metadata import _now_utc_iso, _resolve_action_by, _build_metadata_column_key, _build_metadata_table_key, _build_runtime_audit_fields, _build_dq_rule_key
+from .data_agreement import DATA_AGREEMENT_TABLE, DATA_AGREEMENT_EVIDENCE_TABLE
 
 CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
 COLUMN_CONTEXT_TABLE = "METADATA_COLUMN_CONTEXT"
 DQ_RULES_TABLE = "METADATA_DQ_RULES"
 COLUMN_CLASSIFICATION_TABLE = "METADATA_COLUMN_CLASSIFICATION"
 LINEAGE_TABLE = "METADATA_DATA_LINEAGE_TABLE"
+PIPELINE_RUN_TABLE = "METADATA_PIPELINE_RUN"
+GOVERNANCE_REVIEW_TABLE = "METADATA_GOVERNANCE_REVIEW"
 SUCCESS_STATUSES = {"success", "succeeded", "passed", "complete", "completed", "ok"}
 DQ_RULE_TYPES = ["not_null", "unique_key", "accepted_values", "value_range", "regex_format", "datatype", "referential_integrity", "custom_expression"]
 DQ_RULE_TYPE_ALIASES = {"unique": "unique_key", "regex": "regex_format"}
@@ -142,7 +145,9 @@ def _get_governance_metadata_schemas() -> dict[str, Any]:
         COLUMN_CONTEXT_TABLE: _schema([("metadata_column_key", string), ("metadata_table_key", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("column_name", string), ("business_context", string), ("notes", string), ("review_status", string), ("approved_by", string), ("approved_at", string), ("ai_suggestion_json", string), *audit]),
         DQ_RULES_TABLE: _schema([("rule_key", string), ("rule_id", string), ("metadata_column_key", string), ("metadata_table_key", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("column_name", string), ("rule_type", string), ("rule_parameters_json", string), ("severity", string), ("description", string), ("is_active", boolean), ("review_status", string), ("approved_by", string), ("approved_at", string), ("ai_suggestion_json", string), ("action_type", string), *audit]),
         COLUMN_CLASSIFICATION_TABLE: _schema([("metadata_column_key", string), ("metadata_table_key", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("column_name", string), ("sensitivity_label", string), ("personal_data_classification", string), ("pii_identifier_type", string), ("handling_requirement", string), ("reasoning", string), ("review_status", string), ("approved_by", string), ("approved_at", string), ("ai_suggestion_json", string), *audit]),
-        LINEAGE_TABLE: _schema([("lineage_id", string), ("dataset_name", string), ("run_id", string), ("source_table", string), ("target_table", string), ("source_table_key", string), ("target_table_key", string), ("transformation_steps_json", string), ("created_at", string), *audit]),
+        LINEAGE_TABLE: _schema([("lineage_id", string), ("run_id", string), ("agreement_id", string), ("agreement_contract_version", string), ("environment_name", string), ("dataset_name", string), ("pipeline_name", string), ("source_table", string), ("target_table", string), ("source_table_key", string), ("target_table_key", string), ("notebook_registry_id", string), ("notebook_id", string), ("lineage_level", string), ("transformation_type", string), ("transformation_summary", string), ("transformation_steps_json", string), ("lineage_payload_json", string), ("created_at", string), ("captured_at", string), *audit]),
+        PIPELINE_RUN_TABLE: _schema([("run_id", string), ("agreement_id", string), ("agreement_contract_version", string), ("environment_name", string), ("dataset_name", string), ("pipeline_name", string), ("source_table", string), ("target_table", string), ("source_row_count", long), ("target_row_count", long), ("source_schema_status", string), ("target_schema_status", string), ("source_drift_status", string), ("target_drift_status", string), ("dq_status", string), ("dq_can_continue", boolean), ("dq_rule_count", long), ("dq_failed_rule_count", long), ("dq_warning_rule_count", long), ("dq_error_rule_count", long), ("dq_failed_row_count", long), ("schema_drift_status", string), ("pipeline_status", string), ("notebook_registry_id", string), ("notebook_id", string), ("started_at", string), ("completed_at", string), ("evidence_json", string), *audit]),
+        GOVERNANCE_REVIEW_TABLE: _schema([("review_id", string), ("run_id", string), ("agreement_id", string), ("agreement_contract_version", string), ("environment_name", string), ("dataset_name", string), ("pipeline_name", string), ("target_table", string), ("outcome", string), ("reviewed_at", string), ("reviewed_by", string), ("agreement_evidence_status", string), ("pipeline_evidence_status", string), ("schema_evidence_status", string), ("dq_evidence_status", string), ("profile_evidence_status", string), ("lineage_evidence_status", string), ("issues_json", string), ("latest_run_key", string), *audit]),
     }
 
 
@@ -587,6 +592,238 @@ def record_table_governance(
         "dq_rules": dq_rule_records,
         "column_classification": classification_records,
     }
+
+
+
+def _latest_row(rows: list[dict[str, Any]], *sort_fields: str) -> dict[str, Any] | None:
+    """Return the latest row by non-empty string sort fields."""
+    if not rows:
+        return None
+    fields = sort_fields or ("_committed_at", "completed_at", "profiled_at")
+    return max(rows, key=lambda row: tuple(str(_value(row, field, "")) for field in fields))
+
+
+def _matches_identity(row: dict[str, Any], *, env: str, dataset_name: str, target_table: str, run_id: str | None = None, agreement_id: str | None = None) -> bool:
+    if str(_value(row, "environment_name")) != str(env):
+        return False
+    if dataset_name and str(_value(row, "dataset_name")) != str(dataset_name):
+        return False
+    table_value = str(_value(row, "target_table") or _value(row, "table_name") or _value(row, "PROFILED_TABLE_NAME"))
+    if target_table and table_value != str(target_table):
+        return False
+    if run_id and str(_value(row, "run_id") or _value(row, "profile_run_id")) != str(run_id):
+        return False
+    if agreement_id and str(_value(row, "agreement_id") or _value(row, "AGREEMENT_ID")) != str(agreement_id):
+        return False
+    return True
+
+
+def _read_metadata_rows(config: Any, env: str, table_name: str, *, spark_session: Any, missing_ok: bool = True) -> list[dict[str, Any]]:
+    """Read metadata rows from the configured metadata lakehouse target."""
+    try:
+        return _coerce_rows(read_lakehouse_table(config, env, "metadata", table_name, spark_session=spark_session))
+    except Exception as exc:
+        if missing_ok and _is_table_not_found_error(exc):
+            return []
+        raise
+
+
+def _status_from_guardrail(value: Any) -> str:
+    text = str(value or "").strip().lower()
+    if not text:
+        return "missing"
+    if text in {"passed", "pass", "success", "successful", "ok", "complete", "completed"}:
+        return "passed"
+    if text in {"warning", "warn", "needs_review", "needs remediation", "needs_remediation"}:
+        return "warning"
+    if text in {"failed", "fail", "error", "blocked", "rejected"}:
+        return "failed"
+    return text
+
+
+def _schema_review_status(*rows: dict[str, Any]) -> str:
+    statuses = []
+    for row in rows:
+        for field in ("source_schema_status", "target_schema_status"):
+            status = _status_from_guardrail(row.get(field))
+            if status != "missing":
+                statuses.append(status)
+        for field in ("source_schema_check", "target_schema_check", "SOURCE_SCHEMA_CHECK", "TARGET_SCHEMA_CHECK"):
+            value = str(row.get(field) or "").strip().lower()
+            if value:
+                statuses.append("warning" if value == "monitor_only" else "passed")
+    if not statuses:
+        return "missing"
+    if any(status == "failed" for status in statuses):
+        return "failed"
+    if any(status == "warning" for status in statuses):
+        return "warning"
+    return "passed"
+
+
+def _safe_int(value: Any) -> int:
+    try:
+        return int(value or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
+def _dq_review_status(*rows: dict[str, Any]) -> str:
+    statuses = []
+    for row in rows:
+        status = _status_from_guardrail(row.get("dq_status") or row.get("DQ_STATUS"))
+        if status != "missing":
+            statuses.append(status)
+        error_count = _safe_int(row.get("dq_error_rule_count") or row.get("DQ_ERROR_RULE_COUNT"))
+        failed_count = _safe_int(row.get("dq_failed_rule_count") or row.get("DQ_FAILED_RULE_COUNT"))
+        if error_count:
+            statuses.append("failed")
+        elif failed_count:
+            statuses.append("warning")
+    if not statuses:
+        return "missing"
+    if any(status == "failed" for status in statuses):
+        return "failed"
+    if any(status == "warning" for status in statuses):
+        return "warning"
+    return "passed"
+
+
+def _governance_outcome(statuses: dict[str, str]) -> str:
+    blocking = {"agreement_evidence", "pipeline_evidence", "profile_evidence"}
+    if any(statuses[name] in {"missing", "failed"} for name in blocking):
+        return "rejected"
+    if statuses["dq_evidence"] == "failed":
+        return "rejected"
+    if statuses["schema_evidence"] == "failed":
+        return "needs_remediation"
+    if any(status in {"missing", "warning"} for status in statuses.values()):
+        return "needs_remediation"
+    return "approved"
+
+
+def review_pipeline_run(
+    config: Any,
+    env: str,
+    *,
+    spark_session: Any,
+    dataset_name: str,
+    target_table: str,
+    run_id: str | None = None,
+    agreement_id: str | None = None,
+    reviewed_by: str | None = None,
+    mode: str = "append",
+) -> dict[str, Any]:
+    """Review a completed v1 pipeline run and persist governance outcome evidence.
+
+    Parameters
+    ----------
+    config : FrameworkConfig or dict
+        Shared ``00_env_config`` configuration containing the metadata target.
+    env : str
+        Environment key used to read and write metadata.
+    spark_session : pyspark.sql.SparkSession
+        Spark session used for metadata DataFrame creation and table I/O.
+    dataset_name : str
+        Dataset identity written by ``02_pipeline`` evidence.
+    target_table : str
+        Target table identity written by ``02_pipeline`` evidence.
+    run_id : str, optional
+        Specific pipeline run to review. When omitted, the latest matching
+        pipeline evidence row is selected.
+    agreement_id : str, optional
+        Agreement identity to require. When omitted, the selected pipeline run's
+        agreement is used.
+    reviewed_by : str, optional
+        Reviewer identity stamped on the governance review row.
+    mode : str, default="append"
+        Metadata write mode for ``METADATA_GOVERNANCE_REVIEW``.
+
+    Returns
+    -------
+    dict[str, Any]
+        Governance review row with an ``outcome`` of ``approved``, ``rejected``,
+        or ``needs_remediation`` plus evidence status fields.
+
+    Notes
+    -----
+    This helper is designed for ``03_review``/``03_governance`` separate-session
+    execution. It reads agreement, pipeline, profile, lineage, and DQ evidence
+    from the configured ``metadata`` lakehouse target and never depends on local
+    variables copied from ``02_pipeline``.
+    """
+    pipeline_rows = [
+        row for row in _read_metadata_rows(config, env, PIPELINE_RUN_TABLE, spark_session=spark_session)
+        if _matches_identity(row, env=env, dataset_name=dataset_name, target_table=target_table, run_id=run_id, agreement_id=agreement_id)
+    ]
+    pipeline_row = _latest_row(pipeline_rows, "completed_at", "run_id")
+    selected_run_id = str(run_id or (pipeline_row or {}).get("run_id") or "")
+    selected_agreement_id = str(agreement_id or (pipeline_row or {}).get("agreement_id") or "")
+    selected_contract_version = str((pipeline_row or {}).get("agreement_contract_version") or "")
+    selected_pipeline_name = str((pipeline_row or {}).get("pipeline_name") or "")
+
+    agreement_rows = [
+        row for row in _read_metadata_rows(config, env, DATA_AGREEMENT_TABLE, spark_session=spark_session)
+        if selected_agreement_id and str(row.get("agreement_id") or "") == selected_agreement_id
+    ]
+    if selected_contract_version:
+        agreement_rows = [row for row in agreement_rows if str(row.get("contract_version") or "") == selected_contract_version] or agreement_rows
+
+    agreement_evidence_rows = [
+        row for row in _read_metadata_rows(config, env, DATA_AGREEMENT_EVIDENCE_TABLE, spark_session=spark_session)
+        if selected_agreement_id and str(row.get("agreement_id") or "") == selected_agreement_id
+    ]
+    catalogue_rows = [
+        row for row in _read_metadata_rows(config, env, CATALOGUE_TABLE, spark_session=spark_session)
+        if _matches_identity(row, env=env, dataset_name=dataset_name, target_table=target_table, run_id=selected_run_id or None)
+    ]
+    target_profile_rows = [row for row in catalogue_rows if str(_value(row, "profile_stage") or _value(row, "PROFILE_STAGE")).lower() == "target"]
+    lineage_rows = [
+        row for row in _read_metadata_rows(config, env, LINEAGE_TABLE, spark_session=spark_session)
+        if _matches_identity(row, env=env, dataset_name=dataset_name, target_table=target_table, run_id=selected_run_id or None, agreement_id=selected_agreement_id or None)
+    ]
+
+    latest_profile_row = _latest_row(target_profile_rows, "profiled_at", "PROFILE_RUN_ID") or {}
+    statuses = {
+        "agreement_evidence": "passed" if agreement_rows or agreement_evidence_rows else "missing",
+        "pipeline_evidence": "passed" if pipeline_row else "missing",
+        "schema_evidence": _schema_review_status(pipeline_row or {}, latest_profile_row),
+        "dq_evidence": _dq_review_status(pipeline_row or {}, latest_profile_row),
+        "profile_evidence": "passed" if target_profile_rows else "missing",
+        "lineage_evidence": "passed" if lineage_rows else "missing",
+    }
+    issues = [
+        {"evidence": name, "status": status}
+        for name, status in statuses.items()
+        if status in {"missing", "warning", "failed"}
+    ]
+    reviewed_at = datetime.now(timezone.utc).isoformat()
+    reviewer = _resolve_action_by(reviewed_by)
+    audit = _build_runtime_audit_fields(config=config, env=env, committed_by=reviewer, committed_at=reviewed_at)
+    review_row = {
+        "review_id": str(uuid.uuid4()),
+        "run_id": selected_run_id,
+        "agreement_id": selected_agreement_id,
+        "agreement_contract_version": selected_contract_version,
+        "environment_name": env,
+        "dataset_name": dataset_name,
+        "pipeline_name": selected_pipeline_name,
+        "target_table": target_table,
+        "outcome": _governance_outcome(statuses),
+        "reviewed_at": reviewed_at,
+        "reviewed_by": reviewer,
+        "agreement_evidence_status": statuses["agreement_evidence"],
+        "pipeline_evidence_status": statuses["pipeline_evidence"],
+        "schema_evidence_status": statuses["schema_evidence"],
+        "dq_evidence_status": statuses["dq_evidence"],
+        "profile_evidence_status": statuses["profile_evidence"],
+        "lineage_evidence_status": statuses["lineage_evidence"],
+        "issues_json": json.dumps(issues, sort_keys=True),
+        "latest_run_key": "|".join([env, dataset_name, target_table, selected_run_id]),
+        **audit,
+    }
+    write_lakehouse_table(spark_session.createDataFrame([review_row]), config, env, "metadata", GOVERNANCE_REVIEW_TABLE, mode=mode)
+    return review_row
 
 
 def _spark_sql_helpers():

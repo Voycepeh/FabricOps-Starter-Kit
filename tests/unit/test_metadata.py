@@ -232,4 +232,5 @@ def test_public_v1_callable_list_unchanged_after_metadata_cleanup():
         "widget_review_dq_rules",
         "widget_review_column_classification",
         "record_table_governance",
+        "review_pipeline_run",
     ]

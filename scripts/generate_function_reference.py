@@ -78,6 +78,7 @@ V1_CALLABLES = {
     "widget_review_dq_rules",
     "widget_review_column_classification",
     "record_table_governance",
+    "review_pipeline_run",
 }
 
 @dataclass
