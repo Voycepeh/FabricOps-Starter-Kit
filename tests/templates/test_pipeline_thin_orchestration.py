@@ -115,7 +115,7 @@ def test_pipeline_notebook_hides_manual_catalogue_and_lineage_plumbing():
 
 
 def test_pipeline_notebook_supports_many_sources_and_many_targets_by_definition():
-    _, code = _notebook_sources()
+    markdown, code = _notebook_sources()
 
     assert "SOURCE_DEFINITIONS" not in code
     assert "SOURCE_DATASETS = {" in code
@@ -138,6 +138,8 @@ def test_pipeline_notebook_supports_many_sources_and_many_targets_by_definition(
     assert "target_definitions=target_evidence_definitions" in code
     assert "target_name" in code
     assert "target_layer" in code
+    assert "\"target_layer\": \"unified\",  # source | unified | product" in code
+    assert "Choose the target layer based on where this output should be written" in markdown
     assert "write_mode" in code
     assert (
         code.index("target_profiles = {}")
