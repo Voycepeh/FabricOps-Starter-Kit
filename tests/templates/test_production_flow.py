@@ -27,6 +27,7 @@ def test_production_and_governance_templates_cover_output_summary_and_review_flo
     assert "monitor_data_changes" in production
     assert "enforce_dq_rules" in production
     assert "write_lakehouse_table" in production or "write_warehouse_table" in production
+    assert "write_catalogue_evidence" in production
     assert "write_pipeline_lineage" in production
     assert "write_pipeline_run_summary" in production
     assert "run_summary" in production

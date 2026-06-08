@@ -3,7 +3,7 @@
 ## Summary
 
 - Before callable count: **71** exported callable functions across essential and optional categories.
-- Revised after callable count: **29** curated v1 template callables.
+- Revised after callable count: **30** curated v1 template callables.
 - Definition: a callable is a function that a notebook template user actively calls in a template cell.
 - Source of truth: `src/fabricops_kit/__init__.py::__all__`, enforced by `tests/contract/test_public_contract.py` and mirrored in `scripts/generate_function_reference.py::V1_CALLABLES`.
 
@@ -29,15 +29,16 @@
 18. `stop_if_failed`
 19. `enforce_dq_rules`
 20. `build_lineage_records`
-21. `write_pipeline_lineage`
-22. `write_pipeline_run_summary`
-23. `widget_select_catalogue_table`
-24. `get_selected_catalogue_table`
-25. `load_catalogue_profile_rows`
-26. `widget_review_column_context`
-27. `widget_review_dq_rules`
-28. `widget_review_column_classification`
-29. `record_table_governance`
+21. `write_catalogue_evidence`
+22. `write_pipeline_lineage`
+23. `write_pipeline_run_summary`
+24. `widget_select_catalogue_table`
+25. `get_selected_catalogue_table`
+26. `load_catalogue_profile_rows`
+27. `widget_review_column_context`
+28. `widget_review_dq_rules`
+29. `widget_review_column_classification`
+30. `record_table_governance`
 
 ## Deleted from the public callable surface
 
@@ -55,7 +56,7 @@ The following previous public/exported functions were removed from the v1 callab
 
 ## Added pipeline evidence helpers
 
-`02_pipeline` continues to use existing public read, profiling, guardrail, DQ, and write helpers directly. The added public pipeline helpers are limited to noisy metadata evidence tasks: many-to-many lineage persistence and runtime summary logging. Catalogue evidence enrichment remains implementation plumbing rather than a package-root public callable.
+`02_pipeline` continues to use existing public read, profiling, guardrail, DQ, and write helpers directly. The added public pipeline helpers are limited to noisy metadata evidence tasks: catalogue evidence enrichment, many-to-many lineage persistence, and runtime summary logging.
 
 ## Merged functions
 

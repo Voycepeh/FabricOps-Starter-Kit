@@ -32,6 +32,7 @@ def test_pipeline_notebook_uses_existing_public_apis_and_metadata_helpers():
         "enforce_dq_rules",
         "stop_if_failed",
         "write_lakehouse_table",
+        "write_catalogue_evidence",
         "write_pipeline_lineage",
         "write_pipeline_run_summary",
     ]:
@@ -96,7 +97,9 @@ def test_pipeline_notebook_hides_manual_catalogue_and_lineage_plumbing():
     for snippet in forbidden_visible_plumbing:
         assert snippet not in code
 
-    assert code.count("_write_catalogue_evidence(") == 2
+    assert "from fabricops_kit.pipeline import _write_catalogue_evidence" not in code
+    assert "_write_catalogue_evidence(" not in code
+    assert code.count("write_catalogue_evidence(") == 2
     assert code.count("write_pipeline_lineage(") == 1
 
 
@@ -105,7 +108,9 @@ def test_pipeline_notebook_supports_many_sources_and_many_targets_by_definition(
 
     assert "for source_name, source_definition in SOURCE_DEFINITIONS.items()" in code
     assert "source_dfs[\"source_alias\"]" in code
+    assert code.index("raise ValueError(f\"Unsupported source kind") < code.index("df_minimal_source = source_dfs[\"minimal_source\"]")
     assert "target_dfs = {" in code
+    assert code.index("target_profiles = {}") < code.index("for target_name, target_df in target_dfs.items():", code.index("target_profiles = {}")) < code.index("write_catalogue_evidence(\n    target_profiles")
     assert "Add more sources" in code
     assert "Add more targets" in code
     assert "\"sources\": [" in code

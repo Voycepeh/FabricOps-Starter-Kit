@@ -67,7 +67,7 @@ def _dq_summary_fields(dq_result: Mapping[str, Any] | None) -> dict[str, Any]:
     }
 
 
-def _write_catalogue_evidence(
+def write_catalogue_evidence(
     profiles: Mapping[str, Any],
     dataset_definitions: Mapping[str, Mapping[str, Any]],
     *,

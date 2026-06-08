@@ -78,6 +78,7 @@ V1_CALLABLES = {
     "stop_if_failed",
     "enforce_dq_rules",
     "build_lineage_records",
+    "write_catalogue_evidence",
     "write_pipeline_lineage",
     "write_pipeline_run_summary",
     "widget_select_catalogue_table",

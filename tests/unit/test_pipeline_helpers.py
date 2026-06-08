@@ -20,6 +20,7 @@ class FakeSpark:
 
 
 def test_public_pipeline_helpers_are_exported_without_wrapper_bloat():
+    assert "write_catalogue_evidence" in fabricops_kit.__all__
     assert "write_pipeline_lineage" in fabricops_kit.__all__
     assert "write_pipeline_run_summary" in fabricops_kit.__all__
     for removed_name in {
@@ -28,7 +29,6 @@ def test_public_pipeline_helpers_are_exported_without_wrapper_bloat():
         "run_schema_guardrails",
         "run_data_drift_guardrails",
         "run_dq_guardrails",
-        "write_catalogue_evidence",
         "add_runtime_audit_columns",
         "write_pipeline_targets",
     }:

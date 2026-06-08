@@ -25,6 +25,7 @@ from .fabric_input_output import (
     write_warehouse_table,
 )
 from .pipeline import (
+    write_catalogue_evidence,
     write_pipeline_lineage,
     write_pipeline_run_summary,
 )
@@ -76,6 +77,7 @@ __all__ = [
     "stop_if_failed",
     "enforce_dq_rules",
     "build_lineage_records",
+    "write_catalogue_evidence",
     "write_pipeline_lineage",
     "write_pipeline_run_summary",
     "widget_select_catalogue_table",
