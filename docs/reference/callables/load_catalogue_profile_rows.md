@@ -71,6 +71,7 @@ Not documented yet
 <details class="reference-implementation-details">
 <summary>Implementation details</summary>
 
+- <a href="../internal/governance_review__review_governance_evidence/"><code>fabricops_kit.governance_review._review_governance_evidence</code></a>
 - <a href="../internal/governance_review__coerce_rows/"><code>fabricops_kit.governance_review._coerce_rows</code></a>
 - <a href="../internal/governance_review__is_success/"><code>fabricops_kit.governance_review._is_success</code></a>
 - <a href="../internal/governance_review__value/"><code>fabricops_kit.governance_review._value</code></a>
@@ -81,7 +82,7 @@ Not documented yet
 ## Source
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/769c8a7851b5cc8730434576fb06702a5a032f26/src/fabricops_kit/governance_review.py#L334-L359">View load_catalogue_profile_rows on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c7049e78d915b93903574ea792043a66ebe62cee/src/fabricops_kit/governance_review.py#L337-L362">View load_catalogue_profile_rows on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -130,13 +131,13 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
-- Source line: `334`
-- Inbound references count: 0
+- Source line: `337`
+- Inbound references count: 1
 - Outbound references count: 5
 
 ### AI implementation contract
 
-- **required_context:** Starter template: `03_review`; segment: `Governance review`.
+- **required_context:** Starter template: `03_governance`; segment: `Governance review`.
 - **inputs:** Not documented yet
 - **output:** Not documented yet
 - **side_effects:** Not documented yet
@@ -145,7 +146,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 
 ### Inbound references
 
-Not documented yet
+- <a href="../internal/governance_review__review_governance_evidence/"><code>fabricops_kit.governance_review._review_governance_evidence</code></a>
 
 ### Outbound references
 
@@ -158,9 +159,9 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/769c8a7851b5cc8730434576fb06702a5a032f26/src/fabricops_kit/governance_review.py#L334-L359">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/769c8a7851b5cc8730434576fb06702a5a032f26/src/fabricops_kit/governance_review.py#L334-L359</a>
-- Start line: `334`
-- End line: `359`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c7049e78d915b93903574ea792043a66ebe62cee/src/fabricops_kit/governance_review.py#L337-L362">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c7049e78d915b93903574ea792043a66ebe62cee/src/fabricops_kit/governance_review.py#L337-L362</a>
+- Start line: `337`
+- End line: `362`
 - Signature:
 
 ```python
@@ -175,6 +176,7 @@ def load_catalogue_profile_rows(config: Any, env: str, selection: dict[str, Any]
 
 ### Internal implementation helpers
 
+- <a href="../internal/governance_review__review_governance_evidence/"><code>fabricops_kit.governance_review._review_governance_evidence</code></a>
 - <a href="../internal/governance_review__coerce_rows/"><code>fabricops_kit.governance_review._coerce_rows</code></a>
 - <a href="../internal/governance_review__is_success/"><code>fabricops_kit.governance_review._is_success</code></a>
 - <a href="../internal/governance_review__value/"><code>fabricops_kit.governance_review._value</code></a>

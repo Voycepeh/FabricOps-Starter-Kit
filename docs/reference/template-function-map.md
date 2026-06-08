@@ -30,7 +30,7 @@ Compact template-first lookup for the public helper functions used by each noteb
 </section>
 
 <section class="template-function-group">
-<h2><code>03_review</code></h2>
+<h2><code>03_governance</code></h2>
 <p class="template-function-purpose">Table-scoped governance review and approved metadata recording.</p>
 <div class="template-function-row">
 <span class="template-function-segment">Governance review</span>

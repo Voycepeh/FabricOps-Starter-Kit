@@ -186,5 +186,73 @@ def test_governance_metadata_schemas_do_not_add_dq_failure_tables():
 
     assert governance.DQ_RULES_TABLE in schemas
     assert governance.PIPELINE_RUNS_TABLE in schemas
+    assert governance.GOVERNANCE_REVIEWS_TABLE in schemas
     assert "run_summary_json" in schemas[governance.PIPELINE_RUNS_TABLE].fieldNames()
+    assert "outcome" in schemas[governance.GOVERNANCE_REVIEWS_TABLE].fieldNames()
     assert not any("FAILURE" in table or "QUARANTINE" in table for table in schemas)
+
+
+def test_review_governance_evidence_reads_metadata_and_writes_approved_outcome(monkeypatch):
+    writes = []
+    selection = {
+        "environment_name": "dev",
+        "dataset_name": "sales",
+        "table_name": "orders",
+        "metadata_table_key": "dev|sales|orders",
+        "profile_run_id": "run-002",
+        "profile_stage": "target",
+    }
+    tables = {
+        governance.CATALOGUE_TABLE: [
+            {**selection, "profile_status": "success", "column_name": "order_id", "agreement_id": "agr-1", "contract_version": "1.0", "DQ_STATUS": "passed", "DQ_FAILED_RULE_COUNT": 0, "DQ_ERROR_RULE_COUNT": 0},
+        ],
+        governance.PIPELINE_RUNS_TABLE: [
+            {"environment_name": "dev", "run_id": "run-001", "agreement_id": "agr-1", "status": "completed", "source_guardrail_status": "passed", "target_guardrail_status": "passed", "completed_at": "2026-01-01T00:00:00+00:00"},
+            {"environment_name": "dev", "run_id": "run-002", "agreement_id": "agr-1", "status": "completed", "source_guardrail_status": "passed", "target_guardrail_status": "passed", "completed_at": "2026-01-02T00:00:00+00:00"},
+        ],
+        governance.DATA_AGREEMENT_TABLE: [{"agreement_id": "agr-1", "contract_version": "1.0", "agreement_name": "Orders"}],
+        governance.DATA_AGREEMENT_EVIDENCE_TABLE: [{"agreement_id": "agr-1", "contract_version": "1.0", "evidence_type": "Email Approval"}],
+    }
+
+    monkeypatch.setattr(governance, "read_lakehouse_table", lambda config, env, target, table, **kwargs: tables[table])
+    monkeypatch.setattr(governance, "write_lakehouse_table", lambda df, config, env, target, table, **kwargs: writes.append((table, df.rows, env, target, kwargs)))
+
+    result = governance._review_governance_evidence(framework_config(), "dev", selection, spark_session=FakeSpark(), reviewed_by="reviewer@example.com")
+
+    assert result["outcome"] == "approved"
+    assert result["blockers"] == []
+    assert writes[0][0] == governance.GOVERNANCE_REVIEWS_TABLE
+    assert writes[0][1][0]["pipeline_run_id"] == "run-002"
+    assert writes[0][1][0]["agreement_id"] == "agr-1"
+
+
+def test_review_governance_evidence_blocks_missing_agreement_and_failed_dq(monkeypatch):
+    writes = []
+    selection = {
+        "environment_name": "dev",
+        "dataset_name": "sales",
+        "table_name": "orders",
+        "metadata_table_key": "dev|sales|orders",
+        "profile_run_id": "run-003",
+        "profile_stage": "target",
+    }
+    tables = {
+        governance.CATALOGUE_TABLE: [
+            {**selection, "profile_status": "success", "column_name": "order_id", "agreement_id": "missing", "contract_version": "1.0", "DQ_STATUS": "failed", "DQ_FAILED_RULE_COUNT": 1, "DQ_ERROR_RULE_COUNT": 1},
+        ],
+        governance.PIPELINE_RUNS_TABLE: [
+            {"environment_name": "dev", "run_id": "run-003", "agreement_id": "missing", "status": "completed", "source_guardrail_status": "passed", "target_guardrail_status": "warning", "completed_at": "2026-01-03T00:00:00+00:00"},
+        ],
+        governance.DATA_AGREEMENT_TABLE: [],
+        governance.DATA_AGREEMENT_EVIDENCE_TABLE: [],
+    }
+
+    monkeypatch.setattr(governance, "read_lakehouse_table", lambda config, env, target, table, **kwargs: tables[table])
+    monkeypatch.setattr(governance, "write_lakehouse_table", lambda df, config, env, target, table, **kwargs: writes.append((table, df.rows)))
+
+    result = governance._review_governance_evidence(framework_config(), "dev", selection, spark_session=FakeSpark())
+
+    assert result["outcome"] == "rejected"
+    assert {item["code"] for item in result["blockers"]} == {"missing_agreement_metadata", "dq_failed"}
+    assert result["warnings"][0]["code"] == "target_guardrail_status_warning"
+    assert writes[0][1][0]["outcome"] == "rejected"

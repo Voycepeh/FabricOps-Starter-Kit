@@ -33,11 +33,12 @@ write_lakehouse_table(
 | `METADATA_DATA_CATALOGUE` | `02_pipeline` | Stores table context, profile evidence, and guardrail context. |
 | `METADATA_PIPELINE_RUNS` | `02_pipeline` | Stores one runtime summary row per pipeline run, tied to agreement and notebook registry context. |
 | `METADATA_DATA_ACCESS` | Access capture process | Stores table-level access assignments when captured. |
-| `METADATA_COLUMN_CONTEXT` | `03_review` | Stores reviewed business meaning for catalogue columns. |
-| `METADATA_DQ_RULES` | `03_review` | Stores approved DQ expectations only; runtime DQ results stay with notebook guardrail output and existing catalogue/profile evidence. |
-| `METADATA_COLUMN_CLASSIFICATION` | `03_review` | Stores reviewed sensitivity and PII classifications. |
+| `METADATA_COLUMN_CONTEXT` | `03_governance` | Stores reviewed business meaning for catalogue columns. |
+| `METADATA_DQ_RULES` | `03_governance` | Stores approved DQ expectations only; runtime DQ results stay with notebook guardrail output and existing catalogue/profile evidence. |
+| `METADATA_COLUMN_CLASSIFICATION` | `03_governance` | Stores reviewed sensitivity and PII classifications. |
+| `METADATA_GOVERNANCE_REVIEWS` | `03_governance` | Stores final review outcomes such as approved, rejected, or needs remediation with blockers and warnings. |
 
-`01_agreement` writes steward, agreement, and evidence metadata. `02_pipeline` writes registry, catalogue, lineage, profile, guardrail, and run evidence. `03_review` writes reviewed metadata such as column context, DQ expectations, sensitivity, and classification. `99_explore` can support investigation, but it is optional and is not a required gate.
+`01_agreement` writes steward, agreement, and evidence metadata. `02_pipeline` writes registry, catalogue, lineage, profile, guardrail, and run evidence. `03_governance` writes reviewed metadata such as column context, DQ expectations, sensitivity, classification, and final governance review outcomes. `99_explore` can support investigation, but it is optional and is not a required gate.
 
 For how schema, data drift, and DQ presets produce this evidence, see [Pipeline Guardrails](schema-and-data-drift.md).
 
@@ -222,7 +223,7 @@ Fabric Delta tables do not enforce primary and foreign keys. FabricOps still use
 | `layer` | Source or target storage layer. |
 | `asset_kind` | Lakehouse, warehouse, CSV or Parquet. |
 
-**Workflow connection:** `03_review` uses catalogue evidence to select tables and columns for reviewed metadata. Agreement context can be resolved through the notebook registry rather than stored directly on each catalogue row.
+**Workflow connection:** `03_governance` uses catalogue evidence to select tables and columns for reviewed metadata. Agreement context can be resolved through the notebook registry rather than stored directly on each catalogue row.
 
 ### `METADATA_PIPELINE_RUNS`
 
@@ -272,7 +273,7 @@ This table stores one summary row per pipeline run. It is tied to the selected a
 
 ### `METADATA_COLUMN_CONTEXT`
 
-**For:** human-reviewed business context for catalogue columns, written by `03_review`.
+**For:** human-reviewed business context for catalogue columns, written by `03_governance`.
 
 | Column | Purpose |
 | --- | --- |
@@ -290,7 +291,7 @@ This table stores one summary row per pipeline run. It is tied to the selected a
 
 ### `METADATA_DQ_RULES`
 
-**For:** approved DQ expectations only, written by `03_review`.
+**For:** approved DQ expectations only, written by `03_governance`.
 
 | Column | Purpose |
 | --- | --- |
@@ -320,7 +321,7 @@ This table stores one summary row per pipeline run. It is tied to the selected a
 
 ### `METADATA_COLUMN_CLASSIFICATION`
 
-**For:** human-reviewed sensitivity and PII decisions, written by `03_review`.
+**For:** human-reviewed sensitivity and PII decisions, written by `03_governance`.
 
 | Column | Purpose |
 | --- | --- |

@@ -52,7 +52,7 @@ Runtime evidence is stored in metadata. Profiles and DQ summaries are written to
 
 **Result:** repeatable transformations, output tables, catalogue evidence, lineage, runtime evidence, schema guardrails, drift guardrails, and DQ guardrails are produced without exposing implementation-heavy code in the notebook.
 
-### `03_review`
+### `03_governance`
 
 Run after `02_pipeline` has created evidence for review.
 
@@ -64,7 +64,7 @@ It stores reviewed metadata. Enforcement happens only when a later `02_pipeline`
 
 ### Enforce approved governance rules
 
-After `03_review`, engineering reruns or updates `02_pipeline`.
+After `03_governance`, engineering reruns or updates `02_pipeline`.
 
 The pipeline fetches approved rules from:
 
@@ -88,8 +88,8 @@ After the production pipeline is approved and stable, store the approved product
 | Optional discovery and profiling                        | Analyst or data scientist | `99_explore`                       |
 | Transformation and output delivery                      | Engineering               | `02_pipeline`                      |
 | Catalogue, lineage, profile, schema, and drift evidence | Engineering               | `02_pipeline`                      |
-| Reviewed governance metadata                            | Governance                | `03_review`                        |
-| Approved rule enforcement                               | Engineering               | `02_pipeline` after `03_review`    |
+| Reviewed governance metadata                            | Governance                | `03_governance`                        |
+| Approved rule enforcement                               | Engineering               | `02_pipeline` after `03_governance`    |
 | Production handover                                     | Engineering               | Store approved production notebook |
 
 ## Next step

@@ -21,7 +21,7 @@ def _code(path: str) -> str:
 
 def test_production_and_governance_templates_cover_output_summary_and_review_flows():
     production = _code("02_pipeline.ipynb")
-    governance = _code("03_review.ipynb")
+    governance = _code("03_governance.ipynb")
 
     assert "validate_schema" in production
     assert "monitor_data_changes" in production
@@ -36,6 +36,7 @@ def test_production_and_governance_templates_cover_output_summary_and_review_flo
     assert "widget_review_dq_rules" in governance
     assert "widget_review_column_classification" in governance
     assert "record_table_governance" in governance
+    assert "write_governance_review=True" in governance
 
 
 def test_production_template_enforces_dq_before_full_dataset_write():
@@ -78,7 +79,7 @@ def test_docs_and_templates_do_not_add_dq_failure_table_behavior():
         root / "docs" / "how-fabricops-works" / "metadata-tables.md",
         root / "docs" / "quick-start.md",
         root / "templates" / "notebooks" / "02_pipeline.ipynb",
-        root / "templates" / "notebooks" / "03_review.ipynb",
+        root / "templates" / "notebooks" / "03_governance.ipynb",
     ]
     forbidden = [
         "METADATA_DQ_FAILURE",

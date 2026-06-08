@@ -52,7 +52,7 @@ MODULE_DOCS_METADATA: list[ModuleDocMetadata] = [
     {"module_name": "drift", "visibility": "public", "module_summary": "Owns schema/profile/data drift checks as engineering guardrails during pipeline runs.", "sidebar_group": "3. Data engineer", "sidebar_include": True},
     {"module_name": "metadata", "visibility": "public", "module_summary": "Owns metadata evidence persistence, stable keys, notebook registry, catalogue keys, and runtime audit helpers.", "sidebar_group": "5. Metadata store", "sidebar_include": True},
     {"module_name": "pipeline", "visibility": "public", "module_summary": "Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals, lineage persistence, and runtime summaries.", "sidebar_group": "3. Data engineer", "sidebar_include": True},
-    {"module_name": "governance_review", "visibility": "public", "module_summary": "Owns table-scoped 03_review catalogue selection, business context review, DQ-rule review guidance, classification review, AI-assisted internal drafting helpers, and approved metadata commit through record_table_governance.", "sidebar_group": "1. Governance steward", "sidebar_include": True},
+    {"module_name": "governance_review", "visibility": "public", "module_summary": "Owns table-scoped 03_governance catalogue selection, business context review, DQ-rule review guidance, classification review, AI-assisted internal drafting helpers, and approved metadata commit through record_table_governance.", "sidebar_group": "1. Governance steward", "sidebar_include": True},
     {"module_name": "ai", "visibility": "internal", "module_summary": "Internal AI utility surface used by workflow-facing public functions.", "sidebar_group": "Internal", "sidebar_include": False},
     {"module_name": "schemas", "visibility": "internal", "module_summary": "Internal schema artifacts used for validation and contracts.", "sidebar_group": "Internal", "sidebar_include": False},
 ]
@@ -112,8 +112,8 @@ TEMPLATE_FLOW_DOCS: list[TemplateFlowDocMetadata] = [{'notebook_key': '00_env_co
                             'write_pipeline_run_summary'],
                 'title': 'Pipeline run'}],
   'template_path': 'templates/notebooks/02_pipeline.ipynb'},
- {'notebook_key': '03_review',
-  'notebook_label': '`03_review`',
+ {'notebook_key': '03_governance',
+  'notebook_label': '`03_governance`',
   'segment_intro': 'Table-scoped governance review and approved metadata recording.',
   'segments': [{'symbols': ['widget_select_catalogue_table',
                             'get_selected_catalogue_table',
@@ -123,7 +123,7 @@ TEMPLATE_FLOW_DOCS: list[TemplateFlowDocMetadata] = [{'notebook_key': '00_env_co
                             'widget_review_column_classification',
                             'record_table_governance'],
                 'title': 'Governance review'}],
-  'template_path': 'templates/notebooks/03_review.ipynb'},
+  'template_path': 'templates/notebooks/03_governance.ipynb'},
  {'notebook_key': '99_explore',
   'notebook_label': '`99_explore`',
   'segment_intro': 'Optional discovery, profiling, troubleshooting, investigation, and ad hoc '
@@ -225,7 +225,7 @@ PUBLIC_SYMBOL_DOCS: list[PublicSymbolDocMetadata] = [{'kind': 'function',
   'use_when': 'Use in 02_pipeline or 99_explore notebooks to let a user select an approved data '
               'agreement before reading, profiling, or writing governed data.',
   'do_not_use_when': 'Do not use when an agreement has already been programmatically selected and '
-                     'validated, or for catalogue table review selection in 03_review.',
+                     'validated, or for catalogue table review selection in 03_governance.',
   'parameters': 'config, env, optional spark_session, and notebook registration options for '
                 'loading agreement choices from metadata.',
   'returns': 'Interactive widget state; call get_selected_agreement to retrieve the selected '
@@ -555,7 +555,7 @@ PUBLIC_SYMBOL_DOCS: list[PublicSymbolDocMetadata] = [{'kind': 'function',
   'side_effects': 'Reads approved DQ-rule metadata and evaluates checks against the DataFrame; it '
                   'does not filter the DataFrame or write target data.',
   'fabric_context': 'Requires active approved DQ-rule evidence in the configured metadata target '
-                    'from 03_review governance workflows.',
+                    'from 03_governance governance workflows.',
   'ai_verification': 'Verify approved metadata exists, inspect status/can_continue, and call '
                      'stop_if_failed before writing when blocking failures occur.',
   'preferred_example': 'dq_result = enforce_dq_rules(df, CONFIG, env, dataset_name, table_name, '
@@ -628,21 +628,21 @@ PUBLIC_SYMBOL_DOCS: list[PublicSymbolDocMetadata] = [{'kind': 'function',
   'function_type': 'callable',
   'summary_override': 'Render a searchable selector for latest successful catalogue profiles.',
   'symbol_name': 'widget_select_catalogue_table',
-  'template_notebook': '03_review',
+  'template_notebook': '03_governance',
   'template_segment': 'Governance review'},
  {'kind': 'function',
   'module': 'governance_review',
   'function_type': 'callable',
   'summary_override': 'Return the table selected by widget_select_catalogue_table.',
   'symbol_name': 'get_selected_catalogue_table',
-  'template_notebook': '03_review',
+  'template_notebook': '03_governance',
   'template_segment': 'Governance review'},
  {'kind': 'function',
   'module': 'governance_review',
   'function_type': 'callable',
   'summary_override': 'Load column profile rows for the selected catalogue table.',
   'symbol_name': 'load_catalogue_profile_rows',
-  'template_notebook': '03_review',
+  'template_notebook': '03_governance',
   'template_segment': 'Governance review'},
  {'kind': 'function',
   'module': 'governance_review',
@@ -650,14 +650,14 @@ PUBLIC_SYMBOL_DOCS: list[PublicSymbolDocMetadata] = [{'kind': 'function',
   'summary_override': 'Render standalone business-context review guidance for selected profile '
                       'rows.',
   'symbol_name': 'widget_review_column_context',
-  'template_notebook': '03_review',
+  'template_notebook': '03_governance',
   'template_segment': 'Governance review'},
  {'kind': 'function',
   'module': 'governance_review',
   'function_type': 'callable',
   'summary_override': 'Render standalone DQ-rule review guidance for selected profile rows.',
   'symbol_name': 'widget_review_dq_rules',
-  'template_notebook': '03_review',
+  'template_notebook': '03_governance',
   'template_segment': 'Governance review'},
  {'kind': 'function',
   'module': 'governance_review',
@@ -665,7 +665,7 @@ PUBLIC_SYMBOL_DOCS: list[PublicSymbolDocMetadata] = [{'kind': 'function',
   'summary_override': 'Render standalone sensitivity and PII classification review guidance for '
                       'selected profile rows.',
   'symbol_name': 'widget_review_column_classification',
-  'template_notebook': '03_review',
+  'template_notebook': '03_governance',
   'template_segment': 'Governance review'},
  {'kind': 'function',
   'module': 'governance_review',
@@ -673,9 +673,9 @@ PUBLIC_SYMBOL_DOCS: list[PublicSymbolDocMetadata] = [{'kind': 'function',
   'summary_override': 'Persist approved table-governance context, DQ-rule, and classification '
                       'evidence in one v1 commit action.',
   'symbol_name': 'record_table_governance',
-  'template_notebook': '03_review',
+  'template_notebook': '03_governance',
   'template_segment': 'Governance review',
-  'use_when': 'Use in 03_review after human approval to persist approved column context, DQ rules, '
+  'use_when': 'Use in 03_governance after human approval to persist approved column context, DQ rules, '
               'and classification evidence for a profiled table.',
   'do_not_use_when': 'Do not use to draft governance recommendations, bypass review approval, or '
                      'write unapproved rows.',
@@ -686,7 +686,7 @@ PUBLIC_SYMBOL_DOCS: list[PublicSymbolDocMetadata] = [{'kind': 'function',
   'raises': 'Raises configuration, validation, Spark, or metadata-write errors when approved '
             'records cannot be built or persisted.',
   'side_effects': 'Writes approved governance metadata records to configured metadata tables.',
-  'fabric_context': 'Requires 03_review profile rows and 00_env_config metadata routing; '
+  'fabric_context': 'Requires 03_governance profile rows and 00_env_config metadata routing; '
                     'governance metadata must be written to the configured metadata target.',
   'ai_verification': 'Verify review_status is approved and commit is true for intended rows before '
                      'calling; confirm returned record groups match expected approvals.',

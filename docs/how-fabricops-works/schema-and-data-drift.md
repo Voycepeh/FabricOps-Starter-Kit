@@ -2,7 +2,7 @@
 
 Pipeline guardrails are checks inside `02_pipeline` that help decide whether a run should continue, warn, or stop before writing outputs.
 
-Read [How FabricOps Works](index.md) first for the standard `01_agreement` → `02_pipeline` → `03_review` path. This page focuses on the guardrails that the pipeline owns.
+Read [How FabricOps Works](index.md) first for the standard `01_agreement` → `02_pipeline` → `03_governance` path. This page focuses on the guardrails that the pipeline owns.
 
 ![Schema, data-change, and DQ guardrails showing source and target validation flow](../assets/fabricops-schema-data-guardrails.png){ .full-width }
 
@@ -12,7 +12,7 @@ Source checks run before transformation. They validate source schema, compare so
 
 Target checks run before publication. They validate transformed target schema, compare proposed target profiles with previous metadata evidence, and evaluate approved active DQ rules for target tables before outputs are written.
 
-The important boundary is that `02_pipeline` owns blocking behavior. `03_review` can approve DQ metadata, but those expectations become active only when `02_pipeline` loads them through the DQ guardrail helper.
+The important boundary is that `02_pipeline` owns blocking behavior. `03_governance` can approve DQ metadata, but those expectations become active only when `02_pipeline` loads them through the DQ guardrail helper.
 
 ## Guardrail flow
 
@@ -43,7 +43,7 @@ Use a simple pattern first, then add stricter checks only when the team needs th
 
 ## DQ guardrail behavior
 
-`03_review` records human-approved DQ expectations in `METADATA_DQ_RULES`. `02_pipeline` reads the active approved rules for the target table and evaluates them with the same simple guardrail contract used by schema and data-change checks:
+`03_governance` records human-approved DQ expectations in `METADATA_DQ_RULES`. `02_pipeline` reads the active approved rules for the target table and evaluates them with the same simple guardrail contract used by schema and data-change checks:
 
 - `status`: `passed`, `warning`, or `failed`;
 - `can_continue`: whether publication can proceed;
@@ -88,12 +88,12 @@ Start with monitor settings when the team is still learning the data. Move to bl
 
 | Preset | Use when | Behavior in plain language |
 | --- | --- | --- |
-| `approved_rules` | The dataset should enforce DQ expectations approved in `03_review`. | Read active approved rules from `METADATA_DQ_RULES` and evaluate them as aggregate guardrails. |
+| `approved_rules` | The dataset should enforce DQ expectations approved in `03_governance`. | Read active approved rules from `METADATA_DQ_RULES` and evaluate them as aggregate guardrails. |
 | `skip` | A dataset has no approved DQ expectations yet or should not run DQ checks in this notebook. | Return a skipped result and continue without loading DQ rules. |
 
 ## How DQ rules are approved
 
-`03_review` writes approved active rules to `METADATA_DQ_RULES`. `02_pipeline` does not author DQ rules; users only choose `dq_preset` per source or target definition. When the preset is `approved_rules`, `02_pipeline` reads those approved active rules from the configured metadata lakehouse route and enforces them before downstream writes.
+`03_governance` writes approved active rules to `METADATA_DQ_RULES`. `02_pipeline` does not author DQ rules; users only choose `dq_preset` per source or target definition. When the preset is `approved_rules`, `02_pipeline` reads those approved active rules from the configured metadata lakehouse route and enforces them before downstream writes.
 
 ## Metadata evidence for review
 
@@ -108,7 +108,7 @@ The thin `02_pipeline` template calls existing FabricOps helpers directly for re
 - lineage and run context;
 - runtime summary rows in `METADATA_PIPELINE_RUNS`.
 
-This evidence helps `03_review`, support teams, and future maintainers understand what the pipeline checked and why it did or did not write outputs.
+This evidence helps `03_governance`, support teams, and future maintainers understand what the pipeline checked and why it did or did not write outputs.
 
 ## What this is not
 
