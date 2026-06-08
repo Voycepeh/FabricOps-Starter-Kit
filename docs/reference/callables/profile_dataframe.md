@@ -2,11 +2,9 @@
 
 Profile a source or target DataFrame for schema, quality, and catalogue evidence.
 
-## What this is for
+## What this is for and when to use it
 
 Profile a source or target DataFrame for schema, quality, and catalogue evidence.
-
-## When to use it
 
 - Use to create schema, null, distinct, min/max, and optional distribution evidence from a Spark DataFrame.
 
@@ -85,13 +83,11 @@ profile_rows_df = profile_dataframe(df, table_name="orders", include_distributio
 
 Spark DataFrame containing one profile row per eligible business column.
 
-## Raises
+## Errors and side effects
 
-Raises Spark/DataFrame errors when profiling expressions cannot be evaluated.
+**Errors:** Raises Spark/DataFrame errors when profiling expressions cannot be evaluated.
 
-## Side effects
-
-Computes profiling aggregations on the provided DataFrame; it does not write metadata, tables, or files.
+**Side effects:** Computes profiling aggregations on the provided DataFrame; it does not write metadata, tables, or files.
 
 ## Related functions
 
@@ -112,7 +108,7 @@ Computes profiling aggregations on the provided DataFrame; it does not write met
 ## Source
 
 - Source file path: `src/fabricops_kit/data_profiling.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/data_profiling.py#L213-L327">View profile_dataframe on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d6fb0fb33beb9bd33597b485cb7d9af5e9bfe8fb/src/fabricops_kit/data_profiling.py#L213-L327">View profile_dataframe on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -277,7 +273,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/data_profiling.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/data_profiling.py#L213-L327">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/data_profiling.py#L213-L327</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d6fb0fb33beb9bd33597b485cb7d9af5e9bfe8fb/src/fabricops_kit/data_profiling.py#L213-L327">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d6fb0fb33beb9bd33597b485cb7d9af5e9bfe8fb/src/fabricops_kit/data_profiling.py#L213-L327</a>
 - Start line: `213`
 - End line: `327`
 - Signature:

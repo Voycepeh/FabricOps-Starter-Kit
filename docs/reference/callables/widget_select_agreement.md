@@ -2,11 +2,9 @@
 
 Render an agreement selector and optionally register the active notebook.
 
-## What this is for
+## What this is for and when to use it
 
 Render an agreement selector and optionally register the active notebook.
-
-## When to use it
 
 - Use in 02_pipeline or 99_explore notebooks to let a user select an approved data agreement before reading, profiling, or writing governed data.
 
@@ -91,13 +89,11 @@ agreement = get_selected_agreement()
 
 Interactive widget state; call get_selected_agreement to retrieve the selected agreement record.
 
-## Raises
+## Errors and side effects
 
-Raises metadata read, widget dependency, or configuration errors when agreement metadata cannot be loaded.
+**Errors:** Raises metadata read, widget dependency, or configuration errors when agreement metadata cannot be loaded.
 
-## Side effects
-
-Displays an IPython widget and may register the active notebook selection in metadata when requested.
+**Side effects:** Displays an IPython widget and may register the active notebook selection in metadata when requested.
 
 ## Related functions
 
@@ -120,7 +116,7 @@ Displays an IPython widget and may register the active notebook selection in met
 ## Source
 
 - Source file path: `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/data_agreement.py#L856-L1080">View widget_select_agreement on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d6fb0fb33beb9bd33597b485cb7d9af5e9bfe8fb/src/fabricops_kit/data_agreement.py#L856-L1080">View widget_select_agreement on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -398,7 +394,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/data_agreement.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/data_agreement.py#L856-L1080">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/data_agreement.py#L856-L1080</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d6fb0fb33beb9bd33597b485cb7d9af5e9bfe8fb/src/fabricops_kit/data_agreement.py#L856-L1080">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d6fb0fb33beb9bd33597b485cb7d9af5e9bfe8fb/src/fabricops_kit/data_agreement.py#L856-L1080</a>
 - Start line: `856`
 - End line: `1080`
 - Signature:

@@ -2,11 +2,9 @@
 
 Enforce approved active DQ rules as a target-write guardrail without filtering rows.
 
-## What this is for
+## What this is for and when to use it
 
 Enforce approved active DQ rules as a target-write guardrail without filtering rows.
-
-## When to use it
 
 - Use before target writes to enforce active approved DQ rules for a dataset/table as a pipeline guardrail.
 
@@ -71,13 +69,11 @@ stop_if_failed(dq_result)
 
 Guardrail result dictionary with status, can_continue, checks, message, tagged dataframe, and summary fields.
 
-## Raises
+## Errors and side effects
 
-Raises configuration, metadata-read, or Spark expression errors when approved rules cannot be loaded or evaluated.
+**Errors:** Raises configuration, metadata-read, or Spark expression errors when approved rules cannot be loaded or evaluated.
 
-## Side effects
-
-Reads approved DQ-rule metadata and evaluates checks against the DataFrame; it does not filter the DataFrame or write target data.
+**Side effects:** Reads approved DQ-rule metadata and evaluates checks against the DataFrame; it does not filter the DataFrame or write target data.
 
 ## Related functions
 
@@ -100,7 +96,7 @@ Reads approved DQ-rule metadata and evaluates checks against the DataFrame; it d
 ## Source
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/governance_review.py#L886-L943">View enforce_dq_rules on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d6fb0fb33beb9bd33597b485cb7d9af5e9bfe8fb/src/fabricops_kit/governance_review.py#L886-L943">View enforce_dq_rules on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -211,7 +207,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/governance_review.py#L886-L943">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/governance_review.py#L886-L943</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d6fb0fb33beb9bd33597b485cb7d9af5e9bfe8fb/src/fabricops_kit/governance_review.py#L886-L943">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d6fb0fb33beb9bd33597b485cb7d9af5e9bfe8fb/src/fabricops_kit/governance_review.py#L886-L943</a>
 - Start line: `886`
 - End line: `943`
 - Signature:

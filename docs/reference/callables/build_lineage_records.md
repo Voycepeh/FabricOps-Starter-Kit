@@ -2,11 +2,9 @@
 
 Build source-to-target lineage evidence records for a pipeline run.
 
-## What this is for
+## What this is for and when to use it
 
 Build source-to-target lineage evidence records for a pipeline run.
-
-## When to use it
 
 - Use in pipeline notebooks to build source-to-target lineage evidence rows for a completed transformation run.
 
@@ -65,13 +63,11 @@ lineage_rows = build_lineage_records(dataset_name=dataset_name, run_id=run_id, s
 
 List of lineage record dictionaries suitable for metadata persistence.
 
-## Raises
+## Errors and side effects
 
-Raises normal Python errors if required lineage inputs are missing or malformed.
+**Errors:** Raises normal Python errors if required lineage inputs are missing or malformed.
 
-## Side effects
-
-Pure record-building helper; it does not write metadata, tables, or files.
+**Side effects:** Pure record-building helper; it does not write metadata, tables, or files.
 
 ## Related functions
 
@@ -81,7 +77,7 @@ Pure record-building helper; it does not write metadata, tables, or files.
 ## Source
 
 - Source file path: `src/fabricops_kit/data_lineage.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/data_lineage.py#L209-L230">View build_lineage_records on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d6fb0fb33beb9bd33597b485cb7d9af5e9bfe8fb/src/fabricops_kit/data_lineage.py#L209-L230">View build_lineage_records on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -150,7 +146,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/data_lineage.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/data_lineage.py#L209-L230">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/data_lineage.py#L209-L230</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d6fb0fb33beb9bd33597b485cb7d9af5e9bfe8fb/src/fabricops_kit/data_lineage.py#L209-L230">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d6fb0fb33beb9bd33597b485cb7d9af5e9bfe8fb/src/fabricops_kit/data_lineage.py#L209-L230</a>
 - Start line: `209`
 - End line: `230`
 - Signature:

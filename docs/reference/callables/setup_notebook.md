@@ -2,11 +2,9 @@
 
 Shared environment setup and runtime validation for notebook templates.
 
-## What this is for
+## What this is for and when to use it
 
 Prepare a FabricOps notebook by validating configuration, resolving environment targets, and returning reusable runtime context.
-
-## When to use it
 
 - Starting a FabricOps notebook from 00_env_config
 - Validating configured environment targets before downstream helpers run
@@ -72,13 +70,11 @@ context = setup_notebook(CONFIG, env="Sandbox", required_targets=["Source", "Uni
 
 NotebookSetupContext with resolved configuration paths, runtime metadata, smoke-check results, and readiness status.
 
-## Raises
+## Errors and side effects
 
-ValueError for invalid configuration sections, missing required paths, or unresolved required targets.
+**Errors:** ValueError for invalid configuration sections, missing required paths, or unresolved required targets.
 
-## Side effects
-
-Runs configuration validation and Fabric readiness checks; it does not write FabricOps metadata tables.
+**Side effects:** Runs configuration validation and Fabric readiness checks; it does not write FabricOps metadata tables.
 
 ## Related functions
 
@@ -97,7 +93,7 @@ Runs configuration validation and Fabric readiness checks; it does not write Fab
 ## Source
 
 - Source file path: `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/config.py#L595-L704">View setup_notebook on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d6fb0fb33beb9bd33597b485cb7d9af5e9bfe8fb/src/fabricops_kit/config.py#L595-L704">View setup_notebook on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -257,7 +253,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/config.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/config.py#L595-L704">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/config.py#L595-L704</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d6fb0fb33beb9bd33597b485cb7d9af5e9bfe8fb/src/fabricops_kit/config.py#L595-L704">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d6fb0fb33beb9bd33597b485cb7d9af5e9bfe8fb/src/fabricops_kit/config.py#L595-L704</a>
 - Start line: `595`
 - End line: `704`
 - Signature:

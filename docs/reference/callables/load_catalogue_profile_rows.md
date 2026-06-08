@@ -2,11 +2,9 @@
 
 Load column profile rows for the selected catalogue table.
 
-## What this is for
+## What this is for and when to use it
 
 Load column profile rows for the selected catalogue table.
-
-## When to use it
 
 - Load column profile rows for the selected catalogue table.
 
@@ -60,13 +58,11 @@ Not documented yet
 
 Not documented yet
 
-## Raises
+## Errors and side effects
 
-Not documented yet
+**Errors:** Not documented yet
 
-## Side effects
-
-Not documented yet
+**Side effects:** Not documented yet
 
 ## Related functions
 
@@ -85,7 +81,7 @@ Not documented yet
 ## Source
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/governance_review.py#L332-L357">View load_catalogue_profile_rows on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d6fb0fb33beb9bd33597b485cb7d9af5e9bfe8fb/src/fabricops_kit/governance_review.py#L332-L357">View load_catalogue_profile_rows on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -162,7 +158,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/governance_review.py#L332-L357">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/governance_review.py#L332-L357</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d6fb0fb33beb9bd33597b485cb7d9af5e9bfe8fb/src/fabricops_kit/governance_review.py#L332-L357">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d6fb0fb33beb9bd33597b485cb7d9af5e9bfe8fb/src/fabricops_kit/governance_review.py#L332-L357</a>
 - Start line: `332`
 - End line: `357`
 - Signature:

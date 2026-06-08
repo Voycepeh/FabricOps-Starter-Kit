@@ -2,11 +2,9 @@
 
 Render the standalone data-agreement intake widget.
 
-## What this is for
+## What this is for and when to use it
 
 Render the standalone data-agreement intake widget.
-
-## When to use it
 
 - Render the standalone data-agreement intake widget.
 
@@ -56,13 +54,11 @@ Not documented yet
 dict[str, Any]
     Rendered controls, including read-only generated-identifier context.
 
-## Raises
+## Errors and side effects
 
-Not documented yet
+**Errors:** Not documented yet
 
-## Side effects
-
-Not documented yet
+**Side effects:** Not documented yet
 
 ## Related functions
 
@@ -78,7 +74,7 @@ Not documented yet
 ## Source
 
 - Source file path: `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/data_agreement.py#L1518-L1535">View widget_render_data_agreement on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d6fb0fb33beb9bd33597b485cb7d9af5e9bfe8fb/src/fabricops_kit/data_agreement.py#L1518-L1535">View widget_render_data_agreement on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -149,7 +145,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/data_agreement.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/data_agreement.py#L1518-L1535">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/data_agreement.py#L1518-L1535</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d6fb0fb33beb9bd33597b485cb7d9af5e9bfe8fb/src/fabricops_kit/data_agreement.py#L1518-L1535">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d6fb0fb33beb9bd33597b485cb7d9af5e9bfe8fb/src/fabricops_kit/data_agreement.py#L1518-L1535</a>
 - Start line: `1518`
 - End line: `1535`
 - Signature:

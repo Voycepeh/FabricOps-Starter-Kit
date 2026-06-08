@@ -2,11 +2,9 @@
 
 Write a DataFrame to a configured Fabric warehouse target.
 
-## What this is for
+## What this is for and when to use it
 
 Write a DataFrame to a configured Fabric warehouse target.
-
-## When to use it
 
 - Use when publishing a Spark DataFrame to a configured Fabric warehouse table.
 
@@ -75,13 +73,11 @@ write_warehouse_table(serving_df, CONFIG, env="Sandbox", target="Warehouse", sch
 
 None; the DataFrame is written to the configured warehouse table.
 
-## Raises
+## Errors and side effects
 
-Raises configuration, Spark connector, or warehouse write errors when the target/table cannot be written.
+**Errors:** Raises configuration, Spark connector, or warehouse write errors when the target/table cannot be written.
 
-## Side effects
-
-Writes data to a Fabric warehouse table using the selected mode.
+**Side effects:** Writes data to a Fabric warehouse table using the selected mode.
 
 ## Related functions
 
@@ -99,7 +95,7 @@ Writes data to a Fabric warehouse table using the selected mode.
 ## Source
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/fabric_input_output.py#L385-L449">View write_warehouse_table on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d6fb0fb33beb9bd33597b485cb7d9af5e9bfe8fb/src/fabricops_kit/fabric_input_output.py#L385-L449">View write_warehouse_table on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -211,7 +207,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/fabric_input_output.py#L385-L449">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/fabric_input_output.py#L385-L449</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d6fb0fb33beb9bd33597b485cb7d9af5e9bfe8fb/src/fabricops_kit/fabric_input_output.py#L385-L449">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d6fb0fb33beb9bd33597b485cb7d9af5e9bfe8fb/src/fabricops_kit/fabric_input_output.py#L385-L449</a>
 - Start line: `385`
 - End line: `449`
 - Signature:

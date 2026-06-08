@@ -2,11 +2,9 @@
 
 Write a DataFrame to a configured Fabric lakehouse target.
 
-## What this is for
+## What this is for and when to use it
 
 Write a DataFrame to a configured Fabric lakehouse target.
-
-## When to use it
 
 - Use when publishing a Spark DataFrame to a configured Fabric lakehouse table.
 
@@ -85,13 +83,11 @@ write_lakehouse_table(curated_df, CONFIG, env="Sandbox", target="Unified", table
 
 None; the DataFrame is written to the configured lakehouse table.
 
-## Raises
+## Errors and side effects
 
-Raises configuration, Spark, or write errors when the target cannot be resolved or the write fails.
+**Errors:** Raises configuration, Spark, or write errors when the target cannot be resolved or the write fails.
 
-## Side effects
-
-Writes data to a Fabric lakehouse table using the selected write mode.
+**Side effects:** Writes data to a Fabric lakehouse table using the selected write mode.
 
 ## Related functions
 
@@ -115,7 +111,7 @@ Writes data to a Fabric lakehouse table using the selected write mode.
 ## Source
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/fabric_input_output.py#L181-L275">View write_lakehouse_table on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d6fb0fb33beb9bd33597b485cb7d9af5e9bfe8fb/src/fabricops_kit/fabric_input_output.py#L181-L275">View write_lakehouse_table on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -262,7 +258,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/fabric_input_output.py#L181-L275">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/fabric_input_output.py#L181-L275</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d6fb0fb33beb9bd33597b485cb7d9af5e9bfe8fb/src/fabricops_kit/fabric_input_output.py#L181-L275">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d6fb0fb33beb9bd33597b485cb7d9af5e9bfe8fb/src/fabricops_kit/fabric_input_output.py#L181-L275</a>
 - Start line: `181`
 - End line: `275`
 - Signature:

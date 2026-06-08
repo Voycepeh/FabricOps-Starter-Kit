@@ -2,11 +2,9 @@
 
 Validate a DataFrame schema using strict, allow-new-columns, or monitor-only presets.
 
-## What this is for
+## What this is for and when to use it
 
 Validate a DataFrame schema using strict, allow-new-columns, or monitor-only presets.
-
-## When to use it
 
 - Use before writes to compare a DataFrame schema against an expected schema with strict, allow-new-columns, or monitor-only behavior.
 
@@ -56,13 +54,11 @@ stop_if_failed(schema_result)
 
 Guardrail result dictionary with status, can_continue, checks, message, and schema difference details.
 
-## Raises
+## Errors and side effects
 
-ValueError when preset is not one of the supported schema presets.
+**Errors:** ValueError when preset is not one of the supported schema presets.
 
-## Side effects
-
-Inspects DataFrame schema only; it does not write metadata, tables, or files.
+**Side effects:** Inspects DataFrame schema only; it does not write metadata, tables, or files.
 
 ## Related functions
 
@@ -80,7 +76,7 @@ Inspects DataFrame schema only; it does not write metadata, tables, or files.
 ## Source
 
 - Source file path: `src/fabricops_kit/drift.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/drift.py#L96-L185">View validate_schema on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d6fb0fb33beb9bd33597b485cb7d9af5e9bfe8fb/src/fabricops_kit/drift.py#L96-L185">View validate_schema on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -218,7 +214,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/drift.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/drift.py#L96-L185">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/drift.py#L96-L185</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d6fb0fb33beb9bd33597b485cb7d9af5e9bfe8fb/src/fabricops_kit/drift.py#L96-L185">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d6fb0fb33beb9bd33597b485cb7d9af5e9bfe8fb/src/fabricops_kit/drift.py#L96-L185</a>
 - Start line: `96`
 - End line: `185`
 - Signature:

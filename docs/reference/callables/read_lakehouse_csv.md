@@ -2,11 +2,9 @@
 
 Read a CSV file from a configured Fabric lakehouse Files path.
 
-## What this is for
+## What this is for and when to use it
 
 Read a CSV file from a configured Fabric lakehouse Files path.
-
-## When to use it
 
 - Use when reading a CSV file from a configured Fabric lakehouse Files path.
 
@@ -70,13 +68,11 @@ df = read_lakehouse_csv(CONFIG, env="Sandbox", target="Source", relative_path="r
 
 Spark DataFrame loaded from the lakehouse Files CSV path.
 
-## Raises
+## Errors and side effects
 
-Raises ValueError for invalid file paths and configuration/Spark errors when the file cannot be read.
+**Errors:** Raises ValueError for invalid file paths and configuration/Spark errors when the file cannot be read.
 
-## Side effects
-
-Reads from lakehouse Files; it does not write metadata, tables, or files.
+**Side effects:** Reads from lakehouse Files; it does not write metadata, tables, or files.
 
 ## Related functions
 
@@ -96,7 +92,7 @@ Reads from lakehouse Files; it does not write metadata, tables, or files.
 ## Source
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/fabric_input_output.py#L278-L320">View read_lakehouse_csv on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d6fb0fb33beb9bd33597b485cb7d9af5e9bfe8fb/src/fabricops_kit/fabric_input_output.py#L278-L320">View read_lakehouse_csv on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -188,7 +184,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/fabric_input_output.py#L278-L320">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/fabric_input_output.py#L278-L320</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d6fb0fb33beb9bd33597b485cb7d9af5e9bfe8fb/src/fabricops_kit/fabric_input_output.py#L278-L320">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d6fb0fb33beb9bd33597b485cb7d9af5e9bfe8fb/src/fabricops_kit/fabric_input_output.py#L278-L320</a>
 - Start line: `278`
 - End line: `320`
 - Signature:

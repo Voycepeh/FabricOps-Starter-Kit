@@ -2,11 +2,9 @@
 
 Create or validate all FabricOps metadata tables through one setup action.
 
-## What this is for
+## What this is for and when to use it
 
 Create or validate all FabricOps metadata tables through one setup action.
-
-## When to use it
 
 - Use after setup_notebook in 00_env_config to create or validate the FabricOps metadata tables required by agreement, profiling, lineage, drift, and governance workflows.
 
@@ -60,13 +58,11 @@ setup_metadata_tables(CONFIG, env="Sandbox", spark_session=spark)
 
 Setup result describing metadata table creation or validation status.
 
-## Raises
+## Errors and side effects
 
-Raises configuration, Spark, or storage errors when metadata routing or table preparation fails.
+**Errors:** Raises configuration, Spark, or storage errors when metadata routing or table preparation fails.
 
-## Side effects
-
-Creates or validates FabricOps metadata tables in the configured metadata lakehouse target.
+**Side effects:** Creates or validates FabricOps metadata tables in the configured metadata lakehouse target.
 
 ## Related functions
 
@@ -86,7 +82,7 @@ Creates or validates FabricOps metadata tables in the configured metadata lakeho
 ## Source
 
 - Source file path: `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/config.py#L707-L758">View setup_metadata_tables on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d6fb0fb33beb9bd33597b485cb7d9af5e9bfe8fb/src/fabricops_kit/config.py#L707-L758">View setup_metadata_tables on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -187,7 +183,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/config.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/config.py#L707-L758">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/config.py#L707-L758</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d6fb0fb33beb9bd33597b485cb7d9af5e9bfe8fb/src/fabricops_kit/config.py#L707-L758">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d6fb0fb33beb9bd33597b485cb7d9af5e9bfe8fb/src/fabricops_kit/config.py#L707-L758</a>
 - Start line: `707`
 - End line: `758`
 - Signature:

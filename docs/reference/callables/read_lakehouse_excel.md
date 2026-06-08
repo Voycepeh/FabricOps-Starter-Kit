@@ -2,11 +2,9 @@
 
 Read an Excel file from a configured Fabric lakehouse Files path.
 
-## What this is for
+## What this is for and when to use it
 
 Read an Excel file from a configured Fabric lakehouse Files path.
-
-## When to use it
 
 - Use when reading .xlsx files from a configured Fabric lakehouse Files path, especially small reference files, mapping tables, or manually maintained business inputs.
 
@@ -70,13 +68,11 @@ mapping_df = read_lakehouse_excel(CONFIG, env="Sandbox", target="Source", relati
 
 Spark DataFrame converted from the selected Excel worksheet.
 
-## Raises
+## Errors and side effects
 
-Raises ValueError for invalid or non-Excel paths and Fabric/Spark/pandas errors when the file cannot be read.
+**Errors:** Raises ValueError for invalid or non-Excel paths and Fabric/Spark/pandas errors when the file cannot be read.
 
-## Side effects
-
-Reads from lakehouse Files through a temporary local Excel file; it does not write metadata, tables, or files.
+**Side effects:** Reads from lakehouse Files through a temporary local Excel file; it does not write metadata, tables, or files.
 
 ## Related functions
 
@@ -96,7 +92,7 @@ Reads from lakehouse Files through a temporary local Excel file; it does not wri
 ## Source
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/fabric_input_output.py#L632-L719">View read_lakehouse_excel on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d6fb0fb33beb9bd33597b485cb7d9af5e9bfe8fb/src/fabricops_kit/fabric_input_output.py#L632-L719">View read_lakehouse_excel on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -233,7 +229,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/fabric_input_output.py#L632-L719">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/fabric_input_output.py#L632-L719</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d6fb0fb33beb9bd33597b485cb7d9af5e9bfe8fb/src/fabricops_kit/fabric_input_output.py#L632-L719">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d6fb0fb33beb9bd33597b485cb7d9af5e9bfe8fb/src/fabricops_kit/fabric_input_output.py#L632-L719</a>
 - Start line: `632`
 - End line: `719`
 - Signature:

@@ -2,11 +2,9 @@
 
 Render standalone sensitivity and PII classification review guidance for selected profile rows.
 
-## What this is for
+## What this is for and when to use it
 
 Render standalone sensitivity and PII classification review guidance for selected profile rows.
-
-## When to use it
 
 - Render standalone sensitivity and PII classification review guidance for selected profile rows.
 
@@ -47,13 +45,11 @@ list[dict[str, Any]]
     Empty editable review list. Add approved classification dictionaries
     before calling ``record_table_governance``.
 
-## Raises
+## Errors and side effects
 
-Not documented yet
+**Errors:** Not documented yet
 
-## Side effects
-
-Not documented yet
+**Side effects:** Not documented yet
 
 ## Related functions
 
@@ -69,7 +65,7 @@ Not documented yet
 ## Source
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/governance_review.py#L488-L506">View widget_review_column_classification on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d6fb0fb33beb9bd33597b485cb7d9af5e9bfe8fb/src/fabricops_kit/governance_review.py#L488-L506">View widget_review_column_classification on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -138,7 +134,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/governance_review.py#L488-L506">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/governance_review.py#L488-L506</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d6fb0fb33beb9bd33597b485cb7d9af5e9bfe8fb/src/fabricops_kit/governance_review.py#L488-L506">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d6fb0fb33beb9bd33597b485cb7d9af5e9bfe8fb/src/fabricops_kit/governance_review.py#L488-L506</a>
 - Start line: `488`
 - End line: `506`
 - Signature:

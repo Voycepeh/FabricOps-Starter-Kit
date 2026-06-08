@@ -2,11 +2,9 @@
 
 Profile data, compare against the approved baseline, and return a drift guardrail result.
 
-## What this is for
+## What this is for and when to use it
 
 Profile data, compare against the approved baseline, and return a drift guardrail result.
-
-## When to use it
 
 - Use in 02_pipeline to compare current profile evidence with an approved or previous baseline and produce a data-change guardrail result.
 
@@ -91,13 +89,11 @@ stop_if_failed(drift_result)
 
 Guardrail result dictionary with status, can_continue, message, current profile, baseline details, and drift checks.
 
-## Raises
+## Errors and side effects
 
-Raises Spark or metadata-read errors when baseline profile evidence cannot be loaded or compared.
+**Errors:** Raises Spark or metadata-read errors when baseline profile evidence cannot be loaded or compared.
 
-## Side effects
-
-Reads baseline profile metadata and computes current profile evidence; it does not write target data.
+**Side effects:** Reads baseline profile metadata and computes current profile evidence; it does not write target data.
 
 ## Related functions
 
@@ -120,7 +116,7 @@ Reads baseline profile metadata and computes current profile evidence; it does n
 ## Source
 
 - Source file path: `src/fabricops_kit/drift.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/drift.py#L582-L671">View monitor_data_changes on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d6fb0fb33beb9bd33597b485cb7d9af5e9bfe8fb/src/fabricops_kit/drift.py#L582-L671">View monitor_data_changes on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -262,7 +258,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/drift.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/drift.py#L582-L671">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/drift.py#L582-L671</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d6fb0fb33beb9bd33597b485cb7d9af5e9bfe8fb/src/fabricops_kit/drift.py#L582-L671">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d6fb0fb33beb9bd33597b485cb7d9af5e9bfe8fb/src/fabricops_kit/drift.py#L582-L671</a>
 - Start line: `582`
 - End line: `671`
 - Signature:

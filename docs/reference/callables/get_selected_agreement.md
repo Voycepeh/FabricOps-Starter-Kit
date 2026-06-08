@@ -2,11 +2,9 @@
 
 Return the agreement selected by widget_select_agreement.
 
-## What this is for
+## What this is for and when to use it
 
 Return the agreement selected by widget_select_agreement.
-
-## When to use it
 
 - Use immediately after widget_select_agreement to retrieve the selected agreement record for pipeline logic and evidence binding.
 
@@ -46,13 +44,11 @@ dataset_name = agreement["dataset_name"]
 
 Selected agreement dictionary for the active notebook session.
 
-## Raises
+## Errors and side effects
 
-Raises an error when no agreement has been selected in the current session.
+**Errors:** Raises an error when no agreement has been selected in the current session.
 
-## Side effects
-
-Reads session/widget state only; it does not write metadata, tables, or files.
+**Side effects:** Reads session/widget state only; it does not write metadata, tables, or files.
 
 ## Related functions
 
@@ -61,7 +57,7 @@ Reads session/widget state only; it does not write metadata, tables, or files.
 ## Source
 
 - Source file path: `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/data_agreement.py#L1083-L1098">View get_selected_agreement on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d6fb0fb33beb9bd33597b485cb7d9af5e9bfe8fb/src/fabricops_kit/data_agreement.py#L1083-L1098">View get_selected_agreement on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -124,7 +120,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/data_agreement.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/data_agreement.py#L1083-L1098">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/data_agreement.py#L1083-L1098</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d6fb0fb33beb9bd33597b485cb7d9af5e9bfe8fb/src/fabricops_kit/data_agreement.py#L1083-L1098">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d6fb0fb33beb9bd33597b485cb7d9af5e9bfe8fb/src/fabricops_kit/data_agreement.py#L1083-L1098</a>
 - Start line: `1083`
 - End line: `1098`
 - Signature:

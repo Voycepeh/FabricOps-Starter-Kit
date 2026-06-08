@@ -2,11 +2,9 @@
 
 Stop a notebook only when a schema or data-change guardrail result blocks continuation.
 
-## What this is for
+## What this is for and when to use it
 
 Stop a notebook only when a schema or data-change guardrail result blocks continuation.
-
-## When to use it
 
 - Use after schema, drift, or DQ guardrail helpers to stop the notebook when can_continue is false.
 
@@ -46,13 +44,11 @@ stop_if_failed(schema_result)
 
 None when execution may continue; otherwise raises or exits according to runtime behavior.
 
-## Raises
+## Errors and side effects
 
-Raises RuntimeError outside Fabric notebook exit handling when a failed guardrail must stop execution.
+**Errors:** Raises RuntimeError outside Fabric notebook exit handling when a failed guardrail must stop execution.
 
-## Side effects
-
-May terminate notebook execution through Fabric notebook utilities or raise an exception.
+**Side effects:** May terminate notebook execution through Fabric notebook utilities or raise an exception.
 
 ## Related functions
 
@@ -70,7 +66,7 @@ May terminate notebook execution through Fabric notebook utilities or raise an e
 ## Source
 
 - Source file path: `src/fabricops_kit/drift.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/drift.py#L674-L694">View stop_if_failed on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d6fb0fb33beb9bd33597b485cb7d9af5e9bfe8fb/src/fabricops_kit/drift.py#L674-L694">View stop_if_failed on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -138,7 +134,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/drift.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/drift.py#L674-L694">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/drift.py#L674-L694</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d6fb0fb33beb9bd33597b485cb7d9af5e9bfe8fb/src/fabricops_kit/drift.py#L674-L694">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d6fb0fb33beb9bd33597b485cb7d9af5e9bfe8fb/src/fabricops_kit/drift.py#L674-L694</a>
 - Start line: `674`
 - End line: `694`
 - Signature:

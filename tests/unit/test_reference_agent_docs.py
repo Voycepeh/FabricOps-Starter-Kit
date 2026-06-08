@@ -27,9 +27,10 @@ CORE_CALLABLES = {
     "record_table_governance",
 }
 CORE_PAGE_SECTIONS = (
+    "What this is for and when to use it",
     "When not to use it",
     "Example",
-    "Side effects",
+    "Errors and side effects",
     "Source",
 )
 CORE_AGENT_FIELDS = (
@@ -72,10 +73,14 @@ def test_every_callable_page_has_ai_reference_sections() -> None:
     assert callable_pages
     for page in callable_pages:
         text = page.read_text(encoding="utf-8")
-        assert "## What this is for" in text, page
-        assert "## When to use it" in text, page
-        assert "## Side effects" in text, page
+        assert "## What this is for and when to use it" in text, page
+        assert "## When not to use it" in text, page
+        assert "## Errors and side effects" in text, page
         assert "## Source" in text, page
+        assert "\n## What this is for\n" not in text, page
+        assert "\n## When to use it\n" not in text, page
+        assert "\n## Raises\n" not in text, page
+        assert "\n## Side effects\n" not in text, page
         assert "## AI / machine-readable metadata" not in text, page
         assert "<summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>" in text, page
 
@@ -166,7 +171,7 @@ def test_setup_notebook_reference_uses_human_first_source_documentation() -> Non
     assert "src/fabricops_kit/config.py#L595" in text
     assert "## Example\n\n```python\ncontext = setup_notebook" in text
     first_metadata = text.index("<summary>AI / machine-readable metadata")
-    for marker in ("## What this is for", "## When to use it", "## When not to use it", "## Example"):
+    for marker in ("## What this is for and when to use it", "## When not to use it", "## Example", "## Errors and side effects"):
         assert text.index(marker) < first_metadata
     assert "## AI / machine-readable metadata" not in text
     assert "- Starting a FabricOps notebook from 00_env_config" in text

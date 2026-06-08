@@ -2,11 +2,9 @@
 
 Persist approved table-governance context, DQ-rule, and classification evidence in one v1 commit action.
 
-## What this is for
+## What this is for and when to use it
 
 Persist approved table-governance context, DQ-rule, and classification evidence in one v1 commit action.
-
-## When to use it
 
 - Use in 03_review after human approval to persist approved column context, DQ rules, and classification evidence for a profiled table.
 
@@ -85,13 +83,11 @@ written = record_table_governance(CONFIG, env, profile_rows, spark_session=spark
 
 Dictionary of records written for column_context, dq_rules, and column_classification.
 
-## Raises
+## Errors and side effects
 
-Raises configuration, validation, Spark, or metadata-write errors when approved records cannot be built or persisted.
+**Errors:** Raises configuration, validation, Spark, or metadata-write errors when approved records cannot be built or persisted.
 
-## Side effects
-
-Writes approved governance metadata records to configured metadata tables.
+**Side effects:** Writes approved governance metadata records to configured metadata tables.
 
 ## Related functions
 
@@ -112,7 +108,7 @@ Writes approved governance metadata records to configured metadata tables.
 ## Source
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/governance_review.py#L509-L589">View record_table_governance on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d6fb0fb33beb9bd33597b485cb7d9af5e9bfe8fb/src/fabricops_kit/governance_review.py#L509-L589">View record_table_governance on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -243,7 +239,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/governance_review.py#L509-L589">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1171b98e11e7afc7b6351c6501d1c7050119657f/src/fabricops_kit/governance_review.py#L509-L589</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d6fb0fb33beb9bd33597b485cb7d9af5e9bfe8fb/src/fabricops_kit/governance_review.py#L509-L589">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d6fb0fb33beb9bd33597b485cb7d9af5e9bfe8fb/src/fabricops_kit/governance_review.py#L509-L589</a>
 - Start line: `509`
 - End line: `589`
 - Signature:
