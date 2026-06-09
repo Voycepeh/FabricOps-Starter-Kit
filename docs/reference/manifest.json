@@ -31,7 +31,7 @@
     {
       "module_name": "drift",
       "visibility": "public",
-      "module_summary": "Owns schema/profile/data drift checks as engineering guardrails during pipeline runs.",
+      "module_summary": "Owns schema and catalogue profile stability checks as engineering guardrails during pipeline runs.",
       "sidebar_group": "3. Data engineer",
       "sidebar_include": true
     },
@@ -185,20 +185,33 @@
     {
       "module_name": "drift",
       "visibility": "public",
-      "module_summary": "Owns schema/profile/data drift checks as engineering guardrails during pipeline runs.",
+      "module_summary": "Owns schema and catalogue profile stability checks as engineering guardrails during pipeline runs.",
       "sidebar_group": "3. Data engineer",
       "sidebar_include": true,
-      "callable_name": "monitor_data_changes",
+      "callable_name": "enforce_catalogue_stability",
       "callable_visibility": "public",
       "callable_type": "callable",
       "callable_role": "callable",
       "template_notebook": "02_pipeline",
-      "template_segment": "Drift monitoring"
+      "template_segment": "Stability monitoring"
     },
     {
       "module_name": "drift",
       "visibility": "public",
-      "module_summary": "Owns schema/profile/data drift checks as engineering guardrails during pipeline runs.",
+      "module_summary": "Owns schema and catalogue profile stability checks as engineering guardrails during pipeline runs.",
+      "sidebar_group": "3. Data engineer",
+      "sidebar_include": true,
+      "callable_name": "generate_schema_guardrail_config",
+      "callable_visibility": "public",
+      "callable_type": "callable",
+      "callable_role": "callable",
+      "template_notebook": "02_pipeline",
+      "template_segment": "Schema validation"
+    },
+    {
+      "module_name": "drift",
+      "visibility": "public",
+      "module_summary": "Owns schema and catalogue profile stability checks as engineering guardrails during pipeline runs.",
       "sidebar_group": "3. Data engineer",
       "sidebar_include": true,
       "callable_name": "stop_if_failed",
@@ -211,7 +224,7 @@
     {
       "module_name": "drift",
       "visibility": "public",
-      "module_summary": "Owns schema/profile/data drift checks as engineering guardrails during pipeline runs.",
+      "module_summary": "Owns schema and catalogue profile stability checks as engineering guardrails during pipeline runs.",
       "sidebar_group": "3. Data engineer",
       "sidebar_include": true,
       "callable_name": "validate_schema",

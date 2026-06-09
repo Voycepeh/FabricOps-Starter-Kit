@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 2</span><span class="reference-chip">Internal helpers: 13</span><span class="reference-chip">Outbound: 3</span><span class="reference-chip">Inbound: 2</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 2</span><span class="reference-chip">Internal helpers: 13</span><span class="reference-chip">Outbound: 3</span><span class="reference-chip">Inbound: 3</span></div>
 
 ## Module purpose
 
@@ -44,7 +44,7 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
     </tr>
     <tr>
       <td>Inbound module count</td>
-      <td>2</td>
+      <td>3</td>
     </tr>
     <tr>
       <td>Outbound module count</td>
@@ -52,7 +52,7 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
     </tr>
     <tr>
       <td>External callers</td>
-      <td><code>data_agreement</code>, <code>fabric_input_output</code></td>
+      <td><code>data_agreement</code>, <code>drift</code>, <code>fabric_input_output</code></td>
     </tr>
     <tr>
       <td>External callees</td>

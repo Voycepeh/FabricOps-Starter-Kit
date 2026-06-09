@@ -1,4 +1,4 @@
-# _categorical_distance
+# _row_to_dict
 
 **Module:** `drift`  
 **Classification:** Internal
@@ -17,7 +17,7 @@ Do not call this helper directly from notebooks; use the public callable helpers
 
 ## Used by
 
-- <a href="../internal/drift__check_profile_drift/"><code>fabricops_kit.drift._check_profile_drift</code></a>
+- <a href="../internal/drift__latest_catalogue_stability_row/"><code>fabricops_kit.drift._latest_catalogue_stability_row</code></a>
 
 ## Purpose
 
@@ -26,7 +26,7 @@ No summary available.
 ## Signature if available
 
 ```python
-def _categorical_distance(current_distribution: dict, baseline_distribution: dict) -> tuple[float, list[str]]
+def _row_to_dict(row) -> dict
 ```
 
 ## Side effects
@@ -43,15 +43,15 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 
 ## Function manifest
 
-- Fully qualified function name: `fabricops_kit.drift._categorical_distance`
-- Short name: `_categorical_distance`
+- Fully qualified function name: `fabricops_kit.drift._row_to_dict`
+- Short name: `_row_to_dict`
 - Module: `drift`
 - Classification: Internal
 - Related module: `drift`
 - Source file path: `src/fabricops_kit/drift.py`
-- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c7049e78d915b93903574ea792043a66ebe62cee/src/fabricops_kit/drift.py#L304-L316">View source on GitHub</a>
+- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/15f1799b713dde469e690b3bbdf35ffe588ff83c/src/fabricops_kit/drift.py#L369-L376">View source on GitHub</a>
 - Inbound references count: 1
 - Outbound references count: 0
 
 ## Inbound references
-- <a href="../internal/drift__check_profile_drift/"><code>fabricops_kit.drift._check_profile_drift</code></a>
+- <a href="../internal/drift__latest_catalogue_stability_row/"><code>fabricops_kit.drift._latest_catalogue_stability_row</code></a>

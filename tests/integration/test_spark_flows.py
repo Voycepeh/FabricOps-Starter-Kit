@@ -4,38 +4,10 @@ import json
 
 import pytest
 
-from fabricops_kit.governance_review import _enforce_dq, _load_active_dq_rules, enforce_dq_rules
+from fabricops_kit.governance_review import _load_active_dq_rules, enforce_dq_rules
 from fabricops_kit.drift import stop_if_failed, validate_schema
 
 pytestmark = pytest.mark.spark
-
-
-def test_spark_dq_enforcement_splits_valid_quarantine_and_failure_rows(spark_session):
-    df = spark_session.createDataFrame(
-        [
-            {"order_id": "A", "status": "active", "amount": 10.0},
-            {"order_id": "B", "status": "invalid", "amount": 20.0},
-            {"order_id": None, "status": "active", "amount": -1.0},
-        ]
-    )
-    rules = [
-        {"rule_id": "order_id_required", "rule_type": "not_null", "columns": ["order_id"], "severity": "error", "description": "Required"},
-        {
-            "rule_id": "status_known",
-            "rule_type": "accepted_values",
-            "columns": ["status"],
-            "allowed_values": ["active", "inactive"],
-            "severity": "warning",
-            "description": "Known status",
-        },
-        {"rule_id": "amount_positive", "rule_type": "value_range", "columns": ["amount"], "lower_bound": 0, "severity": "error", "description": "Positive"},
-    ]
-
-    result = _enforce_dq(df, table_name="orders", rules=rules, row_id_columns=["order_id"], dq_run_id="dq-run")
-
-    assert result.valid_rows.count() == 1
-    assert result.quarantine_rows.count() == 2
-    assert result.failure_rows.count() == 3
 
 
 def test_spark_schema_validation_and_latest_dq_metadata_are_stable(spark_session):
@@ -440,3 +412,28 @@ def test_enforce_dq_rules_supports_current_v1_metadata_shape(spark_session, monk
     assert result["status"] == "passed"
     assert result["can_continue"] is True
     assert result["checks"][0]["rule_type"] == "not_null"
+
+
+def test_write_catalogue_evidence_appends_stability_fields_without_updates(spark_session, monkeypatch):
+    from fabricops_kit.data_profiling import profile_dataframe
+    from fabricops_kit import pipeline
+
+    writes = []
+    monkeypatch.setattr(pipeline, "write_lakehouse_table", lambda df, config, env, target, table, **kwargs: writes.append((df, env, target, table, kwargs)))
+    df = spark_session.createDataFrame([(1, "open")], "id int, status string")
+    profile_df = profile_dataframe(df, "orders")
+
+    result = pipeline.write_catalogue_evidence(
+        {"orders": profile_df},
+        {"orders": {"dataset_name": "sales", "table_name": "orders", "stage": "source", "data_behavior": "fixed", "stability_check_type": "full_profile_hash"}},
+        config={},
+        env="dev",
+        run_id="run-1",
+        stability_results={"orders": {"status": "baseline_created", "can_continue": True, "stability_check_enabled": True, "data_behavior": "fixed", "stability_check_type": "full_profile_hash", "profile_hash": "abc", "comparable_profile_hash": "abc", "stability_status": "baseline_created", "stability_can_continue": True}},
+    )
+
+    assert result == {"orders": "written"}
+    assert writes[0][2:4] == ("metadata", "METADATA_DATA_CATALOGUE")
+    assert writes[0][4]["mode"] == "append"
+    assert "stability_status" in writes[0][0].columns
+    assert "profile_hash" in writes[0][0].columns

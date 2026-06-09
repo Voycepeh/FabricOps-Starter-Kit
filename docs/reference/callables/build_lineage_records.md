@@ -77,7 +77,7 @@ List of lineage record dictionaries suitable for metadata persistence.
 ## Source
 
 - Source file path: `src/fabricops_kit/data_lineage.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c7049e78d915b93903574ea792043a66ebe62cee/src/fabricops_kit/data_lineage.py#L209-L230">View build_lineage_records on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/15f1799b713dde469e690b3bbdf35ffe588ff83c/src/fabricops_kit/data_lineage.py#L209-L230">View build_lineage_records on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -146,7 +146,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/data_lineage.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c7049e78d915b93903574ea792043a66ebe62cee/src/fabricops_kit/data_lineage.py#L209-L230">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c7049e78d915b93903574ea792043a66ebe62cee/src/fabricops_kit/data_lineage.py#L209-L230</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/15f1799b713dde469e690b3bbdf35ffe588ff83c/src/fabricops_kit/data_lineage.py#L209-L230">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/15f1799b713dde469e690b3bbdf35ffe588ff83c/src/fabricops_kit/data_lineage.py#L209-L230</a>
 - Start line: `209`
 - End line: `230`
 - Signature:

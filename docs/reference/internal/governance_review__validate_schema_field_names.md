@@ -1,4 +1,4 @@
-# DQEnforcementResult
+# _validate_schema_field_names
 
 **Module:** `governance_review`  
 **Classification:** Internal
@@ -17,16 +17,16 @@ Do not call this helper directly from notebooks; use the public callable helpers
 
 ## Used by
 
-- <a href="../internal/governance_review__enforce_dq/"><code>fabricops_kit.governance_review._enforce_dq</code></a>
+- <a href="../internal/governance_review__schema/"><code>fabricops_kit.governance_review._schema</code></a>
 
 ## Purpose
 
-Structured DQ enforcement outputs produced by internal DQ helpers.
+Validate that a metadata schema has no case-insensitive duplicates.
 
 ## Signature if available
 
 ```python
-class DQEnforcementResult
+def _validate_schema_field_names(table_name: str, fields: list[tuple[str, Any]]) -> None
 ```
 
 ## Side effects
@@ -43,15 +43,15 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 
 ## Function manifest
 
-- Fully qualified function name: `fabricops_kit.governance_review.DQEnforcementResult`
-- Short name: `DQEnforcementResult`
+- Fully qualified function name: `fabricops_kit.governance_review._validate_schema_field_names`
+- Short name: `_validate_schema_field_names`
 - Module: `governance_review`
 - Classification: Internal
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
-- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c7049e78d915b93903574ea792043a66ebe62cee/src/fabricops_kit/governance_review.py#L38-L45">View source on GitHub</a>
+- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/15f1799b713dde469e690b3bbdf35ffe588ff83c/src/fabricops_kit/governance_review.py#L89-L114">View source on GitHub</a>
 - Inbound references count: 1
 - Outbound references count: 0
 
 ## Inbound references
-- <a href="../internal/governance_review__enforce_dq/"><code>fabricops_kit.governance_review._enforce_dq</code></a>
+- <a href="../internal/governance_review__schema/"><code>fabricops_kit.governance_review._schema</code></a>

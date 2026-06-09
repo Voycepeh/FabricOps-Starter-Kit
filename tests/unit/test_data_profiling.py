@@ -41,3 +41,14 @@ def test_profile_dataframe_excludes_dq_technical_columns(spark_session):
     columns = {row["COLUMN_NAME"] for row in profile_dataframe(df, "orders").collect()}
 
     assert columns == {"order_id", "amount"}
+
+
+def test_profile_dataframe_excludes_fabricops_and_dq_annotation_prefixes(spark_session):
+    df = spark_session.createDataFrame(
+        [(1, "ok", "warning", "rule", "run-1", "pipe")],
+        "id int, status string, _dq_check_status string, _dq_failed_rules string, _fabricops_run_id string, _fabricops_pipeline_name string",
+    )
+
+    columns = {row["COLUMN_NAME"] for row in profile_dataframe(df, "orders").collect()}
+
+    assert columns == {"id", "status"}

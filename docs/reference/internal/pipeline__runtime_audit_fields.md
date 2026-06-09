@@ -50,7 +50,7 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 - Classification: Internal
 - Related module: `pipeline`
 - Source file path: `src/fabricops_kit/pipeline.py`
-- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c7049e78d915b93903574ea792043a66ebe62cee/src/fabricops_kit/pipeline.py#L38-L49">View source on GitHub</a>
+- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/15f1799b713dde469e690b3bbdf35ffe588ff83c/src/fabricops_kit/pipeline.py#L47-L58">View source on GitHub</a>
 - Inbound references count: 2
 - Outbound references count: 2
 

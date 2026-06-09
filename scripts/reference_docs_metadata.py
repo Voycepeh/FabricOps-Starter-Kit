@@ -49,7 +49,7 @@ MODULE_DOCS_METADATA: list[ModuleDocMetadata] = [
     {"module_name": "data_profiling", "visibility": "public", "module_summary": "Owns deterministic profiling evidence such as schema, nulls, distincts, min/max, and optional lightweight distributions.", "sidebar_group": "2. Analyst / data scientist", "sidebar_include": True},
     {"module_name": "fabric_input_output", "visibility": "public", "module_summary": "Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.", "sidebar_group": "3. Data engineer", "sidebar_include": True},
     {"module_name": "data_lineage", "visibility": "public", "module_summary": "Owns source-to-target lineage and transformation evidence.", "sidebar_group": "3. Data engineer", "sidebar_include": True},
-    {"module_name": "drift", "visibility": "public", "module_summary": "Owns schema/profile/data drift checks as engineering guardrails during pipeline runs.", "sidebar_group": "3. Data engineer", "sidebar_include": True},
+    {"module_name": "drift", "visibility": "public", "module_summary": "Owns schema and catalogue profile stability checks as engineering guardrails during pipeline runs.", "sidebar_group": "3. Data engineer", "sidebar_include": True},
     {"module_name": "metadata", "visibility": "public", "module_summary": "Owns metadata evidence persistence, stable keys, notebook registry, catalogue keys, and runtime audit helpers.", "sidebar_group": "5. Metadata store", "sidebar_include": True},
     {"module_name": "pipeline", "visibility": "public", "module_summary": "Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals, lineage persistence, and runtime summaries.", "sidebar_group": "3. Data engineer", "sidebar_include": True},
     {"module_name": "governance_review", "visibility": "public", "module_summary": "Owns table-scoped 03_governance catalogue selection, business context review, DQ-rule review guidance, classification review, AI-assisted internal drafting helpers, and approved metadata commit through record_table_governance.", "sidebar_group": "1. Governance steward", "sidebar_include": True},
@@ -102,7 +102,8 @@ TEMPLATE_FLOW_DOCS: list[TemplateFlowDocMetadata] = [{'notebook_key': '00_env_co
                             'read_warehouse_table',
                             'profile_dataframe',
                             'validate_schema',
-                            'monitor_data_changes',
+                            'generate_schema_guardrail_config',
+                            'enforce_catalogue_stability',
                             'enforce_dq_rules',
                             'stop_if_failed',
                             'write_lakehouse_table',
@@ -177,7 +178,7 @@ PUBLIC_SYMBOL_DOCS: list[PublicSymbolDocMetadata] = [{'kind': 'function',
   'template_notebook': '00_env_config',
   'template_segment': 'Environment bootstrap',
   'use_when': 'Use after setup_notebook in 00_env_config to create or validate the FabricOps '
-              'metadata tables required by agreement, profiling, lineage, drift, and governance '
+              'metadata tables required by agreement, profiling, lineage, stability, and governance '
               'workflows.',
   'do_not_use_when': 'Do not use for writing business data or pipeline target tables; use '
                      'write_lakehouse_table or write_warehouse_table for data outputs.',
@@ -191,7 +192,7 @@ PUBLIC_SYMBOL_DOCS: list[PublicSymbolDocMetadata] = [{'kind': 'function',
   'fabric_context': 'Requires the metadata target from 00_env_config; metadata tables must be '
                     'routed through CONFIG.path_config paths for the selected env.',
   'ai_verification': 'Verify metadata setup completes before recommending agreement, profiling, '
-                     'lineage, drift, or governance workflows that persist evidence.',
+                     'lineage, stability, or governance workflows that persist evidence.',
   'preferred_example': 'setup_metadata_tables(CONFIG, env="Sandbox", spark_session=spark)',
   'related_functions': ['setup_notebook', 'record_table_governance']},
  {'kind': 'function',
@@ -455,7 +456,7 @@ PUBLIC_SYMBOL_DOCS: list[PublicSymbolDocMetadata] = [{'kind': 'function',
                      'key schema/profile fields before writing evidence.',
   'preferred_example': 'profile_rows_df = profile_dataframe(df, table_name="orders", '
                        'include_distributions=True, distribution_columns=["status"] )',
-  'related_functions': ['monitor_data_changes', 'record_table_governance']},
+  'related_functions': ['enforce_catalogue_stability', 'record_table_governance']},
  {'kind': 'function',
   'module': 'drift',
   'function_type': 'callable',
@@ -480,23 +481,40 @@ PUBLIC_SYMBOL_DOCS: list[PublicSymbolDocMetadata] = [{'kind': 'function',
   'preferred_example': 'schema_result = validate_schema(df, {"order_id": "string"}, '
                        'preset="allow_new_columns")\n'
                        'stop_if_failed(schema_result)',
-  'related_functions': ['monitor_data_changes', 'stop_if_failed']},
+  'related_functions': ['generate_schema_guardrail_config', 'enforce_catalogue_stability', 'stop_if_failed']},
  {'kind': 'function',
   'module': 'drift',
   'function_type': 'callable',
-  'summary_override': 'Profile data, compare against the approved baseline, and return a drift '
-                      'guardrail result.',
-  'symbol_name': 'monitor_data_changes',
+  'summary_override': 'Generate starter schema guardrail config from a DataFrame schema.',
+  'symbol_name': 'generate_schema_guardrail_config',
   'template_notebook': '02_pipeline',
-  'template_segment': 'Drift monitoring',
+  'template_segment': 'Schema validation',
+  'use_when': 'Use while authoring 02_pipeline to copy the current DataFrame schema into a reviewed expected_schema guardrail.',
+  'do_not_use_when': 'Do not treat the generated output as approved without human review, and do not use it for DQ or stability checks.',
+  'parameters': 'dataframe plus optional exclude_columns, sort_columns, and output_format values dict, python, or rows.',
+  'returns': 'A starter expected_schema dict, copy-paste Python code, or row dictionaries depending on output_format.',
+  'raises': 'ValueError when output_format is not dict, python, or rows.',
+  'side_effects': 'Inspects DataFrame schema only; it does not write metadata, tables, or files.',
+  'fabric_context': 'Use in notebooks after reading a DataFrame and before finalizing the manually reviewed schema guardrail.',
+  'ai_verification': 'Review generated datatypes and remove runtime-only columns before committing the expected schema to a pipeline.',
+  'preferred_example': 'expected_schema = generate_schema_guardrail_config(df, exclude_columns=["_loaded_at"])',
+  'related_functions': ['validate_schema']},
+ {'kind': 'function',
+  'module': 'drift',
+  'function_type': 'callable',
+  'summary_override': 'Compare deterministic profile hashes against append-only catalogue evidence and return a source '
+                      'stability guardrail result.',
+  'symbol_name': 'enforce_catalogue_stability',
+  'template_notebook': '02_pipeline',
+  'template_segment': 'Stability monitoring',
   'use_when': 'Use in 02_pipeline to compare current profile evidence with an approved or previous '
               'baseline and produce a data-change guardrail result.',
   'do_not_use_when': 'Do not use for simple schema validation or DQ-rule enforcement; use '
                      'validate_schema or enforce_dq_rules for those checks.',
   'parameters': 'spark, dataframe, metadata_table, dataset_name, table_name, required stage, '
-                'preset, optional exclude_run_id, distribution columns, and policy overrides.',
+                'run_id, data_behavior, stability_check_type, optional watermark fields, exclude_columns, and exclude_run_id.',
   'returns': 'Guardrail result dictionary with status, can_continue, message, current profile, '
-             'baseline details, and drift checks.',
+             'baseline details, and stability checks.',
   'raises': 'Raises Spark or metadata-read errors when baseline profile evidence cannot be loaded '
             'or compared.',
   'side_effects': 'Reads baseline profile metadata and computes current profile evidence; it does '
@@ -505,19 +523,19 @@ PUBLIC_SYMBOL_DOCS: list[PublicSymbolDocMetadata] = [{'kind': 'function',
                     'metadata target and a valid source/target stage.',
   'ai_verification': 'Verify baseline selection, status, and can_continue before allowing '
                      'downstream writes or calling stop_if_failed.',
-  'preferred_example': 'drift_result = monitor_data_changes(spark, df, "METADATA_PROFILE", '
+  'preferred_example': 'stability_result = enforce_catalogue_stability(spark, df, "METADATA_DATA_CATALOGUE", '
                        'dataset_name, table_name, stage="target")\n'
-                       'stop_if_failed(drift_result)',
+                       'stop_if_failed(stability_result)',
   'related_functions': ['profile_dataframe', 'validate_schema', 'stop_if_failed']},
  {'kind': 'function',
   'module': 'drift',
   'function_type': 'callable',
-  'summary_override': 'Stop a notebook only when a schema or data-change guardrail result blocks '
+  'summary_override': 'Stop a notebook only when a schema, stability, or DQ guardrail result blocks '
                       'continuation.',
   'symbol_name': 'stop_if_failed',
   'template_notebook': '02_pipeline',
   'template_segment': 'Guardrail enforcement',
-  'use_when': 'Use after schema, drift, or DQ guardrail helpers to stop the notebook when '
+  'use_when': 'Use after schema, stability, or DQ guardrail helpers to stop the notebook when '
               'can_continue is false.',
   'do_not_use_when': 'Do not use for informational warnings that should not block execution, or '
                      'before a guardrail result exists.',
@@ -528,13 +546,13 @@ PUBLIC_SYMBOL_DOCS: list[PublicSymbolDocMetadata] = [{'kind': 'function',
             'must stop execution.',
   'side_effects': 'May terminate notebook execution through Fabric notebook utilities or raise an '
                   'exception.',
-  'fabric_context': 'Use in 02_pipeline after validate_schema, monitor_data_changes, or '
+  'fabric_context': 'Use in 02_pipeline after validate_schema, enforce_catalogue_stability, or '
                     'enforce_dq_rules and before write helpers.',
   'ai_verification': 'Verify the guardrail result shape includes status/can_continue/message '
                      'before passing it to stop_if_failed.',
   'preferred_example': 'schema_result = validate_schema(df, expected_schema)\n'
                        'stop_if_failed(schema_result)',
-  'related_functions': ['validate_schema', 'monitor_data_changes', 'enforce_dq_rules']},
+  'related_functions': ['validate_schema', 'enforce_catalogue_stability', 'enforce_dq_rules']},
  {'kind': 'function',
   'module': 'governance_review',
   'function_type': 'callable',
