@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 8</span><span class="reference-chip">Internal helpers: 45</span><span class="reference-chip">Outbound: 3</span><span class="reference-chip">Inbound: 1</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 8</span><span class="reference-chip">Internal helpers: 42</span><span class="reference-chip">Outbound: 3</span><span class="reference-chip">Inbound: 1</span></div>
 
 ## Module purpose
 
@@ -40,7 +40,7 @@ Owns table-scoped 03_governance catalogue selection, business context review, DQ
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>45</td>
+      <td>42</td>
     </tr>
     <tr>
       <td>Inbound module count</td>
@@ -273,10 +273,6 @@ Owns table-scoped 03_governance catalogue selection, business context review, DQ
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/governance_review/_enforce_dq/"><code>_enforce_dq</code></a></td>
-      <td>—</td>
-    </tr>
-    <tr>
       <td><a href="../../reference/internal/governance_review/_extract_assignment_payload/"><code>_extract_assignment_payload</code></a></td>
       <td>—</td>
     </tr>
@@ -329,10 +325,6 @@ Owns table-scoped 03_governance catalogue selection, business context review, DQ
       <td><a href="../../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a></td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/governance_review/_run_dq_rules/"><code>_run_dq_rules</code></a></td>
-      <td>—</td>
-    </tr>
-    <tr>
       <td><a href="../../reference/internal/governance_review/_run_fabric_ai_drafting/"><code>_run_fabric_ai_drafting</code></a></td>
       <td>—</td>
     </tr>
@@ -354,10 +346,6 @@ Owns table-scoped 03_governance catalogue selection, business context review, DQ
     </tr>
     <tr>
       <td><a href="../../reference/internal/governance_review/_spark_types/"><code>_spark_types</code></a></td>
-      <td>—</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/internal/governance_review/_split_dq_rows/"><code>_split_dq_rows</code></a></td>
       <td>—</td>
     </tr>
     <tr>
@@ -470,11 +458,6 @@ Owns table-scoped 03_governance catalogue selection, business context review, DQ
 <a class="reference-chip" href="#_run_fabric_ai_drafting"><code>_run_fabric_ai_drafting</code></a>
 </li>
 <li>
-<a class="reference-chip" href="#_enforce_dq"><code>_enforce_dq</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_load_active_dq_rules"><code>_load_active_dq_rules</code></a>, <a class="reference-chip" href="#_run_dq_rules"><code>_run_dq_rules</code></a>, <a class="reference-chip" href="#_split_dq_rows"><code>_split_dq_rows</code></a>, <a class="reference-chip" href="#_validate_dq_rules"><code>_validate_dq_rules</code></a>
-</li>
-<li>
 <a class="reference-chip" href="#_extract_assignment_payload"><code>_extract_assignment_payload</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_coerce_rows"><code>_coerce_rows</code></a>, <a class="reference-chip" href="#_parse_ai_dict_response"><code>_parse_ai_dict_response</code></a>
@@ -534,11 +517,6 @@ Owns table-scoped 03_governance catalogue selection, business context review, DQ
 <a class="reference-chip" href="#_dq_check_status"><code>_dq_check_status</code></a>, <a class="reference-chip" href="#_dq_failed_expression"><code>_dq_failed_expression</code></a>, <a class="reference-chip" href="#_spark_sql_helpers"><code>_spark_sql_helpers</code></a>, <a class="reference-chip" href="#_validate_dq_rules"><code>_validate_dq_rules</code></a>
 </li>
 <li>
-<a class="reference-chip" href="#_run_dq_rules"><code>_run_dq_rules</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_spark_sql_helpers"><code>_spark_sql_helpers</code></a>, <a class="reference-chip" href="#_split_dq_rows"><code>_split_dq_rows</code></a>, <a class="reference-chip" href="#_validate_dq_rules"><code>_validate_dq_rules</code></a>
-</li>
-<li>
 <a class="reference-chip" href="#_run_fabric_ai_drafting"><code>_run_fabric_ai_drafting</code></a>
 </li>
 <li>
@@ -559,11 +537,6 @@ Owns table-scoped 03_governance catalogue selection, business context review, DQ
 </li>
 <li>
 <a class="reference-chip" href="#_spark_types"><code>_spark_types</code></a>
-</li>
-<li>
-<a class="reference-chip" href="#_split_dq_rows"><code>_split_dq_rows</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_spark_sql_helpers"><code>_spark_sql_helpers</code></a>, <a class="reference-chip" href="#_validate_dq_rules"><code>_validate_dq_rules</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_status_is_failed"><code>_status_is_failed</code></a>

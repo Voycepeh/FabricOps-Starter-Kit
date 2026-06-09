@@ -17,11 +17,8 @@ Do not call this helper directly from notebooks; use the public callable helpers
 
 ## Used by
 
-- <a href="../internal/governance_review__enforce_dq/"><code>fabricops_kit.governance_review._enforce_dq</code></a>
 - <a href="../internal/governance_review__load_active_dq_rules/"><code>fabricops_kit.governance_review._load_active_dq_rules</code></a>
 - <a href="../internal/governance_review__run_dq_guardrail_checks/"><code>fabricops_kit.governance_review._run_dq_guardrail_checks</code></a>
-- <a href="../internal/governance_review__run_dq_rules/"><code>fabricops_kit.governance_review._run_dq_rules</code></a>
-- <a href="../internal/governance_review__split_dq_rows/"><code>fabricops_kit.governance_review._split_dq_rows</code></a>
 
 ## Purpose
 
@@ -53,16 +50,13 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 - Classification: Internal
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
-- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/acd9c065e2cac26ab9378c11c224ee1b7fb00ba7/src/fabricops_kit/governance_review.py#L882-L909">View source on GitHub</a>
-- Inbound references count: 5
+- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/15f1799b713dde469e690b3bbdf35ffe588ff83c/src/fabricops_kit/governance_review.py#L871-L898">View source on GitHub</a>
+- Inbound references count: 2
 - Outbound references count: 1
 
 ## Inbound references
-- <a href="../internal/governance_review__enforce_dq/"><code>fabricops_kit.governance_review._enforce_dq</code></a>
 - <a href="../internal/governance_review__load_active_dq_rules/"><code>fabricops_kit.governance_review._load_active_dq_rules</code></a>
 - <a href="../internal/governance_review__run_dq_guardrail_checks/"><code>fabricops_kit.governance_review._run_dq_guardrail_checks</code></a>
-- <a href="../internal/governance_review__run_dq_rules/"><code>fabricops_kit.governance_review._run_dq_rules</code></a>
-- <a href="../internal/governance_review__split_dq_rows/"><code>fabricops_kit.governance_review._split_dq_rows</code></a>
 
 ## Outbound references
 - <a href="../internal/governance_review__canonical_dq_rule_type/"><code>fabricops_kit.governance_review._canonical_dq_rule_type</code></a>

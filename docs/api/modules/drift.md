@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 3</span><span class="reference-chip">Internal helpers: 16</span><span class="reference-chip">Outbound: 2</span><span class="reference-chip">Inbound: 0</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 4</span><span class="reference-chip">Internal helpers: 17</span><span class="reference-chip">Outbound: 3</span><span class="reference-chip">Inbound: 0</span></div>
 
 ## Module purpose
 
@@ -36,11 +36,11 @@ Owns schema and catalogue profile stability checks as engineering guardrails dur
     </tr>
     <tr>
       <td>Public callable count</td>
-      <td>3</td>
+      <td>4</td>
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>16</td>
+      <td>17</td>
     </tr>
     <tr>
       <td>Inbound module count</td>
@@ -48,7 +48,7 @@ Owns schema and catalogue profile stability checks as engineering guardrails dur
     </tr>
     <tr>
       <td>Outbound module count</td>
-      <td>2</td>
+      <td>3</td>
     </tr>
     <tr>
       <td>External callers</td>
@@ -56,7 +56,7 @@ Owns schema and catalogue profile stability checks as engineering guardrails dur
     </tr>
     <tr>
       <td>External callees</td>
-      <td><code>data_profiling</code>, <code>fabric_input_output</code></td>
+      <td><code>config</code>, <code>data_profiling</code>, <code>fabric_input_output</code></td>
     </tr>
   </tbody>
 </table>
@@ -81,6 +81,13 @@ Owns schema and catalogue profile stability checks as engineering guardrails dur
       <td>function</td>
       <td>Compare deterministic profile hashes against append-only catalogue evidence and return a source stability guardrail result.</td>
       <td><a href="../../reference/internal/drift/_filter_watermark_slice/"><code>_filter_watermark_slice</code></a> (internal), <a href="../../reference/internal/drift/_is_missing_table_error/"><code>_is_missing_table_error</code></a> (internal), <a href="../../reference/internal/drift/_latest_catalogue_stability_row/"><code>_latest_catalogue_stability_row</code></a> (internal), <a href="../../reference/internal/drift/_max_watermark_value/"><code>_max_watermark_value</code></a> (internal), <a href="../../reference/internal/drift/_profile_hash/"><code>_profile_hash</code></a> (internal), <a href="../../reference/internal/drift/_profile_row_count/"><code>_profile_row_count</code></a> (internal), <a href="../../reference/internal/drift/_schema_hash_from_dataframe/"><code>_schema_hash_from_dataframe</code></a> (internal), <a href="../../reference/internal/drift/_stability_exclude_columns/"><code>_stability_exclude_columns</code></a> (internal)</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/generate_schema_guardrail_config/"><code>generate_schema_guardrail_config</code></a></td>
+      <td>Callable</td>
+      <td>function</td>
+      <td>Generate starter schema guardrail config from a DataFrame schema.</td>
+      <td><a href="../../reference/internal/drift/_schema_guardrail_rows/"><code>_schema_guardrail_rows</code></a> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/stop_if_failed/"><code>stop_if_failed</code></a></td>
@@ -116,6 +123,11 @@ Owns schema and catalogue profile stability checks as engineering guardrails dur
 <a class="reference-chip" href="../../reference/enforce_catalogue_stability/"><code>enforce_catalogue_stability</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_filter_watermark_slice"><code>_filter_watermark_slice</code></a>, <a class="reference-chip" href="#_is_missing_table_error"><code>_is_missing_table_error</code></a>, <a class="reference-chip" href="#_latest_catalogue_stability_row"><code>_latest_catalogue_stability_row</code></a>, <a class="reference-chip" href="#_max_watermark_value"><code>_max_watermark_value</code></a>, <a class="reference-chip" href="#_profile_hash"><code>_profile_hash</code></a>, <a class="reference-chip" href="#_profile_row_count"><code>_profile_row_count</code></a>, <a class="reference-chip" href="#_schema_hash_from_dataframe"><code>_schema_hash_from_dataframe</code></a>, <a class="reference-chip" href="#_stability_exclude_columns"><code>_stability_exclude_columns</code></a>
+</li>
+<li>
+<a class="reference-chip" href="../../reference/generate_schema_guardrail_config/"><code>generate_schema_guardrail_config</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_schema_guardrail_rows"><code>_schema_guardrail_rows</code></a>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/stop_if_failed/"><code>stop_if_failed</code></a>
@@ -197,6 +209,10 @@ Owns schema and catalogue profile stability checks as engineering guardrails dur
       <td>—</td>
     </tr>
     <tr>
+      <td><a href="../../reference/internal/drift/_schema_guardrail_rows/"><code>_schema_guardrail_rows</code></a></td>
+      <td><a href="../../reference/generate_schema_guardrail_config/"><code>generate_schema_guardrail_config</code></a></td>
+    </tr>
+    <tr>
       <td><a href="../../reference/internal/drift/_schema_hash_from_dataframe/"><code>_schema_hash_from_dataframe</code></a></td>
       <td><a href="../../reference/enforce_catalogue_stability/"><code>enforce_catalogue_stability</code></a></td>
     </tr>
@@ -266,6 +282,11 @@ Owns schema and catalogue profile stability checks as engineering guardrails dur
 </li>
 <li>
 <a class="reference-chip" href="#_row_to_dict"><code>_row_to_dict</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_schema_guardrail_rows"><code>_schema_guardrail_rows</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_actual_schema"><code>_actual_schema</code></a>, <a class="reference-chip" href="#_normalize_datatype"><code>_normalize_datatype</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_schema_hash_from_dataframe"><code>_schema_hash_from_dataframe</code></a>

@@ -39,6 +39,7 @@ EXPECTED_V1_CALLABLES = [
     "write_warehouse_table",
     "profile_dataframe",
     "validate_schema",
+    "generate_schema_guardrail_config",
     "enforce_catalogue_stability",
     "stop_if_failed",
     "enforce_dq_rules",
@@ -130,18 +131,15 @@ def test_dq_ai_response_parsing_and_candidate_rule_extraction():
     ) == parsed["orders"]
 
 
-def test_dq_rule_validation_and_enforcement_result_shape():
+def test_dq_rule_validation_rejects_unsupported_runtime_rule_types():
     rules = [{"rule_id": "id_required", "rule_type": "not_null", "columns": ["id"], "severity": "error", "description": "Required"}]
     assert governance._validate_dq_rules(rules) == rules
     with pytest.raises(ValueError):
         governance._validate_dq_rules([{**rules[0], "rule_type": "custom"}])
 
-    result = governance.DQEnforcementResult(rules=rules, rule_results="results", valid_rows="valid", quarantine_rows="quarantine", failure_rows="failures")
-    assert result.rules == rules
-    assert result.rule_results == "results"
-    assert result.valid_rows == "valid"
-    assert result.quarantine_rows == "quarantine"
-    assert result.failure_rows == "failures"
+    for unsupported in ("datatype", "referential_integrity", "custom_expression"):
+        with pytest.raises(ValueError):
+            governance._validate_dq_rules([{**rules[0], "rule_type": unsupported}])
 
 
 def test_record_table_governance_writes_context_dq_and_classification(monkeypatch):

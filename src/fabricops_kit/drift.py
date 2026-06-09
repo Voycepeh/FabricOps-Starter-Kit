@@ -1,7 +1,8 @@
 """Lightweight schema and catalogue profile stability safeguards.
 
-Use :func:`validate_schema`, :func:`enforce_catalogue_stability`, and
-:func:`stop_if_failed` in production pipeline notebooks. FabricOps compares
+Use :func:`validate_schema`, :func:`generate_schema_guardrail_config`,
+:func:`enforce_catalogue_stability`, and :func:`stop_if_failed` in production
+pipeline notebooks. FabricOps compares
 append-only catalogue profile evidence to catch silent upstream source changes
 before governed outputs are promoted.
 """
@@ -100,6 +101,102 @@ def _actual_schema(df) -> tuple[list[str], dict[str, str]]:
 
     columns = [str(column) for column in getattr(df, "columns", [])]
     return columns, {}
+
+
+
+def _schema_guardrail_rows(
+    dataframe,
+    *,
+    exclude_columns: list[str] | set[str] | tuple[str, ...] | None = None,
+    sort_columns: bool = False,
+) -> list[dict[str, str | bool | None]]:
+    """Return schema rows used by the public schema guardrail generator."""
+    excluded = {str(column) for column in (exclude_columns or [])}
+    columns, types = _actual_schema(dataframe)
+    nullable_by_column: dict[str, bool | None] = {}
+    raw_type_by_column: dict[str, str] = {}
+    schema = getattr(dataframe, "schema", None)
+    if schema is not None and hasattr(schema, "fields"):
+        for field in schema.fields:
+            nullable_by_column[str(field.name)] = getattr(field, "nullable", None)
+            raw_type_by_column[str(field.name)] = str(getattr(field, "dataType", ""))
+    dtypes = getattr(dataframe, "dtypes", None)
+    if dtypes is not None:
+        dtype_items = dtypes.items() if hasattr(dtypes, "items") else dtypes
+        for name, dtype in dtype_items:
+            raw_type_by_column.setdefault(str(name), str(dtype))
+    selected_columns = [column for column in columns if column not in excluded]
+    if sort_columns:
+        selected_columns = sorted(selected_columns)
+    return [
+        {
+            "column_name": column,
+            "spark_data_type": raw_type_by_column.get(column, str(types.get(column, ""))),
+            "nullable": nullable_by_column.get(column),
+            "guardrail_data_type": _normalize_datatype(raw_type_by_column.get(column, types.get(column, ""))),
+        }
+        for column in selected_columns
+    ]
+
+
+def generate_schema_guardrail_config(
+    dataframe,
+    *,
+    exclude_columns: list[str] | set[str] | tuple[str, ...] | None = None,
+    sort_columns: bool = False,
+    output_format: str = "dict",
+):
+    """Generate starter schema guardrail config from a DataFrame schema.
+
+    Parameters
+    ----------
+    dataframe : Any
+        Spark, pandas, or dataframe-like object with schema metadata.
+    exclude_columns : list-like, optional
+        Columns to omit from the starter expectation, such as runtime audit or
+        technical annotation columns.
+    sort_columns : bool, default=False
+        When ``True``, sort output columns alphabetically. When ``False``,
+        preserve DataFrame schema order.
+    output_format : {"dict", "python", "rows"}, default="dict"
+        Return shape. ``"dict"`` returns a mapping suitable for review before
+        passing to :func:`validate_schema`. ``"python"`` returns copy-paste-ready
+        Python code defining ``expected_schema``. ``"rows"`` returns row
+        dictionaries with column name, Spark datatype, nullable flag, and
+        proposed guardrail datatype.
+
+    Returns
+    -------
+    dict[str, str] or str or list[dict]
+        Starter schema guardrail in the requested output format.
+
+    Raises
+    ------
+    ValueError
+        If ``output_format`` is not one of ``"dict"``, ``"python"``, or
+        ``"rows"``.
+
+    Notes
+    -----
+    This helper captures the current observed schema only. Review and approve
+    the returned expectation before using it as a pipeline guardrail. Common
+    normalized types include ``string``, ``int``, ``bigint``, ``double``,
+    ``decimal(p,s)``, ``date``, ``timestamp``, and ``boolean``.
+    """
+    rows = _schema_guardrail_rows(dataframe, exclude_columns=exclude_columns, sort_columns=sort_columns)
+    config = {str(row["column_name"]): str(row["guardrail_data_type"]) for row in rows}
+    normalized_format = str(output_format or "dict").lower()
+    if normalized_format == "dict":
+        return config
+    if normalized_format == "rows":
+        return rows
+    if normalized_format == "python":
+        lines = ["expected_schema = {"]
+        for column, data_type in config.items():
+            lines.append(f"    {column!r}: {data_type!r},")
+        lines.append("}")
+        return "\n".join(lines)
+    raise ValueError("output_format must be one of: dict, python, rows")
 
 
 

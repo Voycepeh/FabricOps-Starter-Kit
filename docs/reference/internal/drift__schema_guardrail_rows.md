@@ -1,4 +1,4 @@
-# _stable_profile_payload
+# _schema_guardrail_rows
 
 **Module:** `drift`  
 **Classification:** Internal
@@ -17,17 +17,16 @@ Do not call this helper directly from notebooks; use the public callable helpers
 
 ## Used by
 
-- <a href="../internal/drift__profile_hash/"><code>fabricops_kit.drift._profile_hash</code></a>
-- <a href="../internal/drift__profile_row_count/"><code>fabricops_kit.drift._profile_row_count</code></a>
+- <a href="../generate_schema_guardrail_config/"><code>fabricops_kit.drift.generate_schema_guardrail_config</code></a>
 
 ## Purpose
 
-No summary available.
+Return schema rows used by the public schema guardrail generator.
 
 ## Signature if available
 
 ```python
-def _stable_profile_payload(profile) -> dict
+def _schema_guardrail_rows(dataframe, *, exclude_columns: list[str] | set[str] | tuple[str, ...] | None=None, sort_columns: bool=False) -> list[dict[str, str | bool | None]]
 ```
 
 ## Side effects
@@ -44,20 +43,19 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 
 ## Function manifest
 
-- Fully qualified function name: `fabricops_kit.drift._stable_profile_payload`
-- Short name: `_stable_profile_payload`
+- Fully qualified function name: `fabricops_kit.drift._schema_guardrail_rows`
+- Short name: `_schema_guardrail_rows`
 - Module: `drift`
 - Classification: Internal
 - Related module: `drift`
 - Source file path: `src/fabricops_kit/drift.py`
-- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/15f1799b713dde469e690b3bbdf35ffe588ff83c/src/fabricops_kit/drift.py#L404-L428">View source on GitHub</a>
-- Inbound references count: 2
+- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/15f1799b713dde469e690b3bbdf35ffe588ff83c/src/fabricops_kit/drift.py#L107-L139">View source on GitHub</a>
+- Inbound references count: 1
 - Outbound references count: 2
 
 ## Inbound references
-- <a href="../internal/drift__profile_hash/"><code>fabricops_kit.drift._profile_hash</code></a>
-- <a href="../internal/drift__profile_row_count/"><code>fabricops_kit.drift._profile_row_count</code></a>
+- <a href="../generate_schema_guardrail_config/"><code>fabricops_kit.drift.generate_schema_guardrail_config</code></a>
 
 ## Outbound references
+- <a href="../internal/drift__actual_schema/"><code>fabricops_kit.drift._actual_schema</code></a>
 - <a href="../internal/drift__normalize_datatype/"><code>fabricops_kit.drift._normalize_datatype</code></a>
-- <a href="../internal/drift__normalize_profile/"><code>fabricops_kit.drift._normalize_profile</code></a>

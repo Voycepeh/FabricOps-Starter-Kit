@@ -18,6 +18,7 @@ Do not call this helper directly from notebooks; use the public callable helpers
 ## Used by
 
 - <a href="../internal/drift__actual_schema/"><code>fabricops_kit.drift._actual_schema</code></a>
+- <a href="../internal/drift__schema_guardrail_rows/"><code>fabricops_kit.drift._schema_guardrail_rows</code></a>
 - <a href="../internal/drift__stable_profile_payload/"><code>fabricops_kit.drift._stable_profile_payload</code></a>
 - <a href="../validate_schema/"><code>fabricops_kit.drift.validate_schema</code></a>
 
@@ -51,11 +52,12 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 - Classification: Internal
 - Related module: `drift`
 - Source file path: `src/fabricops_kit/drift.py`
-- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/acd9c065e2cac26ab9378c11c224ee1b7fb00ba7/src/fabricops_kit/drift.py#L38-L84">View source on GitHub</a>
-- Inbound references count: 3
+- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/15f1799b713dde469e690b3bbdf35ffe588ff83c/src/fabricops_kit/drift.py#L39-L85">View source on GitHub</a>
+- Inbound references count: 4
 - Outbound references count: 0
 
 ## Inbound references
 - <a href="../internal/drift__actual_schema/"><code>fabricops_kit.drift._actual_schema</code></a>
+- <a href="../internal/drift__schema_guardrail_rows/"><code>fabricops_kit.drift._schema_guardrail_rows</code></a>
 - <a href="../internal/drift__stable_profile_payload/"><code>fabricops_kit.drift._stable_profile_payload</code></a>
 - <a href="../validate_schema/"><code>fabricops_kit.drift.validate_schema</code></a>

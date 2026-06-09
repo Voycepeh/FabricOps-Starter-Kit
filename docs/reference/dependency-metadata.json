@@ -1682,10 +1682,11 @@
       ],
       "calls_count": 1,
       "used_by": [
+        "fabricops_kit.drift._schema_guardrail_rows",
         "fabricops_kit.drift._schema_hash_from_dataframe",
         "fabricops_kit.drift.validate_schema"
       ],
-      "used_by_count": 2,
+      "used_by_count": 3,
       "internal_helpers_used": [
         "fabricops_kit.drift._normalize_datatype"
       ],
@@ -1831,10 +1832,11 @@
       "calls_count": 0,
       "used_by": [
         "fabricops_kit.drift._actual_schema",
+        "fabricops_kit.drift._schema_guardrail_rows",
         "fabricops_kit.drift._stable_profile_payload",
         "fabricops_kit.drift.validate_schema"
       ],
-      "used_by_count": 3,
+      "used_by_count": 4,
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
@@ -1916,6 +1918,28 @@
       "used_by_count": 1,
       "internal_helpers_used": [],
       "internal_helper_count": 0
+    },
+    "fabricops_kit.drift._schema_guardrail_rows": {
+      "qualified_name": "fabricops_kit.drift._schema_guardrail_rows",
+      "short_name": "_schema_guardrail_rows",
+      "module": "drift",
+      "callable": "_schema_guardrail_rows",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/drift/_schema_guardrail_rows/",
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.drift._actual_schema",
+        "fabricops_kit.drift._normalize_datatype"
+      ],
+      "calls_count": 2,
+      "used_by": [
+        "fabricops_kit.drift.generate_schema_guardrail_config"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [
+        "fabricops_kit.drift._actual_schema",
+        "fabricops_kit.drift._normalize_datatype"
+      ],
+      "internal_helper_count": 2
     },
     "fabricops_kit.drift._schema_hash_from_dataframe": {
       "qualified_name": "fabricops_kit.drift._schema_hash_from_dataframe",
@@ -2016,6 +2040,25 @@
         "fabricops_kit.drift._stability_exclude_columns"
       ],
       "internal_helper_count": 8
+    },
+    "fabricops_kit.drift.generate_schema_guardrail_config": {
+      "qualified_name": "fabricops_kit.drift.generate_schema_guardrail_config",
+      "short_name": "generate_schema_guardrail_config",
+      "module": "drift",
+      "callable": "generate_schema_guardrail_config",
+      "docs_url": "/FabricOps-Starter-Kit/reference/generate_schema_guardrail_config/",
+      "classification": "callable",
+      "calls": [
+        "fabricops_kit.config.items",
+        "fabricops_kit.drift._schema_guardrail_rows"
+      ],
+      "calls_count": 2,
+      "used_by": [],
+      "used_by_count": 0,
+      "internal_helpers_used": [
+        "fabricops_kit.drift._schema_guardrail_rows"
+      ],
+      "internal_helper_count": 1
     },
     "fabricops_kit.drift.stop_if_failed": {
       "qualified_name": "fabricops_kit.drift.stop_if_failed",
@@ -2276,22 +2319,6 @@
       "calls_count": 1,
       "used_by": [],
       "used_by_count": 0,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.governance_review.DQEnforcementResult": {
-      "qualified_name": "fabricops_kit.governance_review.DQEnforcementResult",
-      "short_name": "DQEnforcementResult",
-      "module": "governance_review",
-      "callable": "DQEnforcementResult",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/governance_review/DQEnforcementResult/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.governance_review._enforce_dq"
-      ],
-      "used_by_count": 1,
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
@@ -2666,31 +2693,6 @@
       ],
       "internal_helper_count": 1
     },
-    "fabricops_kit.governance_review._enforce_dq": {
-      "qualified_name": "fabricops_kit.governance_review._enforce_dq",
-      "short_name": "_enforce_dq",
-      "module": "governance_review",
-      "callable": "_enforce_dq",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/governance_review/_enforce_dq/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.governance_review.DQEnforcementResult",
-        "fabricops_kit.governance_review._load_active_dq_rules",
-        "fabricops_kit.governance_review._run_dq_rules",
-        "fabricops_kit.governance_review._split_dq_rows",
-        "fabricops_kit.governance_review._validate_dq_rules"
-      ],
-      "calls_count": 5,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [
-        "fabricops_kit.governance_review._load_active_dq_rules",
-        "fabricops_kit.governance_review._run_dq_rules",
-        "fabricops_kit.governance_review._split_dq_rows",
-        "fabricops_kit.governance_review._validate_dq_rules"
-      ],
-      "internal_helper_count": 4
-    },
     "fabricops_kit.governance_review._extract_assignment_payload": {
       "qualified_name": "fabricops_kit.governance_review._extract_assignment_payload",
       "short_name": "_extract_assignment_payload",
@@ -2846,10 +2848,9 @@
       ],
       "calls_count": 5,
       "used_by": [
-        "fabricops_kit.governance_review._enforce_dq",
         "fabricops_kit.governance_review.enforce_dq_rules"
       ],
-      "used_by_count": 2,
+      "used_by_count": 1,
       "internal_helpers_used": [
         "fabricops_kit.governance_review._canonical_dq_rule_type",
         "fabricops_kit.governance_review._coerce_rows",
@@ -2977,30 +2978,6 @@
       ],
       "internal_helper_count": 4
     },
-    "fabricops_kit.governance_review._run_dq_rules": {
-      "qualified_name": "fabricops_kit.governance_review._run_dq_rules",
-      "short_name": "_run_dq_rules",
-      "module": "governance_review",
-      "callable": "_run_dq_rules",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/governance_review/_run_dq_rules/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.governance_review._spark_sql_helpers",
-        "fabricops_kit.governance_review._split_dq_rows",
-        "fabricops_kit.governance_review._validate_dq_rules"
-      ],
-      "calls_count": 3,
-      "used_by": [
-        "fabricops_kit.governance_review._enforce_dq"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [
-        "fabricops_kit.governance_review._spark_sql_helpers",
-        "fabricops_kit.governance_review._split_dq_rows",
-        "fabricops_kit.governance_review._validate_dq_rules"
-      ],
-      "internal_helper_count": 3
-    },
     "fabricops_kit.governance_review._run_fabric_ai_drafting": {
       "qualified_name": "fabricops_kit.governance_review._run_fabric_ai_drafting",
       "short_name": "_run_fabric_ai_drafting",
@@ -3101,11 +3078,9 @@
         "fabricops_kit.governance_review._latest_dq_rule_versions",
         "fabricops_kit.governance_review._load_active_dq_rules",
         "fabricops_kit.governance_review._prepare_dq_profile_input_rows",
-        "fabricops_kit.governance_review._run_dq_guardrail_checks",
-        "fabricops_kit.governance_review._run_dq_rules",
-        "fabricops_kit.governance_review._split_dq_rows"
+        "fabricops_kit.governance_review._run_dq_guardrail_checks"
       ],
-      "used_by_count": 9,
+      "used_by_count": 7,
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
@@ -3125,29 +3100,6 @@
       "used_by_count": 2,
       "internal_helpers_used": [],
       "internal_helper_count": 0
-    },
-    "fabricops_kit.governance_review._split_dq_rows": {
-      "qualified_name": "fabricops_kit.governance_review._split_dq_rows",
-      "short_name": "_split_dq_rows",
-      "module": "governance_review",
-      "callable": "_split_dq_rows",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/governance_review/_split_dq_rows/",
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.governance_review._spark_sql_helpers",
-        "fabricops_kit.governance_review._validate_dq_rules"
-      ],
-      "calls_count": 2,
-      "used_by": [
-        "fabricops_kit.governance_review._enforce_dq",
-        "fabricops_kit.governance_review._run_dq_rules"
-      ],
-      "used_by_count": 2,
-      "internal_helpers_used": [
-        "fabricops_kit.governance_review._spark_sql_helpers",
-        "fabricops_kit.governance_review._validate_dq_rules"
-      ],
-      "internal_helper_count": 2
     },
     "fabricops_kit.governance_review._status_is_failed": {
       "qualified_name": "fabricops_kit.governance_review._status_is_failed",
@@ -3210,13 +3162,10 @@
       ],
       "calls_count": 1,
       "used_by": [
-        "fabricops_kit.governance_review._enforce_dq",
         "fabricops_kit.governance_review._load_active_dq_rules",
-        "fabricops_kit.governance_review._run_dq_guardrail_checks",
-        "fabricops_kit.governance_review._run_dq_rules",
-        "fabricops_kit.governance_review._split_dq_rows"
+        "fabricops_kit.governance_review._run_dq_guardrail_checks"
       ],
-      "used_by_count": 5,
+      "used_by_count": 2,
       "internal_helpers_used": [
         "fabricops_kit.governance_review._canonical_dq_rule_type"
       ],
@@ -4024,10 +3973,11 @@
       ],
       "inbound_modules": [
         "data_agreement",
+        "drift",
         "fabric_input_output"
       ],
       "outbound_count": 3,
-      "inbound_count": 2
+      "inbound_count": 3
     },
     "data_agreement": {
       "callable_count": 5,
@@ -4063,14 +4013,15 @@
       "inbound_count": 2
     },
     "drift": {
-      "callable_count": 3,
-      "internal_count": 16,
+      "callable_count": 4,
+      "internal_count": 17,
       "outbound_modules": [
+        "config",
         "data_profiling",
         "fabric_input_output"
       ],
       "inbound_modules": [],
-      "outbound_count": 2,
+      "outbound_count": 3,
       "inbound_count": 0
     },
     "fabric_input_output": {
@@ -4091,7 +4042,7 @@
     },
     "governance_review": {
       "callable_count": 8,
-      "internal_count": 45,
+      "internal_count": 42,
       "outbound_modules": [
         "data_profiling",
         "fabric_input_output",
