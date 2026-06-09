@@ -20,7 +20,6 @@ CORE_CALLABLES = {
     "write_warehouse_table",
     "profile_dataframe",
     "validate_schema",
-    "generate_schema_guardrail_config",
     "enforce_catalogue_stability",
     "stop_if_failed",
     "enforce_dq_rules",

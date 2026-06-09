@@ -49,9 +49,9 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 - Classification: Internal
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
-- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/15f1799b713dde469e690b3bbdf35ffe588ff83c/src/fabricops_kit/governance_review.py#L402-L421">View source on GitHub</a>
+- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/3d2707796405a2e3e2f36d7a599be05589995508/src/fabricops_kit/governance_review.py#L460-L511">View source on GitHub</a>
 - Inbound references count: 1
-- Outbound references count: 5
+- Outbound references count: 7
 
 ## Inbound references
 - <a href="../record_table_governance/"><code>fabricops_kit.governance_review.record_table_governance</code></a>
@@ -60,5 +60,7 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 - <a href="../internal/governance_review__approved_column_identity/"><code>fabricops_kit.governance_review._approved_column_identity</code></a>
 - <a href="../internal/governance_review__approved_review_context/"><code>fabricops_kit.governance_review._approved_review_context</code></a>
 - <a href="../internal/governance_review__canonical_dq_rule_type/"><code>fabricops_kit.governance_review._canonical_dq_rule_type</code></a>
+- <a href="../internal/governance_review__dq_rule_parameter_payload/"><code>fabricops_kit.governance_review._dq_rule_parameter_payload</code></a>
 - <a href="../internal/governance_review__json/"><code>fabricops_kit.governance_review._json</code></a>
+- <a href="../internal/governance_review__validate_dq_rules/"><code>fabricops_kit.governance_review._validate_dq_rules</code></a>
 - <a href="../internal/metadata__build_dq_rule_key/"><code>fabricops_kit.metadata._build_dq_rule_key</code></a>

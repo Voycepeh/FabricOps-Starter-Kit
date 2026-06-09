@@ -17,7 +17,7 @@ Do not call this helper directly from notebooks; use the public callable helpers
 
 ## Used by
 
-- <a href="../generate_schema_guardrail_config/"><code>fabricops_kit.drift.generate_schema_guardrail_config</code></a>
+- <a href="../internal/drift__generate_schema_guardrail_config/"><code>fabricops_kit.drift._generate_schema_guardrail_config</code></a>
 
 ## Purpose
 
@@ -49,12 +49,12 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 - Classification: Internal
 - Related module: `drift`
 - Source file path: `src/fabricops_kit/drift.py`
-- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/15f1799b713dde469e690b3bbdf35ffe588ff83c/src/fabricops_kit/drift.py#L107-L139">View source on GitHub</a>
+- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/3d2707796405a2e3e2f36d7a599be05589995508/src/fabricops_kit/drift.py#L106-L138">View source on GitHub</a>
 - Inbound references count: 1
 - Outbound references count: 2
 
 ## Inbound references
-- <a href="../generate_schema_guardrail_config/"><code>fabricops_kit.drift.generate_schema_guardrail_config</code></a>
+- <a href="../internal/drift__generate_schema_guardrail_config/"><code>fabricops_kit.drift._generate_schema_guardrail_config</code></a>
 
 ## Outbound references
 - <a href="../internal/drift__actual_schema/"><code>fabricops_kit.drift._actual_schema</code></a>

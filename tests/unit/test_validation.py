@@ -4,7 +4,7 @@ import pandas as pd
 import pytest
 
 from fabricops_kit.governance_review import _validate_dq_rules
-from fabricops_kit.drift import enforce_catalogue_stability, generate_schema_guardrail_config, stop_if_failed, validate_schema
+from fabricops_kit.drift import _generate_schema_guardrail_config, enforce_catalogue_stability, stop_if_failed, validate_schema
 
 pytestmark = pytest.mark.unit
 
@@ -27,12 +27,12 @@ def test_validate_schema_supports_strict_allow_new_and_monitor_modes():
         validate_schema(df, expected, preset="unknown")
 
 
-def test_generate_schema_guardrail_config_returns_dict_rows_and_python_code():
+def test_internal_generate_schema_guardrail_config_returns_dict_rows_and_python_code():
     df = pd.DataFrame({"id": [1], "status": ["open"], "_runtime": ["skip"]})
 
-    config = generate_schema_guardrail_config(df, exclude_columns=["_runtime"], output_format="dict")
-    rows = generate_schema_guardrail_config(df, exclude_columns=["_runtime"], output_format="rows")
-    python_code = generate_schema_guardrail_config(df, exclude_columns=["_runtime"], output_format="python")
+    config = _generate_schema_guardrail_config(df, exclude_columns=["_runtime"], output_format="dict")
+    rows = _generate_schema_guardrail_config(df, exclude_columns=["_runtime"], output_format="rows")
+    python_code = _generate_schema_guardrail_config(df, exclude_columns=["_runtime"], output_format="python")
 
     assert config == {"id": "bigint", "status": "string"}
     assert rows == [
@@ -42,7 +42,7 @@ def test_generate_schema_guardrail_config_returns_dict_rows_and_python_code():
     assert "expected_schema = {" in python_code
     assert "'id': 'bigint'" in python_code
     with pytest.raises(ValueError, match="output_format"):
-        generate_schema_guardrail_config(df, output_format="html")
+        _generate_schema_guardrail_config(df, output_format="html")
 
 
 def test__validate_dq_rules_accepts_canonical_rules_and_rejects_invalid_shapes():
@@ -146,7 +146,7 @@ def test_drift_public_surface_keeps_removed_exceptions_unexported():
     import fabricops_kit
     import fabricops_kit.drift as drift
 
-    public_drift_callables = {"validate_schema", "generate_schema_guardrail_config", "enforce_catalogue_stability", "stop_if_failed"}
+    public_drift_callables = {"validate_schema", "enforce_catalogue_stability", "stop_if_failed"}
     exported_from_drift = {
         name
         for name in fabricops_kit.__all__

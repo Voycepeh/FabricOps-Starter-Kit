@@ -30,7 +30,6 @@ APPROVED_V1_CALLABLES = {
     "write_warehouse_table",
     "profile_dataframe",
     "validate_schema",
-    "generate_schema_guardrail_config",
     "enforce_catalogue_stability",
     "stop_if_failed",
     "enforce_dq_rules",
@@ -51,6 +50,7 @@ REMOVED_LEGACY_ALIASES = {
     "monitor_data_changes",
     "display_schema_profile",
     "print_schema_guardrail_config",
+    "generate_schema_guardrail_config",
     "widget_review_table_governance",
     "widget_render_agreement_intake_app",
     "setup_governance_metadata_tables",
@@ -117,7 +117,7 @@ def _template_called_fabricops_functions() -> set[str]:
 
 def test_root_exports_only_approved_v1_template_callables():
     assert set(fabricops_kit.__all__) == APPROVED_V1_CALLABLES
-    assert len(fabricops_kit.__all__) == 31
+    assert len(fabricops_kit.__all__) == 30
     assert len(fabricops_kit.__all__) < 71
     for name in fabricops_kit.__all__:
         assert callable(getattr(fabricops_kit, name))

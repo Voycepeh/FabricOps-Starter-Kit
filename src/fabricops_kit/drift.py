@@ -1,7 +1,6 @@
 """Lightweight schema and catalogue profile stability safeguards.
 
-Use :func:`validate_schema`, :func:`generate_schema_guardrail_config`,
-:func:`enforce_catalogue_stability`, and :func:`stop_if_failed` in production
+Use :func:`validate_schema`, :func:`enforce_catalogue_stability`, and :func:`stop_if_failed` in production
 pipeline notebooks. FabricOps compares
 append-only catalogue profile evidence to catch silent upstream source changes
 before governed outputs are promoted.
@@ -139,14 +138,14 @@ def _schema_guardrail_rows(
     ]
 
 
-def generate_schema_guardrail_config(
+def _generate_schema_guardrail_config(
     dataframe,
     *,
     exclude_columns: list[str] | set[str] | tuple[str, ...] | None = None,
     sort_columns: bool = False,
     output_format: str = "dict",
 ):
-    """Generate starter schema guardrail config from a DataFrame schema.
+    """Generate internal starter schema guardrail config from a DataFrame schema.
 
     Parameters
     ----------

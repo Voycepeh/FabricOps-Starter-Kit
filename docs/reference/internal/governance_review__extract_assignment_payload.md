@@ -18,6 +18,7 @@ Do not call this helper directly from notebooks; use the public callable helpers
 ## Used by
 
 - <a href="../internal/governance_review__draft_dq_rules/"><code>fabricops_kit.governance_review._draft_dq_rules</code></a>
+- <a href="../internal/governance_review__parse_dq_ai_suggestions/"><code>fabricops_kit.governance_review._parse_dq_ai_suggestions</code></a>
 
 ## Purpose
 
@@ -49,12 +50,13 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 - Classification: Internal
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
-- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/15f1799b713dde469e690b3bbdf35ffe588ff83c/src/fabricops_kit/governance_review.py#L854-L868">View source on GitHub</a>
-- Inbound references count: 1
+- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/3d2707796405a2e3e2f36d7a599be05589995508/src/fabricops_kit/governance_review.py#L1167-L1181">View source on GitHub</a>
+- Inbound references count: 2
 - Outbound references count: 2
 
 ## Inbound references
 - <a href="../internal/governance_review__draft_dq_rules/"><code>fabricops_kit.governance_review._draft_dq_rules</code></a>
+- <a href="../internal/governance_review__parse_dq_ai_suggestions/"><code>fabricops_kit.governance_review._parse_dq_ai_suggestions</code></a>
 
 ## Outbound references
 - <a href="../internal/governance_review__coerce_rows/"><code>fabricops_kit.governance_review._coerce_rows</code></a>
