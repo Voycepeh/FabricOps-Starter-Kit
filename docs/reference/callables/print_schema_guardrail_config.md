@@ -81,7 +81,7 @@ The generated schema guardrail dictionary after printing Python code.
 ## Source
 
 - Source file path: `src/fabricops_kit/drift.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6e744d11e5f3081af2c7f10e6b37ccaaba97dd6d/src/fabricops_kit/drift.py#L186-L227">View print_schema_guardrail_config on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c30f90cb0288be7f5624f9a80a62facf8b12c3e5/src/fabricops_kit/drift.py#L196-L237">View print_schema_guardrail_config on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -146,7 +146,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `drift`
 - Source file path: `src/fabricops_kit/drift.py`
-- Source line: `186`
+- Source line: `196`
 - Inbound references count: 0
 - Outbound references count: 2
 
@@ -170,9 +170,9 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/drift.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6e744d11e5f3081af2c7f10e6b37ccaaba97dd6d/src/fabricops_kit/drift.py#L186-L227">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6e744d11e5f3081af2c7f10e6b37ccaaba97dd6d/src/fabricops_kit/drift.py#L186-L227</a>
-- Start line: `186`
-- End line: `227`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c30f90cb0288be7f5624f9a80a62facf8b12c3e5/src/fabricops_kit/drift.py#L196-L237">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c30f90cb0288be7f5624f9a80a62facf8b12c3e5/src/fabricops_kit/drift.py#L196-L237</a>
+- Start line: `196`
+- End line: `237`
 - Signature:
 
 ```python

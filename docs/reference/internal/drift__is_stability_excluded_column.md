@@ -1,4 +1,4 @@
-# _schema_guardrail_type
+# _is_stability_excluded_column
 
 **Module:** `drift`  
 **Classification:** Internal
@@ -17,16 +17,16 @@ Do not call this helper directly from notebooks; use the public callable helpers
 
 ## Used by
 
-- <a href="../internal/drift__schema_profile_rows/"><code>fabricops_kit.drift._schema_profile_rows</code></a>
+- <a href="../internal/drift__schema_hash_from_dataframe/"><code>fabricops_kit.drift._schema_hash_from_dataframe</code></a>
 
 ## Purpose
 
-Return a user-facing schema guardrail type for Spark or pandas dtypes.
+No summary available.
 
 ## Signature if available
 
 ```python
-def _schema_guardrail_type(data_type) -> str
+def _is_stability_excluded_column(column: str, exclude_columns: set[str]) -> bool
 ```
 
 ## Side effects
@@ -43,18 +43,15 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 
 ## Function manifest
 
-- Fully qualified function name: `fabricops_kit.drift._schema_guardrail_type`
-- Short name: `_schema_guardrail_type`
+- Fully qualified function name: `fabricops_kit.drift._is_stability_excluded_column`
+- Short name: `_is_stability_excluded_column`
 - Module: `drift`
 - Classification: Internal
 - Related module: `drift`
 - Source file path: `src/fabricops_kit/drift.py`
-- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c30f90cb0288be7f5624f9a80a62facf8b12c3e5/src/fabricops_kit/drift.py#L105-L115">View source on GitHub</a>
+- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c30f90cb0288be7f5624f9a80a62facf8b12c3e5/src/fabricops_kit/drift.py#L528-L530">View source on GitHub</a>
 - Inbound references count: 1
-- Outbound references count: 1
+- Outbound references count: 0
 
 ## Inbound references
-- <a href="../internal/drift__schema_profile_rows/"><code>fabricops_kit.drift._schema_profile_rows</code></a>
-
-## Outbound references
-- <a href="../internal/drift__normalize_datatype/"><code>fabricops_kit.drift._normalize_datatype</code></a>
+- <a href="../internal/drift__schema_hash_from_dataframe/"><code>fabricops_kit.drift._schema_hash_from_dataframe</code></a>

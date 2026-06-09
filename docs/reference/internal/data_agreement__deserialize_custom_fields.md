@@ -50,7 +50,7 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 - Classification: Internal
 - Related module: `data_agreement`
 - Source file path: `src/fabricops_kit/data_agreement.py`
-- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6e744d11e5f3081af2c7f10e6b37ccaaba97dd6d/src/fabricops_kit/data_agreement.py#L118-L146">View source on GitHub</a>
+- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c30f90cb0288be7f5624f9a80a62facf8b12c3e5/src/fabricops_kit/data_agreement.py#L118-L146">View source on GitHub</a>
 - Inbound references count: 2
 - Outbound references count: 0
 

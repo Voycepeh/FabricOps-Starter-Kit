@@ -82,6 +82,8 @@ previous stored comparable profile for that watermark
 
 After the comparison, today's profile and today's comparable hash are appended as the next baseline.
 
+Technical runtime and annotation columns are excluded from schema/profile hashes and comparable profile evidence by default. This includes exact columns such as `_fabricops_run_id`, `_fabricops_pipeline_name`, `_fabricops_created_at`, `_dq_check_status`, and `_dq_failed_rules`, plus any column starting with `_fabricops_` or `_dq_`. These columns may still be written to target outputs when allowed by DQ behavior; the exclusion only prevents runtime annotations from being treated as business-data stability changes.
+
 ## DQ guardrail behavior
 
 `03_governance` records human-approved DQ expectations in `METADATA_DQ_RULES`. `02_pipeline` reads the active approved rules for the target table and evaluates them with the same simple guardrail contract used by schema and source stability checks:
@@ -115,6 +117,10 @@ The generated dictionary is only a starter schema guardrail. Users must review t
 | `strict` | Production outputs must match the expected schema. | Stop when columns or data types do not match. |
 | `allow_new_columns` | New fields are acceptable, but existing fields still matter. | Allow additional columns while still checking known columns. |
 | `monitor_only` | A team wants visibility before blocking runs. | Record schema differences without stopping the pipeline. |
+
+## Runtime summary roll-ups
+
+Pipeline run summaries treat `baseline_created` as a non-blocking successful stability outcome because the current run established the first compatible catalogue baseline. `skipped` remains non-blocking; it is ignored when other concrete guardrail results exist and appears as `skipped` only when every result in that roll-up was skipped. Skipped stability rows are not eligible as future baselines.
 
 ## Evidence produced
 

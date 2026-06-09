@@ -45,7 +45,13 @@ _DEFAULT_PROFILE_EXCLUDE_COLUMNS = {
     "pipeline_run_id",
     "loaded_at",
     "run_ingest_id",
+    "_fabricops_run_id",
+    "_fabricops_pipeline_name",
+    "_fabricops_created_at",
+    "_dq_check_status",
+    "_dq_failed_rules",
 }
+_DEFAULT_PROFILE_EXCLUDE_PREFIXES = ("_fabricops_", "_dq_")
 
 
 def _get_profiled_columns(df, exclude_columns: list[str] | set[str] | None = None) -> list[str]:
@@ -66,7 +72,11 @@ def _get_profiled_columns(df, exclude_columns: list[str] | set[str] | None = Non
     excluded = set(_DEFAULT_PROFILE_EXCLUDE_COLUMNS)
     if exclude_columns:
         excluded.update(exclude_columns)
-    return [name for name, _dtype in df.dtypes if name not in excluded]
+    return [
+        name
+        for name, _dtype in df.dtypes
+        if name not in excluded and not any(str(name).startswith(prefix) for prefix in _DEFAULT_PROFILE_EXCLUDE_PREFIXES)
+    ]
 
 
 def _is_min_max_supported_type(data_type: str) -> bool:

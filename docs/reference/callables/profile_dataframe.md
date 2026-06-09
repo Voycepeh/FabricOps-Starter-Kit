@@ -108,7 +108,7 @@ Spark DataFrame containing one profile row per eligible business column.
 ## Source
 
 - Source file path: `src/fabricops_kit/data_profiling.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6e744d11e5f3081af2c7f10e6b37ccaaba97dd6d/src/fabricops_kit/data_profiling.py#L213-L327">View profile_dataframe on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c30f90cb0288be7f5624f9a80a62facf8b12c3e5/src/fabricops_kit/data_profiling.py#L223-L337">View profile_dataframe on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -246,7 +246,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `data_profiling`
 - Source file path: `src/fabricops_kit/data_profiling.py`
-- Source line: `213`
+- Source line: `223`
 - Inbound references count: 2
 - Outbound references count: 3
 
@@ -273,9 +273,9 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/data_profiling.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6e744d11e5f3081af2c7f10e6b37ccaaba97dd6d/src/fabricops_kit/data_profiling.py#L213-L327">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6e744d11e5f3081af2c7f10e6b37ccaaba97dd6d/src/fabricops_kit/data_profiling.py#L213-L327</a>
-- Start line: `213`
-- End line: `327`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c30f90cb0288be7f5624f9a80a62facf8b12c3e5/src/fabricops_kit/data_profiling.py#L223-L337">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c30f90cb0288be7f5624f9a80a62facf8b12c3e5/src/fabricops_kit/data_profiling.py#L223-L337</a>
+- Start line: `223`
+- End line: `337`
 - Signature:
 
 ```python

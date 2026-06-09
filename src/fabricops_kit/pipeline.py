@@ -23,16 +23,25 @@ def _definition_name(name: str, definition: Mapping[str, Any]) -> str:
 
 
 def _summary_status(results: Mapping[str, Mapping[str, Any]]) -> str:
+    """Return a roll-up status for guardrail result mappings.
+
+    ``baseline_created`` is non-blocking and rolls up as ``passed``. ``skipped``
+    is ignored when other concrete results exist and is returned only when all
+    supplied results were skipped.
+    """
     statuses = {str(result.get("status", "unknown")).lower() for result in results.values()}
     if not statuses:
         return "not_run"
-    if "failed" in statuses:
+    concrete = statuses - {"skipped"}
+    if not concrete:
+        return "skipped"
+    if "failed" in concrete:
         return "failed"
-    if "warning" in statuses:
+    if "warning" in concrete:
         return "warning"
-    if statuses <= {"passed", "success", "succeeded"}:
+    if concrete <= {"passed", "success", "succeeded", "baseline_created"}:
         return "passed"
-    return ",".join(sorted(statuses))
+    return ",".join(sorted(concrete))
 
 
 def _runtime_audit_fields(config: Any, env: str) -> dict[str, str]:

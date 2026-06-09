@@ -90,6 +90,72 @@ def test_schema_guardrail_helpers_generate_reviewable_config(capsys):
     assert "'id': 'integer'" in output
 
 
+
+def test_enforce_catalogue_stability_reads_catalogue_through_metadata_route(spark_session, monkeypatch):
+    import fabricops_kit.fabric_input_output as io
+
+    df = spark_session.createDataFrame([(1, "open")], "id int, status string")
+    first = enforce_catalogue_stability(spark_session, df, "missing_catalogue", "sales", "orders", stage="source", run_id="run-1", data_behavior="fixed", stability_check_type="full_profile_hash")
+    catalogue_df = spark_session.createDataFrame([{**first, "dataset_name": "sales", "table_name": "orders", "profile_stage": "source", "profile_run_id": "run-1", "profile_status": "success", "profiled_at": "2026-01-01T00:00:00Z"}])
+    calls = []
+
+    def fake_read(config, env, target, table, *, spark_session=None):
+        calls.append((config, env, target, table, spark_session))
+        return catalogue_df
+
+    monkeypatch.setattr(io, "read_lakehouse_table", fake_read)
+    result = enforce_catalogue_stability(spark_session, df, "METADATA_DATA_CATALOGUE", "sales", "orders", stage="source", run_id="run-2", data_behavior="fixed", stability_check_type="full_profile_hash", config={"cfg": True}, env="dev")
+
+    assert result["status"] == "passed"
+    assert calls == [({"cfg": True}, "dev", "metadata", "METADATA_DATA_CATALOGUE", spark_session)]
+
+
+def test_enforce_catalogue_stability_ignores_incompatible_skipped_and_failed_baselines(spark_session):
+    df = spark_session.createDataFrame([(1, "open")], "id int, status string")
+    first = enforce_catalogue_stability(spark_session, df, "missing_catalogue", "sales", "orders", stage="source", run_id="run-good", data_behavior="fixed", stability_check_type="full_profile_hash")
+    rows = [
+        {**first, "dataset_name": "sales", "table_name": "orders", "profile_stage": "source", "profile_run_id": "run-skipped", "profile_status": "success", "profiled_at": "2026-01-03T00:00:00Z", "stability_status": "skipped", "stability_check_enabled": False},
+        {**first, "dataset_name": "sales", "table_name": "orders", "profile_stage": "source", "profile_run_id": "run-failed", "profile_status": "success", "profiled_at": "2026-01-02T00:00:00Z", "stability_status": "failed"},
+        {**first, "dataset_name": "sales", "table_name": "orders", "profile_stage": "source", "profile_run_id": "run-changing", "profile_status": "success", "profiled_at": "2026-01-01T12:00:00Z", "data_behavior": "changing"},
+        {**first, "dataset_name": "sales", "table_name": "orders", "profile_stage": "source", "profile_run_id": "run-good", "profile_status": "success", "profiled_at": "2026-01-01T00:00:00Z"},
+    ]
+    catalogue_df = spark_session.createDataFrame(rows)
+
+    result = enforce_catalogue_stability(spark_session, df, "METADATA_DATA_CATALOGUE", "sales", "orders", stage="source", run_id="run-current", data_behavior="fixed", stability_check_type="full_profile_hash", catalogue_df=catalogue_df)
+
+    assert result["status"] == "passed"
+    assert result["baseline_run_id"] == "run-good"
+
+
+def test_enforce_catalogue_stability_watermark_requires_usable_baseline_hash_and_watermark(spark_session):
+    df = spark_session.createDataFrame([(1, "2026-01-01", 10)], "id int, business_date string, amount int")
+    first = enforce_catalogue_stability(spark_session, df, "missing_catalogue", "sales", "orders", stage="source", run_id="run-1", data_behavior="changing", stability_check_type="watermark_slice_hash", watermark_column="business_date", watermark_value="2026-01-01")
+    bad = {**first, "dataset_name": "sales", "table_name": "orders", "profile_stage": "source", "profile_run_id": "run-1", "profile_status": "success", "profiled_at": "2026-01-01T00:00:00Z", "watermark_value": "", "comparable_profile_hash": ""}
+    catalogue_df = spark_session.createDataFrame([bad])
+
+    result = enforce_catalogue_stability(spark_session, df, "METADATA_DATA_CATALOGUE", "sales", "orders", stage="source", run_id="run-2", data_behavior="changing", stability_check_type="watermark_slice_hash", watermark_column="business_date", watermark_value="2026-01-01", catalogue_df=catalogue_df)
+
+    assert result["status"] == "baseline_created"
+    assert result["can_continue"] is True
+
+
+def test_enforce_catalogue_stability_technical_columns_do_not_change_hashes(spark_session):
+    baseline_df = spark_session.createDataFrame([(1, "2026-01-01", 10)], "id int, business_date string, amount int")
+    tagged_df = spark_session.createDataFrame(
+        [(1, "2026-01-01", 10, "warning", "amount_positive", "run-2", "pipe", "2026-01-02")],
+        "id int, business_date string, amount int, _dq_check_status string, _dq_failed_rules string, _fabricops_run_id string, _fabricops_pipeline_name string, _fabricops_created_at string",
+    )
+    first = enforce_catalogue_stability(spark_session, baseline_df, "missing_catalogue", "sales", "orders", stage="target", run_id="run-1", data_behavior="changing", stability_check_type="watermark_slice_hash", watermark_column="business_date", watermark_value="2026-01-01")
+    catalogue_df = spark_session.createDataFrame([{**first, "dataset_name": "sales", "table_name": "orders", "profile_stage": "target", "profile_run_id": "run-1", "profile_status": "success", "profiled_at": "2026-01-01T00:00:00Z"}])
+
+    result = enforce_catalogue_stability(spark_session, tagged_df, "METADATA_DATA_CATALOGUE", "sales", "orders", stage="target", run_id="run-2", data_behavior="changing", stability_check_type="watermark_slice_hash", watermark_column="business_date", watermark_value="2026-01-01", catalogue_df=catalogue_df)
+
+    assert result["status"] == "passed"
+    assert result["profile_hash"] == first["profile_hash"]
+    assert result["comparable_profile_hash"] == first["comparable_profile_hash"]
+    assert result["schema_hash"] == first["schema_hash"]
+
+
 def test_stop_if_failed_blocks_only_failed_guardrail_results():
     stop_if_failed({"can_continue": True, "status": "warning", "message": "observed"})
     stop_if_failed({"result": {"can_continue": True, "status": "passed"}})
@@ -119,7 +185,7 @@ def test_enforce_catalogue_stability_fixed_passes_when_profile_hash_unchanged(sp
     first = enforce_catalogue_stability(spark_session, df, "missing_catalogue", "sales", "orders", stage="source", run_id="run-1", data_behavior="fixed", stability_check_type="full_profile_hash")
     spark_session.createDataFrame([{**first, "dataset_name": "sales", "table_name": "orders", "profile_stage": "source", "profile_run_id": "run-1", "profile_status": "success", "profiled_at": "2026-01-01T00:00:00Z"}]).createOrReplaceTempView("catalogue_fixed_pass")
 
-    result = enforce_catalogue_stability(spark_session, df, "catalogue_fixed_pass", "sales", "orders", stage="source", run_id="run-2", data_behavior="fixed", stability_check_type="full_profile_hash")
+    result = enforce_catalogue_stability(spark_session, df, "METADATA_DATA_CATALOGUE", "sales", "orders", stage="source", run_id="run-2", data_behavior="fixed", stability_check_type="full_profile_hash", catalogue_df=spark_session.table("catalogue_fixed_pass"))
 
     assert result["status"] == "passed"
     assert result["can_continue"] is True
@@ -132,7 +198,7 @@ def test_enforce_catalogue_stability_fixed_fails_when_profile_hash_changes(spark
     first = enforce_catalogue_stability(spark_session, baseline_df, "missing_catalogue", "sales", "orders", stage="target", run_id="run-1", data_behavior="fixed", stability_check_type="full_profile_hash")
     spark_session.createDataFrame([{**first, "dataset_name": "sales", "table_name": "orders", "profile_stage": "target", "profile_run_id": "run-1", "profile_status": "success", "profiled_at": "2026-01-01T00:00:00Z"}]).createOrReplaceTempView("catalogue_fixed_fail")
 
-    result = enforce_catalogue_stability(spark_session, changed_df, "catalogue_fixed_fail", "sales", "orders", stage="target", run_id="run-2", data_behavior="fixed", stability_check_type="full_profile_hash")
+    result = enforce_catalogue_stability(spark_session, changed_df, "METADATA_DATA_CATALOGUE", "sales", "orders", stage="target", run_id="run-2", data_behavior="fixed", stability_check_type="full_profile_hash", catalogue_df=spark_session.table("catalogue_fixed_fail"))
 
     assert result["status"] == "failed"
     assert result["can_continue"] is False
@@ -146,8 +212,8 @@ def test_enforce_catalogue_stability_changing_watermark_slice_passes_and_fails(s
     first = enforce_catalogue_stability(spark_session, baseline_df, "missing_catalogue", "sales", "orders", stage="source", run_id="run-1", data_behavior="changing", stability_check_type="watermark_slice_hash", watermark_column="business_date", watermark_value="2026-01-02")
     spark_session.createDataFrame([{**first, "dataset_name": "sales", "table_name": "orders", "profile_stage": "source", "profile_run_id": "run-1", "profile_status": "success", "profiled_at": "2026-01-01T00:00:00Z"}]).createOrReplaceTempView("catalogue_changing")
 
-    passed = enforce_catalogue_stability(spark_session, unchanged_df, "catalogue_changing", "sales", "orders", stage="source", run_id="run-2", data_behavior="changing", stability_check_type="watermark_slice_hash", watermark_column="business_date", watermark_value="2026-01-03")
-    failed = enforce_catalogue_stability(spark_session, changed_df, "catalogue_changing", "sales", "orders", stage="source", run_id="run-2", data_behavior="changing", stability_check_type="watermark_slice_hash", watermark_column="business_date", watermark_value="2026-01-03")
+    passed = enforce_catalogue_stability(spark_session, unchanged_df, "METADATA_DATA_CATALOGUE", "sales", "orders", stage="source", run_id="run-2", data_behavior="changing", stability_check_type="watermark_slice_hash", watermark_column="business_date", watermark_value="2026-01-03", catalogue_df=spark_session.table("catalogue_changing"))
+    failed = enforce_catalogue_stability(spark_session, changed_df, "METADATA_DATA_CATALOGUE", "sales", "orders", stage="source", run_id="run-2", data_behavior="changing", stability_check_type="watermark_slice_hash", watermark_column="business_date", watermark_value="2026-01-03", catalogue_df=spark_session.table("catalogue_changing"))
 
     assert passed["status"] == "passed"
     assert failed["status"] == "failed"
@@ -159,7 +225,7 @@ def test_enforce_catalogue_stability_first_run_and_current_run_exclusion(spark_s
     current = enforce_catalogue_stability(spark_session, df, "missing_catalogue", "sales", "orders", stage="source", run_id="run-current", data_behavior="fixed", stability_check_type="full_profile_hash")
     spark_session.createDataFrame([{**current, "dataset_name": "sales", "table_name": "orders", "profile_stage": "source", "profile_run_id": "run-current", "profile_status": "success", "profiled_at": "2026-01-02T00:00:00Z"}]).createOrReplaceTempView("catalogue_current_only")
 
-    result = enforce_catalogue_stability(spark_session, df, "catalogue_current_only", "sales", "orders", stage="source", run_id="run-current", data_behavior="fixed", stability_check_type="full_profile_hash")
+    result = enforce_catalogue_stability(spark_session, df, "METADATA_DATA_CATALOGUE", "sales", "orders", stage="source", run_id="run-current", data_behavior="fixed", stability_check_type="full_profile_hash", catalogue_df=spark_session.table("catalogue_current_only"))
 
     assert result["status"] == "baseline_created"
     assert result["can_continue"] is True

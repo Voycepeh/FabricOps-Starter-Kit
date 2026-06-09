@@ -1,4 +1,4 @@
-# _latest_catalogue_stability_row
+# _stability_exclude_columns
 
 **Module:** `drift`  
 **Classification:** Internal
@@ -17,6 +17,7 @@ Do not call this helper directly from notebooks; use the public callable helpers
 
 ## Used by
 
+- <a href="../internal/drift__schema_hash_from_dataframe/"><code>fabricops_kit.drift._schema_hash_from_dataframe</code></a>
 - <a href="../enforce_catalogue_stability/"><code>fabricops_kit.drift.enforce_catalogue_stability</code></a>
 
 ## Purpose
@@ -26,7 +27,7 @@ No summary available.
 ## Signature if available
 
 ```python
-def _latest_catalogue_stability_row(catalogue_df, *, dataset_name: str, table_name: str, profile_stage: str, stability_check_type: str, data_behavior: str, profile_scope: str, watermark_column: str | None=None, exclude_run_id: str | None=None) -> dict | None
+def _stability_exclude_columns(exclude_columns: list[str] | set[str] | tuple[str, ...] | None=None) -> set[str]
 ```
 
 ## Side effects
@@ -43,19 +44,16 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 
 ## Function manifest
 
-- Fully qualified function name: `fabricops_kit.drift._latest_catalogue_stability_row`
-- Short name: `_latest_catalogue_stability_row`
+- Fully qualified function name: `fabricops_kit.drift._stability_exclude_columns`
+- Short name: `_stability_exclude_columns`
 - Module: `drift`
 - Classification: Internal
 - Related module: `drift`
 - Source file path: `src/fabricops_kit/drift.py`
-- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c30f90cb0288be7f5624f9a80a62facf8b12c3e5/src/fabricops_kit/drift.py#L564-L668">View source on GitHub</a>
-- Inbound references count: 1
-- Outbound references count: 2
+- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c30f90cb0288be7f5624f9a80a62facf8b12c3e5/src/fabricops_kit/drift.py#L521-L525">View source on GitHub</a>
+- Inbound references count: 2
+- Outbound references count: 0
 
 ## Inbound references
+- <a href="../internal/drift__schema_hash_from_dataframe/"><code>fabricops_kit.drift._schema_hash_from_dataframe</code></a>
 - <a href="../enforce_catalogue_stability/"><code>fabricops_kit.drift.enforce_catalogue_stability</code></a>
-
-## Outbound references
-- <a href="../internal/drift__is_missing_table_error/"><code>fabricops_kit.drift._is_missing_table_error</code></a>
-- <a href="../internal/drift__row_to_dict/"><code>fabricops_kit.drift._row_to_dict</code></a>

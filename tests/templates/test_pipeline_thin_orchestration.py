@@ -88,7 +88,7 @@ def test_pipeline_notebook_contains_expected_high_level_flow_sections():
         "## 11. Transform to target DataFrame",
         "## 12. Register target outputs and add audit columns",
         "## 13. Check each target schema",
-        "## 14. Check each target for source stability",
+        "## 14. Check each target for target stability",
         "## 15. Check each target with DQ guardrails",
         "## 16. Write target catalogue evidence",
         "## 17. Write target tables",

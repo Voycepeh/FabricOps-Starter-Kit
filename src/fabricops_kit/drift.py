@@ -15,6 +15,16 @@ import re
 from decimal import Decimal
 
 
+_DEFAULT_STABILITY_EXCLUDE_COLUMNS = {
+    "_fabricops_run_id",
+    "_fabricops_pipeline_name",
+    "_fabricops_created_at",
+    "_dq_check_status",
+    "_dq_failed_rules",
+}
+_DEFAULT_STABILITY_EXCLUDE_PREFIXES = ("_fabricops_", "_dq_")
+
+
 class SchemaDriftError(Exception):
     """Raised when a schema check is configured to fail on drift.
 
@@ -508,10 +518,22 @@ def _profile_hash(profile) -> str:
     return _canonical_json_hash(_stable_profile_payload(profile))
 
 
+def _stability_exclude_columns(exclude_columns: list[str] | set[str] | tuple[str, ...] | None = None) -> set[str]:
+    excluded = set(_DEFAULT_STABILITY_EXCLUDE_COLUMNS)
+    if exclude_columns:
+        excluded.update(str(column) for column in exclude_columns)
+    return excluded
+
+
+def _is_stability_excluded_column(column: str, exclude_columns: set[str]) -> bool:
+    name = str(column)
+    return name in exclude_columns or any(name.startswith(prefix) for prefix in _DEFAULT_STABILITY_EXCLUDE_PREFIXES)
+
+
 def _schema_hash_from_dataframe(dataframe, exclude_columns: list[str] | set[str] | tuple[str, ...] | None = None) -> str:
-    excluded = {str(column) for column in (exclude_columns or [])}
+    excluded = _stability_exclude_columns(exclude_columns)
     columns, types = _actual_schema(dataframe)
-    payload = {column: types.get(column, "") for column in columns if column not in excluded}
+    payload = {column: types.get(column, "") for column in columns if not _is_stability_excluded_column(column, excluded)}
     return _canonical_json_hash(payload)
 
 
@@ -539,17 +561,25 @@ def _max_watermark_value(dataframe, watermark_column: str):
     return rows[0]["watermark_value"]
 
 
-def _latest_catalogue_stability_row(spark, metadata_table: str, dataset_name: str, table_name: str, profile_stage: str, exclude_run_id: str | None = None) -> dict | None:
-    try:
-        df = spark.table(metadata_table)
-    except Exception as exc:
-        if _is_missing_table_error(exc):
-            return None
-        raise
+def _latest_catalogue_stability_row(
+    catalogue_df,
+    *,
+    dataset_name: str,
+    table_name: str,
+    profile_stage: str,
+    stability_check_type: str,
+    data_behavior: str,
+    profile_scope: str,
+    watermark_column: str | None = None,
+    exclude_run_id: str | None = None,
+) -> dict | None:
+    if catalogue_df is None:
+        return None
 
     try:
         from pyspark.sql import functions as F
 
+        df = catalogue_df
         columns_by_lower = {str(column).lower(): column for column in df.columns}
 
         def catalogue_col(*names: str) -> str | None:
@@ -560,27 +590,67 @@ def _latest_catalogue_stability_row(spark, metadata_table: str, dataset_name: st
                     return columns_by_lower[name.lower()]
             return None
 
+        def required_col(*names: str) -> str | None:
+            return catalogue_col(*names)
+
         stage = str(profile_stage).lower()
         stage_roles = [stage, f"{stage}_profile"]
         if stage == "target":
             stage_roles.append("output_profile")
-        dataset_col = catalogue_col("dataset_name", "DATASET_NAME")
-        table_col = catalogue_col("table_name", "PROFILED_TABLE_NAME", "TABLE_NAME")
-        stage_col = catalogue_col("profile_stage", "PROFILE_STAGE", "evidence_role", "EVIDENCE_ROLE")
+
+        dataset_col = required_col("dataset_name", "DATASET_NAME")
+        table_col = required_col("table_name", "PROFILED_TABLE_NAME", "TABLE_NAME")
+        stage_col = required_col("profile_stage", "PROFILE_STAGE", "evidence_role", "EVIDENCE_ROLE")
         profile_status_col = catalogue_col("profile_status", "PROFILE_STATUS")
         run_col = catalogue_col("profile_run_id", "PROFILE_RUN_ID", "run_id", "RUN_ID")
         time_col = catalogue_col("profiled_at", "run_timestamp", "RUN_TIMESTAMP", "created_at")
-        filters = []
-        if dataset_col:
-            filters.append(F.col(dataset_col) == dataset_name)
-        if table_col:
-            filters.append(F.col(table_col) == table_name)
-        if stage_col:
-            filters.append(F.lower(F.col(stage_col)).isin(stage_roles))
+        enabled_col = required_col("stability_check_enabled", "STABILITY_CHECK_ENABLED")
+        stability_status_col = required_col("stability_status", "STABILITY_STATUS")
+        check_type_col = required_col("stability_check_type", "STABILITY_CHECK_TYPE")
+        behavior_col = required_col("data_behavior", "DATA_BEHAVIOR")
+        scope_col = required_col("profile_scope", "PROFILE_SCOPE")
+        watermark_col = required_col("watermark_column", "WATERMARK_COLUMN")
+        comparable_hash_col = required_col("comparable_profile_hash", "COMPARABLE_PROFILE_HASH")
+        profile_hash_col = required_col("profile_hash", "PROFILE_HASH")
+        watermark_value_col = required_col("watermark_value", "WATERMARK_VALUE")
+
+        required = [
+            dataset_col,
+            table_col,
+            stage_col,
+            enabled_col,
+            stability_status_col,
+            check_type_col,
+            behavior_col,
+            scope_col,
+            profile_hash_col,
+        ]
+        if str(stability_check_type).lower() == "watermark_slice_hash":
+            required.extend([watermark_col, comparable_hash_col, watermark_value_col])
+        if any(column is None for column in required):
+            return None
+
+        filters = [
+            F.col(dataset_col) == dataset_name,
+            F.col(table_col) == table_name,
+            F.lower(F.col(stage_col)).isin(stage_roles),
+            F.lower(F.col(stability_status_col)).isin("passed", "baseline_created"),
+            F.lower(F.col(check_type_col)) == str(stability_check_type).lower(),
+            F.lower(F.col(behavior_col)) == str(data_behavior).lower(),
+            F.lower(F.col(scope_col)) == str(profile_scope).lower(),
+            F.lower(F.col(enabled_col).cast("string")).isin("true", "1", "yes"),
+        ]
         if profile_status_col:
             filters.append(F.lower(F.col(profile_status_col)).isin("success", "successful"))
         if exclude_run_id and run_col:
             filters.append(F.col(run_col) != exclude_run_id)
+        if str(stability_check_type).lower() == "watermark_slice_hash":
+            filters.append(F.col(watermark_col) == (watermark_column or ""))
+            filters.append(F.col(comparable_hash_col).isNotNull() & (F.length(F.trim(F.col(comparable_hash_col).cast("string"))) > 0))
+            filters.append(F.col(watermark_value_col).isNotNull() & (F.length(F.trim(F.col(watermark_value_col).cast("string"))) > 0))
+        else:
+            filters.append(F.col(profile_hash_col).isNotNull() & (F.length(F.trim(F.col(profile_hash_col).cast("string"))) > 0))
+
         for condition in filters:
             df = df.filter(condition)
         order_columns = []
@@ -613,6 +683,9 @@ def enforce_catalogue_stability(
     watermark_value=None,
     exclude_columns: list[str] | set[str] | tuple[str, ...] | None = None,
     exclude_run_id: str | None = None,
+    config=None,
+    env: str | None = None,
+    catalogue_df=None,
 ) -> dict:
     """Compare the current DataFrame profile with append-only catalogue evidence.
 
@@ -646,6 +719,12 @@ def enforce_catalogue_stability(
         Business or technical columns to exclude from deterministic profiles.
     exclude_run_id : str, optional
         Run identifier to exclude from baseline lookup. Defaults to ``run_id``.
+    config, env : object, str, optional
+        Metadata route from ``00_env_config`` used to read the catalogue table
+        via ``read_lakehouse_table`` when ``catalogue_df`` is not supplied.
+    catalogue_df : DataFrame, optional
+        Preloaded ``METADATA_DATA_CATALOGUE`` DataFrame. When provided, no
+        metadata read is performed.
 
     Returns
     -------
@@ -669,10 +748,11 @@ def enforce_catalogue_stability(
     if check_type == "watermark_slice_hash" and not watermark_column:
         raise ValueError("watermark_column is required for watermark_slice_hash")
 
-    current_profile_df = profile_dataframe(dataframe, table_name, exclude_columns=exclude_columns)
+    effective_exclude_columns = _stability_exclude_columns(exclude_columns)
+    current_profile_df = profile_dataframe(dataframe, table_name, exclude_columns=effective_exclude_columns)
     current_profile_hash = _profile_hash(current_profile_df)
     current_row_count = _profile_row_count(current_profile_df)
-    schema_hash = _schema_hash_from_dataframe(dataframe, exclude_columns=exclude_columns)
+    schema_hash = _schema_hash_from_dataframe(dataframe, exclude_columns=effective_exclude_columns)
     effective_watermark = watermark_value
     if check_type == "watermark_slice_hash" and effective_watermark is None:
         effective_watermark = _max_watermark_value(dataframe, str(watermark_column))
@@ -684,14 +764,28 @@ def enforce_catalogue_stability(
         profile_scope = "watermark_slice"
         profile_filter_expression = f"{watermark_column} <= {effective_watermark}"
         comparable_df = _filter_watermark_slice(dataframe, str(watermark_column), effective_watermark)
-        comparable_profile_hash = _profile_hash(profile_dataframe(comparable_df, table_name, exclude_columns=exclude_columns))
+        comparable_profile_hash = _profile_hash(profile_dataframe(comparable_df, table_name, exclude_columns=effective_exclude_columns))
+
+    if catalogue_df is None and config is not None and env is not None:
+        from fabricops_kit.fabric_input_output import read_lakehouse_table
+
+        try:
+            catalogue_df = read_lakehouse_table(config, env, "metadata", metadata_table, spark_session=spark)
+        except Exception as exc:
+            if _is_missing_table_error(exc):
+                catalogue_df = None
+            else:
+                raise
 
     baseline = _latest_catalogue_stability_row(
-        spark,
-        metadata_table,
-        dataset_name,
-        table_name,
-        stage,
+        catalogue_df,
+        dataset_name=dataset_name,
+        table_name=table_name,
+        profile_stage=stage,
+        stability_check_type=check_type,
+        data_behavior=behavior,
+        profile_scope=profile_scope,
+        watermark_column=watermark_column,
         exclude_run_id=exclude_run_id or run_id,
     )
     baseline_run_id = str((baseline or {}).get("profile_run_id") or (baseline or {}).get("PROFILE_RUN_ID") or "")
@@ -702,7 +796,7 @@ def enforce_catalogue_stability(
         if baseline_watermark_value is not None:
             profile_filter_expression = f"{watermark_column} <= {baseline_watermark_value}"
             comparable_df = _filter_watermark_slice(dataframe, str(watermark_column), baseline_watermark_value)
-            comparable_profile_hash = _profile_hash(profile_dataframe(comparable_df, table_name, exclude_columns=exclude_columns))
+            comparable_profile_hash = _profile_hash(profile_dataframe(comparable_df, table_name, exclude_columns=effective_exclude_columns))
 
     result = {
         "status": "passed",

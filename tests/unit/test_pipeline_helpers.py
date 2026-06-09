@@ -80,3 +80,9 @@ def test_write_pipeline_run_summary_writes_metadata_table(monkeypatch):
     assert row["dq_status"] == "warning"
     assert writes[0][2:4] == ("metadata", "METADATA_PIPELINE_RUNS")
     assert writes[0][4]["mode"] == "append"
+
+
+def test_summary_status_treats_baseline_created_as_passed_and_skipped_as_nonblocking():
+    assert pipeline._summary_status({"s1": {"status": "baseline_created"}}) == "passed"
+    assert pipeline._summary_status({"s1": {"status": "skipped"}}) == "skipped"
+    assert pipeline._summary_status({"s1": {"status": "passed"}, "s2": {"status": "skipped"}}) == "passed"

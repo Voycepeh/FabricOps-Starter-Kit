@@ -96,6 +96,21 @@ stop_if_failed(stability_result)
       <td data-label="Required">No</td>
       <td data-label="Meaning">Run identifier to exclude from baseline lookup. Defaults to ``run_id``.</td>
     </tr>
+    <tr>
+      <td data-label="Parameter"><code>config</code></td>
+      <td data-label="Required">No</td>
+      <td data-label="Meaning">Metadata route from ``00_env_config`` used to read the catalogue table via ``read_lakehouse_table`` when ``catalogue_df`` is not supplied.</td>
+    </tr>
+    <tr>
+      <td data-label="Parameter"><code>env</code></td>
+      <td data-label="Required">No</td>
+      <td data-label="Meaning">Not documented yet</td>
+    </tr>
+    <tr>
+      <td data-label="Parameter"><code>catalogue_df</code></td>
+      <td data-label="Required">No</td>
+      <td data-label="Meaning">Preloaded ``METADATA_DATA_CATALOGUE`` DataFrame. When provided, no metadata read is performed.</td>
+    </tr>
   </tbody>
 </table>
 </div>
@@ -121,18 +136,21 @@ Guardrail result dictionary with status, can_continue, message, current profile,
 
 - <a href="../profile_dataframe/"><code>fabricops_kit.data_profiling.profile_dataframe</code></a>
 - <a href="../internal/drift__filter_watermark_slice/"><code>fabricops_kit.drift._filter_watermark_slice</code></a>
+- <a href="../internal/drift__is_missing_table_error/"><code>fabricops_kit.drift._is_missing_table_error</code></a>
 - <a href="../internal/drift__latest_catalogue_stability_row/"><code>fabricops_kit.drift._latest_catalogue_stability_row</code></a>
 - <a href="../internal/drift__max_watermark_value/"><code>fabricops_kit.drift._max_watermark_value</code></a>
 - <a href="../internal/drift__profile_hash/"><code>fabricops_kit.drift._profile_hash</code></a>
 - <a href="../internal/drift__profile_row_count/"><code>fabricops_kit.drift._profile_row_count</code></a>
 - <a href="../internal/drift__schema_hash_from_dataframe/"><code>fabricops_kit.drift._schema_hash_from_dataframe</code></a>
+- <a href="../internal/drift__stability_exclude_columns/"><code>fabricops_kit.drift._stability_exclude_columns</code></a>
+- <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a>
 
 </details>
 
 ## Source
 
 - Source file path: `src/fabricops_kit/drift.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6e744d11e5f3081af2c7f10e6b37ccaaba97dd6d/src/fabricops_kit/drift.py#L601-L749">View enforce_catalogue_stability on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c30f90cb0288be7f5624f9a80a62facf8b12c3e5/src/fabricops_kit/drift.py#L671-L843">View enforce_catalogue_stability on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -153,6 +171,9 @@ def enforce_catalogue_stability(
     watermark_value=None,
     exclude_columns: list[str] | set[str] | tuple[str, ...] | None = None,
     exclude_run_id: str | None = None,
+    config=None,
+    env: str | None = None,
+    catalogue_df=None,
 ) -> dict:
     """Compare the current DataFrame profile with append-only catalogue evidence.
 
@@ -186,6 +207,12 @@ def enforce_catalogue_stability(
         Business or technical columns to exclude from deterministic profiles.
     exclude_run_id : str, optional
         Run identifier to exclude from baseline lookup. Defaults to ``run_id``.
+    config, env : object, str, optional
+        Metadata route from ``00_env_config`` used to read the catalogue table
+        via ``read_lakehouse_table`` when ``catalogue_df`` is not supplied.
+    catalogue_df : DataFrame, optional
+        Preloaded ``METADATA_DATA_CATALOGUE`` DataFrame. When provided, no
+        metadata read is performed.
 
     Returns
     -------
@@ -209,10 +236,11 @@ def enforce_catalogue_stability(
     if check_type == "watermark_slice_hash" and not watermark_column:
         raise ValueError("watermark_column is required for watermark_slice_hash")
 
-    current_profile_df = profile_dataframe(dataframe, table_name, exclude_columns=exclude_columns)
+    effective_exclude_columns = _stability_exclude_columns(exclude_columns)
+    current_profile_df = profile_dataframe(dataframe, table_name, exclude_columns=effective_exclude_columns)
     current_profile_hash = _profile_hash(current_profile_df)
     current_row_count = _profile_row_count(current_profile_df)
-    schema_hash = _schema_hash_from_dataframe(dataframe, exclude_columns=exclude_columns)
+    schema_hash = _schema_hash_from_dataframe(dataframe, exclude_columns=effective_exclude_columns)
     effective_watermark = watermark_value
     if check_type == "watermark_slice_hash" and effective_watermark is None:
         effective_watermark = _max_watermark_value(dataframe, str(watermark_column))
@@ -224,14 +252,28 @@ def enforce_catalogue_stability(
         profile_scope = "watermark_slice"
         profile_filter_expression = f"{watermark_column} <= {effective_watermark}"
         comparable_df = _filter_watermark_slice(dataframe, str(watermark_column), effective_watermark)
-        comparable_profile_hash = _profile_hash(profile_dataframe(comparable_df, table_name, exclude_columns=exclude_columns))
+        comparable_profile_hash = _profile_hash(profile_dataframe(comparable_df, table_name, exclude_columns=effective_exclude_columns))
+
+    if catalogue_df is None and config is not None and env is not None:
+        from fabricops_kit.fabric_input_output import read_lakehouse_table
+
+        try:
+            catalogue_df = read_lakehouse_table(config, env, "metadata", metadata_table, spark_session=spark)
+        except Exception as exc:
+            if _is_missing_table_error(exc):
+                catalogue_df = None
+            else:
+                raise
 
     baseline = _latest_catalogue_stability_row(
-        spark,
-        metadata_table,
-        dataset_name,
-        table_name,
-        stage,
+        catalogue_df,
+        dataset_name=dataset_name,
+        table_name=table_name,
+        profile_stage=stage,
+        stability_check_type=check_type,
+        data_behavior=behavior,
+        profile_scope=profile_scope,
+        watermark_column=watermark_column,
         exclude_run_id=exclude_run_id or run_id,
     )
     baseline_run_id = str((baseline or {}).get("profile_run_id") or (baseline or {}).get("PROFILE_RUN_ID") or "")
@@ -242,7 +284,7 @@ def enforce_catalogue_stability(
         if baseline_watermark_value is not None:
             profile_filter_expression = f"{watermark_column} <= {baseline_watermark_value}"
             comparable_df = _filter_watermark_slice(dataframe, str(watermark_column), baseline_watermark_value)
-            comparable_profile_hash = _profile_hash(profile_dataframe(comparable_df, table_name, exclude_columns=exclude_columns))
+            comparable_profile_hash = _profile_hash(profile_dataframe(comparable_df, table_name, exclude_columns=effective_exclude_columns))
 
     result = {
         "status": "passed",
@@ -304,9 +346,9 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `drift`
 - Source file path: `src/fabricops_kit/drift.py`
-- Source line: `601`
+- Source line: `671`
 - Inbound references count: 0
-- Outbound references count: 7
+- Outbound references count: 10
 
 ### AI implementation contract
 
@@ -325,22 +367,25 @@ Not documented yet
 
 - <a href="../profile_dataframe/"><code>fabricops_kit.data_profiling.profile_dataframe</code></a>
 - <a href="../internal/drift__filter_watermark_slice/"><code>fabricops_kit.drift._filter_watermark_slice</code></a>
+- <a href="../internal/drift__is_missing_table_error/"><code>fabricops_kit.drift._is_missing_table_error</code></a>
 - <a href="../internal/drift__latest_catalogue_stability_row/"><code>fabricops_kit.drift._latest_catalogue_stability_row</code></a>
 - <a href="../internal/drift__max_watermark_value/"><code>fabricops_kit.drift._max_watermark_value</code></a>
 - <a href="../internal/drift__profile_hash/"><code>fabricops_kit.drift._profile_hash</code></a>
 - <a href="../internal/drift__profile_row_count/"><code>fabricops_kit.drift._profile_row_count</code></a>
 - <a href="../internal/drift__schema_hash_from_dataframe/"><code>fabricops_kit.drift._schema_hash_from_dataframe</code></a>
+- <a href="../internal/drift__stability_exclude_columns/"><code>fabricops_kit.drift._stability_exclude_columns</code></a>
+- <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a>
 
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/drift.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6e744d11e5f3081af2c7f10e6b37ccaaba97dd6d/src/fabricops_kit/drift.py#L601-L749">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6e744d11e5f3081af2c7f10e6b37ccaaba97dd6d/src/fabricops_kit/drift.py#L601-L749</a>
-- Start line: `601`
-- End line: `749`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c30f90cb0288be7f5624f9a80a62facf8b12c3e5/src/fabricops_kit/drift.py#L671-L843">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c30f90cb0288be7f5624f9a80a62facf8b12c3e5/src/fabricops_kit/drift.py#L671-L843</a>
+- Start line: `671`
+- End line: `843`
 - Signature:
 
 ```python
-def enforce_catalogue_stability(spark, dataframe, metadata_table: str, dataset_name: str, table_name: str, *, stage: str, run_id: str, data_behavior: str, stability_check_type: str, watermark_column: str | None=None, watermark_value=None, exclude_columns: list[str] | set[str] | tuple[str, ...] | None=None, exclude_run_id: str | None=None) -> dict
+def enforce_catalogue_stability(spark, dataframe, metadata_table: str, dataset_name: str, table_name: str, *, stage: str, run_id: str, data_behavior: str, stability_check_type: str, watermark_column: str | None=None, watermark_value=None, exclude_columns: list[str] | set[str] | tuple[str, ...] | None=None, exclude_run_id: str | None=None, config=None, env: str | None=None, catalogue_df=None) -> dict
 ```
 
 ### Internal relationship graph
@@ -355,10 +400,13 @@ def enforce_catalogue_stability(spark, dataframe, metadata_table: str, dataset_n
 
 - <a href="../profile_dataframe/"><code>fabricops_kit.data_profiling.profile_dataframe</code></a>
 - <a href="../internal/drift__filter_watermark_slice/"><code>fabricops_kit.drift._filter_watermark_slice</code></a>
+- <a href="../internal/drift__is_missing_table_error/"><code>fabricops_kit.drift._is_missing_table_error</code></a>
 - <a href="../internal/drift__latest_catalogue_stability_row/"><code>fabricops_kit.drift._latest_catalogue_stability_row</code></a>
 - <a href="../internal/drift__max_watermark_value/"><code>fabricops_kit.drift._max_watermark_value</code></a>
 - <a href="../internal/drift__profile_hash/"><code>fabricops_kit.drift._profile_hash</code></a>
 - <a href="../internal/drift__profile_row_count/"><code>fabricops_kit.drift._profile_row_count</code></a>
 - <a href="../internal/drift__schema_hash_from_dataframe/"><code>fabricops_kit.drift._schema_hash_from_dataframe</code></a>
+- <a href="../internal/drift__stability_exclude_columns/"><code>fabricops_kit.drift._stability_exclude_columns</code></a>
+- <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a>
 
 </details>

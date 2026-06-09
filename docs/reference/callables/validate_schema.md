@@ -79,7 +79,7 @@ Guardrail result dictionary with status, can_continue, checks, message, and sche
 ## Source
 
 - Source file path: `src/fabricops_kit/drift.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6e744d11e5f3081af2c7f10e6b37ccaaba97dd6d/src/fabricops_kit/drift.py#L282-L371">View validate_schema on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c30f90cb0288be7f5624f9a80a62facf8b12c3e5/src/fabricops_kit/drift.py#L292-L381">View validate_schema on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -192,7 +192,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `drift`
 - Source file path: `src/fabricops_kit/drift.py`
-- Source line: `282`
+- Source line: `292`
 - Inbound references count: 0
 - Outbound references count: 2
 
@@ -217,9 +217,9 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/drift.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6e744d11e5f3081af2c7f10e6b37ccaaba97dd6d/src/fabricops_kit/drift.py#L282-L371">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6e744d11e5f3081af2c7f10e6b37ccaaba97dd6d/src/fabricops_kit/drift.py#L282-L371</a>
-- Start line: `282`
-- End line: `371`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c30f90cb0288be7f5624f9a80a62facf8b12c3e5/src/fabricops_kit/drift.py#L292-L381">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c30f90cb0288be7f5624f9a80a62facf8b12c3e5/src/fabricops_kit/drift.py#L292-L381</a>
+- Start line: `292`
+- End line: `381`
 - Signature:
 
 ```python

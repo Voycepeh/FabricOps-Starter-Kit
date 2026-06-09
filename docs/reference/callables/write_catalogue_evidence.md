@@ -140,7 +140,7 @@ Dictionary of write statuses keyed by dataset alias.
 ## Source
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6e744d11e5f3081af2c7f10e6b37ccaaba97dd6d/src/fabricops_kit/pipeline.py#L101-L208">View write_catalogue_evidence on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c30f90cb0288be7f5624f9a80a62facf8b12c3e5/src/fabricops_kit/pipeline.py#L110-L217">View write_catalogue_evidence on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -271,7 +271,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `pipeline`
 - Source file path: `src/fabricops_kit/pipeline.py`
-- Source line: `101`
+- Source line: `110`
 - Inbound references count: 0
 - Outbound references count: 7
 
@@ -301,9 +301,9 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6e744d11e5f3081af2c7f10e6b37ccaaba97dd6d/src/fabricops_kit/pipeline.py#L101-L208">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6e744d11e5f3081af2c7f10e6b37ccaaba97dd6d/src/fabricops_kit/pipeline.py#L101-L208</a>
-- Start line: `101`
-- End line: `208`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c30f90cb0288be7f5624f9a80a62facf8b12c3e5/src/fabricops_kit/pipeline.py#L110-L217">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c30f90cb0288be7f5624f9a80a62facf8b12c3e5/src/fabricops_kit/pipeline.py#L110-L217</a>
+- Start line: `110`
+- End line: `217`
 - Signature:
 
 ```python
