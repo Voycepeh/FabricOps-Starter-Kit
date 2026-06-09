@@ -139,7 +139,7 @@ Status, row count, and lineage rows.
 ## Source
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d7fae51cae8b101fbee48f365b462f6b6f647e79/src/fabricops_kit/pipeline.py#L211-L295">View write_pipeline_lineage on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6e744d11e5f3081af2c7f10e6b37ccaaba97dd6d/src/fabricops_kit/pipeline.py#L211-L295">View write_pipeline_lineage on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -275,7 +275,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d7fae51cae8b101fbee48f365b462f6b6f647e79/src/fabricops_kit/pipeline.py#L211-L295">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d7fae51cae8b101fbee48f365b462f6b6f647e79/src/fabricops_kit/pipeline.py#L211-L295</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6e744d11e5f3081af2c7f10e6b37ccaaba97dd6d/src/fabricops_kit/pipeline.py#L211-L295">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6e744d11e5f3081af2c7f10e6b37ccaaba97dd6d/src/fabricops_kit/pipeline.py#L211-L295</a>
 - Start line: `211`
 - End line: `295`
 - Signature:

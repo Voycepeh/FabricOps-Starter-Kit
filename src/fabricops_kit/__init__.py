@@ -14,7 +14,14 @@ from .data_agreement import (
 )
 from .data_lineage import build_lineage_records
 from .data_profiling import profile_dataframe
-from .drift import enforce_catalogue_stability, stop_if_failed, validate_schema
+from .drift import (
+    display_schema_profile,
+    enforce_catalogue_stability,
+    generate_schema_guardrail_config,
+    print_schema_guardrail_config,
+    stop_if_failed,
+    validate_schema,
+)
 from .fabric_input_output import (
     read_lakehouse_csv,
     read_lakehouse_excel,
@@ -73,6 +80,9 @@ __all__ = [
     "write_warehouse_table",
     "profile_dataframe",
     "validate_schema",
+    "generate_schema_guardrail_config",
+    "print_schema_guardrail_config",
+    "display_schema_profile",
     "enforce_catalogue_stability",
     "stop_if_failed",
     "enforce_dq_rules",

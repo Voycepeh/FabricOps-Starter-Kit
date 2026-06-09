@@ -108,7 +108,7 @@ Spark DataFrame containing one profile row per eligible business column.
 ## Source
 
 - Source file path: `src/fabricops_kit/data_profiling.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d7fae51cae8b101fbee48f365b462f6b6f647e79/src/fabricops_kit/data_profiling.py#L213-L327">View profile_dataframe on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6e744d11e5f3081af2c7f10e6b37ccaaba97dd6d/src/fabricops_kit/data_profiling.py#L213-L327">View profile_dataframe on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -273,7 +273,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/data_profiling.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d7fae51cae8b101fbee48f365b462f6b6f647e79/src/fabricops_kit/data_profiling.py#L213-L327">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d7fae51cae8b101fbee48f365b462f6b6f647e79/src/fabricops_kit/data_profiling.py#L213-L327</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6e744d11e5f3081af2c7f10e6b37ccaaba97dd6d/src/fabricops_kit/data_profiling.py#L213-L327">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6e744d11e5f3081af2c7f10e6b37ccaaba97dd6d/src/fabricops_kit/data_profiling.py#L213-L327</a>
 - Start line: `213`
 - End line: `327`
 - Signature:

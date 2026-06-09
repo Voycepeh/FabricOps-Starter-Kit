@@ -1,10 +1,10 @@
 # stop_if_failed
 
-Stop a notebook only when a schema or data-change guardrail result blocks continuation.
+Stop a notebook only when a schema, stability, or DQ guardrail result blocks continuation.
 
 ## What this is for and when to use it
 
-Stop a notebook only when a schema or data-change guardrail result blocks continuation.
+Stop a notebook only when a schema, stability, or DQ guardrail result blocks continuation.
 
 - Use after schema, stability, or DQ guardrail helpers to stop the notebook when can_continue is false.
 
@@ -66,7 +66,7 @@ None when execution may continue; otherwise raises or exits according to runtime
 ## Source
 
 - Source file path: `src/fabricops_kit/drift.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d7fae51cae8b101fbee48f365b462f6b6f647e79/src/fabricops_kit/drift.py#L574-L593">View stop_if_failed on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6e744d11e5f3081af2c7f10e6b37ccaaba97dd6d/src/fabricops_kit/drift.py#L758-L777">View stop_if_failed on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -109,7 +109,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `drift`
 - Source file path: `src/fabricops_kit/drift.py`
-- Source line: `574`
+- Source line: `758`
 - Inbound references count: 0
 - Outbound references count: 1
 
@@ -133,9 +133,9 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/drift.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d7fae51cae8b101fbee48f365b462f6b6f647e79/src/fabricops_kit/drift.py#L574-L593">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d7fae51cae8b101fbee48f365b462f6b6f647e79/src/fabricops_kit/drift.py#L574-L593</a>
-- Start line: `574`
-- End line: `593`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6e744d11e5f3081af2c7f10e6b37ccaaba97dd6d/src/fabricops_kit/drift.py#L758-L777">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6e744d11e5f3081af2c7f10e6b37ccaaba97dd6d/src/fabricops_kit/drift.py#L758-L777</a>
+- Start line: `758`
+- End line: `777`
 - Signature:
 
 ```python

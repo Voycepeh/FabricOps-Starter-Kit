@@ -1683,9 +1683,10 @@
       "calls_count": 1,
       "used_by": [
         "fabricops_kit.drift._schema_hash_from_dataframe",
+        "fabricops_kit.drift._schema_profile_rows",
         "fabricops_kit.drift.validate_schema"
       ],
-      "used_by_count": 2,
+      "used_by_count": 3,
       "internal_helpers_used": [
         "fabricops_kit.drift._normalize_datatype"
       ],
@@ -1814,10 +1815,11 @@
       "calls_count": 0,
       "used_by": [
         "fabricops_kit.drift._actual_schema",
+        "fabricops_kit.drift._schema_guardrail_type",
         "fabricops_kit.drift._stable_profile_payload",
         "fabricops_kit.drift.validate_schema"
       ],
-      "used_by_count": 3,
+      "used_by_count": 4,
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
@@ -1900,6 +1902,26 @@
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
+    "fabricops_kit.drift._schema_guardrail_type": {
+      "qualified_name": "fabricops_kit.drift._schema_guardrail_type",
+      "short_name": "_schema_guardrail_type",
+      "module": "drift",
+      "callable": "_schema_guardrail_type",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/drift/_schema_guardrail_type/",
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.drift._normalize_datatype"
+      ],
+      "calls_count": 1,
+      "used_by": [
+        "fabricops_kit.drift._schema_profile_rows"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [
+        "fabricops_kit.drift._normalize_datatype"
+      ],
+      "internal_helper_count": 1
+    },
     "fabricops_kit.drift._schema_hash_from_dataframe": {
       "qualified_name": "fabricops_kit.drift._schema_hash_from_dataframe",
       "short_name": "_schema_hash_from_dataframe",
@@ -1919,6 +1941,29 @@
       "internal_helpers_used": [
         "fabricops_kit.drift._actual_schema",
         "fabricops_kit.drift._canonical_json_hash"
+      ],
+      "internal_helper_count": 2
+    },
+    "fabricops_kit.drift._schema_profile_rows": {
+      "qualified_name": "fabricops_kit.drift._schema_profile_rows",
+      "short_name": "_schema_profile_rows",
+      "module": "drift",
+      "callable": "_schema_profile_rows",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/drift/_schema_profile_rows/",
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.drift._actual_schema",
+        "fabricops_kit.drift._schema_guardrail_type"
+      ],
+      "calls_count": 2,
+      "used_by": [
+        "fabricops_kit.drift.display_schema_profile",
+        "fabricops_kit.drift.generate_schema_guardrail_config"
+      ],
+      "used_by_count": 2,
+      "internal_helpers_used": [
+        "fabricops_kit.drift._actual_schema",
+        "fabricops_kit.drift._schema_guardrail_type"
       ],
       "internal_helper_count": 2
     },
@@ -1944,6 +1989,24 @@
         "fabricops_kit.drift._normalize_profile"
       ],
       "internal_helper_count": 2
+    },
+    "fabricops_kit.drift.display_schema_profile": {
+      "qualified_name": "fabricops_kit.drift.display_schema_profile",
+      "short_name": "display_schema_profile",
+      "module": "drift",
+      "callable": "display_schema_profile",
+      "docs_url": "/FabricOps-Starter-Kit/reference/display_schema_profile/",
+      "classification": "callable",
+      "calls": [
+        "fabricops_kit.drift._schema_profile_rows"
+      ],
+      "calls_count": 1,
+      "used_by": [],
+      "used_by_count": 0,
+      "internal_helpers_used": [
+        "fabricops_kit.drift._schema_profile_rows"
+      ],
+      "internal_helper_count": 1
     },
     "fabricops_kit.drift.enforce_catalogue_stability": {
       "qualified_name": "fabricops_kit.drift.enforce_catalogue_stability",
@@ -1973,6 +2036,43 @@
         "fabricops_kit.drift._schema_hash_from_dataframe"
       ],
       "internal_helper_count": 6
+    },
+    "fabricops_kit.drift.generate_schema_guardrail_config": {
+      "qualified_name": "fabricops_kit.drift.generate_schema_guardrail_config",
+      "short_name": "generate_schema_guardrail_config",
+      "module": "drift",
+      "callable": "generate_schema_guardrail_config",
+      "docs_url": "/FabricOps-Starter-Kit/reference/generate_schema_guardrail_config/",
+      "classification": "callable",
+      "calls": [
+        "fabricops_kit.drift._schema_profile_rows"
+      ],
+      "calls_count": 1,
+      "used_by": [
+        "fabricops_kit.drift.print_schema_guardrail_config"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [
+        "fabricops_kit.drift._schema_profile_rows"
+      ],
+      "internal_helper_count": 1
+    },
+    "fabricops_kit.drift.print_schema_guardrail_config": {
+      "qualified_name": "fabricops_kit.drift.print_schema_guardrail_config",
+      "short_name": "print_schema_guardrail_config",
+      "module": "drift",
+      "callable": "print_schema_guardrail_config",
+      "docs_url": "/FabricOps-Starter-Kit/reference/print_schema_guardrail_config/",
+      "classification": "callable",
+      "calls": [
+        "fabricops_kit.config.items",
+        "fabricops_kit.drift.generate_schema_guardrail_config"
+      ],
+      "calls_count": 2,
+      "used_by": [],
+      "used_by_count": 0,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
     },
     "fabricops_kit.drift.stop_if_failed": {
       "qualified_name": "fabricops_kit.drift.stop_if_failed",
@@ -3980,10 +4080,11 @@
       ],
       "inbound_modules": [
         "data_agreement",
+        "drift",
         "fabric_input_output"
       ],
       "outbound_count": 3,
-      "inbound_count": 2
+      "inbound_count": 3
     },
     "data_agreement": {
       "callable_count": 5,
@@ -4019,13 +4120,14 @@
       "inbound_count": 2
     },
     "drift": {
-      "callable_count": 3,
-      "internal_count": 14,
+      "callable_count": 6,
+      "internal_count": 16,
       "outbound_modules": [
+        "config",
         "data_profiling"
       ],
       "inbound_modules": [],
-      "outbound_count": 1,
+      "outbound_count": 2,
       "inbound_count": 0
     },
     "fabric_input_output": {

@@ -92,6 +92,190 @@ def _actual_schema(df) -> tuple[list[str], dict[str, str]]:
     return columns, {}
 
 
+def _schema_guardrail_type(data_type) -> str:
+    """Return a user-facing schema guardrail type for Spark or pandas dtypes."""
+    normalized = _normalize_datatype(data_type)
+    aliases = {
+        "int": "integer",
+        "bigint": "long",
+        "str": "string",
+        "object": "string",
+        "bool": "boolean",
+    }
+    return aliases.get(normalized, normalized)
+
+
+def _schema_profile_rows(
+    dataframe,
+    *,
+    exclude_columns: list[str] | set[str] | tuple[str, ...] | None = None,
+    sort_columns: bool = False,
+) -> list[dict]:
+    """Return schema rows used by schema guardrail starter helpers."""
+    excluded = {str(column) for column in (exclude_columns or [])}
+    columns, types = _actual_schema(dataframe)
+    nullable_by_column: dict[str, bool | None] = {}
+    raw_type_by_column: dict[str, str] = {}
+    schema = getattr(dataframe, "schema", None)
+    if schema is not None and hasattr(schema, "fields"):
+        for field in schema.fields:
+            nullable_by_column[str(field.name)] = getattr(field, "nullable", None)
+            raw_type_by_column[str(field.name)] = str(getattr(field, "dataType", ""))
+    dtypes = getattr(dataframe, "dtypes", None)
+    if dtypes is not None:
+        dtype_items = dtypes.items() if hasattr(dtypes, "items") else dtypes
+        for name, dtype in dtype_items:
+            raw_type_by_column.setdefault(str(name), str(dtype))
+    selected_columns = [column for column in columns if column not in excluded]
+    if sort_columns:
+        selected_columns = sorted(selected_columns)
+    return [
+        {
+            "column_name": column,
+            "spark_data_type": raw_type_by_column.get(column, str(types.get(column, ""))),
+            "nullable": nullable_by_column.get(column),
+            "guardrail_data_type": _schema_guardrail_type(raw_type_by_column.get(column, types.get(column, ""))),
+        }
+        for column in selected_columns
+    ]
+
+
+def generate_schema_guardrail_config(
+    dataframe,
+    *,
+    exclude_columns: list[str] | set[str] | tuple[str, ...] | None = None,
+    sort_columns: bool = False,
+) -> dict[str, str]:
+    """Generate a starter schema guardrail dictionary from a DataFrame schema.
+
+    Parameters
+    ----------
+    dataframe : Any
+        Spark, pandas, or dataframe-like object with schema metadata.
+    exclude_columns : list-like, optional
+        Columns to omit from the generated starter expectation, such as audit
+        or runtime columns managed by the pipeline.
+    sort_columns : bool, default=False
+        When ``True``, sort columns alphabetically. When ``False``, preserve
+        the DataFrame schema order.
+
+    Returns
+    -------
+    dict[str, str]
+        Mapping of column names to normalized guardrail datatype strings that
+        can be reviewed and then passed to :func:`validate_schema`.
+
+    Notes
+    -----
+    This helper creates a starter schema guardrail from the current observed
+    schema. Review the output before treating it as an approved expectation.
+    Supported common normalized types include ``string``, ``integer``,
+    ``long``, ``double``, ``decimal(p,s)``, ``date``, ``timestamp``, and
+    ``boolean``.
+    """
+    return {
+        row["column_name"]: row["guardrail_data_type"]
+        for row in _schema_profile_rows(
+            dataframe,
+            exclude_columns=exclude_columns,
+            sort_columns=sort_columns,
+        )
+    }
+
+
+def print_schema_guardrail_config(
+    dataframe,
+    *,
+    exclude_columns: list[str] | set[str] | tuple[str, ...] | None = None,
+    sort_columns: bool = False,
+    variable_name: str = "expected_schema",
+) -> dict[str, str]:
+    """Print copy-paste-ready starter schema guardrail code.
+
+    Parameters
+    ----------
+    dataframe : Any
+        Spark, pandas, or dataframe-like object with schema metadata.
+    exclude_columns : list-like, optional
+        Columns to omit from the starter expectation.
+    sort_columns : bool, default=False
+        When ``True``, sort columns alphabetically. When ``False``, preserve
+        DataFrame schema order.
+    variable_name : str, default="expected_schema"
+        Python variable name to use in the printed snippet.
+
+    Returns
+    -------
+    dict[str, str]
+        The same starter dictionary printed as Python code.
+
+    Notes
+    -----
+    The printed dictionary is a starting point only. Users should review and
+    edit it before treating it as the approved schema guardrail.
+    """
+    config = generate_schema_guardrail_config(
+        dataframe,
+        exclude_columns=exclude_columns,
+        sort_columns=sort_columns,
+    )
+    lines = [f"{variable_name} = {{"]
+    for column, data_type in config.items():
+        lines.append(f"    {column!r}: {data_type!r},")
+    lines.append("}")
+    print("\n".join(lines))
+    return config
+
+
+def display_schema_profile(
+    dataframe,
+    *,
+    exclude_columns: list[str] | set[str] | tuple[str, ...] | None = None,
+    sort_columns: bool = False,
+) -> list[dict]:
+    """Display the observed schema alongside proposed guardrail datatypes.
+
+    Parameters
+    ----------
+    dataframe : Any
+        Spark, pandas, or dataframe-like object with schema metadata.
+    exclude_columns : list-like, optional
+        Columns to omit from the displayed profile.
+    sort_columns : bool, default=False
+        When ``True``, sort columns alphabetically. When ``False``, preserve
+        DataFrame schema order.
+
+    Returns
+    -------
+    list[dict]
+        Rows containing ``column_name``, ``spark_data_type``, ``nullable``, and
+        ``guardrail_data_type``.
+
+    Notes
+    -----
+    This is a notebook-friendly review aid. It shows a starter schema guardrail
+    profile only; users must review the proposed types before treating them as
+    approved expectations.
+    """
+    rows = _schema_profile_rows(
+        dataframe,
+        exclude_columns=exclude_columns,
+        sort_columns=sort_columns,
+    )
+    headers = ["column_name", "spark_data_type", "nullable", "guardrail_data_type"]
+    widths = {header: len(header) for header in headers}
+    for row in rows:
+        for header in headers:
+            widths[header] = max(widths[header], len(str(row.get(header, ""))))
+    header_line = " | ".join(header.ljust(widths[header]) for header in headers)
+    separator = "-+-".join("-" * widths[header] for header in headers)
+    print(header_line)
+    print(separator)
+    for row in rows:
+        print(" | ".join(str(row.get(header, "")).ljust(widths[header]) for header in headers))
+    return rows
+
+
 _SCHEMA_PRESETS = {"strict", "allow_new_columns", "monitor_only"}
 
 

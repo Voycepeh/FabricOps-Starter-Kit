@@ -44,7 +44,7 @@ Run when engineering is ready to build or run the data product.
 
 It is a thin orchestration notebook. Users first read source data into DataFrames using normal Spark code or the same helper functions shown in `99_explore`, then register those existing DataFrames with per-source schema/stability/DQ guardrails. After transformation, users register target DataFrames with write settings and target guardrails. FabricOps starts after each DataFrame exists: it profiles, validates, enforces approved active DQ rules, records evidence, and writes configured targets. Reusable evidence helpers hide catalogue enrichment, lineage capture, and runtime summary logging.
 
-The template supports many sources and many targets. Source and target registrations contain DataFrame references and guardrail presets rather than loader metadata. Source and target guardrail flows are symmetrical: schema checks, source stability checks, and approved active DQ rules from `METADATA_DQ_RULES` run per dataset using that dataset's configured preset.
+The template supports many sources and many targets. Source and target registrations contain DataFrame references and guardrail presets rather than loader metadata. An optional helper cell can display the current source schema and print starter `expected_schema` code; users must review that generated starter before treating it as the approved schema expectation. Source and target guardrail flows are symmetrical: schema checks, source stability checks, and approved active DQ rules from `METADATA_DQ_RULES` run per dataset using that dataset's configured preset.
 
 See [Pipeline Guardrails](schema-and-data-drift.md) for the source/target guardrail flow and supported schema, source stability, and DQ settings.
 
