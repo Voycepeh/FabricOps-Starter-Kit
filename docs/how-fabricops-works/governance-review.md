@@ -15,9 +15,9 @@ Use the smallest FabricOps-native rule that expresses the requirement. Prefer ex
 
 | Rule | When to use it | Required parameters | Example JSON |
 |---|---|---|---|
-| `not_null` | One or more columns must be populated. | `columns` | `{"rule_type":"not_null","columns":["student_id"],"severity":"error"}` |
-| `null_rate_below` | A nullable column is acceptable only below a threshold. | one `columns` value, `max_null_percent` | `{"rule_type":"null_rate_below","columns":["email"],"max_null_percent":5,"severity":"warning"}` |
-| `non_empty_string` | String columns must not be null or blank. | `columns` | `{"rule_type":"non_empty_string","columns":["programme_name"],"severity":"error"}` |
+| `not_null` | One or more columns must not be actual null values. Blank strings are handled by `non_empty_string`. | `columns` | `{"rule_type":"not_null","columns":["student_id"],"severity":"error"}` |
+| `null_rate_below` | A column null percentage must stay below a threshold; blank strings are not counted as nulls. | one `columns` value, `max_null_percent` | `{"rule_type":"null_rate_below","columns":["email"],"max_null_percent":5,"severity":"warning"}` |
+| `non_empty_string` | String columns must not be null, blank, or whitespace-only. | `columns` | `{"rule_type":"non_empty_string","columns":["programme_name"],"severity":"error"}` |
 | `unique` | A single column must be unique. | one `columns` value | `{"rule_type":"unique","columns":["student_id"],"severity":"error"}` |
 | `unique_combination` | Two or more columns define the business grain. | two or more `columns` values | `{"rule_type":"unique_combination","columns":["student_id","semester"],"severity":"error"}` |
 | `accepted_values` | A column must contain only approved values. | one `columns` value, `allowed_values` | `{"rule_type":"accepted_values","columns":["status"],"allowed_values":["Active","Inactive"],"severity":"error"}` |
@@ -37,9 +37,9 @@ Use the smallest FabricOps-native rule that expresses the requirement. Prefer ex
 | `column_a_gt_column_b` | The first column must be greater than the second. | exactly two `columns` values | `{"rule_type":"column_a_gt_column_b","columns":["expiry_date","start_date"],"severity":"error"}` |
 | `required_when` | One or more columns are required only when a condition is true. | `columns`, `condition` | `{"rule_type":"required_when","columns":["approved_date"],"condition":"status = 'Approved'","severity":"error"}` |
 | `value_when` | A column must equal a specific value when a condition is true. | one `columns` value, `condition`, `expected_value` | `{"rule_type":"value_when","condition":"student_status = 'Graduated'","columns":["is_active"],"expected_value":false,"severity":"error"}` |
-| `expression_true` | No simpler rule can express the requirement. | `expression` | `{"rule_type":"expression_true","expression":"credits_attempted >= credits_earned","severity":"error"}` |
+| `expression_true` | Advanced escape hatch for trusted reviewers when no named rule can express the requirement. Accepts a Spark SQL boolean expression. | `expression` | `{"rule_type":"expression_true","expression":"credits_attempted >= credits_earned","severity":"error"}` |
 
-Backward-compatible names such as `unique_key`, `regex_format`, and `value_range` are accepted only as aliases inside the rule engine. New approved metadata should use the catalogue names above.
+FabricOps uses one canonical DQ rule vocabulary. Old or external rule names are not accepted. Approved metadata should use only the rule names listed in this catalogue.
 
 ## How to choose a rule
 
@@ -48,7 +48,7 @@ Backward-compatible names such as `unique_key`, `regex_format`, and `value_range
 3. Use accepted or blocked values for small controlled domains.
 4. Use range, comparison, date, or freshness rules for measurable constraints.
 5. Use cross-column and conditional rules for relationships within the same row.
-6. Use `expression_true` only when no simpler rule type can express the requirement.
+6. Use `expression_true` only when no simpler rule type can express the requirement. It accepts a Spark SQL boolean expression, and only trusted reviewers should approve expression rules.
 
 Set `severity="error"` when a failure should block unsafe or misleading output. Set `severity="warning"` when the issue should be visible in evidence but should not block the run.
 
@@ -78,7 +78,7 @@ For a selected table, the widget display shows rule ID, rule type, column list, 
 
 ## AI suggestions
 
-The AI suggestion action is advisory only. It uses selected table profile evidence such as column names, data types, null counts, distinct counts, min/max values, and distributions where available. The default prompt tells AI to suggest FabricOps-native DQ rules only, return JSON only, avoid unsupported rule types, include descriptions and required parameters, and prefer simple rules before `expression_true`.
+The AI suggestion action is advisory only. It uses selected table profile evidence such as column names, data types, null counts, distinct counts, min/max values, and distributions where available. The default prompt tells AI to suggest FabricOps-native DQ rules only, return JSON only, avoid unsupported rule types, include descriptions and required parameters, and prefer simple named rules before `expression_true`.
 
 AI suggestions are drafts. Reviewers can accept, edit, reject, or commit each suggestion, but FabricOps does not auto-approve AI output.
 

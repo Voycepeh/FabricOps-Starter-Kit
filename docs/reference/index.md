@@ -244,7 +244,7 @@ Use the finder below to look up public callables and internal support functions 
   <p class="reference-catalogue-item-purpose">Render standalone DQ-rule review guidance for selected profile rows.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">03_governance</span></p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 5</span></summary><ul><li><code>_canonical_dq_rule_type</code></li><li><code>_dq_rule_display_rows</code></li><li><code>_draft_dq_rules</code></li><li><code>_validate_dq_rules</code></li><li><code>_value</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 6</span></summary><ul><li><code>_canonical_dq_rule_type</code></li><li><code>_dq_parameter_fields_for_rule_type</code></li><li><code>_dq_rule_display_rows</code></li><li><code>_draft_dq_rules</code></li><li><code>_validate_dq_rules</code></li><li><code>_value</code></li></ul></details>
 
   </div>
 </article>
@@ -326,7 +326,7 @@ Use the finder below to look up public callables and internal support functions 
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/drift/" title="Open drift module page" aria-label="Open drift module page">drift</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_normalize_datatype</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 3</span></summary><ul><li><code>_schema_guardrail_rows</code></li><li><code>_schema_hash_from_dataframe</code></li><li><code>validate_schema</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 2</span></summary><ul><li><code>_schema_hash_from_dataframe</code></li><li><code>validate_schema</code></li></ul></details>
   </div>
 </article>
 <article id="data_agreement-_agreement_identity_text" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_agreement_identity_text" data-callable-module="data_agreement" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Return read-only agreement version context for the notebook form.">
@@ -680,22 +680,13 @@ Use the finder below to look up public callables and internal support functions 
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>enforce_dq_rules</code></li></ul></details>
   </div>
 </article>
-<article id="governance_review-_dq_literal" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_dq_literal" data-callable-module="governance_review" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Internal helper used by the package.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/governance_review__dq_literal/"><code>_dq_literal</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Internal helper used by the package.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_spark_sql_helpers</code></li></ul></details>
-
-  </div>
-</article>
 <article id="governance_review-_dq_parameter_fields_for_rule_type" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_dq_parameter_fields_for_rule_type" data-callable-module="governance_review" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Return parameter names a reviewer should fill for a rule type.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/governance_review__dq_parameter_fields_for_rule_type/"><code>_dq_parameter_fields_for_rule_type</code></a></h3>
   <p class="reference-catalogue-item-purpose">Return parameter names a reviewer should fill for a rule type.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_canonical_dq_rule_type</code></li></ul></details>
-
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>widget_review_dq_rules</code></li></ul></details>
   </div>
 </article>
 <article id="governance_review-_dq_rule_display_rows" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_dq_rule_display_rows" data-callable-module="governance_review" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Return table-shaped rows for active and inactive selected-table rules.">
@@ -743,9 +734,9 @@ Use the finder below to look up public callables and internal support functions 
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>write_catalogue_evidence</code></li></ul></details>
   </div>
 </article>
-<article id="governance_review-_dq_tagged_dataframe" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_dq_tagged_dataframe" data-callable-module="governance_review" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Return the full DataFrame tagged with failed DQ rule IDs.">
+<article id="governance_review-_dq_tagged_dataframe" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_dq_tagged_dataframe" data-callable-module="governance_review" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Return the full DataFrame tagged with failed DQ rule IDs and row status.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/governance_review__dq_tagged_dataframe/"><code>_dq_tagged_dataframe</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Return the full DataFrame tagged with failed DQ rule IDs.</p>
+  <p class="reference-catalogue-item-purpose">Return the full DataFrame tagged with failed DQ rule IDs and row status.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>_dq_failed_expression</code></li><li><code>_spark_sql_helpers</code></li></ul></details>
@@ -840,15 +831,6 @@ Use the finder below to look up public callables and internal support functions 
   <div class="reference-catalogue-item-counts">
 
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_create_or_update_data_agreement</code></li></ul></details>
-  </div>
-</article>
-<article id="drift-_generate_schema_guardrail_config" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_generate_schema_guardrail_config" data-callable-module="drift" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Generate internal starter schema guardrail config from a DataFrame schema.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/drift__generate_schema_guardrail_config/"><code>_generate_schema_guardrail_config</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Generate internal starter schema guardrail config from a DataFrame schema.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/drift/" title="Open drift module page" aria-label="Open drift module page">drift</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>items</code></li><li><code>_schema_guardrail_rows</code></li></ul></details>
-
   </div>
 </article>
 <article id="data_agreement-_generate_steward_id" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_generate_steward_id" data-callable-module="data_agreement" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Generate a stable public-safe steward identifier from business fields.">
@@ -1136,7 +1118,7 @@ Use the finder below to look up public callables and internal support functions 
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/drift/" title="Open drift module page" aria-label="Open drift module page">drift</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
 
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 4</span></summary><ul><li><code>_actual_schema</code></li><li><code>_schema_guardrail_rows</code></li><li><code>_stable_profile_payload</code></li><li><code>validate_schema</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 3</span></summary><ul><li><code>_actual_schema</code></li><li><code>_stable_profile_payload</code></li><li><code>validate_schema</code></li></ul></details>
   </div>
 </article>
 <article id="drift-_normalize_profile" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_normalize_profile" data-callable-module="drift" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Internal helper used by the package.">
@@ -1472,15 +1454,6 @@ Use the finder below to look up public callables and internal support functions 
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_setup_governance_metadata_tables</code></li></ul></details>
   </div>
 </article>
-<article id="drift-_schema_guardrail_rows" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_schema_guardrail_rows" data-callable-module="drift" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Return schema rows used by the public schema guardrail generator.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/drift__schema_guardrail_rows/"><code>_schema_guardrail_rows</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Return schema rows used by the public schema guardrail generator.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/drift/" title="Open drift module page" aria-label="Open drift module page">drift</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>_actual_schema</code></li><li><code>_normalize_datatype</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_generate_schema_guardrail_config</code></li></ul></details>
-  </div>
-</article>
 <article id="drift-_schema_hash_from_dataframe" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_schema_hash_from_dataframe" data-callable-module="drift" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Internal helper used by the package.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/drift__schema_hash_from_dataframe/"><code>_schema_hash_from_dataframe</code></a></h3>
   <p class="reference-catalogue-item-purpose">Internal helper used by the package.</p>
@@ -1532,7 +1505,7 @@ Use the finder below to look up public callables and internal support functions 
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
 
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 8</span></summary><ul><li><code>_dq_failed_expression</code></li><li><code>_dq_failed_row_count</code></li><li><code>_dq_literal</code></li><li><code>_dq_tagged_dataframe</code></li><li><code>_latest_dq_rule_versions</code></li><li><code>_load_active_dq_rules</code></li><li><code>_prepare_dq_profile_input_rows</code></li><li><code>_run_dq_guardrail_checks</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 7</span></summary><ul><li><code>_dq_failed_expression</code></li><li><code>_dq_failed_row_count</code></li><li><code>_dq_tagged_dataframe</code></li><li><code>_latest_dq_rule_versions</code></li><li><code>_load_active_dq_rules</code></li><li><code>_prepare_dq_profile_input_rows</code></li><li><code>_run_dq_guardrail_checks</code></li></ul></details>
   </div>
 </article>
 <article id="governance_review-_spark_types" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_spark_types" data-callable-module="governance_review" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Return Spark SQL type classes lazily so package import stays lightweight.">

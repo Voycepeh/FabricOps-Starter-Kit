@@ -57,13 +57,23 @@ def test_dq_rule_engine_supports_catalogue_rules(spark_session, rule, failed):
     assert checks[0]["failed_count"] == failed
 
 
-def test_dq_rule_aliases_are_canonicalized():
-    rules = [
-        _rule("unique_key", columns=["id"]),
-        _rule("regex_format", columns=["email"], regex_pattern=".*"),
-        _rule("value_range", columns=["score"], lower_bound=0),
-    ]
-    assert [r["rule_type"] for r in governance._validate_dq_rules(rules)] == ["unique", "regex_match", "between"]
+@pytest.mark.parametrize("old_rule_type", ["unique_key", "regex_format", "value_range", "regex", "unique_compound", "compound_unique", "datatype", "referential_integrity", "custom_expression"])
+def test_legacy_or_external_rule_names_fail_validation(old_rule_type):
+    with pytest.raises(ValueError, match="unsupported rule_type"):
+        governance._validate_dq_rules([_rule(old_rule_type, columns=["id"])])
+
+
+def test_not_null_and_non_empty_string_have_distinct_semantics(spark_session):
+    df = spark_session.createDataFrame([(None,), ("",), ("   ",), ("ok",)], "name string")
+
+    not_null = _rule("not_null", columns=["name"])
+    non_empty = _rule("non_empty_string", columns=["name"])
+
+    not_null_check = governance._run_dq_guardrail_checks(df, "students", [not_null])[0]
+    non_empty_check = governance._run_dq_guardrail_checks(df, "students", [non_empty])[0]
+
+    assert not_null_check["failed_count"] == 1
+    assert non_empty_check["failed_count"] == 3
 
 
 def test_dq_metadata_actions_are_append_only_and_preserve_multicolumns(fake_notebookutils):
@@ -116,3 +126,65 @@ def test_ai_suggestion_parser_rejects_unsupported_and_keeps_drafts():
     bad = {"DQ_RULES": {"orders": [{"rule_id": "bad", "rule_type": "required_columns", "columns": ["id"], "severity": "warning", "description": "bad"}]}}
     with pytest.raises(ValueError):
         governance._parse_dq_ai_suggestions([{"response": json.dumps(bad)}], table_name="orders")
+
+
+def test_dq_tagged_dataframe_uses_row_level_warning_and_error_status(spark_session):
+    df = spark_session.createDataFrame(
+        [(None, "bad", -1), ("ok", "bad", -1), ("ok", "good", 1), (None, "good", -1)],
+        "id string, status string, amount int",
+    )
+    rules = [
+        _rule("not_null", rule_id="id_required", columns=["id"], severity="error"),
+        _rule("accepted_values", rule_id="status_allowed", columns=["status"], allowed_values=["good"], severity="warning"),
+        _rule("greater_than", rule_id="amount_positive", columns=["amount"], value=0, severity="warning"),
+    ]
+
+    rows = governance._dq_tagged_dataframe(df, rules).select("id", "status", "amount", "_dq_failed_rules", "_dq_check_status").collect()
+    by_values = {(row["id"], row["status"], row["amount"]): row.asDict() for row in rows}
+
+    assert by_values[(None, "bad", -1)]["_dq_check_status"] == "failed"
+    assert by_values[("ok", "bad", -1)]["_dq_check_status"] == "warning"
+    assert by_values[("ok", "good", 1)]["_dq_check_status"] == "passed"
+    assert by_values[(None, "good", -1)]["_dq_check_status"] == "failed"
+
+
+def test_value_when_uses_null_safe_expected_value_comparison(spark_session):
+    df = spark_session.createDataFrame(
+        [
+            ("Graduated", True, None, None, None),
+            ("Graduated", False, None, None, None),
+            ("Graduated", False, None, "x", None),
+            ("Graduated", False, None, None, "x"),
+            ("Active", True, "x", "y", None),
+        ],
+        "student_status string, is_active boolean, expected_null string, actual_non_null string, actual_null string",
+    )
+    rules = [
+        _rule("value_when", rule_id="graduated_inactive", columns=["is_active"], condition="student_status = 'Graduated'", expected_value=False),
+        _rule("value_when", rule_id="null_expected", columns=["expected_null"], condition="student_status = 'Graduated'", expected_value=None),
+        _rule("value_when", rule_id="nonnull_expected", columns=["actual_null"], condition="student_status = 'Graduated'", expected_value="x"),
+    ]
+
+    checks = {check["rule_id"]: check for check in governance._run_dq_guardrail_checks(df, "students", rules)}
+
+    assert checks["graduated_inactive"]["failed_count"] == 1
+    assert checks["null_expected"]["failed_count"] == 0
+    assert checks["nonnull_expected"]["failed_count"] == 4
+
+    null_mismatch = _rule("value_when", rule_id="null_mismatch", columns=["actual_non_null"], condition="student_status = 'Graduated'", expected_value=None)
+    assert governance._run_dq_guardrail_checks(df, "students", [null_mismatch])[0]["failed_count"] == 1
+
+
+def test_cross_column_rules_use_consistent_null_behavior(spark_session):
+    df = spark_session.createDataFrame(
+        [(None, None), (None, 1), (1, None), (1, 1), (2, 1), (1, 2)],
+        "a int, b int",
+    )
+
+    equal_check = governance._run_dq_guardrail_checks(df, "pairs", [_rule("column_pair_equal", columns=["a", "b"])])[0]
+    gte_check = governance._run_dq_guardrail_checks(df, "pairs", [_rule("column_a_gte_column_b", columns=["a", "b"])])[0]
+    gt_check = governance._run_dq_guardrail_checks(df, "pairs", [_rule("column_a_gt_column_b", columns=["a", "b"])])[0]
+
+    assert equal_check["failed_count"] == 4
+    assert gte_check["failed_count"] == 3
+    assert gt_check["failed_count"] == 4

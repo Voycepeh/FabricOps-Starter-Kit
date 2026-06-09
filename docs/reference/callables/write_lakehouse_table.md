@@ -115,7 +115,7 @@ None; the DataFrame is written to the configured lakehouse table.
 ## Source
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/3d2707796405a2e3e2f36d7a599be05589995508/src/fabricops_kit/fabric_input_output.py#L181-L275">View write_lakehouse_table on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/5d3d97d1ce1ae47231e3567728d98d9a77733d95/src/fabricops_kit/fabric_input_output.py#L181-L275">View write_lakehouse_table on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -266,7 +266,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/3d2707796405a2e3e2f36d7a599be05589995508/src/fabricops_kit/fabric_input_output.py#L181-L275">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/3d2707796405a2e3e2f36d7a599be05589995508/src/fabricops_kit/fabric_input_output.py#L181-L275</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/5d3d97d1ce1ae47231e3567728d98d9a77733d95/src/fabricops_kit/fabric_input_output.py#L181-L275">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/5d3d97d1ce1ae47231e3567728d98d9a77733d95/src/fabricops_kit/fabric_input_output.py#L181-L275</a>
 - Start line: `181`
 - End line: `275`
 - Signature:

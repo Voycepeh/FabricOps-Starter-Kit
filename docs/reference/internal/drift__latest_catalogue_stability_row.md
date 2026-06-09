@@ -49,7 +49,7 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 - Classification: Internal
 - Related module: `drift`
 - Source file path: `src/fabricops_kit/drift.py`
-- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/3d2707796405a2e3e2f36d7a599be05589995508/src/fabricops_kit/drift.py#L477-L581">View source on GitHub</a>
+- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/5d3d97d1ce1ae47231e3567728d98d9a77733d95/src/fabricops_kit/drift.py#L382-L486">View source on GitHub</a>
 - Inbound references count: 1
 - Outbound references count: 2
 

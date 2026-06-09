@@ -90,6 +90,7 @@ Not documented yet
 <summary>Implementation details</summary>
 
 - <a href="../internal/governance_review__canonical_dq_rule_type/"><code>fabricops_kit.governance_review._canonical_dq_rule_type</code></a>
+- <a href="../internal/governance_review__dq_parameter_fields_for_rule_type/"><code>fabricops_kit.governance_review._dq_parameter_fields_for_rule_type</code></a>
 - <a href="../internal/governance_review__dq_rule_display_rows/"><code>fabricops_kit.governance_review._dq_rule_display_rows</code></a>
 - <a href="../internal/governance_review__draft_dq_rules/"><code>fabricops_kit.governance_review._draft_dq_rules</code></a>
 - <a href="../internal/governance_review__validate_dq_rules/"><code>fabricops_kit.governance_review._validate_dq_rules</code></a>
@@ -100,7 +101,7 @@ Not documented yet
 ## Source
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/3d2707796405a2e3e2f36d7a599be05589995508/src/fabricops_kit/governance_review.py#L671-L825">View widget_review_dq_rules on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/5d3d97d1ce1ae47231e3567728d98d9a77733d95/src/fabricops_kit/governance_review.py#L662-L825">View widget_review_dq_rules on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -154,6 +155,7 @@ def widget_review_dq_rules(
     severity = widgets.ToggleButtons(options=["warning", "error"], value="warning", description="Severity")
     description = widgets.Textarea(description="Description", layout=widgets.Layout(width="760px", height="70px"))
     params = widgets.Textarea(description="Parameters JSON", value="{}", layout=widgets.Layout(width="760px", height="90px"))
+    parameter_guidance = widgets.HTML()
     rule_id = widgets.Text(description="Rule ID", layout=widgets.Layout(width="760px"))
     preview = widgets.Textarea(description="Preview", disabled=True, layout=widgets.Layout(width="900px", height="160px"))
     existing_options = [(f"{r['Rule ID']} · {r['Rule type']} · {r['Column(s)']} · {r['Status']}", i) for i, r in enumerate(rules_table)]
@@ -179,7 +181,15 @@ def widget_review_dq_rules(
         _validate_dq_rules([draft])
         return draft
 
+    def refresh_parameter_guidance(*_: Any) -> None:
+        required = _dq_parameter_fields_for_rule_type(rule_type_dropdown.value)
+        if required:
+            parameter_guidance.value = f"<b>Required parameters for this rule:</b> {', '.join(required)}"
+        else:
+            parameter_guidance.value = "<b>No extra parameters required.</b>"
+
     def refresh_preview(*_: Any) -> None:
+        refresh_parameter_guidance()
         try:
             preview.value = json.dumps(current_rule("created"), indent=2, default=str)
             message.value = ""
@@ -252,7 +262,7 @@ def widget_review_dq_rules(
         existing_select,
         widgets.HBox([rule_type_dropdown, column_select]),
         rule_id,
-        widgets.HTML("<b>Required parameter names for this rule type are shown in documentation; enter them as JSON below.</b>"),
+        parameter_guidance,
         params,
         severity,
         description,
@@ -278,9 +288,9 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
-- Source line: `671`
+- Source line: `662`
 - Inbound references count: 0
-- Outbound references count: 5
+- Outbound references count: 6
 
 ### AI implementation contract
 
@@ -312,6 +322,7 @@ Not documented yet
 ### Outbound references
 
 - <a href="../internal/governance_review__canonical_dq_rule_type/"><code>fabricops_kit.governance_review._canonical_dq_rule_type</code></a>
+- <a href="../internal/governance_review__dq_parameter_fields_for_rule_type/"><code>fabricops_kit.governance_review._dq_parameter_fields_for_rule_type</code></a>
 - <a href="../internal/governance_review__dq_rule_display_rows/"><code>fabricops_kit.governance_review._dq_rule_display_rows</code></a>
 - <a href="../internal/governance_review__draft_dq_rules/"><code>fabricops_kit.governance_review._draft_dq_rules</code></a>
 - <a href="../internal/governance_review__validate_dq_rules/"><code>fabricops_kit.governance_review._validate_dq_rules</code></a>
@@ -320,8 +331,8 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/3d2707796405a2e3e2f36d7a599be05589995508/src/fabricops_kit/governance_review.py#L671-L825">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/3d2707796405a2e3e2f36d7a599be05589995508/src/fabricops_kit/governance_review.py#L671-L825</a>
-- Start line: `671`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/5d3d97d1ce1ae47231e3567728d98d9a77733d95/src/fabricops_kit/governance_review.py#L662-L825">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/5d3d97d1ce1ae47231e3567728d98d9a77733d95/src/fabricops_kit/governance_review.py#L662-L825</a>
+- Start line: `662`
 - End line: `825`
 - Signature:
 
@@ -338,6 +349,7 @@ Not documented yet
 ### Internal implementation helpers
 
 - <a href="../internal/governance_review__canonical_dq_rule_type/"><code>fabricops_kit.governance_review._canonical_dq_rule_type</code></a>
+- <a href="../internal/governance_review__dq_parameter_fields_for_rule_type/"><code>fabricops_kit.governance_review._dq_parameter_fields_for_rule_type</code></a>
 - <a href="../internal/governance_review__dq_rule_display_rows/"><code>fabricops_kit.governance_review._dq_rule_display_rows</code></a>
 - <a href="../internal/governance_review__draft_dq_rules/"><code>fabricops_kit.governance_review._draft_dq_rules</code></a>
 - <a href="../internal/governance_review__validate_dq_rules/"><code>fabricops_kit.governance_review._validate_dq_rules</code></a>

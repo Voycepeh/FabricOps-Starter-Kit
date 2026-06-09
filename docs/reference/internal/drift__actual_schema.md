@@ -17,7 +17,6 @@ Do not call this helper directly from notebooks; use the public callable helpers
 
 ## Used by
 
-- <a href="../internal/drift__schema_guardrail_rows/"><code>fabricops_kit.drift._schema_guardrail_rows</code></a>
 - <a href="../internal/drift__schema_hash_from_dataframe/"><code>fabricops_kit.drift._schema_hash_from_dataframe</code></a>
 - <a href="../validate_schema/"><code>fabricops_kit.drift.validate_schema</code></a>
 
@@ -51,12 +50,11 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 - Classification: Internal
 - Related module: `drift`
 - Source file path: `src/fabricops_kit/drift.py`
-- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/3d2707796405a2e3e2f36d7a599be05589995508/src/fabricops_kit/drift.py#L87-L102">View source on GitHub</a>
-- Inbound references count: 3
+- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/5d3d97d1ce1ae47231e3567728d98d9a77733d95/src/fabricops_kit/drift.py#L87-L102">View source on GitHub</a>
+- Inbound references count: 2
 - Outbound references count: 1
 
 ## Inbound references
-- <a href="../internal/drift__schema_guardrail_rows/"><code>fabricops_kit.drift._schema_guardrail_rows</code></a>
 - <a href="../internal/drift__schema_hash_from_dataframe/"><code>fabricops_kit.drift._schema_hash_from_dataframe</code></a>
 - <a href="../validate_schema/"><code>fabricops_kit.drift.validate_schema</code></a>
 

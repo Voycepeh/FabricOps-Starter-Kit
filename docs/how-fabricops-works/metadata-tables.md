@@ -324,8 +324,8 @@ This table stores one summary row per pipeline run. It is tied to the selected a
 | `severity` | Rule severity. |
 | `description` | Human-readable rule description. |
 | `allowed_values` | Optional accepted values. |
-| `lower_bound` | Optional minimum value. |
-| `upper_bound` | Optional maximum value. |
+| `min_value` | Optional minimum value stored inside `rule_parameters_json`. |
+| `max_value` | Optional maximum value stored inside `rule_parameters_json`. |
 | `regex_pattern` | Optional regular expression. |
 | `status` | Review status. |
 | `is_active` | Active rule state. |

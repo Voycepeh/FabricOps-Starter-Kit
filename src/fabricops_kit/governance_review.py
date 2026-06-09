@@ -49,14 +49,6 @@ DQ_RULE_TYPES = [
     "value_when",
     "expression_true",
 ]
-DQ_RULE_TYPE_ALIASES = {
-    "unique_key": "unique",
-    "regex_format": "regex_match",
-    "value_range": "between",
-    "regex": "regex_match",
-    "unique_compound": "unique_combination",
-    "compound_unique": "unique_combination",
-}
 SENSITIVITY_LABELS = ["public", "internal", "confidential", "restricted"]
 PERSONAL_DATA_CLASSIFICATIONS = ["not_personal_data", "direct_identifier", "indirect_identifier", "sensitive_personal_data", "unknown"]
 BUSINESS_CONTEXT_PROMPT = DEFAULT_BUSINESS_CONTEXT_PROMPT_TEMPLATE
@@ -85,8 +77,7 @@ def _is_success(row: dict[str, Any]) -> bool:
 
 
 def _canonical_dq_rule_type(rule_type: Any) -> str:
-    raw = str(rule_type or "").strip()
-    return DQ_RULE_TYPE_ALIASES.get(raw, raw)
+    return str(rule_type or "").strip()
 
 
 def _approved_review_context(profile_rows: list[dict[str, Any]], *, config: Any = None, env: str | None = None, approved_by: str | None = None) -> tuple[dict[str, dict[str, Any]], str, str, dict[str, Any]]:
@@ -716,6 +707,7 @@ def widget_review_dq_rules(
     severity = widgets.ToggleButtons(options=["warning", "error"], value="warning", description="Severity")
     description = widgets.Textarea(description="Description", layout=widgets.Layout(width="760px", height="70px"))
     params = widgets.Textarea(description="Parameters JSON", value="{}", layout=widgets.Layout(width="760px", height="90px"))
+    parameter_guidance = widgets.HTML()
     rule_id = widgets.Text(description="Rule ID", layout=widgets.Layout(width="760px"))
     preview = widgets.Textarea(description="Preview", disabled=True, layout=widgets.Layout(width="900px", height="160px"))
     existing_options = [(f"{r['Rule ID']} · {r['Rule type']} · {r['Column(s)']} · {r['Status']}", i) for i, r in enumerate(rules_table)]
@@ -741,7 +733,15 @@ def widget_review_dq_rules(
         _validate_dq_rules([draft])
         return draft
 
+    def refresh_parameter_guidance(*_: Any) -> None:
+        required = _dq_parameter_fields_for_rule_type(rule_type_dropdown.value)
+        if required:
+            parameter_guidance.value = f"<b>Required parameters for this rule:</b> {', '.join(required)}"
+        else:
+            parameter_guidance.value = "<b>No extra parameters required.</b>"
+
     def refresh_preview(*_: Any) -> None:
+        refresh_parameter_guidance()
         try:
             preview.value = json.dumps(current_rule("created"), indent=2, default=str)
             message.value = ""
@@ -814,7 +814,7 @@ def widget_review_dq_rules(
         existing_select,
         widgets.HBox([rule_type_dropdown, column_select]),
         rule_id,
-        widgets.HTML("<b>Required parameter names for this rule type are shown in documentation; enter them as JSON below.</b>"),
+        parameter_guidance,
         params,
         severity,
         description,
@@ -1217,11 +1217,6 @@ def _validate_dq_rules(rules: list[dict[str, Any]]) -> list[dict[str, Any]]:
         if str(rule.get("severity", "warning")).lower() not in {"warning", "error"}:
             raise ValueError(f"DQ rule '{rule['rule_id']}' severity must be warning or error.")
 
-        if "lower_bound" in rule and "min_value" not in rule:
-            rule["min_value"] = rule["lower_bound"]
-        if "upper_bound" in rule and "max_value" not in rule:
-            rule["max_value"] = rule["upper_bound"]
-
         if rtype in {"not_null", "non_empty_string", "required_when"}:
             require_columns(rule, minimum=1)
         elif rtype in {
@@ -1323,10 +1318,6 @@ def _load_active_dq_rules(metadata_df, table_name: str, env_name: str | None = N
     return _validate_dq_rules(rules)
 
 
-def _dq_literal(value: Any):
-    _, F, _ = _spark_sql_helpers()
-    return F.lit(value)
-
 
 def _dq_failed_expression(df, rule: dict[str, Any]):
     """Build a Spark boolean expression identifying rows that fail one DQ rule."""
@@ -1348,9 +1339,9 @@ def _dq_failed_expression(df, rule: dict[str, Any]):
         return F.col(column)
 
     if rtype == "not_null":
-        failed = empty_string(cols[0])
+        failed = F.col(cols[0]).isNull()
         for c in cols[1:]:
-            failed = failed | empty_string(c)
+            failed = failed | F.col(c).isNull()
     elif rtype == "null_rate_below":
         total = int(df.count())
         null_count = int(df.filter(F.col(col_name).isNull()).count()) if total else 0
@@ -1388,11 +1379,15 @@ def _dq_failed_expression(df, rule: dict[str, Any]):
     elif rtype in {"freshness", "max_age_days"}:
         failed = F.col(col_name).isNotNull() & (F.to_date(F.col(col_name)) < F.date_sub(F.current_date(), int(rule["max_age_days"])))
     elif rtype == "column_pair_equal":
-        failed = F.col(cols[0]).isNotNull() & F.col(cols[1]).isNotNull() & (F.col(cols[0]) != F.col(cols[1]))
+        failed = ~F.col(cols[0]).eqNullSafe(F.col(cols[1]))
     elif rtype == "column_a_gte_column_b":
-        failed = F.col(cols[0]).isNotNull() & F.col(cols[1]).isNotNull() & ~(F.col(cols[0]) >= F.col(cols[1]))
+        one_null = F.col(cols[0]).isNull() != F.col(cols[1]).isNull()
+        both_non_null_and_invalid = F.col(cols[0]).isNotNull() & F.col(cols[1]).isNotNull() & ~(F.col(cols[0]) >= F.col(cols[1]))
+        failed = one_null | both_non_null_and_invalid
     elif rtype == "column_a_gt_column_b":
-        failed = F.col(cols[0]).isNotNull() & F.col(cols[1]).isNotNull() & ~(F.col(cols[0]) > F.col(cols[1]))
+        one_null = F.col(cols[0]).isNull() != F.col(cols[1]).isNull()
+        both_non_null_and_invalid = F.col(cols[0]).isNotNull() & F.col(cols[1]).isNotNull() & ~(F.col(cols[0]) > F.col(cols[1]))
+        failed = one_null | both_non_null_and_invalid
     elif rtype == "required_when":
         condition = F.expr(str(rule["condition"]))
         missing = empty_string(cols[0])
@@ -1401,7 +1396,7 @@ def _dq_failed_expression(df, rule: dict[str, Any]):
         failed = condition & missing
     elif rtype == "value_when":
         condition = F.expr(str(rule["condition"]))
-        failed = condition & (F.col(col_name) != F.lit(rule["expected_value"]))
+        failed = condition & ~F.col(col_name).eqNullSafe(F.lit(rule["expected_value"]))
     elif rtype == "expression_true":
         failed = ~F.expr(expression)
     else:
@@ -1453,22 +1448,37 @@ def _run_dq_guardrail_checks(df, table_name: str, rules: list[dict[str, Any]]) -
 
 
 def _dq_tagged_dataframe(df, rules: list[dict[str, Any]]):
-    """Return the full DataFrame tagged with failed DQ rule IDs."""
+    """Return the full DataFrame tagged with failed DQ rule IDs and row status."""
     _, F, _ = _spark_sql_helpers()
-    sorted_rules = sorted(
-        rules or [],
-        key=lambda rule: str(rule.get("rule_id") or ""),
-    )
+    sorted_rules = sorted(rules or [], key=lambda rule: str(rule.get("rule_id") or ""))
     failed_rule_columns = [
         F.when(_dq_failed_expression(df, rule), F.lit(str(rule.get("rule_id") or "")))
         for rule in sorted_rules
     ]
     failed_rules = F.concat_ws(",", *failed_rule_columns) if failed_rule_columns else F.lit("")
+    error_failures = [
+        F.when(_dq_failed_expression(df, rule), F.lit(1)).otherwise(F.lit(0))
+        for rule in sorted_rules
+        if str(rule.get("severity", "warning")).strip().lower() == "error"
+    ]
+    warning_failures = [
+        F.when(_dq_failed_expression(df, rule), F.lit(1)).otherwise(F.lit(0))
+        for rule in sorted_rules
+        if str(rule.get("severity", "warning")).strip().lower() != "error"
+    ]
+    error_count = error_failures[0] if error_failures else F.lit(0)
+    for failure in error_failures[1:]:
+        error_count = error_count + failure
+    warning_count = warning_failures[0] if warning_failures else F.lit(0)
+    for failure in warning_failures[1:]:
+        warning_count = warning_count + failure
     return (
         df.withColumn("_dq_failed_rules", failed_rules)
         .withColumn(
             "_dq_check_status",
-            F.when(F.col("_dq_failed_rules") == F.lit(""), F.lit("passed")).otherwise(F.lit("failed")),
+            F.when(error_count > F.lit(0), F.lit("failed"))
+            .when(warning_count > F.lit(0), F.lit("warning"))
+            .otherwise(F.lit("passed")),
         )
     )
 

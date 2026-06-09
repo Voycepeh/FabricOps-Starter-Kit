@@ -137,9 +137,8 @@ def test_dq_rule_validation_rejects_unsupported_runtime_rule_types():
     with pytest.raises(ValueError):
         governance._validate_dq_rules([{**rules[0], "rule_type": "custom"}])
 
-    for unsupported in ("datatype", "referential_integrity", "custom_expression"):
-        with pytest.raises(ValueError):
-            governance._validate_dq_rules([{**rules[0], "rule_type": unsupported}])
+    with pytest.raises(ValueError):
+        governance._validate_dq_rules([{**rules[0], "rule_type": "unsupported_rule"}])
 
 
 def test_record_table_governance_writes_context_dq_and_classification(monkeypatch):

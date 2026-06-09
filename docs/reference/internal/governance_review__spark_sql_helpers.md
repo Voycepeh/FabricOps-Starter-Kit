@@ -19,7 +19,6 @@ Do not call this helper directly from notebooks; use the public callable helpers
 
 - <a href="../internal/governance_review__dq_failed_expression/"><code>fabricops_kit.governance_review._dq_failed_expression</code></a>
 - <a href="../internal/governance_review__dq_failed_row_count/"><code>fabricops_kit.governance_review._dq_failed_row_count</code></a>
-- <a href="../internal/governance_review__dq_literal/"><code>fabricops_kit.governance_review._dq_literal</code></a>
 - <a href="../internal/governance_review__dq_tagged_dataframe/"><code>fabricops_kit.governance_review._dq_tagged_dataframe</code></a>
 - <a href="../internal/governance_review__latest_dq_rule_versions/"><code>fabricops_kit.governance_review._latest_dq_rule_versions</code></a>
 - <a href="../internal/governance_review__load_active_dq_rules/"><code>fabricops_kit.governance_review._load_active_dq_rules</code></a>
@@ -56,14 +55,13 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 - Classification: Internal
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
-- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/3d2707796405a2e3e2f36d7a599be05589995508/src/fabricops_kit/governance_review.py#L1121-L1128">View source on GitHub</a>
-- Inbound references count: 8
+- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/5d3d97d1ce1ae47231e3567728d98d9a77733d95/src/fabricops_kit/governance_review.py#L1121-L1128">View source on GitHub</a>
+- Inbound references count: 7
 - Outbound references count: 0
 
 ## Inbound references
 - <a href="../internal/governance_review__dq_failed_expression/"><code>fabricops_kit.governance_review._dq_failed_expression</code></a>
 - <a href="../internal/governance_review__dq_failed_row_count/"><code>fabricops_kit.governance_review._dq_failed_row_count</code></a>
-- <a href="../internal/governance_review__dq_literal/"><code>fabricops_kit.governance_review._dq_literal</code></a>
 - <a href="../internal/governance_review__dq_tagged_dataframe/"><code>fabricops_kit.governance_review._dq_tagged_dataframe</code></a>
 - <a href="../internal/governance_review__latest_dq_rule_versions/"><code>fabricops_kit.governance_review._latest_dq_rule_versions</code></a>
 - <a href="../internal/governance_review__load_active_dq_rules/"><code>fabricops_kit.governance_review._load_active_dq_rules</code></a>
