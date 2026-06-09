@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 3</span><span class="reference-chip">Internal helpers: 5</span><span class="reference-chip">Outbound: 2</span><span class="reference-chip">Inbound: 0</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 3</span><span class="reference-chip">Internal helpers: 6</span><span class="reference-chip">Outbound: 2</span><span class="reference-chip">Inbound: 0</span></div>
 
 ## Module purpose
 
@@ -40,7 +40,7 @@ Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>5</td>
+      <td>6</td>
     </tr>
     <tr>
       <td>Inbound module count</td>
@@ -80,7 +80,7 @@ Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals
       <td>Callable</td>
       <td>function</td>
       <td>Enrich profile rows with guardrail context and write catalogue evidence.</td>
-      <td><a href="../../reference/internal/pipeline/_definition_name/"><code>_definition_name</code></a> (internal), <a href="../../reference/internal/pipeline/_dq_summary_fields/"><code>_dq_summary_fields</code></a> (internal), <a href="../../reference/internal/pipeline/_runtime_audit_fields/"><code>_runtime_audit_fields</code></a> (internal)</td>
+      <td><a href="../../reference/internal/pipeline/_canonical_catalogue_profile_df/"><code>_canonical_catalogue_profile_df</code></a> (internal), <a href="../../reference/internal/pipeline/_definition_name/"><code>_definition_name</code></a> (internal), <a href="../../reference/internal/pipeline/_dq_summary_fields/"><code>_dq_summary_fields</code></a> (internal), <a href="../../reference/internal/pipeline/_now_iso/"><code>_now_iso</code></a> (internal), <a href="../../reference/internal/pipeline/_runtime_audit_fields/"><code>_runtime_audit_fields</code></a> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/write_pipeline_lineage/"><code>write_pipeline_lineage</code></a></td>
@@ -115,7 +115,7 @@ Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals
 <li>
 <a class="reference-chip" href="../../reference/write_catalogue_evidence/"><code>write_catalogue_evidence</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_definition_name"><code>_definition_name</code></a>, <a class="reference-chip" href="#_dq_summary_fields"><code>_dq_summary_fields</code></a>, <a class="reference-chip" href="#_runtime_audit_fields"><code>_runtime_audit_fields</code></a>
+<a class="reference-chip" href="#_canonical_catalogue_profile_df"><code>_canonical_catalogue_profile_df</code></a>, <a class="reference-chip" href="#_definition_name"><code>_definition_name</code></a>, <a class="reference-chip" href="#_dq_summary_fields"><code>_dq_summary_fields</code></a>, <a class="reference-chip" href="#_now_iso"><code>_now_iso</code></a>, <a class="reference-chip" href="#_runtime_audit_fields"><code>_runtime_audit_fields</code></a>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/write_pipeline_lineage/"><code>write_pipeline_lineage</code></a>
@@ -145,6 +145,10 @@ Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals
   </thead>
   <tbody>
     <tr>
+      <td><a href="../../reference/internal/pipeline/_canonical_catalogue_profile_df/"><code>_canonical_catalogue_profile_df</code></a></td>
+      <td><a href="../../reference/write_catalogue_evidence/"><code>write_catalogue_evidence</code></a></td>
+    </tr>
+    <tr>
       <td><a href="../../reference/internal/pipeline/_definition_name/"><code>_definition_name</code></a></td>
       <td><a href="../../reference/write_catalogue_evidence/"><code>write_catalogue_evidence</code></a>, <a href="../../reference/write_pipeline_lineage/"><code>write_pipeline_lineage</code></a>, <a href="../../reference/write_pipeline_run_summary/"><code>write_pipeline_run_summary</code></a></td>
     </tr>
@@ -154,7 +158,7 @@ Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals
     </tr>
     <tr>
       <td><a href="../../reference/internal/pipeline/_now_iso/"><code>_now_iso</code></a></td>
-      <td><a href="../../reference/write_pipeline_lineage/"><code>write_pipeline_lineage</code></a>, <a href="../../reference/write_pipeline_run_summary/"><code>write_pipeline_run_summary</code></a></td>
+      <td><a href="../../reference/write_catalogue_evidence/"><code>write_catalogue_evidence</code></a>, <a href="../../reference/write_pipeline_lineage/"><code>write_pipeline_lineage</code></a>, <a href="../../reference/write_pipeline_run_summary/"><code>write_pipeline_run_summary</code></a></td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/pipeline/_runtime_audit_fields/"><code>_runtime_audit_fields</code></a></td>
@@ -170,6 +174,9 @@ Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals
 
 <h6>Internal helpers details</h6>
 <ul class="callable-relationship-rows">
+<li>
+<a class="reference-chip" href="#_canonical_catalogue_profile_df"><code>_canonical_catalogue_profile_df</code></a>
+</li>
 <li>
 <a class="reference-chip" href="#_definition_name"><code>_definition_name</code></a>
 </li>

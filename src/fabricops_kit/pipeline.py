@@ -23,16 +23,25 @@ def _definition_name(name: str, definition: Mapping[str, Any]) -> str:
 
 
 def _summary_status(results: Mapping[str, Mapping[str, Any]]) -> str:
+    """Return a roll-up status for guardrail result mappings.
+
+    ``baseline_created`` is non-blocking and rolls up as ``passed``. ``skipped``
+    is ignored when other concrete results exist and is returned only when all
+    supplied results were skipped.
+    """
     statuses = {str(result.get("status", "unknown")).lower() for result in results.values()}
     if not statuses:
         return "not_run"
-    if "failed" in statuses:
+    concrete = statuses - {"skipped"}
+    if not concrete:
+        return "skipped"
+    if "failed" in concrete:
         return "failed"
-    if "warning" in statuses:
+    if "warning" in concrete:
         return "warning"
-    if statuses <= {"passed", "success", "succeeded"}:
+    if concrete <= {"passed", "success", "succeeded", "baseline_created"}:
         return "passed"
-    return ",".join(sorted(statuses))
+    return ",".join(sorted(concrete))
 
 
 def _runtime_audit_fields(config: Any, env: str) -> dict[str, str]:
@@ -111,7 +120,7 @@ def write_catalogue_evidence(
     notebook_id: str = "",
     pipeline_name: str = "",
     schema_results: Mapping[str, Mapping[str, Any]] | None = None,
-    drift_results: Mapping[str, Mapping[str, Any]] | None = None,
+    stability_results: Mapping[str, Mapping[str, Any]] | None = None,
     dq_results: Mapping[str, Mapping[str, Any]] | None = None,
     metadata_table: str = CATALOGUE_TABLE,
     mode: str = "append",
@@ -130,7 +139,7 @@ def write_catalogue_evidence(
         Pipeline run identifier.
     agreement_id, agreement_contract_version, notebook_registry_id, notebook_id, pipeline_name : str, optional
         Governance context added to each catalogue row.
-    schema_results, drift_results, dq_results : mapping, optional
+    schema_results, stability_results, dq_results : mapping, optional
         Guardrail results keyed by dataset alias.
     metadata_table : str, default="METADATA_DATA_CATALOGUE"
         Metadata table to append.
@@ -151,7 +160,7 @@ def write_catalogue_evidence(
         table_name = _definition_name(name, definition)
         dataset_name = str(definition.get("dataset_name") or table_name)
         stage = str(definition.get("stage", "target"))
-        drift_result = dict((drift_results or {}).get(name) or {})
+        stability_result = dict((stability_results or {}).get(name) or {})
         schema_result = dict((schema_results or {}).get(name) or {})
         dq_fields = _dq_summary_fields((dq_results or {}).get(name))
         evidence = _canonical_catalogue_profile_df(profile_df)
@@ -167,10 +176,10 @@ def write_catalogue_evidence(
             "profile_run_id": run_id,
             "profile_stage": stage,
             "profile_status": "success",
-            "baseline_status": str(drift_result.get("baseline_status", drift_result.get("status", ""))),
-            "source_data_change_check": str(definition.get("drift_preset", "")) if stage == "source" else "",
-            "target_data_change_check": str(definition.get("drift_preset", "")) if stage == "target" else "",
-            "profile_baseline_mode": str(drift_result.get("baseline_mode", "")),
+            "baseline_status": str(stability_result.get("baseline_status", stability_result.get("status", ""))),
+            "source_data_change_check": str(definition.get("stability_check_type", "")) if stage == "source" else "",
+            "target_data_change_check": str(definition.get("stability_check_type", "")) if stage == "target" else "",
+            "profile_baseline_mode": str(stability_result.get("stability_check_type", "")),
             "profiled_at": _now_iso(),
             "agreement_id": agreement_id,
             "contract_version": agreement_contract_version,
@@ -179,7 +188,24 @@ def write_catalogue_evidence(
             "evidence_role": str(definition.get("evidence_role", f"{stage}_profile")),
             "source_schema_check": str(definition.get("schema_preset", "")) if stage == "source" else "",
             "target_schema_check": str(definition.get("schema_preset", "")) if stage == "target" else "",
-            "source_change_signal_json": json.dumps({"schema": schema_result, "drift": drift_result}, default=str, sort_keys=True),
+            "stability_check_enabled": bool(stability_result.get("stability_check_enabled", False)),
+            "stability_check_type": str(stability_result.get("stability_check_type", definition.get("stability_check_type", ""))),
+            "data_behavior": str(stability_result.get("data_behavior", definition.get("data_behavior", ""))),
+            "profile_scope": str(stability_result.get("profile_scope", "")),
+            "watermark_column": str(stability_result.get("watermark_column", definition.get("watermark_column", ""))),
+            "watermark_value": str(stability_result.get("watermark_value", definition.get("watermark_value", ""))),
+            "profile_filter_expression": str(stability_result.get("profile_filter_expression", "")),
+            "schema_hash": str(stability_result.get("schema_hash", "")),
+            "profile_hash": str(stability_result.get("profile_hash", "")),
+            "comparable_profile_hash": str(stability_result.get("comparable_profile_hash", "")),
+            "baseline_run_id": str(stability_result.get("baseline_run_id", "")),
+            "baseline_profile_hash": str(stability_result.get("baseline_profile_hash", "")),
+            "baseline_watermark_value": str(stability_result.get("baseline_watermark_value", "")),
+            "stability_status": str(stability_result.get("stability_status", stability_result.get("status", ""))),
+            "stability_can_continue": bool(stability_result.get("stability_can_continue", stability_result.get("can_continue", True))),
+            "stability_message": str(stability_result.get("stability_message", stability_result.get("message", ""))),
+            "stability_difference_summary": str(stability_result.get("stability_difference_summary", "")),
+            "source_change_signal_json": json.dumps({"schema": schema_result, "stability": stability_result}, default=str, sort_keys=True),
             **dq_fields,
             **audit,
         }
@@ -297,8 +323,8 @@ def write_pipeline_run_summary(
     target_definitions: Mapping[str, Mapping[str, Any]] | None = None,
     source_schema_results: Mapping[str, Mapping[str, Any]] | None = None,
     target_schema_results: Mapping[str, Mapping[str, Any]] | None = None,
-    source_drift_results: Mapping[str, Mapping[str, Any]] | None = None,
-    target_drift_results: Mapping[str, Mapping[str, Any]] | None = None,
+    source_stability_results: Mapping[str, Mapping[str, Any]] | None = None,
+    target_stability_results: Mapping[str, Mapping[str, Any]] | None = None,
     source_dq_results: Mapping[str, Mapping[str, Any]] | None = None,
     target_dq_results: Mapping[str, Mapping[str, Any]] | None = None,
     lineage_status: str = "not_run",
@@ -325,7 +351,7 @@ def write_pipeline_run_summary(
         Overall pipeline status.
     source_definitions, target_definitions : mapping, optional
         Dataset definitions used to compute source and target counts.
-    source_schema_results, target_schema_results, source_drift_results, target_drift_results, source_dq_results, target_dq_results : mapping, optional
+    source_schema_results, target_schema_results, source_stability_results, target_stability_results, source_dq_results, target_dq_results : mapping, optional
         Guardrail result dictionaries included in the JSON summary.
     lineage_status, catalogue_status, message : str, optional
         Evidence write statuses and support message.
@@ -349,14 +375,14 @@ def write_pipeline_run_summary(
     started = started_at or completed
     sources = source_definitions or {}
     targets = target_definitions or {}
-    source_guardrail_status = _summary_status({**(source_schema_results or {}), **(source_drift_results or {})})
-    target_guardrail_status = _summary_status({**(target_schema_results or {}), **(target_drift_results or {})})
+    source_guardrail_status = _summary_status({**(source_schema_results or {}), **(source_stability_results or {})})
+    target_guardrail_status = _summary_status({**(target_schema_results or {}), **(target_stability_results or {})})
     dq_status = _summary_status({**(source_dq_results or {}), **(target_dq_results or {})})
     run_summary = {
         "source_schema_results": source_schema_results or {},
         "target_schema_results": target_schema_results or {},
-        "source_drift_results": source_drift_results or {},
-        "target_drift_results": target_drift_results or {},
+        "source_stability_results": source_stability_results or {},
+        "target_stability_results": target_stability_results or {},
         "source_dq_results": source_dq_results or {},
         "target_dq_results": target_dq_results or {},
         "source_tables": [_definition_name(name, definition) for name, definition in sources.items()],

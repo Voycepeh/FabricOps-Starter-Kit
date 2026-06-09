@@ -21,7 +21,7 @@ Do not call this helper directly from notebooks; use the public callable helpers
 
 ## Purpose
 
-No summary available.
+Return a roll-up status for guardrail result mappings.
 
 ## Signature if available
 
@@ -49,7 +49,7 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 - Classification: Internal
 - Related module: `pipeline`
 - Source file path: `src/fabricops_kit/pipeline.py`
-- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c7049e78d915b93903574ea792043a66ebe62cee/src/fabricops_kit/pipeline.py#L25-L35">View source on GitHub</a>
+- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c30f90cb0288be7f5624f9a80a62facf8b12c3e5/src/fabricops_kit/pipeline.py#L25-L44">View source on GitHub</a>
 - Inbound references count: 1
 - Outbound references count: 0
 

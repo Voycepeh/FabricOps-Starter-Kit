@@ -1,4 +1,4 @@
-# _load_latest_profile
+# _latest_catalogue_stability_row
 
 **Module:** `drift`  
 **Classification:** Internal
@@ -17,16 +17,16 @@ Do not call this helper directly from notebooks; use the public callable helpers
 
 ## Used by
 
-- <a href="../monitor_data_changes/"><code>fabricops_kit.drift.monitor_data_changes</code></a>
+- <a href="../enforce_catalogue_stability/"><code>fabricops_kit.drift.enforce_catalogue_stability</code></a>
 
 ## Purpose
 
-Load an explicit profile-drift baseline from profile metadata rows.
+No summary available.
 
 ## Signature if available
 
 ```python
-def _load_latest_profile(spark, metadata_table: str, dataset_name: str, table_name: str, profile_stage: str, exclude_run_id: str | None=None, baseline_mode: str='latest_successful') -> dict | None
+def _latest_catalogue_stability_row(catalogue_df, *, dataset_name: str, table_name: str, profile_stage: str, stability_check_type: str, data_behavior: str, profile_scope: str, watermark_column: str | None=None, exclude_run_id: str | None=None) -> dict | None
 ```
 
 ## Side effects
@@ -43,19 +43,19 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 
 ## Function manifest
 
-- Fully qualified function name: `fabricops_kit.drift._load_latest_profile`
-- Short name: `_load_latest_profile`
+- Fully qualified function name: `fabricops_kit.drift._latest_catalogue_stability_row`
+- Short name: `_latest_catalogue_stability_row`
 - Module: `drift`
 - Classification: Internal
 - Related module: `drift`
 - Source file path: `src/fabricops_kit/drift.py`
-- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c7049e78d915b93903574ea792043a66ebe62cee/src/fabricops_kit/drift.py#L410-L500">View source on GitHub</a>
+- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c30f90cb0288be7f5624f9a80a62facf8b12c3e5/src/fabricops_kit/drift.py#L564-L668">View source on GitHub</a>
 - Inbound references count: 1
 - Outbound references count: 2
 
 ## Inbound references
-- <a href="../monitor_data_changes/"><code>fabricops_kit.drift.monitor_data_changes</code></a>
+- <a href="../enforce_catalogue_stability/"><code>fabricops_kit.drift.enforce_catalogue_stability</code></a>
 
 ## Outbound references
 - <a href="../internal/drift__is_missing_table_error/"><code>fabricops_kit.drift._is_missing_table_error</code></a>
-- <a href="../internal/drift__normalize_profile/"><code>fabricops_kit.drift._normalize_profile</code></a>
+- <a href="../internal/drift__row_to_dict/"><code>fabricops_kit.drift._row_to_dict</code></a>

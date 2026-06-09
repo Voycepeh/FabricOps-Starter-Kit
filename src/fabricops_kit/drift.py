@@ -1,16 +1,28 @@
-"""Lightweight schema, partition, and profile drift safeguards.
+"""Lightweight schema and catalogue profile stability safeguards.
 
-Use :func:`validate_schema`, :func:`monitor_data_changes`, and
-:func:`stop_if_failed` in production pipeline notebooks. Users choose
-intent-based presets while FabricOps handles profiling, baseline selection,
-comparison, and enforcement mechanics internally.
+Use :func:`validate_schema`, :func:`enforce_catalogue_stability`, and
+:func:`stop_if_failed` in production pipeline notebooks. FabricOps compares
+append-only catalogue profile evidence to catch silent upstream source changes
+before governed outputs are promoted.
 """
 
 from __future__ import annotations
 
+import hashlib
 import json
 import math
 import re
+from decimal import Decimal
+
+
+_DEFAULT_STABILITY_EXCLUDE_COLUMNS = {
+    "_fabricops_run_id",
+    "_fabricops_pipeline_name",
+    "_fabricops_created_at",
+    "_dq_check_status",
+    "_dq_failed_rules",
+}
+_DEFAULT_STABILITY_EXCLUDE_PREFIXES = ("_fabricops_", "_dq_")
 
 
 class SchemaDriftError(Exception):
@@ -88,6 +100,190 @@ def _actual_schema(df) -> tuple[list[str], dict[str, str]]:
 
     columns = [str(column) for column in getattr(df, "columns", [])]
     return columns, {}
+
+
+def _schema_guardrail_type(data_type) -> str:
+    """Return a user-facing schema guardrail type for Spark or pandas dtypes."""
+    normalized = _normalize_datatype(data_type)
+    aliases = {
+        "int": "integer",
+        "bigint": "long",
+        "str": "string",
+        "object": "string",
+        "bool": "boolean",
+    }
+    return aliases.get(normalized, normalized)
+
+
+def _schema_profile_rows(
+    dataframe,
+    *,
+    exclude_columns: list[str] | set[str] | tuple[str, ...] | None = None,
+    sort_columns: bool = False,
+) -> list[dict]:
+    """Return schema rows used by schema guardrail starter helpers."""
+    excluded = {str(column) for column in (exclude_columns or [])}
+    columns, types = _actual_schema(dataframe)
+    nullable_by_column: dict[str, bool | None] = {}
+    raw_type_by_column: dict[str, str] = {}
+    schema = getattr(dataframe, "schema", None)
+    if schema is not None and hasattr(schema, "fields"):
+        for field in schema.fields:
+            nullable_by_column[str(field.name)] = getattr(field, "nullable", None)
+            raw_type_by_column[str(field.name)] = str(getattr(field, "dataType", ""))
+    dtypes = getattr(dataframe, "dtypes", None)
+    if dtypes is not None:
+        dtype_items = dtypes.items() if hasattr(dtypes, "items") else dtypes
+        for name, dtype in dtype_items:
+            raw_type_by_column.setdefault(str(name), str(dtype))
+    selected_columns = [column for column in columns if column not in excluded]
+    if sort_columns:
+        selected_columns = sorted(selected_columns)
+    return [
+        {
+            "column_name": column,
+            "spark_data_type": raw_type_by_column.get(column, str(types.get(column, ""))),
+            "nullable": nullable_by_column.get(column),
+            "guardrail_data_type": _schema_guardrail_type(raw_type_by_column.get(column, types.get(column, ""))),
+        }
+        for column in selected_columns
+    ]
+
+
+def generate_schema_guardrail_config(
+    dataframe,
+    *,
+    exclude_columns: list[str] | set[str] | tuple[str, ...] | None = None,
+    sort_columns: bool = False,
+) -> dict[str, str]:
+    """Generate a starter schema guardrail dictionary from a DataFrame schema.
+
+    Parameters
+    ----------
+    dataframe : Any
+        Spark, pandas, or dataframe-like object with schema metadata.
+    exclude_columns : list-like, optional
+        Columns to omit from the generated starter expectation, such as audit
+        or runtime columns managed by the pipeline.
+    sort_columns : bool, default=False
+        When ``True``, sort columns alphabetically. When ``False``, preserve
+        the DataFrame schema order.
+
+    Returns
+    -------
+    dict[str, str]
+        Mapping of column names to normalized guardrail datatype strings that
+        can be reviewed and then passed to :func:`validate_schema`.
+
+    Notes
+    -----
+    This helper creates a starter schema guardrail from the current observed
+    schema. Review the output before treating it as an approved expectation.
+    Supported common normalized types include ``string``, ``integer``,
+    ``long``, ``double``, ``decimal(p,s)``, ``date``, ``timestamp``, and
+    ``boolean``.
+    """
+    return {
+        row["column_name"]: row["guardrail_data_type"]
+        for row in _schema_profile_rows(
+            dataframe,
+            exclude_columns=exclude_columns,
+            sort_columns=sort_columns,
+        )
+    }
+
+
+def print_schema_guardrail_config(
+    dataframe,
+    *,
+    exclude_columns: list[str] | set[str] | tuple[str, ...] | None = None,
+    sort_columns: bool = False,
+    variable_name: str = "expected_schema",
+) -> dict[str, str]:
+    """Print copy-paste-ready starter schema guardrail code.
+
+    Parameters
+    ----------
+    dataframe : Any
+        Spark, pandas, or dataframe-like object with schema metadata.
+    exclude_columns : list-like, optional
+        Columns to omit from the starter expectation.
+    sort_columns : bool, default=False
+        When ``True``, sort columns alphabetically. When ``False``, preserve
+        DataFrame schema order.
+    variable_name : str, default="expected_schema"
+        Python variable name to use in the printed snippet.
+
+    Returns
+    -------
+    dict[str, str]
+        The same starter dictionary printed as Python code.
+
+    Notes
+    -----
+    The printed dictionary is a starting point only. Users should review and
+    edit it before treating it as the approved schema guardrail.
+    """
+    config = generate_schema_guardrail_config(
+        dataframe,
+        exclude_columns=exclude_columns,
+        sort_columns=sort_columns,
+    )
+    lines = [f"{variable_name} = {{"]
+    for column, data_type in config.items():
+        lines.append(f"    {column!r}: {data_type!r},")
+    lines.append("}")
+    print("\n".join(lines))
+    return config
+
+
+def display_schema_profile(
+    dataframe,
+    *,
+    exclude_columns: list[str] | set[str] | tuple[str, ...] | None = None,
+    sort_columns: bool = False,
+) -> list[dict]:
+    """Display the observed schema alongside proposed guardrail datatypes.
+
+    Parameters
+    ----------
+    dataframe : Any
+        Spark, pandas, or dataframe-like object with schema metadata.
+    exclude_columns : list-like, optional
+        Columns to omit from the displayed profile.
+    sort_columns : bool, default=False
+        When ``True``, sort columns alphabetically. When ``False``, preserve
+        DataFrame schema order.
+
+    Returns
+    -------
+    list[dict]
+        Rows containing ``column_name``, ``spark_data_type``, ``nullable``, and
+        ``guardrail_data_type``.
+
+    Notes
+    -----
+    This is a notebook-friendly review aid. It shows a starter schema guardrail
+    profile only; users must review the proposed types before treating them as
+    approved expectations.
+    """
+    rows = _schema_profile_rows(
+        dataframe,
+        exclude_columns=exclude_columns,
+        sort_columns=sort_columns,
+    )
+    headers = ["column_name", "spark_data_type", "nullable", "guardrail_data_type"]
+    widths = {header: len(header) for header in headers}
+    for row in rows:
+        for header in headers:
+            widths[header] = max(widths[header], len(str(row.get(header, ""))))
+    header_line = " | ".join(header.ljust(widths[header]) for header in headers)
+    separator = "-+-".join("-" * widths[header] for header in headers)
+    print(header_line)
+    print(separator)
+    for row in rows:
+        print(" | ".join(str(row.get(header, "")).ljust(widths[header]) for header in headers))
+    return rows
 
 
 _SCHEMA_PRESETS = {"strict", "allow_new_columns", "monitor_only"}
@@ -185,18 +381,6 @@ def validate_schema(dataframe, expected_schema: dict[str, str], *, preset: str =
     }
 
 
-_DEFAULT_PROFILE_DRIFT_POLICY = {
-    "max_row_count_change_percent": 50,
-    "max_null_percent_change_points": 20,
-    "max_distinct_percent_change_points": 30,
-    "warn_numeric_psi": 0.10,
-    "block_numeric_psi": 0.25,
-    "warn_categorical_distance": 0.10,
-    "block_categorical_distance": 0.25,
-    "fail_on_missing_column": True,
-}
-
-
 def _normalize_profile(profile) -> dict | None:
     def row_value(row, *names):
         for name in names:
@@ -268,198 +452,134 @@ def _normalize_profile(profile) -> dict | None:
     return profile
 
 
-def _baseline_distribution_args(profile) -> dict[str, dict[str, list[float] | list[str]]]:
+def _row_to_dict(row) -> dict:
+    if row is None:
+        return {}
+    if isinstance(row, dict):
+        return dict(row)
+    if hasattr(row, "asDict"):
+        return row.asDict(recursive=True)
+    return {name: getattr(row, name) for name in dir(row) if not name.startswith("_")}
+
+
+def _canonical_hash_value(value):
+    if value is None:
+        return None
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, int):
+        return value
+    if isinstance(value, (float, Decimal)):
+        numeric = float(value)
+        if math.isnan(numeric) or math.isinf(numeric):
+            return str(numeric)
+        return round(numeric, 12)
+    if isinstance(value, dict):
+        return {str(key): _canonical_hash_value(value[key]) for key in sorted(value)}
+    if isinstance(value, (list, tuple, set)):
+        return [_canonical_hash_value(item) for item in value]
+    return str(value)
+
+
+def _canonical_json_hash(payload: dict) -> str:
+    canonical = _canonical_hash_value(payload)
+    encoded = json.dumps(canonical, sort_keys=True, separators=(",", ":"), ensure_ascii=True)
+    return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
+
+
+def _stable_profile_payload(profile) -> dict:
     normalized = _normalize_profile(profile) or {}
-    numeric_edges: dict[str, list[float]] = {}
-    categorical_values: dict[str, list[str]] = {}
-    for column in normalized.get("columns", []):
-        distribution = column.get("distribution") or {}
-        column_name = str(column.get("column_name"))
-        if column.get("distribution_type") == "numeric" and distribution.get("bin_edges"):
-            numeric_edges[column_name] = [float(value) for value in distribution.get("bin_edges", [])]
-        elif column.get("distribution_type") == "categorical" and distribution.get("category_counts") is not None:
-            categorical_values[column_name] = [str(value) for value in distribution.get("category_counts", {}).keys()]
-    return {"numeric_edges": numeric_edges, "categorical_values": categorical_values}
-
-def _numeric_psi(current_distribution: dict, baseline_distribution: dict) -> float | None:
-    current_edges = [float(value) for value in current_distribution.get("bin_edges", [])]
-    baseline_edges = [float(value) for value in baseline_distribution.get("bin_edges", [])]
-    if current_edges != baseline_edges:
-        return None
-    current_counts = [float(value or 0) for value in current_distribution.get("bin_counts", [])]
-    baseline_counts = [float(value or 0) for value in baseline_distribution.get("bin_counts", [])]
-    if len(current_counts) != len(baseline_counts) or not current_counts:
-        return None
-    def proportions(counts: list[float], epsilon: float = 1e-9) -> list[float]:
-        total = float(sum(float(count or 0) for count in counts))
-        if total <= 0:
-            return [epsilon for _ in counts]
-        return [max(float(count or 0) / total, epsilon) for count in counts]
-
-    current_props = proportions(current_counts)
-    baseline_props = proportions(baseline_counts)
-    return float(sum((current - baseline) * math.log(current / baseline) for current, baseline in zip(current_props, baseline_props)))
+    columns = []
+    for column in normalized.get("columns", []) or []:
+        column_payload = {
+            "column_name": column.get("column_name"),
+            "data_type": _normalize_datatype(column.get("data_type")),
+            "row_count": column.get("row_count"),
+            "null_count": column.get("null_count"),
+            "null_pct": column.get("null_pct"),
+            "distinct_count": column.get("distinct_count"),
+            "distinct_pct": column.get("distinct_pct"),
+            "min_value": column.get("min_value"),
+            "max_value": column.get("max_value"),
+        }
+        if column.get("distribution_type"):
+            column_payload["distribution_type"] = column.get("distribution_type")
+        if column.get("distribution") is not None:
+            column_payload["distribution"] = column.get("distribution")
+        columns.append(column_payload)
+    columns.sort(key=lambda item: str(item.get("column_name") or ""))
+    row_count = normalized.get("row_count")
+    if row_count is None and columns:
+        row_count = columns[0].get("row_count")
+    return {"row_count": row_count, "columns": columns}
 
 
-def _categorical_distance(current_distribution: dict, baseline_distribution: dict) -> tuple[float, list[str]]:
-    current_counts = {str(k): float(v or 0) for k, v in (current_distribution.get("category_counts") or {}).items()}
-    baseline_counts = {str(k): float(v or 0) for k, v in (baseline_distribution.get("category_counts") or {}).items()}
-    current_counts["__other__"] = float(current_distribution.get("other_count") or 0)
-    baseline_counts["__other__"] = float(baseline_distribution.get("other_count") or 0)
-    current_total = sum(current_counts.values()) or 1.0
-    baseline_total = sum(baseline_counts.values()) or 1.0
-    categories = sorted(set(current_counts) | set(baseline_counts))
-    distance = 0.5 * sum(abs((current_counts.get(category, 0.0) / current_total) - (baseline_counts.get(category, 0.0) / baseline_total)) for category in categories)
-    explicit_new = set(current_distribution.get("new_categories") or [])
-    compared_new = {category for category in set(current_counts) - set(baseline_counts) if category != "__other__"}
-    new_categories = sorted(str(category) for category in explicit_new | compared_new)
-    return float(distance), new_categories
+def _profile_hash(profile) -> str:
+    return _canonical_json_hash(_stable_profile_payload(profile))
 
 
-def _check_profile_drift(current_profile: dict, baseline_profile: dict | None = None, policy: dict | None = None) -> dict:
-    """Compare profile metrics against a baseline profile and drift thresholds.
-
-    Parameters
-    ----------
-    current_profile : dict or Spark DataFrame or list[dict]
-        Current profile payload. Spark profile DataFrames and collected profile
-        rows are normalized into the existing dictionary shape.
-    baseline_profile : dict or Spark DataFrame or list[dict] or None, optional
-        Previous successful profile for the same dataset, table, and source or
-        target stage. ``None`` returns a non-blocking ``no_baseline`` result.
-    policy : dict, optional
-        Threshold overrides. Unspecified values fall back to
-        :func:`monitor_data_changes`.
-
-    Returns
-    -------
-    dict
-        Result with ``status``, ``can_continue``, ``checks``, and ``message``.
-        Status is ``passed``, ``warning``, ``failed``, or ``no_baseline``.
-    """
-    active = {**_DEFAULT_PROFILE_DRIFT_POLICY, **(policy or {})}
-    current = _normalize_profile(current_profile)
-    baseline = _normalize_profile(baseline_profile)
-    if baseline is None:
-        return {"status": "no_baseline", "can_continue": True, "checks": [], "message": "No baseline profile provided."}
-    if current is None:
-        raise ValueError("current_profile must contain at least one profile row.")
-
-    checks = []
-    blocking = False
-    warning = False
-    b_row = float(baseline.get("row_count") or 0)
-    c_row = float(current.get("row_count") or 0)
-    row_delta_pct = 0.0 if b_row == 0 else abs(c_row - b_row) / b_row * 100.0
-    row_ok = row_delta_pct <= float(active["max_row_count_change_percent"])
-    checks.append({"check": "row_count_change_percent", "passed": row_ok, "value": row_delta_pct, "threshold": active["max_row_count_change_percent"], "status": "passed" if row_ok else "failed"})
-    blocking = blocking or (not row_ok)
-
-    b_cols = {c.get("column_name"): c for c in baseline.get("columns", [])}
-    c_cols = {c.get("column_name"): c for c in current.get("columns", [])}
-    for col in sorted(set(b_cols) - set(c_cols)):
-        passed = not bool(active["fail_on_missing_column"])
-        status = "passed" if passed else "failed"
-        checks.append({"check": "missing_column", "column": col, "passed": passed, "status": status})
-        blocking = blocking or (not passed)
-
-    for col in sorted(set(b_cols).intersection(c_cols)):
-        b = b_cols[col]
-        c = c_cols[col]
-        if "null_pct" in b and "null_pct" in c:
-            delta = abs(float(c.get("null_pct") or 0) - float(b.get("null_pct") or 0))
-            passed = delta <= float(active["max_null_percent_change_points"])
-            checks.append({"check": "null_percent_change_points", "column": col, "passed": passed, "value": delta, "threshold": active["max_null_percent_change_points"], "status": "passed" if passed else "failed"})
-            blocking = blocking or (not passed)
-        if "distinct_pct" in b and "distinct_pct" in c:
-            delta = abs(float(c.get("distinct_pct") or 0) - float(b.get("distinct_pct") or 0))
-            passed = delta <= float(active["max_distinct_percent_change_points"])
-            checks.append({"check": "distinct_percent_change_points", "column": col, "passed": passed, "value": delta, "threshold": active["max_distinct_percent_change_points"], "status": "passed" if passed else "failed"})
-            blocking = blocking or (not passed)
-        if b.get("min_value") != c.get("min_value"):
-            checks.append({"check": "min_changed", "column": col, "passed": True, "status": "passed", "baseline": b.get("min_value"), "current": c.get("min_value")})
-        if b.get("max_value") != c.get("max_value"):
-            checks.append({"check": "max_changed", "column": col, "passed": True, "status": "passed", "baseline": b.get("max_value"), "current": c.get("max_value")})
-
-        b_distribution = b.get("distribution") or {}
-        c_distribution = c.get("distribution") or {}
-        if b.get("distribution_type") == "numeric" and c.get("distribution_type") == "numeric" and b_distribution and c_distribution:
-            value = _numeric_psi(c_distribution, b_distribution)
-            if value is not None:
-                status = "failed" if value >= float(active["block_numeric_psi"]) else "warning" if value >= float(active["warn_numeric_psi"]) else "passed"
-                checks.append({"check": "numeric_psi", "column": col, "value": value, "warning_threshold": active["warn_numeric_psi"], "blocking_threshold": active["block_numeric_psi"], "status": status, "passed": status != "failed"})
-                warning = warning or status == "warning"
-                blocking = blocking or status == "failed"
-        if b.get("distribution_type") == "categorical" and c.get("distribution_type") == "categorical" and b_distribution and c_distribution:
-            value, new_categories = _categorical_distance(c_distribution, b_distribution)
-            status = "failed" if value >= float(active["block_categorical_distance"]) else "warning" if value >= float(active["warn_categorical_distance"]) else "passed"
-            checks.append({"check": "categorical_distance", "column": col, "value": value, "warning_threshold": active["warn_categorical_distance"], "blocking_threshold": active["block_categorical_distance"], "status": status, "passed": status != "failed", "new_categories": new_categories})
-            warning = warning or status == "warning"
-            blocking = blocking or status == "failed"
-
-    status = "failed" if blocking else "warning" if warning else "passed"
-    return {"status": status, "can_continue": not blocking, "checks": checks, "message": "Profile drift check completed."}
+def _stability_exclude_columns(exclude_columns: list[str] | set[str] | tuple[str, ...] | None = None) -> set[str]:
+    excluded = set(_DEFAULT_STABILITY_EXCLUDE_COLUMNS)
+    if exclude_columns:
+        excluded.update(str(column) for column in exclude_columns)
+    return excluded
 
 
-def _is_missing_table_error(exc: Exception) -> bool:
-    text = str(exc).lower()
-    patterns = ["not found", "table or view not found", "no such table", "cannot resolve", "missing"]
-    return any(pattern in text for pattern in patterns)
+def _is_stability_excluded_column(column: str, exclude_columns: set[str]) -> bool:
+    name = str(column)
+    return name in exclude_columns or any(name.startswith(prefix) for prefix in _DEFAULT_STABILITY_EXCLUDE_PREFIXES)
 
 
-def _load_latest_profile(spark, metadata_table: str, dataset_name: str, table_name: str, profile_stage: str, exclude_run_id: str | None = None, baseline_mode: str = "latest_successful") -> dict | None:
-    """Load an explicit profile-drift baseline from profile metadata rows.
+def _schema_hash_from_dataframe(dataframe, exclude_columns: list[str] | set[str] | tuple[str, ...] | None = None) -> str:
+    excluded = _stability_exclude_columns(exclude_columns)
+    columns, types = _actual_schema(dataframe)
+    payload = {column: types.get(column, "") for column in columns if not _is_stability_excluded_column(column, excluded)}
+    return _canonical_json_hash(payload)
 
-    Parameters
-    ----------
-    spark : Any
-        Spark session used to query the existing profile metadata table.
-    metadata_table : str
-        Existing profile metadata table, such as
-        ``METADATA_DATA_CATALOGUE``.
-    dataset_name : str
-        Dataset name to match.
-    table_name : str
-        Profiled source or target table name to match.
-    profile_stage : {"source", "target"}
-        Profile stage to match. Existing ``EVIDENCE_ROLE`` values such as
-        ``source_profile`` and ``output_profile`` are supported.
-    exclude_run_id : str, optional
-        Current run identifier to exclude from baseline selection.
-    baseline_mode : {"latest_successful", "approved"}, default="latest_successful"
-        Baseline selection mode. ``latest_successful`` selects the latest
-        previous row marked ``PROFILE_STATUS = successful`` when that field is
-        present. ``approved`` selects rows marked ``BASELINE_STATUS = approved``
-        and never falls back to latest previous evidence.
 
-    Returns
-    -------
-    dict or None
-        Normalized profile dictionary for the latest matching previous profile,
-        or ``None`` when no baseline exists.
-
-    Notes
-    -----
-    This helper reuses the existing profile metadata rows. It does not create a
-    separate data-drift table or approval workflow.
-    """
-    mode = str(baseline_mode or "latest_successful").lower()
-    if mode not in {"latest_successful", "approved"}:
-        raise ValueError("baseline_mode must be one of: latest_successful, approved")
+def _profile_row_count(profile) -> int | None:
+    payload = _stable_profile_payload(profile)
+    value = payload.get("row_count")
     try:
-        df = spark.table(metadata_table)
-    except Exception as exc:
-        if _is_missing_table_error(exc):
-            return None
-        raise
+        return int(value) if value is not None else None
+    except (TypeError, ValueError):
+        return None
+
+
+def _filter_watermark_slice(dataframe, watermark_column: str, watermark_value):
+    from pyspark.sql import functions as F
+
+    return dataframe.where(F.col(watermark_column) <= F.lit(watermark_value))
+
+
+def _max_watermark_value(dataframe, watermark_column: str):
+    from pyspark.sql import functions as F
+
+    rows = dataframe.agg(F.max(F.col(watermark_column)).alias("watermark_value")).collect()
+    if not rows:
+        return None
+    return rows[0]["watermark_value"]
+
+
+def _latest_catalogue_stability_row(
+    catalogue_df,
+    *,
+    dataset_name: str,
+    table_name: str,
+    profile_stage: str,
+    stability_check_type: str,
+    data_behavior: str,
+    profile_scope: str,
+    watermark_column: str | None = None,
+    exclude_run_id: str | None = None,
+) -> dict | None:
+    if catalogue_df is None:
+        return None
 
     try:
         from pyspark.sql import functions as F
 
-        stage = str(profile_stage).lower()
-        stage_roles = [stage, f"{stage}_profile"]
-        if stage == "target":
-            stage_roles.append("output_profile")
+        df = catalogue_df
         columns_by_lower = {str(column).lower(): column for column in df.columns}
 
         def catalogue_col(*names: str) -> str | None:
@@ -470,129 +590,85 @@ def _load_latest_profile(spark, metadata_table: str, dataset_name: str, table_na
                     return columns_by_lower[name.lower()]
             return None
 
-        filters = []
-        dataset_col = catalogue_col("dataset_name", "DATASET_NAME")
-        table_col = catalogue_col("table_name", "PROFILED_TABLE_NAME", "TABLE_NAME")
-        stage_col = catalogue_col("profile_stage", "PROFILE_STAGE", "evidence_role", "EVIDENCE_ROLE")
-        baseline_col = catalogue_col("baseline_status", "BASELINE_STATUS")
+        def required_col(*names: str) -> str | None:
+            return catalogue_col(*names)
+
+        stage = str(profile_stage).lower()
+        stage_roles = [stage, f"{stage}_profile"]
+        if stage == "target":
+            stage_roles.append("output_profile")
+
+        dataset_col = required_col("dataset_name", "DATASET_NAME")
+        table_col = required_col("table_name", "PROFILED_TABLE_NAME", "TABLE_NAME")
+        stage_col = required_col("profile_stage", "PROFILE_STAGE", "evidence_role", "EVIDENCE_ROLE")
         profile_status_col = catalogue_col("profile_status", "PROFILE_STATUS")
-        profile_run_col = catalogue_col("profile_run_id", "PROFILE_RUN_ID")
-        run_timestamp_col = catalogue_col("run_timestamp", "RUN_TIMESTAMP", "profiled_at")
-        if dataset_col:
-            filters.append(F.col(dataset_col) == dataset_name)
-        if table_col:
-            filters.append(F.col(table_col) == table_name)
-        if stage_col:
-            filters.append(F.lower(F.col(stage_col)).isin(stage_roles))
-        if mode == "approved":
-            if not baseline_col:
-                return None
-            filters.append(F.lower(F.col(baseline_col)) == "approved")
-        elif profile_status_col:
+        run_col = catalogue_col("profile_run_id", "PROFILE_RUN_ID", "run_id", "RUN_ID")
+        time_col = catalogue_col("profiled_at", "run_timestamp", "RUN_TIMESTAMP", "created_at")
+        enabled_col = required_col("stability_check_enabled", "STABILITY_CHECK_ENABLED")
+        stability_status_col = required_col("stability_status", "STABILITY_STATUS")
+        check_type_col = required_col("stability_check_type", "STABILITY_CHECK_TYPE")
+        behavior_col = required_col("data_behavior", "DATA_BEHAVIOR")
+        scope_col = required_col("profile_scope", "PROFILE_SCOPE")
+        watermark_col = required_col("watermark_column", "WATERMARK_COLUMN")
+        comparable_hash_col = required_col("comparable_profile_hash", "COMPARABLE_PROFILE_HASH")
+        profile_hash_col = required_col("profile_hash", "PROFILE_HASH")
+        watermark_value_col = required_col("watermark_value", "WATERMARK_VALUE")
+
+        required = [
+            dataset_col,
+            table_col,
+            stage_col,
+            enabled_col,
+            stability_status_col,
+            check_type_col,
+            behavior_col,
+            scope_col,
+            profile_hash_col,
+        ]
+        if str(stability_check_type).lower() == "watermark_slice_hash":
+            required.extend([watermark_col, comparable_hash_col, watermark_value_col])
+        if any(column is None for column in required):
+            return None
+
+        filters = [
+            F.col(dataset_col) == dataset_name,
+            F.col(table_col) == table_name,
+            F.lower(F.col(stage_col)).isin(stage_roles),
+            F.lower(F.col(stability_status_col)).isin("passed", "baseline_created"),
+            F.lower(F.col(check_type_col)) == str(stability_check_type).lower(),
+            F.lower(F.col(behavior_col)) == str(data_behavior).lower(),
+            F.lower(F.col(scope_col)) == str(profile_scope).lower(),
+            F.lower(F.col(enabled_col).cast("string")).isin("true", "1", "yes"),
+        ]
+        if profile_status_col:
             filters.append(F.lower(F.col(profile_status_col)).isin("success", "successful"))
-        if exclude_run_id and profile_run_col:
-            filters.append(F.col(profile_run_col) != exclude_run_id)
+        if exclude_run_id and run_col:
+            filters.append(F.col(run_col) != exclude_run_id)
+        if str(stability_check_type).lower() == "watermark_slice_hash":
+            filters.append(F.col(watermark_col) == (watermark_column or ""))
+            filters.append(F.col(comparable_hash_col).isNotNull() & (F.length(F.trim(F.col(comparable_hash_col).cast("string"))) > 0))
+            filters.append(F.col(watermark_value_col).isNotNull() & (F.length(F.trim(F.col(watermark_value_col).cast("string"))) > 0))
+        else:
+            filters.append(F.col(profile_hash_col).isNotNull() & (F.length(F.trim(F.col(profile_hash_col).cast("string"))) > 0))
+
         for condition in filters:
             df = df.filter(condition)
-        if not profile_run_col:
-            rows = df.collect() if hasattr(df, "collect") else []
-            return _normalize_profile(rows)
         order_columns = []
-        if run_timestamp_col:
-            order_columns.append(F.col(run_timestamp_col).desc())
-        order_columns.append(F.col(profile_run_col).desc())
-        latest_runs = df.orderBy(*order_columns).select(profile_run_col).limit(1).collect()
-        if not latest_runs:
-            return None
-        latest_run_id = latest_runs[0][profile_run_col]
-        rows = df.filter(F.col(profile_run_col) == latest_run_id).collect()
-        return _normalize_profile(rows)
+        if time_col:
+            order_columns.append(F.col(time_col).desc())
+        if run_col:
+            order_columns.append(F.col(run_col).desc())
+        if order_columns:
+            df = df.orderBy(*order_columns)
+        rows = df.limit(1).collect()
+        return _row_to_dict(rows[0]) if rows else None
     except Exception as exc:
         if _is_missing_table_error(exc):
             return None
         raise
 
 
-_DATA_CHANGE_PRESETS = {
-    "changing_data": {
-        "baseline_mode": "latest_successful",
-        "policy": {
-            "max_row_count_change_percent": 50,
-            "max_null_percent_change_points": 20,
-            "max_distinct_percent_change_points": 30,
-            "warn_numeric_psi": 0.10,
-            "block_numeric_psi": 0.25,
-            "warn_categorical_distance": 0.10,
-            "block_categorical_distance": 0.25,
-            "fail_on_missing_column": True,
-        },
-        "monitor_only": False,
-    },
-    "fixed_data": {
-        "baseline_mode": "approved",
-        "policy": {
-            "max_row_count_change_percent": 0,
-            "max_null_percent_change_points": 0,
-            "max_distinct_percent_change_points": 0,
-            "warn_numeric_psi": 0.01,
-            "block_numeric_psi": 0.10,
-            "warn_categorical_distance": 0.01,
-            "block_categorical_distance": 0.10,
-            "fail_on_missing_column": True,
-        },
-        "monitor_only": False,
-    },
-    "monitor_changing_data": {
-        "baseline_mode": "latest_successful",
-        "policy": {
-            "max_row_count_change_percent": 50,
-            "max_null_percent_change_points": 20,
-            "max_distinct_percent_change_points": 30,
-            "warn_numeric_psi": 0.10,
-            "block_numeric_psi": 0.25,
-            "warn_categorical_distance": 0.10,
-            "block_categorical_distance": 0.25,
-            "fail_on_missing_column": True,
-        },
-        "monitor_only": True,
-    },
-    "monitor_fixed_data": {
-        "baseline_mode": "approved",
-        "policy": {
-            "max_row_count_change_percent": 0,
-            "max_null_percent_change_points": 0,
-            "max_distinct_percent_change_points": 0,
-            "warn_numeric_psi": 0.01,
-            "block_numeric_psi": 0.10,
-            "warn_categorical_distance": 0.01,
-            "block_categorical_distance": 0.10,
-            "fail_on_missing_column": True,
-        },
-        "monitor_only": True,
-    },
-}
-
-
-def _data_change_preset_config(preset: str, policy_overrides: dict | None = None) -> dict:
-    normalized_preset = str(preset).lower()
-    if normalized_preset not in _DATA_CHANGE_PRESETS:
-        raise ValueError("preset must be one of: changing_data, fixed_data, monitor_changing_data, monitor_fixed_data")
-    base = _DATA_CHANGE_PRESETS[normalized_preset]
-    overrides = policy_overrides or {}
-    unsupported = sorted(set(overrides) - set(base["policy"]))
-    if unsupported:
-        allowed = ", ".join(sorted(base["policy"]))
-        invalid = ", ".join(unsupported)
-        raise ValueError(f"policy_overrides may only adjust threshold policy keys. Invalid: {invalid}. Allowed: {allowed}")
-    return {
-        "preset": normalized_preset,
-        "baseline_mode": base["baseline_mode"],
-        "policy": {**base["policy"], **overrides},
-        "monitor_only": bool(base["monitor_only"]),
-    }
-
-
-def monitor_data_changes(
+def enforce_catalogue_stability(
     spark,
     dataframe,
     metadata_table: str,
@@ -600,88 +676,177 @@ def monitor_data_changes(
     table_name: str,
     *,
     stage: str,
-    preset: str = "changing_data",
+    run_id: str,
+    data_behavior: str,
+    stability_check_type: str,
+    watermark_column: str | None = None,
+    watermark_value=None,
+    exclude_columns: list[str] | set[str] | tuple[str, ...] | None = None,
     exclude_run_id: str | None = None,
-    distribution_columns: list[str] | set[str] | tuple[str, ...] | None = None,
-    policy_overrides: dict | None = None,
+    config=None,
+    env: str | None = None,
+    catalogue_df=None,
 ) -> dict:
-    """Profile a dataframe and compare it with the baseline selected by a preset.
+    """Compare the current DataFrame profile with append-only catalogue evidence.
 
     Parameters
     ----------
     spark : Any
-        Spark session used to load existing profile metadata.
+        Spark session used to read ``METADATA_DATA_CATALOGUE`` baselines.
     dataframe : Any
-        Spark DataFrame to profile.
+        Spark DataFrame being checked.
     metadata_table : str
-        Existing metadata table containing profile evidence rows.
+        Existing catalogue metadata table that stores profile evidence rows.
     dataset_name : str
-        Dataset identifier used to select matching baseline profiles.
+        Governed dataset identifier used for baseline lookup.
     table_name : str
-        Source or target table name used to select matching baseline profiles.
+        Governed source or target table name used for baseline lookup.
     stage : {"source", "target"}
-        Pipeline stage being monitored. Source and target baselines are selected
-        independently.
-    preset : {"changing_data", "fixed_data", "monitor_changing_data", "monitor_fixed_data"}, default="changing_data"
-        Data-change monitoring intent. ``changing_data`` compares with the
-        latest successful profile and may block, ``fixed_data`` compares with
-        an approved baseline and may block, ``monitor_changing_data`` compares
-        with the latest successful profile without blocking, and
-        ``monitor_fixed_data`` compares with an approved baseline without
-        blocking. Presets determine baseline and enforcement behavior;
-        ``policy_overrides`` adjusts thresholds only.
+        Pipeline stage used to keep source and target baselines independent.
+    run_id : str
+        Current pipeline run identifier.
+    data_behavior : {"fixed", "changing"}
+        Whether the dataset is expected to be stable in full or only stable for
+        the previously loaded watermark slice.
+    stability_check_type : {"full_profile_hash", "watermark_slice_hash", "skip"}
+        Comparison strategy. ``skip`` records a non-blocking skipped result.
+    watermark_column : str, optional
+        Comparable watermark column required for ``watermark_slice_hash``.
+    watermark_value : Any, optional
+        Current run watermark. When omitted for changing data, the maximum
+        value in ``watermark_column`` is used.
+    exclude_columns : list-like, optional
+        Business or technical columns to exclude from deterministic profiles.
     exclude_run_id : str, optional
-        Current run identifier to exclude from baseline lookup.
-    distribution_columns : list[str] or set[str] or tuple[str, ...], optional
-        Optional allow-list of columns for distribution comparisons.
-    policy_overrides : dict, optional
-        Threshold policy overrides merged with the selected preset defaults.
-        Overrides may adjust thresholds only; presets retain control of
-        baseline selection and blocking behaviour.
+        Run identifier to exclude from baseline lookup. Defaults to ``run_id``.
+    config, env : object, str, optional
+        Metadata route from ``00_env_config`` used to read the catalogue table
+        via ``read_lakehouse_table`` when ``catalogue_df`` is not supplied.
+    catalogue_df : DataFrame, optional
+        Preloaded ``METADATA_DATA_CATALOGUE`` DataFrame. When provided, no
+        metadata read is performed.
 
     Returns
     -------
     dict
-        Wrapper containing ``profile`` for the current profile, ``baseline`` for
-        the selected baseline profile, and ``result`` for the drift decision.
+        Standard guardrail result compatible with ``stop_if_failed``.
 
     Notes
     -----
-    Users choose intent through presets. FabricOps handles profiling, baseline
-    selection, comparison, and enforcement mechanics internally.
+    The function does not create a separate history table. It reads the latest
+    previous row from the existing append-only catalogue and returns stability
+    metadata for ``write_catalogue_evidence`` to append with today's profile.
     """
     from fabricops_kit.data_profiling import profile_dataframe
 
-    config = _data_change_preset_config(preset, policy_overrides)
-    baseline_profile = _load_latest_profile(
-        spark,
-        metadata_table=metadata_table,
+    behavior = str(data_behavior or "").lower()
+    check_type = str(stability_check_type or "").lower()
+    if behavior not in {"fixed", "changing"}:
+        raise ValueError("data_behavior must be one of: fixed, changing")
+    if check_type not in {"full_profile_hash", "watermark_slice_hash", "skip"}:
+        raise ValueError("stability_check_type must be one of: full_profile_hash, watermark_slice_hash, skip")
+    if check_type == "watermark_slice_hash" and not watermark_column:
+        raise ValueError("watermark_column is required for watermark_slice_hash")
+
+    effective_exclude_columns = _stability_exclude_columns(exclude_columns)
+    current_profile_df = profile_dataframe(dataframe, table_name, exclude_columns=effective_exclude_columns)
+    current_profile_hash = _profile_hash(current_profile_df)
+    current_row_count = _profile_row_count(current_profile_df)
+    schema_hash = _schema_hash_from_dataframe(dataframe, exclude_columns=effective_exclude_columns)
+    effective_watermark = watermark_value
+    if check_type == "watermark_slice_hash" and effective_watermark is None:
+        effective_watermark = _max_watermark_value(dataframe, str(watermark_column))
+
+    comparable_profile_hash = current_profile_hash
+    profile_scope = "full_table"
+    profile_filter_expression = ""
+    if check_type == "watermark_slice_hash":
+        profile_scope = "watermark_slice"
+        profile_filter_expression = f"{watermark_column} <= {effective_watermark}"
+        comparable_df = _filter_watermark_slice(dataframe, str(watermark_column), effective_watermark)
+        comparable_profile_hash = _profile_hash(profile_dataframe(comparable_df, table_name, exclude_columns=effective_exclude_columns))
+
+    if catalogue_df is None and config is not None and env is not None:
+        from fabricops_kit.fabric_input_output import read_lakehouse_table
+
+        try:
+            catalogue_df = read_lakehouse_table(config, env, "metadata", metadata_table, spark_session=spark)
+        except Exception as exc:
+            if _is_missing_table_error(exc):
+                catalogue_df = None
+            else:
+                raise
+
+    baseline = _latest_catalogue_stability_row(
+        catalogue_df,
         dataset_name=dataset_name,
         table_name=table_name,
         profile_stage=stage,
-        exclude_run_id=exclude_run_id,
-        baseline_mode=config["baseline_mode"],
+        stability_check_type=check_type,
+        data_behavior=behavior,
+        profile_scope=profile_scope,
+        watermark_column=watermark_column,
+        exclude_run_id=exclude_run_id or run_id,
     )
-    baseline_distribution_args = _baseline_distribution_args(baseline_profile)
-    current_profile_df = profile_dataframe(
-        dataframe,
-        table_name,
-        include_distributions=True,
-        distribution_columns=distribution_columns,
-        distribution_bin_edges=baseline_distribution_args["numeric_edges"],
-        categorical_categories=baseline_distribution_args["categorical_values"],
-    )
-    current_profile = _normalize_profile(current_profile_df)
-    result = _check_profile_drift(current_profile, baseline_profile, policy=config["policy"])
-    if config["monitor_only"] and not bool(result.get("can_continue", True)):
-        original_status = result.get("status")
-        result = {**result, "can_continue": True, "status": "warning", "monitor_only": True, "original_status": original_status}
-        result["message"] = (
-            "Monitor-only data-change check observed blocking drift without stopping execution. "
-            f"{result.get('message', '')}"
-        ).strip()
-    result = {**result, "preset": config["preset"], "baseline_mode": config["baseline_mode"], "policy": config["policy"]}
-    return {"profile": current_profile_df, "profile_payload": current_profile, "baseline": baseline_profile, "result": result}
+    baseline_run_id = str((baseline or {}).get("profile_run_id") or (baseline or {}).get("PROFILE_RUN_ID") or "")
+    baseline_watermark_value = (baseline or {}).get("watermark_value", (baseline or {}).get("WATERMARK_VALUE"))
+    baseline_profile_hash = (baseline or {}).get("profile_hash", (baseline or {}).get("PROFILE_HASH"))
+    if check_type == "watermark_slice_hash":
+        baseline_profile_hash = (baseline or {}).get("comparable_profile_hash", (baseline or {}).get("COMPARABLE_PROFILE_HASH"))
+        if baseline_watermark_value is not None:
+            profile_filter_expression = f"{watermark_column} <= {baseline_watermark_value}"
+            comparable_df = _filter_watermark_slice(dataframe, str(watermark_column), baseline_watermark_value)
+            comparable_profile_hash = _profile_hash(profile_dataframe(comparable_df, table_name, exclude_columns=effective_exclude_columns))
+
+    result = {
+        "status": "passed",
+        "can_continue": True,
+        "check_type": "catalogue_profile_stability",
+        "stability_check_enabled": check_type != "skip",
+        "stability_check_type": check_type,
+        "data_behavior": behavior,
+        "profile_scope": profile_scope,
+        "watermark_column": watermark_column or "",
+        "watermark_value": str(effective_watermark) if effective_watermark is not None else "",
+        "profile_filter_expression": profile_filter_expression,
+        "row_count": current_row_count,
+        "schema_hash": schema_hash,
+        "profile_hash": current_profile_hash,
+        "comparable_profile_hash": comparable_profile_hash,
+        "baseline_run_id": baseline_run_id,
+        "baseline_profile_hash": str(baseline_profile_hash or ""),
+        "baseline_watermark_value": str(baseline_watermark_value) if baseline_watermark_value is not None else "",
+        "stability_status": "passed",
+        "stability_can_continue": True,
+        "stability_message": "Current profile matches the previous catalogue profile.",
+        "stability_difference_summary": "",
+    }
+    if check_type == "skip":
+        result.update(status="skipped", stability_status="skipped", stability_message="Catalogue profile stability check skipped.", message="Catalogue profile stability check skipped.")
+        return result
+    if not baseline or not baseline_profile_hash:
+        result.update(status="baseline_created", stability_status="baseline_created", baseline_profile_hash="", stability_message="No previous catalogue stability profile was available; current profile establishes the baseline.", message="No previous catalogue stability profile was available; current profile establishes the baseline.")
+        return result
+    if comparable_profile_hash != str(baseline_profile_hash):
+        message = "Previously loaded data changed compared with the prior catalogue profile." if check_type == "watermark_slice_hash" else "Current full profile differs from the previous catalogue profile."
+        result.update(
+            status="failed",
+            can_continue=False,
+            stability_status="failed",
+            stability_can_continue=False,
+            stability_message=message,
+            stability_difference_summary=json.dumps({"current_hash": comparable_profile_hash, "baseline_hash": str(baseline_profile_hash)}, sort_keys=True),
+            message=message,
+        )
+        return result
+    result["message"] = result["stability_message"]
+    return result
+
+
+def _is_missing_table_error(exc: Exception) -> bool:
+    text = str(exc).lower()
+    patterns = ["not found", "table or view not found", "no such table", "cannot resolve", "missing"]
+    return any(pattern in text for pattern in patterns)
 
 
 def stop_if_failed(result) -> None:
@@ -690,8 +855,7 @@ def stop_if_failed(result) -> None:
     Parameters
     ----------
     result : dict
-        Direct schema result, direct data-change result, or the wrapper returned
-        by :func:`monitor_data_changes`.
+        Direct schema, catalogue stability, or DQ guardrail result.
 
     Raises
     ------

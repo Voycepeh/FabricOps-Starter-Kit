@@ -62,7 +62,10 @@ Guardrail result dictionary with status, can_continue, checks, message, and sche
 
 ## Related functions
 
-- <a href="../monitor_data_changes/"><code>fabricops_kit.drift.monitor_data_changes</code></a>
+- <a href="../generate_schema_guardrail_config/"><code>fabricops_kit.drift.generate_schema_guardrail_config</code></a>
+- <a href="../print_schema_guardrail_config/"><code>fabricops_kit.drift.print_schema_guardrail_config</code></a>
+- <a href="../display_schema_profile/"><code>fabricops_kit.drift.display_schema_profile</code></a>
+- <a href="../enforce_catalogue_stability/"><code>fabricops_kit.drift.enforce_catalogue_stability</code></a>
 - <a href="../stop_if_failed/"><code>fabricops_kit.drift.stop_if_failed</code></a>
 
 <details class="reference-implementation-details">
@@ -76,7 +79,7 @@ Guardrail result dictionary with status, can_continue, checks, message, and sche
 ## Source
 
 - Source file path: `src/fabricops_kit/drift.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c7049e78d915b93903574ea792043a66ebe62cee/src/fabricops_kit/drift.py#L96-L185">View validate_schema on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c30f90cb0288be7f5624f9a80a62facf8b12c3e5/src/fabricops_kit/drift.py#L292-L381">View validate_schema on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -189,7 +192,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `drift`
 - Source file path: `src/fabricops_kit/drift.py`
-- Source line: `96`
+- Source line: `292`
 - Inbound references count: 0
 - Outbound references count: 2
 
@@ -214,9 +217,9 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/drift.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c7049e78d915b93903574ea792043a66ebe62cee/src/fabricops_kit/drift.py#L96-L185">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c7049e78d915b93903574ea792043a66ebe62cee/src/fabricops_kit/drift.py#L96-L185</a>
-- Start line: `96`
-- End line: `185`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c30f90cb0288be7f5624f9a80a62facf8b12c3e5/src/fabricops_kit/drift.py#L292-L381">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c30f90cb0288be7f5624f9a80a62facf8b12c3e5/src/fabricops_kit/drift.py#L292-L381</a>
+- Start line: `292`
+- End line: `381`
 - Signature:
 
 ```python
@@ -227,7 +230,10 @@ def validate_schema(dataframe, expected_schema: dict[str, str], *, preset: str='
 
 ### Public related functions
 
-- <a href="../monitor_data_changes/"><code>fabricops_kit.drift.monitor_data_changes</code></a>
+- <a href="../generate_schema_guardrail_config/"><code>fabricops_kit.drift.generate_schema_guardrail_config</code></a>
+- <a href="../print_schema_guardrail_config/"><code>fabricops_kit.drift.print_schema_guardrail_config</code></a>
+- <a href="../display_schema_profile/"><code>fabricops_kit.drift.display_schema_profile</code></a>
+- <a href="../enforce_catalogue_stability/"><code>fabricops_kit.drift.enforce_catalogue_stability</code></a>
 - <a href="../stop_if_failed/"><code>fabricops_kit.drift.stop_if_failed</code></a>
 
 ### Internal implementation helpers

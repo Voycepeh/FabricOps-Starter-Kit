@@ -42,15 +42,15 @@ Run in Engineering Dev and link it to one or more agreements when relevant.
 
 Run when engineering is ready to build or run the data product.
 
-It is a thin orchestration notebook. Users first read source data into DataFrames using normal Spark code or the same helper functions shown in `99_explore`, then register those existing DataFrames with per-source schema/drift/DQ guardrails. After transformation, users register target DataFrames with write settings and target guardrails. FabricOps starts after each DataFrame exists: it profiles, validates, enforces approved active DQ rules, records evidence, and writes configured targets. Reusable evidence helpers hide catalogue enrichment, lineage capture, and runtime summary logging.
+It is a thin orchestration notebook. Users first read source data into DataFrames using normal Spark code or the same helper functions shown in `99_explore`, then register those existing DataFrames with per-source schema/stability/DQ guardrails. After transformation, users register target DataFrames with write settings and target guardrails. FabricOps starts after each DataFrame exists: it profiles, validates, enforces approved active DQ rules, records evidence, and writes configured targets. Reusable evidence helpers hide catalogue enrichment, lineage capture, and runtime summary logging.
 
-The template supports many sources and many targets. Source and target registrations contain DataFrame references and guardrail presets rather than loader metadata. Source and target guardrail flows are symmetrical: schema checks, data drift checks, and approved active DQ rules from `METADATA_DQ_RULES` run per dataset using that dataset's configured preset.
+The template supports many sources and many targets. Source and target registrations contain DataFrame references and guardrail presets rather than loader metadata. An optional helper cell can display the current source schema and print starter `expected_schema` code; users must review that generated starter before treating it as the approved schema expectation. Source and target guardrail flows are symmetrical: schema checks, source stability checks, and approved active DQ rules from `METADATA_DQ_RULES` run per dataset using that dataset's configured preset.
 
-See [Pipeline Guardrails](schema-and-data-drift.md) for the source/target guardrail flow and supported schema, drift, and DQ presets.
+See [Pipeline Guardrails](schema-and-data-drift.md) for the source/target guardrail flow and supported schema, source stability, and DQ settings.
 
 Runtime evidence is stored in metadata. Profiles and DQ summaries are written to `METADATA_DATA_CATALOGUE`, many-to-many lineage is written to `METADATA_DATA_LINEAGE_TABLE`, and run summaries are written to `METADATA_PIPELINE_RUNS`.
 
-**Result:** repeatable transformations, output tables, catalogue evidence, lineage, runtime evidence, schema guardrails, drift guardrails, and DQ guardrails are produced without exposing implementation-heavy code in the notebook.
+**Result:** repeatable transformations, output tables, catalogue evidence, lineage, runtime evidence, schema guardrails, stability guardrails, and DQ guardrails are produced without exposing implementation-heavy code in the notebook.
 
 ### `03_governance`
 
@@ -87,7 +87,7 @@ After the production pipeline is approved and stable, store the approved product
 | Agreement and steward metadata                          | Governance                | `01_agreement`                     |
 | Optional discovery and profiling                        | Analyst or data scientist | `99_explore`                       |
 | Transformation and output delivery                      | Engineering               | `02_pipeline`                      |
-| Catalogue, lineage, profile, schema, and drift evidence | Engineering               | `02_pipeline`                      |
+| Catalogue, lineage, profile, schema, and stability evidence | Engineering               | `02_pipeline`                      |
 | Reviewed governance metadata                            | Governance                | `03_governance`                        |
 | Approved rule enforcement                               | Engineering               | `02_pipeline` after `03_governance`    |
 | Production handover                                     | Engineering               | Store approved production notebook |

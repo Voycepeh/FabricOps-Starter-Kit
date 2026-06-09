@@ -1643,7 +1643,7 @@
       ],
       "calls_count": 3,
       "used_by": [
-        "fabricops_kit.drift.monitor_data_changes",
+        "fabricops_kit.drift.enforce_catalogue_stability",
         "fabricops_kit.governance_review._prepare_dq_profile_input_rows"
       ],
       "used_by_count": 2,
@@ -1682,85 +1682,69 @@
       ],
       "calls_count": 1,
       "used_by": [
+        "fabricops_kit.drift._schema_hash_from_dataframe",
+        "fabricops_kit.drift._schema_profile_rows",
         "fabricops_kit.drift.validate_schema"
       ],
-      "used_by_count": 1,
+      "used_by_count": 3,
       "internal_helpers_used": [
         "fabricops_kit.drift._normalize_datatype"
       ],
       "internal_helper_count": 1
     },
-    "fabricops_kit.drift._baseline_distribution_args": {
-      "qualified_name": "fabricops_kit.drift._baseline_distribution_args",
-      "short_name": "_baseline_distribution_args",
+    "fabricops_kit.drift._canonical_hash_value": {
+      "qualified_name": "fabricops_kit.drift._canonical_hash_value",
+      "short_name": "_canonical_hash_value",
       "module": "drift",
-      "callable": "_baseline_distribution_args",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/drift/_baseline_distribution_args/",
+      "callable": "_canonical_hash_value",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/drift/_canonical_hash_value/",
       "classification": "internal",
       "calls": [
-        "fabricops_kit.drift._normalize_profile"
+        "fabricops_kit.drift._canonical_hash_value"
       ],
       "calls_count": 1,
       "used_by": [
-        "fabricops_kit.drift.monitor_data_changes"
+        "fabricops_kit.drift._canonical_hash_value",
+        "fabricops_kit.drift._canonical_json_hash"
       ],
-      "used_by_count": 1,
+      "used_by_count": 2,
       "internal_helpers_used": [
-        "fabricops_kit.drift._normalize_profile"
+        "fabricops_kit.drift._canonical_hash_value"
       ],
       "internal_helper_count": 1
     },
-    "fabricops_kit.drift._categorical_distance": {
-      "qualified_name": "fabricops_kit.drift._categorical_distance",
-      "short_name": "_categorical_distance",
+    "fabricops_kit.drift._canonical_json_hash": {
+      "qualified_name": "fabricops_kit.drift._canonical_json_hash",
+      "short_name": "_canonical_json_hash",
       "module": "drift",
-      "callable": "_categorical_distance",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/drift/_categorical_distance/",
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.drift._check_profile_drift"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.drift._check_profile_drift": {
-      "qualified_name": "fabricops_kit.drift._check_profile_drift",
-      "short_name": "_check_profile_drift",
-      "module": "drift",
-      "callable": "_check_profile_drift",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/drift/_check_profile_drift/",
+      "callable": "_canonical_json_hash",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/drift/_canonical_json_hash/",
       "classification": "internal",
       "calls": [
-        "fabricops_kit.drift._categorical_distance",
-        "fabricops_kit.drift._normalize_profile",
-        "fabricops_kit.drift._numeric_psi"
+        "fabricops_kit.drift._canonical_hash_value"
       ],
-      "calls_count": 3,
+      "calls_count": 1,
       "used_by": [
-        "fabricops_kit.drift.monitor_data_changes"
+        "fabricops_kit.drift._profile_hash",
+        "fabricops_kit.drift._schema_hash_from_dataframe"
       ],
-      "used_by_count": 1,
+      "used_by_count": 2,
       "internal_helpers_used": [
-        "fabricops_kit.drift._categorical_distance",
-        "fabricops_kit.drift._normalize_profile",
-        "fabricops_kit.drift._numeric_psi"
+        "fabricops_kit.drift._canonical_hash_value"
       ],
-      "internal_helper_count": 3
+      "internal_helper_count": 1
     },
-    "fabricops_kit.drift._data_change_preset_config": {
-      "qualified_name": "fabricops_kit.drift._data_change_preset_config",
-      "short_name": "_data_change_preset_config",
+    "fabricops_kit.drift._filter_watermark_slice": {
+      "qualified_name": "fabricops_kit.drift._filter_watermark_slice",
+      "short_name": "_filter_watermark_slice",
       "module": "drift",
-      "callable": "_data_change_preset_config",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/drift/_data_change_preset_config/",
+      "callable": "_filter_watermark_slice",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/drift/_filter_watermark_slice/",
       "classification": "internal",
       "calls": [],
       "calls_count": 0,
       "used_by": [
-        "fabricops_kit.drift.monitor_data_changes"
+        "fabricops_kit.drift.enforce_catalogue_stability"
       ],
       "used_by_count": 1,
       "internal_helpers_used": [],
@@ -1776,33 +1760,66 @@
       "calls": [],
       "calls_count": 0,
       "used_by": [
-        "fabricops_kit.drift._load_latest_profile"
+        "fabricops_kit.drift._latest_catalogue_stability_row",
+        "fabricops_kit.drift.enforce_catalogue_stability"
+      ],
+      "used_by_count": 2,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.drift._is_stability_excluded_column": {
+      "qualified_name": "fabricops_kit.drift._is_stability_excluded_column",
+      "short_name": "_is_stability_excluded_column",
+      "module": "drift",
+      "callable": "_is_stability_excluded_column",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/drift/_is_stability_excluded_column/",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.drift._schema_hash_from_dataframe"
       ],
       "used_by_count": 1,
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
-    "fabricops_kit.drift._load_latest_profile": {
-      "qualified_name": "fabricops_kit.drift._load_latest_profile",
-      "short_name": "_load_latest_profile",
+    "fabricops_kit.drift._latest_catalogue_stability_row": {
+      "qualified_name": "fabricops_kit.drift._latest_catalogue_stability_row",
+      "short_name": "_latest_catalogue_stability_row",
       "module": "drift",
-      "callable": "_load_latest_profile",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/drift/_load_latest_profile/",
+      "callable": "_latest_catalogue_stability_row",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/drift/_latest_catalogue_stability_row/",
       "classification": "internal",
       "calls": [
         "fabricops_kit.drift._is_missing_table_error",
-        "fabricops_kit.drift._normalize_profile"
+        "fabricops_kit.drift._row_to_dict"
       ],
       "calls_count": 2,
       "used_by": [
-        "fabricops_kit.drift.monitor_data_changes"
+        "fabricops_kit.drift.enforce_catalogue_stability"
       ],
       "used_by_count": 1,
       "internal_helpers_used": [
         "fabricops_kit.drift._is_missing_table_error",
-        "fabricops_kit.drift._normalize_profile"
+        "fabricops_kit.drift._row_to_dict"
       ],
       "internal_helper_count": 2
+    },
+    "fabricops_kit.drift._max_watermark_value": {
+      "qualified_name": "fabricops_kit.drift._max_watermark_value",
+      "short_name": "_max_watermark_value",
+      "module": "drift",
+      "callable": "_max_watermark_value",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/drift/_max_watermark_value/",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.drift.enforce_catalogue_stability"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
     },
     "fabricops_kit.drift._normalize_datatype": {
       "qualified_name": "fabricops_kit.drift._normalize_datatype",
@@ -1815,9 +1832,11 @@
       "calls_count": 0,
       "used_by": [
         "fabricops_kit.drift._actual_schema",
+        "fabricops_kit.drift._schema_guardrail_type",
+        "fabricops_kit.drift._stable_profile_payload",
         "fabricops_kit.drift.validate_schema"
       ],
-      "used_by_count": 2,
+      "used_by_count": 4,
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
@@ -1833,60 +1852,270 @@
       ],
       "calls_count": 1,
       "used_by": [
-        "fabricops_kit.drift._baseline_distribution_args",
-        "fabricops_kit.drift._check_profile_drift",
-        "fabricops_kit.drift._load_latest_profile",
         "fabricops_kit.drift._normalize_profile",
-        "fabricops_kit.drift.monitor_data_changes"
+        "fabricops_kit.drift._stable_profile_payload"
       ],
-      "used_by_count": 5,
+      "used_by_count": 2,
       "internal_helpers_used": [
         "fabricops_kit.drift._normalize_profile"
       ],
       "internal_helper_count": 1
     },
-    "fabricops_kit.drift._numeric_psi": {
-      "qualified_name": "fabricops_kit.drift._numeric_psi",
-      "short_name": "_numeric_psi",
+    "fabricops_kit.drift._profile_hash": {
+      "qualified_name": "fabricops_kit.drift._profile_hash",
+      "short_name": "_profile_hash",
       "module": "drift",
-      "callable": "_numeric_psi",
-      "docs_url": "/FabricOps-Starter-Kit/reference/internal/drift/_numeric_psi/",
+      "callable": "_profile_hash",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/drift/_profile_hash/",
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.drift._canonical_json_hash",
+        "fabricops_kit.drift._stable_profile_payload"
+      ],
+      "calls_count": 2,
+      "used_by": [
+        "fabricops_kit.drift.enforce_catalogue_stability"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [
+        "fabricops_kit.drift._canonical_json_hash",
+        "fabricops_kit.drift._stable_profile_payload"
+      ],
+      "internal_helper_count": 2
+    },
+    "fabricops_kit.drift._profile_row_count": {
+      "qualified_name": "fabricops_kit.drift._profile_row_count",
+      "short_name": "_profile_row_count",
+      "module": "drift",
+      "callable": "_profile_row_count",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/drift/_profile_row_count/",
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.drift._stable_profile_payload"
+      ],
+      "calls_count": 1,
+      "used_by": [
+        "fabricops_kit.drift.enforce_catalogue_stability"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [
+        "fabricops_kit.drift._stable_profile_payload"
+      ],
+      "internal_helper_count": 1
+    },
+    "fabricops_kit.drift._row_to_dict": {
+      "qualified_name": "fabricops_kit.drift._row_to_dict",
+      "short_name": "_row_to_dict",
+      "module": "drift",
+      "callable": "_row_to_dict",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/drift/_row_to_dict/",
       "classification": "internal",
       "calls": [],
       "calls_count": 0,
       "used_by": [
-        "fabricops_kit.drift._check_profile_drift"
+        "fabricops_kit.drift._latest_catalogue_stability_row"
       ],
       "used_by_count": 1,
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
-    "fabricops_kit.drift.monitor_data_changes": {
-      "qualified_name": "fabricops_kit.drift.monitor_data_changes",
-      "short_name": "monitor_data_changes",
+    "fabricops_kit.drift._schema_guardrail_type": {
+      "qualified_name": "fabricops_kit.drift._schema_guardrail_type",
+      "short_name": "_schema_guardrail_type",
       "module": "drift",
-      "callable": "monitor_data_changes",
-      "docs_url": "/FabricOps-Starter-Kit/reference/monitor_data_changes/",
-      "classification": "callable",
+      "callable": "_schema_guardrail_type",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/drift/_schema_guardrail_type/",
+      "classification": "internal",
       "calls": [
-        "fabricops_kit.data_profiling.profile_dataframe",
-        "fabricops_kit.drift._baseline_distribution_args",
-        "fabricops_kit.drift._check_profile_drift",
-        "fabricops_kit.drift._data_change_preset_config",
-        "fabricops_kit.drift._load_latest_profile",
+        "fabricops_kit.drift._normalize_datatype"
+      ],
+      "calls_count": 1,
+      "used_by": [
+        "fabricops_kit.drift._schema_profile_rows"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [
+        "fabricops_kit.drift._normalize_datatype"
+      ],
+      "internal_helper_count": 1
+    },
+    "fabricops_kit.drift._schema_hash_from_dataframe": {
+      "qualified_name": "fabricops_kit.drift._schema_hash_from_dataframe",
+      "short_name": "_schema_hash_from_dataframe",
+      "module": "drift",
+      "callable": "_schema_hash_from_dataframe",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/drift/_schema_hash_from_dataframe/",
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.drift._actual_schema",
+        "fabricops_kit.drift._canonical_json_hash",
+        "fabricops_kit.drift._is_stability_excluded_column",
+        "fabricops_kit.drift._stability_exclude_columns"
+      ],
+      "calls_count": 4,
+      "used_by": [
+        "fabricops_kit.drift.enforce_catalogue_stability"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [
+        "fabricops_kit.drift._actual_schema",
+        "fabricops_kit.drift._canonical_json_hash",
+        "fabricops_kit.drift._is_stability_excluded_column",
+        "fabricops_kit.drift._stability_exclude_columns"
+      ],
+      "internal_helper_count": 4
+    },
+    "fabricops_kit.drift._schema_profile_rows": {
+      "qualified_name": "fabricops_kit.drift._schema_profile_rows",
+      "short_name": "_schema_profile_rows",
+      "module": "drift",
+      "callable": "_schema_profile_rows",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/drift/_schema_profile_rows/",
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.drift._actual_schema",
+        "fabricops_kit.drift._schema_guardrail_type"
+      ],
+      "calls_count": 2,
+      "used_by": [
+        "fabricops_kit.drift.display_schema_profile",
+        "fabricops_kit.drift.generate_schema_guardrail_config"
+      ],
+      "used_by_count": 2,
+      "internal_helpers_used": [
+        "fabricops_kit.drift._actual_schema",
+        "fabricops_kit.drift._schema_guardrail_type"
+      ],
+      "internal_helper_count": 2
+    },
+    "fabricops_kit.drift._stability_exclude_columns": {
+      "qualified_name": "fabricops_kit.drift._stability_exclude_columns",
+      "short_name": "_stability_exclude_columns",
+      "module": "drift",
+      "callable": "_stability_exclude_columns",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/drift/_stability_exclude_columns/",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.drift._schema_hash_from_dataframe",
+        "fabricops_kit.drift.enforce_catalogue_stability"
+      ],
+      "used_by_count": 2,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.drift._stable_profile_payload": {
+      "qualified_name": "fabricops_kit.drift._stable_profile_payload",
+      "short_name": "_stable_profile_payload",
+      "module": "drift",
+      "callable": "_stable_profile_payload",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/drift/_stable_profile_payload/",
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.drift._normalize_datatype",
         "fabricops_kit.drift._normalize_profile"
       ],
-      "calls_count": 6,
+      "calls_count": 2,
+      "used_by": [
+        "fabricops_kit.drift._profile_hash",
+        "fabricops_kit.drift._profile_row_count"
+      ],
+      "used_by_count": 2,
+      "internal_helpers_used": [
+        "fabricops_kit.drift._normalize_datatype",
+        "fabricops_kit.drift._normalize_profile"
+      ],
+      "internal_helper_count": 2
+    },
+    "fabricops_kit.drift.display_schema_profile": {
+      "qualified_name": "fabricops_kit.drift.display_schema_profile",
+      "short_name": "display_schema_profile",
+      "module": "drift",
+      "callable": "display_schema_profile",
+      "docs_url": "/FabricOps-Starter-Kit/reference/display_schema_profile/",
+      "classification": "callable",
+      "calls": [
+        "fabricops_kit.drift._schema_profile_rows"
+      ],
+      "calls_count": 1,
       "used_by": [],
       "used_by_count": 0,
       "internal_helpers_used": [
-        "fabricops_kit.drift._baseline_distribution_args",
-        "fabricops_kit.drift._check_profile_drift",
-        "fabricops_kit.drift._data_change_preset_config",
-        "fabricops_kit.drift._load_latest_profile",
-        "fabricops_kit.drift._normalize_profile"
+        "fabricops_kit.drift._schema_profile_rows"
       ],
-      "internal_helper_count": 5
+      "internal_helper_count": 1
+    },
+    "fabricops_kit.drift.enforce_catalogue_stability": {
+      "qualified_name": "fabricops_kit.drift.enforce_catalogue_stability",
+      "short_name": "enforce_catalogue_stability",
+      "module": "drift",
+      "callable": "enforce_catalogue_stability",
+      "docs_url": "/FabricOps-Starter-Kit/reference/enforce_catalogue_stability/",
+      "classification": "callable",
+      "calls": [
+        "fabricops_kit.data_profiling.profile_dataframe",
+        "fabricops_kit.drift._filter_watermark_slice",
+        "fabricops_kit.drift._is_missing_table_error",
+        "fabricops_kit.drift._latest_catalogue_stability_row",
+        "fabricops_kit.drift._max_watermark_value",
+        "fabricops_kit.drift._profile_hash",
+        "fabricops_kit.drift._profile_row_count",
+        "fabricops_kit.drift._schema_hash_from_dataframe",
+        "fabricops_kit.drift._stability_exclude_columns",
+        "fabricops_kit.fabric_input_output.read_lakehouse_table"
+      ],
+      "calls_count": 10,
+      "used_by": [],
+      "used_by_count": 0,
+      "internal_helpers_used": [
+        "fabricops_kit.drift._filter_watermark_slice",
+        "fabricops_kit.drift._is_missing_table_error",
+        "fabricops_kit.drift._latest_catalogue_stability_row",
+        "fabricops_kit.drift._max_watermark_value",
+        "fabricops_kit.drift._profile_hash",
+        "fabricops_kit.drift._profile_row_count",
+        "fabricops_kit.drift._schema_hash_from_dataframe",
+        "fabricops_kit.drift._stability_exclude_columns"
+      ],
+      "internal_helper_count": 8
+    },
+    "fabricops_kit.drift.generate_schema_guardrail_config": {
+      "qualified_name": "fabricops_kit.drift.generate_schema_guardrail_config",
+      "short_name": "generate_schema_guardrail_config",
+      "module": "drift",
+      "callable": "generate_schema_guardrail_config",
+      "docs_url": "/FabricOps-Starter-Kit/reference/generate_schema_guardrail_config/",
+      "classification": "callable",
+      "calls": [
+        "fabricops_kit.drift._schema_profile_rows"
+      ],
+      "calls_count": 1,
+      "used_by": [
+        "fabricops_kit.drift.print_schema_guardrail_config"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [
+        "fabricops_kit.drift._schema_profile_rows"
+      ],
+      "internal_helper_count": 1
+    },
+    "fabricops_kit.drift.print_schema_guardrail_config": {
+      "qualified_name": "fabricops_kit.drift.print_schema_guardrail_config",
+      "short_name": "print_schema_guardrail_config",
+      "module": "drift",
+      "callable": "print_schema_guardrail_config",
+      "docs_url": "/FabricOps-Starter-Kit/reference/print_schema_guardrail_config/",
+      "classification": "callable",
+      "calls": [
+        "fabricops_kit.config.items",
+        "fabricops_kit.drift.generate_schema_guardrail_config"
+      ],
+      "calls_count": 2,
+      "used_by": [],
+      "used_by_count": 0,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
     },
     "fabricops_kit.drift.stop_if_failed": {
       "qualified_name": "fabricops_kit.drift.stop_if_failed",
@@ -2073,6 +2302,7 @@
         "fabricops_kit.data_agreement._ensure_metadata_tables",
         "fabricops_kit.data_agreement._list_all_data_agreement_rows",
         "fabricops_kit.data_agreement._list_data_stewards",
+        "fabricops_kit.drift.enforce_catalogue_stability",
         "fabricops_kit.governance_review._read_metadata_rows",
         "fabricops_kit.governance_review._setup_governance_metadata_tables",
         "fabricops_kit.governance_review.enforce_dq_rules",
@@ -2081,7 +2311,7 @@
         "fabricops_kit.metadata._load_notebook_registry",
         "fabricops_kit.metadata._setup_notebook_registry_table"
       ],
-      "used_by_count": 10,
+      "used_by_count": 11,
       "internal_helpers_used": [
         "fabricops_kit.fabric_input_output._get_spark"
       ],
@@ -2897,17 +3127,19 @@
       "docs_url": "/FabricOps-Starter-Kit/reference/internal/governance_review/_schema/",
       "classification": "internal",
       "calls": [
-        "fabricops_kit.governance_review._spark_types"
+        "fabricops_kit.governance_review._spark_types",
+        "fabricops_kit.governance_review._validate_schema_field_names"
       ],
-      "calls_count": 1,
+      "calls_count": 2,
       "used_by": [
         "fabricops_kit.governance_review._get_governance_metadata_schemas"
       ],
       "used_by_count": 1,
       "internal_helpers_used": [
-        "fabricops_kit.governance_review._spark_types"
+        "fabricops_kit.governance_review._spark_types",
+        "fabricops_kit.governance_review._validate_schema_field_names"
       ],
-      "internal_helper_count": 1
+      "internal_helper_count": 2
     },
     "fabricops_kit.governance_review._schema_field_names": {
       "qualified_name": "fabricops_kit.governance_review._schema_field_names",
@@ -3089,6 +3321,22 @@
         "fabricops_kit.governance_review._canonical_dq_rule_type"
       ],
       "internal_helper_count": 1
+    },
+    "fabricops_kit.governance_review._validate_schema_field_names": {
+      "qualified_name": "fabricops_kit.governance_review._validate_schema_field_names",
+      "short_name": "_validate_schema_field_names",
+      "module": "governance_review",
+      "callable": "_validate_schema_field_names",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/governance_review/_validate_schema_field_names/",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.governance_review._schema"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
     },
     "fabricops_kit.governance_review._value": {
       "qualified_name": "fabricops_kit.governance_review._value",
@@ -3677,6 +3925,22 @@
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
+    "fabricops_kit.pipeline._canonical_catalogue_profile_df": {
+      "qualified_name": "fabricops_kit.pipeline._canonical_catalogue_profile_df",
+      "short_name": "_canonical_catalogue_profile_df",
+      "module": "pipeline",
+      "callable": "_canonical_catalogue_profile_df",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/pipeline/_canonical_catalogue_profile_df/",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.pipeline.write_catalogue_evidence"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
     "fabricops_kit.pipeline._definition_name": {
       "qualified_name": "fabricops_kit.pipeline._definition_name",
       "short_name": "_definition_name",
@@ -3727,10 +3991,11 @@
       "used_by": [
         "fabricops_kit.pipeline._dq_summary_fields",
         "fabricops_kit.pipeline._runtime_audit_fields",
+        "fabricops_kit.pipeline.write_catalogue_evidence",
         "fabricops_kit.pipeline.write_pipeline_lineage",
         "fabricops_kit.pipeline.write_pipeline_run_summary"
       ],
-      "used_by_count": 4,
+      "used_by_count": 5,
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
@@ -3782,19 +4047,23 @@
       "calls": [
         "fabricops_kit.fabric_input_output.write_lakehouse_table",
         "fabricops_kit.metadata._build_metadata_table_key",
+        "fabricops_kit.pipeline._canonical_catalogue_profile_df",
         "fabricops_kit.pipeline._definition_name",
         "fabricops_kit.pipeline._dq_summary_fields",
+        "fabricops_kit.pipeline._now_iso",
         "fabricops_kit.pipeline._runtime_audit_fields"
       ],
-      "calls_count": 5,
+      "calls_count": 7,
       "used_by": [],
       "used_by_count": 0,
       "internal_helpers_used": [
+        "fabricops_kit.pipeline._canonical_catalogue_profile_df",
         "fabricops_kit.pipeline._definition_name",
         "fabricops_kit.pipeline._dq_summary_fields",
+        "fabricops_kit.pipeline._now_iso",
         "fabricops_kit.pipeline._runtime_audit_fields"
       ],
-      "internal_helper_count": 3
+      "internal_helper_count": 5
     },
     "fabricops_kit.pipeline.write_pipeline_lineage": {
       "qualified_name": "fabricops_kit.pipeline.write_pipeline_lineage",
@@ -3855,10 +4124,11 @@
       ],
       "inbound_modules": [
         "data_agreement",
+        "drift",
         "fabric_input_output"
       ],
       "outbound_count": 3,
-      "inbound_count": 2
+      "inbound_count": 3
     },
     "data_agreement": {
       "callable_count": 5,
@@ -3894,13 +4164,15 @@
       "inbound_count": 2
     },
     "drift": {
-      "callable_count": 3,
-      "internal_count": 10,
+      "callable_count": 6,
+      "internal_count": 18,
       "outbound_modules": [
-        "data_profiling"
+        "config",
+        "data_profiling",
+        "fabric_input_output"
       ],
       "inbound_modules": [],
-      "outbound_count": 1,
+      "outbound_count": 3,
       "inbound_count": 0
     },
     "fabric_input_output": {
@@ -3911,16 +4183,17 @@
       ],
       "inbound_modules": [
         "data_agreement",
+        "drift",
         "governance_review",
         "metadata",
         "pipeline"
       ],
       "outbound_count": 1,
-      "inbound_count": 4
+      "inbound_count": 5
     },
     "governance_review": {
       "callable_count": 8,
-      "internal_count": 44,
+      "internal_count": 45,
       "outbound_modules": [
         "data_profiling",
         "fabric_input_output",
@@ -3949,7 +4222,7 @@
     },
     "pipeline": {
       "callable_count": 3,
-      "internal_count": 5,
+      "internal_count": 6,
       "outbound_modules": [
         "fabric_input_output",
         "metadata"

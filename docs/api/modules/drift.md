@@ -10,11 +10,11 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 3</span><span class="reference-chip">Internal helpers: 10</span><span class="reference-chip">Outbound: 1</span><span class="reference-chip">Inbound: 0</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 6</span><span class="reference-chip">Internal helpers: 18</span><span class="reference-chip">Outbound: 3</span><span class="reference-chip">Inbound: 0</span></div>
 
 ## Module purpose
 
-Owns schema/profile/data drift checks as engineering guardrails during pipeline runs.
+Owns schema and catalogue profile stability checks as engineering guardrails during pipeline runs.
 
 ## Module manifest
 
@@ -32,15 +32,15 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
     </tr>
     <tr>
       <td>Module purpose</td>
-      <td>Owns schema/profile/data drift checks as engineering guardrails during pipeline runs.</td>
+      <td>Owns schema and catalogue profile stability checks as engineering guardrails during pipeline runs.</td>
     </tr>
     <tr>
       <td>Public callable count</td>
-      <td>3</td>
+      <td>6</td>
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>10</td>
+      <td>18</td>
     </tr>
     <tr>
       <td>Inbound module count</td>
@@ -48,7 +48,7 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
     </tr>
     <tr>
       <td>Outbound module count</td>
-      <td>1</td>
+      <td>3</td>
     </tr>
     <tr>
       <td>External callers</td>
@@ -56,7 +56,7 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
     </tr>
     <tr>
       <td>External callees</td>
-      <td><code>data_profiling</code></td>
+      <td><code>config</code>, <code>data_profiling</code>, <code>fabric_input_output</code></td>
     </tr>
   </tbody>
 </table>
@@ -76,17 +76,38 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
   </thead>
   <tbody>
     <tr>
-      <td><a href="../../reference/monitor_data_changes/"><code>monitor_data_changes</code></a></td>
+      <td><a href="../../reference/display_schema_profile/"><code>display_schema_profile</code></a></td>
       <td>Callable</td>
       <td>function</td>
-      <td>Profile data, compare against the approved baseline, and return a drift guardrail result.</td>
-      <td><a href="../../reference/internal/drift/_baseline_distribution_args/"><code>_baseline_distribution_args</code></a> (internal), <a href="../../reference/internal/drift/_check_profile_drift/"><code>_check_profile_drift</code></a> (internal), <a href="../../reference/internal/drift/_data_change_preset_config/"><code>_data_change_preset_config</code></a> (internal), <a href="../../reference/internal/drift/_load_latest_profile/"><code>_load_latest_profile</code></a> (internal), <a href="../../reference/internal/drift/_normalize_profile/"><code>_normalize_profile</code></a> (internal)</td>
+      <td>Display current schema columns, Spark datatypes, nullable flags, and proposed guardrail datatypes.</td>
+      <td><a href="../../reference/internal/drift/_schema_profile_rows/"><code>_schema_profile_rows</code></a> (internal)</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/enforce_catalogue_stability/"><code>enforce_catalogue_stability</code></a></td>
+      <td>Callable</td>
+      <td>function</td>
+      <td>Compare deterministic profile hashes against append-only catalogue evidence and return a source stability guardrail result.</td>
+      <td><a href="../../reference/internal/drift/_filter_watermark_slice/"><code>_filter_watermark_slice</code></a> (internal), <a href="../../reference/internal/drift/_is_missing_table_error/"><code>_is_missing_table_error</code></a> (internal), <a href="../../reference/internal/drift/_latest_catalogue_stability_row/"><code>_latest_catalogue_stability_row</code></a> (internal), <a href="../../reference/internal/drift/_max_watermark_value/"><code>_max_watermark_value</code></a> (internal), <a href="../../reference/internal/drift/_profile_hash/"><code>_profile_hash</code></a> (internal), <a href="../../reference/internal/drift/_profile_row_count/"><code>_profile_row_count</code></a> (internal), <a href="../../reference/internal/drift/_schema_hash_from_dataframe/"><code>_schema_hash_from_dataframe</code></a> (internal), <a href="../../reference/internal/drift/_stability_exclude_columns/"><code>_stability_exclude_columns</code></a> (internal)</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/generate_schema_guardrail_config/"><code>generate_schema_guardrail_config</code></a></td>
+      <td>Callable</td>
+      <td>function</td>
+      <td>Generate a reviewed starter expected_schema dictionary from a DataFrame schema.</td>
+      <td><a href="../../reference/internal/drift/_schema_profile_rows/"><code>_schema_profile_rows</code></a> (internal)</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/print_schema_guardrail_config/"><code>print_schema_guardrail_config</code></a></td>
+      <td>Callable</td>
+      <td>function</td>
+      <td>Print copy-paste-ready starter expected_schema code from a DataFrame schema.</td>
+      <td>—</td>
     </tr>
     <tr>
       <td><a href="../../reference/stop_if_failed/"><code>stop_if_failed</code></a></td>
       <td>Callable</td>
       <td>function</td>
-      <td>Stop a notebook only when a schema or data-change guardrail result blocks continuation.</td>
+      <td>Stop a notebook only when a schema, stability, or DQ guardrail result blocks continuation.</td>
       <td>—</td>
     </tr>
     <tr>
@@ -113,9 +134,24 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
 <h6>Public callables</h6>
 <ul class="callable-relationship-rows">
 <li>
-<a class="reference-chip" href="../../reference/monitor_data_changes/"><code>monitor_data_changes</code></a>
+<a class="reference-chip" href="../../reference/display_schema_profile/"><code>display_schema_profile</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_baseline_distribution_args"><code>_baseline_distribution_args</code></a>, <a class="reference-chip" href="#_check_profile_drift"><code>_check_profile_drift</code></a>, <a class="reference-chip" href="#_data_change_preset_config"><code>_data_change_preset_config</code></a>, <a class="reference-chip" href="#_load_latest_profile"><code>_load_latest_profile</code></a>, <a class="reference-chip" href="#_normalize_profile"><code>_normalize_profile</code></a>
+<a class="reference-chip" href="#_schema_profile_rows"><code>_schema_profile_rows</code></a>
+</li>
+<li>
+<a class="reference-chip" href="../../reference/enforce_catalogue_stability/"><code>enforce_catalogue_stability</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_filter_watermark_slice"><code>_filter_watermark_slice</code></a>, <a class="reference-chip" href="#_is_missing_table_error"><code>_is_missing_table_error</code></a>, <a class="reference-chip" href="#_latest_catalogue_stability_row"><code>_latest_catalogue_stability_row</code></a>, <a class="reference-chip" href="#_max_watermark_value"><code>_max_watermark_value</code></a>, <a class="reference-chip" href="#_profile_hash"><code>_profile_hash</code></a>, <a class="reference-chip" href="#_profile_row_count"><code>_profile_row_count</code></a>, <a class="reference-chip" href="#_schema_hash_from_dataframe"><code>_schema_hash_from_dataframe</code></a>, <a class="reference-chip" href="#_stability_exclude_columns"><code>_stability_exclude_columns</code></a>
+</li>
+<li>
+<a class="reference-chip" href="../../reference/generate_schema_guardrail_config/"><code>generate_schema_guardrail_config</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_schema_profile_rows"><code>_schema_profile_rows</code></a>
+</li>
+<li>
+<a class="reference-chip" href="../../reference/print_schema_guardrail_config/"><code>print_schema_guardrail_config</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="../../reference/generate_schema_guardrail_config/"><code>generate_schema_guardrail_config</code></a>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/stop_if_failed/"><code>stop_if_failed</code></a>
@@ -149,28 +185,32 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
       <td><a href="../../reference/validate_schema/"><code>validate_schema</code></a></td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/drift/_baseline_distribution_args/"><code>_baseline_distribution_args</code></a></td>
-      <td><a href="../../reference/monitor_data_changes/"><code>monitor_data_changes</code></a></td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/internal/drift/_categorical_distance/"><code>_categorical_distance</code></a></td>
+      <td><a href="../../reference/internal/drift/_canonical_hash_value/"><code>_canonical_hash_value</code></a></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/drift/_check_profile_drift/"><code>_check_profile_drift</code></a></td>
-      <td><a href="../../reference/monitor_data_changes/"><code>monitor_data_changes</code></a></td>
+      <td><a href="../../reference/internal/drift/_canonical_json_hash/"><code>_canonical_json_hash</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/drift/_data_change_preset_config/"><code>_data_change_preset_config</code></a></td>
-      <td><a href="../../reference/monitor_data_changes/"><code>monitor_data_changes</code></a></td>
+      <td><a href="../../reference/internal/drift/_filter_watermark_slice/"><code>_filter_watermark_slice</code></a></td>
+      <td><a href="../../reference/enforce_catalogue_stability/"><code>enforce_catalogue_stability</code></a></td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/drift/_is_missing_table_error/"><code>_is_missing_table_error</code></a></td>
+      <td><a href="../../reference/enforce_catalogue_stability/"><code>enforce_catalogue_stability</code></a></td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/drift/_is_stability_excluded_column/"><code>_is_stability_excluded_column</code></a></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/drift/_load_latest_profile/"><code>_load_latest_profile</code></a></td>
-      <td><a href="../../reference/monitor_data_changes/"><code>monitor_data_changes</code></a></td>
+      <td><a href="../../reference/internal/drift/_latest_catalogue_stability_row/"><code>_latest_catalogue_stability_row</code></a></td>
+      <td><a href="../../reference/enforce_catalogue_stability/"><code>enforce_catalogue_stability</code></a></td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/drift/_max_watermark_value/"><code>_max_watermark_value</code></a></td>
+      <td><a href="../../reference/enforce_catalogue_stability/"><code>enforce_catalogue_stability</code></a></td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/drift/_normalize_datatype/"><code>_normalize_datatype</code></a></td>
@@ -178,10 +218,38 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
     </tr>
     <tr>
       <td><a href="../../reference/internal/drift/_normalize_profile/"><code>_normalize_profile</code></a></td>
-      <td><a href="../../reference/monitor_data_changes/"><code>monitor_data_changes</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/drift/_numeric_psi/"><code>_numeric_psi</code></a></td>
+      <td><a href="../../reference/internal/drift/_profile_hash/"><code>_profile_hash</code></a></td>
+      <td><a href="../../reference/enforce_catalogue_stability/"><code>enforce_catalogue_stability</code></a></td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/drift/_profile_row_count/"><code>_profile_row_count</code></a></td>
+      <td><a href="../../reference/enforce_catalogue_stability/"><code>enforce_catalogue_stability</code></a></td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/drift/_row_to_dict/"><code>_row_to_dict</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/drift/_schema_guardrail_type/"><code>_schema_guardrail_type</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/drift/_schema_hash_from_dataframe/"><code>_schema_hash_from_dataframe</code></a></td>
+      <td><a href="../../reference/enforce_catalogue_stability/"><code>enforce_catalogue_stability</code></a></td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/drift/_schema_profile_rows/"><code>_schema_profile_rows</code></a></td>
+      <td><a href="../../reference/display_schema_profile/"><code>display_schema_profile</code></a>, <a href="../../reference/generate_schema_guardrail_config/"><code>generate_schema_guardrail_config</code></a></td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/drift/_stability_exclude_columns/"><code>_stability_exclude_columns</code></a></td>
+      <td><a href="../../reference/enforce_catalogue_stability/"><code>enforce_catalogue_stability</code></a></td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/internal/drift/_stable_profile_payload/"><code>_stable_profile_payload</code></a></td>
       <td>—</td>
     </tr>
   </tbody>
@@ -196,28 +264,31 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
 <a class="reference-chip" href="#_normalize_datatype"><code>_normalize_datatype</code></a>
 </li>
 <li>
-<a class="reference-chip" href="#_baseline_distribution_args"><code>_baseline_distribution_args</code></a>
+<a class="reference-chip" href="#_canonical_hash_value"><code>_canonical_hash_value</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_normalize_profile"><code>_normalize_profile</code></a>
+<a class="reference-chip" href="#_canonical_hash_value"><code>_canonical_hash_value</code></a>
 </li>
 <li>
-<a class="reference-chip" href="#_categorical_distance"><code>_categorical_distance</code></a>
-</li>
-<li>
-<a class="reference-chip" href="#_check_profile_drift"><code>_check_profile_drift</code></a>
+<a class="reference-chip" href="#_canonical_json_hash"><code>_canonical_json_hash</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_categorical_distance"><code>_categorical_distance</code></a>, <a class="reference-chip" href="#_normalize_profile"><code>_normalize_profile</code></a>, <a class="reference-chip" href="#_numeric_psi"><code>_numeric_psi</code></a>
+<a class="reference-chip" href="#_canonical_hash_value"><code>_canonical_hash_value</code></a>
 </li>
 <li>
-<a class="reference-chip" href="#_data_change_preset_config"><code>_data_change_preset_config</code></a>
+<a class="reference-chip" href="#_filter_watermark_slice"><code>_filter_watermark_slice</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_is_missing_table_error"><code>_is_missing_table_error</code></a>
 </li>
 <li>
-<a class="reference-chip" href="#_load_latest_profile"><code>_load_latest_profile</code></a>
+<a class="reference-chip" href="#_is_stability_excluded_column"><code>_is_stability_excluded_column</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_latest_catalogue_stability_row"><code>_latest_catalogue_stability_row</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_is_missing_table_error"><code>_is_missing_table_error</code></a>, <a class="reference-chip" href="#_normalize_profile"><code>_normalize_profile</code></a>
+<a class="reference-chip" href="#_is_missing_table_error"><code>_is_missing_table_error</code></a>, <a class="reference-chip" href="#_row_to_dict"><code>_row_to_dict</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_max_watermark_value"><code>_max_watermark_value</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_normalize_datatype"><code>_normalize_datatype</code></a>
@@ -228,7 +299,40 @@ Owns schema/profile/data drift checks as engineering guardrails during pipeline 
 <a class="reference-chip" href="#_normalize_profile"><code>_normalize_profile</code></a>
 </li>
 <li>
-<a class="reference-chip" href="#_numeric_psi"><code>_numeric_psi</code></a>
+<a class="reference-chip" href="#_profile_hash"><code>_profile_hash</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_canonical_json_hash"><code>_canonical_json_hash</code></a>, <a class="reference-chip" href="#_stable_profile_payload"><code>_stable_profile_payload</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_profile_row_count"><code>_profile_row_count</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_stable_profile_payload"><code>_stable_profile_payload</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_row_to_dict"><code>_row_to_dict</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_schema_guardrail_type"><code>_schema_guardrail_type</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_normalize_datatype"><code>_normalize_datatype</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_schema_hash_from_dataframe"><code>_schema_hash_from_dataframe</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_actual_schema"><code>_actual_schema</code></a>, <a class="reference-chip" href="#_canonical_json_hash"><code>_canonical_json_hash</code></a>, <a class="reference-chip" href="#_is_stability_excluded_column"><code>_is_stability_excluded_column</code></a>, <a class="reference-chip" href="#_stability_exclude_columns"><code>_stability_exclude_columns</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_schema_profile_rows"><code>_schema_profile_rows</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_actual_schema"><code>_actual_schema</code></a>, <a class="reference-chip" href="#_schema_guardrail_type"><code>_schema_guardrail_type</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_stability_exclude_columns"><code>_stability_exclude_columns</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_stable_profile_payload"><code>_stable_profile_payload</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_normalize_datatype"><code>_normalize_datatype</code></a>, <a class="reference-chip" href="#_normalize_profile"><code>_normalize_profile</code></a>
 </li>
 </ul>
 </details>
@@ -240,3 +344,6 @@ None.
 
 **data_profiling**
 <a class="reference-chip" href="../../reference/profile_dataframe/"><code>profile_dataframe</code></a>
+
+**fabric_input_output**
+<a class="reference-chip" href="../../reference/read_lakehouse_table/"><code>read_lakehouse_table</code></a>

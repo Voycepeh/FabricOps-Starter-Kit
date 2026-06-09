@@ -1,4 +1,4 @@
-# _categorical_distance
+# _profile_hash
 
 **Module:** `drift`  
 **Classification:** Internal
@@ -17,7 +17,7 @@ Do not call this helper directly from notebooks; use the public callable helpers
 
 ## Used by
 
-- <a href="../internal/drift__check_profile_drift/"><code>fabricops_kit.drift._check_profile_drift</code></a>
+- <a href="../enforce_catalogue_stability/"><code>fabricops_kit.drift.enforce_catalogue_stability</code></a>
 
 ## Purpose
 
@@ -26,7 +26,7 @@ No summary available.
 ## Signature if available
 
 ```python
-def _categorical_distance(current_distribution: dict, baseline_distribution: dict) -> tuple[float, list[str]]
+def _profile_hash(profile) -> str
 ```
 
 ## Side effects
@@ -43,15 +43,19 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 
 ## Function manifest
 
-- Fully qualified function name: `fabricops_kit.drift._categorical_distance`
-- Short name: `_categorical_distance`
+- Fully qualified function name: `fabricops_kit.drift._profile_hash`
+- Short name: `_profile_hash`
 - Module: `drift`
 - Classification: Internal
 - Related module: `drift`
 - Source file path: `src/fabricops_kit/drift.py`
-- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c7049e78d915b93903574ea792043a66ebe62cee/src/fabricops_kit/drift.py#L304-L316">View source on GitHub</a>
+- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c30f90cb0288be7f5624f9a80a62facf8b12c3e5/src/fabricops_kit/drift.py#L517-L518">View source on GitHub</a>
 - Inbound references count: 1
-- Outbound references count: 0
+- Outbound references count: 2
 
 ## Inbound references
-- <a href="../internal/drift__check_profile_drift/"><code>fabricops_kit.drift._check_profile_drift</code></a>
+- <a href="../enforce_catalogue_stability/"><code>fabricops_kit.drift.enforce_catalogue_stability</code></a>
+
+## Outbound references
+- <a href="../internal/drift__canonical_json_hash/"><code>fabricops_kit.drift._canonical_json_hash</code></a>
+- <a href="../internal/drift__stable_profile_payload/"><code>fabricops_kit.drift._stable_profile_payload</code></a>

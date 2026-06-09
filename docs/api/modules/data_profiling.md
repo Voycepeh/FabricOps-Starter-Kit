@@ -176,7 +176,7 @@ Owns deterministic profiling evidence such as schema, nulls, distincts, min/max,
 ### External callers
 
 **drift**
-<a class="reference-chip" href="../../reference/monitor_data_changes/"><code>monitor_data_changes</code></a>
+<a class="reference-chip" href="../../reference/enforce_catalogue_stability/"><code>enforce_catalogue_stability</code></a>
 
 **governance_review**
 <a class="reference-chip" href="../governance_review/#_prepare_dq_profile_input_rows"><code>_prepare_dq_profile_input_rows</code></a>

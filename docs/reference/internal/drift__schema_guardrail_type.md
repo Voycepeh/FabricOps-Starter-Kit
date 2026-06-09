@@ -1,4 +1,4 @@
-# _numeric_psi
+# _schema_guardrail_type
 
 **Module:** `drift`  
 **Classification:** Internal
@@ -17,16 +17,16 @@ Do not call this helper directly from notebooks; use the public callable helpers
 
 ## Used by
 
-- <a href="../internal/drift__check_profile_drift/"><code>fabricops_kit.drift._check_profile_drift</code></a>
+- <a href="../internal/drift__schema_profile_rows/"><code>fabricops_kit.drift._schema_profile_rows</code></a>
 
 ## Purpose
 
-No summary available.
+Return a user-facing schema guardrail type for Spark or pandas dtypes.
 
 ## Signature if available
 
 ```python
-def _numeric_psi(current_distribution: dict, baseline_distribution: dict) -> float | None
+def _schema_guardrail_type(data_type) -> str
 ```
 
 ## Side effects
@@ -43,15 +43,18 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 
 ## Function manifest
 
-- Fully qualified function name: `fabricops_kit.drift._numeric_psi`
-- Short name: `_numeric_psi`
+- Fully qualified function name: `fabricops_kit.drift._schema_guardrail_type`
+- Short name: `_schema_guardrail_type`
 - Module: `drift`
 - Classification: Internal
 - Related module: `drift`
 - Source file path: `src/fabricops_kit/drift.py`
-- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c7049e78d915b93903574ea792043a66ebe62cee/src/fabricops_kit/drift.py#L284-L301">View source on GitHub</a>
+- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c30f90cb0288be7f5624f9a80a62facf8b12c3e5/src/fabricops_kit/drift.py#L105-L115">View source on GitHub</a>
 - Inbound references count: 1
-- Outbound references count: 0
+- Outbound references count: 1
 
 ## Inbound references
-- <a href="../internal/drift__check_profile_drift/"><code>fabricops_kit.drift._check_profile_drift</code></a>
+- <a href="../internal/drift__schema_profile_rows/"><code>fabricops_kit.drift._schema_profile_rows</code></a>
+
+## Outbound references
+- <a href="../internal/drift__normalize_datatype/"><code>fabricops_kit.drift._normalize_datatype</code></a>

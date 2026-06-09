@@ -65,7 +65,7 @@ Not documented yet
 ## Source
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c7049e78d915b93903574ea792043a66ebe62cee/src/fabricops_kit/governance_review.py#L451-L469">View widget_review_column_context on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c30f90cb0288be7f5624f9a80a62facf8b12c3e5/src/fabricops_kit/governance_review.py#L483-L501">View widget_review_column_context on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -107,7 +107,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
-- Source line: `451`
+- Source line: `483`
 - Inbound references count: 0
 - Outbound references count: 1
 
@@ -134,9 +134,9 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c7049e78d915b93903574ea792043a66ebe62cee/src/fabricops_kit/governance_review.py#L451-L469">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c7049e78d915b93903574ea792043a66ebe62cee/src/fabricops_kit/governance_review.py#L451-L469</a>
-- Start line: `451`
-- End line: `469`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c30f90cb0288be7f5624f9a80a62facf8b12c3e5/src/fabricops_kit/governance_review.py#L483-L501">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c30f90cb0288be7f5624f9a80a62facf8b12c3e5/src/fabricops_kit/governance_review.py#L483-L501</a>
+- Start line: `483`
+- End line: `501`
 - Signature:
 
 ```python

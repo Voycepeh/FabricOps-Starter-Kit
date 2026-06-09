@@ -19,6 +19,7 @@ Do not call this helper directly from notebooks; use the public callable helpers
 
 - <a href="../internal/pipeline__dq_summary_fields/"><code>fabricops_kit.pipeline._dq_summary_fields</code></a>
 - <a href="../internal/pipeline__runtime_audit_fields/"><code>fabricops_kit.pipeline._runtime_audit_fields</code></a>
+- <a href="../write_catalogue_evidence/"><code>fabricops_kit.pipeline.write_catalogue_evidence</code></a>
 - <a href="../write_pipeline_lineage/"><code>fabricops_kit.pipeline.write_pipeline_lineage</code></a>
 - <a href="../write_pipeline_run_summary/"><code>fabricops_kit.pipeline.write_pipeline_run_summary</code></a>
 
@@ -52,12 +53,13 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 - Classification: Internal
 - Related module: `pipeline`
 - Source file path: `src/fabricops_kit/pipeline.py`
-- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c7049e78d915b93903574ea792043a66ebe62cee/src/fabricops_kit/pipeline.py#L17-L18">View source on GitHub</a>
-- Inbound references count: 4
+- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c30f90cb0288be7f5624f9a80a62facf8b12c3e5/src/fabricops_kit/pipeline.py#L17-L18">View source on GitHub</a>
+- Inbound references count: 5
 - Outbound references count: 0
 
 ## Inbound references
 - <a href="../internal/pipeline__dq_summary_fields/"><code>fabricops_kit.pipeline._dq_summary_fields</code></a>
 - <a href="../internal/pipeline__runtime_audit_fields/"><code>fabricops_kit.pipeline._runtime_audit_fields</code></a>
+- <a href="../write_catalogue_evidence/"><code>fabricops_kit.pipeline.write_catalogue_evidence</code></a>
 - <a href="../write_pipeline_lineage/"><code>fabricops_kit.pipeline.write_pipeline_lineage</code></a>
 - <a href="../write_pipeline_run_summary/"><code>fabricops_kit.pipeline.write_pipeline_run_summary</code></a>
