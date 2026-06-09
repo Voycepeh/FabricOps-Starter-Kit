@@ -104,12 +104,6 @@ Severity controls the result:
 
 FabricOps keeps DQ enforcement intentionally simple. It does not write a separate invalid-row metadata dataset, filter invalid rows out of the target, send alerts, or perform partial target writes. For warning-level failures, the written dataset keeps every row and adds row-level technical annotations (`_dq_check_status` plus `_dq_failed_rules`) so consumers can see warning-only row issues without losing data.
 
-## Schema guardrail starter helpers
-
-`02_pipeline` includes an optional helper cell that can inspect a current DataFrame schema before users fill in `expected_schema`. Use `display_schema_profile(df)` to review column name, Spark datatype, nullable flag, and proposed guardrail datatype. Use `print_schema_guardrail_config(df)` to print copy-paste-ready starter Python code.
-
-The generated dictionary is only a starter schema guardrail. Users must review the proposed columns and normalized types before treating them as the approved expectation for `validate_schema(...)`. The helpers support excluding technical columns and either preserving DataFrame order or sorting columns alphabetically. Common Spark types are normalized to guardrail-friendly values such as `string`, `integer`, `long`, `double`, `decimal(p,s)`, `date`, `timestamp`, and `boolean`.
-
 ## Schema presets
 
 | Preset | Use when | Behavior in plain language |

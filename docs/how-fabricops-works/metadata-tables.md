@@ -218,8 +218,8 @@ Fabric Delta tables do not enforce primary and foreign keys. FabricOps still use
 | `baseline_status` | `observed` or `approved`. |
 | `source_schema_check` | Source schema-check preset used by the pipeline. |
 | `target_schema_check` | Target schema-check preset used by the pipeline. |
-| `source_data_change_check` | Backward-compatible source profile check label. |
-| `target_data_change_check` | Backward-compatible target profile check label. |
+| `source_data_change_check` | Source stability check label. |
+| `target_data_change_check` | Target stability check label. |
 | `stability_check_enabled` | Whether source stability checking was enabled. |
 | `stability_check_type` | `full_profile_hash`, `watermark_slice_hash`, or `skip`. |
 | `data_behavior` | `fixed` or `changing`. |

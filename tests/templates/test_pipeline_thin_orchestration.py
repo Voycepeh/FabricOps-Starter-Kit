@@ -28,8 +28,6 @@ def test_pipeline_notebook_uses_existing_public_apis_and_metadata_helpers():
         "read_lakehouse_csv",
         "profile_dataframe",
         "validate_schema",
-        "display_schema_profile",
-        "print_schema_guardrail_config",
         "enforce_catalogue_stability",
         "enforce_dq_rules",
         "stop_if_failed",

@@ -24,8 +24,6 @@ def test_production_and_governance_templates_cover_output_summary_and_review_flo
     governance = _code("03_governance.ipynb")
 
     assert "validate_schema" in production
-    assert "display_schema_profile" in production
-    assert "print_schema_guardrail_config" in production
     assert "enforce_catalogue_stability" in production
     assert "enforce_dq_rules" in production
     assert "write_lakehouse_table" in production or "write_warehouse_table" in production

@@ -4,14 +4,7 @@ import pandas as pd
 import pytest
 
 from fabricops_kit.governance_review import _validate_dq_rules
-from fabricops_kit.drift import (
-    display_schema_profile,
-    enforce_catalogue_stability,
-    generate_schema_guardrail_config,
-    print_schema_guardrail_config,
-    stop_if_failed,
-    validate_schema,
-)
+from fabricops_kit.drift import enforce_catalogue_stability, stop_if_failed, validate_schema
 
 pytestmark = pytest.mark.unit
 
@@ -56,39 +49,6 @@ def test__validate_dq_rules_accepts_canonical_rules_and_rejects_invalid_shapes()
     ):
         with pytest.raises(ValueError):
             _validate_dq_rules(invalid)
-
-
-def test_schema_guardrail_helpers_generate_reviewable_config(capsys):
-    class FakeField:
-        def __init__(self, name, data_type, nullable):
-            self.name = name
-            self.dataType = data_type
-            self.nullable = nullable
-
-    class FakeSchema:
-        fields = [
-            FakeField("status", "StringType()", True),
-            FakeField("id", "IntegerType()", False),
-            FakeField("amount", "DecimalType(10,2)", True),
-            FakeField("loaded_at", "TimestampType()", True),
-        ]
-
-    class FakeDataFrame:
-        schema = FakeSchema()
-        dtypes = [(field.name, str(field.dataType)) for field in schema.fields]
-        columns = [field.name for field in schema.fields]
-
-    config = generate_schema_guardrail_config(FakeDataFrame(), exclude_columns={"loaded_at"}, sort_columns=True)
-    rows = display_schema_profile(FakeDataFrame(), exclude_columns={"loaded_at"}, sort_columns=True)
-    printed = print_schema_guardrail_config(FakeDataFrame(), exclude_columns={"loaded_at"}, sort_columns=True, variable_name="source_expected_schema")
-    output = capsys.readouterr().out
-
-    assert config == {"amount": "decimal(10,2)", "id": "integer", "status": "string"}
-    assert printed == config
-    assert rows[0] == {"column_name": "amount", "spark_data_type": "DecimalType(10,2)", "nullable": True, "guardrail_data_type": "decimal(10,2)"}
-    assert "source_expected_schema = {" in output
-    assert "'id': 'integer'" in output
-
 
 
 def test_enforce_catalogue_stability_reads_catalogue_through_metadata_route(spark_session, monkeypatch):
@@ -168,7 +128,7 @@ def test_drift_public_surface_keeps_removed_exceptions_unexported():
     import fabricops_kit
     import fabricops_kit.drift as drift
 
-    public_drift_callables = {"validate_schema", "generate_schema_guardrail_config", "print_schema_guardrail_config", "display_schema_profile", "enforce_catalogue_stability", "stop_if_failed"}
+    public_drift_callables = {"validate_schema", "enforce_catalogue_stability", "stop_if_failed"}
     exported_from_drift = {
         name
         for name in fabricops_kit.__all__
