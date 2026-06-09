@@ -1,4 +1,4 @@
-# _baseline_distribution_args
+# _row_to_dict
 
 **Module:** `drift`  
 **Classification:** Internal
@@ -17,7 +17,7 @@ Do not call this helper directly from notebooks; use the public callable helpers
 
 ## Used by
 
-- <a href="../monitor_data_changes/"><code>fabricops_kit.drift.monitor_data_changes</code></a>
+- <a href="../internal/drift__latest_catalogue_stability_row/"><code>fabricops_kit.drift._latest_catalogue_stability_row</code></a>
 
 ## Purpose
 
@@ -26,7 +26,7 @@ No summary available.
 ## Signature if available
 
 ```python
-def _baseline_distribution_args(profile) -> dict[str, dict[str, list[float] | list[str]]]
+def _row_to_dict(row) -> dict
 ```
 
 ## Side effects
@@ -43,18 +43,15 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 
 ## Function manifest
 
-- Fully qualified function name: `fabricops_kit.drift._baseline_distribution_args`
-- Short name: `_baseline_distribution_args`
+- Fully qualified function name: `fabricops_kit.drift._row_to_dict`
+- Short name: `_row_to_dict`
 - Module: `drift`
 - Classification: Internal
 - Related module: `drift`
 - Source file path: `src/fabricops_kit/drift.py`
-- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c7049e78d915b93903574ea792043a66ebe62cee/src/fabricops_kit/drift.py#L271-L282">View source on GitHub</a>
+- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d7fae51cae8b101fbee48f365b462f6b6f647e79/src/fabricops_kit/drift.py#L261-L268">View source on GitHub</a>
 - Inbound references count: 1
-- Outbound references count: 1
+- Outbound references count: 0
 
 ## Inbound references
-- <a href="../monitor_data_changes/"><code>fabricops_kit.drift.monitor_data_changes</code></a>
-
-## Outbound references
-- <a href="../internal/drift__normalize_profile/"><code>fabricops_kit.drift._normalize_profile</code></a>
+- <a href="../internal/drift__latest_catalogue_stability_row/"><code>fabricops_kit.drift._latest_catalogue_stability_row</code></a>

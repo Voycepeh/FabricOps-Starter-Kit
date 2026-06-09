@@ -30,7 +30,7 @@ APPROVED_V1_CALLABLES = {
     "write_warehouse_table",
     "profile_dataframe",
     "validate_schema",
-    "monitor_data_changes",
+    "enforce_catalogue_stability",
     "stop_if_failed",
     "enforce_dq_rules",
     "build_lineage_records",

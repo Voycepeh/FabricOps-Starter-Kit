@@ -1,4 +1,4 @@
-# _categorical_distance
+# _filter_watermark_slice
 
 **Module:** `drift`  
 **Classification:** Internal
@@ -17,7 +17,7 @@ Do not call this helper directly from notebooks; use the public callable helpers
 
 ## Used by
 
-- <a href="../internal/drift__check_profile_drift/"><code>fabricops_kit.drift._check_profile_drift</code></a>
+- <a href="../enforce_catalogue_stability/"><code>fabricops_kit.drift.enforce_catalogue_stability</code></a>
 
 ## Purpose
 
@@ -26,7 +26,7 @@ No summary available.
 ## Signature if available
 
 ```python
-def _categorical_distance(current_distribution: dict, baseline_distribution: dict) -> tuple[float, list[str]]
+def _filter_watermark_slice(dataframe, watermark_column: str, watermark_value)
 ```
 
 ## Side effects
@@ -43,15 +43,15 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 
 ## Function manifest
 
-- Fully qualified function name: `fabricops_kit.drift._categorical_distance`
-- Short name: `_categorical_distance`
+- Fully qualified function name: `fabricops_kit.drift._filter_watermark_slice`
+- Short name: `_filter_watermark_slice`
 - Module: `drift`
 - Classification: Internal
 - Related module: `drift`
 - Source file path: `src/fabricops_kit/drift.py`
-- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c7049e78d915b93903574ea792043a66ebe62cee/src/fabricops_kit/drift.py#L304-L316">View source on GitHub</a>
+- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d7fae51cae8b101fbee48f365b462f6b6f647e79/src/fabricops_kit/drift.py#L343-L346">View source on GitHub</a>
 - Inbound references count: 1
 - Outbound references count: 0
 
 ## Inbound references
-- <a href="../internal/drift__check_profile_drift/"><code>fabricops_kit.drift._check_profile_drift</code></a>
+- <a href="../enforce_catalogue_stability/"><code>fabricops_kit.drift.enforce_catalogue_stability</code></a>

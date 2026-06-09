@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 8</span><span class="reference-chip">Internal helpers: 44</span><span class="reference-chip">Outbound: 3</span><span class="reference-chip">Inbound: 1</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 8</span><span class="reference-chip">Internal helpers: 45</span><span class="reference-chip">Outbound: 3</span><span class="reference-chip">Inbound: 1</span></div>
 
 ## Module purpose
 
@@ -40,7 +40,7 @@ Owns table-scoped 03_governance catalogue selection, business context review, DQ
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>44</td>
+      <td>45</td>
     </tr>
     <tr>
       <td>Inbound module count</td>
@@ -377,6 +377,10 @@ Owns table-scoped 03_governance catalogue selection, business context review, DQ
       <td>—</td>
     </tr>
     <tr>
+      <td><a href="../../reference/internal/governance_review/_validate_schema_field_names/"><code>_validate_schema_field_names</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
       <td><a href="../../reference/internal/governance_review/_value/"><code>_value</code></a></td>
       <td><a href="../../reference/load_catalogue_profile_rows/"><code>load_catalogue_profile_rows</code></a></td>
     </tr>
@@ -540,7 +544,7 @@ Owns table-scoped 03_governance catalogue selection, business context review, DQ
 <li>
 <a class="reference-chip" href="#_schema"><code>_schema</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_spark_types"><code>_spark_types</code></a>
+<a class="reference-chip" href="#_spark_types"><code>_spark_types</code></a>, <a class="reference-chip" href="#_validate_schema_field_names"><code>_validate_schema_field_names</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_schema_field_names"><code>_schema_field_names</code></a>
@@ -574,6 +578,9 @@ Owns table-scoped 03_governance catalogue selection, business context review, DQ
 <a class="reference-chip" href="#_validate_dq_rules"><code>_validate_dq_rules</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_canonical_dq_rule_type"><code>_canonical_dq_rule_type</code></a>
+</li>
+<li>
+<a class="reference-chip" href="#_validate_schema_field_names"><code>_validate_schema_field_names</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_value"><code>_value</code></a>

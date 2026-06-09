@@ -4,7 +4,7 @@ import pandas as pd
 import pytest
 
 from fabricops_kit.governance_review import _validate_dq_rules
-from fabricops_kit.drift import _check_profile_drift, monitor_data_changes, stop_if_failed, validate_schema
+from fabricops_kit.drift import enforce_catalogue_stability, stop_if_failed, validate_schema
 
 pytestmark = pytest.mark.unit
 
@@ -51,64 +51,6 @@ def test__validate_dq_rules_accepts_canonical_rules_and_rejects_invalid_shapes()
             _validate_dq_rules(invalid)
 
 
-def test_monitor_data_changes_uses_profile_baselines_without_blocking_first_observation():
-    current = {
-        "row_count": 100,
-        "columns": [{"column_name": "status", "null_percent": 0.0, "distinct_count": 2}],
-    }
-    baseline = {
-        "row_count": 100,
-        "columns": [{"column_name": "status", "null_percent": 0.0, "distinct_count": 2}],
-    }
-
-    first = _check_profile_drift(current, baseline_profile=None)
-    changed = _check_profile_drift(current, baseline_profile=baseline)
-
-    assert first["status"] == "no_baseline"
-    assert first["can_continue"] is True
-    assert changed["status"] in {"warning", "failed", "passed"}
-
-
-def test_monitor_data_changes_returns_guardrail_wrapper_shape(monkeypatch):
-    import fabricops_kit.data_profiling as data_profiling
-
-    profile_rows = [
-        {
-            "TABLE_NAME": "orders",
-            "COLUMN_NAME": "status",
-            "DATA_TYPE": "string",
-            "ROW_COUNT": 100,
-            "NULL_COUNT": 0,
-            "NULL_PERCENT": 0.0,
-            "DISTINCT_COUNT": 2,
-            "DISTINCT_PERCENT": 2.0,
-        }
-    ]
-
-    class FakeSpark:
-        def table(self, _metadata_table):
-            raise RuntimeError("table not found")
-
-    monkeypatch.setattr(data_profiling, "profile_dataframe", lambda *args, **kwargs: profile_rows)
-    result = monitor_data_changes(
-        FakeSpark(),
-        object(),
-        "METADATA_DATA_CATALOGUE",
-        "sales",
-        "orders",
-        stage="target",
-        preset="monitor_changing_data",
-    )
-
-    assert set(result) == {"profile", "profile_payload", "baseline", "result"}
-    assert result["profile"] == profile_rows
-    assert result["profile_payload"]["columns"][0]["column_name"] == "status"
-    assert result["baseline"] is None
-    assert result["result"]["status"] == "no_baseline"
-    assert result["result"]["can_continue"] is True
-    assert result["result"]["preset"] == "monitor_changing_data"
-
-
 def test_stop_if_failed_blocks_only_failed_guardrail_results():
     stop_if_failed({"can_continue": True, "status": "warning", "message": "observed"})
     stop_if_failed({"result": {"can_continue": True, "status": "passed"}})
@@ -121,7 +63,7 @@ def test_drift_public_surface_keeps_removed_exceptions_unexported():
     import fabricops_kit
     import fabricops_kit.drift as drift
 
-    public_drift_callables = {"validate_schema", "monitor_data_changes", "stop_if_failed"}
+    public_drift_callables = {"validate_schema", "enforce_catalogue_stability", "stop_if_failed"}
     exported_from_drift = {
         name
         for name in fabricops_kit.__all__
@@ -131,3 +73,54 @@ def test_drift_public_surface_keeps_removed_exceptions_unexported():
     assert exported_from_drift == public_drift_callables
     assert not hasattr(drift, "_check_partition_drift")
     assert not hasattr(drift, "_build_partition_snapshot")
+
+
+def test_enforce_catalogue_stability_fixed_passes_when_profile_hash_unchanged(spark_session):
+    df = spark_session.createDataFrame([(1, "open"), (2, "closed")], "id int, status string")
+    first = enforce_catalogue_stability(spark_session, df, "missing_catalogue", "sales", "orders", stage="source", run_id="run-1", data_behavior="fixed", stability_check_type="full_profile_hash")
+    spark_session.createDataFrame([{**first, "dataset_name": "sales", "table_name": "orders", "profile_stage": "source", "profile_run_id": "run-1", "profile_status": "success", "profiled_at": "2026-01-01T00:00:00Z"}]).createOrReplaceTempView("catalogue_fixed_pass")
+
+    result = enforce_catalogue_stability(spark_session, df, "catalogue_fixed_pass", "sales", "orders", stage="source", run_id="run-2", data_behavior="fixed", stability_check_type="full_profile_hash")
+
+    assert result["status"] == "passed"
+    assert result["can_continue"] is True
+    assert result["baseline_run_id"] == "run-1"
+
+
+def test_enforce_catalogue_stability_fixed_fails_when_profile_hash_changes(spark_session):
+    baseline_df = spark_session.createDataFrame([(1, "open"), (2, "closed")], "id int, status string")
+    changed_df = spark_session.createDataFrame([(1, "open"), (2, "closed"), (3, "new")], "id int, status string")
+    first = enforce_catalogue_stability(spark_session, baseline_df, "missing_catalogue", "sales", "orders", stage="target", run_id="run-1", data_behavior="fixed", stability_check_type="full_profile_hash")
+    spark_session.createDataFrame([{**first, "dataset_name": "sales", "table_name": "orders", "profile_stage": "target", "profile_run_id": "run-1", "profile_status": "success", "profiled_at": "2026-01-01T00:00:00Z"}]).createOrReplaceTempView("catalogue_fixed_fail")
+
+    result = enforce_catalogue_stability(spark_session, changed_df, "catalogue_fixed_fail", "sales", "orders", stage="target", run_id="run-2", data_behavior="fixed", stability_check_type="full_profile_hash")
+
+    assert result["status"] == "failed"
+    assert result["can_continue"] is False
+    assert "differs" in result["message"]
+
+
+def test_enforce_catalogue_stability_changing_watermark_slice_passes_and_fails(spark_session):
+    baseline_df = spark_session.createDataFrame([(1, "2026-01-01", 10), (2, "2026-01-02", 20)], "id int, business_date string, amount int")
+    unchanged_df = spark_session.createDataFrame([(1, "2026-01-01", 10), (2, "2026-01-02", 20), (3, "2026-01-03", 30)], "id int, business_date string, amount int")
+    changed_df = spark_session.createDataFrame([(1, "2026-01-01", 999), (2, "2026-01-02", 20), (3, "2026-01-03", 30)], "id int, business_date string, amount int")
+    first = enforce_catalogue_stability(spark_session, baseline_df, "missing_catalogue", "sales", "orders", stage="source", run_id="run-1", data_behavior="changing", stability_check_type="watermark_slice_hash", watermark_column="business_date", watermark_value="2026-01-02")
+    spark_session.createDataFrame([{**first, "dataset_name": "sales", "table_name": "orders", "profile_stage": "source", "profile_run_id": "run-1", "profile_status": "success", "profiled_at": "2026-01-01T00:00:00Z"}]).createOrReplaceTempView("catalogue_changing")
+
+    passed = enforce_catalogue_stability(spark_session, unchanged_df, "catalogue_changing", "sales", "orders", stage="source", run_id="run-2", data_behavior="changing", stability_check_type="watermark_slice_hash", watermark_column="business_date", watermark_value="2026-01-03")
+    failed = enforce_catalogue_stability(spark_session, changed_df, "catalogue_changing", "sales", "orders", stage="source", run_id="run-2", data_behavior="changing", stability_check_type="watermark_slice_hash", watermark_column="business_date", watermark_value="2026-01-03")
+
+    assert passed["status"] == "passed"
+    assert failed["status"] == "failed"
+    assert "Previously loaded data changed" in failed["message"]
+
+
+def test_enforce_catalogue_stability_first_run_and_current_run_exclusion(spark_session):
+    df = spark_session.createDataFrame([(1, "open")], "id int, status string")
+    current = enforce_catalogue_stability(spark_session, df, "missing_catalogue", "sales", "orders", stage="source", run_id="run-current", data_behavior="fixed", stability_check_type="full_profile_hash")
+    spark_session.createDataFrame([{**current, "dataset_name": "sales", "table_name": "orders", "profile_stage": "source", "profile_run_id": "run-current", "profile_status": "success", "profiled_at": "2026-01-02T00:00:00Z"}]).createOrReplaceTempView("catalogue_current_only")
+
+    result = enforce_catalogue_stability(spark_session, df, "catalogue_current_only", "sales", "orders", stage="source", run_id="run-current", data_behavior="fixed", stability_check_type="full_profile_hash")
+
+    assert result["status"] == "baseline_created"
+    assert result["can_continue"] is True

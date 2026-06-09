@@ -26,7 +26,7 @@ No summary available.
 ## Signature if available
 
 ```python
-def _schema(fields: list[tuple[str, Any]])
+def _schema(table_name: str, fields: list[tuple[str, Any]])
 ```
 
 ## Side effects
@@ -49,12 +49,13 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 - Classification: Internal
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
-- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c7049e78d915b93903574ea792043a66ebe62cee/src/fabricops_kit/governance_review.py#L100-L102">View source on GitHub</a>
+- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d7fae51cae8b101fbee48f365b462f6b6f647e79/src/fabricops_kit/governance_review.py#L128-L131">View source on GitHub</a>
 - Inbound references count: 1
-- Outbound references count: 1
+- Outbound references count: 2
 
 ## Inbound references
 - <a href="../internal/governance_review__get_governance_metadata_schemas/"><code>fabricops_kit.governance_review._get_governance_metadata_schemas</code></a>
 
 ## Outbound references
 - <a href="../internal/governance_review__spark_types/"><code>fabricops_kit.governance_review._spark_types</code></a>
+- <a href="../internal/governance_review__validate_schema_field_names/"><code>fabricops_kit.governance_review._validate_schema_field_names</code></a>

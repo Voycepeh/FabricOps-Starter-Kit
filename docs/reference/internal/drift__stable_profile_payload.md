@@ -1,4 +1,4 @@
-# _load_latest_profile
+# _stable_profile_payload
 
 **Module:** `drift`  
 **Classification:** Internal
@@ -17,16 +17,17 @@ Do not call this helper directly from notebooks; use the public callable helpers
 
 ## Used by
 
-- <a href="../monitor_data_changes/"><code>fabricops_kit.drift.monitor_data_changes</code></a>
+- <a href="../internal/drift__profile_hash/"><code>fabricops_kit.drift._profile_hash</code></a>
+- <a href="../internal/drift__profile_row_count/"><code>fabricops_kit.drift._profile_row_count</code></a>
 
 ## Purpose
 
-Load an explicit profile-drift baseline from profile metadata rows.
+No summary available.
 
 ## Signature if available
 
 ```python
-def _load_latest_profile(spark, metadata_table: str, dataset_name: str, table_name: str, profile_stage: str, exclude_run_id: str | None=None, baseline_mode: str='latest_successful') -> dict | None
+def _stable_profile_payload(profile) -> dict
 ```
 
 ## Side effects
@@ -43,19 +44,20 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 
 ## Function manifest
 
-- Fully qualified function name: `fabricops_kit.drift._load_latest_profile`
-- Short name: `_load_latest_profile`
+- Fully qualified function name: `fabricops_kit.drift._stable_profile_payload`
+- Short name: `_stable_profile_payload`
 - Module: `drift`
 - Classification: Internal
 - Related module: `drift`
 - Source file path: `src/fabricops_kit/drift.py`
-- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c7049e78d915b93903574ea792043a66ebe62cee/src/fabricops_kit/drift.py#L410-L500">View source on GitHub</a>
-- Inbound references count: 1
+- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d7fae51cae8b101fbee48f365b462f6b6f647e79/src/fabricops_kit/drift.py#L296-L320">View source on GitHub</a>
+- Inbound references count: 2
 - Outbound references count: 2
 
 ## Inbound references
-- <a href="../monitor_data_changes/"><code>fabricops_kit.drift.monitor_data_changes</code></a>
+- <a href="../internal/drift__profile_hash/"><code>fabricops_kit.drift._profile_hash</code></a>
+- <a href="../internal/drift__profile_row_count/"><code>fabricops_kit.drift._profile_row_count</code></a>
 
 ## Outbound references
-- <a href="../internal/drift__is_missing_table_error/"><code>fabricops_kit.drift._is_missing_table_error</code></a>
+- <a href="../internal/drift__normalize_datatype/"><code>fabricops_kit.drift._normalize_datatype</code></a>
 - <a href="../internal/drift__normalize_profile/"><code>fabricops_kit.drift._normalize_profile</code></a>

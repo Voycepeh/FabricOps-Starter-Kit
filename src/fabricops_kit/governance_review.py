@@ -164,7 +164,11 @@ def _get_governance_metadata_schemas() -> dict[str, Any]:
         ("source_data_change_check", string), ("target_data_change_check", string), ("profile_baseline_mode", string), ("data_type", string), ("row_count", long), ("null_count", long), ("distinct_count", long),
         ("distribution_type", string), ("distribution_json", string), ("profiled_at", string), ("run_timestamp", timestamp), ("null_percent", double), ("distinct_percent", double), ("min_value", string), ("max_value", string),
         ("agreement_id", string), ("contract_version", string), ("notebook_registry_id", string), ("notebook_id", string), ("evidence_role", string),
-        ("source_schema_check", string), ("target_schema_check", string), ("source_change_signal_json", string),
+        ("source_schema_check", string), ("target_schema_check", string),
+        ("stability_check_enabled", boolean), ("stability_check_type", string), ("data_behavior", string), ("profile_scope", string), ("watermark_column", string), ("watermark_value", string),
+        ("profile_filter_expression", string), ("schema_hash", string), ("profile_hash", string), ("comparable_profile_hash", string), ("baseline_run_id", string), ("baseline_profile_hash", string),
+        ("baseline_watermark_value", string), ("stability_status", string), ("stability_can_continue", boolean), ("stability_message", string), ("stability_difference_summary", string),
+        ("source_change_signal_json", string),
         ("dq_status", string), ("dq_rule_count", long), ("dq_failed_rule_count", long), ("dq_warning_rule_count", long), ("dq_error_rule_count", long), ("dq_failed_row_count", long), ("dq_failed_row_percent", double), ("dq_checked_at", string),
         *audit,
     ]

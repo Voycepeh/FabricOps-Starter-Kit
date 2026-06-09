@@ -1,4 +1,4 @@
-# _data_change_preset_config
+# _profile_row_count
 
 **Module:** `drift`  
 **Classification:** Internal
@@ -17,7 +17,7 @@ Do not call this helper directly from notebooks; use the public callable helpers
 
 ## Used by
 
-- <a href="../monitor_data_changes/"><code>fabricops_kit.drift.monitor_data_changes</code></a>
+- <a href="../enforce_catalogue_stability/"><code>fabricops_kit.drift.enforce_catalogue_stability</code></a>
 
 ## Purpose
 
@@ -26,7 +26,7 @@ No summary available.
 ## Signature if available
 
 ```python
-def _data_change_preset_config(preset: str, policy_overrides: dict | None=None) -> dict
+def _profile_row_count(profile) -> int | None
 ```
 
 ## Side effects
@@ -43,15 +43,18 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 
 ## Function manifest
 
-- Fully qualified function name: `fabricops_kit.drift._data_change_preset_config`
-- Short name: `_data_change_preset_config`
+- Fully qualified function name: `fabricops_kit.drift._profile_row_count`
+- Short name: `_profile_row_count`
 - Module: `drift`
 - Classification: Internal
 - Related module: `drift`
 - Source file path: `src/fabricops_kit/drift.py`
-- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c7049e78d915b93903574ea792043a66ebe62cee/src/fabricops_kit/drift.py#L563-L579">View source on GitHub</a>
+- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d7fae51cae8b101fbee48f365b462f6b6f647e79/src/fabricops_kit/drift.py#L334-L340">View source on GitHub</a>
 - Inbound references count: 1
-- Outbound references count: 0
+- Outbound references count: 1
 
 ## Inbound references
-- <a href="../monitor_data_changes/"><code>fabricops_kit.drift.monitor_data_changes</code></a>
+- <a href="../enforce_catalogue_stability/"><code>fabricops_kit.drift.enforce_catalogue_stability</code></a>
+
+## Outbound references
+- <a href="../internal/drift__stable_profile_payload/"><code>fabricops_kit.drift._stable_profile_payload</code></a>

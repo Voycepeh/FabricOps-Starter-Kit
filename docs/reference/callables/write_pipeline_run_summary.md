@@ -116,12 +116,12 @@ Not documented yet
       <td data-label="Meaning">Not documented yet</td>
     </tr>
     <tr>
-      <td data-label="Parameter"><code>source_drift_results</code></td>
+      <td data-label="Parameter"><code>source_stability_results</code></td>
       <td data-label="Required">No</td>
       <td data-label="Meaning">Not documented yet</td>
     </tr>
     <tr>
-      <td data-label="Parameter"><code>target_drift_results</code></td>
+      <td data-label="Parameter"><code>target_stability_results</code></td>
       <td data-label="Required">No</td>
       <td data-label="Meaning">Not documented yet</td>
     </tr>
@@ -193,7 +193,7 @@ Runtime summary row that was written.
 ## Source
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c7049e78d915b93903574ea792043a66ebe62cee/src/fabricops_kit/pipeline.py#L268-L376">View write_pipeline_run_summary on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d7fae51cae8b101fbee48f365b462f6b6f647e79/src/fabricops_kit/pipeline.py#L298-L406">View write_pipeline_run_summary on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -218,8 +218,8 @@ def write_pipeline_run_summary(
     target_definitions: Mapping[str, Mapping[str, Any]] | None = None,
     source_schema_results: Mapping[str, Mapping[str, Any]] | None = None,
     target_schema_results: Mapping[str, Mapping[str, Any]] | None = None,
-    source_drift_results: Mapping[str, Mapping[str, Any]] | None = None,
-    target_drift_results: Mapping[str, Mapping[str, Any]] | None = None,
+    source_stability_results: Mapping[str, Mapping[str, Any]] | None = None,
+    target_stability_results: Mapping[str, Mapping[str, Any]] | None = None,
     source_dq_results: Mapping[str, Mapping[str, Any]] | None = None,
     target_dq_results: Mapping[str, Mapping[str, Any]] | None = None,
     lineage_status: str = "not_run",
@@ -246,7 +246,7 @@ def write_pipeline_run_summary(
         Overall pipeline status.
     source_definitions, target_definitions : mapping, optional
         Dataset definitions used to compute source and target counts.
-    source_schema_results, target_schema_results, source_drift_results, target_drift_results, source_dq_results, target_dq_results : mapping, optional
+    source_schema_results, target_schema_results, source_stability_results, target_stability_results, source_dq_results, target_dq_results : mapping, optional
         Guardrail result dictionaries included in the JSON summary.
     lineage_status, catalogue_status, message : str, optional
         Evidence write statuses and support message.
@@ -270,14 +270,14 @@ def write_pipeline_run_summary(
     started = started_at or completed
     sources = source_definitions or {}
     targets = target_definitions or {}
-    source_guardrail_status = _summary_status({**(source_schema_results or {}), **(source_drift_results or {})})
-    target_guardrail_status = _summary_status({**(target_schema_results or {}), **(target_drift_results or {})})
+    source_guardrail_status = _summary_status({**(source_schema_results or {}), **(source_stability_results or {})})
+    target_guardrail_status = _summary_status({**(target_schema_results or {}), **(target_stability_results or {})})
     dq_status = _summary_status({**(source_dq_results or {}), **(target_dq_results or {})})
     run_summary = {
         "source_schema_results": source_schema_results or {},
         "target_schema_results": target_schema_results or {},
-        "source_drift_results": source_drift_results or {},
-        "target_drift_results": target_drift_results or {},
+        "source_stability_results": source_stability_results or {},
+        "target_stability_results": target_stability_results or {},
         "source_dq_results": source_dq_results or {},
         "target_dq_results": target_dq_results or {},
         "source_tables": [_definition_name(name, definition) for name, definition in sources.items()],
@@ -325,7 +325,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `pipeline`
 - Source file path: `src/fabricops_kit/pipeline.py`
-- Source line: `268`
+- Source line: `298`
 - Inbound references count: 0
 - Outbound references count: 4
 
@@ -352,13 +352,13 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c7049e78d915b93903574ea792043a66ebe62cee/src/fabricops_kit/pipeline.py#L268-L376">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c7049e78d915b93903574ea792043a66ebe62cee/src/fabricops_kit/pipeline.py#L268-L376</a>
-- Start line: `268`
-- End line: `376`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d7fae51cae8b101fbee48f365b462f6b6f647e79/src/fabricops_kit/pipeline.py#L298-L406">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d7fae51cae8b101fbee48f365b462f6b6f647e79/src/fabricops_kit/pipeline.py#L298-L406</a>
+- Start line: `298`
+- End line: `406`
 - Signature:
 
 ```python
-def write_pipeline_run_summary(*, spark: Any, config: Any, env: str, run_id: str, agreement_id: str='', agreement_contract_version: str='', notebook_registry_id: str='', notebook_id: str='', notebook_type: str='02_pipeline', pipeline_name: str='', started_at: str | None=None, completed_at: str | None=None, status: str='completed', source_definitions: Mapping[str, Mapping[str, Any]] | None=None, target_definitions: Mapping[str, Mapping[str, Any]] | None=None, source_schema_results: Mapping[str, Mapping[str, Any]] | None=None, target_schema_results: Mapping[str, Mapping[str, Any]] | None=None, source_drift_results: Mapping[str, Mapping[str, Any]] | None=None, target_drift_results: Mapping[str, Mapping[str, Any]] | None=None, source_dq_results: Mapping[str, Mapping[str, Any]] | None=None, target_dq_results: Mapping[str, Mapping[str, Any]] | None=None, lineage_status: str='not_run', catalogue_status: str='not_run', message: str='', metadata_table: str=METADATA_PIPELINE_RUNS_TABLE, mode: str='append') -> dict[str, Any]
+def write_pipeline_run_summary(*, spark: Any, config: Any, env: str, run_id: str, agreement_id: str='', agreement_contract_version: str='', notebook_registry_id: str='', notebook_id: str='', notebook_type: str='02_pipeline', pipeline_name: str='', started_at: str | None=None, completed_at: str | None=None, status: str='completed', source_definitions: Mapping[str, Mapping[str, Any]] | None=None, target_definitions: Mapping[str, Mapping[str, Any]] | None=None, source_schema_results: Mapping[str, Mapping[str, Any]] | None=None, target_schema_results: Mapping[str, Mapping[str, Any]] | None=None, source_stability_results: Mapping[str, Mapping[str, Any]] | None=None, target_stability_results: Mapping[str, Mapping[str, Any]] | None=None, source_dq_results: Mapping[str, Mapping[str, Any]] | None=None, target_dq_results: Mapping[str, Mapping[str, Any]] | None=None, lineage_status: str='not_run', catalogue_status: str='not_run', message: str='', metadata_table: str=METADATA_PIPELINE_RUNS_TABLE, mode: str='append') -> dict[str, Any]
 ```
 
 ### Internal relationship graph

@@ -440,3 +440,28 @@ def test_enforce_dq_rules_supports_current_v1_metadata_shape(spark_session, monk
     assert result["status"] == "passed"
     assert result["can_continue"] is True
     assert result["checks"][0]["rule_type"] == "not_null"
+
+
+def test_write_catalogue_evidence_appends_stability_fields_without_updates(spark_session, monkeypatch):
+    from fabricops_kit.data_profiling import profile_dataframe
+    from fabricops_kit import pipeline
+
+    writes = []
+    monkeypatch.setattr(pipeline, "write_lakehouse_table", lambda df, config, env, target, table, **kwargs: writes.append((df, env, target, table, kwargs)))
+    df = spark_session.createDataFrame([(1, "open")], "id int, status string")
+    profile_df = profile_dataframe(df, "orders")
+
+    result = pipeline.write_catalogue_evidence(
+        {"orders": profile_df},
+        {"orders": {"dataset_name": "sales", "table_name": "orders", "stage": "source", "data_behavior": "fixed", "stability_check_type": "full_profile_hash"}},
+        config={},
+        env="dev",
+        run_id="run-1",
+        stability_results={"orders": {"status": "baseline_created", "can_continue": True, "stability_check_enabled": True, "data_behavior": "fixed", "stability_check_type": "full_profile_hash", "profile_hash": "abc", "comparable_profile_hash": "abc", "stability_status": "baseline_created", "stability_can_continue": True}},
+    )
+
+    assert result == {"orders": "written"}
+    assert writes[0][2:4] == ("metadata", "METADATA_DATA_CATALOGUE")
+    assert writes[0][4]["mode"] == "append"
+    assert "stability_status" in writes[0][0].columns
+    assert "profile_hash" in writes[0][0].columns

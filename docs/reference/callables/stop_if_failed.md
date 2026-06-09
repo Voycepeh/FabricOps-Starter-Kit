@@ -6,7 +6,7 @@ Stop a notebook only when a schema or data-change guardrail result blocks contin
 
 Stop a notebook only when a schema or data-change guardrail result blocks continuation.
 
-- Use after schema, drift, or DQ guardrail helpers to stop the notebook when can_continue is false.
+- Use after schema, stability, or DQ guardrail helpers to stop the notebook when can_continue is false.
 
 ## When not to use it
 
@@ -34,7 +34,7 @@ stop_if_failed(schema_result)
     <tr>
       <td data-label="Parameter"><code>result</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Direct schema result, direct data-change result, or the wrapper returned by :func:`monitor_data_changes`.</td>
+      <td data-label="Meaning">Direct schema, catalogue stability, or DQ guardrail result.</td>
     </tr>
   </tbody>
 </table>
@@ -53,7 +53,7 @@ None when execution may continue; otherwise raises or exits according to runtime
 ## Related functions
 
 - <a href="../validate_schema/"><code>fabricops_kit.drift.validate_schema</code></a>
-- <a href="../monitor_data_changes/"><code>fabricops_kit.drift.monitor_data_changes</code></a>
+- <a href="../enforce_catalogue_stability/"><code>fabricops_kit.drift.enforce_catalogue_stability</code></a>
 - <a href="../enforce_dq_rules/"><code>fabricops_kit.governance_review.enforce_dq_rules</code></a>
 
 <details class="reference-implementation-details">
@@ -66,7 +66,7 @@ None when execution may continue; otherwise raises or exits according to runtime
 ## Source
 
 - Source file path: `src/fabricops_kit/drift.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c7049e78d915b93903574ea792043a66ebe62cee/src/fabricops_kit/drift.py#L674-L694">View stop_if_failed on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d7fae51cae8b101fbee48f365b462f6b6f647e79/src/fabricops_kit/drift.py#L574-L593">View stop_if_failed on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -78,8 +78,7 @@ def stop_if_failed(result) -> None:
     Parameters
     ----------
     result : dict
-        Direct schema result, direct data-change result, or the wrapper returned
-        by :func:`monitor_data_changes`.
+        Direct schema, catalogue stability, or DQ guardrail result.
 
     Raises
     ------
@@ -110,13 +109,13 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `drift`
 - Source file path: `src/fabricops_kit/drift.py`
-- Source line: `674`
+- Source line: `574`
 - Inbound references count: 0
 - Outbound references count: 1
 
 ### AI implementation contract
 
-- **required_context:** Use in 02_pipeline after validate_schema, monitor_data_changes, or enforce_dq_rules and before write helpers.
+- **required_context:** Use in 02_pipeline after validate_schema, enforce_catalogue_stability, or enforce_dq_rules and before write helpers.
 - **inputs:** guardrail result dictionary and optional message/runtime controls.
 - **output:** None when execution may continue; otherwise raises or exits according to runtime behavior.
 - **side_effects:** May terminate notebook execution through Fabric notebook utilities or raise an exception.
@@ -134,9 +133,9 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/drift.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c7049e78d915b93903574ea792043a66ebe62cee/src/fabricops_kit/drift.py#L674-L694">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c7049e78d915b93903574ea792043a66ebe62cee/src/fabricops_kit/drift.py#L674-L694</a>
-- Start line: `674`
-- End line: `694`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d7fae51cae8b101fbee48f365b462f6b6f647e79/src/fabricops_kit/drift.py#L574-L593">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d7fae51cae8b101fbee48f365b462f6b6f647e79/src/fabricops_kit/drift.py#L574-L593</a>
+- Start line: `574`
+- End line: `593`
 - Signature:
 
 ```python
@@ -148,7 +147,7 @@ def stop_if_failed(result) -> None
 ### Public related functions
 
 - <a href="../validate_schema/"><code>fabricops_kit.drift.validate_schema</code></a>
-- <a href="../monitor_data_changes/"><code>fabricops_kit.drift.monitor_data_changes</code></a>
+- <a href="../enforce_catalogue_stability/"><code>fabricops_kit.drift.enforce_catalogue_stability</code></a>
 - <a href="../enforce_dq_rules/"><code>fabricops_kit.governance_review.enforce_dq_rules</code></a>
 
 ### Internal implementation helpers

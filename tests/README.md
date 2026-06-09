@@ -29,7 +29,7 @@ Use these fixtures instead of repeated ad hoc notebook runtime mocks.
 - Configuration and dataset-contract validation.
 - Environment and path resolution.
 - Data agreement and metadata-table persistence logic.
-- Data quality, schema/profile drift, profiling, lineage, and governance review helpers.
+- Data quality, schema/profile stability, profiling, lineage, and governance review helpers.
 - Lakehouse, Warehouse, Excel, CSV, and Parquet helper boundaries through mocks.
 - Representative executable notebook-template workflows.
 - Minimal public API, schema, and template availability contracts.

@@ -27,7 +27,7 @@ def test_public_pipeline_helpers_are_exported_without_wrapper_bloat():
         "read_pipeline_sources",
         "profile_pipeline_datasets",
         "run_schema_guardrails",
-        "run_data_drift_guardrails",
+        "run_source_stability_guardrails",
         "run_dq_guardrails",
         "add_runtime_audit_columns",
         "write_pipeline_targets",
