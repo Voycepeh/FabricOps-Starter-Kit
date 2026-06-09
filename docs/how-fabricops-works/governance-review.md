@@ -1,15 +1,63 @@
 # Governance Review
 
-`03_governance` is the human review and approval step for governed, quality-checked, AI-ready notebooks in Microsoft Fabric. The boundary is intentionally simple:
+Governance Review is the point where pipeline evidence becomes reviewed metadata. `02_pipeline` records metadata evidence during normal runs, and `03_governance` turns that evidence into explicit human approvals for business context, data-quality expectations, and sensitivity/classification.
 
-- `03_governance` owns review and approval.
-- `METADATA_DQ_RULES` stores approved DQ rules as append-only metadata history.
-- `02_pipeline` loads the newest active approved DQ rules for the selected table.
-- `enforce_dq_rules` enforces those rules at runtime before unsafe or misleading output is written.
+The operating model is intentionally simple:
 
-DQ rule authoring stays metadata-driven. FabricOps does not expose one Python callable per DQ rule, and it does not require Great Expectations or dbt at runtime.
+- `02_pipeline` records evidence such as catalogue profile rows, schema/profile guardrail outcomes, DQ outcomes, lineage, and run summaries.
+- `03_governance` reviews the evidence and appends approved metadata decisions.
+- AI can suggest useful drafts, but humans approve what becomes governed metadata.
+- Metadata stores the approved decisions.
+- Later pipeline runs load and enforce the approved metadata where relevant.
 
-## Approved DQ rule catalogue
+This keeps FabricOps metadata-driven and junior-friendly: the pipeline does not hide governance decisions in code, and the governance notebook does not become the runtime enforcement layer.
+
+## What `03_governance` uses
+
+The Governance Review notebook starts from the latest successful catalogue evidence in `METADATA_DATA_CATALOGUE`. For the selected table, reviewers can inspect the table identity, profile run, environment, dataset, table name, column names, data types, row counts, null counts, distinct counts, min/max values, distributions where available, and prior guardrail evidence recorded by pipeline runs.
+
+That evidence answers questions such as:
+
+- Which table and profile run are being reviewed?
+- Which columns exist in the latest successful profile?
+- What do the observed data types, null rates, distinct counts, and min/max values suggest?
+- Did the most recent pipeline run pass schema, stability, and DQ guardrails?
+- Is there enough evidence for a reviewer to approve business metadata safely?
+
+## What reviewers approve
+
+`03_governance` is responsible for append-only human decisions. Reviewers approve:
+
+| Review area | Metadata table | What is approved |
+|---|---|---|
+| Business context | `METADATA_COLUMN_CONTEXT` | Human-readable meaning, notes, and context for columns. |
+| DQ expectations | `METADATA_DQ_RULES` | Active approved data-quality rules for a table or columns. |
+| Sensitivity/classification | `METADATA_COLUMN_CLASSIFICATION` | Sensitivity labels, personal-data classification, identifier type, and handling requirements. |
+| Governance outcome | `METADATA_GOVERNANCE_REVIEWS` | Optional final review outcome based on evidence, blockers, and warnings. |
+
+AI suggestions are advisory drafts only. A human reviewer must accept, edit, reject, or commit each suggestion before it becomes approved metadata.
+
+## Human review workflow
+
+A typical review flow is:
+
+1. Select a profiled catalogue table with `widget_select_catalogue_table`.
+2. Load profile rows for that selection with `load_catalogue_profile_rows`.
+3. Review or edit business context using the column context workflow.
+4. Review or edit DQ expectations using `widget_review_dq_rules`.
+5. Review sensitivity and personal-data classification.
+6. Commit approved rows with `record_table_governance`.
+7. Optionally write a governance review outcome after checking related evidence.
+
+The review notebook writes metadata only after explicit commit actions. Draft rows, AI suggestions, and uncommitted edits remain advisory and are not enforced by later pipeline runs.
+
+## DQ expectations in Governance Review
+
+`03_governance` owns DQ rule authoring, review, and approval. `METADATA_DQ_RULES` stores approved DQ rules as append-only metadata history. `02_pipeline` loads the newest active approved DQ rules for the selected table, and `enforce_dq_rules` enforces them at runtime before unsafe or misleading output is written.
+
+DQ rule authoring stays metadata-driven. FabricOps does not expose one public callable per DQ rule, and it does not require Great Expectations or dbt at runtime.
+
+### Approved DQ rule catalogue
 
 Use the smallest FabricOps-native rule that expresses the requirement. Prefer explicit rule types such as `not_null`, `accepted_values`, or `between` before the escape hatch `expression_true`.
 
@@ -41,7 +89,7 @@ Use the smallest FabricOps-native rule that expresses the requirement. Prefer ex
 
 FabricOps uses one canonical DQ rule vocabulary. Old or external rule names are not accepted. Approved metadata should use only the rule names listed in this catalogue.
 
-## How to choose a rule
+### How to choose a DQ rule
 
 1. Start with completeness rules (`not_null`, `null_rate_below`, `non_empty_string`).
 2. Add uniqueness rules only where the business grain is clear.
@@ -52,7 +100,7 @@ FabricOps uses one canonical DQ rule vocabulary. Old or external rule names are 
 
 Set `severity="error"` when a failure should block unsafe or misleading output. Set `severity="warning"` when the issue should be visible in evidence but should not block the run.
 
-## Set up a rule in `03_governance`
+### Set up a DQ rule in `03_governance`
 
 1. Select a catalogue table from the latest successful profile evidence.
 2. Open `widget_review_dq_rules`.
@@ -65,7 +113,7 @@ Set `severity="error"` when a failure should block unsafe or misleading output. 
 
 Every write to `METADATA_DQ_RULES` includes rule identity, table/column identity, rule JSON, severity, description, active status, review status, approver, approval time, AI suggestion evidence when available, append-only action type, and runtime audit fields.
 
-## Edit, deactivate, and reactivate rules
+### Edit, deactivate, and reactivate DQ rules
 
 `METADATA_DQ_RULES` is append-only. FabricOps does not physically delete DQ rule rows.
 
@@ -76,22 +124,30 @@ Every write to `METADATA_DQ_RULES` includes rule identity, table/column identity
 
 For a selected table, the widget display shows rule ID, rule type, column list, parameter summary, severity, active/inactive status, review status, approver, approval time, last action, commit time, and description. Multi-column rules store the full column list in `rule_parameters_json.columns` even when `column_name` is a display string.
 
-## AI suggestions
+### AI suggestions for DQ rules
 
 The AI suggestion action is advisory only. It uses selected table profile evidence such as column names, data types, null counts, distinct counts, min/max values, and distributions where available. The default prompt tells AI to suggest FabricOps-native DQ rules only, return JSON only, avoid unsupported rule types, include descriptions and required parameters, and prefer simple named rules before `expression_true`.
 
 AI suggestions are drafts. Reviewers can accept, edit, reject, or commit each suggestion, but FabricOps does not auto-approve AI output.
 
-## How `02_pipeline` enforces rules
+## How approved metadata returns to the pipeline
 
-`02_pipeline` calls `enforce_dq_rules` for the runtime DataFrame. The helper reads `METADATA_DQ_RULES` from the configured metadata lakehouse target, resolves the newest version for each rule, keeps only active approved rules, evaluates them, and returns a guardrail result with status, checks, a tagged DataFrame, and summary fields for evidence.
+Approved metadata affects later runs only after it is written to metadata tables.
 
-Error-severity failures return `status="failed"` and `can_continue=false`. Warning-severity failures return `status="warning"` and `can_continue=true`.
+- Approved business context and classification are available as metadata evidence for downstream reporting, handover, and governance review.
+- Approved active DQ rules are read by `02_pipeline` when it calls `enforce_dq_rules`.
+- `enforce_dq_rules` reads `METADATA_DQ_RULES` from the configured metadata lakehouse target, resolves the newest version for each rule, keeps only active approved rules, evaluates them, and returns a guardrail result with status, checks, a tagged DataFrame, and summary fields for evidence.
 
-## Schema guardrails are separate
+Error-severity DQ failures return `status="failed"` and `can_continue=false`. Warning-severity DQ failures return `status="warning"` and `can_continue=true`.
+
+## What this page is not
+
+Governance Review is not a full data product platform, an external DQ framework wrapper, or a replacement for normal pipeline engineering. It does not move DQ authoring into `02_pipeline`, expose one public Python function per rule, or require Great Expectations or dbt at runtime.
+
+### Schema guardrails are separate
 
 Do not model schema rules such as required columns, expected schema, or datatype checks as DQ rules. Schema guardrails are a separate FabricOps layer and should remain in schema validation configuration.
 
-## Source stability is separate
+### Source stability is separate
 
 Do not model source stability checks as DQ rules. Source stability compares catalogue/profile evidence across runs and is handled by the source stability guardrail layer, not by `METADATA_DQ_RULES`.
