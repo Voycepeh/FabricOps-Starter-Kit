@@ -30,17 +30,24 @@ nav:
       - Notebook Templates: how-fabricops-works/notebook-templates.md
       - Metadata Tables: how-fabricops-works/metadata-tables.md
       - Pipeline Guardrails: how-fabricops-works/schema-and-data-drift.md
-      - Governance Review: how-fabricops-works/governance-review.md
+      - Data quality & Governance: how-fabricops-works/governance-review.md
       - Metadata Dashboard: how-fabricops-works/metadata-dashboard.md
 
-  - Maintainer Guide:
-      - Release Management: development/release-management.md
-      - Release Traceability: release-info.md
-      - Documentation Versioning: development/docs-versioning.md
-
-  - Function Reference:
-      - Overview: reference/index.md
+  - Function & rules Reference:
+      - List of functions: reference/index.md
       - Template Function Map: reference/template-function-map.md
+      - Functions by Modules:
+          # AUTO-GENERATED-MODULES-START
+          - config: api/modules/config.md
+          - data_agreement: api/modules/data_agreement.md
+          - governance_review: api/modules/governance_review.md
+          - data_profiling: api/modules/data_profiling.md
+          - fabric_input_output: api/modules/fabric_input_output.md
+          - data_lineage: api/modules/data_lineage.md
+          - drift: api/modules/drift.md
+          - pipeline: api/modules/pipeline.md
+          - metadata: api/modules/metadata.md
+          # AUTO-GENERATED-MODULES-END
       - DQ Rules:
           - Overview: reference/dq-rules/index.md
           - not_null: reference/dq-rules/not-null.md
@@ -66,18 +73,11 @@ nav:
           - required_when: reference/dq-rules/required-when.md
           - value_when: reference/dq-rules/value-when.md
           - expression_true: reference/dq-rules/expression-true.md
-      - Implementation Modules:
-          # AUTO-GENERATED-MODULES-START
-          - config: api/modules/config.md
-          - data_agreement: api/modules/data_agreement.md
-          - governance_review: api/modules/governance_review.md
-          - data_profiling: api/modules/data_profiling.md
-          - fabric_input_output: api/modules/fabric_input_output.md
-          - data_lineage: api/modules/data_lineage.md
-          - drift: api/modules/drift.md
-          - pipeline: api/modules/pipeline.md
-          - metadata: api/modules/metadata.md
-      # AUTO-GENERATED-MODULES-END
+      
+  - Maintainer Guide:
+      - Release Management: development/release-management.md
+      - Release Traceability: release-info.md
+      - Documentation Versioning: development/docs-versioning.md
 
 extra:
   version:
