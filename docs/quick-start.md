@@ -53,6 +53,8 @@ Start with one Governance workspace and one Engineering workspace. **Alternative
 | ---- | ------- | --------------- |---------- |
 | 5    | Run the required notebooks in sequence. | The Agreement → Pipeline → Review delivery flow is created and can be reviewed before production promotion. | [Notebook Templates](how-fabricops-works/notebook-templates.md)    |
 
+*Optional: After running `00_env_config`, you may run the example smoke test notebooks to quickly understand how the pipeline and DQ rule flows work before adapting the production templates. Use [`example_pipeline_smoke_test.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/example_pipeline_smoke_test.ipynb) to validate the pipeline path, including metadata tables, source and target guardrails, evidence writing, lineage, runtime summary, and target writes. Use [`example_dq_rule_smoke_test.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/example_dq_rule_smoke_test.ipynb) to understand how DQ rules are evaluated, how warning rules behave, and how error rules block when enforcement fails. These examples are aligned to the current release and should be treated as release-specific validation aids, not production workflow templates.*
+
 On first and later pipeline runs, approved DQ warning rules do not block publication and write the full dataset; approved DQ error rules block before the target write.
 
 The notebooks are intentionally separated by role. Each template produces metadata or outputs that the next role can reuse.

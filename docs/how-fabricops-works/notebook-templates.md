@@ -160,3 +160,11 @@ Source data is explored and profiled without turning the exploration notebook in
 
 </div>
 
+## Optional example notebooks
+
+These notebooks are release-specific validation aids. They are stored beside the templates with an `example_` prefix so users can quickly test or understand specific flows before adapting the production templates. They are not production workflow templates.
+
+| Notebook | Purpose |
+| --- | --- |
+| `example_pipeline_smoke_test.ipynb` | Validates the pipeline path: source and target guardrails, catalogue evidence, lineage, runtime summary, and a smoke target write. |
+| `example_dq_rule_smoke_test.ipynb` | Demonstrates DQ rule evaluation, warning behavior, and error blocking behavior using smoke-test data and rules. |
