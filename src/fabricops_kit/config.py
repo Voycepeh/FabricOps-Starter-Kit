@@ -122,6 +122,8 @@ Rule selection principles:
 - Do not suggest row filtering or quarantine behavior; FabricOps v1 reports/tags outcomes and error severity blocks unsafe downstream writes.
 - Use expression_true only as the Custom expression escape hatch when no smaller rule fits.
 
+Data type / constraint-shape guidance and required parameters for all 23 rule types:
+
 Rule catalogue guidance:
 Completeness:
 - not_null: any profiled column where every row must have a non-null value. Required: columns.

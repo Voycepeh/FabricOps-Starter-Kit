@@ -122,7 +122,9 @@ These examples show how approved active metadata rows are evaluated by `enforce_
 
 **What the rule checks:** each `order_id` + `line_no` pair appears once.
 
-**Rule applies to:** `order_id`, `line_no`
+**Data applicability:** Composite business keys or table-grain columns that should be unique together.
+
+**Example column(s) used here:** `order_id`, `line_no`
 
 **Parameters:**
 
@@ -160,7 +162,9 @@ severity: error
 
 **What the rule checks:** `status` uses only the governed customer lifecycle values.
 
-**Rule applies to:** `status`
+**Data applicability:** Governed categorical, status, flag, code, or other controlled-domain columns.
+
+**Example column(s) used here:** `status`
 
 **Parameters:**
 
@@ -200,7 +204,9 @@ severity: warning
 
 **What the rule checks:** populated email values look like an address with text on both sides of `@` and a dot in the domain.
 
-**Rule applies to:** `email`
+**Data applicability:** String or string-castable columns with a known text pattern.
+
+**Example column(s) used here:** `email`
 
 **Parameters:**
 
@@ -240,7 +246,9 @@ severity: warning
 
 **What the rule checks:** Singapore transactions must use SGD.
 
-**Rule applies to:** `currency`
+**Data applicability:** Columns whose expected value depends on conditional business logic in the same row.
+
+**Example column(s) used here:** `currency`
 
 **Parameters:**
 

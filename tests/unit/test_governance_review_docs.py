@@ -19,6 +19,9 @@ def test_governance_review_page_documents_dq_catalogue_and_boundaries():
     assert "severity=\"warning\"" in text
     assert "Schema guardrails are separate" in text
     assert "Source stability is separate" in text
+    assert "Data applicability:" in text
+    assert "Example column(s) used here:" in text
+    assert "**Rule applies to:**" not in text
 
 
 def test_dq_rule_reference_pages_exist_for_supported_catalogue():
