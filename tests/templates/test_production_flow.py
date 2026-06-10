@@ -84,10 +84,11 @@ def test_quick_start_links_template_smoke_tests_with_release_specific_wording():
     expected = (
         "*Optional: After running `00_env_config`, you may run the example smoke test notebooks to quickly "
         "understand how the pipeline and DQ rule flows work before adapting the production templates. "
-        "Use [`example_pipeline_smoke_test.ipynb`](../templates/notebooks/example_pipeline_smoke_test.ipynb) "
+        "Use [`example_pipeline_smoke_test.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/example_pipeline_smoke_test.ipynb) "
         "to validate the pipeline path, including metadata tables, source and target guardrails, evidence "
         "writing, lineage, runtime summary, and target writes. Use [`example_dq_rule_smoke_test.ipynb`]"
-        "(../templates/notebooks/example_dq_rule_smoke_test.ipynb) to understand how DQ rules are "
+        "(https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/example_dq_rule_smoke_test.ipynb) "
+        "to understand how DQ rules are "
         "evaluated, how warning rules behave, and how error rules block when enforcement fails. These "
         "examples are aligned to the current release and should be treated as release-specific validation "
         "aids, not production workflow templates.*"
