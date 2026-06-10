@@ -4,6 +4,42 @@ FabricOps Starter Kit is a lightweight Microsoft Fabric notebook starter kit for
 
 Use it when you want Fabric notebooks to move data from source to target while keeping useful metadata for review, guardrails, and governance.
 
+## FabricOps at a glance
+
+<div class="grid cards" markdown>
+
+-   **5 notebook templates**
+
+    A small starter workflow covers environment setup, agreement intake, exploration, pipeline delivery, and governance review.
+
+    [View notebook templates](how-fabricops-works/notebook-templates.md)
+
+-   **30 reusable callables**
+
+    Notebook-friendly helper functions keep repeated setup, IO, profiling, guardrails, lineage, and review steps consistent.
+
+    [View function reference](reference/index.md)
+
+-   **9 Python modules**
+
+    The package is organized into focused implementation modules for setup, agreement, profiling, IO, lineage, drift, governance review, metadata, and pipeline support.
+
+    [View module catalogue](api/modules/index.md)
+
+-   **23 native DQ rules**
+
+    Built-in data quality rule types support approved metadata-driven checks during later pipeline runs.
+
+    [View DQ rules](reference/dq-rules/index.md)
+
+-   **11 metadata tables**
+
+    `00_env_config` prepares the governed evidence tables used by agreement, notebook registry, catalogue, lineage, DQ, pipeline, and review workflows.
+
+    [View metadata tables](how-fabricops-works/metadata-tables.md)
+
+</div>
+
 ## Start here
 
 Choose where to begin:
