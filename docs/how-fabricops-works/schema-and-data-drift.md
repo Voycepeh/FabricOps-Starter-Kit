@@ -1,78 +1,69 @@
 # Pipeline Guardrails
 
-Pipeline guardrails are checks inside `02_pipeline` that help decide whether a run should continue, warn, or stop before writing outputs.
+Pipeline guardrails are the checks inside `02_pipeline` that decide whether a run can continue, continue with warnings, or stop before writing governed outputs.
 
-Read [How FabricOps Works](index.md) first for the standard `01_agreement` → `02_pipeline` → `03_governance` path. This page focuses on the guardrails that the pipeline owns.
+Read [How FabricOps Works](index.md) first for the standard `01_agreement` → `02_pipeline` → `03_governance` workflow. This page focuses only on the guardrails owned by `02_pipeline`.
 
-![Schema, data-change, and DQ guardrails showing source and target validation flow](../assets/fabricops-schema-data-guardrails.png){ .full-width }
+![Schema, source stability, and DQ guardrails showing source, transform, and target validation flow](../assets/fabricops-schema-data-guardrails.png){ .full-width }
 
-## Where guardrails run
+## What guardrails protect
 
-Source checks run before transformation. They validate source schema, compare source profiles with previous append-only catalogue evidence, and optionally evaluate approved active DQ rules for source tables.
+`02_pipeline` is where source data is read, transformed, checked, and written as governed output. Guardrails protect that path by checking:
 
-Target checks run before publication. They validate transformed target schema, compare proposed target profiles with previous append-only catalogue evidence, and evaluate approved active DQ rules for target tables before outputs are written.
+1. whether the source or target schema still matches what the pipeline expects;
+2. whether source or target profiles changed unexpectedly compared with previous catalogue evidence;
+3. whether approved active DQ rules pass at the source or target stage.
 
-The important boundary is that `02_pipeline` owns blocking behavior. `03_governance` can approve DQ metadata, but those expectations become active only when `02_pipeline` loads them through the DQ guardrail helper.
+The boundary is simple: `03_governance` can review and approve DQ metadata, but `02_pipeline` owns the runtime decision to continue, warn, or stop.
 
-## Guardrail flow
+## Guardrail flow in `02_pipeline`
 
-| Point in the run | What happens | Why it matters |
-| --- | --- | --- |
-| Before transform | Check the source schema and source stability profile. | Catch unexpected input changes early. |
-| During transform | Apply deterministic business logic. | Keep the output repeatable. |
-| Before write | Check the target schema, target stability profile, and approved active DQ rules. | Avoid publishing unexpected output changes or error-severity DQ failures. |
-| After successful checks | Write outputs and metadata evidence. | Keep review and support grounded in what actually ran. |
+| Point in the run        | What happens                                                                   | Why it matters                                                            |
+| ----------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------- |
+| After source read       | Validate source schema, source stability, and approved active source DQ rules. | Catch upstream structure, stability, and quality issues early.            |
+| During transform        | Apply deterministic business logic.                                            | Keep the output repeatable.                                               |
+| Before target write     | Validate target schema, target stability, and approved active target DQ rules. | Avoid publishing unexpected output changes or error-severity DQ failures. |
+| After successful checks | Write outputs and metadata evidence.                                           | Keep governance review and support grounded in what actually ran.         |
 
-## Compact starter pattern
+## The three guardrail types
 
-Use a simple pattern first, then add stricter checks only when the team needs them:
+| Guardrail            | What it checks                                                                        | Typical behavior                                                            |
+| -------------------- | ------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| Schema guardrails    | Whether the source or target structure still matches expected columns and data types. | Stop, warn, or monitor depending on the schema preset.                      |
+| Stability guardrails | Whether the current profile matches previous append-only catalogue evidence.          | Catch silent reloads, backfills, and unexpected upstream mutations.         |
+| DQ guardrails        | Whether approved active DQ rules pass at the source or target stage.                  | Warning failures can continue; error failures block the next critical step. |
 
-```python
-# 1. Load environment config and source data.
-# 2. Validate the source schema.
-# 3. Profile source data and compare it with previous catalogue evidence.
-# 4. Transform the data.
-# 5. Validate and profile the proposed target.
-# 6. Enforce source and target stability checks.
-# 7. Enforce approved active DQ rules as aggregate guardrails.
-# 8. Stop or warn based on configured guardrails.
-# 9. Write the full target only after required checks pass.
-# 10. Record profile, lineage, and run metadata evidence.
-```
+Each guardrail returns a notebook result that can be printed as run evidence and passed to `stop_if_failed(...)` when it should block the run.
 
-## Three pipeline guardrails
+## Schema guardrails
 
-`02_pipeline` treats schema checks, source stability checks, and approved DQ rules as one guardrail family. Schema guardrails check structure, source stability guardrails compare deterministic catalogue profile hashes, and DQ guardrails evaluate human-approved expectations from `METADATA_DQ_RULES`. Each guardrail returns a notebook result that can be printed for run evidence and passed to `stop_if_failed(...)` when it should block.
+Schema guardrails check whether the structure of a source or target table still matches what the pipeline expects.
 
-## Source stability behavior
+| Preset              | Use when                                                  | Behavior                                                        |
+| ------------------- | --------------------------------------------------------- | --------------------------------------------------------------- |
+| `strict`            | Production outputs must match the expected schema.        | Stop when columns or data types do not match.                   |
+| `allow_new_columns` | New fields are acceptable, but known fields still matter. | Allow additional columns while still checking expected columns. |
+| `monitor_only`      | A team wants visibility before blocking runs.             | Record schema differences without stopping the pipeline.        |
 
-FabricOps does not use the catalogue to perform generic distribution drift monitoring. Instead, each pipeline run appends source and target profile evidence into `METADATA_DATA_CATALOGUE`. Fixed datasets are expected to match the previous profile exactly. Changing datasets are compared only for the slice that had already been loaded in the previous run, using a configured watermark or comparable filter.
+## Stability guardrails
 
-This catches silent reloads, late backfills, and unexpected upstream mutations before data is promoted into governed outputs.
+Stability guardrails compare deterministic profile evidence from the current run with previous evidence stored in `METADATA_DATA_CATALOGUE`.
 
-Key rules:
+FabricOps does not use the catalogue as a generic distribution drift monitor. Each run appends source and target profile evidence. The latest previous profile for the same dataset, table, and stage becomes the baseline for the next comparison.
 
-- `METADATA_DATA_CATALOGUE` is append only.
-- Each run writes a new profile evidence row for every profiled column.
-- The latest previous row for the same dataset, table, and stage becomes the baseline.
-- No separate profile history table is introduced.
-- Older catalogue rows remain readable. If no previous stability fields exist, the run establishes the first non-blocking baseline.
+| Setting                                                                       | Use when                                                                    | Behavior                                                                                             |
+| ----------------------------------------------------------------------------- | --------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `data_behavior="fixed"` with `stability_check_type="full_profile_hash"`       | Reference, mapping, or other fixed datasets should not change between runs. | Compare today’s full deterministic profile hash with the previous full profile hash.                 |
+| `data_behavior="changing"` with `stability_check_type="watermark_slice_hash"` | Tables receive new or changed periods over time.                            | Compare only the slice that already existed in the previous run, using the previous watermark value. |
+| `stability_check_type="skip"`                                                 | A dataset is intentionally exempt during early build or investigation.      | Return a non-blocking skipped result while allowing other evidence to be written.                    |
 
-## Source stability check types
-
-| Setting | Use when | Behavior in plain language |
-| --- | --- | --- |
-| `data_behavior="fixed"` with `stability_check_type="full_profile_hash"` | Reference, mapping, or other fixed datasets should not change between runs. | Compare today's full deterministic profile hash with the previous full profile hash. |
-| `data_behavior="changing"` with `stability_check_type="watermark_slice_hash"` | Tables receive new or changed periods over time. | Compare only today's version of the slice that already existed in the previous run, using the previous watermark value. |
-| `stability_check_type="skip"` | A dataset is intentionally exempt for an early build or investigation. | Return a non-blocking skipped result and still allow other evidence to be written. |
-
-For fixed data, the expected logic is:
+For fixed data, the expected comparison is:
 
 ```text
 today_full_profile_hash == previous_full_profile_hash
 ```
 
-For changing data, the expected logic is:
+For changing data, the expected comparison is:
 
 ```text
 today profile where watermark_column <= previous_watermark
@@ -80,52 +71,44 @@ today profile where watermark_column <= previous_watermark
 previous stored comparable profile for that watermark
 ```
 
-After the comparison, today's profile and today's comparable hash are appended as the next baseline.
+After the comparison, today’s profile and comparable hash are appended as the next baseline.
 
-Technical runtime and annotation columns are excluded from schema/profile hashes and comparable profile evidence by default. This includes exact columns such as `_fabricops_run_id`, `_fabricops_pipeline_name`, `_fabricops_created_at`, `_dq_check_status`, and `_dq_failed_rules`, plus any column starting with `_fabricops_` or `_dq_`. These columns may still be written to target outputs when allowed by DQ behavior; the exclusion only prevents runtime annotations from being treated as business-data stability changes.
+`METADATA_DATA_CATALOGUE` remains append-only. Each run writes new profile evidence rows, older rows remain readable, and skipped stability rows are not eligible as future baselines.
 
-## DQ guardrail behavior
+Technical runtime and annotation columns are excluded from schema hashes, profile hashes, and comparable profile evidence by default. This includes columns such as `_fabricops_run_id`, `_fabricops_pipeline_name`, `_fabricops_created_at`, `_dq_check_status`, and `_dq_failed_rules`, plus any column starting with `_fabricops_` or `_dq_`.
 
-`03_governance` records human-approved DQ expectations in `METADATA_DQ_RULES`. `02_pipeline` reads the active approved rules for the target table and evaluates them with the same simple guardrail contract used by schema and source stability checks:
+## DQ guardrails
 
-- `status`: `passed`, `warning`, or `failed`;
-- `can_continue`: whether publication can proceed;
-- `checks`: aggregate rule-level outcomes;
-- `message`: a concise summary.
+DQ guardrails enforce human-approved expectations.
 
-Severity controls the result:
+`03_governance` records reviewed DQ expectations in `METADATA_DQ_RULES`. `02_pipeline` reads active approved rules and evaluates them at the configured stage.
 
-| Rule outcome | Guardrail result | Pipeline behavior |
-| --- | --- | --- |
-| No rule failures | `passed`, `can_continue=True` | Continue and write the full target dataset. |
-| Warning-severity failure | `warning`, `can_continue=True` | Log the warning result, tag rows with `_dq_check_status` and `_dq_failed_rules`, and write the full target dataset. |
-| Error-severity failure | `failed`, `can_continue=False` | `stop_if_failed(...)` blocks before the target write. |
-| Mixed warning and error failures | `failed`, `can_continue=False` | Error severity wins and blocks before the target write. |
+Source DQ rules can run after source read and before transformation. Target DQ rules can run after transformation and before the target write.
 
-FabricOps keeps DQ enforcement intentionally simple. It does not write a separate invalid-row metadata dataset, filter invalid rows out of the target, send alerts, or perform partial target writes. For warning-level failures, the written dataset keeps every row and adds row-level technical annotations (`_dq_check_status` plus `_dq_failed_rules`) so consumers can see warning-only row issues without losing data.
+| Rule outcome                     | Guardrail result               | Pipeline behavior                                           |
+| -------------------------------- | ------------------------------ | ----------------------------------------------------------- |
+| No rule failures                 | `passed`, `can_continue=True`  | Continue to the next step.                                  |
+| Warning-severity failure         | `warning`, `can_continue=True` | Log the warning and continue.                               |
+| Error-severity failure           | `failed`, `can_continue=False` | `stop_if_failed(...)` blocks before the next critical step. |
+| Mixed warning and error failures | `failed`, `can_continue=False` | Error severity wins and blocks the run.                     |
 
-## Schema presets
+FabricOps keeps DQ enforcement lightweight. It does not create a separate invalid-row dataset, filter invalid rows out of the target, send alerts, or perform partial target writes.
 
-| Preset | Use when | Behavior in plain language |
-| --- | --- | --- |
-| `strict` | Production outputs must match the expected schema. | Stop when columns or data types do not match. |
-| `allow_new_columns` | New fields are acceptable, but existing fields still matter. | Allow additional columns while still checking known columns. |
-| `monitor_only` | A team wants visibility before blocking runs. | Record schema differences without stopping the pipeline. |
+For warning-level target failures, the written target can keep every row and add row-level technical annotations:
 
-## Runtime summary roll-ups
+```text
+_dq_check_status
+_dq_failed_rules
+```
 
-Pipeline run summaries treat `baseline_created` as a non-blocking successful stability outcome because the current run established the first compatible catalogue baseline. `skipped` remains non-blocking; it is ignored when other concrete guardrail results exist and appears as `skipped` only when every result in that roll-up was skipped. Skipped stability rows are not eligible as future baselines.
+## Evidence written
 
-## Evidence produced
+When guardrails run, the pipeline writes evidence into the existing metadata model.
 
-Guardrail results are written with existing metadata evidence:
-
-- source and target profile rows in `METADATA_DATA_CATALOGUE`, including stability hash fields;
-- lineage rows in `METADATA_DATA_LINEAGE_TABLE`;
-- runtime summary rows in `METADATA_PIPELINE_RUNS`.
+| Evidence                   | Metadata table                | Purpose                                                     |
+| -------------------------- | ----------------------------- | ----------------------------------------------------------- |
+| Source and target profiles | `METADATA_DATA_CATALOGUE`     | Records profile evidence and stability hash fields.         |
+| Lineage                    | `METADATA_DATA_LINEAGE_TABLE` | Records how data moved through the pipeline.                |
+| Runtime summaries          | `METADATA_PIPELINE_RUNS`      | Records whether the run passed, warned, skipped, or failed. |
 
 This evidence helps `03_governance`, support teams, and future maintainers understand what the pipeline checked and why it did or did not write outputs.
-
-## What this is not
-
-Pipeline guardrails are not a separate data contract framework and FabricOps does not require separate data contracts. Keep the operating model lightweight: the pipeline notebook owns the checks it runs, and reviewed metadata can inform those checks when intentionally implemented.
