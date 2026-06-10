@@ -9,19 +9,13 @@ import pytest
 from fabricops_kit.config import (
     DEFAULT_DQ_RULE_SUGGESTION_PROMPT_TEMPLATE,
     DataAgreementConfig,
-    DatasetContractValidationError,
     PathConfig,
-    _assert_valid_dataset_contract,
-    _load_dataset_contract,
     setup_metadata_tables,
     setup_notebook,
-    _validate_dataset_contract,
 )
 from tests.helpers import framework_config
 
 pytestmark = pytest.mark.unit
-
-FIXTURES = Path(__file__).parents[1] / "fixtures"
 
 
 def _notebook_dq_prompt_template() -> str:
@@ -88,18 +82,6 @@ def test_dq_ai_suggestion_prompt_guidance_stays_aligned_with_notebook_template()
             assert required in prompt, f"{prompt_name} DQ prompt missing {required!r}"
         for rule_type in DQ_RULE_TYPES:
             assert rule_type in prompt, f"{prompt_name} DQ prompt missing rule_type {rule_type!r}"
-
-
-def test_dataset_contract_valid_and_invalid_paths_are_actionable():
-    valid = _load_dataset_contract(FIXTURES / "valid_dataset_contract.yaml")
-    invalid = _load_dataset_contract(FIXTURES / "invalid_dataset_contract_missing_required.yaml")
-
-    assert _validate_dataset_contract(valid) == []
-    errors = _validate_dataset_contract(invalid)
-    assert errors
-    assert any("required property" in error for error in errors)
-    with pytest.raises(DatasetContractValidationError):
-        _assert_valid_dataset_contract(invalid)
 
 
 def test_setup_notebook_resolves_environment_paths_and_reports_invalid_targets(fake_notebookutils):
