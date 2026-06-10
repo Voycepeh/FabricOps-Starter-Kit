@@ -102,15 +102,3 @@ Approved metadata affects later runs only after it is written to metadata tables
 - `enforce_dq_rules` reads `METADATA_DQ_RULES` from the configured metadata lakehouse target, resolves the newest version for each rule, keeps only active approved rules, evaluates them, and returns a guardrail result with status, checks, a tagged DataFrame, and summary fields for evidence.
 
 Error-severity DQ failures return `status="failed"` and `can_continue=false`. Warning-severity DQ failures return `status="warning"` and `can_continue=true`.
-
-## What this page is not
-
-Governance Review is not a full data product platform, an external DQ framework wrapper, or a replacement for normal pipeline engineering. It is a metadata control panel for augmenting profiled catalogue output. It does not move DQ authoring into `02_pipeline`, expose one public Python function per rule, or require Great Expectations or dbt at runtime.
-
-### Schema guardrails are separate
-
-Do not model schema rules such as required columns, expected schema, or datatype checks as DQ rules. Schema guardrails are a separate FabricOps layer and should remain in schema validation configuration.
-
-### Source stability is separate
-
-Do not model source stability checks as DQ rules. Source stability compares catalogue/profile evidence across runs and is handled by the source stability guardrail layer, not by `METADATA_DQ_RULES`.
