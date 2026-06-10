@@ -22,7 +22,13 @@ Use this skill when changing FabricOps Starter Kit notebooks, package helpers, m
 - Prefer existing public helpers and notebook workflows before adding wrappers or new steps.
 - Do not invent unsupported DQ rule types, parameters, notebook responsibilities, or enforcement behavior.
 
-## Validation reminder
+## Governance and DQ guidance
+
+- Treat `03_governance` as the metadata control panel that augments catalogue/profile output after `02_pipeline` has written and profiled real tables.
+- Keep detailed DQ rule guidance in `docs/reference/dq-rules/index.md`; do not duplicate the full catalogue in workflow pages.
+- Remember that approved DQ rules live in `METADATA_DQ_RULES` and are enforced by later `02_pipeline` runs through `enforce_dq_rules`.
+
+## Workflow
 
 For repo-wide or reference-affecting changes, run relevant tests and a strict docs build, typically:
 
