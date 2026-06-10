@@ -96,7 +96,7 @@ Guardrail result dictionary with status, can_continue, checks, message, tagged d
 ## Source
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/15f1799b713dde469e690b3bbdf35ffe588ff83c/src/fabricops_kit/governance_review.py#L1102-L1159">View enforce_dq_rules on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ffb9386812c13cf40a6a40503d36bd7a16dc5e31/src/fabricops_kit/governance_review.py#L1537-L1594">View enforce_dq_rules on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -177,7 +177,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
-- Source line: `1102`
+- Source line: `1537`
 - Inbound references count: 0
 - Outbound references count: 7
 
@@ -207,9 +207,9 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/15f1799b713dde469e690b3bbdf35ffe588ff83c/src/fabricops_kit/governance_review.py#L1102-L1159">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/15f1799b713dde469e690b3bbdf35ffe588ff83c/src/fabricops_kit/governance_review.py#L1102-L1159</a>
-- Start line: `1102`
-- End line: `1159`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ffb9386812c13cf40a6a40503d36bd7a16dc5e31/src/fabricops_kit/governance_review.py#L1537-L1594">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ffb9386812c13cf40a6a40503d36bd7a16dc5e31/src/fabricops_kit/governance_review.py#L1537-L1594</a>
+- Start line: `1537`
+- End line: `1594`
 - Signature:
 
 ```python

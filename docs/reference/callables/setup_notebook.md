@@ -93,7 +93,7 @@ NotebookSetupContext with resolved configuration paths, runtime metadata, smoke-
 ## Source
 
 - Source file path: `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/15f1799b713dde469e690b3bbdf35ffe588ff83c/src/fabricops_kit/config.py#L595-L704">View setup_notebook on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ffb9386812c13cf40a6a40503d36bd7a16dc5e31/src/fabricops_kit/config.py#L598-L707">View setup_notebook on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -226,7 +226,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `config`
 - Source file path: `src/fabricops_kit/config.py`
-- Source line: `595`
+- Source line: `598`
 - Inbound references count: 0
 - Outbound references count: 4
 
@@ -253,9 +253,9 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/config.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/15f1799b713dde469e690b3bbdf35ffe588ff83c/src/fabricops_kit/config.py#L595-L704">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/15f1799b713dde469e690b3bbdf35ffe588ff83c/src/fabricops_kit/config.py#L595-L704</a>
-- Start line: `595`
-- End line: `704`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ffb9386812c13cf40a6a40503d36bd7a16dc5e31/src/fabricops_kit/config.py#L598-L707">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ffb9386812c13cf40a6a40503d36bd7a16dc5e31/src/fabricops_kit/config.py#L598-L707</a>
+- Start line: `598`
+- End line: `707`
 - Signature:
 
 ```python

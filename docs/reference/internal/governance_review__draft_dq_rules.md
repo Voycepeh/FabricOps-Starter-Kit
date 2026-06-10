@@ -17,7 +17,7 @@ Do not call this helper directly from notebooks; use the public callable helpers
 
 ## Used by
 
-Not documented yet
+- <a href="../widget_review_dq_rules/"><code>fabricops_kit.governance_review.widget_review_dq_rules</code></a>
 
 ## Purpose
 
@@ -49,12 +49,16 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 - Classification: Internal
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
-- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/15f1799b713dde469e690b3bbdf35ffe588ff83c/src/fabricops_kit/governance_review.py#L1188-L1194">View source on GitHub</a>
-- Inbound references count: 0
-- Outbound references count: 4
+- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ffb9386812c13cf40a6a40503d36bd7a16dc5e31/src/fabricops_kit/governance_review.py#L1623-L1631">View source on GitHub</a>
+- Inbound references count: 1
+- Outbound references count: 5
+
+## Inbound references
+- <a href="../widget_review_dq_rules/"><code>fabricops_kit.governance_review.widget_review_dq_rules</code></a>
 
 ## Outbound references
 - <a href="../internal/governance_review__canonical_dq_rule_type/"><code>fabricops_kit.governance_review._canonical_dq_rule_type</code></a>
 - <a href="../internal/governance_review__extract_assignment_payload/"><code>fabricops_kit.governance_review._extract_assignment_payload</code></a>
 - <a href="../internal/governance_review__prepare_dq_profile_input_rows/"><code>fabricops_kit.governance_review._prepare_dq_profile_input_rows</code></a>
 - <a href="../internal/governance_review__run_fabric_ai_drafting/"><code>fabricops_kit.governance_review._run_fabric_ai_drafting</code></a>
+- <a href="../internal/governance_review__validate_dq_rules/"><code>fabricops_kit.governance_review._validate_dq_rules</code></a>

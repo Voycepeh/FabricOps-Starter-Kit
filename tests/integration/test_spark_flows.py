@@ -64,8 +64,8 @@ def test_load_active_dq_rules_reconstructs_current_shape_metadata_row(spark_sess
                 "rule_key": "orders|amount_positive",
                 "rule_id": "amount_positive",
                 "column_name": "amount",
-                "rule_type": "value_range",
-                "rule_parameters_json": json.dumps({"lower_bound": 0}),
+                "rule_type": "greater_than",
+                "rule_parameters_json": json.dumps({"value": 0}),
                 "severity": "error",
                 "description": "Amount must be non-negative",
                 "is_active": True,
@@ -82,11 +82,11 @@ def test_load_active_dq_rules_reconstructs_current_shape_metadata_row(spark_sess
     assert _load_active_dq_rules(metadata_df, table_name="orders") == [
         {
             "rule_id": "amount_positive",
-            "rule_type": "value_range",
+            "rule_type": "greater_than",
             "columns": ["amount"],
             "severity": "error",
             "description": "Amount must be non-negative",
-            "lower_bound": 0,
+            "value": 0,
         }
     ]
 
@@ -117,8 +117,9 @@ def test_load_active_dq_rules_reconstructs_current_governance_metadata(spark_ses
             {
                 "rule_id": "amount_positive",
                 "column_name": "amount",
-                "rule_type": "value_range",
-                "rule_parameters": {"lower_bound": 0},
+                "rule_type": "greater_than",
+                "columns": ["amount"],
+                "value": 0,
                 "severity": "error",
                 "description": "Amount must be non-negative",
                 "commit": True,
@@ -133,11 +134,11 @@ def test_load_active_dq_rules_reconstructs_current_governance_metadata(spark_ses
     assert loaded == [
         {
             "rule_id": "amount_positive",
-            "rule_type": "value_range",
+            "rule_type": "greater_than",
             "columns": ["amount"],
             "severity": "error",
             "description": "Amount must be non-negative",
-            "lower_bound": 0,
+            "value": 0,
         }
     ]
 
@@ -249,8 +250,8 @@ def test_enforce_dq_rules_warning_failure_adds_technical_columns_and_preserves_r
                 "rule_key": "orders|amount_positive",
                 "rule_id": "amount_positive",
                 "column_name": "amount",
-                "rule_type": "value_range",
-                "rule_parameters_json": json.dumps({"lower_bound": 0}),
+                "rule_type": "greater_than",
+                "rule_parameters_json": json.dumps({"value": 0}),
                 "severity": "warning",
                 "description": "Positive amount",
                 "is_active": True,

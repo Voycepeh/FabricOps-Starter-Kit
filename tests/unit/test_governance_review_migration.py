@@ -39,7 +39,6 @@ EXPECTED_V1_CALLABLES = [
     "write_warehouse_table",
     "profile_dataframe",
     "validate_schema",
-    "generate_schema_guardrail_config",
     "enforce_catalogue_stability",
     "stop_if_failed",
     "enforce_dq_rules",
@@ -72,7 +71,7 @@ def test_no_source_tests_docs_or_templates_reference_removed_modules_or_callable
         "_get" + "_notebook_registry_schema",
         "configure" + "_ai",
         "Config" + "BootstrapResult",
-    )
+        )
     removed_module_files = tuple(f"fabricops_kit/{suffix}.py" for suffix in DELETED_MODULE_SUFFIXES)
     offenders: list[str] = []
     for base in [root / "src", root / "tests", root / "docs", root / "templates"]:
@@ -137,9 +136,8 @@ def test_dq_rule_validation_rejects_unsupported_runtime_rule_types():
     with pytest.raises(ValueError):
         governance._validate_dq_rules([{**rules[0], "rule_type": "custom"}])
 
-    for unsupported in ("datatype", "referential_integrity", "custom_expression"):
-        with pytest.raises(ValueError):
-            governance._validate_dq_rules([{**rules[0], "rule_type": unsupported}])
+    with pytest.raises(ValueError):
+        governance._validate_dq_rules([{**rules[0], "rule_type": "unsupported_rule"}])
 
 
 def test_record_table_governance_writes_context_dq_and_classification(monkeypatch):

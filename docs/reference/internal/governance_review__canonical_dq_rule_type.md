@@ -18,9 +18,13 @@ Do not call this helper directly from notebooks; use the public callable helpers
 ## Used by
 
 - <a href="../internal/governance_review__build_dq_rule_records/"><code>fabricops_kit.governance_review._build_dq_rule_records</code></a>
+- <a href="../internal/governance_review__dq_parameter_fields_for_rule_type/"><code>fabricops_kit.governance_review._dq_parameter_fields_for_rule_type</code></a>
+- <a href="../internal/governance_review__dq_rule_display_rows/"><code>fabricops_kit.governance_review._dq_rule_display_rows</code></a>
 - <a href="../internal/governance_review__draft_dq_rules/"><code>fabricops_kit.governance_review._draft_dq_rules</code></a>
 - <a href="../internal/governance_review__load_active_dq_rules/"><code>fabricops_kit.governance_review._load_active_dq_rules</code></a>
+- <a href="../internal/governance_review__parse_dq_ai_suggestions/"><code>fabricops_kit.governance_review._parse_dq_ai_suggestions</code></a>
 - <a href="../internal/governance_review__validate_dq_rules/"><code>fabricops_kit.governance_review._validate_dq_rules</code></a>
+- <a href="../widget_review_dq_rules/"><code>fabricops_kit.governance_review.widget_review_dq_rules</code></a>
 
 ## Purpose
 
@@ -52,12 +56,16 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 - Classification: Internal
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
-- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/15f1799b713dde469e690b3bbdf35ffe588ff83c/src/fabricops_kit/governance_review.py#L55-L56">View source on GitHub</a>
-- Inbound references count: 4
+- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ffb9386812c13cf40a6a40503d36bd7a16dc5e31/src/fabricops_kit/governance_review.py#L79-L80">View source on GitHub</a>
+- Inbound references count: 8
 - Outbound references count: 0
 
 ## Inbound references
 - <a href="../internal/governance_review__build_dq_rule_records/"><code>fabricops_kit.governance_review._build_dq_rule_records</code></a>
+- <a href="../internal/governance_review__dq_parameter_fields_for_rule_type/"><code>fabricops_kit.governance_review._dq_parameter_fields_for_rule_type</code></a>
+- <a href="../internal/governance_review__dq_rule_display_rows/"><code>fabricops_kit.governance_review._dq_rule_display_rows</code></a>
 - <a href="../internal/governance_review__draft_dq_rules/"><code>fabricops_kit.governance_review._draft_dq_rules</code></a>
 - <a href="../internal/governance_review__load_active_dq_rules/"><code>fabricops_kit.governance_review._load_active_dq_rules</code></a>
+- <a href="../internal/governance_review__parse_dq_ai_suggestions/"><code>fabricops_kit.governance_review._parse_dq_ai_suggestions</code></a>
 - <a href="../internal/governance_review__validate_dq_rules/"><code>fabricops_kit.governance_review._validate_dq_rules</code></a>
+- <a href="../widget_review_dq_rules/"><code>fabricops_kit.governance_review.widget_review_dq_rules</code></a>

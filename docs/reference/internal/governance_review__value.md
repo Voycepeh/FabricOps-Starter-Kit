@@ -25,6 +25,7 @@ Do not call this helper directly from notebooks; use the public callable helpers
 - <a href="../internal/governance_review__latest_row/"><code>fabricops_kit.governance_review._latest_row</code></a>
 - <a href="../internal/governance_review__review_governance_evidence/"><code>fabricops_kit.governance_review._review_governance_evidence</code></a>
 - <a href="../load_catalogue_profile_rows/"><code>fabricops_kit.governance_review.load_catalogue_profile_rows</code></a>
+- <a href="../widget_review_dq_rules/"><code>fabricops_kit.governance_review.widget_review_dq_rules</code></a>
 
 ## Purpose
 
@@ -56,8 +57,8 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 - Classification: Internal
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
-- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/15f1799b713dde469e690b3bbdf35ffe588ff83c/src/fabricops_kit/governance_review.py#L47-L48">View source on GitHub</a>
-- Inbound references count: 8
+- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ffb9386812c13cf40a6a40503d36bd7a16dc5e31/src/fabricops_kit/governance_review.py#L71-L72">View source on GitHub</a>
+- Inbound references count: 9
 - Outbound references count: 0
 
 ## Inbound references
@@ -69,3 +70,4 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 - <a href="../internal/governance_review__latest_row/"><code>fabricops_kit.governance_review._latest_row</code></a>
 - <a href="../internal/governance_review__review_governance_evidence/"><code>fabricops_kit.governance_review._review_governance_evidence</code></a>
 - <a href="../load_catalogue_profile_rows/"><code>fabricops_kit.governance_review.load_catalogue_profile_rows</code></a>
+- <a href="../widget_review_dq_rules/"><code>fabricops_kit.governance_review.widget_review_dq_rules</code></a>
