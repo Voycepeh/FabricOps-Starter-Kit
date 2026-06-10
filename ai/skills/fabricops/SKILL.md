@@ -2,6 +2,10 @@
 
 Use this skill when authoring notebooks, changing package helpers, or reviewing generated references for the FabricOps Starter Kit.
 
+## What this skill is for
+
+This skill guides AI agents working on the FabricOps Starter Kit repository. It is not public user documentation and should not become a replacement for the docs, generated references, source code, or notebook templates. Point agents to the source of truth instead of duplicating full documentation, generated manifests, or rule pages here.
+
 ## Reference sources
 
 Start with the existing generated function reference system. Do not replace it with a separate documentation or manifest system.
@@ -13,42 +17,40 @@ Start with the existing generated function reference system. Do not replace it w
 - `docs/reference/dq-rules/` — generated DQ rule reference pages for supported rule types, parameters, and examples.
 - `docs/reference/template-function-map.md` — notebook-template to callable map.
 
-## Agent rules
+## Core operating principles
 
-- Respect `00_env_config`; use its configured environment and metadata targets rather than assuming an attached/default lakehouse.
-- Prefer existing helpers before creating wrappers.
+- Respect `00_env_config`; it owns environment setup and configured runtime targets.
+- Use configured metadata targets rather than assuming an attached/default lakehouse.
+- Prefer existing helpers before creating wrappers or new workflow steps.
 - Do not hardcode Fabric workspace IDs or item IDs unless explicitly provided by the user.
-- Do not bypass metadata evidence when governance workflows require it.
+- Do not bypass governed metadata evidence when agreement, review, enforcement, lineage, or handover workflows require it.
+- Do not invent unsupported workflow steps, notebook responsibilities, DQ rule types, parameters, or enforcement behavior.
+- Do not create a separate documentation or manifest system for FabricOps guidance.
+- Keep examples public-safe and generic; do not include production values, tenant or workspace identifiers, internal URLs, secrets, or screenshots.
 - Check side effects before using a function.
-- Treat `Not documented yet` as incomplete guidance; inspect source code, docstrings, and generated manifests before generating code.
-- Use callable pages for notebook authoring.
-- Use internal pages only for package maintenance.
+- Treat `Not documented yet` as incomplete guidance; inspect source code, docstrings, generated manifests, and generated reference pages before generating code.
 - Update docs and tests together when changing public APIs, generated reference behavior, or notebook-facing guidance.
-- Do not create a new documentation system or separate manifest for FabricOps guidance.
-- Do not manually edit generated reference files unless the generator or source inputs require it.
 
-## Workflow
+## Notebook workflow ownership
 
-1. Identify whether the task is agreement, profiling or review, pipeline enforcement, governance review, handover, or package maintenance.
-2. Check `docs/reference/template-function-map.md` for the relevant starter flow.
-3. Read the matching page in `docs/reference/callables/` before calling or recommending a public helper.
-4. For DQ work, read the relevant generated DQ rule page in `docs/reference/dq-rules/` and the callable page before generating notebook code.
-5. Inspect `docs/reference/agent-manifest.json` for required context, inputs, output, side effects, failure modes, verification, and related functions.
-6. Use `docs/reference/internal/` only when maintaining package implementation details.
-7. If source metadata, public API surface, or generator behavior changes, regenerate the existing reference outputs with `PYTHONPATH=src python scripts/generate_function_reference.py` and run relevant tests.
+- `00_env_config` owns environment selection, runtime setup, and metadata target configuration.
+- `01_agreement` owns agreement and steward context.
+- Profiling or review notebooks own discovery, suggested metadata, and review evidence.
+- Pipeline notebooks own executable validation, enforcement, lineage, and run evidence.
+- Handover outputs should be assembled from approved metadata and runtime evidence rather than ad hoc notebook-only state.
 
-## Data quality and contract rules
+### Data quality rules
 
-Treat DQ rules as governed evidence, not ad hoc notebook checks. Rules should flow through the contract, profiling, review, approval, metadata, and enforcement lifecycle so downstream notebooks can explain which approved expectations were evaluated and why.
+DQ rules are governed evidence, not ad hoc notebook checks. They should flow through contract, profiling, review, approval, metadata, and enforcement workflows so downstream notebooks can explain which approved expectations were evaluated and why.
 
-- Use `widget_review_dq_rules` for human review or approval workflows that draft, edit, approve, deactivate, or reactivate DQ rules.
+- Use `docs/reference/dq-rules/` for generated DQ rule guidance, and inspect individual generated rule pages before recommending syntax or parameters.
+- Use `widget_review_dq_rules` for DQ review and approval workflows.
 - Use `enforce_dq_rules` for executable pipeline enforcement before target writes.
-- Do not bypass approved metadata when pipeline enforcement requires reviewed rules; enforcement should read the approved active rules from the configured metadata target.
+- Do not bypass approved metadata when pipeline enforcement requires reviewed rules; enforcement should read approved active rules from the configured metadata target.
 - Do not invent unsupported DQ rule types, syntax, parameters, or enforcement semantics.
-- Inspect individual generated DQ rule pages before recommending rule syntax or parameters; summarize the relevant rule page instead of duplicating full generated rule content.
-- Keep examples public-safe and generic; do not include production values, tenant or workspace identifiers, internal URLs, or screenshots.
+- Summarize the relevant generated DQ rule page instead of duplicating full generated rule content.
 
-Current supported DQ rule reference pages are generated under `docs/reference/dq-rules/`; use `docs/reference/dq-rules/index.md` as the source of truth. Current pages include:
+`docs/reference/dq-rules/index.md` is the source of truth for currently supported DQ rule pages; the list below is an orientation aid and must not become a separate permanent source of truth:
 
 - `docs/reference/dq-rules/accepted-values.md`
 - `docs/reference/dq-rules/between.md`
@@ -74,10 +76,22 @@ Current supported DQ rule reference pages are generated under `docs/reference/dq
 - `docs/reference/dq-rules/unique-combination.md`
 - `docs/reference/dq-rules/value-when.md`
 
-For DQ requests:
+## Generated reference discipline
 
-1. Classify the work first: agreement, profiling or review, pipeline enforcement, governance review, or handover.
-2. Read the matching callable reference, such as `docs/reference/callables/widget_review_dq_rules.md` for review/approval or `docs/reference/callables/enforce_dq_rules.md` for pipeline enforcement.
-3. Read each relevant generated DQ rule page in `docs/reference/dq-rules/` before writing notebook code or recommending parameters.
-4. Preserve the `00_env_config` metadata target route for reads and writes, especially for `METADATA_DQ_RULES` and related governed evidence tables.
-5. If a requested rule cannot be mapped to a generated DQ rule reference page, explain that it is unsupported and propose the nearest supported rule only when the reference page confirms the syntax and parameters.
+- Use `docs/reference/agent-manifest.json` for required context, inputs, outputs, side effects, failure modes, verification, and related functions.
+- Use `docs/reference/function-manifest.json` for the machine-readable function inventory and dependency metadata.
+- Use pages in `docs/reference/callables/` for notebook authoring guidance.
+- Use pages in `docs/reference/internal/` only for package maintenance.
+- Use `docs/reference/template-function-map.md` to connect notebook templates to callable references.
+- Do not manually edit generated reference files unless source inputs or generator behavior require it.
+- If source metadata, public API surface, callable documentation contracts, or generator behavior changes, regenerate the existing reference outputs with `PYTHONPATH=src python scripts/generate_function_reference.py` and run relevant tests.
+
+## Workflow
+
+1. Identify whether the task is agreement, profiling or review, pipeline enforcement, governance review, handover, notebook authoring, or package maintenance.
+2. Check the notebook workflow ownership above and `docs/reference/template-function-map.md` for the relevant starter flow.
+3. Read the matching page in `docs/reference/callables/` before calling or recommending a public helper.
+4. For DQ work, read `docs/reference/dq-rules/index.md`, each relevant generated DQ rule page, and the callable page before generating notebook code.
+5. Inspect `docs/reference/agent-manifest.json` and `docs/reference/function-manifest.json` when you need execution metadata, dependencies, side effects, failure modes, or verification guidance.
+6. Use `docs/reference/internal/` only when maintaining package implementation details.
+7. Preserve `00_env_config` metadata routing for reads and writes, especially governed evidence tables such as `METADATA_DQ_RULES`.
