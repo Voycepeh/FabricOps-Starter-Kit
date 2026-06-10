@@ -1,28 +1,26 @@
-# FabricOps Starter Kit skill
+---
+name: fabricops
+description: Repository guidance for AI agents working on governed, quality-checked, AI-ready notebooks in Microsoft Fabric.
+---
 
-Use this skill when authoring notebooks, changing package helpers, or reviewing generated references for the FabricOps Starter Kit.
+# FabricOps agent skill
 
-## Reference sources
+Use this skill when changing FabricOps Starter Kit notebooks, package helpers, metadata workflows, generated reference guidance, or DQ rule behavior.
 
-Start with the existing generated function reference system. Do not replace it with a separate documentation or manifest system.
+## Source of truth
 
-- `docs/reference/agent-manifest.json` — AI-oriented callable and helper execution metadata.
-- `docs/reference/function-manifest.json` — machine-readable function inventory and dependency metadata.
-- `docs/reference/callables/` — public callable pages for notebook authors.
-- `docs/reference/internal/` — internal helper pages for package maintenance.
-- `docs/reference/template-function-map.md` — notebook-template to callable map.
+- Treat `00_env_config` as the owner of environment setup and configured metadata/lakehouse targets.
+- Use `docs/reference/agent-manifest.json`, `docs/reference/function-manifest.json`, `docs/reference/callables/`, and `docs/reference/internal/` before changing or recommending helpers.
+- Use `docs/reference/dq-rules/` for supported DQ rule names, parameters, and examples.
+- Do not duplicate generated callable lists or generated DQ catalogue content in hand-written docs.
 
-## Agent rules
+## Operating rules
 
-- Respect `00_env_config`; use its configured environment and metadata targets rather than assuming an attached/default lakehouse.
-- Prefer existing helpers before creating wrappers.
-- Do not hardcode Fabric workspace IDs or item IDs unless explicitly provided by the user.
-- Do not bypass metadata evidence when governance workflows require it.
-- Check side effects before using a function.
-- Treat `Not documented yet` as incomplete guidance; inspect source code, docstrings, and generated manifests before generating code.
-- Use callable pages for notebook authoring.
-- Use internal pages only for package maintenance.
-- Update docs and tests together when changing public APIs, generated reference behavior, or notebook-facing guidance.
+- Keep examples generic and public-safe: no secrets, tenant IDs, workspace IDs, internal URLs, real data, or production screenshots.
+- Route metadata reads and writes through the configured `metadata` target from `00_env_config`; do not assume an attached/default lakehouse.
+- Preserve governance review as a metadata control panel over profiled catalogue output; do not move the DQ catalogue back into `docs/how-fabricops-works/governance-review.md`.
+- Prefer existing public helpers and notebook workflows before adding wrappers or new steps.
+- Do not invent unsupported DQ rule types, parameters, notebook responsibilities, or enforcement behavior.
 
 ## Governance and DQ guidance
 
@@ -32,9 +30,9 @@ Start with the existing generated function reference system. Do not replace it w
 
 ## Workflow
 
-1. Identify the notebook or maintenance task.
-2. Check `docs/reference/template-function-map.md` for the relevant starter flow.
-3. Read the matching page in `docs/reference/callables/` before calling or recommending a public helper.
-4. Inspect `docs/reference/agent-manifest.json` for required context, inputs, output, side effects, failure modes, verification, and related functions.
-5. Use `docs/reference/internal/` only when maintaining package implementation details.
-6. If source metadata, public API surface, or generator behavior changes, regenerate the existing reference outputs with `PYTHONPATH=src python scripts/generate_function_reference.py` and run relevant tests.
+For repo-wide or reference-affecting changes, run relevant tests and a strict docs build, typically:
+
+```bash
+uv run pytest
+uv run mkdocs build --strict
+```

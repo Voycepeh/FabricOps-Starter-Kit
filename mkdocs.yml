@@ -48,7 +48,8 @@ nav:
           - pipeline: api/modules/pipeline.md
           - metadata: api/modules/metadata.md
           # AUTO-GENERATED-MODULES-END
-      - DQ Rules: reference/dq-rules/index.md
+      - DQ Rules:
+          - Overview: reference/dq-rules/index.md
           - not_null: reference/dq-rules/not-null.md
           - null_rate_below: reference/dq-rules/null-rate-below.md
           - non_empty_string: reference/dq-rules/non-empty-string.md
