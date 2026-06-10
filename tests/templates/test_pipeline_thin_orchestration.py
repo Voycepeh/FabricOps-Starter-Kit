@@ -65,7 +65,7 @@ def test_pipeline_notebook_uses_existing_public_apis_and_metadata_helpers():
     assert "LINEAGE_RELATIONSHIPS" in code
     assert "METADATA_PIPELINE_RUNS" in markdown
     assert "imports existing FabricOps callables directly for reads, profiling, guardrails, writes" in markdown
-    assert "FabricOps then orchestrates profiling, schema validation, stability enforcement, DQ enforcement" in markdown
+    assert "FabricOps then enriches those source entries with framework defaults and DataFrames" in markdown
 
 
 def test_pipeline_notebook_contains_expected_config_driven_flow_sections():
@@ -74,29 +74,32 @@ def test_pipeline_notebook_contains_expected_config_driven_flow_sections():
         "## 1. Run `00_env_config`",
         "## 2. Import required functions",
         "## 3. Select data agreement and capture run context",
-        "## 4. Source DataFrame/config blocks",
-        "## 5. Collect source configs",
-        "## 6. Define reusable guardrail orchestration helpers",
-        "## 7. Run source guardrails before transformation",
-        "## 8. Transform to target DataFrames",
-        "## 9. Target DataFrame/config blocks",
-        "## 10. Collect target configs",
-        "## 11. Run target guardrails before writes",
-        "## 12. Write target tables",
-        "## 13. Capture many-to-many lineage",
-        "## 14. Write runtime summary",
+        "## 4. USER EDIT SECTION — source table configuration",
+        "## 5. FRAMEWORK DEFAULTS — source governance settings",
+        "## 6. FRAMEWORK PREPARATION — load and enrich source configs",
+        "## 7. Optional: inspect a source schema",
+        "## 8. Define reusable guardrail orchestration helpers",
+        "## 9. Run source guardrails before transformation",
+        "## 10. Transform to target DataFrames",
+        "## 11. Target DataFrame/config blocks",
+        "## 12. Collect target configs",
+        "## 13. Run target guardrails before writes",
+        "## 14. Write target tables",
+        "## 15. Capture many-to-many lineage",
+        "## 16. Write runtime summary",
     ]
     for section in expected_sections:
         assert section in markdown
 
-    assert "Users clone only DataFrame/config blocks" in markdown
+    assert "beginner friendly" in markdown
     assert "Schema, stability, and DQ remain separate guardrail concepts" in markdown
-    assert "Each source block starts with a small editable parameter header" in markdown
-    assert "replace `SOURCE_01`/`df_source_01` with `SOURCE_02`/`df_source_02`" in markdown
+    assert "Most users only edit this section for sources" in markdown
+    assert "To support multiple source tables, add another dictionary to `SOURCE_TABLES`" in markdown
     assert "Each target block starts with a small editable parameter header" in markdown
     assert "replace `TARGET_01`/`df_target_01` with `TARGET_02`/`df_target_02`" in markdown
     assert "Do not copy profiling, schema, stability, DQ, or catalogue-evidence code" in markdown
     assert "Do not copy profiling, schema, stability, DQ, catalogue-evidence, or write orchestration code" in markdown
+    assert "`metadata` = governance evidence lakehouse" in markdown
 
 
 def test_pipeline_notebook_hides_manual_catalogue_and_lineage_plumbing():
@@ -124,53 +127,55 @@ def test_pipeline_notebook_runs_guardrails_from_source_and_target_config_lists()
     markdown, code = _notebook_sources()
 
     assert "DATASET_NAME = \"CHANGE_ME_dataset\"" in code
-    assert "SOURCE_01_KEY = \"source_01\"" in code
-    assert "SOURCE_01_DATASET_NAME = DATASET_NAME" in code
-    assert "SOURCE_01_LAYER = \"source\"" in code
-    assert "SOURCE_01_TABLE_NAME = \"CHANGE_ME_source_table\"" in code
-    assert "SOURCE_01_STAGE = \"source\"" in code
-    assert "df_source_01 = read_lakehouse_table(" in code
-    assert "SOURCE_01_CONFIG = {" in code
-    assert "SOURCE_01_LAYER,\n    SOURCE_01_TABLE_NAME," in code
-    assert "# SOURCE_02_KEY = \"source_02\"" in code
-    assert "# SOURCE_02_TABLE_NAME = \"CHANGE_ME_second_source_table\"" in code
-    assert "# df_source_02 = read_lakehouse_csv(" in code
-    assert "# SOURCE_02_CONFIG = {" in code
-    assert "SOURCE_TABLES = [SOURCE_01_CONFIG]" in code
-    assert "# SOURCE_TABLES = [SOURCE_01_CONFIG, SOURCE_02_CONFIG]" in code
+    assert "SOURCE_TABLES = [" in code
+    assert '"key": "source_01"' in code
+    assert '"layer": "source"' in code
+    assert '"table_name": "CHANGE_ME_source_table"' in code
+    assert '"stage": "source"' in code
+    assert '"watermark_column": "CHANGE_ME_business_date"' in code
+    assert '"watermark_value": None' in code
+    assert '"expected_schema": {' in code
+    assert '"business_date": "date"' in code
+    assert '"dq_preset": "approved_rules"' in code
+    assert "DEFAULT_SOURCE_SETTINGS = {" in code
+    assert '"schema_preset": "allow_new_columns"' in code
+    assert '"data_behavior": "changing"' in code
+    assert '"stability_check_type": "watermark_slice_hash"' in code
+    assert "_SOURCE_TABLES_USER_CONFIG = SOURCE_TABLES" in code
+    assert "for source_config in _SOURCE_TABLES_USER_CONFIG:" in code
+    assert "**DEFAULT_SOURCE_SETTINGS" in code
+    assert "**source_config" in code
+    assert '"dataset_name": DATASET_NAME' in code
+    assert 'enriched_source["df"] = read_lakehouse_table(' in code
+    assert 'enriched_source["layer"],' in code
+    assert 'enriched_source["table_name"],' in code
+    assert "SOURCE_CONFIG_BY_KEY =" in code
+    assert 'SOURCE_01_CONFIG = SOURCE_CONFIG_BY_KEY["source_01"]' in code
+    assert "df_source_01 = SOURCE_01_CONFIG[\"df\"]" in code
     assert "for table_config in table_configs:" in code
     assert "source_guardrail_results = run_table_guardrails(" in code
     assert "stop_if_any_guardrail_failed(source_guardrail_results)" in code
     assert code.index("source_guardrail_results = run_table_guardrails(") < code.index("df_target_01 = (")
 
-    source_block = code[code.index("SOURCE_01_CONFIG = {"):code.index("# Source 02 example")]
-    for required_field in [
-        '"key"',
-        '"df"',
-        '"dataset_name"',
-        '"table_name"',
-        '"stage"',
-        '"schema_preset"',
-        '"data_behavior"',
-        '"stability_check_type"',
-        '"watermark_column"',
-        '"watermark_value"',
-        '"dq_preset"',
-        '"expected_schema"',
-        '"distribution_columns"',
-        '"exclude_columns"',
+    user_edit_block = code[code.index("DATASET_NAME = \"CHANGE_ME_dataset\""):code.index("DEFAULT_SOURCE_SETTINGS = {")]
+    for inline_comment in [
+        "Change: business dataset or domain name",
+        "Usually keep: unique source key",
+        "Usually keep: configured lakehouse layer",
+        "Change: source lakehouse table name",
+        "Usually keep: governance stage",
+        "Change when using watermark stability",
+        "Usually keep None",
+        "Change: columns and Spark SQL types",
+        "Optional: uncomment to override DEFAULT_SOURCE_SETTINGS",
     ]:
-        assert required_field in source_block
-    for constant_field in [
-        '"key": SOURCE_01_KEY',
-        '"dataset_name": SOURCE_01_DATASET_NAME',
-        '"table_name": SOURCE_01_TABLE_NAME',
-        '"stage": SOURCE_01_STAGE',
-    ]:
-        assert constant_field in source_block
-    assert '"key": "source_01"' not in source_block
-    assert '"table_name": "CHANGE_ME_source_table"' not in source_block
-    assert '"stage": "source"' not in source_block
+        assert inline_comment in user_edit_block
+
+    assert "`source` = raw/source lakehouse table" in markdown
+    assert "`unified` = cleaned/conformed lakehouse table" in markdown
+    assert "`product` = curated product or warehouse output" in markdown
+    assert "`metadata` = governance evidence lakehouse" in markdown
+    assert "not usually selected as a business source table" in markdown
 
     assert "TARGET_01_KEY = \"target_01\"" in code
     assert "TARGET_01_DATASET_NAME = DATASET_NAME" in code
@@ -236,7 +241,6 @@ def test_pipeline_notebook_runs_guardrails_from_source_and_target_config_lists()
     assert '"targets": [TARGET_01_KEY]' in code
     assert '"operation": f"derive amount band and publish {TARGET_01_TABLE_NAME}"' in code
     assert '"description": f"{SOURCE_01_TABLE_NAME} rows are transformed into {TARGET_01_TABLE_NAME}."' in code
-
 
 def test_pipeline_notebook_collects_separate_guardrail_results_before_stopping():
     _, code = _notebook_sources()
