@@ -24,6 +24,12 @@ Start with the existing generated function reference system. Do not replace it w
 - Use internal pages only for package maintenance.
 - Update docs and tests together when changing public APIs, generated reference behavior, or notebook-facing guidance.
 
+## Governance and DQ guidance
+
+- Treat `03_governance` as the metadata control panel that augments catalogue/profile output after `02_pipeline` has written and profiled real tables.
+- Keep detailed DQ rule guidance in `docs/reference/dq-rules/index.md`; do not duplicate the full catalogue in workflow pages.
+- Remember that approved DQ rules live in `METADATA_DQ_RULES` and are enforced by later `02_pipeline` runs through `enforce_dq_rules`.
+
 ## Workflow
 
 1. Identify the notebook or maintenance task.
