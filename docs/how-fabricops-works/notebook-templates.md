@@ -10,18 +10,22 @@ These links open the current development templates. Released documentation shoul
 
 ![Role-based notebook workflow from environment configuration through governance review](../assets/fabricops-role-workflow.png){ .full-width }
 
-## Optional example notebooks
+## How the templates work together
 
-These notebooks are release-specific validation aids. They are stored beside the templates with an `example_` prefix so users can quickly test or understand specific flows before adapting the production templates. They are not production workflow templates.
+| Step | Notebook | Main owner | What happens |
+| ---- | -------- | ---------- | ------------ |
+| 1 | `00_env_config` | Engineering | Configure paths, Fabric targets, metadata tables, and reusable widgets. |
+| 2 | `01_agreement` | Governance | Capture the request, ownership, steward details, and agreement evidence. |
+| 3 | `99_explore` | Analyst or engineering | Optionally inspect and profile source data before production delivery. |
+| 4 | `02_pipeline` | Engineering | Build the data product, write outputs, and record catalogue, lineage, DQ, and run evidence. |
+| 5 | `03_governance` | Governance | Review and approve metadata, classifications, sensitivity labels, and DQ rules. |
+| 6 | `02_pipeline` | Engineering | Rerun the pipeline so approved rules are enforced during delivery. |
 
-| Notebook | Purpose |
-| --- | --- |
-| `example_pipeline_smoke_test.ipynb` | Validates the pipeline path: source and target guardrails, catalogue evidence, lineage, runtime summary, and a smoke target write. |
-| `example_dq_rule_smoke_test.ipynb` | Demonstrates DQ rule evaluation, warning behavior, and error blocking behavior using smoke-test data and rules. |
+For detailed behavior, continue to [Pipeline Guardrails](schema-and-data-drift.md), [Governance Review](governance-review.md), and [Metadata Tables](metadata-tables.md).
 
 ## Template notebooks
 
-<div class="grid cards" markdown>
+<div class="template-card-list" markdown>
 
 <div markdown class="card">
 
@@ -77,31 +81,6 @@ Agreement, steward, and agreement evidence records are stored in the metadata la
 
 <div markdown class="card">
 
-### `99_explore`
-
-**Objective**
-
-Explore source data before or during delivery when discovery is needed.
-
-**Used by**
-
-Analysts, data scientists, or engineers.
-
-**Key function**
-
-Supports source inspection, profiling, early schema understanding, pre-agreement checks, troubleshooting, and review questions. It can be linked to one or more agreements when the exploration produces useful evidence.
-
-**Output**
-
-Source data is explored and profiled without turning the exploration notebook into the production pipeline.
-
-**Template**
-
-[Open `99_explore.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/99_explore.ipynb)
-
-</div>
-
-<div markdown class="card">
 
 ### `02_pipeline`
 
@@ -153,17 +132,39 @@ Reviewed governance metadata is committed table by table and becomes available f
 
 </div>
 
+### `99_explore`
+
+**Objective**
+
+Explore source data before or during delivery when discovery is needed.
+
+**Used by**
+
+Analysts, data scientists, or engineers.
+
+**Key function**
+
+Supports source inspection, profiling, early schema understanding, pre-agreement checks, troubleshooting, and review questions. It can be linked to one or more agreements when the exploration produces useful evidence.
+
+**Output**
+
+Source data is explored and profiled without turning the exploration notebook into the production pipeline.
+
+**Template**
+
+[Open `99_explore.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/99_explore.ipynb)
+
 </div>
 
-## How the templates work together
+<div markdown class="card">
 
-| Step | Notebook | Main owner | What happens |
-| ---- | -------- | ---------- | ------------ |
-| 1 | `00_env_config` | Engineering | Configure paths, Fabric targets, metadata tables, and reusable widgets. |
-| 2 | `01_agreement` | Governance | Capture the request, ownership, steward details, and agreement evidence. |
-| 3 | `99_explore` | Analyst or engineering | Optionally inspect and profile source data before production delivery. |
-| 4 | `02_pipeline` | Engineering | Build the data product, write outputs, and record catalogue, lineage, DQ, and run evidence. |
-| 5 | `03_governance` | Governance | Review and approve metadata, classifications, sensitivity labels, and DQ rules. |
-| 6 | `02_pipeline` | Engineering | Rerun the pipeline so approved rules are enforced during delivery. |
+</div>
 
-For detailed behavior, continue to [Pipeline Guardrails](schema-and-data-drift.md), [Governance Review](governance-review.md), and [Metadata Tables](metadata-tables.md).
+## Optional example notebooks
+
+These notebooks are release-specific validation aids. They are stored beside the templates with an `example_` prefix so users can quickly test or understand specific flows before adapting the production templates. They are not production workflow templates.
+
+| Notebook | Purpose |
+| --- | --- |
+| `example_pipeline_smoke_test.ipynb` | Validates the pipeline path: source and target guardrails, catalogue evidence, lineage, runtime summary, and a smoke target write. |
+| `example_dq_rule_smoke_test.ipynb` | Demonstrates DQ rule evaluation, warning behavior, and error blocking behavior using smoke-test data and rules. |

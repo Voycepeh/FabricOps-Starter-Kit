@@ -38,6 +38,7 @@ Each guardrail returns a notebook result that can be printed as run evidence and
 ## Schema guardrails
 
 Schema guardrails check whether the structure of a source or target table still matches what the pipeline expects.
+![Schema Guardrail](../assets/fabricops-schema-guardrail.png)
 
 | Preset              | Use when                                                  | Behavior                                                        |
 | ------------------- | --------------------------------------------------------- | --------------------------------------------------------------- |
@@ -50,6 +51,8 @@ Schema guardrails check whether the structure of a source or target table still 
 Stability guardrails compare deterministic profile evidence from the current run with previous evidence stored in `METADATA_DATA_CATALOGUE`.
 
 FabricOps does not use the catalogue as a generic distribution drift monitor. Each run appends source and target profile evidence. The latest previous profile for the same dataset, table, and stage becomes the baseline for the next comparison.
+
+![Source Stability Guardrail](../assets/fabricops-source-stability-guardrail.png)
 
 | Setting                                                                       | Use when                                                                    | Behavior                                                                                             |
 | ----------------------------------------------------------------------------- | --------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
@@ -84,6 +87,8 @@ DQ guardrails enforce human-approved expectations.
 `03_governance` records reviewed DQ expectations in `METADATA_DQ_RULES`. `02_pipeline` reads active approved rules and evaluates them at the configured stage.
 
 Source DQ rules can run after source read and before transformation. Target DQ rules can run after transformation and before the target write.
+
+![DQ Guardrail](../assets/fabricops-data-quality-guardrail.png)
 
 | Rule outcome                     | Guardrail result               | Pipeline behavior                                           |
 | -------------------------------- | ------------------------------ | ----------------------------------------------------------- |
