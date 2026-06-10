@@ -65,7 +65,7 @@ def test_pipeline_notebook_uses_existing_public_apis_and_metadata_helpers():
     assert "LINEAGE_RELATIONSHIPS" in code
     assert "METADATA_PIPELINE_RUNS" in markdown
     assert "imports existing FabricOps callables directly for reads, profiling, guardrails, writes" in markdown
-    assert "FabricOps then enriches those source entries with framework defaults and DataFrames" in markdown
+    assert "FabricOps then enriches those source and target entries with framework defaults and DataFrames" in markdown
 
 
 def test_pipeline_notebook_contains_expected_config_driven_flow_sections():
@@ -81,8 +81,9 @@ def test_pipeline_notebook_contains_expected_config_driven_flow_sections():
         "## 8. Define reusable guardrail orchestration helpers",
         "## 9. Run source guardrails before transformation",
         "## 10. Transform to target DataFrames",
-        "## 11. Target DataFrame/config blocks",
-        "## 12. Collect target configs",
+        "## TARGET USER EDIT SECTION — target table configuration",
+        "## TARGET FRAMEWORK DEFAULTS — target governance and write settings",
+        "## TARGET FRAMEWORK PREPARATION — enrich target configs",
         "## 13. Run target guardrails before writes",
         "## 14. Write target tables",
         "## 15. Capture many-to-many lineage",
@@ -95,8 +96,11 @@ def test_pipeline_notebook_contains_expected_config_driven_flow_sections():
     assert "Schema, stability, and DQ remain separate guardrail concepts" in markdown
     assert "Most users only edit this section for sources" in markdown
     assert "To support multiple source tables, add another dictionary to `SOURCE_TABLES`" in markdown
-    assert "Each target block starts with a small editable parameter header" in markdown
-    assert "replace `TARGET_01`/`df_target_01` with `TARGET_02`/`df_target_02`" in markdown
+    assert "source setup configures input tables" in markdown
+    assert "transform section creates target DataFrames" in markdown
+    assert "target setup configures output tables and write behavior" in markdown
+    assert "Most users only edit this target section" in markdown
+    assert "To support multiple target tables, add another dictionary to `TARGET_TABLES`" in markdown
     assert "Do not copy profiling, schema, stability, DQ, or catalogue-evidence code" in markdown
     assert "Do not copy profiling, schema, stability, DQ, catalogue-evidence, or write orchestration code" in markdown
     assert "`metadata` = governance evidence lakehouse" in markdown
@@ -177,63 +181,58 @@ def test_pipeline_notebook_runs_guardrails_from_source_and_target_config_lists()
     assert "`metadata` = governance evidence lakehouse" in markdown
     assert "not usually selected as a business source table" in markdown
 
-    assert "TARGET_01_KEY = \"target_01\"" in code
-    assert "TARGET_01_DATASET_NAME = DATASET_NAME" in code
-    assert "TARGET_01_TABLE_NAME = \"CHANGE_ME_target_table\"" in code
-    assert "TARGET_01_LAYER = \"unified\"" in code
-    assert "TARGET_01_KIND = \"lakehouse\"" in code
-    assert "TARGET_01_WRITE_MODE = \"overwrite\"" in code
-    assert "df_target_01 = (" in code
-    assert "TARGET_01_CONFIG = {" in code
-    assert "# TARGET_02_KEY = \"target_02\"" in code
-    assert "# TARGET_02_TABLE_NAME = \"CHANGE_ME_second_target_table\"" in code
-    assert "# TARGET_02_CONFIG = {" in code
-    assert "TARGET_TABLES = [TARGET_01_CONFIG]" in code
-    assert "# TARGET_TABLES = [TARGET_01_CONFIG, TARGET_02_CONFIG]" in code
+    assert "TARGET_TABLES = [" in code
+    assert '"key": "target_01"' in code
+    assert '"df": df_target_01' in code
+    assert '"layer": "unified"' in code
+    assert '"table_name": "CHANGE_ME_target_table"' in code
+    assert '"stage": "unified"' in code
+    assert '"kind": "lakehouse"' in code
+    assert '"write_mode": "overwrite"' in code
+    assert "DEFAULT_TARGET_SETTINGS = {" in code
+    assert '"schema_preset": "strict"' in code
+    assert '"data_behavior": "changing"' in code
+    assert '"stability_check_type": "watermark_slice_hash"' in code
+    assert '"dq_preset": "approved_rules"' in code
+    assert "_TARGET_TABLES_USER_CONFIG = TARGET_TABLES" in code
+    assert "for target_config in _TARGET_TABLES_USER_CONFIG:" in code
+    assert "**DEFAULT_TARGET_SETTINGS" in code
+    assert "**target_config" in code
+    assert '"dataset_name": DATASET_NAME' in code
+    assert 'enriched_target["target_layer"] = enriched_target.get("target_layer", enriched_target["layer"])' in code
+    assert 'enriched_target["target_name"] = enriched_target.get("target_name", enriched_target["table_name"])' in code
+    assert 'enriched_target["target_kind"] = enriched_target.get("target_kind", enriched_target.get("kind", "lakehouse"))' in code
+    assert "TARGET_CONFIG_BY_KEY =" in code
+    assert 'TARGET_01_CONFIG = TARGET_CONFIG_BY_KEY["target_01"]' in code
+    assert 'TARGET_01_TABLE_NAME = TARGET_01_CONFIG["table_name"]' in code
+    assert "TARGET_01_KEY = \"target_01\"" not in code
+    assert "TARGET_01_TABLE_NAME = \"CHANGE_ME_target_table\"" not in code
+    assert "TARGET_01_LAYER = \"unified\"" not in code
+    assert "TARGET_01_WRITE_MODE = \"overwrite\"" not in code
+    assert "TARGET_01_CONFIG = {" not in code
+    assert "# TARGET_02_KEY = \"target_02\"" not in code
+    assert "# TARGET_02_CONFIG = {" not in code
+    assert "TARGET_TABLES = [TARGET_01_CONFIG]" not in code
+    assert "# TARGET_TABLES = [TARGET_01_CONFIG, TARGET_02_CONFIG]" not in code
     assert "target_guardrail_results = run_table_guardrails(" in code
     assert "stop_if_any_guardrail_failed(target_guardrail_results)" in code
     assert code.index("target_guardrail_results = run_table_guardrails(") < code.index("target_write_status = {}")
     assert "A blocking schema, stability, or DQ failure prevents every target write" in markdown
 
-    target_block = code[code.index("TARGET_01_CONFIG = {"):code.index("# Target 02 example")]
-    for required_field in [
-        '"key"',
-        '"df"',
-        '"dataset_name"',
-        '"target_name"',
-        '"target_layer"',
-        '"target_kind"',
-        '"write_mode"',
-        '"schema_preset"',
-        '"data_behavior"',
-        '"stability_check_type"',
-        '"watermark_column"',
-        '"watermark_value"',
-        '"dq_preset"',
-        '"expected_schema"',
-        '"distribution_columns"',
-        '"partition_by"',
-        '"repartition_by"',
-        '"overwrite_schema"',
+    target_user_block = code[code.index("TARGET_TABLES = ["):code.index("DEFAULT_TARGET_SETTINGS = {")]
+    for inline_comment in [
+        "Usually keep: unique key for target guardrail results and lineage",
+        "Usually keep: DataFrame produced in the transformation section",
+        "Change if writing to a different configured output layer",
+        "Change: output table name to publish",
+        "Usually keep aligned with the output layer",
+        "Usually keep: use lakehouse",
+        "Change only when append/merge behavior is intended",
+        "Change: expected schema after transformation",
+        "Optional: uncomment any table-specific overrides",
+        "Optional: partition Lakehouse output",
     ]:
-        assert required_field in target_block
-    for constant_field in [
-        '"key": TARGET_01_KEY',
-        '"dataset_name": TARGET_01_DATASET_NAME',
-        '"target_name": TARGET_01_TABLE_NAME',
-        '"target_layer": TARGET_01_LAYER',
-        '"target_kind": TARGET_01_KIND',
-        '"write_mode": TARGET_01_WRITE_MODE',
-    ]:
-        assert constant_field in target_block
-    for repeated_literal in [
-        '"key": "target_01"',
-        '"target_name": "CHANGE_ME_target_table"',
-        '"target_layer": "unified"',
-        '"target_kind": "lakehouse"',
-        '"write_mode": "overwrite"',
-    ]:
-        assert repeated_literal not in target_block
+        assert inline_comment in target_user_block
 
     assert "source_definitions=source_evidence_definitions" in code
     assert "target_definitions=target_evidence_definitions" in code
