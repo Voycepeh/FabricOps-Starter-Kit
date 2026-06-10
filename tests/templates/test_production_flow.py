@@ -80,6 +80,25 @@ def test_guardrail_orchestration_keeps_dq_results_and_documents_simple_v1_behavi
     assert "blocks before the next critical step" in guardrail_docs
 
 
+def test_quick_start_links_example_smoke_tests_with_safety_wording():
+    quick_start = (ROOT / "docs" / "quick-start.md").read_text(encoding="utf-8")
+    expected = (
+        "*Optional: After running `00_env_config`, you may run the example smoke tests to quickly "
+        "understand how the pipeline and DQ rule flows work before adapting the production templates. "
+        "Use `examples/notebooks/98_pipeline_smoke_test.ipynb` to validate the pipeline path, "
+        "including metadata tables, source and target guardrails, evidence writing, lineage, runtime "
+        "summary, and target writes. Use `examples/notebooks/98_dq_rule_smoke_test.ipynb` to "
+        "understand how DQ rules are evaluated, how warning rules behave, and how error rules block "
+        "when enforcement fails. The pipeline smoke test uses overwrite mode only for the smoke "
+        "target table; metadata evidence remains append-only through the FabricOps evidence helpers. "
+        "These notebooks are example validation aids, not production workflow templates.*"
+    )
+
+    assert expected in quick_start
+    assert (EXAMPLE_NOTEBOOKS / "98_pipeline_smoke_test.ipynb").exists()
+    assert (EXAMPLE_NOTEBOOKS / "98_dq_rule_smoke_test.ipynb").exists()
+
+
 def test_smoke_test_example_notebook_exists_and_covers_end_to_end_pattern():
     smoke_notebook = EXAMPLE_NOTEBOOKS / "98_pipeline_smoke_test.ipynb"
 
@@ -127,6 +146,7 @@ def test_docs_and_templates_do_not_add_dq_failure_table_behavior():
         ROOT / "templates" / "notebooks" / "02_pipeline.ipynb",
         ROOT / "templates" / "notebooks" / "03_governance.ipynb",
         ROOT / "examples" / "notebooks" / "98_pipeline_smoke_test.ipynb",
+        ROOT / "examples" / "notebooks" / "98_dq_rule_smoke_test.ipynb",
     ]
     forbidden = [
         "METADATA_DQ_FAILURE",
