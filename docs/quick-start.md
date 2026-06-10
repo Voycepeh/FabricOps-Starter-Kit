@@ -53,6 +53,8 @@ Start with one Governance workspace and one Engineering workspace. **Alternative
 | ---- | ------- | --------------- |---------- |
 | 5    | Run the required notebooks in sequence. | The Agreement → Pipeline → Review delivery flow is created and can be reviewed before production promotion. | [Notebook Templates](how-fabricops-works/notebook-templates.md)    |
 
+After running `00_env_config`, you may run `examples/notebooks/98_smoke_test.ipynb` to validate metadata tables, guardrails, evidence writing, lineage, runtime summary, and target writes before adapting the production templates. The smoke notebook is an example validation notebook, not a production workflow template.
+
 On first and later pipeline runs, approved DQ warning rules do not block publication and write the full dataset; approved DQ error rules block before the target write.
 
 The notebooks are intentionally separated by role. Each template produces metadata or outputs that the next role can reuse.
