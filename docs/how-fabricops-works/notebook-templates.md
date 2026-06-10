@@ -10,6 +10,15 @@ These links open the current development templates. Released documentation shoul
 
 ![Role-based notebook workflow from environment configuration through governance review](../assets/fabricops-role-workflow.png){ .full-width }
 
+## Optional example notebooks
+
+These notebooks are release-specific validation aids. They are stored beside the templates with an `example_` prefix so users can quickly test or understand specific flows before adapting the production templates. They are not production workflow templates.
+
+| Notebook | Purpose |
+| --- | --- |
+| `example_pipeline_smoke_test.ipynb` | Validates the pipeline path: source and target guardrails, catalogue evidence, lineage, runtime summary, and a smoke target write. |
+| `example_dq_rule_smoke_test.ipynb` | Demonstrates DQ rule evaluation, warning behavior, and error blocking behavior using smoke-test data and rules. |
+
 ## Template notebooks
 
 <div class="grid cards" markdown>

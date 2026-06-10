@@ -79,6 +79,18 @@ def test_guardrail_orchestration_keeps_dq_results_and_documents_simple_v1_behavi
     assert "blocks before the next critical step" in guardrail_docs
 
 
+def test_notebook_template_docs_describe_optional_example_notebooks():
+    notebook_docs = (ROOT / "docs" / "how-fabricops-works" / "notebook-templates.md").read_text(
+        encoding="utf-8"
+    )
+
+    assert "## Optional example notebooks" in notebook_docs
+    assert "These notebooks are release-specific validation aids." in notebook_docs
+    assert "They are not production workflow templates." in notebook_docs
+    assert "| `example_pipeline_smoke_test.ipynb` | Validates the pipeline path: source and target guardrails, catalogue evidence, lineage, runtime summary, and a smoke target write. |" in notebook_docs
+    assert "| `example_dq_rule_smoke_test.ipynb` | Demonstrates DQ rule evaluation, warning behavior, and error blocking behavior using smoke-test data and rules. |" in notebook_docs
+
+
 def test_quick_start_links_template_smoke_tests_with_release_specific_wording():
     quick_start = (ROOT / "docs" / "quick-start.md").read_text(encoding="utf-8")
     expected = (
