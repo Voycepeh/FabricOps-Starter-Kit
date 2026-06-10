@@ -168,7 +168,8 @@ def test_setup_notebook_reference_uses_human_first_source_documentation() -> Non
     text = (REFERENCE_DIR / "callables" / "setup_notebook.md").read_text(encoding="utf-8")
 
     assert "../../api/modules/config/#setup_notebook" not in text
-    assert "src/fabricops_kit/config.py#L595" in text
+    assert "src/fabricops_kit/config.py#L" in text
+    assert "setup_notebook on GitHub" in text
     assert "## Example\n\n```python\ncontext = setup_notebook" in text
     first_metadata = text.index("<summary>AI / machine-readable metadata")
     for marker in ("## What this is for and when to use it", "## When not to use it", "## Example", "## Errors and side effects"):
