@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import ast
+import json
 from pathlib import Path
 
 import pytest
 
 from fabricops_kit.config import (
+    DEFAULT_DQ_RULE_SUGGESTION_PROMPT_TEMPLATE,
     DataAgreementConfig,
     DatasetContractValidationError,
     PathConfig,
@@ -19,6 +22,67 @@ from tests.helpers import framework_config
 pytestmark = pytest.mark.unit
 
 FIXTURES = Path(__file__).parents[1] / "fixtures"
+
+
+def _notebook_dq_prompt_template() -> str:
+    notebook = json.loads(Path("templates/notebooks/00_env_config.ipynb").read_text(encoding="utf-8"))
+    for cell in notebook["cells"]:
+        if cell.get("cell_type") != "code":
+            continue
+        source = "".join(cell.get("source", []))
+        if "DQ_RULE_SUGGESTION_PROMPT_TEMPLATE" not in source:
+            continue
+        tree = ast.parse(source)
+        for node in tree.body:
+            if not isinstance(node, ast.Assign):
+                continue
+            if not any(
+                isinstance(target, ast.Name) and target.id == "DQ_RULE_SUGGESTION_PROMPT_TEMPLATE"
+                for target in node.targets
+            ):
+                continue
+            if (
+                isinstance(node.value, ast.Call)
+                and isinstance(node.value.func, ast.Attribute)
+                and node.value.func.attr == "strip"
+            ):
+                value = node.value.func.value
+            else:
+                value = node.value
+            if isinstance(value, ast.Constant) and isinstance(value.value, str):
+                return value.value.strip()
+    raise AssertionError("DQ_RULE_SUGGESTION_PROMPT_TEMPLATE assignment not found in 00_env_config.ipynb")
+
+
+def test_dq_ai_suggestion_prompt_guidance_stays_aligned_with_notebook_template():
+    from fabricops_kit.governance_review import DQ_RULE_TYPES
+
+    prompts = {
+        "package default": DEFAULT_DQ_RULE_SUGGESTION_PROMPT_TEMPLATE,
+        "00_env_config notebook": _notebook_dq_prompt_template(),
+    }
+    assert prompts["package default"] == prompts["00_env_config notebook"]
+
+    required_strings = [
+        "23",
+        "FabricOps-native DQ rule types",
+        "unique_combination",
+        "accepted_values",
+        "regex_match",
+        "value_when",
+        "expression_true",
+        "Custom expression",
+        "Do not invent rule types",
+        "Do not invent columns",
+        "Return valid JSON only",
+        "Schema guardrails and source stability are separate FabricOps layers",
+    ]
+
+    for prompt_name, prompt in prompts.items():
+        for required in required_strings:
+            assert required in prompt, f"{prompt_name} DQ prompt missing {required!r}"
+        for rule_type in DQ_RULE_TYPES:
+            assert rule_type in prompt, f"{prompt_name} DQ prompt missing rule_type {rule_type!r}"
 
 
 def test_dataset_contract_valid_and_invalid_paths_are_actionable():

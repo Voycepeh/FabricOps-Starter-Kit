@@ -105,7 +105,114 @@ column_name, ai_suggested_personal_identifier_classification, confidentiality_la
 """.strip()
 
 
-DEFAULT_DQ_RULE_SUGGESTION_PROMPT_TEMPLATE = 'You are helping draft candidate FabricOps-native data quality rules for a Microsoft Fabric pipeline.\n\nThese suggestions are advisory drafts only. A human reviewer must approve, edit, or reject every rule before enforcement.\n\nSuggest FabricOps-native DQ rules only. Use only supported rule_type values. Return JSON only. Do not invent unsupported rule types. Prefer simple rules before expression_true. Use expression_true only when no simpler rule can express the requirement; only trusted reviewers should approve expression rules.\n\nSeverity guidance:\n- severity="error" only when the rule should block unsafe or misleading output.\n- severity="warning" when the issue should be visible but should not block.\n\nSupported rule_type catalogue:\n- not_null\n- null_rate_below\n- non_empty_string\n- unique\n- unique_combination\n- accepted_values\n- not_in_values\n- between\n- greater_than\n- greater_than_or_equal\n- less_than\n- less_than_or_equal\n- regex_match\n- date_not_future\n- date_between\n- freshness\n- max_age_days\n- column_pair_equal\n- column_a_gte_column_b\n- column_a_gt_column_b\n- required_when\n- value_when\n- expression_true\n\nFor every suggestion include rule_id, rule_type, columns, severity, description, and all required parameters for that rule_type.\n\nWhat belongs outside DQ:\n- Do not suggest schema rules such as required_columns, expected_schema, or datatype checks.\n- Do not suggest source stability rules.\n- Schema guardrails and source stability are separate FabricOps layers.\n\nReturn only JSON in this shape:\n{"DQ_RULES":{"{table_name}":[{"rule_id":"lower_snake_case_rule_id","rule_type":"not_null","columns":["column_name"],"severity":"warning","description":"Plain business explanation."}]}}\n\nTable name: {table_name}\nBusiness context: {business_context}\nColumn profile row:\nColumn name: {column_name}\nData type: {data_type}\nRow count: {row_count}\nNull count: {null_count}\nNull percent: {null_percent}\nDistinct count: {distinct_count}\nDistinct percent: {distinct_percent}\nMinimum value: {min_value}\nMaximum value: {max_value}\nObserved values sample: {observed_values_sample}'
+DEFAULT_DQ_RULE_SUGGESTION_PROMPT_TEMPLATE = """
+You are helping draft candidate FabricOps-native data quality rules for a Microsoft Fabric pipeline.
+
+These suggestions are advisory drafts only. A human reviewer must approve, edit, or reject every rule before enforcement.
+
+Suggest FabricOps-native DQ rules only. FabricOps supports 23 FabricOps-native DQ rule types. Use only supported rule_type values. Do not invent rule types. Prefer simple named rules before expression_true. Treat expression_true as the Custom expression rule and use it only when no smaller named rule can express the requirement; only trusted reviewers should approve expression rules.
+
+Rule selection principles:
+- Suggest DQ rules only when the column profile or business context gives enough evidence.
+- Prefer the smallest named rule that expresses the requirement.
+- Use column profile evidence: data_type, row_count, null_count, null_percent, distinct_count, distinct_percent, min_value, max_value, and observed_values_sample.
+- Do not suggest datatype/schema rules; schema validation is separate.
+- Do not suggest source stability rules; stability checks are separate.
+- Schema guardrails and source stability are separate FabricOps layers.
+- Do not suggest row filtering or quarantine behavior; FabricOps v1 reports/tags outcomes and error severity blocks unsafe downstream writes.
+- Use expression_true only as the Custom expression escape hatch when no smaller rule fits.
+
+Rule catalogue guidance:
+Completeness:
+- not_null: any profiled column where every row must have a non-null value. Required: columns.
+- null_rate_below: any profiled column where some nulls are allowed but the null percentage must stay below a threshold. Required: columns, max_null_percent.
+- non_empty_string: string columns where blank or whitespace-only values should fail. Required: columns.
+- required_when: any target column required only when a condition is true. Required: columns, condition.
+
+Uniqueness:
+- unique: one column should uniquely identify rows. Required: columns.
+- unique_combination: a composite business key or table grain should be unique. Required: columns.
+
+Allowed / blocked values:
+- accepted_values: governed allowed values for string, numeric, boolean, or code columns. Required: columns, allowed_values.
+- not_in_values: placeholder, blocked, retired, or invalid values must not appear. Required: columns, blocked_values.
+
+Numeric / comparable ranges:
+- between: comparable value must be within min and/or max. Common for numeric, date, timestamp, or consistently formatted strings. Required: columns, at least one of min_value or max_value.
+- greater_than: value must be greater than threshold. Required: columns, value.
+- greater_than_or_equal: value must be greater than or equal to threshold. Required: columns, value.
+- less_than: value must be less than threshold. Required: columns, value.
+- less_than_or_equal: value must be less than or equal to threshold. Required: columns, value.
+
+Pattern and date rules:
+- regex_match: string column must match a pattern. Required: columns, regex_pattern.
+- date_not_future: date or timestamp column must not be in the future. Required: columns.
+- date_between: date or timestamp column must be within a date range. Required: columns, min_value, max_value.
+- freshness: date or timestamp column must be recent enough. Required: columns, max_age_days.
+- max_age_days: date or timestamp value must not be older than max age. Required: columns, max_age_days.
+
+Cross-column logic:
+- column_pair_equal: two compatible columns must be equal. Required: exactly two columns.
+- column_a_gte_column_b: first comparable column must be greater than or equal to second. Required: exactly two columns.
+- column_a_gt_column_b: first comparable column must be greater than second. Required: exactly two columns.
+- value_when: target column must equal expected_value when condition is true. Required: one columns value, condition, expected_value.
+
+Advanced:
+- expression_true: Custom expression rule. Use only when no named rule can express the business requirement. Required: expression. Prefer not to use it unless there is clear business logic evidence.
+
+Priority guide:
+- If checking presence, choose not_null, null_rate_below, non_empty_string, or required_when.
+- If checking duplicate grain, choose unique or unique_combination.
+- If checking governed categories, choose accepted_values.
+- If checking invalid placeholders, choose not_in_values.
+- If checking numeric or date bounds, choose between or threshold rules.
+- If checking formatted text, choose regex_match.
+- If checking recency, choose freshness or max_age_days.
+- If checking relationship between columns, choose cross-column rules.
+- If checking conditional business logic, choose required_when or value_when.
+- Use expression_true only after all named rules are insufficient.
+
+Evidence guidance:
+- Use not_null only when business context indicates the column is mandatory or null_count is already zero and the column looks required.
+- Use accepted_values only when observed_values_sample or business context shows a stable controlled set.
+- Use unique when distinct_count equals or is expected to equal row_count.
+- Use unique_combination only when business context indicates a composite key/table grain.
+- Use null_rate_below when nulls are expected but should stay within tolerance.
+- Use warning severity by default unless the rule protects a key, required business field, financial measure, compliance field, or downstream join/grain integrity.
+- Use error severity when bad data would make output unsafe or misleading.
+
+Output guardrails:
+- Every suggestion must include rule_id, rule_type, columns, severity, description, and required parameters.
+- rule_id must be lower snake case.
+- columns must contain actual column names from the profile/context.
+- Do not invent columns.
+- Do not invent rule types.
+- Do not output markdown.
+- Do not output comments.
+- Return valid JSON only.
+
+What belongs outside DQ:
+- Do not suggest schema rules such as required_columns, expected_schema, or datatype checks.
+- Do not suggest source stability rules.
+- Schema guardrails and source stability are separate FabricOps layers.
+
+Return valid JSON only in this shape:
+{"DQ_RULES":{"{table_name}":[{"rule_id":"lower_snake_case_rule_id","rule_type":"not_null","columns":["column_name"],"severity":"warning","description":"Plain business explanation."}]}}
+
+Table name: {table_name}
+Business context: {business_context}
+Column profile row:
+Column name: {column_name}
+Data type: {data_type}
+Row count: {row_count}
+Null count: {null_count}
+Null percent: {null_percent}
+Distinct count: {distinct_count}
+Distinct percent: {distinct_percent}
+Minimum value: {min_value}
+Maximum value: {max_value}
+Observed values sample: {observed_values_sample}
+""".strip()
 
 
 @dataclass(frozen=True)
