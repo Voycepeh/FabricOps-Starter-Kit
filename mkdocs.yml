@@ -48,30 +48,31 @@ nav:
           - pipeline: api/modules/pipeline.md
           - metadata: api/modules/metadata.md
           # AUTO-GENERATED-MODULES-END
-      - DQ Rules: reference/dq-rules/index.md
-          - not_null: reference/dq-rules/not-null.md
-          - null_rate_below: reference/dq-rules/null-rate-below.md
-          - non_empty_string: reference/dq-rules/non-empty-string.md
-          - unique: reference/dq-rules/unique.md
-          - unique_combination: reference/dq-rules/unique-combination.md
-          - accepted_values: reference/dq-rules/accepted-values.md
-          - not_in_values: reference/dq-rules/not-in-values.md
-          - between: reference/dq-rules/between.md
-          - greater_than: reference/dq-rules/greater-than.md
-          - greater_than_or_equal: reference/dq-rules/greater-than-or-equal.md
-          - less_than: reference/dq-rules/less-than.md
-          - less_than_or_equal: reference/dq-rules/less-than-or-equal.md
-          - regex_match: reference/dq-rules/regex-match.md
-          - date_not_future: reference/dq-rules/date-not-future.md
-          - date_between: reference/dq-rules/date-between.md
-          - freshness: reference/dq-rules/freshness.md
-          - max_age_days: reference/dq-rules/max-age-days.md
-          - column_pair_equal: reference/dq-rules/column-pair-equal.md
-          - column_a_gte_column_b: reference/dq-rules/column-a-gte-column-b.md
-          - column_a_gt_column_b: reference/dq-rules/column-a-gt-column-b.md
-          - required_when: reference/dq-rules/required-when.md
-          - value_when: reference/dq-rules/value-when.md
-          - expression_true: reference/dq-rules/expression-true.md
+      - DQ Rules: 
+          - overview: reference/dq-rules/index.md
+            - not_null: reference/dq-rules/not-null.md
+            - null_rate_below: reference/dq-rules/null-rate-below.md
+            - non_empty_string: reference/dq-rules/non-empty-string.md
+            - unique: reference/dq-rules/unique.md
+            - unique_combination: reference/dq-rules/unique-combination.md
+            - accepted_values: reference/dq-rules/accepted-values.md
+            - not_in_values: reference/dq-rules/not-in-values.md
+            - between: reference/dq-rules/between.md
+            - greater_than: reference/dq-rules/greater-than.md
+            - greater_than_or_equal: reference/dq-rules/greater-than-or-equal.md
+            - less_than: reference/dq-rules/less-than.md
+            - less_than_or_equal: reference/dq-rules/less-than-or-equal.md
+            - regex_match: reference/dq-rules/regex-match.md
+            - date_not_future: reference/dq-rules/date-not-future.md
+            - date_between: reference/dq-rules/date-between.md
+            - freshness: reference/dq-rules/freshness.md
+            - max_age_days: reference/dq-rules/max-age-days.md
+            - column_pair_equal: reference/dq-rules/column-pair-equal.md
+            - column_a_gte_column_b: reference/dq-rules/column-a-gte-column-b.md
+            - column_a_gt_column_b: reference/dq-rules/column-a-gt-column-b.md
+            - required_when: reference/dq-rules/required-when.md
+            - value_when: reference/dq-rules/value-when.md
+            - expression_true: reference/dq-rules/expression-true.md
       
   - Maintainer Guide:
       - Release Management: development/release-management.md
