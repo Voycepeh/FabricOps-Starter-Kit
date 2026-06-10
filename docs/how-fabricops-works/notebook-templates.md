@@ -6,6 +6,8 @@ Each template has a clear owner and purpose. The notebooks are meant to stay lig
 
 ## The templates are available in the [`templates/notebooks`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks) folder.
 
+These links open the current development templates. Released documentation should link to the matching released templates.
+
 ![Role-based notebook workflow from environment configuration through governance review](../assets/fabricops-role-workflow.png){ .full-width }
 
 ## Template notebooks
@@ -156,18 +158,3 @@ Reviewed governance metadata is committed table by table and becomes available f
 | 6 | `02_pipeline` | Engineering | Rerun the pipeline so approved rules are enforced during delivery. |
 
 For detailed behavior, continue to [Pipeline Guardrails](schema-and-data-drift.md), [Governance Review](governance-review.md), and [Metadata Tables](metadata-tables.md).
-
-## Development and release links
-
-The links above point to the live development templates in GitHub.
-
-For released documentation, do not point to the moving `main` branch. A release should freeze the matching notebook templates together with the wheel file, so users can download a consistent version of the docs, wheel, and templates.
-
-| Documentation version | Template link target |
-| --------------------- | -------------------- |
-| `dev` docs | GitHub `main` branch templates. |
-| Released docs | GitHub release tag, for example `v0.1.0`, or release assets. |
-| Wheel download | Same release as the frozen templates. |
-| Template download | Same release as the wheel, ideally as a `templates.zip` asset. |
-
-This prevents a user reading released documentation from opening a newer notebook template that expects a newer wheel or newer metadata schema.

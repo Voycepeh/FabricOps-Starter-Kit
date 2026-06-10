@@ -24,6 +24,12 @@ Do not automatically make `main` the `latest` documentation version. Only a vali
 
 The documentation build generates a release traceability page with the full package version, Mike documentation version, and Git commit SHA. Release builds pass those values from GitHub Actions environment variables; local builds derive the package version from `pyproject.toml` and the commit from Git when available.
 
+## Template and wheel alignment
+
+Released documentation, released wheel files, and released notebook templates must be frozen together. Dev documentation may point to `main` branch templates, but released documentation should point to the matching Git tag or release assets.
+
+Template downloads should use the same release as the wheel, ideally as a `templates.zip` release asset. This avoids users reading released documentation while opening a newer notebook that expects a newer wheel or metadata schema.
+
 ## Release process
 
 See [Release management](release-management.md) for the complete GitHub-only release flow, local validation commands, Mike deployment behavior, and retry guidance.
