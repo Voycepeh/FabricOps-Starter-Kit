@@ -48,7 +48,7 @@ def test_production_template_enforces_guardrails_before_full_dataset_write():
 
     source_guardrails = production.index("source_guardrail_results = run_table_guardrails")
     source_stop = production.index("stop_if_any_guardrail_failed(source_guardrail_results)", source_guardrails)
-    transformation = production.index("df_target_01 = (", source_stop)
+    transformation = production.index("df_target_01 = df_source_01", source_stop)
     target_guardrails = production.index("target_guardrail_results = run_table_guardrails", transformation)
     target_stop = production.index("stop_if_any_guardrail_failed(target_guardrail_results)", target_guardrails)
     target_write = production.index("target_write_status = {}", target_stop)

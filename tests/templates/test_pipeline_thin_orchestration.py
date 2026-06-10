@@ -97,6 +97,8 @@ def test_pipeline_notebook_contains_expected_config_driven_flow_sections():
     assert "To use a file or warehouse source, comment out the default Lakehouse table read" in markdown
     assert "To support multiple source tables, add another dictionary to `SOURCE_TABLES`" in markdown
     assert "source setup configures input tables" in markdown
+    assert "This is the only section where most users write business transformation logic" in markdown
+    assert "FabricOps guardrails and audit columns are handled in later sections" in markdown
     assert "transform section creates target DataFrames" in markdown
     assert "target setup configures output tables and write behavior" in markdown
     assert "Most users only edit this target section" in markdown
@@ -193,7 +195,11 @@ def test_pipeline_notebook_runs_guardrails_from_source_and_target_config_lists()
     assert 'SOURCE_01_CONFIG["df"]' not in code
     assert "source_guardrail_results = run_table_guardrails(" in code
     assert "stop_if_any_guardrail_failed(source_guardrail_results)" in code
-    assert code.index("source_guardrail_results = run_table_guardrails(") < code.index("df_target_01 = (")
+    assert code.index("source_guardrail_results = run_table_guardrails(") < code.index("df_target_01 = df_source_01")
+    assert "# DIY your transformations here." in code
+    assert "# Replace this passthrough with your business logic." in code
+    assert '#     .select("customer_id", "business_date", "amount")' in code
+    assert '#     .where(F.col("amount").isNotNull())' in code
 
     source_user_block = code[code.index("SOURCE_TABLES = ["):code.index("DEFAULT_SOURCE_GUARDRAILS = {")]
     source_default_example = source_user_block[:source_user_block.index("# To add a second source table")]
