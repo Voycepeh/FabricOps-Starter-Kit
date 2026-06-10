@@ -1,97 +1,173 @@
 # Notebook Templates
 
-FabricOps Starter Kit uses a small set of notebook templates so teams can move from agreement to pipeline to review without inventing a new process for every data product.
+FabricOps Starter Kit uses a small set of notebook templates to move a data product from setup, agreement, exploration, pipeline delivery, and governance review.
+
+Each template has a clear owner and purpose. The notebooks are meant to stay lightweight in Fabric, while the helper wheel handles the repeated setup, metadata, profiling, lineage, and governance evidence work.
 
 ## The templates are available in the [`templates/notebooks`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks) folder.
 
 ![Role-based notebook workflow from environment configuration through governance review](../assets/fabricops-role-workflow.png){ .full-width }
 
-## What each template is for
+## Template notebooks
+
+<div class="grid cards" markdown>
+
+<div markdown class="card">
 
 ### `00_env_config`
 
-Run first in each environment.
+**Objective**
 
-Defines environment paths, Fabric item targets, metadata lakehouse settings, downstream defaults, and active metadata table schemas.
+Set up the Fabric environment so the downstream notebooks can run consistently.
 
-On first run, it creates metadata tables if needed. Later runs validate expected schemas.
+**Used by**
 
-**Result:** environment paths and active metadata schemas are ready.
+Engineering or platform setup owner.
+
+**Key function**
+
+Defines workspace paths, Fabric item targets, lakehouse and warehouse locations, metadata lakehouse settings, notebook defaults, and reusable widgets. On first run, it creates the metadata tables. On later runs, it validates that the expected metadata schemas are still available.
+
+**Output**
+
+The environment is ready for `01_agreement`, `02_pipeline`, `03_governance`, and optional `99_explore`.
+
+**Template**
+
+[Open `00_env_config.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/00_env_config.ipynb)
+
+</div>
+
+<div markdown class="card">
 
 ### `01_agreement`
 
-Run when governance needs to capture the request, ownership, and supporting evidence.
+**Objective**
 
-Records business purpose, steward and owner details, support expectations, and agreement evidence.
+Capture the business agreement before engineering starts building the data product.
 
-It stores agreement metadata only. It does not approve classifications, save reviewed DQ rules, or enforce checks.
+**Used by**
 
-**Result:** steward, agreement, and agreement-evidence records are stored.
+Governance, data stewards, or the team coordinating the request.
+
+**Key function**
+
+Records the agreement name, business purpose, steward and owner details, support expectations, and supporting evidence. It establishes the governed request, but does not approve classifications, save reviewed DQ rules, or enforce production checks.
+
+**Output**
+
+Agreement, steward, and agreement evidence records are stored in the metadata lakehouse.
+
+**Template**
+
+[Open `01_agreement.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/01_agreement.ipynb)
+
+</div>
+
+<div markdown class="card">
 
 ### `99_explore`
 
-Use only when optional discovery or troubleshooting is useful.
+**Objective**
 
-Supports source exploration, profiling, pre-agreement checks, failed-run investigation, or review questions.
+Explore source data before or during delivery when discovery is needed.
 
-Run in Engineering Dev and link it to one or more agreements when relevant.
+**Used by**
 
-**Result:** data is explored and profiled.
+Analysts, data scientists, or engineers.
+
+**Key function**
+
+Supports source inspection, profiling, early schema understanding, pre-agreement checks, troubleshooting, and review questions. It can be linked to one or more agreements when the exploration produces useful evidence.
+
+**Output**
+
+Source data is explored and profiled without turning the exploration notebook into the production pipeline.
+
+**Template**
+
+[Open `99_explore.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/99_explore.ipynb)
+
+</div>
+
+<div markdown class="card">
 
 ### `02_pipeline`
 
-Run when engineering is ready to build or run the data product.
+**Objective**
 
-It is a thin orchestration notebook. Users first read source data into DataFrames using normal Spark code or the same helper functions shown in `99_explore`, then register those existing DataFrames with per-source schema/stability/DQ guardrails. After transformation, users register target DataFrames with write settings and target guardrails. FabricOps starts after each DataFrame exists: it profiles, validates, enforces approved active DQ rules, records evidence, and writes configured targets. Reusable evidence helpers hide catalogue enrichment, lineage capture, and runtime summary logging.
+Build and run the governed data product pipeline.
 
-The template supports many sources and many targets. Source and target registrations contain DataFrame references and guardrail presets rather than loader metadata. An optional helper cell can display the current source schema and print starter `expected_schema` code; users must review that generated starter before treating it as the approved schema expectation. Source and target guardrail flows are symmetrical: schema checks, source stability checks, and approved active DQ rules from `METADATA_DQ_RULES` run per dataset using that dataset's configured preset.
+**Used by**
 
-See [Pipeline Guardrails](schema-and-data-drift.md) for the source/target guardrail flow and supported schema, source stability, and DQ settings.
+Engineering.
 
-Runtime evidence is stored in metadata. Profiles and DQ summaries are written to `METADATA_DATA_CATALOGUE`, many-to-many lineage is written to `METADATA_DATA_LINEAGE_TABLE`, and run summaries are written to `METADATA_PIPELINE_RUNS`.
+**Key function**
 
-**Result:** repeatable transformations, output tables, catalogue evidence, lineage, runtime evidence, schema guardrails, stability guardrails, and DQ guardrails are produced without exposing implementation-heavy code in the notebook.
+Reads source data, registers source and target DataFrames, applies schema checks, applies source stability checks, runs approved active DQ rules, writes configured outputs, and records runtime evidence. It also writes catalogue, profile, lineage, DQ, and pipeline run metadata so governance can review what was produced.
+
+**Output**
+
+The data product tables are created or refreshed, and the supporting metadata evidence is written for governance review and future enforcement.
+
+**Template**
+
+[Open `02_pipeline.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/02_pipeline.ipynb)
+
+</div>
+
+<div markdown class="card">
 
 ### `03_governance`
 
-Run after `02_pipeline` has created evidence for review.
+**Objective**
 
-Use it to review and commit business context, DQ rules, sensitivity labels, PII classifications, and column classifications.
+Review and approve the governance evidence produced by the pipeline.
 
-It stores reviewed metadata. Enforcement happens only when a later `02_pipeline` run loads the approved rules.
+**Used by**
 
-**Result:** reviewed governance metadata is committed table by table.
+Governance, data stewards, or reviewers.
 
-### Enforce approved governance rules
+**Key function**
 
-After `03_governance`, engineering reruns or updates `02_pipeline`.
+Reviews and commits business context, sensitivity labels, PII classifications, column classifications, and DQ rules. It stores reviewed metadata, but does not itself enforce the rules. Enforcement happens when `02_pipeline` runs again using the approved metadata.
 
-The pipeline fetches approved rules from:
+**Output**
 
-* `METADATA_DQ_RULES`
-* `METADATA_COLUMN_CLASSIFICATION`
+Reviewed governance metadata is committed table by table and becomes available for later pipeline enforcement.
 
-**Result:** approved DQ rules and column classifications are enforced during the pipeline run.
+**Template**
 
-### Production handover
+[Open `03_governance.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/03_governance.ipynb)
 
-After the production pipeline is approved and stable, store the approved production notebook for handover.
+</div>
 
-**Result:** the production implementation and supporting metadata remain available for support and future enhancement.
+</div>
 
-## Ownership summary
+## How the templates work together
 
-| Area                                                    | Owner                     | Notebook or action                 |
-| ------------------------------------------------------- | ------------------------- | ---------------------------------- |
-| Environment paths and metadata setup                    | Engineering               | `00_env_config`                    |
-| Agreement and steward metadata                          | Governance                | `01_agreement`                     |
-| Optional discovery and profiling                        | Analyst or data scientist | `99_explore`                       |
-| Transformation and output delivery                      | Engineering               | `02_pipeline`                      |
-| Catalogue, lineage, profile, schema, and stability evidence | Engineering               | `02_pipeline`                      |
-| Reviewed governance metadata                            | Governance                | `03_governance`                        |
-| Approved rule enforcement                               | Engineering               | `02_pipeline` after `03_governance`    |
-| Production handover                                     | Engineering               | Store approved production notebook |
+| Step | Notebook | Main owner | What happens |
+| ---- | -------- | ---------- | ------------ |
+| 1 | `00_env_config` | Engineering | Configure paths, Fabric targets, metadata tables, and reusable widgets. |
+| 2 | `01_agreement` | Governance | Capture the request, ownership, steward details, and agreement evidence. |
+| 3 | `99_explore` | Analyst or engineering | Optionally inspect and profile source data before production delivery. |
+| 4 | `02_pipeline` | Engineering | Build the data product, write outputs, and record catalogue, lineage, DQ, and run evidence. |
+| 5 | `03_governance` | Governance | Review and approve metadata, classifications, sensitivity labels, and DQ rules. |
+| 6 | `02_pipeline` | Engineering | Rerun the pipeline so approved rules are enforced during delivery. |
 
-## Next step
+For detailed behavior, continue to [Pipeline Guardrails](schema-and-data-drift.md), [Governance Review](governance-review.md), and [Metadata Tables](metadata-tables.md).
 
-Continue to [Metadata Tables](metadata-tables.md) for a lightweight map of the metadata used by the notebook workflow.
+## Development and release links
+
+The links above point to the live development templates in GitHub.
+
+For released documentation, do not point to the moving `main` branch. A release should freeze the matching notebook templates together with the wheel file, so users can download a consistent version of the docs, wheel, and templates.
+
+| Documentation version | Template link target |
+| --------------------- | -------------------- |
+| `dev` docs | GitHub `main` branch templates. |
+| Released docs | GitHub release tag, for example `v0.1.0`, or release assets. |
+| Wheel download | Same release as the frozen templates. |
+| Template download | Same release as the wheel, ideally as a `templates.zip` asset. |
+
+This prevents a user reading released documentation from opening a newer notebook template that expects a newer wheel or newer metadata schema.
