@@ -73,3 +73,49 @@
 .md-typeset summary {
   background-color: rgba(71, 215, 172, 0.12);
 }
+
+/* Scoped KPI cards for the docs homepage. */
+.md-typeset .fabricops-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 1rem 0 1.5rem;
+}
+
+.md-typeset .fabricops-kpi-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.2rem;
+  padding: 1rem;
+}
+
+.md-typeset .fabricops-kpi-number {
+  color: var(--md-primary-fg-color);
+  font-size: 2.4rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.md-typeset .fabricops-kpi-label {
+  color: var(--md-default-fg-color);
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.md-typeset .fabricops-kpi-card p {
+  margin: 0.35rem 0 0.25rem;
+}
+
+.md-typeset .fabricops-kpi-card a {
+  margin-top: auto;
+  font-weight: 600;
+}
+
+@media screen and (max-width: 768px) {
+  .md-typeset .fabricops-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+}
