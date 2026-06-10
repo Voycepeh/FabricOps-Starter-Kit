@@ -14,7 +14,7 @@ Use this page as a function lookup after you understand the notebook flow. The d
 - **Function manifests** (`manifest.json` and `function-manifest.json`) provide machine-readable callable/module inventory for checks and automation.
 - **Agent manifest** (`agent-manifest.json`) adds AI-oriented execution fields for planning, side-effect checks, and verification.
 - **AI implementation contracts** on callable/internal pages summarize expectations agents must satisfy before using or changing a function.
-- **Skill file** (`ai/skills/fabricops/SKILL.md`) gives agents repo-specific rules and points them to these generated references.
+- **Skill file** (`.agents/skills/fabricops/SKILL.md`) gives agents repo-specific rules and points them to these generated references.
 
 ## Find a function
 
