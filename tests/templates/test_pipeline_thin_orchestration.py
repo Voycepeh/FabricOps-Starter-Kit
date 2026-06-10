@@ -49,52 +49,50 @@ def test_pipeline_notebook_uses_existing_public_apis_and_metadata_helpers():
         assert removed_wrapper not in code
 
     assert "SOURCE_DEFINITIONS" not in code
+    assert "SOURCE_DATASETS" not in code
+    assert "TARGET_DEFINITIONS" not in code
+    assert "TARGET_DATASETS" not in code
     assert "USE_SAMPLE_DATA" not in code
     assert "sample_agreement_dataset" not in code
     assert "Files/sample/minimal_source.csv" not in code
-    assert "SOURCE_DATASETS" in code
-    assert 'source_config["df"]' in code
-    assert "TARGET_DEFINITIONS" not in code
-    assert "TARGET_DATASETS" in code
+    assert "SOURCE_TABLES" in code
+    assert "TARGET_TABLES" in code
+    assert 'table_config["df"]' in code
     assert 'target_config["df"]' in code
     assert "RUN_ID = RUN_CONTEXT.run_id" in code
     assert "RUN_CONTEXT.runtime_metadata.get" in code
     assert "SETUP." not in code
     assert "LINEAGE_RELATIONSHIPS" in code
     assert "METADATA_PIPELINE_RUNS" in markdown
-    assert "imports existing FabricOps callables directly for reads, profiling, guardrails, and writes" in markdown
-    assert (
-        "Metadata evidence helpers are imported only where they hide catalogue, lineage, "
-        "and runtime-summary plumbing"
-        in markdown
-    )
+    assert "imports existing FabricOps callables directly for reads, profiling, guardrails, writes" in markdown
+    assert "FabricOps then orchestrates profiling, schema validation, stability enforcement, DQ enforcement" in markdown
 
 
-def test_pipeline_notebook_contains_expected_high_level_flow_sections():
+def test_pipeline_notebook_contains_expected_config_driven_flow_sections():
     markdown, _ = _notebook_sources()
     expected_sections = [
         "## 1. Run `00_env_config`",
         "## 2. Import required functions",
-        "## 3. Select data agreement and register notebook",
-        "## 4. Read source data",
-        "## 5. Register source DataFrames with FabricOps guardrails",
-        "## 6. Profile each registered source DataFrame",
-        "## 7. Check each source schema",
-        "## 8. Check each source for source stability",
-        "## 9. Check each source with DQ guardrails",
-        "## 10. Write source catalogue evidence",
-        "## 11. Transform to target DataFrame",
-        "## 12. Register target outputs and add audit columns",
-        "## 13. Check each target schema",
-        "## 14. Check each target for target stability",
-        "## 15. Check each target with DQ guardrails",
-        "## 16. Write target catalogue evidence",
-        "## 17. Write target tables",
-        "## 18. Capture many-to-many lineage",
-        "## 19. Write runtime summary",
+        "## 3. Select data agreement and capture run context",
+        "## 4. Source DataFrame/config blocks",
+        "## 5. Collect source configs",
+        "## 6. Define reusable guardrail orchestration helpers",
+        "## 7. Run source guardrails before transformation",
+        "## 8. Transform to target DataFrames",
+        "## 9. Target DataFrame/config blocks",
+        "## 10. Collect target configs",
+        "## 11. Run target guardrails before writes",
+        "## 12. Write target tables",
+        "## 13. Capture many-to-many lineage",
+        "## 14. Write runtime summary",
     ]
     for section in expected_sections:
         assert section in markdown
+
+    assert "Users clone only DataFrame/config blocks" in markdown
+    assert "Schema, stability, and DQ remain separate guardrail concepts" in markdown
+    assert "Do not copy profiling, schema, stability, DQ, or catalogue-evidence code" in markdown
+    assert "Do not copy profiling, schema, stability, DQ, catalogue-evidence, or write orchestration code" in markdown
 
 
 def test_pipeline_notebook_hides_manual_catalogue_and_lineage_plumbing():
@@ -113,62 +111,132 @@ def test_pipeline_notebook_hides_manual_catalogue_and_lineage_plumbing():
 
     assert "from fabricops_kit.pipeline import _write_catalogue_evidence" not in code
     assert "_write_catalogue_evidence(" not in code
-    assert code.count("write_catalogue_evidence(") == 2
+    assert code.count("write_catalogue_evidence(") == 1
+    assert "catalogue_status = write_catalogue_evidence(" in code
     assert code.count("write_pipeline_lineage(") == 1
 
 
-def test_pipeline_notebook_supports_many_sources_and_many_targets_by_definition():
+def test_pipeline_notebook_runs_guardrails_from_source_and_target_config_lists():
     markdown, code = _notebook_sources()
 
-    assert "SOURCE_DEFINITIONS" not in code
-    assert "USE_SAMPLE_DATA" not in code
     assert "DATASET_NAME = \"CHANGE_ME_dataset\"" in code
-    assert "Files/sample/minimal_source.csv" not in code
-    assert "df_minimal_source = read_lakehouse_table(" in code
-    assert "# df_minimal_source = read_lakehouse_csv(CONFIG, ENV_NAME, \"source\", \"Files/CHANGE_ME/source_file.csv\", spark_session=spark, header=True)" in code
-    assert "# df_minimal_source = read_warehouse_table(CONFIG, ENV_NAME, \"product\", \"dbo\", \"CHANGE_ME_source_table\", spark_session=spark)" in code
-    assert "SOURCE_DATASETS = {" in code
-    assert "\"df\": df_minimal_source" in code
-    assert "for source_name, source_config in SOURCE_DATASETS.items():" in code
-    assert "source_df = source_config[\"df\"]" in code
-    assert "source_evidence_definitions" in code
-    assert "source_definitions=source_evidence_definitions" in code
-    source_registration = code[code.index("SOURCE_DATASETS = {"):code.index("source_evidence_definitions = {")]
-    for loader_field in ["kind", "path", "layer", "table_name"]:
-        assert loader_field not in source_registration
-    assert "SOURCE_DATASETS[\"source_alias\"][\"df\"]" in code
+    assert "df_source_01 = read_lakehouse_table(" in code
+    assert "SOURCE_01_CONFIG = {" in code
+    assert "# df_source_02 = read_lakehouse_csv(" in code
+    assert "# SOURCE_02_CONFIG = {" in code
+    assert "SOURCE_TABLES = [SOURCE_01_CONFIG]" in code
+    assert "# SOURCE_TABLES = [SOURCE_01_CONFIG, SOURCE_02_CONFIG]" in code
+    assert "for table_config in table_configs:" in code
+    assert "source_guardrail_results = run_table_guardrails(" in code
+    assert "stop_if_any_guardrail_failed(source_guardrail_results)" in code
+    assert code.index("source_guardrail_results = run_table_guardrails(") < code.index("df_target_01 = (")
 
-    assert "TARGET_DEFINITIONS" not in code
-    assert "TARGET_DATASETS = {" in code
-    assert "\"df\": df_minimal_target" in code
-    assert "for target_name, target_config in TARGET_DATASETS.items():" in code
-    assert "target_df = target_config[\"df\"]" in code
-    assert "target_evidence_definitions" in code
+    source_block = code[code.index("SOURCE_01_CONFIG = {"):code.index("# Source 02 example")]
+    for required_field in [
+        '"key"',
+        '"df"',
+        '"dataset_name"',
+        '"table_name"',
+        '"stage": "source"',
+        '"schema_preset"',
+        '"data_behavior"',
+        '"stability_check_type"',
+        '"watermark_column"',
+        '"watermark_value"',
+        '"dq_preset"',
+        '"expected_schema"',
+        '"distribution_columns"',
+        '"exclude_columns"',
+    ]:
+        assert required_field in source_block
+
+    assert "df_target_01 = (" in code
+    assert "TARGET_01_CONFIG = {" in code
+    assert "# TARGET_02_CONFIG = {" in code
+    assert "TARGET_TABLES = [TARGET_01_CONFIG]" in code
+    assert "# TARGET_TABLES = [TARGET_01_CONFIG, TARGET_02_CONFIG]" in code
+    assert "target_guardrail_results = run_table_guardrails(" in code
+    assert "stop_if_any_guardrail_failed(target_guardrail_results)" in code
+    assert code.index("target_guardrail_results = run_table_guardrails(") < code.index("target_write_status = {}")
+    assert "A blocking schema, stability, or DQ failure prevents every target write" in markdown
+
+    target_block = code[code.index("TARGET_01_CONFIG = {"):code.index("# Target 02 example")]
+    for required_field in [
+        '"key"',
+        '"df"',
+        '"dataset_name"',
+        '"target_name"',
+        '"target_layer"',
+        '"target_kind"',
+        '"write_mode"',
+        '"schema_preset"',
+        '"data_behavior"',
+        '"stability_check_type"',
+        '"watermark_column"',
+        '"watermark_value"',
+        '"dq_preset"',
+        '"expected_schema"',
+        '"distribution_columns"',
+        '"partition_by"',
+        '"repartition_by"',
+        '"overwrite_schema"',
+    ]:
+        assert required_field in target_block
+
+    assert "source_definitions=source_evidence_definitions" in code
     assert "target_definitions=target_evidence_definitions" in code
-    assert "target_name" in code
-    assert "\"target_name\": \"CHANGE_ME_target_table\"" in code
-    assert "target_layer" in code
-    assert "\"target_layer\": \"unified\",  # source | unified | product" in code
-    assert "Choose the target layer based on where this output should be written" in markdown
-    assert "write_mode" in code
-    assert (
-        code.index("target_profiles = {}")
-        < code.index("for target_name, target_config in TARGET_DATASETS.items():", code.index("target_profiles = {}"))
-        < code.index("target_catalogue_status = write_catalogue_evidence(\n    target_profiles")
-    )
-    assert "\ntarget_catalogue_status = write_catalogue_evidence(\n    target_profiles" in code
-    audit_alias = code.index("\ndf_minimal_target = TARGET_DATASETS[\"minimal_target\"][\"df\"]", code.index("AUDIT_CREATED_AT"))
-    assert (
-        code.rindex("for target_name, target_config in TARGET_DATASETS.items():", code.index("AUDIT_CREATED_AT"), audit_alias)
-        < audit_alias
-    )
-    dq_alias = code.index("\ndf_minimal_target = TARGET_DATASETS[\"minimal_target\"][\"df\"]", code.index("target_dq_results = {}"))
-    assert (
-        code.rindex("for target_name, target_config in TARGET_DATASETS.items():", code.index("target_dq_results = {}"), dq_alias)
-        < dq_alias
-    )
-    assert "Add more sources" in code
-    assert "Add more targets" in code
-    assert "\"sources\": [" in code
-    assert "\"targets\": [" in code
+    assert '"sources": ["source_01"]' in code
+    assert '"targets": ["target_01"]' in code
     assert "CHANGE_ME_source_table rows are transformed into CHANGE_ME_target_table" in code
+
+
+def test_pipeline_notebook_collects_separate_guardrail_results_before_stopping():
+    _, code = _notebook_sources()
+
+    assert "def run_table_guardrails(" in code
+    assert "def stop_if_any_guardrail_failed(guardrail_results):" in code
+    assert "profiles = {}" in code
+    assert "schema_results = {}" in code
+    assert "stability_results = {}" in code
+    assert "dq_results = {}" in code
+    assert "failed_tables = []" in code
+    assert '"profiles": profiles' in code
+    assert '"schema_results": schema_results' in code
+    assert '"stability_results": stability_results' in code
+    assert '"dq_results": dq_results' in code
+    assert '"catalogue_status": catalogue_status' in code
+    assert '"can_continue": not failed_tables' in code
+    assert '"failed_tables": failed_tables' in code
+
+    helper_body = code[code.index("def run_table_guardrails("):code.index("def stop_if_any_guardrail_failed")]
+    assert helper_body.index("profile_dataframe(") < helper_body.index("validate_schema(")
+    assert helper_body.index("validate_schema(") < helper_body.index("enforce_catalogue_stability(")
+    assert helper_body.index("enforce_catalogue_stability(") < helper_body.index("enforce_dq_rules(")
+    assert helper_body.index("enforce_dq_rules(") < helper_body.index("write_catalogue_evidence(")
+    assert "stop_if_failed(" not in helper_body
+
+    source_display = code[code.index("source_guardrail_results = run_table_guardrails("):code.index("stop_if_any_guardrail_failed(source_guardrail_results)")]
+    target_display = code[code.index("target_guardrail_results = run_table_guardrails("):code.index("stop_if_any_guardrail_failed(target_guardrail_results)")]
+    for display_block in [source_display, target_display]:
+        assert '"schema_results"' in display_block
+        assert '"stability_results"' in display_block
+        assert '"dq_results"' in display_block
+        assert '"failed_tables"' in display_block
+
+
+def test_pipeline_notebook_writes_catalogue_evidence_with_governance_context():
+    _, code = _notebook_sources()
+
+    evidence_call = code[code.index("catalogue_status = write_catalogue_evidence("):code.index("return {", code.index("catalogue_status = write_catalogue_evidence("))]
+    for context_field in [
+        "run_id=run_id",
+        "agreement_id=agreement_id",
+        "agreement_contract_version=agreement_contract_version",
+        "notebook_registry_id=notebook_registry_id",
+        "notebook_id=notebook_id",
+        "pipeline_name=pipeline_name",
+        "schema_results=schema_results",
+        "stability_results=stability_results",
+        "dq_results=dq_results",
+    ]:
+        assert context_field in evidence_call
