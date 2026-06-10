@@ -1,100 +1,103 @@
 # Governance Review
 
-Governance Review is the operating model that turns pipeline evidence into approved metadata. `02_pipeline` records evidence during normal runs, and `03_governance` helps people review that evidence before any business context, data-quality (DQ) expectations, or sensitivity/classification decisions become governed metadata.
+Governance Review is the metadata control panel for FabricOps. `02_pipeline` runs first: it writes real data tables, profiles the actual columns that landed, and records catalogue/profile metadata. `03_governance` then runs separately, usually from a governance workspace or governance notebook, so reviewers can augment that profiled catalogue without editing pipeline code.
 
 ![FabricOps Governance Review operating model](../assets/fabricops-goverance-review.png)
 
 The page follows the flow in the diagram:
 
-1. `02_pipeline` profiles data and records evidence.
-2. `03_governance` reviews that evidence with a human in the loop.
-3. Approved decisions are written back as metadata.
-4. Later `02_pipeline` runs load approved metadata and enforce it where relevant.
+1. `02_pipeline` writes real data tables and records catalogue/profile metadata for the tables and columns that actually exist.
+2. `03_governance` opens the profiled catalogue as a control panel for metadata augmentation.
+3. Governance users add or update business context, sensitivity/classification, personal-data or identifier classification, DQ expectations, and optional governance notes.
+4. Approved augmentations are stored as governed metadata/configuration.
+5. Later `02_pipeline` runs read that metadata/configuration and apply the relevant guardrails, checks, and behaviours.
 
-AI can help draft suggestions, but AI output is advisory only. A person must approve, edit, or reject suggestions before they become metadata.
+AI can help draft suggested metadata, but AI output is advisory only. A person must approve, edit, or reject suggestions before they become governed metadata.
 
 ## Operating model
 
-FabricOps keeps governance separate from runtime pipeline logic:
+FabricOps keeps metadata configuration separate from runtime pipeline engineering:
 
-- `02_pipeline` records profile, catalogue, guardrail, DQ, lineage, and run evidence during normal execution.
-- `03_governance` reviews recorded evidence and captures explicit human decisions.
-- Humans approve business context, DQ expectations, and sensitivity/classification.
-- Approved decisions are stored in metadata tables as append-only history.
-- Later pipeline runs load approved metadata and apply it where it is relevant.
+- `02_pipeline` runs first and writes the real target tables.
+- `02_pipeline` profiles those tables and records catalogue/profile metadata for the real columns, row counts, data types, null counts, distinct counts, min/max values, and related run context.
+- `03_governance` runs separately as a metadata control panel over that profiled catalogue output.
+- Governance users augment the catalogue with human-approved meaning, classification, DQ expectations, and notes.
+- Approved augmentations are stored in metadata tables as append-only governed configuration.
+- Later pipeline runs consume approved metadata and apply relevant guardrails, checks, and behaviours.
 - AI suggestions stay advisory until a human reviewer commits them.
 
-This keeps the workflow metadata-driven and junior-friendly. Engineers can inspect what the pipeline observed, reviewers can see what they are approving, and later runs can enforce approved metadata without hiding governance rules inside notebook code.
+Some governance metadata cannot be created safely before actual tables and columns exist. For example, reviewers need to see the real column names and profiling signals before approving column meaning, sensitivity, identifier classification, or DQ expectations. That is why `03_governance` works after `02_pipeline` has created and profiled the table.
 
-## What `02_pipeline` records
+## Why `03_governance` is separate
 
-`02_pipeline` creates the evidence that Governance Review depends on. Typical evidence includes:
+`03_governance` is separate so governance users can configure metadata without changing production pipeline code. The pipeline remains responsible for writing data and applying approved configuration. The governance notebook remains responsible for controlled metadata augmentation.
 
-| Evidence area | What it helps reviewers understand |
+This separation keeps the handoff junior-friendly:
+
+- Pipeline engineers can focus on table creation, profiling, and guardrail execution.
+- Governance reviewers can focus on what the profiled columns mean and which metadata should govern later runs.
+- Approved metadata remains visible in metadata tables instead of being hidden inside notebook logic.
+- Later `02_pipeline` runs behave consistently because they read governed metadata/configuration instead of relying on ad hoc edits.
+
+## What `02_pipeline` creates before governance
+
+`02_pipeline` creates the data and catalogue foundation that Governance Review augments. Typical outputs include:
+
+| Pipeline output | How `03_governance` uses it |
 |---|---|
-| Profile and catalogue evidence | Which table was profiled, which columns exist, observed data types, row counts, null counts, distinct counts, min/max values, and distribution signals where available. |
-| Guardrail evidence | Whether schema, source stability, and other pipeline guardrails passed, warned, or failed. |
-| DQ evidence | Which approved DQ rules were evaluated, which checks passed or failed, and whether failures should block or warn. |
-| Lineage evidence | Which upstream and downstream objects were involved in the run. |
-| Run evidence | Which environment, dataset, table, notebook, activity, and run summary produced the evidence. |
+| Real data tables | Reviewers augment metadata for tables and columns that actually exist. |
+| Profile and catalogue metadata | Reviewers see table identity, column names, data types, row counts, null counts, distinct counts, min/max values, and distribution signals where available. |
+| Guardrail and DQ evidence | Reviewers can understand what the pipeline observed when deciding which metadata or expectations to approve. |
+| Lineage and run metadata | Reviewers can see which environment, dataset, table, notebook, activity, and run context produced the profiled catalogue rows. |
 
-The pipeline records this evidence first. It does not ask reviewers to approve rules inside the production pipeline path.
+In this page, “evidence” means the profile/catalogue and run signals produced by `02_pipeline`. The main job of `03_governance` is to augment that profiled catalogue, not to act as the runtime enforcement layer.
 
-## What `03_governance` reviews
+## What reviewers augment
 
-`03_governance` starts from the latest successful catalogue evidence, then gives reviewers a focused place to inspect and approve metadata. Reviewers can answer questions such as:
+Governance Review captures append-only human-approved metadata/configuration:
 
-- Which table and profile run are being reviewed?
-- Which columns exist in the latest successful profile?
-- What do the observed data types, null rates, distinct counts, and min/max values suggest?
-- Did recent pipeline runs pass schema, stability, DQ, lineage, and run guardrails?
-- Is there enough evidence for a human to approve metadata safely?
-
-The governance notebook writes approved metadata only after explicit commit actions. Draft rows, AI suggestions, and uncommitted edits are not enforced by later pipeline runs.
-
-## What humans approve
-
-Governance Review is responsible for append-only human decisions:
-
-| Review area | Metadata table | What humans approve |
+| Augmentation area | Metadata table | What reviewers add or approve |
 |---|---|---|
-| Business context | `METADATA_COLUMN_CONTEXT` | Human-readable meaning, notes, and context for columns. |
-| DQ expectations | `METADATA_DQ_RULES` | Active approved DQ rules for a table or columns. |
-| Sensitivity/classification | `METADATA_COLUMN_CLASSIFICATION` | Sensitivity labels, personal-data classification, identifier type, and handling requirements. |
-| Governance outcome | `METADATA_GOVERNANCE_REVIEWS` | Optional final review outcome based on evidence, blockers, and warnings. |
+| Business context | `METADATA_COLUMN_CONTEXT` | Human-readable meaning, notes, and context for real profiled columns. |
+| Sensitivity/classification | `METADATA_COLUMN_CLASSIFICATION` | Sensitivity labels and handling requirements for profiled columns. |
+| Personal-data or identifier classification | `METADATA_COLUMN_CLASSIFICATION` | Whether columns represent personal data, identifiers, or other governed classification signals. |
+| DQ expectations | `METADATA_DQ_RULES` | Active approved DQ rules that later pipeline runs can load and enforce. |
+| Governance outcome notes | `METADATA_GOVERNANCE_REVIEWS` | Optional outcome notes, blockers, warnings, or review decisions for the table. |
 
 AI suggestions can be useful starting points, especially for first-pass descriptions or candidate DQ expectations, but they are never auto-approved.
 
-## Human review workflow
+## Human metadata workflow
 
-A typical review flow is:
+A typical metadata augmentation flow is:
 
-1. Select a profiled catalogue table with `widget_select_catalogue_table`.
-2. Load profile rows for that selection with `load_catalogue_profile_rows`.
-3. Review or edit business context using the column context workflow.
-4. Review or edit DQ expectations using `widget_review_dq_rules`.
-5. Review sensitivity and personal-data classification.
-6. Commit approved rows with `record_table_governance`.
-7. Optionally write a governance review outcome after checking related evidence.
+1. `02_pipeline` writes and profiles a real table.
+2. A governance user opens `03_governance` from the governance workspace or governance notebook.
+3. The user selects a profiled catalogue table with `widget_select_catalogue_table`.
+4. The notebook loads the profiled catalogue rows with `load_catalogue_profile_rows`.
+5. The user augments column business context, sensitivity/classification, personal-data or identifier classification, and DQ expectations.
+6. The user commits approved metadata with `record_table_governance` and related commit actions.
+7. Optional governance outcome notes are stored when useful for handover.
+8. Later `02_pipeline` runs read the approved metadata/configuration and apply the relevant behaviours.
 
 The important control point is the commit. Nothing becomes governed metadata until a human reviewer explicitly commits it.
 
-## DQ expectations in the workflow
+## DQ expectations in the control panel
 
-DQ expectations are one approval area inside Governance Review; they are not the purpose of the whole page.
+DQ expectations are one kind of metadata augmentation in Governance Review; they are not the purpose of the whole page.
 
-- `03_governance` reviews the profiling evidence and approves DQ expectations that are appropriate for the table.
-- Approved rules are stored as metadata in `METADATA_DQ_RULES`.
+- `03_governance` lets reviewers add, edit, approve, deactivate, or reactivate DQ expectations for profiled tables and columns.
+- Approved rules are stored as governed metadata/configuration in `METADATA_DQ_RULES`.
 - Later `02_pipeline` runs load the newest active approved rules for the table.
 - `enforce_dq_rules` enforces those approved rules at runtime and records the outcome as guardrail evidence.
 
 FabricOps uses one canonical DQ rule vocabulary and does not require Great Expectations or dbt at runtime. For the full list of supported rule types, parameters, and examples, see the [DQ rule reference](../reference/dq-rules/index.md).
 
-## How approved metadata returns to the pipeline
+## How approved metadata controls later pipeline runs
 
 Approved metadata affects later runs only after it is written to metadata tables.
 
-- Approved business context and classification become metadata evidence for downstream reporting, handover, and later governance review.
+- Approved business context and classification become metadata/configuration for downstream reporting, handover, governance review, and runtime decisions where relevant.
+- Approved sensitivity and personal-data classifications can influence later pipeline behaviours, handling expectations, and review decisions.
 - Approved active DQ rules are read by `02_pipeline` when it calls `enforce_dq_rules`.
 - `enforce_dq_rules` reads `METADATA_DQ_RULES` from the configured metadata lakehouse target, resolves the newest version for each rule, keeps only active approved rules, evaluates them, and returns a guardrail result with status, checks, a tagged DataFrame, and summary fields for evidence.
 
@@ -102,7 +105,7 @@ Error-severity DQ failures return `status="failed"` and `can_continue=false`. Wa
 
 ## What this page is not
 
-Governance Review is not a full data product platform, an external DQ framework wrapper, or a replacement for normal pipeline engineering. It does not move DQ authoring into `02_pipeline`, expose one public Python function per rule, or require Great Expectations or dbt at runtime.
+Governance Review is not a full data product platform, an external DQ framework wrapper, or a replacement for normal pipeline engineering. It is a metadata control panel for augmenting profiled catalogue output. It does not move DQ authoring into `02_pipeline`, expose one public Python function per rule, or require Great Expectations or dbt at runtime.
 
 ### Schema guardrails are separate
 
