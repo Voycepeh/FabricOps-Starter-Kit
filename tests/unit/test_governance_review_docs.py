@@ -32,6 +32,10 @@ def test_dq_rule_reference_pages_exist_for_supported_catalogue():
         assert page_path.exists(), f"Missing DQ rule reference page for {rule_type}"
         page_text = page_path.read_text(encoding="utf-8")
         assert f"rule_type: {rule_type}" in page_text
+        applies_section = page_text.split("## Rule applies to", 1)[1].split("## Parameters", 1)[0]
+        assert "Data applicability:" in applies_section
+        assert "Example column(s) on this page:" in applies_section
+        assert not applies_section.strip().startswith("`")
         for heading in (
             "What this rule does",
             "When to use it",

@@ -10,7 +10,9 @@ Use only when no smaller built-in FabricOps rule can express the requirement. Pr
 
 ## Rule applies to
 
-Expression references `credits_attempted` and `credits_earned`
+**Data applicability:** Any profiled row set where the required check is best expressed as a built-in Spark SQL boolean expression over available columns, after simpler named rules have been ruled out.
+
+**Example column(s) on this page:** expression references `credits_attempted` and `credits_earned`
 
 ## Parameters
 

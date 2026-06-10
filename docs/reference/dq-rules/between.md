@@ -10,7 +10,9 @@ Use for percentages, scores, quantities, and other values with a known valid ran
 
 ## Rule applies to
 
-`score`
+**Data applicability:** Numeric, date, or otherwise comparable profiled columns where catalogue min/max evidence should stay inside an approved lower and/or upper bound.
+
+**Example column(s) on this page:** `score`
 
 ## Parameters
 

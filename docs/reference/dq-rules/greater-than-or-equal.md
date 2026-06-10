@@ -10,7 +10,9 @@ Use for non-negative values, minimum credits, or dates that must not precede a b
 
 ## Rule applies to
 
-`credit_units`
+**Data applicability:** Numeric, date, or otherwise comparable profiled columns that must be at least a configured threshold.
+
+**Example column(s) on this page:** `credit_units`
 
 ## Parameters
 

@@ -10,7 +10,9 @@ Use when a small amount of missing data is acceptable but a spike should be visi
 
 ## Rule applies to
 
-`email`
+**Data applicability:** Any profiled column where some missing values are acceptable, but the catalogue null percentage must stay below an approved threshold.
+
+**Example column(s) on this page:** `email`
 
 ## Parameters
 

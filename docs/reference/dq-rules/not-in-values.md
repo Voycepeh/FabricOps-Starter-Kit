@@ -10,7 +10,9 @@ Use to catch placeholders, retired codes, test values, or values known to be uns
 
 ## Rule applies to
 
-`country_code`
+**Data applicability:** Categorical, flag, status, code, or other profiled string-like columns where specific placeholder, retired, test, or blocked values must not appear.
+
+**Example column(s) on this page:** `country_code`
 
 ## Parameters
 

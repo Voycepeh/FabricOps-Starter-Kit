@@ -10,7 +10,9 @@ Use for ratios or risk values where the boundary itself is not allowed.
 
 ## Rule applies to
 
-`risk_score`
+**Data applicability:** Numeric, date, or otherwise comparable profiled columns that must be strictly below a configured threshold.
+
+**Example column(s) on this page:** `risk_score`
 
 ## Parameters
 

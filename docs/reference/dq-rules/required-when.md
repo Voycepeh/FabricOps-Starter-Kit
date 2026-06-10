@@ -10,7 +10,9 @@ Use for conditional mandatory fields such as approved date for approved records 
 
 ## Rule applies to
 
-`approved_date`
+**Data applicability:** Profiled columns that are conditionally mandatory when a Spark SQL condition over the same row is true.
+
+**Example column(s) on this page:** `approved_date`
 
 ## Parameters
 

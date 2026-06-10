@@ -10,7 +10,9 @@ Use for natural keys, source identifiers, or generated business IDs that must id
 
 ## Rule applies to
 
-`student_id`
+**Data applicability:** A single profiled column that should identify one row per value, where duplicate values indicate duplicate or ambiguous business keys.
+
+**Example column(s) on this page:** `student_id`
 
 ## Parameters
 

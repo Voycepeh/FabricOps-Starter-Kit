@@ -10,7 +10,9 @@ Use when the business grain is composite, such as order line, account month, or 
 
 ## Rule applies to
 
-`order_id`, `line_no`
+**Data applicability:** Two or more profiled columns that together define the business grain, especially where catalogue distinct-count evidence should match row-level uniqueness expectations.
+
+**Example column(s) on this page:** `order_id`, `line_no`
 
 ## Parameters
 

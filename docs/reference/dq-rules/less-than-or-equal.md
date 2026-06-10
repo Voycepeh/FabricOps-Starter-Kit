@@ -10,7 +10,9 @@ Use for maximum percentages, caps, limits, or service-level thresholds.
 
 ## Rule applies to
 
-`response_rate`
+**Data applicability:** Numeric, date, or otherwise comparable profiled columns that must be no greater than a configured threshold.
+
+**Example column(s) on this page:** `response_rate`
 
 ## Parameters
 

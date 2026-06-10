@@ -10,7 +10,9 @@ Use when a column is mandatory for joins, reporting, or safe downstream interpre
 
 ## Rule applies to
 
-`customer_id`
+**Data applicability:** Any profiled column where catalogue null-count evidence should remain zero because the value is mandatory for safe downstream use.
+
+**Example column(s) on this page:** `customer_id`
 
 ## Parameters
 

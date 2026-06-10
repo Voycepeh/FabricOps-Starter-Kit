@@ -10,7 +10,9 @@ Use for expiry dates after start dates, positive duration checks, or ordered num
 
 ## Rule applies to
 
-`expiry_date`, `start_date`
+**Data applicability:** Pairs of comparable profiled columns in the same row where the first selected column must be strictly greater than the second selected column.
+
+**Example column(s) on this page:** `expiry_date`, `start_date`
 
 ## Parameters
 

@@ -10,7 +10,9 @@ Use for operational tables where stale data should block or warn before reportin
 
 ## Rule applies to
 
-`updated_at`
+**Data applicability:** Date or timestamp profiled columns that represent update, ingest, event, or snapshot recency and should stay within a maximum age from the run date.
+
+**Example column(s) on this page:** `updated_at`
 
 ## Parameters
 

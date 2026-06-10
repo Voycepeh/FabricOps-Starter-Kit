@@ -10,7 +10,9 @@ Use for reconciled identifiers, copied reference values, or source/target fields
 
 ## Rule applies to
 
-`source_id`, `target_id`
+**Data applicability:** Pairs of profiled columns in the same row that should carry the same value, such as reconciled identifiers, mirrored codes, or copied reference fields.
+
+**Example column(s) on this page:** `source_id`, `target_id`
 
 ## Parameters
 

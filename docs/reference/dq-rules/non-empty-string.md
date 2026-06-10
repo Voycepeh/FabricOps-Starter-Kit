@@ -10,7 +10,9 @@ Use for names, descriptions, labels, codes, or other text fields that must conta
 
 ## Rule applies to
 
-`programme_name`
+**Data applicability:** Profiled string or string-castable columns where nulls, blank strings, and whitespace-only values should all be treated as missing content.
+
+**Example column(s) on this page:** `programme_name`
 
 ## Parameters
 

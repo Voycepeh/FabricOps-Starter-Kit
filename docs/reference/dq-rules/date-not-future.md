@@ -10,7 +10,9 @@ Use for birth dates, transaction dates, application dates, or any date that shou
 
 ## Rule applies to
 
-`birth_date`
+**Data applicability:** Date or timestamp profiled columns that should never be later than the pipeline run date.
+
+**Example column(s) on this page:** `birth_date`
 
 ## Parameters
 

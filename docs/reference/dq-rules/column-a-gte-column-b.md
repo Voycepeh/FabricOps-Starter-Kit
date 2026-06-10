@@ -10,7 +10,9 @@ Use for end dates after start dates, minimum/maximum pairs, or numeric bounds wh
 
 ## Rule applies to
 
-`end_date`, `start_date`
+**Data applicability:** Pairs of comparable profiled columns in the same row where the first selected column must be greater than or equal to the second selected column.
+
+**Example column(s) on this page:** `end_date`, `start_date`
 
 ## Parameters
 

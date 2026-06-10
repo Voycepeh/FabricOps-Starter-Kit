@@ -10,7 +10,9 @@ Use for controlled domains such as status, category, currency, country group, or
 
 ## Rule applies to
 
-`status`
+**Data applicability:** Categorical, flag, status, code, or other profiled string-like columns where the data catalogue shows a small governed domain of valid values.
+
+**Example column(s) on this page:** `status`
 
 ## Parameters
 

@@ -10,7 +10,9 @@ Use for snapshot tables, extracts, or SLA checks where maximum age is the cleare
 
 ## Rule applies to
 
-`snapshot_date`
+**Data applicability:** Date or timestamp profiled columns that represent snapshot, extract, update, or business recency and should not be older than a configured number of days from the run date.
+
+**Example column(s) on this page:** `snapshot_date`
 
 ## Parameters
 

@@ -10,7 +10,9 @@ Use for event windows, supported history ranges, academic terms, or operational 
 
 ## Rule applies to
 
-`event_date`
+**Data applicability:** Date or timestamp profiled columns where catalogue min/max evidence should stay inside an approved business date window.
+
+**Example column(s) on this page:** `event_date`
 
 ## Parameters
 

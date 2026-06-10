@@ -10,7 +10,9 @@ Use for emails, fixed-format codes, identifiers, postcodes, and other structured
 
 ## Rule applies to
 
-`email`
+**Data applicability:** Profiled string or string-castable columns with a known textual pattern, such as emails, codes, identifiers, or formatted reference numbers.
+
+**Example column(s) on this page:** `email`
 
 ## Parameters
 

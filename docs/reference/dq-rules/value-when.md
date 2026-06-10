@@ -10,7 +10,9 @@ Use for conditional business rules such as country-specific currency, status fla
 
 ## Rule applies to
 
-`currency`
+**Data applicability:** Profiled columns whose expected value depends on a Spark SQL condition over the same row, usually for conditional business logic.
+
+**Example column(s) on this page:** `currency`
 
 ## Parameters
 

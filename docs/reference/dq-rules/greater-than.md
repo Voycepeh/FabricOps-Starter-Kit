@@ -10,7 +10,9 @@ Use when zero or the threshold itself is invalid, such as positive amount checks
 
 ## Rule applies to
 
-`amount`
+**Data applicability:** Numeric, date, or otherwise comparable profiled columns that must be strictly above a configured threshold.
+
+**Example column(s) on this page:** `amount`
 
 ## Parameters
 
