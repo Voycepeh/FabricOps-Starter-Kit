@@ -10,7 +10,6 @@ pytestmark = pytest.mark.contract
 
 ROOT = Path(__file__).parents[2]
 TEMPLATES = ROOT / "templates" / "notebooks"
-EXAMPLE_NOTEBOOKS = ROOT / "examples" / "notebooks"
 
 
 def _code_from_notebook(path: Path) -> str:
@@ -80,27 +79,29 @@ def test_guardrail_orchestration_keeps_dq_results_and_documents_simple_v1_behavi
     assert "blocks before the next critical step" in guardrail_docs
 
 
-def test_quick_start_links_example_smoke_tests_with_safety_wording():
+def test_quick_start_links_template_smoke_tests_with_release_specific_wording():
     quick_start = (ROOT / "docs" / "quick-start.md").read_text(encoding="utf-8")
     expected = (
-        "*Optional: After running `00_env_config`, you may run the example smoke tests to quickly "
+        "*Optional: After running `00_env_config`, you may run the example smoke test notebooks to quickly "
         "understand how the pipeline and DQ rule flows work before adapting the production templates. "
-        "Use `examples/notebooks/98_pipeline_smoke_test.ipynb` to validate the pipeline path, "
-        "including metadata tables, source and target guardrails, evidence writing, lineage, runtime "
-        "summary, and target writes. Use `examples/notebooks/98_dq_rule_smoke_test.ipynb` to "
-        "understand how DQ rules are evaluated, how warning rules behave, and how error rules block "
-        "when enforcement fails. The pipeline smoke test uses overwrite mode only for the smoke "
-        "target table; metadata evidence remains append-only through the FabricOps evidence helpers. "
-        "These notebooks are example validation aids, not production workflow templates.*"
+        "Use [`example_pipeline_smoke_test.ipynb`](../templates/notebooks/example_pipeline_smoke_test.ipynb) "
+        "to validate the pipeline path, including metadata tables, source and target guardrails, evidence "
+        "writing, lineage, runtime summary, and target writes. Use [`example_dq_rule_smoke_test.ipynb`]"
+        "(../templates/notebooks/example_dq_rule_smoke_test.ipynb) to understand how DQ rules are "
+        "evaluated, how warning rules behave, and how error rules block when enforcement fails. These "
+        "examples are aligned to the current release and should be treated as release-specific validation "
+        "aids, not production workflow templates.*"
     )
 
     assert expected in quick_start
-    assert (EXAMPLE_NOTEBOOKS / "98_pipeline_smoke_test.ipynb").exists()
-    assert (EXAMPLE_NOTEBOOKS / "98_dq_rule_smoke_test.ipynb").exists()
+    assert (TEMPLATES / "example_pipeline_smoke_test.ipynb").exists()
+    assert (TEMPLATES / "example_dq_rule_smoke_test.ipynb").exists()
+    assert not (ROOT / "examples" / "notebooks" / "98_pipeline_smoke_test.ipynb").exists()
+    assert not (ROOT / "examples" / "notebooks" / "98_dq_rule_smoke_test.ipynb").exists()
 
 
 def test_smoke_test_example_notebook_exists_and_covers_end_to_end_pattern():
-    smoke_notebook = EXAMPLE_NOTEBOOKS / "98_pipeline_smoke_test.ipynb"
+    smoke_notebook = TEMPLATES / "example_pipeline_smoke_test.ipynb"
 
     assert smoke_notebook.exists()
     smoke_text = smoke_notebook.read_text(encoding="utf-8")
@@ -135,6 +136,10 @@ def test_smoke_test_example_notebook_exists_and_covers_end_to_end_pattern():
     assert "read_lakehouse_excel" not in smoke
     assert "read_lakehouse_parquet" not in smoke
 
+    dq_smoke = _code_from_notebook(TEMPLATES / "example_dq_rule_smoke_test.ipynb")
+    assert "mode=\"overwrite\"" not in dq_smoke
+    assert "mode = \"overwrite\"" not in dq_smoke
+
 
 def test_docs_and_templates_do_not_add_dq_failure_table_behavior():
     checked_paths = [
@@ -145,8 +150,8 @@ def test_docs_and_templates_do_not_add_dq_failure_table_behavior():
         ROOT / "docs" / "quick-start.md",
         ROOT / "templates" / "notebooks" / "02_pipeline.ipynb",
         ROOT / "templates" / "notebooks" / "03_governance.ipynb",
-        ROOT / "examples" / "notebooks" / "98_pipeline_smoke_test.ipynb",
-        ROOT / "examples" / "notebooks" / "98_dq_rule_smoke_test.ipynb",
+        ROOT / "templates" / "notebooks" / "example_pipeline_smoke_test.ipynb",
+        ROOT / "templates" / "notebooks" / "example_dq_rule_smoke_test.ipynb",
     ]
     forbidden = [
         "METADATA_DQ_FAILURE",
