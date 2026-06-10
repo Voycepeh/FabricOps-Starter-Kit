@@ -81,7 +81,7 @@ def test_guardrail_orchestration_keeps_dq_results_and_documents_simple_v1_behavi
 
 
 def test_smoke_test_example_notebook_exists_and_covers_end_to_end_pattern():
-    smoke_notebook = EXAMPLE_NOTEBOOKS / "98_smoke_test.ipynb"
+    smoke_notebook = EXAMPLE_NOTEBOOKS / "98_pipeline_smoke_test.ipynb"
 
     assert smoke_notebook.exists()
     smoke_text = smoke_notebook.read_text(encoding="utf-8")
@@ -97,11 +97,21 @@ def test_smoke_test_example_notebook_exists_and_covers_end_to_end_pattern():
         "run_table_guardrails",
         "write_pipeline_lineage",
         "write_pipeline_run_summary",
-        "PASS: FabricOps smoke test completed.",
+        "PASS: FabricOps pipeline smoke test completed.",
     ]:
         assert expected in smoke
 
     assert "fabricops_smoke_target" in smoke
+    assert "TARGET_01_WRITE_MODE = \"overwrite\"" in smoke
+    assert "Metadata evidence tables remain append-only" in smoke_text
+    for evidence_helper in [
+        "write_catalogue_evidence",
+        "write_pipeline_lineage",
+        "write_pipeline_run_summary",
+    ]:
+        assert evidence_helper in smoke
+    assert "mode=\"overwrite\"" not in smoke
+    assert "mode = \"overwrite\"" not in smoke
     assert "read_lakehouse_csv" not in smoke
     assert "read_lakehouse_excel" not in smoke
     assert "read_lakehouse_parquet" not in smoke
@@ -116,7 +126,7 @@ def test_docs_and_templates_do_not_add_dq_failure_table_behavior():
         ROOT / "docs" / "quick-start.md",
         ROOT / "templates" / "notebooks" / "02_pipeline.ipynb",
         ROOT / "templates" / "notebooks" / "03_governance.ipynb",
-        ROOT / "examples" / "notebooks" / "98_smoke_test.ipynb",
+        ROOT / "examples" / "notebooks" / "98_pipeline_smoke_test.ipynb",
     ]
     forbidden = [
         "METADATA_DQ_FAILURE",
