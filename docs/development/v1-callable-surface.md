@@ -3,11 +3,13 @@
 ## Summary
 
 - Before callable count: **71** exported callable functions across essential and optional categories.
-- Revised after callable count: **30** curated v1 template callables.
-- Definition: a callable is a function that a notebook template user actively calls in a template cell.
+- Revised after callable count: **37** curated v1 template callables.
+- Definition: a callable is a function that a notebook template user actively calls in a template cell or that a template imports as package-level orchestration.
 - Source of truth: `src/fabricops_kit/__init__.py::__all__`, enforced by `tests/contract/test_public_contract.py` and mirrored in `scripts/generate_function_reference.py::V1_CALLABLES`.
 
-## Final v1 callable list
+## Current v1 callable list
+
+This list is kept as release-planning context only. The source of truth is the package export list and generated reference manifest.
 
 1. `setup_notebook`
 2. `setup_metadata_tables`
@@ -29,16 +31,23 @@
 18. `stop_if_failed`
 19. `enforce_dq_rules`
 20. `build_lineage_records`
-21. `write_catalogue_evidence`
-22. `write_pipeline_lineage`
-23. `write_pipeline_run_summary`
-24. `widget_select_catalogue_table`
-25. `get_selected_catalogue_table`
-26. `load_catalogue_profile_rows`
-27. `widget_review_column_context`
-28. `widget_review_dq_rules`
-29. `widget_review_column_classification`
-30. `record_table_governance`
+21. `build_guardrail_evidence_definitions`
+22. `prepare_source_table_configs`
+23. `prepare_target_table_configs`
+24. `run_table_guardrails`
+25. `guardrail_summary`
+26. `stop_if_any_guardrail_failed`
+27. `write_catalogue_evidence`
+28. `write_target_tables`
+29. `write_pipeline_lineage`
+30. `write_pipeline_run_summary`
+31. `widget_select_catalogue_table`
+32. `get_selected_catalogue_table`
+33. `load_catalogue_profile_rows`
+34. `widget_review_column_context`
+35. `widget_review_dq_rules`
+36. `widget_review_column_classification`
+37. `record_table_governance`
 
 ## Deleted from the public callable surface
 
@@ -54,9 +63,9 @@ The following previous public/exported functions were removed from the v1 callab
 - Advanced incremental/profile comparison helpers and low-level row/key builders: `build_and_write_partition_snapshot`, `load_latest_partition_snapshot`, `default_incremental_safety_policy`, `build_partition_snapshot`, `assert_incremental_safe`, `build_incremental_safety_records`, `build_evidence_row`, `build_metadata_table_key`, `build_metadata_column_key`, `build_dq_rule_key`, `build_profile_summary`, `latest_by_column`, `build_column_context_records`, `build_dq_rule_records`, `build_classification_records`, `commit_column_context`, `commit_dq_rules`, `commit_column_classification`.
 - Optional/internal utilities: `catalogue_table_options`, `get_governance_metadata_schemas`, `optional_ai_generate_response`, `default_evidence_types`, `normalise_records_by_column`, `column_context_rows_for_spark`, `write_metadata_rows`, `detect_dataframe_engine`, `check_naming_convention`, `seed_minimal_sample_source_table`, `load_dataset_contract`, `validate_dataset_contract`, `assert_valid_dataset_contract`, and `load_and_validate_dataset_contract`.
 
-## Added pipeline evidence helpers
+## Added pipeline orchestration helpers
 
-`02_pipeline` continues to use existing public read, profiling, guardrail, DQ, and write helpers directly. The added public pipeline helpers are limited to noisy metadata evidence tasks: catalogue evidence enrichment, many-to-many lineage persistence, and runtime summary logging.
+`02_pipeline` now keeps beginner-editable source configs, source guardrail defaults, transform logic, target configs, target guardrail/write defaults, lineage relationships, and pipeline naming visible. Reusable setup, guardrail orchestration, target writes, catalogue evidence, lineage persistence, and runtime summary logging live behind package helpers such as `prepare_source_table_configs`, `run_table_guardrails`, `guardrail_summary`, `stop_if_any_guardrail_failed`, `prepare_target_table_configs`, `write_target_tables`, `write_pipeline_lineage`, and `write_pipeline_run_summary`.
 
 ## Merged functions
 
@@ -85,4 +94,4 @@ The obsolete `handover`, `business_context`, `data_governance`, `data_quality`, 
 
 ## Rationale
 
-The v1 surface keeps one high-level function per backend user action while preserving smaller standalone widget cells for Fabric stability. Notebook users configure schemas and stability settings directly in templates, call `validate_schema` and `enforce_catalogue_stability`, and use `stop_if_failed` only to stop on those guardrail result objects. Low-level coercion, key generation, row building, Spark conversion, docs metadata, and non-template helpers are internal implementation details rather than notebook-template callables.
+The v1 surface keeps one high-level function per notebook user action while preserving smaller standalone widget cells for Fabric stability. Notebook users configure business-specific values directly in templates and call package orchestration helpers for reusable setup, guardrails, writes, and evidence. Low-level coercion, key generation, row building, Spark conversion, docs metadata, and non-template helpers are internal implementation details rather than notebook-template callables.

@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import sys
+import types
 
 import pytest
 
@@ -20,6 +22,9 @@ class FakeSpark:
 
 
 def test_public_pipeline_helpers_are_exported_without_wrapper_bloat():
+    assert "prepare_source_table_configs" in fabricops_kit.__all__
+    assert "prepare_target_table_configs" in fabricops_kit.__all__
+    assert "write_target_tables" in fabricops_kit.__all__
     assert "build_guardrail_evidence_definitions" in fabricops_kit.__all__
     assert "run_table_guardrails" in fabricops_kit.__all__
     assert "guardrail_summary" in fabricops_kit.__all__
@@ -38,6 +43,194 @@ def test_public_pipeline_helpers_are_exported_without_wrapper_bloat():
     }:
         assert removed_name not in fabricops_kit.__all__
         assert not hasattr(fabricops_kit, removed_name)
+
+
+class FakeDataFrame:
+    def __init__(self, name="df"):
+        self.name = name
+        self.with_columns = []
+
+    def withColumn(self, name, value):
+        self.with_columns.append((name, value))
+        return self
+
+
+def _install_fake_pyspark_functions(monkeypatch):
+    fake_functions = types.SimpleNamespace(lit=lambda value: ("lit", value))
+    fake_sql = types.ModuleType("pyspark.sql")
+    fake_sql.functions = fake_functions
+    fake_pyspark = types.ModuleType("pyspark")
+    fake_pyspark.sql = fake_sql
+    monkeypatch.setitem(sys.modules, "pyspark", fake_pyspark)
+    monkeypatch.setitem(sys.modules, "pyspark.sql", fake_sql)
+    monkeypatch.setitem(sys.modules, "pyspark.sql.functions", fake_functions)
+
+
+def test_prepare_source_table_configs_derives_defaults_and_reads_lakehouse_table(monkeypatch):
+    calls = []
+
+    def fake_read(config, env, layer, table, *, spark_session=None):
+        calls.append((config, env, layer, table, spark_session))
+        return "loaded_df"
+
+    monkeypatch.setattr(pipeline, "read_lakehouse_table", fake_read)
+
+    enriched, by_key = pipeline.prepare_source_table_configs(
+        [
+            {
+                "key": "source_01",
+                "layer": "source",
+                "table_name": "orders_raw",
+                "watermark_column": "business_date",
+            }
+        ],
+        {
+            "schema_preset": "allow_new_columns",
+            "data_behavior": "changing",
+            "watermark_value": "default_should_be_overridden",
+        },
+        config={"config": True},
+        env="dev",
+        spark_session="spark",
+    )
+
+    assert calls == [({"config": True}, "dev", "source", "orders_raw", "spark")]
+    assert enriched == [
+        {
+            "schema_preset": "allow_new_columns",
+            "data_behavior": "changing",
+            "watermark_value": None,
+            "key": "source_01",
+            "layer": "source",
+            "table_name": "orders_raw",
+            "watermark_column": "business_date",
+            "dataset_name": "orders_raw",
+            "stage": "source",
+            "df": "loaded_df",
+        }
+    ]
+    assert by_key["source_01"] is enriched[0]
+
+
+def test_prepare_source_table_configs_supports_explicit_read_patterns(monkeypatch):
+    calls = []
+
+    monkeypatch.setattr(pipeline, "read_lakehouse_csv", lambda *args, **kwargs: calls.append(("csv", args, kwargs)) or "csv_df")
+    monkeypatch.setattr(pipeline, "read_lakehouse_parquet", lambda *args, **kwargs: calls.append(("parquet", args, kwargs)) or "parquet_df")
+    monkeypatch.setattr(pipeline, "read_lakehouse_excel", lambda *args, **kwargs: calls.append(("excel", args, kwargs)) or "excel_df")
+    monkeypatch.setattr(pipeline, "read_warehouse_table", lambda *args, **kwargs: calls.append(("warehouse", args, kwargs)) or "warehouse_df")
+
+    class FakeReader:
+        def table(self, table_name):
+            calls.append(("spark_table", table_name))
+            return "spark_table_df"
+
+    fake_spark = types.SimpleNamespace(read=FakeReader())
+    configs = [
+        {"key": "csv", "layer": "source", "table_name": "csv_t", "read_type": "csv", "relative_path": "raw/orders.csv"},
+        {"key": "parquet", "layer": "source", "table_name": "parquet_t", "read_type": "parquet", "relative_path": "raw/orders.parquet"},
+        {"key": "excel", "layer": "source", "table_name": "excel_t", "read_type": "excel", "relative_path": "raw/orders.xlsx", "sheet_name": "Sheet1"},
+        {"key": "wh", "layer": "warehouse", "table_name": "orders", "read_type": "warehouse", "schema": "sales", "warehouse_target": "product"},
+        {"key": "spark", "layer": "source", "table_name": "orders", "read_type": "spark_table", "spark_table": "db.orders"},
+    ]
+
+    enriched, by_key = pipeline.prepare_source_table_configs(configs, {}, {}, "dev", fake_spark)
+
+    assert [config["df"] for config in enriched] == ["csv_df", "parquet_df", "excel_df", "warehouse_df", "spark_table_df"]
+    assert by_key["spark"]["dataset_name"] == "orders"
+    assert calls[0][0] == "csv"
+    assert calls[1][0] == "parquet"
+    assert calls[2][0] == "excel"
+    assert calls[3][0] == "warehouse"
+    assert calls[4] == ("spark_table", "db.orders")
+
+
+def test_prepare_target_table_configs_adds_audit_columns_and_derives_write_defaults(monkeypatch):
+    _install_fake_pyspark_functions(monkeypatch)
+    df = FakeDataFrame("target")
+
+    enriched, by_key = pipeline.prepare_target_table_configs(
+        [
+            {
+                "key": "target_01",
+                "df": df,
+                "layer": "unified",
+                "table_name": "orders_curated",
+            }
+        ],
+        {"schema_preset": "allow_new_columns", "write_mode": "overwrite", "target_kind": "lakehouse"},
+        run_id="run-1",
+        pipeline_name="pipeline-1",
+    )
+
+    target = enriched[0]
+    assert target["dataset_name"] == "orders_curated"
+    assert target["stage"] == "unified"
+    assert target["target_layer"] == "unified"
+    assert target["target_name"] == "orders_curated"
+    assert target["target_kind"] == "lakehouse"
+    assert target["watermark_value"] is None
+    assert by_key["target_01"] is target
+    assert [name for name, _value in df.with_columns] == [
+        "_fabricops_run_id",
+        "_fabricops_pipeline_name",
+        "_fabricops_created_at",
+    ]
+
+
+def test_write_target_tables_writes_lakehouse_and_warehouse_targets(monkeypatch):
+    calls = []
+    monkeypatch.setattr(pipeline, "write_lakehouse_table", lambda *args, **kwargs: calls.append(("lakehouse", args, kwargs)))
+    monkeypatch.setattr(pipeline, "write_warehouse_table", lambda *args, **kwargs: calls.append(("warehouse", args, kwargs)))
+
+    status = pipeline.write_target_tables(
+        [
+            {
+                "key": "lake",
+                "df": "lake_df",
+                "target_kind": "lakehouse",
+                "target_layer": "unified",
+                "target_name": "orders",
+                "write_mode": "overwrite",
+                "partition_by": ["business_date"],
+                "repartition_by": ["customer_id"],
+                "overwrite_schema": True,
+            },
+            {
+                "key": "wh",
+                "df": "warehouse_df",
+                "target_kind": "warehouse",
+                "target_layer": "product",
+                "schema": "sales",
+                "target_name": "orders_product",
+                "mode": "append",
+            },
+        ],
+        config={"config": True},
+        env="dev",
+    )
+
+    assert status == {"lake": "written", "wh": "written"}
+    assert calls[0] == (
+        "lakehouse",
+        ("lake_df", {"config": True}, "dev", "unified", "orders"),
+        {
+            "mode": "overwrite",
+            "partition_by": ["business_date"],
+            "repartition_by": ["customer_id"],
+            "overwrite_schema": True,
+        },
+    )
+    assert calls[1] == (
+        "warehouse",
+        ("warehouse_df", {"config": True}, "dev", "product", "sales", "orders_product"),
+        {"mode": "append"},
+    )
+
+
+def test_write_target_tables_rejects_unsupported_target_kind():
+    with pytest.raises(ValueError, match="Unsupported target kind for bad: file"):
+        pipeline.write_target_tables([{"key": "bad", "df": object(), "target_kind": "file"}], {}, "dev")
 
 
 def test_write_pipeline_lineage_supports_many_to_many_relationships(monkeypatch):

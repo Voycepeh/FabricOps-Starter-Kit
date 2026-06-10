@@ -9,7 +9,15 @@ from uuid import uuid4
 
 from .data_profiling import profile_dataframe
 from .drift import enforce_catalogue_stability, stop_if_failed, validate_schema
-from .fabric_input_output import write_lakehouse_table
+from .fabric_input_output import (
+    read_lakehouse_csv,
+    read_lakehouse_excel,
+    read_lakehouse_parquet,
+    read_lakehouse_table,
+    read_warehouse_table,
+    write_lakehouse_table,
+    write_warehouse_table,
+)
 from .governance_review import CATALOGUE_TABLE, LINEAGE_TABLE, enforce_dq_rules
 from .metadata import _build_metadata_table_key, _build_runtime_audit_fields
 
@@ -107,6 +115,223 @@ def _canonical_catalogue_profile_df(profile_df: Any):
         if source is not None:
             expressions.append(F.col(source).alias(target))
     return profile_df.select(*expressions) if expressions else profile_df
+
+
+def _source_read_type(source_config: Mapping[str, Any]) -> str:
+    return str(source_config.get("read_type") or source_config.get("kind") or "lakehouse_table").lower()
+
+
+def _read_source_dataframe(source_config: Mapping[str, Any], *, config: Any, env: str, spark_session: Any):
+    read_type = _source_read_type(source_config)
+    layer = source_config["layer"]
+    table_name = source_config["table_name"]
+
+    if "df" in source_config:
+        return source_config["df"]
+    if read_type in {"lakehouse", "lakehouse_table", "table", "delta"}:
+        return read_lakehouse_table(config, env, layer, table_name, spark_session=spark_session)
+    if read_type in {"csv", "lakehouse_csv"}:
+        return read_lakehouse_csv(
+            config,
+            env,
+            layer,
+            source_config["relative_path"],
+            spark_session=spark_session,
+            header=source_config.get("header", True),
+        )
+    if read_type in {"parquet", "lakehouse_parquet"}:
+        return read_lakehouse_parquet(
+            config,
+            env,
+            layer,
+            source_config["relative_path"],
+            verbose=source_config.get("verbose", True),
+            spark_session=spark_session,
+        )
+    if read_type in {"excel", "lakehouse_excel"}:
+        excel_kwargs = dict(source_config.get("read_excel_kwargs") or {})
+        return read_lakehouse_excel(
+            config,
+            env,
+            layer,
+            source_config["relative_path"],
+            sheet_name=source_config.get("sheet_name", 0),
+            spark_session=spark_session,
+            **excel_kwargs,
+        )
+    if read_type in {"warehouse", "warehouse_table"}:
+        return read_warehouse_table(
+            config,
+            env,
+            source_config.get("warehouse_target", source_config.get("target", layer)),
+            source_config.get("schema", "dbo"),
+            source_config.get("warehouse_table", table_name),
+            spark_session=spark_session,
+        )
+    if read_type in {"spark_table", "custom_spark_table"}:
+        return spark_session.read.table(source_config.get("spark_table", table_name))
+    raise ValueError(f"Unsupported source read type for {source_config.get('key', table_name)}: {read_type}")
+
+
+def prepare_source_table_configs(
+    source_table_configs: list[dict[str, Any]],
+    default_source_guardrails: Mapping[str, Any],
+    config: Any,
+    env: str,
+    spark_session: Any,
+) -> tuple[list[dict[str, Any]], dict[str, dict[str, Any]]]:
+    """Enrich source table configs and load source DataFrames.
+
+    Parameters
+    ----------
+    source_table_configs : list of dict
+        User-authored ``SOURCE_TABLES`` entries. Each entry must include
+        ``key``, ``layer``, and ``table_name``. Optional read settings include
+        ``read_type``/``kind``, ``relative_path``, ``schema``,
+        ``warehouse_target``, ``warehouse_table``, ``spark_table``, or ``df``.
+    default_source_guardrails : mapping
+        Default guardrail settings merged before each source config.
+    config : Any
+        FabricOps framework configuration from ``00_env_config``.
+    env : str
+        Environment key used for configured source routing.
+    spark_session : Any
+        Spark session used for table/file/warehouse reads.
+
+    Returns
+    -------
+    tuple[list[dict[str, Any]], dict[str, dict[str, Any]]]
+        Enriched source configs and a lookup keyed by source ``key``.
+    """
+    enriched_sources: list[dict[str, Any]] = []
+    for source_config in source_table_configs:
+        dataset_name = source_config.get("dataset_name", source_config["table_name"])
+        stage = source_config.get("stage", source_config["layer"])
+        watermark_value = source_config.get("watermark_value", None)
+        enriched_source = {
+            **default_source_guardrails,
+            **source_config,
+            "dataset_name": dataset_name,
+            "stage": stage,
+            "watermark_value": watermark_value,
+        }
+        enriched_source["df"] = _read_source_dataframe(enriched_source, config=config, env=env, spark_session=spark_session)
+        enriched_sources.append(enriched_source)
+    return enriched_sources, {source_config["key"]: source_config for source_config in enriched_sources}
+
+
+def prepare_target_table_configs(
+    target_table_configs: list[dict[str, Any]],
+    default_target_guardrails_and_write_options: Mapping[str, Any],
+    run_id: str,
+    pipeline_name: str,
+) -> tuple[list[dict[str, Any]], dict[str, dict[str, Any]]]:
+    """Enrich target table configs and add FabricOps runtime audit columns.
+
+    Parameters
+    ----------
+    target_table_configs : list of dict
+        User-authored ``TARGET_TABLES`` entries. Each entry must include
+        ``key``, ``df``, ``layer``, and ``table_name``.
+    default_target_guardrails_and_write_options : mapping
+        Default target guardrail and write settings merged before each target
+        config.
+    run_id : str
+        Current pipeline run identifier for audit columns.
+    pipeline_name : str
+        Pipeline name for audit columns.
+
+    Returns
+    -------
+    tuple[list[dict[str, Any]], dict[str, dict[str, Any]]]
+        Enriched target configs and a lookup keyed by target ``key``.
+    """
+    from pyspark.sql import functions as F
+
+    audit_created_at = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+    enriched_targets: list[dict[str, Any]] = []
+    for target_config in target_table_configs:
+        merged_target = {**default_target_guardrails_and_write_options, **target_config}
+        target_df = (
+            merged_target["df"]
+            .withColumn("_fabricops_run_id", F.lit(run_id))
+            .withColumn("_fabricops_pipeline_name", F.lit(pipeline_name))
+            .withColumn("_fabricops_created_at", F.lit(audit_created_at))
+        )
+        dataset_name = merged_target.get("dataset_name", merged_target["table_name"])
+        stage = merged_target.get("stage", merged_target["layer"])
+        target_layer = merged_target.get("target_layer", merged_target["layer"])
+        target_name = merged_target.get("target_name", merged_target["table_name"])
+        target_kind = merged_target.get("target_kind", merged_target.get("kind", "lakehouse"))
+        watermark_value = merged_target.get("watermark_value", None)
+        enriched_target = {
+            **merged_target,
+            "df": target_df,
+            "dataset_name": dataset_name,
+            "stage": stage,
+            "target_layer": target_layer,
+            "target_name": target_name,
+            "target_kind": target_kind,
+            "watermark_value": watermark_value,
+        }
+        enriched_targets.append(enriched_target)
+    return enriched_targets, {target_config["key"]: target_config for target_config in enriched_targets}
+
+
+def write_target_tables(target_table_configs: list[Mapping[str, Any]], config: Any, env: str) -> dict[str, str]:
+    """Write checked target DataFrames to configured Lakehouse or Warehouse targets.
+
+    Parameters
+    ----------
+    target_table_configs : list of mapping
+        Enriched target configs, normally returned by
+        :func:`prepare_target_table_configs` and updated by
+        :func:`run_table_guardrails`.
+    config : Any
+        FabricOps framework configuration from ``00_env_config``.
+    env : str
+        Environment key used for configured target routing.
+
+    Returns
+    -------
+    dict[str, str]
+        Write status keyed by target config ``key``.
+    """
+    target_write_status: dict[str, str] = {}
+    for target_config in target_table_configs:
+        target_key = target_config["key"]
+        target_df = target_config["df"]
+        target_kind = str(target_config.get("target_kind", target_config.get("kind", "lakehouse"))).lower()
+        target_layer = target_config.get("target_layer", target_config.get("layer", "unified"))
+        target_table = target_config.get("target_name", target_config.get("table_name", target_key))
+        target_mode = target_config.get("write_mode", target_config.get("mode", "overwrite"))
+
+        if target_kind == "lakehouse":
+            write_lakehouse_table(
+                target_df,
+                config,
+                env,
+                target_layer,
+                target_table,
+                mode=target_mode,
+                partition_by=target_config.get("partition_by"),
+                repartition_by=target_config.get("repartition_by"),
+                overwrite_schema=target_config.get("overwrite_schema", target_mode == "overwrite"),
+            )
+        elif target_kind == "warehouse":
+            write_warehouse_table(
+                target_df,
+                config,
+                env,
+                target_layer,
+                target_config.get("schema", "dbo"),
+                target_table,
+                mode=target_mode,
+            )
+        else:
+            raise ValueError(f"Unsupported target kind for {target_key}: {target_kind}")
+        target_write_status[target_key] = "written"
+    return target_write_status
 
 
 def _table_key(table_config: Mapping[str, Any]) -> str:

@@ -31,7 +31,7 @@ def test_production_and_governance_templates_cover_output_summary_and_review_flo
     assert "run_table_guardrails" in production
     assert "guardrail_summary" in production
     assert "stop_if_any_guardrail_failed" in production
-    assert "write_lakehouse_table" in production or "write_warehouse_table" in production
+    assert "write_target_tables" in production
     assert "write_pipeline_lineage" in production
     assert "write_pipeline_run_summary" in production
     assert "run_summary" in production
@@ -51,7 +51,7 @@ def test_production_template_enforces_guardrails_before_full_dataset_write():
     transformation = production.index("df_target_01 = df_source_01", source_stop)
     target_guardrails = production.index("target_guardrail_results = run_table_guardrails", transformation)
     target_stop = production.index("stop_if_any_guardrail_failed(target_guardrail_results)", target_guardrails)
-    target_write = production.index("target_write_status = {}", target_stop)
+    target_write = production.index("target_write_status = write_target_tables(TARGET_TABLES, CONFIG, ENV_NAME)", target_stop)
 
     assert source_guardrails < source_stop < transformation < target_guardrails < target_stop < target_write
     assert "valid_rows" not in production
@@ -72,7 +72,7 @@ def test_guardrail_orchestration_is_imported_and_documents_simple_v1_behavior():
     assert "display(guardrail_summary(source_guardrail_results))" in production
     assert "display(guardrail_summary(target_guardrail_results))" in production
     assert 'target_dq_results = target_guardrail_results["dq_results"]' in production
-    assert "target_write_status = {}" in production
+    assert "target_write_status = write_target_tables(TARGET_TABLES, CONFIG, ENV_NAME)" in production
     guardrail_docs = (ROOT / "docs" / "how-fabricops-works" / "schema-and-data-drift.md").read_text(encoding="utf-8")
     assert "Warning-severity failure" in guardrail_docs
     assert "Error-severity failure" in guardrail_docs
@@ -127,6 +127,9 @@ def test_smoke_test_example_notebook_exists_and_covers_end_to_end_pattern():
         "SOURCE_TABLES",
         "TARGET_TABLES",
         "run_table_guardrails",
+        "prepare_source_table_configs",
+        "prepare_target_table_configs",
+        "write_target_tables",
         "write_pipeline_lineage",
         "write_pipeline_run_summary",
         "PASS: FabricOps pipeline smoke test completed.",
@@ -137,6 +140,9 @@ def test_smoke_test_example_notebook_exists_and_covers_end_to_end_pattern():
     assert "TARGET_01_WRITE_MODE = \"overwrite\"" in smoke
     assert "Metadata evidence tables remain append-only" in smoke_text
     for evidence_helper in [
+        "prepare_source_table_configs",
+        "prepare_target_table_configs",
+        "write_target_tables",
         "write_pipeline_lineage",
         "write_pipeline_run_summary",
     ]:
@@ -146,6 +152,8 @@ def test_smoke_test_example_notebook_exists_and_covers_end_to_end_pattern():
     assert "read_lakehouse_csv" not in smoke
     assert "read_lakehouse_excel" not in smoke
     assert "read_lakehouse_parquet" not in smoke
+    assert "def run_table_guardrails(" not in smoke
+    assert "for target_config in TARGET_TABLES:" not in smoke
 
     dq_smoke = _code_from_notebook(TEMPLATES / "example_dq_rule_smoke_test.ipynb")
     assert "mode=\"overwrite\"" not in dq_smoke
