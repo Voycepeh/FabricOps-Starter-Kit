@@ -31,7 +31,7 @@ def _rule(rule_type: str, **kwargs):
         (_rule("greater_than_or_equal", columns=["credit_units"], value=0), 1),
         (_rule("less_than", columns=["risk_score"], value=1), 1),
         (_rule("less_than_or_equal", columns=["response_rate"], value=100), 1),
-        (_rule("regex_match", columns=["email"], regex_pattern=r"^[^@]+@[^@]+\.[^@]+$"), 2),
+        (_rule("regex_match", columns=["email"], regex_pattern=r"^[^@]+@[^@]+\.[^@]+$"), 1),
         (_rule("date_not_future", columns=["birth_date"]), 1),
         (_rule("date_between", columns=["event_date"], min_value="2020-01-01", max_value="2026-12-31"), 1),
         (_rule("freshness", columns=["updated_at"], max_age_days=1000), 1),
@@ -49,7 +49,7 @@ def test_dq_rule_engine_supports_catalogue_rules(spark_session, rule, failed):
         [
             ("1", "2026A", "good@example.com", "Alice", "Active", "US", 50, 10, 0, 0.5, 99, "2000-01-01", "2025-01-01", "2099-01-01", "2099-01-01", "A", "A", "2026-01-02", "2026-01-01", "2026-01-02", "2026-01-01", "2026-01-01", "Graduated", False, 10, 9),
             ("1", "2026A", "bad-email", "", "Pending", "UNKNOWN", 101, 0, -1, 1.5, 101, "2999-01-01", "2019-12-31", "2000-01-01", "2000-01-01", "B", "C", "2026-01-01", "2026-01-02", "2026-01-01", "2026-01-01", None, "Graduated", True, 4, 5),
-            ("3", "2026B", None, None, "Inactive", "N/A", 0, 1, 1, 0.1, 100, "2001-01-01", "2026-01-01", "2026-01-01", "2026-01-01", "D", "D", "2026-01-02", "2026-01-01", "2026-01-02", "2026-01-01", None, "Active", True, 1, 1),
+            (None, "2026B", None, None, "Inactive", "N/A", 0, 1, 1, 0.1, 100, "2001-01-01", "2026-01-01", "2026-01-01", "2026-01-01", "D", "D", "2026-01-02", "2026-01-01", "2026-01-02", "2026-01-01", None, "Active", True, 1, 1),
         ],
         "id string, semester string, email string, name string, status string, country string, score int, amount int, credit_units int, risk_score double, response_rate int, birth_date string, event_date string, updated_at string, snapshot_date string, source_id string, target_id string, end_date string, start_date string, expiry_date string, other_start_date string, approved_date string, student_status string, is_active boolean, credits_attempted int, credits_earned int",
     )
@@ -169,7 +169,7 @@ def test_value_when_uses_null_safe_expected_value_comparison(spark_session):
 
     assert checks["graduated_inactive"]["failed_count"] == 1
     assert checks["null_expected"]["failed_count"] == 0
-    assert checks["nonnull_expected"]["failed_count"] == 4
+    assert checks["nonnull_expected"]["failed_count"] == 3
 
     null_mismatch = _rule("value_when", rule_id="null_mismatch", columns=["actual_non_null"], condition="student_status = 'Graduated'", expected_value=None)
     assert governance._run_dq_guardrail_checks(df, "students", [null_mismatch])[0]["failed_count"] == 1

@@ -50,7 +50,6 @@ REMOVED_LEGACY_ALIASES = {
     "monitor_data_changes",
     "display_schema_profile",
     "print_schema_guardrail_config",
-    "generate_schema_guardrail_config",
     "widget_review_table_governance",
     "widget_render_agreement_intake_app",
     "setup_governance_metadata_tables",

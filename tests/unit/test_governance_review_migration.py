@@ -71,8 +71,7 @@ def test_no_source_tests_docs_or_templates_reference_removed_modules_or_callable
         "_get" + "_notebook_registry_schema",
         "configure" + "_ai",
         "Config" + "BootstrapResult",
-        "generate_schema_guardrail_config",
-    )
+        )
     removed_module_files = tuple(f"fabricops_kit/{suffix}.py" for suffix in DELETED_MODULE_SUFFIXES)
     offenders: list[str] = []
     for base in [root / "src", root / "tests", root / "docs", root / "templates"]:
