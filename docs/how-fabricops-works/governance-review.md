@@ -59,7 +59,32 @@ DQ rule authoring stays metadata-driven. FabricOps does not expose one public ca
 
 ### Approved DQ rule catalogue
 
-Use the smallest FabricOps-native rule that expresses the requirement. Prefer explicit rule types such as `not_null`, `accepted_values`, or `between` before the escape hatch `expression_true`.
+!!! success "23 native DQ rule types"
+    FabricOps currently supports **23 native DQ rule types**. These rules are reviewed as metadata, stored in `METADATA_DQ_RULES`, and enforced by `enforce_dq_rules` before unsafe or misleading output is written. Use targeted rules where possible, and reserve **Custom expression** (`expression_true`) for cases that cannot be captured by a smaller built-in rule.
+
+Actual enforcement depends on the approved active metadata rows present for a table in `METADATA_DQ_RULES`; not every dataset has all 23 rule types enabled. The rules are FabricOps-native and do not require Great Expectations or dbt at runtime.
+
+<div class="grid cards" markdown>
+
+-   **`unique_combination`**
+
+    Composite grain checks that prevent duplicate business keys such as `(order_id, line_no)`.
+
+-   **`accepted_values`**
+
+    Controlled value sets for statuses, categories, flags, and other governed domains.
+
+-   **`regex_match`**
+
+    Pattern validation for emails, codes, identifiers, and other formatted strings.
+
+-   **`value_when`**
+
+    Conditional business logic such as “when country is SG, currency must be SGD.”
+
+</div>
+
+Use the smallest FabricOps-native rule that expresses the requirement. Prefer explicit rule types such as `not_null`, `accepted_values`, or `between` before the Custom expression escape hatch (`expression_true`).
 
 | Rule | When to use it | Required parameters | Example JSON |
 |---|---|---|---|
@@ -85,9 +110,180 @@ Use the smallest FabricOps-native rule that expresses the requirement. Prefer ex
 | `column_a_gt_column_b` | The first column must be greater than the second. | exactly two `columns` values | `{"rule_type":"column_a_gt_column_b","columns":["expiry_date","start_date"],"severity":"error"}` |
 | `required_when` | One or more columns are required only when a condition is true. | `columns`, `condition` | `{"rule_type":"required_when","columns":["approved_date"],"condition":"status = 'Approved'","severity":"error"}` |
 | `value_when` | A column must equal a specific value when a condition is true. | one `columns` value, `condition`, `expected_value` | `{"rule_type":"value_when","condition":"student_status = 'Graduated'","columns":["is_active"],"expected_value":false,"severity":"error"}` |
-| `expression_true` | Advanced escape hatch for trusted reviewers when no named rule can express the requirement. Accepts a Spark SQL boolean expression. | `expression` | `{"rule_type":"expression_true","expression":"credits_attempted >= credits_earned","severity":"error"}` |
+| `expression_true` — Custom expression | Built-in FabricOps rule for trusted reviewers when no named rule can express the requirement. It accepts an `expression` parameter containing a boolean expression and fails rows where that expression evaluates false. This is not a custom Python plugin rule. | `expression` | `{"rule_type":"expression_true","expression":"credits_attempted >= credits_earned","severity":"error"}` |
 
 FabricOps uses one canonical DQ rule vocabulary. Old or external rule names are not accepted. Approved metadata should use only the rule names listed in this catalogue.
+
+### DQ rules in action
+
+These examples show how approved active metadata rows are evaluated by `enforce_dq_rules`. FabricOps tags and reports DQ outcomes; v1 does not filter failed rows out of the DataFrame. Error severity stops unsafe downstream writes, while warning severity records evidence and allows the run to continue.
+
+#### `unique_combination`
+
+**What the rule checks:** each `order_id` + `line_no` pair appears once.
+
+**Data applicability:** Composite business keys or table-grain columns that should be unique together.
+
+**Example column(s) used here:** `order_id`, `line_no`
+
+**Parameters:**
+
+```yaml
+rule_type: unique_combination
+columns: ["order_id", "line_no"]
+severity: error
+```
+
+**Sample input rows**
+
+| order_id | line_no | product | qty |
+|---|---:|---|---:|
+| A100 | 1 | Pen | 2 |
+| A100 | 2 | Book | 1 |
+| A101 | 1 | Bag | 1 |
+| A100 | 1 | Eraser | 1 |
+
+**Rows that pass**
+
+| order_id | line_no | Why |
+|---|---:|---|
+| A100 | 2 | Combination appears once. |
+| A101 | 1 | Combination appears once. |
+
+**Rows that fail**
+
+| order_id | line_no | Why |
+|---|---:|---|
+| A100 | 1 | Combination appears more than once. |
+
+**Why it matters:** duplicate grain rows can double-count quantities, revenue, or downstream facts.
+
+#### `accepted_values`
+
+**What the rule checks:** `status` uses only the governed customer lifecycle values.
+
+**Data applicability:** Governed categorical, status, flag, code, or other controlled-domain columns.
+
+**Example column(s) used here:** `status`
+
+**Parameters:**
+
+```yaml
+rule_type: accepted_values
+columns: ["status"]
+allowed_values: ["new", "active", "inactive", "closed"]
+severity: warning
+```
+
+**Sample input rows**
+
+| customer_id | status |
+|---|---|
+| C001 | new |
+| C002 | active |
+| C003 | inactive |
+| C004 | pending |
+
+**Rows that pass**
+
+| customer_id | status |
+|---|---|
+| C001 | new |
+| C002 | active |
+| C003 | inactive |
+
+**Rows that fail**
+
+| customer_id | status | Why |
+|---|---|---|
+| C004 | pending | `pending` is not in the allowed value list. |
+
+**Why it matters:** controlled domains keep reports, filters, and case logic stable.
+
+#### `regex_match`
+
+**What the rule checks:** populated email values look like an address with text on both sides of `@` and a dot in the domain.
+
+**Data applicability:** String or string-castable columns with a known text pattern.
+
+**Example column(s) used here:** `email`
+
+**Parameters:**
+
+```yaml
+rule_type: regex_match
+columns: ["email"]
+regex_pattern: "^[^@]+@[^@]+\\.[^@]+$"
+severity: warning
+```
+
+**Sample input rows**
+
+| staff_id | email |
+|---|---|
+| S001 | amy@nus.edu.sg |
+| S002 | ben.lee@company.com |
+| S003 | charlie.company.com |
+| S004 | diana@ |
+
+**Rows that pass**
+
+| staff_id | email |
+|---|---|
+| S001 | amy@nus.edu.sg |
+| S002 | ben.lee@company.com |
+
+**Rows that fail**
+
+| staff_id | email | Why |
+|---|---|---|
+| S003 | charlie.company.com | Missing `@`. |
+| S004 | diana@ | Missing domain after `@`. |
+
+**Why it matters:** pattern checks catch malformed identifiers before users rely on them.
+
+#### `value_when`
+
+**What the rule checks:** Singapore transactions must use SGD.
+
+**Data applicability:** Columns whose expected value depends on conditional business logic in the same row.
+
+**Example column(s) used here:** `currency`
+
+**Parameters:**
+
+```yaml
+rule_type: value_when
+columns: ["currency"]
+condition: "country_code = 'SG'"
+expected_value: "SGD"
+severity: error
+```
+
+**Sample input rows**
+
+| txn_id | country_code | currency |
+|---|---|---|
+| T001 | SG | SGD |
+| T002 | US | USD |
+| T003 | SG | USD |
+| T004 | SG | null |
+
+**Rows that pass**
+
+| txn_id | country_code | currency | Why |
+|---|---|---|---|
+| T001 | SG | SGD | Required value is present. |
+| T002 | US | USD | Condition is false, so the rule does not apply. |
+
+**Rows that fail**
+
+| txn_id | country_code | currency | Why |
+|---|---|---|---|
+| T003 | SG | USD | `country_code = 'SG'` requires `currency = 'SGD'`. |
+| T004 | SG | null | Null is not null-safe equal to `SGD`. |
+
+**Why it matters:** conditional checks encode business rules that simple column-level checks cannot express.
 
 ### How to choose a DQ rule
 
