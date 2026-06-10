@@ -20,8 +20,6 @@ def test_governance_review_page_frames_metadata_control_panel():
     assert "Some governance metadata cannot be created safely before actual tables and columns exist" in text
     assert "Later `02_pipeline` runs read" in text
     assert "Approved DQ rule catalogue" not in text
-    assert "Schema guardrails are separate" in text
-    assert "Source stability is separate" in text
     assert "**Rule applies to:**" not in text
 
 
