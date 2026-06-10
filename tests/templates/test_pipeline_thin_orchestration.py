@@ -91,6 +91,10 @@ def test_pipeline_notebook_contains_expected_config_driven_flow_sections():
 
     assert "Users clone only DataFrame/config blocks" in markdown
     assert "Schema, stability, and DQ remain separate guardrail concepts" in markdown
+    assert "Each source block starts with a small editable parameter header" in markdown
+    assert "replace `SOURCE_01`/`df_source_01` with `SOURCE_02`/`df_source_02`" in markdown
+    assert "Each target block starts with a small editable parameter header" in markdown
+    assert "replace `TARGET_01`/`df_target_01` with `TARGET_02`/`df_target_02`" in markdown
     assert "Do not copy profiling, schema, stability, DQ, or catalogue-evidence code" in markdown
     assert "Do not copy profiling, schema, stability, DQ, catalogue-evidence, or write orchestration code" in markdown
 
@@ -120,8 +124,16 @@ def test_pipeline_notebook_runs_guardrails_from_source_and_target_config_lists()
     markdown, code = _notebook_sources()
 
     assert "DATASET_NAME = \"CHANGE_ME_dataset\"" in code
+    assert "SOURCE_01_KEY = \"source_01\"" in code
+    assert "SOURCE_01_DATASET_NAME = DATASET_NAME" in code
+    assert "SOURCE_01_LAYER = \"source\"" in code
+    assert "SOURCE_01_TABLE_NAME = \"CHANGE_ME_source_table\"" in code
+    assert "SOURCE_01_STAGE = \"source\"" in code
     assert "df_source_01 = read_lakehouse_table(" in code
     assert "SOURCE_01_CONFIG = {" in code
+    assert "SOURCE_01_LAYER,\n    SOURCE_01_TABLE_NAME," in code
+    assert "# SOURCE_02_KEY = \"source_02\"" in code
+    assert "# SOURCE_02_TABLE_NAME = \"CHANGE_ME_second_source_table\"" in code
     assert "# df_source_02 = read_lakehouse_csv(" in code
     assert "# SOURCE_02_CONFIG = {" in code
     assert "SOURCE_TABLES = [SOURCE_01_CONFIG]" in code
@@ -137,7 +149,7 @@ def test_pipeline_notebook_runs_guardrails_from_source_and_target_config_lists()
         '"df"',
         '"dataset_name"',
         '"table_name"',
-        '"stage": "source"',
+        '"stage"',
         '"schema_preset"',
         '"data_behavior"',
         '"stability_check_type"',
@@ -149,9 +161,27 @@ def test_pipeline_notebook_runs_guardrails_from_source_and_target_config_lists()
         '"exclude_columns"',
     ]:
         assert required_field in source_block
+    for constant_field in [
+        '"key": SOURCE_01_KEY',
+        '"dataset_name": SOURCE_01_DATASET_NAME',
+        '"table_name": SOURCE_01_TABLE_NAME',
+        '"stage": SOURCE_01_STAGE',
+    ]:
+        assert constant_field in source_block
+    assert '"key": "source_01"' not in source_block
+    assert '"table_name": "CHANGE_ME_source_table"' not in source_block
+    assert '"stage": "source"' not in source_block
 
+    assert "TARGET_01_KEY = \"target_01\"" in code
+    assert "TARGET_01_DATASET_NAME = DATASET_NAME" in code
+    assert "TARGET_01_TABLE_NAME = \"CHANGE_ME_target_table\"" in code
+    assert "TARGET_01_LAYER = \"unified\"" in code
+    assert "TARGET_01_KIND = \"lakehouse\"" in code
+    assert "TARGET_01_WRITE_MODE = \"overwrite\"" in code
     assert "df_target_01 = (" in code
     assert "TARGET_01_CONFIG = {" in code
+    assert "# TARGET_02_KEY = \"target_02\"" in code
+    assert "# TARGET_02_TABLE_NAME = \"CHANGE_ME_second_target_table\"" in code
     assert "# TARGET_02_CONFIG = {" in code
     assert "TARGET_TABLES = [TARGET_01_CONFIG]" in code
     assert "# TARGET_TABLES = [TARGET_01_CONFIG, TARGET_02_CONFIG]" in code
@@ -182,12 +212,30 @@ def test_pipeline_notebook_runs_guardrails_from_source_and_target_config_lists()
         '"overwrite_schema"',
     ]:
         assert required_field in target_block
+    for constant_field in [
+        '"key": TARGET_01_KEY',
+        '"dataset_name": TARGET_01_DATASET_NAME',
+        '"target_name": TARGET_01_TABLE_NAME',
+        '"target_layer": TARGET_01_LAYER',
+        '"target_kind": TARGET_01_KIND',
+        '"write_mode": TARGET_01_WRITE_MODE',
+    ]:
+        assert constant_field in target_block
+    for repeated_literal in [
+        '"key": "target_01"',
+        '"target_name": "CHANGE_ME_target_table"',
+        '"target_layer": "unified"',
+        '"target_kind": "lakehouse"',
+        '"write_mode": "overwrite"',
+    ]:
+        assert repeated_literal not in target_block
 
     assert "source_definitions=source_evidence_definitions" in code
     assert "target_definitions=target_evidence_definitions" in code
-    assert '"sources": ["source_01"]' in code
-    assert '"targets": ["target_01"]' in code
-    assert "CHANGE_ME_source_table rows are transformed into CHANGE_ME_target_table" in code
+    assert '"sources": [SOURCE_01_KEY]' in code
+    assert '"targets": [TARGET_01_KEY]' in code
+    assert '"operation": f"derive amount band and publish {TARGET_01_TABLE_NAME}"' in code
+    assert '"description": f"{SOURCE_01_TABLE_NAME} rows are transformed into {TARGET_01_TABLE_NAME}."' in code
 
 
 def test_pipeline_notebook_collects_separate_guardrail_results_before_stopping():
