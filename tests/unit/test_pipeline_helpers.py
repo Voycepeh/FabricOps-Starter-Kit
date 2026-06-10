@@ -20,6 +20,10 @@ class FakeSpark:
 
 
 def test_public_pipeline_helpers_are_exported_without_wrapper_bloat():
+    assert "build_guardrail_evidence_definitions" in fabricops_kit.__all__
+    assert "run_table_guardrails" in fabricops_kit.__all__
+    assert "guardrail_summary" in fabricops_kit.__all__
+    assert "stop_if_any_guardrail_failed" in fabricops_kit.__all__
     assert "write_catalogue_evidence" in fabricops_kit.__all__
     assert "write_pipeline_lineage" in fabricops_kit.__all__
     assert "write_pipeline_run_summary" in fabricops_kit.__all__
@@ -86,3 +90,146 @@ def test_summary_status_treats_baseline_created_as_passed_and_skipped_as_nonbloc
     assert pipeline._summary_status({"s1": {"status": "baseline_created"}}) == "passed"
     assert pipeline._summary_status({"s1": {"status": "skipped"}}) == "skipped"
     assert pipeline._summary_status({"s1": {"status": "passed"}, "s2": {"status": "skipped"}}) == "passed"
+
+
+
+def test_build_guardrail_evidence_definitions_excludes_dataframes_and_resolves_target_fields():
+    definitions = pipeline.build_guardrail_evidence_definitions(
+        [
+            {
+                "key": "target_01",
+                "df": object(),
+                "table_name": "orders_curated",
+                "stage": "target",
+                "target_layer": "product",
+                "target_kind": "warehouse",
+                "write_mode": "overwrite",
+            }
+        ]
+    )
+
+    assert definitions == {
+        "target_01": {
+            "key": "target_01",
+            "table_name": "orders_curated",
+            "stage": "target",
+            "target_layer": "product",
+            "target_kind": "warehouse",
+            "write_mode": "overwrite",
+            "layer": "product",
+            "kind": "warehouse",
+            "mode": "overwrite",
+        }
+    }
+
+
+def test_run_table_guardrails_collects_results_before_reporting_failures(monkeypatch):
+    calls = []
+    catalogue_calls = []
+
+    def fake_profile(dataframe, *, table_name, exclude_columns=None, include_distributions=True, distribution_columns=None):
+        calls.append(("profile", table_name))
+        return {"profile_for": table_name, "df": dataframe}
+
+    def fake_validate(dataframe, expected_schema, *, preset="strict"):
+        calls.append(("schema", dataframe))
+        return {"status": "failed" if dataframe == "df_bad" else "passed", "can_continue": dataframe != "df_bad"}
+
+    def fake_stability(*args, **kwargs):
+        calls.append(("stability", args[4]))
+        return {"status": "passed", "can_continue": True}
+
+    def fake_dq(dataframe, config, env, dataset_name, table_name, *, spark_session=None):
+        calls.append(("dq", table_name))
+        result = {"status": "passed", "can_continue": True, "checks": []}
+        if table_name == "orders_good":
+            result["dataframe"] = "df_good_checked"
+        return result
+
+    def fake_catalogue(profiles, definitions, **kwargs):
+        catalogue_calls.append((profiles, definitions, kwargs))
+        return {"status": "written"}
+
+    monkeypatch.setattr(pipeline, "profile_dataframe", fake_profile)
+    monkeypatch.setattr(pipeline, "validate_schema", fake_validate)
+    monkeypatch.setattr(pipeline, "enforce_catalogue_stability", fake_stability)
+    monkeypatch.setattr(pipeline, "enforce_dq_rules", fake_dq)
+    monkeypatch.setattr(pipeline, "write_catalogue_evidence", fake_catalogue)
+
+    table_configs = [
+        {
+            "key": "good",
+            "df": "df_good",
+            "table_name": "orders_good",
+            "dataset_name": "orders",
+            "stage": "source",
+            "expected_schema": {"id": "bigint"},
+            "watermark_column": "business_date",
+        },
+        {
+            "key": "bad",
+            "df": "df_bad",
+            "table_name": "orders_bad",
+            "stage": "source",
+            "expected_schema": {"id": "bigint"},
+            "watermark_column": "business_date",
+            "dq_preset": "skip",
+        },
+    ]
+
+    result = pipeline.run_table_guardrails(
+        table_configs,
+        config={"config": True},
+        env="dev",
+        run_id="run-1",
+        spark_session="spark",
+        agreement_id="agreement-1",
+        agreement_contract_version="v1",
+        notebook_registry_id="notebook-registry-1",
+        notebook_id="notebook-1",
+        pipeline_name="pipeline-1",
+    )
+
+    assert result["can_continue"] is False
+    assert result["failed_tables"] == ["bad"]
+    assert set(result["profiles"]) == {"good", "bad"}
+    assert set(result["schema_results"]) == {"good", "bad"}
+    assert set(result["stability_results"]) == {"good", "bad"}
+    assert result["dq_results"]["bad"]["status"] == "skipped"
+    assert table_configs[0]["df"] == "df_good_checked"
+    assert ("profile", "orders_bad") in calls
+    assert ("stability", "orders_bad") in calls
+    assert catalogue_calls
+    assert catalogue_calls[0][2]["schema_results"] == result["schema_results"]
+
+
+def test_guardrail_summary_returns_concise_display_fields():
+    result = {
+        "schema_results": {"t": {"status": "passed"}},
+        "stability_results": {"t": {"status": "passed"}},
+        "dq_results": {"t": {"status": "passed"}},
+        "catalogue_status": {"status": "written"},
+        "failed_tables": [],
+        "profiles": {"t": object()},
+    }
+
+    assert pipeline.guardrail_summary(result) == {
+        "schema_results": result["schema_results"],
+        "stability_results": result["stability_results"],
+        "dq_results": result["dq_results"],
+        "catalogue_status": result["catalogue_status"],
+        "failed_tables": [],
+    }
+
+
+def test_stop_if_any_guardrail_failed_delegates_to_standard_stopper(monkeypatch):
+    stopped = []
+    monkeypatch.setattr(pipeline, "stop_if_failed", lambda result: stopped.append(result))
+
+    pipeline.stop_if_any_guardrail_failed({"can_continue": True, "failed_tables": []})
+    assert stopped == []
+
+    pipeline.stop_if_any_guardrail_failed({"can_continue": False, "failed_tables": ["orders"]})
+    assert stopped[0]["status"] == "failed"
+    assert stopped[0]["can_continue"] is False
+    assert stopped[0]["failed_tables"] == ["orders"]

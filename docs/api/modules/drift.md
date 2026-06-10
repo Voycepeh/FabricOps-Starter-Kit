@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 3</span><span class="reference-chip">Internal helpers: 16</span><span class="reference-chip">Outbound: 2</span><span class="reference-chip">Inbound: 0</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 3</span><span class="reference-chip">Internal helpers: 16</span><span class="reference-chip">Outbound: 2</span><span class="reference-chip">Inbound: 1</span></div>
 
 ## Module purpose
 
@@ -44,7 +44,7 @@ Owns schema and catalogue profile stability checks as engineering guardrails dur
     </tr>
     <tr>
       <td>Inbound module count</td>
-      <td>0</td>
+      <td>1</td>
     </tr>
     <tr>
       <td>Outbound module count</td>
@@ -52,7 +52,7 @@ Owns schema and catalogue profile stability checks as engineering guardrails dur
     </tr>
     <tr>
       <td>External callers</td>
-      <td>—</td>
+      <td><code>pipeline</code></td>
     </tr>
     <tr>
       <td>External callees</td>
@@ -285,7 +285,9 @@ Owns schema and catalogue profile stability checks as engineering guardrails dur
 
 ### External callers
 
-None.
+**pipeline**
+<a class="reference-chip" href="../../reference/run_table_guardrails/"><code>run_table_guardrails</code></a>, <a class="reference-chip" href="../../reference/stop_if_any_guardrail_failed/"><code>stop_if_any_guardrail_failed</code></a>
+
 ### External callees
 
 **data_profiling**

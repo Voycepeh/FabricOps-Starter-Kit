@@ -134,6 +134,7 @@ Guardrail result dictionary with status, can_continue, message, current profile,
 <details class="reference-implementation-details">
 <summary>Implementation details</summary>
 
+- <a href="../run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
 - <a href="../profile_dataframe/"><code>fabricops_kit.data_profiling.profile_dataframe</code></a>
 - <a href="../internal/drift__filter_watermark_slice/"><code>fabricops_kit.drift._filter_watermark_slice</code></a>
 - <a href="../internal/drift__is_missing_table_error/"><code>fabricops_kit.drift._is_missing_table_error</code></a>
@@ -150,7 +151,7 @@ Guardrail result dictionary with status, can_continue, message, current profile,
 ## Source
 
 - Source file path: `src/fabricops_kit/drift.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ffb9386812c13cf40a6a40503d36bd7a16dc5e31/src/fabricops_kit/drift.py#L489-L661">View enforce_catalogue_stability on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6d8de4b3e35399458b9ee2a79568a6d6f1831a4e/src/fabricops_kit/drift.py#L489-L661">View enforce_catalogue_stability on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -347,7 +348,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Related module: `drift`
 - Source file path: `src/fabricops_kit/drift.py`
 - Source line: `489`
-- Inbound references count: 0
+- Inbound references count: 1
 - Outbound references count: 10
 
 ### AI implementation contract
@@ -361,7 +362,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 
 ### Inbound references
 
-Not documented yet
+- <a href="../run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
 
 ### Outbound references
 
@@ -379,7 +380,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/drift.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ffb9386812c13cf40a6a40503d36bd7a16dc5e31/src/fabricops_kit/drift.py#L489-L661">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ffb9386812c13cf40a6a40503d36bd7a16dc5e31/src/fabricops_kit/drift.py#L489-L661</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6d8de4b3e35399458b9ee2a79568a6d6f1831a4e/src/fabricops_kit/drift.py#L489-L661">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6d8de4b3e35399458b9ee2a79568a6d6f1831a4e/src/fabricops_kit/drift.py#L489-L661</a>
 - Start line: `489`
 - End line: `661`
 - Signature:
@@ -398,6 +399,7 @@ def enforce_catalogue_stability(spark, dataframe, metadata_table: str, dataset_n
 
 ### Internal implementation helpers
 
+- <a href="../run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
 - <a href="../profile_dataframe/"><code>fabricops_kit.data_profiling.profile_dataframe</code></a>
 - <a href="../internal/drift__filter_watermark_slice/"><code>fabricops_kit.drift._filter_watermark_slice</code></a>
 - <a href="../internal/drift__is_missing_table_error/"><code>fabricops_kit.drift._is_missing_table_error</code></a>

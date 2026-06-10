@@ -47,7 +47,7 @@ nav:
           - drift: api/modules/drift.md
           - pipeline: api/modules/pipeline.md
           - metadata: api/modules/metadata.md
-          # AUTO-GENERATED-MODULES-END
+      # AUTO-GENERATED-MODULES-END
       - DQ Rules:
           - Overview: reference/dq-rules/index.md
           - not_null: reference/dq-rules/not-null.md

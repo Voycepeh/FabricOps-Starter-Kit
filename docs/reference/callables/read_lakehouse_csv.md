@@ -92,7 +92,7 @@ Spark DataFrame loaded from the lakehouse Files CSV path.
 ## Source
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ffb9386812c13cf40a6a40503d36bd7a16dc5e31/src/fabricops_kit/fabric_input_output.py#L278-L320">View read_lakehouse_csv on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6d8de4b3e35399458b9ee2a79568a6d6f1831a4e/src/fabricops_kit/fabric_input_output.py#L278-L320">View read_lakehouse_csv on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -184,7 +184,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ffb9386812c13cf40a6a40503d36bd7a16dc5e31/src/fabricops_kit/fabric_input_output.py#L278-L320">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ffb9386812c13cf40a6a40503d36bd7a16dc5e31/src/fabricops_kit/fabric_input_output.py#L278-L320</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6d8de4b3e35399458b9ee2a79568a6d6f1831a4e/src/fabricops_kit/fabric_input_output.py#L278-L320">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6d8de4b3e35399458b9ee2a79568a6d6f1831a4e/src/fabricops_kit/fabric_input_output.py#L278-L320</a>
 - Start line: `278`
 - End line: `320`
 - Signature:

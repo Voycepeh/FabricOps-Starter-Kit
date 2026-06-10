@@ -25,6 +25,10 @@ from .fabric_input_output import (
     write_warehouse_table,
 )
 from .pipeline import (
+    build_guardrail_evidence_definitions,
+    guardrail_summary,
+    run_table_guardrails,
+    stop_if_any_guardrail_failed,
     write_catalogue_evidence,
     write_pipeline_lineage,
     write_pipeline_run_summary,
@@ -77,6 +81,10 @@ __all__ = [
     "stop_if_failed",
     "enforce_dq_rules",
     "build_lineage_records",
+    "build_guardrail_evidence_definitions",
+    "run_table_guardrails",
+    "guardrail_summary",
+    "stop_if_any_guardrail_failed",
     "write_catalogue_evidence",
     "write_pipeline_lineage",
     "write_pipeline_run_summary",

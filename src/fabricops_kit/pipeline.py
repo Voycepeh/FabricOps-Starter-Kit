@@ -7,8 +7,10 @@ import json
 from typing import Any, Mapping
 from uuid import uuid4
 
+from .data_profiling import profile_dataframe
+from .drift import enforce_catalogue_stability, stop_if_failed, validate_schema
 from .fabric_input_output import write_lakehouse_table
-from .governance_review import CATALOGUE_TABLE, LINEAGE_TABLE
+from .governance_review import CATALOGUE_TABLE, LINEAGE_TABLE, enforce_dq_rules
 from .metadata import _build_metadata_table_key, _build_runtime_audit_fields
 
 METADATA_PIPELINE_RUNS_TABLE = "METADATA_PIPELINE_RUNS"
@@ -105,6 +107,258 @@ def _canonical_catalogue_profile_df(profile_df: Any):
         if source is not None:
             expressions.append(F.col(source).alias(target))
     return profile_df.select(*expressions) if expressions else profile_df
+
+
+def _table_key(table_config: Mapping[str, Any]) -> str:
+    return str(table_config["key"])
+
+
+def _table_name(table_config: Mapping[str, Any]) -> str:
+    return str(table_config.get("table_name") or table_config.get("target_name") or table_config["key"])
+
+
+def _guardrail_can_continue(result: Mapping[str, Any] | None) -> bool:
+    return bool((result or {}).get("can_continue", True))
+
+
+def build_guardrail_evidence_definitions(table_configs: list[Mapping[str, Any]]) -> dict[str, dict[str, Any]]:
+    """Build catalogue evidence definitions for pipeline table guardrails.
+
+    Parameters
+    ----------
+    table_configs : list of mapping
+        Source or target table configuration dictionaries. Each item must
+        include ``key`` and normally includes ``table_name``, ``stage``, and
+        optional target write metadata. DataFrame values are intentionally
+        omitted from the returned definitions.
+
+    Returns
+    -------
+    dict[str, dict[str, Any]]
+        Definitions keyed by table key, suitable for
+        :func:`write_catalogue_evidence`. Target definitions include resolved
+        write-layer, kind, and mode fields when the stage is ``target``.
+    """
+    definitions: dict[str, dict[str, Any]] = {}
+    for table_config in table_configs:
+        table_key = _table_key(table_config)
+        definition = {key: value for key, value in table_config.items() if key != "df"}
+        definition["table_name"] = _table_name(table_config)
+        definition["stage"] = table_config.get("stage", "target")
+        if definition["stage"] == "target":
+            definition["layer"] = table_config.get("target_layer", "unified")
+            definition["kind"] = table_config.get("target_kind", "lakehouse")
+            definition["mode"] = table_config.get("write_mode", "overwrite")
+        definitions[table_key] = definition
+    return definitions
+
+
+def run_table_guardrails(
+    table_configs: list[dict[str, Any]],
+    *,
+    config: Any,
+    env: str,
+    run_id: str,
+    spark_session: Any,
+    agreement_id: str = "",
+    agreement_contract_version: str = "",
+    notebook_registry_id: str = "",
+    notebook_id: str = "",
+    pipeline_name: str = "",
+) -> dict[str, Any]:
+    """Run profiling, schema, stability, DQ, and catalogue guardrails.
+
+    Parameters
+    ----------
+    table_configs : list of dict
+        Source or target table configs. Each config must contain ``key``,
+        ``df``, and ``expected_schema``. Optional keys such as
+        ``dataset_name``, ``stage``, ``schema_preset``, ``data_behavior``,
+        ``stability_check_type``, ``watermark_column``, ``watermark_value``,
+        ``dq_preset``, ``distribution_columns``, and ``exclude_columns``
+        control the guardrail behavior.
+    config : Any
+        FabricOps framework configuration from ``00_env_config``.
+    env : str
+        Environment key used for configured metadata routing.
+    run_id : str
+        Current pipeline run identifier.
+    spark_session : Any
+        Spark session used by stability and DQ helpers.
+    agreement_id, agreement_contract_version, notebook_registry_id, notebook_id, pipeline_name : str, optional
+        Governance context written with catalogue evidence.
+
+    Returns
+    -------
+    dict[str, Any]
+        Guardrail result bundle containing profiles, schema results, stability
+        results, DQ results, catalogue status, evidence definitions,
+        ``can_continue``, and ``failed_tables``. Results remain separated by
+        table key and guardrail type.
+
+    Notes
+    -----
+    This helper intentionally collects all per-table schema, stability, and DQ
+    results before reporting blocking failures. DQ results that return an
+    annotated DataFrame update the corresponding table config ``df`` in place
+    so downstream writes use the checked DataFrame. Metadata reads and writes
+    are routed through the configured metadata target by the called helpers.
+    """
+    profiles: dict[str, Any] = {}
+    schema_results: dict[str, Mapping[str, Any]] = {}
+    stability_results: dict[str, Mapping[str, Any]] = {}
+    dq_results: dict[str, Mapping[str, Any]] = {}
+    failed_tables: list[str] = []
+    evidence_definitions = build_guardrail_evidence_definitions(table_configs)
+
+    for table_config in table_configs:
+        table_key = _table_key(table_config)
+        table_name = _table_name(table_config)
+        dataset_name = table_config.get("dataset_name", table_name)
+        stage = table_config.get("stage", "target")
+        dataframe = table_config["df"]
+
+        profiles[table_key] = profile_dataframe(
+            dataframe,
+            table_name=table_name,
+            # profile_dataframe automatically excludes FabricOps/DQ technical annotation columns
+            # and unions those defaults with any table-specific exclude_columns.
+            exclude_columns=table_config.get("exclude_columns"),
+            include_distributions=True,
+            distribution_columns=table_config.get("distribution_columns"),
+        )
+
+        schema_results[table_key] = validate_schema(
+            dataframe,
+            table_config["expected_schema"],
+            preset=table_config.get("schema_preset", "strict"),
+        )
+
+        stability_results[table_key] = enforce_catalogue_stability(
+            spark_session,
+            dataframe,
+            CATALOGUE_TABLE,
+            dataset_name,
+            table_name,
+            stage=stage,
+            run_id=run_id,
+            data_behavior=table_config.get("data_behavior", "changing"),
+            stability_check_type=table_config.get("stability_check_type", "watermark_slice_hash"),
+            watermark_column=table_config.get("watermark_column"),
+            watermark_value=table_config.get("watermark_value"),
+            exclude_columns=table_config.get("exclude_columns"),
+            exclude_run_id=run_id,
+            config=config,
+            env=env,
+        )
+
+        if table_config.get("dq_preset", "approved_rules") == "skip":
+            dq_results[table_key] = {
+                "status": "skipped",
+                "can_continue": True,
+                "checks": [],
+                "message": "DQ guardrail skipped by preset.",
+            }
+        else:
+            dq_results[table_key] = enforce_dq_rules(
+                dataframe,
+                config,
+                env,
+                dataset_name,
+                table_name,
+                spark_session=spark_session,
+            )
+
+        if "dataframe" in dq_results[table_key]:
+            table_config["df"] = dq_results[table_key]["dataframe"]
+
+        table_can_continue = all(
+            _guardrail_can_continue(result)
+            for result in (schema_results[table_key], stability_results[table_key], dq_results[table_key])
+        )
+        if not table_can_continue:
+            failed_tables.append(table_key)
+
+    catalogue_status = write_catalogue_evidence(
+        profiles,
+        evidence_definitions,
+        config=config,
+        env=env,
+        run_id=run_id,
+        agreement_id=agreement_id,
+        agreement_contract_version=agreement_contract_version,
+        notebook_registry_id=notebook_registry_id,
+        notebook_id=notebook_id,
+        pipeline_name=pipeline_name,
+        schema_results=schema_results,
+        stability_results=stability_results,
+        dq_results=dq_results,
+    )
+
+    return {
+        "profiles": profiles,
+        "schema_results": schema_results,
+        "stability_results": stability_results,
+        "dq_results": dq_results,
+        "catalogue_status": catalogue_status,
+        "evidence_definitions": evidence_definitions,
+        "can_continue": not failed_tables,
+        "failed_tables": failed_tables,
+    }
+
+
+def guardrail_summary(guardrail_results: Mapping[str, Any]) -> dict[str, Any]:
+    """Return a concise notebook display summary for guardrail results.
+
+    Parameters
+    ----------
+    guardrail_results : mapping
+        Result bundle returned by :func:`run_table_guardrails`.
+
+    Returns
+    -------
+    dict[str, Any]
+        Concise summary containing schema, stability, DQ, catalogue, and failed
+        table information for notebook display.
+    """
+    return {
+        "schema_results": guardrail_results["schema_results"],
+        "stability_results": guardrail_results["stability_results"],
+        "dq_results": guardrail_results["dq_results"],
+        "catalogue_status": guardrail_results["catalogue_status"],
+        "failed_tables": guardrail_results["failed_tables"],
+    }
+
+
+def stop_if_any_guardrail_failed(guardrail_results: Mapping[str, Any]) -> None:
+    """Stop notebook execution when any table guardrail is blocking.
+
+    Parameters
+    ----------
+    guardrail_results : mapping
+        Result bundle returned by :func:`run_table_guardrails`. The helper
+        checks ``can_continue`` and forwards a standard failed guardrail result
+        to :func:`fabricops_kit.drift.stop_if_failed` when one or more tables
+        failed.
+
+    Returns
+    -------
+    None
+        Returns normally when all guardrails can continue. Raises through
+        :func:`stop_if_failed` for blocking failures.
+    """
+    if guardrail_results.get("can_continue", True):
+        return
+
+    failed_tables = guardrail_results.get("failed_tables", [])
+    stop_if_failed(
+        {
+            "status": "failed",
+            "can_continue": False,
+            "message": "Blocking guardrail failure for table(s): " + ", ".join(failed_tables),
+            "failed_tables": failed_tables,
+        }
+    )
 
 
 def write_catalogue_evidence(

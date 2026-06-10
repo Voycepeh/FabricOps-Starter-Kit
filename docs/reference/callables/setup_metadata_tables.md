@@ -82,7 +82,7 @@ Setup result describing metadata table creation or validation status.
 ## Source
 
 - Source file path: `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ffb9386812c13cf40a6a40503d36bd7a16dc5e31/src/fabricops_kit/config.py#L710-L761">View setup_metadata_tables on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6d8de4b3e35399458b9ee2a79568a6d6f1831a4e/src/fabricops_kit/config.py#L819-L870">View setup_metadata_tables on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -157,7 +157,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `config`
 - Source file path: `src/fabricops_kit/config.py`
-- Source line: `710`
+- Source line: `819`
 - Inbound references count: 0
 - Outbound references count: 4
 
@@ -183,9 +183,9 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/config.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ffb9386812c13cf40a6a40503d36bd7a16dc5e31/src/fabricops_kit/config.py#L710-L761">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ffb9386812c13cf40a6a40503d36bd7a16dc5e31/src/fabricops_kit/config.py#L710-L761</a>
-- Start line: `710`
-- End line: `761`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6d8de4b3e35399458b9ee2a79568a6d6f1831a4e/src/fabricops_kit/config.py#L819-L870">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6d8de4b3e35399458b9ee2a79568a6d6f1831a4e/src/fabricops_kit/config.py#L819-L870</a>
+- Start line: `819`
+- End line: `870`
 - Signature:
 
 ```python

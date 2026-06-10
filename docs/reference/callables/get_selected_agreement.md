@@ -57,7 +57,7 @@ Selected agreement dictionary for the active notebook session.
 ## Source
 
 - Source file path: `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ffb9386812c13cf40a6a40503d36bd7a16dc5e31/src/fabricops_kit/data_agreement.py#L1083-L1098">View get_selected_agreement on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6d8de4b3e35399458b9ee2a79568a6d6f1831a4e/src/fabricops_kit/data_agreement.py#L1083-L1098">View get_selected_agreement on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -120,7 +120,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/data_agreement.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ffb9386812c13cf40a6a40503d36bd7a16dc5e31/src/fabricops_kit/data_agreement.py#L1083-L1098">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ffb9386812c13cf40a6a40503d36bd7a16dc5e31/src/fabricops_kit/data_agreement.py#L1083-L1098</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6d8de4b3e35399458b9ee2a79568a6d6f1831a4e/src/fabricops_kit/data_agreement.py#L1083-L1098">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6d8de4b3e35399458b9ee2a79568a6d6f1831a4e/src/fabricops_kit/data_agreement.py#L1083-L1098</a>
 - Start line: `1083`
 - End line: `1098`
 - Signature:

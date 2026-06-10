@@ -83,6 +83,7 @@ Guardrail result dictionary with status, can_continue, checks, message, tagged d
 <details class="reference-implementation-details">
 <summary>Implementation details</summary>
 
+- <a href="../run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
 - <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a>
 - <a href="../internal/governance_review__dq_failed_row_count/"><code>fabricops_kit.governance_review._dq_failed_row_count</code></a>
 - <a href="../internal/governance_review__dq_summary/"><code>fabricops_kit.governance_review._dq_summary</code></a>
@@ -96,7 +97,7 @@ Guardrail result dictionary with status, can_continue, checks, message, tagged d
 ## Source
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ffb9386812c13cf40a6a40503d36bd7a16dc5e31/src/fabricops_kit/governance_review.py#L1537-L1594">View enforce_dq_rules on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6d8de4b3e35399458b9ee2a79568a6d6f1831a4e/src/fabricops_kit/governance_review.py#L1537-L1594">View enforce_dq_rules on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -178,7 +179,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
 - Source line: `1537`
-- Inbound references count: 0
+- Inbound references count: 1
 - Outbound references count: 7
 
 ### AI implementation contract
@@ -192,7 +193,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 
 ### Inbound references
 
-Not documented yet
+- <a href="../run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
 
 ### Outbound references
 
@@ -207,7 +208,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ffb9386812c13cf40a6a40503d36bd7a16dc5e31/src/fabricops_kit/governance_review.py#L1537-L1594">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ffb9386812c13cf40a6a40503d36bd7a16dc5e31/src/fabricops_kit/governance_review.py#L1537-L1594</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6d8de4b3e35399458b9ee2a79568a6d6f1831a4e/src/fabricops_kit/governance_review.py#L1537-L1594">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6d8de4b3e35399458b9ee2a79568a6d6f1831a4e/src/fabricops_kit/governance_review.py#L1537-L1594</a>
 - Start line: `1537`
 - End line: `1594`
 - Signature:
@@ -225,6 +226,7 @@ def enforce_dq_rules(dataframe, config, env, dataset_name, table_name, *, spark_
 
 ### Internal implementation helpers
 
+- <a href="../run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
 - <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a>
 - <a href="../internal/governance_review__dq_failed_row_count/"><code>fabricops_kit.governance_review._dq_failed_row_count</code></a>
 - <a href="../internal/governance_review__dq_summary/"><code>fabricops_kit.governance_review._dq_summary</code></a>
