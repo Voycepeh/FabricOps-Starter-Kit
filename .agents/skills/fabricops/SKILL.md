@@ -1,4 +1,7 @@
-# FabricOps Starter Kit skill
+---
+name: fabricops
+description: Guides AI coding agents working on the FabricOps Starter Kit. Use when authoring or reviewing Fabric notebooks, package helpers, metadata and contract workflows, generated function references, DQ rule review or enforcement, or repo changes that must preserve FabricOps governance, 00_env_config routing, and metadata-backed evidence.
+---
 
 Use this skill when authoring notebooks, changing package helpers, or reviewing generated references for the FabricOps Starter Kit.
 
