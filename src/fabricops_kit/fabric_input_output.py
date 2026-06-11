@@ -13,6 +13,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Any
+import re
 import tempfile
 
 import pandas as pd
@@ -75,6 +76,43 @@ class FabricStore:
         if self.kind != "lakehouse":
             raise ValueError("root is only available for lakehouse stores.")
         return f"abfss://{self.workspace_id}@onelake.dfs.fabric.microsoft.com/{self.item_id}"
+
+
+def _normalize_table_name(table: str) -> str:
+    """Return a safe Spark table name, never a nested folder path."""
+    value = str(table or "").strip()
+    if not value:
+        raise ValueError("table is required.")
+    if any(separator in value for separator in ("/", "\\")) or ".." in value:
+        raise ValueError("table must be a table name, not a file path or nested folder path.")
+    if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", value):
+        raise ValueError("table must contain only letters, numbers, and underscores, and must not start with a number.")
+    return value
+
+
+def _quote_identifier(identifier: str) -> str:
+    return f"`{str(identifier).replace('`', '``')}`"
+
+
+def _registered_table_identifier(store: FabricStore, table: str) -> str:
+    """Return a metadata lakehouse-qualified Spark table identifier."""
+    return f"{_quote_identifier(store.name)}.{_quote_identifier(_normalize_table_name(table))}"
+
+
+def _uses_registered_metadata_table(target: str) -> bool:
+    """Return whether a target should use Spark table registration."""
+    return str(target or "").strip().lower() == "metadata"
+
+
+def _current_database_matches(spark_obj: Any, store: FabricStore) -> bool:
+    catalog = getattr(spark_obj, "catalog", None)
+    current_database = getattr(catalog, "currentDatabase", None)
+    if not callable(current_database):
+        return False
+    try:
+        return str(current_database()).strip().lower() == store.name.strip().lower()
+    except Exception:
+        return False
 
 
 DEFAULT_ENV = "Sandbox"
@@ -170,11 +208,19 @@ def read_lakehouse_table(config, env, target, table, spark_session=None):
     store = _get_store(config, env, target)
     if store.kind != "lakehouse":
         raise ValueError(f"Target '{env}/{target}' is not a lakehouse store.")
-    if not table:
-        raise ValueError("table is required.")
+    table_name = _normalize_table_name(table)
 
     spark_obj = _get_spark(spark_session)
-    path = f"{store.root.rstrip('/')}/Tables/{table}"
+    if _uses_registered_metadata_table(target):
+        try:
+            return spark_obj.table(_registered_table_identifier(store, table_name))
+        except Exception:
+            if _current_database_matches(spark_obj, store):
+                try:
+                    return spark_obj.table(table_name)
+                except Exception:
+                    pass
+    path = f"{store.root.rstrip('/')}/Tables/{table_name}"
     return spark_obj.read.format("delta").load(path)
 
 
@@ -241,14 +287,13 @@ def write_lakehouse_table(
     store = _get_store(config, env, target)
     if store.kind != "lakehouse":
         raise ValueError(f"Target '{env}/{target}' is not a lakehouse store.")
-    if not table:
-        raise ValueError("table is required.")
+    table_name = _normalize_table_name(table)
 
     normalized_mode = str(mode or "").lower().strip()
     if normalized_mode not in {"append", "overwrite", "errorifexists", "ignore"}:
         raise ValueError("mode must be one of append, overwrite, errorifexists, ignore.")
 
-    path = f"{store.root.rstrip('/')}/Tables/{table}"
+    path = f"{store.root.rstrip('/')}/Tables/{table_name}"
 
     if repartition_by is not None:
         if isinstance(repartition_by, (list, tuple)):
@@ -272,7 +317,10 @@ def write_lakehouse_table(
     if overwrite_schema:
         writer = writer.option("overwriteSchema", "true")
 
-    writer.save(path)
+    if _uses_registered_metadata_table(target):
+        writer.saveAsTable(_registered_table_identifier(store, table_name))
+    else:
+        writer.save(path)
 
 
 def read_lakehouse_csv(config, env, target, relative_path, spark_session=None, header=True):

@@ -97,7 +97,7 @@ Guardrail result dictionary with status, can_continue, checks, message, tagged d
 ## Source
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a212c94775e71b6e429e41b51fbc57ac733903cb/src/fabricops_kit/governance_review.py#L1537-L1594">View enforce_dq_rules on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/governance_review.py#L1536-L1593">View enforce_dq_rules on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -159,7 +159,7 @@ def enforce_dq_rules(
     failed_row_count = _dq_failed_row_count(dataframe, rules) if rules else 0
     result = _summarize_dq_guardrail(checks)
     result["dataframe"] = _dq_tagged_dataframe(dataframe, rules)
-    result["summary"] = _dq_summary(checks, total_count, failed_row_count)
+    result["summary"] = _dq_summary(checks, total_count, failed_row_count, config=config)
     return result
 ```
 
@@ -178,7 +178,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
-- Source line: `1537`
+- Source line: `1536`
 - Inbound references count: 1
 - Outbound references count: 7
 
@@ -208,9 +208,9 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a212c94775e71b6e429e41b51fbc57ac733903cb/src/fabricops_kit/governance_review.py#L1537-L1594">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a212c94775e71b6e429e41b51fbc57ac733903cb/src/fabricops_kit/governance_review.py#L1537-L1594</a>
-- Start line: `1537`
-- End line: `1594`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/governance_review.py#L1536-L1593">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/governance_review.py#L1536-L1593</a>
+- Start line: `1536`
+- End line: `1593`
 - Signature:
 
 ```python

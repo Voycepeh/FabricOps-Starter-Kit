@@ -1,6 +1,6 @@
 # _assert_valid_dataset_contract
 
-**Module:** `config`  
+**Module:** `config`
 **Classification:** Internal
 
 ## Status
@@ -49,7 +49,7 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 - Classification: Internal
 - Related module: `config`
 - Source file path: `src/fabricops_kit/config.py`
-- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a212c94775e71b6e429e41b51fbc57ac733903cb/src/fabricops_kit/config.py#L1009-L1030">View source on GitHub</a>
+- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/config.py#L1238-L1259">View source on GitHub</a>
 - Inbound references count: 0
 - Outbound references count: 2
 

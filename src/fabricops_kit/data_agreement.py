@@ -830,7 +830,7 @@ def _save_agreement_evidence_records(*, spark: Any, config: Any, env_name: str, 
     evidence_type = str(evidence_type or "Other").strip() or "Other"
     file_references = _prepare_evidence_file_references(evidence_file_paths)
     audit = _build_runtime_audit_fields(config=config, env=env_name, committed_by=committed_by, committed_at=committed_at, runtime_context=runtime_context)
-    uploaded_at = audit.get("_committed_at") or datetime.now(timezone.utc).isoformat()
+    uploaded_at = audit.get("_committed_at") or _current_audit_timestamp(config=config, drop_microseconds=False)
     uploaded_by = audit.get("_committed_by") or ""
 
     metadata_tables = _config_value(config, "metadata_tables", {}) or {}
@@ -1030,7 +1030,7 @@ def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None 
                 pipeline_name=pipeline_name,
             )
             if other and role == "primary":
-                superseded_at = datetime.now(timezone.utc).isoformat()
+                superseded_at = _current_audit_timestamp(config=config, drop_microseconds=False)
                 for previous in other:
                     _register_current_notebook(
                         spark_session,

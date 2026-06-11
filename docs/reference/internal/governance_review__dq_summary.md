@@ -26,7 +26,7 @@ Build aggregate DQ fields for catalogue/profile evidence.
 ## Signature if available
 
 ```python
-def _dq_summary(checks: list[dict[str, Any]], total_count: int, failed_row_count: int) -> dict[str, Any]
+def _dq_summary(checks: list[dict[str, Any]], total_count: int, failed_row_count: int, *, config: Any=None) -> dict[str, Any]
 ```
 
 ## Side effects
@@ -49,12 +49,13 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 - Classification: Internal
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
-- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a212c94775e71b6e429e41b51fbc57ac733903cb/src/fabricops_kit/governance_review.py#L1499-L1514">View source on GitHub</a>
+- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/governance_review.py#L1498-L1513">View source on GitHub</a>
 - Inbound references count: 1
-- Outbound references count: 1
+- Outbound references count: 2
 
 ## Inbound references
 - <a href="../enforce_dq_rules/"><code>fabricops_kit.governance_review.enforce_dq_rules</code></a>
 
 ## Outbound references
+- <a href="../internal/config__current_audit_timestamp/"><code>fabricops_kit.config._current_audit_timestamp</code></a>
 - <a href="../internal/governance_review__summarize_dq_guardrail/"><code>fabricops_kit.governance_review._summarize_dq_guardrail</code></a>

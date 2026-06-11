@@ -17,6 +17,7 @@ Do not call this helper directly from notebooks; use the public callable helpers
 
 ## Used by
 
+- <a href="../internal/config__get_active_metadata_tables/"><code>fabricops_kit.config._get_active_metadata_tables</code></a>
 - <a href="../internal/governance_review__setup_governance_metadata_tables/"><code>fabricops_kit.governance_review._setup_governance_metadata_tables</code></a>
 
 ## Purpose
@@ -49,11 +50,12 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 - Classification: Internal
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
-- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a212c94775e71b6e429e41b51fbc57ac733903cb/src/fabricops_kit/governance_review.py#L153-L196">View source on GitHub</a>
-- Inbound references count: 1
+- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/governance_review.py#L152-L195">View source on GitHub</a>
+- Inbound references count: 2
 - Outbound references count: 2
 
 ## Inbound references
+- <a href="../internal/config__get_active_metadata_tables/"><code>fabricops_kit.config._get_active_metadata_tables</code></a>
 - <a href="../internal/governance_review__setup_governance_metadata_tables/"><code>fabricops_kit.governance_review._setup_governance_metadata_tables</code></a>
 
 ## Outbound references

@@ -44,10 +44,15 @@ class _Spark:
     def __init__(self):
         self.read = _Reader()
         self.created = []
+        self.table_calls = []
 
     def createDataFrame(self, rows):
         self.created.append(rows)
         return {"created": rows}
+
+    def table(self, table):
+        self.table_calls.append(table)
+        return {"table": table}
 
 
 class _Writer:
@@ -72,6 +77,9 @@ class _Writer:
 
     def save(self, path):
         self.calls.append(("save", path))
+
+    def saveAsTable(self, table):  # noqa: N802 - mirrors Spark API
+        self.calls.append(("saveAsTable", table))
 
     def synapsesql(self, table):
         self.calls.append(("synapsesql", table))
@@ -100,6 +108,27 @@ def test_lakehouse_read_and_write_helpers_route_to_configured_paths():
     assert save_call[1].endswith("/Tables/orders_clean")
     assert ("format", "delta") in frame.write.calls
     assert ("partitionBy", ("status",)) in frame.write.calls
+
+
+def test_metadata_lakehouse_table_helpers_use_registered_tables():
+    config = framework_config()
+    spark = _Spark()
+    frame = _Frame()
+
+    read_result = io.read_lakehouse_table(config, "dev", "metadata", "METADATA_DQ_RULES", spark_session=spark)
+    io.write_lakehouse_table(frame, config, "dev", "metadata", "METADATA_DQ_RULES", mode="ignore")
+
+    assert read_result == {"table": "`lh_metadata_dev`.`METADATA_DQ_RULES`"}
+    assert spark.table_calls == ["`lh_metadata_dev`.`METADATA_DQ_RULES`"]
+    assert ("saveAsTable", "`lh_metadata_dev`.`METADATA_DQ_RULES`") in frame.write.calls
+    assert not any(call[0] == "save" and "Unidentified" in call[1] for call in frame.write.calls)
+
+
+def test_lakehouse_table_helpers_reject_nested_table_paths():
+    config = framework_config()
+
+    with pytest.raises(ValueError, match="not a file path"):
+        io.write_lakehouse_table(_Frame(), config, "dev", "metadata", "METADATA_DQ_RULES/Unidentified", mode="ignore")
 
 
 def test_file_readers_validate_source_paths_and_excel_uses_pandas_kwargs(monkeypatch):

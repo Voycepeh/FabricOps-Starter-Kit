@@ -4,10 +4,65 @@ import json
 
 import pytest
 
-from fabricops_kit.governance_review import _load_active_dq_rules, enforce_dq_rules
+from fabricops_kit.governance_review import _load_active_dq_rules, _prepare_dq_profile_input_rows, enforce_dq_rules
 from fabricops_kit.drift import stop_if_failed, validate_schema
+from tests.helpers import framework_config
 
 pytestmark = pytest.mark.spark
+
+
+def test_prepare_dq_profile_input_rows_uses_configured_audit_timezone(spark_session):
+    config = framework_config()
+    object.__setattr__(config, "audit_timezone", "Asia/Singapore")
+    profile_df = spark_session.createDataFrame(
+        [
+            {
+                "TABLE_NAME": "orders",
+                "COLUMN_NAME": "order_id",
+                "DATA_TYPE": "string",
+                "ROW_COUNT": 1,
+                "NULL_COUNT": 0,
+                "NULL_PERCENT": 0.0,
+                "DISTINCT_COUNT": 1,
+                "DISTINCT_PERCENT": 100.0,
+                "MIN_VALUE": "A",
+                "MAX_VALUE": "A",
+            }
+        ]
+    )
+
+    row = _prepare_dq_profile_input_rows(
+        profile_df=profile_df,
+        table_name="orders",
+        business_context="test context",
+        config=config,
+    ).collect()[0].asDict()
+
+    assert row["profile_timestamp"].endswith("+08:00")
+    assert row["business_context"] == "test context"
+
+
+def test_prepare_dq_profile_input_rows_defaults_to_utc_without_config(spark_session):
+    profile_df = spark_session.createDataFrame(
+        [
+            {
+                "TABLE_NAME": "orders",
+                "COLUMN_NAME": "order_id",
+                "DATA_TYPE": "string",
+                "ROW_COUNT": 1,
+                "NULL_COUNT": 0,
+                "NULL_PERCENT": 0.0,
+                "DISTINCT_COUNT": 1,
+                "DISTINCT_PERCENT": 100.0,
+                "MIN_VALUE": "A",
+                "MAX_VALUE": "A",
+            }
+        ]
+    )
+
+    row = _prepare_dq_profile_input_rows(profile_df=profile_df, table_name="orders").collect()[0].asDict()
+
+    assert row["profile_timestamp"].endswith("+00:00")
 
 
 def test_spark_schema_validation_and_latest_dq_metadata_are_stable(spark_session):

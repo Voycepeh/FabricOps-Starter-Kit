@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 5</span><span class="reference-chip">Internal helpers: 11</span><span class="reference-chip">Outbound: 5</span><span class="reference-chip">Inbound: 0</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 5</span><span class="reference-chip">Internal helpers: 11</span><span class="reference-chip">Outbound: 6</span><span class="reference-chip">Inbound: 0</span></div>
 
 ## Module purpose
 
@@ -48,7 +48,7 @@ Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals
     </tr>
     <tr>
       <td>Outbound module count</td>
-      <td>5</td>
+      <td>6</td>
     </tr>
     <tr>
       <td>External callers</td>
@@ -56,7 +56,7 @@ Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals
     </tr>
     <tr>
       <td>External callees</td>
-      <td><code>data_profiling</code>, <code>drift</code>, <code>fabric_input_output</code>, <code>governance_review</code>, <code>metadata</code></td>
+      <td><code>config</code>, <code>data_profiling</code>, <code>drift</code>, <code>fabric_input_output</code>, <code>governance_review</code>, <code>metadata</code></td>
     </tr>
   </tbody>
 </table>
@@ -264,6 +264,9 @@ Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals
 
 None.
 ### External callees
+
+**config**
+<a class="reference-chip" href="../config/#_current_audit_timestamp"><code>_current_audit_timestamp</code></a>, <a class="reference-chip" href="../config/#_get_audit_timezone"><code>_get_audit_timezone</code></a>
 
 **data_profiling**
 <a class="reference-chip" href="../../reference/profile_dataframe/"><code>profile_dataframe</code></a>

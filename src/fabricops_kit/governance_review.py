@@ -3,14 +3,13 @@
 from __future__ import annotations
 
 import ast
-from datetime import datetime, timezone
 import importlib
 import json
 import re
 import uuid
 from typing import Any, Iterable
 
-from .config import DEFAULT_BUSINESS_CONTEXT_PROMPT_TEMPLATE, DEFAULT_DQ_RULE_SUGGESTION_PROMPT_TEMPLATE, DEFAULT_GOVERNANCE_PERSONAL_IDENTIFIER_PROMPT_TEMPLATE
+from .config import DEFAULT_BUSINESS_CONTEXT_PROMPT_TEMPLATE, DEFAULT_DQ_RULE_SUGGESTION_PROMPT_TEMPLATE, DEFAULT_GOVERNANCE_PERSONAL_IDENTIFIER_PROMPT_TEMPLATE, _current_audit_timestamp, _get_audit_timezone
 from .fabric_input_output import read_lakehouse_table, write_lakehouse_table
 from .data_profiling import profile_dataframe
 from .metadata import _now_utc_iso, _resolve_action_by, _build_metadata_column_key, _build_metadata_table_key, _build_runtime_audit_fields, _build_dq_rule_key
@@ -83,7 +82,7 @@ def _canonical_dq_rule_type(rule_type: Any) -> str:
 def _approved_review_context(profile_rows: list[dict[str, Any]], *, config: Any = None, env: str | None = None, approved_by: str | None = None) -> tuple[dict[str, dict[str, Any]], str, str, dict[str, Any]]:
     actor = _resolve_action_by(approved_by)
     audit = _build_runtime_audit_fields(config=config, env=env or "", committed_by=actor) if config is not None and env is not None else {}
-    return {str(_value(r, "column_name")): r for r in profile_rows}, actor, _now_utc_iso(), audit
+    return {str(_value(r, "column_name")): r for r in profile_rows}, actor, _now_utc_iso(config), audit
 
 
 def _approved_column_identity(profile_row: dict[str, Any], review_row: dict[str, Any], *, env: str | None = None) -> dict[str, str]:
@@ -780,7 +779,7 @@ def widget_review_dq_rules(
         try:
             prompt = getattr(getattr(config, "ai_prompt_config", None), "dq_rule_suggestion_prompt_template", "") if config is not None else ""
             profile_df = spark_session.createDataFrame(profile_rows) if spark_session is not None and not hasattr(profile_rows, "ai") else profile_rows
-            drafts = _draft_dq_rules(profile_df=profile_df, table_name=selected_table, business_context=business_context, prompt_template=prompt)
+            drafts = _draft_dq_rules(profile_df=profile_df, table_name=selected_table, business_context=business_context, prompt_template=prompt, config=config)
             for draft in drafts:
                 draft.update({"review_status": "draft", "is_active": False, "commit": False})
             review_rows.extend(drafts)
@@ -977,7 +976,7 @@ def _review_governance_evidence(
                 warnings.append({"code": f"{field}_warning", "message": f"{field} is {status}; schema drift is surfaced for review."})
 
     outcome = "rejected" if blockers else ("needs_remediation" if warnings else "approved")
-    reviewed_at = _now_utc_iso()
+    reviewed_at = _now_utc_iso(config)
     actor = _resolve_action_by(reviewed_by)
     audit = _build_runtime_audit_fields(config=config, env=env, committed_by=actor, committed_at=reviewed_at)
     evidence_summary = {
@@ -1496,7 +1495,7 @@ def _dq_failed_row_count(df, rules: list[dict[str, Any]]) -> int:
     return int(failed_rows.agg(F.sum("failed").alias("failed_count")).collect()[0]["failed_count"] or 0)
 
 
-def _dq_summary(checks: list[dict[str, Any]], total_count: int, failed_row_count: int) -> dict[str, Any]:
+def _dq_summary(checks: list[dict[str, Any]], total_count: int, failed_row_count: int, *, config: Any = None) -> dict[str, Any]:
     """Build aggregate DQ fields for catalogue/profile evidence."""
     failed_checks = [check for check in checks if not bool(check.get("passed", False))]
     warning_checks = [check for check in failed_checks if check.get("severity") == "warning"]
@@ -1510,7 +1509,7 @@ def _dq_summary(checks: list[dict[str, Any]], total_count: int, failed_row_count
         "DQ_ERROR_RULE_COUNT": len(error_checks),
         "DQ_FAILED_ROW_COUNT": failed_row_count,
         "DQ_FAILED_ROW_PERCENT": float(round((failed_row_count / total_count) * 100, 4)) if total_count else 0.0,
-        "DQ_CHECKED_AT": datetime.now(timezone.utc).isoformat(),
+        "DQ_CHECKED_AT": _current_audit_timestamp(config=config, drop_microseconds=False),
     }
 
 
@@ -1590,15 +1589,15 @@ def enforce_dq_rules(
     failed_row_count = _dq_failed_row_count(dataframe, rules) if rules else 0
     result = _summarize_dq_guardrail(checks)
     result["dataframe"] = _dq_tagged_dataframe(dataframe, rules)
-    result["summary"] = _dq_summary(checks, total_count, failed_row_count)
+    result["summary"] = _dq_summary(checks, total_count, failed_row_count, config=config)
     return result
 
-def _prepare_dq_profile_input_rows(*, profile_df=None, df=None, table_name: str, business_context: str = ""):
+def _prepare_dq_profile_input_rows(*, profile_df=None, df=None, table_name: str, business_context: str = "", config: Any = None):
     """Prepare DQ prompt profile rows from a profile DataFrame or raw DataFrame."""
     if (profile_df is None) == (df is None):
         raise ValueError("Provide exactly one of profile_df or df.")
     if profile_df is None:
-        profile_df = profile_dataframe(df, table_name=table_name)
+        profile_df = profile_dataframe(df, table_name=table_name, run_timestamp_timezone=_get_audit_timezone(config))
     cols = set(profile_df.columns)
     if {"column_name", "data_type", "row_count", "null_count", "distinct_count"}.issubset(cols):
         return profile_df
@@ -1616,13 +1615,13 @@ def _prepare_dq_profile_input_rows(*, profile_df=None, df=None, table_name: str,
         F.col("MAX_VALUE").alias("max_value"),
         F.lit("").alias("observed_values_sample"),
         F.lit(business_context).alias("business_context"),
-        F.lit(datetime.now(timezone.utc).isoformat()).alias("profile_timestamp"),
+        F.lit(_current_audit_timestamp(config=config, drop_microseconds=False)).alias("profile_timestamp"),
     )
 
 
-def _draft_dq_rules(*, profile_df=None, df=None, table_name: str, business_context: str = "", prompt_template: str | None = None, output_col: str = "response") -> list[dict[str, Any]]:
+def _draft_dq_rules(*, profile_df=None, df=None, table_name: str, business_context: str = "", prompt_template: str | None = None, output_col: str = "response", config: Any = None) -> list[dict[str, Any]]:
     """Draft candidate DQ rules from metadata profiles or a raw DataFrame fallback."""
-    prepared = _prepare_dq_profile_input_rows(profile_df=profile_df, df=df, table_name=table_name, business_context=business_context)
+    prepared = _prepare_dq_profile_input_rows(profile_df=profile_df, df=df, table_name=table_name, business_context=business_context, config=config)
     responses = _run_fabric_ai_drafting(prepared, prompt=prompt_template or DQ_RULE_SUGGESTION_PROMPT, output_col=output_col)
     candidates = _extract_assignment_payload(responses, response_col=output_col, assignment_key="DQ_RULES", table_name=table_name)
     by_id = {r.get("rule_id"): {**r, "rule_type": _canonical_dq_rule_type(r.get("rule_type"))} for r in candidates if r.get("rule_id")}

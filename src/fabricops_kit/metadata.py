@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import hashlib
 import json
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Any
+from .config import _current_audit_timestamp
 from .fabric_input_output import read_lakehouse_table, write_lakehouse_table
 
 NOTEBOOK_REGISTRY_TABLE = "METADATA_NOTEBOOK_REGISTRY"
@@ -129,8 +130,8 @@ def _setup_notebook_registry_table(
     }
 
 
-def _now_utc_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+def _now_utc_iso(config: Any = None) -> str:
+    return _current_audit_timestamp(config=config, drop_microseconds=False)
 
 
 def _resolve_action_by(action_by: str | None = None) -> str:
@@ -243,7 +244,7 @@ def _build_runtime_audit_fields(
         Output keys for metadata lakehouse and Fabric activity audit values.
     committed_by, committed_at : str, optional
         Deterministic audit overrides. When omitted, values resolve from Fabric
-        runtime context and the current UTC timestamp.
+        runtime context and the configured audit timezone timestamp.
     runtime_context : dict[str, Any], optional
         Values merged over :func:`_runtime_context`, primarily for tests or
         controlled notebook overrides.
@@ -280,7 +281,7 @@ def _build_runtime_audit_fields(
         else _safe_str(_first_non_blank("userName", "userId") or "unknown"),
         timestamp_field: _safe_str(committed_at)
         if committed_at
-        else datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
+        else _current_audit_timestamp(config=config),
         workspace_field: _safe_str(_first_non_blank("currentWorkspaceName", "workspaceName") or ""),
         notebook_field: _safe_str(_first_non_blank("currentNotebookName", "notebookName") or ""),
         metadata_lakehouse_field: metadata_lakehouse_name,
@@ -390,7 +391,7 @@ def _register_current_notebook(
         ),
         "user_name": _safe_str(user_name),
         "user_id": _safe_str(user_id),
-        "registered_at": datetime.now(timezone.utc).isoformat(),
+        "registered_at": _current_audit_timestamp(config=config, drop_microseconds=False),
         "agreement_contract_version": _safe_str(contract_version),
         "registration_role": _safe_str(registration_role or "primary"),
         "registration_status": _safe_str(registration_status or "active"),

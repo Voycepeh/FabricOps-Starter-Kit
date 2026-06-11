@@ -1,8 +1,9 @@
 """Notebook lineage helpers for deterministic parsing and metadata-ready evidence."""
 from __future__ import annotations
 import ast
-from datetime import datetime, timezone
 from typing import Any
+
+from .config import _current_audit_timestamp
 
 _ALLOWED_TYPES = {"dataframe", "lakehouse_table", "warehouse_table", "file", "unknown"}
 _ALLOWED_CONFIDENCE = {"high", "medium", "low"}
@@ -162,7 +163,7 @@ def _validate_lineage_steps(lineage_steps: Any) -> dict[str, Any]:
     return {"is_valid": not errors, "errors": errors, "warnings": warnings, "review_required": review_required}
 
 
-def _build_lineage_records(dataset_name: str, lineage_steps: list[dict], run_id: str | None = None, notebook_name: str | None = None, workspace_name: str | None = None, workspace_id: str | None = None, notebook_id: str | None = None, created_by: str | None = None) -> list[dict]:
+def _build_lineage_records(dataset_name: str, lineage_steps: list[dict], run_id: str | None = None, notebook_name: str | None = None, workspace_name: str | None = None, workspace_id: str | None = None, notebook_id: str | None = None, created_by: str | None = None, config: Any = None) -> list[dict]:
     """Build metadata-ready lineage rows from validated lineage steps.
 
     Parameters
@@ -179,6 +180,8 @@ def _build_lineage_records(dataset_name: str, lineage_steps: list[dict], run_id:
         Optional workspace display name.
     created_by : str or None, default=None
         Optional creator identity.
+    config : Any, optional
+        Framework configuration used to resolve the configured audit timezone.
 
     Returns
     -------
@@ -188,7 +191,7 @@ def _build_lineage_records(dataset_name: str, lineage_steps: list[dict], run_id:
     validation = _validate_lineage_steps(lineage_steps)
     if not validation["is_valid"]:
         raise ValueError(f"Invalid lineage_steps: {validation['errors']}")
-    created_ts = datetime.now(timezone.utc).isoformat()
+    created_ts = _current_audit_timestamp(config=config, drop_microseconds=False)
     return [
         {
             "dataset_name": dataset_name,
@@ -206,7 +209,7 @@ def _build_lineage_records(dataset_name: str, lineage_steps: list[dict], run_id:
     ]
 
 
-def build_lineage_records(*, dataset_name: str, run_id: str, source_tables: list[str], target_table: str, transformation_steps: list[dict]) -> list[dict]:
+def build_lineage_records(*, dataset_name: str, run_id: str, source_tables: list[str], target_table: str, transformation_steps: list[dict], config: Any = None) -> list[dict]:
     """Build compact lineage records for downstream metadata sinks.
 
     Parameters
@@ -221,10 +224,13 @@ def build_lineage_records(*, dataset_name: str, run_id: str, source_tables: list
         Target table name produced by the run.
     transformation_steps : list of dict
         Transformation step dictionaries to merge into each output row.
+    config : Any, optional
+        Framework configuration used to resolve the configured audit timezone
+        when adding timestamp metadata.
 
     Returns
     -------
     list of dict
         Row dictionaries suitable for metadata persistence.
     """
-    return [{"run_id": run_id, "dataset_name": dataset_name, "source_tables": source_tables, "target_table": target_table, **s} for s in transformation_steps]
+    return [{"run_id": run_id, "dataset_name": dataset_name, "source_tables": source_tables, "target_table": target_table, **({"created_ts": _current_audit_timestamp(config=config, drop_microseconds=False)} if config is not None else {}), **s} for s in transformation_steps]

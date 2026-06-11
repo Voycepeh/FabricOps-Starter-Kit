@@ -107,6 +107,7 @@ Guardrail result bundle with profiles, schema results, stability results, DQ res
 <details class="reference-implementation-details">
 <summary>Implementation details</summary>
 
+- <a href="../internal/config__get_audit_timezone/"><code>fabricops_kit.config._get_audit_timezone</code></a>
 - <a href="../profile_dataframe/"><code>fabricops_kit.data_profiling.profile_dataframe</code></a>
 - <a href="../enforce_catalogue_stability/"><code>fabricops_kit.drift.enforce_catalogue_stability</code></a>
 - <a href="../stop_if_failed/"><code>fabricops_kit.drift.stop_if_failed</code></a>
@@ -123,7 +124,7 @@ Guardrail result bundle with profiles, schema results, stability results, DQ res
 ## Source
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a212c94775e71b6e429e41b51fbc57ac733903cb/src/fabricops_kit/pipeline.py#L266-L442">View run_table_guardrails on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/pipeline.py#L266-L443">View run_table_guardrails on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -207,6 +208,7 @@ def run_table_guardrails(
             exclude_columns=table_config.get("exclude_columns"),
             include_distributions=True,
             distribution_columns=table_config.get("distribution_columns"),
+            run_timestamp_timezone=table_config.get("run_timestamp_timezone") or _get_audit_timezone(config),
         )
 
         schema_results[table_key] = validate_schema(
@@ -325,7 +327,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source file path: `src/fabricops_kit/pipeline.py`
 - Source line: `266`
 - Inbound references count: 0
-- Outbound references count: 10
+- Outbound references count: 11
 
 ### AI implementation contract
 
@@ -342,6 +344,7 @@ Not documented yet
 
 ### Outbound references
 
+- <a href="../internal/config__get_audit_timezone/"><code>fabricops_kit.config._get_audit_timezone</code></a>
 - <a href="../profile_dataframe/"><code>fabricops_kit.data_profiling.profile_dataframe</code></a>
 - <a href="../enforce_catalogue_stability/"><code>fabricops_kit.drift.enforce_catalogue_stability</code></a>
 - <a href="../stop_if_failed/"><code>fabricops_kit.drift.stop_if_failed</code></a>
@@ -356,9 +359,9 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a212c94775e71b6e429e41b51fbc57ac733903cb/src/fabricops_kit/pipeline.py#L266-L442">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a212c94775e71b6e429e41b51fbc57ac733903cb/src/fabricops_kit/pipeline.py#L266-L442</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/pipeline.py#L266-L443">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/pipeline.py#L266-L443</a>
 - Start line: `266`
-- End line: `442`
+- End line: `443`
 - Signature:
 
 ```python
@@ -374,6 +377,7 @@ def run_table_guardrails(table_configs: list[dict[str, Any]], *, config: Any, en
 
 ### Internal implementation helpers
 
+- <a href="../internal/config__get_audit_timezone/"><code>fabricops_kit.config._get_audit_timezone</code></a>
 - <a href="../profile_dataframe/"><code>fabricops_kit.data_profiling.profile_dataframe</code></a>
 - <a href="../enforce_catalogue_stability/"><code>fabricops_kit.drift.enforce_catalogue_stability</code></a>
 - <a href="../stop_if_failed/"><code>fabricops_kit.drift.stop_if_failed</code></a>

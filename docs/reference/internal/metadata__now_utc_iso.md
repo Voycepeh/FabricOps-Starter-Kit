@@ -27,7 +27,7 @@ No summary available.
 ## Signature if available
 
 ```python
-def _now_utc_iso() -> str
+def _now_utc_iso(config: Any=None) -> str
 ```
 
 ## Side effects
@@ -50,10 +50,13 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 - Classification: Internal
 - Related module: `metadata`
 - Source file path: `src/fabricops_kit/metadata.py`
-- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a212c94775e71b6e429e41b51fbc57ac733903cb/src/fabricops_kit/metadata.py#L132-L133">View source on GitHub</a>
+- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/metadata.py#L133-L134">View source on GitHub</a>
 - Inbound references count: 2
-- Outbound references count: 0
+- Outbound references count: 1
 
 ## Inbound references
 - <a href="../internal/governance_review__approved_review_context/"><code>fabricops_kit.governance_review._approved_review_context</code></a>
 - <a href="../internal/governance_review__review_governance_evidence/"><code>fabricops_kit.governance_review._review_governance_evidence</code></a>
+
+## Outbound references
+- <a href="../internal/config__current_audit_timestamp/"><code>fabricops_kit.config._current_audit_timestamp</code></a>

@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import pytest
 
-from fabricops_kit.data_lineage import build_lineage_records
+from fabricops_kit.data_lineage import _build_lineage_records, build_lineage_records
+from tests.helpers import framework_config
+
 from fabricops_kit.governance_review import (
     _build_classification_records,
     _build_column_context_records,
@@ -72,6 +74,62 @@ def test_profile_and_lineage_helpers_return_notebook_ready_structures():
             "description": "Clean source rows",
         }
     ]
+
+
+def test_private_lineage_records_use_configured_audit_timezone():
+    config = framework_config()
+    object.__setattr__(config, "audit_timezone", "Asia/Singapore")
+
+    rows = _build_lineage_records(
+        "sales",
+        [{
+            "source": "raw_orders",
+            "target": "orders",
+            "transformation": "clean",
+            "reason": "prepare target",
+            "source_type": "lakehouse_table",
+            "target_type": "lakehouse_table",
+            "confidence": "high",
+        }],
+        run_id="run-1",
+        config=config,
+    )
+
+    assert rows[0]["created_ts"].endswith("+08:00")
+
+
+def test_private_lineage_records_default_to_utc_without_config():
+    rows = _build_lineage_records(
+        "sales",
+        [{
+            "source": "raw_orders",
+            "target": "orders",
+            "transformation": "clean",
+            "reason": "prepare target",
+            "source_type": "lakehouse_table",
+            "target_type": "lakehouse_table",
+            "confidence": "high",
+        }],
+        run_id="run-1",
+    )
+
+    assert rows[0]["created_ts"].endswith("+00:00")
+
+
+def test_public_lineage_records_accept_config_for_timestamp_metadata():
+    config = framework_config()
+    object.__setattr__(config, "audit_timezone", "Asia/Singapore")
+
+    rows = build_lineage_records(
+        dataset_name="sales",
+        run_id="run-1",
+        source_tables=["raw_orders"],
+        target_table="orders",
+        transformation_steps=[{"step": "clean"}],
+        config=config,
+    )
+
+    assert rows[0]["created_ts"].endswith("+08:00")
 
 
 def test_governance_review_builders_commit_only_human_approved_records():

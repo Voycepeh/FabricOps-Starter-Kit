@@ -26,7 +26,7 @@ Build metadata-ready lineage rows from validated lineage steps.
 ## Signature if available
 
 ```python
-def _build_lineage_records(dataset_name: str, lineage_steps: list[dict], run_id: str | None=None, notebook_name: str | None=None, workspace_name: str | None=None, workspace_id: str | None=None, notebook_id: str | None=None, created_by: str | None=None) -> list[dict]
+def _build_lineage_records(dataset_name: str, lineage_steps: list[dict], run_id: str | None=None, notebook_name: str | None=None, workspace_name: str | None=None, workspace_id: str | None=None, notebook_id: str | None=None, created_by: str | None=None, config: Any=None) -> list[dict]
 ```
 
 ## Side effects
@@ -49,9 +49,10 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 - Classification: Internal
 - Related module: `data_lineage`
 - Source file path: `src/fabricops_kit/data_lineage.py`
-- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a212c94775e71b6e429e41b51fbc57ac733903cb/src/fabricops_kit/data_lineage.py#L165-L206">View source on GitHub</a>
+- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/data_lineage.py#L166-L209">View source on GitHub</a>
 - Inbound references count: 0
-- Outbound references count: 1
+- Outbound references count: 2
 
 ## Outbound references
+- <a href="../internal/config__current_audit_timestamp/"><code>fabricops_kit.config._current_audit_timestamp</code></a>
 - <a href="../internal/data_lineage__validate_lineage_steps/"><code>fabricops_kit.data_lineage._validate_lineage_steps</code></a>

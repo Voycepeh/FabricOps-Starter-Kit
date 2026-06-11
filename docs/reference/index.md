@@ -46,7 +46,7 @@ Use the finder below to look up public callables and internal support functions 
   <p class="reference-catalogue-item-purpose">Build source-to-target lineage evidence records for a pipeline run.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_lineage/" title="Open data_lineage module page" aria-label="Open data_lineage module page">data_lineage</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
-
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_current_audit_timestamp</code></li></ul></details>
 
   </div>
 </article>
@@ -109,7 +109,7 @@ Use the finder below to look up public callables and internal support functions 
   <p class="reference-catalogue-item-purpose">Profile a source or target DataFrame for schema, quality, and catalogue evidence.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_profiling/" title="Open data_profiling module page" aria-label="Open data_profiling module page">data_profiling</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">99_explore</span></p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 3</span></summary><ul><li><code>_build_distribution_summaries</code></li><li><code>_get_profiled_columns</code></li><li><code>_is_min_max_supported_type</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 5</span></summary><ul><li><code>_audit_timestamp_expr</code></li><li><code>_validate_audit_timezone</code></li><li><code>_build_distribution_summaries</code></li><li><code>_get_profiled_columns</code></li><li><code>_is_min_max_supported_type</code></li></ul></details>
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 3</span></summary><ul><li><code>enforce_catalogue_stability</code></li><li><code>_prepare_dq_profile_input_rows</code></li><li><code>run_table_guardrails</code></li></ul></details>
   </div>
 </article>
@@ -145,7 +145,7 @@ Use the finder below to look up public callables and internal support functions 
   <p class="reference-catalogue-item-purpose">Read a table from a configured Fabric lakehouse target.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">02_pipeline, 99_explore</span></p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>_get_store</code></li><li><code>_get_spark</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 6</span></summary><ul><li><code>_get_store</code></li><li><code>_current_database_matches</code></li><li><code>_get_spark</code></li><li><code>_normalize_table_name</code></li><li><code>_registered_table_identifier</code></li><li><code>_uses_registered_metadata_table</code></li></ul></details>
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 11</span></summary><ul><li><code>_ensure_metadata_tables</code></li><li><code>_list_all_data_agreement_rows</code></li><li><code>_list_data_stewards</code></li><li><code>enforce_catalogue_stability</code></li><li><code>_read_metadata_rows</code></li><li><code>_setup_governance_metadata_tables</code></li><li><code>enforce_dq_rules</code></li><li><code>load_catalogue_profile_rows</code></li><li><code>widget_select_catalogue_table</code></li><li><code>_load_notebook_registry</code></li><li><code>_setup_notebook_registry_table</code></li></ul></details>
   </div>
 </article>
@@ -172,7 +172,7 @@ Use the finder below to look up public callables and internal support functions 
   <p class="reference-catalogue-item-purpose">Run profiling, schema, stability, DQ, and catalogue guardrails for table configs.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/pipeline/" title="Open pipeline module page" aria-label="Open pipeline module page">pipeline</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">02_pipeline</span></p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 10</span></summary><ul><li><code>profile_dataframe</code></li><li><code>enforce_catalogue_stability</code></li><li><code>stop_if_failed</code></li><li><code>validate_schema</code></li><li><code>enforce_dq_rules</code></li><li><code>_build_guardrail_evidence_definitions</code></li><li><code>_guardrail_can_continue</code></li><li><code>_table_key</code></li><li><code>_table_name</code></li><li><code>write_catalogue_evidence</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 11</span></summary><ul><li><code>_get_audit_timezone</code></li><li><code>profile_dataframe</code></li><li><code>enforce_catalogue_stability</code></li><li><code>stop_if_failed</code></li><li><code>validate_schema</code></li><li><code>enforce_dq_rules</code></li><li><code>_build_guardrail_evidence_definitions</code></li><li><code>_guardrail_can_continue</code></li><li><code>_table_key</code></li><li><code>_table_name</code></li><li><code>write_catalogue_evidence</code></li></ul></details>
 
   </div>
 </article>
@@ -181,7 +181,7 @@ Use the finder below to look up public callables and internal support functions 
   <p class="reference-catalogue-item-purpose">Create or validate all FabricOps metadata tables through one setup action.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/config/" title="Open config module page" aria-label="Open config module page">config</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">00_env_config</span></p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 4</span></summary><ul><li><code>_setup_data_agreement_tables</code></li><li><code>get</code></li><li><code>_setup_governance_metadata_tables</code></li><li><code>_setup_notebook_registry_table</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 7</span></summary><ul><li><code>_get_active_metadata_tables</code></li><li><code>_metadata_tables_from_setup_results</code></li><li><code>_validate_metadata_table_registration</code></li><li><code>_setup_data_agreement_tables</code></li><li><code>get</code></li><li><code>_setup_governance_metadata_tables</code></li><li><code>_setup_notebook_registry_table</code></li></ul></details>
 
   </div>
 </article>
@@ -298,7 +298,7 @@ Use the finder below to look up public callables and internal support functions 
   <p class="reference-catalogue-item-purpose">Write a DataFrame to a configured Fabric lakehouse target.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">02_pipeline</span></p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_get_store</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 4</span></summary><ul><li><code>_get_store</code></li><li><code>_normalize_table_name</code></li><li><code>_registered_table_identifier</code></li><li><code>_uses_registered_metadata_table</code></li></ul></details>
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 10</span></summary><ul><li><code>_ensure_metadata_tables</code></li><li><code>_write_row</code></li><li><code>_review_governance_evidence</code></li><li><code>_setup_governance_metadata_tables</code></li><li><code>record_table_governance</code></li><li><code>_register_current_notebook</code></li><li><code>_setup_notebook_registry_table</code></li><li><code>write_catalogue_evidence</code></li><li><code>write_pipeline_lineage</code></li><li><code>write_pipeline_run_summary</code></li></ul></details>
   </div>
 </article>
@@ -352,7 +352,7 @@ Use the finder below to look up public callables and internal support functions 
   <p class="reference-catalogue-item-purpose">Return a DataFrame with standard FabricOps target audit columns.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/pipeline/" title="Open pipeline module page" aria-label="Open pipeline module page">pipeline</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
-
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_current_audit_timestamp</code></li></ul></details>
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>prepare_pipeline_table_configs</code></li></ul></details>
   </div>
 </article>
@@ -390,6 +390,15 @@ Use the finder below to look up public callables and internal support functions 
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>DatasetContractValidationError</code></li><li><code>_validate_dataset_contract</code></li></ul></details>
 
+  </div>
+</article>
+<article id="config-_audit_timestamp_expr" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_audit_timestamp_expr" data-callable-module="config" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Return a Spark expression for the current audit timestamp timezone.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/config__audit_timestamp_expr/"><code>_audit_timestamp_expr</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Return a Spark expression for the current audit timestamp timezone.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/config/" title="Open config module page" aria-label="Open config module page">config</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_get_audit_timezone</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>profile_dataframe</code></li></ul></details>
   </div>
 </article>
 <article id="data_profiling-_build_categorical_distribution" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_build_categorical_distribution" data-callable-module="data_profiling" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Internal helper used by the package.">
@@ -460,7 +469,7 @@ Use the finder below to look up public callables and internal support functions 
   <p class="reference-catalogue-item-purpose">Build metadata-ready lineage rows from validated lineage steps.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_lineage/" title="Open data_lineage module page" aria-label="Open data_lineage module page">data_lineage</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_validate_lineage_steps</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>_current_audit_timestamp</code></li><li><code>_validate_lineage_steps</code></li></ul></details>
 
   </div>
 </article>
@@ -496,7 +505,7 @@ Use the finder below to look up public callables and internal support functions 
   <p class="reference-catalogue-item-purpose">Build reusable framework-managed audit fields for metadata-table rows.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/metadata/" title="Open metadata module page" aria-label="Open metadata module page">metadata</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 3</span></summary><ul><li><code>_context_get</code></li><li><code>_runtime_context</code></li><li><code>_safe_str</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 4</span></summary><ul><li><code>_current_audit_timestamp</code></li><li><code>_context_get</code></li><li><code>_runtime_context</code></li><li><code>_safe_str</code></li></ul></details>
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 6</span></summary><ul><li><code>_create_or_update_data_agreement</code></li><li><code>_create_or_update_data_steward</code></li><li><code>_save_agreement_evidence_records</code></li><li><code>_approved_review_context</code></li><li><code>_review_governance_evidence</code></li><li><code>_runtime_audit_fields</code></li></ul></details>
   </div>
 </article>
@@ -644,6 +653,24 @@ Use the finder below to look up public callables and internal support functions 
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_render_maintenance_widget</code></li></ul></details>
   </div>
 </article>
+<article id="config-_current_audit_timestamp" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_current_audit_timestamp" data-callable-module="config" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Return the current audit timestamp in the configured audit timezone.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/config__current_audit_timestamp/"><code>_current_audit_timestamp</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Return the current audit timestamp in the configured audit timezone.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/config/" title="Open config module page" aria-label="Open config module page">config</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_get_audit_timezone</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 9</span></summary><ul><li><code>_build_lineage_records</code></li><li><code>build_lineage_records</code></li><li><code>_dq_summary</code></li><li><code>_prepare_dq_profile_input_rows</code></li><li><code>_build_runtime_audit_fields</code></li><li><code>_now_utc_iso</code></li><li><code>_register_current_notebook</code></li><li><code>_add_audit_columns</code></li><li><code>_now_iso</code></li></ul></details>
+  </div>
+</article>
+<article id="fabric_input_output-_current_database_matches" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_current_database_matches" data-callable-module="fabric_input_output" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Internal helper used by the package.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/fabric_input_output__current_database_matches/"><code>_current_database_matches</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Internal helper used by the package.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>read_lakehouse_table</code></li></ul></details>
+  </div>
+</article>
 <article id="metadata-_current_notebook_active_registrations" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_current_notebook_active_registrations" data-callable-module="metadata" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Return active agreement registrations for the running notebook.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/metadata__current_notebook_active_registrations/"><code>_current_notebook_active_registrations</code></a></h3>
   <p class="reference-catalogue-item-purpose">Return active agreement registrations for the running notebook.</p>
@@ -678,6 +705,15 @@ Use the finder below to look up public callables and internal support functions 
   <div class="reference-catalogue-item-counts">
 
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 2</span></summary><ul><li><code>_business_agreement_snapshot</code></li><li><code>_render_maintenance_widget</code></li></ul></details>
+  </div>
+</article>
+<article id="config-_detect_nested_metadata_delta_folders" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_detect_nested_metadata_delta_folders" data-callable-module="config" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Best-effort warning detector for legacy nested metadata Delta folders.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/config__detect_nested_metadata_delta_folders/"><code>_detect_nested_metadata_delta_folders</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Best-effort warning detector for legacy nested metadata Delta folders.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/config/" title="Open config module page" aria-label="Open config module page">config</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_get_store</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_validate_metadata_table_registration</code></li></ul></details>
   </div>
 </article>
 <article id="governance_review-_display_review_guidance" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_display_review_guidance" data-callable-module="governance_review" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Internal helper used by the package.">
@@ -757,7 +793,7 @@ Use the finder below to look up public callables and internal support functions 
   <p class="reference-catalogue-item-purpose">Build aggregate DQ fields for catalogue/profile evidence.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_summarize_dq_guardrail</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>_current_audit_timestamp</code></li><li><code>_summarize_dq_guardrail</code></li></ul></details>
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>enforce_dq_rules</code></li></ul></details>
   </div>
 </article>
@@ -878,6 +914,24 @@ Use the finder below to look up public callables and internal support functions 
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_create_or_update_data_steward</code></li></ul></details>
   </div>
 </article>
+<article id="config-_get_active_metadata_tables" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_get_active_metadata_tables" data-callable-module="config" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Return the canonical active metadata tables prepared by ``00_env_config``.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/config__get_active_metadata_tables/"><code>_get_active_metadata_tables</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Return the canonical active metadata tables prepared by ``00_env_config``.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/config/" title="Open config module page" aria-label="Open config module page">config</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>_validate_framework_config</code></li><li><code>_get_governance_metadata_schemas</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 2</span></summary><ul><li><code>_validate_metadata_table_registration</code></li><li><code>setup_metadata_tables</code></li></ul></details>
+  </div>
+</article>
+<article id="config-_get_audit_timezone" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_get_audit_timezone" data-callable-module="config" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Resolve the configured FabricOps audit timezone, defaulting to UTC.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/config__get_audit_timezone/"><code>_get_audit_timezone</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Resolve the configured FabricOps audit timezone, defaulting to UTC.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/config/" title="Open config module page" aria-label="Open config module page">config</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_validate_audit_timezone</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 4</span></summary><ul><li><code>_audit_timestamp_expr</code></li><li><code>_current_audit_timestamp</code></li><li><code>_prepare_dq_profile_input_rows</code></li><li><code>run_table_guardrails</code></li></ul></details>
+  </div>
+</article>
 <article id="config-_get_fabric_runtime_metadata" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_get_fabric_runtime_metadata" data-callable-module="config" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Best-effort retrieval of Fabric runtime metadata.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/config__get_fabric_runtime_metadata/"><code>_get_fabric_runtime_metadata</code></a></h3>
   <p class="reference-catalogue-item-purpose">Best-effort retrieval of Fabric runtime metadata.</p>
@@ -893,7 +947,7 @@ Use the finder below to look up public callables and internal support functions 
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>_schema</code></li><li><code>_spark_types</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_setup_governance_metadata_tables</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 2</span></summary><ul><li><code>_get_active_metadata_tables</code></li><li><code>_setup_governance_metadata_tables</code></li></ul></details>
   </div>
 </article>
 <article id="data_agreement-_get_notebookutils" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_get_notebookutils" data-callable-module="data_agreement" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Return a notebookutils-like object when the Fabric runtime exposes one.">
@@ -929,7 +983,7 @@ Use the finder below to look up public callables and internal support functions 
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/config/" title="Open config module page" aria-label="Open config module page">config</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
 
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 9</span></summary><ul><li><code>_run_config_smoke_tests</code></li><li><code>setup_notebook</code></li><li><code>read_lakehouse_csv</code></li><li><code>read_lakehouse_excel</code></li><li><code>read_lakehouse_parquet</code></li><li><code>read_lakehouse_table</code></li><li><code>read_warehouse_table</code></li><li><code>write_lakehouse_table</code></li><li><code>write_warehouse_table</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 11</span></summary><ul><li><code>_detect_nested_metadata_delta_folders</code></li><li><code>_run_config_smoke_tests</code></li><li><code>_show_tables_for_metadata_lakehouse</code></li><li><code>setup_notebook</code></li><li><code>read_lakehouse_csv</code></li><li><code>read_lakehouse_excel</code></li><li><code>read_lakehouse_parquet</code></li><li><code>read_lakehouse_table</code></li><li><code>read_warehouse_table</code></li><li><code>write_lakehouse_table</code></li><li><code>write_warehouse_table</code></li></ul></details>
   </div>
 </article>
 <article id="data_agreement-_get_widget_visible_fields" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_get_widget_visible_fields" data-callable-module="data_agreement" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Return configured editable columns without backend audit fields.">
@@ -1148,6 +1202,15 @@ Use the finder below to look up public callables and internal support functions 
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>enforce_catalogue_stability</code></li></ul></details>
   </div>
 </article>
+<article id="config-_metadata_tables_from_setup_results" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_metadata_tables_from_setup_results" data-callable-module="config" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Return ordered metadata table names from setup helper summaries.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/config__metadata_tables_from_setup_results/"><code>_metadata_tables_from_setup_results</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Return ordered metadata table names from setup helper summaries.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/config/" title="Open config module page" aria-label="Open config module page">config</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>setup_metadata_tables</code></li></ul></details>
+  </div>
+</article>
 <article id="data_agreement-_next_minor_version" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_next_minor_version" data-callable-module="data_agreement" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Return the next minor contract version, defaulting to ``1.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/data_agreement__next_minor_version/"><code>_next_minor_version</code></a></h3>
   <p class="reference-catalogue-item-purpose">Return the next minor contract version, defaulting to ``1.</p>
@@ -1175,6 +1238,15 @@ Use the finder below to look up public callables and internal support functions 
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 2</span></summary><ul><li><code>_normalize_profile</code></li><li><code>_stable_profile_payload</code></li></ul></details>
   </div>
 </article>
+<article id="fabric_input_output-_normalize_table_name" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_normalize_table_name" data-callable-module="fabric_input_output" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Return a safe Spark table name, never a nested folder path.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/fabric_input_output__normalize_table_name/"><code>_normalize_table_name</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Return a safe Spark table name, never a nested folder path.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 3</span></summary><ul><li><code>_registered_table_identifier</code></li><li><code>read_lakehouse_table</code></li><li><code>write_lakehouse_table</code></li></ul></details>
+  </div>
+</article>
 <article id="metadata-_notebook_registration_key" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_notebook_registration_key" data-callable-module="metadata" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Internal helper used by the package.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/metadata__notebook_registration_key/"><code>_notebook_registration_key</code></a></h3>
   <p class="reference-catalogue-item-purpose">Internal helper used by the package.</p>
@@ -1189,7 +1261,7 @@ Use the finder below to look up public callables and internal support functions 
   <p class="reference-catalogue-item-purpose">Internal helper used by the package.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/pipeline/" title="Open pipeline module page" aria-label="Open pipeline module page">pipeline</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
-
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_current_audit_timestamp</code></li></ul></details>
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 5</span></summary><ul><li><code>_dq_summary_fields</code></li><li><code>_runtime_audit_fields</code></li><li><code>write_catalogue_evidence</code></li><li><code>write_pipeline_lineage</code></li><li><code>write_pipeline_run_summary</code></li></ul></details>
   </div>
 </article>
@@ -1198,7 +1270,7 @@ Use the finder below to look up public callables and internal support functions 
   <p class="reference-catalogue-item-purpose">Internal helper used by the package.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/metadata/" title="Open metadata module page" aria-label="Open metadata module page">metadata</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
-
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_current_audit_timestamp</code></li></ul></details>
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 2</span></summary><ul><li><code>_approved_review_context</code></li><li><code>_review_governance_evidence</code></li></ul></details>
   </div>
 </article>
@@ -1252,7 +1324,7 @@ Use the finder below to look up public callables and internal support functions 
   <p class="reference-catalogue-item-purpose">Prepare DQ prompt profile rows from a profile DataFrame or raw DataFrame.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>profile_dataframe</code></li><li><code>_spark_sql_helpers</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 4</span></summary><ul><li><code>_current_audit_timestamp</code></li><li><code>_get_audit_timezone</code></li><li><code>profile_dataframe</code></li><li><code>_spark_sql_helpers</code></li></ul></details>
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_draft_dq_rules</code></li></ul></details>
   </div>
 </article>
@@ -1283,6 +1355,15 @@ Use the finder below to look up public callables and internal support functions 
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>enforce_catalogue_stability</code></li></ul></details>
   </div>
 </article>
+<article id="fabric_input_output-_quote_identifier" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_quote_identifier" data-callable-module="fabric_input_output" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Internal helper used by the package.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/fabric_input_output__quote_identifier/"><code>_quote_identifier</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Internal helper used by the package.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_registered_table_identifier</code></li></ul></details>
+  </div>
+</article>
 <article id="governance_review-_read_metadata_rows" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_read_metadata_rows" data-callable-module="governance_review" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Internal helper used by the package.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/governance_review__read_metadata_rows/"><code>_read_metadata_rows</code></a></h3>
   <p class="reference-catalogue-item-purpose">Internal helper used by the package.</p>
@@ -1297,8 +1378,17 @@ Use the finder below to look up public callables and internal support functions 
   <p class="reference-catalogue-item-purpose">Append a runtime notebook registration row.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/metadata/" title="Open metadata module page" aria-label="Open metadata module page">metadata</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 6</span></summary><ul><li><code>write_lakehouse_table</code></li><li><code>_context_get</code></li><li><code>_notebook_registration_key</code></li><li><code>_rows_for_spark</code></li><li><code>_runtime_context</code></li><li><code>_safe_str</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 7</span></summary><ul><li><code>_current_audit_timestamp</code></li><li><code>write_lakehouse_table</code></li><li><code>_context_get</code></li><li><code>_notebook_registration_key</code></li><li><code>_rows_for_spark</code></li><li><code>_runtime_context</code></li><li><code>_safe_str</code></li></ul></details>
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>widget_select_agreement</code></li></ul></details>
+  </div>
+</article>
+<article id="fabric_input_output-_registered_table_identifier" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_registered_table_identifier" data-callable-module="fabric_input_output" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Return a metadata lakehouse-qualified Spark table identifier.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/fabric_input_output__registered_table_identifier/"><code>_registered_table_identifier</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Return a metadata lakehouse-qualified Spark table identifier.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>_normalize_table_name</code></li><li><code>_quote_identifier</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 2</span></summary><ul><li><code>read_lakehouse_table</code></li><li><code>write_lakehouse_table</code></li></ul></details>
   </div>
 </article>
 <article id="metadata-_registry_rows_with_defaults" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_registry_rows_with_defaults" data-callable-module="metadata" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Internal helper used by the package.">
@@ -1544,6 +1634,15 @@ Use the finder below to look up public callables and internal support functions 
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>setup_metadata_tables</code></li></ul></details>
   </div>
 </article>
+<article id="config-_show_tables_for_metadata_lakehouse" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_show_tables_for_metadata_lakehouse" data-callable-module="config" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Inspect registered tables for the configured metadata lakehouse.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/config__show_tables_for_metadata_lakehouse/"><code>_show_tables_for_metadata_lakehouse</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Inspect registered tables for the configured metadata lakehouse.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/config/" title="Open config module page" aria-label="Open config module page">config</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_get_store</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_validate_metadata_table_registration</code></li></ul></details>
+  </div>
+</article>
 <article id="governance_review-_spark_sql_helpers" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_spark_sql_helpers" data-callable-module="governance_review" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Return Spark SQL helper modules lazily for DQ runtime helpers.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/governance_review__spark_sql_helpers/"><code>_spark_sql_helpers</code></a></h3>
   <p class="reference-catalogue-item-purpose">Return Spark SQL helper modules lazily for DQ runtime helpers.</p>
@@ -1670,6 +1769,24 @@ Use the finder below to look up public callables and internal support functions 
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 2</span></summary><ul><li><code>_collect_custom_fields</code></li><li><code>_render_maintenance_widget</code></li></ul></details>
   </div>
 </article>
+<article id="fabric_input_output-_uses_registered_metadata_table" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_uses_registered_metadata_table" data-callable-module="fabric_input_output" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Return whether a target should use Spark table registration.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/fabric_input_output__uses_registered_metadata_table/"><code>_uses_registered_metadata_table</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Return whether a target should use Spark table registration.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 2</span></summary><ul><li><code>read_lakehouse_table</code></li><li><code>write_lakehouse_table</code></li></ul></details>
+  </div>
+</article>
+<article id="config-_validate_audit_timezone" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_validate_audit_timezone" data-callable-module="config" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Return a valid IANA audit timezone name.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/config__validate_audit_timezone/"><code>_validate_audit_timezone</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Return a valid IANA audit timezone name.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/config/" title="Open config module page" aria-label="Open config module page">config</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 3</span></summary><ul><li><code>_get_audit_timezone</code></li><li><code>_validate_framework_config</code></li><li><code>profile_dataframe</code></li></ul></details>
+  </div>
+</article>
 <article id="config-_validate_dataset_contract" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_validate_dataset_contract" data-callable-module="config" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Validate a loaded dataset contract against the JSON schema.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/config__validate_dataset_contract/"><code>_validate_dataset_contract</code></a></h3>
   <p class="reference-catalogue-item-purpose">Validate a loaded dataset contract against the JSON schema.</p>
@@ -1693,8 +1810,8 @@ Use the finder below to look up public callables and internal support functions 
   <p class="reference-catalogue-item-purpose">Validate and normalize framework configuration input.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/config/" title="Open config module page" aria-label="Open config module page">config</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>FrameworkConfig</code></li><li><code>keys</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>setup_notebook</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 3</span></summary><ul><li><code>FrameworkConfig</code></li><li><code>_validate_audit_timezone</code></li><li><code>keys</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 3</span></summary><ul><li><code>_get_active_metadata_tables</code></li><li><code>_validate_metadata_table_registration</code></li><li><code>setup_notebook</code></li></ul></details>
   </div>
 </article>
 <article id="data_lineage-_validate_lineage_steps" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_validate_lineage_steps" data-callable-module="data_lineage" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Validate lineage step structure and flag records requiring human review.">
@@ -1704,6 +1821,15 @@ Use the finder below to look up public callables and internal support functions 
   <div class="reference-catalogue-item-counts">
 
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_build_lineage_records</code></li></ul></details>
+  </div>
+</article>
+<article id="config-_validate_metadata_table_registration" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_validate_metadata_table_registration" data-callable-module="config" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Validate that active metadata tables are registered in the Spark catalog.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/config__validate_metadata_table_registration/"><code>_validate_metadata_table_registration</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Validate that active metadata tables are registered in the Spark catalog.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/config/" title="Open config module page" aria-label="Open config module page">config</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 4</span></summary><ul><li><code>_detect_nested_metadata_delta_folders</code></li><li><code>_get_active_metadata_tables</code></li><li><code>_show_tables_for_metadata_lakehouse</code></li><li><code>_validate_framework_config</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>setup_metadata_tables</code></li></ul></details>
   </div>
 </article>
 <article id="config-_validate_notebook_name" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_validate_notebook_name" data-callable-module="config" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Internal helper used by the package.">

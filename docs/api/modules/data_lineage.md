@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 1</span><span class="reference-chip">Internal helpers: 7</span><span class="reference-chip">Outbound: 0</span><span class="reference-chip">Inbound: 0</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 1</span><span class="reference-chip">Internal helpers: 7</span><span class="reference-chip">Outbound: 1</span><span class="reference-chip">Inbound: 0</span></div>
 
 ## Module purpose
 
@@ -48,7 +48,7 @@ Owns source-to-target lineage and transformation evidence.
     </tr>
     <tr>
       <td>Outbound module count</td>
-      <td>0</td>
+      <td>1</td>
     </tr>
     <tr>
       <td>External callers</td>
@@ -56,7 +56,7 @@ Owns source-to-target lineage and transformation evidence.
     </tr>
     <tr>
       <td>External callees</td>
-      <td>—</td>
+      <td><code>config</code></td>
     </tr>
   </tbody>
 </table>
@@ -189,4 +189,5 @@ Owns source-to-target lineage and transformation evidence.
 None.
 ### External callees
 
-None.
+**config**
+<a class="reference-chip" href="../config/#_current_audit_timestamp"><code>_current_audit_timestamp</code></a>
