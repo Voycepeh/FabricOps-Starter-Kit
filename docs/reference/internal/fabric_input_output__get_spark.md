@@ -1,6 +1,6 @@
 # _get_spark
 
-**Module:** `fabric_input_output`  
+**Module:** `fabric_input_output`
 **Classification:** Internal
 
 ## Status
@@ -53,7 +53,7 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 - Classification: Internal
 - Related module: `fabric_input_output`
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a212c94775e71b6e429e41b51fbc57ac733903cb/src/fabricops_kit/fabric_input_output.py#L87-L117">View source on GitHub</a>
+- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/fabric_input_output.py#L125-L155">View source on GitHub</a>
 - Inbound references count: 5
 - Outbound references count: 0
 

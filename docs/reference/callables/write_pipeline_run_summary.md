@@ -193,7 +193,7 @@ Runtime summary row that was written.
 ## Source
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a212c94775e71b6e429e41b51fbc57ac733903cb/src/fabricops_kit/pipeline.py#L642-L750">View write_pipeline_run_summary on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/pipeline.py#L643-L751">View write_pipeline_run_summary on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -266,7 +266,7 @@ def write_pipeline_run_summary(
     "metadata", metadata_table, mode="append")`` so runtime evidence never
     relies on a default attached lakehouse.
     """
-    completed = completed_at or _now_iso()
+    completed = completed_at or _now_iso(config)
     started = started_at or completed
     sources = source_definitions or {}
     targets = target_definitions or {}
@@ -304,7 +304,7 @@ def write_pipeline_run_summary(
         "catalogue_status": catalogue_status,
         "message": message,
         "run_summary_json": json.dumps(run_summary, default=str, sort_keys=True),
-        "created_at": _now_iso(),
+        "created_at": _now_iso(config),
     }
     write_lakehouse_table(spark.createDataFrame([row]), config, env, "metadata", metadata_table, mode=mode)
     return row
@@ -325,7 +325,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `pipeline`
 - Source file path: `src/fabricops_kit/pipeline.py`
-- Source line: `642`
+- Source line: `643`
 - Inbound references count: 0
 - Outbound references count: 4
 
@@ -352,9 +352,9 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a212c94775e71b6e429e41b51fbc57ac733903cb/src/fabricops_kit/pipeline.py#L642-L750">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a212c94775e71b6e429e41b51fbc57ac733903cb/src/fabricops_kit/pipeline.py#L642-L750</a>
-- Start line: `642`
-- End line: `750`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/pipeline.py#L643-L751">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/pipeline.py#L643-L751</a>
+- Start line: `643`
+- End line: `751`
 - Signature:
 
 ```python

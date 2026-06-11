@@ -85,7 +85,7 @@ Enriched table configs and a dictionary keyed by table key.
 ## Source
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a212c94775e71b6e429e41b51fbc57ac733903cb/src/fabricops_kit/pipeline.py#L126-L220">View prepare_pipeline_table_configs on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/pipeline.py#L126-L220">View prepare_pipeline_table_configs on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -175,7 +175,7 @@ def prepare_pipeline_table_configs(
             target_kind = merged_config.get("target_kind", merged_config.get("kind", "lakehouse"))
             enriched_table = {
                 **merged_config,
-                "df": _add_audit_columns(merged_config["df"], run_id=run_id, pipeline_name=pipeline_name),
+                "df": _add_audit_columns(merged_config["df"], run_id=run_id, pipeline_name=pipeline_name, config=merged_config.get("config", default_settings.get("config"))),
                 "dataset_name": dataset_name,
                 "stage": stage,
                 "target_layer": target_layer,
@@ -228,7 +228,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a212c94775e71b6e429e41b51fbc57ac733903cb/src/fabricops_kit/pipeline.py#L126-L220">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a212c94775e71b6e429e41b51fbc57ac733903cb/src/fabricops_kit/pipeline.py#L126-L220</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/pipeline.py#L126-L220">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/pipeline.py#L126-L220</a>
 - Start line: `126`
 - End line: `220`
 - Signature:

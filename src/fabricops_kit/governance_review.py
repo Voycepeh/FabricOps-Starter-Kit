@@ -9,7 +9,7 @@ import re
 import uuid
 from typing import Any, Iterable
 
-from .config import DEFAULT_BUSINESS_CONTEXT_PROMPT_TEMPLATE, DEFAULT_DQ_RULE_SUGGESTION_PROMPT_TEMPLATE, DEFAULT_GOVERNANCE_PERSONAL_IDENTIFIER_PROMPT_TEMPLATE, _current_audit_timestamp
+from .config import DEFAULT_BUSINESS_CONTEXT_PROMPT_TEMPLATE, DEFAULT_DQ_RULE_SUGGESTION_PROMPT_TEMPLATE, DEFAULT_GOVERNANCE_PERSONAL_IDENTIFIER_PROMPT_TEMPLATE, _current_audit_timestamp, _get_audit_timezone
 from .fabric_input_output import read_lakehouse_table, write_lakehouse_table
 from .data_profiling import profile_dataframe
 from .metadata import _now_utc_iso, _resolve_action_by, _build_metadata_column_key, _build_metadata_table_key, _build_runtime_audit_fields, _build_dq_rule_key
@@ -779,7 +779,7 @@ def widget_review_dq_rules(
         try:
             prompt = getattr(getattr(config, "ai_prompt_config", None), "dq_rule_suggestion_prompt_template", "") if config is not None else ""
             profile_df = spark_session.createDataFrame(profile_rows) if spark_session is not None and not hasattr(profile_rows, "ai") else profile_rows
-            drafts = _draft_dq_rules(profile_df=profile_df, table_name=selected_table, business_context=business_context, prompt_template=prompt)
+            drafts = _draft_dq_rules(profile_df=profile_df, table_name=selected_table, business_context=business_context, prompt_template=prompt, config=config)
             for draft in drafts:
                 draft.update({"review_status": "draft", "is_active": False, "commit": False})
             review_rows.extend(drafts)
@@ -1592,12 +1592,12 @@ def enforce_dq_rules(
     result["summary"] = _dq_summary(checks, total_count, failed_row_count, config=config)
     return result
 
-def _prepare_dq_profile_input_rows(*, profile_df=None, df=None, table_name: str, business_context: str = ""):
+def _prepare_dq_profile_input_rows(*, profile_df=None, df=None, table_name: str, business_context: str = "", config: Any = None):
     """Prepare DQ prompt profile rows from a profile DataFrame or raw DataFrame."""
     if (profile_df is None) == (df is None):
         raise ValueError("Provide exactly one of profile_df or df.")
     if profile_df is None:
-        profile_df = profile_dataframe(df, table_name=table_name)
+        profile_df = profile_dataframe(df, table_name=table_name, run_timestamp_timezone=_get_audit_timezone(config))
     cols = set(profile_df.columns)
     if {"column_name", "data_type", "row_count", "null_count", "distinct_count"}.issubset(cols):
         return profile_df
@@ -1619,9 +1619,9 @@ def _prepare_dq_profile_input_rows(*, profile_df=None, df=None, table_name: str,
     )
 
 
-def _draft_dq_rules(*, profile_df=None, df=None, table_name: str, business_context: str = "", prompt_template: str | None = None, output_col: str = "response") -> list[dict[str, Any]]:
+def _draft_dq_rules(*, profile_df=None, df=None, table_name: str, business_context: str = "", prompt_template: str | None = None, output_col: str = "response", config: Any = None) -> list[dict[str, Any]]:
     """Draft candidate DQ rules from metadata profiles or a raw DataFrame fallback."""
-    prepared = _prepare_dq_profile_input_rows(profile_df=profile_df, df=df, table_name=table_name, business_context=business_context)
+    prepared = _prepare_dq_profile_input_rows(profile_df=profile_df, df=df, table_name=table_name, business_context=business_context, config=config)
     responses = _run_fabric_ai_drafting(prepared, prompt=prompt_template or DQ_RULE_SUGGESTION_PROMPT, output_col=output_col)
     candidates = _extract_assignment_payload(responses, response_col=output_col, assignment_key="DQ_RULES", table_name=table_name)
     by_id = {r.get("rule_id"): {**r, "rule_type": _canonical_dq_rule_type(r.get("rule_type"))} for r in candidates if r.get("rule_id")}

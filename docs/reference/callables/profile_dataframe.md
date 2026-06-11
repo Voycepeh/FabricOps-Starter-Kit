@@ -48,7 +48,7 @@ profile_rows_df = profile_dataframe(df, table_name="orders", include_distributio
     <tr>
       <td data-label="Parameter"><code>run_timestamp_timezone</code></td>
       <td data-label="Required">No</td>
-      <td data-label="Meaning">Time zone used for the ``RUN_TIMESTAMP`` evidence field.</td>
+      <td data-label="Meaning">IANA time zone used for the ``RUN_TIMESTAMP`` evidence field.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>include_distributions</code></td>
@@ -100,6 +100,8 @@ Spark DataFrame containing one profile row per eligible business column.
 - <a href="../enforce_catalogue_stability/"><code>fabricops_kit.drift.enforce_catalogue_stability</code></a>
 - <a href="../internal/governance_review__prepare_dq_profile_input_rows/"><code>fabricops_kit.governance_review._prepare_dq_profile_input_rows</code></a>
 - <a href="../run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
+- <a href="../internal/config__audit_timestamp_expr/"><code>fabricops_kit.config._audit_timestamp_expr</code></a>
+- <a href="../internal/config__validate_audit_timezone/"><code>fabricops_kit.config._validate_audit_timezone</code></a>
 - <a href="../internal/data_profiling__build_distribution_summaries/"><code>fabricops_kit.data_profiling._build_distribution_summaries</code></a>
 - <a href="../internal/data_profiling__get_profiled_columns/"><code>fabricops_kit.data_profiling._get_profiled_columns</code></a>
 - <a href="../internal/data_profiling__is_min_max_supported_type/"><code>fabricops_kit.data_profiling._is_min_max_supported_type</code></a>
@@ -109,7 +111,7 @@ Spark DataFrame containing one profile row per eligible business column.
 ## Source
 
 - Source file path: `src/fabricops_kit/data_profiling.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a212c94775e71b6e429e41b51fbc57ac733903cb/src/fabricops_kit/data_profiling.py#L223-L337">View profile_dataframe on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/data_profiling.py#L225-L340">View profile_dataframe on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -120,7 +122,7 @@ def profile_dataframe(
     table_name: str,
     *,
     exclude_columns=None,
-    run_timestamp_timezone="Asia/Singapore",
+    run_timestamp_timezone="UTC",
     include_distributions: bool = False,
     distribution_columns: list[str] | set[str] | tuple[str, ...] | None = None,
     distribution_bin_edges: dict[str, list[float]] | None = None,
@@ -137,8 +139,8 @@ def profile_dataframe(
         Logical table name written into each profile row.
     exclude_columns : list[str] or set[str], optional
         Additional columns to skip, on top of the standard technical columns.
-    run_timestamp_timezone : str, default="Asia/Singapore"
-        Time zone used for the ``RUN_TIMESTAMP`` evidence field.
+    run_timestamp_timezone : str, default="UTC"
+        IANA time zone used for the ``RUN_TIMESTAMP`` evidence field.
     include_distributions : bool, default=False
         When true, add lightweight distribution summaries for suitable numeric
         and categorical columns. The default preserves the existing lightweight
@@ -173,6 +175,7 @@ def profile_dataframe(
     """
     from pyspark.sql import functions as F
 
+    run_timestamp_timezone = _validate_audit_timezone(run_timestamp_timezone)
     eligible_columns = _get_profiled_columns(df, exclude_columns=exclude_columns)
     if not eligible_columns:
         raise ValueError("No eligible non-technical columns found for metadata profiling.")
@@ -205,7 +208,7 @@ def profile_dataframe(
     for column_name in eligible_columns:
         select_exprs = [
             F.lit(table_name).alias("TABLE_NAME"),
-            F.from_utc_timestamp(F.current_timestamp(), run_timestamp_timezone).alias("RUN_TIMESTAMP"),
+            _audit_timestamp_expr(timezone_name=run_timestamp_timezone).alias("RUN_TIMESTAMP"),
             F.lit(column_name).alias("COLUMN_NAME"),
             F.lit(dtype_map[column_name]).alias("DATA_TYPE"),
             F.lit(row_count).alias("ROW_COUNT"),
@@ -247,9 +250,9 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `data_profiling`
 - Source file path: `src/fabricops_kit/data_profiling.py`
-- Source line: `223`
+- Source line: `225`
 - Inbound references count: 3
-- Outbound references count: 3
+- Outbound references count: 5
 
 ### AI implementation contract
 
@@ -268,6 +271,8 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 
 ### Outbound references
 
+- <a href="../internal/config__audit_timestamp_expr/"><code>fabricops_kit.config._audit_timestamp_expr</code></a>
+- <a href="../internal/config__validate_audit_timezone/"><code>fabricops_kit.config._validate_audit_timezone</code></a>
 - <a href="../internal/data_profiling__build_distribution_summaries/"><code>fabricops_kit.data_profiling._build_distribution_summaries</code></a>
 - <a href="../internal/data_profiling__get_profiled_columns/"><code>fabricops_kit.data_profiling._get_profiled_columns</code></a>
 - <a href="../internal/data_profiling__is_min_max_supported_type/"><code>fabricops_kit.data_profiling._is_min_max_supported_type</code></a>
@@ -275,13 +280,13 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/data_profiling.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a212c94775e71b6e429e41b51fbc57ac733903cb/src/fabricops_kit/data_profiling.py#L223-L337">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a212c94775e71b6e429e41b51fbc57ac733903cb/src/fabricops_kit/data_profiling.py#L223-L337</a>
-- Start line: `223`
-- End line: `337`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/data_profiling.py#L225-L340">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/data_profiling.py#L225-L340</a>
+- Start line: `225`
+- End line: `340`
 - Signature:
 
 ```python
-def profile_dataframe(df, table_name: str, *, exclude_columns=None, run_timestamp_timezone='Asia/Singapore', include_distributions: bool=False, distribution_columns: list[str] | set[str] | tuple[str, ...] | None=None, distribution_bin_edges: dict[str, list[float]] | None=None, categorical_categories: dict[str, list[str]] | None=None, categorical_top_n: int=20)
+def profile_dataframe(df, table_name: str, *, exclude_columns=None, run_timestamp_timezone='UTC', include_distributions: bool=False, distribution_columns: list[str] | set[str] | tuple[str, ...] | None=None, distribution_bin_edges: dict[str, list[float]] | None=None, categorical_categories: dict[str, list[str]] | None=None, categorical_top_n: int=20)
 ```
 
 ### Internal relationship graph
@@ -296,6 +301,8 @@ def profile_dataframe(df, table_name: str, *, exclude_columns=None, run_timestam
 - <a href="../enforce_catalogue_stability/"><code>fabricops_kit.drift.enforce_catalogue_stability</code></a>
 - <a href="../internal/governance_review__prepare_dq_profile_input_rows/"><code>fabricops_kit.governance_review._prepare_dq_profile_input_rows</code></a>
 - <a href="../run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
+- <a href="../internal/config__audit_timestamp_expr/"><code>fabricops_kit.config._audit_timestamp_expr</code></a>
+- <a href="../internal/config__validate_audit_timezone/"><code>fabricops_kit.config._validate_audit_timezone</code></a>
 - <a href="../internal/data_profiling__build_distribution_summaries/"><code>fabricops_kit.data_profiling._build_distribution_summaries</code></a>
 - <a href="../internal/data_profiling__get_profiled_columns/"><code>fabricops_kit.data_profiling._get_profiled_columns</code></a>
 - <a href="../internal/data_profiling__is_min_max_supported_type/"><code>fabricops_kit.data_profiling._is_min_max_supported_type</code></a>

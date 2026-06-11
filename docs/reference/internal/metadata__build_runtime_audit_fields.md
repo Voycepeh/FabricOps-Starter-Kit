@@ -54,9 +54,9 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 - Classification: Internal
 - Related module: `metadata`
 - Source file path: `src/fabricops_kit/metadata.py`
-- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a212c94775e71b6e429e41b51fbc57ac733903cb/src/fabricops_kit/metadata.py#L218-L288">View source on GitHub</a>
+- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/metadata.py#L219-L289">View source on GitHub</a>
 - Inbound references count: 6
-- Outbound references count: 3
+- Outbound references count: 4
 
 ## Inbound references
 - <a href="../internal/data_agreement__create_or_update_data_agreement/"><code>fabricops_kit.data_agreement._create_or_update_data_agreement</code></a>
@@ -67,6 +67,7 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 - <a href="../internal/pipeline__runtime_audit_fields/"><code>fabricops_kit.pipeline._runtime_audit_fields</code></a>
 
 ## Outbound references
+- <a href="../internal/config__current_audit_timestamp/"><code>fabricops_kit.config._current_audit_timestamp</code></a>
 - <a href="../internal/metadata__context_get/"><code>fabricops_kit.metadata._context_get</code></a>
 - <a href="../internal/metadata__runtime_context/"><code>fabricops_kit.metadata._runtime_context</code></a>
 - <a href="../internal/metadata__safe_str/"><code>fabricops_kit.metadata._safe_str</code></a>

@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 0</span><span class="reference-chip">Internal helpers: 18</span><span class="reference-chip">Outbound: 1</span><span class="reference-chip">Inbound: 4</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 0</span><span class="reference-chip">Internal helpers: 18</span><span class="reference-chip">Outbound: 2</span><span class="reference-chip">Inbound: 4</span></div>
 
 ## Module purpose
 
@@ -48,7 +48,7 @@ Owns metadata evidence persistence, stable keys, notebook registry, catalogue ke
     </tr>
     <tr>
       <td>Outbound module count</td>
-      <td>1</td>
+      <td>2</td>
     </tr>
     <tr>
       <td>External callers</td>
@@ -56,7 +56,7 @@ Owns metadata evidence persistence, stable keys, notebook registry, catalogue ke
     </tr>
     <tr>
       <td>External callees</td>
-      <td><code>fabric_input_output</code></td>
+      <td><code>config</code>, <code>fabric_input_output</code></td>
     </tr>
   </tbody>
 </table>
@@ -265,6 +265,9 @@ No public exports in this module.
 <a class="reference-chip" href="../pipeline/#_runtime_audit_fields"><code>_runtime_audit_fields</code></a>, <a class="reference-chip" href="../../reference/write_catalogue_evidence/"><code>write_catalogue_evidence</code></a>, <a class="reference-chip" href="../../reference/write_pipeline_lineage/"><code>write_pipeline_lineage</code></a>
 
 ### External callees
+
+**config**
+<a class="reference-chip" href="../config/#_current_audit_timestamp"><code>_current_audit_timestamp</code></a>
 
 **fabric_input_output**
 <a class="reference-chip" href="../../reference/read_lakehouse_table/"><code>read_lakehouse_table</code></a>, <a class="reference-chip" href="../../reference/write_lakehouse_table/"><code>write_lakehouse_table</code></a>

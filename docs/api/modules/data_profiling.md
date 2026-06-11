@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 1</span><span class="reference-chip">Internal helpers: 6</span><span class="reference-chip">Outbound: 0</span><span class="reference-chip">Inbound: 3</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 1</span><span class="reference-chip">Internal helpers: 6</span><span class="reference-chip">Outbound: 1</span><span class="reference-chip">Inbound: 3</span></div>
 
 ## Module purpose
 
@@ -48,7 +48,7 @@ Owns deterministic profiling evidence such as schema, nulls, distincts, min/max,
     </tr>
     <tr>
       <td>Outbound module count</td>
-      <td>0</td>
+      <td>1</td>
     </tr>
     <tr>
       <td>External callers</td>
@@ -56,7 +56,7 @@ Owns deterministic profiling evidence such as schema, nulls, distincts, min/max,
     </tr>
     <tr>
       <td>External callees</td>
-      <td>—</td>
+      <td><code>config</code></td>
     </tr>
   </tbody>
 </table>
@@ -186,4 +186,5 @@ Owns deterministic profiling evidence such as schema, nulls, distincts, min/max,
 
 ### External callees
 
-None.
+**config**
+<a class="reference-chip" href="../config/#_audit_timestamp_expr"><code>_audit_timestamp_expr</code></a>, <a class="reference-chip" href="../config/#_validate_audit_timezone"><code>_validate_audit_timezone</code></a>

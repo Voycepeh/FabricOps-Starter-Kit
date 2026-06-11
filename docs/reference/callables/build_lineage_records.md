@@ -55,6 +55,11 @@ lineage_rows = build_lineage_records(dataset_name=dataset_name, run_id=run_id, s
       <td data-label="Required">Yes</td>
       <td data-label="Meaning">Transformation step dictionaries to merge into each output row.</td>
     </tr>
+    <tr>
+      <td data-label="Parameter"><code>config</code></td>
+      <td data-label="Required">No</td>
+      <td data-label="Meaning">Framework configuration used to resolve the configured audit timezone when adding timestamp metadata.</td>
+    </tr>
   </tbody>
 </table>
 </div>
@@ -74,16 +79,23 @@ List of lineage record dictionaries suitable for metadata persistence.
 - <a href="../setup_notebook/"><code>fabricops_kit.config.setup_notebook</code></a>
 - <a href="../write_lakehouse_table/"><code>fabricops_kit.fabric_input_output.write_lakehouse_table</code></a>
 
+<details class="reference-implementation-details">
+<summary>Implementation details</summary>
+
+- <a href="../internal/config__current_audit_timestamp/"><code>fabricops_kit.config._current_audit_timestamp</code></a>
+
+</details>
+
 ## Source
 
 - Source file path: `src/fabricops_kit/data_lineage.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a212c94775e71b6e429e41b51fbc57ac733903cb/src/fabricops_kit/data_lineage.py#L209-L230">View build_lineage_records on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/data_lineage.py#L212-L236">View build_lineage_records on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
 
 ```python
-def build_lineage_records(*, dataset_name: str, run_id: str, source_tables: list[str], target_table: str, transformation_steps: list[dict]) -> list[dict]:
+def build_lineage_records(*, dataset_name: str, run_id: str, source_tables: list[str], target_table: str, transformation_steps: list[dict], config: Any = None) -> list[dict]:
     """Build compact lineage records for downstream metadata sinks.
 
     Parameters
@@ -98,13 +110,16 @@ def build_lineage_records(*, dataset_name: str, run_id: str, source_tables: list
         Target table name produced by the run.
     transformation_steps : list of dict
         Transformation step dictionaries to merge into each output row.
+    config : Any, optional
+        Framework configuration used to resolve the configured audit timezone
+        when adding timestamp metadata.
 
     Returns
     -------
     list of dict
         Row dictionaries suitable for metadata persistence.
     """
-    return [{"run_id": run_id, "dataset_name": dataset_name, "source_tables": source_tables, "target_table": target_table, **s} for s in transformation_steps]
+    return [{"run_id": run_id, "dataset_name": dataset_name, "source_tables": source_tables, "target_table": target_table, **({"created_ts": _current_audit_timestamp(config=config, drop_microseconds=False)} if config is not None else {}), **s} for s in transformation_steps]
 ```
 
 </details>
@@ -122,9 +137,9 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `data_lineage`
 - Source file path: `src/fabricops_kit/data_lineage.py`
-- Source line: `209`
+- Source line: `212`
 - Inbound references count: 0
-- Outbound references count: 0
+- Outbound references count: 1
 
 ### AI implementation contract
 
@@ -141,18 +156,18 @@ Not documented yet
 
 ### Outbound references
 
-Not documented yet
+- <a href="../internal/config__current_audit_timestamp/"><code>fabricops_kit.config._current_audit_timestamp</code></a>
 
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/data_lineage.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a212c94775e71b6e429e41b51fbc57ac733903cb/src/fabricops_kit/data_lineage.py#L209-L230">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a212c94775e71b6e429e41b51fbc57ac733903cb/src/fabricops_kit/data_lineage.py#L209-L230</a>
-- Start line: `209`
-- End line: `230`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/data_lineage.py#L212-L236">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/data_lineage.py#L212-L236</a>
+- Start line: `212`
+- End line: `236`
 - Signature:
 
 ```python
-def build_lineage_records(*, dataset_name: str, run_id: str, source_tables: list[str], target_table: str, transformation_steps: list[dict]) -> list[dict]
+def build_lineage_records(*, dataset_name: str, run_id: str, source_tables: list[str], target_table: str, transformation_steps: list[dict], config: Any=None) -> list[dict]
 ```
 
 ### Internal relationship graph
@@ -164,6 +179,6 @@ def build_lineage_records(*, dataset_name: str, run_id: str, source_tables: list
 
 ### Internal implementation helpers
 
-Not documented yet
+- <a href="../internal/config__current_audit_timestamp/"><code>fabricops_kit.config._current_audit_timestamp</code></a>
 
 </details>

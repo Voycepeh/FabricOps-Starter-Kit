@@ -26,7 +26,7 @@ Prepare DQ prompt profile rows from a profile DataFrame or raw DataFrame.
 ## Signature if available
 
 ```python
-def _prepare_dq_profile_input_rows(*, profile_df=None, df=None, table_name: str, business_context: str='')
+def _prepare_dq_profile_input_rows(*, profile_df=None, df=None, table_name: str, business_context: str='', config: Any=None)
 ```
 
 ## Side effects
@@ -49,13 +49,15 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 - Classification: Internal
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
-- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a212c94775e71b6e429e41b51fbc57ac733903cb/src/fabricops_kit/governance_review.py#L1596-L1620">View source on GitHub</a>
+- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/governance_review.py#L1595-L1619">View source on GitHub</a>
 - Inbound references count: 1
-- Outbound references count: 2
+- Outbound references count: 4
 
 ## Inbound references
 - <a href="../internal/governance_review__draft_dq_rules/"><code>fabricops_kit.governance_review._draft_dq_rules</code></a>
 
 ## Outbound references
+- <a href="../internal/config__current_audit_timestamp/"><code>fabricops_kit.config._current_audit_timestamp</code></a>
+- <a href="../internal/config__get_audit_timezone/"><code>fabricops_kit.config._get_audit_timezone</code></a>
 - <a href="../profile_dataframe/"><code>fabricops_kit.data_profiling.profile_dataframe</code></a>
 - <a href="../internal/governance_review__spark_sql_helpers/"><code>fabricops_kit.governance_review._spark_sql_helpers</code></a>

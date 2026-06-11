@@ -1,6 +1,6 @@
 # _get_store
 
-**Module:** `config`  
+**Module:** `config`
 **Classification:** Internal
 
 ## Status
@@ -17,7 +17,9 @@ Do not call this helper directly from notebooks; use the public callable helpers
 
 ## Used by
 
+- <a href="../internal/config__detect_nested_metadata_delta_folders/"><code>fabricops_kit.config._detect_nested_metadata_delta_folders</code></a>
 - <a href="../internal/config__run_config_smoke_tests/"><code>fabricops_kit.config._run_config_smoke_tests</code></a>
+- <a href="../internal/config__show_tables_for_metadata_lakehouse/"><code>fabricops_kit.config._show_tables_for_metadata_lakehouse</code></a>
 - <a href="../setup_notebook/"><code>fabricops_kit.config.setup_notebook</code></a>
 - <a href="../read_lakehouse_csv/"><code>fabricops_kit.fabric_input_output.read_lakehouse_csv</code></a>
 - <a href="../read_lakehouse_excel/"><code>fabricops_kit.fabric_input_output.read_lakehouse_excel</code></a>
@@ -57,12 +59,14 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 - Classification: Internal
 - Related module: `config`
 - Source file path: `src/fabricops_kit/config.py`
-- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a212c94775e71b6e429e41b51fbc57ac733903cb/src/fabricops_kit/config.py#L548-L588">View source on GitHub</a>
-- Inbound references count: 9
+- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/config.py#L618-L658">View source on GitHub</a>
+- Inbound references count: 11
 - Outbound references count: 0
 
 ## Inbound references
+- <a href="../internal/config__detect_nested_metadata_delta_folders/"><code>fabricops_kit.config._detect_nested_metadata_delta_folders</code></a>
 - <a href="../internal/config__run_config_smoke_tests/"><code>fabricops_kit.config._run_config_smoke_tests</code></a>
+- <a href="../internal/config__show_tables_for_metadata_lakehouse/"><code>fabricops_kit.config._show_tables_for_metadata_lakehouse</code></a>
 - <a href="../setup_notebook/"><code>fabricops_kit.config.setup_notebook</code></a>
 - <a href="../read_lakehouse_csv/"><code>fabricops_kit.fabric_input_output.read_lakehouse_csv</code></a>
 - <a href="../read_lakehouse_excel/"><code>fabricops_kit.fabric_input_output.read_lakehouse_excel</code></a>

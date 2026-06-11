@@ -91,14 +91,18 @@ Spark DataFrame loaded from the configured lakehouse table.
 - <a href="../internal/metadata__load_notebook_registry/"><code>fabricops_kit.metadata._load_notebook_registry</code></a>
 - <a href="../internal/metadata__setup_notebook_registry_table/"><code>fabricops_kit.metadata._setup_notebook_registry_table</code></a>
 - <a href="../internal/config__get_store/"><code>fabricops_kit.config._get_store</code></a>
+- <a href="../internal/fabric_input_output__current_database_matches/"><code>fabricops_kit.fabric_input_output._current_database_matches</code></a>
 - <a href="../internal/fabric_input_output__get_spark/"><code>fabricops_kit.fabric_input_output._get_spark</code></a>
+- <a href="../internal/fabric_input_output__normalize_table_name/"><code>fabricops_kit.fabric_input_output._normalize_table_name</code></a>
+- <a href="../internal/fabric_input_output__registered_table_identifier/"><code>fabricops_kit.fabric_input_output._registered_table_identifier</code></a>
+- <a href="../internal/fabric_input_output__uses_registered_metadata_table/"><code>fabricops_kit.fabric_input_output._uses_registered_metadata_table</code></a>
 
 </details>
 
 ## Source
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a212c94775e71b6e429e41b51fbc57ac733903cb/src/fabricops_kit/fabric_input_output.py#L133-L178">View read_lakehouse_table on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/fabric_input_output.py#L171-L224">View read_lakehouse_table on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -144,11 +148,19 @@ def read_lakehouse_table(config, env, target, table, spark_session=None):
     store = _get_store(config, env, target)
     if store.kind != "lakehouse":
         raise ValueError(f"Target '{env}/{target}' is not a lakehouse store.")
-    if not table:
-        raise ValueError("table is required.")
+    table_name = _normalize_table_name(table)
 
     spark_obj = _get_spark(spark_session)
-    path = f"{store.root.rstrip('/')}/Tables/{table}"
+    if _uses_registered_metadata_table(target):
+        try:
+            return spark_obj.table(_registered_table_identifier(store, table_name))
+        except Exception:
+            if _current_database_matches(spark_obj, store):
+                try:
+                    return spark_obj.table(table_name)
+                except Exception:
+                    pass
+    path = f"{store.root.rstrip('/')}/Tables/{table_name}"
     return spark_obj.read.format("delta").load(path)
 ```
 
@@ -167,9 +179,9 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `fabric_input_output`
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- Source line: `133`
+- Source line: `171`
 - Inbound references count: 11
-- Outbound references count: 2
+- Outbound references count: 6
 
 ### AI implementation contract
 
@@ -197,14 +209,18 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 ### Outbound references
 
 - <a href="../internal/config__get_store/"><code>fabricops_kit.config._get_store</code></a>
+- <a href="../internal/fabric_input_output__current_database_matches/"><code>fabricops_kit.fabric_input_output._current_database_matches</code></a>
 - <a href="../internal/fabric_input_output__get_spark/"><code>fabricops_kit.fabric_input_output._get_spark</code></a>
+- <a href="../internal/fabric_input_output__normalize_table_name/"><code>fabricops_kit.fabric_input_output._normalize_table_name</code></a>
+- <a href="../internal/fabric_input_output__registered_table_identifier/"><code>fabricops_kit.fabric_input_output._registered_table_identifier</code></a>
+- <a href="../internal/fabric_input_output__uses_registered_metadata_table/"><code>fabricops_kit.fabric_input_output._uses_registered_metadata_table</code></a>
 
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a212c94775e71b6e429e41b51fbc57ac733903cb/src/fabricops_kit/fabric_input_output.py#L133-L178">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a212c94775e71b6e429e41b51fbc57ac733903cb/src/fabricops_kit/fabric_input_output.py#L133-L178</a>
-- Start line: `133`
-- End line: `178`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/fabric_input_output.py#L171-L224">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/fabric_input_output.py#L171-L224</a>
+- Start line: `171`
+- End line: `224`
 - Signature:
 
 ```python
@@ -234,6 +250,10 @@ def read_lakehouse_table(config, env, target, table, spark_session=None)
 - <a href="../internal/metadata__load_notebook_registry/"><code>fabricops_kit.metadata._load_notebook_registry</code></a>
 - <a href="../internal/metadata__setup_notebook_registry_table/"><code>fabricops_kit.metadata._setup_notebook_registry_table</code></a>
 - <a href="../internal/config__get_store/"><code>fabricops_kit.config._get_store</code></a>
+- <a href="../internal/fabric_input_output__current_database_matches/"><code>fabricops_kit.fabric_input_output._current_database_matches</code></a>
 - <a href="../internal/fabric_input_output__get_spark/"><code>fabricops_kit.fabric_input_output._get_spark</code></a>
+- <a href="../internal/fabric_input_output__normalize_table_name/"><code>fabricops_kit.fabric_input_output._normalize_table_name</code></a>
+- <a href="../internal/fabric_input_output__registered_table_identifier/"><code>fabricops_kit.fabric_input_output._registered_table_identifier</code></a>
+- <a href="../internal/fabric_input_output__uses_registered_metadata_table/"><code>fabricops_kit.fabric_input_output._uses_registered_metadata_table</code></a>
 
 </details>

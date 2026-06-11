@@ -1,6 +1,6 @@
 # _validate_framework_config
 
-**Module:** `config`  
+**Module:** `config`
 **Classification:** Internal
 
 ## Status
@@ -17,6 +17,8 @@ Do not call this helper directly from notebooks; use the public callable helpers
 
 ## Used by
 
+- <a href="../internal/config__get_active_metadata_tables/"><code>fabricops_kit.config._get_active_metadata_tables</code></a>
+- <a href="../internal/config__validate_metadata_table_registration/"><code>fabricops_kit.config._validate_metadata_table_registration</code></a>
 - <a href="../setup_notebook/"><code>fabricops_kit.config.setup_notebook</code></a>
 
 ## Purpose
@@ -49,12 +51,15 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 - Classification: Internal
 - Related module: `config`
 - Source file path: `src/fabricops_kit/config.py`
-- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a212c94775e71b6e429e41b51fbc57ac733903cb/src/fabricops_kit/config.py#L470-L545">View source on GitHub</a>
-- Inbound references count: 1
-- Outbound references count: 2
+- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/config.py#L539-L615">View source on GitHub</a>
+- Inbound references count: 3
+- Outbound references count: 3
 
 ## Inbound references
+- <a href="../internal/config__get_active_metadata_tables/"><code>fabricops_kit.config._get_active_metadata_tables</code></a>
+- <a href="../internal/config__validate_metadata_table_registration/"><code>fabricops_kit.config._validate_metadata_table_registration</code></a>
 - <a href="../setup_notebook/"><code>fabricops_kit.config.setup_notebook</code></a>
 
 ## Outbound references
 - <a href="../internal/config_FrameworkConfig/"><code>fabricops_kit.config.FrameworkConfig</code></a>
+- <a href="../internal/config__validate_audit_timezone/"><code>fabricops_kit.config._validate_audit_timezone</code></a>
