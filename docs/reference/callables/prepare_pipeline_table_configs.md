@@ -1,0 +1,251 @@
+# prepare_pipeline_table_configs
+
+Prepare source or target table configs for 02_pipeline.
+
+## What this is for and when to use it
+
+Prepare source or target table configs for 02_pipeline.
+
+- Use after SOURCE_TABLES or TARGET_TABLES and their defaults are defined to derive standard config fields or add target audit columns.
+
+## When not to use it
+
+- Do not use for ad hoc reads or writes outside the pipeline table-config pattern.
+
+## Example
+
+```python
+SOURCE_TABLES, SOURCE_CONFIG_BY_KEY = prepare_pipeline_table_configs(SOURCE_TABLES, DEFAULT_SOURCE_GUARDRAILS, table_role="source")
+```
+
+## Inputs
+
+<div class="module-table-scroll reference-input-table">
+<table class="reference-function-table">
+  <thead>
+    <tr>
+      <th>Parameter</th>
+      <th>Required</th>
+      <th>Meaning</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td data-label="Parameter"><code>table_configs</code></td>
+      <td data-label="Required">Yes</td>
+      <td data-label="Meaning">User-authored table config dictionaries from ``SOURCE_TABLES`` or ``TARGET_TABLES``.</td>
+    </tr>
+    <tr>
+      <td data-label="Parameter"><code>default_settings</code></td>
+      <td data-label="Required">Yes</td>
+      <td data-label="Meaning">Default guardrails, and for targets write options, merged before each table config. Table-specific values take precedence.</td>
+    </tr>
+    <tr>
+      <td data-label="Parameter"><code>table_role</code></td>
+      <td data-label="Required">Yes</td>
+      <td data-label="Meaning">Role-specific preparation mode. Source mode validates that each config already includes a DataFrame; target mode adds FabricOps audit columns and derives write metadata.</td>
+    </tr>
+    <tr>
+      <td data-label="Parameter"><code>run_id</code></td>
+      <td data-label="Required">No</td>
+      <td data-label="Meaning">Pipeline run identifier used for target audit columns. Required for target role.</td>
+    </tr>
+    <tr>
+      <td data-label="Parameter"><code>pipeline_name</code></td>
+      <td data-label="Required">No</td>
+      <td data-label="Meaning">Pipeline name used for target audit columns. Required for target role.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+## Output
+
+Enriched table configs and a dictionary keyed by table key.
+
+## Errors and side effects
+
+**Errors:** ValueError
+    If ``table_role`` is not ``"source"`` or ``"target"``.
+
+**Side effects:** Source role validates pre-loaded DataFrames. Target role adds FabricOps audit columns to target DataFrames.
+
+## Related functions
+
+- <a href="../run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
+- <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a>
+
+<details class="reference-implementation-details">
+<summary>Implementation details</summary>
+
+- <a href="../internal/pipeline__add_audit_columns/"><code>fabricops_kit.pipeline._add_audit_columns</code></a>
+
+</details>
+
+## Source
+
+- Source file path: `src/fabricops_kit/pipeline.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a212c94775e71b6e429e41b51fbc57ac733903cb/src/fabricops_kit/pipeline.py#L126-L220">View prepare_pipeline_table_configs on GitHub</a>
+
+<details class="reference-source-details">
+<summary>Show source code</summary>
+
+```python
+def prepare_pipeline_table_configs(
+    table_configs: list[dict[str, Any]],
+    default_settings: Mapping[str, Any],
+    *,
+    table_role: str,
+    run_id: str = "",
+    pipeline_name: str = "",
+) -> tuple[list[dict[str, Any]], dict[str, dict[str, Any]]]:
+    """Prepare source or target table configs for a pipeline notebook.
+
+    Parameters
+    ----------
+    table_configs : list of dict
+        User-authored table config dictionaries from ``SOURCE_TABLES`` or
+        ``TARGET_TABLES``.
+    default_settings : mapping
+        Default guardrails, and for targets write options, merged before each
+        table config. Table-specific values take precedence.
+    table_role : {"source", "target"}
+        Role-specific preparation mode. Source mode validates that each config
+        already includes a DataFrame; target mode adds FabricOps audit columns
+        and derives write metadata.
+    run_id : str, optional
+        Pipeline run identifier used for target audit columns. Required for
+        target role.
+    pipeline_name : str, optional
+        Pipeline name used for target audit columns. Required for target role.
+
+    Returns
+    -------
+    tuple[list[dict[str, Any]], dict[str, dict[str, Any]]]
+        Enriched table configs and a lookup keyed by table ``key``.
+
+    Raises
+    ------
+    ValueError
+        If ``table_role`` is not ``"source"`` or ``"target"``.
+
+    Notes
+    -----
+    Source configs derive ``dataset_name`` from ``table_name``, ``stage`` from
+    ``layer``, and ``watermark_value`` from the individual table config only.
+    ``watermark_value`` defaults to ``None`` and is never inherited from
+    ``default_settings``. Source
+    DataFrames must be loaded directly in the notebook with the existing
+    FabricOps read helpers and supplied in each source config as ``df``.
+
+    Target configs derive ``dataset_name``, ``stage``, ``target_layer``,
+    ``target_name``, ``target_kind``, and ``watermark_value`` unless overridden,
+    then add standard FabricOps audit columns.
+    """
+    normalized_role = str(table_role or "").lower().strip()
+    if normalized_role not in {"source", "target"}:
+        raise ValueError("table_role must be 'source' or 'target'.")
+
+    enriched_tables: list[dict[str, Any]] = []
+    for table_config in table_configs:
+        merged_config = {**default_settings, **table_config}
+        dataset_name = merged_config.get("dataset_name", merged_config["table_name"])
+        stage = merged_config.get("stage", merged_config["layer"])
+        watermark_value = table_config.get("watermark_value", None)
+
+        if normalized_role == "source":
+            if "df" not in merged_config:
+                table_key = merged_config.get("key", merged_config.get("table_name", "<unknown>"))
+                raise ValueError(
+                    "Source table config "
+                    f"{table_key!r} must include a pre-loaded DataFrame in the 'df' key. "
+                    "Load the source with read_lakehouse_table, read_lakehouse_csv, "
+                    "read_lakehouse_parquet, read_lakehouse_excel, read_warehouse_table, "
+                    "or spark.read.table before calling prepare_pipeline_table_configs."
+                )
+            enriched_table = {
+                **merged_config,
+                "dataset_name": dataset_name,
+                "stage": stage,
+                "watermark_value": watermark_value,
+            }
+        else:
+            target_layer = merged_config.get("target_layer", merged_config["layer"])
+            target_name = merged_config.get("target_name", merged_config["table_name"])
+            target_kind = merged_config.get("target_kind", merged_config.get("kind", "lakehouse"))
+            enriched_table = {
+                **merged_config,
+                "df": _add_audit_columns(merged_config["df"], run_id=run_id, pipeline_name=pipeline_name),
+                "dataset_name": dataset_name,
+                "stage": stage,
+                "target_layer": target_layer,
+                "target_name": target_name,
+                "target_kind": target_kind,
+                "watermark_value": watermark_value,
+            }
+        enriched_tables.append(enriched_table)
+
+    return enriched_tables, {table_config["key"]: table_config for table_config in enriched_tables}
+```
+
+</details>
+
+<details class="reference-metadata-details">
+<summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
+
+These generated fields are for automation, AI agents, maintainers, and doc tooling. Skip this block when reading the docs normally.
+
+### Function manifest
+
+- Fully qualified function name: `fabricops_kit.pipeline.prepare_pipeline_table_configs`
+- Short name: `prepare_pipeline_table_configs`
+- Module: `pipeline`
+- Classification: Callable
+- Related module: `pipeline`
+- Source file path: `src/fabricops_kit/pipeline.py`
+- Source line: `126`
+- Inbound references count: 0
+- Outbound references count: 1
+
+### AI implementation contract
+
+- **required_context:** Source DataFrames should be loaded directly in the notebook with existing FabricOps read helpers. Target audit columns require a Spark-compatible DataFrame.
+- **inputs:** table_configs, default_settings, table_role, and role-specific context such as run_id/pipeline_name for targets.
+- **output:** Enriched table configs and a dictionary keyed by table key.
+- **side_effects:** Source role validates pre-loaded DataFrames. Target role adds FabricOps audit columns to target DataFrames.
+- **failure_modes:** ValueError
+    If ``table_role`` is not ``"source"`` or ``"target"``.
+- **verification:** Verify the correct table_role is used and enriched configs are passed to run_table_guardrails before transformation or writes.
+
+### Inbound references
+
+Not documented yet
+
+### Outbound references
+
+- <a href="../internal/pipeline__add_audit_columns/"><code>fabricops_kit.pipeline._add_audit_columns</code></a>
+
+### Raw source metadata
+
+- Source file path: `src/fabricops_kit/pipeline.py`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a212c94775e71b6e429e41b51fbc57ac733903cb/src/fabricops_kit/pipeline.py#L126-L220">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a212c94775e71b6e429e41b51fbc57ac733903cb/src/fabricops_kit/pipeline.py#L126-L220</a>
+- Start line: `126`
+- End line: `220`
+- Signature:
+
+```python
+def prepare_pipeline_table_configs(table_configs: list[dict[str, Any]], default_settings: Mapping[str, Any], *, table_role: str, run_id: str='', pipeline_name: str='') -> tuple[list[dict[str, Any]], dict[str, dict[str, Any]]]
+```
+
+### Internal relationship graph
+
+### Public related functions
+
+- <a href="../run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
+- <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a>
+
+### Internal implementation helpers
+
+- <a href="../internal/pipeline__add_audit_columns/"><code>fabricops_kit.pipeline._add_audit_columns</code></a>
+
+</details>

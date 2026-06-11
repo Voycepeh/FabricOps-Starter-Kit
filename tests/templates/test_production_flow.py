@@ -28,11 +28,10 @@ def test_production_and_governance_templates_cover_output_summary_and_review_flo
     production = _code("02_pipeline.ipynb")
     governance = _code("03_governance.ipynb")
 
-    assert "validate_schema" in production
-    assert "enforce_catalogue_stability" in production
-    assert "enforce_dq_rules" in production
-    assert "write_lakehouse_table" in production or "write_warehouse_table" in production
-    assert "write_catalogue_evidence" in production
+    assert "run_table_guardrails" in production
+    assert "prepare_pipeline_table_configs" in production
+    assert "write_lakehouse_table" in production
+    assert "write_warehouse_table" in production
     assert "write_pipeline_lineage" in production
     assert "write_pipeline_run_summary" in production
     assert "run_summary" in production
@@ -48,10 +47,10 @@ def test_production_template_enforces_guardrails_before_full_dataset_write():
     production = _code("02_pipeline.ipynb")
 
     source_guardrails = production.index("source_guardrail_results = run_table_guardrails")
-    source_stop = production.index("stop_if_any_guardrail_failed(source_guardrail_results)", source_guardrails)
-    transformation = production.index("df_target_01 = (", source_stop)
+    source_stop = production.index("stop_on_failure=True", source_guardrails)
+    transformation = production.index("df_target_01 = df_source_01", source_stop)
     target_guardrails = production.index("target_guardrail_results = run_table_guardrails", transformation)
-    target_stop = production.index("stop_if_any_guardrail_failed(target_guardrail_results)", target_guardrails)
+    target_stop = production.index("stop_on_failure=True", target_guardrails)
     target_write = production.index("target_write_status = {}", target_stop)
 
     assert source_guardrails < source_stop < transformation < target_guardrails < target_stop < target_write
@@ -60,24 +59,32 @@ def test_production_template_enforces_guardrails_before_full_dataset_write():
     assert "failure_rows" not in production
     assert "df_output.filter" not in production
     assert "df_output.where" not in production
-    assert "dq_results=dq_results" in production
+    assert "run_table_guardrails" in production
 
 
-def test_guardrail_orchestration_keeps_dq_results_and_documents_simple_v1_behavior():
+def test_guardrail_orchestration_is_imported_and_documents_simple_v1_behavior():
     production = _code("02_pipeline.ipynb")
 
-    helper = production.index("def run_table_guardrails(")
-    dq_results = production.index("dq_results = {}", helper)
-    dq_enforcement = production.index("dq_results[table_key] = enforce_dq_rules", dq_results)
-    dq_dataframe_assignment = production.index("table_config[\"df\"] = dq_results[table_key][\"dataframe\"]", dq_enforcement)
-    target_write = production.index("target_write_status = {}")
-
-    assert dq_results < dq_enforcement < dq_dataframe_assignment < target_write
+    assert "def run_table_guardrails(" not in production
+    assert "def _table_key(" not in production
+    assert "run_table_guardrails," in production
+    assert "prepare_pipeline_table_configs," in production
+    assert "read_lakehouse_table," in production
+    assert "read_lakehouse_csv," in production
+    assert "read_lakehouse_parquet," in production
+    assert "read_lakehouse_excel," in production
+    assert "read_warehouse_table," in production
+    assert 'display(source_guardrail_results["summary"])' in production
+    assert 'display(target_guardrail_results["summary"])' in production
+    assert 'target_dq_results = target_guardrail_results["dq_results"]' in production
+    assert "target_write_status = {}" in production
+    assert "_load_source_dataframe" not in production
+    assert "_read_source_dataframe" not in production
+    assert "read_type" not in production
     guardrail_docs = (ROOT / "docs" / "how-fabricops-works" / "schema-and-data-drift.md").read_text(encoding="utf-8")
     assert "Warning-severity failure" in guardrail_docs
     assert "Error-severity failure" in guardrail_docs
     assert "blocks before the next critical step" in guardrail_docs
-
 
 def test_notebook_template_docs_describe_optional_example_notebooks():
     notebook_docs = (ROOT / "docs" / "how-fabricops-works" / "notebook-templates.md").read_text(
@@ -128,6 +135,9 @@ def test_smoke_test_example_notebook_exists_and_covers_end_to_end_pattern():
         "SOURCE_TABLES",
         "TARGET_TABLES",
         "run_table_guardrails",
+        "prepare_pipeline_table_configs",
+        "write_lakehouse_table",
+        "write_warehouse_table",
         "write_pipeline_lineage",
         "write_pipeline_run_summary",
         "PASS: FabricOps pipeline smoke test completed.",
@@ -138,7 +148,9 @@ def test_smoke_test_example_notebook_exists_and_covers_end_to_end_pattern():
     assert "TARGET_01_WRITE_MODE = \"overwrite\"" in smoke
     assert "Metadata evidence tables remain append-only" in smoke_text
     for evidence_helper in [
-        "write_catalogue_evidence",
+        "prepare_pipeline_table_configs",
+        "write_lakehouse_table",
+        "write_warehouse_table",
         "write_pipeline_lineage",
         "write_pipeline_run_summary",
     ]:
@@ -148,6 +160,13 @@ def test_smoke_test_example_notebook_exists_and_covers_end_to_end_pattern():
     assert "read_lakehouse_csv" not in smoke
     assert "read_lakehouse_excel" not in smoke
     assert "read_lakehouse_parquet" not in smoke
+    assert "_load_source_dataframe" not in smoke
+    assert "_read_source_dataframe" not in smoke
+    assert "read_type" not in smoke
+    assert "def run_table_guardrails(" not in smoke
+    assert "prepare_source_table_configs" not in smoke
+    assert "prepare_target_table_configs" not in smoke
+    assert "write_target_tables" not in smoke
 
     dq_smoke = _code_from_notebook(TEMPLATES / "example_dq_rule_smoke_test.ipynb")
     assert "mode=\"overwrite\"" not in dq_smoke

@@ -68,6 +68,7 @@ Guardrail result dictionary with status, can_continue, checks, message, and sche
 <details class="reference-implementation-details">
 <summary>Implementation details</summary>
 
+- <a href="../run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
 - <a href="../internal/drift__actual_schema/"><code>fabricops_kit.drift._actual_schema</code></a>
 - <a href="../internal/drift__normalize_datatype/"><code>fabricops_kit.drift._normalize_datatype</code></a>
 
@@ -76,7 +77,7 @@ Guardrail result dictionary with status, can_continue, checks, message, and sche
 ## Source
 
 - Source file path: `src/fabricops_kit/drift.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ffb9386812c13cf40a6a40503d36bd7a16dc5e31/src/fabricops_kit/drift.py#L110-L199">View validate_schema on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a212c94775e71b6e429e41b51fbc57ac733903cb/src/fabricops_kit/drift.py#L110-L199">View validate_schema on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -190,7 +191,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Related module: `drift`
 - Source file path: `src/fabricops_kit/drift.py`
 - Source line: `110`
-- Inbound references count: 0
+- Inbound references count: 1
 - Outbound references count: 2
 
 ### AI implementation contract
@@ -204,7 +205,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 
 ### Inbound references
 
-Not documented yet
+- <a href="../run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
 
 ### Outbound references
 
@@ -214,7 +215,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/drift.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ffb9386812c13cf40a6a40503d36bd7a16dc5e31/src/fabricops_kit/drift.py#L110-L199">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ffb9386812c13cf40a6a40503d36bd7a16dc5e31/src/fabricops_kit/drift.py#L110-L199</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a212c94775e71b6e429e41b51fbc57ac733903cb/src/fabricops_kit/drift.py#L110-L199">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a212c94775e71b6e429e41b51fbc57ac733903cb/src/fabricops_kit/drift.py#L110-L199</a>
 - Start line: `110`
 - End line: `199`
 - Signature:
@@ -232,6 +233,7 @@ def validate_schema(dataframe, expected_schema: dict[str, str], *, preset: str='
 
 ### Internal implementation helpers
 
+- <a href="../run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
 - <a href="../internal/drift__actual_schema/"><code>fabricops_kit.drift._actual_schema</code></a>
 - <a href="../internal/drift__normalize_datatype/"><code>fabricops_kit.drift._normalize_datatype</code></a>
 

@@ -127,6 +127,7 @@ Dictionary of write statuses keyed by dataset alias.
 <details class="reference-implementation-details">
 <summary>Implementation details</summary>
 
+- <a href="../run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
 - <a href="../write_lakehouse_table/"><code>fabricops_kit.fabric_input_output.write_lakehouse_table</code></a>
 - <a href="../internal/metadata__build_metadata_table_key/"><code>fabricops_kit.metadata._build_metadata_table_key</code></a>
 - <a href="../internal/pipeline__canonical_catalogue_profile_df/"><code>fabricops_kit.pipeline._canonical_catalogue_profile_df</code></a>
@@ -140,7 +141,7 @@ Dictionary of write statuses keyed by dataset alias.
 ## Source
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ffb9386812c13cf40a6a40503d36bd7a16dc5e31/src/fabricops_kit/pipeline.py#L110-L217">View write_catalogue_evidence on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a212c94775e71b6e429e41b51fbc57ac733903cb/src/fabricops_kit/pipeline.py#L445-L552">View write_catalogue_evidence on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -271,8 +272,8 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `pipeline`
 - Source file path: `src/fabricops_kit/pipeline.py`
-- Source line: `110`
-- Inbound references count: 0
+- Source line: `445`
+- Inbound references count: 1
 - Outbound references count: 7
 
 ### AI implementation contract
@@ -286,7 +287,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 
 ### Inbound references
 
-Not documented yet
+- <a href="../run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
 
 ### Outbound references
 
@@ -301,9 +302,9 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ffb9386812c13cf40a6a40503d36bd7a16dc5e31/src/fabricops_kit/pipeline.py#L110-L217">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ffb9386812c13cf40a6a40503d36bd7a16dc5e31/src/fabricops_kit/pipeline.py#L110-L217</a>
-- Start line: `110`
-- End line: `217`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a212c94775e71b6e429e41b51fbc57ac733903cb/src/fabricops_kit/pipeline.py#L445-L552">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a212c94775e71b6e429e41b51fbc57ac733903cb/src/fabricops_kit/pipeline.py#L445-L552</a>
+- Start line: `445`
+- End line: `552`
 - Signature:
 
 ```python
@@ -319,6 +320,7 @@ def write_catalogue_evidence(profiles: Mapping[str, Any], dataset_definitions: M
 
 ### Internal implementation helpers
 
+- <a href="../run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
 - <a href="../write_lakehouse_table/"><code>fabricops_kit.fabric_input_output.write_lakehouse_table</code></a>
 - <a href="../internal/metadata__build_metadata_table_key/"><code>fabricops_kit.metadata._build_metadata_table_key</code></a>
 - <a href="../internal/pipeline__canonical_catalogue_profile_df/"><code>fabricops_kit.pipeline._canonical_catalogue_profile_df</code></a>

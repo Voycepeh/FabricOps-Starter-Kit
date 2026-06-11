@@ -43,6 +43,8 @@ EXPECTED_V1_CALLABLES = [
     "stop_if_failed",
     "enforce_dq_rules",
     "build_lineage_records",
+    "prepare_pipeline_table_configs",
+    "run_table_guardrails",
     "write_catalogue_evidence",
     "write_pipeline_lineage",
     "write_pipeline_run_summary",
