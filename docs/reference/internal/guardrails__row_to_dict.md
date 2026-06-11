@@ -1,6 +1,6 @@
 # _row_to_dict
 
-**Module:** `drift`  
+**Module:** `guardrails`
 **Classification:** Internal
 
 ## Status
@@ -17,7 +17,7 @@ Do not call this helper directly from notebooks; use the public callable helpers
 
 ## Used by
 
-- <a href="../internal/drift__latest_catalogue_stability_row/"><code>fabricops_kit.drift._latest_catalogue_stability_row</code></a>
+- <a href="../internal/guardrails__latest_catalogue_behavior_profile_row/"><code>fabricops_kit.guardrails._latest_catalogue_behavior_profile_row</code></a>
 
 ## Purpose
 
@@ -43,15 +43,15 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 
 ## Function manifest
 
-- Fully qualified function name: `fabricops_kit.drift._row_to_dict`
+- Fully qualified function name: `fabricops_kit.guardrails._row_to_dict`
 - Short name: `_row_to_dict`
-- Module: `drift`
+- Module: `guardrails`
 - Classification: Internal
-- Related module: `drift`
-- Source file path: `src/fabricops_kit/drift.py`
-- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/drift.py#L273-L280">View source on GitHub</a>
+- Related module: `guardrails`
+- Source file path: `src/fabricops_kit/guardrails.py`
+- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a80b5a6ddb4de14056095d4da916cd452e478ff8/src/fabricops_kit/guardrails.py#L272-L279">View source on GitHub</a>
 - Inbound references count: 1
 - Outbound references count: 0
 
 ## Inbound references
-- <a href="../internal/drift__latest_catalogue_stability_row/"><code>fabricops_kit.drift._latest_catalogue_stability_row</code></a>
+- <a href="../internal/guardrails__latest_catalogue_behavior_profile_row/"><code>fabricops_kit.guardrails._latest_catalogue_behavior_profile_row</code></a>

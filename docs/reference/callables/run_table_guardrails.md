@@ -1,10 +1,10 @@
 # run_table_guardrails
 
-Run profiling, schema, stability, DQ, and catalogue guardrails for table configs.
+Run profiling, schema, freshness, profile behavior, DQ, and catalogue guardrails for table configs.
 
 ## What this is for and when to use it
 
-Run profiling, schema, stability, DQ, and catalogue guardrails for table configs.
+Run profiling, schema, freshness, profile behavior, DQ, and catalogue guardrails for table configs.
 
 - Use in 02_pipeline to run source guardrails before transformation and target guardrails before writes while keeping per-table results separated.
 
@@ -33,7 +33,7 @@ source_guardrail_results = run_table_guardrails(SOURCE_TABLES, config=CONFIG, en
     <tr>
       <td data-label="Parameter"><code>table_configs</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Source or target table configs. Each config must contain ``key``, ``df``, and ``expected_schema``. Optional keys such as ``dataset_name``, ``stage``, ``schema_preset``, ``data_behavior``, ``stability_check_type``, ``watermark_column``, ``watermark_value``, ``dq_preset``, ``distribution_columns``, and ``exclude_columns`` control the guardrail behavior.</td>
+      <td data-label="Meaning">Source or target table configs. Each config must contain ``key``, ``df``, and ``expected_schema``. Optional keys such as ``dataset_name``, ``stage``, ``schema_preset``, ``load_behavior``, ``watermark_column``, ``dq_preset``, ``distribution_columns``, and ``exclude_columns`` control the guardrail behavior.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>config</code></td>
@@ -53,7 +53,7 @@ source_guardrail_results = run_table_guardrails(SOURCE_TABLES, config=CONFIG, en
     <tr>
       <td data-label="Parameter"><code>spark_session</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Spark session used by stability and DQ helpers.</td>
+      <td data-label="Meaning">Spark session used by profile behavior and DQ helpers.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>agreement_id</code></td>
@@ -91,7 +91,7 @@ source_guardrail_results = run_table_guardrails(SOURCE_TABLES, config=CONFIG, en
 
 ## Output
 
-Guardrail result bundle with profiles, schema results, stability results, DQ results, catalogue status, evidence definitions, summary, can_continue, and failed_tables.
+Guardrail result bundle with profiles, schema results, freshness results, stability results, DQ results, catalogue status, evidence definitions, summary, can_continue, and failed_tables.
 
 ## Errors and side effects
 
@@ -109,10 +109,11 @@ Guardrail result bundle with profiles, schema results, stability results, DQ res
 
 - <a href="../internal/config__get_audit_timezone/"><code>fabricops_kit.config._get_audit_timezone</code></a>
 - <a href="../profile_dataframe/"><code>fabricops_kit.data_profiling.profile_dataframe</code></a>
-- <a href="../enforce_catalogue_stability/"><code>fabricops_kit.drift.enforce_catalogue_stability</code></a>
-- <a href="../stop_if_failed/"><code>fabricops_kit.drift.stop_if_failed</code></a>
-- <a href="../validate_schema/"><code>fabricops_kit.drift.validate_schema</code></a>
 - <a href="../enforce_dq_rules/"><code>fabricops_kit.governance_review.enforce_dq_rules</code></a>
+- <a href="../enforce_freshness/"><code>fabricops_kit.guardrails.enforce_freshness</code></a>
+- <a href="../enforce_profile_behavior/"><code>fabricops_kit.guardrails.enforce_profile_behavior</code></a>
+- <a href="../stop_if_failed/"><code>fabricops_kit.guardrails.stop_if_failed</code></a>
+- <a href="../validate_schema/"><code>fabricops_kit.guardrails.validate_schema</code></a>
 - <a href="../internal/pipeline__build_guardrail_evidence_definitions/"><code>fabricops_kit.pipeline._build_guardrail_evidence_definitions</code></a>
 - <a href="../internal/pipeline__guardrail_can_continue/"><code>fabricops_kit.pipeline._guardrail_can_continue</code></a>
 - <a href="../internal/pipeline__table_key/"><code>fabricops_kit.pipeline._table_key</code></a>
@@ -124,7 +125,7 @@ Guardrail result bundle with profiles, schema results, stability results, DQ res
 ## Source
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/pipeline.py#L266-L443">View run_table_guardrails on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a80b5a6ddb4de14056095d4da916cd452e478ff8/src/fabricops_kit/pipeline.py#L260-L447">View run_table_guardrails on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -144,15 +145,15 @@ def run_table_guardrails(
     pipeline_name: str = "",
     stop_on_failure: bool = False,
 ) -> dict[str, Any]:
-    """Run profiling, schema, stability, DQ, and catalogue guardrails.
+    """Run profiling, schema, freshness, profile behavior, DQ, and catalogue guardrails.
 
     Parameters
     ----------
     table_configs : list of dict
         Source or target table configs. Each config must contain ``key``,
         ``df``, and ``expected_schema``. Optional keys such as
-        ``dataset_name``, ``stage``, ``schema_preset``, ``data_behavior``,
-        ``stability_check_type``, ``watermark_column``, ``watermark_value``,
+        ``dataset_name``, ``stage``, ``schema_preset``, ``load_behavior``,
+        ``watermark_column``,
         ``dq_preset``, ``distribution_columns``, and ``exclude_columns``
         control the guardrail behavior.
     config : Any
@@ -162,7 +163,7 @@ def run_table_guardrails(
     run_id : str
         Current pipeline run identifier.
     spark_session : Any
-        Spark session used by stability and DQ helpers.
+        Spark session used by profile behavior and DQ helpers.
     agreement_id, agreement_contract_version, notebook_registry_id, notebook_id, pipeline_name : str, optional
         Governance context written with catalogue evidence.
     stop_on_failure : bool, default False
@@ -173,14 +174,14 @@ def run_table_guardrails(
     Returns
     -------
     dict[str, Any]
-        Guardrail result bundle containing profiles, schema results, stability
-        results, DQ results, catalogue status, evidence definitions, concise
+        Guardrail result bundle containing profiles, schema results, freshness
+        results, profile behavior results, DQ results, catalogue status, evidence definitions, concise
         ``summary``, ``can_continue``, and ``failed_tables``. Results remain
         separated by table key and guardrail type.
 
     Notes
     -----
-    This helper intentionally collects all per-table schema, stability, and DQ
+    This helper intentionally collects all per-table schema, freshness, profile behavior, and DQ
     results before reporting blocking failures. DQ results that return an
     annotated DataFrame update the corresponding table config ``df`` in place
     so downstream writes use the checked DataFrame. Metadata reads and writes
@@ -188,6 +189,7 @@ def run_table_guardrails(
     """
     profiles: dict[str, Any] = {}
     schema_results: dict[str, Mapping[str, Any]] = {}
+    freshness_results: dict[str, Mapping[str, Any]] = {}
     stability_results: dict[str, Mapping[str, Any]] = {}
     dq_results: dict[str, Mapping[str, Any]] = {}
     failed_tables: list[str] = []
@@ -217,7 +219,14 @@ def run_table_guardrails(
             preset=table_config.get("schema_preset", "strict"),
         )
 
-        stability_results[table_key] = enforce_catalogue_stability(
+        freshness_results[table_key] = enforce_freshness(
+            dataframe,
+            table_config.get("freshness_column"),
+            table_config.get("freshness_max_lag_days"),
+            severity=table_config.get("freshness_severity", "blocking"),
+        )
+
+        stability_results[table_key] = enforce_profile_behavior(
             spark_session,
             dataframe,
             CATALOGUE_TABLE,
@@ -225,14 +234,13 @@ def run_table_guardrails(
             table_name,
             stage=stage,
             run_id=run_id,
-            data_behavior=table_config.get("data_behavior", "changing"),
-            stability_check_type=table_config.get("stability_check_type", "watermark_slice_hash"),
+            load_behavior=table_config.get("load_behavior", "append"),
             watermark_column=table_config.get("watermark_column"),
-            watermark_value=table_config.get("watermark_value"),
             exclude_columns=table_config.get("exclude_columns"),
             exclude_run_id=run_id,
             config=config,
             env=env,
+            current_profile=profiles[table_key],
         )
 
         if table_config.get("dq_preset", "approved_rules") == "skip":
@@ -257,7 +265,7 @@ def run_table_guardrails(
 
         table_can_continue = all(
             _guardrail_can_continue(result)
-            for result in (schema_results[table_key], stability_results[table_key], dq_results[table_key])
+            for result in (schema_results[table_key], freshness_results[table_key], stability_results[table_key], dq_results[table_key])
         )
         if not table_can_continue:
             failed_tables.append(table_key)
@@ -274,12 +282,14 @@ def run_table_guardrails(
         notebook_id=notebook_id,
         pipeline_name=pipeline_name,
         schema_results=schema_results,
+        freshness_results=freshness_results,
         stability_results=stability_results,
         dq_results=dq_results,
     )
 
     summary = {
         "schema_results": schema_results,
+        "freshness_results": freshness_results,
         "stability_results": stability_results,
         "dq_results": dq_results,
         "catalogue_status": catalogue_status,
@@ -288,6 +298,7 @@ def run_table_guardrails(
     result = {
         "profiles": profiles,
         "schema_results": schema_results,
+        "freshness_results": freshness_results,
         "stability_results": stability_results,
         "dq_results": dq_results,
         "catalogue_status": catalogue_status,
@@ -325,15 +336,15 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `pipeline`
 - Source file path: `src/fabricops_kit/pipeline.py`
-- Source line: `266`
+- Source line: `260`
 - Inbound references count: 0
-- Outbound references count: 11
+- Outbound references count: 12
 
 ### AI implementation contract
 
 - **required_context:** Requires CONFIG and env from 00_env_config so metadata operations use the configured metadata target.
 - **inputs:** table_configs plus config, env, run_id, spark_session, and agreement/notebook context.
-- **output:** Guardrail result bundle with profiles, schema results, stability results, DQ results, catalogue status, evidence definitions, summary, can_continue, and failed_tables.
+- **output:** Guardrail result bundle with profiles, schema results, freshness results, stability results, DQ results, catalogue status, evidence definitions, summary, can_continue, and failed_tables.
 - **side_effects:** Profiles DataFrames, reads stability/DQ metadata through configured metadata routing, writes catalogue evidence, and may update table config DataFrames with DQ annotations.
 - **failure_modes:** Not documented yet
 - **verification:** Verify stop_on_failure=True is used before transformation or writes when blocking guardrails should stop execution.
@@ -346,10 +357,11 @@ Not documented yet
 
 - <a href="../internal/config__get_audit_timezone/"><code>fabricops_kit.config._get_audit_timezone</code></a>
 - <a href="../profile_dataframe/"><code>fabricops_kit.data_profiling.profile_dataframe</code></a>
-- <a href="../enforce_catalogue_stability/"><code>fabricops_kit.drift.enforce_catalogue_stability</code></a>
-- <a href="../stop_if_failed/"><code>fabricops_kit.drift.stop_if_failed</code></a>
-- <a href="../validate_schema/"><code>fabricops_kit.drift.validate_schema</code></a>
 - <a href="../enforce_dq_rules/"><code>fabricops_kit.governance_review.enforce_dq_rules</code></a>
+- <a href="../enforce_freshness/"><code>fabricops_kit.guardrails.enforce_freshness</code></a>
+- <a href="../enforce_profile_behavior/"><code>fabricops_kit.guardrails.enforce_profile_behavior</code></a>
+- <a href="../stop_if_failed/"><code>fabricops_kit.guardrails.stop_if_failed</code></a>
+- <a href="../validate_schema/"><code>fabricops_kit.guardrails.validate_schema</code></a>
 - <a href="../internal/pipeline__build_guardrail_evidence_definitions/"><code>fabricops_kit.pipeline._build_guardrail_evidence_definitions</code></a>
 - <a href="../internal/pipeline__guardrail_can_continue/"><code>fabricops_kit.pipeline._guardrail_can_continue</code></a>
 - <a href="../internal/pipeline__table_key/"><code>fabricops_kit.pipeline._table_key</code></a>
@@ -359,9 +371,9 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/pipeline.py#L266-L443">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/pipeline.py#L266-L443</a>
-- Start line: `266`
-- End line: `443`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a80b5a6ddb4de14056095d4da916cd452e478ff8/src/fabricops_kit/pipeline.py#L260-L447">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a80b5a6ddb4de14056095d4da916cd452e478ff8/src/fabricops_kit/pipeline.py#L260-L447</a>
+- Start line: `260`
+- End line: `447`
 - Signature:
 
 ```python
@@ -379,10 +391,11 @@ def run_table_guardrails(table_configs: list[dict[str, Any]], *, config: Any, en
 
 - <a href="../internal/config__get_audit_timezone/"><code>fabricops_kit.config._get_audit_timezone</code></a>
 - <a href="../profile_dataframe/"><code>fabricops_kit.data_profiling.profile_dataframe</code></a>
-- <a href="../enforce_catalogue_stability/"><code>fabricops_kit.drift.enforce_catalogue_stability</code></a>
-- <a href="../stop_if_failed/"><code>fabricops_kit.drift.stop_if_failed</code></a>
-- <a href="../validate_schema/"><code>fabricops_kit.drift.validate_schema</code></a>
 - <a href="../enforce_dq_rules/"><code>fabricops_kit.governance_review.enforce_dq_rules</code></a>
+- <a href="../enforce_freshness/"><code>fabricops_kit.guardrails.enforce_freshness</code></a>
+- <a href="../enforce_profile_behavior/"><code>fabricops_kit.guardrails.enforce_profile_behavior</code></a>
+- <a href="../stop_if_failed/"><code>fabricops_kit.guardrails.stop_if_failed</code></a>
+- <a href="../validate_schema/"><code>fabricops_kit.guardrails.validate_schema</code></a>
 - <a href="../internal/pipeline__build_guardrail_evidence_definitions/"><code>fabricops_kit.pipeline._build_guardrail_evidence_definitions</code></a>
 - <a href="../internal/pipeline__guardrail_can_continue/"><code>fabricops_kit.pipeline._guardrail_can_continue</code></a>
 - <a href="../internal/pipeline__table_key/"><code>fabricops_kit.pipeline._table_key</code></a>

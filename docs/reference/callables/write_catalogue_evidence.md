@@ -86,6 +86,11 @@ Not documented yet
       <td data-label="Meaning">Guardrail results keyed by dataset alias.</td>
     </tr>
     <tr>
+      <td data-label="Parameter"><code>freshness_results</code></td>
+      <td data-label="Required">No</td>
+      <td data-label="Meaning">Not documented yet</td>
+    </tr>
+    <tr>
       <td data-label="Parameter"><code>stability_results</code></td>
       <td data-label="Required">No</td>
       <td data-label="Meaning">Not documented yet</td>
@@ -141,7 +146,7 @@ Dictionary of write statuses keyed by dataset alias.
 ## Source
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/pipeline.py#L446-L553">View write_catalogue_evidence on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a80b5a6ddb4de14056095d4da916cd452e478ff8/src/fabricops_kit/pipeline.py#L450-L555">View write_catalogue_evidence on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -160,6 +165,7 @@ def write_catalogue_evidence(
     notebook_id: str = "",
     pipeline_name: str = "",
     schema_results: Mapping[str, Mapping[str, Any]] | None = None,
+    freshness_results: Mapping[str, Mapping[str, Any]] | None = None,
     stability_results: Mapping[str, Mapping[str, Any]] | None = None,
     dq_results: Mapping[str, Mapping[str, Any]] | None = None,
     metadata_table: str = CATALOGUE_TABLE,
@@ -179,7 +185,7 @@ def write_catalogue_evidence(
         Pipeline run identifier.
     agreement_id, agreement_contract_version, notebook_registry_id, notebook_id, pipeline_name : str, optional
         Governance context added to each catalogue row.
-    schema_results, stability_results, dq_results : mapping, optional
+    schema_results, freshness_results, stability_results, dq_results : mapping, optional
         Guardrail results keyed by dataset alias.
     metadata_table : str, default="METADATA_DATA_CATALOGUE"
         Metadata table to append.
@@ -201,6 +207,7 @@ def write_catalogue_evidence(
         dataset_name = str(definition.get("dataset_name") or table_name)
         stage = str(definition.get("stage", "target"))
         stability_result = dict((stability_results or {}).get(name) or {})
+        freshness_result = dict((freshness_results or {}).get(name) or {})
         schema_result = dict((schema_results or {}).get(name) or {})
         dq_fields = _dq_summary_fields((dq_results or {}).get(name))
         evidence = _canonical_catalogue_profile_df(profile_df)
@@ -217,9 +224,9 @@ def write_catalogue_evidence(
             "profile_stage": stage,
             "profile_status": "success",
             "baseline_status": str(stability_result.get("baseline_status", stability_result.get("status", ""))),
-            "source_data_change_check": str(definition.get("stability_check_type", "")) if stage == "source" else "",
-            "target_data_change_check": str(definition.get("stability_check_type", "")) if stage == "target" else "",
-            "profile_baseline_mode": str(stability_result.get("stability_check_type", "")),
+            "source_data_change_check": str(definition.get("load_behavior", "")) if stage == "source" else "",
+            "target_data_change_check": str(definition.get("load_behavior", "")) if stage == "target" else "",
+            "profile_baseline_mode": str(stability_result.get("load_behavior", "")),
             "profiled_at": _now_iso(),
             "agreement_id": agreement_id,
             "contract_version": agreement_contract_version,
@@ -229,23 +236,19 @@ def write_catalogue_evidence(
             "source_schema_check": str(definition.get("schema_preset", "")) if stage == "source" else "",
             "target_schema_check": str(definition.get("schema_preset", "")) if stage == "target" else "",
             "stability_check_enabled": bool(stability_result.get("stability_check_enabled", False)),
-            "stability_check_type": str(stability_result.get("stability_check_type", definition.get("stability_check_type", ""))),
-            "data_behavior": str(stability_result.get("data_behavior", definition.get("data_behavior", ""))),
-            "profile_scope": str(stability_result.get("profile_scope", "")),
+            "load_behavior": str(stability_result.get("load_behavior", definition.get("load_behavior", ""))),
             "watermark_column": str(stability_result.get("watermark_column", definition.get("watermark_column", ""))),
-            "watermark_value": str(stability_result.get("watermark_value", definition.get("watermark_value", ""))),
-            "profile_filter_expression": str(stability_result.get("profile_filter_expression", "")),
-            "schema_hash": str(stability_result.get("schema_hash", "")),
-            "profile_hash": str(stability_result.get("profile_hash", "")),
-            "comparable_profile_hash": str(stability_result.get("comparable_profile_hash", "")),
+            "freshness_column": str(freshness_result.get("freshness_column", definition.get("freshness_column", ""))),
+            "freshness_max_lag_days": str(freshness_result.get("freshness_max_lag_days", definition.get("freshness_max_lag_days", ""))),
+            "freshness_status": str(freshness_result.get("freshness_status", freshness_result.get("status", ""))),
+            "freshness_can_continue": bool(freshness_result.get("freshness_can_continue", freshness_result.get("can_continue", True))),
+            "freshness_message": str(freshness_result.get("freshness_message", freshness_result.get("message", ""))),
             "baseline_run_id": str(stability_result.get("baseline_run_id", "")),
-            "baseline_profile_hash": str(stability_result.get("baseline_profile_hash", "")),
-            "baseline_watermark_value": str(stability_result.get("baseline_watermark_value", "")),
             "stability_status": str(stability_result.get("stability_status", stability_result.get("status", ""))),
             "stability_can_continue": bool(stability_result.get("stability_can_continue", stability_result.get("can_continue", True))),
             "stability_message": str(stability_result.get("stability_message", stability_result.get("message", ""))),
             "stability_difference_summary": str(stability_result.get("stability_difference_summary", "")),
-            "source_change_signal_json": json.dumps({"schema": schema_result, "stability": stability_result}, default=str, sort_keys=True),
+            "source_change_signal_json": json.dumps({"schema": schema_result, "freshness": freshness_result, "stability": stability_result}, default=str, sort_keys=True),
             **dq_fields,
             **audit,
         }
@@ -272,7 +275,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `pipeline`
 - Source file path: `src/fabricops_kit/pipeline.py`
-- Source line: `446`
+- Source line: `450`
 - Inbound references count: 1
 - Outbound references count: 7
 
@@ -302,13 +305,13 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/pipeline.py#L446-L553">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/pipeline.py#L446-L553</a>
-- Start line: `446`
-- End line: `553`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a80b5a6ddb4de14056095d4da916cd452e478ff8/src/fabricops_kit/pipeline.py#L450-L555">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a80b5a6ddb4de14056095d4da916cd452e478ff8/src/fabricops_kit/pipeline.py#L450-L555</a>
+- Start line: `450`
+- End line: `555`
 - Signature:
 
 ```python
-def write_catalogue_evidence(profiles: Mapping[str, Any], dataset_definitions: Mapping[str, Mapping[str, Any]], *, config: Any, env: str, run_id: str, agreement_id: str='', agreement_contract_version: str='', notebook_registry_id: str='', notebook_id: str='', pipeline_name: str='', schema_results: Mapping[str, Mapping[str, Any]] | None=None, stability_results: Mapping[str, Mapping[str, Any]] | None=None, dq_results: Mapping[str, Mapping[str, Any]] | None=None, metadata_table: str=CATALOGUE_TABLE, mode: str='append') -> dict[str, str]
+def write_catalogue_evidence(profiles: Mapping[str, Any], dataset_definitions: Mapping[str, Mapping[str, Any]], *, config: Any, env: str, run_id: str, agreement_id: str='', agreement_contract_version: str='', notebook_registry_id: str='', notebook_id: str='', pipeline_name: str='', schema_results: Mapping[str, Mapping[str, Any]] | None=None, freshness_results: Mapping[str, Mapping[str, Any]] | None=None, stability_results: Mapping[str, Mapping[str, Any]] | None=None, dq_results: Mapping[str, Mapping[str, Any]] | None=None, metadata_table: str=CATALOGUE_TABLE, mode: str='append') -> dict[str, str]
 ```
 
 ### Internal relationship graph

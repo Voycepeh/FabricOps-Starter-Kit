@@ -1,6 +1,6 @@
 # _context_get
 
-**Module:** `metadata`  
+**Module:** `metadata`
 **Classification:** Internal
 
 ## Status
@@ -53,7 +53,7 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 - Classification: Internal
 - Related module: `metadata`
 - Source file path: `src/fabricops_kit/metadata.py`
-- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/metadata.py#L173-L185">View source on GitHub</a>
+- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a80b5a6ddb4de14056095d4da916cd452e478ff8/src/fabricops_kit/metadata.py#L173-L185">View source on GitHub</a>
 - Inbound references count: 5
 - Outbound references count: 0
 

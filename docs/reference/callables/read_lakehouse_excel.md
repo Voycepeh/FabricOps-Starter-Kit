@@ -92,7 +92,7 @@ Spark DataFrame converted from the selected Excel worksheet.
 ## Source
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/fabric_input_output.py#L680-L767">View read_lakehouse_excel on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a80b5a6ddb4de14056095d4da916cd452e478ff8/src/fabricops_kit/fabric_input_output.py#L680-L767">View read_lakehouse_excel on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -229,7 +229,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/fabric_input_output.py#L680-L767">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/fabric_input_output.py#L680-L767</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a80b5a6ddb4de14056095d4da916cd452e478ff8/src/fabricops_kit/fabric_input_output.py#L680-L767">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a80b5a6ddb4de14056095d4da916cd452e478ff8/src/fabricops_kit/fabric_input_output.py#L680-L767</a>
 - Start line: `680`
 - End line: `767`
 - Signature:

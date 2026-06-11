@@ -1,6 +1,6 @@
 # _coerce_rows
 
-**Module:** `governance_review`  
+**Module:** `governance_review`
 **Classification:** Internal
 
 ## Status
@@ -54,7 +54,7 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 - Classification: Internal
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
-- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/governance_review.py#L62-L67">View source on GitHub</a>
+- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a80b5a6ddb4de14056095d4da916cd452e478ff8/src/fabricops_kit/governance_review.py#L62-L67">View source on GitHub</a>
 - Inbound references count: 6
 - Outbound references count: 0
 

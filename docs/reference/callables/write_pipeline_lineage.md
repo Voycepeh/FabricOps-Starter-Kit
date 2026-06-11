@@ -139,7 +139,7 @@ Status, row count, and lineage rows.
 ## Source
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/pipeline.py#L556-L640">View write_pipeline_lineage on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a80b5a6ddb4de14056095d4da916cd452e478ff8/src/fabricops_kit/pipeline.py#L558-L642">View write_pipeline_lineage on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -247,7 +247,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `pipeline`
 - Source file path: `src/fabricops_kit/pipeline.py`
-- Source line: `556`
+- Source line: `558`
 - Inbound references count: 0
 - Outbound references count: 5
 
@@ -275,9 +275,9 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/pipeline.py#L556-L640">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/pipeline.py#L556-L640</a>
-- Start line: `556`
-- End line: `640`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a80b5a6ddb4de14056095d4da916cd452e478ff8/src/fabricops_kit/pipeline.py#L558-L642">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a80b5a6ddb4de14056095d4da916cd452e478ff8/src/fabricops_kit/pipeline.py#L558-L642</a>
+- Start line: `558`
+- End line: `642`
 - Signature:
 
 ```python

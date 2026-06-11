@@ -1,12 +1,12 @@
 # stop_if_failed
 
-Stop a notebook only when a schema, stability, or DQ guardrail result blocks continuation.
+Stop a notebook only when a schema, freshness, profile behavior, or DQ guardrail result blocks continuation.
 
 ## What this is for and when to use it
 
-Stop a notebook only when a schema, stability, or DQ guardrail result blocks continuation.
+Stop a notebook only when a schema, freshness, profile behavior, or DQ guardrail result blocks continuation.
 
-- Use after schema, stability, or DQ guardrail helpers to stop the notebook when can_continue is false.
+- Use after schema, freshness, profile behavior, or DQ guardrail helpers to stop the notebook when can_continue is false.
 
 ## When not to use it
 
@@ -34,7 +34,7 @@ stop_if_failed(schema_result)
     <tr>
       <td data-label="Parameter"><code>result</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Direct schema, catalogue stability, or DQ guardrail result.</td>
+      <td data-label="Meaning">Direct schema, freshness, profile behavior, or DQ guardrail result.</td>
     </tr>
   </tbody>
 </table>
@@ -52,22 +52,23 @@ None when execution may continue; otherwise raises or exits according to runtime
 
 ## Related functions
 
-- <a href="../validate_schema/"><code>fabricops_kit.drift.validate_schema</code></a>
-- <a href="../enforce_catalogue_stability/"><code>fabricops_kit.drift.enforce_catalogue_stability</code></a>
+- <a href="../validate_schema/"><code>fabricops_kit.guardrails.validate_schema</code></a>
+- <a href="../enforce_freshness/"><code>fabricops_kit.guardrails.enforce_freshness</code></a>
+- <a href="../enforce_profile_behavior/"><code>fabricops_kit.guardrails.enforce_profile_behavior</code></a>
 - <a href="../enforce_dq_rules/"><code>fabricops_kit.governance_review.enforce_dq_rules</code></a>
 
 <details class="reference-implementation-details">
 <summary>Implementation details</summary>
 
 - <a href="../run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
-- <a href="../internal/drift_SchemaDriftError/"><code>fabricops_kit.drift.SchemaDriftError</code></a>
+- <a href="../internal/guardrails_SchemaDriftError/"><code>fabricops_kit.guardrails.SchemaDriftError</code></a>
 
 </details>
 
 ## Source
 
-- Source file path: `src/fabricops_kit/drift.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/drift.py#L670-L689">View stop_if_failed on GitHub</a>
+- Source file path: `src/fabricops_kit/guardrails.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a80b5a6ddb4de14056095d4da916cd452e478ff8/src/fabricops_kit/guardrails.py#L834-L853">View stop_if_failed on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -79,7 +80,7 @@ def stop_if_failed(result) -> None:
     Parameters
     ----------
     result : dict
-        Direct schema, catalogue stability, or DQ guardrail result.
+        Direct schema, freshness, profile behavior, or DQ guardrail result.
 
     Raises
     ------
@@ -104,19 +105,19 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 
 ### Function manifest
 
-- Fully qualified function name: `fabricops_kit.drift.stop_if_failed`
+- Fully qualified function name: `fabricops_kit.guardrails.stop_if_failed`
 - Short name: `stop_if_failed`
-- Module: `drift`
+- Module: `guardrails`
 - Classification: Callable
-- Related module: `drift`
-- Source file path: `src/fabricops_kit/drift.py`
-- Source line: `670`
+- Related module: `guardrails`
+- Source file path: `src/fabricops_kit/guardrails.py`
+- Source line: `834`
 - Inbound references count: 1
 - Outbound references count: 1
 
 ### AI implementation contract
 
-- **required_context:** Use in 02_pipeline after validate_schema, enforce_catalogue_stability, or enforce_dq_rules and before write helpers.
+- **required_context:** Use in 02_pipeline after validate_schema, enforce_freshness, enforce_profile_behavior, or enforce_dq_rules and before write helpers.
 - **inputs:** guardrail result dictionary and optional message/runtime controls.
 - **output:** None when execution may continue; otherwise raises or exits according to runtime behavior.
 - **side_effects:** May terminate notebook execution through Fabric notebook utilities or raise an exception.
@@ -129,14 +130,14 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 
 ### Outbound references
 
-- <a href="../internal/drift_SchemaDriftError/"><code>fabricops_kit.drift.SchemaDriftError</code></a>
+- <a href="../internal/guardrails_SchemaDriftError/"><code>fabricops_kit.guardrails.SchemaDriftError</code></a>
 
 ### Raw source metadata
 
-- Source file path: `src/fabricops_kit/drift.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/drift.py#L670-L689">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/drift.py#L670-L689</a>
-- Start line: `670`
-- End line: `689`
+- Source file path: `src/fabricops_kit/guardrails.py`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a80b5a6ddb4de14056095d4da916cd452e478ff8/src/fabricops_kit/guardrails.py#L834-L853">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a80b5a6ddb4de14056095d4da916cd452e478ff8/src/fabricops_kit/guardrails.py#L834-L853</a>
+- Start line: `834`
+- End line: `853`
 - Signature:
 
 ```python
@@ -147,13 +148,14 @@ def stop_if_failed(result) -> None
 
 ### Public related functions
 
-- <a href="../validate_schema/"><code>fabricops_kit.drift.validate_schema</code></a>
-- <a href="../enforce_catalogue_stability/"><code>fabricops_kit.drift.enforce_catalogue_stability</code></a>
+- <a href="../validate_schema/"><code>fabricops_kit.guardrails.validate_schema</code></a>
+- <a href="../enforce_freshness/"><code>fabricops_kit.guardrails.enforce_freshness</code></a>
+- <a href="../enforce_profile_behavior/"><code>fabricops_kit.guardrails.enforce_profile_behavior</code></a>
 - <a href="../enforce_dq_rules/"><code>fabricops_kit.governance_review.enforce_dq_rules</code></a>
 
 ### Internal implementation helpers
 
 - <a href="../run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
-- <a href="../internal/drift_SchemaDriftError/"><code>fabricops_kit.drift.SchemaDriftError</code></a>
+- <a href="../internal/guardrails_SchemaDriftError/"><code>fabricops_kit.guardrails.SchemaDriftError</code></a>
 
 </details>

@@ -10,6 +10,6 @@ Zero-callable modules are hidden unless explicitly allowlisted as major internal
 - [`data_profiling`](data_profiling.md)
 - [`fabric_input_output`](fabric_input_output.md)
 - [`data_lineage`](data_lineage.md)
-- [`drift`](drift.md)
+- [`guardrails`](guardrails.md)
 - [`metadata`](metadata.md)
 - [`pipeline`](pipeline.md)

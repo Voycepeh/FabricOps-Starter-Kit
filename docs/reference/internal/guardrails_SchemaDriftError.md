@@ -1,6 +1,6 @@
 # SchemaDriftError
 
-**Module:** `drift`  
+**Module:** `guardrails`
 **Classification:** Internal
 
 ## Status
@@ -17,11 +17,11 @@ Do not call this helper directly from notebooks; use the public callable helpers
 
 ## Used by
 
-- <a href="../stop_if_failed/"><code>fabricops_kit.drift.stop_if_failed</code></a>
+- <a href="../stop_if_failed/"><code>fabricops_kit.guardrails.stop_if_failed</code></a>
 
 ## Purpose
 
-Raised when a schema check is configured to fail on drift.
+Raised when a guardrail check is configured to stop execution.
 
 ## Signature if available
 
@@ -43,15 +43,15 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 
 ## Function manifest
 
-- Fully qualified function name: `fabricops_kit.drift.SchemaDriftError`
+- Fully qualified function name: `fabricops_kit.guardrails.SchemaDriftError`
 - Short name: `SchemaDriftError`
-- Module: `drift`
+- Module: `guardrails`
 - Classification: Internal
-- Related module: `drift`
-- Source file path: `src/fabricops_kit/drift.py`
-- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/drift.py#L28-L35">View source on GitHub</a>
+- Related module: `guardrails`
+- Source file path: `src/fabricops_kit/guardrails.py`
+- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a80b5a6ddb4de14056095d4da916cd452e478ff8/src/fabricops_kit/guardrails.py#L27-L34">View source on GitHub</a>
 - Inbound references count: 1
 - Outbound references count: 0
 
 ## Inbound references
-- <a href="../stop_if_failed/"><code>fabricops_kit.drift.stop_if_failed</code></a>
+- <a href="../stop_if_failed/"><code>fabricops_kit.guardrails.stop_if_failed</code></a>

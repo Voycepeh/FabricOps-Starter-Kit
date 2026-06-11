@@ -7,7 +7,7 @@ from typing import Any, Mapping
 from uuid import uuid4
 
 from .data_profiling import profile_dataframe
-from .drift import enforce_catalogue_stability, stop_if_failed, validate_schema
+from .guardrails import enforce_freshness, enforce_profile_behavior, stop_if_failed, validate_schema
 from .fabric_input_output import write_lakehouse_table
 from .governance_review import CATALOGUE_TABLE, LINEAGE_TABLE, enforce_dq_rules
 from .config import _current_audit_timestamp, _get_audit_timezone
@@ -163,16 +163,14 @@ def prepare_pipeline_table_configs(
 
     Notes
     -----
-    Source configs derive ``dataset_name`` from ``table_name``, ``stage`` from
-    ``layer``, and ``watermark_value`` from the individual table config only.
-    ``watermark_value`` defaults to ``None`` and is never inherited from
-    ``default_settings``. Source
+    Source configs derive ``dataset_name`` from ``table_name`` and ``stage`` from
+    ``layer``. Source
     DataFrames must be loaded directly in the notebook with the existing
     FabricOps read helpers and supplied in each source config as ``df``.
 
     Target configs derive ``dataset_name``, ``stage``, ``target_layer``,
-    ``target_name``, ``target_kind``, and ``watermark_value`` unless overridden,
-    then add standard FabricOps audit columns.
+    ``target_name``, and ``target_kind`` unless overridden, then add standard
+    FabricOps audit columns.
     """
     normalized_role = str(table_role or "").lower().strip()
     if normalized_role not in {"source", "target"}:
@@ -183,8 +181,6 @@ def prepare_pipeline_table_configs(
         merged_config = {**default_settings, **table_config}
         dataset_name = merged_config.get("dataset_name", merged_config["table_name"])
         stage = merged_config.get("stage", merged_config["layer"])
-        watermark_value = table_config.get("watermark_value", None)
-
         if normalized_role == "source":
             if "df" not in merged_config:
                 table_key = merged_config.get("key", merged_config.get("table_name", "<unknown>"))
@@ -199,7 +195,6 @@ def prepare_pipeline_table_configs(
                 **merged_config,
                 "dataset_name": dataset_name,
                 "stage": stage,
-                "watermark_value": watermark_value,
             }
         else:
             target_layer = merged_config.get("target_layer", merged_config["layer"])
@@ -213,7 +208,6 @@ def prepare_pipeline_table_configs(
                 "target_layer": target_layer,
                 "target_name": target_name,
                 "target_kind": target_kind,
-                "watermark_value": watermark_value,
             }
         enriched_tables.append(enriched_table)
 
@@ -277,15 +271,15 @@ def run_table_guardrails(
     pipeline_name: str = "",
     stop_on_failure: bool = False,
 ) -> dict[str, Any]:
-    """Run profiling, schema, stability, DQ, and catalogue guardrails.
+    """Run profiling, schema, freshness, profile behavior, DQ, and catalogue guardrails.
 
     Parameters
     ----------
     table_configs : list of dict
         Source or target table configs. Each config must contain ``key``,
         ``df``, and ``expected_schema``. Optional keys such as
-        ``dataset_name``, ``stage``, ``schema_preset``, ``data_behavior``,
-        ``stability_check_type``, ``watermark_column``, ``watermark_value``,
+        ``dataset_name``, ``stage``, ``schema_preset``, ``load_behavior``,
+        ``watermark_column``,
         ``dq_preset``, ``distribution_columns``, and ``exclude_columns``
         control the guardrail behavior.
     config : Any
@@ -295,7 +289,7 @@ def run_table_guardrails(
     run_id : str
         Current pipeline run identifier.
     spark_session : Any
-        Spark session used by stability and DQ helpers.
+        Spark session used by profile behavior and DQ helpers.
     agreement_id, agreement_contract_version, notebook_registry_id, notebook_id, pipeline_name : str, optional
         Governance context written with catalogue evidence.
     stop_on_failure : bool, default False
@@ -306,14 +300,14 @@ def run_table_guardrails(
     Returns
     -------
     dict[str, Any]
-        Guardrail result bundle containing profiles, schema results, stability
-        results, DQ results, catalogue status, evidence definitions, concise
+        Guardrail result bundle containing profiles, schema results, freshness
+        results, profile behavior results, DQ results, catalogue status, evidence definitions, concise
         ``summary``, ``can_continue``, and ``failed_tables``. Results remain
         separated by table key and guardrail type.
 
     Notes
     -----
-    This helper intentionally collects all per-table schema, stability, and DQ
+    This helper intentionally collects all per-table schema, freshness, profile behavior, and DQ
     results before reporting blocking failures. DQ results that return an
     annotated DataFrame update the corresponding table config ``df`` in place
     so downstream writes use the checked DataFrame. Metadata reads and writes
@@ -321,6 +315,7 @@ def run_table_guardrails(
     """
     profiles: dict[str, Any] = {}
     schema_results: dict[str, Mapping[str, Any]] = {}
+    freshness_results: dict[str, Mapping[str, Any]] = {}
     stability_results: dict[str, Mapping[str, Any]] = {}
     dq_results: dict[str, Mapping[str, Any]] = {}
     failed_tables: list[str] = []
@@ -350,7 +345,14 @@ def run_table_guardrails(
             preset=table_config.get("schema_preset", "strict"),
         )
 
-        stability_results[table_key] = enforce_catalogue_stability(
+        freshness_results[table_key] = enforce_freshness(
+            dataframe,
+            table_config.get("freshness_column"),
+            table_config.get("freshness_max_lag_days"),
+            severity=table_config.get("freshness_severity", "blocking"),
+        )
+
+        stability_results[table_key] = enforce_profile_behavior(
             spark_session,
             dataframe,
             CATALOGUE_TABLE,
@@ -358,14 +360,13 @@ def run_table_guardrails(
             table_name,
             stage=stage,
             run_id=run_id,
-            data_behavior=table_config.get("data_behavior", "changing"),
-            stability_check_type=table_config.get("stability_check_type", "watermark_slice_hash"),
+            load_behavior=table_config.get("load_behavior", "append"),
             watermark_column=table_config.get("watermark_column"),
-            watermark_value=table_config.get("watermark_value"),
             exclude_columns=table_config.get("exclude_columns"),
             exclude_run_id=run_id,
             config=config,
             env=env,
+            current_profile=profiles[table_key],
         )
 
         if table_config.get("dq_preset", "approved_rules") == "skip":
@@ -390,7 +391,7 @@ def run_table_guardrails(
 
         table_can_continue = all(
             _guardrail_can_continue(result)
-            for result in (schema_results[table_key], stability_results[table_key], dq_results[table_key])
+            for result in (schema_results[table_key], freshness_results[table_key], stability_results[table_key], dq_results[table_key])
         )
         if not table_can_continue:
             failed_tables.append(table_key)
@@ -407,12 +408,14 @@ def run_table_guardrails(
         notebook_id=notebook_id,
         pipeline_name=pipeline_name,
         schema_results=schema_results,
+        freshness_results=freshness_results,
         stability_results=stability_results,
         dq_results=dq_results,
     )
 
     summary = {
         "schema_results": schema_results,
+        "freshness_results": freshness_results,
         "stability_results": stability_results,
         "dq_results": dq_results,
         "catalogue_status": catalogue_status,
@@ -421,6 +424,7 @@ def run_table_guardrails(
     result = {
         "profiles": profiles,
         "schema_results": schema_results,
+        "freshness_results": freshness_results,
         "stability_results": stability_results,
         "dq_results": dq_results,
         "catalogue_status": catalogue_status,
@@ -456,6 +460,7 @@ def write_catalogue_evidence(
     notebook_id: str = "",
     pipeline_name: str = "",
     schema_results: Mapping[str, Mapping[str, Any]] | None = None,
+    freshness_results: Mapping[str, Mapping[str, Any]] | None = None,
     stability_results: Mapping[str, Mapping[str, Any]] | None = None,
     dq_results: Mapping[str, Mapping[str, Any]] | None = None,
     metadata_table: str = CATALOGUE_TABLE,
@@ -475,7 +480,7 @@ def write_catalogue_evidence(
         Pipeline run identifier.
     agreement_id, agreement_contract_version, notebook_registry_id, notebook_id, pipeline_name : str, optional
         Governance context added to each catalogue row.
-    schema_results, stability_results, dq_results : mapping, optional
+    schema_results, freshness_results, stability_results, dq_results : mapping, optional
         Guardrail results keyed by dataset alias.
     metadata_table : str, default="METADATA_DATA_CATALOGUE"
         Metadata table to append.
@@ -497,6 +502,7 @@ def write_catalogue_evidence(
         dataset_name = str(definition.get("dataset_name") or table_name)
         stage = str(definition.get("stage", "target"))
         stability_result = dict((stability_results or {}).get(name) or {})
+        freshness_result = dict((freshness_results or {}).get(name) or {})
         schema_result = dict((schema_results or {}).get(name) or {})
         dq_fields = _dq_summary_fields((dq_results or {}).get(name))
         evidence = _canonical_catalogue_profile_df(profile_df)
@@ -513,9 +519,9 @@ def write_catalogue_evidence(
             "profile_stage": stage,
             "profile_status": "success",
             "baseline_status": str(stability_result.get("baseline_status", stability_result.get("status", ""))),
-            "source_data_change_check": str(definition.get("stability_check_type", "")) if stage == "source" else "",
-            "target_data_change_check": str(definition.get("stability_check_type", "")) if stage == "target" else "",
-            "profile_baseline_mode": str(stability_result.get("stability_check_type", "")),
+            "source_data_change_check": str(definition.get("load_behavior", "")) if stage == "source" else "",
+            "target_data_change_check": str(definition.get("load_behavior", "")) if stage == "target" else "",
+            "profile_baseline_mode": str(stability_result.get("load_behavior", "")),
             "profiled_at": _now_iso(),
             "agreement_id": agreement_id,
             "contract_version": agreement_contract_version,
@@ -525,23 +531,19 @@ def write_catalogue_evidence(
             "source_schema_check": str(definition.get("schema_preset", "")) if stage == "source" else "",
             "target_schema_check": str(definition.get("schema_preset", "")) if stage == "target" else "",
             "stability_check_enabled": bool(stability_result.get("stability_check_enabled", False)),
-            "stability_check_type": str(stability_result.get("stability_check_type", definition.get("stability_check_type", ""))),
-            "data_behavior": str(stability_result.get("data_behavior", definition.get("data_behavior", ""))),
-            "profile_scope": str(stability_result.get("profile_scope", "")),
+            "load_behavior": str(stability_result.get("load_behavior", definition.get("load_behavior", ""))),
             "watermark_column": str(stability_result.get("watermark_column", definition.get("watermark_column", ""))),
-            "watermark_value": str(stability_result.get("watermark_value", definition.get("watermark_value", ""))),
-            "profile_filter_expression": str(stability_result.get("profile_filter_expression", "")),
-            "schema_hash": str(stability_result.get("schema_hash", "")),
-            "profile_hash": str(stability_result.get("profile_hash", "")),
-            "comparable_profile_hash": str(stability_result.get("comparable_profile_hash", "")),
+            "freshness_column": str(freshness_result.get("freshness_column", definition.get("freshness_column", ""))),
+            "freshness_max_lag_days": str(freshness_result.get("freshness_max_lag_days", definition.get("freshness_max_lag_days", ""))),
+            "freshness_status": str(freshness_result.get("freshness_status", freshness_result.get("status", ""))),
+            "freshness_can_continue": bool(freshness_result.get("freshness_can_continue", freshness_result.get("can_continue", True))),
+            "freshness_message": str(freshness_result.get("freshness_message", freshness_result.get("message", ""))),
             "baseline_run_id": str(stability_result.get("baseline_run_id", "")),
-            "baseline_profile_hash": str(stability_result.get("baseline_profile_hash", "")),
-            "baseline_watermark_value": str(stability_result.get("baseline_watermark_value", "")),
             "stability_status": str(stability_result.get("stability_status", stability_result.get("status", ""))),
             "stability_can_continue": bool(stability_result.get("stability_can_continue", stability_result.get("can_continue", True))),
             "stability_message": str(stability_result.get("stability_message", stability_result.get("message", ""))),
             "stability_difference_summary": str(stability_result.get("stability_difference_summary", "")),
-            "source_change_signal_json": json.dumps({"schema": schema_result, "stability": stability_result}, default=str, sort_keys=True),
+            "source_change_signal_json": json.dumps({"schema": schema_result, "freshness": freshness_result, "stability": stability_result}, default=str, sort_keys=True),
             **dq_fields,
             **audit,
         }
@@ -659,6 +661,8 @@ def write_pipeline_run_summary(
     target_definitions: Mapping[str, Mapping[str, Any]] | None = None,
     source_schema_results: Mapping[str, Mapping[str, Any]] | None = None,
     target_schema_results: Mapping[str, Mapping[str, Any]] | None = None,
+    source_freshness_results: Mapping[str, Mapping[str, Any]] | None = None,
+    target_freshness_results: Mapping[str, Mapping[str, Any]] | None = None,
     source_stability_results: Mapping[str, Mapping[str, Any]] | None = None,
     target_stability_results: Mapping[str, Mapping[str, Any]] | None = None,
     source_dq_results: Mapping[str, Mapping[str, Any]] | None = None,
@@ -687,7 +691,7 @@ def write_pipeline_run_summary(
         Overall pipeline status.
     source_definitions, target_definitions : mapping, optional
         Dataset definitions used to compute source and target counts.
-    source_schema_results, target_schema_results, source_stability_results, target_stability_results, source_dq_results, target_dq_results : mapping, optional
+    source_schema_results, target_schema_results, source_freshness_results, target_freshness_results, source_stability_results, target_stability_results, source_dq_results, target_dq_results : mapping, optional
         Guardrail result dictionaries included in the JSON summary.
     lineage_status, catalogue_status, message : str, optional
         Evidence write statuses and support message.
@@ -711,12 +715,14 @@ def write_pipeline_run_summary(
     started = started_at or completed
     sources = source_definitions or {}
     targets = target_definitions or {}
-    source_guardrail_status = _summary_status({**(source_schema_results or {}), **(source_stability_results or {})})
-    target_guardrail_status = _summary_status({**(target_schema_results or {}), **(target_stability_results or {})})
+    source_guardrail_status = _summary_status({**(source_schema_results or {}), **(source_freshness_results or {}), **(source_stability_results or {})})
+    target_guardrail_status = _summary_status({**(target_schema_results or {}), **(target_freshness_results or {}), **(target_stability_results or {})})
     dq_status = _summary_status({**(source_dq_results or {}), **(target_dq_results or {})})
     run_summary = {
         "source_schema_results": source_schema_results or {},
         "target_schema_results": target_schema_results or {},
+        "source_freshness_results": source_freshness_results or {},
+        "target_freshness_results": target_freshness_results or {},
         "source_stability_results": source_stability_results or {},
         "target_stability_results": target_stability_results or {},
         "source_dq_results": source_dq_results or {},

@@ -86,8 +86,7 @@ def test_prepare_pipeline_table_configs_source_role_derives_defaults_from_preloa
         ],
         {
             "schema_preset": "allow_new_columns",
-            "data_behavior": "changing",
-            "watermark_value": "default_should_be_overridden",
+            "load_behavior": "append",
         },
         table_role="source",
     )
@@ -95,8 +94,7 @@ def test_prepare_pipeline_table_configs_source_role_derives_defaults_from_preloa
     assert enriched == [
         {
             "schema_preset": "allow_new_columns",
-            "data_behavior": "changing",
-            "watermark_value": None,
+            "load_behavior": "append",
             "key": "source_01",
             "df": source_df,
             "layer": "source",
@@ -125,37 +123,6 @@ def test_pipeline_module_does_not_expose_source_read_routing_wrappers():
 
 
 
-def test_prepare_pipeline_table_configs_uses_only_table_watermark_values(monkeypatch):
-    _install_fake_pyspark_functions(monkeypatch)
-    source_df = FakeDataFrame("source")
-    target_df = FakeDataFrame("target")
-
-    source_tables, _source_by_key = pipeline.prepare_pipeline_table_configs(
-        [
-            {"key": "source_default", "df": source_df, "layer": "source", "table_name": "orders"},
-            {
-                "key": "source_override",
-                "df": source_df,
-                "layer": "source",
-                "table_name": "orders_daily",
-                "watermark_value": "2026-01-31",
-            },
-        ],
-        {"watermark_value": "default_should_not_apply", "schema_preset": "allow_new_columns"},
-        table_role="source",
-    )
-    target_tables, _target_by_key = pipeline.prepare_pipeline_table_configs(
-        [{"key": "target_default", "df": target_df, "layer": "unified", "table_name": "orders_curated"}],
-        {"watermark_value": "default_should_not_apply", "write_mode": "overwrite"},
-        table_role="target",
-        run_id="run-1",
-        pipeline_name="pipeline-1",
-    )
-
-    assert source_tables[0]["watermark_value"] is None
-    assert source_tables[1]["watermark_value"] == "2026-01-31"
-    assert target_tables[0]["watermark_value"] is None
-
 
 def test_prepare_pipeline_table_configs_target_role_adds_audit_columns_and_derives_write_defaults(monkeypatch):
     _install_fake_pyspark_functions(monkeypatch)
@@ -174,7 +141,6 @@ def test_prepare_pipeline_table_configs_target_role_adds_audit_columns_and_deriv
             "schema_preset": "allow_new_columns",
             "write_mode": "overwrite",
             "target_kind": "lakehouse",
-            "watermark_value": "default_should_be_overridden",
         },
         table_role="target",
         run_id="run-1",
@@ -187,7 +153,6 @@ def test_prepare_pipeline_table_configs_target_role_adds_audit_columns_and_deriv
     assert target["target_layer"] == "unified"
     assert target["target_name"] == "orders_curated"
     assert target["target_kind"] == "lakehouse"
-    assert target["watermark_value"] is None
     assert by_key["target_01"] is target
     assert [name for name, _value in df.with_columns] == [
         "_fabricops_run_id",
@@ -306,8 +271,12 @@ def test_run_table_guardrails_collects_results_and_returns_summary_before_report
         calls.append(("schema", dataframe))
         return {"status": "failed" if dataframe == "df_bad" else "passed", "can_continue": dataframe != "df_bad"}
 
+    def fake_freshness(dataframe, freshness_column, max_lag_days, severity="blocking", **kwargs):
+        calls.append(("freshness", dataframe))
+        return {"status": "passed", "can_continue": True}
+
     def fake_stability(*args, **kwargs):
-        calls.append(("stability", args[4]))
+        calls.append(("stability", args[4], kwargs.get("current_profile")))
         return {"status": "passed", "can_continue": True}
 
     def fake_dq(dataframe, config, env, dataset_name, table_name, *, spark_session=None):
@@ -323,7 +292,8 @@ def test_run_table_guardrails_collects_results_and_returns_summary_before_report
 
     monkeypatch.setattr(pipeline, "profile_dataframe", fake_profile)
     monkeypatch.setattr(pipeline, "validate_schema", fake_validate)
-    monkeypatch.setattr(pipeline, "enforce_catalogue_stability", fake_stability)
+    monkeypatch.setattr(pipeline, "enforce_freshness", fake_freshness)
+    monkeypatch.setattr(pipeline, "enforce_profile_behavior", fake_stability)
     monkeypatch.setattr(pipeline, "enforce_dq_rules", fake_dq)
     monkeypatch.setattr(pipeline, "write_catalogue_evidence", fake_catalogue)
 
@@ -365,10 +335,12 @@ def test_run_table_guardrails_collects_results_and_returns_summary_before_report
     assert result["failed_tables"] == ["bad"]
     assert set(result["profiles"]) == {"good", "bad"}
     assert set(result["schema_results"]) == {"good", "bad"}
+    assert set(result["freshness_results"]) == {"good", "bad"}
     assert set(result["stability_results"]) == {"good", "bad"}
     assert result["dq_results"]["bad"]["status"] == "skipped"
     assert result["summary"] == {
         "schema_results": result["schema_results"],
+        "freshness_results": result["freshness_results"],
         "stability_results": result["stability_results"],
         "dq_results": result["dq_results"],
         "catalogue_status": result["catalogue_status"],
@@ -376,9 +348,11 @@ def test_run_table_guardrails_collects_results_and_returns_summary_before_report
     }
     assert table_configs[0]["df"] == "df_good_checked"
     assert ("profile", "orders_bad") in calls
-    assert ("stability", "orders_bad") in calls
+    assert ("freshness", "df_bad") in calls
+    assert ("stability", "orders_bad", result["profiles"]["bad"]) in calls
     assert catalogue_calls
     assert catalogue_calls[0][2]["schema_results"] == result["schema_results"]
+    assert catalogue_calls[0][2]["freshness_results"] == result["freshness_results"]
 
 
 
@@ -387,7 +361,8 @@ def test_run_table_guardrails_stop_on_failure_delegates_to_standard_stopper(monk
 
     monkeypatch.setattr(pipeline, "profile_dataframe", lambda dataframe, **kwargs: {"profile_for": kwargs["table_name"]})
     monkeypatch.setattr(pipeline, "validate_schema", lambda dataframe, expected_schema, *, preset="strict": {"status": "failed", "can_continue": False})
-    monkeypatch.setattr(pipeline, "enforce_catalogue_stability", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
+    monkeypatch.setattr(pipeline, "enforce_freshness", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
+    monkeypatch.setattr(pipeline, "enforce_profile_behavior", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
     monkeypatch.setattr(pipeline, "write_catalogue_evidence", lambda *args, **kwargs: {"status": "written"})
     monkeypatch.setattr(pipeline, "stop_if_failed", lambda result: stopped.append(result))
 

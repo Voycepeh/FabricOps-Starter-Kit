@@ -1,6 +1,6 @@
 # _profile_row_count
 
-**Module:** `drift`  
+**Module:** `guardrails`
 **Classification:** Internal
 
 ## Status
@@ -17,7 +17,7 @@ Do not call this helper directly from notebooks; use the public callable helpers
 
 ## Used by
 
-- <a href="../enforce_catalogue_stability/"><code>fabricops_kit.drift.enforce_catalogue_stability</code></a>
+- <a href="../enforce_profile_behavior/"><code>fabricops_kit.guardrails.enforce_profile_behavior</code></a>
 
 ## Purpose
 
@@ -43,18 +43,18 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 
 ## Function manifest
 
-- Fully qualified function name: `fabricops_kit.drift._profile_row_count`
+- Fully qualified function name: `fabricops_kit.guardrails._profile_row_count`
 - Short name: `_profile_row_count`
-- Module: `drift`
+- Module: `guardrails`
 - Classification: Internal
-- Related module: `drift`
-- Source file path: `src/fabricops_kit/drift.py`
-- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/drift.py#L358-L364">View source on GitHub</a>
+- Related module: `guardrails`
+- Source file path: `src/fabricops_kit/guardrails.py`
+- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a80b5a6ddb4de14056095d4da916cd452e478ff8/src/fabricops_kit/guardrails.py#L294-L300">View source on GitHub</a>
 - Inbound references count: 1
 - Outbound references count: 1
 
 ## Inbound references
-- <a href="../enforce_catalogue_stability/"><code>fabricops_kit.drift.enforce_catalogue_stability</code></a>
+- <a href="../enforce_profile_behavior/"><code>fabricops_kit.guardrails.enforce_profile_behavior</code></a>
 
 ## Outbound references
-- <a href="../internal/drift__stable_profile_payload/"><code>fabricops_kit.drift._stable_profile_payload</code></a>
+- <a href="../internal/guardrails__normalize_profile/"><code>fabricops_kit.guardrails._normalize_profile</code></a>

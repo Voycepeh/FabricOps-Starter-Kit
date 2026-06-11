@@ -180,8 +180,8 @@ Rule selection principles:
 - Prefer the smallest named rule that expresses the requirement.
 - Use column profile evidence: data_type, row_count, null_count, null_percent, distinct_count, distinct_percent, min_value, max_value, and observed_values_sample.
 - Do not suggest datatype/schema rules; schema validation is separate.
-- Do not suggest source stability rules; stability checks are separate.
-- Schema guardrails and source stability are separate FabricOps layers.
+- Do not suggest profile behavior guardrail rules; profile behavior checks are separate.
+- Schema guardrails and profile behavior guardrails are separate FabricOps layers.
 - Do not suggest row filtering or quarantine behavior; FabricOps v1 reports/tags outcomes and error severity blocks unsafe downstream writes.
 - Use expression_true only as the Custom expression escape hatch when no smaller rule fits.
 
@@ -258,8 +258,8 @@ Output guardrails:
 
 What belongs outside DQ:
 - Do not suggest schema rules such as required_columns, expected_schema, or datatype checks.
-- Do not suggest source stability rules.
-- Schema guardrails and source stability are separate FabricOps layers.
+- Do not suggest profile behavior guardrail rules.
+- Schema guardrails and profile behavior guardrails are separate FabricOps layers.
 
 Return valid JSON only in this shape:
 {"DQ_RULES":{"{table_name}":[{"rule_id":"lower_snake_case_rule_id","rule_type":"not_null","columns":["column_name"],"severity":"warning","description":"Plain business explanation."}]}}

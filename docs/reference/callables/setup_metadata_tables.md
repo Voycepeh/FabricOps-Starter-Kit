@@ -85,7 +85,7 @@ Setup result describing metadata table creation or validation status.
 ## Source
 
 - Source file path: `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/config.py#L1035-L1099">View setup_metadata_tables on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a80b5a6ddb4de14056095d4da916cd452e478ff8/src/fabricops_kit/config.py#L1035-L1099">View setup_metadata_tables on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -202,7 +202,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/config.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/config.py#L1035-L1099">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/config.py#L1035-L1099</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a80b5a6ddb4de14056095d4da916cd452e478ff8/src/fabricops_kit/config.py#L1035-L1099">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a80b5a6ddb4de14056095d4da916cd452e478ff8/src/fabricops_kit/config.py#L1035-L1099</a>
 - Start line: `1035`
 - End line: `1099`
 - Signature:

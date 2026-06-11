@@ -27,22 +27,23 @@ This list is kept as release-planning context only. The source of truth is the p
 14. `write_warehouse_table`
 15. `profile_dataframe`
 16. `validate_schema`
-17. `enforce_catalogue_stability`
-18. `stop_if_failed`
-19. `enforce_dq_rules`
-20. `build_lineage_records`
-21. `prepare_pipeline_table_configs`
-22. `run_table_guardrails`
-23. `write_catalogue_evidence`
-24. `write_pipeline_lineage`
-25. `write_pipeline_run_summary`
-26. `widget_select_catalogue_table`
-27. `get_selected_catalogue_table`
-28. `load_catalogue_profile_rows`
-29. `widget_review_column_context`
-30. `widget_review_dq_rules`
-31. `widget_review_column_classification`
-32. `record_table_governance`
+17. `enforce_freshness`
+18. `enforce_profile_behavior`
+19. `stop_if_failed`
+20. `enforce_dq_rules`
+21. `build_lineage_records`
+22. `prepare_pipeline_table_configs`
+23. `run_table_guardrails`
+24. `write_catalogue_evidence`
+25. `write_pipeline_lineage`
+26. `write_pipeline_run_summary`
+27. `widget_select_catalogue_table`
+28. `get_selected_catalogue_table`
+29. `load_catalogue_profile_rows`
+30. `widget_review_column_context`
+31. `widget_review_dq_rules`
+32. `widget_review_column_classification`
+33. `record_table_governance`
 
 ## Deleted from the public callable surface
 

@@ -78,7 +78,7 @@ Guardrail result dictionary with status, can_continue, checks, message, tagged d
 ## Related functions
 
 - <a href="../record_table_governance/"><code>fabricops_kit.governance_review.record_table_governance</code></a>
-- <a href="../stop_if_failed/"><code>fabricops_kit.drift.stop_if_failed</code></a>
+- <a href="../stop_if_failed/"><code>fabricops_kit.guardrails.stop_if_failed</code></a>
 
 <details class="reference-implementation-details">
 <summary>Implementation details</summary>
@@ -97,7 +97,7 @@ Guardrail result dictionary with status, can_continue, checks, message, tagged d
 ## Source
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/governance_review.py#L1536-L1593">View enforce_dq_rules on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a80b5a6ddb4de14056095d4da916cd452e478ff8/src/fabricops_kit/governance_review.py#L1536-L1593">View enforce_dq_rules on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -208,7 +208,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/governance_review.py#L1536-L1593">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/governance_review.py#L1536-L1593</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a80b5a6ddb4de14056095d4da916cd452e478ff8/src/fabricops_kit/governance_review.py#L1536-L1593">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a80b5a6ddb4de14056095d4da916cd452e478ff8/src/fabricops_kit/governance_review.py#L1536-L1593</a>
 - Start line: `1536`
 - End line: `1593`
 - Signature:
@@ -222,7 +222,7 @@ def enforce_dq_rules(dataframe, config, env, dataset_name, table_name, *, spark_
 ### Public related functions
 
 - <a href="../record_table_governance/"><code>fabricops_kit.governance_review.record_table_governance</code></a>
-- <a href="../stop_if_failed/"><code>fabricops_kit.drift.stop_if_failed</code></a>
+- <a href="../stop_if_failed/"><code>fabricops_kit.guardrails.stop_if_failed</code></a>
 
 ### Internal implementation helpers
 
