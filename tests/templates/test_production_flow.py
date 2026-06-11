@@ -81,7 +81,7 @@ def test_guardrail_orchestration_is_imported_and_documents_simple_v1_behavior():
     assert "_load_source_dataframe" not in production
     assert "_read_source_dataframe" not in production
     assert "read_type" not in production
-    guardrail_docs = (ROOT / "docs" / "how-fabricops-works" / "schema-and-data-drift.md").read_text(encoding="utf-8")
+    guardrail_docs = (ROOT / "docs" / "how-fabricops-works" / "pipeline-guardrails.md").read_text(encoding="utf-8")
     assert "Warning-severity failure" in guardrail_docs
     assert "Error-severity failure" in guardrail_docs
     assert "blocks before the next critical step" in guardrail_docs
@@ -175,7 +175,7 @@ def test_smoke_test_example_notebook_exists_and_covers_end_to_end_pattern():
 
 def test_docs_and_templates_do_not_add_dq_failure_table_behavior():
     checked_paths = [
-        ROOT / "docs" / "how-fabricops-works" / "schema-and-data-drift.md",
+        ROOT / "docs" / "how-fabricops-works" / "pipeline-guardrails.md",
         ROOT / "docs" / "how-fabricops-works" / "governance-review.md",
         ROOT / "docs" / "how-fabricops-works" / "notebook-templates.md",
         ROOT / "docs" / "how-fabricops-works" / "metadata-tables.md",

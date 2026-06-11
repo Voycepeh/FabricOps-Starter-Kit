@@ -42,7 +42,7 @@ write_lakehouse_table(
 
 `01_agreement` writes steward, agreement, and evidence metadata. `02_pipeline` writes registry, catalogue, lineage, profile, guardrail, and run evidence. `03_governance` writes reviewed metadata such as column context, DQ expectations, sensitivity, classification, and final governance review outcomes. `99_explore` can support investigation, but it is optional and is not a required gate.
 
-For how schema, freshness, profile behavior, and DQ settings produce this evidence, see [Pipeline Guardrails](schema-and-data-drift.md).
+For how schema, freshness, profile behavior, and DQ settings produce this evidence, see [Pipeline Guardrails](pipeline-guardrails.md).
 
 
 ## Standard runtime audit columns
