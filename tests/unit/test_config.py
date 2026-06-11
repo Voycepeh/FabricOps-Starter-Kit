@@ -10,6 +10,7 @@ from fabricops_kit.config import (
     DEFAULT_DQ_RULE_SUGGESTION_PROMPT_TEMPLATE,
     DataAgreementConfig,
     PathConfig,
+    _validate_metadata_table_registration,
     setup_metadata_tables,
     setup_notebook,
 )
@@ -135,6 +136,10 @@ def test_setup_metadata_tables_delegates_v1_metadata_setup(monkeypatch):
     monkeypatch.setattr("fabricops_kit.data_agreement._setup_data_agreement_tables", data_agreement_setup)
     monkeypatch.setattr("fabricops_kit.metadata._setup_notebook_registry_table", notebook_registry_setup)
     monkeypatch.setattr("fabricops_kit.governance_review._setup_governance_metadata_tables", governance_setup)
+    monkeypatch.setattr(
+        "fabricops_kit.config._validate_metadata_table_registration",
+        lambda **kwargs: {"status": "ready", "missing_tables": [], "expected_tables": kwargs["expected_tables"]},
+    )
 
     config = framework_config()
     spark = object()
@@ -145,6 +150,58 @@ def test_setup_metadata_tables_delegates_v1_metadata_setup(monkeypatch):
     assert calls[0][1] == {"spark": spark, "config": config, "env": "dev", "require_active_steward": True}
     assert calls[1][1] == {"spark": spark, "config": config, "env": "dev"}
     assert calls[2][1] == {"spark": spark, "config": config, "env": "dev"}
+    assert result["registration_validation"]["status"] == "ready"
+
+
+def test_metadata_registration_validation_uses_show_tables_against_metadata_lakehouse():
+    class Row(dict):
+        def asDict(self, recursive=True):  # noqa: N802 - mirrors Spark API
+            return dict(self)
+
+    class Result:
+        def collect(self):
+            return [Row(tableName="METADATA_DATA_STEWARD"), Row(tableName="METADATA_DQ_RULES")]
+
+    class Spark:
+        def __init__(self):
+            self.statements = []
+
+        def sql(self, statement):
+            self.statements.append(statement)
+            return Result()
+
+    spark = Spark()
+    result = _validate_metadata_table_registration(
+        spark=spark,
+        config=framework_config(),
+        env="dev",
+        expected_tables=["METADATA_DATA_STEWARD", "METADATA_DQ_RULES"],
+    )
+
+    assert result["status"] == "ready"
+    assert result["missing_tables"] == []
+    assert spark.statements == ["SHOW TABLES IN `lh_metadata_dev`"]
+
+
+def test_metadata_registration_validation_warns_for_missing_registered_tables():
+    class Result:
+        def collect(self):
+            return []
+
+    class Spark:
+        def sql(self, statement):
+            return Result()
+
+    result = _validate_metadata_table_registration(
+        spark=Spark(),
+        config=framework_config(),
+        env="dev",
+        expected_tables=["METADATA_DATA_STEWARD"],
+    )
+
+    assert result["status"] == "not_ready"
+    assert result["missing_tables"] == ["METADATA_DATA_STEWARD"]
+    assert "Unidentified" in result["warnings"][0]
 
 
 def test_governance_review_imports_current_prompt_constants():

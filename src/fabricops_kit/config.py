@@ -816,6 +816,91 @@ def setup_notebook(
     )
 
 
+def _metadata_tables_from_setup_results(*summaries: dict[str, Any]) -> list[str]:
+    """Return ordered metadata table names from setup helper summaries."""
+    tables: list[str] = []
+    for summary in summaries:
+        for key in ("tables", "table"):
+            value = summary.get(key) if isinstance(summary, dict) else None
+            values = value if isinstance(value, list) else [value] if value else []
+            for table in values:
+                table_name = str(table or "").strip()
+                if table_name and table_name not in tables:
+                    tables.append(table_name)
+    return tables
+
+
+def _show_tables_for_metadata_lakehouse(*, spark: Any, config: FrameworkConfig | dict[str, Any], env: str) -> dict[str, Any]:
+    """Run SHOW TABLES for the configured metadata lakehouse when available."""
+    metadata_store = _get_store(config=config, env=env, target="metadata")
+    if metadata_store.kind != "lakehouse":
+        raise ValueError(f"Target '{env}/metadata' is not a lakehouse store.")
+    if not hasattr(spark, "sql"):
+        return {"status": "skipped", "database": metadata_store.name, "tables": [], "message": "Spark SQL is unavailable in this runtime."}
+
+    statements = [f"SHOW TABLES IN `{str(metadata_store.name).replace('`', '``')}`", "SHOW TABLES"]
+    last_error: Exception | None = None
+    for statement in statements:
+        try:
+            rows = spark.sql(statement).collect()
+            table_names: list[str] = []
+            for row in rows:
+                if hasattr(row, "asDict"):
+                    item = row.asDict(recursive=True)
+                elif isinstance(row, dict):
+                    item = row
+                else:
+                    try:
+                        item = dict(row)
+                    except Exception:
+                        item = {}
+                table_name = item.get("tableName") or item.get("table_name") or item.get("tablename")
+                if table_name is None and not item:
+                    try:
+                        table_name = row[1]
+                    except Exception:
+                        table_name = None
+                if table_name:
+                    table_names.append(str(table_name))
+            return {"status": "ready", "database": metadata_store.name, "tables": sorted(set(table_names)), "statement": statement}
+        except Exception as exc:  # pragma: no cover - depends on Fabric Spark catalog behavior
+            last_error = exc
+    return {"status": "skipped", "database": metadata_store.name, "tables": [], "message": f"SHOW TABLES was unavailable: {last_error}"}
+
+
+def _validate_metadata_table_registration(
+    *,
+    spark: Any,
+    config: FrameworkConfig | dict[str, Any],
+    env: str,
+    expected_tables: list[str],
+) -> dict[str, Any]:
+    """Validate that expected metadata tables are registered in Spark catalog."""
+    show_tables = _show_tables_for_metadata_lakehouse(spark=spark, config=config, env=env)
+    observed = {str(name).lower(): str(name) for name in show_tables.get("tables", [])}
+    show_tables_ready = show_tables.get("status") == "ready"
+    missing = [table for table in expected_tables if table.lower() not in observed] if show_tables_ready else []
+    warnings = []
+    if missing:
+        warnings.append(
+            "Expected metadata tables were not returned by SHOW TABLES. If a previous run wrote Delta files under "
+            "Tables/<metadata_table>/Unidentified, do not delete data automatically; migrate or recreate those "
+            "folders deliberately, then rerun 00_env_config."
+        )
+    if not show_tables_ready:
+        warnings.append(str(show_tables.get("message") or "SHOW TABLES validation was skipped."))
+    status = "ready" if show_tables_ready and not missing else "not_ready" if show_tables_ready else "skipped"
+    return {
+        "status": status,
+        "database": show_tables.get("database"),
+        "expected_tables": list(expected_tables),
+        "registered_tables": show_tables.get("tables", []),
+        "missing_tables": missing,
+        "warnings": warnings,
+        "show_tables_statement": show_tables.get("statement"),
+    }
+
+
 def setup_metadata_tables(
     *,
     spark: Any,
@@ -861,12 +946,21 @@ def setup_metadata_tables(
     )
     notebook_registry = _setup_notebook_registry_table(spark=spark, config=config, env=env)
     governance = _setup_governance_metadata_tables(spark=spark, config=config, env=env)
+    expected_tables = _metadata_tables_from_setup_results(data_agreement, notebook_registry, governance)
+    registration = _validate_metadata_table_registration(
+        spark=spark,
+        config=config,
+        env=env,
+        expected_tables=expected_tables,
+    )
     statuses = [data_agreement.get("status"), notebook_registry.get("status"), governance.get("status")]
+    registration_status = registration.get("status")
     return {
-        "status": "ready" if all(status == "ready" for status in statuses) else "not_ready",
+        "status": "ready" if all(status == "ready" for status in statuses) and registration_status in {"ready", "skipped"} else "not_ready",
         "data_agreement": data_agreement,
         "notebook_registry": notebook_registry,
         "governance": governance,
+        "registration_validation": registration,
     }
 
 

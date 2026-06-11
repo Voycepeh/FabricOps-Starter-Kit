@@ -2,7 +2,9 @@
 
 FabricOps metadata tables live in the Governance workspace `metadata_lakehouse`. They coordinate the notebook workflow and keep metadata evidence available for review, support, and visibility.
 
-`00_env_config` creates every active metadata table on first run and validates the expected schemas on later runs. Most users should not create or edit these schemas by hand.
+`00_env_config` creates every active metadata table on first run and validates the expected schemas on later runs. It registers these objects as Fabric Lakehouse Delta tables, so they should appear in `SHOW TABLES` for the configured metadata lakehouse. Most users should not create or edit these schemas by hand.
+
+A healthy metadata table is rooted directly at `Tables/<metadata_table>/_delta_log`. If you find legacy folders such as `Tables/<metadata_table>/Unidentified/_delta_log`, treat them as migration evidence: do not delete user data automatically. Migrate or recreate those folders deliberately, then rerun `00_env_config` and confirm the table appears in `SHOW TABLES`.
 
 All workflow notebooks read and write metadata through the configured metadata route:
 

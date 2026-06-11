@@ -270,6 +270,7 @@
       "calls_count": 0,
       "used_by": [
         "fabricops_kit.config._run_config_smoke_tests",
+        "fabricops_kit.config._show_tables_for_metadata_lakehouse",
         "fabricops_kit.config.setup_notebook",
         "fabricops_kit.fabric_input_output.read_lakehouse_csv",
         "fabricops_kit.fabric_input_output.read_lakehouse_excel",
@@ -279,7 +280,7 @@
         "fabricops_kit.fabric_input_output.write_lakehouse_table",
         "fabricops_kit.fabric_input_output.write_warehouse_table"
       ],
-      "used_by_count": 9,
+      "used_by_count": 10,
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
@@ -339,6 +340,22 @@
       ],
       "internal_helper_count": 1
     },
+    "fabricops_kit.config._metadata_tables_from_setup_results": {
+      "qualified_name": "fabricops_kit.config._metadata_tables_from_setup_results",
+      "short_name": "_metadata_tables_from_setup_results",
+      "module": "config",
+      "callable": "_metadata_tables_from_setup_results",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/config/_metadata_tables_from_setup_results/",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.config.setup_metadata_tables"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
     "fabricops_kit.config._run_config_smoke_tests": {
       "qualified_name": "fabricops_kit.config._run_config_smoke_tests",
       "short_name": "_run_config_smoke_tests",
@@ -365,6 +382,26 @@
         "fabricops_kit.config._validate_notebook_name"
       ],
       "internal_helper_count": 4
+    },
+    "fabricops_kit.config._show_tables_for_metadata_lakehouse": {
+      "qualified_name": "fabricops_kit.config._show_tables_for_metadata_lakehouse",
+      "short_name": "_show_tables_for_metadata_lakehouse",
+      "module": "config",
+      "callable": "_show_tables_for_metadata_lakehouse",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/config/_show_tables_for_metadata_lakehouse/",
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.config._get_store"
+      ],
+      "calls_count": 1,
+      "used_by": [
+        "fabricops_kit.config._validate_metadata_table_registration"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [
+        "fabricops_kit.config._get_store"
+      ],
+      "internal_helper_count": 1
     },
     "fabricops_kit.config._validate_dataset_contract": {
       "qualified_name": "fabricops_kit.config._validate_dataset_contract",
@@ -408,6 +445,26 @@
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
+    "fabricops_kit.config._validate_metadata_table_registration": {
+      "qualified_name": "fabricops_kit.config._validate_metadata_table_registration",
+      "short_name": "_validate_metadata_table_registration",
+      "module": "config",
+      "callable": "_validate_metadata_table_registration",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/config/_validate_metadata_table_registration/",
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.config._show_tables_for_metadata_lakehouse"
+      ],
+      "calls_count": 1,
+      "used_by": [
+        "fabricops_kit.config.setup_metadata_tables"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [
+        "fabricops_kit.config._show_tables_for_metadata_lakehouse"
+      ],
+      "internal_helper_count": 1
+    },
     "fabricops_kit.config._validate_notebook_name": {
       "qualified_name": "fabricops_kit.config._validate_notebook_name",
       "short_name": "_validate_notebook_name",
@@ -432,16 +489,21 @@
       "docs_url": "/FabricOps-Starter-Kit/reference/setup_metadata_tables/",
       "classification": "callable",
       "calls": [
+        "fabricops_kit.config._metadata_tables_from_setup_results",
+        "fabricops_kit.config._validate_metadata_table_registration",
         "fabricops_kit.data_agreement._setup_data_agreement_tables",
         "fabricops_kit.data_agreement.get",
         "fabricops_kit.governance_review._setup_governance_metadata_tables",
         "fabricops_kit.metadata._setup_notebook_registry_table"
       ],
-      "calls_count": 4,
+      "calls_count": 6,
       "used_by": [],
       "used_by_count": 0,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
+      "internal_helpers_used": [
+        "fabricops_kit.config._metadata_tables_from_setup_results",
+        "fabricops_kit.config._validate_metadata_table_registration"
+      ],
+      "internal_helper_count": 2
     },
     "fabricops_kit.config.setup_notebook": {
       "qualified_name": "fabricops_kit.config.setup_notebook",
@@ -2090,6 +2152,22 @@
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
+    "fabricops_kit.fabric_input_output._current_database_matches": {
+      "qualified_name": "fabricops_kit.fabric_input_output._current_database_matches",
+      "short_name": "_current_database_matches",
+      "module": "fabric_input_output",
+      "callable": "_current_database_matches",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/fabric_input_output/_current_database_matches/",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.fabric_input_output.read_lakehouse_table"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
     "fabricops_kit.fabric_input_output._get_spark": {
       "qualified_name": "fabricops_kit.fabric_input_output._get_spark",
       "short_name": "_get_spark",
@@ -2125,6 +2203,80 @@
         "fabricops_kit.fabric_input_output.read_lakehouse_parquet"
       ],
       "used_by_count": 3,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.fabric_input_output._lakehouse_table_identifier": {
+      "qualified_name": "fabricops_kit.fabric_input_output._lakehouse_table_identifier",
+      "short_name": "_lakehouse_table_identifier",
+      "module": "fabric_input_output",
+      "callable": "_lakehouse_table_identifier",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/fabric_input_output/_lakehouse_table_identifier/",
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.fabric_input_output._normalize_table_name",
+        "fabricops_kit.fabric_input_output._quote_identifier"
+      ],
+      "calls_count": 2,
+      "used_by": [
+        "fabricops_kit.fabric_input_output.read_lakehouse_table",
+        "fabricops_kit.fabric_input_output.write_lakehouse_table"
+      ],
+      "used_by_count": 2,
+      "internal_helpers_used": [
+        "fabricops_kit.fabric_input_output._normalize_table_name",
+        "fabricops_kit.fabric_input_output._quote_identifier"
+      ],
+      "internal_helper_count": 2
+    },
+    "fabricops_kit.fabric_input_output._normalize_table_name": {
+      "qualified_name": "fabricops_kit.fabric_input_output._normalize_table_name",
+      "short_name": "_normalize_table_name",
+      "module": "fabric_input_output",
+      "callable": "_normalize_table_name",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/fabric_input_output/_normalize_table_name/",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.fabric_input_output._lakehouse_table_identifier",
+        "fabricops_kit.fabric_input_output.read_lakehouse_table",
+        "fabricops_kit.fabric_input_output.write_lakehouse_table"
+      ],
+      "used_by_count": 3,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.fabric_input_output._quote_identifier": {
+      "qualified_name": "fabricops_kit.fabric_input_output._quote_identifier",
+      "short_name": "_quote_identifier",
+      "module": "fabric_input_output",
+      "callable": "_quote_identifier",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/fabric_input_output/_quote_identifier/",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.fabric_input_output._lakehouse_table_identifier"
+      ],
+      "used_by_count": 1,
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.fabric_input_output._use_registered_table": {
+      "qualified_name": "fabricops_kit.fabric_input_output._use_registered_table",
+      "short_name": "_use_registered_table",
+      "module": "fabric_input_output",
+      "callable": "_use_registered_table",
+      "docs_url": "/FabricOps-Starter-Kit/reference/internal/fabric_input_output/_use_registered_table/",
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.fabric_input_output.read_lakehouse_table",
+        "fabricops_kit.fabric_input_output.write_lakehouse_table"
+      ],
+      "used_by_count": 2,
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
@@ -2202,9 +2354,13 @@
       "classification": "callable",
       "calls": [
         "fabricops_kit.config._get_store",
-        "fabricops_kit.fabric_input_output._get_spark"
+        "fabricops_kit.fabric_input_output._current_database_matches",
+        "fabricops_kit.fabric_input_output._get_spark",
+        "fabricops_kit.fabric_input_output._lakehouse_table_identifier",
+        "fabricops_kit.fabric_input_output._normalize_table_name",
+        "fabricops_kit.fabric_input_output._use_registered_table"
       ],
-      "calls_count": 2,
+      "calls_count": 6,
       "used_by": [
         "fabricops_kit.data_agreement._ensure_metadata_tables",
         "fabricops_kit.data_agreement._list_all_data_agreement_rows",
@@ -2220,9 +2376,13 @@
       ],
       "used_by_count": 11,
       "internal_helpers_used": [
-        "fabricops_kit.fabric_input_output._get_spark"
+        "fabricops_kit.fabric_input_output._current_database_matches",
+        "fabricops_kit.fabric_input_output._get_spark",
+        "fabricops_kit.fabric_input_output._lakehouse_table_identifier",
+        "fabricops_kit.fabric_input_output._normalize_table_name",
+        "fabricops_kit.fabric_input_output._use_registered_table"
       ],
-      "internal_helper_count": 1
+      "internal_helper_count": 5
     },
     "fabricops_kit.fabric_input_output.read_warehouse_table": {
       "qualified_name": "fabricops_kit.fabric_input_output.read_warehouse_table",
@@ -2251,9 +2411,12 @@
       "docs_url": "/FabricOps-Starter-Kit/reference/write_lakehouse_table/",
       "classification": "callable",
       "calls": [
-        "fabricops_kit.config._get_store"
+        "fabricops_kit.config._get_store",
+        "fabricops_kit.fabric_input_output._lakehouse_table_identifier",
+        "fabricops_kit.fabric_input_output._normalize_table_name",
+        "fabricops_kit.fabric_input_output._use_registered_table"
       ],
-      "calls_count": 1,
+      "calls_count": 4,
       "used_by": [
         "fabricops_kit.data_agreement._ensure_metadata_tables",
         "fabricops_kit.data_agreement._write_row",
@@ -2267,8 +2430,12 @@
         "fabricops_kit.pipeline.write_pipeline_run_summary"
       ],
       "used_by_count": 10,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
+      "internal_helpers_used": [
+        "fabricops_kit.fabric_input_output._lakehouse_table_identifier",
+        "fabricops_kit.fabric_input_output._normalize_table_name",
+        "fabricops_kit.fabric_input_output._use_registered_table"
+      ],
+      "internal_helper_count": 3
     },
     "fabricops_kit.fabric_input_output.write_warehouse_table": {
       "qualified_name": "fabricops_kit.fabric_input_output.write_warehouse_table",
@@ -4195,7 +4362,7 @@
   "modules": {
     "config": {
       "callable_count": 2,
-      "internal_count": 13,
+      "internal_count": 16,
       "outbound_modules": [
         "data_agreement",
         "governance_review",
@@ -4257,7 +4424,7 @@
     },
     "fabric_input_output": {
       "callable_count": 7,
-      "internal_count": 3,
+      "internal_count": 8,
       "outbound_modules": [
         "config"
       ],

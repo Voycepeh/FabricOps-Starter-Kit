@@ -56,13 +56,17 @@ def _io_config() -> PathConfig:
 def test_lakehouse_table_read_routes_every_configured_lakehouse_store():
     config = _io_config()
 
-    for target in ("source", "unified", "product", "metadata"):
+    for target in ("source", "unified", "product"):
         spark = _Spark()
         io.read_lakehouse_table(config, "dev", target, "orders", spark_session=spark)
 
         expected_path = f"abfss://dev-{target}-workspace@onelake.dfs.fabric.microsoft.com/dev-{target}-item/Tables/orders"
         assert ("format", "delta") in spark.read.calls
         assert ("load", expected_path) in spark.read.calls
+
+    metadata_spark = _Spark()
+    io.read_lakehouse_table(config, "dev", "metadata", "orders", spark_session=metadata_spark)
+    assert metadata_spark.table_calls == ["`lh_metadata_dev`.`orders`"]
 
 
 def test_lakehouse_table_write_routes_to_configured_store():
@@ -73,7 +77,7 @@ def test_lakehouse_table_write_routes_to_configured_store():
 
     assert ("mode", "overwrite") in frame.write.calls
     assert ("format", "delta") in frame.write.calls
-    assert ("save", "abfss://dev-metadata-workspace@onelake.dfs.fabric.microsoft.com/dev-metadata-item/Tables/metadata_orders") in frame.write.calls
+    assert ("saveAsTable", "`lh_metadata_dev`.`metadata_orders`") in frame.write.calls
 
 
 def test_lakehouse_file_readers_build_configured_files_paths():

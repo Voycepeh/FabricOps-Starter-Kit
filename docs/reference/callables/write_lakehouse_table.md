@@ -109,13 +109,16 @@ None; the DataFrame is written to the configured lakehouse table.
 - <a href="../write_pipeline_lineage/"><code>fabricops_kit.pipeline.write_pipeline_lineage</code></a>
 - <a href="../write_pipeline_run_summary/"><code>fabricops_kit.pipeline.write_pipeline_run_summary</code></a>
 - <a href="../internal/config__get_store/"><code>fabricops_kit.config._get_store</code></a>
+- <a href="../internal/fabric_input_output__lakehouse_table_identifier/"><code>fabricops_kit.fabric_input_output._lakehouse_table_identifier</code></a>
+- <a href="../internal/fabric_input_output__normalize_table_name/"><code>fabricops_kit.fabric_input_output._normalize_table_name</code></a>
+- <a href="../internal/fabric_input_output__use_registered_table/"><code>fabricops_kit.fabric_input_output._use_registered_table</code></a>
 
 </details>
 
 ## Source
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a212c94775e71b6e429e41b51fbc57ac733903cb/src/fabricops_kit/fabric_input_output.py#L181-L275">View write_lakehouse_table on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b37a3d3a2b947b2e265229d7ea688a0bac6a5396/src/fabricops_kit/fabric_input_output.py#L232-L333">View write_lakehouse_table on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -135,8 +138,11 @@ def write_lakehouse_table(
     """Write a Spark DataFrame to a Fabric lakehouse Delta table.
 
     This writes to the lakehouse `Tables/` area using the ABFSS root stored in
-    a `FabricStore`. Use this in the Unified/Product stage after transformations,
-    DQ checks, and runtime audit-column enrichment are complete.
+    a `FabricStore`. For the configured ``metadata`` target, it writes through
+    Spark table registration with ``saveAsTable`` against the metadata
+    lakehouse name, preventing ambiguous nested Delta paths. Use this in the
+    Unified/Product stage after transformations, DQ checks, and runtime
+    audit-column enrichment are complete.
 
     Parameters
     ----------
@@ -169,6 +175,8 @@ def write_lakehouse_table(
     -----
     Side effects:
     - Persists data to OneLake Delta storage under ``Tables/<table>``.
+    - For the ``metadata`` target, registers or appends to a Spark catalog table
+      in the configured metadata lakehouse.
     - Optional repartitioning can change output file sizing and partition
       layout.
 
@@ -184,14 +192,13 @@ def write_lakehouse_table(
     store = _get_store(config, env, target)
     if store.kind != "lakehouse":
         raise ValueError(f"Target '{env}/{target}' is not a lakehouse store.")
-    if not table:
-        raise ValueError("table is required.")
+    table_name = _normalize_table_name(table)
 
     normalized_mode = str(mode or "").lower().strip()
     if normalized_mode not in {"append", "overwrite", "errorifexists", "ignore"}:
         raise ValueError("mode must be one of append, overwrite, errorifexists, ignore.")
 
-    path = f"{store.root.rstrip('/')}/Tables/{table}"
+    path = f"{store.root.rstrip('/')}/Tables/{table_name}"
 
     if repartition_by is not None:
         if isinstance(repartition_by, (list, tuple)):
@@ -215,7 +222,10 @@ def write_lakehouse_table(
     if overwrite_schema:
         writer = writer.option("overwriteSchema", "true")
 
-    writer.save(path)
+    if _use_registered_table(target):
+        writer.saveAsTable(_lakehouse_table_identifier(store, table_name))
+    else:
+        writer.save(path)
 ```
 
 </details>
@@ -233,9 +243,9 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `fabric_input_output`
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- Source line: `181`
+- Source line: `232`
 - Inbound references count: 10
-- Outbound references count: 1
+- Outbound references count: 4
 
 ### AI implementation contract
 
@@ -262,13 +272,16 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 ### Outbound references
 
 - <a href="../internal/config__get_store/"><code>fabricops_kit.config._get_store</code></a>
+- <a href="../internal/fabric_input_output__lakehouse_table_identifier/"><code>fabricops_kit.fabric_input_output._lakehouse_table_identifier</code></a>
+- <a href="../internal/fabric_input_output__normalize_table_name/"><code>fabricops_kit.fabric_input_output._normalize_table_name</code></a>
+- <a href="../internal/fabric_input_output__use_registered_table/"><code>fabricops_kit.fabric_input_output._use_registered_table</code></a>
 
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a212c94775e71b6e429e41b51fbc57ac733903cb/src/fabricops_kit/fabric_input_output.py#L181-L275">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a212c94775e71b6e429e41b51fbc57ac733903cb/src/fabricops_kit/fabric_input_output.py#L181-L275</a>
-- Start line: `181`
-- End line: `275`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b37a3d3a2b947b2e265229d7ea688a0bac6a5396/src/fabricops_kit/fabric_input_output.py#L232-L333">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b37a3d3a2b947b2e265229d7ea688a0bac6a5396/src/fabricops_kit/fabric_input_output.py#L232-L333</a>
+- Start line: `232`
+- End line: `333`
 - Signature:
 
 ```python
@@ -296,5 +309,8 @@ def write_lakehouse_table(df, config, env, target, table, mode='append', partiti
 - <a href="../write_pipeline_lineage/"><code>fabricops_kit.pipeline.write_pipeline_lineage</code></a>
 - <a href="../write_pipeline_run_summary/"><code>fabricops_kit.pipeline.write_pipeline_run_summary</code></a>
 - <a href="../internal/config__get_store/"><code>fabricops_kit.config._get_store</code></a>
+- <a href="../internal/fabric_input_output__lakehouse_table_identifier/"><code>fabricops_kit.fabric_input_output._lakehouse_table_identifier</code></a>
+- <a href="../internal/fabric_input_output__normalize_table_name/"><code>fabricops_kit.fabric_input_output._normalize_table_name</code></a>
+- <a href="../internal/fabric_input_output__use_registered_table/"><code>fabricops_kit.fabric_input_output._use_registered_table</code></a>
 
 </details>

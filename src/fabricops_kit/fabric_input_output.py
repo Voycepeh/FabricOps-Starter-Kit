@@ -13,6 +13,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Any
+import re
 import tempfile
 
 import pandas as pd
@@ -77,6 +78,45 @@ class FabricStore:
         return f"abfss://{self.workspace_id}@onelake.dfs.fabric.microsoft.com/{self.item_id}"
 
 
+def _normalize_table_name(table: str) -> str:
+    """Return a safe Spark table identifier for Lakehouse table operations."""
+    value = str(table or "").strip()
+    if not value:
+        raise ValueError("table is required.")
+    if any(segment in value for segment in ("/", "\\")) or ".." in value:
+        raise ValueError("table must be a table name, not a file path or nested folder path.")
+    if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", value):
+        raise ValueError("table must contain only letters, numbers, and underscores, and must not start with a number.")
+    return value
+
+
+def _quote_identifier(identifier: str) -> str:
+    return f"`{str(identifier).replace('`', '``')}`"
+
+
+def _lakehouse_table_identifier(store: FabricStore, table: str) -> str:
+    """Return a Spark SQL table identifier qualified by lakehouse/database name."""
+    table_name = _normalize_table_name(table)
+    return f"{_quote_identifier(store.name)}.{_quote_identifier(table_name)}"
+
+
+def _use_registered_table(target: str) -> bool:
+    """Return whether IO should prefer Spark-catalog table registration."""
+    return str(target or "").strip().lower() == "metadata"
+
+
+def _current_database_matches(spark_obj: Any, store: FabricStore) -> bool:
+    """Return whether the active Spark database appears to be the target lakehouse."""
+    catalog = getattr(spark_obj, "catalog", None)
+    current_database = getattr(catalog, "currentDatabase", None)
+    if not callable(current_database):
+        return False
+    try:
+        return str(current_database()).strip().lower() == store.name.strip().lower()
+    except Exception:
+        return False
+
+
 DEFAULT_ENV = "Sandbox"
 DEFAULT_TARGET = "Source"
 
@@ -134,8 +174,11 @@ def read_lakehouse_table(config, env, target, table, spark_session=None):
     """Read a Delta table from a Fabric lakehouse.
 
     This reads from the lakehouse `Tables/` area using the ABFSS root stored in
-    a `FabricStore`. In the notebook lifecycle, call this near the start of the
-    Source or Unified step when loading Delta-backed source datasets.
+    a `FabricStore`. For the configured ``metadata`` target, it first reads the
+    registered Spark table in the metadata lakehouse so FabricOps metadata
+    behaves as Lakehouse tables rather than path-only Delta folders. In the
+    notebook lifecycle, call this near the start of the Source or Unified step
+    when loading Delta-backed source datasets.
 
     Parameters
     ----------
@@ -170,11 +213,19 @@ def read_lakehouse_table(config, env, target, table, spark_session=None):
     store = _get_store(config, env, target)
     if store.kind != "lakehouse":
         raise ValueError(f"Target '{env}/{target}' is not a lakehouse store.")
-    if not table:
-        raise ValueError("table is required.")
+    table_name = _normalize_table_name(table)
 
     spark_obj = _get_spark(spark_session)
-    path = f"{store.root.rstrip('/')}/Tables/{table}"
+    if _use_registered_table(target):
+        try:
+            return spark_obj.table(_lakehouse_table_identifier(store, table_name))
+        except Exception:
+            if _current_database_matches(spark_obj, store):
+                try:
+                    return spark_obj.table(table_name)
+                except Exception:
+                    pass
+    path = f"{store.root.rstrip('/')}/Tables/{table_name}"
     return spark_obj.read.format("delta").load(path)
 
 
@@ -192,8 +243,11 @@ def write_lakehouse_table(
     """Write a Spark DataFrame to a Fabric lakehouse Delta table.
 
     This writes to the lakehouse `Tables/` area using the ABFSS root stored in
-    a `FabricStore`. Use this in the Unified/Product stage after transformations,
-    DQ checks, and runtime audit-column enrichment are complete.
+    a `FabricStore`. For the configured ``metadata`` target, it writes through
+    Spark table registration with ``saveAsTable`` against the metadata
+    lakehouse name, preventing ambiguous nested Delta paths. Use this in the
+    Unified/Product stage after transformations, DQ checks, and runtime
+    audit-column enrichment are complete.
 
     Parameters
     ----------
@@ -226,6 +280,8 @@ def write_lakehouse_table(
     -----
     Side effects:
     - Persists data to OneLake Delta storage under ``Tables/<table>``.
+    - For the ``metadata`` target, registers or appends to a Spark catalog table
+      in the configured metadata lakehouse.
     - Optional repartitioning can change output file sizing and partition
       layout.
 
@@ -241,14 +297,13 @@ def write_lakehouse_table(
     store = _get_store(config, env, target)
     if store.kind != "lakehouse":
         raise ValueError(f"Target '{env}/{target}' is not a lakehouse store.")
-    if not table:
-        raise ValueError("table is required.")
+    table_name = _normalize_table_name(table)
 
     normalized_mode = str(mode or "").lower().strip()
     if normalized_mode not in {"append", "overwrite", "errorifexists", "ignore"}:
         raise ValueError("mode must be one of append, overwrite, errorifexists, ignore.")
 
-    path = f"{store.root.rstrip('/')}/Tables/{table}"
+    path = f"{store.root.rstrip('/')}/Tables/{table_name}"
 
     if repartition_by is not None:
         if isinstance(repartition_by, (list, tuple)):
@@ -272,7 +327,10 @@ def write_lakehouse_table(
     if overwrite_schema:
         writer = writer.option("overwriteSchema", "true")
 
-    writer.save(path)
+    if _use_registered_table(target):
+        writer.saveAsTable(_lakehouse_table_identifier(store, table_name))
+    else:
+        writer.save(path)
 
 
 def read_lakehouse_csv(config, env, target, relative_path, spark_session=None, header=True):
