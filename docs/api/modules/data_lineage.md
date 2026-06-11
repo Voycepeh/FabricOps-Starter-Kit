@@ -121,31 +121,31 @@ Owns source-to-target lineage and transformation evidence.
   </thead>
   <tbody>
     <tr>
-      <td><a href="../../reference/internal/data_lineage/_build_lineage_records/"><code>_build_lineage_records</code></a></td>
+      <td><code>_build_lineage_records</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_lineage/_enrich_lineage_steps_with_ai/"><code>_enrich_lineage_steps_with_ai</code></a></td>
+      <td><code>_enrich_lineage_steps_with_ai</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_lineage/_flatten_chain/"><code>_flatten_chain</code></a></td>
+      <td><code>_flatten_chain</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_lineage/_resolve_write_target/"><code>_resolve_write_target</code></a></td>
+      <td><code>_resolve_write_target</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_lineage/_scan_notebook_cells/"><code>_scan_notebook_cells</code></a></td>
+      <td><code>_scan_notebook_cells</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_lineage/_scan_notebook_lineage/"><code>_scan_notebook_lineage</code></a></td>
+      <td><code>_scan_notebook_lineage</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_lineage/_validate_lineage_steps/"><code>_validate_lineage_steps</code></a></td>
+      <td><code>_validate_lineage_steps</code></td>
       <td>—</td>
     </tr>
   </tbody>
@@ -155,31 +155,31 @@ Owns source-to-target lineage and transformation evidence.
 <h6>Internal helpers details</h6>
 <ul class="callable-relationship-rows">
 <li>
-<a class="reference-chip" href="#_build_lineage_records"><code>_build_lineage_records</code></a>
+<span class="reference-chip"><code>_build_lineage_records</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_validate_lineage_steps"><code>_validate_lineage_steps</code></a>
+<span class="reference-chip"><code>_validate_lineage_steps</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_enrich_lineage_steps_with_ai"><code>_enrich_lineage_steps_with_ai</code></a>
+<span class="reference-chip"><code>_enrich_lineage_steps_with_ai</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_flatten_chain"><code>_flatten_chain</code></a>
+<span class="reference-chip"><code>_flatten_chain</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_resolve_write_target"><code>_resolve_write_target</code></a>
+<span class="reference-chip"><code>_resolve_write_target</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_scan_notebook_cells"><code>_scan_notebook_cells</code></a>
+<span class="reference-chip"><code>_scan_notebook_cells</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_scan_notebook_lineage"><code>_scan_notebook_lineage</code></a>
+<span class="reference-chip"><code>_scan_notebook_lineage</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_scan_notebook_lineage"><code>_scan_notebook_lineage</code></a>
+<span class="reference-chip"><code>_scan_notebook_lineage</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_flatten_chain"><code>_flatten_chain</code></a>, <a class="reference-chip" href="#_resolve_write_target"><code>_resolve_write_target</code></a>
+<span class="reference-chip"><code>_flatten_chain</code></span>, <span class="reference-chip"><code>_resolve_write_target</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_validate_lineage_steps"><code>_validate_lineage_steps</code></a>
+<span class="reference-chip"><code>_validate_lineage_steps</code></span>
 </li>
 </ul>
 </details>

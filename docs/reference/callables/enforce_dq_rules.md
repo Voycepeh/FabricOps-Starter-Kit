@@ -83,21 +83,844 @@ Guardrail result dictionary with status, can_continue, checks, message, tagged d
 <details class="reference-implementation-details">
 <summary>Implementation details</summary>
 
-- <a href="../run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
-- <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a>
-- <a href="../internal/governance_review__dq_failed_row_count/"><code>fabricops_kit.governance_review._dq_failed_row_count</code></a>
-- <a href="../internal/governance_review__dq_summary/"><code>fabricops_kit.governance_review._dq_summary</code></a>
-- <a href="../internal/governance_review__dq_tagged_dataframe/"><code>fabricops_kit.governance_review._dq_tagged_dataframe</code></a>
-- <a href="../internal/governance_review__load_active_dq_rules/"><code>fabricops_kit.governance_review._load_active_dq_rules</code></a>
-- <a href="../internal/governance_review__run_dq_guardrail_checks/"><code>fabricops_kit.governance_review._run_dq_guardrail_checks</code></a>
-- <a href="../internal/governance_review__summarize_dq_guardrail/"><code>fabricops_kit.governance_review._summarize_dq_guardrail</code></a>
+### Call flow
+
+```text
+enforce_dq_rules(...)
+├── _dq_failed_row_count(...)
+│   ├── _dq_failed_expression(...)
+│   │   ├── _spark_sql_helpers(...)
+│   │   └── _validate_dq_rules(...)
+│   │       └── _canonical_dq_rule_type(...)
+│   └── _spark_sql_helpers(...)
+├── _dq_summary(...)
+│   ├── _current_audit_timestamp(...)
+│   │   └── _get_audit_timezone(...)
+│   │       └── _validate_audit_timezone(...)
+│   └── _summarize_dq_guardrail(...)
+├── _dq_tagged_dataframe(...)
+│   ├── _dq_failed_expression(...)
+│   │   ├── _spark_sql_helpers(...)
+│   │   └── _validate_dq_rules(...)
+│   │       └── _canonical_dq_rule_type(...)
+│   └── _spark_sql_helpers(...)
+├── _load_active_dq_rules(...)
+│   ├── _canonical_dq_rule_type(...)
+│   ├── _coerce_rows(...)
+│   ├── _latest_dq_rule_versions(...)
+│   │   └── _spark_sql_helpers(...)
+│   ├── _spark_sql_helpers(...)
+│   └── _validate_dq_rules(...)
+│       └── _canonical_dq_rule_type(...)
+├── _run_dq_guardrail_checks(...)
+│   ├── _dq_check_status(...)
+│   ├── _dq_failed_expression(...)
+│   │   ├── _spark_sql_helpers(...)
+│   │   └── _validate_dq_rules(...)
+│   │       └── _canonical_dq_rule_type(...)
+│   ├── _spark_sql_helpers(...)
+│   └── _validate_dq_rules(...)
+│       └── _canonical_dq_rule_type(...)
+├── _summarize_dq_guardrail(...)
+└── read_lakehouse_table(...)
+    ├── _current_database_matches(...)
+    ├── _get_spark(...)
+    ├── _get_store(...)
+    ├── _normalize_table_name(...)
+    ├── _registered_table_identifier(...)
+    │   ├── _normalize_table_name(...)
+    │   └── _quote_identifier(...)
+    └── _uses_registered_metadata_table(...)
+```
+
+### Internal helpers used by this callable
+
+### `def _dq_failed_row_count(df, rules: list[dict[str, Any]]) -> int`
+
+**What it does:**
+
+Return the count of rows that failed at least one DQ rule.
+
+**Source:**
+
+- `src/fabricops_kit/governance_review.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L1485-L1495">View `_dq_failed_row_count` on GitHub</a>
+
+**Code:**
+
+```python
+def _dq_failed_row_count(df, rules: list[dict[str, Any]]) -> int:
+    """Return the count of rows that failed at least one DQ rule."""
+    _, F, _ = _spark_sql_helpers()
+    if not rules:
+        return 0
+    failed_columns = [F.when(_dq_failed_expression(df, rule), F.lit(1)).otherwise(F.lit(0)) for rule in rules]
+    failed_row = failed_columns[0]
+    for column in failed_columns[1:]:
+        failed_row = failed_row + column
+    failed_rows = df.select(F.when(failed_row > F.lit(0), F.lit(1)).otherwise(F.lit(0)).alias("failed"))
+    return int(failed_rows.agg(F.sum("failed").alias("failed_count")).collect()[0]["failed_count"] or 0)
+```
+
+**Used here because:**
+
+`enforce_dq_rules` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `enforce_dq_rules` or another caller that reaches `_dq_failed_row_count`.
+
+### `def _dq_failed_expression(df, rule: dict[str, Any])`
+
+**What it does:**
+
+Build a Spark boolean expression identifying rows that fail one DQ rule.
+
+**Source:**
+
+- `src/fabricops_kit/governance_review.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L1321-L1403">View `_dq_failed_expression` on GitHub</a>
+
+**Code:**
+
+```python
+def _dq_failed_expression(df, rule: dict[str, Any]):
+    """Build a Spark boolean expression identifying rows that fail one DQ rule."""
+    _, F, Window = _spark_sql_helpers()
+    rule = _validate_dq_rules([dict(rule)])[0]
+    rtype = str(rule["rule_type"])
+    cols = [str(column) for column in rule.get("columns", [])]
+    dataframe_columns = set(getattr(df, "columns", []))
+    missing_columns = [column for column in cols if column not in dataframe_columns]
+    expression = str(rule.get("expression") or "")
+    if rtype != "expression_true" and missing_columns:
+        return F.lit(True)
+    col_name = cols[0] if cols else None
+
+    def empty_string(column: str):
+        return F.col(column).isNull() | (F.trim(F.col(column).cast("string")) == "")
+
+    def cast_for_compare(column):
+        return F.col(column)
+
+    if rtype == "not_null":
+        failed = F.col(cols[0]).isNull()
+        for c in cols[1:]:
+            failed = failed | F.col(c).isNull()
+    elif rtype == "null_rate_below":
+        total = int(df.count())
+        null_count = int(df.filter(F.col(col_name).isNull()).count()) if total else 0
+        failed = F.col(col_name).isNull() if total and ((null_count / total) * 100) > float(rule["max_null_percent"]) else F.lit(False)
+    elif rtype == "non_empty_string":
+        failed = empty_string(cols[0])
+        for c in cols[1:]:
+            failed = failed | empty_string(c)
+    elif rtype in {"unique", "unique_combination"}:
+        failed = F.count(F.lit(1)).over(Window.partitionBy(*[F.col(c) for c in cols])) > F.lit(1)
+    elif rtype == "accepted_values":
+        failed = F.col(col_name).isNotNull() & ~F.col(col_name).isin(list(rule["allowed_values"]))
+    elif rtype == "not_in_values":
+        failed = F.col(col_name).isNotNull() & F.col(col_name).isin(list(rule["blocked_values"]))
+    elif rtype in {"between", "date_between"}:
+        value_col = cast_for_compare(col_name)
+        cond = F.lit(False)
+        if rule.get("min_value") is not None:
+            cond = cond | (value_col < F.lit(rule["min_value"]))
+        if rule.get("max_value") is not None:
+            cond = cond | (value_col > F.lit(rule["max_value"]))
+        failed = F.col(col_name).isNotNull() & cond
+    elif rtype == "greater_than":
+        failed = F.col(col_name).isNotNull() & ~(F.col(col_name) > F.lit(rule["value"]))
+    elif rtype == "greater_than_or_equal":
+        failed = F.col(col_name).isNotNull() & ~(F.col(col_name) >= F.lit(rule["value"]))
+    elif rtype == "less_than":
+        failed = F.col(col_name).isNotNull() & ~(F.col(col_name) < F.lit(rule["value"]))
+    elif rtype == "less_than_or_equal":
+        failed = F.col(col_name).isNotNull() & ~(F.col(col_name) <= F.lit(rule["value"]))
+    elif rtype == "regex_match":
+        failed = F.col(col_name).isNotNull() & ~F.col(col_name).cast("string").rlike(rule["regex_pattern"])
+    elif rtype == "date_not_future":
+        failed = F.col(col_name).isNotNull() & (F.to_date(F.col(col_name)) > F.current_date())
+    elif rtype in {"freshness", "max_age_days"}:
+        failed = F.col(col_name).isNotNull() & (F.to_date(F.col(col_name)) < F.date_sub(F.current_date(), int(rule["max_age_days"])))
+    elif rtype == "column_pair_equal":
+        failed = ~F.col(cols[0]).eqNullSafe(F.col(cols[1]))
+    elif rtype == "column_a_gte_column_b":
+        one_null = F.col(cols[0]).isNull() != F.col(cols[1]).isNull()
+        both_non_null_and_invalid = F.col(cols[0]).isNotNull() & F.col(cols[1]).isNotNull() & ~(F.col(cols[0]) >= F.col(cols[1]))
+        failed = one_null | both_non_null_and_invalid
+    elif rtype == "column_a_gt_column_b":
+        one_null = F.col(cols[0]).isNull() != F.col(cols[1]).isNull()
+        both_non_null_and_invalid = F.col(cols[0]).isNotNull() & F.col(cols[1]).isNotNull() & ~(F.col(cols[0]) > F.col(cols[1]))
+        failed = one_null | both_non_null_and_invalid
+    elif rtype == "required_when":
+        condition = F.expr(str(rule["condition"]))
+        missing = empty_string(cols[0])
+        for c in cols[1:]:
+            missing = missing | empty_string(c)
+        failed = condition & missing
+    elif rtype == "value_when":
+        condition = F.expr(str(rule["condition"]))
+        failed = condition & ~F.col(col_name).eqNullSafe(F.lit(rule["expected_value"]))
+    elif rtype == "expression_true":
+        failed = ~F.expr(expression)
+    else:
+        raise ValueError(f"Unsupported rule_type: {rtype}")
+    return F.coalesce(failed, F.lit(False))
+```
+
+**Used here because:**
+
+`enforce_dq_rules` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `enforce_dq_rules` or another caller that reaches `_dq_failed_expression`.
+
+### `def _spark_sql_helpers()`
+
+**What it does:**
+
+Return Spark SQL helper modules lazily for DQ runtime helpers.
+
+**Source:**
+
+- `src/fabricops_kit/governance_review.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L1120-L1127">View `_spark_sql_helpers` on GitHub</a>
+
+**Code:**
+
+```python
+def _spark_sql_helpers():
+    """Return Spark SQL helper modules lazily for DQ runtime helpers."""
+    try:
+        from pyspark.sql import SparkSession, functions as F
+        from pyspark.sql.window import Window
+    except Exception as exc:  # pragma: no cover - Fabric/runtime dependency guard
+        raise RuntimeError("DQ enforcement helpers require pyspark in the active runtime.") from exc
+    return SparkSession, F, Window
+```
+
+**Used here because:**
+
+`enforce_dq_rules` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `enforce_dq_rules` or another caller that reaches `_spark_sql_helpers`.
+
+### `def _validate_dq_rules(rules: list[dict[str, Any]]) -> list[dict[str, Any]]`
+
+**What it does:**
+
+Validate canonical DQ rules before loading or enforcement.
+
+**Source:**
+
+- `src/fabricops_kit/governance_review.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L1183-L1256">View `_validate_dq_rules` on GitHub</a>
+
+**Code:**
+
+```python
+def _validate_dq_rules(rules: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Validate canonical DQ rules before loading or enforcement."""
+    if not isinstance(rules, list):
+        raise ValueError("DQ rules must be a list of dictionaries.")
+
+    optional_common = {"severity", "description", "rule_id", "is_active", "review_status"}
+    del optional_common  # Documents intentionally accepted fields for callers and tests.
+
+    def require_columns(rule: dict[str, Any], count: int | None = None, *, minimum: int | None = None) -> list[str]:
+        cols = rule.get("columns")
+        if isinstance(cols, str):
+            cols = [c.strip() for c in cols.split(",") if c.strip()]
+            rule["columns"] = cols
+        if not isinstance(cols, list) or not cols or not all(str(c).strip() for c in cols):
+            raise ValueError(f"DQ rule '{rule.get('rule_id', '?')}' columns must be a non-empty list.")
+        cols = [str(c).strip() for c in cols]
+        rule["columns"] = cols
+        if count is not None and len(cols) != count:
+            raise ValueError(f"DQ rule '{rule.get('rule_id', '?')}' requires exactly {count} column(s).")
+        if minimum is not None and len(cols) < minimum:
+            raise ValueError(f"DQ rule '{rule.get('rule_id', '?')}' requires at least {minimum} column(s).")
+        return cols
+
+    for i, rule in enumerate(rules):
+        if not isinstance(rule, dict):
+            raise ValueError(f"DQ rule at index {i} must be a dictionary.")
+        rule.setdefault("rule_id", f"dq_rule_{i + 1}")
+        rule.setdefault("severity", "warning")
+        rule.setdefault("description", "")
+        rule["rule_type"] = _canonical_dq_rule_type(rule.get("rule_type"))
+        rtype = rule["rule_type"]
+        if rtype not in DQ_RULE_TYPES:
+            raise ValueError(f"DQ rule '{rule['rule_id']}' has unsupported rule_type '{rtype}'.")
+        if str(rule.get("severity", "warning")).lower() not in {"warning", "error"}:
+            raise ValueError(f"DQ rule '{rule['rule_id']}' severity must be warning or error.")
+
+        if rtype in {"not_null", "non_empty_string", "required_when"}:
+            require_columns(rule, minimum=1)
+        elif rtype in {
+            "null_rate_below", "unique", "accepted_values", "not_in_values", "between",
+            "greater_than", "greater_than_or_equal", "less_than", "less_than_or_equal",
+            "regex_match", "date_not_future", "date_between", "freshness", "max_age_days", "value_when",
+        }:
+            require_columns(rule, count=1)
+        elif rtype == "unique_combination":
+            require_columns(rule, minimum=2)
+        elif rtype in {"column_pair_equal", "column_a_gte_column_b", "column_a_gt_column_b"}:
+            require_columns(rule, count=2)
+        elif rtype == "expression_true":
+            if not str(rule.get("expression") or "").strip():
+                raise ValueError(f"DQ rule '{rule['rule_id']}' requires expression.")
+
+        if rtype == "null_rate_below" and rule.get("max_null_percent") is None:
+            raise ValueError(f"DQ rule '{rule['rule_id']}' requires max_null_percent.")
+        if rtype == "accepted_values" and "allowed_values" not in rule:
+            raise ValueError(f"DQ rule '{rule['rule_id']}' requires allowed_values.")
+        if rtype == "not_in_values" and "blocked_values" not in rule:
+            raise ValueError(f"DQ rule '{rule['rule_id']}' requires blocked_values.")
+        if rtype in {"between", "date_between"} and rule.get("min_value") is None and rule.get("max_value") is None:
+            raise ValueError(f"DQ rule '{rule['rule_id']}' requires min_value or max_value.")
+        if rtype in {"greater_than", "greater_than_or_equal", "less_than", "less_than_or_equal"} and rule.get("value") is None:
+            raise ValueError(f"DQ rule '{rule['rule_id']}' requires value.")
+        if rtype == "regex_match" and not str(rule.get("regex_pattern") or ""):
+            raise ValueError(f"DQ rule '{rule['rule_id']}' requires regex_pattern.")
+        if rtype in {"freshness", "max_age_days"} and rule.get("max_age_days") is None:
+            raise ValueError(f"DQ rule '{rule['rule_id']}' requires max_age_days.")
+        if rtype == "required_when" and not str(rule.get("condition") or "").strip():
+            raise ValueError(f"DQ rule '{rule['rule_id']}' requires condition.")
+        if rtype == "value_when":
+            if not str(rule.get("condition") or "").strip():
+                raise ValueError(f"DQ rule '{rule['rule_id']}' requires condition.")
+            if "expected_value" not in rule:
+                raise ValueError(f"DQ rule '{rule['rule_id']}' requires expected_value.")
+    return rules
+```
+
+**Used here because:**
+
+`enforce_dq_rules` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `enforce_dq_rules` or another caller that reaches `_validate_dq_rules`.
+
+### `def _canonical_dq_rule_type(rule_type: Any) -> str`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/governance_review.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L78-L79">View `_canonical_dq_rule_type` on GitHub</a>
+
+**Code:**
+
+```python
+def _canonical_dq_rule_type(rule_type: Any) -> str:
+    return str(rule_type or "").strip()
+```
+
+**Used here because:**
+
+`enforce_dq_rules` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `enforce_dq_rules` or another caller that reaches `_canonical_dq_rule_type`.
+
+### `def _dq_summary(checks: list[dict[str, Any]], total_count: int, failed_row_count: int, *, config: Any=None) -> dict[str, Any]`
+
+**What it does:**
+
+Build aggregate DQ fields for catalogue/profile evidence.
+
+**Source:**
+
+- `src/fabricops_kit/governance_review.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L1498-L1513">View `_dq_summary` on GitHub</a>
+
+**Code:**
+
+```python
+def _dq_summary(checks: list[dict[str, Any]], total_count: int, failed_row_count: int, *, config: Any = None) -> dict[str, Any]:
+    """Build aggregate DQ fields for catalogue/profile evidence."""
+    failed_checks = [check for check in checks if not bool(check.get("passed", False))]
+    warning_checks = [check for check in failed_checks if check.get("severity") == "warning"]
+    error_checks = [check for check in failed_checks if check.get("severity") == "error"]
+    status = _summarize_dq_guardrail(checks)["status"]
+    return {
+        "DQ_STATUS": status,
+        "DQ_RULE_COUNT": len(checks),
+        "DQ_FAILED_RULE_COUNT": len(failed_checks),
+        "DQ_WARNING_RULE_COUNT": len(warning_checks),
+        "DQ_ERROR_RULE_COUNT": len(error_checks),
+        "DQ_FAILED_ROW_COUNT": failed_row_count,
+        "DQ_FAILED_ROW_PERCENT": float(round((failed_row_count / total_count) * 100, 4)) if total_count else 0.0,
+        "DQ_CHECKED_AT": _current_audit_timestamp(config=config, drop_microseconds=False),
+    }
+```
+
+**Used here because:**
+
+`enforce_dq_rules` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `enforce_dq_rules` or another caller that reaches `_dq_summary`.
+
+### `def _current_audit_timestamp(config: Any=None, timezone_name: str | None=None, *, drop_microseconds: bool=True) -> str`
+
+**What it does:**
+
+Return the current audit timestamp in the configured audit timezone.
+
+**Source:**
+
+- `src/fabricops_kit/config.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L69-L75">View `_current_audit_timestamp` on GitHub</a>
+
+**Code:**
+
+```python
+def _current_audit_timestamp(config: Any = None, timezone_name: str | None = None, *, drop_microseconds: bool = True) -> str:
+    """Return the current audit timestamp in the configured audit timezone."""
+    tz_name = _get_audit_timezone(config, timezone_name)
+    value = datetime.now(ZoneInfo(tz_name))
+    if drop_microseconds:
+        value = value.replace(microsecond=0)
+    return value.isoformat()
+```
+
+**Used here because:**
+
+`enforce_dq_rules` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `enforce_dq_rules` or another caller that reaches `_current_audit_timestamp`.
+
+### `def _get_audit_timezone(config: Any=None, timezone_name: str | None=None) -> str`
+
+**What it does:**
+
+Resolve the configured FabricOps audit timezone, defaulting to UTC.
+
+**Source:**
+
+- `src/fabricops_kit/config.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L61-L66">View `_get_audit_timezone` on GitHub</a>
+
+**Code:**
+
+```python
+def _get_audit_timezone(config: Any = None, timezone_name: str | None = None) -> str:
+    """Resolve the configured FabricOps audit timezone, defaulting to UTC."""
+    if timezone_name is not None:
+        return _validate_audit_timezone(timezone_name)
+    value = getattr(config, "audit_timezone", None) if config is not None else None
+    return _validate_audit_timezone(value)
+```
+
+**Used here because:**
+
+`enforce_dq_rules` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `enforce_dq_rules` or another caller that reaches `_get_audit_timezone`.
+
+### `def _validate_audit_timezone(timezone_name: str | None) -> str`
+
+**What it does:**
+
+Return a valid IANA audit timezone name.
+
+**Source:**
+
+- `src/fabricops_kit/config.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L27-L58">View `_validate_audit_timezone` on GitHub</a>
+
+**Code:**
+
+```python
+def _validate_audit_timezone(timezone_name: str | None) -> str:
+    """Return a valid IANA audit timezone name.
+
+    Parameters
+    ----------
+    timezone_name : str or None
+        IANA timezone name to validate. Blank values default to ``"UTC"``.
+
+    Returns
+    -------
+    str
+        Validated timezone name.
+
+    Raises
+    ------
+    ValueError
+        If a non-blank value is not a valid IANA timezone name.
+    """
+    value = str(timezone_name or DEFAULT_AUDIT_TIMEZONE).strip() or DEFAULT_AUDIT_TIMEZONE
+    if value != DEFAULT_AUDIT_TIMEZONE and "/" not in value:
+        raise ValueError(
+            f'Invalid FABRICOPS_AUDIT_TIMEZONE: "{value}". '
+            'Use a valid IANA timezone name such as "Asia/Singapore" or keep the default "UTC".'
+        )
+    try:
+        ZoneInfo(value)
+    except ZoneInfoNotFoundError as exc:
+        raise ValueError(
+            f'Invalid FABRICOPS_AUDIT_TIMEZONE: "{value}". '
+            'Use a valid IANA timezone name such as "Asia/Singapore" or keep the default "UTC".'
+        ) from exc
+    return value
+```
+
+**Used here because:**
+
+`enforce_dq_rules` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `enforce_dq_rules` or another caller that reaches `_validate_audit_timezone`.
+
+### `def _summarize_dq_guardrail(checks: list[dict[str, Any]]) -> dict[str, Any]`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/governance_review.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L1516-L1533">View `_summarize_dq_guardrail` on GitHub</a>
+
+**Code:**
+
+```python
+def _summarize_dq_guardrail(checks: list[dict[str, Any]]) -> dict[str, Any]:
+    if any(check.get("status") == "failed" for check in checks):
+        status = "failed"
+        can_continue = False
+    elif any(check.get("status") == "warning" for check in checks):
+        status = "warning"
+        can_continue = True
+    else:
+        status = "passed"
+        can_continue = True
+    failed_checks = [check for check in checks if check.get("status") in {"warning", "failed"}]
+    if not checks:
+        message = "No active approved DQ rules found."
+    elif failed_checks:
+        message = f"DQ guardrail found {len(failed_checks)} rule failure(s): {status}."
+    else:
+        message = f"DQ guardrail passed {len(checks)} active approved rule(s)."
+    return {"status": status, "can_continue": can_continue, "checks": checks, "message": message}
+```
+
+**Used here because:**
+
+`enforce_dq_rules` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `enforce_dq_rules` or another caller that reaches `_summarize_dq_guardrail`.
+
+### `def _dq_tagged_dataframe(df, rules: list[dict[str, Any]])`
+
+**What it does:**
+
+Return the full DataFrame tagged with failed DQ rule IDs and row status.
+
+**Source:**
+
+- `src/fabricops_kit/governance_review.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L1449-L1482">View `_dq_tagged_dataframe` on GitHub</a>
+
+**Code:**
+
+```python
+def _dq_tagged_dataframe(df, rules: list[dict[str, Any]]):
+    """Return the full DataFrame tagged with failed DQ rule IDs and row status."""
+    _, F, _ = _spark_sql_helpers()
+    sorted_rules = sorted(rules or [], key=lambda rule: str(rule.get("rule_id") or ""))
+    failed_rule_columns = [
+        F.when(_dq_failed_expression(df, rule), F.lit(str(rule.get("rule_id") or "")))
+        for rule in sorted_rules
+    ]
+    failed_rules = F.concat_ws(",", *failed_rule_columns) if failed_rule_columns else F.lit("")
+    error_failures = [
+        F.when(_dq_failed_expression(df, rule), F.lit(1)).otherwise(F.lit(0))
+        for rule in sorted_rules
+        if str(rule.get("severity", "warning")).strip().lower() == "error"
+    ]
+    warning_failures = [
+        F.when(_dq_failed_expression(df, rule), F.lit(1)).otherwise(F.lit(0))
+        for rule in sorted_rules
+        if str(rule.get("severity", "warning")).strip().lower() != "error"
+    ]
+    error_count = error_failures[0] if error_failures else F.lit(0)
+    for failure in error_failures[1:]:
+        error_count = error_count + failure
+    warning_count = warning_failures[0] if warning_failures else F.lit(0)
+    for failure in warning_failures[1:]:
+        warning_count = warning_count + failure
+    return (
+        df.withColumn("_dq_failed_rules", failed_rules)
+        .withColumn(
+            "_dq_check_status",
+            F.when(error_count > F.lit(0), F.lit("failed"))
+            .when(warning_count > F.lit(0), F.lit("warning"))
+            .otherwise(F.lit("passed")),
+        )
+    )
+```
+
+**Used here because:**
+
+`enforce_dq_rules` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `enforce_dq_rules` or another caller that reaches `_dq_tagged_dataframe`.
+
+### `def _load_active_dq_rules(metadata_df, table_name: str, env_name: str | None=None, dataset_name: str | None=None) -> list[dict[str, Any]]`
+
+**What it does:**
+
+Load active approved DQ rules from append-only metadata rows.
+
+**Source:**
+
+- `src/fabricops_kit/governance_review.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L1282-L1317">View `_load_active_dq_rules` on GitHub</a>
+
+**Code:**
+
+```python
+def _load_active_dq_rules(metadata_df, table_name: str, env_name: str | None = None, dataset_name: str | None = None) -> list[dict[str, Any]]:
+    """Load active approved DQ rules from append-only metadata rows."""
+    _, F, _ = _spark_sql_helpers()
+    columns = set(getattr(metadata_df, "columns", []))
+    latest = _latest_dq_rule_versions(metadata_df, table_name, env_name=env_name, dataset_name=dataset_name)
+    if "is_active" in columns:
+        latest = latest.filter(F.col("is_active") == True)
+    if "action_type" in columns:
+        latest = latest.filter(F.lower(F.coalesce(F.col("action_type"), F.lit("created"))) != "deactivated")
+    if "review_status" in columns:
+        latest = latest.filter(F.lower(F.coalesce(F.col("review_status"), F.lit("approved"))) == "approved")
+
+    rules: list[dict[str, Any]] = []
+    for row in _coerce_rows(latest.collect()):
+        params_raw = row.get("rule_parameters_json") or "{}"
+        try:
+            params = json.loads(params_raw) if isinstance(params_raw, str) else dict(params_raw)
+        except Exception:
+            params = {}
+        columns_value = params.get("columns") or row.get("columns") or row.get("column_name")
+        if isinstance(columns_value, str):
+            rule_columns = [c.strip() for c in columns_value.split(",") if c.strip()]
+        else:
+            rule_columns = list(columns_value or [])
+        params = {k: v for k, v in params.items() if k != "columns"}
+        rules.append(
+            {
+                "rule_id": str(row.get("rule_id") or ""),
+                "rule_type": _canonical_dq_rule_type(row.get("rule_type")),
+                "columns": rule_columns,
+                "severity": str(row.get("severity") or "warning"),
+                "description": str(row.get("description") or ""),
+                **params,
+            }
+        )
+    return _validate_dq_rules(rules)
+```
+
+**Used here because:**
+
+`enforce_dq_rules` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `enforce_dq_rules` or another caller that reaches `_load_active_dq_rules`.
+
+### `def _coerce_rows(rows_or_df: Any) -> list[dict[str, Any]]`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/governance_review.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L62-L67">View `_coerce_rows` on GitHub</a>
+
+**Code:**
+
+```python
+def _coerce_rows(rows_or_df: Any) -> list[dict[str, Any]]:
+    if rows_or_df is None:
+        return []
+    if hasattr(rows_or_df, "collect"):
+        rows_or_df = rows_or_df.collect()
+    return [row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row) for row in rows_or_df]
+```
+
+**Used here because:**
+
+`enforce_dq_rules` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `enforce_dq_rules` or another caller that reaches `_coerce_rows`.
+
+### `def _latest_dq_rule_versions(metadata_df, table_name: str, env_name: str | None=None, dataset_name: str | None=None)`
+
+**What it does:**
+
+Resolve latest append-only DQ metadata rows by stable rule identity.
+
+**Source:**
+
+- `src/fabricops_kit/governance_review.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L1258-L1279">View `_latest_dq_rule_versions` on GitHub</a>
+
+**Code:**
+
+```python
+def _latest_dq_rule_versions(metadata_df, table_name: str, env_name: str | None = None, dataset_name: str | None = None):
+    """Resolve latest append-only DQ metadata rows by stable rule identity."""
+    _, F, Window = _spark_sql_helpers()
+    columns = set(getattr(metadata_df, "columns", []))
+    if "rule_key" in columns:
+        partition_cols = ["rule_key"]
+    elif "rule_id" in columns:
+        partition_cols = ["rule_id"]
+    else:
+        partition_cols = [name for name in ("metadata_table_key", "column_name", "rule_type") if name in columns]
+    order_cols = [name for name in ("_committed_at", "approved_at") if name in columns]
+    if not partition_cols:
+        raise ValueError("DQ metadata must include rule_key or rule identity columns.")
+    scoped = metadata_df.filter(F.col("table_name") == table_name) if "table_name" in columns else metadata_df
+    if env_name is not None and "environment_name" in columns:
+        scoped = scoped.filter(F.col("environment_name") == env_name)
+    if dataset_name is not None and "dataset_name" in columns:
+        scoped = scoped.filter(F.col("dataset_name") == dataset_name)
+    if not order_cols:
+        return scoped
+    w = Window.partitionBy(*[F.col(name) for name in partition_cols]).orderBy(*[F.col(name).desc_nulls_last() for name in order_cols])
+    return scoped.withColumn("_rn", F.row_number().over(w)).filter(F.col("_rn") == 1).drop("_rn")
+```
+
+**Used here because:**
+
+`enforce_dq_rules` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `enforce_dq_rules` or another caller that reaches `_latest_dq_rule_versions`.
+
+### `def _run_dq_guardrail_checks(df, table_name: str, rules: list[dict[str, Any]]) -> list[dict[str, Any]]`
+
+**What it does:**
+
+Run DQ rules and return notebook guardrail check dictionaries.
+
+**Source:**
+
+- `src/fabricops_kit/governance_review.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L1411-L1446">View `_run_dq_guardrail_checks` on GitHub</a>
+
+**Code:**
+
+```python
+def _run_dq_guardrail_checks(df, table_name: str, rules: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Run DQ rules and return notebook guardrail check dictionaries."""
+    _, F, _ = _spark_sql_helpers()
+    _validate_dq_rules(rules)
+    total = int(df.count())
+    checks: list[dict[str, Any]] = []
+    dataframe_columns = set(getattr(df, "columns", []))
+    for rule in rules:
+        failed_rows = df.select(
+            F.when(_dq_failed_expression(df, rule), F.lit(1)).otherwise(F.lit(0)).alias("failed")
+        )
+        failed_count = int(
+            failed_rows.agg(F.sum("failed").alias("failed_count")).collect()[0]["failed_count"] or 0
+        )
+        severity = str(rule.get("severity", "warning")).strip().lower()
+        columns = [str(column) for column in rule.get("columns", [])]
+        check_status = _dq_check_status(severity, failed_count)
+        check = {
+            "check": "dq_rule",
+            "table_name": table_name,
+            "rule_id": str(rule.get("rule_id") or ""),
+            "rule_type": str(rule.get("rule_type") or ""),
+            "columns": columns,
+            "severity": severity,
+            "status": check_status,
+            "passed": failed_count == 0,
+            "failed_count": failed_count,
+            "total_count": total,
+            "failed_percent": float(round((failed_count / total) * 100, 4)) if total else 0.0,
+            "description": str(rule.get("description") or ""),
+        }
+        missing_columns = [column for column in columns if column not in dataframe_columns]
+        if missing_columns:
+            check["missing_columns"] = missing_columns
+        checks.append(check)
+    return checks
+```
+
+**Used here because:**
+
+`enforce_dq_rules` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `enforce_dq_rules` or another caller that reaches `_run_dq_guardrail_checks`.
+
+### `def _dq_check_status(severity: str, failed_count: int) -> str`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/governance_review.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L1405-L1408">View `_dq_check_status` on GitHub</a>
+
+**Code:**
+
+```python
+def _dq_check_status(severity: str, failed_count: int) -> str:
+    if failed_count <= 0:
+        return "passed"
+    return "failed" if str(severity).strip().lower() == "error" else "warning"
+```
+
+**Used here because:**
+
+`enforce_dq_rules` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `enforce_dq_rules` or another caller that reaches `_dq_check_status`.
+
 
 </details>
 
 ## Source
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a80b5a6ddb4de14056095d4da916cd452e478ff8/src/fabricops_kit/governance_review.py#L1536-L1593">View enforce_dq_rules on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L1536-L1593">View enforce_dq_rules on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -198,17 +1021,17 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 ### Outbound references
 
 - <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a>
-- <a href="../internal/governance_review__dq_failed_row_count/"><code>fabricops_kit.governance_review._dq_failed_row_count</code></a>
-- <a href="../internal/governance_review__dq_summary/"><code>fabricops_kit.governance_review._dq_summary</code></a>
-- <a href="../internal/governance_review__dq_tagged_dataframe/"><code>fabricops_kit.governance_review._dq_tagged_dataframe</code></a>
-- <a href="../internal/governance_review__load_active_dq_rules/"><code>fabricops_kit.governance_review._load_active_dq_rules</code></a>
-- <a href="../internal/governance_review__run_dq_guardrail_checks/"><code>fabricops_kit.governance_review._run_dq_guardrail_checks</code></a>
-- <a href="../internal/governance_review__summarize_dq_guardrail/"><code>fabricops_kit.governance_review._summarize_dq_guardrail</code></a>
+- `fabricops_kit.governance_review._dq_failed_row_count`
+- `fabricops_kit.governance_review._dq_summary`
+- `fabricops_kit.governance_review._dq_tagged_dataframe`
+- `fabricops_kit.governance_review._load_active_dq_rules`
+- `fabricops_kit.governance_review._run_dq_guardrail_checks`
+- `fabricops_kit.governance_review._summarize_dq_guardrail`
 
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a80b5a6ddb4de14056095d4da916cd452e478ff8/src/fabricops_kit/governance_review.py#L1536-L1593">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a80b5a6ddb4de14056095d4da916cd452e478ff8/src/fabricops_kit/governance_review.py#L1536-L1593</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L1536-L1593">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L1536-L1593</a>
 - Start line: `1536`
 - End line: `1593`
 - Signature:
@@ -226,13 +1049,836 @@ def enforce_dq_rules(dataframe, config, env, dataset_name, table_name, *, spark_
 
 ### Internal implementation helpers
 
-- <a href="../run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
-- <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a>
-- <a href="../internal/governance_review__dq_failed_row_count/"><code>fabricops_kit.governance_review._dq_failed_row_count</code></a>
-- <a href="../internal/governance_review__dq_summary/"><code>fabricops_kit.governance_review._dq_summary</code></a>
-- <a href="../internal/governance_review__dq_tagged_dataframe/"><code>fabricops_kit.governance_review._dq_tagged_dataframe</code></a>
-- <a href="../internal/governance_review__load_active_dq_rules/"><code>fabricops_kit.governance_review._load_active_dq_rules</code></a>
-- <a href="../internal/governance_review__run_dq_guardrail_checks/"><code>fabricops_kit.governance_review._run_dq_guardrail_checks</code></a>
-- <a href="../internal/governance_review__summarize_dq_guardrail/"><code>fabricops_kit.governance_review._summarize_dq_guardrail</code></a>
+### Call flow
+
+```text
+enforce_dq_rules(...)
+├── _dq_failed_row_count(...)
+│   ├── _dq_failed_expression(...)
+│   │   ├── _spark_sql_helpers(...)
+│   │   └── _validate_dq_rules(...)
+│   │       └── _canonical_dq_rule_type(...)
+│   └── _spark_sql_helpers(...)
+├── _dq_summary(...)
+│   ├── _current_audit_timestamp(...)
+│   │   └── _get_audit_timezone(...)
+│   │       └── _validate_audit_timezone(...)
+│   └── _summarize_dq_guardrail(...)
+├── _dq_tagged_dataframe(...)
+│   ├── _dq_failed_expression(...)
+│   │   ├── _spark_sql_helpers(...)
+│   │   └── _validate_dq_rules(...)
+│   │       └── _canonical_dq_rule_type(...)
+│   └── _spark_sql_helpers(...)
+├── _load_active_dq_rules(...)
+│   ├── _canonical_dq_rule_type(...)
+│   ├── _coerce_rows(...)
+│   ├── _latest_dq_rule_versions(...)
+│   │   └── _spark_sql_helpers(...)
+│   ├── _spark_sql_helpers(...)
+│   └── _validate_dq_rules(...)
+│       └── _canonical_dq_rule_type(...)
+├── _run_dq_guardrail_checks(...)
+│   ├── _dq_check_status(...)
+│   ├── _dq_failed_expression(...)
+│   │   ├── _spark_sql_helpers(...)
+│   │   └── _validate_dq_rules(...)
+│   │       └── _canonical_dq_rule_type(...)
+│   ├── _spark_sql_helpers(...)
+│   └── _validate_dq_rules(...)
+│       └── _canonical_dq_rule_type(...)
+├── _summarize_dq_guardrail(...)
+└── read_lakehouse_table(...)
+    ├── _current_database_matches(...)
+    ├── _get_spark(...)
+    ├── _get_store(...)
+    ├── _normalize_table_name(...)
+    ├── _registered_table_identifier(...)
+    │   ├── _normalize_table_name(...)
+    │   └── _quote_identifier(...)
+    └── _uses_registered_metadata_table(...)
+```
+
+### Internal helpers used by this callable
+
+### `def _dq_failed_row_count(df, rules: list[dict[str, Any]]) -> int`
+
+**What it does:**
+
+Return the count of rows that failed at least one DQ rule.
+
+**Source:**
+
+- `src/fabricops_kit/governance_review.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L1485-L1495">View `_dq_failed_row_count` on GitHub</a>
+
+**Code:**
+
+```python
+def _dq_failed_row_count(df, rules: list[dict[str, Any]]) -> int:
+    """Return the count of rows that failed at least one DQ rule."""
+    _, F, _ = _spark_sql_helpers()
+    if not rules:
+        return 0
+    failed_columns = [F.when(_dq_failed_expression(df, rule), F.lit(1)).otherwise(F.lit(0)) for rule in rules]
+    failed_row = failed_columns[0]
+    for column in failed_columns[1:]:
+        failed_row = failed_row + column
+    failed_rows = df.select(F.when(failed_row > F.lit(0), F.lit(1)).otherwise(F.lit(0)).alias("failed"))
+    return int(failed_rows.agg(F.sum("failed").alias("failed_count")).collect()[0]["failed_count"] or 0)
+```
+
+**Used here because:**
+
+`enforce_dq_rules` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `enforce_dq_rules` or another caller that reaches `_dq_failed_row_count`.
+
+### `def _dq_failed_expression(df, rule: dict[str, Any])`
+
+**What it does:**
+
+Build a Spark boolean expression identifying rows that fail one DQ rule.
+
+**Source:**
+
+- `src/fabricops_kit/governance_review.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L1321-L1403">View `_dq_failed_expression` on GitHub</a>
+
+**Code:**
+
+```python
+def _dq_failed_expression(df, rule: dict[str, Any]):
+    """Build a Spark boolean expression identifying rows that fail one DQ rule."""
+    _, F, Window = _spark_sql_helpers()
+    rule = _validate_dq_rules([dict(rule)])[0]
+    rtype = str(rule["rule_type"])
+    cols = [str(column) for column in rule.get("columns", [])]
+    dataframe_columns = set(getattr(df, "columns", []))
+    missing_columns = [column for column in cols if column not in dataframe_columns]
+    expression = str(rule.get("expression") or "")
+    if rtype != "expression_true" and missing_columns:
+        return F.lit(True)
+    col_name = cols[0] if cols else None
+
+    def empty_string(column: str):
+        return F.col(column).isNull() | (F.trim(F.col(column).cast("string")) == "")
+
+    def cast_for_compare(column):
+        return F.col(column)
+
+    if rtype == "not_null":
+        failed = F.col(cols[0]).isNull()
+        for c in cols[1:]:
+            failed = failed | F.col(c).isNull()
+    elif rtype == "null_rate_below":
+        total = int(df.count())
+        null_count = int(df.filter(F.col(col_name).isNull()).count()) if total else 0
+        failed = F.col(col_name).isNull() if total and ((null_count / total) * 100) > float(rule["max_null_percent"]) else F.lit(False)
+    elif rtype == "non_empty_string":
+        failed = empty_string(cols[0])
+        for c in cols[1:]:
+            failed = failed | empty_string(c)
+    elif rtype in {"unique", "unique_combination"}:
+        failed = F.count(F.lit(1)).over(Window.partitionBy(*[F.col(c) for c in cols])) > F.lit(1)
+    elif rtype == "accepted_values":
+        failed = F.col(col_name).isNotNull() & ~F.col(col_name).isin(list(rule["allowed_values"]))
+    elif rtype == "not_in_values":
+        failed = F.col(col_name).isNotNull() & F.col(col_name).isin(list(rule["blocked_values"]))
+    elif rtype in {"between", "date_between"}:
+        value_col = cast_for_compare(col_name)
+        cond = F.lit(False)
+        if rule.get("min_value") is not None:
+            cond = cond | (value_col < F.lit(rule["min_value"]))
+        if rule.get("max_value") is not None:
+            cond = cond | (value_col > F.lit(rule["max_value"]))
+        failed = F.col(col_name).isNotNull() & cond
+    elif rtype == "greater_than":
+        failed = F.col(col_name).isNotNull() & ~(F.col(col_name) > F.lit(rule["value"]))
+    elif rtype == "greater_than_or_equal":
+        failed = F.col(col_name).isNotNull() & ~(F.col(col_name) >= F.lit(rule["value"]))
+    elif rtype == "less_than":
+        failed = F.col(col_name).isNotNull() & ~(F.col(col_name) < F.lit(rule["value"]))
+    elif rtype == "less_than_or_equal":
+        failed = F.col(col_name).isNotNull() & ~(F.col(col_name) <= F.lit(rule["value"]))
+    elif rtype == "regex_match":
+        failed = F.col(col_name).isNotNull() & ~F.col(col_name).cast("string").rlike(rule["regex_pattern"])
+    elif rtype == "date_not_future":
+        failed = F.col(col_name).isNotNull() & (F.to_date(F.col(col_name)) > F.current_date())
+    elif rtype in {"freshness", "max_age_days"}:
+        failed = F.col(col_name).isNotNull() & (F.to_date(F.col(col_name)) < F.date_sub(F.current_date(), int(rule["max_age_days"])))
+    elif rtype == "column_pair_equal":
+        failed = ~F.col(cols[0]).eqNullSafe(F.col(cols[1]))
+    elif rtype == "column_a_gte_column_b":
+        one_null = F.col(cols[0]).isNull() != F.col(cols[1]).isNull()
+        both_non_null_and_invalid = F.col(cols[0]).isNotNull() & F.col(cols[1]).isNotNull() & ~(F.col(cols[0]) >= F.col(cols[1]))
+        failed = one_null | both_non_null_and_invalid
+    elif rtype == "column_a_gt_column_b":
+        one_null = F.col(cols[0]).isNull() != F.col(cols[1]).isNull()
+        both_non_null_and_invalid = F.col(cols[0]).isNotNull() & F.col(cols[1]).isNotNull() & ~(F.col(cols[0]) > F.col(cols[1]))
+        failed = one_null | both_non_null_and_invalid
+    elif rtype == "required_when":
+        condition = F.expr(str(rule["condition"]))
+        missing = empty_string(cols[0])
+        for c in cols[1:]:
+            missing = missing | empty_string(c)
+        failed = condition & missing
+    elif rtype == "value_when":
+        condition = F.expr(str(rule["condition"]))
+        failed = condition & ~F.col(col_name).eqNullSafe(F.lit(rule["expected_value"]))
+    elif rtype == "expression_true":
+        failed = ~F.expr(expression)
+    else:
+        raise ValueError(f"Unsupported rule_type: {rtype}")
+    return F.coalesce(failed, F.lit(False))
+```
+
+**Used here because:**
+
+`enforce_dq_rules` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `enforce_dq_rules` or another caller that reaches `_dq_failed_expression`.
+
+### `def _spark_sql_helpers()`
+
+**What it does:**
+
+Return Spark SQL helper modules lazily for DQ runtime helpers.
+
+**Source:**
+
+- `src/fabricops_kit/governance_review.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L1120-L1127">View `_spark_sql_helpers` on GitHub</a>
+
+**Code:**
+
+```python
+def _spark_sql_helpers():
+    """Return Spark SQL helper modules lazily for DQ runtime helpers."""
+    try:
+        from pyspark.sql import SparkSession, functions as F
+        from pyspark.sql.window import Window
+    except Exception as exc:  # pragma: no cover - Fabric/runtime dependency guard
+        raise RuntimeError("DQ enforcement helpers require pyspark in the active runtime.") from exc
+    return SparkSession, F, Window
+```
+
+**Used here because:**
+
+`enforce_dq_rules` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `enforce_dq_rules` or another caller that reaches `_spark_sql_helpers`.
+
+### `def _validate_dq_rules(rules: list[dict[str, Any]]) -> list[dict[str, Any]]`
+
+**What it does:**
+
+Validate canonical DQ rules before loading or enforcement.
+
+**Source:**
+
+- `src/fabricops_kit/governance_review.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L1183-L1256">View `_validate_dq_rules` on GitHub</a>
+
+**Code:**
+
+```python
+def _validate_dq_rules(rules: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Validate canonical DQ rules before loading or enforcement."""
+    if not isinstance(rules, list):
+        raise ValueError("DQ rules must be a list of dictionaries.")
+
+    optional_common = {"severity", "description", "rule_id", "is_active", "review_status"}
+    del optional_common  # Documents intentionally accepted fields for callers and tests.
+
+    def require_columns(rule: dict[str, Any], count: int | None = None, *, minimum: int | None = None) -> list[str]:
+        cols = rule.get("columns")
+        if isinstance(cols, str):
+            cols = [c.strip() for c in cols.split(",") if c.strip()]
+            rule["columns"] = cols
+        if not isinstance(cols, list) or not cols or not all(str(c).strip() for c in cols):
+            raise ValueError(f"DQ rule '{rule.get('rule_id', '?')}' columns must be a non-empty list.")
+        cols = [str(c).strip() for c in cols]
+        rule["columns"] = cols
+        if count is not None and len(cols) != count:
+            raise ValueError(f"DQ rule '{rule.get('rule_id', '?')}' requires exactly {count} column(s).")
+        if minimum is not None and len(cols) < minimum:
+            raise ValueError(f"DQ rule '{rule.get('rule_id', '?')}' requires at least {minimum} column(s).")
+        return cols
+
+    for i, rule in enumerate(rules):
+        if not isinstance(rule, dict):
+            raise ValueError(f"DQ rule at index {i} must be a dictionary.")
+        rule.setdefault("rule_id", f"dq_rule_{i + 1}")
+        rule.setdefault("severity", "warning")
+        rule.setdefault("description", "")
+        rule["rule_type"] = _canonical_dq_rule_type(rule.get("rule_type"))
+        rtype = rule["rule_type"]
+        if rtype not in DQ_RULE_TYPES:
+            raise ValueError(f"DQ rule '{rule['rule_id']}' has unsupported rule_type '{rtype}'.")
+        if str(rule.get("severity", "warning")).lower() not in {"warning", "error"}:
+            raise ValueError(f"DQ rule '{rule['rule_id']}' severity must be warning or error.")
+
+        if rtype in {"not_null", "non_empty_string", "required_when"}:
+            require_columns(rule, minimum=1)
+        elif rtype in {
+            "null_rate_below", "unique", "accepted_values", "not_in_values", "between",
+            "greater_than", "greater_than_or_equal", "less_than", "less_than_or_equal",
+            "regex_match", "date_not_future", "date_between", "freshness", "max_age_days", "value_when",
+        }:
+            require_columns(rule, count=1)
+        elif rtype == "unique_combination":
+            require_columns(rule, minimum=2)
+        elif rtype in {"column_pair_equal", "column_a_gte_column_b", "column_a_gt_column_b"}:
+            require_columns(rule, count=2)
+        elif rtype == "expression_true":
+            if not str(rule.get("expression") or "").strip():
+                raise ValueError(f"DQ rule '{rule['rule_id']}' requires expression.")
+
+        if rtype == "null_rate_below" and rule.get("max_null_percent") is None:
+            raise ValueError(f"DQ rule '{rule['rule_id']}' requires max_null_percent.")
+        if rtype == "accepted_values" and "allowed_values" not in rule:
+            raise ValueError(f"DQ rule '{rule['rule_id']}' requires allowed_values.")
+        if rtype == "not_in_values" and "blocked_values" not in rule:
+            raise ValueError(f"DQ rule '{rule['rule_id']}' requires blocked_values.")
+        if rtype in {"between", "date_between"} and rule.get("min_value") is None and rule.get("max_value") is None:
+            raise ValueError(f"DQ rule '{rule['rule_id']}' requires min_value or max_value.")
+        if rtype in {"greater_than", "greater_than_or_equal", "less_than", "less_than_or_equal"} and rule.get("value") is None:
+            raise ValueError(f"DQ rule '{rule['rule_id']}' requires value.")
+        if rtype == "regex_match" and not str(rule.get("regex_pattern") or ""):
+            raise ValueError(f"DQ rule '{rule['rule_id']}' requires regex_pattern.")
+        if rtype in {"freshness", "max_age_days"} and rule.get("max_age_days") is None:
+            raise ValueError(f"DQ rule '{rule['rule_id']}' requires max_age_days.")
+        if rtype == "required_when" and not str(rule.get("condition") or "").strip():
+            raise ValueError(f"DQ rule '{rule['rule_id']}' requires condition.")
+        if rtype == "value_when":
+            if not str(rule.get("condition") or "").strip():
+                raise ValueError(f"DQ rule '{rule['rule_id']}' requires condition.")
+            if "expected_value" not in rule:
+                raise ValueError(f"DQ rule '{rule['rule_id']}' requires expected_value.")
+    return rules
+```
+
+**Used here because:**
+
+`enforce_dq_rules` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `enforce_dq_rules` or another caller that reaches `_validate_dq_rules`.
+
+### `def _canonical_dq_rule_type(rule_type: Any) -> str`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/governance_review.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L78-L79">View `_canonical_dq_rule_type` on GitHub</a>
+
+**Code:**
+
+```python
+def _canonical_dq_rule_type(rule_type: Any) -> str:
+    return str(rule_type or "").strip()
+```
+
+**Used here because:**
+
+`enforce_dq_rules` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `enforce_dq_rules` or another caller that reaches `_canonical_dq_rule_type`.
+
+### `def _dq_summary(checks: list[dict[str, Any]], total_count: int, failed_row_count: int, *, config: Any=None) -> dict[str, Any]`
+
+**What it does:**
+
+Build aggregate DQ fields for catalogue/profile evidence.
+
+**Source:**
+
+- `src/fabricops_kit/governance_review.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L1498-L1513">View `_dq_summary` on GitHub</a>
+
+**Code:**
+
+```python
+def _dq_summary(checks: list[dict[str, Any]], total_count: int, failed_row_count: int, *, config: Any = None) -> dict[str, Any]:
+    """Build aggregate DQ fields for catalogue/profile evidence."""
+    failed_checks = [check for check in checks if not bool(check.get("passed", False))]
+    warning_checks = [check for check in failed_checks if check.get("severity") == "warning"]
+    error_checks = [check for check in failed_checks if check.get("severity") == "error"]
+    status = _summarize_dq_guardrail(checks)["status"]
+    return {
+        "DQ_STATUS": status,
+        "DQ_RULE_COUNT": len(checks),
+        "DQ_FAILED_RULE_COUNT": len(failed_checks),
+        "DQ_WARNING_RULE_COUNT": len(warning_checks),
+        "DQ_ERROR_RULE_COUNT": len(error_checks),
+        "DQ_FAILED_ROW_COUNT": failed_row_count,
+        "DQ_FAILED_ROW_PERCENT": float(round((failed_row_count / total_count) * 100, 4)) if total_count else 0.0,
+        "DQ_CHECKED_AT": _current_audit_timestamp(config=config, drop_microseconds=False),
+    }
+```
+
+**Used here because:**
+
+`enforce_dq_rules` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `enforce_dq_rules` or another caller that reaches `_dq_summary`.
+
+### `def _current_audit_timestamp(config: Any=None, timezone_name: str | None=None, *, drop_microseconds: bool=True) -> str`
+
+**What it does:**
+
+Return the current audit timestamp in the configured audit timezone.
+
+**Source:**
+
+- `src/fabricops_kit/config.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L69-L75">View `_current_audit_timestamp` on GitHub</a>
+
+**Code:**
+
+```python
+def _current_audit_timestamp(config: Any = None, timezone_name: str | None = None, *, drop_microseconds: bool = True) -> str:
+    """Return the current audit timestamp in the configured audit timezone."""
+    tz_name = _get_audit_timezone(config, timezone_name)
+    value = datetime.now(ZoneInfo(tz_name))
+    if drop_microseconds:
+        value = value.replace(microsecond=0)
+    return value.isoformat()
+```
+
+**Used here because:**
+
+`enforce_dq_rules` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `enforce_dq_rules` or another caller that reaches `_current_audit_timestamp`.
+
+### `def _get_audit_timezone(config: Any=None, timezone_name: str | None=None) -> str`
+
+**What it does:**
+
+Resolve the configured FabricOps audit timezone, defaulting to UTC.
+
+**Source:**
+
+- `src/fabricops_kit/config.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L61-L66">View `_get_audit_timezone` on GitHub</a>
+
+**Code:**
+
+```python
+def _get_audit_timezone(config: Any = None, timezone_name: str | None = None) -> str:
+    """Resolve the configured FabricOps audit timezone, defaulting to UTC."""
+    if timezone_name is not None:
+        return _validate_audit_timezone(timezone_name)
+    value = getattr(config, "audit_timezone", None) if config is not None else None
+    return _validate_audit_timezone(value)
+```
+
+**Used here because:**
+
+`enforce_dq_rules` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `enforce_dq_rules` or another caller that reaches `_get_audit_timezone`.
+
+### `def _validate_audit_timezone(timezone_name: str | None) -> str`
+
+**What it does:**
+
+Return a valid IANA audit timezone name.
+
+**Source:**
+
+- `src/fabricops_kit/config.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L27-L58">View `_validate_audit_timezone` on GitHub</a>
+
+**Code:**
+
+```python
+def _validate_audit_timezone(timezone_name: str | None) -> str:
+    """Return a valid IANA audit timezone name.
+
+    Parameters
+    ----------
+    timezone_name : str or None
+        IANA timezone name to validate. Blank values default to ``"UTC"``.
+
+    Returns
+    -------
+    str
+        Validated timezone name.
+
+    Raises
+    ------
+    ValueError
+        If a non-blank value is not a valid IANA timezone name.
+    """
+    value = str(timezone_name or DEFAULT_AUDIT_TIMEZONE).strip() or DEFAULT_AUDIT_TIMEZONE
+    if value != DEFAULT_AUDIT_TIMEZONE and "/" not in value:
+        raise ValueError(
+            f'Invalid FABRICOPS_AUDIT_TIMEZONE: "{value}". '
+            'Use a valid IANA timezone name such as "Asia/Singapore" or keep the default "UTC".'
+        )
+    try:
+        ZoneInfo(value)
+    except ZoneInfoNotFoundError as exc:
+        raise ValueError(
+            f'Invalid FABRICOPS_AUDIT_TIMEZONE: "{value}". '
+            'Use a valid IANA timezone name such as "Asia/Singapore" or keep the default "UTC".'
+        ) from exc
+    return value
+```
+
+**Used here because:**
+
+`enforce_dq_rules` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `enforce_dq_rules` or another caller that reaches `_validate_audit_timezone`.
+
+### `def _summarize_dq_guardrail(checks: list[dict[str, Any]]) -> dict[str, Any]`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/governance_review.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L1516-L1533">View `_summarize_dq_guardrail` on GitHub</a>
+
+**Code:**
+
+```python
+def _summarize_dq_guardrail(checks: list[dict[str, Any]]) -> dict[str, Any]:
+    if any(check.get("status") == "failed" for check in checks):
+        status = "failed"
+        can_continue = False
+    elif any(check.get("status") == "warning" for check in checks):
+        status = "warning"
+        can_continue = True
+    else:
+        status = "passed"
+        can_continue = True
+    failed_checks = [check for check in checks if check.get("status") in {"warning", "failed"}]
+    if not checks:
+        message = "No active approved DQ rules found."
+    elif failed_checks:
+        message = f"DQ guardrail found {len(failed_checks)} rule failure(s): {status}."
+    else:
+        message = f"DQ guardrail passed {len(checks)} active approved rule(s)."
+    return {"status": status, "can_continue": can_continue, "checks": checks, "message": message}
+```
+
+**Used here because:**
+
+`enforce_dq_rules` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `enforce_dq_rules` or another caller that reaches `_summarize_dq_guardrail`.
+
+### `def _dq_tagged_dataframe(df, rules: list[dict[str, Any]])`
+
+**What it does:**
+
+Return the full DataFrame tagged with failed DQ rule IDs and row status.
+
+**Source:**
+
+- `src/fabricops_kit/governance_review.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L1449-L1482">View `_dq_tagged_dataframe` on GitHub</a>
+
+**Code:**
+
+```python
+def _dq_tagged_dataframe(df, rules: list[dict[str, Any]]):
+    """Return the full DataFrame tagged with failed DQ rule IDs and row status."""
+    _, F, _ = _spark_sql_helpers()
+    sorted_rules = sorted(rules or [], key=lambda rule: str(rule.get("rule_id") or ""))
+    failed_rule_columns = [
+        F.when(_dq_failed_expression(df, rule), F.lit(str(rule.get("rule_id") or "")))
+        for rule in sorted_rules
+    ]
+    failed_rules = F.concat_ws(",", *failed_rule_columns) if failed_rule_columns else F.lit("")
+    error_failures = [
+        F.when(_dq_failed_expression(df, rule), F.lit(1)).otherwise(F.lit(0))
+        for rule in sorted_rules
+        if str(rule.get("severity", "warning")).strip().lower() == "error"
+    ]
+    warning_failures = [
+        F.when(_dq_failed_expression(df, rule), F.lit(1)).otherwise(F.lit(0))
+        for rule in sorted_rules
+        if str(rule.get("severity", "warning")).strip().lower() != "error"
+    ]
+    error_count = error_failures[0] if error_failures else F.lit(0)
+    for failure in error_failures[1:]:
+        error_count = error_count + failure
+    warning_count = warning_failures[0] if warning_failures else F.lit(0)
+    for failure in warning_failures[1:]:
+        warning_count = warning_count + failure
+    return (
+        df.withColumn("_dq_failed_rules", failed_rules)
+        .withColumn(
+            "_dq_check_status",
+            F.when(error_count > F.lit(0), F.lit("failed"))
+            .when(warning_count > F.lit(0), F.lit("warning"))
+            .otherwise(F.lit("passed")),
+        )
+    )
+```
+
+**Used here because:**
+
+`enforce_dq_rules` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `enforce_dq_rules` or another caller that reaches `_dq_tagged_dataframe`.
+
+### `def _load_active_dq_rules(metadata_df, table_name: str, env_name: str | None=None, dataset_name: str | None=None) -> list[dict[str, Any]]`
+
+**What it does:**
+
+Load active approved DQ rules from append-only metadata rows.
+
+**Source:**
+
+- `src/fabricops_kit/governance_review.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L1282-L1317">View `_load_active_dq_rules` on GitHub</a>
+
+**Code:**
+
+```python
+def _load_active_dq_rules(metadata_df, table_name: str, env_name: str | None = None, dataset_name: str | None = None) -> list[dict[str, Any]]:
+    """Load active approved DQ rules from append-only metadata rows."""
+    _, F, _ = _spark_sql_helpers()
+    columns = set(getattr(metadata_df, "columns", []))
+    latest = _latest_dq_rule_versions(metadata_df, table_name, env_name=env_name, dataset_name=dataset_name)
+    if "is_active" in columns:
+        latest = latest.filter(F.col("is_active") == True)
+    if "action_type" in columns:
+        latest = latest.filter(F.lower(F.coalesce(F.col("action_type"), F.lit("created"))) != "deactivated")
+    if "review_status" in columns:
+        latest = latest.filter(F.lower(F.coalesce(F.col("review_status"), F.lit("approved"))) == "approved")
+
+    rules: list[dict[str, Any]] = []
+    for row in _coerce_rows(latest.collect()):
+        params_raw = row.get("rule_parameters_json") or "{}"
+        try:
+            params = json.loads(params_raw) if isinstance(params_raw, str) else dict(params_raw)
+        except Exception:
+            params = {}
+        columns_value = params.get("columns") or row.get("columns") or row.get("column_name")
+        if isinstance(columns_value, str):
+            rule_columns = [c.strip() for c in columns_value.split(",") if c.strip()]
+        else:
+            rule_columns = list(columns_value or [])
+        params = {k: v for k, v in params.items() if k != "columns"}
+        rules.append(
+            {
+                "rule_id": str(row.get("rule_id") or ""),
+                "rule_type": _canonical_dq_rule_type(row.get("rule_type")),
+                "columns": rule_columns,
+                "severity": str(row.get("severity") or "warning"),
+                "description": str(row.get("description") or ""),
+                **params,
+            }
+        )
+    return _validate_dq_rules(rules)
+```
+
+**Used here because:**
+
+`enforce_dq_rules` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `enforce_dq_rules` or another caller that reaches `_load_active_dq_rules`.
+
+### `def _coerce_rows(rows_or_df: Any) -> list[dict[str, Any]]`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/governance_review.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L62-L67">View `_coerce_rows` on GitHub</a>
+
+**Code:**
+
+```python
+def _coerce_rows(rows_or_df: Any) -> list[dict[str, Any]]:
+    if rows_or_df is None:
+        return []
+    if hasattr(rows_or_df, "collect"):
+        rows_or_df = rows_or_df.collect()
+    return [row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row) for row in rows_or_df]
+```
+
+**Used here because:**
+
+`enforce_dq_rules` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `enforce_dq_rules` or another caller that reaches `_coerce_rows`.
+
+### `def _latest_dq_rule_versions(metadata_df, table_name: str, env_name: str | None=None, dataset_name: str | None=None)`
+
+**What it does:**
+
+Resolve latest append-only DQ metadata rows by stable rule identity.
+
+**Source:**
+
+- `src/fabricops_kit/governance_review.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L1258-L1279">View `_latest_dq_rule_versions` on GitHub</a>
+
+**Code:**
+
+```python
+def _latest_dq_rule_versions(metadata_df, table_name: str, env_name: str | None = None, dataset_name: str | None = None):
+    """Resolve latest append-only DQ metadata rows by stable rule identity."""
+    _, F, Window = _spark_sql_helpers()
+    columns = set(getattr(metadata_df, "columns", []))
+    if "rule_key" in columns:
+        partition_cols = ["rule_key"]
+    elif "rule_id" in columns:
+        partition_cols = ["rule_id"]
+    else:
+        partition_cols = [name for name in ("metadata_table_key", "column_name", "rule_type") if name in columns]
+    order_cols = [name for name in ("_committed_at", "approved_at") if name in columns]
+    if not partition_cols:
+        raise ValueError("DQ metadata must include rule_key or rule identity columns.")
+    scoped = metadata_df.filter(F.col("table_name") == table_name) if "table_name" in columns else metadata_df
+    if env_name is not None and "environment_name" in columns:
+        scoped = scoped.filter(F.col("environment_name") == env_name)
+    if dataset_name is not None and "dataset_name" in columns:
+        scoped = scoped.filter(F.col("dataset_name") == dataset_name)
+    if not order_cols:
+        return scoped
+    w = Window.partitionBy(*[F.col(name) for name in partition_cols]).orderBy(*[F.col(name).desc_nulls_last() for name in order_cols])
+    return scoped.withColumn("_rn", F.row_number().over(w)).filter(F.col("_rn") == 1).drop("_rn")
+```
+
+**Used here because:**
+
+`enforce_dq_rules` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `enforce_dq_rules` or another caller that reaches `_latest_dq_rule_versions`.
+
+### `def _run_dq_guardrail_checks(df, table_name: str, rules: list[dict[str, Any]]) -> list[dict[str, Any]]`
+
+**What it does:**
+
+Run DQ rules and return notebook guardrail check dictionaries.
+
+**Source:**
+
+- `src/fabricops_kit/governance_review.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L1411-L1446">View `_run_dq_guardrail_checks` on GitHub</a>
+
+**Code:**
+
+```python
+def _run_dq_guardrail_checks(df, table_name: str, rules: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Run DQ rules and return notebook guardrail check dictionaries."""
+    _, F, _ = _spark_sql_helpers()
+    _validate_dq_rules(rules)
+    total = int(df.count())
+    checks: list[dict[str, Any]] = []
+    dataframe_columns = set(getattr(df, "columns", []))
+    for rule in rules:
+        failed_rows = df.select(
+            F.when(_dq_failed_expression(df, rule), F.lit(1)).otherwise(F.lit(0)).alias("failed")
+        )
+        failed_count = int(
+            failed_rows.agg(F.sum("failed").alias("failed_count")).collect()[0]["failed_count"] or 0
+        )
+        severity = str(rule.get("severity", "warning")).strip().lower()
+        columns = [str(column) for column in rule.get("columns", [])]
+        check_status = _dq_check_status(severity, failed_count)
+        check = {
+            "check": "dq_rule",
+            "table_name": table_name,
+            "rule_id": str(rule.get("rule_id") or ""),
+            "rule_type": str(rule.get("rule_type") or ""),
+            "columns": columns,
+            "severity": severity,
+            "status": check_status,
+            "passed": failed_count == 0,
+            "failed_count": failed_count,
+            "total_count": total,
+            "failed_percent": float(round((failed_count / total) * 100, 4)) if total else 0.0,
+            "description": str(rule.get("description") or ""),
+        }
+        missing_columns = [column for column in columns if column not in dataframe_columns]
+        if missing_columns:
+            check["missing_columns"] = missing_columns
+        checks.append(check)
+    return checks
+```
+
+**Used here because:**
+
+`enforce_dq_rules` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `enforce_dq_rules` or another caller that reaches `_run_dq_guardrail_checks`.
+
+### `def _dq_check_status(severity: str, failed_count: int) -> str`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/governance_review.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L1405-L1408">View `_dq_check_status` on GitHub</a>
+
+**Code:**
+
+```python
+def _dq_check_status(severity: str, failed_count: int) -> str:
+    if failed_count <= 0:
+        return "passed"
+    return "failed" if str(severity).strip().lower() == "error" else "warning"
+```
+
+**Used here because:**
+
+`enforce_dq_rules` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `enforce_dq_rules` or another caller that reaches `_dq_check_status`.
+
 
 </details>

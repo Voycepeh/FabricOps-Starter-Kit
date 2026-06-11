@@ -109,13 +109,36 @@ def test_core_agent_manifest_entries_have_non_placeholder_ai_fields() -> None:
             assert value != PLACEHOLDER, f"{callable_name}.{field} is placeholder"
 
 
-def test_every_internal_page_marks_direct_use_as_no() -> None:
+def test_standalone_internal_pages_are_not_generated_by_default() -> None:
     internal_pages = sorted((REFERENCE_DIR / "internal").glob("*.md"))
 
-    assert internal_pages
-    for page in internal_pages:
+    assert internal_pages == []
+
+
+def test_callable_pages_embed_implementation_details() -> None:
+    callable_pages = sorted((REFERENCE_DIR / "callables").glob("*.md"))
+
+    assert callable_pages
+    for page in callable_pages:
         text = page.read_text(encoding="utf-8")
-        assert "## Direct use: No" in text, page
+        assert "<summary>Implementation details</summary>" in text, page
+        assert "### Call flow" in text, page
+        assert "### Internal helpers used by this callable" in text, page
+        if "**Source:**" in text or "**Code:**" in text:
+            assert "**Source:**" in text, page
+            assert "**Code:**" in text, page
+
+
+
+
+def test_internal_reference_page_generation_flag(monkeypatch) -> None:
+    from scripts.generate_function_reference import generate_internal_reference_pages
+
+    monkeypatch.delenv("FABRICOPS_GENERATE_INTERNAL_REFERENCE_PAGES", raising=False)
+    assert not generate_internal_reference_pages()
+
+    monkeypatch.setenv("FABRICOPS_GENERATE_INTERNAL_REFERENCE_PAGES", "true")
+    assert generate_internal_reference_pages()
 
 
 def test_github_source_url_uses_configured_source_ref(monkeypatch) -> None:

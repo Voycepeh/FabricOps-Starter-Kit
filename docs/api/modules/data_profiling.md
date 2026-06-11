@@ -80,7 +80,7 @@ Owns deterministic profiling evidence such as schema, nulls, distincts, min/max,
       <td>Callable</td>
       <td>function</td>
       <td>Profile a source or target DataFrame for schema, quality, and catalogue evidence.</td>
-      <td><a href="../../reference/internal/data_profiling/_build_distribution_summaries/"><code>_build_distribution_summaries</code></a> (internal), <a href="../../reference/internal/data_profiling/_get_profiled_columns/"><code>_get_profiled_columns</code></a> (internal), <a href="../../reference/internal/data_profiling/_is_min_max_supported_type/"><code>_is_min_max_supported_type</code></a> (internal)</td>
+      <td><code>_build_distribution_summaries</code> (internal), <code>_get_profiled_columns</code> (internal), <code>_is_min_max_supported_type</code> (internal)</td>
     </tr>
   </tbody>
 </table>
@@ -101,7 +101,7 @@ Owns deterministic profiling evidence such as schema, nulls, distincts, min/max,
 <li>
 <a class="reference-chip" href="../../reference/profile_dataframe/"><code>profile_dataframe</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_build_distribution_summaries"><code>_build_distribution_summaries</code></a>, <a class="reference-chip" href="#_get_profiled_columns"><code>_get_profiled_columns</code></a>, <a class="reference-chip" href="#_is_min_max_supported_type"><code>_is_min_max_supported_type</code></a>
+<span class="reference-chip"><code>_build_distribution_summaries</code></span>, <span class="reference-chip"><code>_get_profiled_columns</code></span>, <span class="reference-chip"><code>_is_min_max_supported_type</code></span>
 </li>
 </ul>
 </section>
@@ -121,27 +121,27 @@ Owns deterministic profiling evidence such as schema, nulls, distincts, min/max,
   </thead>
   <tbody>
     <tr>
-      <td><a href="../../reference/internal/data_profiling/_build_categorical_distribution/"><code>_build_categorical_distribution</code></a></td>
+      <td><code>_build_categorical_distribution</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_profiling/_build_distribution_summaries/"><code>_build_distribution_summaries</code></a></td>
+      <td><code>_build_distribution_summaries</code></td>
       <td><a href="../../reference/profile_dataframe/"><code>profile_dataframe</code></a></td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_profiling/_build_numeric_distribution/"><code>_build_numeric_distribution</code></a></td>
+      <td><code>_build_numeric_distribution</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_profiling/_get_profiled_columns/"><code>_get_profiled_columns</code></a></td>
+      <td><code>_get_profiled_columns</code></td>
       <td><a href="../../reference/profile_dataframe/"><code>profile_dataframe</code></a></td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_profiling/_is_min_max_supported_type/"><code>_is_min_max_supported_type</code></a></td>
+      <td><code>_is_min_max_supported_type</code></td>
       <td><a href="../../reference/profile_dataframe/"><code>profile_dataframe</code></a></td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_profiling/_numeric_bin_edges/"><code>_numeric_bin_edges</code></a></td>
+      <td><code>_numeric_bin_edges</code></td>
       <td>—</td>
     </tr>
   </tbody>
@@ -151,24 +151,24 @@ Owns deterministic profiling evidence such as schema, nulls, distincts, min/max,
 <h6>Internal helpers details</h6>
 <ul class="callable-relationship-rows">
 <li>
-<a class="reference-chip" href="#_build_categorical_distribution"><code>_build_categorical_distribution</code></a>
+<span class="reference-chip"><code>_build_categorical_distribution</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_build_distribution_summaries"><code>_build_distribution_summaries</code></a>
+<span class="reference-chip"><code>_build_distribution_summaries</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_build_categorical_distribution"><code>_build_categorical_distribution</code></a>, <a class="reference-chip" href="#_build_numeric_distribution"><code>_build_numeric_distribution</code></a>, <a class="reference-chip" href="#_numeric_bin_edges"><code>_numeric_bin_edges</code></a>
+<span class="reference-chip"><code>_build_categorical_distribution</code></span>, <span class="reference-chip"><code>_build_numeric_distribution</code></span>, <span class="reference-chip"><code>_numeric_bin_edges</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_build_numeric_distribution"><code>_build_numeric_distribution</code></a>
+<span class="reference-chip"><code>_build_numeric_distribution</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_get_profiled_columns"><code>_get_profiled_columns</code></a>
+<span class="reference-chip"><code>_get_profiled_columns</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_is_min_max_supported_type"><code>_is_min_max_supported_type</code></a>
+<span class="reference-chip"><code>_is_min_max_supported_type</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_numeric_bin_edges"><code>_numeric_bin_edges</code></a>
+<span class="reference-chip"><code>_numeric_bin_edges</code></span>
 </li>
 </ul>
 </details>

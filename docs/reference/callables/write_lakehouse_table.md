@@ -98,27 +98,206 @@ None; the DataFrame is written to the configured lakehouse table.
 <details class="reference-implementation-details">
 <summary>Implementation details</summary>
 
-- <a href="../internal/data_agreement__ensure_metadata_tables/"><code>fabricops_kit.data_agreement._ensure_metadata_tables</code></a>
-- <a href="../internal/data_agreement__write_row/"><code>fabricops_kit.data_agreement._write_row</code></a>
-- <a href="../internal/governance_review__review_governance_evidence/"><code>fabricops_kit.governance_review._review_governance_evidence</code></a>
-- <a href="../internal/governance_review__setup_governance_metadata_tables/"><code>fabricops_kit.governance_review._setup_governance_metadata_tables</code></a>
-- <a href="../record_table_governance/"><code>fabricops_kit.governance_review.record_table_governance</code></a>
-- <a href="../internal/metadata__register_current_notebook/"><code>fabricops_kit.metadata._register_current_notebook</code></a>
-- <a href="../internal/metadata__setup_notebook_registry_table/"><code>fabricops_kit.metadata._setup_notebook_registry_table</code></a>
-- <a href="../write_catalogue_evidence/"><code>fabricops_kit.pipeline.write_catalogue_evidence</code></a>
-- <a href="../write_pipeline_lineage/"><code>fabricops_kit.pipeline.write_pipeline_lineage</code></a>
-- <a href="../write_pipeline_run_summary/"><code>fabricops_kit.pipeline.write_pipeline_run_summary</code></a>
-- <a href="../internal/config__get_store/"><code>fabricops_kit.config._get_store</code></a>
-- <a href="../internal/fabric_input_output__normalize_table_name/"><code>fabricops_kit.fabric_input_output._normalize_table_name</code></a>
-- <a href="../internal/fabric_input_output__registered_table_identifier/"><code>fabricops_kit.fabric_input_output._registered_table_identifier</code></a>
-- <a href="../internal/fabric_input_output__uses_registered_metadata_table/"><code>fabricops_kit.fabric_input_output._uses_registered_metadata_table</code></a>
+### Call flow
+
+```text
+write_lakehouse_table(...)
+├── _get_store(...)
+├── _normalize_table_name(...)
+├── _registered_table_identifier(...)
+│   ├── _normalize_table_name(...)
+│   └── _quote_identifier(...)
+└── _uses_registered_metadata_table(...)
+```
+
+### Internal helpers used by this callable
+
+### `def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any`
+
+**What it does:**
+
+Resolve a configured Fabric path for an environment and target.
+
+**Source:**
+
+- `src/fabricops_kit/config.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L618-L658">View `_get_store` on GitHub</a>
+
+**Code:**
+
+```python
+def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any:
+    """Resolve a configured Fabric path for an environment and target.
+
+    Parameters
+    ----------
+    env : str
+        Environment key such as ``Sandbox``, ``DE``, or ``Prod``.
+    target : str
+        Target key such as ``Source``, ``Unified``, ``Product``, or ``Warehouse``.
+    config : FrameworkConfig | PathConfig | None
+        Configuration that contains environment-to-target path mappings.
+
+    Returns
+    -------
+    Any
+        FabricStore object with ``workspace_id``, ``house_id``, ``house_name``, and ``root``.
+
+    Raises
+    ------
+    ValueError
+        If config is missing, or if the environment/target mapping does not exist.
+
+    Examples
+    --------
+    >>> get_path("Sandbox", "Source", config=CONFIG)
+    Housepath(...)
+    """
+    if config is None:
+        raise ValueError("No Fabric config was provided. Pass a FrameworkConfig or PathConfig instance.")
+    paths = config.path_config.paths if isinstance(config, FrameworkConfig) else config.paths
+    if env not in paths:
+        available_envs = ", ".join(sorted(paths.keys())) or "<none>"
+        raise ValueError(
+            f"Environment '{env}' was not found in Fabric config. Available environments: {available_envs}."
+        )
+    if target not in paths[env]:
+        available_targets = ", ".join(sorted(paths[env].keys())) or "<none>"
+        raise ValueError(
+            f"Target '{target}' was not found under environment '{env}'. Available targets: {available_targets}."
+        )
+    return paths[env][target]
+```
+
+**Used here because:**
+
+`write_lakehouse_table` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `write_lakehouse_table` or another caller that reaches `_get_store`.
+
+### `def _normalize_table_name(table: str) -> str`
+
+**What it does:**
+
+Return a safe Spark table name, never a nested folder path.
+
+**Source:**
+
+- `src/fabricops_kit/fabric_input_output.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/fabric_input_output.py#L81-L90">View `_normalize_table_name` on GitHub</a>
+
+**Code:**
+
+```python
+def _normalize_table_name(table: str) -> str:
+    """Return a safe Spark table name, never a nested folder path."""
+    value = str(table or "").strip()
+    if not value:
+        raise ValueError("table is required.")
+    if any(separator in value for separator in ("/", "\\")) or ".." in value:
+        raise ValueError("table must be a table name, not a file path or nested folder path.")
+    if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", value):
+        raise ValueError("table must contain only letters, numbers, and underscores, and must not start with a number.")
+    return value
+```
+
+**Used here because:**
+
+`write_lakehouse_table` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `write_lakehouse_table` or another caller that reaches `_normalize_table_name`.
+
+### `def _registered_table_identifier(store: FabricStore, table: str) -> str`
+
+**What it does:**
+
+Return a metadata lakehouse-qualified Spark table identifier.
+
+**Source:**
+
+- `src/fabricops_kit/fabric_input_output.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/fabric_input_output.py#L97-L99">View `_registered_table_identifier` on GitHub</a>
+
+**Code:**
+
+```python
+def _registered_table_identifier(store: FabricStore, table: str) -> str:
+    """Return a metadata lakehouse-qualified Spark table identifier."""
+    return f"{_quote_identifier(store.name)}.{_quote_identifier(_normalize_table_name(table))}"
+```
+
+**Used here because:**
+
+`write_lakehouse_table` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `write_lakehouse_table` or another caller that reaches `_registered_table_identifier`.
+
+### `def _quote_identifier(identifier: str) -> str`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/fabric_input_output.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/fabric_input_output.py#L93-L94">View `_quote_identifier` on GitHub</a>
+
+**Code:**
+
+```python
+def _quote_identifier(identifier: str) -> str:
+    return f"`{str(identifier).replace('`', '``')}`"
+```
+
+**Used here because:**
+
+`write_lakehouse_table` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `write_lakehouse_table` or another caller that reaches `_quote_identifier`.
+
+### `def _uses_registered_metadata_table(target: str) -> bool`
+
+**What it does:**
+
+Return whether a target should use Spark table registration.
+
+**Source:**
+
+- `src/fabricops_kit/fabric_input_output.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/fabric_input_output.py#L102-L104">View `_uses_registered_metadata_table` on GitHub</a>
+
+**Code:**
+
+```python
+def _uses_registered_metadata_table(target: str) -> bool:
+    """Return whether a target should use Spark table registration."""
+    return str(target or "").strip().lower() == "metadata"
+```
+
+**Used here because:**
+
+`write_lakehouse_table` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `write_lakehouse_table` or another caller that reaches `_uses_registered_metadata_table`.
+
 
 </details>
 
 ## Source
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a80b5a6ddb4de14056095d4da916cd452e478ff8/src/fabricops_kit/fabric_input_output.py#L227-L323">View write_lakehouse_table on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/fabric_input_output.py#L227-L323">View write_lakehouse_table on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -253,28 +432,28 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 
 ### Inbound references
 
-- <a href="../internal/data_agreement__ensure_metadata_tables/"><code>fabricops_kit.data_agreement._ensure_metadata_tables</code></a>
-- <a href="../internal/data_agreement__write_row/"><code>fabricops_kit.data_agreement._write_row</code></a>
-- <a href="../internal/governance_review__review_governance_evidence/"><code>fabricops_kit.governance_review._review_governance_evidence</code></a>
-- <a href="../internal/governance_review__setup_governance_metadata_tables/"><code>fabricops_kit.governance_review._setup_governance_metadata_tables</code></a>
+- `fabricops_kit.data_agreement._ensure_metadata_tables`
+- `fabricops_kit.data_agreement._write_row`
+- `fabricops_kit.governance_review._review_governance_evidence`
+- `fabricops_kit.governance_review._setup_governance_metadata_tables`
 - <a href="../record_table_governance/"><code>fabricops_kit.governance_review.record_table_governance</code></a>
-- <a href="../internal/metadata__register_current_notebook/"><code>fabricops_kit.metadata._register_current_notebook</code></a>
-- <a href="../internal/metadata__setup_notebook_registry_table/"><code>fabricops_kit.metadata._setup_notebook_registry_table</code></a>
+- `fabricops_kit.metadata._register_current_notebook`
+- `fabricops_kit.metadata._setup_notebook_registry_table`
 - <a href="../write_catalogue_evidence/"><code>fabricops_kit.pipeline.write_catalogue_evidence</code></a>
 - <a href="../write_pipeline_lineage/"><code>fabricops_kit.pipeline.write_pipeline_lineage</code></a>
 - <a href="../write_pipeline_run_summary/"><code>fabricops_kit.pipeline.write_pipeline_run_summary</code></a>
 
 ### Outbound references
 
-- <a href="../internal/config__get_store/"><code>fabricops_kit.config._get_store</code></a>
-- <a href="../internal/fabric_input_output__normalize_table_name/"><code>fabricops_kit.fabric_input_output._normalize_table_name</code></a>
-- <a href="../internal/fabric_input_output__registered_table_identifier/"><code>fabricops_kit.fabric_input_output._registered_table_identifier</code></a>
-- <a href="../internal/fabric_input_output__uses_registered_metadata_table/"><code>fabricops_kit.fabric_input_output._uses_registered_metadata_table</code></a>
+- `fabricops_kit.config._get_store`
+- `fabricops_kit.fabric_input_output._normalize_table_name`
+- `fabricops_kit.fabric_input_output._registered_table_identifier`
+- `fabricops_kit.fabric_input_output._uses_registered_metadata_table`
 
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a80b5a6ddb4de14056095d4da916cd452e478ff8/src/fabricops_kit/fabric_input_output.py#L227-L323">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a80b5a6ddb4de14056095d4da916cd452e478ff8/src/fabricops_kit/fabric_input_output.py#L227-L323</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/fabric_input_output.py#L227-L323">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/fabric_input_output.py#L227-L323</a>
 - Start line: `227`
 - End line: `323`
 - Signature:
@@ -293,19 +472,198 @@ def write_lakehouse_table(df, config, env, target, table, mode='append', partiti
 
 ### Internal implementation helpers
 
-- <a href="../internal/data_agreement__ensure_metadata_tables/"><code>fabricops_kit.data_agreement._ensure_metadata_tables</code></a>
-- <a href="../internal/data_agreement__write_row/"><code>fabricops_kit.data_agreement._write_row</code></a>
-- <a href="../internal/governance_review__review_governance_evidence/"><code>fabricops_kit.governance_review._review_governance_evidence</code></a>
-- <a href="../internal/governance_review__setup_governance_metadata_tables/"><code>fabricops_kit.governance_review._setup_governance_metadata_tables</code></a>
-- <a href="../record_table_governance/"><code>fabricops_kit.governance_review.record_table_governance</code></a>
-- <a href="../internal/metadata__register_current_notebook/"><code>fabricops_kit.metadata._register_current_notebook</code></a>
-- <a href="../internal/metadata__setup_notebook_registry_table/"><code>fabricops_kit.metadata._setup_notebook_registry_table</code></a>
-- <a href="../write_catalogue_evidence/"><code>fabricops_kit.pipeline.write_catalogue_evidence</code></a>
-- <a href="../write_pipeline_lineage/"><code>fabricops_kit.pipeline.write_pipeline_lineage</code></a>
-- <a href="../write_pipeline_run_summary/"><code>fabricops_kit.pipeline.write_pipeline_run_summary</code></a>
-- <a href="../internal/config__get_store/"><code>fabricops_kit.config._get_store</code></a>
-- <a href="../internal/fabric_input_output__normalize_table_name/"><code>fabricops_kit.fabric_input_output._normalize_table_name</code></a>
-- <a href="../internal/fabric_input_output__registered_table_identifier/"><code>fabricops_kit.fabric_input_output._registered_table_identifier</code></a>
-- <a href="../internal/fabric_input_output__uses_registered_metadata_table/"><code>fabricops_kit.fabric_input_output._uses_registered_metadata_table</code></a>
+### Call flow
+
+```text
+write_lakehouse_table(...)
+├── _get_store(...)
+├── _normalize_table_name(...)
+├── _registered_table_identifier(...)
+│   ├── _normalize_table_name(...)
+│   └── _quote_identifier(...)
+└── _uses_registered_metadata_table(...)
+```
+
+### Internal helpers used by this callable
+
+### `def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any`
+
+**What it does:**
+
+Resolve a configured Fabric path for an environment and target.
+
+**Source:**
+
+- `src/fabricops_kit/config.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L618-L658">View `_get_store` on GitHub</a>
+
+**Code:**
+
+```python
+def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any:
+    """Resolve a configured Fabric path for an environment and target.
+
+    Parameters
+    ----------
+    env : str
+        Environment key such as ``Sandbox``, ``DE``, or ``Prod``.
+    target : str
+        Target key such as ``Source``, ``Unified``, ``Product``, or ``Warehouse``.
+    config : FrameworkConfig | PathConfig | None
+        Configuration that contains environment-to-target path mappings.
+
+    Returns
+    -------
+    Any
+        FabricStore object with ``workspace_id``, ``house_id``, ``house_name``, and ``root``.
+
+    Raises
+    ------
+    ValueError
+        If config is missing, or if the environment/target mapping does not exist.
+
+    Examples
+    --------
+    >>> get_path("Sandbox", "Source", config=CONFIG)
+    Housepath(...)
+    """
+    if config is None:
+        raise ValueError("No Fabric config was provided. Pass a FrameworkConfig or PathConfig instance.")
+    paths = config.path_config.paths if isinstance(config, FrameworkConfig) else config.paths
+    if env not in paths:
+        available_envs = ", ".join(sorted(paths.keys())) or "<none>"
+        raise ValueError(
+            f"Environment '{env}' was not found in Fabric config. Available environments: {available_envs}."
+        )
+    if target not in paths[env]:
+        available_targets = ", ".join(sorted(paths[env].keys())) or "<none>"
+        raise ValueError(
+            f"Target '{target}' was not found under environment '{env}'. Available targets: {available_targets}."
+        )
+    return paths[env][target]
+```
+
+**Used here because:**
+
+`write_lakehouse_table` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `write_lakehouse_table` or another caller that reaches `_get_store`.
+
+### `def _normalize_table_name(table: str) -> str`
+
+**What it does:**
+
+Return a safe Spark table name, never a nested folder path.
+
+**Source:**
+
+- `src/fabricops_kit/fabric_input_output.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/fabric_input_output.py#L81-L90">View `_normalize_table_name` on GitHub</a>
+
+**Code:**
+
+```python
+def _normalize_table_name(table: str) -> str:
+    """Return a safe Spark table name, never a nested folder path."""
+    value = str(table or "").strip()
+    if not value:
+        raise ValueError("table is required.")
+    if any(separator in value for separator in ("/", "\\")) or ".." in value:
+        raise ValueError("table must be a table name, not a file path or nested folder path.")
+    if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", value):
+        raise ValueError("table must contain only letters, numbers, and underscores, and must not start with a number.")
+    return value
+```
+
+**Used here because:**
+
+`write_lakehouse_table` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `write_lakehouse_table` or another caller that reaches `_normalize_table_name`.
+
+### `def _registered_table_identifier(store: FabricStore, table: str) -> str`
+
+**What it does:**
+
+Return a metadata lakehouse-qualified Spark table identifier.
+
+**Source:**
+
+- `src/fabricops_kit/fabric_input_output.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/fabric_input_output.py#L97-L99">View `_registered_table_identifier` on GitHub</a>
+
+**Code:**
+
+```python
+def _registered_table_identifier(store: FabricStore, table: str) -> str:
+    """Return a metadata lakehouse-qualified Spark table identifier."""
+    return f"{_quote_identifier(store.name)}.{_quote_identifier(_normalize_table_name(table))}"
+```
+
+**Used here because:**
+
+`write_lakehouse_table` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `write_lakehouse_table` or another caller that reaches `_registered_table_identifier`.
+
+### `def _quote_identifier(identifier: str) -> str`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/fabric_input_output.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/fabric_input_output.py#L93-L94">View `_quote_identifier` on GitHub</a>
+
+**Code:**
+
+```python
+def _quote_identifier(identifier: str) -> str:
+    return f"`{str(identifier).replace('`', '``')}`"
+```
+
+**Used here because:**
+
+`write_lakehouse_table` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `write_lakehouse_table` or another caller that reaches `_quote_identifier`.
+
+### `def _uses_registered_metadata_table(target: str) -> bool`
+
+**What it does:**
+
+Return whether a target should use Spark table registration.
+
+**Source:**
+
+- `src/fabricops_kit/fabric_input_output.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/fabric_input_output.py#L102-L104">View `_uses_registered_metadata_table` on GitHub</a>
+
+**Code:**
+
+```python
+def _uses_registered_metadata_table(target: str) -> bool:
+    """Return whether a target should use Spark table registration."""
+    return str(target or "").strip().lower() == "metadata"
+```
+
+**Used here because:**
+
+`write_lakehouse_table` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `write_lakehouse_table` or another caller that reaches `_uses_registered_metadata_table`.
+
 
 </details>

@@ -132,21 +132,612 @@ Dictionary of write statuses keyed by dataset alias.
 <details class="reference-implementation-details">
 <summary>Implementation details</summary>
 
-- <a href="../run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
-- <a href="../write_lakehouse_table/"><code>fabricops_kit.fabric_input_output.write_lakehouse_table</code></a>
-- <a href="../internal/metadata__build_metadata_table_key/"><code>fabricops_kit.metadata._build_metadata_table_key</code></a>
-- <a href="../internal/pipeline__canonical_catalogue_profile_df/"><code>fabricops_kit.pipeline._canonical_catalogue_profile_df</code></a>
-- <a href="../internal/pipeline__definition_name/"><code>fabricops_kit.pipeline._definition_name</code></a>
-- <a href="../internal/pipeline__dq_summary_fields/"><code>fabricops_kit.pipeline._dq_summary_fields</code></a>
-- <a href="../internal/pipeline__now_iso/"><code>fabricops_kit.pipeline._now_iso</code></a>
-- <a href="../internal/pipeline__runtime_audit_fields/"><code>fabricops_kit.pipeline._runtime_audit_fields</code></a>
+### Call flow
+
+```text
+write_catalogue_evidence(...)
+├── _build_metadata_table_key(...)
+│   └── _stable_metadata_key(...)
+├── _canonical_catalogue_profile_df(...)
+├── _definition_name(...)
+├── _dq_summary_fields(...)
+│   └── _now_iso(...)
+│       └── _current_audit_timestamp(...)
+│           └── _get_audit_timezone(...)
+│               └── _validate_audit_timezone(...)
+├── _now_iso(...)
+│   └── _current_audit_timestamp(...)
+│       └── _get_audit_timezone(...)
+│           └── _validate_audit_timezone(...)
+├── _runtime_audit_fields(...)
+│   ├── _build_runtime_audit_fields(...)
+│   │   ├── _context_get(...)
+│   │   ├── _current_audit_timestamp(...)
+│   │   │   └── _get_audit_timezone(...)
+│   │   │       └── _validate_audit_timezone(...)
+│   │   ├── _runtime_context(...)
+│   │   │   └── _context_get(...)
+│   │   └── _safe_str(...)
+│   └── _now_iso(...)
+│       └── _current_audit_timestamp(...)
+│           └── _get_audit_timezone(...)
+│               └── _validate_audit_timezone(...)
+└── write_lakehouse_table(...)
+    ├── _get_store(...)
+    ├── _normalize_table_name(...)
+    ├── _registered_table_identifier(...)
+    │   ├── _normalize_table_name(...)
+    │   └── _quote_identifier(...)
+    └── _uses_registered_metadata_table(...)
+```
+
+### Internal helpers used by this callable
+
+### `def _build_metadata_table_key(environment_name, dataset_name, table_name) -> str`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/metadata.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L149-L150">View `_build_metadata_table_key` on GitHub</a>
+
+**Code:**
+
+```python
+def _build_metadata_table_key(environment_name, dataset_name, table_name) -> str:
+    return _stable_metadata_key(environment_name, dataset_name, table_name)
+```
+
+**Used here because:**
+
+`write_catalogue_evidence` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `write_catalogue_evidence` or another caller that reaches `_build_metadata_table_key`.
+
+### `def _stable_metadata_key(*parts: Any) -> str`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/metadata.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L144-L146">View `_stable_metadata_key` on GitHub</a>
+
+**Code:**
+
+```python
+def _stable_metadata_key(*parts: Any) -> str:
+    normalized = "|".join(str(part or "").strip().lower() for part in parts)
+    return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
+```
+
+**Used here because:**
+
+`write_catalogue_evidence` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `write_catalogue_evidence` or another caller that reaches `_stable_metadata_key`.
+
+### `def _canonical_catalogue_profile_df(profile_df: Any)`
+
+**What it does:**
+
+Return profile evidence using lowercase catalogue column names only.
+
+**Source:**
+
+- `src/fabricops_kit/pipeline.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/pipeline.py#L81-L109">View `_canonical_catalogue_profile_df` on GitHub</a>
+
+**Code:**
+
+```python
+def _canonical_catalogue_profile_df(profile_df: Any):
+    """Return profile evidence using lowercase catalogue column names only."""
+    from pyspark.sql import functions as F
+
+    profile_columns = list(getattr(profile_df, "columns", []) or [])
+    by_lower = {str(column).lower(): column for column in profile_columns}
+    source_map = {
+        "table_name": ("table_name", "TABLE_NAME"),
+        "column_name": ("column_name", "COLUMN_NAME"),
+        "run_timestamp": ("run_timestamp", "RUN_TIMESTAMP"),
+        "data_type": ("data_type", "DATA_TYPE"),
+        "row_count": ("row_count", "ROW_COUNT"),
+        "null_count": ("null_count", "NULL_COUNT"),
+        "null_percent": ("null_percent", "NULL_PERCENT"),
+        "distinct_count": ("distinct_count", "DISTINCT_COUNT"),
+        "distinct_percent": ("distinct_percent", "DISTINCT_PERCENT"),
+        "min_value": ("min_value", "MIN_VALUE"),
+        "max_value": ("max_value", "MAX_VALUE"),
+        "distribution_type": ("distribution_type", "DISTRIBUTION_TYPE"),
+        "distribution_json": ("distribution_json", "DISTRIBUTION_JSON"),
+    }
+    expressions = []
+    for target, candidates in source_map.items():
+        source = next((candidate for candidate in candidates if candidate in profile_columns), None)
+        if source is None:
+            source = next((by_lower[candidate.lower()] for candidate in candidates if candidate.lower() in by_lower), None)
+        if source is not None:
+            expressions.append(F.col(source).alias(target))
+    return profile_df.select(*expressions) if expressions else profile_df
+```
+
+**Used here because:**
+
+`write_catalogue_evidence` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `write_catalogue_evidence` or another caller that reaches `_canonical_catalogue_profile_df`.
+
+### `def _definition_name(name: str, definition: Mapping[str, Any]) -> str`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/pipeline.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/pipeline.py#L23-L24">View `_definition_name` on GitHub</a>
+
+**Code:**
+
+```python
+def _definition_name(name: str, definition: Mapping[str, Any]) -> str:
+    return str(definition.get("table_name") or definition.get("name") or name)
+```
+
+**Used here because:**
+
+`write_catalogue_evidence` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `write_catalogue_evidence` or another caller that reaches `_definition_name`.
+
+### `def _dq_summary_fields(dq_result: Mapping[str, Any] | None) -> dict[str, Any]`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/pipeline.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/pipeline.py#L63-L78">View `_dq_summary_fields` on GitHub</a>
+
+**Code:**
+
+```python
+def _dq_summary_fields(dq_result: Mapping[str, Any] | None) -> dict[str, Any]:
+    summary = dict((dq_result or {}).get("summary") or {})
+    checks = list((dq_result or {}).get("checks") or [])
+    failed = [check for check in checks if str(check.get("status", "")).lower() in {"failed", "fail"}]
+    warning = [check for check in failed if str(check.get("severity", "")).lower() == "warning"]
+    error = [check for check in failed if str(check.get("severity", "")).lower() != "warning"]
+    return {
+        "dq_status": str((dq_result or {}).get("status") or "not_run"),
+        "dq_rule_count": int(summary.get("rule_count", len(checks)) or 0),
+        "dq_failed_rule_count": int(summary.get("failed_rule_count", len(failed)) or 0),
+        "dq_warning_rule_count": int(summary.get("warning_rule_count", len(warning)) or 0),
+        "dq_error_rule_count": int(summary.get("error_rule_count", len(error)) or 0),
+        "dq_failed_row_count": int(summary.get("failed_row_count", 0) or 0),
+        "dq_failed_row_percent": float(summary.get("failed_row_percent", 0.0) or 0.0),
+        "dq_checked_at": str(summary.get("checked_at") or _now_iso()),
+    }
+```
+
+**Used here because:**
+
+`write_catalogue_evidence` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `write_catalogue_evidence` or another caller that reaches `_dq_summary_fields`.
+
+### `def _now_iso(config: Any=None) -> str`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/pipeline.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/pipeline.py#L19-L20">View `_now_iso` on GitHub</a>
+
+**Code:**
+
+```python
+def _now_iso(config: Any = None) -> str:
+    return _current_audit_timestamp(config=config)
+```
+
+**Used here because:**
+
+`write_catalogue_evidence` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `write_catalogue_evidence` or another caller that reaches `_now_iso`.
+
+### `def _current_audit_timestamp(config: Any=None, timezone_name: str | None=None, *, drop_microseconds: bool=True) -> str`
+
+**What it does:**
+
+Return the current audit timestamp in the configured audit timezone.
+
+**Source:**
+
+- `src/fabricops_kit/config.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L69-L75">View `_current_audit_timestamp` on GitHub</a>
+
+**Code:**
+
+```python
+def _current_audit_timestamp(config: Any = None, timezone_name: str | None = None, *, drop_microseconds: bool = True) -> str:
+    """Return the current audit timestamp in the configured audit timezone."""
+    tz_name = _get_audit_timezone(config, timezone_name)
+    value = datetime.now(ZoneInfo(tz_name))
+    if drop_microseconds:
+        value = value.replace(microsecond=0)
+    return value.isoformat()
+```
+
+**Used here because:**
+
+`write_catalogue_evidence` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `write_catalogue_evidence` or another caller that reaches `_current_audit_timestamp`.
+
+### `def _get_audit_timezone(config: Any=None, timezone_name: str | None=None) -> str`
+
+**What it does:**
+
+Resolve the configured FabricOps audit timezone, defaulting to UTC.
+
+**Source:**
+
+- `src/fabricops_kit/config.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L61-L66">View `_get_audit_timezone` on GitHub</a>
+
+**Code:**
+
+```python
+def _get_audit_timezone(config: Any = None, timezone_name: str | None = None) -> str:
+    """Resolve the configured FabricOps audit timezone, defaulting to UTC."""
+    if timezone_name is not None:
+        return _validate_audit_timezone(timezone_name)
+    value = getattr(config, "audit_timezone", None) if config is not None else None
+    return _validate_audit_timezone(value)
+```
+
+**Used here because:**
+
+`write_catalogue_evidence` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `write_catalogue_evidence` or another caller that reaches `_get_audit_timezone`.
+
+### `def _validate_audit_timezone(timezone_name: str | None) -> str`
+
+**What it does:**
+
+Return a valid IANA audit timezone name.
+
+**Source:**
+
+- `src/fabricops_kit/config.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L27-L58">View `_validate_audit_timezone` on GitHub</a>
+
+**Code:**
+
+```python
+def _validate_audit_timezone(timezone_name: str | None) -> str:
+    """Return a valid IANA audit timezone name.
+
+    Parameters
+    ----------
+    timezone_name : str or None
+        IANA timezone name to validate. Blank values default to ``"UTC"``.
+
+    Returns
+    -------
+    str
+        Validated timezone name.
+
+    Raises
+    ------
+    ValueError
+        If a non-blank value is not a valid IANA timezone name.
+    """
+    value = str(timezone_name or DEFAULT_AUDIT_TIMEZONE).strip() or DEFAULT_AUDIT_TIMEZONE
+    if value != DEFAULT_AUDIT_TIMEZONE and "/" not in value:
+        raise ValueError(
+            f'Invalid FABRICOPS_AUDIT_TIMEZONE: "{value}". '
+            'Use a valid IANA timezone name such as "Asia/Singapore" or keep the default "UTC".'
+        )
+    try:
+        ZoneInfo(value)
+    except ZoneInfoNotFoundError as exc:
+        raise ValueError(
+            f'Invalid FABRICOPS_AUDIT_TIMEZONE: "{value}". '
+            'Use a valid IANA timezone name such as "Asia/Singapore" or keep the default "UTC".'
+        ) from exc
+    return value
+```
+
+**Used here because:**
+
+`write_catalogue_evidence` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `write_catalogue_evidence` or another caller that reaches `_validate_audit_timezone`.
+
+### `def _runtime_audit_fields(config: Any, env: str) -> dict[str, str]`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/pipeline.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/pipeline.py#L49-L60">View `_runtime_audit_fields` on GitHub</a>
+
+**Code:**
+
+```python
+def _runtime_audit_fields(config: Any, env: str) -> dict[str, str]:
+    try:
+        return _build_runtime_audit_fields(config=config, env=env)
+    except Exception:
+        return {
+            "_committed_at": _now_iso(config),
+            "_committed_by": "unknown",
+            "_workspace_name": "",
+            "_notebook_name": "",
+            "_metadata_lakehouse_name": "",
+            "_activity_id": "",
+        }
+```
+
+**Used here because:**
+
+`write_catalogue_evidence` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `write_catalogue_evidence` or another caller that reaches `_runtime_audit_fields`.
+
+### `def _build_runtime_audit_fields(*, config: Any=None, env: str | None=None, timestamp_field: str='_committed_at', user_field: str='_committed_by', workspace_field: str='_workspace_name', notebook_field: str='_notebook_name', metadata_lakehouse_field: str='_metadata_lakehouse_name', activity_field: str='_activity_id', committed_by: str | None=None, committed_at: str | None=None, runtime_context: dict[str, Any] | None=None) -> dict[str, str]`
+
+**What it does:**
+
+Build reusable framework-managed audit fields for metadata-table rows.
+
+**Source:**
+
+- `src/fabricops_kit/metadata.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L219-L289">View `_build_runtime_audit_fields` on GitHub</a>
+
+**Code:**
+
+```python
+def _build_runtime_audit_fields(
+    *,
+    config: Any = None,
+    env: str | None = None,
+    timestamp_field: str = "_committed_at",
+    user_field: str = "_committed_by",
+    workspace_field: str = "_workspace_name",
+    notebook_field: str = "_notebook_name",
+    metadata_lakehouse_field: str = "_metadata_lakehouse_name",
+    activity_field: str = "_activity_id",
+    committed_by: str | None = None,
+    committed_at: str | None = None,
+    runtime_context: dict[str, Any] | None = None,
+) -> dict[str, str]:
+    """Build reusable framework-managed audit fields for metadata-table rows.
+
+    Parameters
+    ----------
+    config : FrameworkConfig | dict, optional
+        Framework config containing ``path_config.paths[env]["metadata"]``.
+    env : str, optional
+        Environment key paired with ``config``.
+    timestamp_field, user_field, workspace_field, notebook_field : str
+        Output keys for timestamp, user, workspace, and notebook audit values.
+    metadata_lakehouse_field, activity_field : str
+        Output keys for metadata lakehouse and Fabric activity audit values.
+    committed_by, committed_at : str, optional
+        Deterministic audit overrides. When omitted, values resolve from Fabric
+        runtime context and the configured audit timezone timestamp.
+    runtime_context : dict[str, Any], optional
+        Values merged over :func:`_runtime_context`, primarily for tests or
+        controlled notebook overrides.
+
+    Returns
+    -------
+    dict[str, str]
+        Framework-managed metadata audit values keyed by the supplied field
+        names.
+
+    Notes
+    -----
+    DataFrame runtime audit columns and metadata-table audit fields both use
+    underscore-prefixed names. This helper centralizes the metadata-table
+    convention so notebooks can reuse runtime context when adding dataframe
+    audit columns inline.
+    """
+    context = {**_runtime_context(), **(runtime_context or {})}
+
+    def _first_non_blank(*keys: str) -> Any:
+        for key in keys:
+            value = _context_get(context, key)
+            if value is not None and str(value).strip():
+                return value
+        return None
+
+    metadata_lakehouse_name = ""
+    if config is not None and env is not None:
+        paths = config.path_config.paths if hasattr(config, "path_config") else config.paths
+        metadata_lakehouse_name = _safe_str(paths[env]["metadata"].name)
+    return {
+        user_field: _safe_str(committed_by).strip()
+        if committed_by and _safe_str(committed_by).strip()
+        else _safe_str(_first_non_blank("userName", "userId") or "unknown"),
+        timestamp_field: _safe_str(committed_at)
+        if committed_at
+        else _current_audit_timestamp(config=config),
+        workspace_field: _safe_str(_first_non_blank("currentWorkspaceName", "workspaceName") or ""),
+        notebook_field: _safe_str(_first_non_blank("currentNotebookName", "notebookName") or ""),
+        metadata_lakehouse_field: metadata_lakehouse_name,
+        activity_field: _safe_str(_first_non_blank("activityId") or ""),
+    }
+```
+
+**Used here because:**
+
+`write_catalogue_evidence` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `write_catalogue_evidence` or another caller that reaches `_build_runtime_audit_fields`.
+
+### `def _context_get(context: Any, *keys: str) -> Any`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/metadata.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L173-L185">View `_context_get` on GitHub</a>
+
+**Code:**
+
+```python
+def _context_get(context: Any, *keys: str) -> Any:
+    for key in keys:
+        try:
+            if isinstance(context, dict):
+                value = context.get(key)
+            else:
+                getter = getattr(context, "get", None)
+                value = getter(key) if callable(getter) else None
+        except Exception:
+            value = None
+        if value is not None:
+            return value
+    return None
+```
+
+**Used here because:**
+
+`write_catalogue_evidence` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `write_catalogue_evidence` or another caller that reaches `_context_get`.
+
+### `def _runtime_context() -> dict[str, Any]`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/metadata.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L192-L216">View `_runtime_context` on GitHub</a>
+
+**Code:**
+
+```python
+def _runtime_context() -> dict[str, Any]:
+    try:
+        import notebookutils  # type: ignore
+    except Exception:
+        return {}
+
+    runtime = getattr(notebookutils, "runtime", None)
+    context = getattr(runtime, "context", None)
+    if context is None:
+        return {}
+
+    keys = [
+        "currentWorkspaceId",
+        "currentWorkspaceName",
+        "currentNotebookId",
+        "currentNotebookName",
+        "workspaceId",
+        "workspaceName",
+        "notebookId",
+        "notebookName",
+        "userId",
+        "userName",
+        "activityId",
+    ]
+    return {key: _context_get(context, key) for key in keys}
+```
+
+**Used here because:**
+
+`write_catalogue_evidence` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `write_catalogue_evidence` or another caller that reaches `_runtime_context`.
+
+### `def _safe_str(value: Any) -> str`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/metadata.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L188-L189">View `_safe_str` on GitHub</a>
+
+**Code:**
+
+```python
+def _safe_str(value: Any) -> str:
+    return "" if value is None else str(value)
+```
+
+**Used here because:**
+
+`write_catalogue_evidence` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `write_catalogue_evidence` or another caller that reaches `_safe_str`.
+
 
 </details>
 
 ## Source
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a80b5a6ddb4de14056095d4da916cd452e478ff8/src/fabricops_kit/pipeline.py#L450-L555">View write_catalogue_evidence on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/pipeline.py#L450-L555">View write_catalogue_evidence on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -295,17 +886,17 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 ### Outbound references
 
 - <a href="../write_lakehouse_table/"><code>fabricops_kit.fabric_input_output.write_lakehouse_table</code></a>
-- <a href="../internal/metadata__build_metadata_table_key/"><code>fabricops_kit.metadata._build_metadata_table_key</code></a>
-- <a href="../internal/pipeline__canonical_catalogue_profile_df/"><code>fabricops_kit.pipeline._canonical_catalogue_profile_df</code></a>
-- <a href="../internal/pipeline__definition_name/"><code>fabricops_kit.pipeline._definition_name</code></a>
-- <a href="../internal/pipeline__dq_summary_fields/"><code>fabricops_kit.pipeline._dq_summary_fields</code></a>
-- <a href="../internal/pipeline__now_iso/"><code>fabricops_kit.pipeline._now_iso</code></a>
-- <a href="../internal/pipeline__runtime_audit_fields/"><code>fabricops_kit.pipeline._runtime_audit_fields</code></a>
+- `fabricops_kit.metadata._build_metadata_table_key`
+- `fabricops_kit.pipeline._canonical_catalogue_profile_df`
+- `fabricops_kit.pipeline._definition_name`
+- `fabricops_kit.pipeline._dq_summary_fields`
+- `fabricops_kit.pipeline._now_iso`
+- `fabricops_kit.pipeline._runtime_audit_fields`
 
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a80b5a6ddb4de14056095d4da916cd452e478ff8/src/fabricops_kit/pipeline.py#L450-L555">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a80b5a6ddb4de14056095d4da916cd452e478ff8/src/fabricops_kit/pipeline.py#L450-L555</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/pipeline.py#L450-L555">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/pipeline.py#L450-L555</a>
 - Start line: `450`
 - End line: `555`
 - Signature:
@@ -323,13 +914,604 @@ def write_catalogue_evidence(profiles: Mapping[str, Any], dataset_definitions: M
 
 ### Internal implementation helpers
 
-- <a href="../run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
-- <a href="../write_lakehouse_table/"><code>fabricops_kit.fabric_input_output.write_lakehouse_table</code></a>
-- <a href="../internal/metadata__build_metadata_table_key/"><code>fabricops_kit.metadata._build_metadata_table_key</code></a>
-- <a href="../internal/pipeline__canonical_catalogue_profile_df/"><code>fabricops_kit.pipeline._canonical_catalogue_profile_df</code></a>
-- <a href="../internal/pipeline__definition_name/"><code>fabricops_kit.pipeline._definition_name</code></a>
-- <a href="../internal/pipeline__dq_summary_fields/"><code>fabricops_kit.pipeline._dq_summary_fields</code></a>
-- <a href="../internal/pipeline__now_iso/"><code>fabricops_kit.pipeline._now_iso</code></a>
-- <a href="../internal/pipeline__runtime_audit_fields/"><code>fabricops_kit.pipeline._runtime_audit_fields</code></a>
+### Call flow
+
+```text
+write_catalogue_evidence(...)
+├── _build_metadata_table_key(...)
+│   └── _stable_metadata_key(...)
+├── _canonical_catalogue_profile_df(...)
+├── _definition_name(...)
+├── _dq_summary_fields(...)
+│   └── _now_iso(...)
+│       └── _current_audit_timestamp(...)
+│           └── _get_audit_timezone(...)
+│               └── _validate_audit_timezone(...)
+├── _now_iso(...)
+│   └── _current_audit_timestamp(...)
+│       └── _get_audit_timezone(...)
+│           └── _validate_audit_timezone(...)
+├── _runtime_audit_fields(...)
+│   ├── _build_runtime_audit_fields(...)
+│   │   ├── _context_get(...)
+│   │   ├── _current_audit_timestamp(...)
+│   │   │   └── _get_audit_timezone(...)
+│   │   │       └── _validate_audit_timezone(...)
+│   │   ├── _runtime_context(...)
+│   │   │   └── _context_get(...)
+│   │   └── _safe_str(...)
+│   └── _now_iso(...)
+│       └── _current_audit_timestamp(...)
+│           └── _get_audit_timezone(...)
+│               └── _validate_audit_timezone(...)
+└── write_lakehouse_table(...)
+    ├── _get_store(...)
+    ├── _normalize_table_name(...)
+    ├── _registered_table_identifier(...)
+    │   ├── _normalize_table_name(...)
+    │   └── _quote_identifier(...)
+    └── _uses_registered_metadata_table(...)
+```
+
+### Internal helpers used by this callable
+
+### `def _build_metadata_table_key(environment_name, dataset_name, table_name) -> str`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/metadata.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L149-L150">View `_build_metadata_table_key` on GitHub</a>
+
+**Code:**
+
+```python
+def _build_metadata_table_key(environment_name, dataset_name, table_name) -> str:
+    return _stable_metadata_key(environment_name, dataset_name, table_name)
+```
+
+**Used here because:**
+
+`write_catalogue_evidence` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `write_catalogue_evidence` or another caller that reaches `_build_metadata_table_key`.
+
+### `def _stable_metadata_key(*parts: Any) -> str`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/metadata.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L144-L146">View `_stable_metadata_key` on GitHub</a>
+
+**Code:**
+
+```python
+def _stable_metadata_key(*parts: Any) -> str:
+    normalized = "|".join(str(part or "").strip().lower() for part in parts)
+    return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
+```
+
+**Used here because:**
+
+`write_catalogue_evidence` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `write_catalogue_evidence` or another caller that reaches `_stable_metadata_key`.
+
+### `def _canonical_catalogue_profile_df(profile_df: Any)`
+
+**What it does:**
+
+Return profile evidence using lowercase catalogue column names only.
+
+**Source:**
+
+- `src/fabricops_kit/pipeline.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/pipeline.py#L81-L109">View `_canonical_catalogue_profile_df` on GitHub</a>
+
+**Code:**
+
+```python
+def _canonical_catalogue_profile_df(profile_df: Any):
+    """Return profile evidence using lowercase catalogue column names only."""
+    from pyspark.sql import functions as F
+
+    profile_columns = list(getattr(profile_df, "columns", []) or [])
+    by_lower = {str(column).lower(): column for column in profile_columns}
+    source_map = {
+        "table_name": ("table_name", "TABLE_NAME"),
+        "column_name": ("column_name", "COLUMN_NAME"),
+        "run_timestamp": ("run_timestamp", "RUN_TIMESTAMP"),
+        "data_type": ("data_type", "DATA_TYPE"),
+        "row_count": ("row_count", "ROW_COUNT"),
+        "null_count": ("null_count", "NULL_COUNT"),
+        "null_percent": ("null_percent", "NULL_PERCENT"),
+        "distinct_count": ("distinct_count", "DISTINCT_COUNT"),
+        "distinct_percent": ("distinct_percent", "DISTINCT_PERCENT"),
+        "min_value": ("min_value", "MIN_VALUE"),
+        "max_value": ("max_value", "MAX_VALUE"),
+        "distribution_type": ("distribution_type", "DISTRIBUTION_TYPE"),
+        "distribution_json": ("distribution_json", "DISTRIBUTION_JSON"),
+    }
+    expressions = []
+    for target, candidates in source_map.items():
+        source = next((candidate for candidate in candidates if candidate in profile_columns), None)
+        if source is None:
+            source = next((by_lower[candidate.lower()] for candidate in candidates if candidate.lower() in by_lower), None)
+        if source is not None:
+            expressions.append(F.col(source).alias(target))
+    return profile_df.select(*expressions) if expressions else profile_df
+```
+
+**Used here because:**
+
+`write_catalogue_evidence` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `write_catalogue_evidence` or another caller that reaches `_canonical_catalogue_profile_df`.
+
+### `def _definition_name(name: str, definition: Mapping[str, Any]) -> str`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/pipeline.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/pipeline.py#L23-L24">View `_definition_name` on GitHub</a>
+
+**Code:**
+
+```python
+def _definition_name(name: str, definition: Mapping[str, Any]) -> str:
+    return str(definition.get("table_name") or definition.get("name") or name)
+```
+
+**Used here because:**
+
+`write_catalogue_evidence` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `write_catalogue_evidence` or another caller that reaches `_definition_name`.
+
+### `def _dq_summary_fields(dq_result: Mapping[str, Any] | None) -> dict[str, Any]`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/pipeline.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/pipeline.py#L63-L78">View `_dq_summary_fields` on GitHub</a>
+
+**Code:**
+
+```python
+def _dq_summary_fields(dq_result: Mapping[str, Any] | None) -> dict[str, Any]:
+    summary = dict((dq_result or {}).get("summary") or {})
+    checks = list((dq_result or {}).get("checks") or [])
+    failed = [check for check in checks if str(check.get("status", "")).lower() in {"failed", "fail"}]
+    warning = [check for check in failed if str(check.get("severity", "")).lower() == "warning"]
+    error = [check for check in failed if str(check.get("severity", "")).lower() != "warning"]
+    return {
+        "dq_status": str((dq_result or {}).get("status") or "not_run"),
+        "dq_rule_count": int(summary.get("rule_count", len(checks)) or 0),
+        "dq_failed_rule_count": int(summary.get("failed_rule_count", len(failed)) or 0),
+        "dq_warning_rule_count": int(summary.get("warning_rule_count", len(warning)) or 0),
+        "dq_error_rule_count": int(summary.get("error_rule_count", len(error)) or 0),
+        "dq_failed_row_count": int(summary.get("failed_row_count", 0) or 0),
+        "dq_failed_row_percent": float(summary.get("failed_row_percent", 0.0) or 0.0),
+        "dq_checked_at": str(summary.get("checked_at") or _now_iso()),
+    }
+```
+
+**Used here because:**
+
+`write_catalogue_evidence` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `write_catalogue_evidence` or another caller that reaches `_dq_summary_fields`.
+
+### `def _now_iso(config: Any=None) -> str`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/pipeline.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/pipeline.py#L19-L20">View `_now_iso` on GitHub</a>
+
+**Code:**
+
+```python
+def _now_iso(config: Any = None) -> str:
+    return _current_audit_timestamp(config=config)
+```
+
+**Used here because:**
+
+`write_catalogue_evidence` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `write_catalogue_evidence` or another caller that reaches `_now_iso`.
+
+### `def _current_audit_timestamp(config: Any=None, timezone_name: str | None=None, *, drop_microseconds: bool=True) -> str`
+
+**What it does:**
+
+Return the current audit timestamp in the configured audit timezone.
+
+**Source:**
+
+- `src/fabricops_kit/config.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L69-L75">View `_current_audit_timestamp` on GitHub</a>
+
+**Code:**
+
+```python
+def _current_audit_timestamp(config: Any = None, timezone_name: str | None = None, *, drop_microseconds: bool = True) -> str:
+    """Return the current audit timestamp in the configured audit timezone."""
+    tz_name = _get_audit_timezone(config, timezone_name)
+    value = datetime.now(ZoneInfo(tz_name))
+    if drop_microseconds:
+        value = value.replace(microsecond=0)
+    return value.isoformat()
+```
+
+**Used here because:**
+
+`write_catalogue_evidence` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `write_catalogue_evidence` or another caller that reaches `_current_audit_timestamp`.
+
+### `def _get_audit_timezone(config: Any=None, timezone_name: str | None=None) -> str`
+
+**What it does:**
+
+Resolve the configured FabricOps audit timezone, defaulting to UTC.
+
+**Source:**
+
+- `src/fabricops_kit/config.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L61-L66">View `_get_audit_timezone` on GitHub</a>
+
+**Code:**
+
+```python
+def _get_audit_timezone(config: Any = None, timezone_name: str | None = None) -> str:
+    """Resolve the configured FabricOps audit timezone, defaulting to UTC."""
+    if timezone_name is not None:
+        return _validate_audit_timezone(timezone_name)
+    value = getattr(config, "audit_timezone", None) if config is not None else None
+    return _validate_audit_timezone(value)
+```
+
+**Used here because:**
+
+`write_catalogue_evidence` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `write_catalogue_evidence` or another caller that reaches `_get_audit_timezone`.
+
+### `def _validate_audit_timezone(timezone_name: str | None) -> str`
+
+**What it does:**
+
+Return a valid IANA audit timezone name.
+
+**Source:**
+
+- `src/fabricops_kit/config.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L27-L58">View `_validate_audit_timezone` on GitHub</a>
+
+**Code:**
+
+```python
+def _validate_audit_timezone(timezone_name: str | None) -> str:
+    """Return a valid IANA audit timezone name.
+
+    Parameters
+    ----------
+    timezone_name : str or None
+        IANA timezone name to validate. Blank values default to ``"UTC"``.
+
+    Returns
+    -------
+    str
+        Validated timezone name.
+
+    Raises
+    ------
+    ValueError
+        If a non-blank value is not a valid IANA timezone name.
+    """
+    value = str(timezone_name or DEFAULT_AUDIT_TIMEZONE).strip() or DEFAULT_AUDIT_TIMEZONE
+    if value != DEFAULT_AUDIT_TIMEZONE and "/" not in value:
+        raise ValueError(
+            f'Invalid FABRICOPS_AUDIT_TIMEZONE: "{value}". '
+            'Use a valid IANA timezone name such as "Asia/Singapore" or keep the default "UTC".'
+        )
+    try:
+        ZoneInfo(value)
+    except ZoneInfoNotFoundError as exc:
+        raise ValueError(
+            f'Invalid FABRICOPS_AUDIT_TIMEZONE: "{value}". '
+            'Use a valid IANA timezone name such as "Asia/Singapore" or keep the default "UTC".'
+        ) from exc
+    return value
+```
+
+**Used here because:**
+
+`write_catalogue_evidence` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `write_catalogue_evidence` or another caller that reaches `_validate_audit_timezone`.
+
+### `def _runtime_audit_fields(config: Any, env: str) -> dict[str, str]`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/pipeline.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/pipeline.py#L49-L60">View `_runtime_audit_fields` on GitHub</a>
+
+**Code:**
+
+```python
+def _runtime_audit_fields(config: Any, env: str) -> dict[str, str]:
+    try:
+        return _build_runtime_audit_fields(config=config, env=env)
+    except Exception:
+        return {
+            "_committed_at": _now_iso(config),
+            "_committed_by": "unknown",
+            "_workspace_name": "",
+            "_notebook_name": "",
+            "_metadata_lakehouse_name": "",
+            "_activity_id": "",
+        }
+```
+
+**Used here because:**
+
+`write_catalogue_evidence` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `write_catalogue_evidence` or another caller that reaches `_runtime_audit_fields`.
+
+### `def _build_runtime_audit_fields(*, config: Any=None, env: str | None=None, timestamp_field: str='_committed_at', user_field: str='_committed_by', workspace_field: str='_workspace_name', notebook_field: str='_notebook_name', metadata_lakehouse_field: str='_metadata_lakehouse_name', activity_field: str='_activity_id', committed_by: str | None=None, committed_at: str | None=None, runtime_context: dict[str, Any] | None=None) -> dict[str, str]`
+
+**What it does:**
+
+Build reusable framework-managed audit fields for metadata-table rows.
+
+**Source:**
+
+- `src/fabricops_kit/metadata.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L219-L289">View `_build_runtime_audit_fields` on GitHub</a>
+
+**Code:**
+
+```python
+def _build_runtime_audit_fields(
+    *,
+    config: Any = None,
+    env: str | None = None,
+    timestamp_field: str = "_committed_at",
+    user_field: str = "_committed_by",
+    workspace_field: str = "_workspace_name",
+    notebook_field: str = "_notebook_name",
+    metadata_lakehouse_field: str = "_metadata_lakehouse_name",
+    activity_field: str = "_activity_id",
+    committed_by: str | None = None,
+    committed_at: str | None = None,
+    runtime_context: dict[str, Any] | None = None,
+) -> dict[str, str]:
+    """Build reusable framework-managed audit fields for metadata-table rows.
+
+    Parameters
+    ----------
+    config : FrameworkConfig | dict, optional
+        Framework config containing ``path_config.paths[env]["metadata"]``.
+    env : str, optional
+        Environment key paired with ``config``.
+    timestamp_field, user_field, workspace_field, notebook_field : str
+        Output keys for timestamp, user, workspace, and notebook audit values.
+    metadata_lakehouse_field, activity_field : str
+        Output keys for metadata lakehouse and Fabric activity audit values.
+    committed_by, committed_at : str, optional
+        Deterministic audit overrides. When omitted, values resolve from Fabric
+        runtime context and the configured audit timezone timestamp.
+    runtime_context : dict[str, Any], optional
+        Values merged over :func:`_runtime_context`, primarily for tests or
+        controlled notebook overrides.
+
+    Returns
+    -------
+    dict[str, str]
+        Framework-managed metadata audit values keyed by the supplied field
+        names.
+
+    Notes
+    -----
+    DataFrame runtime audit columns and metadata-table audit fields both use
+    underscore-prefixed names. This helper centralizes the metadata-table
+    convention so notebooks can reuse runtime context when adding dataframe
+    audit columns inline.
+    """
+    context = {**_runtime_context(), **(runtime_context or {})}
+
+    def _first_non_blank(*keys: str) -> Any:
+        for key in keys:
+            value = _context_get(context, key)
+            if value is not None and str(value).strip():
+                return value
+        return None
+
+    metadata_lakehouse_name = ""
+    if config is not None and env is not None:
+        paths = config.path_config.paths if hasattr(config, "path_config") else config.paths
+        metadata_lakehouse_name = _safe_str(paths[env]["metadata"].name)
+    return {
+        user_field: _safe_str(committed_by).strip()
+        if committed_by and _safe_str(committed_by).strip()
+        else _safe_str(_first_non_blank("userName", "userId") or "unknown"),
+        timestamp_field: _safe_str(committed_at)
+        if committed_at
+        else _current_audit_timestamp(config=config),
+        workspace_field: _safe_str(_first_non_blank("currentWorkspaceName", "workspaceName") or ""),
+        notebook_field: _safe_str(_first_non_blank("currentNotebookName", "notebookName") or ""),
+        metadata_lakehouse_field: metadata_lakehouse_name,
+        activity_field: _safe_str(_first_non_blank("activityId") or ""),
+    }
+```
+
+**Used here because:**
+
+`write_catalogue_evidence` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `write_catalogue_evidence` or another caller that reaches `_build_runtime_audit_fields`.
+
+### `def _context_get(context: Any, *keys: str) -> Any`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/metadata.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L173-L185">View `_context_get` on GitHub</a>
+
+**Code:**
+
+```python
+def _context_get(context: Any, *keys: str) -> Any:
+    for key in keys:
+        try:
+            if isinstance(context, dict):
+                value = context.get(key)
+            else:
+                getter = getattr(context, "get", None)
+                value = getter(key) if callable(getter) else None
+        except Exception:
+            value = None
+        if value is not None:
+            return value
+    return None
+```
+
+**Used here because:**
+
+`write_catalogue_evidence` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `write_catalogue_evidence` or another caller that reaches `_context_get`.
+
+### `def _runtime_context() -> dict[str, Any]`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/metadata.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L192-L216">View `_runtime_context` on GitHub</a>
+
+**Code:**
+
+```python
+def _runtime_context() -> dict[str, Any]:
+    try:
+        import notebookutils  # type: ignore
+    except Exception:
+        return {}
+
+    runtime = getattr(notebookutils, "runtime", None)
+    context = getattr(runtime, "context", None)
+    if context is None:
+        return {}
+
+    keys = [
+        "currentWorkspaceId",
+        "currentWorkspaceName",
+        "currentNotebookId",
+        "currentNotebookName",
+        "workspaceId",
+        "workspaceName",
+        "notebookId",
+        "notebookName",
+        "userId",
+        "userName",
+        "activityId",
+    ]
+    return {key: _context_get(context, key) for key in keys}
+```
+
+**Used here because:**
+
+`write_catalogue_evidence` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `write_catalogue_evidence` or another caller that reaches `_runtime_context`.
+
+### `def _safe_str(value: Any) -> str`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/metadata.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L188-L189">View `_safe_str` on GitHub</a>
+
+**Code:**
+
+```python
+def _safe_str(value: Any) -> str:
+    return "" if value is None else str(value)
+```
+
+**Used here because:**
+
+`write_catalogue_evidence` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `write_catalogue_evidence` or another caller that reaches `_safe_str`.
+
 
 </details>

@@ -80,14 +80,14 @@ Owns schema, freshness, and profile behavior checks as pipeline guardrails durin
       <td>Callable</td>
       <td>function</td>
       <td>Enforce whether the latest data arrived within the configured freshness lag.</td>
-      <td><a href="../../reference/internal/guardrails/_coerce_date/"><code>_coerce_date</code></a> (internal), <a href="../../reference/internal/guardrails/_iso_date_value/"><code>_iso_date_value</code></a> (internal), <a href="../../reference/internal/guardrails/_max_column_value/"><code>_max_column_value</code></a> (internal)</td>
+      <td><code>_coerce_date</code> (internal), <code>_iso_date_value</code> (internal), <code>_max_column_value</code> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/enforce_profile_behavior/"><code>enforce_profile_behavior</code></a></td>
       <td>Callable</td>
       <td>function</td>
       <td>Enforce append, overwrite, or skip profile behavior against accepted catalogue profile evidence.</td>
-      <td><a href="../../reference/internal/guardrails/_catalogue_value/"><code>_catalogue_value</code></a> (internal), <a href="../../reference/internal/guardrails/_guardrail_exclude_columns/"><code>_guardrail_exclude_columns</code></a> (internal), <a href="../../reference/internal/guardrails/_is_greater_than/"><code>_is_greater_than</code></a> (internal), <a href="../../reference/internal/guardrails/_is_less_than/"><code>_is_less_than</code></a> (internal), <a href="../../reference/internal/guardrails/_is_missing_table_error/"><code>_is_missing_table_error</code></a> (internal), <a href="../../reference/internal/guardrails/_latest_catalogue_behavior_profile_row/"><code>_latest_catalogue_behavior_profile_row</code></a> (internal), <a href="../../reference/internal/guardrails/_profile_row_count/"><code>_profile_row_count</code></a> (internal), <a href="../../reference/internal/guardrails/_profile_watermark_bounds/"><code>_profile_watermark_bounds</code></a> (internal), <a href="../../reference/internal/guardrails/_string_value/"><code>_string_value</code></a> (internal)</td>
+      <td><code>_catalogue_value</code> (internal), <code>_guardrail_exclude_columns</code> (internal), <code>_is_greater_than</code> (internal), <code>_is_less_than</code> (internal), <code>_is_missing_table_error</code> (internal), <code>_latest_catalogue_behavior_profile_row</code> (internal), <code>_profile_row_count</code> (internal), <code>_profile_watermark_bounds</code> (internal), <code>_string_value</code> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/stop_if_failed/"><code>stop_if_failed</code></a></td>
@@ -101,7 +101,7 @@ Owns schema, freshness, and profile behavior checks as pipeline guardrails durin
       <td>Callable</td>
       <td>function</td>
       <td>Validate a DataFrame schema using strict, allow-new-columns, or monitor-only presets.</td>
-      <td><a href="../../reference/internal/guardrails/_actual_schema/"><code>_actual_schema</code></a> (internal), <a href="../../reference/internal/guardrails/_normalize_datatype/"><code>_normalize_datatype</code></a> (internal)</td>
+      <td><code>_actual_schema</code> (internal), <code>_normalize_datatype</code> (internal)</td>
     </tr>
   </tbody>
 </table>
@@ -122,12 +122,12 @@ Owns schema, freshness, and profile behavior checks as pipeline guardrails durin
 <li>
 <a class="reference-chip" href="../../reference/enforce_freshness/"><code>enforce_freshness</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_coerce_date"><code>_coerce_date</code></a>, <a class="reference-chip" href="#_iso_date_value"><code>_iso_date_value</code></a>, <a class="reference-chip" href="#_max_column_value"><code>_max_column_value</code></a>
+<span class="reference-chip"><code>_coerce_date</code></span>, <span class="reference-chip"><code>_iso_date_value</code></span>, <span class="reference-chip"><code>_max_column_value</code></span>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/enforce_profile_behavior/"><code>enforce_profile_behavior</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_catalogue_value"><code>_catalogue_value</code></a>, <a class="reference-chip" href="#_guardrail_exclude_columns"><code>_guardrail_exclude_columns</code></a>, <a class="reference-chip" href="#_is_greater_than"><code>_is_greater_than</code></a>, <a class="reference-chip" href="#_is_less_than"><code>_is_less_than</code></a>, <a class="reference-chip" href="#_is_missing_table_error"><code>_is_missing_table_error</code></a>, <a class="reference-chip" href="#_latest_catalogue_behavior_profile_row"><code>_latest_catalogue_behavior_profile_row</code></a>, <a class="reference-chip" href="#_profile_row_count"><code>_profile_row_count</code></a>, <a class="reference-chip" href="#_profile_watermark_bounds"><code>_profile_watermark_bounds</code></a>, <a class="reference-chip" href="#_string_value"><code>_string_value</code></a>
+<span class="reference-chip"><code>_catalogue_value</code></span>, <span class="reference-chip"><code>_guardrail_exclude_columns</code></span>, <span class="reference-chip"><code>_is_greater_than</code></span>, <span class="reference-chip"><code>_is_less_than</code></span>, <span class="reference-chip"><code>_is_missing_table_error</code></span>, <span class="reference-chip"><code>_latest_catalogue_behavior_profile_row</code></span>, <span class="reference-chip"><code>_profile_row_count</code></span>, <span class="reference-chip"><code>_profile_watermark_bounds</code></span>, <span class="reference-chip"><code>_string_value</code></span>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/stop_if_failed/"><code>stop_if_failed</code></a>
@@ -137,7 +137,7 @@ Owns schema, freshness, and profile behavior checks as pipeline guardrails durin
 <li>
 <a class="reference-chip" href="../../reference/validate_schema/"><code>validate_schema</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_actual_schema"><code>_actual_schema</code></a>, <a class="reference-chip" href="#_normalize_datatype"><code>_normalize_datatype</code></a>
+<span class="reference-chip"><code>_actual_schema</code></span>, <span class="reference-chip"><code>_normalize_datatype</code></span>
 </li>
 </ul>
 </section>
@@ -157,75 +157,75 @@ Owns schema, freshness, and profile behavior checks as pipeline guardrails durin
   </thead>
   <tbody>
     <tr>
-      <td><a href="../../reference/internal/guardrails/_actual_schema/"><code>_actual_schema</code></a></td>
+      <td><code>_actual_schema</code></td>
       <td><a href="../../reference/validate_schema/"><code>validate_schema</code></a></td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/guardrails/_catalogue_value/"><code>_catalogue_value</code></a></td>
+      <td><code>_catalogue_value</code></td>
       <td><a href="../../reference/enforce_profile_behavior/"><code>enforce_profile_behavior</code></a></td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/guardrails/_coerce_date/"><code>_coerce_date</code></a></td>
+      <td><code>_coerce_date</code></td>
       <td><a href="../../reference/enforce_freshness/"><code>enforce_freshness</code></a></td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/guardrails/_comparable_value/"><code>_comparable_value</code></a></td>
+      <td><code>_comparable_value</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/guardrails/_guardrail_exclude_columns/"><code>_guardrail_exclude_columns</code></a></td>
+      <td><code>_guardrail_exclude_columns</code></td>
       <td><a href="../../reference/enforce_profile_behavior/"><code>enforce_profile_behavior</code></a></td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/guardrails/_is_greater_than/"><code>_is_greater_than</code></a></td>
+      <td><code>_is_greater_than</code></td>
       <td><a href="../../reference/enforce_profile_behavior/"><code>enforce_profile_behavior</code></a></td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/guardrails/_is_guardrail_excluded_column/"><code>_is_guardrail_excluded_column</code></a></td>
+      <td><code>_is_guardrail_excluded_column</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/guardrails/_is_less_than/"><code>_is_less_than</code></a></td>
+      <td><code>_is_less_than</code></td>
       <td><a href="../../reference/enforce_profile_behavior/"><code>enforce_profile_behavior</code></a></td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/guardrails/_is_missing_table_error/"><code>_is_missing_table_error</code></a></td>
+      <td><code>_is_missing_table_error</code></td>
       <td><a href="../../reference/enforce_profile_behavior/"><code>enforce_profile_behavior</code></a></td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/guardrails/_iso_date_value/"><code>_iso_date_value</code></a></td>
+      <td><code>_iso_date_value</code></td>
       <td><a href="../../reference/enforce_freshness/"><code>enforce_freshness</code></a></td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/guardrails/_latest_catalogue_behavior_profile_row/"><code>_latest_catalogue_behavior_profile_row</code></a></td>
+      <td><code>_latest_catalogue_behavior_profile_row</code></td>
       <td><a href="../../reference/enforce_profile_behavior/"><code>enforce_profile_behavior</code></a></td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/guardrails/_max_column_value/"><code>_max_column_value</code></a></td>
+      <td><code>_max_column_value</code></td>
       <td><a href="../../reference/enforce_freshness/"><code>enforce_freshness</code></a></td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/guardrails/_normalize_datatype/"><code>_normalize_datatype</code></a></td>
+      <td><code>_normalize_datatype</code></td>
       <td><a href="../../reference/validate_schema/"><code>validate_schema</code></a></td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/guardrails/_normalize_profile/"><code>_normalize_profile</code></a></td>
+      <td><code>_normalize_profile</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/guardrails/_profile_row_count/"><code>_profile_row_count</code></a></td>
+      <td><code>_profile_row_count</code></td>
       <td><a href="../../reference/enforce_profile_behavior/"><code>enforce_profile_behavior</code></a></td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/guardrails/_profile_watermark_bounds/"><code>_profile_watermark_bounds</code></a></td>
+      <td><code>_profile_watermark_bounds</code></td>
       <td><a href="../../reference/enforce_profile_behavior/"><code>enforce_profile_behavior</code></a></td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/guardrails/_row_to_dict/"><code>_row_to_dict</code></a></td>
+      <td><code>_row_to_dict</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/guardrails/_string_value/"><code>_string_value</code></a></td>
+      <td><code>_string_value</code></td>
       <td><a href="../../reference/enforce_profile_behavior/"><code>enforce_profile_behavior</code></a></td>
     </tr>
   </tbody>
@@ -235,74 +235,74 @@ Owns schema, freshness, and profile behavior checks as pipeline guardrails durin
 <h6>Internal helpers details</h6>
 <ul class="callable-relationship-rows">
 <li>
-<a class="reference-chip" href="#_actual_schema"><code>_actual_schema</code></a>
+<span class="reference-chip"><code>_actual_schema</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_normalize_datatype"><code>_normalize_datatype</code></a>
+<span class="reference-chip"><code>_normalize_datatype</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_catalogue_value"><code>_catalogue_value</code></a>
+<span class="reference-chip"><code>_catalogue_value</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_coerce_date"><code>_coerce_date</code></a>
+<span class="reference-chip"><code>_coerce_date</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_comparable_value"><code>_comparable_value</code></a>
+<span class="reference-chip"><code>_comparable_value</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_guardrail_exclude_columns"><code>_guardrail_exclude_columns</code></a>
+<span class="reference-chip"><code>_guardrail_exclude_columns</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_is_greater_than"><code>_is_greater_than</code></a>
+<span class="reference-chip"><code>_is_greater_than</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_comparable_value"><code>_comparable_value</code></a>
+<span class="reference-chip"><code>_comparable_value</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_is_guardrail_excluded_column"><code>_is_guardrail_excluded_column</code></a>
+<span class="reference-chip"><code>_is_guardrail_excluded_column</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_is_less_than"><code>_is_less_than</code></a>
+<span class="reference-chip"><code>_is_less_than</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_comparable_value"><code>_comparable_value</code></a>
+<span class="reference-chip"><code>_comparable_value</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_is_missing_table_error"><code>_is_missing_table_error</code></a>
+<span class="reference-chip"><code>_is_missing_table_error</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_iso_date_value"><code>_iso_date_value</code></a>
+<span class="reference-chip"><code>_iso_date_value</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_coerce_date"><code>_coerce_date</code></a>
+<span class="reference-chip"><code>_coerce_date</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_latest_catalogue_behavior_profile_row"><code>_latest_catalogue_behavior_profile_row</code></a>
+<span class="reference-chip"><code>_latest_catalogue_behavior_profile_row</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_catalogue_value"><code>_catalogue_value</code></a>, <a class="reference-chip" href="#_is_missing_table_error"><code>_is_missing_table_error</code></a>, <a class="reference-chip" href="#_row_to_dict"><code>_row_to_dict</code></a>, <a class="reference-chip" href="#_string_value"><code>_string_value</code></a>
+<span class="reference-chip"><code>_catalogue_value</code></span>, <span class="reference-chip"><code>_is_missing_table_error</code></span>, <span class="reference-chip"><code>_row_to_dict</code></span>, <span class="reference-chip"><code>_string_value</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_max_column_value"><code>_max_column_value</code></a>
+<span class="reference-chip"><code>_max_column_value</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_normalize_datatype"><code>_normalize_datatype</code></a>
+<span class="reference-chip"><code>_normalize_datatype</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_normalize_profile"><code>_normalize_profile</code></a>
+<span class="reference-chip"><code>_normalize_profile</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_normalize_profile"><code>_normalize_profile</code></a>
+<span class="reference-chip"><code>_normalize_profile</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_profile_row_count"><code>_profile_row_count</code></a>
+<span class="reference-chip"><code>_profile_row_count</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_normalize_profile"><code>_normalize_profile</code></a>
+<span class="reference-chip"><code>_normalize_profile</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_profile_watermark_bounds"><code>_profile_watermark_bounds</code></a>
+<span class="reference-chip"><code>_profile_watermark_bounds</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_normalize_profile"><code>_normalize_profile</code></a>, <a class="reference-chip" href="#_string_value"><code>_string_value</code></a>
+<span class="reference-chip"><code>_normalize_profile</code></span>, <span class="reference-chip"><code>_string_value</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_row_to_dict"><code>_row_to_dict</code></a>
+<span class="reference-chip"><code>_row_to_dict</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_string_value"><code>_string_value</code></a>
+<span class="reference-chip"><code>_string_value</code></span>
 </li>
 </ul>
 </details>

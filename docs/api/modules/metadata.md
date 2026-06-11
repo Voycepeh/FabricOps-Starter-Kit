@@ -94,75 +94,75 @@ No public exports in this module.
   </thead>
   <tbody>
     <tr>
-      <td><a href="../../reference/internal/metadata/_build_dq_rule_key/"><code>_build_dq_rule_key</code></a></td>
+      <td><code>_build_dq_rule_key</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/metadata/_build_metadata_column_key/"><code>_build_metadata_column_key</code></a></td>
+      <td><code>_build_metadata_column_key</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/metadata/_build_metadata_table_key/"><code>_build_metadata_table_key</code></a></td>
+      <td><code>_build_metadata_table_key</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/metadata/_build_runtime_audit_fields/"><code>_build_runtime_audit_fields</code></a></td>
+      <td><code>_build_runtime_audit_fields</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/metadata/_coerce_row_dicts/"><code>_coerce_row_dicts</code></a></td>
+      <td><code>_coerce_row_dicts</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/metadata/_context_get/"><code>_context_get</code></a></td>
+      <td><code>_context_get</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/metadata/_current_notebook_active_registrations/"><code>_current_notebook_active_registrations</code></a></td>
+      <td><code>_current_notebook_active_registrations</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/metadata/_load_notebook_registry/"><code>_load_notebook_registry</code></a></td>
+      <td><code>_load_notebook_registry</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/metadata/_notebook_registration_key/"><code>_notebook_registration_key</code></a></td>
+      <td><code>_notebook_registration_key</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/metadata/_now_utc_iso/"><code>_now_utc_iso</code></a></td>
+      <td><code>_now_utc_iso</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/metadata/_register_current_notebook/"><code>_register_current_notebook</code></a></td>
+      <td><code>_register_current_notebook</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/metadata/_registry_rows_with_defaults/"><code>_registry_rows_with_defaults</code></a></td>
+      <td><code>_registry_rows_with_defaults</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/metadata/_resolve_action_by/"><code>_resolve_action_by</code></a></td>
+      <td><code>_resolve_action_by</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/metadata/_rows_for_spark/"><code>_rows_for_spark</code></a></td>
+      <td><code>_rows_for_spark</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/metadata/_runtime_context/"><code>_runtime_context</code></a></td>
+      <td><code>_runtime_context</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/metadata/_safe_str/"><code>_safe_str</code></a></td>
+      <td><code>_safe_str</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/metadata/_setup_notebook_registry_table/"><code>_setup_notebook_registry_table</code></a></td>
+      <td><code>_setup_notebook_registry_table</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/metadata/_stable_metadata_key/"><code>_stable_metadata_key</code></a></td>
+      <td><code>_stable_metadata_key</code></td>
       <td>—</td>
     </tr>
   </tbody>
@@ -172,80 +172,80 @@ No public exports in this module.
 <h6>Internal helpers details</h6>
 <ul class="callable-relationship-rows">
 <li>
-<a class="reference-chip" href="#_build_dq_rule_key"><code>_build_dq_rule_key</code></a>
+<span class="reference-chip"><code>_build_dq_rule_key</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_stable_metadata_key"><code>_stable_metadata_key</code></a>
+<span class="reference-chip"><code>_stable_metadata_key</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_build_metadata_column_key"><code>_build_metadata_column_key</code></a>
+<span class="reference-chip"><code>_build_metadata_column_key</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_stable_metadata_key"><code>_stable_metadata_key</code></a>
+<span class="reference-chip"><code>_stable_metadata_key</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_build_metadata_table_key"><code>_build_metadata_table_key</code></a>
+<span class="reference-chip"><code>_build_metadata_table_key</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_stable_metadata_key"><code>_stable_metadata_key</code></a>
+<span class="reference-chip"><code>_stable_metadata_key</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_build_runtime_audit_fields"><code>_build_runtime_audit_fields</code></a>
+<span class="reference-chip"><code>_build_runtime_audit_fields</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_context_get"><code>_context_get</code></a>, <a class="reference-chip" href="#_runtime_context"><code>_runtime_context</code></a>, <a class="reference-chip" href="#_safe_str"><code>_safe_str</code></a>
+<span class="reference-chip"><code>_context_get</code></span>, <span class="reference-chip"><code>_runtime_context</code></span>, <span class="reference-chip"><code>_safe_str</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_coerce_row_dicts"><code>_coerce_row_dicts</code></a>
+<span class="reference-chip"><code>_coerce_row_dicts</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_context_get"><code>_context_get</code></a>
+<span class="reference-chip"><code>_context_get</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_current_notebook_active_registrations"><code>_current_notebook_active_registrations</code></a>
+<span class="reference-chip"><code>_current_notebook_active_registrations</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_context_get"><code>_context_get</code></a>, <a class="reference-chip" href="#_load_notebook_registry"><code>_load_notebook_registry</code></a>, <a class="reference-chip" href="#_runtime_context"><code>_runtime_context</code></a>, <a class="reference-chip" href="#_safe_str"><code>_safe_str</code></a>
+<span class="reference-chip"><code>_context_get</code></span>, <span class="reference-chip"><code>_load_notebook_registry</code></span>, <span class="reference-chip"><code>_runtime_context</code></span>, <span class="reference-chip"><code>_safe_str</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_load_notebook_registry"><code>_load_notebook_registry</code></a>
+<span class="reference-chip"><code>_load_notebook_registry</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_notebook_registration_key"><code>_notebook_registration_key</code></a>, <a class="reference-chip" href="#_registry_rows_with_defaults"><code>_registry_rows_with_defaults</code></a>
+<span class="reference-chip"><code>_notebook_registration_key</code></span>, <span class="reference-chip"><code>_registry_rows_with_defaults</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_notebook_registration_key"><code>_notebook_registration_key</code></a>
+<span class="reference-chip"><code>_notebook_registration_key</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_now_utc_iso"><code>_now_utc_iso</code></a>
+<span class="reference-chip"><code>_now_utc_iso</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_register_current_notebook"><code>_register_current_notebook</code></a>
+<span class="reference-chip"><code>_register_current_notebook</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_context_get"><code>_context_get</code></a>, <a class="reference-chip" href="#_notebook_registration_key"><code>_notebook_registration_key</code></a>, <a class="reference-chip" href="#_rows_for_spark"><code>_rows_for_spark</code></a>, <a class="reference-chip" href="#_runtime_context"><code>_runtime_context</code></a>, <a class="reference-chip" href="#_safe_str"><code>_safe_str</code></a>
+<span class="reference-chip"><code>_context_get</code></span>, <span class="reference-chip"><code>_notebook_registration_key</code></span>, <span class="reference-chip"><code>_rows_for_spark</code></span>, <span class="reference-chip"><code>_runtime_context</code></span>, <span class="reference-chip"><code>_safe_str</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_registry_rows_with_defaults"><code>_registry_rows_with_defaults</code></a>
+<span class="reference-chip"><code>_registry_rows_with_defaults</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_coerce_row_dicts"><code>_coerce_row_dicts</code></a>, <a class="reference-chip" href="#_notebook_registration_key"><code>_notebook_registration_key</code></a>, <a class="reference-chip" href="#_safe_str"><code>_safe_str</code></a>
+<span class="reference-chip"><code>_coerce_row_dicts</code></span>, <span class="reference-chip"><code>_notebook_registration_key</code></span>, <span class="reference-chip"><code>_safe_str</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_resolve_action_by"><code>_resolve_action_by</code></a>
+<span class="reference-chip"><code>_resolve_action_by</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_context_get"><code>_context_get</code></a>, <a class="reference-chip" href="#_runtime_context"><code>_runtime_context</code></a>
+<span class="reference-chip"><code>_context_get</code></span>, <span class="reference-chip"><code>_runtime_context</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_rows_for_spark"><code>_rows_for_spark</code></a>
+<span class="reference-chip"><code>_rows_for_spark</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_runtime_context"><code>_runtime_context</code></a>
+<span class="reference-chip"><code>_runtime_context</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_context_get"><code>_context_get</code></a>
+<span class="reference-chip"><code>_context_get</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_safe_str"><code>_safe_str</code></a>
+<span class="reference-chip"><code>_safe_str</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_setup_notebook_registry_table"><code>_setup_notebook_registry_table</code></a>
+<span class="reference-chip"><code>_setup_notebook_registry_table</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_coerce_row_dicts"><code>_coerce_row_dicts</code></a>, <a class="reference-chip" href="#_registry_rows_with_defaults"><code>_registry_rows_with_defaults</code></a>, <a class="reference-chip" href="#_rows_for_spark"><code>_rows_for_spark</code></a>
+<span class="reference-chip"><code>_coerce_row_dicts</code></span>, <span class="reference-chip"><code>_registry_rows_with_defaults</code></span>, <span class="reference-chip"><code>_rows_for_spark</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_stable_metadata_key"><code>_stable_metadata_key</code></a>
+<span class="reference-chip"><code>_stable_metadata_key</code></span>
 </li>
 </ul>
 </details>

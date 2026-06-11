@@ -71,18 +71,171 @@ Not documented yet
 <details class="reference-implementation-details">
 <summary>Implementation details</summary>
 
-- <a href="../internal/governance_review__review_governance_evidence/"><code>fabricops_kit.governance_review._review_governance_evidence</code></a>
-- <a href="../internal/governance_review__coerce_rows/"><code>fabricops_kit.governance_review._coerce_rows</code></a>
-- <a href="../internal/governance_review__is_success/"><code>fabricops_kit.governance_review._is_success</code></a>
-- <a href="../internal/governance_review__value/"><code>fabricops_kit.governance_review._value</code></a>
-- <a href="../internal/metadata__build_metadata_table_key/"><code>fabricops_kit.metadata._build_metadata_table_key</code></a>
+### Call flow
+
+```text
+load_catalogue_profile_rows(...)
+├── _build_metadata_table_key(...)
+│   └── _stable_metadata_key(...)
+├── _coerce_rows(...)
+├── _is_success(...)
+│   └── _value(...)
+├── _value(...)
+└── read_lakehouse_table(...)
+    ├── _current_database_matches(...)
+    ├── _get_spark(...)
+    ├── _get_store(...)
+    ├── _normalize_table_name(...)
+    ├── _registered_table_identifier(...)
+    │   ├── _normalize_table_name(...)
+    │   └── _quote_identifier(...)
+    └── _uses_registered_metadata_table(...)
+```
+
+### Internal helpers used by this callable
+
+### `def _coerce_rows(rows_or_df: Any) -> list[dict[str, Any]]`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/governance_review.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L62-L67">View `_coerce_rows` on GitHub</a>
+
+**Code:**
+
+```python
+def _coerce_rows(rows_or_df: Any) -> list[dict[str, Any]]:
+    if rows_or_df is None:
+        return []
+    if hasattr(rows_or_df, "collect"):
+        rows_or_df = rows_or_df.collect()
+    return [row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row) for row in rows_or_df]
+```
+
+**Used here because:**
+
+`load_catalogue_profile_rows` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `load_catalogue_profile_rows` or another caller that reaches `_coerce_rows`.
+
+### `def _is_success(row: dict[str, Any]) -> bool`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/governance_review.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L74-L75">View `_is_success` on GitHub</a>
+
+**Code:**
+
+```python
+def _is_success(row: dict[str, Any]) -> bool:
+    return str(_value(row, "profile_status", "")).strip().lower() in SUCCESS_STATUSES
+```
+
+**Used here because:**
+
+`load_catalogue_profile_rows` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `load_catalogue_profile_rows` or another caller that reaches `_is_success`.
+
+### `def _value(row: dict[str, Any], name: str, default: Any='') -> Any`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/governance_review.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L70-L71">View `_value` on GitHub</a>
+
+**Code:**
+
+```python
+def _value(row: dict[str, Any], name: str, default: Any = "") -> Any:
+    return row.get(name, row.get(name.upper(), default))
+```
+
+**Used here because:**
+
+`load_catalogue_profile_rows` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `load_catalogue_profile_rows` or another caller that reaches `_value`.
+
+### `def _build_metadata_table_key(environment_name, dataset_name, table_name) -> str`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/metadata.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L149-L150">View `_build_metadata_table_key` on GitHub</a>
+
+**Code:**
+
+```python
+def _build_metadata_table_key(environment_name, dataset_name, table_name) -> str:
+    return _stable_metadata_key(environment_name, dataset_name, table_name)
+```
+
+**Used here because:**
+
+`load_catalogue_profile_rows` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `load_catalogue_profile_rows` or another caller that reaches `_build_metadata_table_key`.
+
+### `def _stable_metadata_key(*parts: Any) -> str`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/metadata.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L144-L146">View `_stable_metadata_key` on GitHub</a>
+
+**Code:**
+
+```python
+def _stable_metadata_key(*parts: Any) -> str:
+    normalized = "|".join(str(part or "").strip().lower() for part in parts)
+    return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
+```
+
+**Used here because:**
+
+`load_catalogue_profile_rows` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `load_catalogue_profile_rows` or another caller that reaches `_stable_metadata_key`.
+
 
 </details>
 
 ## Source
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a80b5a6ddb4de14056095d4da916cd452e478ff8/src/fabricops_kit/governance_review.py#L381-L406">View load_catalogue_profile_rows on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L381-L406">View load_catalogue_profile_rows on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -146,20 +299,20 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 
 ### Inbound references
 
-- <a href="../internal/governance_review__review_governance_evidence/"><code>fabricops_kit.governance_review._review_governance_evidence</code></a>
+- `fabricops_kit.governance_review._review_governance_evidence`
 
 ### Outbound references
 
 - <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a>
-- <a href="../internal/governance_review__coerce_rows/"><code>fabricops_kit.governance_review._coerce_rows</code></a>
-- <a href="../internal/governance_review__is_success/"><code>fabricops_kit.governance_review._is_success</code></a>
-- <a href="../internal/governance_review__value/"><code>fabricops_kit.governance_review._value</code></a>
-- <a href="../internal/metadata__build_metadata_table_key/"><code>fabricops_kit.metadata._build_metadata_table_key</code></a>
+- `fabricops_kit.governance_review._coerce_rows`
+- `fabricops_kit.governance_review._is_success`
+- `fabricops_kit.governance_review._value`
+- `fabricops_kit.metadata._build_metadata_table_key`
 
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a80b5a6ddb4de14056095d4da916cd452e478ff8/src/fabricops_kit/governance_review.py#L381-L406">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a80b5a6ddb4de14056095d4da916cd452e478ff8/src/fabricops_kit/governance_review.py#L381-L406</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L381-L406">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L381-L406</a>
 - Start line: `381`
 - End line: `406`
 - Signature:
@@ -176,10 +329,163 @@ def load_catalogue_profile_rows(config: Any, env: str, selection: dict[str, Any]
 
 ### Internal implementation helpers
 
-- <a href="../internal/governance_review__review_governance_evidence/"><code>fabricops_kit.governance_review._review_governance_evidence</code></a>
-- <a href="../internal/governance_review__coerce_rows/"><code>fabricops_kit.governance_review._coerce_rows</code></a>
-- <a href="../internal/governance_review__is_success/"><code>fabricops_kit.governance_review._is_success</code></a>
-- <a href="../internal/governance_review__value/"><code>fabricops_kit.governance_review._value</code></a>
-- <a href="../internal/metadata__build_metadata_table_key/"><code>fabricops_kit.metadata._build_metadata_table_key</code></a>
+### Call flow
+
+```text
+load_catalogue_profile_rows(...)
+├── _build_metadata_table_key(...)
+│   └── _stable_metadata_key(...)
+├── _coerce_rows(...)
+├── _is_success(...)
+│   └── _value(...)
+├── _value(...)
+└── read_lakehouse_table(...)
+    ├── _current_database_matches(...)
+    ├── _get_spark(...)
+    ├── _get_store(...)
+    ├── _normalize_table_name(...)
+    ├── _registered_table_identifier(...)
+    │   ├── _normalize_table_name(...)
+    │   └── _quote_identifier(...)
+    └── _uses_registered_metadata_table(...)
+```
+
+### Internal helpers used by this callable
+
+### `def _coerce_rows(rows_or_df: Any) -> list[dict[str, Any]]`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/governance_review.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L62-L67">View `_coerce_rows` on GitHub</a>
+
+**Code:**
+
+```python
+def _coerce_rows(rows_or_df: Any) -> list[dict[str, Any]]:
+    if rows_or_df is None:
+        return []
+    if hasattr(rows_or_df, "collect"):
+        rows_or_df = rows_or_df.collect()
+    return [row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row) for row in rows_or_df]
+```
+
+**Used here because:**
+
+`load_catalogue_profile_rows` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `load_catalogue_profile_rows` or another caller that reaches `_coerce_rows`.
+
+### `def _is_success(row: dict[str, Any]) -> bool`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/governance_review.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L74-L75">View `_is_success` on GitHub</a>
+
+**Code:**
+
+```python
+def _is_success(row: dict[str, Any]) -> bool:
+    return str(_value(row, "profile_status", "")).strip().lower() in SUCCESS_STATUSES
+```
+
+**Used here because:**
+
+`load_catalogue_profile_rows` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `load_catalogue_profile_rows` or another caller that reaches `_is_success`.
+
+### `def _value(row: dict[str, Any], name: str, default: Any='') -> Any`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/governance_review.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L70-L71">View `_value` on GitHub</a>
+
+**Code:**
+
+```python
+def _value(row: dict[str, Any], name: str, default: Any = "") -> Any:
+    return row.get(name, row.get(name.upper(), default))
+```
+
+**Used here because:**
+
+`load_catalogue_profile_rows` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `load_catalogue_profile_rows` or another caller that reaches `_value`.
+
+### `def _build_metadata_table_key(environment_name, dataset_name, table_name) -> str`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/metadata.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L149-L150">View `_build_metadata_table_key` on GitHub</a>
+
+**Code:**
+
+```python
+def _build_metadata_table_key(environment_name, dataset_name, table_name) -> str:
+    return _stable_metadata_key(environment_name, dataset_name, table_name)
+```
+
+**Used here because:**
+
+`load_catalogue_profile_rows` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `load_catalogue_profile_rows` or another caller that reaches `_build_metadata_table_key`.
+
+### `def _stable_metadata_key(*parts: Any) -> str`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/metadata.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L144-L146">View `_stable_metadata_key` on GitHub</a>
+
+**Code:**
+
+```python
+def _stable_metadata_key(*parts: Any) -> str:
+    normalized = "|".join(str(part or "").strip().lower() for part in parts)
+    return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
+```
+
+**Used here because:**
+
+`load_catalogue_profile_rows` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `load_catalogue_profile_rows` or another caller that reaches `_stable_metadata_key`.
+
 
 </details>

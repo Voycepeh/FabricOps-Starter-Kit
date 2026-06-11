@@ -80,14 +80,14 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
       <td>Callable</td>
       <td>function</td>
       <td>Create or validate all FabricOps metadata tables through one setup action.</td>
-      <td><a href="../../reference/internal/config/_get_active_metadata_tables/"><code>_get_active_metadata_tables</code></a> (internal), <a href="../../reference/internal/config/_metadata_tables_from_setup_results/"><code>_metadata_tables_from_setup_results</code></a> (internal), <a href="../../reference/internal/config/_validate_metadata_table_registration/"><code>_validate_metadata_table_registration</code></a> (internal)</td>
+      <td><code>_get_active_metadata_tables</code> (internal), <code>_metadata_tables_from_setup_results</code> (internal), <code>_validate_metadata_table_registration</code> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/setup_notebook/"><code>setup_notebook</code></a></td>
       <td>Callable</td>
       <td>function</td>
       <td>Shared environment setup and runtime validation for notebook templates.</td>
-      <td><a href="../../reference/internal/config/_get_store/"><code>_get_store</code></a> (internal), <a href="../../reference/internal/config/_run_config_smoke_tests/"><code>_run_config_smoke_tests</code></a> (internal), <a href="../../reference/internal/config/_validate_framework_config/"><code>_validate_framework_config</code></a> (internal)</td>
+      <td><code>_get_store</code> (internal), <code>_run_config_smoke_tests</code> (internal), <code>_validate_framework_config</code> (internal)</td>
     </tr>
   </tbody>
 </table>
@@ -108,12 +108,12 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
 <li>
 <a class="reference-chip" href="../../reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_get_active_metadata_tables"><code>_get_active_metadata_tables</code></a>, <a class="reference-chip" href="#_metadata_tables_from_setup_results"><code>_metadata_tables_from_setup_results</code></a>, <a class="reference-chip" href="#_validate_metadata_table_registration"><code>_validate_metadata_table_registration</code></a>
+<span class="reference-chip"><code>_get_active_metadata_tables</code></span>, <span class="reference-chip"><code>_metadata_tables_from_setup_results</code></span>, <span class="reference-chip"><code>_validate_metadata_table_registration</code></span>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/setup_notebook/"><code>setup_notebook</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_get_store"><code>_get_store</code></a>, <a class="reference-chip" href="#_run_config_smoke_tests"><code>_run_config_smoke_tests</code></a>, <a class="reference-chip" href="#_validate_framework_config"><code>_validate_framework_config</code></a>
+<span class="reference-chip"><code>_get_store</code></span>, <span class="reference-chip"><code>_run_config_smoke_tests</code></span>, <span class="reference-chip"><code>_validate_framework_config</code></span>
 </li>
 </ul>
 </section>
@@ -133,91 +133,91 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
   </thead>
   <tbody>
     <tr>
-      <td><a href="../../reference/internal/config/_assert_valid_dataset_contract/"><code>_assert_valid_dataset_contract</code></a></td>
+      <td><code>_assert_valid_dataset_contract</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/config/_audit_timestamp_expr/"><code>_audit_timestamp_expr</code></a></td>
+      <td><code>_audit_timestamp_expr</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/config/_check_spark_session/"><code>_check_spark_session</code></a></td>
+      <td><code>_check_spark_session</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/config/_current_audit_timestamp/"><code>_current_audit_timestamp</code></a></td>
+      <td><code>_current_audit_timestamp</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/config/_default_schema_text/"><code>_default_schema_text</code></a></td>
+      <td><code>_default_schema_text</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/config/_detect_nested_metadata_delta_folders/"><code>_detect_nested_metadata_delta_folders</code></a></td>
+      <td><code>_detect_nested_metadata_delta_folders</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/config/_format_error_path/"><code>_format_error_path</code></a></td>
+      <td><code>_format_error_path</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/config/_get_active_metadata_tables/"><code>_get_active_metadata_tables</code></a></td>
+      <td><code>_get_active_metadata_tables</code></td>
       <td><a href="../../reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a></td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/config/_get_audit_timezone/"><code>_get_audit_timezone</code></a></td>
+      <td><code>_get_audit_timezone</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/config/_get_fabric_runtime_metadata/"><code>_get_fabric_runtime_metadata</code></a></td>
+      <td><code>_get_fabric_runtime_metadata</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/config/_get_store/"><code>_get_store</code></a></td>
+      <td><code>_get_store</code></td>
       <td><a href="../../reference/setup_notebook/"><code>setup_notebook</code></a></td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/config/_load_and_validate_dataset_contract/"><code>_load_and_validate_dataset_contract</code></a></td>
+      <td><code>_load_and_validate_dataset_contract</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/config/_load_dataset_contract/"><code>_load_dataset_contract</code></a></td>
+      <td><code>_load_dataset_contract</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/config/_load_schema/"><code>_load_schema</code></a></td>
+      <td><code>_load_schema</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/config/_metadata_tables_from_setup_results/"><code>_metadata_tables_from_setup_results</code></a></td>
+      <td><code>_metadata_tables_from_setup_results</code></td>
       <td><a href="../../reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a></td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/config/_run_config_smoke_tests/"><code>_run_config_smoke_tests</code></a></td>
+      <td><code>_run_config_smoke_tests</code></td>
       <td><a href="../../reference/setup_notebook/"><code>setup_notebook</code></a></td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/config/_show_tables_for_metadata_lakehouse/"><code>_show_tables_for_metadata_lakehouse</code></a></td>
+      <td><code>_show_tables_for_metadata_lakehouse</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/config/_validate_audit_timezone/"><code>_validate_audit_timezone</code></a></td>
+      <td><code>_validate_audit_timezone</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/config/_validate_dataset_contract/"><code>_validate_dataset_contract</code></a></td>
+      <td><code>_validate_dataset_contract</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/config/_validate_framework_config/"><code>_validate_framework_config</code></a></td>
+      <td><code>_validate_framework_config</code></td>
       <td><a href="../../reference/setup_notebook/"><code>setup_notebook</code></a></td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/config/_validate_metadata_table_registration/"><code>_validate_metadata_table_registration</code></a></td>
+      <td><code>_validate_metadata_table_registration</code></td>
       <td><a href="../../reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a></td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/config/_validate_notebook_name/"><code>_validate_notebook_name</code></a></td>
+      <td><code>_validate_notebook_name</code></td>
       <td>—</td>
     </tr>
   </tbody>
@@ -227,96 +227,96 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
 <h6>Internal helpers details</h6>
 <ul class="callable-relationship-rows">
 <li>
-<a class="reference-chip" href="#_assert_valid_dataset_contract"><code>_assert_valid_dataset_contract</code></a>
+<span class="reference-chip"><code>_assert_valid_dataset_contract</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_validate_dataset_contract"><code>_validate_dataset_contract</code></a>
+<span class="reference-chip"><code>_validate_dataset_contract</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_audit_timestamp_expr"><code>_audit_timestamp_expr</code></a>
+<span class="reference-chip"><code>_audit_timestamp_expr</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_get_audit_timezone"><code>_get_audit_timezone</code></a>
+<span class="reference-chip"><code>_get_audit_timezone</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_check_spark_session"><code>_check_spark_session</code></a>
+<span class="reference-chip"><code>_check_spark_session</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_current_audit_timestamp"><code>_current_audit_timestamp</code></a>
+<span class="reference-chip"><code>_current_audit_timestamp</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_get_audit_timezone"><code>_get_audit_timezone</code></a>
+<span class="reference-chip"><code>_get_audit_timezone</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_default_schema_text"><code>_default_schema_text</code></a>
+<span class="reference-chip"><code>_default_schema_text</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_detect_nested_metadata_delta_folders"><code>_detect_nested_metadata_delta_folders</code></a>
+<span class="reference-chip"><code>_detect_nested_metadata_delta_folders</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_get_store"><code>_get_store</code></a>
+<span class="reference-chip"><code>_get_store</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_format_error_path"><code>_format_error_path</code></a>
+<span class="reference-chip"><code>_format_error_path</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_get_active_metadata_tables"><code>_get_active_metadata_tables</code></a>
+<span class="reference-chip"><code>_get_active_metadata_tables</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_validate_framework_config"><code>_validate_framework_config</code></a>
+<span class="reference-chip"><code>_validate_framework_config</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_get_audit_timezone"><code>_get_audit_timezone</code></a>
+<span class="reference-chip"><code>_get_audit_timezone</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_validate_audit_timezone"><code>_validate_audit_timezone</code></a>
+<span class="reference-chip"><code>_validate_audit_timezone</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_get_fabric_runtime_metadata"><code>_get_fabric_runtime_metadata</code></a>
+<span class="reference-chip"><code>_get_fabric_runtime_metadata</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_get_store"><code>_get_store</code></a>
+<span class="reference-chip"><code>_get_store</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_load_and_validate_dataset_contract"><code>_load_and_validate_dataset_contract</code></a>
+<span class="reference-chip"><code>_load_and_validate_dataset_contract</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_load_dataset_contract"><code>_load_dataset_contract</code></a>, <a class="reference-chip" href="#_validate_dataset_contract"><code>_validate_dataset_contract</code></a>
+<span class="reference-chip"><code>_load_dataset_contract</code></span>, <span class="reference-chip"><code>_validate_dataset_contract</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_load_dataset_contract"><code>_load_dataset_contract</code></a>
+<span class="reference-chip"><code>_load_dataset_contract</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_load_schema"><code>_load_schema</code></a>
+<span class="reference-chip"><code>_load_schema</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_default_schema_text"><code>_default_schema_text</code></a>
+<span class="reference-chip"><code>_default_schema_text</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_metadata_tables_from_setup_results"><code>_metadata_tables_from_setup_results</code></a>
+<span class="reference-chip"><code>_metadata_tables_from_setup_results</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_run_config_smoke_tests"><code>_run_config_smoke_tests</code></a>
+<span class="reference-chip"><code>_run_config_smoke_tests</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_check_spark_session"><code>_check_spark_session</code></a>, <a class="reference-chip" href="#_get_fabric_runtime_metadata"><code>_get_fabric_runtime_metadata</code></a>, <a class="reference-chip" href="#_get_store"><code>_get_store</code></a>, <a class="reference-chip" href="#_validate_notebook_name"><code>_validate_notebook_name</code></a>
+<span class="reference-chip"><code>_check_spark_session</code></span>, <span class="reference-chip"><code>_get_fabric_runtime_metadata</code></span>, <span class="reference-chip"><code>_get_store</code></span>, <span class="reference-chip"><code>_validate_notebook_name</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_show_tables_for_metadata_lakehouse"><code>_show_tables_for_metadata_lakehouse</code></a>
+<span class="reference-chip"><code>_show_tables_for_metadata_lakehouse</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_get_store"><code>_get_store</code></a>
+<span class="reference-chip"><code>_get_store</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_validate_audit_timezone"><code>_validate_audit_timezone</code></a>
+<span class="reference-chip"><code>_validate_audit_timezone</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_validate_dataset_contract"><code>_validate_dataset_contract</code></a>
+<span class="reference-chip"><code>_validate_dataset_contract</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_format_error_path"><code>_format_error_path</code></a>, <a class="reference-chip" href="#_load_schema"><code>_load_schema</code></a>
+<span class="reference-chip"><code>_format_error_path</code></span>, <span class="reference-chip"><code>_load_schema</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_validate_framework_config"><code>_validate_framework_config</code></a>
+<span class="reference-chip"><code>_validate_framework_config</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_validate_audit_timezone"><code>_validate_audit_timezone</code></a>
+<span class="reference-chip"><code>_validate_audit_timezone</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_validate_metadata_table_registration"><code>_validate_metadata_table_registration</code></a>
+<span class="reference-chip"><code>_validate_metadata_table_registration</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_detect_nested_metadata_delta_folders"><code>_detect_nested_metadata_delta_folders</code></a>, <a class="reference-chip" href="#_get_active_metadata_tables"><code>_get_active_metadata_tables</code></a>, <a class="reference-chip" href="#_show_tables_for_metadata_lakehouse"><code>_show_tables_for_metadata_lakehouse</code></a>, <a class="reference-chip" href="#_validate_framework_config"><code>_validate_framework_config</code></a>
+<span class="reference-chip"><code>_detect_nested_metadata_delta_folders</code></span>, <span class="reference-chip"><code>_get_active_metadata_tables</code></span>, <span class="reference-chip"><code>_show_tables_for_metadata_lakehouse</code></span>, <span class="reference-chip"><code>_validate_framework_config</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_validate_notebook_name"><code>_validate_notebook_name</code></a>
+<span class="reference-chip"><code>_validate_notebook_name</code></span>
 </li>
 </ul>
 </details>

@@ -69,16 +69,135 @@ Guardrail result dictionary with status, can_continue, checks, message, and sche
 <details class="reference-implementation-details">
 <summary>Implementation details</summary>
 
-- <a href="../run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
-- <a href="../internal/guardrails__actual_schema/"><code>fabricops_kit.guardrails._actual_schema</code></a>
-- <a href="../internal/guardrails__normalize_datatype/"><code>fabricops_kit.guardrails._normalize_datatype</code></a>
+### Call flow
+
+```text
+validate_schema(...)
+├── _actual_schema(...)
+│   └── _normalize_datatype(...)
+└── _normalize_datatype(...)
+```
+
+### Internal helpers used by this callable
+
+### `def _actual_schema(df) -> tuple[list[str], dict[str, str]]`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/guardrails.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L86-L101">View `_actual_schema` on GitHub</a>
+
+**Code:**
+
+```python
+def _actual_schema(df) -> tuple[list[str], dict[str, str]]:
+    schema = getattr(df, "schema", None)
+    if schema is not None and hasattr(schema, "fields"):
+        columns = [str(field.name) for field in schema.fields]
+        types = {str(field.name): _normalize_datatype(getattr(field, "dataType", "")) for field in schema.fields}
+        return columns, types
+
+    dtypes = getattr(df, "dtypes", None)
+    if dtypes is not None:
+        dtype_items = dtypes.items() if hasattr(dtypes, "items") else dtypes
+        types = {str(name): _normalize_datatype(dtype) for name, dtype in dtype_items}
+        columns = [str(column) for column in getattr(df, "columns", list(types))]
+        return columns, types
+
+    columns = [str(column) for column in getattr(df, "columns", [])]
+    return columns, {}
+```
+
+**Used here because:**
+
+`validate_schema` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `validate_schema` or another caller that reaches `_actual_schema`.
+
+### `def _normalize_datatype(data_type) -> str`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/guardrails.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L37-L83">View `_normalize_datatype` on GitHub</a>
+
+**Code:**
+
+```python
+def _normalize_datatype(data_type) -> str:
+    raw = str(data_type).strip().lower()
+    raw = re.sub(r"\s+", "", raw)
+
+    decimal_match = re.search(r"decimaltype\((\d+),(\d+)\)|decimal\((\d+),(\d+)\)", raw)
+    if decimal_match:
+        precision = decimal_match.group(1) or decimal_match.group(3)
+        scale = decimal_match.group(2) or decimal_match.group(4)
+        return f"decimal({precision},{scale})"
+
+    aliases = {
+        "integertype()": "int",
+        "integertype": "int",
+        "integer": "int",
+        "int32": "int",
+        "int": "int",
+        "longtype()": "bigint",
+        "longtype": "bigint",
+        "long": "bigint",
+        "int64": "bigint",
+        "bigint": "bigint",
+        "stringtype()": "string",
+        "stringtype": "string",
+        "str": "string",
+        "object": "string",
+        "string": "string",
+        "datetype()": "date",
+        "datetype": "date",
+        "date": "date",
+        "timestamptype()": "timestamp",
+        "timestamptype": "timestamp",
+        "timestamp": "timestamp",
+        "datetime64[ns]": "timestamp",
+        "doubletype()": "double",
+        "doubletype": "double",
+        "double": "double",
+        "float64": "double",
+        "floattype()": "float",
+        "floattype": "float",
+        "float32": "float",
+        "float": "float",
+        "booleantype()": "boolean",
+        "booleantype": "boolean",
+        "bool": "boolean",
+        "boolean": "boolean",
+    }
+    return aliases.get(raw, raw)
+```
+
+**Used here because:**
+
+`validate_schema` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `validate_schema` or another caller that reaches `_normalize_datatype`.
+
 
 </details>
 
 ## Source
 
 - Source file path: `src/fabricops_kit/guardrails.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a80b5a6ddb4de14056095d4da916cd452e478ff8/src/fabricops_kit/guardrails.py#L109-L198">View validate_schema on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L109-L198">View validate_schema on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -210,13 +329,13 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 
 ### Outbound references
 
-- <a href="../internal/guardrails__actual_schema/"><code>fabricops_kit.guardrails._actual_schema</code></a>
-- <a href="../internal/guardrails__normalize_datatype/"><code>fabricops_kit.guardrails._normalize_datatype</code></a>
+- `fabricops_kit.guardrails._actual_schema`
+- `fabricops_kit.guardrails._normalize_datatype`
 
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/guardrails.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a80b5a6ddb4de14056095d4da916cd452e478ff8/src/fabricops_kit/guardrails.py#L109-L198">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a80b5a6ddb4de14056095d4da916cd452e478ff8/src/fabricops_kit/guardrails.py#L109-L198</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L109-L198">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L109-L198</a>
 - Start line: `109`
 - End line: `198`
 - Signature:
@@ -235,8 +354,127 @@ def validate_schema(dataframe, expected_schema: dict[str, str], *, preset: str='
 
 ### Internal implementation helpers
 
-- <a href="../run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
-- <a href="../internal/guardrails__actual_schema/"><code>fabricops_kit.guardrails._actual_schema</code></a>
-- <a href="../internal/guardrails__normalize_datatype/"><code>fabricops_kit.guardrails._normalize_datatype</code></a>
+### Call flow
+
+```text
+validate_schema(...)
+├── _actual_schema(...)
+│   └── _normalize_datatype(...)
+└── _normalize_datatype(...)
+```
+
+### Internal helpers used by this callable
+
+### `def _actual_schema(df) -> tuple[list[str], dict[str, str]]`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/guardrails.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L86-L101">View `_actual_schema` on GitHub</a>
+
+**Code:**
+
+```python
+def _actual_schema(df) -> tuple[list[str], dict[str, str]]:
+    schema = getattr(df, "schema", None)
+    if schema is not None and hasattr(schema, "fields"):
+        columns = [str(field.name) for field in schema.fields]
+        types = {str(field.name): _normalize_datatype(getattr(field, "dataType", "")) for field in schema.fields}
+        return columns, types
+
+    dtypes = getattr(df, "dtypes", None)
+    if dtypes is not None:
+        dtype_items = dtypes.items() if hasattr(dtypes, "items") else dtypes
+        types = {str(name): _normalize_datatype(dtype) for name, dtype in dtype_items}
+        columns = [str(column) for column in getattr(df, "columns", list(types))]
+        return columns, types
+
+    columns = [str(column) for column in getattr(df, "columns", [])]
+    return columns, {}
+```
+
+**Used here because:**
+
+`validate_schema` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `validate_schema` or another caller that reaches `_actual_schema`.
+
+### `def _normalize_datatype(data_type) -> str`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/guardrails.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L37-L83">View `_normalize_datatype` on GitHub</a>
+
+**Code:**
+
+```python
+def _normalize_datatype(data_type) -> str:
+    raw = str(data_type).strip().lower()
+    raw = re.sub(r"\s+", "", raw)
+
+    decimal_match = re.search(r"decimaltype\((\d+),(\d+)\)|decimal\((\d+),(\d+)\)", raw)
+    if decimal_match:
+        precision = decimal_match.group(1) or decimal_match.group(3)
+        scale = decimal_match.group(2) or decimal_match.group(4)
+        return f"decimal({precision},{scale})"
+
+    aliases = {
+        "integertype()": "int",
+        "integertype": "int",
+        "integer": "int",
+        "int32": "int",
+        "int": "int",
+        "longtype()": "bigint",
+        "longtype": "bigint",
+        "long": "bigint",
+        "int64": "bigint",
+        "bigint": "bigint",
+        "stringtype()": "string",
+        "stringtype": "string",
+        "str": "string",
+        "object": "string",
+        "string": "string",
+        "datetype()": "date",
+        "datetype": "date",
+        "date": "date",
+        "timestamptype()": "timestamp",
+        "timestamptype": "timestamp",
+        "timestamp": "timestamp",
+        "datetime64[ns]": "timestamp",
+        "doubletype()": "double",
+        "doubletype": "double",
+        "double": "double",
+        "float64": "double",
+        "floattype()": "float",
+        "floattype": "float",
+        "float32": "float",
+        "float": "float",
+        "booleantype()": "boolean",
+        "booleantype": "boolean",
+        "bool": "boolean",
+        "boolean": "boolean",
+    }
+    return aliases.get(raw, raw)
+```
+
+**Used here because:**
+
+`validate_schema` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `validate_schema` or another caller that reaches `_normalize_datatype`.
+
 
 </details>

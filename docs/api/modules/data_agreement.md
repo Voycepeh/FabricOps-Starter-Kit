@@ -87,28 +87,28 @@ Owns agreement metadata capture, audited record building, metadata commit helper
       <td>Callable</td>
       <td>function</td>
       <td>Render the standalone agreement-evidence widget.</td>
-      <td><a href="../../reference/internal/data_agreement/_render_agreement_evidence_widget/"><code>_render_agreement_evidence_widget</code></a> (internal)</td>
+      <td><code>_render_agreement_evidence_widget</code> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a></td>
       <td>Callable</td>
       <td>function</td>
       <td>Render the standalone data-agreement intake widget.</td>
-      <td><a href="../../reference/internal/data_agreement/_render_maintenance_widget/"><code>_render_maintenance_widget</code></a> (internal)</td>
+      <td><code>_render_maintenance_widget</code> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a></td>
       <td>Callable</td>
       <td>function</td>
       <td>Render the standalone data-steward intake widget.</td>
-      <td><a href="../../reference/internal/data_agreement/_render_maintenance_widget/"><code>_render_maintenance_widget</code></a> (internal)</td>
+      <td><code>_render_maintenance_widget</code> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/widget_select_agreement/"><code>widget_select_agreement</code></a></td>
       <td>Callable</td>
       <td>function</td>
       <td>Render an agreement selector and optionally register the active notebook.</td>
-      <td><a href="../../reference/internal/data_agreement/_html_escape/"><code>_html_escape</code></a> (internal), <a href="../../reference/internal/data_agreement/_latest_agreement_versions/"><code>_latest_agreement_versions</code></a> (internal), <a href="../../reference/internal/data_agreement/_list_data_agreements/"><code>_list_data_agreements</code></a> (internal), <a href="../../reference/internal/data_agreement/_render_searchable_selector/"><code>_render_searchable_selector</code></a> (internal), <a href="../../reference/internal/data_agreement/_require_ipywidgets/"><code>_require_ipywidgets</code></a> (internal)</td>
+      <td><code>_html_escape</code> (internal), <code>_latest_agreement_versions</code> (internal), <code>_list_data_agreements</code> (internal), <code>_render_searchable_selector</code> (internal), <code>_require_ipywidgets</code> (internal)</td>
     </tr>
   </tbody>
 </table>
@@ -134,22 +134,22 @@ Owns agreement metadata capture, audited record building, metadata commit helper
 <li>
 <a class="reference-chip" href="../../reference/widget_render_agreement_evidence/"><code>widget_render_agreement_evidence</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_render_agreement_evidence_widget"><code>_render_agreement_evidence_widget</code></a>
+<span class="reference-chip"><code>_render_agreement_evidence_widget</code></span>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_render_maintenance_widget"><code>_render_maintenance_widget</code></a>
+<span class="reference-chip"><code>_render_maintenance_widget</code></span>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_render_maintenance_widget"><code>_render_maintenance_widget</code></a>
+<span class="reference-chip"><code>_render_maintenance_widget</code></span>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/widget_select_agreement/"><code>widget_select_agreement</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_html_escape"><code>_html_escape</code></a>, <a class="reference-chip" href="#_latest_agreement_versions"><code>_latest_agreement_versions</code></a>, <a class="reference-chip" href="#_list_data_agreements"><code>_list_data_agreements</code></a>, <a class="reference-chip" href="#_render_searchable_selector"><code>_render_searchable_selector</code></a>, <a class="reference-chip" href="#_require_ipywidgets"><code>_require_ipywidgets</code></a>
+<span class="reference-chip"><code>_html_escape</code></span>, <span class="reference-chip"><code>_latest_agreement_versions</code></span>, <span class="reference-chip"><code>_list_data_agreements</code></span>, <span class="reference-chip"><code>_render_searchable_selector</code></span>, <span class="reference-chip"><code>_require_ipywidgets</code></span>
 </li>
 </ul>
 </section>
@@ -169,151 +169,151 @@ Owns agreement metadata capture, audited record building, metadata commit helper
   </thead>
   <tbody>
     <tr>
-      <td><a href="../../reference/internal/data_agreement/_active_steward/"><code>_active_steward</code></a></td>
+      <td><code>_active_steward</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_agreement/_agreement_identity_text/"><code>_agreement_identity_text</code></a></td>
+      <td><code>_agreement_identity_text</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_agreement/_business_agreement_snapshot/"><code>_business_agreement_snapshot</code></a></td>
+      <td><code>_business_agreement_snapshot</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_agreement/_coerce_row_dicts/"><code>_coerce_row_dicts</code></a></td>
+      <td><code>_coerce_row_dicts</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_agreement/_collect_custom_fields/"><code>_collect_custom_fields</code></a></td>
+      <td><code>_collect_custom_fields</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_agreement/_config_value/"><code>_config_value</code></a></td>
+      <td><code>_config_value</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_agreement/_create_or_update_data_agreement/"><code>_create_or_update_data_agreement</code></a></td>
+      <td><code>_create_or_update_data_agreement</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_agreement/_create_or_update_data_steward/"><code>_create_or_update_data_steward</code></a></td>
+      <td><code>_create_or_update_data_steward</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_agreement/_deserialize_custom_fields/"><code>_deserialize_custom_fields</code></a></td>
+      <td><code>_deserialize_custom_fields</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_agreement/_ensure_metadata_tables/"><code>_ensure_metadata_tables</code></a></td>
+      <td><code>_ensure_metadata_tables</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_agreement/_generate_agreement_id/"><code>_generate_agreement_id</code></a></td>
+      <td><code>_generate_agreement_id</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_agreement/_generate_steward_id/"><code>_generate_steward_id</code></a></td>
+      <td><code>_generate_steward_id</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_agreement/_get_notebookutils/"><code>_get_notebookutils</code></a></td>
+      <td><code>_get_notebookutils</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_agreement/_get_widget_visible_fields/"><code>_get_widget_visible_fields</code></a></td>
+      <td><code>_get_widget_visible_fields</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_agreement/_html_escape/"><code>_html_escape</code></a></td>
+      <td><code>_html_escape</code></td>
       <td><a href="../../reference/widget_select_agreement/"><code>widget_select_agreement</code></a></td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_agreement/_latest_agreement_versions/"><code>_latest_agreement_versions</code></a></td>
+      <td><code>_latest_agreement_versions</code></td>
       <td><a href="../../reference/widget_select_agreement/"><code>widget_select_agreement</code></a></td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_agreement/_latest_by_key/"><code>_latest_by_key</code></a></td>
+      <td><code>_latest_by_key</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_agreement/_list_all_data_agreement_rows/"><code>_list_all_data_agreement_rows</code></a></td>
+      <td><code>_list_all_data_agreement_rows</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_agreement/_list_data_agreements/"><code>_list_data_agreements</code></a></td>
+      <td><code>_list_data_agreements</code></td>
       <td><a href="../../reference/widget_select_agreement/"><code>widget_select_agreement</code></a></td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_agreement/_list_data_stewards/"><code>_list_data_stewards</code></a></td>
+      <td><code>_list_data_stewards</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_agreement/_next_minor_version/"><code>_next_minor_version</code></a></td>
+      <td><code>_next_minor_version</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_agreement/_parse_contract_version/"><code>_parse_contract_version</code></a></td>
+      <td><code>_parse_contract_version</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_agreement/_parse_iso_date/"><code>_parse_iso_date</code></a></td>
+      <td><code>_parse_iso_date</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_agreement/_prepare_evidence_file_references/"><code>_prepare_evidence_file_references</code></a></td>
+      <td><code>_prepare_evidence_file_references</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_agreement/_render_agreement_evidence_widget/"><code>_render_agreement_evidence_widget</code></a></td>
+      <td><code>_render_agreement_evidence_widget</code></td>
       <td><a href="../../reference/widget_render_agreement_evidence/"><code>widget_render_agreement_evidence</code></a></td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_agreement/_render_custom_fields/"><code>_render_custom_fields</code></a></td>
+      <td><code>_render_custom_fields</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_agreement/_render_maintenance_widget/"><code>_render_maintenance_widget</code></a></td>
+      <td><code>_render_maintenance_widget</code></td>
       <td><a href="../../reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a>, <a href="../../reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a></td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_agreement/_render_searchable_selector/"><code>_render_searchable_selector</code></a></td>
+      <td><code>_render_searchable_selector</code></td>
       <td><a href="../../reference/widget_select_agreement/"><code>widget_select_agreement</code></a></td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_agreement/_require_ipywidgets/"><code>_require_ipywidgets</code></a></td>
+      <td><code>_require_ipywidgets</code></td>
       <td><a href="../../reference/widget_select_agreement/"><code>widget_select_agreement</code></a></td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_agreement/_save_agreement_evidence_records/"><code>_save_agreement_evidence_records</code></a></td>
+      <td><code>_save_agreement_evidence_records</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_agreement/_serialize_custom_fields/"><code>_serialize_custom_fields</code></a></td>
+      <td><code>_serialize_custom_fields</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_agreement/_setup_data_agreement_tables/"><code>_setup_data_agreement_tables</code></a></td>
+      <td><code>_setup_data_agreement_tables</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_agreement/_standard_widget/"><code>_standard_widget</code></a></td>
+      <td><code>_standard_widget</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_agreement/_to_bool/"><code>_to_bool</code></a></td>
+      <td><code>_to_bool</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_agreement/_to_iso_date/"><code>_to_iso_date</code></a></td>
+      <td><code>_to_iso_date</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_agreement/_widget_common/"><code>_widget_common</code></a></td>
+      <td><code>_widget_common</code></td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/data_agreement/_write_row/"><code>_write_row</code></a></td>
+      <td><code>_write_row</code></td>
       <td>—</td>
     </tr>
   </tbody>
@@ -323,159 +323,159 @@ Owns agreement metadata capture, audited record building, metadata commit helper
 <h6>Internal helpers details</h6>
 <ul class="callable-relationship-rows">
 <li>
-<a class="reference-chip" href="#_active_steward"><code>_active_steward</code></a>
+<span class="reference-chip"><code>_active_steward</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_to_bool"><code>_to_bool</code></a>
+<span class="reference-chip"><code>_to_bool</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_agreement_identity_text"><code>_agreement_identity_text</code></a>
+<span class="reference-chip"><code>_agreement_identity_text</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_next_minor_version"><code>_next_minor_version</code></a>
+<span class="reference-chip"><code>_next_minor_version</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_business_agreement_snapshot"><code>_business_agreement_snapshot</code></a>
+<span class="reference-chip"><code>_business_agreement_snapshot</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_deserialize_custom_fields"><code>_deserialize_custom_fields</code></a>, <a class="reference-chip" href="#_serialize_custom_fields"><code>_serialize_custom_fields</code></a>
+<span class="reference-chip"><code>_deserialize_custom_fields</code></span>, <span class="reference-chip"><code>_serialize_custom_fields</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_coerce_row_dicts"><code>_coerce_row_dicts</code></a>
+<span class="reference-chip"><code>_coerce_row_dicts</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_collect_custom_fields"><code>_collect_custom_fields</code></a>
+<span class="reference-chip"><code>_collect_custom_fields</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_to_iso_date"><code>_to_iso_date</code></a>
+<span class="reference-chip"><code>_to_iso_date</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_config_value"><code>_config_value</code></a>
+<span class="reference-chip"><code>_config_value</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_create_or_update_data_agreement"><code>_create_or_update_data_agreement</code></a>
+<span class="reference-chip"><code>_create_or_update_data_agreement</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_business_agreement_snapshot"><code>_business_agreement_snapshot</code></a>, <a class="reference-chip" href="#_config_value"><code>_config_value</code></a>, <a class="reference-chip" href="#_generate_agreement_id"><code>_generate_agreement_id</code></a>, <a class="reference-chip" href="#_list_all_data_agreement_rows"><code>_list_all_data_agreement_rows</code></a>, <a class="reference-chip" href="#_list_data_stewards"><code>_list_data_stewards</code></a>, <a class="reference-chip" href="#_next_minor_version"><code>_next_minor_version</code></a>, <a class="reference-chip" href="#_parse_contract_version"><code>_parse_contract_version</code></a>, <a class="reference-chip" href="#_parse_iso_date"><code>_parse_iso_date</code></a>, <a class="reference-chip" href="#_serialize_custom_fields"><code>_serialize_custom_fields</code></a>, <a class="reference-chip" href="#_write_row"><code>_write_row</code></a>
+<span class="reference-chip"><code>_business_agreement_snapshot</code></span>, <span class="reference-chip"><code>_config_value</code></span>, <span class="reference-chip"><code>_generate_agreement_id</code></span>, <span class="reference-chip"><code>_list_all_data_agreement_rows</code></span>, <span class="reference-chip"><code>_list_data_stewards</code></span>, <span class="reference-chip"><code>_next_minor_version</code></span>, <span class="reference-chip"><code>_parse_contract_version</code></span>, <span class="reference-chip"><code>_parse_iso_date</code></span>, <span class="reference-chip"><code>_serialize_custom_fields</code></span>, <span class="reference-chip"><code>_write_row</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_create_or_update_data_steward"><code>_create_or_update_data_steward</code></a>
+<span class="reference-chip"><code>_create_or_update_data_steward</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_active_steward"><code>_active_steward</code></a>, <a class="reference-chip" href="#_config_value"><code>_config_value</code></a>, <a class="reference-chip" href="#_generate_steward_id"><code>_generate_steward_id</code></a>, <a class="reference-chip" href="#_parse_iso_date"><code>_parse_iso_date</code></a>, <a class="reference-chip" href="#_serialize_custom_fields"><code>_serialize_custom_fields</code></a>, <a class="reference-chip" href="#_to_bool"><code>_to_bool</code></a>, <a class="reference-chip" href="#_write_row"><code>_write_row</code></a>
+<span class="reference-chip"><code>_active_steward</code></span>, <span class="reference-chip"><code>_config_value</code></span>, <span class="reference-chip"><code>_generate_steward_id</code></span>, <span class="reference-chip"><code>_parse_iso_date</code></span>, <span class="reference-chip"><code>_serialize_custom_fields</code></span>, <span class="reference-chip"><code>_to_bool</code></span>, <span class="reference-chip"><code>_write_row</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_deserialize_custom_fields"><code>_deserialize_custom_fields</code></a>
+<span class="reference-chip"><code>_deserialize_custom_fields</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_ensure_metadata_tables"><code>_ensure_metadata_tables</code></a>
+<span class="reference-chip"><code>_ensure_metadata_tables</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_coerce_row_dicts"><code>_coerce_row_dicts</code></a>, <a class="reference-chip" href="#_config_value"><code>_config_value</code></a>
+<span class="reference-chip"><code>_coerce_row_dicts</code></span>, <span class="reference-chip"><code>_config_value</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_generate_agreement_id"><code>_generate_agreement_id</code></a>
+<span class="reference-chip"><code>_generate_agreement_id</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_generate_steward_id"><code>_generate_steward_id</code></a>
+<span class="reference-chip"><code>_generate_steward_id</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_get_notebookutils"><code>_get_notebookutils</code></a>
+<span class="reference-chip"><code>_get_notebookutils</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_get_widget_visible_fields"><code>_get_widget_visible_fields</code></a>
+<span class="reference-chip"><code>_get_widget_visible_fields</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_config_value"><code>_config_value</code></a>
+<span class="reference-chip"><code>_config_value</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_html_escape"><code>_html_escape</code></a>
+<span class="reference-chip"><code>_html_escape</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_latest_agreement_versions"><code>_latest_agreement_versions</code></a>
+<span class="reference-chip"><code>_latest_agreement_versions</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_coerce_row_dicts"><code>_coerce_row_dicts</code></a>, <a class="reference-chip" href="#_parse_contract_version"><code>_parse_contract_version</code></a>
+<span class="reference-chip"><code>_coerce_row_dicts</code></span>, <span class="reference-chip"><code>_parse_contract_version</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_latest_by_key"><code>_latest_by_key</code></a>
+<span class="reference-chip"><code>_latest_by_key</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_coerce_row_dicts"><code>_coerce_row_dicts</code></a>
+<span class="reference-chip"><code>_coerce_row_dicts</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_list_all_data_agreement_rows"><code>_list_all_data_agreement_rows</code></a>
+<span class="reference-chip"><code>_list_all_data_agreement_rows</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_coerce_row_dicts"><code>_coerce_row_dicts</code></a>, <a class="reference-chip" href="#_config_value"><code>_config_value</code></a>
+<span class="reference-chip"><code>_coerce_row_dicts</code></span>, <span class="reference-chip"><code>_config_value</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_list_data_agreements"><code>_list_data_agreements</code></a>
+<span class="reference-chip"><code>_list_data_agreements</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_latest_agreement_versions"><code>_latest_agreement_versions</code></a>, <a class="reference-chip" href="#_list_all_data_agreement_rows"><code>_list_all_data_agreement_rows</code></a>
+<span class="reference-chip"><code>_latest_agreement_versions</code></span>, <span class="reference-chip"><code>_list_all_data_agreement_rows</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_list_data_stewards"><code>_list_data_stewards</code></a>
+<span class="reference-chip"><code>_list_data_stewards</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_active_steward"><code>_active_steward</code></a>, <a class="reference-chip" href="#_config_value"><code>_config_value</code></a>, <a class="reference-chip" href="#_latest_by_key"><code>_latest_by_key</code></a>
+<span class="reference-chip"><code>_active_steward</code></span>, <span class="reference-chip"><code>_config_value</code></span>, <span class="reference-chip"><code>_latest_by_key</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_next_minor_version"><code>_next_minor_version</code></a>
+<span class="reference-chip"><code>_next_minor_version</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_parse_contract_version"><code>_parse_contract_version</code></a>
+<span class="reference-chip"><code>_parse_contract_version</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_parse_contract_version"><code>_parse_contract_version</code></a>
+<span class="reference-chip"><code>_parse_contract_version</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_parse_iso_date"><code>_parse_iso_date</code></a>
+<span class="reference-chip"><code>_parse_iso_date</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_prepare_evidence_file_references"><code>_prepare_evidence_file_references</code></a>
+<span class="reference-chip"><code>_prepare_evidence_file_references</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_get_notebookutils"><code>_get_notebookutils</code></a>
+<span class="reference-chip"><code>_get_notebookutils</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_render_agreement_evidence_widget"><code>_render_agreement_evidence_widget</code></a>
+<span class="reference-chip"><code>_render_agreement_evidence_widget</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_list_all_data_agreement_rows"><code>_list_all_data_agreement_rows</code></a>, <a class="reference-chip" href="#_render_searchable_selector"><code>_render_searchable_selector</code></a>, <a class="reference-chip" href="#_require_ipywidgets"><code>_require_ipywidgets</code></a>, <a class="reference-chip" href="#_save_agreement_evidence_records"><code>_save_agreement_evidence_records</code></a>, <a class="reference-chip" href="#_widget_common"><code>_widget_common</code></a>
+<span class="reference-chip"><code>_list_all_data_agreement_rows</code></span>, <span class="reference-chip"><code>_render_searchable_selector</code></span>, <span class="reference-chip"><code>_require_ipywidgets</code></span>, <span class="reference-chip"><code>_save_agreement_evidence_records</code></span>, <span class="reference-chip"><code>_widget_common</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_render_custom_fields"><code>_render_custom_fields</code></a>
+<span class="reference-chip"><code>_render_custom_fields</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_require_ipywidgets"><code>_require_ipywidgets</code></a>, <a class="reference-chip" href="#_to_bool"><code>_to_bool</code></a>, <a class="reference-chip" href="#_widget_common"><code>_widget_common</code></a>
+<span class="reference-chip"><code>_require_ipywidgets</code></span>, <span class="reference-chip"><code>_to_bool</code></span>, <span class="reference-chip"><code>_widget_common</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_render_maintenance_widget"><code>_render_maintenance_widget</code></a>
+<span class="reference-chip"><code>_render_maintenance_widget</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_agreement_identity_text"><code>_agreement_identity_text</code></a>, <a class="reference-chip" href="#_collect_custom_fields"><code>_collect_custom_fields</code></a>, <a class="reference-chip" href="#_config_value"><code>_config_value</code></a>, <a class="reference-chip" href="#_create_or_update_data_agreement"><code>_create_or_update_data_agreement</code></a>, <a class="reference-chip" href="#_create_or_update_data_steward"><code>_create_or_update_data_steward</code></a>, <a class="reference-chip" href="#_deserialize_custom_fields"><code>_deserialize_custom_fields</code></a>, <a class="reference-chip" href="#_get_widget_visible_fields"><code>_get_widget_visible_fields</code></a>, <a class="reference-chip" href="#_list_data_agreements"><code>_list_data_agreements</code></a>, <a class="reference-chip" href="#_list_data_stewards"><code>_list_data_stewards</code></a>, <a class="reference-chip" href="#_render_custom_fields"><code>_render_custom_fields</code></a>, <a class="reference-chip" href="#_render_searchable_selector"><code>_render_searchable_selector</code></a>, <a class="reference-chip" href="#_require_ipywidgets"><code>_require_ipywidgets</code></a>, <a class="reference-chip" href="#_standard_widget"><code>_standard_widget</code></a>, <a class="reference-chip" href="#_to_bool"><code>_to_bool</code></a>, <a class="reference-chip" href="#_to_iso_date"><code>_to_iso_date</code></a>
+<span class="reference-chip"><code>_agreement_identity_text</code></span>, <span class="reference-chip"><code>_collect_custom_fields</code></span>, <span class="reference-chip"><code>_config_value</code></span>, <span class="reference-chip"><code>_create_or_update_data_agreement</code></span>, <span class="reference-chip"><code>_create_or_update_data_steward</code></span>, <span class="reference-chip"><code>_deserialize_custom_fields</code></span>, <span class="reference-chip"><code>_get_widget_visible_fields</code></span>, <span class="reference-chip"><code>_list_data_agreements</code></span>, <span class="reference-chip"><code>_list_data_stewards</code></span>, <span class="reference-chip"><code>_render_custom_fields</code></span>, <span class="reference-chip"><code>_render_searchable_selector</code></span>, <span class="reference-chip"><code>_require_ipywidgets</code></span>, <span class="reference-chip"><code>_standard_widget</code></span>, <span class="reference-chip"><code>_to_bool</code></span>, <span class="reference-chip"><code>_to_iso_date</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_render_searchable_selector"><code>_render_searchable_selector</code></a>
+<span class="reference-chip"><code>_render_searchable_selector</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_html_escape"><code>_html_escape</code></a>, <a class="reference-chip" href="#_widget_common"><code>_widget_common</code></a>
+<span class="reference-chip"><code>_html_escape</code></span>, <span class="reference-chip"><code>_widget_common</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_require_ipywidgets"><code>_require_ipywidgets</code></a>
+<span class="reference-chip"><code>_require_ipywidgets</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_save_agreement_evidence_records"><code>_save_agreement_evidence_records</code></a>
+<span class="reference-chip"><code>_save_agreement_evidence_records</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_config_value"><code>_config_value</code></a>, <a class="reference-chip" href="#_prepare_evidence_file_references"><code>_prepare_evidence_file_references</code></a>, <a class="reference-chip" href="#_write_row"><code>_write_row</code></a>
+<span class="reference-chip"><code>_config_value</code></span>, <span class="reference-chip"><code>_prepare_evidence_file_references</code></span>, <span class="reference-chip"><code>_write_row</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_serialize_custom_fields"><code>_serialize_custom_fields</code></a>
+<span class="reference-chip"><code>_serialize_custom_fields</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_setup_data_agreement_tables"><code>_setup_data_agreement_tables</code></a>
+<span class="reference-chip"><code>_setup_data_agreement_tables</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_ensure_metadata_tables"><code>_ensure_metadata_tables</code></a>, <a class="reference-chip" href="#_list_data_stewards"><code>_list_data_stewards</code></a>
+<span class="reference-chip"><code>_ensure_metadata_tables</code></span>, <span class="reference-chip"><code>_list_data_stewards</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_standard_widget"><code>_standard_widget</code></a>
+<span class="reference-chip"><code>_standard_widget</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_require_ipywidgets"><code>_require_ipywidgets</code></a>, <a class="reference-chip" href="#_to_bool"><code>_to_bool</code></a>, <a class="reference-chip" href="#_widget_common"><code>_widget_common</code></a>
+<span class="reference-chip"><code>_require_ipywidgets</code></span>, <span class="reference-chip"><code>_to_bool</code></span>, <span class="reference-chip"><code>_widget_common</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_to_bool"><code>_to_bool</code></a>
+<span class="reference-chip"><code>_to_bool</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_to_iso_date"><code>_to_iso_date</code></a>
+<span class="reference-chip"><code>_to_iso_date</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_widget_common"><code>_widget_common</code></a>
+<span class="reference-chip"><code>_widget_common</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_write_row"><code>_write_row</code></a>
+<span class="reference-chip"><code>_write_row</code></span>
 </li>
 </ul>
 </details>

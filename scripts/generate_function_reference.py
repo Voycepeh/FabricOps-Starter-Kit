@@ -26,6 +26,8 @@ FUNCTION_MANIFEST_PATH = ROOT / "docs" / "reference" / "function-manifest.json"
 TEMPLATE_FUNCTION_MAP_PATH = ROOT / "docs" / "reference" / "template-function-map.md"
 GITHUB_REPO_URL = "https://github.com/Voycepeh/FabricOps-Starter-Kit"
 DEFAULT_SOURCE_REF = "main"
+GENERATE_INTERNAL_REFERENCE_PAGES_ENV = "FABRICOPS_GENERATE_INTERNAL_REFERENCE_PAGES"
+
 
 
 PUBLIC_MODULE_PREFERRED_NAMES = {
@@ -502,9 +504,14 @@ def parse_module_docs_metadata() -> list[dict[str, Any]]:
     raise RuntimeError("Could not parse MODULE_DOCS_METADATA from reference_docs_metadata.py")
 
 
+def generate_internal_reference_pages() -> bool:
+    """Return whether standalone internal helper pages should be generated."""
+    return os.environ.get(GENERATE_INTERNAL_REFERENCE_PAGES_ENV, "").strip().lower() in {"1", "true", "yes", "on"}
+
+
 def internal_helper_link(actual_module: str, helper: str) -> str:
     """Return module-page-relative link target for an internal helper page."""
-    return f"../../reference/internal/{actual_module}/{helper}/"
+    return f"../../reference/internal/{actual_module}_{helper}/"
 
 
 def public_reference_link(
@@ -703,8 +710,11 @@ def _related_function_links(
         label = qn
         if node and node.get("exported"):
             href = f"../{node['callable_name']}/"
-        elif node:
+        elif node and generate_internal_reference_pages():
             href = f"../internal/{node['module_name']}_{node['callable_name']}/"
+        elif node:
+            rows.append(f"- `{label}`")
+            continue
         elif item in docs_metadata:
             href = f"../{item}/"
             label = item
@@ -714,6 +724,120 @@ def _related_function_links(
         rows.append(f'- <a href="{href}"><code>{label}</code></a>')
     return rows
 
+
+
+def _is_internal_helper_qn(qn: str, node_by_qn: dict[str, dict[str, Any]]) -> bool:
+    """Return whether a qualified name identifies an internal helper node."""
+    node = node_by_qn.get(qn, {})
+    return bool(node) and not node.get("exported") and node.get("callable_name", "").startswith("_")
+
+
+def _collect_internal_helper_descendants(
+    root_qn: str,
+    calls_by_qn: dict[str, list[str]],
+    node_by_qn: dict[str, dict[str, Any]],
+) -> list[str]:
+    """Return internal helper qualified names reachable from a callable."""
+    seen: set[str] = set()
+    helpers: list[str] = []
+
+    def visit(qn: str) -> None:
+        for callee in sorted(set(calls_by_qn.get(qn, []))):
+            if callee in seen:
+                continue
+            seen.add(callee)
+            if _is_internal_helper_qn(callee, node_by_qn):
+                helpers.append(callee)
+                visit(callee)
+
+    visit(root_qn)
+    return helpers
+
+
+def _render_call_tree(
+    root_qn: str,
+    calls_by_qn: dict[str, list[str]],
+    node_by_qn: dict[str, dict[str, Any]],
+    *,
+    max_depth: int = 6,
+) -> list[str]:
+    """Render a compact ASCII call tree for package-local calls."""
+    root = node_by_qn[root_qn]["callable_name"]
+    lines = [f"{root}(...)"]
+
+    def children(qn: str) -> list[str]:
+        return sorted(
+            {c for c in calls_by_qn.get(qn, []) if c in node_by_qn},
+            key=lambda c: (0 if _is_internal_helper_qn(c, node_by_qn) else 1, node_by_qn[c]["callable_name"].lower(), c),
+        )
+
+    def visit(qn: str, prefix: str, ancestors: set[str], depth: int) -> None:
+        if depth >= max_depth:
+            if children(qn):
+                lines.append(f"{prefix}└── …")
+            return
+        child_qns = children(qn)
+        for index, child in enumerate(child_qns):
+            connector = "└── " if index == len(child_qns) - 1 else "├── "
+            child_name = node_by_qn[child]["callable_name"]
+            suffix = " (recursive)" if child in ancestors else ""
+            lines.append(f"{prefix}{connector}{child_name}(...){suffix}")
+            if child not in ancestors:
+                extension = "    " if index == len(child_qns) - 1 else "│   "
+                visit(child, prefix + extension, ancestors | {child}, depth + 1)
+
+    visit(root_qn, "", {root_qn}, 0)
+    return ["```text", *lines, "```"]
+
+
+def _render_internal_helper_details(
+    root_qn: str,
+    helper_qns: list[str],
+    node_by_qn: dict[str, dict[str, Any]],
+    module_data: dict[str, dict[str, Any]],
+) -> list[str]:
+    """Render embedded maintainer details for internal helpers used by a callable."""
+    root_name = node_by_qn[root_qn]["callable_name"]
+    if not helper_qns:
+        return [PLACEHOLDER]
+    lines: list[str] = []
+    for helper_qn in helper_qns:
+        helper_node = node_by_qn[helper_qn]
+        helper_name = helper_node["callable_name"]
+        module_name = helper_node["module_name"]
+        info = module_data[module_name]
+        signature = info.get("signatures", {}).get(helper_name, f"{helper_name}(...)")
+        source_path = f"src/fabricops_kit/{module_name}.py"
+        source_block = info.get("source_blocks", {}).get(helper_name, "")
+        purpose = info.get("functions", {}).get(helper_name) or "Internal helper used by the package implementation."
+        source_location = info.get("source_locations", {}).get(helper_name, {})
+        source_url = github_source_url(source_path, source_location.get("start_line"), source_location.get("end_line"))
+        lines.extend([
+            f"### `{signature}`",
+            "",
+            "**What it does:**",
+            "",
+            purpose,
+            "",
+            "**Source:**",
+            "",
+            f"- `{source_path}`",
+            f'- <a class="reference-source-link" href="{source_url}">View `{helper_name}` on GitHub</a>',
+            "",
+            "**Code:**",
+            "",
+            _code_block(source_block) if source_block else PLACEHOLDER,
+            "",
+            "**Used here because:**",
+            "",
+            f"`{root_name}` reaches this helper in its implementation path.",
+            "",
+            "**Modify this if:**",
+            "",
+            f"You want to change the implementation behavior summarized above for `{root_name}` or another caller that reaches `{helper_name}`.",
+            "",
+        ])
+    return lines
 
 def function_chip_wrap(chips: list[str]) -> str:
     """Return a mobile-friendly chip wrapper for a generated docs table cell."""
@@ -1023,7 +1147,7 @@ def main() -> None:
                         tier,
                         symbol.obj_type,
                         symbol.summary or "—",
-                        ', '.join(f'<a href="{internal_helper_link(symbol.actual_module, r)}"><code>{r}</code></a> (internal)' for r in related) or "—",
+                        ', '.join(f'<code>{r}</code> (internal)' for r in related) or "—",
                     ])
                 return rows
 
@@ -1070,7 +1194,7 @@ def main() -> None:
                     lines.append(" <span class=\"callable-relationship-uses\">uses:</span>")
                     if callees:
                         callee_links = ", ".join(
-                            f'<a class="reference-chip" href="{callable_docs_link(dst_qn.split(".")[-1], _module_name(dst_qn), docs_metadata, source_module=actual_module)}"><code>{_label(dst_qn)}</code></a>'
+                            (f'<a class="reference-chip" href="{callable_docs_link(dst_qn.split(".")[-1], _module_name(dst_qn), docs_metadata, source_module=actual_module)}"><code>{_label(dst_qn)}</code></a>' if node_lookup.get(dst_qn, {}).get("exported") else f'<span class="reference-chip"><code>{_label(dst_qn)}</code></span>')
                             for dst_qn in callees
                         )
                         lines.append(callee_links)
@@ -1088,7 +1212,7 @@ def main() -> None:
                     users_links = ", ".join(
                         f'<a href="{callable_docs_link(u, module, docs_metadata, source_module=actual_module)}"><code>{u}</code></a>' for u in users
                     ) or "—"
-                    helper_rows.append([f'<a href="{internal_helper_link(actual_module, helper)}"><code>{helper}</code></a>', users_links])
+                    helper_rows.append([f'<code>{helper}</code>', users_links])
                 lines.extend(['<div class="module-table-scroll">'])
                 lines.extend(render_html_table(["Helper", "Related public callables"], helper_rows))
                 lines.extend(['</div>', "", "<h6>Internal helpers details</h6>"])
@@ -1096,12 +1220,11 @@ def main() -> None:
                 for name in internal_names:
                     src_qn = f"fabricops_kit.{actual_module}.{name}"
                     callees = sorted([d for s, d in inside_rows if s == src_qn], key=lambda q: _label(q))
-                    src_link = callable_docs_link(name, actual_module, docs_metadata, source_module=actual_module)
                     lines.append("<li>")
-                    lines.append(f'<a class="reference-chip" href="{src_link}"><code>{name}</code></a>')
+                    lines.append(f'<span class="reference-chip"><code>{name}</code></span>')
                     if callees:
                         callee_links = ", ".join(
-                            f'<a class="reference-chip" href="{callable_docs_link(dst_qn.split(".")[-1], _module_name(dst_qn), docs_metadata, source_module=actual_module)}"><code>{_label(dst_qn)}</code></a>'
+                            (f'<a class="reference-chip" href="{callable_docs_link(dst_qn.split(".")[-1], _module_name(dst_qn), docs_metadata, source_module=actual_module)}"><code>{_label(dst_qn)}</code></a>' if node_lookup.get(dst_qn, {}).get("exported") else f'<span class="reference-chip"><code>{_label(dst_qn)}</code></span>')
                             for dst_qn in callees
                         )
                         lines.append(" <span class=\"callable-relationship-uses\">uses:</span>")
@@ -1155,11 +1278,9 @@ def main() -> None:
                         f"Found obsolete module-path public link for {module}.{s.name}; expected public reference slug path."
                     )
         for helper in internal_fns:
-            helper_target = internal_helper_link(actual_module, helper)
-            expected_helper_link = f"[`{helper}`]({helper_target})"
-            expected_helper_href = f'href="{helper_target}"'
-            if not any((expected_helper_link in line) or (expected_helper_href in line) for line in lines):
-                raise RuntimeError(f"Missing internal helper link for {module}.{helper}")
+            expected_helper_code = f"<code>{helper}</code>"
+            if not any(expected_helper_code in line for line in lines):
+                raise RuntimeError(f"Missing internal helper summary for {module}.{helper}")
         if any("## Public callable details" in line for line in lines):
             raise RuntimeError(f"Public callable details section should not be rendered for {module}")
         if any("## Full module API" in line for line in lines):
@@ -1254,7 +1375,11 @@ def main() -> None:
             "docs_url": (
                 f"/FabricOps-Starter-Kit/reference/{node['callable_name']}/"
                 if node["exported"]
-                else f"/FabricOps-Starter-Kit/reference/internal/{node['module_name']}/{node['callable_name']}/"
+                else (
+                    f"/FabricOps-Starter-Kit/reference/internal/{node['module_name']}_{node['callable_name']}/"
+                    if generate_internal_reference_pages()
+                    else None
+                )
             ),
             "classification": node["role"],
             "calls": deps,
@@ -1380,17 +1505,17 @@ def main() -> None:
         "Use this page as a function lookup after you understand the notebook flow. The default catalogue shows public v1 callables that notebook authors can import from the package root; the Template Function Map shows where those callables are used in starter templates; Implementation Modules show the active source modules that maintainers debug and extend.",
         "",
         "- Use [Template Function Map](template-function-map.md) to see what notebook users call from the starter notebook templates.",
-        "- Use the Function catalogue below to browse the public v1 callables by default; enable Internal for package helpers.",
+        "- Use the Function catalogue below to browse public v1 callables. Internal helper details are embedded inside callable pages instead of normal catalogue entries.",
         "- Use Implementation Modules only when debugging or maintaining current major source boundaries; they do not document every `.py` file.",
         "",
         "## How to use this reference",
         "",
         "- **Callable helpers** are public v1 functions intended for notebook authors and human operators.",
-        "- **Internal helpers** document package support functions for transparency; use them for maintenance, not direct notebook calls.",
+        "- **Internal helpers** are maintainer implementation details embedded inside the public callable pages that use them.",
         "- **Implementation modules** show source ownership, module-level dependencies, and helper relationships for maintainers.",
         "- **Function manifests** (`manifest.json` and `function-manifest.json`) provide machine-readable callable/module inventory for checks and automation.",
         "- **Agent manifest** (`agent-manifest.json`) adds AI-oriented execution fields for planning, side-effect checks, and verification.",
-        "- **AI implementation contracts** on callable/internal pages summarize expectations agents must satisfy before using or changing a function.",
+        "- **AI implementation contracts** on callable pages summarize expectations agents must satisfy before using or changing a function.",
         "- **Skill file** (`.agents/skills/fabricops/SKILL.md`) gives agents repo-specific rules and points them to these generated references.",
         "",
     ]
@@ -1399,7 +1524,7 @@ def main() -> None:
         [
             "## Find a function",
             "",
-            "Use the finder below to look up public callables and internal support functions from active v1 modules.",
+            "Use the finder below to look up public callables from active v1 modules. For internal helper behavior, open the public callable page and expand Implementation details.",
             "",
             '<div class="callable-finder" data-callable-finder>',
             '  <label class="callable-finder-label" for="callable-finder-input">Search functions</label>',
@@ -1411,8 +1536,6 @@ def main() -> None:
             '    <legend>Function type filters</legend>',
             '    <label><input type="checkbox" data-function-type-filter="callable" checked> Callable</label>',
             '    <p class="callable-type-note"><strong>Callable</strong>: Public functions intended for notebook authors.</p>',
-            '    <label><input type="checkbox" data-function-type-filter="internal"> Internal</label>',
-            '    <p class="callable-type-note"><strong>Internal</strong>: Supporting functions used by the package. Shown for transparency and debugging.</p>',
             '  </fieldset>',
             '  <p class="callable-finder-empty" data-callable-finder-empty hidden>No functions match your search.</p>',
             "</div>",
@@ -1428,8 +1551,8 @@ def main() -> None:
         return "Callable" if function_type == "callable" else "Internal"
 
     catalogue_nodes = sorted(
-        [n for n in node_by_qn.values() if n["callable_name"] in module_data[n["module_name"]]["functions"]],
-        key=lambda n: (0 if n["role"] == "callable" else 1, n["callable_name"].lower(), n["module_name"]),
+        [n for n in node_by_qn.values() if n["exported"] and n["callable_name"] in module_data[n["module_name"]]["functions"]],
+        key=lambda n: (n["callable_name"].lower(), n["module_name"]),
     )
     for node in catalogue_nodes:
         name = node["callable_name"]
@@ -1497,6 +1620,7 @@ def main() -> None:
     REFERENCE_PATH.parent.mkdir(parents=True, exist_ok=True)
     REFERENCE_PATH.write_text("\n".join(ref) + "\n", encoding="utf-8", newline="\n")
 
+    generate_internal_pages = generate_internal_reference_pages()
     CALLABLE_REFERENCE_DIR.mkdir(parents=True, exist_ok=True)
     INTERNAL_REFERENCE_DIR.mkdir(parents=True, exist_ok=True)
     for generated_page in [*CALLABLE_REFERENCE_DIR.glob("*.md"), *INTERNAL_REFERENCE_DIR.glob("*.md")]:
@@ -1513,8 +1637,8 @@ def main() -> None:
         doc_sections = module_info.get("doc_sections", {}).get(short_name, {})
         signature = module_info.get("signatures", {}).get(short_name, "")
         summary = metadata.get("summary_override") or ""
-        docs_path = (
-            f"reference/{short_name}.md" if node["exported"] else f"reference/internal/{module_name}_{short_name}.md"
+        docs_path = f"reference/{short_name}.md" if node["exported"] else (
+            f"reference/internal/{module_name}_{short_name}.md" if generate_internal_pages else None
         )
         source_path = f"src/fabricops_kit/{module_name}.py"
         source_location = module_info.get("source_locations", {}).get(short_name, {})
@@ -1557,9 +1681,12 @@ def main() -> None:
                     continue
                 if n.get("exported"):
                     href = f"../{n['callable_name']}/"
-                else:
+                    out.append(f'- <a href="{href}"><code>{item}</code></a>')
+                elif generate_internal_reference_pages():
                     href = f"../internal/{n['module_name']}_{n['callable_name']}/"
-                out.append(f'- <a href="{href}"><code>{item}</code></a>')
+                    out.append(f'- <a href="{href}"><code>{item}</code></a>')
+                else:
+                    out.append(f"- `{item}`")
             return out
 
         if node["exported"]:
@@ -1573,9 +1700,17 @@ def main() -> None:
                 table_class="reference-function-table",
             )
             related_public = [item for item in related_for_page if item in docs_metadata or node_by_qn.get(item, {}).get("exported")]
-            implementation_related = [item for item in relationship_related if item not in related_public]
             related_lines = _related_function_links(related_public, node_by_qn, docs_metadata)
-            implementation_lines = _related_function_links(implementation_related, node_by_qn, docs_metadata)
+            helper_qns = _collect_internal_helper_descendants(qn, calls_by_qn, node_by_qn)
+            implementation_lines = [
+                "### Call flow",
+                "",
+                *_render_call_tree(qn, calls_by_qn, node_by_qn),
+                "",
+                "### Internal helpers used by this callable",
+                "",
+                *_render_internal_helper_details(qn, helper_qns, node_by_qn, module_data),
+            ]
             human_use_when = _documented_text(metadata.get("use_when"), metadata.get("purpose"), purpose)
             human_use_bullets = _bullet_lines("\n".join(metadata["when_to_use"])) if metadata.get("when_to_use") else _bullet_lines(human_use_when)
             human_do_not_use = _documented_text(metadata.get("do_not_use_when"))
@@ -1766,7 +1901,7 @@ def main() -> None:
 
         if node["exported"]:
             (CALLABLE_REFERENCE_DIR / f"{short_name}.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
-        else:
+        elif generate_internal_pages:
             (INTERNAL_REFERENCE_DIR / f"{module_name}_{short_name}.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
         function_manifest.append({"id": qn, "name": short_name, "qualified_name": qn, "module": module_name, "classification": classification, "inbound": used_by, "outbound": deps, "source_path": source_path, "source_start_line": source_start_line, "source_end_line": source_end_line, "source_url": source_ref, "docs_path": docs_path, "summary": purpose})
