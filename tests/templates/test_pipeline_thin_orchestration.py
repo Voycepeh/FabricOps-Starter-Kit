@@ -126,12 +126,11 @@ def test_source_config_defaults_are_reduced_but_advanced_overrides_remain_discov
         '"country_code": "string"',
     ]:
         assert beginner_field in source_default_example
-    for hidden_beginner_field in ['"dataset_name"', '"stage"', '"watermark_value"']:
+    for hidden_beginner_field in ['"dataset_name"', '"stage"']:
         assert hidden_beginner_field not in source_default_example
     for advanced_override in [
         '"dataset_name": "CHANGE_ME_governance_dataset"',
         '"stage": "source"',
-        '"watermark_value": "2026-01-31"',
         '"dq_preset": "approved_rules"',
     ]:
         assert advanced_override in source_user_block
@@ -153,13 +152,14 @@ def test_guardrail_default_sections_include_supported_preset_comments():
         '#   "allow_new_columns" = allow additive columns, block incompatible schema drift',
         '#   "strict" = require the schema to match exactly',
         '#   "monitor_only" = report schema differences without blocking',
-        '# Data behavior options:',
-        '#   "changing" = source data can change between runs',
-        '#   "fixed" = source data is expected to remain stable',
-        '# Stability check options:',
-        '#   "watermark_slice_hash" = hash one business-date/extract-date slice',
-        '#   "full_profile_hash" = hash the full profile',
-        '#   "skip" = skip stability enforcement for this table',
+        '# Load behavior guardrail options:',
+        '#   "append" = protect existing history',
+        '#   "overwrite" = accept full refresh/rebuild as the new state',
+        '#   "skip" = skip only profile behavior enforcement',
+        '# Freshness guardrail options:',
+        '#   freshness_column = date/timestamp column that proves latest data arrived',
+        "#   freshness_max_lag_days = allowed lag from today's date",
+        '#   freshness_severity = "blocking" or "warning"',
         '# DQ preset options:',
         '#   "approved_rules" = enforce approved DQ rules from governance metadata',
         '#   "skip" = skip DQ enforcement for this table',
@@ -201,7 +201,7 @@ def test_active_default_source_transform_and_target_schema_are_coherent_passthro
     ]:
         assert expected_column in target_default_example
     assert '"amount_band": "string"' not in target_default_example
-    for hidden_beginner_field in ['"dataset_name"', '"stage"', '"target_kind"', '"watermark_value"', '"kind"']:
+    for hidden_beginner_field in ['"dataset_name"', '"stage"', '"target_kind"', '"kind"']:
         assert hidden_beginner_field not in target_default_example
 
     assert "TARGET_TABLES, TARGET_CONFIG_BY_KEY = prepare_pipeline_table_configs(" in code
@@ -225,10 +225,12 @@ def test_guardrails_stop_before_transform_and_writes_via_run_table_guardrails_fl
 
     for runtime_alias in [
         'source_schema_results = source_guardrail_results["schema_results"]',
+        'source_freshness_results = source_guardrail_results["freshness_results"]',
         'source_stability_results = source_guardrail_results["stability_results"]',
         'source_dq_results = source_guardrail_results["dq_results"]',
         'source_evidence_definitions = source_guardrail_results["evidence_definitions"]',
         'target_schema_results = target_guardrail_results["schema_results"]',
+        'target_freshness_results = target_guardrail_results["freshness_results"]',
         'target_stability_results = target_guardrail_results["stability_results"]',
         'target_dq_results = target_guardrail_results["dq_results"]',
         'target_evidence_definitions = target_guardrail_results["evidence_definitions"]',

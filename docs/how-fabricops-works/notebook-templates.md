@@ -94,7 +94,7 @@ Engineering.
 
 **Key function**
 
-Reads source data, registers source and target DataFrames, applies schema checks, applies source stability checks, runs approved active DQ rules, writes configured outputs, and records runtime evidence. It also writes catalogue, profile, lineage, DQ, and pipeline run metadata so governance can review what was produced.
+Reads source data, registers source and target DataFrames, applies schema checks, applies freshness and profile behavior checks, runs approved active DQ rules, writes configured outputs, and records runtime evidence. It also writes catalogue, profile, lineage, DQ, and pipeline run metadata so governance can review what was produced.
 
 **Output**
 

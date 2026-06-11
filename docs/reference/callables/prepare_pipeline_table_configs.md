@@ -85,7 +85,7 @@ Enriched table configs and a dictionary keyed by table key.
 ## Source
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/pipeline.py#L126-L220">View prepare_pipeline_table_configs on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1bac7913a070db1a771a2991ff5421c37ffc9d94/src/fabricops_kit/pipeline.py#L126-L214">View prepare_pipeline_table_configs on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -131,16 +131,14 @@ def prepare_pipeline_table_configs(
 
     Notes
     -----
-    Source configs derive ``dataset_name`` from ``table_name``, ``stage`` from
-    ``layer``, and ``watermark_value`` from the individual table config only.
-    ``watermark_value`` defaults to ``None`` and is never inherited from
-    ``default_settings``. Source
+    Source configs derive ``dataset_name`` from ``table_name`` and ``stage`` from
+    ``layer``. Source
     DataFrames must be loaded directly in the notebook with the existing
     FabricOps read helpers and supplied in each source config as ``df``.
 
     Target configs derive ``dataset_name``, ``stage``, ``target_layer``,
-    ``target_name``, ``target_kind``, and ``watermark_value`` unless overridden,
-    then add standard FabricOps audit columns.
+    ``target_name``, and ``target_kind`` unless overridden, then add standard
+    FabricOps audit columns.
     """
     normalized_role = str(table_role or "").lower().strip()
     if normalized_role not in {"source", "target"}:
@@ -151,8 +149,6 @@ def prepare_pipeline_table_configs(
         merged_config = {**default_settings, **table_config}
         dataset_name = merged_config.get("dataset_name", merged_config["table_name"])
         stage = merged_config.get("stage", merged_config["layer"])
-        watermark_value = table_config.get("watermark_value", None)
-
         if normalized_role == "source":
             if "df" not in merged_config:
                 table_key = merged_config.get("key", merged_config.get("table_name", "<unknown>"))
@@ -167,7 +163,6 @@ def prepare_pipeline_table_configs(
                 **merged_config,
                 "dataset_name": dataset_name,
                 "stage": stage,
-                "watermark_value": watermark_value,
             }
         else:
             target_layer = merged_config.get("target_layer", merged_config["layer"])
@@ -181,7 +176,6 @@ def prepare_pipeline_table_configs(
                 "target_layer": target_layer,
                 "target_name": target_name,
                 "target_kind": target_kind,
-                "watermark_value": watermark_value,
             }
         enriched_tables.append(enriched_table)
 
@@ -228,9 +222,9 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/pipeline.py#L126-L220">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/pipeline.py#L126-L220</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1bac7913a070db1a771a2991ff5421c37ffc9d94/src/fabricops_kit/pipeline.py#L126-L214">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1bac7913a070db1a771a2991ff5421c37ffc9d94/src/fabricops_kit/pipeline.py#L126-L214</a>
 - Start line: `126`
-- End line: `220`
+- End line: `214`
 - Signature:
 
 ```python

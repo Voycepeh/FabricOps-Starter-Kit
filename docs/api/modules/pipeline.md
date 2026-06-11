@@ -56,7 +56,7 @@ Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals
     </tr>
     <tr>
       <td>External callees</td>
-      <td><code>config</code>, <code>data_profiling</code>, <code>drift</code>, <code>fabric_input_output</code>, <code>governance_review</code>, <code>metadata</code></td>
+      <td><code>config</code>, <code>data_profiling</code>, <code>fabric_input_output</code>, <code>governance_review</code>, <code>guardrails</code>, <code>metadata</code></td>
     </tr>
   </tbody>
 </table>
@@ -86,7 +86,7 @@ Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals
       <td><a href="../../reference/run_table_guardrails/"><code>run_table_guardrails</code></a></td>
       <td>Callable</td>
       <td>function</td>
-      <td>Run profiling, schema, stability, DQ, and catalogue guardrails for table configs.</td>
+      <td>Run profiling, schema, freshness, profile behavior, DQ, and catalogue guardrails for table configs.</td>
       <td><a href="../../reference/internal/pipeline/_build_guardrail_evidence_definitions/"><code>_build_guardrail_evidence_definitions</code></a> (internal), <a href="../../reference/internal/pipeline/_guardrail_can_continue/"><code>_guardrail_can_continue</code></a> (internal), <a href="../../reference/internal/pipeline/_table_key/"><code>_table_key</code></a> (internal), <a href="../../reference/internal/pipeline/_table_name/"><code>_table_name</code></a> (internal)</td>
     </tr>
     <tr>
@@ -271,14 +271,14 @@ None.
 **data_profiling**
 <a class="reference-chip" href="../../reference/profile_dataframe/"><code>profile_dataframe</code></a>
 
-**drift**
-<a class="reference-chip" href="../../reference/enforce_catalogue_stability/"><code>enforce_catalogue_stability</code></a>, <a class="reference-chip" href="../../reference/stop_if_failed/"><code>stop_if_failed</code></a>, <a class="reference-chip" href="../../reference/validate_schema/"><code>validate_schema</code></a>
-
 **fabric_input_output**
 <a class="reference-chip" href="../../reference/write_lakehouse_table/"><code>write_lakehouse_table</code></a>
 
 **governance_review**
 <a class="reference-chip" href="../../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a>
+
+**guardrails**
+<a class="reference-chip" href="../../reference/enforce_freshness/"><code>enforce_freshness</code></a>, <a class="reference-chip" href="../../reference/enforce_profile_behavior/"><code>enforce_profile_behavior</code></a>, <a class="reference-chip" href="../../reference/stop_if_failed/"><code>stop_if_failed</code></a>, <a class="reference-chip" href="../../reference/validate_schema/"><code>validate_schema</code></a>
 
 **metadata**
 <a class="reference-chip" href="../metadata/#_build_metadata_table_key"><code>_build_metadata_table_key</code></a>, <a class="reference-chip" href="../metadata/#_build_runtime_audit_fields"><code>_build_runtime_audit_fields</code></a>

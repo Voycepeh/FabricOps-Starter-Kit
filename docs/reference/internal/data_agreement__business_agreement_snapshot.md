@@ -1,6 +1,6 @@
 # _business_agreement_snapshot
 
-**Module:** `data_agreement`  
+**Module:** `data_agreement`
 **Classification:** Internal
 
 ## Status
@@ -49,7 +49,7 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 - Classification: Internal
 - Related module: `data_agreement`
 - Source file path: `src/fabricops_kit/data_agreement.py`
-- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/data_agreement.py#L704-L708">View source on GitHub</a>
+- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1bac7913a070db1a771a2991ff5421c37ffc9d94/src/fabricops_kit/data_agreement.py#L704-L708">View source on GitHub</a>
 - Inbound references count: 1
 - Outbound references count: 2
 

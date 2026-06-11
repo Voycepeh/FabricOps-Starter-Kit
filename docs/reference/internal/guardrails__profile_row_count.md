@@ -1,6 +1,6 @@
-# SchemaDriftError
+# _profile_row_count
 
-**Module:** `drift`  
+**Module:** `guardrails`
 **Classification:** Internal
 
 ## Status
@@ -17,16 +17,16 @@ Do not call this helper directly from notebooks; use the public callable helpers
 
 ## Used by
 
-- <a href="../stop_if_failed/"><code>fabricops_kit.drift.stop_if_failed</code></a>
+- <a href="../enforce_profile_behavior/"><code>fabricops_kit.guardrails.enforce_profile_behavior</code></a>
 
 ## Purpose
 
-Raised when a schema check is configured to fail on drift.
+No summary available.
 
 ## Signature if available
 
 ```python
-class SchemaDriftError(Exception)
+def _profile_row_count(profile) -> int | None
 ```
 
 ## Side effects
@@ -43,15 +43,15 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 
 ## Function manifest
 
-- Fully qualified function name: `fabricops_kit.drift.SchemaDriftError`
-- Short name: `SchemaDriftError`
-- Module: `drift`
+- Fully qualified function name: `fabricops_kit.guardrails._profile_row_count`
+- Short name: `_profile_row_count`
+- Module: `guardrails`
 - Classification: Internal
-- Related module: `drift`
-- Source file path: `src/fabricops_kit/drift.py`
-- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/drift.py#L28-L35">View source on GitHub</a>
+- Related module: `guardrails`
+- Source file path: `src/fabricops_kit/guardrails.py`
+- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1bac7913a070db1a771a2991ff5421c37ffc9d94/src/fabricops_kit/guardrails.py#L294-L300">View source on GitHub</a>
 - Inbound references count: 1
 - Outbound references count: 0
 
 ## Inbound references
-- <a href="../stop_if_failed/"><code>fabricops_kit.drift.stop_if_failed</code></a>
+- <a href="../enforce_profile_behavior/"><code>fabricops_kit.guardrails.enforce_profile_behavior</code></a>

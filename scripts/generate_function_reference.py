@@ -35,7 +35,7 @@ PUBLIC_MODULE_PREFERRED_NAMES = {
     "data_profiling": "data_profiling",
     "fabric_input_output": "fabric_input_output",
     "data_lineage": "data_lineage",
-    "drift": "drift",
+    "guardrails": "guardrails",
     "metadata": "metadata",
     "pipeline": "pipeline",
 }
@@ -46,7 +46,7 @@ MAJOR_IMPLEMENTATION_MODULE_ORDER = [
     "data_profiling",
     "fabric_input_output",
     "data_lineage",
-    "drift",
+    "guardrails",
     "metadata",
     "pipeline",
 ]
@@ -74,7 +74,8 @@ V1_CALLABLES = {
     "write_warehouse_table",
     "profile_dataframe",
     "validate_schema",
-    "enforce_catalogue_stability",
+    "enforce_freshness",
+    "enforce_profile_behavior",
     "stop_if_failed",
     "enforce_dq_rules",
     "build_lineage_records",
@@ -1701,7 +1702,7 @@ def main() -> None:
             lines = [
                 f"# {short_name}",
                 "",
-                f"**Module:** `{module_name}`  ",
+                f"**Module:** `{module_name}`",
                 "**Classification:** Internal",
                 "",
                 "## Status",

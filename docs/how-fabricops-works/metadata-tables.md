@@ -42,7 +42,7 @@ write_lakehouse_table(
 
 `01_agreement` writes steward, agreement, and evidence metadata. `02_pipeline` writes registry, catalogue, lineage, profile, guardrail, and run evidence. `03_governance` writes reviewed metadata such as column context, DQ expectations, sensitivity, classification, and final governance review outcomes. `99_explore` can support investigation, but it is optional and is not a required gate.
 
-For how schema, source stability, and DQ settings produce this evidence, see [Pipeline Guardrails](schema-and-data-drift.md).
+For how schema, freshness, profile behavior, and DQ settings produce this evidence, see [Pipeline Guardrails](schema-and-data-drift.md).
 
 
 ## Standard runtime audit columns
@@ -220,26 +220,22 @@ Fabric Delta tables do not enforce primary and foreign keys. FabricOps still use
 | `baseline_status` | `observed` or `approved`. |
 | `source_schema_check` | Source schema-check preset used by the pipeline. |
 | `target_schema_check` | Target schema-check preset used by the pipeline. |
-| `source_data_change_check` | Source stability check label. |
-| `target_data_change_check` | Target stability check label. |
-| `stability_check_enabled` | Whether source stability checking was enabled. |
-| `stability_check_type` | `full_profile_hash`, `watermark_slice_hash`, or `skip`. |
-| `data_behavior` | `fixed` or `changing`. |
-| `profile_scope` | `full_table` or `watermark_slice`. |
-| `watermark_column` | Watermark column used for changing data checks. |
-| `watermark_value` | Current run watermark stored as the next baseline. |
-| `profile_filter_expression` | Comparable profile filter used for the stability check. |
-| `schema_hash` | Deterministic schema hash. |
-| `profile_hash` | Deterministic full profile hash. |
-| `comparable_profile_hash` | Deterministic hash for the full profile or watermark slice used for comparison. |
-| `baseline_run_id` | Previous catalogue run used as the baseline. |
-| `baseline_profile_hash` | Previous full or comparable profile hash. |
-| `baseline_watermark_value` | Previous watermark used for changing data checks. |
-| `stability_status` | Stability result status. |
-| `stability_can_continue` | Whether the stability result allows the pipeline to continue. |
-| `stability_message` | Human-readable stability result. |
-| `stability_difference_summary` | Compact mismatch summary when stability fails. |
-| `source_change_signal_json` | Optional source-change signal containing schema and stability details. |
+| `source_data_change_check` | Source `load_behavior` label used by the pipeline. |
+| `target_data_change_check` | Target `load_behavior` label used by the pipeline. |
+| `stability_check_enabled` | Whether profile behavior enforcement was enabled for this table. |
+| `load_behavior` | `append`, `overwrite`, or `skip`. This is the user-facing profile behavior model. |
+| `watermark_column` | Watermark column used for append behavior comparisons when configured. |
+| `freshness_column` | Column whose maximum value is checked by the freshness guardrail. |
+| `freshness_max_lag_days` | Maximum allowed lag, in days, for the freshness guardrail. |
+| `freshness_status` | Freshness guardrail result status. |
+| `freshness_can_continue` | Whether the freshness result allows the pipeline to continue. |
+| `freshness_message` | Human-readable freshness result. |
+| `baseline_run_id` | Previous accepted catalogue run used as the comparison point. |
+| `stability_status` | Profile behavior guardrail result status. |
+| `stability_can_continue` | Whether the profile behavior result allows the pipeline to continue. |
+| `stability_message` | Human-readable profile behavior result. |
+| `stability_difference_summary` | Compact row-count or watermark comparison summary when profile behavior fails. |
+| `source_change_signal_json` | Optional source-change signal containing schema, freshness, and profile behavior details. |
 | `layer` | Source or target storage layer. |
 | `asset_kind` | Lakehouse, warehouse, CSV or Parquet. |
 
@@ -266,8 +262,8 @@ This table stores one summary row per pipeline run. It is tied to the selected a
 | `status` | Overall pipeline status recorded by the notebook. |
 | `source_count` | Number of registered source DataFrames. |
 | `target_count` | Number of registered target DataFrames. |
-| `source_guardrail_status` | Roll-up status for source schema and stability guardrails. |
-| `target_guardrail_status` | Roll-up status for target schema and stability guardrails. |
+| `source_guardrail_status` | Roll-up status for source schema and profile behavior guardrails. |
+| `target_guardrail_status` | Roll-up status for target schema and profile behavior guardrails. |
 | `dq_status` | Roll-up status for source and target DQ guardrails. |
 | `lineage_status` | Status returned by lineage evidence writing. |
 | `catalogue_status` | Status returned by catalogue evidence writing. |
@@ -382,7 +378,7 @@ This table stores one summary row per pipeline run. It is tied to the selected a
 | `blocker_count` | Number of blocking findings that prevent approval. |
 | `warning_count` | Number of non-blocking warnings that require remediation review or follow-up. |
 | `blockers_json` | JSON array of blocker codes and messages, including missing agreement evidence or failed DQ evidence. |
-| `warnings_json` | JSON array of warning codes and messages, including warning DQ or surfaced schema/stability findings. |
+| `warnings_json` | JSON array of warning codes and messages, including warning DQ or surfaced schema/profile behavior findings. |
 | `evidence_summary_json` | JSON summary of agreement rows, agreement evidence, profile column counts, prior runs, and latest pipeline evidence used for the decision. |
 | `reviewed_at` | UTC timestamp when the outcome row was written. |
 | `reviewed_by` | Reviewer identity resolved from the runtime or explicit reviewer input. |

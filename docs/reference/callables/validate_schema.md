@@ -10,7 +10,7 @@ Validate a DataFrame schema using strict, allow-new-columns, or monitor-only pre
 
 ## When not to use it
 
-- Do not use for data-value drift, DQ-rule enforcement, or metadata persistence.
+- Do not use for DQ-rule enforcement or metadata persistence.
 
 ## Example
 
@@ -62,22 +62,23 @@ Guardrail result dictionary with status, can_continue, checks, message, and sche
 
 ## Related functions
 
-- <a href="../enforce_catalogue_stability/"><code>fabricops_kit.drift.enforce_catalogue_stability</code></a>
-- <a href="../stop_if_failed/"><code>fabricops_kit.drift.stop_if_failed</code></a>
+- <a href="../enforce_freshness/"><code>fabricops_kit.guardrails.enforce_freshness</code></a>
+- <a href="../enforce_profile_behavior/"><code>fabricops_kit.guardrails.enforce_profile_behavior</code></a>
+- <a href="../stop_if_failed/"><code>fabricops_kit.guardrails.stop_if_failed</code></a>
 
 <details class="reference-implementation-details">
 <summary>Implementation details</summary>
 
 - <a href="../run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
-- <a href="../internal/drift__actual_schema/"><code>fabricops_kit.drift._actual_schema</code></a>
-- <a href="../internal/drift__normalize_datatype/"><code>fabricops_kit.drift._normalize_datatype</code></a>
+- <a href="../internal/guardrails__actual_schema/"><code>fabricops_kit.guardrails._actual_schema</code></a>
+- <a href="../internal/guardrails__normalize_datatype/"><code>fabricops_kit.guardrails._normalize_datatype</code></a>
 
 </details>
 
 ## Source
 
-- Source file path: `src/fabricops_kit/drift.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/drift.py#L110-L199">View validate_schema on GitHub</a>
+- Source file path: `src/fabricops_kit/guardrails.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1bac7913a070db1a771a2991ff5421c37ffc9d94/src/fabricops_kit/guardrails.py#L109-L198">View validate_schema on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -184,13 +185,13 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 
 ### Function manifest
 
-- Fully qualified function name: `fabricops_kit.drift.validate_schema`
+- Fully qualified function name: `fabricops_kit.guardrails.validate_schema`
 - Short name: `validate_schema`
-- Module: `drift`
+- Module: `guardrails`
 - Classification: Callable
-- Related module: `drift`
-- Source file path: `src/fabricops_kit/drift.py`
-- Source line: `110`
+- Related module: `guardrails`
+- Source file path: `src/fabricops_kit/guardrails.py`
+- Source line: `109`
 - Inbound references count: 1
 - Outbound references count: 2
 
@@ -209,15 +210,15 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 
 ### Outbound references
 
-- <a href="../internal/drift__actual_schema/"><code>fabricops_kit.drift._actual_schema</code></a>
-- <a href="../internal/drift__normalize_datatype/"><code>fabricops_kit.drift._normalize_datatype</code></a>
+- <a href="../internal/guardrails__actual_schema/"><code>fabricops_kit.guardrails._actual_schema</code></a>
+- <a href="../internal/guardrails__normalize_datatype/"><code>fabricops_kit.guardrails._normalize_datatype</code></a>
 
 ### Raw source metadata
 
-- Source file path: `src/fabricops_kit/drift.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/drift.py#L110-L199">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/drift.py#L110-L199</a>
-- Start line: `110`
-- End line: `199`
+- Source file path: `src/fabricops_kit/guardrails.py`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1bac7913a070db1a771a2991ff5421c37ffc9d94/src/fabricops_kit/guardrails.py#L109-L198">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1bac7913a070db1a771a2991ff5421c37ffc9d94/src/fabricops_kit/guardrails.py#L109-L198</a>
+- Start line: `109`
+- End line: `198`
 - Signature:
 
 ```python
@@ -228,13 +229,14 @@ def validate_schema(dataframe, expected_schema: dict[str, str], *, preset: str='
 
 ### Public related functions
 
-- <a href="../enforce_catalogue_stability/"><code>fabricops_kit.drift.enforce_catalogue_stability</code></a>
-- <a href="../stop_if_failed/"><code>fabricops_kit.drift.stop_if_failed</code></a>
+- <a href="../enforce_freshness/"><code>fabricops_kit.guardrails.enforce_freshness</code></a>
+- <a href="../enforce_profile_behavior/"><code>fabricops_kit.guardrails.enforce_profile_behavior</code></a>
+- <a href="../stop_if_failed/"><code>fabricops_kit.guardrails.stop_if_failed</code></a>
 
 ### Internal implementation helpers
 
 - <a href="../run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
-- <a href="../internal/drift__actual_schema/"><code>fabricops_kit.drift._actual_schema</code></a>
-- <a href="../internal/drift__normalize_datatype/"><code>fabricops_kit.drift._normalize_datatype</code></a>
+- <a href="../internal/guardrails__actual_schema/"><code>fabricops_kit.guardrails._actual_schema</code></a>
+- <a href="../internal/guardrails__normalize_datatype/"><code>fabricops_kit.guardrails._normalize_datatype</code></a>
 
 </details>

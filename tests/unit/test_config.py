@@ -79,7 +79,7 @@ def test_dq_ai_suggestion_prompt_guidance_stays_aligned_with_notebook_template()
         "Do not invent rule types",
         "Do not invent columns",
         "Return valid JSON only",
-        "Schema guardrails and source stability are separate FabricOps layers",
+        "Schema guardrails and profile behavior guardrails are separate FabricOps layers",
     ]
 
     for prompt_name, prompt in prompts.items():

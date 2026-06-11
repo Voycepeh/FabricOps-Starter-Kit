@@ -49,7 +49,7 @@ MODULE_DOCS_METADATA: list[ModuleDocMetadata] = [
     {"module_name": "data_profiling", "visibility": "public", "module_summary": "Owns deterministic profiling evidence such as schema, nulls, distincts, min/max, and optional lightweight distributions.", "sidebar_group": "2. Analyst / data scientist", "sidebar_include": True},
     {"module_name": "fabric_input_output", "visibility": "public", "module_summary": "Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.", "sidebar_group": "3. Data engineer", "sidebar_include": True},
     {"module_name": "data_lineage", "visibility": "public", "module_summary": "Owns source-to-target lineage and transformation evidence.", "sidebar_group": "3. Data engineer", "sidebar_include": True},
-    {"module_name": "drift", "visibility": "public", "module_summary": "Owns schema and catalogue profile stability checks as engineering guardrails during pipeline runs.", "sidebar_group": "3. Data engineer", "sidebar_include": True},
+    {"module_name": "guardrails", "visibility": "public", "module_summary": "Owns schema, freshness, and profile behavior checks as pipeline guardrails during runtime enforcement.", "sidebar_group": "3. Data engineer", "sidebar_include": True},
     {"module_name": "metadata", "visibility": "public", "module_summary": "Owns metadata evidence persistence, stable keys, notebook registry, catalogue keys, and runtime audit helpers.", "sidebar_group": "5. Metadata store", "sidebar_include": True},
     {"module_name": "pipeline", "visibility": "public", "module_summary": "Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals, lineage persistence, and runtime summaries.", "sidebar_group": "3. Data engineer", "sidebar_include": True},
     {"module_name": "governance_review", "visibility": "public", "module_summary": "Owns table-scoped 03_governance catalogue selection, business context review, DQ-rule review guidance, classification review, AI-assisted internal drafting helpers, and approved metadata commit through record_table_governance.", "sidebar_group": "1. Governance steward", "sidebar_include": True},
@@ -451,9 +451,9 @@ PUBLIC_SYMBOL_DOCS: list[PublicSymbolDocMetadata] = [{'kind': 'function',
                      'key schema/profile fields before writing evidence.',
   'preferred_example': 'profile_rows_df = profile_dataframe(df, table_name="orders", '
                        'include_distributions=True, distribution_columns=["status"] )',
-  'related_functions': ['enforce_catalogue_stability', 'record_table_governance']},
+  'related_functions': ['enforce_profile_behavior', 'record_table_governance']},
  {'kind': 'function',
-  'module': 'drift',
+  'module': 'guardrails',
   'function_type': 'callable',
   'summary_override': 'Validate a DataFrame schema using strict, allow-new-columns, or '
                       'monitor-only presets.',
@@ -462,7 +462,7 @@ PUBLIC_SYMBOL_DOCS: list[PublicSymbolDocMetadata] = [{'kind': 'function',
   'template_segment': 'Schema validation',
   'use_when': 'Use before writes to compare a DataFrame schema against an expected schema with '
               'strict, allow-new-columns, or monitor-only behavior.',
-  'do_not_use_when': 'Do not use for data-value drift, DQ-rule enforcement, or metadata '
+  'do_not_use_when': 'Do not use for DQ-rule enforcement or metadata '
                      'persistence.',
   'parameters': 'dataframe, expected_schema mapping, and preset controlling blocking behavior.',
   'returns': 'Guardrail result dictionary with status, can_continue, checks, message, and schema '
@@ -476,23 +476,38 @@ PUBLIC_SYMBOL_DOCS: list[PublicSymbolDocMetadata] = [{'kind': 'function',
   'preferred_example': 'schema_result = validate_schema(df, {"order_id": "string"}, '
                        'preset="allow_new_columns")\n'
                        'stop_if_failed(schema_result)',
-  'related_functions': ['enforce_catalogue_stability', 'stop_if_failed']},
+  'related_functions': ['enforce_freshness', 'enforce_profile_behavior', 'stop_if_failed']},
  {'kind': 'function',
-  'module': 'drift',
+  'module': 'guardrails',
   'function_type': 'callable',
-  'summary_override': 'Compare deterministic profile hashes against append-only catalogue evidence and return a source '
-                      'stability guardrail result.',
-  'symbol_name': 'enforce_catalogue_stability',
+  'summary_override': 'Enforce whether the latest data arrived within the configured freshness lag.',
+  'symbol_name': 'enforce_freshness',
   'template_notebook': '02_pipeline',
-  'template_segment': 'Stability monitoring',
-  'use_when': 'Use in 02_pipeline to compare current profile evidence with an approved or previous '
-              'baseline and produce a data-change guardrail result.',
+  'template_segment': 'Freshness enforcement',
+  'use_when': 'Use in 02_pipeline to validate max(freshness_column) is at least today minus freshness_max_lag_days.',
+  'do_not_use_when': 'Do not use for schema validation, load-behavior enforcement, or DQ-rule enforcement; use validate_schema, enforce_profile_behavior, or enforce_dq_rules for those checks.',
+  'parameters': 'dataframe, freshness_column, max_lag_days, severity, and optional reference_date for deterministic validation.',
+  'returns': 'Guardrail result dictionary with status, can_continue, latest_value, required_min_value, and freshness evidence fields.',
+  'raises': 'ValueError when severity is unsupported, lag is missing for a configured column, lag is negative, or reference_date is invalid.',
+  'side_effects': 'Computes max(freshness_column) on the provided DataFrame; it does not write metadata, tables, or files.',
+  'fabric_context': 'Use in 02_pipeline after schema validation and before downstream writes so stale data can block or warn independently from profile behavior.',
+  'ai_verification': 'Verify freshness_column and freshness_max_lag_days come from the table config and that blocking severity stops writes when can_continue is false.',
+  'preferred_example': 'freshness_result = enforce_freshness(df, "business_date", 1, severity="blocking")\nstop_if_failed(freshness_result)',
+  'related_functions': ['validate_schema', 'enforce_profile_behavior', 'stop_if_failed']},
+ {'kind': 'function',
+  'module': 'guardrails',
+  'function_type': 'callable',
+  'summary_override': 'Enforce append, overwrite, or skip profile behavior against accepted catalogue profile evidence.',
+  'symbol_name': 'enforce_profile_behavior',
+  'template_notebook': '02_pipeline',
+  'template_segment': 'Profile behavior enforcement',
+  'use_when': 'Use in 02_pipeline to enforce load_behavior expectations against previous accepted catalogue profile evidence.',
   'do_not_use_when': 'Do not use for simple schema validation or DQ-rule enforcement; use '
                      'validate_schema or enforce_dq_rules for those checks.',
   'parameters': 'spark, dataframe, metadata_table, dataset_name, table_name, required stage, '
-                'run_id, data_behavior, stability_check_type, optional watermark fields, exclude_columns, and exclude_run_id.',
+                'run_id, load_behavior, optional watermark column, exclude_columns, and exclude_run_id.',
   'returns': 'Guardrail result dictionary with status, can_continue, message, current profile, '
-             'baseline details, and stability checks.',
+             'baseline details, and profile behavior checks.',
   'raises': 'Raises Spark or metadata-read errors when baseline profile evidence cannot be loaded '
             'or compared.',
   'side_effects': 'Reads baseline profile metadata and computes current profile evidence; it does '
@@ -501,19 +516,18 @@ PUBLIC_SYMBOL_DOCS: list[PublicSymbolDocMetadata] = [{'kind': 'function',
                     'metadata target and a valid source/target stage.',
   'ai_verification': 'Verify baseline selection, status, and can_continue before allowing '
                      'downstream writes or calling stop_if_failed.',
-  'preferred_example': 'stability_result = enforce_catalogue_stability(spark, df, "METADATA_DATA_CATALOGUE", '
-                       'dataset_name, table_name, stage="target")\n'
+  'preferred_example': 'stability_result = enforce_profile_behavior(spark, df, "METADATA_DATA_CATALOGUE", dataset_name, table_name, stage="target", run_id=run_id, load_behavior="overwrite")\n'
                        'stop_if_failed(stability_result)',
-  'related_functions': ['profile_dataframe', 'validate_schema', 'stop_if_failed']},
+  'related_functions': ['profile_dataframe', 'validate_schema', 'enforce_freshness', 'stop_if_failed']},
  {'kind': 'function',
-  'module': 'drift',
+  'module': 'guardrails',
   'function_type': 'callable',
-  'summary_override': 'Stop a notebook only when a schema, stability, or DQ guardrail result blocks '
+  'summary_override': 'Stop a notebook only when a schema, freshness, profile behavior, or DQ guardrail result blocks '
                       'continuation.',
   'symbol_name': 'stop_if_failed',
   'template_notebook': '02_pipeline',
   'template_segment': 'Guardrail enforcement',
-  'use_when': 'Use after schema, stability, or DQ guardrail helpers to stop the notebook when '
+  'use_when': 'Use after schema, freshness, profile behavior, or DQ guardrail helpers to stop the notebook when '
               'can_continue is false.',
   'do_not_use_when': 'Do not use for informational warnings that should not block execution, or '
                      'before a guardrail result exists.',
@@ -524,13 +538,13 @@ PUBLIC_SYMBOL_DOCS: list[PublicSymbolDocMetadata] = [{'kind': 'function',
             'must stop execution.',
   'side_effects': 'May terminate notebook execution through Fabric notebook utilities or raise an '
                   'exception.',
-  'fabric_context': 'Use in 02_pipeline after validate_schema, enforce_catalogue_stability, or '
+  'fabric_context': 'Use in 02_pipeline after validate_schema, enforce_freshness, enforce_profile_behavior, or '
                     'enforce_dq_rules and before write helpers.',
   'ai_verification': 'Verify the guardrail result shape includes status/can_continue/message '
                      'before passing it to stop_if_failed.',
   'preferred_example': 'schema_result = validate_schema(df, expected_schema)\n'
                        'stop_if_failed(schema_result)',
-  'related_functions': ['validate_schema', 'enforce_catalogue_stability', 'enforce_dq_rules']},
+  'related_functions': ['validate_schema', 'enforce_freshness', 'enforce_profile_behavior', 'enforce_dq_rules']},
  {'kind': 'function',
   'module': 'governance_review',
   'function_type': 'callable',
@@ -601,14 +615,14 @@ PUBLIC_SYMBOL_DOCS: list[PublicSymbolDocMetadata] = [{'kind': 'function',
  {'kind': 'function',
   'module': 'pipeline',
   'function_type': 'callable',
-  'summary_override': 'Run profiling, schema, stability, DQ, and catalogue guardrails for table configs.',
+  'summary_override': 'Run profiling, schema, freshness, profile behavior, DQ, and catalogue guardrails for table configs.',
   'symbol_name': 'run_table_guardrails',
   'template_notebook': '02_pipeline',
   'template_segment': 'Guardrail orchestration',
   'use_when': 'Use in 02_pipeline to run source guardrails before transformation and target guardrails before writes while keeping per-table results separated.',
   'do_not_use_when': 'Do not use as a replacement for individual helper calls when debugging one specific guardrail interactively.',
   'parameters': 'table_configs plus config, env, run_id, spark_session, and agreement/notebook context.',
-  'returns': 'Guardrail result bundle with profiles, schema results, stability results, DQ results, catalogue status, evidence definitions, summary, can_continue, and failed_tables.',
+  'returns': 'Guardrail result bundle with profiles, schema results, freshness results, stability results, DQ results, catalogue status, evidence definitions, summary, can_continue, and failed_tables.',
   'side_effects': 'Profiles DataFrames, reads stability/DQ metadata through configured metadata routing, writes catalogue evidence, and may update table config DataFrames with DQ annotations.',
   'fabric_context': 'Requires CONFIG and env from 00_env_config so metadata operations use the configured metadata target.',
   'ai_verification': 'Verify stop_on_failure=True is used before transformation or writes when blocking guardrails should stop execution.',

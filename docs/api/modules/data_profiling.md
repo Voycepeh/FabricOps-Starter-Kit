@@ -52,7 +52,7 @@ Owns deterministic profiling evidence such as schema, nulls, distincts, min/max,
     </tr>
     <tr>
       <td>External callers</td>
-      <td><code>drift</code>, <code>governance_review</code>, <code>pipeline</code></td>
+      <td><code>governance_review</code>, <code>guardrails</code>, <code>pipeline</code></td>
     </tr>
     <tr>
       <td>External callees</td>
@@ -175,11 +175,11 @@ Owns deterministic profiling evidence such as schema, nulls, distincts, min/max,
 
 ### External callers
 
-**drift**
-<a class="reference-chip" href="../../reference/enforce_catalogue_stability/"><code>enforce_catalogue_stability</code></a>
-
 **governance_review**
 <a class="reference-chip" href="../governance_review/#_prepare_dq_profile_input_rows"><code>_prepare_dq_profile_input_rows</code></a>
+
+**guardrails**
+<a class="reference-chip" href="../../reference/enforce_profile_behavior/"><code>enforce_profile_behavior</code></a>
 
 **pipeline**
 <a class="reference-chip" href="../../reference/run_table_guardrails/"><code>run_table_guardrails</code></a>

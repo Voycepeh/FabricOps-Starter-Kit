@@ -1,6 +1,6 @@
 # _spark_sql_helpers
 
-**Module:** `governance_review`  
+**Module:** `governance_review`
 **Classification:** Internal
 
 ## Status
@@ -55,7 +55,7 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 - Classification: Internal
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
-- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/governance_review.py#L1120-L1127">View source on GitHub</a>
+- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1bac7913a070db1a771a2991ff5421c37ffc9d94/src/fabricops_kit/governance_review.py#L1120-L1127">View source on GitHub</a>
 - Inbound references count: 7
 - Outbound references count: 0
 

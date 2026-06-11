@@ -5,7 +5,7 @@ import json
 import pytest
 
 from fabricops_kit.governance_review import _load_active_dq_rules, _prepare_dq_profile_input_rows, enforce_dq_rules
-from fabricops_kit.drift import stop_if_failed, validate_schema
+from fabricops_kit.guardrails import stop_if_failed, validate_schema
 from tests.helpers import framework_config
 
 pytestmark = pytest.mark.spark
@@ -481,15 +481,15 @@ def test_write_catalogue_evidence_appends_stability_fields_without_updates(spark
 
     result = pipeline.write_catalogue_evidence(
         {"orders": profile_df},
-        {"orders": {"dataset_name": "sales", "table_name": "orders", "stage": "source", "data_behavior": "fixed", "stability_check_type": "full_profile_hash"}},
+        {"orders": {"dataset_name": "sales", "table_name": "orders", "stage": "source", "load_behavior": "append"}},
         config={},
         env="dev",
         run_id="run-1",
-        stability_results={"orders": {"status": "baseline_created", "can_continue": True, "stability_check_enabled": True, "data_behavior": "fixed", "stability_check_type": "full_profile_hash", "profile_hash": "abc", "comparable_profile_hash": "abc", "stability_status": "baseline_created", "stability_can_continue": True}},
+        stability_results={"orders": {"status": "baseline_created", "can_continue": True, "stability_check_enabled": True, "load_behavior": "append", "stability_status": "baseline_created", "stability_can_continue": True}},
     )
 
     assert result == {"orders": "written"}
     assert writes[0][2:4] == ("metadata", "METADATA_DATA_CATALOGUE")
     assert writes[0][4]["mode"] == "append"
     assert "stability_status" in writes[0][0].columns
-    assert "profile_hash" in writes[0][0].columns
+    assert "load_behavior" in writes[0][0].columns

@@ -44,7 +44,7 @@ nav:
           - data_profiling: api/modules/data_profiling.md
           - fabric_input_output: api/modules/fabric_input_output.md
           - data_lineage: api/modules/data_lineage.md
-          - drift: api/modules/drift.md
+          - guardrails: api/modules/guardrails.md
           - pipeline: api/modules/pipeline.md
           - metadata: api/modules/metadata.md
       # AUTO-GENERATED-MODULES-END
@@ -73,7 +73,7 @@ nav:
           - required_when: reference/dq-rules/required-when.md
           - value_when: reference/dq-rules/value-when.md
           - expression_true: reference/dq-rules/expression-true.md
-      
+
   - Maintainer Guide:
       - Release Management: development/release-management.md
       - Release Traceability: release-info.md

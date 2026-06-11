@@ -30,7 +30,8 @@ APPROVED_V1_CALLABLES = {
     "write_warehouse_table",
     "profile_dataframe",
     "validate_schema",
-    "enforce_catalogue_stability",
+    "enforce_freshness",
+    "enforce_profile_behavior",
     "stop_if_failed",
     "enforce_dq_rules",
     "build_lineage_records",
@@ -118,7 +119,7 @@ def _template_called_fabricops_functions() -> set[str]:
 
 def test_root_exports_only_approved_v1_template_callables():
     assert set(fabricops_kit.__all__) == APPROVED_V1_CALLABLES
-    assert len(fabricops_kit.__all__) == 32
+    assert len(fabricops_kit.__all__) == 33
     assert len(fabricops_kit.__all__) < 71
     for name in fabricops_kit.__all__:
         assert callable(getattr(fabricops_kit, name))
@@ -200,7 +201,7 @@ def test_generated_module_docs_surface_only_active_v1_modules():
         "data_profiling",
         "fabric_input_output",
         "data_lineage",
-        "drift",
+        "guardrails",
         "metadata",
         "pipeline",
     }

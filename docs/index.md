@@ -60,5 +60,5 @@ Choose where to begin:
 | [How FabricOps Works](how-fabricops-works/index.md) | Understand the target delivery workflow from Agreement to Pipeline to Review. |
 | [Notebook Templates](how-fabricops-works/notebook-templates.md) | See what each notebook template is for. |
 | [Metadata Tables](how-fabricops-works/metadata-tables.md) | See what metadata the notebooks write and read. |
-| [Pipeline Guardrails](how-fabricops-works/schema-and-data-drift.md) | Understand how `02_pipeline` checks schema, drift, and approved governance metadata. |
+| [Pipeline Guardrails](how-fabricops-works/schema-and-data-drift.md) | Understand how `02_pipeline` checks schema, freshness, profile behavior, and approved governance metadata. |
 | [Governance Review](how-fabricops-works/governance-review.md) | Understand how `03_governance` adds reviewed governance metadata. |

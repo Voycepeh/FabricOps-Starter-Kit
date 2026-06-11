@@ -1,6 +1,6 @@
-# _max_watermark_value
+# SchemaDriftError
 
-**Module:** `drift`  
+**Module:** `guardrails`
 **Classification:** Internal
 
 ## Status
@@ -17,16 +17,16 @@ Do not call this helper directly from notebooks; use the public callable helpers
 
 ## Used by
 
-- <a href="../enforce_catalogue_stability/"><code>fabricops_kit.drift.enforce_catalogue_stability</code></a>
+- <a href="../stop_if_failed/"><code>fabricops_kit.guardrails.stop_if_failed</code></a>
 
 ## Purpose
 
-No summary available.
+Raised when a guardrail check is configured to stop execution.
 
 ## Signature if available
 
 ```python
-def _max_watermark_value(dataframe, watermark_column: str)
+class SchemaDriftError(Exception)
 ```
 
 ## Side effects
@@ -43,15 +43,15 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 
 ## Function manifest
 
-- Fully qualified function name: `fabricops_kit.drift._max_watermark_value`
-- Short name: `_max_watermark_value`
-- Module: `drift`
+- Fully qualified function name: `fabricops_kit.guardrails.SchemaDriftError`
+- Short name: `SchemaDriftError`
+- Module: `guardrails`
 - Classification: Internal
-- Related module: `drift`
-- Source file path: `src/fabricops_kit/drift.py`
-- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8f8ba1a4c1e063896508520952dedc3eda348629/src/fabricops_kit/drift.py#L373-L379">View source on GitHub</a>
+- Related module: `guardrails`
+- Source file path: `src/fabricops_kit/guardrails.py`
+- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1bac7913a070db1a771a2991ff5421c37ffc9d94/src/fabricops_kit/guardrails.py#L27-L34">View source on GitHub</a>
 - Inbound references count: 1
 - Outbound references count: 0
 
 ## Inbound references
-- <a href="../enforce_catalogue_stability/"><code>fabricops_kit.drift.enforce_catalogue_stability</code></a>
+- <a href="../stop_if_failed/"><code>fabricops_kit.guardrails.stop_if_failed</code></a>
