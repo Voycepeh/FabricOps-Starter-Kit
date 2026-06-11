@@ -6,7 +6,7 @@ import json
 import os
 from pathlib import Path
 import subprocess
-from typing import Any
+from typing import Any, Iterable
 
 ROOT = Path(__file__).resolve().parents[1]
 PKG_DIR = ROOT / "src" / "fabricops_kit"
@@ -800,77 +800,158 @@ def _indent_markdown(lines: list[str], spaces: int = 4) -> list[str]:
     return indented
 
 
+def _helper_area(helper_name: str, purpose: str) -> tuple[str, str]:
+    """Return the implementation area and plain-English role for an internal helper."""
+    haystack = f"{helper_name} {purpose}".lower()
+    if any(token in haystack for token in ("audit", "timestamp", "timezone")):
+        return "Audit timestamp", "Resolve and stamp audit time consistently."
+    if any(
+        token in haystack
+        for token in ("metadata", "load", "table", "database", "registered", "warehouse", "lakehouse")
+    ):
+        return "Metadata loading", "Load and identify the metadata or table context needed by the callable."
+    if any(token in haystack for token in ("valid", "required", "check", "ensure")):
+        return "Validation", "Validate inputs and guard conditions before the workflow continues."
+    if any(token in haystack for token in ("parse", "normalise", "normalize", "canonical", "json", "name")):
+        return "Rule parsing", "Normalize stored or user-provided values before applying rules."
+    if any(token in haystack for token in ("rule", "condition", "evaluate", "sql", "dq", "expectation")):
+        return "Rule evaluation", "Convert configured rules into executable checks and evaluation results."
+    if any(token in haystack for token in ("summary", "summar", "status", "failed", "message", "result")):
+        return "Result summary", "Build final statuses, counts, and messages for the caller."
+    if any(token in haystack for token in ("spark", "fabric", "session")):
+        return "Fabric or Spark access", "Access Fabric or Spark runtime services used by the implementation."
+    return "Other", "Support lower-level implementation details that do not fit the main helper areas."
+
+
+def _ordered_helper_areas(area_names: Iterable[str]) -> list[str]:
+    """Sort helper areas in the documented reference order."""
+    preferred = [
+        "Audit timestamp",
+        "Metadata loading",
+        "Validation",
+        "Rule parsing",
+        "Rule evaluation",
+        "Result summary",
+        "Fabric or Spark access",
+        "Other",
+    ]
+    rank = {name: index for index, name in enumerate(preferred)}
+    return sorted(area_names, key=lambda name: (rank.get(name, len(preferred)), name.lower()))
+
+
+def _helper_area_purposes(area_names: list[str]) -> str:
+    """Return a compact human-readable list of grouped helper purposes."""
+    labels = [name.lower() for name in area_names]
+    if not labels:
+        return "implementation support"
+    if len(labels) == 1:
+        return labels[0]
+    if len(labels) == 2:
+        return f"{labels[0]} and {labels[1]}"
+    return f"{', '.join(labels[:-1])}, and {labels[-1]}"
+
+
 def _render_nested_helper_section(
     root_qn: str,
     helper_qns: list[str],
     node_by_qn: dict[str, dict[str, Any]],
     module_data: dict[str, dict[str, Any]],
 ) -> list[str]:
-    """Render collapsed maintainer details for internal helpers used by a callable."""
+    """Render a collapsed grouped summary for internal helpers used by a callable."""
     root_name = node_by_qn[root_qn]["callable_name"]
     helper_count = len(helper_qns)
-    summary = (
-        f"These nested helpers support `{root_name}` by handling lower-level implementation steps; "
-        "expand this section only when maintaining or debugging the package internals."
-    )
-    helper_rows: list[list[str]] = []
     if not helper_qns:
         body_lines = [
-            f"No nested helper functions were detected for `{root_name}`.",
+            (
+                f"This callable uses 0 internal helpers; `{root_name}` does not have package-local "
+                "helper descendants in the generated call graph."
+            ),
             "",
             '<div class="module-table-scroll reference-input-table">',
-            *render_html_table(["Helper", "Role", "Source"], [["—", "No nested helper functions detected.", "—"]], table_class="reference-function-table"),
+            *render_html_table(
+                ["Area", "Helpers", "What they do"],
+                [["—", "—", "No internal helpers detected."]],
+                table_class="reference-function-table",
+            ),
             "</div>",
         ]
         return [
-            '??? info "Nested helper functions: 0"',
+            '??? info "Internal helpers used: 0"',
             "",
             *_indent_markdown(body_lines),
         ]
 
-    source_lines: list[str] = []
+    grouped: dict[str, dict[str, Any]] = {}
     for helper_qn in helper_qns:
         helper_node = node_by_qn[helper_qn]
         helper_name = helper_node["callable_name"]
         module_name = helper_node["module_name"]
         info = module_data[module_name]
-        signature = info.get("signatures", {}).get(helper_name, f"{helper_name}(...)")
-        source_path = f"src/fabricops_kit/{module_name}.py"
-        source_block = info.get("source_blocks", {}).get(helper_name, "")
         purpose = info.get("functions", {}).get(helper_name) or "Internal helper used by the package implementation."
-        source_location = info.get("source_locations", {}).get(helper_name, {})
-        source_url = github_source_url(source_path, source_location.get("start_line"), source_location.get("end_line"))
-        helper_rows.append([
-            f"<code>{html_escape(helper_name)}</code>",
-            html_escape(purpose),
-            f'<a class="reference-source-link" href="{source_url}">{html_escape(source_path)}</a>',
-        ])
-        source_lines.extend([
-            f"**`{signature}`**",
-            "",
-            f"Source: [`{source_path}`]({source_url})",
-            "",
-            _code_block(source_block) if source_block else PLACEHOLDER,
-            "",
-        ])
+        area, role = _helper_area(helper_name, purpose)
+        grouped.setdefault(area, {"role": role, "helpers": []})["helpers"].append(
+            {
+                "name": helper_name,
+                "module_name": module_name,
+                "signature": info.get("signatures", {}).get(helper_name, f"{helper_name}(...)"),
+                "source_block": info.get("source_blocks", {}).get(helper_name, ""),
+                "source_path": f"src/fabricops_kit/{module_name}.py",
+                "source_location": info.get("source_locations", {}).get(helper_name, {}),
+            }
+        )
+
+    area_order = _ordered_helper_areas(grouped)
+    helper_rows: list[list[str]] = []
+    for area in area_order:
+        helpers = sorted(grouped[area]["helpers"], key=lambda item: item["name"].lower())
+        grouped[area]["helpers"] = helpers
+        helper_rows.append(
+            [
+                html_escape(area),
+                ", ".join(f"<code>{html_escape(helper['name'])}</code>" for helper in helpers),
+                html_escape(grouped[area]["role"]),
+            ]
+        )
+
+    source_by_area_lines: list[str] = []
+    for area in area_order:
+        source_by_area_lines.extend([f'??? example "{area} helpers"', ""])
+        area_source_lines: list[str] = []
+        for helper in grouped[area]["helpers"]:
+            source_location = helper["source_location"]
+            source_url = github_source_url(
+                helper["source_path"],
+                source_location.get("start_line"),
+                source_location.get("end_line"),
+            )
+            area_source_lines.extend(
+                [
+                    f"**`{helper['signature']}`**",
+                    "",
+                    f"Source: [`{helper['source_path']}`]({source_url})",
+                    "",
+                    _code_block(helper["source_block"]) if helper["source_block"] else PLACEHOLDER,
+                    "",
+                ]
+            )
+        source_by_area_lines.extend(_indent_markdown(area_source_lines))
 
     body_lines = [
-        summary,
+        f"This callable uses {helper_count} internal helpers for {_helper_area_purposes(area_order)}.",
         "",
         '<div class="module-table-scroll reference-input-table">',
-        *render_html_table(["Helper", "Role", "Source"], helper_rows, table_class="reference-function-table"),
+        *render_html_table(["Area", "Helpers", "What they do"], helper_rows, table_class="reference-function-table"),
         "</div>",
         "",
-        '??? example "View helper source code"',
+        '??? example "View helper source by area"',
         "",
-        *_indent_markdown(source_lines),
+        *_indent_markdown(source_by_area_lines),
     ]
     return [
-        f'??? info "Nested helper functions: {helper_count}"',
+        f'??? info "Internal helpers used: {helper_count}"',
         "",
         *_indent_markdown(body_lines),
     ]
-
 
 def function_chip_wrap(chips: list[str]) -> str:
     """Return a mobile-friendly chip wrapper for a generated docs table cell."""
@@ -1689,6 +1770,7 @@ def main() -> None:
         rendered_parameters = _documented_text(metadata.get("parameters"), doc_sections.get("parameters"))
         rendered_returns = _documented_text(metadata.get("returns"), doc_sections.get("returns"))
         rendered_raises = _documented_text(metadata.get("raises"), doc_sections.get("raises"))
+        rendered_notes = _documented_text(doc_sections.get("notes"), "No additional callable notes are documented.")
         rendered_side_effects = _documented_text(metadata.get("side_effects"))
         rendered_fabric_context = _documented_text(
             metadata.get("fabric_context"),
@@ -1735,10 +1817,32 @@ def main() -> None:
             related_public = [item for item in related_for_page if item in docs_metadata or node_by_qn.get(item, {}).get("exported")]
             related_lines = _related_function_links(related_public, node_by_qn, docs_metadata)
             helper_qns = _collect_internal_helper_descendants(qn, calls_by_qn, node_by_qn)
-            implementation_lines = [
-                "### Call flow",
+            call_tree_depth = 2 if len(helper_qns) > 12 else 6
+            call_flow_lines = [
+                '??? info "Call flow"',
                 "",
-                *_render_call_tree(qn, calls_by_qn, node_by_qn),
+                *_indent_markdown([
+                    *(
+                        [
+                            "Large call graph shown to two levels.",
+                            "",
+                            "Expanded internal helper tree is available in the internal implementation summary.",
+                            "",
+                        ]
+                        if call_tree_depth == 2
+                        else []
+                    ),
+                    *_render_call_tree(qn, calls_by_qn, node_by_qn, max_depth=call_tree_depth),
+                ]),
+            ]
+            function_detail_lines = [
+                f"- Module: `{rel_module}`",
+                "- Classification: Callable",
+                f"- Source file path: `{source_path}`",
+                f"- Source line: `{source_start_line}`",
+                "- Signature:",
+                "",
+                _code_block(signature) if signature else PLACEHOLDER,
             ]
             public_source_lines = [
                 f"- Source file path: `{source_path}`",
@@ -1775,10 +1879,13 @@ def main() -> None:
                 "",
                 *(related_lines if related_lines else [PLACEHOLDER]),
                 "",
-                "### Internal implementation helpers",
+                "### Internal implementation summary",
                 "",
-                *(implementation_lines if implementation_lines else [PLACEHOLDER]),
-
+                f"- Internal helper count: {len(helper_qns)}",
+                (
+                    "- Grouped helper summary and optional source snippets are rendered in the page-level "
+                    "Internal implementation summary section."
+                ),
             ]
             machine_metadata_lines = [
                 "These generated fields are for automation, AI agents, maintainers, and doc tooling. Skip this block when reading the docs normally.",
@@ -1838,16 +1945,6 @@ def main() -> None:
                 "",
                 rendered_side_effects,
                 "",
-                "## Parameters",
-                "",
-                '<div class="module-table-scroll reference-input-table">',
-                *input_table,
-                "</div>",
-                "",
-                "## Returns",
-                "",
-                rendered_returns,
-                "",
                 "## Used by",
                 "",
                 *(_fmt_links(used_by) if used_by else [PLACEHOLDER]),
@@ -1856,20 +1953,38 @@ def main() -> None:
                 "",
                 *(_fmt_links(deps) if deps else [PLACEHOLDER]),
                 "",
-            ]
-            lines.extend([
-                "## Implementation details",
+                "## Callable implementation",
                 "",
-                *implementation_lines,
+                "### Function details",
                 "",
-                "## Public callable source code",
+                *function_detail_lines,
+                "",
+                "### Parameters",
+                "",
+                '<div class="module-table-scroll reference-input-table">',
+                *input_table,
+                "</div>",
+                "",
+                "### Returns",
+                "",
+                rendered_returns,
+                "",
+                "### Notes",
+                "",
+                rendered_notes,
+                "",
+                "### Public callable source code",
                 "",
                 *public_source_lines,
                 "",
-                "## Maintainer internals",
+                "## Internal implementation summary",
+                "",
+                *call_flow_lines,
                 "",
                 *nested_helper_lines,
                 "",
+            ]
+            lines.extend([
                 *markdown_details(
                     "AI / machine-readable metadata — skip this if you are reading the docs normally",
                     machine_metadata_lines,

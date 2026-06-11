@@ -30,7 +30,39 @@ Not documented yet
 
 Profiles DataFrames, reads stability/DQ metadata through configured metadata routing, writes catalogue evidence, and may update table config DataFrames with DQ annotations.
 
-## Parameters
+## Used by
+
+Not documented yet
+
+## Calls
+
+- <a href="../profile_dataframe/"><code>fabricops_kit.data_profiling.profile_dataframe</code></a>
+- <a href="../enforce_dq_rules/"><code>fabricops_kit.governance_review.enforce_dq_rules</code></a>
+- <a href="../enforce_freshness/"><code>fabricops_kit.guardrails.enforce_freshness</code></a>
+- <a href="../enforce_profile_behavior/"><code>fabricops_kit.guardrails.enforce_profile_behavior</code></a>
+- <a href="../stop_if_failed/"><code>fabricops_kit.guardrails.stop_if_failed</code></a>
+- <a href="../validate_schema/"><code>fabricops_kit.guardrails.validate_schema</code></a>
+- `fabricops_kit.pipeline._build_guardrail_evidence_definitions`
+- `fabricops_kit.pipeline._guardrail_can_continue`
+- `fabricops_kit.pipeline._table_key`
+- `fabricops_kit.pipeline._table_name`
+- <a href="../write_catalogue_evidence/"><code>fabricops_kit.pipeline.write_catalogue_evidence</code></a>
+
+## Callable implementation
+
+### Function details
+
+- Module: `pipeline`
+- Classification: Callable
+- Source file path: `src/fabricops_kit/pipeline.py`
+- Source line: `260`
+- Signature:
+
+```python
+def run_table_guardrails(table_configs: list[dict[str, Any]], *, config: Any, env: str, run_id: str, spark_session: Any, agreement_id: str='', agreement_contract_version: str='', notebook_registry_id: str='', notebook_id: str='', pipeline_name: str='', stop_on_failure: bool=False) -> dict[str, Any]
+```
+
+### Parameters
 
 <div class="module-table-scroll reference-input-table">
 <table class="reference-function-table">
@@ -101,190 +133,22 @@ Profiles DataFrames, reads stability/DQ metadata through configured metadata rou
 </table>
 </div>
 
-## Returns
+### Returns
 
 Guardrail result bundle with profiles, schema results, freshness results, stability results, DQ results, catalogue status, evidence definitions, summary, can_continue, and failed_tables.
 
-## Used by
+### Notes
 
-Not documented yet
+This helper intentionally collects all per-table schema, freshness, profile behavior, and DQ
+results before reporting blocking failures. DQ results that return an
+annotated DataFrame update the corresponding table config ``df`` in place
+so downstream writes use the checked DataFrame. Metadata reads and writes
+are routed through the configured metadata target by the called helpers.
 
-## Calls
-
-- <a href="../profile_dataframe/"><code>fabricops_kit.data_profiling.profile_dataframe</code></a>
-- <a href="../enforce_dq_rules/"><code>fabricops_kit.governance_review.enforce_dq_rules</code></a>
-- <a href="../enforce_freshness/"><code>fabricops_kit.guardrails.enforce_freshness</code></a>
-- <a href="../enforce_profile_behavior/"><code>fabricops_kit.guardrails.enforce_profile_behavior</code></a>
-- <a href="../stop_if_failed/"><code>fabricops_kit.guardrails.stop_if_failed</code></a>
-- <a href="../validate_schema/"><code>fabricops_kit.guardrails.validate_schema</code></a>
-- `fabricops_kit.pipeline._build_guardrail_evidence_definitions`
-- `fabricops_kit.pipeline._guardrail_can_continue`
-- `fabricops_kit.pipeline._table_key`
-- `fabricops_kit.pipeline._table_name`
-- <a href="../write_catalogue_evidence/"><code>fabricops_kit.pipeline.write_catalogue_evidence</code></a>
-
-## Implementation details
-
-### Call flow
-
-```text
-run_table_guardrails(...)
-├── _build_guardrail_evidence_definitions(...)
-│   ├── _table_key(...)
-│   └── _table_name(...)
-├── _guardrail_can_continue(...)
-├── _table_key(...)
-├── _table_name(...)
-├── enforce_dq_rules(...)
-│   ├── _dq_failed_row_count(...)
-│   │   ├── _dq_failed_expression(...)
-│   │   │   ├── _spark_sql_helpers(...)
-│   │   │   └── _validate_dq_rules(...)
-│   │   │       └── _canonical_dq_rule_type(...)
-│   │   └── _spark_sql_helpers(...)
-│   ├── _dq_summary(...)
-│   │   ├── _current_audit_timestamp(...)
-│   │   │   └── _get_audit_timezone(...)
-│   │   │       └── _validate_audit_timezone(...)
-│   │   └── _summarize_dq_guardrail(...)
-│   ├── _dq_tagged_dataframe(...)
-│   │   ├── _dq_failed_expression(...)
-│   │   │   ├── _spark_sql_helpers(...)
-│   │   │   └── _validate_dq_rules(...)
-│   │   │       └── _canonical_dq_rule_type(...)
-│   │   └── _spark_sql_helpers(...)
-│   ├── _load_active_dq_rules(...)
-│   │   ├── _canonical_dq_rule_type(...)
-│   │   ├── _coerce_rows(...)
-│   │   ├── _latest_dq_rule_versions(...)
-│   │   │   └── _spark_sql_helpers(...)
-│   │   ├── _spark_sql_helpers(...)
-│   │   └── _validate_dq_rules(...)
-│   │       └── _canonical_dq_rule_type(...)
-│   ├── _run_dq_guardrail_checks(...)
-│   │   ├── _dq_check_status(...)
-│   │   ├── _dq_failed_expression(...)
-│   │   │   ├── _spark_sql_helpers(...)
-│   │   │   └── _validate_dq_rules(...)
-│   │   │       └── _canonical_dq_rule_type(...)
-│   │   ├── _spark_sql_helpers(...)
-│   │   └── _validate_dq_rules(...)
-│   │       └── _canonical_dq_rule_type(...)
-│   ├── _summarize_dq_guardrail(...)
-│   └── read_lakehouse_table(...)
-│       ├── _current_database_matches(...)
-│       ├── _get_spark(...)
-│       ├── _get_store(...)
-│       ├── _normalize_table_name(...)
-│       ├── _registered_table_identifier(...)
-│       │   ├── _normalize_table_name(...)
-│       │   └── _quote_identifier(...)
-│       └── _uses_registered_metadata_table(...)
-├── enforce_freshness(...)
-│   ├── _coerce_date(...)
-│   ├── _iso_date_value(...)
-│   │   └── _coerce_date(...)
-│   └── _max_column_value(...)
-├── enforce_profile_behavior(...)
-│   ├── _catalogue_value(...)
-│   ├── _guardrail_exclude_columns(...)
-│   ├── _is_greater_than(...)
-│   │   └── _comparable_value(...)
-│   ├── _is_less_than(...)
-│   │   └── _comparable_value(...)
-│   ├── _is_missing_table_error(...)
-│   ├── _latest_catalogue_behavior_profile_row(...)
-│   │   ├── _catalogue_value(...)
-│   │   ├── _is_missing_table_error(...)
-│   │   ├── _row_to_dict(...)
-│   │   └── _string_value(...)
-│   ├── _profile_row_count(...)
-│   │   └── _normalize_profile(...)
-│   │       └── _normalize_profile(...) (recursive)
-│   ├── _profile_watermark_bounds(...)
-│   │   ├── _normalize_profile(...)
-│   │   │   └── _normalize_profile(...) (recursive)
-│   │   └── _string_value(...)
-│   ├── _string_value(...)
-│   ├── profile_dataframe(...)
-│   │   ├── _audit_timestamp_expr(...)
-│   │   │   └── _get_audit_timezone(...)
-│   │   │       └── _validate_audit_timezone(...)
-│   │   ├── _build_distribution_summaries(...)
-│   │   │   ├── _build_categorical_distribution(...)
-│   │   │   ├── _build_numeric_distribution(...)
-│   │   │   └── _numeric_bin_edges(...)
-│   │   ├── _get_audit_timezone(...)
-│   │   │   └── _validate_audit_timezone(...)
-│   │   ├── _get_profiled_columns(...)
-│   │   └── _is_min_max_supported_type(...)
-│   └── read_lakehouse_table(...)
-│       ├── _current_database_matches(...)
-│       ├── _get_spark(...)
-│       ├── _get_store(...)
-│       ├── _normalize_table_name(...)
-│       ├── _registered_table_identifier(...)
-│       │   ├── _normalize_table_name(...)
-│       │   └── _quote_identifier(...)
-│       └── _uses_registered_metadata_table(...)
-├── profile_dataframe(...)
-│   ├── _audit_timestamp_expr(...)
-│   │   └── _get_audit_timezone(...)
-│   │       └── _validate_audit_timezone(...)
-│   ├── _build_distribution_summaries(...)
-│   │   ├── _build_categorical_distribution(...)
-│   │   ├── _build_numeric_distribution(...)
-│   │   └── _numeric_bin_edges(...)
-│   ├── _get_audit_timezone(...)
-│   │   └── _validate_audit_timezone(...)
-│   ├── _get_profiled_columns(...)
-│   └── _is_min_max_supported_type(...)
-├── stop_if_failed(...)
-│   └── SchemaDriftError(...)
-├── validate_schema(...)
-│   ├── _actual_schema(...)
-│   │   └── _normalize_datatype(...)
-│   └── _normalize_datatype(...)
-└── write_catalogue_evidence(...)
-    ├── _build_metadata_table_key(...)
-    │   └── _stable_metadata_key(...)
-    ├── _canonical_catalogue_profile_df(...)
-    ├── _definition_name(...)
-    ├── _dq_summary_fields(...)
-    │   └── _now_iso(...)
-    │       └── _current_audit_timestamp(...)
-    │           └── _get_audit_timezone(...)
-    │               └── _validate_audit_timezone(...)
-    ├── _now_iso(...)
-    │   └── _current_audit_timestamp(...)
-    │       └── _get_audit_timezone(...)
-    │           └── _validate_audit_timezone(...)
-    ├── _runtime_audit_fields(...)
-    │   ├── _build_runtime_audit_fields(...)
-    │   │   ├── _context_get(...)
-    │   │   ├── _current_audit_timestamp(...)
-    │   │   │   └── _get_audit_timezone(...)
-    │   │   │       └── _validate_audit_timezone(...)
-    │   │   ├── _runtime_context(...)
-    │   │   │   └── _context_get(...)
-    │   │   └── _safe_str(...)
-    │   └── _now_iso(...)
-    │       └── _current_audit_timestamp(...)
-    │           └── _get_audit_timezone(...)
-    │               └── _validate_audit_timezone(...)
-    └── write_lakehouse_table(...)
-        ├── _get_store(...)
-        ├── _normalize_table_name(...)
-        ├── _registered_table_identifier(...)
-        │   ├── _normalize_table_name(...)
-        │   └── _quote_identifier(...)
-        └── _uses_registered_metadata_table(...)
-```
-
-## Public callable source code
+### Public callable source code
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/pipeline.py#L260-L448">View run_table_guardrails on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/pipeline.py#L260-L448">View run_table_guardrails on GitHub</a>
 
 ```python
 def run_table_guardrails(
@@ -478,111 +342,261 @@ def run_table_guardrails(
     return result
 ```
 
-## Maintainer internals
+## Internal implementation summary
 
-??? info "Nested helper functions: 4"
+??? info "Call flow"
 
-    These nested helpers support `run_table_guardrails` by handling lower-level implementation steps; expand this section only when maintaining or debugging the package internals.
+    ```text
+    run_table_guardrails(...)
+    ├── _build_guardrail_evidence_definitions(...)
+    │   ├── _table_key(...)
+    │   └── _table_name(...)
+    ├── _guardrail_can_continue(...)
+    ├── _table_key(...)
+    ├── _table_name(...)
+    ├── enforce_dq_rules(...)
+    │   ├── _dq_failed_row_count(...)
+    │   │   ├── _dq_failed_expression(...)
+    │   │   │   ├── _spark_sql_helpers(...)
+    │   │   │   └── _validate_dq_rules(...)
+    │   │   │       └── _canonical_dq_rule_type(...)
+    │   │   └── _spark_sql_helpers(...)
+    │   ├── _dq_summary(...)
+    │   │   ├── _current_audit_timestamp(...)
+    │   │   │   └── _get_audit_timezone(...)
+    │   │   │       └── _validate_audit_timezone(...)
+    │   │   └── _summarize_dq_guardrail(...)
+    │   ├── _dq_tagged_dataframe(...)
+    │   │   ├── _dq_failed_expression(...)
+    │   │   │   ├── _spark_sql_helpers(...)
+    │   │   │   └── _validate_dq_rules(...)
+    │   │   │       └── _canonical_dq_rule_type(...)
+    │   │   └── _spark_sql_helpers(...)
+    │   ├── _load_active_dq_rules(...)
+    │   │   ├── _canonical_dq_rule_type(...)
+    │   │   ├── _coerce_rows(...)
+    │   │   ├── _latest_dq_rule_versions(...)
+    │   │   │   └── _spark_sql_helpers(...)
+    │   │   ├── _spark_sql_helpers(...)
+    │   │   └── _validate_dq_rules(...)
+    │   │       └── _canonical_dq_rule_type(...)
+    │   ├── _run_dq_guardrail_checks(...)
+    │   │   ├── _dq_check_status(...)
+    │   │   ├── _dq_failed_expression(...)
+    │   │   │   ├── _spark_sql_helpers(...)
+    │   │   │   └── _validate_dq_rules(...)
+    │   │   │       └── _canonical_dq_rule_type(...)
+    │   │   ├── _spark_sql_helpers(...)
+    │   │   └── _validate_dq_rules(...)
+    │   │       └── _canonical_dq_rule_type(...)
+    │   ├── _summarize_dq_guardrail(...)
+    │   └── read_lakehouse_table(...)
+    │       ├── _current_database_matches(...)
+    │       ├── _get_spark(...)
+    │       ├── _get_store(...)
+    │       ├── _normalize_table_name(...)
+    │       ├── _registered_table_identifier(...)
+    │       │   ├── _normalize_table_name(...)
+    │       │   └── _quote_identifier(...)
+    │       └── _uses_registered_metadata_table(...)
+    ├── enforce_freshness(...)
+    │   ├── _coerce_date(...)
+    │   ├── _iso_date_value(...)
+    │   │   └── _coerce_date(...)
+    │   └── _max_column_value(...)
+    ├── enforce_profile_behavior(...)
+    │   ├── _catalogue_value(...)
+    │   ├── _guardrail_exclude_columns(...)
+    │   ├── _is_greater_than(...)
+    │   │   └── _comparable_value(...)
+    │   ├── _is_less_than(...)
+    │   │   └── _comparable_value(...)
+    │   ├── _is_missing_table_error(...)
+    │   ├── _latest_catalogue_behavior_profile_row(...)
+    │   │   ├── _catalogue_value(...)
+    │   │   ├── _is_missing_table_error(...)
+    │   │   ├── _row_to_dict(...)
+    │   │   └── _string_value(...)
+    │   ├── _profile_row_count(...)
+    │   │   └── _normalize_profile(...)
+    │   │       └── _normalize_profile(...) (recursive)
+    │   ├── _profile_watermark_bounds(...)
+    │   │   ├── _normalize_profile(...)
+    │   │   │   └── _normalize_profile(...) (recursive)
+    │   │   └── _string_value(...)
+    │   ├── _string_value(...)
+    │   ├── profile_dataframe(...)
+    │   │   ├── _audit_timestamp_expr(...)
+    │   │   │   └── _get_audit_timezone(...)
+    │   │   │       └── _validate_audit_timezone(...)
+    │   │   ├── _build_distribution_summaries(...)
+    │   │   │   ├── _build_categorical_distribution(...)
+    │   │   │   ├── _build_numeric_distribution(...)
+    │   │   │   └── _numeric_bin_edges(...)
+    │   │   ├── _get_audit_timezone(...)
+    │   │   │   └── _validate_audit_timezone(...)
+    │   │   ├── _get_profiled_columns(...)
+    │   │   └── _is_min_max_supported_type(...)
+    │   └── read_lakehouse_table(...)
+    │       ├── _current_database_matches(...)
+    │       ├── _get_spark(...)
+    │       ├── _get_store(...)
+    │       ├── _normalize_table_name(...)
+    │       ├── _registered_table_identifier(...)
+    │       │   ├── _normalize_table_name(...)
+    │       │   └── _quote_identifier(...)
+    │       └── _uses_registered_metadata_table(...)
+    ├── profile_dataframe(...)
+    │   ├── _audit_timestamp_expr(...)
+    │   │   └── _get_audit_timezone(...)
+    │   │       └── _validate_audit_timezone(...)
+    │   ├── _build_distribution_summaries(...)
+    │   │   ├── _build_categorical_distribution(...)
+    │   │   ├── _build_numeric_distribution(...)
+    │   │   └── _numeric_bin_edges(...)
+    │   ├── _get_audit_timezone(...)
+    │   │   └── _validate_audit_timezone(...)
+    │   ├── _get_profiled_columns(...)
+    │   └── _is_min_max_supported_type(...)
+    ├── stop_if_failed(...)
+    │   └── SchemaDriftError(...)
+    ├── validate_schema(...)
+    │   ├── _actual_schema(...)
+    │   │   └── _normalize_datatype(...)
+    │   └── _normalize_datatype(...)
+    └── write_catalogue_evidence(...)
+        ├── _build_metadata_table_key(...)
+        │   └── _stable_metadata_key(...)
+        ├── _canonical_catalogue_profile_df(...)
+        ├── _definition_name(...)
+        ├── _dq_summary_fields(...)
+        │   └── _now_iso(...)
+        │       └── _current_audit_timestamp(...)
+        │           └── _get_audit_timezone(...)
+        │               └── _validate_audit_timezone(...)
+        ├── _now_iso(...)
+        │   └── _current_audit_timestamp(...)
+        │       └── _get_audit_timezone(...)
+        │           └── _validate_audit_timezone(...)
+        ├── _runtime_audit_fields(...)
+        │   ├── _build_runtime_audit_fields(...)
+        │   │   ├── _context_get(...)
+        │   │   ├── _current_audit_timestamp(...)
+        │   │   │   └── _get_audit_timezone(...)
+        │   │   │       └── _validate_audit_timezone(...)
+        │   │   ├── _runtime_context(...)
+        │   │   │   └── _context_get(...)
+        │   │   └── _safe_str(...)
+        │   └── _now_iso(...)
+        │       └── _current_audit_timestamp(...)
+        │           └── _get_audit_timezone(...)
+        │               └── _validate_audit_timezone(...)
+        └── write_lakehouse_table(...)
+            ├── _get_store(...)
+            ├── _normalize_table_name(...)
+            ├── _registered_table_identifier(...)
+            │   ├── _normalize_table_name(...)
+            │   └── _quote_identifier(...)
+            └── _uses_registered_metadata_table(...)
+    ```
+
+??? info "Internal helpers used: 4"
+
+    This callable uses 4 internal helpers for metadata loading and other.
 
     <div class="module-table-scroll reference-input-table">
     <table class="reference-function-table">
       <thead>
         <tr>
-          <th>Helper</th>
-          <th>Role</th>
-          <th>Source</th>
+          <th>Area</th>
+          <th>Helpers</th>
+          <th>What they do</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td data-label="Helper"><code>_build_guardrail_evidence_definitions</code></td>
-          <td data-label="Role">Build catalogue evidence definitions for pipeline table guardrails.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/pipeline.py#L228-L257">src/fabricops_kit/pipeline.py</a></td>
+          <td data-label="Area">Metadata loading</td>
+          <td data-label="Helpers"><code>_build_guardrail_evidence_definitions</code>, <code>_table_key</code>, <code>_table_name</code></td>
+          <td data-label="What they do">Load and identify the metadata or table context needed by the callable.</td>
         </tr>
         <tr>
-          <td data-label="Helper"><code>_table_key</code></td>
-          <td data-label="Role">Internal helper used by the package implementation.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/pipeline.py#L216-L217">src/fabricops_kit/pipeline.py</a></td>
-        </tr>
-        <tr>
-          <td data-label="Helper"><code>_table_name</code></td>
-          <td data-label="Role">Internal helper used by the package implementation.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/pipeline.py#L220-L221">src/fabricops_kit/pipeline.py</a></td>
-        </tr>
-        <tr>
-          <td data-label="Helper"><code>_guardrail_can_continue</code></td>
-          <td data-label="Role">Internal helper used by the package implementation.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/pipeline.py#L224-L225">src/fabricops_kit/pipeline.py</a></td>
+          <td data-label="Area">Other</td>
+          <td data-label="Helpers"><code>_guardrail_can_continue</code></td>
+          <td data-label="What they do">Support lower-level implementation details that do not fit the main helper areas.</td>
         </tr>
       </tbody>
     </table>
     </div>
 
-    ??? example "View helper source code"
+    ??? example "View helper source by area"
 
-        **`def _build_guardrail_evidence_definitions(table_configs: list[Mapping[str, Any]]) -> dict[str, dict[str, Any]]`**
+        ??? example "Metadata loading helpers"
 
-        Source: [`src/fabricops_kit/pipeline.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/pipeline.py#L228-L257)
+            **`def _build_guardrail_evidence_definitions(table_configs: list[Mapping[str, Any]]) -> dict[str, dict[str, Any]]`**
 
-        ```python
-        def _build_guardrail_evidence_definitions(table_configs: list[Mapping[str, Any]]) -> dict[str, dict[str, Any]]:
-            """Build catalogue evidence definitions for pipeline table guardrails.
+            Source: [`src/fabricops_kit/pipeline.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/pipeline.py#L228-L257)
 
-            Parameters
-            ----------
-            table_configs : list of mapping
-                Source or target table configuration dictionaries. Each item must
-                include ``key`` and normally includes ``table_name``, ``stage``, and
-                optional target write metadata. DataFrame values are intentionally
-                omitted from the returned definitions.
+            ```python
+            def _build_guardrail_evidence_definitions(table_configs: list[Mapping[str, Any]]) -> dict[str, dict[str, Any]]:
+                """Build catalogue evidence definitions for pipeline table guardrails.
 
-            Returns
-            -------
-            dict[str, dict[str, Any]]
-                Definitions keyed by table key, suitable for
-                :func:`write_catalogue_evidence`. Target definitions include resolved
-                write-layer, kind, and mode fields when the stage is ``target``.
-            """
-            definitions: dict[str, dict[str, Any]] = {}
-            for table_config in table_configs:
-                table_key = _table_key(table_config)
-                definition = {key: value for key, value in table_config.items() if key != "df"}
-                definition["table_name"] = _table_name(table_config)
-                definition["stage"] = table_config.get("stage", "target")
-                if definition["stage"] == "target":
-                    definition["layer"] = table_config.get("target_layer", "unified")
-                    definition["kind"] = table_config.get("target_kind", "lakehouse")
-                    definition["mode"] = table_config.get("write_mode", "overwrite")
-                definitions[table_key] = definition
-            return definitions
-        ```
+                Parameters
+                ----------
+                table_configs : list of mapping
+                    Source or target table configuration dictionaries. Each item must
+                    include ``key`` and normally includes ``table_name``, ``stage``, and
+                    optional target write metadata. DataFrame values are intentionally
+                    omitted from the returned definitions.
 
-        **`def _table_key(table_config: Mapping[str, Any]) -> str`**
+                Returns
+                -------
+                dict[str, dict[str, Any]]
+                    Definitions keyed by table key, suitable for
+                    :func:`write_catalogue_evidence`. Target definitions include resolved
+                    write-layer, kind, and mode fields when the stage is ``target``.
+                """
+                definitions: dict[str, dict[str, Any]] = {}
+                for table_config in table_configs:
+                    table_key = _table_key(table_config)
+                    definition = {key: value for key, value in table_config.items() if key != "df"}
+                    definition["table_name"] = _table_name(table_config)
+                    definition["stage"] = table_config.get("stage", "target")
+                    if definition["stage"] == "target":
+                        definition["layer"] = table_config.get("target_layer", "unified")
+                        definition["kind"] = table_config.get("target_kind", "lakehouse")
+                        definition["mode"] = table_config.get("write_mode", "overwrite")
+                    definitions[table_key] = definition
+                return definitions
+            ```
 
-        Source: [`src/fabricops_kit/pipeline.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/pipeline.py#L216-L217)
+            **`def _table_key(table_config: Mapping[str, Any]) -> str`**
 
-        ```python
-        def _table_key(table_config: Mapping[str, Any]) -> str:
-            return str(table_config["key"])
-        ```
+            Source: [`src/fabricops_kit/pipeline.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/pipeline.py#L216-L217)
 
-        **`def _table_name(table_config: Mapping[str, Any]) -> str`**
+            ```python
+            def _table_key(table_config: Mapping[str, Any]) -> str:
+                return str(table_config["key"])
+            ```
 
-        Source: [`src/fabricops_kit/pipeline.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/pipeline.py#L220-L221)
+            **`def _table_name(table_config: Mapping[str, Any]) -> str`**
 
-        ```python
-        def _table_name(table_config: Mapping[str, Any]) -> str:
-            return str(table_config.get("table_name") or table_config.get("target_name") or table_config["key"])
-        ```
+            Source: [`src/fabricops_kit/pipeline.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/pipeline.py#L220-L221)
 
-        **`def _guardrail_can_continue(result: Mapping[str, Any] | None) -> bool`**
+            ```python
+            def _table_name(table_config: Mapping[str, Any]) -> str:
+                return str(table_config.get("table_name") or table_config.get("target_name") or table_config["key"])
+            ```
 
-        Source: [`src/fabricops_kit/pipeline.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/pipeline.py#L224-L225)
+        ??? example "Other helpers"
 
-        ```python
-        def _guardrail_can_continue(result: Mapping[str, Any] | None) -> bool:
-            return bool((result or {}).get("can_continue", True))
-        ```
+            **`def _guardrail_can_continue(result: Mapping[str, Any] | None) -> bool`**
+
+            Source: [`src/fabricops_kit/pipeline.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/pipeline.py#L224-L225)
+
+            ```python
+            def _guardrail_can_continue(result: Mapping[str, Any] | None) -> bool:
+                return bool((result or {}).get("can_continue", True))
+            ```
 
 
 <details class="reference-metadata-details">
@@ -632,7 +646,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/pipeline.py#L260-L448">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/pipeline.py#L260-L448</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/pipeline.py#L260-L448">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/pipeline.py#L260-L448</a>
 - Start line: `260`
 - End line: `448`
 - Signature:
@@ -648,162 +662,9 @@ def run_table_guardrails(table_configs: list[dict[str, Any]], *, config: Any, en
 - <a href="../prepare_pipeline_table_configs/"><code>fabricops_kit.pipeline.prepare_pipeline_table_configs</code></a>
 - <a href="../write_catalogue_evidence/"><code>fabricops_kit.pipeline.write_catalogue_evidence</code></a>
 
-### Internal implementation helpers
+### Internal implementation summary
 
-### Call flow
-
-```text
-run_table_guardrails(...)
-├── _build_guardrail_evidence_definitions(...)
-│   ├── _table_key(...)
-│   └── _table_name(...)
-├── _guardrail_can_continue(...)
-├── _table_key(...)
-├── _table_name(...)
-├── enforce_dq_rules(...)
-│   ├── _dq_failed_row_count(...)
-│   │   ├── _dq_failed_expression(...)
-│   │   │   ├── _spark_sql_helpers(...)
-│   │   │   └── _validate_dq_rules(...)
-│   │   │       └── _canonical_dq_rule_type(...)
-│   │   └── _spark_sql_helpers(...)
-│   ├── _dq_summary(...)
-│   │   ├── _current_audit_timestamp(...)
-│   │   │   └── _get_audit_timezone(...)
-│   │   │       └── _validate_audit_timezone(...)
-│   │   └── _summarize_dq_guardrail(...)
-│   ├── _dq_tagged_dataframe(...)
-│   │   ├── _dq_failed_expression(...)
-│   │   │   ├── _spark_sql_helpers(...)
-│   │   │   └── _validate_dq_rules(...)
-│   │   │       └── _canonical_dq_rule_type(...)
-│   │   └── _spark_sql_helpers(...)
-│   ├── _load_active_dq_rules(...)
-│   │   ├── _canonical_dq_rule_type(...)
-│   │   ├── _coerce_rows(...)
-│   │   ├── _latest_dq_rule_versions(...)
-│   │   │   └── _spark_sql_helpers(...)
-│   │   ├── _spark_sql_helpers(...)
-│   │   └── _validate_dq_rules(...)
-│   │       └── _canonical_dq_rule_type(...)
-│   ├── _run_dq_guardrail_checks(...)
-│   │   ├── _dq_check_status(...)
-│   │   ├── _dq_failed_expression(...)
-│   │   │   ├── _spark_sql_helpers(...)
-│   │   │   └── _validate_dq_rules(...)
-│   │   │       └── _canonical_dq_rule_type(...)
-│   │   ├── _spark_sql_helpers(...)
-│   │   └── _validate_dq_rules(...)
-│   │       └── _canonical_dq_rule_type(...)
-│   ├── _summarize_dq_guardrail(...)
-│   └── read_lakehouse_table(...)
-│       ├── _current_database_matches(...)
-│       ├── _get_spark(...)
-│       ├── _get_store(...)
-│       ├── _normalize_table_name(...)
-│       ├── _registered_table_identifier(...)
-│       │   ├── _normalize_table_name(...)
-│       │   └── _quote_identifier(...)
-│       └── _uses_registered_metadata_table(...)
-├── enforce_freshness(...)
-│   ├── _coerce_date(...)
-│   ├── _iso_date_value(...)
-│   │   └── _coerce_date(...)
-│   └── _max_column_value(...)
-├── enforce_profile_behavior(...)
-│   ├── _catalogue_value(...)
-│   ├── _guardrail_exclude_columns(...)
-│   ├── _is_greater_than(...)
-│   │   └── _comparable_value(...)
-│   ├── _is_less_than(...)
-│   │   └── _comparable_value(...)
-│   ├── _is_missing_table_error(...)
-│   ├── _latest_catalogue_behavior_profile_row(...)
-│   │   ├── _catalogue_value(...)
-│   │   ├── _is_missing_table_error(...)
-│   │   ├── _row_to_dict(...)
-│   │   └── _string_value(...)
-│   ├── _profile_row_count(...)
-│   │   └── _normalize_profile(...)
-│   │       └── _normalize_profile(...) (recursive)
-│   ├── _profile_watermark_bounds(...)
-│   │   ├── _normalize_profile(...)
-│   │   │   └── _normalize_profile(...) (recursive)
-│   │   └── _string_value(...)
-│   ├── _string_value(...)
-│   ├── profile_dataframe(...)
-│   │   ├── _audit_timestamp_expr(...)
-│   │   │   └── _get_audit_timezone(...)
-│   │   │       └── _validate_audit_timezone(...)
-│   │   ├── _build_distribution_summaries(...)
-│   │   │   ├── _build_categorical_distribution(...)
-│   │   │   ├── _build_numeric_distribution(...)
-│   │   │   └── _numeric_bin_edges(...)
-│   │   ├── _get_audit_timezone(...)
-│   │   │   └── _validate_audit_timezone(...)
-│   │   ├── _get_profiled_columns(...)
-│   │   └── _is_min_max_supported_type(...)
-│   └── read_lakehouse_table(...)
-│       ├── _current_database_matches(...)
-│       ├── _get_spark(...)
-│       ├── _get_store(...)
-│       ├── _normalize_table_name(...)
-│       ├── _registered_table_identifier(...)
-│       │   ├── _normalize_table_name(...)
-│       │   └── _quote_identifier(...)
-│       └── _uses_registered_metadata_table(...)
-├── profile_dataframe(...)
-│   ├── _audit_timestamp_expr(...)
-│   │   └── _get_audit_timezone(...)
-│   │       └── _validate_audit_timezone(...)
-│   ├── _build_distribution_summaries(...)
-│   │   ├── _build_categorical_distribution(...)
-│   │   ├── _build_numeric_distribution(...)
-│   │   └── _numeric_bin_edges(...)
-│   ├── _get_audit_timezone(...)
-│   │   └── _validate_audit_timezone(...)
-│   ├── _get_profiled_columns(...)
-│   └── _is_min_max_supported_type(...)
-├── stop_if_failed(...)
-│   └── SchemaDriftError(...)
-├── validate_schema(...)
-│   ├── _actual_schema(...)
-│   │   └── _normalize_datatype(...)
-│   └── _normalize_datatype(...)
-└── write_catalogue_evidence(...)
-    ├── _build_metadata_table_key(...)
-    │   └── _stable_metadata_key(...)
-    ├── _canonical_catalogue_profile_df(...)
-    ├── _definition_name(...)
-    ├── _dq_summary_fields(...)
-    │   └── _now_iso(...)
-    │       └── _current_audit_timestamp(...)
-    │           └── _get_audit_timezone(...)
-    │               └── _validate_audit_timezone(...)
-    ├── _now_iso(...)
-    │   └── _current_audit_timestamp(...)
-    │       └── _get_audit_timezone(...)
-    │           └── _validate_audit_timezone(...)
-    ├── _runtime_audit_fields(...)
-    │   ├── _build_runtime_audit_fields(...)
-    │   │   ├── _context_get(...)
-    │   │   ├── _current_audit_timestamp(...)
-    │   │   │   └── _get_audit_timezone(...)
-    │   │   │       └── _validate_audit_timezone(...)
-    │   │   ├── _runtime_context(...)
-    │   │   │   └── _context_get(...)
-    │   │   └── _safe_str(...)
-    │   └── _now_iso(...)
-    │       └── _current_audit_timestamp(...)
-    │           └── _get_audit_timezone(...)
-    │               └── _validate_audit_timezone(...)
-    └── write_lakehouse_table(...)
-        ├── _get_store(...)
-        ├── _normalize_table_name(...)
-        ├── _registered_table_identifier(...)
-        │   ├── _normalize_table_name(...)
-        │   └── _quote_identifier(...)
-        └── _uses_registered_metadata_table(...)
-```
+- Internal helper count: 4
+- Grouped helper summary and optional source snippets are rendered in the page-level Internal implementation summary section.
 
 </details>

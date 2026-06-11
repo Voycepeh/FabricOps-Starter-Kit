@@ -30,8 +30,6 @@ CORE_CALLABLES = {
 CORE_PAGE_SECTIONS = (
     "Purpose",
     "At a glance",
-    "Returns",
-    "Public callable source code",
 )
 CORE_AGENT_FIELDS = (
     "use_when",
@@ -75,13 +73,15 @@ def test_every_callable_page_has_ai_reference_sections() -> None:
         text = page.read_text(encoding="utf-8")
         assert "## Purpose" in text, page
         assert "## At a glance" in text, page
-        assert "## Parameters" in text, page
-        assert "## Returns" in text, page
         assert "## Used by" in text, page
         assert "## Calls" in text, page
-        assert "## Implementation details" in text, page
-        assert "## Public callable source code" in text, page
-        assert "## Maintainer internals" in text, page
+        assert "## Callable implementation" in text, page
+        assert "### Function details" in text, page
+        assert "### Parameters" in text, page
+        assert "### Returns" in text, page
+        assert "### Notes" in text, page
+        assert "### Public callable source code" in text, page
+        assert "## Internal implementation summary" in text, page
         assert "## Nested helper functions" not in text, page
         assert "## Source" not in text, page
         assert "\n## What this is for\n" not in text, page
@@ -130,25 +130,58 @@ def test_callable_pages_embed_public_first_implementation_details() -> None:
         ordered_markers = [
             "## Purpose",
             "## At a glance",
-            "## Parameters",
-            "## Returns",
             "## Used by",
             "## Calls",
-            "## Implementation details",
-            "## Public callable source code",
-            "## Maintainer internals",
+            "## Callable implementation",
+            "### Function details",
+            "### Parameters",
+            "### Returns",
+            "### Notes",
+            "### Public callable source code",
+            "## Internal implementation summary",
         ]
         positions = [text.index(marker) for marker in ordered_markers]
         assert positions == sorted(positions), page
-        assert "### Call flow" in text, page
+        assert '??? info "Call flow"' in text, page
+        assert "### Call flow" not in text, page
         assert "### Internal helpers used by this callable" not in text, page
-        assert '??? info "Nested helper functions:' in text, page
-        assert "Helper" in text and "Role" in text and "Source" in text, page
-        if '??? info "Nested helper functions: 0"' not in text:
-            assert '??? example "View helper source code"' in text, page
-        assert text.index("### Call flow") < text.index("## Public callable source code"), page
-        assert text.index("## Public callable source code") < text.index("## Maintainer internals"), page
-        assert text.index("## Maintainer internals") < text.index("<summary>AI / machine-readable metadata"), page
+        assert "Internal helpers used by this callable" not in text, page
+        assert '??? info "Nested helper functions:' not in text, page
+        assert '??? info "Internal helpers used:' in text, page
+        assert "Area" in text and "Helpers" in text and "What they do" in text, page
+        public_source_pos = text.index("### Public callable source code")
+        internal_summary_pos = text.index("## Internal implementation summary")
+        call_flow_pos = text.index('??? info "Call flow"')
+        assert public_source_pos < internal_summary_pos < call_flow_pos, page
+        if '??? info "Internal helpers used: 0"' not in text:
+            assert '??? example "View helper source by area"' in text, page
+            assert text.index('??? example "View helper source by area"') > internal_summary_pos, page
+            first_helper_code = text.index("```python", text.index('??? example "View helper source by area"'))
+            assert first_helper_code > text.index('??? example "View helper source by area"'), page
+        assert "\n### `_" not in text, page
+        assert "\n## `_" not in text, page
+        assert internal_summary_pos < text.index("<summary>AI / machine-readable metadata"), page
+
+
+def test_enforce_dq_rules_large_helper_set_is_grouped_by_area() -> None:
+    text = (REFERENCE_DIR / "callables" / "enforce_dq_rules.md").read_text(encoding="utf-8")
+
+    assert '??? info "Internal helpers used: 16"' in text
+    assert "This callable uses 16 internal helpers for" in text
+    for area in (
+        "Audit timestamp",
+        "Metadata loading",
+        "Validation",
+        "Rule parsing",
+        "Rule evaluation",
+    ):
+        assert f'<td data-label="Area">{area}</td>' in text
+        assert f'??? example "{area} helpers"' in text
+    assert "Expanded internal helper tree is available in the internal implementation summary." in text
+    assert text.index("### Public callable source code") < text.index("## Internal implementation summary")
+    assert text.index("## Internal implementation summary") < text.index('??? info "Call flow"')
+    assert text.index('??? info "Call flow"') < text.index('??? info "Internal helpers used: 16"')
+    assert text.index('??? example "View helper source by area"') < text.index('??? example "Audit timestamp helpers"')
 
 
 def test_indent_markdown_indents_multiline_items_and_blank_lines() -> None:
@@ -192,7 +225,7 @@ def test_callable_pages_include_source_section_and_github_source_link() -> None:
     assert callable_pages
     for page in callable_pages:
         text = page.read_text(encoding="utf-8")
-        assert "## Public callable source code" in text, page
+        assert "### Public callable source code" in text, page
         assert "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/" in text, page
         assert "/src/fabricops_kit/" in text, page
         assert "#L" in text, page
@@ -229,14 +262,14 @@ def test_setup_notebook_reference_uses_human_first_source_documentation() -> Non
     assert "setup_notebook on GitHub" in text
     assert "**Example:**\n\n```python\ncontext = setup_notebook" in text
     first_metadata = text.index("<summary>AI / machine-readable metadata")
-    for marker in ("## Purpose", "## At a glance", "## Parameters", "## Returns"):
+    for marker in ("## Purpose", "## At a glance", "### Parameters", "### Returns"):
         assert text.index(marker) < first_metadata
     assert "## AI / machine-readable metadata" not in text
     assert "- Starting a FabricOps notebook from 00_env_config" in text
     assert "- Validating configured environment targets before downstream helpers run" in text
     assert "- Capturing runtime metadata for later lineage, review, or handover steps" in text
-    assert "## Parameters" in text
+    assert "### Parameters" in text
     assert "Parameter" in text
     assert "Required" in text
     assert "Meaning" in text
-    assert "## Public callable source code" in text
+    assert "### Public callable source code" in text

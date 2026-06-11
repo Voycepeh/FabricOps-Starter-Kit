@@ -31,7 +31,29 @@ Raises an error when no agreement has been selected in the current session.
 
 Reads session/widget state only; it does not write metadata, tables, or files.
 
-## Parameters
+## Used by
+
+Not documented yet
+
+## Calls
+
+Not documented yet
+
+## Callable implementation
+
+### Function details
+
+- Module: `data_agreement`
+- Classification: Callable
+- Source file path: `src/fabricops_kit/data_agreement.py`
+- Source line: `1083`
+- Signature:
+
+```python
+def get_selected_agreement() -> dict[str, Any]
+```
+
+### Parameters
 
 <div class="module-table-scroll reference-input-table">
 <table class="reference-function-table">
@@ -52,30 +74,18 @@ Reads session/widget state only; it does not write metadata, tables, or files.
 </table>
 </div>
 
-## Returns
+### Returns
 
 Selected agreement dictionary for the active notebook session.
 
-## Used by
+### Notes
 
-Not documented yet
+No additional callable notes are documented.
 
-## Calls
-
-Not documented yet
-
-## Implementation details
-
-### Call flow
-
-```text
-get_selected_agreement(...)
-```
-
-## Public callable source code
+### Public callable source code
 
 - Source file path: `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/data_agreement.py#L1083-L1098">View get_selected_agreement on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/data_agreement.py#L1083-L1098">View get_selected_agreement on GitHub</a>
 
 ```python
 def get_selected_agreement() -> dict[str, Any]:
@@ -96,26 +106,32 @@ def get_selected_agreement() -> dict[str, Any]:
     return dict(_SELECTED_AGREEMENT)
 ```
 
-## Maintainer internals
+## Internal implementation summary
 
-??? info "Nested helper functions: 0"
+??? info "Call flow"
 
-    No nested helper functions were detected for `get_selected_agreement`.
+    ```text
+    get_selected_agreement(...)
+    ```
+
+??? info "Internal helpers used: 0"
+
+    This callable uses 0 internal helpers; `get_selected_agreement` does not have package-local helper descendants in the generated call graph.
 
     <div class="module-table-scroll reference-input-table">
     <table class="reference-function-table">
       <thead>
         <tr>
-          <th>Helper</th>
-          <th>Role</th>
-          <th>Source</th>
+          <th>Area</th>
+          <th>Helpers</th>
+          <th>What they do</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td data-label="Helper">—</td>
-          <td data-label="Role">No nested helper functions detected.</td>
-          <td data-label="Source">—</td>
+          <td data-label="Area">—</td>
+          <td data-label="Helpers">—</td>
+          <td data-label="What they do">No internal helpers detected.</td>
         </tr>
       </tbody>
     </table>
@@ -158,7 +174,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/data_agreement.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/data_agreement.py#L1083-L1098">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/data_agreement.py#L1083-L1098</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/data_agreement.py#L1083-L1098">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/data_agreement.py#L1083-L1098</a>
 - Start line: `1083`
 - End line: `1098`
 - Signature:
@@ -173,12 +189,9 @@ def get_selected_agreement() -> dict[str, Any]
 
 - <a href="../widget_select_agreement/"><code>fabricops_kit.data_agreement.widget_select_agreement</code></a>
 
-### Internal implementation helpers
+### Internal implementation summary
 
-### Call flow
-
-```text
-get_selected_agreement(...)
-```
+- Internal helper count: 0
+- Grouped helper summary and optional source snippets are rendered in the page-level Internal implementation summary section.
 
 </details>

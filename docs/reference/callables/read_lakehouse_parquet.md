@@ -30,7 +30,32 @@ Raises ValueError for invalid relative paths and Spark/read errors when the Parq
 
 Reads from lakehouse Files and may create a local timestamp-converted fallback for single-file Parquet precision issues; it does not write metadata tables.
 
-## Parameters
+## Used by
+
+Not documented yet
+
+## Calls
+
+- `fabricops_kit.config._get_store`
+- `fabricops_kit.fabric_input_output._convert_single_parquet_ns_to_us`
+- `fabricops_kit.fabric_input_output._get_spark`
+- `fabricops_kit.fabric_input_output._lakehouse_file_path`
+
+## Callable implementation
+
+### Function details
+
+- Module: `fabric_input_output`
+- Classification: Callable
+- Source file path: `src/fabricops_kit/fabric_input_output.py`
+- Source line: `555`
+- Signature:
+
+```python
+def read_lakehouse_parquet(config, env, target, relative_path, verbose=True, spark_session=None)
+```
+
+### Parameters
 
 <div class="module-table-scroll reference-input-table">
 <table class="reference-function-table">
@@ -76,37 +101,19 @@ Reads from lakehouse Files and may create a local timestamp-converted fallback f
 </table>
 </div>
 
-## Returns
+### Returns
 
 Spark DataFrame loaded from the original Parquet path or timestamp-converted fallback path.
 
-## Used by
+### Notes
 
-Not documented yet
+Assumes Fabric notebook runtime filesystem conventions for local fallback
+conversion paths (``/lakehouse/default/Files/...``).
 
-## Calls
-
-- `fabricops_kit.config._get_store`
-- `fabricops_kit.fabric_input_output._convert_single_parquet_ns_to_us`
-- `fabricops_kit.fabric_input_output._get_spark`
-- `fabricops_kit.fabric_input_output._lakehouse_file_path`
-
-## Implementation details
-
-### Call flow
-
-```text
-read_lakehouse_parquet(...)
-├── _convert_single_parquet_ns_to_us(...)
-├── _get_spark(...)
-├── _get_store(...)
-└── _lakehouse_file_path(...)
-```
-
-## Public callable source code
+### Public callable source code
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/fabric_input_output.py#L555-L677">View read_lakehouse_parquet on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/fabric_input_output.py#L555-L677">View read_lakehouse_parquet on GitHub</a>
 
 ```python
 def read_lakehouse_parquet(config, env, target, relative_path, verbose=True, spark_session=None):
@@ -234,211 +241,222 @@ def read_lakehouse_parquet(config, env, target, relative_path, verbose=True, spa
     raise RuntimeError("Failed to read from both original and _tsus Parquet paths.")
 ```
 
-## Maintainer internals
+## Internal implementation summary
 
-??? info "Nested helper functions: 4"
+??? info "Call flow"
 
-    These nested helpers support `read_lakehouse_parquet` by handling lower-level implementation steps; expand this section only when maintaining or debugging the package internals.
+    ```text
+    read_lakehouse_parquet(...)
+    ├── _convert_single_parquet_ns_to_us(...)
+    ├── _get_spark(...)
+    ├── _get_store(...)
+    └── _lakehouse_file_path(...)
+    ```
+
+??? info "Internal helpers used: 4"
+
+    This callable uses 4 internal helpers for audit timestamp, metadata loading, and fabric or spark access.
 
     <div class="module-table-scroll reference-input-table">
     <table class="reference-function-table">
       <thead>
         <tr>
-          <th>Helper</th>
-          <th>Role</th>
-          <th>Source</th>
+          <th>Area</th>
+          <th>Helpers</th>
+          <th>What they do</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td data-label="Helper"><code>_get_store</code></td>
-          <td data-label="Role">Resolve a configured Fabric path for an environment and target.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/config.py#L627-L667">src/fabricops_kit/config.py</a></td>
+          <td data-label="Area">Audit timestamp</td>
+          <td data-label="Helpers"><code>_convert_single_parquet_ns_to_us</code></td>
+          <td data-label="What they do">Resolve and stamp audit time consistently.</td>
         </tr>
         <tr>
-          <td data-label="Helper"><code>_convert_single_parquet_ns_to_us</code></td>
-          <td data-label="Role">Convert one Parquet file from nanosecond to microsecond timestamps.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/fabric_input_output.py#L500-L552">src/fabricops_kit/fabric_input_output.py</a></td>
+          <td data-label="Area">Metadata loading</td>
+          <td data-label="Helpers"><code>_lakehouse_file_path</code></td>
+          <td data-label="What they do">Load and identify the metadata or table context needed by the callable.</td>
         </tr>
         <tr>
-          <td data-label="Helper"><code>_get_spark</code></td>
-          <td data-label="Role">Return an explicit Spark session or the active notebook global `spark`.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/fabric_input_output.py#L125-L155">src/fabricops_kit/fabric_input_output.py</a></td>
-        </tr>
-        <tr>
-          <td data-label="Helper"><code>_lakehouse_file_path</code></td>
-          <td data-label="Role">Return an ABFSS path under a configured lakehouse Files area.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/fabric_input_output.py#L158-L168">src/fabricops_kit/fabric_input_output.py</a></td>
+          <td data-label="Area">Fabric or Spark access</td>
+          <td data-label="Helpers"><code>_get_spark</code>, <code>_get_store</code></td>
+          <td data-label="What they do">Access Fabric or Spark runtime services used by the implementation.</td>
         </tr>
       </tbody>
     </table>
     </div>
 
-    ??? example "View helper source code"
+    ??? example "View helper source by area"
 
-        **`def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any`**
+        ??? example "Audit timestamp helpers"
 
-        Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/config.py#L627-L667)
+            **`def _convert_single_parquet_ns_to_us(local_in_path, local_out_path, verbose=True)`**
 
-        ```python
-        def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any:
-            """Resolve a configured Fabric path for an environment and target.
+            Source: [`src/fabricops_kit/fabric_input_output.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/fabric_input_output.py#L500-L552)
 
-            Parameters
-            ----------
-            env : str
-                Environment key such as ``Sandbox``, ``DE``, or ``Prod``.
-            target : str
-                Target key such as ``Source``, ``Unified``, ``Product``, or ``Warehouse``.
-            config : FrameworkConfig | PathConfig | None
-                Configuration that contains environment-to-target path mappings.
+            ```python
+            def _convert_single_parquet_ns_to_us(local_in_path, local_out_path, verbose=True):
+                """Convert one Parquet file from nanosecond to microsecond timestamps.
 
-            Returns
-            -------
-            Any
-                FabricStore object with ``workspace_id``, ``house_id``, ``house_name``, and ``root``.
+                Spark can fail to read some Parquet files that contain nanosecond timestamp
+                precision. This helper reads one local Parquet file with PyArrow, rewrites
+                it with microsecond timestamp precision, and saves it to a fallback path.
 
-            Raises
-            ------
-            ValueError
-                If config is missing, or if the environment/target mapping does not exist.
+                This is an internal helper used by `read_lakehouse_parquet`.
 
-            Examples
-            --------
-            >>> get_path("Sandbox", "Source", config=CONFIG)
-            Housepath(...)
-            """
-            if config is None:
-                raise ValueError("No Fabric config was provided. Pass a FrameworkConfig or PathConfig instance.")
-            paths = config.path_config.paths if isinstance(config, FrameworkConfig) else config.paths
-            if env not in paths:
-                available_envs = ", ".join(sorted(paths.keys())) or "<none>"
-                raise ValueError(
-                    f"Environment '{env}' was not found in Fabric config. Available environments: {available_envs}."
-                )
-            if target not in paths[env]:
-                available_targets = ", ".join(sorted(paths[env].keys())) or "<none>"
-                raise ValueError(
-                    f"Target '{target}' was not found under environment '{env}'. Available targets: {available_targets}."
-                )
-            return paths[env][target]
-        ```
+                Parameters
+                ----------
+                local_in_path : str
+                    Local input path to the original Parquet file.
+                local_out_path : str
+                    Local output path for the converted Parquet file.
+                verbose : bool, default True
+                    Whether to print conversion progress.
 
-        **`def _convert_single_parquet_ns_to_us(local_in_path, local_out_path, verbose=True)`**
+                Returns
+                -------
+                None
+                    The converted Parquet file is written to `local_out_path`.
 
-        Source: [`src/fabricops_kit/fabric_input_output.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/fabric_input_output.py#L500-L552)
+                Examples
+                --------
+                >>> _convert_single_parquet_ns_to_us(
+                ...     "/lakehouse/default/Files/raw/orders.parquet",
+                ...     "/lakehouse/default/Files/raw_tsus/orders.parquet",
+                ... )
+                """
+                import pyarrow as pa
+                import pyarrow.parquet as pq
 
-        ```python
-        def _convert_single_parquet_ns_to_us(local_in_path, local_out_path, verbose=True):
-            """Convert one Parquet file from nanosecond to microsecond timestamps.
+                try:
+                    if verbose:
+                        print(f"Reading with pyarrow: {local_in_path}")
+                        print(f"Writing us timestamps to: {local_out_path}")
 
-            Spark can fail to read some Parquet files that contain nanosecond timestamp
-            precision. This helper reads one local Parquet file with PyArrow, rewrites
-            it with microsecond timestamp precision, and saves it to a fallback path.
+                    pdf = pd.read_parquet(local_in_path, engine="pyarrow")
+                    table = pa.Table.from_pandas(pdf, preserve_index=False)
 
-            This is an internal helper used by `read_lakehouse_parquet`.
+                    pq.write_table(
+                        table,
+                        local_out_path,
+                        coerce_timestamps="us",
+                        allow_truncated_timestamps=True,
+                    )
 
-            Parameters
-            ----------
-            local_in_path : str
-                Local input path to the original Parquet file.
-            local_out_path : str
-                Local output path for the converted Parquet file.
-            verbose : bool, default True
-                Whether to print conversion progress.
+                    if verbose:
+                        print(f"done: {local_out_path}")
 
-            Returns
-            -------
-            None
-                The converted Parquet file is written to `local_out_path`.
+                except Exception as exc:
+                    print(f"FAILED converting ns to us for file {local_in_path}: {exc}")
+            ```
 
-            Examples
-            --------
-            >>> _convert_single_parquet_ns_to_us(
-            ...     "/lakehouse/default/Files/raw/orders.parquet",
-            ...     "/lakehouse/default/Files/raw_tsus/orders.parquet",
-            ... )
-            """
-            import pyarrow as pa
-            import pyarrow.parquet as pq
+        ??? example "Metadata loading helpers"
 
-            try:
-                if verbose:
-                    print(f"Reading with pyarrow: {local_in_path}")
-                    print(f"Writing us timestamps to: {local_out_path}")
+            **`def _lakehouse_file_path(store, env: str, target: str, relative_path: str) -> str`**
 
-                pdf = pd.read_parquet(local_in_path, engine="pyarrow")
-                table = pa.Table.from_pandas(pdf, preserve_index=False)
+            Source: [`src/fabricops_kit/fabric_input_output.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/fabric_input_output.py#L158-L168)
 
-                pq.write_table(
-                    table,
-                    local_out_path,
-                    coerce_timestamps="us",
-                    allow_truncated_timestamps=True,
-                )
+            ```python
+            def _lakehouse_file_path(store, env: str, target: str, relative_path: str) -> str:
+                """Return an ABFSS path under a configured lakehouse Files area."""
+                if store.kind != "lakehouse":
+                    raise ValueError(f"Target '{env}/{target}' is not a lakehouse store.")
+                if not isinstance(relative_path, str) or not relative_path.strip():
+                    raise ValueError("relative_path must be a non-empty string.")
 
-                if verbose:
-                    print(f"done: {local_out_path}")
+                normalized_relative_path = relative_path.strip().lstrip("/")
+                if normalized_relative_path.startswith("Files/"):
+                    normalized_relative_path = normalized_relative_path[len("Files/") :]
+                return f"{store.root.rstrip('/')}/Files/{normalized_relative_path}"
+            ```
 
-            except Exception as exc:
-                print(f"FAILED converting ns to us for file {local_in_path}: {exc}")
-        ```
+        ??? example "Fabric or Spark access helpers"
 
-        **`def _get_spark(spark_session=None)`**
+            **`def _get_spark(spark_session=None)`**
 
-        Source: [`src/fabricops_kit/fabric_input_output.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/fabric_input_output.py#L125-L155)
+            Source: [`src/fabricops_kit/fabric_input_output.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/fabric_input_output.py#L125-L155)
 
-        ```python
-        def _get_spark(spark_session=None):
-            """Return an explicit Spark session or the active notebook global `spark`.
+            ```python
+            def _get_spark(spark_session=None):
+                """Return an explicit Spark session or the active notebook global `spark`.
 
-            Most Fabric notebooks already expose a global `spark` object. Tests and
-            local scripts can pass `spark_session` explicitly to avoid relying on the
-            notebook runtime.
+                Most Fabric notebooks already expose a global `spark` object. Tests and
+                local scripts can pass `spark_session` explicitly to avoid relying on the
+                notebook runtime.
 
-            Parameters
-            ----------
-            spark_session : object, optional
-                Spark session to use instead of the notebook global `spark`.
+                Parameters
+                ----------
+                spark_session : object, optional
+                    Spark session to use instead of the notebook global `spark`.
 
-            Returns
-            -------
-            object
-                Spark session object.
+                Returns
+                -------
+                object
+                    Spark session object.
 
-            Raises
-            ------
-            RuntimeError
-                If no Spark session is passed and no global `spark` object exists.
-            """
-            if spark_session is not None:
-                return spark_session
-            try:
-                return globals()["spark"]
-            except KeyError as exc:
-                raise RuntimeError(
-                    "Spark session was not provided and global 'spark' was not found. "
-                    "Run this inside Fabric/Spark or pass spark_session explicitly."
-                ) from exc
-        ```
+                Raises
+                ------
+                RuntimeError
+                    If no Spark session is passed and no global `spark` object exists.
+                """
+                if spark_session is not None:
+                    return spark_session
+                try:
+                    return globals()["spark"]
+                except KeyError as exc:
+                    raise RuntimeError(
+                        "Spark session was not provided and global 'spark' was not found. "
+                        "Run this inside Fabric/Spark or pass spark_session explicitly."
+                    ) from exc
+            ```
 
-        **`def _lakehouse_file_path(store, env: str, target: str, relative_path: str) -> str`**
+            **`def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any`**
 
-        Source: [`src/fabricops_kit/fabric_input_output.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/fabric_input_output.py#L158-L168)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/config.py#L627-L667)
 
-        ```python
-        def _lakehouse_file_path(store, env: str, target: str, relative_path: str) -> str:
-            """Return an ABFSS path under a configured lakehouse Files area."""
-            if store.kind != "lakehouse":
-                raise ValueError(f"Target '{env}/{target}' is not a lakehouse store.")
-            if not isinstance(relative_path, str) or not relative_path.strip():
-                raise ValueError("relative_path must be a non-empty string.")
+            ```python
+            def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any:
+                """Resolve a configured Fabric path for an environment and target.
 
-            normalized_relative_path = relative_path.strip().lstrip("/")
-            if normalized_relative_path.startswith("Files/"):
-                normalized_relative_path = normalized_relative_path[len("Files/") :]
-            return f"{store.root.rstrip('/')}/Files/{normalized_relative_path}"
-        ```
+                Parameters
+                ----------
+                env : str
+                    Environment key such as ``Sandbox``, ``DE``, or ``Prod``.
+                target : str
+                    Target key such as ``Source``, ``Unified``, ``Product``, or ``Warehouse``.
+                config : FrameworkConfig | PathConfig | None
+                    Configuration that contains environment-to-target path mappings.
+
+                Returns
+                -------
+                Any
+                    FabricStore object with ``workspace_id``, ``house_id``, ``house_name``, and ``root``.
+
+                Raises
+                ------
+                ValueError
+                    If config is missing, or if the environment/target mapping does not exist.
+
+                Examples
+                --------
+                >>> get_path("Sandbox", "Source", config=CONFIG)
+                Housepath(...)
+                """
+                if config is None:
+                    raise ValueError("No Fabric config was provided. Pass a FrameworkConfig or PathConfig instance.")
+                paths = config.path_config.paths if isinstance(config, FrameworkConfig) else config.paths
+                if env not in paths:
+                    available_envs = ", ".join(sorted(paths.keys())) or "<none>"
+                    raise ValueError(
+                        f"Environment '{env}' was not found in Fabric config. Available environments: {available_envs}."
+                    )
+                if target not in paths[env]:
+                    available_targets = ", ".join(sorted(paths[env].keys())) or "<none>"
+                    raise ValueError(
+                        f"Target '{target}' was not found under environment '{env}'. Available targets: {available_targets}."
+                    )
+                return paths[env][target]
+            ```
 
 
 <details class="reference-metadata-details">
@@ -481,7 +499,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/fabric_input_output.py#L555-L677">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/fabric_input_output.py#L555-L677</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/fabric_input_output.py#L555-L677">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/fabric_input_output.py#L555-L677</a>
 - Start line: `555`
 - End line: `677`
 - Signature:
@@ -498,16 +516,9 @@ def read_lakehouse_parquet(config, env, target, relative_path, verbose=True, spa
 - <a href="../read_lakehouse_excel/"><code>fabricops_kit.fabric_input_output.read_lakehouse_excel</code></a>
 - <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a>
 
-### Internal implementation helpers
+### Internal implementation summary
 
-### Call flow
-
-```text
-read_lakehouse_parquet(...)
-├── _convert_single_parquet_ns_to_us(...)
-├── _get_spark(...)
-├── _get_store(...)
-└── _lakehouse_file_path(...)
-```
+- Internal helper count: 4
+- Grouped helper summary and optional source snippets are rendered in the page-level Internal implementation summary section.
 
 </details>
