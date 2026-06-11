@@ -162,9 +162,10 @@ enforce_profile_behavior(...)
 │   │   ├── _build_categorical_distribution(...)
 │   │   ├── _build_numeric_distribution(...)
 │   │   └── _numeric_bin_edges(...)
+│   ├── _get_audit_timezone(...)
+│   │   └── _validate_audit_timezone(...)
 │   ├── _get_profiled_columns(...)
-│   ├── _is_min_max_supported_type(...)
-│   └── _validate_audit_timezone(...)
+│   └── _is_min_max_supported_type(...)
 └── read_lakehouse_table(...)
     ├── _current_database_matches(...)
     ├── _get_spark(...)
@@ -187,7 +188,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/guardrails.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L467-L478">View `_catalogue_value` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/guardrails.py#L467-L478">View `_catalogue_value` on GitHub</a>
 
 **Code:**
 
@@ -223,7 +224,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/guardrails.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L282-L286">View `_guardrail_exclude_columns` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/guardrails.py#L282-L286">View `_guardrail_exclude_columns` on GitHub</a>
 
 **Code:**
 
@@ -252,7 +253,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/guardrails.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L507-L514">View `_is_greater_than` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/guardrails.py#L507-L514">View `_is_greater_than` on GitHub</a>
 
 **Code:**
 
@@ -284,7 +285,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/guardrails.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L485-L494">View `_comparable_value` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/guardrails.py#L485-L494">View `_comparable_value` on GitHub</a>
 
 **Code:**
 
@@ -318,7 +319,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/guardrails.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L497-L504">View `_is_less_than` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/guardrails.py#L497-L504">View `_is_less_than` on GitHub</a>
 
 **Code:**
 
@@ -350,7 +351,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/guardrails.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L834-L837">View `_is_missing_table_error` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/guardrails.py#L834-L837">View `_is_missing_table_error` on GitHub</a>
 
 **Code:**
 
@@ -378,7 +379,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/guardrails.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L527-L636">View `_latest_catalogue_behavior_profile_row` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/guardrails.py#L527-L636">View `_latest_catalogue_behavior_profile_row` on GitHub</a>
 
 **Code:**
 
@@ -512,7 +513,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/guardrails.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L272-L279">View `_row_to_dict` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/guardrails.py#L272-L279">View `_row_to_dict` on GitHub</a>
 
 **Code:**
 
@@ -544,7 +545,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/guardrails.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L481-L482">View `_string_value` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/guardrails.py#L481-L482">View `_string_value` on GitHub</a>
 
 **Code:**
 
@@ -570,7 +571,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/guardrails.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L294-L306">View `_profile_row_count` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/guardrails.py#L294-L306">View `_profile_row_count` on GitHub</a>
 
 **Code:**
 
@@ -607,7 +608,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/guardrails.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L201-L269">View `_normalize_profile` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/guardrails.py#L201-L269">View `_normalize_profile` on GitHub</a>
 
 **Code:**
 
@@ -700,7 +701,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/guardrails.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L517-L524">View `_profile_watermark_bounds` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/guardrails.py#L517-L524">View `_profile_watermark_bounds` on GitHub</a>
 
 **Code:**
 
@@ -729,7 +730,7 @@ You want to change the implementation behavior summarized above for `enforce_pro
 ## Source
 
 - Source file path: `src/fabricops_kit/guardrails.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L639-L832">View enforce_profile_behavior on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/guardrails.py#L639-L832">View enforce_profile_behavior on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -816,7 +817,7 @@ def enforce_profile_behavior(
     if current_profile_df is None:
         from fabricops_kit.data_profiling import profile_dataframe
 
-        current_profile_df = profile_dataframe(dataframe, table_name, exclude_columns=effective_exclude_columns)
+        current_profile_df = profile_dataframe(dataframe, table_name, exclude_columns=effective_exclude_columns, config=config)
     current_row_count = _profile_row_count(current_profile_df)
     current_min, current_max = _profile_watermark_bounds(current_profile_df, watermark_column)
 
@@ -980,7 +981,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/guardrails.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L639-L832">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L639-L832</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/guardrails.py#L639-L832">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/guardrails.py#L639-L832</a>
 - Start line: `639`
 - End line: `832`
 - Signature:
@@ -1032,9 +1033,10 @@ enforce_profile_behavior(...)
 │   │   ├── _build_categorical_distribution(...)
 │   │   ├── _build_numeric_distribution(...)
 │   │   └── _numeric_bin_edges(...)
+│   ├── _get_audit_timezone(...)
+│   │   └── _validate_audit_timezone(...)
 │   ├── _get_profiled_columns(...)
-│   ├── _is_min_max_supported_type(...)
-│   └── _validate_audit_timezone(...)
+│   └── _is_min_max_supported_type(...)
 └── read_lakehouse_table(...)
     ├── _current_database_matches(...)
     ├── _get_spark(...)
@@ -1057,7 +1059,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/guardrails.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L467-L478">View `_catalogue_value` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/guardrails.py#L467-L478">View `_catalogue_value` on GitHub</a>
 
 **Code:**
 
@@ -1093,7 +1095,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/guardrails.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L282-L286">View `_guardrail_exclude_columns` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/guardrails.py#L282-L286">View `_guardrail_exclude_columns` on GitHub</a>
 
 **Code:**
 
@@ -1122,7 +1124,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/guardrails.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L507-L514">View `_is_greater_than` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/guardrails.py#L507-L514">View `_is_greater_than` on GitHub</a>
 
 **Code:**
 
@@ -1154,7 +1156,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/guardrails.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L485-L494">View `_comparable_value` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/guardrails.py#L485-L494">View `_comparable_value` on GitHub</a>
 
 **Code:**
 
@@ -1188,7 +1190,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/guardrails.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L497-L504">View `_is_less_than` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/guardrails.py#L497-L504">View `_is_less_than` on GitHub</a>
 
 **Code:**
 
@@ -1220,7 +1222,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/guardrails.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L834-L837">View `_is_missing_table_error` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/guardrails.py#L834-L837">View `_is_missing_table_error` on GitHub</a>
 
 **Code:**
 
@@ -1248,7 +1250,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/guardrails.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L527-L636">View `_latest_catalogue_behavior_profile_row` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/guardrails.py#L527-L636">View `_latest_catalogue_behavior_profile_row` on GitHub</a>
 
 **Code:**
 
@@ -1382,7 +1384,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/guardrails.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L272-L279">View `_row_to_dict` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/guardrails.py#L272-L279">View `_row_to_dict` on GitHub</a>
 
 **Code:**
 
@@ -1414,7 +1416,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/guardrails.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L481-L482">View `_string_value` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/guardrails.py#L481-L482">View `_string_value` on GitHub</a>
 
 **Code:**
 
@@ -1440,7 +1442,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/guardrails.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L294-L306">View `_profile_row_count` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/guardrails.py#L294-L306">View `_profile_row_count` on GitHub</a>
 
 **Code:**
 
@@ -1477,7 +1479,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/guardrails.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L201-L269">View `_normalize_profile` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/guardrails.py#L201-L269">View `_normalize_profile` on GitHub</a>
 
 **Code:**
 
@@ -1570,7 +1572,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/guardrails.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L517-L524">View `_profile_watermark_bounds` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/guardrails.py#L517-L524">View `_profile_watermark_bounds` on GitHub</a>
 
 **Code:**
 

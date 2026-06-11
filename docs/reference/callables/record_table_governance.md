@@ -274,7 +274,7 @@ Build append-only approved sensitivity and PII classification records.
 **Source:**
 
 - `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L503-L524">View `_build_classification_records` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L503-L524">View `_build_classification_records` on GitHub</a>
 
 **Code:**
 
@@ -320,7 +320,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L88-L100">View `_approved_column_identity` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L88-L100">View `_approved_column_identity` on GitHub</a>
 
 **Code:**
 
@@ -357,7 +357,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L70-L71">View `_value` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L70-L71">View `_value` on GitHub</a>
 
 **Code:**
 
@@ -383,7 +383,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/metadata.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L153-L154">View `_build_metadata_column_key` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/metadata.py#L153-L154">View `_build_metadata_column_key` on GitHub</a>
 
 **Code:**
 
@@ -409,7 +409,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/metadata.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L144-L146">View `_stable_metadata_key` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/metadata.py#L144-L146">View `_stable_metadata_key` on GitHub</a>
 
 **Code:**
 
@@ -436,7 +436,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/metadata.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L149-L150">View `_build_metadata_table_key` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/metadata.py#L149-L150">View `_build_metadata_table_key` on GitHub</a>
 
 **Code:**
 
@@ -462,7 +462,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L82-L85">View `_approved_review_context` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L82-L85">View `_approved_review_context` on GitHub</a>
 
 **Code:**
 
@@ -490,7 +490,7 @@ Build reusable framework-managed audit fields for metadata-table rows.
 **Source:**
 
 - `src/fabricops_kit/metadata.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L219-L289">View `_build_runtime_audit_fields` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/metadata.py#L219-L289">View `_build_runtime_audit_fields` on GitHub</a>
 
 **Code:**
 
@@ -585,7 +585,7 @@ Return the current audit timestamp in the configured audit timezone.
 **Source:**
 
 - `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L69-L75">View `_current_audit_timestamp` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L69-L75">View `_current_audit_timestamp` on GitHub</a>
 
 **Code:**
 
@@ -616,7 +616,7 @@ Resolve the configured FabricOps audit timezone, defaulting to UTC.
 **Source:**
 
 - `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L61-L66">View `_get_audit_timezone` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L61-L66">View `_get_audit_timezone` on GitHub</a>
 
 **Code:**
 
@@ -646,7 +646,7 @@ Return a valid IANA audit timezone name.
 **Source:**
 
 - `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L27-L58">View `_validate_audit_timezone` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L27-L58">View `_validate_audit_timezone` on GitHub</a>
 
 **Code:**
 
@@ -702,7 +702,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/metadata.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L173-L185">View `_context_get` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/metadata.py#L173-L185">View `_context_get` on GitHub</a>
 
 **Code:**
 
@@ -739,7 +739,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/metadata.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L192-L216">View `_runtime_context` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/metadata.py#L192-L216">View `_runtime_context` on GitHub</a>
 
 **Code:**
 
@@ -788,7 +788,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/metadata.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L188-L189">View `_safe_str` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/metadata.py#L188-L189">View `_safe_str` on GitHub</a>
 
 **Code:**
 
@@ -814,7 +814,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/metadata.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L133-L134">View `_now_utc_iso` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/metadata.py#L133-L134">View `_now_utc_iso` on GitHub</a>
 
 **Code:**
 
@@ -840,7 +840,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/metadata.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L137-L141">View `_resolve_action_by` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/metadata.py#L137-L141">View `_resolve_action_by` on GitHub</a>
 
 **Code:**
 
@@ -869,7 +869,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L526-L531">View `_json` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L526-L531">View `_json` on GitHub</a>
 
 **Code:**
 
@@ -899,7 +899,7 @@ Build append-only approved business-context records from explicit reviews.
 **Source:**
 
 - `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L409-L422">View `_build_column_context_records` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L409-L422">View `_build_column_context_records` on GitHub</a>
 
 **Code:**
 
@@ -937,7 +937,7 @@ Build append-only approved DQ-rule records without enforcing them.
 **Source:**
 
 - `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L450-L501">View `_build_dq_rule_records` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L450-L501">View `_build_dq_rule_records` on GitHub</a>
 
 **Code:**
 
@@ -1013,7 +1013,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L78-L79">View `_canonical_dq_rule_type` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L78-L79">View `_canonical_dq_rule_type` on GitHub</a>
 
 **Code:**
 
@@ -1039,7 +1039,7 @@ Return rule parameters stored inside ``rule_parameters_json``.
 **Source:**
 
 - `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L425-L447">View `_dq_rule_parameter_payload` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L425-L447">View `_dq_rule_parameter_payload` on GitHub</a>
 
 **Code:**
 
@@ -1086,7 +1086,7 @@ Validate canonical DQ rules before loading or enforcement.
 **Source:**
 
 - `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L1183-L1256">View `_validate_dq_rules` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L1183-L1256">View `_validate_dq_rules` on GitHub</a>
 
 **Code:**
 
@@ -1184,7 +1184,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/metadata.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L157-L158">View `_build_dq_rule_key` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/metadata.py#L157-L158">View `_build_dq_rule_key` on GitHub</a>
 
 **Code:**
 
@@ -1210,7 +1210,7 @@ Review persisted v1 evidence and write a governance outcome row.
 **Source:**
 
 - `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L867-L1013">View `_review_governance_evidence` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L867-L1013">View `_review_governance_evidence` on GitHub</a>
 
 **Code:**
 
@@ -1381,7 +1381,7 @@ Return the latest row using lexicographic string timestamps/ids.
 **Source:**
 
 - `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L848-L852">View `_latest_row` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L848-L852">View `_latest_row` on GitHub</a>
 
 **Code:**
 
@@ -1410,7 +1410,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L863-L864">View `_read_metadata_rows` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L863-L864">View `_read_metadata_rows` on GitHub</a>
 
 **Code:**
 
@@ -1436,7 +1436,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L62-L67">View `_coerce_rows` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L62-L67">View `_coerce_rows` on GitHub</a>
 
 **Code:**
 
@@ -1466,7 +1466,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L855-L856">View `_status_is_failed` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L855-L856">View `_status_is_failed` on GitHub</a>
 
 **Code:**
 
@@ -1492,7 +1492,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L859-L860">View `_status_is_warning` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L859-L860">View `_status_is_warning` on GitHub</a>
 
 **Code:**
 
@@ -1515,7 +1515,7 @@ You want to change the implementation behavior summarized above for `record_tabl
 ## Source
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L1015-L1117">View record_table_governance on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L1015-L1117">View record_table_governance on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -1669,7 +1669,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L1015-L1117">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L1015-L1117</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L1015-L1117">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L1015-L1117</a>
 - Start line: `1015`
 - End line: `1117`
 - Signature:
@@ -1854,7 +1854,7 @@ Build append-only approved sensitivity and PII classification records.
 **Source:**
 
 - `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L503-L524">View `_build_classification_records` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L503-L524">View `_build_classification_records` on GitHub</a>
 
 **Code:**
 
@@ -1900,7 +1900,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L88-L100">View `_approved_column_identity` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L88-L100">View `_approved_column_identity` on GitHub</a>
 
 **Code:**
 
@@ -1937,7 +1937,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L70-L71">View `_value` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L70-L71">View `_value` on GitHub</a>
 
 **Code:**
 
@@ -1963,7 +1963,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/metadata.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L153-L154">View `_build_metadata_column_key` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/metadata.py#L153-L154">View `_build_metadata_column_key` on GitHub</a>
 
 **Code:**
 
@@ -1989,7 +1989,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/metadata.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L144-L146">View `_stable_metadata_key` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/metadata.py#L144-L146">View `_stable_metadata_key` on GitHub</a>
 
 **Code:**
 
@@ -2016,7 +2016,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/metadata.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L149-L150">View `_build_metadata_table_key` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/metadata.py#L149-L150">View `_build_metadata_table_key` on GitHub</a>
 
 **Code:**
 
@@ -2042,7 +2042,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L82-L85">View `_approved_review_context` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L82-L85">View `_approved_review_context` on GitHub</a>
 
 **Code:**
 
@@ -2070,7 +2070,7 @@ Build reusable framework-managed audit fields for metadata-table rows.
 **Source:**
 
 - `src/fabricops_kit/metadata.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L219-L289">View `_build_runtime_audit_fields` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/metadata.py#L219-L289">View `_build_runtime_audit_fields` on GitHub</a>
 
 **Code:**
 
@@ -2165,7 +2165,7 @@ Return the current audit timestamp in the configured audit timezone.
 **Source:**
 
 - `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L69-L75">View `_current_audit_timestamp` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L69-L75">View `_current_audit_timestamp` on GitHub</a>
 
 **Code:**
 
@@ -2196,7 +2196,7 @@ Resolve the configured FabricOps audit timezone, defaulting to UTC.
 **Source:**
 
 - `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L61-L66">View `_get_audit_timezone` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L61-L66">View `_get_audit_timezone` on GitHub</a>
 
 **Code:**
 
@@ -2226,7 +2226,7 @@ Return a valid IANA audit timezone name.
 **Source:**
 
 - `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L27-L58">View `_validate_audit_timezone` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L27-L58">View `_validate_audit_timezone` on GitHub</a>
 
 **Code:**
 
@@ -2282,7 +2282,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/metadata.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L173-L185">View `_context_get` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/metadata.py#L173-L185">View `_context_get` on GitHub</a>
 
 **Code:**
 
@@ -2319,7 +2319,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/metadata.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L192-L216">View `_runtime_context` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/metadata.py#L192-L216">View `_runtime_context` on GitHub</a>
 
 **Code:**
 
@@ -2368,7 +2368,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/metadata.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L188-L189">View `_safe_str` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/metadata.py#L188-L189">View `_safe_str` on GitHub</a>
 
 **Code:**
 
@@ -2394,7 +2394,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/metadata.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L133-L134">View `_now_utc_iso` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/metadata.py#L133-L134">View `_now_utc_iso` on GitHub</a>
 
 **Code:**
 
@@ -2420,7 +2420,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/metadata.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L137-L141">View `_resolve_action_by` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/metadata.py#L137-L141">View `_resolve_action_by` on GitHub</a>
 
 **Code:**
 
@@ -2449,7 +2449,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L526-L531">View `_json` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L526-L531">View `_json` on GitHub</a>
 
 **Code:**
 
@@ -2479,7 +2479,7 @@ Build append-only approved business-context records from explicit reviews.
 **Source:**
 
 - `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L409-L422">View `_build_column_context_records` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L409-L422">View `_build_column_context_records` on GitHub</a>
 
 **Code:**
 
@@ -2517,7 +2517,7 @@ Build append-only approved DQ-rule records without enforcing them.
 **Source:**
 
 - `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L450-L501">View `_build_dq_rule_records` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L450-L501">View `_build_dq_rule_records` on GitHub</a>
 
 **Code:**
 
@@ -2593,7 +2593,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L78-L79">View `_canonical_dq_rule_type` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L78-L79">View `_canonical_dq_rule_type` on GitHub</a>
 
 **Code:**
 
@@ -2619,7 +2619,7 @@ Return rule parameters stored inside ``rule_parameters_json``.
 **Source:**
 
 - `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L425-L447">View `_dq_rule_parameter_payload` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L425-L447">View `_dq_rule_parameter_payload` on GitHub</a>
 
 **Code:**
 
@@ -2666,7 +2666,7 @@ Validate canonical DQ rules before loading or enforcement.
 **Source:**
 
 - `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L1183-L1256">View `_validate_dq_rules` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L1183-L1256">View `_validate_dq_rules` on GitHub</a>
 
 **Code:**
 
@@ -2764,7 +2764,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/metadata.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L157-L158">View `_build_dq_rule_key` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/metadata.py#L157-L158">View `_build_dq_rule_key` on GitHub</a>
 
 **Code:**
 
@@ -2790,7 +2790,7 @@ Review persisted v1 evidence and write a governance outcome row.
 **Source:**
 
 - `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L867-L1013">View `_review_governance_evidence` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L867-L1013">View `_review_governance_evidence` on GitHub</a>
 
 **Code:**
 
@@ -2961,7 +2961,7 @@ Return the latest row using lexicographic string timestamps/ids.
 **Source:**
 
 - `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L848-L852">View `_latest_row` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L848-L852">View `_latest_row` on GitHub</a>
 
 **Code:**
 
@@ -2990,7 +2990,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L863-L864">View `_read_metadata_rows` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L863-L864">View `_read_metadata_rows` on GitHub</a>
 
 **Code:**
 
@@ -3016,7 +3016,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L62-L67">View `_coerce_rows` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L62-L67">View `_coerce_rows` on GitHub</a>
 
 **Code:**
 
@@ -3046,7 +3046,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L855-L856">View `_status_is_failed` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L855-L856">View `_status_is_failed` on GitHub</a>
 
 **Code:**
 
@@ -3072,7 +3072,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L859-L860">View `_status_is_warning` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L859-L860">View `_status_is_warning` on GitHub</a>
 
 **Code:**
 

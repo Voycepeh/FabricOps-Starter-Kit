@@ -336,7 +336,8 @@ def run_table_guardrails(
             exclude_columns=table_config.get("exclude_columns"),
             include_distributions=True,
             distribution_columns=table_config.get("distribution_columns"),
-            run_timestamp_timezone=table_config.get("run_timestamp_timezone") or _get_audit_timezone(config),
+            config=config,
+            run_timestamp_timezone=table_config.get("run_timestamp_timezone"),
         )
 
         schema_results[table_key] = validate_schema(

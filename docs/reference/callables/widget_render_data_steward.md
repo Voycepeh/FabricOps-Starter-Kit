@@ -217,7 +217,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L1130-L1338">View `_render_maintenance_widget` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L1130-L1338">View `_render_maintenance_widget` on GitHub</a>
 
 **Code:**
 
@@ -450,7 +450,7 @@ Return read-only agreement version context for the notebook form.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L1117-L1127">View `_agreement_identity_text` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L1117-L1127">View `_agreement_identity_text` on GitHub</a>
 
 **Code:**
 
@@ -485,7 +485,7 @@ Return the next minor contract version, defaulting to ``1.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L647-L650">View `_next_minor_version` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L647-L650">View `_next_minor_version` on GitHub</a>
 
 **Code:**
 
@@ -513,7 +513,7 @@ Parse a semantic contract version into a comparable tuple.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L638-L644">View `_parse_contract_version` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L638-L644">View `_parse_contract_version` on GitHub</a>
 
 **Code:**
 
@@ -544,7 +544,7 @@ Collect and validate configured custom-field widget values.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L362-L394">View `_collect_custom_fields` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L362-L394">View `_collect_custom_fields` on GitHub</a>
 
 **Code:**
 
@@ -601,7 +601,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L698-L701">View `_to_iso_date` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L698-L701">View `_to_iso_date` on GitHub</a>
 
 **Code:**
 
@@ -629,7 +629,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L149-L153">View `_config_value` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L149-L153">View `_config_value` on GitHub</a>
 
 **Code:**
 
@@ -658,7 +658,7 @@ Append a new agreement or a new semantic version of an existing one.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L711-L755">View `_create_or_update_data_agreement` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L711-L755">View `_create_or_update_data_agreement` on GitHub</a>
 
 **Code:**
 
@@ -727,7 +727,7 @@ Return user-facing agreement values used to detect business changes.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L704-L708">View `_business_agreement_snapshot` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L704-L708">View `_business_agreement_snapshot` on GitHub</a>
 
 **Code:**
 
@@ -756,7 +756,7 @@ Deserialize stored custom-field JSON for widget display.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L118-L146">View `_deserialize_custom_fields` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L118-L146">View `_deserialize_custom_fields` on GitHub</a>
 
 **Code:**
 
@@ -809,7 +809,7 @@ Serialize organization-specific intake values to deterministic JSON.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L102-L115">View `_serialize_custom_fields` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L102-L115">View `_serialize_custom_fields` on GitHub</a>
 
 **Code:**
 
@@ -847,7 +847,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L694-L695">View `_generate_agreement_id` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L694-L695">View `_generate_agreement_id` on GitHub</a>
 
 **Code:**
 
@@ -873,7 +873,7 @@ List all append-only agreement rows from the metadata lakehouse.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L672-L681">View `_list_all_data_agreement_rows` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L672-L681">View `_list_all_data_agreement_rows` on GitHub</a>
 
 **Code:**
 
@@ -907,7 +907,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L397-L402">View `_coerce_row_dicts` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L397-L402">View `_coerce_row_dicts` on GitHub</a>
 
 **Code:**
 
@@ -937,7 +937,7 @@ List latest append-only steward rows from the metadata lakehouse.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L536-L565">View `_list_data_stewards` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L536-L565">View `_list_data_stewards` on GitHub</a>
 
 **Code:**
 
@@ -991,7 +991,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L516-L526">View `_active_steward` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L516-L526">View `_active_steward` on GitHub</a>
 
 **Code:**
 
@@ -1026,7 +1026,7 @@ Normalize common notebook and metadata boolean representations.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L497-L513">View `_to_bool` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L497-L513">View `_to_bool` on GitHub</a>
 
 **Code:**
 
@@ -1067,7 +1067,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L488-L494">View `_latest_by_key` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L488-L494">View `_latest_by_key` on GitHub</a>
 
 **Code:**
 
@@ -1098,7 +1098,7 @@ Return an ISO date string or raise a clear intake validation error.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L572-L582">View `_parse_iso_date` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L572-L582">View `_parse_iso_date` on GitHub</a>
 
 **Code:**
 
@@ -1133,7 +1133,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L568-L569">View `_write_row` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L568-L569">View `_write_row` on GitHub</a>
 
 **Code:**
 
@@ -1159,7 +1159,7 @@ Build reusable framework-managed audit fields for metadata-table rows.
 **Source:**
 
 - `src/fabricops_kit/metadata.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L219-L289">View `_build_runtime_audit_fields` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/metadata.py#L219-L289">View `_build_runtime_audit_fields` on GitHub</a>
 
 **Code:**
 
@@ -1254,7 +1254,7 @@ Return the current audit timestamp in the configured audit timezone.
 **Source:**
 
 - `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L69-L75">View `_current_audit_timestamp` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L69-L75">View `_current_audit_timestamp` on GitHub</a>
 
 **Code:**
 
@@ -1285,7 +1285,7 @@ Resolve the configured FabricOps audit timezone, defaulting to UTC.
 **Source:**
 
 - `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L61-L66">View `_get_audit_timezone` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L61-L66">View `_get_audit_timezone` on GitHub</a>
 
 **Code:**
 
@@ -1315,7 +1315,7 @@ Return a valid IANA audit timezone name.
 **Source:**
 
 - `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L27-L58">View `_validate_audit_timezone` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L27-L58">View `_validate_audit_timezone` on GitHub</a>
 
 **Code:**
 
@@ -1371,7 +1371,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/metadata.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L173-L185">View `_context_get` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/metadata.py#L173-L185">View `_context_get` on GitHub</a>
 
 **Code:**
 
@@ -1408,7 +1408,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/metadata.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L192-L216">View `_runtime_context` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/metadata.py#L192-L216">View `_runtime_context` on GitHub</a>
 
 **Code:**
 
@@ -1457,7 +1457,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/metadata.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L188-L189">View `_safe_str` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/metadata.py#L188-L189">View `_safe_str` on GitHub</a>
 
 **Code:**
 
@@ -1483,7 +1483,7 @@ Append a created or updated steward assignment with runtime audit fields.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L585-L635">View `_create_or_update_data_steward` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L585-L635">View `_create_or_update_data_steward` on GitHub</a>
 
 **Code:**
 
@@ -1558,7 +1558,7 @@ Generate a stable public-safe steward identifier from business fields.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L529-L533">View `_generate_steward_id` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L529-L533">View `_generate_steward_id` on GitHub</a>
 
 **Code:**
 
@@ -1587,7 +1587,7 @@ Return configured editable columns without backend audit fields.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L156-L177">View `_get_widget_visible_fields` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L156-L177">View `_get_widget_visible_fields` on GitHub</a>
 
 **Code:**
 
@@ -1633,7 +1633,7 @@ List latest versioned agreements from the configured metadata lakehouse.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L684-L691">View `_list_data_agreements` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L684-L691">View `_list_data_agreements` on GitHub</a>
 
 **Code:**
 
@@ -1665,7 +1665,7 @@ Return the latest semantic version for each stable agreement ID.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L653-L669">View `_latest_agreement_versions` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L653-L669">View `_latest_agreement_versions` on GitHub</a>
 
 **Code:**
 
@@ -1706,7 +1706,7 @@ Create widgets for configured organization-specific fields.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L310-L359">View `_render_custom_fields` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L310-L359">View `_render_custom_fields` on GitHub</a>
 
 **Code:**
 
@@ -1780,7 +1780,7 @@ Return ipywidgets or raise an actionable optional-dependency error.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L63-L72">View `_require_ipywidgets` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L63-L72">View `_require_ipywidgets` on GitHub</a>
 
 **Code:**
 
@@ -1814,7 +1814,7 @@ Return common style and layout keyword arguments for form controls.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L180-L189">View `_widget_common` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L180-L189">View `_widget_common` on GitHub</a>
 
 **Code:**
 
@@ -1848,7 +1848,7 @@ Render a table-backed selector with search and stable-value tracking.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L198-L308">View `_render_searchable_selector` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L198-L308">View `_render_searchable_selector` on GitHub</a>
 
 **Code:**
 
@@ -1983,7 +1983,7 @@ Return display-safe HTML text for notebook context snippets.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L192-L195">View `_html_escape` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L192-L195">View `_html_escape` on GitHub</a>
 
 **Code:**
 
@@ -2011,7 +2011,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L1101-L1114">View `_standard_widget` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L1101-L1114">View `_standard_widget` on GitHub</a>
 
 **Code:**
 
@@ -2046,7 +2046,7 @@ You want to change the implementation behavior summarized above for `widget_rend
 ## Source
 
 - Source file path: `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L1498-L1515">View widget_render_data_steward on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L1498-L1515">View widget_render_data_steward on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -2117,7 +2117,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/data_agreement.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L1498-L1515">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L1498-L1515</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L1498-L1515">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L1498-L1515</a>
 - Start line: `1498`
 - End line: `1515`
 - Signature:
@@ -2284,7 +2284,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L1130-L1338">View `_render_maintenance_widget` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L1130-L1338">View `_render_maintenance_widget` on GitHub</a>
 
 **Code:**
 
@@ -2517,7 +2517,7 @@ Return read-only agreement version context for the notebook form.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L1117-L1127">View `_agreement_identity_text` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L1117-L1127">View `_agreement_identity_text` on GitHub</a>
 
 **Code:**
 
@@ -2552,7 +2552,7 @@ Return the next minor contract version, defaulting to ``1.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L647-L650">View `_next_minor_version` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L647-L650">View `_next_minor_version` on GitHub</a>
 
 **Code:**
 
@@ -2580,7 +2580,7 @@ Parse a semantic contract version into a comparable tuple.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L638-L644">View `_parse_contract_version` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L638-L644">View `_parse_contract_version` on GitHub</a>
 
 **Code:**
 
@@ -2611,7 +2611,7 @@ Collect and validate configured custom-field widget values.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L362-L394">View `_collect_custom_fields` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L362-L394">View `_collect_custom_fields` on GitHub</a>
 
 **Code:**
 
@@ -2668,7 +2668,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L698-L701">View `_to_iso_date` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L698-L701">View `_to_iso_date` on GitHub</a>
 
 **Code:**
 
@@ -2696,7 +2696,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L149-L153">View `_config_value` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L149-L153">View `_config_value` on GitHub</a>
 
 **Code:**
 
@@ -2725,7 +2725,7 @@ Append a new agreement or a new semantic version of an existing one.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L711-L755">View `_create_or_update_data_agreement` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L711-L755">View `_create_or_update_data_agreement` on GitHub</a>
 
 **Code:**
 
@@ -2794,7 +2794,7 @@ Return user-facing agreement values used to detect business changes.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L704-L708">View `_business_agreement_snapshot` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L704-L708">View `_business_agreement_snapshot` on GitHub</a>
 
 **Code:**
 
@@ -2823,7 +2823,7 @@ Deserialize stored custom-field JSON for widget display.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L118-L146">View `_deserialize_custom_fields` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L118-L146">View `_deserialize_custom_fields` on GitHub</a>
 
 **Code:**
 
@@ -2876,7 +2876,7 @@ Serialize organization-specific intake values to deterministic JSON.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L102-L115">View `_serialize_custom_fields` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L102-L115">View `_serialize_custom_fields` on GitHub</a>
 
 **Code:**
 
@@ -2914,7 +2914,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L694-L695">View `_generate_agreement_id` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L694-L695">View `_generate_agreement_id` on GitHub</a>
 
 **Code:**
 
@@ -2940,7 +2940,7 @@ List all append-only agreement rows from the metadata lakehouse.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L672-L681">View `_list_all_data_agreement_rows` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L672-L681">View `_list_all_data_agreement_rows` on GitHub</a>
 
 **Code:**
 
@@ -2974,7 +2974,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L397-L402">View `_coerce_row_dicts` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L397-L402">View `_coerce_row_dicts` on GitHub</a>
 
 **Code:**
 
@@ -3004,7 +3004,7 @@ List latest append-only steward rows from the metadata lakehouse.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L536-L565">View `_list_data_stewards` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L536-L565">View `_list_data_stewards` on GitHub</a>
 
 **Code:**
 
@@ -3058,7 +3058,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L516-L526">View `_active_steward` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L516-L526">View `_active_steward` on GitHub</a>
 
 **Code:**
 
@@ -3093,7 +3093,7 @@ Normalize common notebook and metadata boolean representations.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L497-L513">View `_to_bool` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L497-L513">View `_to_bool` on GitHub</a>
 
 **Code:**
 
@@ -3134,7 +3134,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L488-L494">View `_latest_by_key` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L488-L494">View `_latest_by_key` on GitHub</a>
 
 **Code:**
 
@@ -3165,7 +3165,7 @@ Return an ISO date string or raise a clear intake validation error.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L572-L582">View `_parse_iso_date` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L572-L582">View `_parse_iso_date` on GitHub</a>
 
 **Code:**
 
@@ -3200,7 +3200,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L568-L569">View `_write_row` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L568-L569">View `_write_row` on GitHub</a>
 
 **Code:**
 
@@ -3226,7 +3226,7 @@ Build reusable framework-managed audit fields for metadata-table rows.
 **Source:**
 
 - `src/fabricops_kit/metadata.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L219-L289">View `_build_runtime_audit_fields` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/metadata.py#L219-L289">View `_build_runtime_audit_fields` on GitHub</a>
 
 **Code:**
 
@@ -3321,7 +3321,7 @@ Return the current audit timestamp in the configured audit timezone.
 **Source:**
 
 - `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L69-L75">View `_current_audit_timestamp` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L69-L75">View `_current_audit_timestamp` on GitHub</a>
 
 **Code:**
 
@@ -3352,7 +3352,7 @@ Resolve the configured FabricOps audit timezone, defaulting to UTC.
 **Source:**
 
 - `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L61-L66">View `_get_audit_timezone` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L61-L66">View `_get_audit_timezone` on GitHub</a>
 
 **Code:**
 
@@ -3382,7 +3382,7 @@ Return a valid IANA audit timezone name.
 **Source:**
 
 - `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L27-L58">View `_validate_audit_timezone` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L27-L58">View `_validate_audit_timezone` on GitHub</a>
 
 **Code:**
 
@@ -3438,7 +3438,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/metadata.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L173-L185">View `_context_get` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/metadata.py#L173-L185">View `_context_get` on GitHub</a>
 
 **Code:**
 
@@ -3475,7 +3475,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/metadata.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L192-L216">View `_runtime_context` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/metadata.py#L192-L216">View `_runtime_context` on GitHub</a>
 
 **Code:**
 
@@ -3524,7 +3524,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/metadata.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L188-L189">View `_safe_str` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/metadata.py#L188-L189">View `_safe_str` on GitHub</a>
 
 **Code:**
 
@@ -3550,7 +3550,7 @@ Append a created or updated steward assignment with runtime audit fields.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L585-L635">View `_create_or_update_data_steward` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L585-L635">View `_create_or_update_data_steward` on GitHub</a>
 
 **Code:**
 
@@ -3625,7 +3625,7 @@ Generate a stable public-safe steward identifier from business fields.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L529-L533">View `_generate_steward_id` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L529-L533">View `_generate_steward_id` on GitHub</a>
 
 **Code:**
 
@@ -3654,7 +3654,7 @@ Return configured editable columns without backend audit fields.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L156-L177">View `_get_widget_visible_fields` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L156-L177">View `_get_widget_visible_fields` on GitHub</a>
 
 **Code:**
 
@@ -3700,7 +3700,7 @@ List latest versioned agreements from the configured metadata lakehouse.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L684-L691">View `_list_data_agreements` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L684-L691">View `_list_data_agreements` on GitHub</a>
 
 **Code:**
 
@@ -3732,7 +3732,7 @@ Return the latest semantic version for each stable agreement ID.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L653-L669">View `_latest_agreement_versions` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L653-L669">View `_latest_agreement_versions` on GitHub</a>
 
 **Code:**
 
@@ -3773,7 +3773,7 @@ Create widgets for configured organization-specific fields.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L310-L359">View `_render_custom_fields` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L310-L359">View `_render_custom_fields` on GitHub</a>
 
 **Code:**
 
@@ -3847,7 +3847,7 @@ Return ipywidgets or raise an actionable optional-dependency error.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L63-L72">View `_require_ipywidgets` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L63-L72">View `_require_ipywidgets` on GitHub</a>
 
 **Code:**
 
@@ -3881,7 +3881,7 @@ Return common style and layout keyword arguments for form controls.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L180-L189">View `_widget_common` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L180-L189">View `_widget_common` on GitHub</a>
 
 **Code:**
 
@@ -3915,7 +3915,7 @@ Render a table-backed selector with search and stable-value tracking.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L198-L308">View `_render_searchable_selector` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L198-L308">View `_render_searchable_selector` on GitHub</a>
 
 **Code:**
 
@@ -4050,7 +4050,7 @@ Return display-safe HTML text for notebook context snippets.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L192-L195">View `_html_escape` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L192-L195">View `_html_escape` on GitHub</a>
 
 **Code:**
 
@@ -4078,7 +4078,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L1101-L1114">View `_standard_widget` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L1101-L1114">View `_standard_widget` on GitHub</a>
 
 **Code:**
 

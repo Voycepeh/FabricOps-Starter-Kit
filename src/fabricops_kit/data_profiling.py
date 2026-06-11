@@ -7,7 +7,7 @@ AI-ready context for deterministic data quality rule hinting.
 
 from __future__ import annotations
 
-from .config import _audit_timestamp_expr, _validate_audit_timezone
+from .config import _audit_timestamp_expr, _get_audit_timezone
 
 import json
 import re
@@ -227,7 +227,8 @@ def profile_dataframe(
     table_name: str,
     *,
     exclude_columns=None,
-    run_timestamp_timezone="UTC",
+    run_timestamp_timezone: str | None = None,
+    config: Any = None,
     include_distributions: bool = False,
     distribution_columns: list[str] | set[str] | tuple[str, ...] | None = None,
     distribution_bin_edges: dict[str, list[float]] | None = None,
@@ -244,8 +245,12 @@ def profile_dataframe(
         Logical table name written into each profile row.
     exclude_columns : list[str] or set[str], optional
         Additional columns to skip, on top of the standard technical columns.
-    run_timestamp_timezone : str, default="UTC"
-        IANA time zone used for the ``RUN_TIMESTAMP`` evidence field.
+    run_timestamp_timezone : str, optional
+        Explicit IANA time zone used for the ``RUN_TIMESTAMP`` evidence field.
+        When omitted, ``config.audit_timezone`` is used and falls back to UTC.
+    config : Any, optional
+        Framework-like configuration carrying ``audit_timezone`` for audit
+        timestamp consistency.
     include_distributions : bool, default=False
         When true, add lightweight distribution summaries for suitable numeric
         and categorical columns. The default preserves the existing lightweight
@@ -280,7 +285,7 @@ def profile_dataframe(
     """
     from pyspark.sql import functions as F
 
-    run_timestamp_timezone = _validate_audit_timezone(run_timestamp_timezone)
+    run_timestamp_timezone = _get_audit_timezone(config=config, timezone_name=run_timestamp_timezone)
     eligible_columns = _get_profiled_columns(df, exclude_columns=exclude_columns)
     if not eligible_columns:
         raise ValueError("No eligible non-technical columns found for metadata profiling.")

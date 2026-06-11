@@ -8,12 +8,8 @@ from fabricops_kit.config import (
     AIPromptConfig,
     DataAgreementConfig,
     FrameworkConfig,
-    GovernanceConfig,
-    LineageConfig,
     NotebookRuntimeConfig,
     PathConfig,
-    QualityConfig,
-    ReviewWorkflowConfig,
 )
 from fabricops_kit.fabric_input_output import FabricStore
 
@@ -42,11 +38,7 @@ def framework_config() -> FrameworkConfig:
             }
         ),
         notebook_runtime_config=NotebookRuntimeConfig(),
-        ai_prompt_config=AIPromptConfig("context", "dq", "personal", "candidate", "review"),
-        quality_config=QualityConfig(),
-        governance_config=GovernanceConfig(),
-        review_workflow_config=ReviewWorkflowConfig(),
-        lineage_config=LineageConfig(),
+        ai_prompt_config=AIPromptConfig(),
         data_agreement_config=DataAgreementConfig(),
     )
 

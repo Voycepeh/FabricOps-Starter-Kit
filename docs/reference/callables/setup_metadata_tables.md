@@ -199,7 +199,7 @@ Return the canonical active metadata tables prepared by ``00_env_config``.
 **Source:**
 
 - `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L889-L916">View `_get_active_metadata_tables` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L898-L925">View `_get_active_metadata_tables` on GitHub</a>
 
 **Code:**
 
@@ -251,7 +251,7 @@ Validate and normalize framework configuration input.
 **Source:**
 
 - `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L539-L615">View `_validate_framework_config` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L551-L624">View `_validate_framework_config` on GitHub</a>
 
 **Code:**
 
@@ -262,8 +262,9 @@ def _validate_framework_config(config: FrameworkConfig | dict[str, Any]) -> Fram
     Parameters
     ----------
     config : FrameworkConfig | dict[str, Any]
-        Existing framework config object or compatible mapping containing all
-        required component configs.
+        Existing framework config object or compatible mapping containing the
+        required user-facing component configs. Framework-only sections may be
+        omitted and will use package defaults.
 
     Returns
     -------
@@ -294,10 +295,6 @@ def _validate_framework_config(config: FrameworkConfig | dict[str, Any]) -> Fram
             "path_config",
             "notebook_runtime_config",
             "ai_prompt_config",
-            "quality_config",
-            "governance_config",
-            "review_workflow_config",
-            "lineage_config",
         }
         missing_keys = sorted(required_keys.difference(config.keys()))
         if missing_keys:
@@ -352,7 +349,7 @@ Return a valid IANA audit timezone name.
 **Source:**
 
 - `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L27-L58">View `_validate_audit_timezone` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L27-L58">View `_validate_audit_timezone` on GitHub</a>
 
 **Code:**
 
@@ -408,7 +405,7 @@ Return typed Spark schemas prepared by ``00_env_config`` for governance.
 **Source:**
 
 - `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L152-L195">View `_get_governance_metadata_schemas` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L152-L195">View `_get_governance_metadata_schemas` on GitHub</a>
 
 **Code:**
 
@@ -476,7 +473,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L140-L143">View `_schema` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L140-L143">View `_schema` on GitHub</a>
 
 **Code:**
 
@@ -504,7 +501,7 @@ Return Spark SQL type classes lazily so package import stays lightweight.
 **Source:**
 
 - `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L103-L109">View `_spark_types` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L103-L109">View `_spark_types` on GitHub</a>
 
 **Code:**
 
@@ -535,7 +532,7 @@ Validate that a metadata schema has no case-insensitive duplicates.
 **Source:**
 
 - `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L112-L137">View `_validate_schema_field_names` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L112-L137">View `_validate_schema_field_names` on GitHub</a>
 
 **Code:**
 
@@ -585,7 +582,7 @@ Return ordered metadata table names from setup helper summaries.
 **Source:**
 
 - `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L919-L930">View `_metadata_tables_from_setup_results` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L928-L939">View `_metadata_tables_from_setup_results` on GitHub</a>
 
 **Code:**
 
@@ -621,7 +618,7 @@ Validate that active metadata tables are registered in the Spark catalog.
 **Source:**
 
 - `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L994-L1032">View `_validate_metadata_table_registration` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L1003-L1041">View `_validate_metadata_table_registration` on GitHub</a>
 
 **Code:**
 
@@ -684,7 +681,7 @@ Best-effort warning detector for legacy nested metadata Delta folders.
 **Source:**
 
 - `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L971-L991">View `_detect_nested_metadata_delta_folders` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L980-L1000">View `_detect_nested_metadata_delta_folders` on GitHub</a>
 
 **Code:**
 
@@ -729,7 +726,7 @@ Resolve a configured Fabric path for an environment and target.
 **Source:**
 
 - `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L618-L658">View `_get_store` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L627-L667">View `_get_store` on GitHub</a>
 
 **Code:**
 
@@ -794,7 +791,7 @@ Inspect registered tables for the configured metadata lakehouse.
 **Source:**
 
 - `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L933-L968">View `_show_tables_for_metadata_lakehouse` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L942-L977">View `_show_tables_for_metadata_lakehouse` on GitHub</a>
 
 **Code:**
 
@@ -854,7 +851,7 @@ Prepare intake tables and report whether agreement intake has a steward.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L451-L485">View `_setup_data_agreement_tables` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L451-L485">View `_setup_data_agreement_tables` on GitHub</a>
 
 **Code:**
 
@@ -913,7 +910,7 @@ Idempotently create or validate lightweight ``01_agreement`` metadata tables.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L405-L448">View `_ensure_metadata_tables` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L405-L448">View `_ensure_metadata_tables` on GitHub</a>
 
 **Code:**
 
@@ -981,7 +978,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L397-L402">View `_coerce_row_dicts` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L397-L402">View `_coerce_row_dicts` on GitHub</a>
 
 **Code:**
 
@@ -1011,7 +1008,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L149-L153">View `_config_value` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L149-L153">View `_config_value` on GitHub</a>
 
 **Code:**
 
@@ -1040,7 +1037,7 @@ List latest append-only steward rows from the metadata lakehouse.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L536-L565">View `_list_data_stewards` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L536-L565">View `_list_data_stewards` on GitHub</a>
 
 **Code:**
 
@@ -1094,7 +1091,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L516-L526">View `_active_steward` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L516-L526">View `_active_steward` on GitHub</a>
 
 **Code:**
 
@@ -1129,7 +1126,7 @@ Normalize common notebook and metadata boolean representations.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L497-L513">View `_to_bool` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L497-L513">View `_to_bool` on GitHub</a>
 
 **Code:**
 
@@ -1170,7 +1167,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L488-L494">View `_latest_by_key` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L488-L494">View `_latest_by_key` on GitHub</a>
 
 **Code:**
 
@@ -1201,7 +1198,7 @@ Create or validate governance metadata tables via the configured route.
 **Source:**
 
 - `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L221-L255">View `_setup_governance_metadata_tables` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L221-L255">View `_setup_governance_metadata_tables` on GitHub</a>
 
 **Code:**
 
@@ -1260,7 +1257,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L62-L67">View `_coerce_rows` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L62-L67">View `_coerce_rows` on GitHub</a>
 
 **Code:**
 
@@ -1290,7 +1287,7 @@ Return whether a Spark/read exception clearly means the table is absent.
 **Source:**
 
 - `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L198-L218">View `_is_table_not_found_error` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L198-L218">View `_is_table_not_found_error` on GitHub</a>
 
 **Code:**
 
@@ -1335,7 +1332,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L146-L149">View `_schema_field_names` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L146-L149">View `_schema_field_names` on GitHub</a>
 
 **Code:**
 
@@ -1363,7 +1360,7 @@ Create or validate the notebook registry metadata table.
 **Source:**
 
 - `src/fabricops_kit/metadata.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L61-L130">View `_setup_notebook_registry_table` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/metadata.py#L61-L130">View `_setup_notebook_registry_table` on GitHub</a>
 
 **Code:**
 
@@ -1457,7 +1454,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/metadata.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L53-L58">View `_coerce_row_dicts` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/metadata.py#L53-L58">View `_coerce_row_dicts` on GitHub</a>
 
 **Code:**
 
@@ -1487,7 +1484,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/metadata.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L408-L419">View `_registry_rows_with_defaults` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/metadata.py#L408-L419">View `_registry_rows_with_defaults` on GitHub</a>
 
 **Code:**
 
@@ -1523,7 +1520,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/metadata.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L41-L50">View `_notebook_registration_key` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/metadata.py#L41-L50">View `_notebook_registration_key` on GitHub</a>
 
 **Code:**
 
@@ -1557,7 +1554,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/metadata.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L188-L189">View `_safe_str` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/metadata.py#L188-L189">View `_safe_str` on GitHub</a>
 
 **Code:**
 
@@ -1583,7 +1580,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/metadata.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L161-L170">View `_rows_for_spark` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/metadata.py#L161-L170">View `_rows_for_spark` on GitHub</a>
 
 **Code:**
 
@@ -1614,7 +1611,7 @@ You want to change the implementation behavior summarized above for `setup_metad
 ## Source
 
 - Source file path: `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L1035-L1099">View setup_metadata_tables on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L1044-L1108">View setup_metadata_tables on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -1702,7 +1699,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `config`
 - Source file path: `src/fabricops_kit/config.py`
-- Source line: `1035`
+- Source line: `1044`
 - Inbound references count: 0
 - Outbound references count: 7
 
@@ -1731,9 +1728,9 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/config.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L1035-L1099">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L1035-L1099</a>
-- Start line: `1035`
-- End line: `1099`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L1044-L1108">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L1044-L1108</a>
+- Start line: `1044`
+- End line: `1108`
 - Signature:
 
 ```python
@@ -1876,7 +1873,7 @@ Return the canonical active metadata tables prepared by ``00_env_config``.
 **Source:**
 
 - `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L889-L916">View `_get_active_metadata_tables` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L898-L925">View `_get_active_metadata_tables` on GitHub</a>
 
 **Code:**
 
@@ -1928,7 +1925,7 @@ Validate and normalize framework configuration input.
 **Source:**
 
 - `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L539-L615">View `_validate_framework_config` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L551-L624">View `_validate_framework_config` on GitHub</a>
 
 **Code:**
 
@@ -1939,8 +1936,9 @@ def _validate_framework_config(config: FrameworkConfig | dict[str, Any]) -> Fram
     Parameters
     ----------
     config : FrameworkConfig | dict[str, Any]
-        Existing framework config object or compatible mapping containing all
-        required component configs.
+        Existing framework config object or compatible mapping containing the
+        required user-facing component configs. Framework-only sections may be
+        omitted and will use package defaults.
 
     Returns
     -------
@@ -1971,10 +1969,6 @@ def _validate_framework_config(config: FrameworkConfig | dict[str, Any]) -> Fram
             "path_config",
             "notebook_runtime_config",
             "ai_prompt_config",
-            "quality_config",
-            "governance_config",
-            "review_workflow_config",
-            "lineage_config",
         }
         missing_keys = sorted(required_keys.difference(config.keys()))
         if missing_keys:
@@ -2029,7 +2023,7 @@ Return a valid IANA audit timezone name.
 **Source:**
 
 - `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L27-L58">View `_validate_audit_timezone` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L27-L58">View `_validate_audit_timezone` on GitHub</a>
 
 **Code:**
 
@@ -2085,7 +2079,7 @@ Return typed Spark schemas prepared by ``00_env_config`` for governance.
 **Source:**
 
 - `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L152-L195">View `_get_governance_metadata_schemas` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L152-L195">View `_get_governance_metadata_schemas` on GitHub</a>
 
 **Code:**
 
@@ -2153,7 +2147,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L140-L143">View `_schema` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L140-L143">View `_schema` on GitHub</a>
 
 **Code:**
 
@@ -2181,7 +2175,7 @@ Return Spark SQL type classes lazily so package import stays lightweight.
 **Source:**
 
 - `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L103-L109">View `_spark_types` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L103-L109">View `_spark_types` on GitHub</a>
 
 **Code:**
 
@@ -2212,7 +2206,7 @@ Validate that a metadata schema has no case-insensitive duplicates.
 **Source:**
 
 - `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L112-L137">View `_validate_schema_field_names` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L112-L137">View `_validate_schema_field_names` on GitHub</a>
 
 **Code:**
 
@@ -2262,7 +2256,7 @@ Return ordered metadata table names from setup helper summaries.
 **Source:**
 
 - `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L919-L930">View `_metadata_tables_from_setup_results` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L928-L939">View `_metadata_tables_from_setup_results` on GitHub</a>
 
 **Code:**
 
@@ -2298,7 +2292,7 @@ Validate that active metadata tables are registered in the Spark catalog.
 **Source:**
 
 - `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L994-L1032">View `_validate_metadata_table_registration` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L1003-L1041">View `_validate_metadata_table_registration` on GitHub</a>
 
 **Code:**
 
@@ -2361,7 +2355,7 @@ Best-effort warning detector for legacy nested metadata Delta folders.
 **Source:**
 
 - `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L971-L991">View `_detect_nested_metadata_delta_folders` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L980-L1000">View `_detect_nested_metadata_delta_folders` on GitHub</a>
 
 **Code:**
 
@@ -2406,7 +2400,7 @@ Resolve a configured Fabric path for an environment and target.
 **Source:**
 
 - `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L618-L658">View `_get_store` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L627-L667">View `_get_store` on GitHub</a>
 
 **Code:**
 
@@ -2471,7 +2465,7 @@ Inspect registered tables for the configured metadata lakehouse.
 **Source:**
 
 - `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L933-L968">View `_show_tables_for_metadata_lakehouse` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L942-L977">View `_show_tables_for_metadata_lakehouse` on GitHub</a>
 
 **Code:**
 
@@ -2531,7 +2525,7 @@ Prepare intake tables and report whether agreement intake has a steward.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L451-L485">View `_setup_data_agreement_tables` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L451-L485">View `_setup_data_agreement_tables` on GitHub</a>
 
 **Code:**
 
@@ -2590,7 +2584,7 @@ Idempotently create or validate lightweight ``01_agreement`` metadata tables.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L405-L448">View `_ensure_metadata_tables` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L405-L448">View `_ensure_metadata_tables` on GitHub</a>
 
 **Code:**
 
@@ -2658,7 +2652,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L397-L402">View `_coerce_row_dicts` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L397-L402">View `_coerce_row_dicts` on GitHub</a>
 
 **Code:**
 
@@ -2688,7 +2682,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L149-L153">View `_config_value` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L149-L153">View `_config_value` on GitHub</a>
 
 **Code:**
 
@@ -2717,7 +2711,7 @@ List latest append-only steward rows from the metadata lakehouse.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L536-L565">View `_list_data_stewards` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L536-L565">View `_list_data_stewards` on GitHub</a>
 
 **Code:**
 
@@ -2771,7 +2765,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L516-L526">View `_active_steward` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L516-L526">View `_active_steward` on GitHub</a>
 
 **Code:**
 
@@ -2806,7 +2800,7 @@ Normalize common notebook and metadata boolean representations.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L497-L513">View `_to_bool` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L497-L513">View `_to_bool` on GitHub</a>
 
 **Code:**
 
@@ -2847,7 +2841,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_agreement.py#L488-L494">View `_latest_by_key` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L488-L494">View `_latest_by_key` on GitHub</a>
 
 **Code:**
 
@@ -2878,7 +2872,7 @@ Create or validate governance metadata tables via the configured route.
 **Source:**
 
 - `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L221-L255">View `_setup_governance_metadata_tables` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L221-L255">View `_setup_governance_metadata_tables` on GitHub</a>
 
 **Code:**
 
@@ -2937,7 +2931,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L62-L67">View `_coerce_rows` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L62-L67">View `_coerce_rows` on GitHub</a>
 
 **Code:**
 
@@ -2967,7 +2961,7 @@ Return whether a Spark/read exception clearly means the table is absent.
 **Source:**
 
 - `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L198-L218">View `_is_table_not_found_error` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L198-L218">View `_is_table_not_found_error` on GitHub</a>
 
 **Code:**
 
@@ -3012,7 +3006,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L146-L149">View `_schema_field_names` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L146-L149">View `_schema_field_names` on GitHub</a>
 
 **Code:**
 
@@ -3040,7 +3034,7 @@ Create or validate the notebook registry metadata table.
 **Source:**
 
 - `src/fabricops_kit/metadata.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L61-L130">View `_setup_notebook_registry_table` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/metadata.py#L61-L130">View `_setup_notebook_registry_table` on GitHub</a>
 
 **Code:**
 
@@ -3134,7 +3128,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/metadata.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L53-L58">View `_coerce_row_dicts` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/metadata.py#L53-L58">View `_coerce_row_dicts` on GitHub</a>
 
 **Code:**
 
@@ -3164,7 +3158,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/metadata.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L408-L419">View `_registry_rows_with_defaults` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/metadata.py#L408-L419">View `_registry_rows_with_defaults` on GitHub</a>
 
 **Code:**
 
@@ -3200,7 +3194,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/metadata.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L41-L50">View `_notebook_registration_key` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/metadata.py#L41-L50">View `_notebook_registration_key` on GitHub</a>
 
 **Code:**
 
@@ -3234,7 +3228,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/metadata.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L188-L189">View `_safe_str` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/metadata.py#L188-L189">View `_safe_str` on GitHub</a>
 
 **Code:**
 
@@ -3260,7 +3254,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/metadata.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L161-L170">View `_rows_for_spark` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/metadata.py#L161-L170">View `_rows_for_spark` on GitHub</a>
 
 **Code:**
 

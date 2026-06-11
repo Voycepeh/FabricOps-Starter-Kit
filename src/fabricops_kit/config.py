@@ -129,28 +129,6 @@ class NotebookRuntimeConfig:
         object.__setattr__(self, "allowed_notebook_prefixes", prefixes)
 
 
-@dataclass(frozen=True)
-class AIPromptConfig:
-    """Prompt templates used by AI-assisted framework workflows."""
-
-    business_context_prompt_template: str = ""
-    dq_rule_suggestion_prompt_template: str = ""
-    governance_personal_identifier_prompt_template: str = ""
-    governance_candidate_prompt_template: str = ""
-    governance_review_prompt_template: str = ""
-
-    def __post_init__(self) -> None:
-        for label, value in {
-            "business_context_prompt_template": self.business_context_prompt_template,
-            "dq_rule_suggestion_prompt_template": self.dq_rule_suggestion_prompt_template,
-            "governance_personal_identifier_prompt_template": self.governance_personal_identifier_prompt_template,
-            "governance_candidate_prompt_template": self.governance_candidate_prompt_template,
-            "governance_review_prompt_template": self.governance_review_prompt_template,
-        }.items():
-            if not isinstance(value, str) or not value.strip():
-                raise ValueError(f"{label} must be a non-empty string.")
-
-
 DEFAULT_BUSINESS_CONTEXT_PROMPT_TEMPLATE = """
 Infer business meaning only for one column. Do not classify personal data.
 Use table_name={table_name}, table_context={table_context}, column_name={column_name}, data_type={data_type},
@@ -278,6 +256,43 @@ Minimum value: {min_value}
 Maximum value: {max_value}
 Observed values sample: {observed_values_sample}
 """.strip()
+
+
+@dataclass(frozen=True)
+class AIPromptConfig:
+    """Prompt templates used by implemented AI-assisted workflows.
+
+    Parameters
+    ----------
+    business_context_prompt_template : str, optional
+        Prompt used for business-context drafting. Blank values use the
+        package default.
+    dq_rule_suggestion_prompt_template : str, optional
+        Prompt used for data-quality rule suggestions. Blank values use the
+        package default.
+    governance_personal_identifier_prompt_template : str, optional
+        Prompt used for personal-identifier classification suggestions. Blank
+        values use the package default.
+    """
+
+    business_context_prompt_template: str = ""
+    dq_rule_suggestion_prompt_template: str = ""
+    governance_personal_identifier_prompt_template: str = ""
+
+    def __post_init__(self) -> None:
+        defaults = {
+            "business_context_prompt_template": DEFAULT_BUSINESS_CONTEXT_PROMPT_TEMPLATE,
+            "dq_rule_suggestion_prompt_template": DEFAULT_DQ_RULE_SUGGESTION_PROMPT_TEMPLATE,
+            "governance_personal_identifier_prompt_template": DEFAULT_GOVERNANCE_PERSONAL_IDENTIFIER_PROMPT_TEMPLATE,
+        }
+        for label, default in defaults.items():
+            value = getattr(self, label)
+            if not isinstance(value, str):
+                raise ValueError(f"{label} must be a string.")
+            resolved = value.strip() or default
+            if not resolved.strip():
+                raise ValueError(f"{label} must be a non-empty string.")
+            object.__setattr__(self, label, resolved)
 
 
 @dataclass(frozen=True)
@@ -451,14 +466,14 @@ class FrameworkConfig:
         Notebook naming policy and runtime validation options.
     ai_prompt_config : AIPromptConfig
         AI prompt templates used across framework workflows.
-    quality_config : QualityConfig
-        Default quality-policy settings.
-    governance_config : GovernanceConfig
-        Default governance-policy settings.
-    review_workflow_config : ReviewWorkflowConfig
-        Notebook-native review, approval, and metadata destination settings.
-    lineage_config : LineageConfig
-        Default lineage capture behavior.
+    quality_config : QualityConfig, optional
+        Default quality-policy settings. Uses package defaults when omitted.
+    governance_config : GovernanceConfig, optional
+        Default governance-policy settings. Uses package defaults when omitted.
+    review_workflow_config : ReviewWorkflowConfig, optional
+        Notebook-native review, approval, and metadata destination settings. Uses package defaults when omitted.
+    lineage_config : LineageConfig, optional
+        Default lineage capture behavior. Uses package defaults when omitted.
     audit_timezone : str, default="UTC"
         IANA timezone used for FabricOps-generated audit and technical timestamps.
 
@@ -467,10 +482,7 @@ class FrameworkConfig:
     >>> cfg = FrameworkConfig(
     ...     path_config=PathConfig(paths={"dev": {"source": object()}}),
     ...     notebook_runtime_config=NotebookRuntimeConfig(("00_",)),
-    ...     ai_prompt_config=AIPromptConfig("context", "dq", "personal", "candidate", "review"),
-    ...     quality_config=QualityConfig(),
-    ...     governance_config=GovernanceConfig(),
-    ...     lineage_config=LineageConfig(),
+    ...     ai_prompt_config=AIPromptConfig(),
     ... )
     >>> isinstance(cfg, FrameworkConfig)
     True
@@ -479,10 +491,10 @@ class FrameworkConfig:
     path_config: PathConfig
     notebook_runtime_config: NotebookRuntimeConfig
     ai_prompt_config: AIPromptConfig
-    quality_config: QualityConfig
-    governance_config: GovernanceConfig
-    review_workflow_config: ReviewWorkflowConfig
-    lineage_config: LineageConfig
+    quality_config: QualityConfig = field(default_factory=QualityConfig)
+    governance_config: GovernanceConfig = field(default_factory=GovernanceConfig)
+    review_workflow_config: ReviewWorkflowConfig = field(default_factory=ReviewWorkflowConfig)
+    lineage_config: LineageConfig = field(default_factory=LineageConfig)
     data_agreement_config: DataAgreementConfig = field(default_factory=DataAgreementConfig)
     audit_timezone: str = DEFAULT_AUDIT_TIMEZONE
 
@@ -542,8 +554,9 @@ def _validate_framework_config(config: FrameworkConfig | dict[str, Any]) -> Fram
     Parameters
     ----------
     config : FrameworkConfig | dict[str, Any]
-        Existing framework config object or compatible mapping containing all
-        required component configs.
+        Existing framework config object or compatible mapping containing the
+        required user-facing component configs. Framework-only sections may be
+        omitted and will use package defaults.
 
     Returns
     -------
@@ -574,10 +587,6 @@ def _validate_framework_config(config: FrameworkConfig | dict[str, Any]) -> Fram
             "path_config",
             "notebook_runtime_config",
             "ai_prompt_config",
-            "quality_config",
-            "governance_config",
-            "review_workflow_config",
-            "lineage_config",
         }
         missing_keys = sorted(required_keys.difference(config.keys()))
         if missing_keys:

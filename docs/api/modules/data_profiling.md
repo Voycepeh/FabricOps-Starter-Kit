@@ -187,4 +187,4 @@ Owns deterministic profiling evidence such as schema, nulls, distincts, min/max,
 ### External callees
 
 **config**
-<a class="reference-chip" href="../config/#_audit_timestamp_expr"><code>_audit_timestamp_expr</code></a>, <a class="reference-chip" href="../config/#_validate_audit_timezone"><code>_validate_audit_timezone</code></a>
+<a class="reference-chip" href="../config/#_audit_timestamp_expr"><code>_audit_timestamp_expr</code></a>, <a class="reference-chip" href="../config/#_get_audit_timezone"><code>_get_audit_timezone</code></a>

@@ -48,7 +48,12 @@ profile_rows_df = profile_dataframe(df, table_name="orders", include_distributio
     <tr>
       <td data-label="Parameter"><code>run_timestamp_timezone</code></td>
       <td data-label="Required">No</td>
-      <td data-label="Meaning">IANA time zone used for the ``RUN_TIMESTAMP`` evidence field.</td>
+      <td data-label="Meaning">Explicit IANA time zone used for the ``RUN_TIMESTAMP`` evidence field. When omitted, ``config.audit_timezone`` is used and falls back to UTC.</td>
+    </tr>
+    <tr>
+      <td data-label="Parameter"><code>config</code></td>
+      <td data-label="Required">No</td>
+      <td data-label="Meaning">Framework-like configuration carrying ``audit_timezone`` for audit timestamp consistency.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>include_distributions</code></td>
@@ -108,9 +113,10 @@ profile_dataframe(...)
 │   ├── _build_categorical_distribution(...)
 │   ├── _build_numeric_distribution(...)
 │   └── _numeric_bin_edges(...)
+├── _get_audit_timezone(...)
+│   └── _validate_audit_timezone(...)
 ├── _get_profiled_columns(...)
-├── _is_min_max_supported_type(...)
-└── _validate_audit_timezone(...)
+└── _is_min_max_supported_type(...)
 ```
 
 ### Internal helpers used by this callable
@@ -124,7 +130,7 @@ Return a Spark expression for the current audit timestamp timezone.
 **Source:**
 
 - `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L78-L83">View `_audit_timestamp_expr` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L78-L83">View `_audit_timestamp_expr` on GitHub</a>
 
 **Code:**
 
@@ -154,7 +160,7 @@ Resolve the configured FabricOps audit timezone, defaulting to UTC.
 **Source:**
 
 - `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L61-L66">View `_get_audit_timezone` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L61-L66">View `_get_audit_timezone` on GitHub</a>
 
 **Code:**
 
@@ -184,7 +190,7 @@ Return a valid IANA audit timezone name.
 **Source:**
 
 - `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L27-L58">View `_validate_audit_timezone` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L27-L58">View `_validate_audit_timezone` on GitHub</a>
 
 **Code:**
 
@@ -240,7 +246,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/data_profiling.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_profiling.py#L192-L222">View `_build_distribution_summaries` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_profiling.py#L192-L222">View `_build_distribution_summaries` on GitHub</a>
 
 **Code:**
 
@@ -295,7 +301,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/data_profiling.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_profiling.py#L152-L189">View `_build_categorical_distribution` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_profiling.py#L152-L189">View `_build_categorical_distribution` on GitHub</a>
 
 **Code:**
 
@@ -357,7 +363,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/data_profiling.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_profiling.py#L120-L149">View `_build_numeric_distribution` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_profiling.py#L120-L149">View `_build_numeric_distribution` on GitHub</a>
 
 **Code:**
 
@@ -411,7 +417,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/data_profiling.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_profiling.py#L107-L117">View `_numeric_bin_edges` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_profiling.py#L107-L117">View `_numeric_bin_edges` on GitHub</a>
 
 **Code:**
 
@@ -446,7 +452,7 @@ Return non-technical column names from a Spark DataFrame.
 **Source:**
 
 - `src/fabricops_kit/data_profiling.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_profiling.py#L59-L81">View `_get_profiled_columns` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_profiling.py#L59-L81">View `_get_profiled_columns` on GitHub</a>
 
 **Code:**
 
@@ -493,7 +499,7 @@ Return whether min/max aggregation is safe for a Spark type string.
 **Source:**
 
 - `src/fabricops_kit/data_profiling.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_profiling.py#L84-L104">View `_is_min_max_supported_type` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_profiling.py#L84-L104">View `_is_min_max_supported_type` on GitHub</a>
 
 **Code:**
 
@@ -535,7 +541,7 @@ You want to change the implementation behavior summarized above for `profile_dat
 ## Source
 
 - Source file path: `src/fabricops_kit/data_profiling.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_profiling.py#L225-L340">View profile_dataframe on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_profiling.py#L225-L345">View profile_dataframe on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -546,7 +552,8 @@ def profile_dataframe(
     table_name: str,
     *,
     exclude_columns=None,
-    run_timestamp_timezone="UTC",
+    run_timestamp_timezone: str | None = None,
+    config: Any = None,
     include_distributions: bool = False,
     distribution_columns: list[str] | set[str] | tuple[str, ...] | None = None,
     distribution_bin_edges: dict[str, list[float]] | None = None,
@@ -563,8 +570,12 @@ def profile_dataframe(
         Logical table name written into each profile row.
     exclude_columns : list[str] or set[str], optional
         Additional columns to skip, on top of the standard technical columns.
-    run_timestamp_timezone : str, default="UTC"
-        IANA time zone used for the ``RUN_TIMESTAMP`` evidence field.
+    run_timestamp_timezone : str, optional
+        Explicit IANA time zone used for the ``RUN_TIMESTAMP`` evidence field.
+        When omitted, ``config.audit_timezone`` is used and falls back to UTC.
+    config : Any, optional
+        Framework-like configuration carrying ``audit_timezone`` for audit
+        timestamp consistency.
     include_distributions : bool, default=False
         When true, add lightweight distribution summaries for suitable numeric
         and categorical columns. The default preserves the existing lightweight
@@ -599,7 +610,7 @@ def profile_dataframe(
     """
     from pyspark.sql import functions as F
 
-    run_timestamp_timezone = _validate_audit_timezone(run_timestamp_timezone)
+    run_timestamp_timezone = _get_audit_timezone(config=config, timezone_name=run_timestamp_timezone)
     eligible_columns = _get_profiled_columns(df, exclude_columns=exclude_columns)
     if not eligible_columns:
         raise ValueError("No eligible non-technical columns found for metadata profiling.")
@@ -696,7 +707,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 ### Outbound references
 
 - `fabricops_kit.config._audit_timestamp_expr`
-- `fabricops_kit.config._validate_audit_timezone`
+- `fabricops_kit.config._get_audit_timezone`
 - `fabricops_kit.data_profiling._build_distribution_summaries`
 - `fabricops_kit.data_profiling._get_profiled_columns`
 - `fabricops_kit.data_profiling._is_min_max_supported_type`
@@ -704,13 +715,13 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/data_profiling.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_profiling.py#L225-L340">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_profiling.py#L225-L340</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_profiling.py#L225-L345">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_profiling.py#L225-L345</a>
 - Start line: `225`
-- End line: `340`
+- End line: `345`
 - Signature:
 
 ```python
-def profile_dataframe(df, table_name: str, *, exclude_columns=None, run_timestamp_timezone='UTC', include_distributions: bool=False, distribution_columns: list[str] | set[str] | tuple[str, ...] | None=None, distribution_bin_edges: dict[str, list[float]] | None=None, categorical_categories: dict[str, list[str]] | None=None, categorical_top_n: int=20)
+def profile_dataframe(df, table_name: str, *, exclude_columns=None, run_timestamp_timezone: str | None=None, config: Any=None, include_distributions: bool=False, distribution_columns: list[str] | set[str] | tuple[str, ...] | None=None, distribution_bin_edges: dict[str, list[float]] | None=None, categorical_categories: dict[str, list[str]] | None=None, categorical_top_n: int=20)
 ```
 
 ### Internal relationship graph
@@ -733,9 +744,10 @@ profile_dataframe(...)
 │   ├── _build_categorical_distribution(...)
 │   ├── _build_numeric_distribution(...)
 │   └── _numeric_bin_edges(...)
+├── _get_audit_timezone(...)
+│   └── _validate_audit_timezone(...)
 ├── _get_profiled_columns(...)
-├── _is_min_max_supported_type(...)
-└── _validate_audit_timezone(...)
+└── _is_min_max_supported_type(...)
 ```
 
 ### Internal helpers used by this callable
@@ -749,7 +761,7 @@ Return a Spark expression for the current audit timestamp timezone.
 **Source:**
 
 - `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L78-L83">View `_audit_timestamp_expr` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L78-L83">View `_audit_timestamp_expr` on GitHub</a>
 
 **Code:**
 
@@ -779,7 +791,7 @@ Resolve the configured FabricOps audit timezone, defaulting to UTC.
 **Source:**
 
 - `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L61-L66">View `_get_audit_timezone` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L61-L66">View `_get_audit_timezone` on GitHub</a>
 
 **Code:**
 
@@ -809,7 +821,7 @@ Return a valid IANA audit timezone name.
 **Source:**
 
 - `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L27-L58">View `_validate_audit_timezone` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L27-L58">View `_validate_audit_timezone` on GitHub</a>
 
 **Code:**
 
@@ -865,7 +877,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/data_profiling.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_profiling.py#L192-L222">View `_build_distribution_summaries` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_profiling.py#L192-L222">View `_build_distribution_summaries` on GitHub</a>
 
 **Code:**
 
@@ -920,7 +932,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/data_profiling.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_profiling.py#L152-L189">View `_build_categorical_distribution` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_profiling.py#L152-L189">View `_build_categorical_distribution` on GitHub</a>
 
 **Code:**
 
@@ -982,7 +994,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/data_profiling.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_profiling.py#L120-L149">View `_build_numeric_distribution` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_profiling.py#L120-L149">View `_build_numeric_distribution` on GitHub</a>
 
 **Code:**
 
@@ -1036,7 +1048,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/data_profiling.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_profiling.py#L107-L117">View `_numeric_bin_edges` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_profiling.py#L107-L117">View `_numeric_bin_edges` on GitHub</a>
 
 **Code:**
 
@@ -1071,7 +1083,7 @@ Return non-technical column names from a Spark DataFrame.
 **Source:**
 
 - `src/fabricops_kit/data_profiling.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_profiling.py#L59-L81">View `_get_profiled_columns` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_profiling.py#L59-L81">View `_get_profiled_columns` on GitHub</a>
 
 **Code:**
 
@@ -1118,7 +1130,7 @@ Return whether min/max aggregation is safe for a Spark type string.
 **Source:**
 
 - `src/fabricops_kit/data_profiling.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/data_profiling.py#L84-L104">View `_is_min_max_supported_type` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_profiling.py#L84-L104">View `_is_min_max_supported_type` on GitHub</a>
 
 **Code:**
 

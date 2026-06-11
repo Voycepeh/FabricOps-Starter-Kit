@@ -266,7 +266,7 @@ None.
 ### External callees
 
 **config**
-<a class="reference-chip" href="../config/#_current_audit_timestamp"><code>_current_audit_timestamp</code></a>, <a class="reference-chip" href="../config/#_get_audit_timezone"><code>_get_audit_timezone</code></a>
+<a class="reference-chip" href="../config/#_current_audit_timestamp"><code>_current_audit_timestamp</code></a>
 
 **data_profiling**
 <a class="reference-chip" href="../../reference/profile_dataframe/"><code>profile_dataframe</code></a>
