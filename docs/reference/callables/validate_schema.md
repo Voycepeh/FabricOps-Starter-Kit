@@ -40,15 +40,6 @@ Inspects DataFrame schema only; it does not write metadata, tables, or files.
 - `fabricops_kit.guardrails._actual_schema`
 - `fabricops_kit.guardrails._normalize_datatype`
 
-??? info "Call flow"
-
-    ```text
-    validate_schema(...)
-    ├── _actual_schema(...)
-    │   └── _normalize_datatype(...)
-    └── _normalize_datatype(...)
-    ```
-
 ## Callable implementation
 
 ### Function details
@@ -105,7 +96,7 @@ No additional callable notes are documented.
 ### Public callable source code
 
 - Source file path: `src/fabricops_kit/guardrails.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/guardrails.py#L109-L198">View validate_schema on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/guardrails.py#L109-L198">View validate_schema on GitHub</a>
 
 ```python
 def validate_schema(dataframe, expected_schema: dict[str, str], *, preset: str = "strict") -> dict:
@@ -202,6 +193,15 @@ def validate_schema(dataframe, expected_schema: dict[str, str], *, preset: str =
 
 ## Internal implementation summary
 
+??? info "Call flow"
+
+    ```text
+    validate_schema(...)
+    ├── _actual_schema(...)
+    │   └── _normalize_datatype(...)
+    └── _normalize_datatype(...)
+    ```
+
 ??? info "Internal helpers used: 2"
 
     This callable uses 2 internal helpers for rule parsing and other.
@@ -236,7 +236,7 @@ def validate_schema(dataframe, expected_schema: dict[str, str], *, preset: str =
 
             **`def _normalize_datatype(data_type) -> str`**
 
-            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/guardrails.py#L37-L83)
+            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/guardrails.py#L37-L83)
 
             ```python
             def _normalize_datatype(data_type) -> str:
@@ -292,7 +292,7 @@ def validate_schema(dataframe, expected_schema: dict[str, str], *, preset: str =
 
             **`def _actual_schema(df) -> tuple[list[str], dict[str, str]]`**
 
-            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/guardrails.py#L86-L101)
+            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/guardrails.py#L86-L101)
 
             ```python
             def _actual_schema(df) -> tuple[list[str], dict[str, str]]:
@@ -352,7 +352,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/guardrails.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/guardrails.py#L109-L198">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/guardrails.py#L109-L198</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/guardrails.py#L109-L198">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/guardrails.py#L109-L198</a>
 - Start line: `109`
 - End line: `198`
 - Signature:

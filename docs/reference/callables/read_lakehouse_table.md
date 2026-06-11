@@ -53,20 +53,6 @@ Reads from a lakehouse table; it does not write metadata, tables, or files.
 - `fabricops_kit.fabric_input_output._registered_table_identifier`
 - `fabricops_kit.fabric_input_output._uses_registered_metadata_table`
 
-??? info "Call flow"
-
-    ```text
-    read_lakehouse_table(...)
-    ├── _current_database_matches(...)
-    ├── _get_spark(...)
-    ├── _get_store(...)
-    ├── _normalize_table_name(...)
-    ├── _registered_table_identifier(...)
-    │   ├── _normalize_table_name(...)
-    │   └── _quote_identifier(...)
-    └── _uses_registered_metadata_table(...)
-    ```
-
 ## Callable implementation
 
 ### Function details
@@ -133,7 +119,7 @@ No additional callable notes are documented.
 ### Public callable source code
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/fabric_input_output.py#L171-L224">View read_lakehouse_table on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/fabric_input_output.py#L171-L224">View read_lakehouse_table on GitHub</a>
 
 ```python
 def read_lakehouse_table(config, env, target, table, spark_session=None):
@@ -194,6 +180,20 @@ def read_lakehouse_table(config, env, target, table, spark_session=None):
 
 ## Internal implementation summary
 
+??? info "Call flow"
+
+    ```text
+    read_lakehouse_table(...)
+    ├── _current_database_matches(...)
+    ├── _get_spark(...)
+    ├── _get_store(...)
+    ├── _normalize_table_name(...)
+    ├── _registered_table_identifier(...)
+    │   ├── _normalize_table_name(...)
+    │   └── _quote_identifier(...)
+    └── _uses_registered_metadata_table(...)
+    ```
+
 ??? info "Internal helpers used: 7"
 
     This callable uses 7 internal helpers for metadata loading, fabric or spark access, and other.
@@ -233,7 +233,7 @@ def read_lakehouse_table(config, env, target, table, spark_session=None):
 
             **`def _current_database_matches(spark_obj: Any, store: FabricStore) -> bool`**
 
-            Source: [`src/fabricops_kit/fabric_input_output.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/fabric_input_output.py#L107-L115)
+            Source: [`src/fabricops_kit/fabric_input_output.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/fabric_input_output.py#L107-L115)
 
             ```python
             def _current_database_matches(spark_obj: Any, store: FabricStore) -> bool:
@@ -249,7 +249,7 @@ def read_lakehouse_table(config, env, target, table, spark_session=None):
 
             **`def _normalize_table_name(table: str) -> str`**
 
-            Source: [`src/fabricops_kit/fabric_input_output.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/fabric_input_output.py#L81-L90)
+            Source: [`src/fabricops_kit/fabric_input_output.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/fabric_input_output.py#L81-L90)
 
             ```python
             def _normalize_table_name(table: str) -> str:
@@ -266,7 +266,7 @@ def read_lakehouse_table(config, env, target, table, spark_session=None):
 
             **`def _registered_table_identifier(store: FabricStore, table: str) -> str`**
 
-            Source: [`src/fabricops_kit/fabric_input_output.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/fabric_input_output.py#L97-L99)
+            Source: [`src/fabricops_kit/fabric_input_output.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/fabric_input_output.py#L97-L99)
 
             ```python
             def _registered_table_identifier(store: FabricStore, table: str) -> str:
@@ -276,7 +276,7 @@ def read_lakehouse_table(config, env, target, table, spark_session=None):
 
             **`def _uses_registered_metadata_table(target: str) -> bool`**
 
-            Source: [`src/fabricops_kit/fabric_input_output.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/fabric_input_output.py#L102-L104)
+            Source: [`src/fabricops_kit/fabric_input_output.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/fabric_input_output.py#L102-L104)
 
             ```python
             def _uses_registered_metadata_table(target: str) -> bool:
@@ -288,7 +288,7 @@ def read_lakehouse_table(config, env, target, table, spark_session=None):
 
             **`def _get_spark(spark_session=None)`**
 
-            Source: [`src/fabricops_kit/fabric_input_output.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/fabric_input_output.py#L125-L155)
+            Source: [`src/fabricops_kit/fabric_input_output.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/fabric_input_output.py#L125-L155)
 
             ```python
             def _get_spark(spark_session=None):
@@ -326,7 +326,7 @@ def read_lakehouse_table(config, env, target, table, spark_session=None):
 
             **`def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/config.py#L627-L667)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/config.py#L627-L667)
 
             ```python
             def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any:
@@ -376,7 +376,7 @@ def read_lakehouse_table(config, env, target, table, spark_session=None):
 
             **`def _quote_identifier(identifier: str) -> str`**
 
-            Source: [`src/fabricops_kit/fabric_input_output.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/fabric_input_output.py#L93-L94)
+            Source: [`src/fabricops_kit/fabric_input_output.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/fabric_input_output.py#L93-L94)
 
             ```python
             def _quote_identifier(identifier: str) -> str:
@@ -436,7 +436,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/fabric_input_output.py#L171-L224">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/fabric_input_output.py#L171-L224</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/fabric_input_output.py#L171-L224">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/fabric_input_output.py#L171-L224</a>
 - Start line: `171`
 - End line: `224`
 - Signature:

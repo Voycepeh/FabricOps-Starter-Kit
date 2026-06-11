@@ -41,16 +41,6 @@ Computes max(freshness_column) on the provided DataFrame; it does not write meta
 - `fabricops_kit.guardrails._iso_date_value`
 - `fabricops_kit.guardrails._max_column_value`
 
-??? info "Call flow"
-
-    ```text
-    enforce_freshness(...)
-    ├── _coerce_date(...)
-    ├── _iso_date_value(...)
-    │   └── _coerce_date(...)
-    └── _max_column_value(...)
-    ```
-
 ## Callable implementation
 
 ### Function details
@@ -118,7 +108,7 @@ skips profile behavior enforcement; freshness still runs when configured.
 ### Public callable source code
 
 - Source file path: `src/fabricops_kit/guardrails.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/guardrails.py#L367-L464">View enforce_freshness on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/guardrails.py#L367-L464">View enforce_freshness on GitHub</a>
 
 ```python
 def enforce_freshness(
@@ -223,6 +213,16 @@ def enforce_freshness(
 
 ## Internal implementation summary
 
+??? info "Call flow"
+
+    ```text
+    enforce_freshness(...)
+    ├── _coerce_date(...)
+    ├── _iso_date_value(...)
+    │   └── _coerce_date(...)
+    └── _max_column_value(...)
+    ```
+
 ??? info "Internal helpers used: 3"
 
     This callable uses 3 internal helpers for other.
@@ -252,7 +252,7 @@ def enforce_freshness(
 
             **`def _coerce_date(value) -> date | None`**
 
-            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/guardrails.py#L342-L359)
+            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/guardrails.py#L342-L359)
 
             ```python
             def _coerce_date(value) -> date | None:
@@ -277,7 +277,7 @@ def enforce_freshness(
 
             **`def _iso_date_value(value) -> str`**
 
-            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/guardrails.py#L362-L364)
+            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/guardrails.py#L362-L364)
 
             ```python
             def _iso_date_value(value) -> str:
@@ -287,7 +287,7 @@ def enforce_freshness(
 
             **`def _max_column_value(dataframe, column_name: str)`**
 
-            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/guardrails.py#L309-L339)
+            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/guardrails.py#L309-L339)
 
             ```python
             def _max_column_value(dataframe, column_name: str):
@@ -363,7 +363,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/guardrails.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/guardrails.py#L367-L464">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/guardrails.py#L367-L464</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/guardrails.py#L367-L464">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/guardrails.py#L367-L464</a>
 - Start line: `367`
 - End line: `464`
 - Signature:

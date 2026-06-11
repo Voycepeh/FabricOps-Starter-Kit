@@ -40,28 +40,6 @@ Not documented yet
 - `fabricops_kit.governance_review._catalogue_table_options`
 - `fabricops_kit.governance_review._coerce_rows`
 
-??? info "Call flow"
-
-    ```text
-    widget_select_catalogue_table(...)
-    ├── _catalogue_table_options(...)
-    │   ├── _build_metadata_table_key(...)
-    │   │   └── _stable_metadata_key(...)
-    │   ├── _is_success(...)
-    │   │   └── _value(...)
-    │   └── _value(...)
-    ├── _coerce_rows(...)
-    └── read_lakehouse_table(...)
-        ├── _current_database_matches(...)
-        ├── _get_spark(...)
-        ├── _get_store(...)
-        ├── _normalize_table_name(...)
-        ├── _registered_table_identifier(...)
-        │   ├── _normalize_table_name(...)
-        │   └── _quote_identifier(...)
-        └── _uses_registered_metadata_table(...)
-    ```
-
 ## Callable implementation
 
 ### Function details
@@ -119,7 +97,7 @@ No additional callable notes are documented.
 ### Public callable source code
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/governance_review.py#L337-L378">View widget_select_catalogue_table on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L337-L378">View widget_select_catalogue_table on GitHub</a>
 
 ```python
 def widget_select_catalogue_table(config: Any, env: str, *, spark_session: Any):
@@ -168,6 +146,28 @@ def widget_select_catalogue_table(config: Any, env: str, *, spark_session: Any):
 
 ## Internal implementation summary
 
+??? info "Call flow"
+
+    ```text
+    widget_select_catalogue_table(...)
+    ├── _catalogue_table_options(...)
+    │   ├── _build_metadata_table_key(...)
+    │   │   └── _stable_metadata_key(...)
+    │   ├── _is_success(...)
+    │   │   └── _value(...)
+    │   └── _value(...)
+    ├── _coerce_rows(...)
+    └── read_lakehouse_table(...)
+        ├── _current_database_matches(...)
+        ├── _get_spark(...)
+        ├── _get_store(...)
+        ├── _normalize_table_name(...)
+        ├── _registered_table_identifier(...)
+        │   ├── _normalize_table_name(...)
+        │   └── _quote_identifier(...)
+        └── _uses_registered_metadata_table(...)
+    ```
+
 ??? info "Internal helpers used: 6"
 
     This callable uses 6 internal helpers for metadata loading and other.
@@ -202,7 +202,7 @@ def widget_select_catalogue_table(config: Any, env: str, *, spark_session: Any):
 
             **`def _build_metadata_table_key(environment_name, dataset_name, table_name) -> str`**
 
-            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/metadata.py#L149-L150)
+            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/metadata.py#L149-L150)
 
             ```python
             def _build_metadata_table_key(environment_name, dataset_name, table_name) -> str:
@@ -211,7 +211,7 @@ def widget_select_catalogue_table(config: Any, env: str, *, spark_session: Any):
 
             **`def _catalogue_table_options(catalogue_rows: Iterable[dict[str, Any]]) -> list[dict[str, Any]]`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/governance_review.py#L258-L307)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L258-L307)
 
             ```python
             def _catalogue_table_options(catalogue_rows: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -268,7 +268,7 @@ def widget_select_catalogue_table(config: Any, env: str, *, spark_session: Any):
 
             **`def _stable_metadata_key(*parts: Any) -> str`**
 
-            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/metadata.py#L144-L146)
+            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/metadata.py#L144-L146)
 
             ```python
             def _stable_metadata_key(*parts: Any) -> str:
@@ -280,7 +280,7 @@ def widget_select_catalogue_table(config: Any, env: str, *, spark_session: Any):
 
             **`def _coerce_rows(rows_or_df: Any) -> list[dict[str, Any]]`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/governance_review.py#L62-L67)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L62-L67)
 
             ```python
             def _coerce_rows(rows_or_df: Any) -> list[dict[str, Any]]:
@@ -293,7 +293,7 @@ def widget_select_catalogue_table(config: Any, env: str, *, spark_session: Any):
 
             **`def _is_success(row: dict[str, Any]) -> bool`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/governance_review.py#L74-L75)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L74-L75)
 
             ```python
             def _is_success(row: dict[str, Any]) -> bool:
@@ -302,7 +302,7 @@ def widget_select_catalogue_table(config: Any, env: str, *, spark_session: Any):
 
             **`def _value(row: dict[str, Any], name: str, default: Any='') -> Any`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/governance_review.py#L70-L71)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L70-L71)
 
             ```python
             def _value(row: dict[str, Any], name: str, default: Any = "") -> Any:
@@ -355,7 +355,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/governance_review.py#L337-L378">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/governance_review.py#L337-L378</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L337-L378">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L337-L378</a>
 - Start line: `337`
 - End line: `378`
 - Signature:

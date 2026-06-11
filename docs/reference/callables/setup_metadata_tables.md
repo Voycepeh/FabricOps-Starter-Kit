@@ -43,55 +43,6 @@ Not documented yet
 - `fabricops_kit.governance_review._setup_governance_metadata_tables`
 - `fabricops_kit.metadata._setup_notebook_registry_table`
 
-??? info "Call flow"
-
-    Large call graph shown to two levels.
-
-    Expanded internal helper tree is available in the internal implementation summary.
-
-    ```text
-    setup_metadata_tables(...)
-    ├── _get_active_metadata_tables(...)
-    │   ├── _get_governance_metadata_schemas(...)
-    │   │   └── …
-    │   └── _validate_framework_config(...)
-    │       └── …
-    ├── _metadata_tables_from_setup_results(...)
-    ├── _setup_data_agreement_tables(...)
-    │   ├── _ensure_metadata_tables(...)
-    │   │   └── …
-    │   └── _list_data_stewards(...)
-    │       └── …
-    ├── _setup_governance_metadata_tables(...)
-    │   ├── _coerce_rows(...)
-    │   ├── _get_governance_metadata_schemas(...)
-    │   │   └── …
-    │   ├── _is_table_not_found_error(...)
-    │   ├── _schema_field_names(...)
-    │   ├── read_lakehouse_table(...)
-    │   │   └── …
-    │   └── write_lakehouse_table(...)
-    │       └── …
-    ├── _setup_notebook_registry_table(...)
-    │   ├── _coerce_row_dicts(...)
-    │   ├── _registry_rows_with_defaults(...)
-    │   │   └── …
-    │   ├── _rows_for_spark(...)
-    │   ├── read_lakehouse_table(...)
-    │   │   └── …
-    │   └── write_lakehouse_table(...)
-    │       └── …
-    └── _validate_metadata_table_registration(...)
-        ├── _detect_nested_metadata_delta_folders(...)
-        │   └── …
-        ├── _get_active_metadata_tables(...)
-        │   └── …
-        ├── _show_tables_for_metadata_lakehouse(...)
-        │   └── …
-        └── _validate_framework_config(...)
-            └── …
-    ```
-
 ## Callable implementation
 
 ### Function details
@@ -155,7 +106,7 @@ metadata reads and writes through the configured metadata lakehouse target.
 ### Public callable source code
 
 - Source file path: `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/config.py#L1044-L1108">View setup_metadata_tables on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/config.py#L1044-L1108">View setup_metadata_tables on GitHub</a>
 
 ```python
 def setup_metadata_tables(
@@ -227,6 +178,55 @@ def setup_metadata_tables(
 
 ## Internal implementation summary
 
+??? info "Call flow"
+
+    Large call graph shown to two levels.
+
+    Expanded internal helper tree is available in the internal implementation summary.
+
+    ```text
+    setup_metadata_tables(...)
+    ├── _get_active_metadata_tables(...)
+    │   ├── _get_governance_metadata_schemas(...)
+    │   │   └── …
+    │   └── _validate_framework_config(...)
+    │       └── …
+    ├── _metadata_tables_from_setup_results(...)
+    ├── _setup_data_agreement_tables(...)
+    │   ├── _ensure_metadata_tables(...)
+    │   │   └── …
+    │   └── _list_data_stewards(...)
+    │       └── …
+    ├── _setup_governance_metadata_tables(...)
+    │   ├── _coerce_rows(...)
+    │   ├── _get_governance_metadata_schemas(...)
+    │   │   └── …
+    │   ├── _is_table_not_found_error(...)
+    │   ├── _schema_field_names(...)
+    │   ├── read_lakehouse_table(...)
+    │   │   └── …
+    │   └── write_lakehouse_table(...)
+    │       └── …
+    ├── _setup_notebook_registry_table(...)
+    │   ├── _coerce_row_dicts(...)
+    │   ├── _registry_rows_with_defaults(...)
+    │   │   └── …
+    │   ├── _rows_for_spark(...)
+    │   ├── read_lakehouse_table(...)
+    │   │   └── …
+    │   └── write_lakehouse_table(...)
+    │       └── …
+    └── _validate_metadata_table_registration(...)
+        ├── _detect_nested_metadata_delta_folders(...)
+        │   └── …
+        ├── _get_active_metadata_tables(...)
+        │   └── …
+        ├── _show_tables_for_metadata_lakehouse(...)
+        │   └── …
+        └── _validate_framework_config(...)
+            └── …
+    ```
+
 ??? info "Internal helpers used: 30"
 
     This callable uses 30 internal helpers for audit timestamp, metadata loading, validation, rule parsing, rule evaluation, fabric or spark access, and other.
@@ -286,7 +286,7 @@ def setup_metadata_tables(
 
             **`def _validate_audit_timezone(timezone_name: str | None) -> str`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/config.py#L27-L58)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/config.py#L27-L58)
 
             ```python
             def _validate_audit_timezone(timezone_name: str | None) -> str:
@@ -327,7 +327,7 @@ def setup_metadata_tables(
 
             **`def _detect_nested_metadata_delta_folders(*, config: FrameworkConfig | dict[str, Any], env: str, expected_tables: list[str]) -> list[str]`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/config.py#L980-L1000)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/config.py#L980-L1000)
 
             ```python
             def _detect_nested_metadata_delta_folders(*, config: FrameworkConfig | dict[str, Any], env: str, expected_tables: list[str]) -> list[str]:
@@ -355,7 +355,7 @@ def setup_metadata_tables(
 
             **`def _ensure_metadata_tables(config: Any, env_name: str, *, spark: Any) -> dict[str, Any]`**
 
-            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/data_agreement.py#L405-L448)
+            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/data_agreement.py#L405-L448)
 
             ```python
             def _ensure_metadata_tables(config: Any, env_name: str, *, spark: Any) -> dict[str, Any]:
@@ -406,7 +406,7 @@ def setup_metadata_tables(
 
             **`def _get_active_metadata_tables(config: FrameworkConfig | dict[str, Any]) -> list[str]`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/config.py#L898-L925)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/config.py#L898-L925)
 
             ```python
             def _get_active_metadata_tables(config: FrameworkConfig | dict[str, Any]) -> list[str]:
@@ -441,7 +441,7 @@ def setup_metadata_tables(
 
             **`def _get_governance_metadata_schemas() -> dict[str, Any]`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/governance_review.py#L152-L195)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L152-L195)
 
             ```python
             def _get_governance_metadata_schemas() -> dict[str, Any]:
@@ -492,7 +492,7 @@ def setup_metadata_tables(
 
             **`def _is_table_not_found_error(exc: Exception) -> bool`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/governance_review.py#L198-L218)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L198-L218)
 
             ```python
             def _is_table_not_found_error(exc: Exception) -> bool:
@@ -520,7 +520,7 @@ def setup_metadata_tables(
 
             **`def _list_data_stewards(config: Any, env_name: str, *, spark_session: Any=None, active_only: bool=True, missing_ok: bool=False) -> list[dict[str, Any]]`**
 
-            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/data_agreement.py#L536-L565)
+            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/data_agreement.py#L536-L565)
 
             ```python
             def _list_data_stewards(config: Any, env_name: str, *, spark_session: Any = None, active_only: bool = True, missing_ok: bool = False) -> list[dict[str, Any]]:
@@ -557,7 +557,7 @@ def setup_metadata_tables(
 
             **`def _metadata_tables_from_setup_results(*summaries: dict[str, Any]) -> list[str]`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/config.py#L928-L939)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/config.py#L928-L939)
 
             ```python
             def _metadata_tables_from_setup_results(*summaries: dict[str, Any]) -> list[str]:
@@ -576,7 +576,7 @@ def setup_metadata_tables(
 
             **`def _setup_data_agreement_tables(*, spark: Any, config: Any, env: str, require_active_steward: bool=False) -> dict[str, Any]`**
 
-            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/data_agreement.py#L451-L485)
+            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/data_agreement.py#L451-L485)
 
             ```python
             def _setup_data_agreement_tables(*, spark: Any, config: Any, env: str, require_active_steward: bool = False) -> dict[str, Any]:
@@ -618,7 +618,7 @@ def setup_metadata_tables(
 
             **`def _setup_governance_metadata_tables(*, spark: Any, config: Any, env: str) -> dict[str, Any]`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/governance_review.py#L221-L255)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L221-L255)
 
             ```python
             def _setup_governance_metadata_tables(*, spark: Any, config: Any, env: str) -> dict[str, Any]:
@@ -660,7 +660,7 @@ def setup_metadata_tables(
 
             **`def _setup_notebook_registry_table(*, spark: Any, config: Any, env: str, metadata_table: str=NOTEBOOK_REGISTRY_TABLE) -> dict[str, Any]`**
 
-            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/metadata.py#L61-L130)
+            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/metadata.py#L61-L130)
 
             ```python
             def _setup_notebook_registry_table(
@@ -737,7 +737,7 @@ def setup_metadata_tables(
 
             **`def _show_tables_for_metadata_lakehouse(*, spark: Any, config: FrameworkConfig | dict[str, Any], env: str) -> dict[str, Any]`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/config.py#L942-L977)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/config.py#L942-L977)
 
             ```python
             def _show_tables_for_metadata_lakehouse(*, spark: Any, config: FrameworkConfig | dict[str, Any], env: str) -> dict[str, Any]:
@@ -780,7 +780,7 @@ def setup_metadata_tables(
 
             **`def _to_bool(value: Any) -> bool`**
 
-            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/data_agreement.py#L497-L513)
+            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/data_agreement.py#L497-L513)
 
             ```python
             def _to_bool(value: Any) -> bool:
@@ -804,7 +804,7 @@ def setup_metadata_tables(
 
             **`def _validate_metadata_table_registration(*, spark: Any, config: FrameworkConfig | dict[str, Any], env: str, expected_tables: list[str] | None=None) -> dict[str, Any]`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/config.py#L1003-L1041)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/config.py#L1003-L1041)
 
             ```python
             def _validate_metadata_table_registration(
@@ -850,7 +850,7 @@ def setup_metadata_tables(
 
             **`def _validate_schema_field_names(table_name: str, fields: list[tuple[str, Any]]) -> None`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/governance_review.py#L112-L137)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L112-L137)
 
             ```python
             def _validate_schema_field_names(table_name: str, fields: list[tuple[str, Any]]) -> None:
@@ -885,7 +885,7 @@ def setup_metadata_tables(
 
             **`def _validate_framework_config(config: FrameworkConfig | dict[str, Any]) -> FrameworkConfig`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/config.py#L551-L624)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/config.py#L551-L624)
 
             ```python
             def _validate_framework_config(config: FrameworkConfig | dict[str, Any]) -> FrameworkConfig:
@@ -968,7 +968,7 @@ def setup_metadata_tables(
 
             **`def _schema_field_names(schema: Any) -> list[str]`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/governance_review.py#L146-L149)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L146-L149)
 
             ```python
             def _schema_field_names(schema: Any) -> list[str]:
@@ -981,7 +981,7 @@ def setup_metadata_tables(
 
             **`def _spark_types()`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/governance_review.py#L103-L109)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L103-L109)
 
             ```python
             def _spark_types():
@@ -997,7 +997,7 @@ def setup_metadata_tables(
 
             **`def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/config.py#L627-L667)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/config.py#L627-L667)
 
             ```python
             def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any:
@@ -1045,7 +1045,7 @@ def setup_metadata_tables(
 
             **`def _rows_for_spark(rows: list[dict[str, Any]]) -> list[dict[str, Any]]`**
 
-            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/metadata.py#L161-L170)
+            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/metadata.py#L161-L170)
 
             ```python
             def _rows_for_spark(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -1064,7 +1064,7 @@ def setup_metadata_tables(
 
             **`def _active_steward(row: dict[str, Any]) -> bool`**
 
-            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/data_agreement.py#L516-L526)
+            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/data_agreement.py#L516-L526)
 
             ```python
             def _active_steward(row: dict[str, Any]) -> bool:
@@ -1082,7 +1082,7 @@ def setup_metadata_tables(
 
             **`def _coerce_row_dicts(rows: Any) -> list[dict[str, Any]]`**
 
-            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/data_agreement.py#L397-L402)
+            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/data_agreement.py#L397-L402)
 
             ```python
             def _coerce_row_dicts(rows: Any) -> list[dict[str, Any]]:
@@ -1095,7 +1095,7 @@ def setup_metadata_tables(
 
             **`def _coerce_row_dicts(rows: Any) -> list[dict[str, Any]]`**
 
-            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/metadata.py#L53-L58)
+            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/metadata.py#L53-L58)
 
             ```python
             def _coerce_row_dicts(rows: Any) -> list[dict[str, Any]]:
@@ -1108,7 +1108,7 @@ def setup_metadata_tables(
 
             **`def _coerce_rows(rows_or_df: Any) -> list[dict[str, Any]]`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/governance_review.py#L62-L67)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L62-L67)
 
             ```python
             def _coerce_rows(rows_or_df: Any) -> list[dict[str, Any]]:
@@ -1121,7 +1121,7 @@ def setup_metadata_tables(
 
             **`def _config_value(config: Any, name: str, default: Any) -> Any`**
 
-            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/data_agreement.py#L149-L153)
+            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/data_agreement.py#L149-L153)
 
             ```python
             def _config_value(config: Any, name: str, default: Any) -> Any:
@@ -1133,7 +1133,7 @@ def setup_metadata_tables(
 
             **`def _latest_by_key(rows: Any, key: str) -> list[dict[str, Any]]`**
 
-            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/data_agreement.py#L488-L494)
+            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/data_agreement.py#L488-L494)
 
             ```python
             def _latest_by_key(rows: Any, key: str) -> list[dict[str, Any]]:
@@ -1147,7 +1147,7 @@ def setup_metadata_tables(
 
             **`def _notebook_registration_key(row: dict[str, Any]) -> str`**
 
-            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/metadata.py#L41-L50)
+            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/metadata.py#L41-L50)
 
             ```python
             def _notebook_registration_key(row: dict[str, Any]) -> str:
@@ -1164,7 +1164,7 @@ def setup_metadata_tables(
 
             **`def _registry_rows_with_defaults(rows: Any) -> list[dict[str, Any]]`**
 
-            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/metadata.py#L408-L419)
+            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/metadata.py#L408-L419)
 
             ```python
             def _registry_rows_with_defaults(rows: Any) -> list[dict[str, Any]]:
@@ -1183,7 +1183,7 @@ def setup_metadata_tables(
 
             **`def _safe_str(value: Any) -> str`**
 
-            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/metadata.py#L188-L189)
+            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/metadata.py#L188-L189)
 
             ```python
             def _safe_str(value: Any) -> str:
@@ -1192,7 +1192,7 @@ def setup_metadata_tables(
 
             **`def _schema(table_name: str, fields: list[tuple[str, Any]])`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/governance_review.py#L140-L143)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L140-L143)
 
             ```python
             def _schema(table_name: str, fields: list[tuple[str, Any]]):
@@ -1244,7 +1244,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/config.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/config.py#L1044-L1108">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/config.py#L1044-L1108</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/config.py#L1044-L1108">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/config.py#L1044-L1108</a>
 - Start line: `1044`
 - End line: `1108`
 - Signature:

@@ -45,52 +45,6 @@ Reads approved DQ-rule metadata and evaluates checks against the DataFrame; it d
 - `fabricops_kit.governance_review._run_dq_guardrail_checks`
 - `fabricops_kit.governance_review._summarize_dq_guardrail`
 
-??? info "Call flow"
-
-    Large call graph shown to two levels.
-
-    Expanded internal helper tree is available in the internal implementation summary.
-
-    ```text
-    enforce_dq_rules(...)
-    ├── _dq_failed_row_count(...)
-    │   ├── _dq_failed_expression(...)
-    │   │   └── …
-    │   └── _spark_sql_helpers(...)
-    ├── _dq_summary(...)
-    │   ├── _current_audit_timestamp(...)
-    │   │   └── …
-    │   └── _summarize_dq_guardrail(...)
-    ├── _dq_tagged_dataframe(...)
-    │   ├── _dq_failed_expression(...)
-    │   │   └── …
-    │   └── _spark_sql_helpers(...)
-    ├── _load_active_dq_rules(...)
-    │   ├── _canonical_dq_rule_type(...)
-    │   ├── _coerce_rows(...)
-    │   ├── _latest_dq_rule_versions(...)
-    │   │   └── …
-    │   ├── _spark_sql_helpers(...)
-    │   └── _validate_dq_rules(...)
-    │       └── …
-    ├── _run_dq_guardrail_checks(...)
-    │   ├── _dq_check_status(...)
-    │   ├── _dq_failed_expression(...)
-    │   │   └── …
-    │   ├── _spark_sql_helpers(...)
-    │   └── _validate_dq_rules(...)
-    │       └── …
-    ├── _summarize_dq_guardrail(...)
-    └── read_lakehouse_table(...)
-        ├── _current_database_matches(...)
-        ├── _get_spark(...)
-        ├── _get_store(...)
-        ├── _normalize_table_name(...)
-        ├── _registered_table_identifier(...)
-        │   └── …
-        └── _uses_registered_metadata_table(...)
-    ```
-
 ## Callable implementation
 
 ### Function details
@@ -165,7 +119,7 @@ rows, send alerts, or partially write targets.
 ### Public callable source code
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/governance_review.py#L1536-L1593">View enforce_dq_rules on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L1536-L1593">View enforce_dq_rules on GitHub</a>
 
 ```python
 def enforce_dq_rules(
@@ -230,6 +184,52 @@ def enforce_dq_rules(
 
 ## Internal implementation summary
 
+??? info "Call flow"
+
+    Large call graph shown to two levels.
+
+    Expanded internal helper tree is available in the internal implementation summary.
+
+    ```text
+    enforce_dq_rules(...)
+    ├── _dq_failed_row_count(...)
+    │   ├── _dq_failed_expression(...)
+    │   │   └── …
+    │   └── _spark_sql_helpers(...)
+    ├── _dq_summary(...)
+    │   ├── _current_audit_timestamp(...)
+    │   │   └── …
+    │   └── _summarize_dq_guardrail(...)
+    ├── _dq_tagged_dataframe(...)
+    │   ├── _dq_failed_expression(...)
+    │   │   └── …
+    │   └── _spark_sql_helpers(...)
+    ├── _load_active_dq_rules(...)
+    │   ├── _canonical_dq_rule_type(...)
+    │   ├── _coerce_rows(...)
+    │   ├── _latest_dq_rule_versions(...)
+    │   │   └── …
+    │   ├── _spark_sql_helpers(...)
+    │   └── _validate_dq_rules(...)
+    │       └── …
+    ├── _run_dq_guardrail_checks(...)
+    │   ├── _dq_check_status(...)
+    │   ├── _dq_failed_expression(...)
+    │   │   └── …
+    │   ├── _spark_sql_helpers(...)
+    │   └── _validate_dq_rules(...)
+    │       └── …
+    ├── _summarize_dq_guardrail(...)
+    └── read_lakehouse_table(...)
+        ├── _current_database_matches(...)
+        ├── _get_spark(...)
+        ├── _get_store(...)
+        ├── _normalize_table_name(...)
+        ├── _registered_table_identifier(...)
+        │   └── …
+        └── _uses_registered_metadata_table(...)
+    ```
+
 ??? info "Internal helpers used: 16"
 
     This callable uses 16 internal helpers for audit timestamp, metadata loading, validation, rule parsing, rule evaluation, and other.
@@ -284,7 +284,7 @@ def enforce_dq_rules(
 
             **`def _current_audit_timestamp(config: Any=None, timezone_name: str | None=None, *, drop_microseconds: bool=True) -> str`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/config.py#L69-L75)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/config.py#L69-L75)
 
             ```python
             def _current_audit_timestamp(config: Any = None, timezone_name: str | None = None, *, drop_microseconds: bool = True) -> str:
@@ -298,7 +298,7 @@ def enforce_dq_rules(
 
             **`def _get_audit_timezone(config: Any=None, timezone_name: str | None=None) -> str`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/config.py#L61-L66)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/config.py#L61-L66)
 
             ```python
             def _get_audit_timezone(config: Any = None, timezone_name: str | None = None) -> str:
@@ -311,7 +311,7 @@ def enforce_dq_rules(
 
             **`def _validate_audit_timezone(timezone_name: str | None) -> str`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/config.py#L27-L58)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/config.py#L27-L58)
 
             ```python
             def _validate_audit_timezone(timezone_name: str | None) -> str:
@@ -352,7 +352,7 @@ def enforce_dq_rules(
 
             **`def _latest_dq_rule_versions(metadata_df, table_name: str, env_name: str | None=None, dataset_name: str | None=None)`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/governance_review.py#L1258-L1279)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L1258-L1279)
 
             ```python
             def _latest_dq_rule_versions(metadata_df, table_name: str, env_name: str | None = None, dataset_name: str | None = None):
@@ -381,7 +381,7 @@ def enforce_dq_rules(
 
             **`def _load_active_dq_rules(metadata_df, table_name: str, env_name: str | None=None, dataset_name: str | None=None) -> list[dict[str, Any]]`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/governance_review.py#L1282-L1317)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L1282-L1317)
 
             ```python
             def _load_active_dq_rules(metadata_df, table_name: str, env_name: str | None = None, dataset_name: str | None = None) -> list[dict[str, Any]]:
@@ -424,7 +424,7 @@ def enforce_dq_rules(
 
             **`def _validate_dq_rules(rules: list[dict[str, Any]]) -> list[dict[str, Any]]`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/governance_review.py#L1183-L1256)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L1183-L1256)
 
             ```python
             def _validate_dq_rules(rules: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -507,7 +507,7 @@ def enforce_dq_rules(
 
             **`def _dq_check_status(severity: str, failed_count: int) -> str`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/governance_review.py#L1405-L1408)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L1405-L1408)
 
             ```python
             def _dq_check_status(severity: str, failed_count: int) -> str:
@@ -518,7 +518,7 @@ def enforce_dq_rules(
 
             **`def _run_dq_guardrail_checks(df, table_name: str, rules: list[dict[str, Any]]) -> list[dict[str, Any]]`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/governance_review.py#L1411-L1446)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L1411-L1446)
 
             ```python
             def _run_dq_guardrail_checks(df, table_name: str, rules: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -563,7 +563,7 @@ def enforce_dq_rules(
 
             **`def _canonical_dq_rule_type(rule_type: Any) -> str`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/governance_review.py#L78-L79)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L78-L79)
 
             ```python
             def _canonical_dq_rule_type(rule_type: Any) -> str:
@@ -574,7 +574,7 @@ def enforce_dq_rules(
 
             **`def _dq_failed_expression(df, rule: dict[str, Any])`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/governance_review.py#L1321-L1403)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L1321-L1403)
 
             ```python
             def _dq_failed_expression(df, rule: dict[str, Any]):
@@ -664,7 +664,7 @@ def enforce_dq_rules(
 
             **`def _dq_failed_row_count(df, rules: list[dict[str, Any]]) -> int`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/governance_review.py#L1485-L1495)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L1485-L1495)
 
             ```python
             def _dq_failed_row_count(df, rules: list[dict[str, Any]]) -> int:
@@ -682,7 +682,7 @@ def enforce_dq_rules(
 
             **`def _dq_summary(checks: list[dict[str, Any]], total_count: int, failed_row_count: int, *, config: Any=None) -> dict[str, Any]`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/governance_review.py#L1498-L1513)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L1498-L1513)
 
             ```python
             def _dq_summary(checks: list[dict[str, Any]], total_count: int, failed_row_count: int, *, config: Any = None) -> dict[str, Any]:
@@ -705,7 +705,7 @@ def enforce_dq_rules(
 
             **`def _dq_tagged_dataframe(df, rules: list[dict[str, Any]])`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/governance_review.py#L1449-L1482)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L1449-L1482)
 
             ```python
             def _dq_tagged_dataframe(df, rules: list[dict[str, Any]]):
@@ -746,7 +746,7 @@ def enforce_dq_rules(
 
             **`def _spark_sql_helpers()`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/governance_review.py#L1120-L1127)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L1120-L1127)
 
             ```python
             def _spark_sql_helpers():
@@ -761,7 +761,7 @@ def enforce_dq_rules(
 
             **`def _summarize_dq_guardrail(checks: list[dict[str, Any]]) -> dict[str, Any]`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/governance_review.py#L1516-L1533)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L1516-L1533)
 
             ```python
             def _summarize_dq_guardrail(checks: list[dict[str, Any]]) -> dict[str, Any]:
@@ -788,7 +788,7 @@ def enforce_dq_rules(
 
             **`def _coerce_rows(rows_or_df: Any) -> list[dict[str, Any]]`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/governance_review.py#L62-L67)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L62-L67)
 
             ```python
             def _coerce_rows(rows_or_df: Any) -> list[dict[str, Any]]:
@@ -843,7 +843,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/governance_review.py#L1536-L1593">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/governance_review.py#L1536-L1593</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L1536-L1593">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L1536-L1593</a>
 - Start line: `1536`
 - End line: `1593`
 - Signature:

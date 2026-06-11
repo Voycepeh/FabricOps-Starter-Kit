@@ -39,14 +39,6 @@ Not documented yet
 - `fabricops_kit.config._get_store`
 - `fabricops_kit.fabric_input_output._get_spark`
 
-??? info "Call flow"
-
-    ```text
-    read_warehouse_table(...)
-    ├── _get_spark(...)
-    └── _get_store(...)
-    ```
-
 ## Callable implementation
 
 ### Function details
@@ -118,7 +110,7 @@ No additional callable notes are documented.
 ### Public callable source code
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/fabric_input_output.py#L371-L430">View read_warehouse_table on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/fabric_input_output.py#L371-L430">View read_warehouse_table on GitHub</a>
 
 ```python
 def read_warehouse_table(config, env, target, schema, table, spark_session=None):
@@ -185,6 +177,14 @@ def read_warehouse_table(config, env, target, schema, table, spark_session=None)
 
 ## Internal implementation summary
 
+??? info "Call flow"
+
+    ```text
+    read_warehouse_table(...)
+    ├── _get_spark(...)
+    └── _get_store(...)
+    ```
+
 ??? info "Internal helpers used: 2"
 
     This callable uses 2 internal helpers for fabric or spark access.
@@ -214,7 +214,7 @@ def read_warehouse_table(config, env, target, schema, table, spark_session=None)
 
             **`def _get_spark(spark_session=None)`**
 
-            Source: [`src/fabricops_kit/fabric_input_output.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/fabric_input_output.py#L125-L155)
+            Source: [`src/fabricops_kit/fabric_input_output.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/fabric_input_output.py#L125-L155)
 
             ```python
             def _get_spark(spark_session=None):
@@ -252,7 +252,7 @@ def read_warehouse_table(config, env, target, schema, table, spark_session=None)
 
             **`def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/config.py#L627-L667)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/config.py#L627-L667)
 
             ```python
             def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any:
@@ -337,7 +337,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/fabric_input_output.py#L371-L430">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/fabric_input_output.py#L371-L430</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/fabric_input_output.py#L371-L430">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/fabric_input_output.py#L371-L430</a>
 - Start line: `371`
 - End line: `430`
 - Signature:

@@ -151,7 +151,8 @@ def test_callable_pages_embed_public_first_implementation_details() -> None:
         assert "Area" in text and "Helpers" in text and "What they do" in text, page
         public_source_pos = text.index("### Public callable source code")
         internal_summary_pos = text.index("## Internal implementation summary")
-        assert public_source_pos < internal_summary_pos, page
+        call_flow_pos = text.index('??? info "Call flow"')
+        assert public_source_pos < internal_summary_pos < call_flow_pos, page
         if '??? info "Internal helpers used: 0"' not in text:
             assert '??? example "View helper source by area"' in text, page
             assert text.index('??? example "View helper source by area"') > internal_summary_pos, page
@@ -178,6 +179,8 @@ def test_enforce_dq_rules_large_helper_set_is_grouped_by_area() -> None:
         assert f'??? example "{area} helpers"' in text
     assert "Expanded internal helper tree is available in the internal implementation summary." in text
     assert text.index("### Public callable source code") < text.index("## Internal implementation summary")
+    assert text.index("## Internal implementation summary") < text.index('??? info "Call flow"')
+    assert text.index('??? info "Call flow"') < text.index('??? info "Internal helpers used: 16"')
     assert text.index('??? example "View helper source by area"') < text.index('??? example "Audit timestamp helpers"')
 
 

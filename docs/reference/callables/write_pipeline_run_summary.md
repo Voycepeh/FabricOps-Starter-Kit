@@ -41,25 +41,6 @@ Not documented yet
 - `fabricops_kit.pipeline._now_iso`
 - `fabricops_kit.pipeline._summary_status`
 
-??? info "Call flow"
-
-    ```text
-    write_pipeline_run_summary(...)
-    ├── _definition_name(...)
-    ├── _now_iso(...)
-    │   └── _current_audit_timestamp(...)
-    │       └── _get_audit_timezone(...)
-    │           └── _validate_audit_timezone(...)
-    ├── _summary_status(...)
-    └── write_lakehouse_table(...)
-        ├── _get_store(...)
-        ├── _normalize_table_name(...)
-        ├── _registered_table_identifier(...)
-        │   ├── _normalize_table_name(...)
-        │   └── _quote_identifier(...)
-        └── _uses_registered_metadata_table(...)
-    ```
-
 ## Callable implementation
 
 ### Function details
@@ -243,7 +224,7 @@ relies on a default attached lakehouse.
 ### Public callable source code
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/pipeline.py#L646-L758">View write_pipeline_run_summary on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/pipeline.py#L646-L758">View write_pipeline_run_summary on GitHub</a>
 
 ```python
 def write_pipeline_run_summary(
@@ -363,6 +344,25 @@ def write_pipeline_run_summary(
 
 ## Internal implementation summary
 
+??? info "Call flow"
+
+    ```text
+    write_pipeline_run_summary(...)
+    ├── _definition_name(...)
+    ├── _now_iso(...)
+    │   └── _current_audit_timestamp(...)
+    │       └── _get_audit_timezone(...)
+    │           └── _validate_audit_timezone(...)
+    ├── _summary_status(...)
+    └── write_lakehouse_table(...)
+        ├── _get_store(...)
+        ├── _normalize_table_name(...)
+        ├── _registered_table_identifier(...)
+        │   ├── _normalize_table_name(...)
+        │   └── _quote_identifier(...)
+        └── _uses_registered_metadata_table(...)
+    ```
+
 ??? info "Internal helpers used: 6"
 
     This callable uses 6 internal helpers for audit timestamp, rule parsing, result summary, and other.
@@ -407,7 +407,7 @@ def write_pipeline_run_summary(
 
             **`def _current_audit_timestamp(config: Any=None, timezone_name: str | None=None, *, drop_microseconds: bool=True) -> str`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/config.py#L69-L75)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/config.py#L69-L75)
 
             ```python
             def _current_audit_timestamp(config: Any = None, timezone_name: str | None = None, *, drop_microseconds: bool = True) -> str:
@@ -421,7 +421,7 @@ def write_pipeline_run_summary(
 
             **`def _get_audit_timezone(config: Any=None, timezone_name: str | None=None) -> str`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/config.py#L61-L66)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/config.py#L61-L66)
 
             ```python
             def _get_audit_timezone(config: Any = None, timezone_name: str | None = None) -> str:
@@ -434,7 +434,7 @@ def write_pipeline_run_summary(
 
             **`def _validate_audit_timezone(timezone_name: str | None) -> str`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/config.py#L27-L58)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/config.py#L27-L58)
 
             ```python
             def _validate_audit_timezone(timezone_name: str | None) -> str:
@@ -475,7 +475,7 @@ def write_pipeline_run_summary(
 
             **`def _definition_name(name: str, definition: Mapping[str, Any]) -> str`**
 
-            Source: [`src/fabricops_kit/pipeline.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/pipeline.py#L23-L24)
+            Source: [`src/fabricops_kit/pipeline.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/pipeline.py#L23-L24)
 
             ```python
             def _definition_name(name: str, definition: Mapping[str, Any]) -> str:
@@ -486,7 +486,7 @@ def write_pipeline_run_summary(
 
             **`def _summary_status(results: Mapping[str, Mapping[str, Any]]) -> str`**
 
-            Source: [`src/fabricops_kit/pipeline.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/pipeline.py#L27-L46)
+            Source: [`src/fabricops_kit/pipeline.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/pipeline.py#L27-L46)
 
             ```python
             def _summary_status(results: Mapping[str, Mapping[str, Any]]) -> str:
@@ -515,7 +515,7 @@ def write_pipeline_run_summary(
 
             **`def _now_iso(config: Any=None) -> str`**
 
-            Source: [`src/fabricops_kit/pipeline.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/pipeline.py#L19-L20)
+            Source: [`src/fabricops_kit/pipeline.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/pipeline.py#L19-L20)
 
             ```python
             def _now_iso(config: Any = None) -> str:
@@ -563,7 +563,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/pipeline.py#L646-L758">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/pipeline.py#L646-L758</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/pipeline.py#L646-L758">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/pipeline.py#L646-L758</a>
 - Start line: `646`
 - End line: `758`
 - Signature:
