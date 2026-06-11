@@ -30,7 +30,54 @@ Not documented yet
 
 Not documented yet
 
-## Parameters
+## Used by
+
+- `fabricops_kit.governance_review._review_governance_evidence`
+
+## Calls
+
+- <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a>
+- `fabricops_kit.governance_review._coerce_rows`
+- `fabricops_kit.governance_review._is_success`
+- `fabricops_kit.governance_review._value`
+- `fabricops_kit.metadata._build_metadata_table_key`
+
+??? info "Call flow"
+
+    ```text
+    load_catalogue_profile_rows(...)
+    ├── _build_metadata_table_key(...)
+    │   └── _stable_metadata_key(...)
+    ├── _coerce_rows(...)
+    ├── _is_success(...)
+    │   └── _value(...)
+    ├── _value(...)
+    └── read_lakehouse_table(...)
+        ├── _current_database_matches(...)
+        ├── _get_spark(...)
+        ├── _get_store(...)
+        ├── _normalize_table_name(...)
+        ├── _registered_table_identifier(...)
+        │   ├── _normalize_table_name(...)
+        │   └── _quote_identifier(...)
+        └── _uses_registered_metadata_table(...)
+    ```
+
+## Callable implementation
+
+### Function details
+
+- Module: `governance_review`
+- Classification: Callable
+- Source file path: `src/fabricops_kit/governance_review.py`
+- Source line: `381`
+- Signature:
+
+```python
+def load_catalogue_profile_rows(config: Any, env: str, selection: dict[str, Any], *, spark_session: Any) -> list[dict[str, Any]]
+```
+
+### Parameters
 
 <div class="module-table-scroll reference-input-table">
 <table class="reference-function-table">
@@ -66,49 +113,18 @@ Not documented yet
 </table>
 </div>
 
-## Returns
+### Returns
 
 Not documented yet
 
-## Used by
+### Notes
 
-- `fabricops_kit.governance_review._review_governance_evidence`
+No additional callable notes are documented.
 
-## Calls
-
-- <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a>
-- `fabricops_kit.governance_review._coerce_rows`
-- `fabricops_kit.governance_review._is_success`
-- `fabricops_kit.governance_review._value`
-- `fabricops_kit.metadata._build_metadata_table_key`
-
-## Implementation details
-
-### Call flow
-
-```text
-load_catalogue_profile_rows(...)
-├── _build_metadata_table_key(...)
-│   └── _stable_metadata_key(...)
-├── _coerce_rows(...)
-├── _is_success(...)
-│   └── _value(...)
-├── _value(...)
-└── read_lakehouse_table(...)
-    ├── _current_database_matches(...)
-    ├── _get_spark(...)
-    ├── _get_store(...)
-    ├── _normalize_table_name(...)
-    ├── _registered_table_identifier(...)
-    │   ├── _normalize_table_name(...)
-    │   └── _quote_identifier(...)
-    └── _uses_registered_metadata_table(...)
-```
-
-## Public callable source code
+### Public callable source code
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/governance_review.py#L381-L406">View load_catalogue_profile_rows on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/governance_review.py#L381-L406">View load_catalogue_profile_rows on GitHub</a>
 
 ```python
 def load_catalogue_profile_rows(config: Any, env: str, selection: dict[str, Any], *, spark_session: Any) -> list[dict[str, Any]]:
@@ -139,102 +155,91 @@ def load_catalogue_profile_rows(config: Any, env: str, selection: dict[str, Any]
     return filtered
 ```
 
-## Maintainer internals
+## Internal implementation summary
 
-??? info "Nested helper functions: 5"
+??? info "Internal helpers used: 5"
 
-    These nested helpers support `load_catalogue_profile_rows` by handling lower-level implementation steps; expand this section only when maintaining or debugging the package internals.
+    This callable uses 5 internal helpers for metadata loading and other.
 
     <div class="module-table-scroll reference-input-table">
     <table class="reference-function-table">
       <thead>
         <tr>
-          <th>Helper</th>
-          <th>Role</th>
-          <th>Source</th>
+          <th>Area</th>
+          <th>Helpers</th>
+          <th>What they do</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td data-label="Helper"><code>_coerce_rows</code></td>
-          <td data-label="Role">Internal helper used by the package implementation.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/governance_review.py#L62-L67">src/fabricops_kit/governance_review.py</a></td>
+          <td data-label="Area">Metadata loading</td>
+          <td data-label="Helpers"><code>_build_metadata_table_key</code>, <code>_stable_metadata_key</code></td>
+          <td data-label="What they do">Load and identify the metadata or table context needed by the callable.</td>
         </tr>
         <tr>
-          <td data-label="Helper"><code>_is_success</code></td>
-          <td data-label="Role">Internal helper used by the package implementation.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/governance_review.py#L74-L75">src/fabricops_kit/governance_review.py</a></td>
-        </tr>
-        <tr>
-          <td data-label="Helper"><code>_value</code></td>
-          <td data-label="Role">Internal helper used by the package implementation.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/governance_review.py#L70-L71">src/fabricops_kit/governance_review.py</a></td>
-        </tr>
-        <tr>
-          <td data-label="Helper"><code>_build_metadata_table_key</code></td>
-          <td data-label="Role">Internal helper used by the package implementation.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/metadata.py#L149-L150">src/fabricops_kit/metadata.py</a></td>
-        </tr>
-        <tr>
-          <td data-label="Helper"><code>_stable_metadata_key</code></td>
-          <td data-label="Role">Internal helper used by the package implementation.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/metadata.py#L144-L146">src/fabricops_kit/metadata.py</a></td>
+          <td data-label="Area">Other</td>
+          <td data-label="Helpers"><code>_coerce_rows</code>, <code>_is_success</code>, <code>_value</code></td>
+          <td data-label="What they do">Support lower-level implementation details that do not fit the main helper areas.</td>
         </tr>
       </tbody>
     </table>
     </div>
 
-    ??? example "View helper source code"
+    ??? example "View helper source by area"
 
-        **`def _coerce_rows(rows_or_df: Any) -> list[dict[str, Any]]`**
+        ??? example "Metadata loading helpers"
 
-        Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/governance_review.py#L62-L67)
+            **`def _build_metadata_table_key(environment_name, dataset_name, table_name) -> str`**
 
-        ```python
-        def _coerce_rows(rows_or_df: Any) -> list[dict[str, Any]]:
-            if rows_or_df is None:
-                return []
-            if hasattr(rows_or_df, "collect"):
-                rows_or_df = rows_or_df.collect()
-            return [row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row) for row in rows_or_df]
-        ```
+            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/metadata.py#L149-L150)
 
-        **`def _is_success(row: dict[str, Any]) -> bool`**
+            ```python
+            def _build_metadata_table_key(environment_name, dataset_name, table_name) -> str:
+                return _stable_metadata_key(environment_name, dataset_name, table_name)
+            ```
 
-        Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/governance_review.py#L74-L75)
+            **`def _stable_metadata_key(*parts: Any) -> str`**
 
-        ```python
-        def _is_success(row: dict[str, Any]) -> bool:
-            return str(_value(row, "profile_status", "")).strip().lower() in SUCCESS_STATUSES
-        ```
+            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/metadata.py#L144-L146)
 
-        **`def _value(row: dict[str, Any], name: str, default: Any='') -> Any`**
+            ```python
+            def _stable_metadata_key(*parts: Any) -> str:
+                normalized = "|".join(str(part or "").strip().lower() for part in parts)
+                return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
+            ```
 
-        Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/governance_review.py#L70-L71)
+        ??? example "Other helpers"
 
-        ```python
-        def _value(row: dict[str, Any], name: str, default: Any = "") -> Any:
-            return row.get(name, row.get(name.upper(), default))
-        ```
+            **`def _coerce_rows(rows_or_df: Any) -> list[dict[str, Any]]`**
 
-        **`def _build_metadata_table_key(environment_name, dataset_name, table_name) -> str`**
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/governance_review.py#L62-L67)
 
-        Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/metadata.py#L149-L150)
+            ```python
+            def _coerce_rows(rows_or_df: Any) -> list[dict[str, Any]]:
+                if rows_or_df is None:
+                    return []
+                if hasattr(rows_or_df, "collect"):
+                    rows_or_df = rows_or_df.collect()
+                return [row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row) for row in rows_or_df]
+            ```
 
-        ```python
-        def _build_metadata_table_key(environment_name, dataset_name, table_name) -> str:
-            return _stable_metadata_key(environment_name, dataset_name, table_name)
-        ```
+            **`def _is_success(row: dict[str, Any]) -> bool`**
 
-        **`def _stable_metadata_key(*parts: Any) -> str`**
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/governance_review.py#L74-L75)
 
-        Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/metadata.py#L144-L146)
+            ```python
+            def _is_success(row: dict[str, Any]) -> bool:
+                return str(_value(row, "profile_status", "")).strip().lower() in SUCCESS_STATUSES
+            ```
 
-        ```python
-        def _stable_metadata_key(*parts: Any) -> str:
-            normalized = "|".join(str(part or "").strip().lower() for part in parts)
-            return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
-        ```
+            **`def _value(row: dict[str, Any], name: str, default: Any='') -> Any`**
+
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/governance_review.py#L70-L71)
+
+            ```python
+            def _value(row: dict[str, Any], name: str, default: Any = "") -> Any:
+                return row.get(name, row.get(name.upper(), default))
+            ```
 
 
 <details class="reference-metadata-details">
@@ -278,7 +283,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/governance_review.py#L381-L406">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/governance_review.py#L381-L406</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/governance_review.py#L381-L406">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/governance_review.py#L381-L406</a>
 - Start line: `381`
 - End line: `406`
 - Signature:
@@ -293,27 +298,9 @@ def load_catalogue_profile_rows(config: Any, env: str, selection: dict[str, Any]
 
 - <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a>
 
-### Internal implementation helpers
+### Internal implementation summary
 
-### Call flow
-
-```text
-load_catalogue_profile_rows(...)
-├── _build_metadata_table_key(...)
-│   └── _stable_metadata_key(...)
-├── _coerce_rows(...)
-├── _is_success(...)
-│   └── _value(...)
-├── _value(...)
-└── read_lakehouse_table(...)
-    ├── _current_database_matches(...)
-    ├── _get_spark(...)
-    ├── _get_store(...)
-    ├── _normalize_table_name(...)
-    ├── _registered_table_identifier(...)
-    │   ├── _normalize_table_name(...)
-    │   └── _quote_identifier(...)
-    └── _uses_registered_metadata_table(...)
-```
+- Internal helper count: 5
+- Grouped helper summary and optional source snippets are rendered in the page-level Internal implementation summary section.
 
 </details>

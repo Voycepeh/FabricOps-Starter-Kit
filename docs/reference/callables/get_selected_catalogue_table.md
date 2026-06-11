@@ -30,7 +30,35 @@ Not documented yet
 
 Not documented yet
 
-## Parameters
+## Used by
+
+Not documented yet
+
+## Calls
+
+Not documented yet
+
+??? info "Call flow"
+
+    ```text
+    get_selected_catalogue_table(...)
+    ```
+
+## Callable implementation
+
+### Function details
+
+- Module: `governance_review`
+- Classification: Callable
+- Source file path: `src/fabricops_kit/governance_review.py`
+- Source line: `310`
+- Signature:
+
+```python
+def get_selected_catalogue_table(table_selector: Any | None=None) -> dict[str, Any]
+```
+
+### Parameters
 
 <div class="module-table-scroll reference-input-table">
 <table class="reference-function-table">
@@ -51,31 +79,19 @@ Not documented yet
 </table>
 </div>
 
-## Returns
+### Returns
 
 dict[str, Any]
     Stable table identity used by ``load_catalogue_profile_rows``.
 
-## Used by
+### Notes
 
-Not documented yet
+No additional callable notes are documented.
 
-## Calls
-
-Not documented yet
-
-## Implementation details
-
-### Call flow
-
-```text
-get_selected_catalogue_table(...)
-```
-
-## Public callable source code
+### Public callable source code
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/governance_review.py#L310-L334">View get_selected_catalogue_table on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/governance_review.py#L310-L334">View get_selected_catalogue_table on GitHub</a>
 
 ```python
 def get_selected_catalogue_table(table_selector: Any | None = None) -> dict[str, Any]:
@@ -105,26 +121,26 @@ def get_selected_catalogue_table(table_selector: Any | None = None) -> dict[str,
     raise ValueError("No catalogue table has been selected. Run widget_select_catalogue_table first.")
 ```
 
-## Maintainer internals
+## Internal implementation summary
 
-??? info "Nested helper functions: 0"
+??? info "Internal helpers used: 0"
 
-    No nested helper functions were detected for `get_selected_catalogue_table`.
+    This callable uses 0 internal helpers; `get_selected_catalogue_table` does not have package-local helper descendants in the generated call graph.
 
     <div class="module-table-scroll reference-input-table">
     <table class="reference-function-table">
       <thead>
         <tr>
-          <th>Helper</th>
-          <th>Role</th>
-          <th>Source</th>
+          <th>Area</th>
+          <th>Helpers</th>
+          <th>What they do</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td data-label="Helper">—</td>
-          <td data-label="Role">No nested helper functions detected.</td>
-          <td data-label="Source">—</td>
+          <td data-label="Area">—</td>
+          <td data-label="Helpers">—</td>
+          <td data-label="What they do">No internal helpers detected.</td>
         </tr>
       </tbody>
     </table>
@@ -170,7 +186,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/governance_review.py#L310-L334">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/governance_review.py#L310-L334</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/governance_review.py#L310-L334">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/governance_review.py#L310-L334</a>
 - Start line: `310`
 - End line: `334`
 - Signature:
@@ -185,12 +201,9 @@ def get_selected_catalogue_table(table_selector: Any | None=None) -> dict[str, A
 
 Not documented yet
 
-### Internal implementation helpers
+### Internal implementation summary
 
-### Call flow
-
-```text
-get_selected_catalogue_table(...)
-```
+- Internal helper count: 0
+- Grouped helper summary and optional source snippets are rendered in the page-level Internal implementation summary section.
 
 </details>

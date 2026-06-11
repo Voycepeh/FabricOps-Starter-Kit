@@ -31,7 +31,76 @@ Raises metadata read, widget dependency, or configuration errors when agreement 
 
 Displays an IPython widget and may register the active notebook selection in metadata when requested.
 
-## Parameters
+## Used by
+
+Not documented yet
+
+## Calls
+
+- `fabricops_kit.data_agreement._html_escape`
+- `fabricops_kit.data_agreement._latest_agreement_versions`
+- `fabricops_kit.data_agreement._list_data_agreements`
+- `fabricops_kit.data_agreement._render_searchable_selector`
+- `fabricops_kit.data_agreement._require_ipywidgets`
+- `fabricops_kit.metadata._current_notebook_active_registrations`
+- `fabricops_kit.metadata._register_current_notebook`
+
+??? info "Call flow"
+
+    Large call graph shown to two levels.
+
+    Expanded internal helper tree is available in the internal implementation summary.
+
+    ```text
+    widget_select_agreement(...)
+    ├── _current_notebook_active_registrations(...)
+    │   ├── _context_get(...)
+    │   ├── _load_notebook_registry(...)
+    │   │   └── …
+    │   ├── _runtime_context(...)
+    │   │   └── …
+    │   └── _safe_str(...)
+    ├── _html_escape(...)
+    ├── _latest_agreement_versions(...)
+    │   ├── _coerce_row_dicts(...)
+    │   └── _parse_contract_version(...)
+    ├── _list_data_agreements(...)
+    │   ├── _latest_agreement_versions(...)
+    │   │   └── …
+    │   └── _list_all_data_agreement_rows(...)
+    │       └── …
+    ├── _register_current_notebook(...)
+    │   ├── _context_get(...)
+    │   ├── _current_audit_timestamp(...)
+    │   │   └── …
+    │   ├── _notebook_registration_key(...)
+    │   ├── _rows_for_spark(...)
+    │   ├── _runtime_context(...)
+    │   │   └── …
+    │   ├── _safe_str(...)
+    │   └── write_lakehouse_table(...)
+    │       └── …
+    ├── _render_searchable_selector(...)
+    │   ├── _html_escape(...)
+    │   └── _widget_common(...)
+    └── _require_ipywidgets(...)
+    ```
+
+## Callable implementation
+
+### Function details
+
+- Module: `data_agreement`
+- Classification: Callable
+- Source file path: `src/fabricops_kit/data_agreement.py`
+- Source line: `856`
+- Signature:
+
+```python
+def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None=None, *, spark_session: Any=None, register_notebook: bool=False, notebook_type: str | None=None, environment_name: str | None=None, dataset_name: str | None=None, table_name: str | None=None, topic: str | None=None, pipeline_name: str | None=None) -> Any
+```
+
+### Parameters
 
 <div class="module-table-scroll reference-input-table">
 <table class="reference-function-table">
@@ -97,97 +166,18 @@ Displays an IPython widget and may register the active notebook selection in met
 </table>
 </div>
 
-## Returns
+### Returns
 
 Interactive widget state; call get_selected_agreement to retrieve the selected agreement record.
 
-## Used by
+### Notes
 
-Not documented yet
+No additional callable notes are documented.
 
-## Calls
-
-- `fabricops_kit.data_agreement._html_escape`
-- `fabricops_kit.data_agreement._latest_agreement_versions`
-- `fabricops_kit.data_agreement._list_data_agreements`
-- `fabricops_kit.data_agreement._render_searchable_selector`
-- `fabricops_kit.data_agreement._require_ipywidgets`
-- `fabricops_kit.metadata._current_notebook_active_registrations`
-- `fabricops_kit.metadata._register_current_notebook`
-
-## Implementation details
-
-### Call flow
-
-```text
-widget_select_agreement(...)
-├── _current_notebook_active_registrations(...)
-│   ├── _context_get(...)
-│   ├── _load_notebook_registry(...)
-│   │   ├── _notebook_registration_key(...)
-│   │   ├── _registry_rows_with_defaults(...)
-│   │   │   ├── _coerce_row_dicts(...)
-│   │   │   ├── _notebook_registration_key(...)
-│   │   │   └── _safe_str(...)
-│   │   └── read_lakehouse_table(...)
-│   │       ├── _current_database_matches(...)
-│   │       ├── _get_spark(...)
-│   │       ├── _get_store(...)
-│   │       ├── _normalize_table_name(...)
-│   │       ├── _registered_table_identifier(...)
-│   │       │   ├── _normalize_table_name(...)
-│   │       │   └── _quote_identifier(...)
-│   │       └── _uses_registered_metadata_table(...)
-│   ├── _runtime_context(...)
-│   │   └── _context_get(...)
-│   └── _safe_str(...)
-├── _html_escape(...)
-├── _latest_agreement_versions(...)
-│   ├── _coerce_row_dicts(...)
-│   └── _parse_contract_version(...)
-├── _list_data_agreements(...)
-│   ├── _latest_agreement_versions(...)
-│   │   ├── _coerce_row_dicts(...)
-│   │   └── _parse_contract_version(...)
-│   └── _list_all_data_agreement_rows(...)
-│       ├── _coerce_row_dicts(...)
-│       ├── _config_value(...)
-│       └── read_lakehouse_table(...)
-│           ├── _current_database_matches(...)
-│           ├── _get_spark(...)
-│           ├── _get_store(...)
-│           ├── _normalize_table_name(...)
-│           ├── _registered_table_identifier(...)
-│           │   ├── _normalize_table_name(...)
-│           │   └── _quote_identifier(...)
-│           └── _uses_registered_metadata_table(...)
-├── _register_current_notebook(...)
-│   ├── _context_get(...)
-│   ├── _current_audit_timestamp(...)
-│   │   └── _get_audit_timezone(...)
-│   │       └── _validate_audit_timezone(...)
-│   ├── _notebook_registration_key(...)
-│   ├── _rows_for_spark(...)
-│   ├── _runtime_context(...)
-│   │   └── _context_get(...)
-│   ├── _safe_str(...)
-│   └── write_lakehouse_table(...)
-│       ├── _get_store(...)
-│       ├── _normalize_table_name(...)
-│       ├── _registered_table_identifier(...)
-│       │   ├── _normalize_table_name(...)
-│       │   └── _quote_identifier(...)
-│       └── _uses_registered_metadata_table(...)
-├── _render_searchable_selector(...)
-│   ├── _html_escape(...)
-│   └── _widget_common(...)
-└── _require_ipywidgets(...)
-```
-
-## Public callable source code
+### Public callable source code
 
 - Source file path: `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/data_agreement.py#L856-L1080">View widget_select_agreement on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/data_agreement.py#L856-L1080">View widget_select_agreement on GitHub</a>
 
 ```python
 def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None = None, *, spark_session: Any = None, register_notebook: bool = False, notebook_type: str | None = None, environment_name: str | None = None, dataset_name: str | None = None, table_name: str | None = None, topic: str | None = None, pipeline_name: str | None = None) -> Any:
@@ -417,831 +407,751 @@ def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None 
     return selector
 ```
 
-## Maintainer internals
+## Internal implementation summary
 
-??? info "Nested helper functions: 23"
+??? info "Internal helpers used: 23"
 
-    These nested helpers support `widget_select_agreement` by handling lower-level implementation steps; expand this section only when maintaining or debugging the package internals.
+    This callable uses 23 internal helpers for audit timestamp, metadata loading, rule parsing, fabric or spark access, and other.
 
     <div class="module-table-scroll reference-input-table">
     <table class="reference-function-table">
       <thead>
         <tr>
-          <th>Helper</th>
-          <th>Role</th>
-          <th>Source</th>
+          <th>Area</th>
+          <th>Helpers</th>
+          <th>What they do</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td data-label="Helper"><code>_html_escape</code></td>
-          <td data-label="Role">Return display-safe HTML text for notebook context snippets.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/data_agreement.py#L192-L195">src/fabricops_kit/data_agreement.py</a></td>
+          <td data-label="Area">Audit timestamp</td>
+          <td data-label="Helpers"><code>_current_audit_timestamp</code>, <code>_get_audit_timezone</code>, <code>_validate_audit_timezone</code></td>
+          <td data-label="What they do">Resolve and stamp audit time consistently.</td>
         </tr>
         <tr>
-          <td data-label="Helper"><code>_latest_agreement_versions</code></td>
-          <td data-label="Role">Return the latest semantic version for each stable agreement ID.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/data_agreement.py#L653-L669">src/fabricops_kit/data_agreement.py</a></td>
+          <td data-label="Area">Metadata loading</td>
+          <td data-label="Helpers"><code>_latest_agreement_versions</code>, <code>_list_all_data_agreement_rows</code>, <code>_list_data_agreements</code>, <code>_load_notebook_registry</code>, <code>_render_searchable_selector</code></td>
+          <td data-label="What they do">Load and identify the metadata or table context needed by the callable.</td>
         </tr>
         <tr>
-          <td data-label="Helper"><code>_coerce_row_dicts</code></td>
-          <td data-label="Role">Internal helper used by the package implementation.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/data_agreement.py#L397-L402">src/fabricops_kit/data_agreement.py</a></td>
+          <td data-label="Area">Rule parsing</td>
+          <td data-label="Helpers"><code>_parse_contract_version</code></td>
+          <td data-label="What they do">Normalize stored or user-provided values before applying rules.</td>
         </tr>
         <tr>
-          <td data-label="Helper"><code>_parse_contract_version</code></td>
-          <td data-label="Role">Parse a semantic contract version into a comparable tuple.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/data_agreement.py#L638-L644">src/fabricops_kit/data_agreement.py</a></td>
+          <td data-label="Area">Fabric or Spark access</td>
+          <td data-label="Helpers"><code>_rows_for_spark</code></td>
+          <td data-label="What they do">Access Fabric or Spark runtime services used by the implementation.</td>
         </tr>
         <tr>
-          <td data-label="Helper"><code>_list_data_agreements</code></td>
-          <td data-label="Role">List latest versioned agreements from the configured metadata lakehouse.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/data_agreement.py#L684-L691">src/fabricops_kit/data_agreement.py</a></td>
-        </tr>
-        <tr>
-          <td data-label="Helper"><code>_list_all_data_agreement_rows</code></td>
-          <td data-label="Role">List all append-only agreement rows from the metadata lakehouse.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/data_agreement.py#L672-L681">src/fabricops_kit/data_agreement.py</a></td>
-        </tr>
-        <tr>
-          <td data-label="Helper"><code>_config_value</code></td>
-          <td data-label="Role">Internal helper used by the package implementation.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/data_agreement.py#L149-L153">src/fabricops_kit/data_agreement.py</a></td>
-        </tr>
-        <tr>
-          <td data-label="Helper"><code>_render_searchable_selector</code></td>
-          <td data-label="Role">Render a table-backed selector with search and stable-value tracking.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/data_agreement.py#L198-L308">src/fabricops_kit/data_agreement.py</a></td>
-        </tr>
-        <tr>
-          <td data-label="Helper"><code>_widget_common</code></td>
-          <td data-label="Role">Return common style and layout keyword arguments for form controls.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/data_agreement.py#L180-L189">src/fabricops_kit/data_agreement.py</a></td>
-        </tr>
-        <tr>
-          <td data-label="Helper"><code>_require_ipywidgets</code></td>
-          <td data-label="Role">Return ipywidgets or raise an actionable optional-dependency error.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/data_agreement.py#L63-L72">src/fabricops_kit/data_agreement.py</a></td>
-        </tr>
-        <tr>
-          <td data-label="Helper"><code>_current_notebook_active_registrations</code></td>
-          <td data-label="Role">Return active agreement registrations for the running notebook.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/metadata.py#L476-L526">src/fabricops_kit/metadata.py</a></td>
-        </tr>
-        <tr>
-          <td data-label="Helper"><code>_context_get</code></td>
-          <td data-label="Role">Internal helper used by the package implementation.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/metadata.py#L173-L185">src/fabricops_kit/metadata.py</a></td>
-        </tr>
-        <tr>
-          <td data-label="Helper"><code>_load_notebook_registry</code></td>
-          <td data-label="Role">Internal helper used by the package implementation.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/metadata.py#L422-L473">src/fabricops_kit/metadata.py</a></td>
-        </tr>
-        <tr>
-          <td data-label="Helper"><code>_notebook_registration_key</code></td>
-          <td data-label="Role">Internal helper used by the package implementation.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/metadata.py#L41-L50">src/fabricops_kit/metadata.py</a></td>
-        </tr>
-        <tr>
-          <td data-label="Helper"><code>_registry_rows_with_defaults</code></td>
-          <td data-label="Role">Internal helper used by the package implementation.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/metadata.py#L408-L419">src/fabricops_kit/metadata.py</a></td>
-        </tr>
-        <tr>
-          <td data-label="Helper"><code>_coerce_row_dicts</code></td>
-          <td data-label="Role">Internal helper used by the package implementation.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/metadata.py#L53-L58">src/fabricops_kit/metadata.py</a></td>
-        </tr>
-        <tr>
-          <td data-label="Helper"><code>_safe_str</code></td>
-          <td data-label="Role">Internal helper used by the package implementation.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/metadata.py#L188-L189">src/fabricops_kit/metadata.py</a></td>
-        </tr>
-        <tr>
-          <td data-label="Helper"><code>_runtime_context</code></td>
-          <td data-label="Role">Internal helper used by the package implementation.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/metadata.py#L192-L216">src/fabricops_kit/metadata.py</a></td>
-        </tr>
-        <tr>
-          <td data-label="Helper"><code>_register_current_notebook</code></td>
-          <td data-label="Role">Append a runtime notebook registration row.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/metadata.py#L292-L405">src/fabricops_kit/metadata.py</a></td>
-        </tr>
-        <tr>
-          <td data-label="Helper"><code>_current_audit_timestamp</code></td>
-          <td data-label="Role">Return the current audit timestamp in the configured audit timezone.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/config.py#L69-L75">src/fabricops_kit/config.py</a></td>
-        </tr>
-        <tr>
-          <td data-label="Helper"><code>_get_audit_timezone</code></td>
-          <td data-label="Role">Resolve the configured FabricOps audit timezone, defaulting to UTC.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/config.py#L61-L66">src/fabricops_kit/config.py</a></td>
-        </tr>
-        <tr>
-          <td data-label="Helper"><code>_validate_audit_timezone</code></td>
-          <td data-label="Role">Return a valid IANA audit timezone name.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/config.py#L27-L58">src/fabricops_kit/config.py</a></td>
-        </tr>
-        <tr>
-          <td data-label="Helper"><code>_rows_for_spark</code></td>
-          <td data-label="Role">Internal helper used by the package implementation.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/metadata.py#L161-L170">src/fabricops_kit/metadata.py</a></td>
+          <td data-label="Area">Other</td>
+          <td data-label="Helpers"><code>_coerce_row_dicts</code>, <code>_coerce_row_dicts</code>, <code>_config_value</code>, <code>_context_get</code>, <code>_current_notebook_active_registrations</code>, <code>_html_escape</code>, <code>_notebook_registration_key</code>, <code>_register_current_notebook</code>, <code>_registry_rows_with_defaults</code>, <code>_require_ipywidgets</code>, <code>_runtime_context</code>, <code>_safe_str</code>, <code>_widget_common</code></td>
+          <td data-label="What they do">Support lower-level implementation details that do not fit the main helper areas.</td>
         </tr>
       </tbody>
     </table>
     </div>
 
-    ??? example "View helper source code"
+    ??? example "View helper source by area"
 
-        **`def _html_escape(value: Any) -> str`**
+        ??? example "Audit timestamp helpers"
 
-        Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/data_agreement.py#L192-L195)
+            **`def _current_audit_timestamp(config: Any=None, timezone_name: str | None=None, *, drop_microseconds: bool=True) -> str`**
 
-        ```python
-        def _html_escape(value: Any) -> str:
-            """Return display-safe HTML text for notebook context snippets."""
-            import html
-            return html.escape(str(value or ""))
-        ```
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/config.py#L69-L75)
 
-        **`def _latest_agreement_versions(rows: Any) -> list[dict[str, Any]]`**
+            ```python
+            def _current_audit_timestamp(config: Any = None, timezone_name: str | None = None, *, drop_microseconds: bool = True) -> str:
+                """Return the current audit timestamp in the configured audit timezone."""
+                tz_name = _get_audit_timezone(config, timezone_name)
+                value = datetime.now(ZoneInfo(tz_name))
+                if drop_microseconds:
+                    value = value.replace(microsecond=0)
+                return value.isoformat()
+            ```
 
-        Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/data_agreement.py#L653-L669)
+            **`def _get_audit_timezone(config: Any=None, timezone_name: str | None=None) -> str`**
 
-        ```python
-        def _latest_agreement_versions(rows: Any) -> list[dict[str, Any]]:
-            """Return the latest semantic version for each stable agreement ID."""
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/config.py#L61-L66)
 
-            def _agreement_sort_key(row: dict[str, Any]) -> tuple[Any, ...]:
-                return (
-                    _parse_contract_version(row.get("contract_version")),
-                    str(row.get("_committed_at") or row.get("updated_at") or row.get("uploaded_at") or ""),
-                    str(row.get("agreement_name") or ""),
-                    str(row.get("agreement_id") or ""),
-                )
+            ```python
+            def _get_audit_timezone(config: Any = None, timezone_name: str | None = None) -> str:
+                """Resolve the configured FabricOps audit timezone, defaulting to UTC."""
+                if timezone_name is not None:
+                    return _validate_audit_timezone(timezone_name)
+                value = getattr(config, "audit_timezone", None) if config is not None else None
+                return _validate_audit_timezone(value)
+            ```
 
-            latest: dict[str, dict[str, Any]] = {}
-            for row in _coerce_row_dicts(rows):
-                key = str(row.get("agreement_id") or "").strip()
-                if key and (key not in latest or _agreement_sort_key(row) > _agreement_sort_key(latest[key])):
-                    latest[key] = row
-            return sorted(latest.values(), key=lambda row: (str(row.get("agreement_name") or "").lower(), str(row.get("agreement_id") or "")))
-        ```
+            **`def _validate_audit_timezone(timezone_name: str | None) -> str`**
 
-        **`def _coerce_row_dicts(rows: Any) -> list[dict[str, Any]]`**
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/config.py#L27-L58)
 
-        Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/data_agreement.py#L397-L402)
+            ```python
+            def _validate_audit_timezone(timezone_name: str | None) -> str:
+                """Return a valid IANA audit timezone name.
 
-        ```python
-        def _coerce_row_dicts(rows: Any) -> list[dict[str, Any]]:
-            if rows is None:
-                return []
-            if hasattr(rows, "collect"):
-                rows = rows.collect()
-            return [row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row) for row in rows]
-        ```
+                Parameters
+                ----------
+                timezone_name : str or None
+                    IANA timezone name to validate. Blank values default to ``"UTC"``.
 
-        **`def _parse_contract_version(version: Any) -> tuple[int, int, int]`**
+                Returns
+                -------
+                str
+                    Validated timezone name.
 
-        Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/data_agreement.py#L638-L644)
-
-        ```python
-        def _parse_contract_version(version: Any) -> tuple[int, int, int]:
-            """Parse a semantic contract version into a comparable tuple."""
-            try:
-                parts = str(version or "").strip().split(".")
-                return tuple(int(parts[index]) if index < len(parts) else 0 for index in range(3))  # type: ignore[return-value]
-            except (TypeError, ValueError):
-                return (0, 0, 0)
-        ```
-
-        **`def _list_data_agreements(config: Any, env_name: str, *, spark_session: Any=None, active_only: bool=False, missing_ok: bool=False) -> list[dict[str, Any]]`**
-
-        Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/data_agreement.py#L684-L691)
-
-        ```python
-        def _list_data_agreements(config: Any, env_name: str, *, spark_session: Any = None, active_only: bool = False, missing_ok: bool = False) -> list[dict[str, Any]]:
-            """List latest versioned agreements from the configured metadata lakehouse."""
-            rows = _list_all_data_agreement_rows(config, env_name, spark_session=spark_session, missing_ok=missing_ok)
-            agreements = _latest_agreement_versions(rows)
-            if not active_only:
-                return agreements
-            today = datetime.now(timezone.utc).date()
-            return [row for row in agreements if (not row.get("start_date") or date.fromisoformat(str(row["start_date"])[:10]) <= today) and (not row.get("expiry_date") or date.fromisoformat(str(row["expiry_date"])[:10]) >= today)]
-        ```
-
-        **`def _list_all_data_agreement_rows(config: Any, env_name: str, *, spark_session: Any=None, missing_ok: bool=False) -> list[dict[str, Any]]`**
-
-        Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/data_agreement.py#L672-L681)
-
-        ```python
-        def _list_all_data_agreement_rows(config: Any, env_name: str, *, spark_session: Any = None, missing_ok: bool = False) -> list[dict[str, Any]]:
-            """List all append-only agreement rows from the metadata lakehouse."""
-            metadata_tables = _config_value(config, "metadata_tables", {}) or {}
-            try:
-                rows = read_lakehouse_table(config, env_name, "metadata", str(metadata_tables.get("data_agreement", DATA_AGREEMENT_TABLE)), spark_session=spark_session)
-            except Exception:
-                if missing_ok:
-                    return []
-                raise
-            return _coerce_row_dicts(rows)
-        ```
-
-        **`def _config_value(config: Any, name: str, default: Any) -> Any`**
-
-        Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/data_agreement.py#L149-L153)
-
-        ```python
-        def _config_value(config: Any, name: str, default: Any) -> Any:
-            agreement_config = getattr(config, "data_agreement_config", config)
-            if isinstance(agreement_config, dict):
-                return agreement_config.get(name, default)
-            return getattr(agreement_config, name, default)
-        ```
-
-        **`def _render_searchable_selector(*, widgets: Any, label: str, rows: list[dict[str, Any]], label_fn: Callable[[dict[str, Any]], str], value_fn: Callable[[dict[str, Any]], str], placeholder: str='Search...', max_results: int=25, search_fields: list[str] | None=None, context_fields: list[tuple[str, str]] | None=None, empty_label: str | None=None, selected_value: str | None=None) -> dict[str, Any]`**
-
-        Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/data_agreement.py#L198-L308)
-
-        ```python
-        def _render_searchable_selector(
-            *,
-            widgets: Any,
-            label: str,
-            rows: list[dict[str, Any]],
-            label_fn: Callable[[dict[str, Any]], str],
-            value_fn: Callable[[dict[str, Any]], str],
-            placeholder: str = "Search...",
-            max_results: int = 25,
-            search_fields: list[str] | None = None,
-            context_fields: list[tuple[str, str]] | None = None,
-            empty_label: str | None = None,
-            selected_value: str | None = None,
-        ) -> dict[str, Any]:
-            """Render a table-backed selector with search and stable-value tracking.
-
-            The visible label may be friendly and long, while the selection value remains
-            the stable key produced by ``value_fn``. The returned ``selector`` is the
-            select control used by persistence code, and its ``value`` is never replaced
-            with the display label.
-            """
-            search = widgets.Text(value="", placeholder=placeholder, **_widget_common(widgets, f"Search {label}"))
-            selector = widgets.Select(options=[], **_widget_common(widgets, label))
-            context = widgets.HTML(value="")
-            lookup: dict[str, dict[str, Any]] = {}
-            indexed_rows: list[dict[str, Any]] = []
-
-            def _set_rows(new_rows: list[dict[str, Any]]) -> None:
-                lookup.clear()
-                indexed_rows.clear()
-                for row in new_rows:
-                    value = str(value_fn(row) or "").strip()
-                    if not value:
-                        continue
-                    display_label = str(label_fn(row) or value)
-                    lookup[value] = row
-                    indexed_rows.append({
-                        "row": row,
-                        "label": display_label,
-                        "value": value,
-                        "search": " ".join(
-                            [display_label, value, *(str(row.get(field) or "") for field in (search_fields or sorted(str(key) for key in row)))]
-                        ).casefold(),
-                    })
-
-            def _matching_options(query: str) -> list[tuple[str, str]]:
-                needle = str(query or "").casefold().strip()
-                matches = [item for item in indexed_rows if not needle or needle in item["search"]]
-                return [(item["label"], item["value"]) for item in matches[:max_results]]
-
-            def _render_context(value: Any) -> None:
-                row = lookup.get(str(value or ""))
-                context.value = "<br>".join(
-                    f"<b>{_html_escape(field_label)}:</b> {_html_escape(row.get(field, ''))}"
-                    for field, field_label in context_fields
-                ) if row and context_fields else ("<em>No record selected.</em>" if context_fields else "")
-
-            def _apply_filter(preferred_value: Any = None) -> None:
-                current = str(preferred_value if preferred_value is not None else selector.value or "")
-                options = _matching_options(search.value)
-                if empty_label is not None:
-                    options = [(empty_label, ""), *options]
-                selector.options = options
-                values = [option[1] if isinstance(option, tuple) and len(option) == 2 else option for option in options]
-                if current and current in lookup and current not in values and not str(search.value or "").strip():
-                    row = lookup[current]
-                    options = [(str(label_fn(row) or current), current), *options]
-                    values = [option[1] if isinstance(option, tuple) and len(option) == 2 else option for option in options]
-                non_empty_values = [value for value in values if value]
-                if current in values and (current or not str(search.value or "").strip()):
-                    selector.value = current
-                elif non_empty_values:
-                    selector.value = non_empty_values[0]
-                elif values:
-                    selector.value = values[0]
-                else:
-                    selector.value = None
-                _render_context(selector.value)
-
-            def _on_search(change: dict[str, Any]) -> None:
-                if change.get("name") == "value":
-                    _apply_filter(selector.value)
-
-            def _on_select(change: dict[str, Any]) -> None:
-                if change.get("name") == "value":
-                    _render_context(change.get("new"))
-
-            def _refresh_rows(new_rows: list[dict[str, Any]], selected: str | None = None) -> None:
-                _set_rows(new_rows)
-                _apply_filter(selected)
-
-            def _select_value(value: str | None) -> None:
-                _apply_filter(str(value or ""))
-
-            search.observe(_on_search, names="value")
-            selector.observe(_on_select, names="value")
-            _refresh_rows(rows, selected_value)
-            container = widgets.VBox([search, selector, context])
-            selector.search_box = search
-            selector.context_html = context
-            selector.refresh_rows = _refresh_rows
-            selector.select_value = _select_value
-            selector.rows_by_value = lookup
-            return {
-                "container": container,
-                "search": search,
-                "selector": selector,
-                "context": context,
-                "rows_by_value": lookup,
-                "refresh_rows": _refresh_rows,
-            }
-        ```
-
-        **`def _widget_common(widgets_module: Any, description: str, *, textarea: bool=False) -> dict[str, Any]`**
-
-        Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/data_agreement.py#L180-L189)
-
-        ```python
-        def _widget_common(widgets_module: Any, description: str, *, textarea: bool = False) -> dict[str, Any]:
-            """Return common style and layout keyword arguments for form controls."""
-            common: dict[str, Any] = {"description": description, "style": dict(_WIDGET_STYLE)}
-            layout_class = getattr(widgets_module, "Layout", None)
-            if layout_class is not None:
-                kwargs = {"width": _WIDGET_LAYOUT_WIDTH}
-                if textarea:
-                    kwargs["height"] = _TEXTAREA_HEIGHT
-                common["layout"] = layout_class(**kwargs)
-            return common
-        ```
-
-        **`def _require_ipywidgets()`**
-
-        Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/data_agreement.py#L63-L72)
-
-        ```python
-        def _require_ipywidgets():
-            """Return ipywidgets or raise an actionable optional-dependency error."""
-            try:
-                import ipywidgets as widgets
-            except ModuleNotFoundError as exc:
-                raise ModuleNotFoundError(
-                    "The data agreement widget feature requires the 'dq-review' extra. "
-                    'Install with: pip install "fabricops-kit[dq-review]"'
-                ) from exc
-            return widgets
-        ```
-
-        **`def _current_notebook_active_registrations(spark, *, config: Any, env: str, metadata_table: str=NOTEBOOK_REGISTRY_TABLE, notebook_type: str | None=None, environment_name: str | None=None, registration_role: str | None=None, missing_ok: bool=True) -> list[dict[str, Any]]`**
-
-        Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/metadata.py#L476-L526)
-
-        ```python
-        def _current_notebook_active_registrations(
-            spark,
-            *,
-            config: Any,
-            env: str,
-            metadata_table: str = NOTEBOOK_REGISTRY_TABLE,
-            notebook_type: str | None = None,
-            environment_name: str | None = None,
-            registration_role: str | None = None,
-            missing_ok: bool = True,
-        ) -> list[dict[str, Any]]:
-            """Return active agreement registrations for the running notebook.
-
-            Parameters
-            ----------
-            spark : pyspark.sql.SparkSession
-                Fabric Spark session used to read the metadata table.
-            config : FrameworkConfig or dict
-                Metadata route configuration from ``00_env_config``.
-            env : str
-                Environment key paired with ``config``.
-            metadata_table : str, default=NOTEBOOK_REGISTRY_TABLE
-                Physical notebook registry table name.
-            notebook_type, environment_name, registration_role : str, optional
-                Optional filters for notebook phase, environment, and primary versus
-                additional registration role.
-            missing_ok : bool, default=True
-                Return an empty list when the registry cannot be read.
-
-            Returns
-            -------
-            list[dict[str, Any]]
-                Active latest registration rows for the current notebook runtime.
-            """
-            ctx = _runtime_context()
-            notebook_id = _safe_str(_context_get(ctx, "currentNotebookId", "notebookId"))
-            notebook_name = _safe_str(_context_get(ctx, "currentNotebookName", "notebookName") or "unknown_notebook")
-            rows = _load_notebook_registry(
-                spark,
-                metadata_table=metadata_table,
-                notebook_type=notebook_type,
-                environment_name=environment_name,
-                missing_ok=missing_ok,
-                config=config,
-                env=env,
-                active_only=True,
-                notebook_id=notebook_id or None,
-                notebook_name=None if notebook_id else notebook_name,
-                registration_role=registration_role,
-            )
-            return rows
-        ```
-
-        **`def _context_get(context: Any, *keys: str) -> Any`**
-
-        Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/metadata.py#L173-L185)
-
-        ```python
-        def _context_get(context: Any, *keys: str) -> Any:
-            for key in keys:
+                Raises
+                ------
+                ValueError
+                    If a non-blank value is not a valid IANA timezone name.
+                """
+                value = str(timezone_name or DEFAULT_AUDIT_TIMEZONE).strip() or DEFAULT_AUDIT_TIMEZONE
+                if value != DEFAULT_AUDIT_TIMEZONE and "/" not in value:
+                    raise ValueError(
+                        f'Invalid FABRICOPS_AUDIT_TIMEZONE: "{value}". '
+                        'Use a valid IANA timezone name such as "Asia/Singapore" or keep the default "UTC".'
+                    )
                 try:
-                    if isinstance(context, dict):
-                        value = context.get(key)
-                    else:
-                        getter = getattr(context, "get", None)
-                        value = getter(key) if callable(getter) else None
-                except Exception:
-                    value = None
-                if value is not None:
-                    return value
-            return None
-        ```
+                    ZoneInfo(value)
+                except ZoneInfoNotFoundError as exc:
+                    raise ValueError(
+                        f'Invalid FABRICOPS_AUDIT_TIMEZONE: "{value}". '
+                        'Use a valid IANA timezone name such as "Asia/Singapore" or keep the default "UTC".'
+                    ) from exc
+                return value
+            ```
 
-        **`def _load_notebook_registry(spark, agreement_id=None, metadata_table=NOTEBOOK_REGISTRY_TABLE, notebook_type=None, environment_name=None, missing_ok: bool=True, *, config: Any=None, env: str | None=None, active_only: bool=False, notebook_id: str | None=None, notebook_name: str | None=None, registration_role: str | None=None) -> list[dict[str, Any]]`**
+        ??? example "Metadata loading helpers"
 
-        Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/metadata.py#L422-L473)
+            **`def _latest_agreement_versions(rows: Any) -> list[dict[str, Any]]`**
 
-        ```python
-        def _load_notebook_registry(
-            spark,
-            agreement_id=None,
-            metadata_table=NOTEBOOK_REGISTRY_TABLE,
-            notebook_type=None,
-            environment_name=None,
-            missing_ok: bool = True,
-            *,
-            config: Any = None,
-            env: str | None = None,
-            active_only: bool = False,
-            notebook_id: str | None = None,
-            notebook_name: str | None = None,
-            registration_role: str | None = None,
-        ) -> list[dict[str, Any]]:
-            try:
-                table = (
-                    read_lakehouse_table(config, env, "metadata", metadata_table, spark_session=spark)
-                    if config is not None and env is not None
-                    else spark.table(metadata_table)
-                )
-                rows = _registry_rows_with_defaults(table)
-            except Exception:
-                if missing_ok:
-                    return []
-                raise
-            if active_only:
+            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/data_agreement.py#L653-L669)
+
+            ```python
+            def _latest_agreement_versions(rows: Any) -> list[dict[str, Any]]:
+                """Return the latest semantic version for each stable agreement ID."""
+
+                def _agreement_sort_key(row: dict[str, Any]) -> tuple[Any, ...]:
+                    return (
+                        _parse_contract_version(row.get("contract_version")),
+                        str(row.get("_committed_at") or row.get("updated_at") or row.get("uploaded_at") or ""),
+                        str(row.get("agreement_name") or ""),
+                        str(row.get("agreement_id") or ""),
+                    )
+
                 latest: dict[str, dict[str, Any]] = {}
-                for row in rows:
-                    key = row.get("registration_id") or _notebook_registration_key(row)
-                    previous = latest.get(key)
-                    if previous is None or str(row.get("registered_at") or "") >= str(previous.get("registered_at") or ""):
+                for row in _coerce_row_dicts(rows):
+                    key = str(row.get("agreement_id") or "").strip()
+                    if key and (key not in latest or _agreement_sort_key(row) > _agreement_sort_key(latest[key])):
                         latest[key] = row
-                rows = list(latest.values())
-            out = []
-            for row in rows:
-                if agreement_id is not None and str(row.get("agreement_id") or "") != str(agreement_id):
-                    continue
-                if notebook_type and str(row.get("notebook_type") or "") != str(notebook_type):
-                    continue
-                if environment_name and str(row.get("environment_name") or "") != str(environment_name):
-                    continue
-                if notebook_id and str(row.get("notebook_id") or "") != str(notebook_id):
-                    continue
-                if notebook_name and str(row.get("notebook_name") or "") != str(notebook_name):
-                    continue
-                if registration_role and str(row.get("registration_role") or "") != str(registration_role):
-                    continue
-                if active_only and str(row.get("registration_status") or "active") != "active":
-                    continue
-                out.append(row)
-            return out
-        ```
+                return sorted(latest.values(), key=lambda row: (str(row.get("agreement_name") or "").lower(), str(row.get("agreement_id") or "")))
+            ```
 
-        **`def _notebook_registration_key(row: dict[str, Any]) -> str`**
+            **`def _list_all_data_agreement_rows(config: Any, env_name: str, *, spark_session: Any=None, missing_ok: bool=False) -> list[dict[str, Any]]`**
 
-        Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/metadata.py#L41-L50)
+            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/data_agreement.py#L672-L681)
 
-        ```python
-        def _notebook_registration_key(row: dict[str, Any]) -> str:
-            parts = [
-                str(row.get("workspace_id") or ""),
-                str(row.get("notebook_id") or ""),
-                str(row.get("notebook_name") or ""),
-                str(row.get("agreement_id") or ""),
-                str(row.get("agreement_contract_version") or ""),
-                str(row.get("registration_role") or ""),
-            ]
-            return hashlib.sha256("||".join(parts).encode("utf-8")).hexdigest()[:24]
-        ```
+            ```python
+            def _list_all_data_agreement_rows(config: Any, env_name: str, *, spark_session: Any = None, missing_ok: bool = False) -> list[dict[str, Any]]:
+                """List all append-only agreement rows from the metadata lakehouse."""
+                metadata_tables = _config_value(config, "metadata_tables", {}) or {}
+                try:
+                    rows = read_lakehouse_table(config, env_name, "metadata", str(metadata_tables.get("data_agreement", DATA_AGREEMENT_TABLE)), spark_session=spark_session)
+                except Exception:
+                    if missing_ok:
+                        return []
+                    raise
+                return _coerce_row_dicts(rows)
+            ```
 
-        **`def _registry_rows_with_defaults(rows: Any) -> list[dict[str, Any]]`**
+            **`def _list_data_agreements(config: Any, env_name: str, *, spark_session: Any=None, active_only: bool=False, missing_ok: bool=False) -> list[dict[str, Any]]`**
 
-        Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/metadata.py#L408-L419)
+            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/data_agreement.py#L684-L691)
 
-        ```python
-        def _registry_rows_with_defaults(rows: Any) -> list[dict[str, Any]]:
-            out = []
-            for source in _coerce_row_dicts(rows):
-                row = {field: _safe_str(source.get(field)) for field in NOTEBOOK_REGISTRY_BASE_FIELDS}
-                row["agreement_contract_version"] = _safe_str(source.get("agreement_contract_version"))
-                row["registration_role"] = _safe_str(source.get("registration_role") or "primary")
-                row["registration_status"] = _safe_str(source.get("registration_status") or "active")
-                row["superseded_at"] = _safe_str(source.get("superseded_at"))
-                row["superseded_by_registration_id"] = _safe_str(source.get("superseded_by_registration_id"))
-                row["registration_id"] = _safe_str(source.get("registration_id") or _notebook_registration_key(row))
-                out.append({field: row.get(field, "") for field in NOTEBOOK_REGISTRY_FIELDS})
-            return out
-        ```
+            ```python
+            def _list_data_agreements(config: Any, env_name: str, *, spark_session: Any = None, active_only: bool = False, missing_ok: bool = False) -> list[dict[str, Any]]:
+                """List latest versioned agreements from the configured metadata lakehouse."""
+                rows = _list_all_data_agreement_rows(config, env_name, spark_session=spark_session, missing_ok=missing_ok)
+                agreements = _latest_agreement_versions(rows)
+                if not active_only:
+                    return agreements
+                today = datetime.now(timezone.utc).date()
+                return [row for row in agreements if (not row.get("start_date") or date.fromisoformat(str(row["start_date"])[:10]) <= today) and (not row.get("expiry_date") or date.fromisoformat(str(row["expiry_date"])[:10]) >= today)]
+            ```
 
-        **`def _coerce_row_dicts(rows: Any) -> list[dict[str, Any]]`**
+            **`def _load_notebook_registry(spark, agreement_id=None, metadata_table=NOTEBOOK_REGISTRY_TABLE, notebook_type=None, environment_name=None, missing_ok: bool=True, *, config: Any=None, env: str | None=None, active_only: bool=False, notebook_id: str | None=None, notebook_name: str | None=None, registration_role: str | None=None) -> list[dict[str, Any]]`**
 
-        Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/metadata.py#L53-L58)
+            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/metadata.py#L422-L473)
 
-        ```python
-        def _coerce_row_dicts(rows: Any) -> list[dict[str, Any]]:
-            if rows is None:
-                return []
-            if hasattr(rows, "collect"):
-                rows = rows.collect()
-            return [row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row) for row in rows]
-        ```
+            ```python
+            def _load_notebook_registry(
+                spark,
+                agreement_id=None,
+                metadata_table=NOTEBOOK_REGISTRY_TABLE,
+                notebook_type=None,
+                environment_name=None,
+                missing_ok: bool = True,
+                *,
+                config: Any = None,
+                env: str | None = None,
+                active_only: bool = False,
+                notebook_id: str | None = None,
+                notebook_name: str | None = None,
+                registration_role: str | None = None,
+            ) -> list[dict[str, Any]]:
+                try:
+                    table = (
+                        read_lakehouse_table(config, env, "metadata", metadata_table, spark_session=spark)
+                        if config is not None and env is not None
+                        else spark.table(metadata_table)
+                    )
+                    rows = _registry_rows_with_defaults(table)
+                except Exception:
+                    if missing_ok:
+                        return []
+                    raise
+                if active_only:
+                    latest: dict[str, dict[str, Any]] = {}
+                    for row in rows:
+                        key = row.get("registration_id") or _notebook_registration_key(row)
+                        previous = latest.get(key)
+                        if previous is None or str(row.get("registered_at") or "") >= str(previous.get("registered_at") or ""):
+                            latest[key] = row
+                    rows = list(latest.values())
+                out = []
+                for row in rows:
+                    if agreement_id is not None and str(row.get("agreement_id") or "") != str(agreement_id):
+                        continue
+                    if notebook_type and str(row.get("notebook_type") or "") != str(notebook_type):
+                        continue
+                    if environment_name and str(row.get("environment_name") or "") != str(environment_name):
+                        continue
+                    if notebook_id and str(row.get("notebook_id") or "") != str(notebook_id):
+                        continue
+                    if notebook_name and str(row.get("notebook_name") or "") != str(notebook_name):
+                        continue
+                    if registration_role and str(row.get("registration_role") or "") != str(registration_role):
+                        continue
+                    if active_only and str(row.get("registration_status") or "active") != "active":
+                        continue
+                    out.append(row)
+                return out
+            ```
 
-        **`def _safe_str(value: Any) -> str`**
+            **`def _render_searchable_selector(*, widgets: Any, label: str, rows: list[dict[str, Any]], label_fn: Callable[[dict[str, Any]], str], value_fn: Callable[[dict[str, Any]], str], placeholder: str='Search...', max_results: int=25, search_fields: list[str] | None=None, context_fields: list[tuple[str, str]] | None=None, empty_label: str | None=None, selected_value: str | None=None) -> dict[str, Any]`**
 
-        Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/metadata.py#L188-L189)
+            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/data_agreement.py#L198-L308)
 
-        ```python
-        def _safe_str(value: Any) -> str:
-            return "" if value is None else str(value)
-        ```
+            ```python
+            def _render_searchable_selector(
+                *,
+                widgets: Any,
+                label: str,
+                rows: list[dict[str, Any]],
+                label_fn: Callable[[dict[str, Any]], str],
+                value_fn: Callable[[dict[str, Any]], str],
+                placeholder: str = "Search...",
+                max_results: int = 25,
+                search_fields: list[str] | None = None,
+                context_fields: list[tuple[str, str]] | None = None,
+                empty_label: str | None = None,
+                selected_value: str | None = None,
+            ) -> dict[str, Any]:
+                """Render a table-backed selector with search and stable-value tracking.
 
-        **`def _runtime_context() -> dict[str, Any]`**
+                The visible label may be friendly and long, while the selection value remains
+                the stable key produced by ``value_fn``. The returned ``selector`` is the
+                select control used by persistence code, and its ``value`` is never replaced
+                with the display label.
+                """
+                search = widgets.Text(value="", placeholder=placeholder, **_widget_common(widgets, f"Search {label}"))
+                selector = widgets.Select(options=[], **_widget_common(widgets, label))
+                context = widgets.HTML(value="")
+                lookup: dict[str, dict[str, Any]] = {}
+                indexed_rows: list[dict[str, Any]] = []
 
-        Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/metadata.py#L192-L216)
+                def _set_rows(new_rows: list[dict[str, Any]]) -> None:
+                    lookup.clear()
+                    indexed_rows.clear()
+                    for row in new_rows:
+                        value = str(value_fn(row) or "").strip()
+                        if not value:
+                            continue
+                        display_label = str(label_fn(row) or value)
+                        lookup[value] = row
+                        indexed_rows.append({
+                            "row": row,
+                            "label": display_label,
+                            "value": value,
+                            "search": " ".join(
+                                [display_label, value, *(str(row.get(field) or "") for field in (search_fields or sorted(str(key) for key in row)))]
+                            ).casefold(),
+                        })
 
-        ```python
-        def _runtime_context() -> dict[str, Any]:
-            try:
-                import notebookutils  # type: ignore
-            except Exception:
-                return {}
+                def _matching_options(query: str) -> list[tuple[str, str]]:
+                    needle = str(query or "").casefold().strip()
+                    matches = [item for item in indexed_rows if not needle or needle in item["search"]]
+                    return [(item["label"], item["value"]) for item in matches[:max_results]]
 
-            runtime = getattr(notebookutils, "runtime", None)
-            context = getattr(runtime, "context", None)
-            if context is None:
-                return {}
+                def _render_context(value: Any) -> None:
+                    row = lookup.get(str(value or ""))
+                    context.value = "<br>".join(
+                        f"<b>{_html_escape(field_label)}:</b> {_html_escape(row.get(field, ''))}"
+                        for field, field_label in context_fields
+                    ) if row and context_fields else ("<em>No record selected.</em>" if context_fields else "")
 
-            keys = [
-                "currentWorkspaceId",
-                "currentWorkspaceName",
-                "currentNotebookId",
-                "currentNotebookName",
-                "workspaceId",
-                "workspaceName",
-                "notebookId",
-                "notebookName",
-                "userId",
-                "userName",
-                "activityId",
-            ]
-            return {key: _context_get(context, key) for key in keys}
-        ```
+                def _apply_filter(preferred_value: Any = None) -> None:
+                    current = str(preferred_value if preferred_value is not None else selector.value or "")
+                    options = _matching_options(search.value)
+                    if empty_label is not None:
+                        options = [(empty_label, ""), *options]
+                    selector.options = options
+                    values = [option[1] if isinstance(option, tuple) and len(option) == 2 else option for option in options]
+                    if current and current in lookup and current not in values and not str(search.value or "").strip():
+                        row = lookup[current]
+                        options = [(str(label_fn(row) or current), current), *options]
+                        values = [option[1] if isinstance(option, tuple) and len(option) == 2 else option for option in options]
+                    non_empty_values = [value for value in values if value]
+                    if current in values and (current or not str(search.value or "").strip()):
+                        selector.value = current
+                    elif non_empty_values:
+                        selector.value = non_empty_values[0]
+                    elif values:
+                        selector.value = values[0]
+                    else:
+                        selector.value = None
+                    _render_context(selector.value)
 
-        **`def _register_current_notebook(spark, agreement_id=None, notebook_type=None, environment_name=None, dataset_name=None, table_name=None, topic=None, pipeline_name=None, contract_version=None, registration_role='primary', registration_status='active', registration_id=None, superseded_at=None, superseded_by_registration_id=None, metadata_table=NOTEBOOK_REGISTRY_TABLE, *, config: Any=None, env: str | None=None)`**
+                def _on_search(change: dict[str, Any]) -> None:
+                    if change.get("name") == "value":
+                        _apply_filter(selector.value)
 
-        Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/metadata.py#L292-L405)
+                def _on_select(change: dict[str, Any]) -> None:
+                    if change.get("name") == "value":
+                        _render_context(change.get("new"))
 
-        ```python
-        def _register_current_notebook(
-            spark,
-            agreement_id=None,
-            notebook_type=None,
-            environment_name=None,
-            dataset_name=None,
-            table_name=None,
-            topic=None,
-            pipeline_name=None,
-            contract_version=None,
-            registration_role="primary",
-            registration_status="active",
-            registration_id=None,
-            superseded_at=None,
-            superseded_by_registration_id=None,
-            metadata_table=NOTEBOOK_REGISTRY_TABLE,
-            *,
-            config: Any = None,
-            env: str | None = None,
-        ):
-            """Append a runtime notebook registration row.
+                def _refresh_rows(new_rows: list[dict[str, Any]], selected: str | None = None) -> None:
+                    _set_rows(new_rows)
+                    _apply_filter(selected)
 
-            Parameters
-            ----------
-            spark : pyspark.sql.SparkSession
-                Fabric Spark session used to append the registration row.
-            config : FrameworkConfig or dict, optional
-                Recommended metadata route configuration from ``00_env_config``. When
-                paired with ``env``, the row is written through
-                ``write_lakehouse_table(df, config, env, "metadata", metadata_table)``.
-            env : str, optional
-                Environment key paired with ``config`` for metadata lakehouse routing.
-            agreement_id : str
-                Agreement identifier this notebook supports.
-            notebook_type : str
-                Notebook family or workflow phase. When blank, the value is inferred
-                from the current notebook name prefix.
-            environment_name, dataset_name, table_name, topic, pipeline_name : str, optional
-                Optional workflow context recorded with the notebook registration.
-            contract_version : str, optional
-                Agreement contract version selected when the notebook was registered.
-            registration_role : {"primary", "additional"}, default="primary"
-                Whether the row represents the notebook's user-facing active agreement
-                or an additional audit link.
-            registration_status : {"active", "superseded"}, default="active"
-                Current registration event state. Superseded rows are retained for audit
-                and ignored by active-registration helpers.
-            registration_id : str, optional
-                Stable registration identifier. When omitted, a deterministic identifier
-                is generated from the notebook and agreement identity.
-            superseded_at, superseded_by_registration_id : str, optional
-                Audit values populated when a prior registration is superseded.
-            metadata_table : str, default=NOTEBOOK_REGISTRY_TABLE
-                Physical notebook registry table name.
+                def _select_value(value: str | None) -> None:
+                    _apply_filter(str(value or ""))
 
-            Returns
-            -------
-            dict[str, str]
-                Registration row matching :data:`NOTEBOOK_REGISTRY_FIELDS`.
+                search.observe(_on_search, names="value")
+                selector.observe(_on_select, names="value")
+                _refresh_rows(rows, selected_value)
+                container = widgets.VBox([search, selector, context])
+                selector.search_box = search
+                selector.context_html = context
+                selector.refresh_rows = _refresh_rows
+                selector.select_value = _select_value
+                selector.rows_by_value = lookup
+                return {
+                    "container": container,
+                    "search": search,
+                    "selector": selector,
+                    "context": context,
+                    "rows_by_value": lookup,
+                    "refresh_rows": _refresh_rows,
+                }
+            ```
 
-            Raises
-            ------
-            ValueError
-                If the recommended ``config``/``env`` route is not provided.
+        ??? example "Rule parsing helpers"
 
-            Notes
-            -----
-            Prepare the registry with :func:`_setup_notebook_registry_table` before
-            workflow notebooks register themselves. New notebooks should pass
-            ``config=CONFIG`` and ``env=ENV`` so metadata writes use the configured
-            ``metadata`` target from ``00_env_config``.
-            """
-            if config is None or env is None:
-                raise ValueError("_register_current_notebook requires config and env for metadata routing.")
+            **`def _parse_contract_version(version: Any) -> tuple[int, int, int]`**
 
-            ctx = _runtime_context()
-            workspace_id = _context_get(ctx, "currentWorkspaceId", "workspaceId")
-            workspace_name = _context_get(ctx, "currentWorkspaceName", "workspaceName")
-            notebook_id = _context_get(ctx, "currentNotebookId", "notebookId")
-            notebook_name = _context_get(ctx, "currentNotebookName", "notebookName") or "unknown_notebook"
-            user_id = _context_get(ctx, "userId")
-            user_name = _context_get(ctx, "userName")
-            inferred_type = notebook_type or str(notebook_name).split("_", 1)[0]
-            row = {
-                "agreement_id": _safe_str(agreement_id),
-                "environment_name": _safe_str(environment_name),
-                "dataset_name": _safe_str(dataset_name),
-                "table_name": _safe_str(table_name),
-                "topic": _safe_str(topic),
-                "pipeline_name": _safe_str(pipeline_name),
-                "notebook_type": _safe_str(inferred_type),
-                "workspace_id": _safe_str(workspace_id),
-                "workspace_name": _safe_str(workspace_name),
-                "notebook_id": _safe_str(notebook_id),
-                "notebook_name": _safe_str(notebook_name),
-                "notebook_url": _safe_str(
-                    f"https://app.fabric.microsoft.com/groups/{workspace_id}/notebooks/{notebook_id}"
-                    if workspace_id and notebook_id
-                    else ""
-                ),
-                "user_name": _safe_str(user_name),
-                "user_id": _safe_str(user_id),
-                "registered_at": _current_audit_timestamp(config=config, drop_microseconds=False),
-                "agreement_contract_version": _safe_str(contract_version),
-                "registration_role": _safe_str(registration_role or "primary"),
-                "registration_status": _safe_str(registration_status or "active"),
-                "superseded_at": _safe_str(superseded_at),
-                "superseded_by_registration_id": _safe_str(superseded_by_registration_id),
-            }
-            row["registration_id"] = _safe_str(registration_id or _notebook_registration_key(row))
-            row = {field: row.get(field, "") for field in NOTEBOOK_REGISTRY_FIELDS}
-            df = spark.createDataFrame(_rows_for_spark([row]))
-            write_lakehouse_table(df, config, env, "metadata", metadata_table, mode="append")
-            return row
-        ```
+            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/data_agreement.py#L638-L644)
 
-        **`def _current_audit_timestamp(config: Any=None, timezone_name: str | None=None, *, drop_microseconds: bool=True) -> str`**
+            ```python
+            def _parse_contract_version(version: Any) -> tuple[int, int, int]:
+                """Parse a semantic contract version into a comparable tuple."""
+                try:
+                    parts = str(version or "").strip().split(".")
+                    return tuple(int(parts[index]) if index < len(parts) else 0 for index in range(3))  # type: ignore[return-value]
+                except (TypeError, ValueError):
+                    return (0, 0, 0)
+            ```
 
-        Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/config.py#L69-L75)
+        ??? example "Fabric or Spark access helpers"
 
-        ```python
-        def _current_audit_timestamp(config: Any = None, timezone_name: str | None = None, *, drop_microseconds: bool = True) -> str:
-            """Return the current audit timestamp in the configured audit timezone."""
-            tz_name = _get_audit_timezone(config, timezone_name)
-            value = datetime.now(ZoneInfo(tz_name))
-            if drop_microseconds:
-                value = value.replace(microsecond=0)
-            return value.isoformat()
-        ```
+            **`def _rows_for_spark(rows: list[dict[str, Any]]) -> list[dict[str, Any]]`**
 
-        **`def _get_audit_timezone(config: Any=None, timezone_name: str | None=None) -> str`**
+            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/metadata.py#L161-L170)
 
-        Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/config.py#L61-L66)
+            ```python
+            def _rows_for_spark(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+                out = []
+                for row in rows or []:
+                    item = dict(row)
+                    if isinstance(item.get("approved_at"), datetime):
+                        item["approved_at"] = item["approved_at"].isoformat()
+                    if isinstance(item.get("ai_suggestion_json"), (dict, list)):
+                        item["ai_suggestion_json"] = json.dumps(item["ai_suggestion_json"], sort_keys=True)
+                    out.append(item)
+                return out
+            ```
 
-        ```python
-        def _get_audit_timezone(config: Any = None, timezone_name: str | None = None) -> str:
-            """Resolve the configured FabricOps audit timezone, defaulting to UTC."""
-            if timezone_name is not None:
-                return _validate_audit_timezone(timezone_name)
-            value = getattr(config, "audit_timezone", None) if config is not None else None
-            return _validate_audit_timezone(value)
-        ```
+        ??? example "Other helpers"
 
-        **`def _validate_audit_timezone(timezone_name: str | None) -> str`**
+            **`def _coerce_row_dicts(rows: Any) -> list[dict[str, Any]]`**
 
-        Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/config.py#L27-L58)
+            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/data_agreement.py#L397-L402)
 
-        ```python
-        def _validate_audit_timezone(timezone_name: str | None) -> str:
-            """Return a valid IANA audit timezone name.
+            ```python
+            def _coerce_row_dicts(rows: Any) -> list[dict[str, Any]]:
+                if rows is None:
+                    return []
+                if hasattr(rows, "collect"):
+                    rows = rows.collect()
+                return [row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row) for row in rows]
+            ```
 
-            Parameters
-            ----------
-            timezone_name : str or None
-                IANA timezone name to validate. Blank values default to ``"UTC"``.
+            **`def _coerce_row_dicts(rows: Any) -> list[dict[str, Any]]`**
 
-            Returns
-            -------
-            str
-                Validated timezone name.
+            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/metadata.py#L53-L58)
 
-            Raises
-            ------
-            ValueError
-                If a non-blank value is not a valid IANA timezone name.
-            """
-            value = str(timezone_name or DEFAULT_AUDIT_TIMEZONE).strip() or DEFAULT_AUDIT_TIMEZONE
-            if value != DEFAULT_AUDIT_TIMEZONE and "/" not in value:
-                raise ValueError(
-                    f'Invalid FABRICOPS_AUDIT_TIMEZONE: "{value}". '
-                    'Use a valid IANA timezone name such as "Asia/Singapore" or keep the default "UTC".'
+            ```python
+            def _coerce_row_dicts(rows: Any) -> list[dict[str, Any]]:
+                if rows is None:
+                    return []
+                if hasattr(rows, "collect"):
+                    rows = rows.collect()
+                return [row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row) for row in rows]
+            ```
+
+            **`def _config_value(config: Any, name: str, default: Any) -> Any`**
+
+            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/data_agreement.py#L149-L153)
+
+            ```python
+            def _config_value(config: Any, name: str, default: Any) -> Any:
+                agreement_config = getattr(config, "data_agreement_config", config)
+                if isinstance(agreement_config, dict):
+                    return agreement_config.get(name, default)
+                return getattr(agreement_config, name, default)
+            ```
+
+            **`def _context_get(context: Any, *keys: str) -> Any`**
+
+            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/metadata.py#L173-L185)
+
+            ```python
+            def _context_get(context: Any, *keys: str) -> Any:
+                for key in keys:
+                    try:
+                        if isinstance(context, dict):
+                            value = context.get(key)
+                        else:
+                            getter = getattr(context, "get", None)
+                            value = getter(key) if callable(getter) else None
+                    except Exception:
+                        value = None
+                    if value is not None:
+                        return value
+                return None
+            ```
+
+            **`def _current_notebook_active_registrations(spark, *, config: Any, env: str, metadata_table: str=NOTEBOOK_REGISTRY_TABLE, notebook_type: str | None=None, environment_name: str | None=None, registration_role: str | None=None, missing_ok: bool=True) -> list[dict[str, Any]]`**
+
+            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/metadata.py#L476-L526)
+
+            ```python
+            def _current_notebook_active_registrations(
+                spark,
+                *,
+                config: Any,
+                env: str,
+                metadata_table: str = NOTEBOOK_REGISTRY_TABLE,
+                notebook_type: str | None = None,
+                environment_name: str | None = None,
+                registration_role: str | None = None,
+                missing_ok: bool = True,
+            ) -> list[dict[str, Any]]:
+                """Return active agreement registrations for the running notebook.
+
+                Parameters
+                ----------
+                spark : pyspark.sql.SparkSession
+                    Fabric Spark session used to read the metadata table.
+                config : FrameworkConfig or dict
+                    Metadata route configuration from ``00_env_config``.
+                env : str
+                    Environment key paired with ``config``.
+                metadata_table : str, default=NOTEBOOK_REGISTRY_TABLE
+                    Physical notebook registry table name.
+                notebook_type, environment_name, registration_role : str, optional
+                    Optional filters for notebook phase, environment, and primary versus
+                    additional registration role.
+                missing_ok : bool, default=True
+                    Return an empty list when the registry cannot be read.
+
+                Returns
+                -------
+                list[dict[str, Any]]
+                    Active latest registration rows for the current notebook runtime.
+                """
+                ctx = _runtime_context()
+                notebook_id = _safe_str(_context_get(ctx, "currentNotebookId", "notebookId"))
+                notebook_name = _safe_str(_context_get(ctx, "currentNotebookName", "notebookName") or "unknown_notebook")
+                rows = _load_notebook_registry(
+                    spark,
+                    metadata_table=metadata_table,
+                    notebook_type=notebook_type,
+                    environment_name=environment_name,
+                    missing_ok=missing_ok,
+                    config=config,
+                    env=env,
+                    active_only=True,
+                    notebook_id=notebook_id or None,
+                    notebook_name=None if notebook_id else notebook_name,
+                    registration_role=registration_role,
                 )
-            try:
-                ZoneInfo(value)
-            except ZoneInfoNotFoundError as exc:
-                raise ValueError(
-                    f'Invalid FABRICOPS_AUDIT_TIMEZONE: "{value}". '
-                    'Use a valid IANA timezone name such as "Asia/Singapore" or keep the default "UTC".'
-                ) from exc
-            return value
-        ```
+                return rows
+            ```
 
-        **`def _rows_for_spark(rows: list[dict[str, Any]]) -> list[dict[str, Any]]`**
+            **`def _html_escape(value: Any) -> str`**
 
-        Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/metadata.py#L161-L170)
+            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/data_agreement.py#L192-L195)
 
-        ```python
-        def _rows_for_spark(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
-            out = []
-            for row in rows or []:
-                item = dict(row)
-                if isinstance(item.get("approved_at"), datetime):
-                    item["approved_at"] = item["approved_at"].isoformat()
-                if isinstance(item.get("ai_suggestion_json"), (dict, list)):
-                    item["ai_suggestion_json"] = json.dumps(item["ai_suggestion_json"], sort_keys=True)
-                out.append(item)
-            return out
-        ```
+            ```python
+            def _html_escape(value: Any) -> str:
+                """Return display-safe HTML text for notebook context snippets."""
+                import html
+                return html.escape(str(value or ""))
+            ```
+
+            **`def _notebook_registration_key(row: dict[str, Any]) -> str`**
+
+            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/metadata.py#L41-L50)
+
+            ```python
+            def _notebook_registration_key(row: dict[str, Any]) -> str:
+                parts = [
+                    str(row.get("workspace_id") or ""),
+                    str(row.get("notebook_id") or ""),
+                    str(row.get("notebook_name") or ""),
+                    str(row.get("agreement_id") or ""),
+                    str(row.get("agreement_contract_version") or ""),
+                    str(row.get("registration_role") or ""),
+                ]
+                return hashlib.sha256("||".join(parts).encode("utf-8")).hexdigest()[:24]
+            ```
+
+            **`def _register_current_notebook(spark, agreement_id=None, notebook_type=None, environment_name=None, dataset_name=None, table_name=None, topic=None, pipeline_name=None, contract_version=None, registration_role='primary', registration_status='active', registration_id=None, superseded_at=None, superseded_by_registration_id=None, metadata_table=NOTEBOOK_REGISTRY_TABLE, *, config: Any=None, env: str | None=None)`**
+
+            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/metadata.py#L292-L405)
+
+            ```python
+            def _register_current_notebook(
+                spark,
+                agreement_id=None,
+                notebook_type=None,
+                environment_name=None,
+                dataset_name=None,
+                table_name=None,
+                topic=None,
+                pipeline_name=None,
+                contract_version=None,
+                registration_role="primary",
+                registration_status="active",
+                registration_id=None,
+                superseded_at=None,
+                superseded_by_registration_id=None,
+                metadata_table=NOTEBOOK_REGISTRY_TABLE,
+                *,
+                config: Any = None,
+                env: str | None = None,
+            ):
+                """Append a runtime notebook registration row.
+
+                Parameters
+                ----------
+                spark : pyspark.sql.SparkSession
+                    Fabric Spark session used to append the registration row.
+                config : FrameworkConfig or dict, optional
+                    Recommended metadata route configuration from ``00_env_config``. When
+                    paired with ``env``, the row is written through
+                    ``write_lakehouse_table(df, config, env, "metadata", metadata_table)``.
+                env : str, optional
+                    Environment key paired with ``config`` for metadata lakehouse routing.
+                agreement_id : str
+                    Agreement identifier this notebook supports.
+                notebook_type : str
+                    Notebook family or workflow phase. When blank, the value is inferred
+                    from the current notebook name prefix.
+                environment_name, dataset_name, table_name, topic, pipeline_name : str, optional
+                    Optional workflow context recorded with the notebook registration.
+                contract_version : str, optional
+                    Agreement contract version selected when the notebook was registered.
+                registration_role : {"primary", "additional"}, default="primary"
+                    Whether the row represents the notebook's user-facing active agreement
+                    or an additional audit link.
+                registration_status : {"active", "superseded"}, default="active"
+                    Current registration event state. Superseded rows are retained for audit
+                    and ignored by active-registration helpers.
+                registration_id : str, optional
+                    Stable registration identifier. When omitted, a deterministic identifier
+                    is generated from the notebook and agreement identity.
+                superseded_at, superseded_by_registration_id : str, optional
+                    Audit values populated when a prior registration is superseded.
+                metadata_table : str, default=NOTEBOOK_REGISTRY_TABLE
+                    Physical notebook registry table name.
+
+                Returns
+                -------
+                dict[str, str]
+                    Registration row matching :data:`NOTEBOOK_REGISTRY_FIELDS`.
+
+                Raises
+                ------
+                ValueError
+                    If the recommended ``config``/``env`` route is not provided.
+
+                Notes
+                -----
+                Prepare the registry with :func:`_setup_notebook_registry_table` before
+                workflow notebooks register themselves. New notebooks should pass
+                ``config=CONFIG`` and ``env=ENV`` so metadata writes use the configured
+                ``metadata`` target from ``00_env_config``.
+                """
+                if config is None or env is None:
+                    raise ValueError("_register_current_notebook requires config and env for metadata routing.")
+
+                ctx = _runtime_context()
+                workspace_id = _context_get(ctx, "currentWorkspaceId", "workspaceId")
+                workspace_name = _context_get(ctx, "currentWorkspaceName", "workspaceName")
+                notebook_id = _context_get(ctx, "currentNotebookId", "notebookId")
+                notebook_name = _context_get(ctx, "currentNotebookName", "notebookName") or "unknown_notebook"
+                user_id = _context_get(ctx, "userId")
+                user_name = _context_get(ctx, "userName")
+                inferred_type = notebook_type or str(notebook_name).split("_", 1)[0]
+                row = {
+                    "agreement_id": _safe_str(agreement_id),
+                    "environment_name": _safe_str(environment_name),
+                    "dataset_name": _safe_str(dataset_name),
+                    "table_name": _safe_str(table_name),
+                    "topic": _safe_str(topic),
+                    "pipeline_name": _safe_str(pipeline_name),
+                    "notebook_type": _safe_str(inferred_type),
+                    "workspace_id": _safe_str(workspace_id),
+                    "workspace_name": _safe_str(workspace_name),
+                    "notebook_id": _safe_str(notebook_id),
+                    "notebook_name": _safe_str(notebook_name),
+                    "notebook_url": _safe_str(
+                        f"https://app.fabric.microsoft.com/groups/{workspace_id}/notebooks/{notebook_id}"
+                        if workspace_id and notebook_id
+                        else ""
+                    ),
+                    "user_name": _safe_str(user_name),
+                    "user_id": _safe_str(user_id),
+                    "registered_at": _current_audit_timestamp(config=config, drop_microseconds=False),
+                    "agreement_contract_version": _safe_str(contract_version),
+                    "registration_role": _safe_str(registration_role or "primary"),
+                    "registration_status": _safe_str(registration_status or "active"),
+                    "superseded_at": _safe_str(superseded_at),
+                    "superseded_by_registration_id": _safe_str(superseded_by_registration_id),
+                }
+                row["registration_id"] = _safe_str(registration_id or _notebook_registration_key(row))
+                row = {field: row.get(field, "") for field in NOTEBOOK_REGISTRY_FIELDS}
+                df = spark.createDataFrame(_rows_for_spark([row]))
+                write_lakehouse_table(df, config, env, "metadata", metadata_table, mode="append")
+                return row
+            ```
+
+            **`def _registry_rows_with_defaults(rows: Any) -> list[dict[str, Any]]`**
+
+            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/metadata.py#L408-L419)
+
+            ```python
+            def _registry_rows_with_defaults(rows: Any) -> list[dict[str, Any]]:
+                out = []
+                for source in _coerce_row_dicts(rows):
+                    row = {field: _safe_str(source.get(field)) for field in NOTEBOOK_REGISTRY_BASE_FIELDS}
+                    row["agreement_contract_version"] = _safe_str(source.get("agreement_contract_version"))
+                    row["registration_role"] = _safe_str(source.get("registration_role") or "primary")
+                    row["registration_status"] = _safe_str(source.get("registration_status") or "active")
+                    row["superseded_at"] = _safe_str(source.get("superseded_at"))
+                    row["superseded_by_registration_id"] = _safe_str(source.get("superseded_by_registration_id"))
+                    row["registration_id"] = _safe_str(source.get("registration_id") or _notebook_registration_key(row))
+                    out.append({field: row.get(field, "") for field in NOTEBOOK_REGISTRY_FIELDS})
+                return out
+            ```
+
+            **`def _require_ipywidgets()`**
+
+            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/data_agreement.py#L63-L72)
+
+            ```python
+            def _require_ipywidgets():
+                """Return ipywidgets or raise an actionable optional-dependency error."""
+                try:
+                    import ipywidgets as widgets
+                except ModuleNotFoundError as exc:
+                    raise ModuleNotFoundError(
+                        "The data agreement widget feature requires the 'dq-review' extra. "
+                        'Install with: pip install "fabricops-kit[dq-review]"'
+                    ) from exc
+                return widgets
+            ```
+
+            **`def _runtime_context() -> dict[str, Any]`**
+
+            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/metadata.py#L192-L216)
+
+            ```python
+            def _runtime_context() -> dict[str, Any]:
+                try:
+                    import notebookutils  # type: ignore
+                except Exception:
+                    return {}
+
+                runtime = getattr(notebookutils, "runtime", None)
+                context = getattr(runtime, "context", None)
+                if context is None:
+                    return {}
+
+                keys = [
+                    "currentWorkspaceId",
+                    "currentWorkspaceName",
+                    "currentNotebookId",
+                    "currentNotebookName",
+                    "workspaceId",
+                    "workspaceName",
+                    "notebookId",
+                    "notebookName",
+                    "userId",
+                    "userName",
+                    "activityId",
+                ]
+                return {key: _context_get(context, key) for key in keys}
+            ```
+
+            **`def _safe_str(value: Any) -> str`**
+
+            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/metadata.py#L188-L189)
+
+            ```python
+            def _safe_str(value: Any) -> str:
+                return "" if value is None else str(value)
+            ```
+
+            **`def _widget_common(widgets_module: Any, description: str, *, textarea: bool=False) -> dict[str, Any]`**
+
+            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/data_agreement.py#L180-L189)
+
+            ```python
+            def _widget_common(widgets_module: Any, description: str, *, textarea: bool = False) -> dict[str, Any]:
+                """Return common style and layout keyword arguments for form controls."""
+                common: dict[str, Any] = {"description": description, "style": dict(_WIDGET_STYLE)}
+                layout_class = getattr(widgets_module, "Layout", None)
+                if layout_class is not None:
+                    kwargs = {"width": _WIDGET_LAYOUT_WIDTH}
+                    if textarea:
+                        kwargs["height"] = _TEXTAREA_HEIGHT
+                    common["layout"] = layout_class(**kwargs)
+                return common
+            ```
 
 
 <details class="reference-metadata-details">
@@ -1287,7 +1197,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/data_agreement.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/data_agreement.py#L856-L1080">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/data_agreement.py#L856-L1080</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/data_agreement.py#L856-L1080">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/data_agreement.py#L856-L1080</a>
 - Start line: `856`
 - End line: `1080`
 - Signature:
@@ -1303,73 +1213,9 @@ def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None=
 - <a href="../get_selected_agreement/"><code>fabricops_kit.data_agreement.get_selected_agreement</code></a>
 - <a href="../setup_metadata_tables/"><code>fabricops_kit.config.setup_metadata_tables</code></a>
 
-### Internal implementation helpers
+### Internal implementation summary
 
-### Call flow
-
-```text
-widget_select_agreement(...)
-├── _current_notebook_active_registrations(...)
-│   ├── _context_get(...)
-│   ├── _load_notebook_registry(...)
-│   │   ├── _notebook_registration_key(...)
-│   │   ├── _registry_rows_with_defaults(...)
-│   │   │   ├── _coerce_row_dicts(...)
-│   │   │   ├── _notebook_registration_key(...)
-│   │   │   └── _safe_str(...)
-│   │   └── read_lakehouse_table(...)
-│   │       ├── _current_database_matches(...)
-│   │       ├── _get_spark(...)
-│   │       ├── _get_store(...)
-│   │       ├── _normalize_table_name(...)
-│   │       ├── _registered_table_identifier(...)
-│   │       │   ├── _normalize_table_name(...)
-│   │       │   └── _quote_identifier(...)
-│   │       └── _uses_registered_metadata_table(...)
-│   ├── _runtime_context(...)
-│   │   └── _context_get(...)
-│   └── _safe_str(...)
-├── _html_escape(...)
-├── _latest_agreement_versions(...)
-│   ├── _coerce_row_dicts(...)
-│   └── _parse_contract_version(...)
-├── _list_data_agreements(...)
-│   ├── _latest_agreement_versions(...)
-│   │   ├── _coerce_row_dicts(...)
-│   │   └── _parse_contract_version(...)
-│   └── _list_all_data_agreement_rows(...)
-│       ├── _coerce_row_dicts(...)
-│       ├── _config_value(...)
-│       └── read_lakehouse_table(...)
-│           ├── _current_database_matches(...)
-│           ├── _get_spark(...)
-│           ├── _get_store(...)
-│           ├── _normalize_table_name(...)
-│           ├── _registered_table_identifier(...)
-│           │   ├── _normalize_table_name(...)
-│           │   └── _quote_identifier(...)
-│           └── _uses_registered_metadata_table(...)
-├── _register_current_notebook(...)
-│   ├── _context_get(...)
-│   ├── _current_audit_timestamp(...)
-│   │   └── _get_audit_timezone(...)
-│   │       └── _validate_audit_timezone(...)
-│   ├── _notebook_registration_key(...)
-│   ├── _rows_for_spark(...)
-│   ├── _runtime_context(...)
-│   │   └── _context_get(...)
-│   ├── _safe_str(...)
-│   └── write_lakehouse_table(...)
-│       ├── _get_store(...)
-│       ├── _normalize_table_name(...)
-│       ├── _registered_table_identifier(...)
-│       │   ├── _normalize_table_name(...)
-│       │   └── _quote_identifier(...)
-│       └── _uses_registered_metadata_table(...)
-├── _render_searchable_selector(...)
-│   ├── _html_escape(...)
-│   └── _widget_common(...)
-└── _require_ipywidgets(...)
-```
+- Internal helper count: 23
+- Grouped helper summary and optional source snippets are rendered in the page-level Internal implementation summary section.
 
 </details>

@@ -30,7 +30,52 @@ Raises Spark/DataFrame errors when profiling expressions cannot be evaluated.
 
 Computes profiling aggregations on the provided DataFrame; it does not write metadata, tables, or files.
 
-## Parameters
+## Used by
+
+- `fabricops_kit.governance_review._prepare_dq_profile_input_rows`
+- <a href="../enforce_profile_behavior/"><code>fabricops_kit.guardrails.enforce_profile_behavior</code></a>
+- <a href="../run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
+
+## Calls
+
+- `fabricops_kit.config._audit_timestamp_expr`
+- `fabricops_kit.config._get_audit_timezone`
+- `fabricops_kit.data_profiling._build_distribution_summaries`
+- `fabricops_kit.data_profiling._get_profiled_columns`
+- `fabricops_kit.data_profiling._is_min_max_supported_type`
+
+??? info "Call flow"
+
+    ```text
+    profile_dataframe(...)
+    ├── _audit_timestamp_expr(...)
+    │   └── _get_audit_timezone(...)
+    │       └── _validate_audit_timezone(...)
+    ├── _build_distribution_summaries(...)
+    │   ├── _build_categorical_distribution(...)
+    │   ├── _build_numeric_distribution(...)
+    │   └── _numeric_bin_edges(...)
+    ├── _get_audit_timezone(...)
+    │   └── _validate_audit_timezone(...)
+    ├── _get_profiled_columns(...)
+    └── _is_min_max_supported_type(...)
+    ```
+
+## Callable implementation
+
+### Function details
+
+- Module: `data_profiling`
+- Classification: Callable
+- Source file path: `src/fabricops_kit/data_profiling.py`
+- Source line: `225`
+- Signature:
+
+```python
+def profile_dataframe(df, table_name: str, *, exclude_columns=None, run_timestamp_timezone: str | None=None, config: Any=None, include_distributions: bool=False, distribution_columns: list[str] | set[str] | tuple[str, ...] | None=None, distribution_bin_edges: dict[str, list[float]] | None=None, categorical_categories: dict[str, list[str]] | None=None, categorical_top_n: int=20)
+```
+
+### Parameters
 
 <div class="module-table-scroll reference-input-table">
 <table class="reference-function-table">
@@ -96,47 +141,20 @@ Computes profiling aggregations on the provided DataFrame; it does not write met
 </table>
 </div>
 
-## Returns
+### Returns
 
 Spark DataFrame containing one profile row per eligible business column.
 
-## Used by
+### Notes
 
-- `fabricops_kit.governance_review._prepare_dq_profile_input_rows`
-- <a href="../enforce_profile_behavior/"><code>fabricops_kit.guardrails.enforce_profile_behavior</code></a>
-- <a href="../run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
+Distribution profiling only collects aggregated Spark results such as
+quantiles, bucket counts, and grouped category counts. It does not collect
+complete datasets to the driver.
 
-## Calls
-
-- `fabricops_kit.config._audit_timestamp_expr`
-- `fabricops_kit.config._get_audit_timezone`
-- `fabricops_kit.data_profiling._build_distribution_summaries`
-- `fabricops_kit.data_profiling._get_profiled_columns`
-- `fabricops_kit.data_profiling._is_min_max_supported_type`
-
-## Implementation details
-
-### Call flow
-
-```text
-profile_dataframe(...)
-├── _audit_timestamp_expr(...)
-│   └── _get_audit_timezone(...)
-│       └── _validate_audit_timezone(...)
-├── _build_distribution_summaries(...)
-│   ├── _build_categorical_distribution(...)
-│   ├── _build_numeric_distribution(...)
-│   └── _numeric_bin_edges(...)
-├── _get_audit_timezone(...)
-│   └── _validate_audit_timezone(...)
-├── _get_profiled_columns(...)
-└── _is_min_max_supported_type(...)
-```
-
-## Public callable source code
+### Public callable source code
 
 - Source file path: `src/fabricops_kit/data_profiling.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/data_profiling.py#L225-L345">View profile_dataframe on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/data_profiling.py#L225-L345">View profile_dataframe on GitHub</a>
 
 ```python
 def profile_dataframe(
@@ -262,333 +280,323 @@ def profile_dataframe(
     return out
 ```
 
-## Maintainer internals
+## Internal implementation summary
 
-??? info "Nested helper functions: 9"
+??? info "Internal helpers used: 9"
 
-    These nested helpers support `profile_dataframe` by handling lower-level implementation steps; expand this section only when maintaining or debugging the package internals.
+    This callable uses 9 internal helpers for audit timestamp, rule parsing, result summary, fabric or spark access, and other.
 
     <div class="module-table-scroll reference-input-table">
     <table class="reference-function-table">
       <thead>
         <tr>
-          <th>Helper</th>
-          <th>Role</th>
-          <th>Source</th>
+          <th>Area</th>
+          <th>Helpers</th>
+          <th>What they do</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td data-label="Helper"><code>_audit_timestamp_expr</code></td>
-          <td data-label="Role">Return a Spark expression for the current audit timestamp timezone.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/config.py#L78-L83">src/fabricops_kit/config.py</a></td>
+          <td data-label="Area">Audit timestamp</td>
+          <td data-label="Helpers"><code>_audit_timestamp_expr</code>, <code>_get_audit_timezone</code>, <code>_validate_audit_timezone</code></td>
+          <td data-label="What they do">Resolve and stamp audit time consistently.</td>
         </tr>
         <tr>
-          <td data-label="Helper"><code>_get_audit_timezone</code></td>
-          <td data-label="Role">Resolve the configured FabricOps audit timezone, defaulting to UTC.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/config.py#L61-L66">src/fabricops_kit/config.py</a></td>
+          <td data-label="Area">Rule parsing</td>
+          <td data-label="Helpers"><code>_get_profiled_columns</code></td>
+          <td data-label="What they do">Normalize stored or user-provided values before applying rules.</td>
         </tr>
         <tr>
-          <td data-label="Helper"><code>_validate_audit_timezone</code></td>
-          <td data-label="Role">Return a valid IANA audit timezone name.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/config.py#L27-L58">src/fabricops_kit/config.py</a></td>
+          <td data-label="Area">Result summary</td>
+          <td data-label="Helpers"><code>_build_distribution_summaries</code></td>
+          <td data-label="What they do">Build final statuses, counts, and messages for the caller.</td>
         </tr>
         <tr>
-          <td data-label="Helper"><code>_build_distribution_summaries</code></td>
-          <td data-label="Role">Internal helper used by the package implementation.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/data_profiling.py#L192-L222">src/fabricops_kit/data_profiling.py</a></td>
+          <td data-label="Area">Fabric or Spark access</td>
+          <td data-label="Helpers"><code>_is_min_max_supported_type</code></td>
+          <td data-label="What they do">Access Fabric or Spark runtime services used by the implementation.</td>
         </tr>
         <tr>
-          <td data-label="Helper"><code>_build_categorical_distribution</code></td>
-          <td data-label="Role">Internal helper used by the package implementation.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/data_profiling.py#L152-L189">src/fabricops_kit/data_profiling.py</a></td>
-        </tr>
-        <tr>
-          <td data-label="Helper"><code>_build_numeric_distribution</code></td>
-          <td data-label="Role">Internal helper used by the package implementation.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/data_profiling.py#L120-L149">src/fabricops_kit/data_profiling.py</a></td>
-        </tr>
-        <tr>
-          <td data-label="Helper"><code>_numeric_bin_edges</code></td>
-          <td data-label="Role">Internal helper used by the package implementation.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/data_profiling.py#L107-L117">src/fabricops_kit/data_profiling.py</a></td>
-        </tr>
-        <tr>
-          <td data-label="Helper"><code>_get_profiled_columns</code></td>
-          <td data-label="Role">Return non-technical column names from a Spark DataFrame.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/data_profiling.py#L59-L81">src/fabricops_kit/data_profiling.py</a></td>
-        </tr>
-        <tr>
-          <td data-label="Helper"><code>_is_min_max_supported_type</code></td>
-          <td data-label="Role">Return whether min/max aggregation is safe for a Spark type string.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/data_profiling.py#L84-L104">src/fabricops_kit/data_profiling.py</a></td>
+          <td data-label="Area">Other</td>
+          <td data-label="Helpers"><code>_build_categorical_distribution</code>, <code>_build_numeric_distribution</code>, <code>_numeric_bin_edges</code></td>
+          <td data-label="What they do">Support lower-level implementation details that do not fit the main helper areas.</td>
         </tr>
       </tbody>
     </table>
     </div>
 
-    ??? example "View helper source code"
+    ??? example "View helper source by area"
 
-        **`def _audit_timestamp_expr(config: Any=None, timezone_name: str | None=None)`**
+        ??? example "Audit timestamp helpers"
 
-        Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/config.py#L78-L83)
+            **`def _audit_timestamp_expr(config: Any=None, timezone_name: str | None=None)`**
 
-        ```python
-        def _audit_timestamp_expr(config: Any = None, timezone_name: str | None = None):
-            """Return a Spark expression for the current audit timestamp timezone."""
-            from pyspark.sql import functions as F
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/config.py#L78-L83)
 
-            tz_name = _get_audit_timezone(config, timezone_name)
-            return F.current_timestamp() if tz_name == "UTC" else F.from_utc_timestamp(F.current_timestamp(), tz_name)
-        ```
+            ```python
+            def _audit_timestamp_expr(config: Any = None, timezone_name: str | None = None):
+                """Return a Spark expression for the current audit timestamp timezone."""
+                from pyspark.sql import functions as F
 
-        **`def _get_audit_timezone(config: Any=None, timezone_name: str | None=None) -> str`**
+                tz_name = _get_audit_timezone(config, timezone_name)
+                return F.current_timestamp() if tz_name == "UTC" else F.from_utc_timestamp(F.current_timestamp(), tz_name)
+            ```
 
-        Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/config.py#L61-L66)
+            **`def _get_audit_timezone(config: Any=None, timezone_name: str | None=None) -> str`**
 
-        ```python
-        def _get_audit_timezone(config: Any = None, timezone_name: str | None = None) -> str:
-            """Resolve the configured FabricOps audit timezone, defaulting to UTC."""
-            if timezone_name is not None:
-                return _validate_audit_timezone(timezone_name)
-            value = getattr(config, "audit_timezone", None) if config is not None else None
-            return _validate_audit_timezone(value)
-        ```
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/config.py#L61-L66)
 
-        **`def _validate_audit_timezone(timezone_name: str | None) -> str`**
+            ```python
+            def _get_audit_timezone(config: Any = None, timezone_name: str | None = None) -> str:
+                """Resolve the configured FabricOps audit timezone, defaulting to UTC."""
+                if timezone_name is not None:
+                    return _validate_audit_timezone(timezone_name)
+                value = getattr(config, "audit_timezone", None) if config is not None else None
+                return _validate_audit_timezone(value)
+            ```
 
-        Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/config.py#L27-L58)
+            **`def _validate_audit_timezone(timezone_name: str | None) -> str`**
 
-        ```python
-        def _validate_audit_timezone(timezone_name: str | None) -> str:
-            """Return a valid IANA audit timezone name.
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/config.py#L27-L58)
 
-            Parameters
-            ----------
-            timezone_name : str or None
-                IANA timezone name to validate. Blank values default to ``"UTC"``.
+            ```python
+            def _validate_audit_timezone(timezone_name: str | None) -> str:
+                """Return a valid IANA audit timezone name.
 
-            Returns
-            -------
-            str
-                Validated timezone name.
+                Parameters
+                ----------
+                timezone_name : str or None
+                    IANA timezone name to validate. Blank values default to ``"UTC"``.
 
-            Raises
-            ------
-            ValueError
-                If a non-blank value is not a valid IANA timezone name.
-            """
-            value = str(timezone_name or DEFAULT_AUDIT_TIMEZONE).strip() or DEFAULT_AUDIT_TIMEZONE
-            if value != DEFAULT_AUDIT_TIMEZONE and "/" not in value:
-                raise ValueError(
-                    f'Invalid FABRICOPS_AUDIT_TIMEZONE: "{value}". '
-                    'Use a valid IANA timezone name such as "Asia/Singapore" or keep the default "UTC".'
+                Returns
+                -------
+                str
+                    Validated timezone name.
+
+                Raises
+                ------
+                ValueError
+                    If a non-blank value is not a valid IANA timezone name.
+                """
+                value = str(timezone_name or DEFAULT_AUDIT_TIMEZONE).strip() or DEFAULT_AUDIT_TIMEZONE
+                if value != DEFAULT_AUDIT_TIMEZONE and "/" not in value:
+                    raise ValueError(
+                        f'Invalid FABRICOPS_AUDIT_TIMEZONE: "{value}". '
+                        'Use a valid IANA timezone name such as "Asia/Singapore" or keep the default "UTC".'
+                    )
+                try:
+                    ZoneInfo(value)
+                except ZoneInfoNotFoundError as exc:
+                    raise ValueError(
+                        f'Invalid FABRICOPS_AUDIT_TIMEZONE: "{value}". '
+                        'Use a valid IANA timezone name such as "Asia/Singapore" or keep the default "UTC".'
+                    ) from exc
+                return value
+            ```
+
+        ??? example "Rule parsing helpers"
+
+            **`def _get_profiled_columns(df, exclude_columns: list[str] | set[str] | None=None) -> list[str]`**
+
+            Source: [`src/fabricops_kit/data_profiling.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/data_profiling.py#L59-L81)
+
+            ```python
+            def _get_profiled_columns(df, exclude_columns: list[str] | set[str] | None = None) -> list[str]:
+                """Return non-technical column names from a Spark DataFrame.
+
+                Parameters
+                ----------
+                df : Any
+                    Spark DataFrame-like object with a ``dtypes`` attribute.
+                exclude_columns : list[str] | set[str] | None, optional
+                    Additional columns to exclude from profiling.
+
+                Returns
+                -------
+                list[str]
+                    Eligible business columns to profile.
+                """
+                excluded = set(_DEFAULT_PROFILE_EXCLUDE_COLUMNS)
+                if exclude_columns:
+                    excluded.update(exclude_columns)
+                return [
+                    name
+                    for name, _dtype in df.dtypes
+                    if name not in excluded and not any(str(name).startswith(prefix) for prefix in _DEFAULT_PROFILE_EXCLUDE_PREFIXES)
+                ]
+            ```
+
+        ??? example "Result summary helpers"
+
+            **`def _build_distribution_summaries(df, eligible_columns: list[str], dtype_map: dict[str, str], *, include_distributions: bool, distribution_columns: list[str] | set[str] | tuple[str, ...] | None, distribution_bin_edges: dict[str, list[float]] | None, categorical_categories: dict[str, list[str]] | None, categorical_top_n: int) -> dict[str, tuple[str, dict[str, Any]]]`**
+
+            Source: [`src/fabricops_kit/data_profiling.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/data_profiling.py#L192-L222)
+
+            ```python
+            def _build_distribution_summaries(
+                df,
+                eligible_columns: list[str],
+                dtype_map: dict[str, str],
+                *,
+                include_distributions: bool,
+                distribution_columns: list[str] | set[str] | tuple[str, ...] | None,
+                distribution_bin_edges: dict[str, list[float]] | None,
+                categorical_categories: dict[str, list[str]] | None,
+                categorical_top_n: int,
+            ) -> dict[str, tuple[str, dict[str, Any]]]:
+                if not include_distributions:
+                    return {}
+
+                selected = set(distribution_columns) if distribution_columns is not None else set(eligible_columns)
+                summaries: dict[str, tuple[str, dict[str, Any]]] = {}
+                for column_name in eligible_columns:
+                    if column_name not in selected:
+                        continue
+                    data_type = dtype_map[column_name]
+                    lowered_type = (data_type or "").lower()
+                    if any(token in lowered_type for token in ("tinyint", "smallint", "int", "bigint", "float", "double", "decimal")):
+                        edges = (distribution_bin_edges or {}).get(column_name) or _numeric_bin_edges(df, column_name)
+                        distribution = _build_numeric_distribution(df, column_name, edges)
+                        if distribution is not None:
+                            summaries[column_name] = ("numeric", distribution)
+                    elif any(token in lowered_type for token in ("string", "char", "varchar", "boolean")):
+                        distribution = _build_categorical_distribution(df, column_name, top_n=categorical_top_n, categories=(categorical_categories or {}).get(column_name))
+                        if distribution is not None:
+                            summaries[column_name] = ("categorical", distribution)
+                return summaries
+            ```
+
+        ??? example "Fabric or Spark access helpers"
+
+            **`def _is_min_max_supported_type(data_type: str) -> bool`**
+
+            Source: [`src/fabricops_kit/data_profiling.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/data_profiling.py#L84-L104)
+
+            ```python
+            def _is_min_max_supported_type(data_type: str) -> bool:
+                """Return whether min/max aggregation is safe for a Spark type string."""
+                value = (data_type or "").lower()
+                unsupported = ("array", "map", "struct", "binary")
+                if any(token in value for token in unsupported):
+                    return False
+                supported = (
+                    "tinyint",
+                    "smallint",
+                    "int",
+                    "bigint",
+                    "float",
+                    "double",
+                    "decimal",
+                    "date",
+                    "timestamp",
+                    "string",
+                    "char",
+                    "varchar",
                 )
-            try:
-                ZoneInfo(value)
-            except ZoneInfoNotFoundError as exc:
-                raise ValueError(
-                    f'Invalid FABRICOPS_AUDIT_TIMEZONE: "{value}". '
-                    'Use a valid IANA timezone name such as "Asia/Singapore" or keep the default "UTC".'
-                ) from exc
-            return value
-        ```
+                return any(token in value for token in supported)
+            ```
 
-        **`def _build_distribution_summaries(df, eligible_columns: list[str], dtype_map: dict[str, str], *, include_distributions: bool, distribution_columns: list[str] | set[str] | tuple[str, ...] | None, distribution_bin_edges: dict[str, list[float]] | None, categorical_categories: dict[str, list[str]] | None, categorical_top_n: int) -> dict[str, tuple[str, dict[str, Any]]]`**
+        ??? example "Other helpers"
 
-        Source: [`src/fabricops_kit/data_profiling.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/data_profiling.py#L192-L222)
+            **`def _build_categorical_distribution(df, column_name: str, *, top_n: int=20, categories: list[str] | set[str] | tuple[str, ...] | None=None) -> dict[str, Any] | None`**
 
-        ```python
-        def _build_distribution_summaries(
-            df,
-            eligible_columns: list[str],
-            dtype_map: dict[str, str],
-            *,
-            include_distributions: bool,
-            distribution_columns: list[str] | set[str] | tuple[str, ...] | None,
-            distribution_bin_edges: dict[str, list[float]] | None,
-            categorical_categories: dict[str, list[str]] | None,
-            categorical_top_n: int,
-        ) -> dict[str, tuple[str, dict[str, Any]]]:
-            if not include_distributions:
-                return {}
+            Source: [`src/fabricops_kit/data_profiling.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/data_profiling.py#L152-L189)
 
-            selected = set(distribution_columns) if distribution_columns is not None else set(eligible_columns)
-            summaries: dict[str, tuple[str, dict[str, Any]]] = {}
-            for column_name in eligible_columns:
-                if column_name not in selected:
-                    continue
-                data_type = dtype_map[column_name]
-                lowered_type = (data_type or "").lower()
-                if any(token in lowered_type for token in ("tinyint", "smallint", "int", "bigint", "float", "double", "decimal")):
-                    edges = (distribution_bin_edges or {}).get(column_name) or _numeric_bin_edges(df, column_name)
-                    distribution = _build_numeric_distribution(df, column_name, edges)
-                    if distribution is not None:
-                        summaries[column_name] = ("numeric", distribution)
-                elif any(token in lowered_type for token in ("string", "char", "varchar", "boolean")):
-                    distribution = _build_categorical_distribution(df, column_name, top_n=categorical_top_n, categories=(categorical_categories or {}).get(column_name))
-                    if distribution is not None:
-                        summaries[column_name] = ("categorical", distribution)
-            return summaries
-        ```
+            ```python
+            def _build_categorical_distribution(df, column_name: str, *, top_n: int = 20, categories: list[str] | set[str] | tuple[str, ...] | None = None) -> dict[str, Any] | None:
+                from pyspark.sql import functions as F
 
-        **`def _build_categorical_distribution(df, column_name: str, *, top_n: int=20, categories: list[str] | set[str] | tuple[str, ...] | None=None) -> dict[str, Any] | None`**
+                non_null = df.where(F.col(column_name).isNotNull())
+                total_count = int(non_null.agg(F.count(F.lit(1)).alias("total_count")).collect()[0]["total_count"])
+                if total_count == 0:
+                    return None
 
-        Source: [`src/fabricops_kit/data_profiling.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/data_profiling.py#L152-L189)
+                if categories is not None:
+                    selected_categories = [str(category) for category in categories]
+                    if not selected_categories:
+                        return {"category_counts": {}, "other_count": total_count, "new_categories": []}
+                    grouped = non_null.groupBy(F.col(column_name).cast("string").alias("_profile_category")).count()
+                    rows = grouped.where(F.col("_profile_category").isin(selected_categories)).collect()
+                    category_counts = {category: 0 for category in selected_categories}
+                    for row in rows:
+                        category_counts[str(row["_profile_category"])] = int(row["count"])
+                    kept_count = int(sum(category_counts.values()))
+                    new_rows = grouped.where(~F.col("_profile_category").isin(selected_categories)).orderBy(F.col("count").desc(), F.col("_profile_category").asc()).limit(top_n).collect()
+                    return {
+                        "category_counts": category_counts,
+                        "other_count": max(total_count - kept_count, 0),
+                        "new_categories": [str(row["_profile_category"]) for row in new_rows],
+                    }
 
-        ```python
-        def _build_categorical_distribution(df, column_name: str, *, top_n: int = 20, categories: list[str] | set[str] | tuple[str, ...] | None = None) -> dict[str, Any] | None:
-            from pyspark.sql import functions as F
-
-            non_null = df.where(F.col(column_name).isNotNull())
-            total_count = int(non_null.agg(F.count(F.lit(1)).alias("total_count")).collect()[0]["total_count"])
-            if total_count == 0:
-                return None
-
-            if categories is not None:
-                selected_categories = [str(category) for category in categories]
-                if not selected_categories:
-                    return {"category_counts": {}, "other_count": total_count, "new_categories": []}
-                grouped = non_null.groupBy(F.col(column_name).cast("string").alias("_profile_category")).count()
-                rows = grouped.where(F.col("_profile_category").isin(selected_categories)).collect()
-                category_counts = {category: 0 for category in selected_categories}
-                for row in rows:
-                    category_counts[str(row["_profile_category"])] = int(row["count"])
+                grouped = (
+                    non_null
+                    .groupBy(F.col(column_name).cast("string").alias("_profile_category"))
+                    .count()
+                    .orderBy(F.col("count").desc(), F.col("_profile_category").asc())
+                )
+                rows = grouped.limit(top_n).collect()
+                if not rows:
+                    return None
+                category_counts = {str(row["_profile_category"]): int(row["count"]) for row in rows}
                 kept_count = int(sum(category_counts.values()))
-                new_rows = grouped.where(~F.col("_profile_category").isin(selected_categories)).orderBy(F.col("count").desc(), F.col("_profile_category").asc()).limit(top_n).collect()
-                return {
-                    "category_counts": category_counts,
-                    "other_count": max(total_count - kept_count, 0),
-                    "new_categories": [str(row["_profile_category"]) for row in new_rows],
-                }
+                other_count = max(total_count - kept_count, 0)
+                return {"category_counts": category_counts, "other_count": other_count}
+            ```
 
-            grouped = (
-                non_null
-                .groupBy(F.col(column_name).cast("string").alias("_profile_category"))
-                .count()
-                .orderBy(F.col("count").desc(), F.col("_profile_category").asc())
-            )
-            rows = grouped.limit(top_n).collect()
-            if not rows:
-                return None
-            category_counts = {str(row["_profile_category"]): int(row["count"]) for row in rows}
-            kept_count = int(sum(category_counts.values()))
-            other_count = max(total_count - kept_count, 0)
-            return {"category_counts": category_counts, "other_count": other_count}
-        ```
+            **`def _build_numeric_distribution(df, column_name: str, edges: list[float]) -> dict[str, list[float] | list[int]] | None`**
 
-        **`def _build_numeric_distribution(df, column_name: str, edges: list[float]) -> dict[str, list[float] | list[int]] | None`**
+            Source: [`src/fabricops_kit/data_profiling.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/data_profiling.py#L120-L149)
 
-        Source: [`src/fabricops_kit/data_profiling.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/data_profiling.py#L120-L149)
+            ```python
+            def _build_numeric_distribution(df, column_name: str, edges: list[float]) -> dict[str, list[float] | list[int]] | None:
+                from pyspark.sql import functions as F
 
-        ```python
-        def _build_numeric_distribution(df, column_name: str, edges: list[float]) -> dict[str, list[float] | list[int]] | None:
-            from pyspark.sql import functions as F
+                cleaned_edges: list[float] = []
+                for edge in edges:
+                    value = float(edge)
+                    if not cleaned_edges or value > cleaned_edges[-1]:
+                        cleaned_edges.append(value)
+                if len(cleaned_edges) < 2:
+                    return None
 
-            cleaned_edges: list[float] = []
-            for edge in edges:
-                value = float(edge)
-                if not cleaned_edges or value > cleaned_edges[-1]:
-                    cleaned_edges.append(value)
-            if len(cleaned_edges) < 2:
-                return None
+                bucket_expr = None
+                numeric_value = F.col(column_name).cast("double")
+                for index, (lower, upper) in enumerate(zip(cleaned_edges[:-1], cleaned_edges[1:])):
+                    if index == 0:
+                        condition = numeric_value < F.lit(upper)
+                    elif index == len(cleaned_edges) - 2:
+                        condition = numeric_value >= F.lit(lower)
+                    else:
+                        condition = (numeric_value >= F.lit(lower)) & (numeric_value < F.lit(upper))
+                    bucket_expr = F.when(condition, F.lit(index)) if bucket_expr is None else bucket_expr.when(condition, F.lit(index))
 
-            bucket_expr = None
-            numeric_value = F.col(column_name).cast("double")
-            for index, (lower, upper) in enumerate(zip(cleaned_edges[:-1], cleaned_edges[1:])):
-                if index == 0:
-                    condition = numeric_value < F.lit(upper)
-                elif index == len(cleaned_edges) - 2:
-                    condition = numeric_value >= F.lit(lower)
-                else:
-                    condition = (numeric_value >= F.lit(lower)) & (numeric_value < F.lit(upper))
-                bucket_expr = F.when(condition, F.lit(index)) if bucket_expr is None else bucket_expr.when(condition, F.lit(index))
+                bucketed = df.where(F.col(column_name).isNotNull()).select(bucket_expr.alias("_profile_bucket"))
+                rows = bucketed.where(F.col("_profile_bucket").isNotNull()).groupBy("_profile_bucket").count().collect()
+                counts = [0 for _ in range(len(cleaned_edges) - 1)]
+                for row in rows:
+                    bucket = int(row["_profile_bucket"])
+                    if 0 <= bucket < len(counts):
+                        counts[bucket] = int(row["count"])
+                return {"bin_edges": cleaned_edges, "bin_counts": counts}
+            ```
 
-            bucketed = df.where(F.col(column_name).isNotNull()).select(bucket_expr.alias("_profile_bucket"))
-            rows = bucketed.where(F.col("_profile_bucket").isNotNull()).groupBy("_profile_bucket").count().collect()
-            counts = [0 for _ in range(len(cleaned_edges) - 1)]
-            for row in rows:
-                bucket = int(row["_profile_bucket"])
-                if 0 <= bucket < len(counts):
-                    counts[bucket] = int(row["count"])
-            return {"bin_edges": cleaned_edges, "bin_counts": counts}
-        ```
+            **`def _numeric_bin_edges(df, column_name: str, *, bin_count: int=10) -> list[float]`**
 
-        **`def _numeric_bin_edges(df, column_name: str, *, bin_count: int=10) -> list[float]`**
+            Source: [`src/fabricops_kit/data_profiling.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/data_profiling.py#L107-L117)
 
-        Source: [`src/fabricops_kit/data_profiling.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/data_profiling.py#L107-L117)
-
-        ```python
-        def _numeric_bin_edges(df, column_name: str, *, bin_count: int = 10) -> list[float]:
-            values = df.select(column_name).where(f"`{column_name}` is not null")
-            try:
-                quantiles = values.approxQuantile(column_name, [i / bin_count for i in range(bin_count + 1)], 0.01)
-            except Exception:
-                return []
-            edges: list[float] = []
-            for value in quantiles:
-                if value is not None and (not edges or float(value) > edges[-1]):
-                    edges.append(float(value))
-            return edges if len(edges) >= 2 else []
-        ```
-
-        **`def _get_profiled_columns(df, exclude_columns: list[str] | set[str] | None=None) -> list[str]`**
-
-        Source: [`src/fabricops_kit/data_profiling.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/data_profiling.py#L59-L81)
-
-        ```python
-        def _get_profiled_columns(df, exclude_columns: list[str] | set[str] | None = None) -> list[str]:
-            """Return non-technical column names from a Spark DataFrame.
-
-            Parameters
-            ----------
-            df : Any
-                Spark DataFrame-like object with a ``dtypes`` attribute.
-            exclude_columns : list[str] | set[str] | None, optional
-                Additional columns to exclude from profiling.
-
-            Returns
-            -------
-            list[str]
-                Eligible business columns to profile.
-            """
-            excluded = set(_DEFAULT_PROFILE_EXCLUDE_COLUMNS)
-            if exclude_columns:
-                excluded.update(exclude_columns)
-            return [
-                name
-                for name, _dtype in df.dtypes
-                if name not in excluded and not any(str(name).startswith(prefix) for prefix in _DEFAULT_PROFILE_EXCLUDE_PREFIXES)
-            ]
-        ```
-
-        **`def _is_min_max_supported_type(data_type: str) -> bool`**
-
-        Source: [`src/fabricops_kit/data_profiling.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/data_profiling.py#L84-L104)
-
-        ```python
-        def _is_min_max_supported_type(data_type: str) -> bool:
-            """Return whether min/max aggregation is safe for a Spark type string."""
-            value = (data_type or "").lower()
-            unsupported = ("array", "map", "struct", "binary")
-            if any(token in value for token in unsupported):
-                return False
-            supported = (
-                "tinyint",
-                "smallint",
-                "int",
-                "bigint",
-                "float",
-                "double",
-                "decimal",
-                "date",
-                "timestamp",
-                "string",
-                "char",
-                "varchar",
-            )
-            return any(token in value for token in supported)
-        ```
+            ```python
+            def _numeric_bin_edges(df, column_name: str, *, bin_count: int = 10) -> list[float]:
+                values = df.select(column_name).where(f"`{column_name}` is not null")
+                try:
+                    quantiles = values.approxQuantile(column_name, [i / bin_count for i in range(bin_count + 1)], 0.01)
+                except Exception:
+                    return []
+                edges: list[float] = []
+                for value in quantiles:
+                    if value is not None and (not edges or float(value) > edges[-1]):
+                        edges.append(float(value))
+                return edges if len(edges) >= 2 else []
+            ```
 
 
 <details class="reference-metadata-details">
@@ -634,7 +642,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/data_profiling.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/data_profiling.py#L225-L345">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/data_profiling.py#L225-L345</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/data_profiling.py#L225-L345">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/data_profiling.py#L225-L345</a>
 - Start line: `225`
 - End line: `345`
 - Signature:
@@ -650,23 +658,9 @@ def profile_dataframe(df, table_name: str, *, exclude_columns=None, run_timestam
 - <a href="../enforce_profile_behavior/"><code>fabricops_kit.guardrails.enforce_profile_behavior</code></a>
 - <a href="../record_table_governance/"><code>fabricops_kit.governance_review.record_table_governance</code></a>
 
-### Internal implementation helpers
+### Internal implementation summary
 
-### Call flow
-
-```text
-profile_dataframe(...)
-├── _audit_timestamp_expr(...)
-│   └── _get_audit_timezone(...)
-│       └── _validate_audit_timezone(...)
-├── _build_distribution_summaries(...)
-│   ├── _build_categorical_distribution(...)
-│   ├── _build_numeric_distribution(...)
-│   └── _numeric_bin_edges(...)
-├── _get_audit_timezone(...)
-│   └── _validate_audit_timezone(...)
-├── _get_profiled_columns(...)
-└── _is_min_max_supported_type(...)
-```
+- Internal helper count: 9
+- Grouped helper summary and optional source snippets are rendered in the page-level Internal implementation summary section.
 
 </details>

@@ -30,7 +30,66 @@ Not documented yet
 
 Writes METADATA_DATA_LINEAGE_TABLE through the configured metadata lakehouse target.
 
-## Parameters
+## Used by
+
+Not documented yet
+
+## Calls
+
+- <a href="../write_lakehouse_table/"><code>fabricops_kit.fabric_input_output.write_lakehouse_table</code></a>
+- `fabricops_kit.metadata._build_metadata_table_key`
+- `fabricops_kit.pipeline._definition_name`
+- `fabricops_kit.pipeline._now_iso`
+- `fabricops_kit.pipeline._runtime_audit_fields`
+
+??? info "Call flow"
+
+    ```text
+    write_pipeline_lineage(...)
+    ├── _build_metadata_table_key(...)
+    │   └── _stable_metadata_key(...)
+    ├── _definition_name(...)
+    ├── _now_iso(...)
+    │   └── _current_audit_timestamp(...)
+    │       └── _get_audit_timezone(...)
+    │           └── _validate_audit_timezone(...)
+    ├── _runtime_audit_fields(...)
+    │   ├── _build_runtime_audit_fields(...)
+    │   │   ├── _context_get(...)
+    │   │   ├── _current_audit_timestamp(...)
+    │   │   │   └── _get_audit_timezone(...)
+    │   │   │       └── _validate_audit_timezone(...)
+    │   │   ├── _runtime_context(...)
+    │   │   │   └── _context_get(...)
+    │   │   └── _safe_str(...)
+    │   └── _now_iso(...)
+    │       └── _current_audit_timestamp(...)
+    │           └── _get_audit_timezone(...)
+    │               └── _validate_audit_timezone(...)
+    └── write_lakehouse_table(...)
+        ├── _get_store(...)
+        ├── _normalize_table_name(...)
+        ├── _registered_table_identifier(...)
+        │   ├── _normalize_table_name(...)
+        │   └── _quote_identifier(...)
+        └── _uses_registered_metadata_table(...)
+    ```
+
+## Callable implementation
+
+### Function details
+
+- Module: `pipeline`
+- Classification: Callable
+- Source file path: `src/fabricops_kit/pipeline.py`
+- Source line: `559`
+- Signature:
+
+```python
+def write_pipeline_lineage(*, spark: Any, config: Any, env: str, run_id: str, source_definitions: Mapping[str, Mapping[str, Any]], target_definitions: Mapping[str, Mapping[str, Any]], relationships: list[Mapping[str, Any]] | None=None, dataset_name: str='', agreement_id: str='', agreement_contract_version: str='', notebook_registry_id: str='', notebook_id: str='', pipeline_name: str='', metadata_table: str=LINEAGE_TABLE, mode: str='append') -> dict[str, Any]
+```
+
+### Parameters
 
 <div class="module-table-scroll reference-input-table">
 <table class="reference-function-table">
@@ -121,61 +180,18 @@ Writes METADATA_DATA_LINEAGE_TABLE through the configured metadata lakehouse tar
 </table>
 </div>
 
-## Returns
+### Returns
 
 Status, row count, and lineage rows.
 
-## Used by
+### Notes
 
-Not documented yet
+No additional callable notes are documented.
 
-## Calls
-
-- <a href="../write_lakehouse_table/"><code>fabricops_kit.fabric_input_output.write_lakehouse_table</code></a>
-- `fabricops_kit.metadata._build_metadata_table_key`
-- `fabricops_kit.pipeline._definition_name`
-- `fabricops_kit.pipeline._now_iso`
-- `fabricops_kit.pipeline._runtime_audit_fields`
-
-## Implementation details
-
-### Call flow
-
-```text
-write_pipeline_lineage(...)
-├── _build_metadata_table_key(...)
-│   └── _stable_metadata_key(...)
-├── _definition_name(...)
-├── _now_iso(...)
-│   └── _current_audit_timestamp(...)
-│       └── _get_audit_timezone(...)
-│           └── _validate_audit_timezone(...)
-├── _runtime_audit_fields(...)
-│   ├── _build_runtime_audit_fields(...)
-│   │   ├── _context_get(...)
-│   │   ├── _current_audit_timestamp(...)
-│   │   │   └── _get_audit_timezone(...)
-│   │   │       └── _validate_audit_timezone(...)
-│   │   ├── _runtime_context(...)
-│   │   │   └── _context_get(...)
-│   │   └── _safe_str(...)
-│   └── _now_iso(...)
-│       └── _current_audit_timestamp(...)
-│           └── _get_audit_timezone(...)
-│               └── _validate_audit_timezone(...)
-└── write_lakehouse_table(...)
-    ├── _get_store(...)
-    ├── _normalize_table_name(...)
-    ├── _registered_table_identifier(...)
-    │   ├── _normalize_table_name(...)
-    │   └── _quote_identifier(...)
-    └── _uses_registered_metadata_table(...)
-```
-
-## Public callable source code
+### Public callable source code
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/pipeline.py#L559-L643">View write_pipeline_lineage on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/pipeline.py#L559-L643">View write_pipeline_lineage on GitHub</a>
 
 ```python
 def write_pipeline_lineage(
@@ -265,348 +281,316 @@ def write_pipeline_lineage(
     return {"status": "written" if rows else "skipped", "row_count": len(rows), "rows": rows}
 ```
 
-## Maintainer internals
+## Internal implementation summary
 
-??? info "Nested helper functions: 12"
+??? info "Internal helpers used: 12"
 
-    These nested helpers support `write_pipeline_lineage` by handling lower-level implementation steps; expand this section only when maintaining or debugging the package internals.
+    This callable uses 12 internal helpers for audit timestamp, metadata loading, rule parsing, and other.
 
     <div class="module-table-scroll reference-input-table">
     <table class="reference-function-table">
       <thead>
         <tr>
-          <th>Helper</th>
-          <th>Role</th>
-          <th>Source</th>
+          <th>Area</th>
+          <th>Helpers</th>
+          <th>What they do</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td data-label="Helper"><code>_build_metadata_table_key</code></td>
-          <td data-label="Role">Internal helper used by the package implementation.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/metadata.py#L149-L150">src/fabricops_kit/metadata.py</a></td>
+          <td data-label="Area">Audit timestamp</td>
+          <td data-label="Helpers"><code>_build_runtime_audit_fields</code>, <code>_current_audit_timestamp</code>, <code>_get_audit_timezone</code>, <code>_runtime_audit_fields</code>, <code>_validate_audit_timezone</code></td>
+          <td data-label="What they do">Resolve and stamp audit time consistently.</td>
         </tr>
         <tr>
-          <td data-label="Helper"><code>_stable_metadata_key</code></td>
-          <td data-label="Role">Internal helper used by the package implementation.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/metadata.py#L144-L146">src/fabricops_kit/metadata.py</a></td>
+          <td data-label="Area">Metadata loading</td>
+          <td data-label="Helpers"><code>_build_metadata_table_key</code>, <code>_stable_metadata_key</code></td>
+          <td data-label="What they do">Load and identify the metadata or table context needed by the callable.</td>
         </tr>
         <tr>
-          <td data-label="Helper"><code>_definition_name</code></td>
-          <td data-label="Role">Internal helper used by the package implementation.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/pipeline.py#L23-L24">src/fabricops_kit/pipeline.py</a></td>
+          <td data-label="Area">Rule parsing</td>
+          <td data-label="Helpers"><code>_definition_name</code></td>
+          <td data-label="What they do">Normalize stored or user-provided values before applying rules.</td>
         </tr>
         <tr>
-          <td data-label="Helper"><code>_now_iso</code></td>
-          <td data-label="Role">Internal helper used by the package implementation.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/pipeline.py#L19-L20">src/fabricops_kit/pipeline.py</a></td>
-        </tr>
-        <tr>
-          <td data-label="Helper"><code>_current_audit_timestamp</code></td>
-          <td data-label="Role">Return the current audit timestamp in the configured audit timezone.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/config.py#L69-L75">src/fabricops_kit/config.py</a></td>
-        </tr>
-        <tr>
-          <td data-label="Helper"><code>_get_audit_timezone</code></td>
-          <td data-label="Role">Resolve the configured FabricOps audit timezone, defaulting to UTC.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/config.py#L61-L66">src/fabricops_kit/config.py</a></td>
-        </tr>
-        <tr>
-          <td data-label="Helper"><code>_validate_audit_timezone</code></td>
-          <td data-label="Role">Return a valid IANA audit timezone name.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/config.py#L27-L58">src/fabricops_kit/config.py</a></td>
-        </tr>
-        <tr>
-          <td data-label="Helper"><code>_runtime_audit_fields</code></td>
-          <td data-label="Role">Internal helper used by the package implementation.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/pipeline.py#L49-L60">src/fabricops_kit/pipeline.py</a></td>
-        </tr>
-        <tr>
-          <td data-label="Helper"><code>_build_runtime_audit_fields</code></td>
-          <td data-label="Role">Build reusable framework-managed audit fields for metadata-table rows.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/metadata.py#L219-L289">src/fabricops_kit/metadata.py</a></td>
-        </tr>
-        <tr>
-          <td data-label="Helper"><code>_context_get</code></td>
-          <td data-label="Role">Internal helper used by the package implementation.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/metadata.py#L173-L185">src/fabricops_kit/metadata.py</a></td>
-        </tr>
-        <tr>
-          <td data-label="Helper"><code>_runtime_context</code></td>
-          <td data-label="Role">Internal helper used by the package implementation.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/metadata.py#L192-L216">src/fabricops_kit/metadata.py</a></td>
-        </tr>
-        <tr>
-          <td data-label="Helper"><code>_safe_str</code></td>
-          <td data-label="Role">Internal helper used by the package implementation.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/metadata.py#L188-L189">src/fabricops_kit/metadata.py</a></td>
+          <td data-label="Area">Other</td>
+          <td data-label="Helpers"><code>_context_get</code>, <code>_now_iso</code>, <code>_runtime_context</code>, <code>_safe_str</code></td>
+          <td data-label="What they do">Support lower-level implementation details that do not fit the main helper areas.</td>
         </tr>
       </tbody>
     </table>
     </div>
 
-    ??? example "View helper source code"
+    ??? example "View helper source by area"
 
-        **`def _build_metadata_table_key(environment_name, dataset_name, table_name) -> str`**
+        ??? example "Audit timestamp helpers"
 
-        Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/metadata.py#L149-L150)
+            **`def _build_runtime_audit_fields(*, config: Any=None, env: str | None=None, timestamp_field: str='_committed_at', user_field: str='_committed_by', workspace_field: str='_workspace_name', notebook_field: str='_notebook_name', metadata_lakehouse_field: str='_metadata_lakehouse_name', activity_field: str='_activity_id', committed_by: str | None=None, committed_at: str | None=None, runtime_context: dict[str, Any] | None=None) -> dict[str, str]`**
 
-        ```python
-        def _build_metadata_table_key(environment_name, dataset_name, table_name) -> str:
-            return _stable_metadata_key(environment_name, dataset_name, table_name)
-        ```
+            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/metadata.py#L219-L289)
 
-        **`def _stable_metadata_key(*parts: Any) -> str`**
+            ```python
+            def _build_runtime_audit_fields(
+                *,
+                config: Any = None,
+                env: str | None = None,
+                timestamp_field: str = "_committed_at",
+                user_field: str = "_committed_by",
+                workspace_field: str = "_workspace_name",
+                notebook_field: str = "_notebook_name",
+                metadata_lakehouse_field: str = "_metadata_lakehouse_name",
+                activity_field: str = "_activity_id",
+                committed_by: str | None = None,
+                committed_at: str | None = None,
+                runtime_context: dict[str, Any] | None = None,
+            ) -> dict[str, str]:
+                """Build reusable framework-managed audit fields for metadata-table rows.
 
-        Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/metadata.py#L144-L146)
+                Parameters
+                ----------
+                config : FrameworkConfig | dict, optional
+                    Framework config containing ``path_config.paths[env]["metadata"]``.
+                env : str, optional
+                    Environment key paired with ``config``.
+                timestamp_field, user_field, workspace_field, notebook_field : str
+                    Output keys for timestamp, user, workspace, and notebook audit values.
+                metadata_lakehouse_field, activity_field : str
+                    Output keys for metadata lakehouse and Fabric activity audit values.
+                committed_by, committed_at : str, optional
+                    Deterministic audit overrides. When omitted, values resolve from Fabric
+                    runtime context and the configured audit timezone timestamp.
+                runtime_context : dict[str, Any], optional
+                    Values merged over :func:`_runtime_context`, primarily for tests or
+                    controlled notebook overrides.
 
-        ```python
-        def _stable_metadata_key(*parts: Any) -> str:
-            normalized = "|".join(str(part or "").strip().lower() for part in parts)
-            return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
-        ```
+                Returns
+                -------
+                dict[str, str]
+                    Framework-managed metadata audit values keyed by the supplied field
+                    names.
 
-        **`def _definition_name(name: str, definition: Mapping[str, Any]) -> str`**
+                Notes
+                -----
+                DataFrame runtime audit columns and metadata-table audit fields both use
+                underscore-prefixed names. This helper centralizes the metadata-table
+                convention so notebooks can reuse runtime context when adding dataframe
+                audit columns inline.
+                """
+                context = {**_runtime_context(), **(runtime_context or {})}
 
-        Source: [`src/fabricops_kit/pipeline.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/pipeline.py#L23-L24)
+                def _first_non_blank(*keys: str) -> Any:
+                    for key in keys:
+                        value = _context_get(context, key)
+                        if value is not None and str(value).strip():
+                            return value
+                    return None
 
-        ```python
-        def _definition_name(name: str, definition: Mapping[str, Any]) -> str:
-            return str(definition.get("table_name") or definition.get("name") or name)
-        ```
-
-        **`def _now_iso(config: Any=None) -> str`**
-
-        Source: [`src/fabricops_kit/pipeline.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/pipeline.py#L19-L20)
-
-        ```python
-        def _now_iso(config: Any = None) -> str:
-            return _current_audit_timestamp(config=config)
-        ```
-
-        **`def _current_audit_timestamp(config: Any=None, timezone_name: str | None=None, *, drop_microseconds: bool=True) -> str`**
-
-        Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/config.py#L69-L75)
-
-        ```python
-        def _current_audit_timestamp(config: Any = None, timezone_name: str | None = None, *, drop_microseconds: bool = True) -> str:
-            """Return the current audit timestamp in the configured audit timezone."""
-            tz_name = _get_audit_timezone(config, timezone_name)
-            value = datetime.now(ZoneInfo(tz_name))
-            if drop_microseconds:
-                value = value.replace(microsecond=0)
-            return value.isoformat()
-        ```
-
-        **`def _get_audit_timezone(config: Any=None, timezone_name: str | None=None) -> str`**
-
-        Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/config.py#L61-L66)
-
-        ```python
-        def _get_audit_timezone(config: Any = None, timezone_name: str | None = None) -> str:
-            """Resolve the configured FabricOps audit timezone, defaulting to UTC."""
-            if timezone_name is not None:
-                return _validate_audit_timezone(timezone_name)
-            value = getattr(config, "audit_timezone", None) if config is not None else None
-            return _validate_audit_timezone(value)
-        ```
-
-        **`def _validate_audit_timezone(timezone_name: str | None) -> str`**
-
-        Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/config.py#L27-L58)
-
-        ```python
-        def _validate_audit_timezone(timezone_name: str | None) -> str:
-            """Return a valid IANA audit timezone name.
-
-            Parameters
-            ----------
-            timezone_name : str or None
-                IANA timezone name to validate. Blank values default to ``"UTC"``.
-
-            Returns
-            -------
-            str
-                Validated timezone name.
-
-            Raises
-            ------
-            ValueError
-                If a non-blank value is not a valid IANA timezone name.
-            """
-            value = str(timezone_name or DEFAULT_AUDIT_TIMEZONE).strip() or DEFAULT_AUDIT_TIMEZONE
-            if value != DEFAULT_AUDIT_TIMEZONE and "/" not in value:
-                raise ValueError(
-                    f'Invalid FABRICOPS_AUDIT_TIMEZONE: "{value}". '
-                    'Use a valid IANA timezone name such as "Asia/Singapore" or keep the default "UTC".'
-                )
-            try:
-                ZoneInfo(value)
-            except ZoneInfoNotFoundError as exc:
-                raise ValueError(
-                    f'Invalid FABRICOPS_AUDIT_TIMEZONE: "{value}". '
-                    'Use a valid IANA timezone name such as "Asia/Singapore" or keep the default "UTC".'
-                ) from exc
-            return value
-        ```
-
-        **`def _runtime_audit_fields(config: Any, env: str) -> dict[str, str]`**
-
-        Source: [`src/fabricops_kit/pipeline.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/pipeline.py#L49-L60)
-
-        ```python
-        def _runtime_audit_fields(config: Any, env: str) -> dict[str, str]:
-            try:
-                return _build_runtime_audit_fields(config=config, env=env)
-            except Exception:
+                metadata_lakehouse_name = ""
+                if config is not None and env is not None:
+                    paths = config.path_config.paths if hasattr(config, "path_config") else config.paths
+                    metadata_lakehouse_name = _safe_str(paths[env]["metadata"].name)
                 return {
-                    "_committed_at": _now_iso(config),
-                    "_committed_by": "unknown",
-                    "_workspace_name": "",
-                    "_notebook_name": "",
-                    "_metadata_lakehouse_name": "",
-                    "_activity_id": "",
+                    user_field: _safe_str(committed_by).strip()
+                    if committed_by and _safe_str(committed_by).strip()
+                    else _safe_str(_first_non_blank("userName", "userId") or "unknown"),
+                    timestamp_field: _safe_str(committed_at)
+                    if committed_at
+                    else _current_audit_timestamp(config=config),
+                    workspace_field: _safe_str(_first_non_blank("currentWorkspaceName", "workspaceName") or ""),
+                    notebook_field: _safe_str(_first_non_blank("currentNotebookName", "notebookName") or ""),
+                    metadata_lakehouse_field: metadata_lakehouse_name,
+                    activity_field: _safe_str(_first_non_blank("activityId") or ""),
                 }
-        ```
+            ```
 
-        **`def _build_runtime_audit_fields(*, config: Any=None, env: str | None=None, timestamp_field: str='_committed_at', user_field: str='_committed_by', workspace_field: str='_workspace_name', notebook_field: str='_notebook_name', metadata_lakehouse_field: str='_metadata_lakehouse_name', activity_field: str='_activity_id', committed_by: str | None=None, committed_at: str | None=None, runtime_context: dict[str, Any] | None=None) -> dict[str, str]`**
+            **`def _current_audit_timestamp(config: Any=None, timezone_name: str | None=None, *, drop_microseconds: bool=True) -> str`**
 
-        Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/metadata.py#L219-L289)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/config.py#L69-L75)
 
-        ```python
-        def _build_runtime_audit_fields(
-            *,
-            config: Any = None,
-            env: str | None = None,
-            timestamp_field: str = "_committed_at",
-            user_field: str = "_committed_by",
-            workspace_field: str = "_workspace_name",
-            notebook_field: str = "_notebook_name",
-            metadata_lakehouse_field: str = "_metadata_lakehouse_name",
-            activity_field: str = "_activity_id",
-            committed_by: str | None = None,
-            committed_at: str | None = None,
-            runtime_context: dict[str, Any] | None = None,
-        ) -> dict[str, str]:
-            """Build reusable framework-managed audit fields for metadata-table rows.
+            ```python
+            def _current_audit_timestamp(config: Any = None, timezone_name: str | None = None, *, drop_microseconds: bool = True) -> str:
+                """Return the current audit timestamp in the configured audit timezone."""
+                tz_name = _get_audit_timezone(config, timezone_name)
+                value = datetime.now(ZoneInfo(tz_name))
+                if drop_microseconds:
+                    value = value.replace(microsecond=0)
+                return value.isoformat()
+            ```
 
-            Parameters
-            ----------
-            config : FrameworkConfig | dict, optional
-                Framework config containing ``path_config.paths[env]["metadata"]``.
-            env : str, optional
-                Environment key paired with ``config``.
-            timestamp_field, user_field, workspace_field, notebook_field : str
-                Output keys for timestamp, user, workspace, and notebook audit values.
-            metadata_lakehouse_field, activity_field : str
-                Output keys for metadata lakehouse and Fabric activity audit values.
-            committed_by, committed_at : str, optional
-                Deterministic audit overrides. When omitted, values resolve from Fabric
-                runtime context and the configured audit timezone timestamp.
-            runtime_context : dict[str, Any], optional
-                Values merged over :func:`_runtime_context`, primarily for tests or
-                controlled notebook overrides.
+            **`def _get_audit_timezone(config: Any=None, timezone_name: str | None=None) -> str`**
 
-            Returns
-            -------
-            dict[str, str]
-                Framework-managed metadata audit values keyed by the supplied field
-                names.
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/config.py#L61-L66)
 
-            Notes
-            -----
-            DataFrame runtime audit columns and metadata-table audit fields both use
-            underscore-prefixed names. This helper centralizes the metadata-table
-            convention so notebooks can reuse runtime context when adding dataframe
-            audit columns inline.
-            """
-            context = {**_runtime_context(), **(runtime_context or {})}
+            ```python
+            def _get_audit_timezone(config: Any = None, timezone_name: str | None = None) -> str:
+                """Resolve the configured FabricOps audit timezone, defaulting to UTC."""
+                if timezone_name is not None:
+                    return _validate_audit_timezone(timezone_name)
+                value = getattr(config, "audit_timezone", None) if config is not None else None
+                return _validate_audit_timezone(value)
+            ```
 
-            def _first_non_blank(*keys: str) -> Any:
+            **`def _runtime_audit_fields(config: Any, env: str) -> dict[str, str]`**
+
+            Source: [`src/fabricops_kit/pipeline.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/pipeline.py#L49-L60)
+
+            ```python
+            def _runtime_audit_fields(config: Any, env: str) -> dict[str, str]:
+                try:
+                    return _build_runtime_audit_fields(config=config, env=env)
+                except Exception:
+                    return {
+                        "_committed_at": _now_iso(config),
+                        "_committed_by": "unknown",
+                        "_workspace_name": "",
+                        "_notebook_name": "",
+                        "_metadata_lakehouse_name": "",
+                        "_activity_id": "",
+                    }
+            ```
+
+            **`def _validate_audit_timezone(timezone_name: str | None) -> str`**
+
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/config.py#L27-L58)
+
+            ```python
+            def _validate_audit_timezone(timezone_name: str | None) -> str:
+                """Return a valid IANA audit timezone name.
+
+                Parameters
+                ----------
+                timezone_name : str or None
+                    IANA timezone name to validate. Blank values default to ``"UTC"``.
+
+                Returns
+                -------
+                str
+                    Validated timezone name.
+
+                Raises
+                ------
+                ValueError
+                    If a non-blank value is not a valid IANA timezone name.
+                """
+                value = str(timezone_name or DEFAULT_AUDIT_TIMEZONE).strip() or DEFAULT_AUDIT_TIMEZONE
+                if value != DEFAULT_AUDIT_TIMEZONE and "/" not in value:
+                    raise ValueError(
+                        f'Invalid FABRICOPS_AUDIT_TIMEZONE: "{value}". '
+                        'Use a valid IANA timezone name such as "Asia/Singapore" or keep the default "UTC".'
+                    )
+                try:
+                    ZoneInfo(value)
+                except ZoneInfoNotFoundError as exc:
+                    raise ValueError(
+                        f'Invalid FABRICOPS_AUDIT_TIMEZONE: "{value}". '
+                        'Use a valid IANA timezone name such as "Asia/Singapore" or keep the default "UTC".'
+                    ) from exc
+                return value
+            ```
+
+        ??? example "Metadata loading helpers"
+
+            **`def _build_metadata_table_key(environment_name, dataset_name, table_name) -> str`**
+
+            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/metadata.py#L149-L150)
+
+            ```python
+            def _build_metadata_table_key(environment_name, dataset_name, table_name) -> str:
+                return _stable_metadata_key(environment_name, dataset_name, table_name)
+            ```
+
+            **`def _stable_metadata_key(*parts: Any) -> str`**
+
+            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/metadata.py#L144-L146)
+
+            ```python
+            def _stable_metadata_key(*parts: Any) -> str:
+                normalized = "|".join(str(part or "").strip().lower() for part in parts)
+                return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
+            ```
+
+        ??? example "Rule parsing helpers"
+
+            **`def _definition_name(name: str, definition: Mapping[str, Any]) -> str`**
+
+            Source: [`src/fabricops_kit/pipeline.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/pipeline.py#L23-L24)
+
+            ```python
+            def _definition_name(name: str, definition: Mapping[str, Any]) -> str:
+                return str(definition.get("table_name") or definition.get("name") or name)
+            ```
+
+        ??? example "Other helpers"
+
+            **`def _context_get(context: Any, *keys: str) -> Any`**
+
+            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/metadata.py#L173-L185)
+
+            ```python
+            def _context_get(context: Any, *keys: str) -> Any:
                 for key in keys:
-                    value = _context_get(context, key)
-                    if value is not None and str(value).strip():
+                    try:
+                        if isinstance(context, dict):
+                            value = context.get(key)
+                        else:
+                            getter = getattr(context, "get", None)
+                            value = getter(key) if callable(getter) else None
+                    except Exception:
+                        value = None
+                    if value is not None:
                         return value
                 return None
+            ```
 
-            metadata_lakehouse_name = ""
-            if config is not None and env is not None:
-                paths = config.path_config.paths if hasattr(config, "path_config") else config.paths
-                metadata_lakehouse_name = _safe_str(paths[env]["metadata"].name)
-            return {
-                user_field: _safe_str(committed_by).strip()
-                if committed_by and _safe_str(committed_by).strip()
-                else _safe_str(_first_non_blank("userName", "userId") or "unknown"),
-                timestamp_field: _safe_str(committed_at)
-                if committed_at
-                else _current_audit_timestamp(config=config),
-                workspace_field: _safe_str(_first_non_blank("currentWorkspaceName", "workspaceName") or ""),
-                notebook_field: _safe_str(_first_non_blank("currentNotebookName", "notebookName") or ""),
-                metadata_lakehouse_field: metadata_lakehouse_name,
-                activity_field: _safe_str(_first_non_blank("activityId") or ""),
-            }
-        ```
+            **`def _now_iso(config: Any=None) -> str`**
 
-        **`def _context_get(context: Any, *keys: str) -> Any`**
+            Source: [`src/fabricops_kit/pipeline.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/pipeline.py#L19-L20)
 
-        Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/metadata.py#L173-L185)
+            ```python
+            def _now_iso(config: Any = None) -> str:
+                return _current_audit_timestamp(config=config)
+            ```
 
-        ```python
-        def _context_get(context: Any, *keys: str) -> Any:
-            for key in keys:
+            **`def _runtime_context() -> dict[str, Any]`**
+
+            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/metadata.py#L192-L216)
+
+            ```python
+            def _runtime_context() -> dict[str, Any]:
                 try:
-                    if isinstance(context, dict):
-                        value = context.get(key)
-                    else:
-                        getter = getattr(context, "get", None)
-                        value = getter(key) if callable(getter) else None
+                    import notebookutils  # type: ignore
                 except Exception:
-                    value = None
-                if value is not None:
-                    return value
-            return None
-        ```
+                    return {}
 
-        **`def _runtime_context() -> dict[str, Any]`**
+                runtime = getattr(notebookutils, "runtime", None)
+                context = getattr(runtime, "context", None)
+                if context is None:
+                    return {}
 
-        Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/metadata.py#L192-L216)
+                keys = [
+                    "currentWorkspaceId",
+                    "currentWorkspaceName",
+                    "currentNotebookId",
+                    "currentNotebookName",
+                    "workspaceId",
+                    "workspaceName",
+                    "notebookId",
+                    "notebookName",
+                    "userId",
+                    "userName",
+                    "activityId",
+                ]
+                return {key: _context_get(context, key) for key in keys}
+            ```
 
-        ```python
-        def _runtime_context() -> dict[str, Any]:
-            try:
-                import notebookutils  # type: ignore
-            except Exception:
-                return {}
+            **`def _safe_str(value: Any) -> str`**
 
-            runtime = getattr(notebookutils, "runtime", None)
-            context = getattr(runtime, "context", None)
-            if context is None:
-                return {}
+            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/metadata.py#L188-L189)
 
-            keys = [
-                "currentWorkspaceId",
-                "currentWorkspaceName",
-                "currentNotebookId",
-                "currentNotebookName",
-                "workspaceId",
-                "workspaceName",
-                "notebookId",
-                "notebookName",
-                "userId",
-                "userName",
-                "activityId",
-            ]
-            return {key: _context_get(context, key) for key in keys}
-        ```
-
-        **`def _safe_str(value: Any) -> str`**
-
-        Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/metadata.py#L188-L189)
-
-        ```python
-        def _safe_str(value: Any) -> str:
-            return "" if value is None else str(value)
-        ```
+            ```python
+            def _safe_str(value: Any) -> str:
+                return "" if value is None else str(value)
+            ```
 
 
 <details class="reference-metadata-details">
@@ -650,7 +634,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/pipeline.py#L559-L643">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/pipeline.py#L559-L643</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/pipeline.py#L559-L643">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1e1b315d5b95935a662818da57af236b37c14595/src/fabricops_kit/pipeline.py#L559-L643</a>
 - Start line: `559`
 - End line: `643`
 - Signature:
@@ -667,39 +651,9 @@ def write_pipeline_lineage(*, spark: Any, config: Any, env: str, run_id: str, so
 - <a href="../build_lineage_records/"><code>fabricops_kit.data_lineage.build_lineage_records</code></a>
 - <a href="../write_pipeline_run_summary/"><code>fabricops_kit.pipeline.write_pipeline_run_summary</code></a>
 
-### Internal implementation helpers
+### Internal implementation summary
 
-### Call flow
-
-```text
-write_pipeline_lineage(...)
-├── _build_metadata_table_key(...)
-│   └── _stable_metadata_key(...)
-├── _definition_name(...)
-├── _now_iso(...)
-│   └── _current_audit_timestamp(...)
-│       └── _get_audit_timezone(...)
-│           └── _validate_audit_timezone(...)
-├── _runtime_audit_fields(...)
-│   ├── _build_runtime_audit_fields(...)
-│   │   ├── _context_get(...)
-│   │   ├── _current_audit_timestamp(...)
-│   │   │   └── _get_audit_timezone(...)
-│   │   │       └── _validate_audit_timezone(...)
-│   │   ├── _runtime_context(...)
-│   │   │   └── _context_get(...)
-│   │   └── _safe_str(...)
-│   └── _now_iso(...)
-│       └── _current_audit_timestamp(...)
-│           └── _get_audit_timezone(...)
-│               └── _validate_audit_timezone(...)
-└── write_lakehouse_table(...)
-    ├── _get_store(...)
-    ├── _normalize_table_name(...)
-    ├── _registered_table_identifier(...)
-    │   ├── _normalize_table_name(...)
-    │   └── _quote_identifier(...)
-    └── _uses_registered_metadata_table(...)
-```
+- Internal helper count: 12
+- Grouped helper summary and optional source snippets are rendered in the page-level Internal implementation summary section.
 
 </details>
