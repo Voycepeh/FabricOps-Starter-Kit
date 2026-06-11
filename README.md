@@ -20,7 +20,7 @@ FabricOps Starter Kit helps teams quickly bootstrap governed Fabric notebook del
 - [How FabricOps Works](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/how-fabricops-works/)
   - [Notebook Templates](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/how-fabricops-works/notebook-templates/)
   - [Metadata Tables](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/how-fabricops-works/metadata-tables/)
-  - [Pipeline Guardrails](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/how-fabricops-works/schema-and-data-drift/)
+  - [Pipeline Guardrails](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/how-fabricops-works/pipeline-guardrails/)
   - [Governance Review](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/how-fabricops-works/governance-review/)
   - [Metadata Dashboard](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/how-fabricops-works/metadata-dashboard/)
 - [Setup](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/install/)

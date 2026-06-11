@@ -21,7 +21,7 @@ These links open the current development templates. Released documentation shoul
 | 5 | `03_governance` | Governance | Review and approve metadata, classifications, sensitivity labels, and DQ rules. |
 | 6 | `02_pipeline` | Engineering | Rerun the pipeline so approved rules are enforced during delivery. |
 
-For detailed behavior, continue to [Pipeline Guardrails](schema-and-data-drift.md), [Governance Review](governance-review.md), and [Metadata Tables](metadata-tables.md).
+For detailed behavior, continue to [Pipeline Guardrails](pipeline-guardrails.md), [Governance Review](governance-review.md), and [Metadata Tables](metadata-tables.md).
 
 ## Template notebooks
 

@@ -101,6 +101,6 @@ The goal is that support and review should no longer depend on memory or side co
 | Page                                          | Why read it                                                                                               |
 | --------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
 | [How FabricOps Works](how-fabricops-works/index.md) | Start with the v1.0.0 metadata-backed notebook workflow, production guardrails, governance review, and support story. |
-| [Production Guardrails Workflow](how-fabricops-works/schema-and-data-drift.md) | Learn how `02_pipeline` owns production guardrails and run evidence. |
+| [Production Guardrails Workflow](how-fabricops-works/pipeline-guardrails.md) | Learn how `02_pipeline` owns production guardrails and run evidence. |
 | [Governance Review Workflow](how-fabricops-works/governance-review.md) | Learn how `03_governance` reviews profile evidence and commits governance metadata. |
 | [Function Reference](reference/index.md)   | Review the reusable helper APIs used by the notebook templates.                                           |
