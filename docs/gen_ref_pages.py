@@ -40,6 +40,23 @@ def _first_sentence(doc: str | None) -> str:
     return line
 
 
+def _signature_from_node(node: ast.AST, source_text: str) -> str:
+    """Return the source signature line for a function or class node."""
+    segment = ast.get_source_segment(source_text, node) or ""
+    if isinstance(node, ast.ClassDef):
+        for line in segment.splitlines():
+            stripped = line.strip()
+            if stripped.startswith("class "):
+                return stripped.rstrip(":")
+        return f"class {node.name}"
+    header_lines: list[str] = []
+    for line in segment.splitlines():
+        header_lines.append(line.strip())
+        if line.rstrip().endswith(":"):
+            break
+    return " ".join(header_lines).rstrip(":")
+
+
 def _parse_exports() -> set[str]:
     tree = ast.parse((PKG_DIR / "__init__.py").read_text(encoding="utf-8"))
     for node in tree.body:
@@ -51,16 +68,25 @@ def _parse_exports() -> set[str]:
 
 def _build_index():
     modules: dict[str, dict[str, str]] = {}
+    source_metadata: dict[str, dict[str, dict[str, str | int | None]]] = {}
     imports: dict[str, tuple[dict[str, str], dict[str, str]]] = {}
     for p in sorted(PKG_DIR.glob("*.py")):
         if p.name in SKIPPED_PACKAGE_MODULE_FILES:
             continue
-        tree = ast.parse(p.read_text(encoding="utf-8"))
+        source_text = p.read_text(encoding="utf-8")
+        tree = ast.parse(source_text)
         mod = p.stem
         functions = {}
+        source_metadata[mod] = {}
         for n in tree.body:
             if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
                 functions[n.name] = _first_sentence(ast.get_docstring(n))
+                source_metadata[mod][n.name] = {
+                    "signature": _signature_from_node(n, source_text),
+                    "source": ast.get_source_segment(source_text, n),
+                    "start_line": getattr(n, "lineno", None),
+                    "end_line": getattr(n, "end_lineno", None),
+                }
         modules[mod] = functions
         mod_alias, sym_alias = {}, {}
         for n in tree.body:
@@ -72,7 +98,7 @@ def _build_index():
                     if a.name != "*":
                         sym_alias[a.asname or a.name] = f"{n.module}.{a.name}"
         imports[mod] = (mod_alias, sym_alias)
-    return modules, imports
+    return modules, source_metadata, imports
 
 
 def _resolve_call(raw: str, module: str, same_names: set[str], mod_alias: dict[str, str], sym_alias: dict[str, str], exports: set[str], modules: dict[str, dict[str, str]]) -> str | None:
@@ -141,7 +167,7 @@ if DEPENDENCY_METADATA_PATH.exists():
     import json
     dependency_metadata = json.loads(DEPENDENCY_METADATA_PATH.read_text(encoding="utf-8"))
 exports = _parse_exports()
-modules, imports = _build_index()
+modules, source_metadata, imports = _build_index()
 module_call_map, reverse_refs = _collect_calls(modules, imports, exports)
 
 
@@ -181,6 +207,125 @@ def _relationship_chip(qualified_name: str, current_module: str) -> str:
         f'<a class="reference-chip" href="{_callable_href(qualified_name)}" '
         f'title="{qualified_name}"><code>{callable_name if module_name == current_module else f"{module_name}.{callable_name}"}</code></a>'
     )
+
+
+def _direct_calls(qualified_name: str) -> list[str]:
+    module_name, callable_name = _parts(qualified_name)
+    manifest_calls = dependency_metadata.get("callables", {}).get(qualified_name, {}).get("calls", [])
+    fallback_calls = module_call_map.get(module_name, {}).get(callable_name, set())
+    return sorted(set(manifest_calls or fallback_calls))
+
+
+def _is_internal_helper(qualified_name: str) -> bool:
+    _, callable_name = _parts(qualified_name)
+    return callable_name.startswith("_") or callable_name not in exports
+
+
+def _collect_internal_helpers(qualified_name: str) -> list[str]:
+    helpers: set[str] = set()
+    visited: set[str] = set()
+
+    def visit(current_qn: str) -> None:
+        if current_qn in visited:
+            return
+        visited.add(current_qn)
+        for child_qn in _direct_calls(current_qn):
+            if child_qn not in visited:
+                if _is_internal_helper(child_qn):
+                    helpers.add(child_qn)
+                visit(child_qn)
+
+    visit(qualified_name)
+    return sorted(helpers, key=lambda item: (_parts(item)[0], _parts(item)[1]))
+
+
+def _render_call_flow(qualified_name: str, *, max_depth: int = 6) -> str:
+    _, root_name = _parts(qualified_name)
+    lines = [f"{root_name}(...)"]
+
+    def children(current_qn: str) -> list[str]:
+        return sorted(
+            _direct_calls(current_qn),
+            key=lambda item: (0 if _is_internal_helper(item) else 1, _parts(item)[1].lower(), item),
+        )
+
+    def visit(current_qn: str, prefix: str, ancestors: set[str], depth: int) -> None:
+        child_qns = children(current_qn)
+        if depth >= max_depth:
+            if child_qns:
+                lines.append(f"{prefix}└── …")
+            return
+        for index, child_qn in enumerate(child_qns):
+            _, child_name = _parts(child_qn)
+            connector = "└── " if index == len(child_qns) - 1 else "├── "
+            suffix = " (recursive)" if child_qn in ancestors else ""
+            lines.append(f"{prefix}{connector}{child_name}(...){suffix}")
+            if child_qn not in ancestors:
+                extension = "    " if index == len(child_qns) - 1 else "│   "
+                visit(child_qn, prefix + extension, ancestors | {child_qn}, depth + 1)
+
+    visit(qualified_name, "", {qualified_name}, 0)
+    return "```text\n" + "\n".join(lines) + "\n```"
+
+
+def _render_internal_helper_details(root_qn: str) -> list[str]:
+    _, root_name = _parts(root_qn)
+    helper_qns = _collect_internal_helpers(root_qn)
+    if not helper_qns:
+        return ["_No internal helper calls detected._"]
+
+    lines: list[str] = []
+    for helper_qn in helper_qns:
+        helper_module, helper_name = _parts(helper_qn)
+        metadata = source_metadata.get(helper_module, {}).get(helper_name, {})
+        signature = str(metadata.get("signature") or f"{helper_name}(...)")
+        source_path = f"src/{PACKAGE}/{helper_module}.py"
+        start_line = metadata.get("start_line")
+        end_line = metadata.get("end_line")
+        line_suffix = f" lines {start_line}-{end_line}" if start_line and end_line else ""
+        source = str(metadata.get("source") or "")
+        purpose = modules.get(helper_module, {}).get(helper_name) or "Internal helper used by the package implementation."
+        lines.extend(
+            [
+                f"### `{signature}`",
+                "",
+                purpose,
+                "",
+                "**Helper source path**",
+                "",
+                f"- `{source_path}`{line_suffix}",
+                "",
+                "**Helper code excerpt**",
+                "",
+                "```python",
+                source or "# Source excerpt unavailable.",
+                "```",
+                "",
+                "**Used here because**",
+                "",
+                f"`{root_name}` reaches `{helper_name}` in its implementation path.",
+                "",
+                "**Modify this if**",
+                "",
+                f"Change `{helper_name}` when the shared implementation behavior it provides to `{root_name}` or another caller needs to change.",
+                "",
+            ]
+        )
+    return lines
+
+
+def _render_implementation_details(root_qn: str) -> list[str]:
+    return [
+        "## Implementation details",
+        "",
+        "### Call flow",
+        "",
+        _render_call_flow(root_qn),
+        "",
+        "### Internal helpers used by this callable",
+        "",
+        *_render_internal_helper_details(root_qn),
+    ]
 
 
 def _source_anchor(module_name: str, symbol_name: str) -> str:
@@ -254,6 +399,9 @@ for row in sorted(public_symbol_docs, key=lambda item: item["symbol_name"]):
             fd.write("\n")
         if not inbound_edges and not outbound_edges:
             fd.write("_No related function links detected._\n")
+
+        for implementation_line in _render_implementation_details(qn):
+            fd.write(f"{implementation_line}\n")
 
         fd.write('\n???+ note "Function details and source"\n\n')
         fd.write(f"    ::: {PACKAGE}.{module_name}.{symbol_name}\n")
