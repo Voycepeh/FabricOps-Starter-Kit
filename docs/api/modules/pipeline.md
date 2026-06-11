@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 5</span><span class="reference-chip">Internal helpers: 13</span><span class="reference-chip">Outbound: 5</span><span class="reference-chip">Inbound: 0</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 5</span><span class="reference-chip">Internal helpers: 11</span><span class="reference-chip">Outbound: 5</span><span class="reference-chip">Inbound: 0</span></div>
 
 ## Module purpose
 
@@ -40,7 +40,7 @@ Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>13</td>
+      <td>11</td>
     </tr>
     <tr>
       <td>Inbound module count</td>
@@ -80,7 +80,7 @@ Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals
       <td>Callable</td>
       <td>function</td>
       <td>Prepare source or target table configs for 02_pipeline.</td>
-      <td><a href="../../reference/internal/pipeline/_add_audit_columns/"><code>_add_audit_columns</code></a> (internal), <a href="../../reference/internal/pipeline/_load_source_dataframe/"><code>_load_source_dataframe</code></a> (internal)</td>
+      <td><a href="../../reference/internal/pipeline/_add_audit_columns/"><code>_add_audit_columns</code></a> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/run_table_guardrails/"><code>run_table_guardrails</code></a></td>
@@ -129,7 +129,7 @@ Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals
 <li>
 <a class="reference-chip" href="../../reference/prepare_pipeline_table_configs/"><code>prepare_pipeline_table_configs</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_add_audit_columns"><code>_add_audit_columns</code></a>, <a class="reference-chip" href="#_load_source_dataframe"><code>_load_source_dataframe</code></a>
+<a class="reference-chip" href="#_add_audit_columns"><code>_add_audit_columns</code></a>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/run_table_guardrails/"><code>run_table_guardrails</code></a>
@@ -193,20 +193,12 @@ Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals
       <td><a href="../../reference/run_table_guardrails/"><code>run_table_guardrails</code></a></td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/pipeline/_load_source_dataframe/"><code>_load_source_dataframe</code></a></td>
-      <td><a href="../../reference/prepare_pipeline_table_configs/"><code>prepare_pipeline_table_configs</code></a></td>
-    </tr>
-    <tr>
       <td><a href="../../reference/internal/pipeline/_now_iso/"><code>_now_iso</code></a></td>
       <td><a href="../../reference/write_catalogue_evidence/"><code>write_catalogue_evidence</code></a>, <a href="../../reference/write_pipeline_lineage/"><code>write_pipeline_lineage</code></a>, <a href="../../reference/write_pipeline_run_summary/"><code>write_pipeline_run_summary</code></a></td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/pipeline/_runtime_audit_fields/"><code>_runtime_audit_fields</code></a></td>
       <td><a href="../../reference/write_catalogue_evidence/"><code>write_catalogue_evidence</code></a>, <a href="../../reference/write_pipeline_lineage/"><code>write_pipeline_lineage</code></a></td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/internal/pipeline/_source_read_type/"><code>_source_read_type</code></a></td>
-      <td>—</td>
     </tr>
     <tr>
       <td><a href="../../reference/internal/pipeline/_summary_status/"><code>_summary_status</code></a></td>
@@ -249,20 +241,12 @@ Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals
 <a class="reference-chip" href="#_guardrail_can_continue"><code>_guardrail_can_continue</code></a>
 </li>
 <li>
-<a class="reference-chip" href="#_load_source_dataframe"><code>_load_source_dataframe</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_source_read_type"><code>_source_read_type</code></a>
-</li>
-<li>
 <a class="reference-chip" href="#_now_iso"><code>_now_iso</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_runtime_audit_fields"><code>_runtime_audit_fields</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <a class="reference-chip" href="#_now_iso"><code>_now_iso</code></a>
-</li>
-<li>
-<a class="reference-chip" href="#_source_read_type"><code>_source_read_type</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_summary_status"><code>_summary_status</code></a>
@@ -288,7 +272,7 @@ None.
 <a class="reference-chip" href="../../reference/enforce_catalogue_stability/"><code>enforce_catalogue_stability</code></a>, <a class="reference-chip" href="../../reference/stop_if_failed/"><code>stop_if_failed</code></a>, <a class="reference-chip" href="../../reference/validate_schema/"><code>validate_schema</code></a>
 
 **fabric_input_output**
-<a class="reference-chip" href="../../reference/read_lakehouse_csv/"><code>read_lakehouse_csv</code></a>, <a class="reference-chip" href="../../reference/read_lakehouse_excel/"><code>read_lakehouse_excel</code></a>, <a class="reference-chip" href="../../reference/read_lakehouse_parquet/"><code>read_lakehouse_parquet</code></a>, <a class="reference-chip" href="../../reference/read_lakehouse_table/"><code>read_lakehouse_table</code></a>, <a class="reference-chip" href="../../reference/read_warehouse_table/"><code>read_warehouse_table</code></a>, <a class="reference-chip" href="../../reference/write_lakehouse_table/"><code>write_lakehouse_table</code></a>
+<a class="reference-chip" href="../../reference/write_lakehouse_table/"><code>write_lakehouse_table</code></a>
 
 **governance_review**
 <a class="reference-chip" href="../../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a>

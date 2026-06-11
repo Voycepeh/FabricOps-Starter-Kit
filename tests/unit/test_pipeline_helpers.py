@@ -45,6 +45,9 @@ def test_public_pipeline_helpers_are_exported_without_wrapper_bloat():
         assert removed_name not in fabricops_kit.__all__
         assert not hasattr(fabricops_kit, removed_name)
 
+    for private_source_reader in {"_load_source_dataframe", "_read_source_dataframe", "_source_read_type"}:
+        assert not hasattr(fabricops_kit, private_source_reader)
+
 
 class FakeDataFrame:
     def __init__(self, name="df"):
@@ -67,19 +70,14 @@ def _install_fake_pyspark_functions(monkeypatch):
     monkeypatch.setitem(sys.modules, "pyspark.sql.functions", fake_functions)
 
 
-def test_prepare_pipeline_table_configs_source_role_derives_defaults_and_reads_lakehouse_table(monkeypatch):
-    calls = []
-
-    def fake_read(config, env, layer, table, *, spark_session=None):
-        calls.append((config, env, layer, table, spark_session))
-        return "loaded_df"
-
-    monkeypatch.setattr(pipeline, "read_lakehouse_table", fake_read)
+def test_prepare_pipeline_table_configs_source_role_derives_defaults_from_preloaded_dataframe():
+    source_df = FakeDataFrame("source")
 
     enriched, by_key = pipeline.prepare_pipeline_table_configs(
         [
             {
                 "key": "source_01",
+                "df": source_df,
                 "layer": "source",
                 "table_name": "orders_raw",
                 "watermark_column": "business_date",
@@ -91,60 +89,41 @@ def test_prepare_pipeline_table_configs_source_role_derives_defaults_and_reads_l
             "watermark_value": "default_should_be_overridden",
         },
         table_role="source",
-        config={"config": True},
+        config={"unused": True},
         env="dev",
         spark_session="spark",
     )
 
-    assert calls == [({"config": True}, "dev", "source", "orders_raw", "spark")]
     assert enriched == [
         {
             "schema_preset": "allow_new_columns",
             "data_behavior": "changing",
             "watermark_value": None,
             "key": "source_01",
+            "df": source_df,
             "layer": "source",
             "table_name": "orders_raw",
             "watermark_column": "business_date",
             "dataset_name": "orders_raw",
             "stage": "source",
-            "df": "loaded_df",
         }
     ]
     assert by_key["source_01"] is enriched[0]
 
 
-def test_prepare_pipeline_table_configs_source_role_supports_explicit_read_patterns(monkeypatch):
-    calls = []
+def test_prepare_pipeline_table_configs_source_role_requires_preloaded_dataframe():
+    with pytest.raises(ValueError, match="must include a pre-loaded DataFrame"):
+        pipeline.prepare_pipeline_table_configs(
+            [{"key": "source_01", "layer": "source", "table_name": "orders_raw"}],
+            {},
+            table_role="source",
+        )
 
-    monkeypatch.setattr(pipeline, "read_lakehouse_csv", lambda *args, **kwargs: calls.append(("csv", args, kwargs)) or "csv_df")
-    monkeypatch.setattr(pipeline, "read_lakehouse_parquet", lambda *args, **kwargs: calls.append(("parquet", args, kwargs)) or "parquet_df")
-    monkeypatch.setattr(pipeline, "read_lakehouse_excel", lambda *args, **kwargs: calls.append(("excel", args, kwargs)) or "excel_df")
-    monkeypatch.setattr(pipeline, "read_warehouse_table", lambda *args, **kwargs: calls.append(("warehouse", args, kwargs)) or "warehouse_df")
 
-    class FakeReader:
-        def table(self, table_name):
-            calls.append(("spark_table", table_name))
-            return "spark_table_df"
-
-    fake_spark = types.SimpleNamespace(read=FakeReader())
-    configs = [
-        {"key": "csv", "layer": "source", "table_name": "csv_t", "read_type": "csv", "relative_path": "raw/orders.csv"},
-        {"key": "parquet", "layer": "source", "table_name": "parquet_t", "read_type": "parquet", "relative_path": "raw/orders.parquet"},
-        {"key": "excel", "layer": "source", "table_name": "excel_t", "read_type": "excel", "relative_path": "raw/orders.xlsx", "sheet_name": "Sheet1"},
-        {"key": "wh", "layer": "warehouse", "table_name": "orders", "read_type": "warehouse", "schema": "sales", "warehouse_target": "product"},
-        {"key": "spark", "layer": "source", "table_name": "orders", "read_type": "spark_table", "spark_table": "db.orders"},
-    ]
-
-    enriched, by_key = pipeline.prepare_pipeline_table_configs(configs, {}, table_role="source", config={}, env="dev", spark_session=fake_spark)
-
-    assert [config["df"] for config in enriched] == ["csv_df", "parquet_df", "excel_df", "warehouse_df", "spark_table_df"]
-    assert by_key["spark"]["dataset_name"] == "orders"
-    assert calls[0][0] == "csv"
-    assert calls[1][0] == "parquet"
-    assert calls[2][0] == "excel"
-    assert calls[3][0] == "warehouse"
-    assert calls[4] == ("spark_table", "db.orders")
+def test_pipeline_module_does_not_expose_source_read_routing_wrappers():
+    assert not hasattr(pipeline, "_load_source_dataframe")
+    assert not hasattr(pipeline, "_read_source_dataframe")
+    assert not hasattr(pipeline, "_source_read_type")
 
 
 def test_prepare_pipeline_table_configs_target_role_adds_audit_columns_and_derives_write_defaults(monkeypatch):

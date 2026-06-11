@@ -42,6 +42,10 @@ def test_pipeline_notebook_uses_minimal_public_helpers_and_no_pr_only_wrappers()
         "stop_if_any_guardrail_failed",
         "build_guardrail_evidence_definitions",
         "write_catalogue_evidence",
+        "_load_source_dataframe",
+        "_read_source_dataframe",
+        "_source_read_type",
+        "read_type",
         "def _table_key(",
         "def _table_name(",
         "def run_table_guardrails(",
@@ -58,20 +62,21 @@ def test_pipeline_notebook_contains_final_thin_flow_sections():
         "## 1. Run `00_env_config`",
         "## 2. Import required functions",
         "## 3. Select data agreement and capture run context",
-        "## 4. USER EDIT SECTION — source table configuration",
-        "## 5. Source guardrail defaults",
-        "## 6. Prepare source table configs",
-        "## 7. Optional: inspect a source schema",
-        "## 8. Run source guardrails before transformation",
-        "## 9. USER EDIT SECTION — DIY transformations",
-        "## 10. USER EDIT SECTION — target table configuration",
-        "## 11. Target guardrail and write defaults",
-        "## 12. Prepare target table configs",
-        "## 13. Run target guardrails before writes",
-        "## 14. Write target tables",
-        "## 15. USER EDIT SECTION — lineage relationships",
-        "## 16. Write lineage",
-        "## 17. Write runtime summary",
+        "## 4. USER EDIT SECTION — load source DataFrames",
+        "## 5. USER EDIT SECTION — source guardrail configuration",
+        "## 6. Source guardrail defaults",
+        "## 7. Prepare source table configs",
+        "## 8. Optional: inspect a source schema",
+        "## 9. Run source guardrails before transformation",
+        "## 10. USER EDIT SECTION — DIY transformations",
+        "## 11. USER EDIT SECTION — target table configuration",
+        "## 12. Target guardrail and write defaults",
+        "## 13. Prepare target table configs",
+        "## 14. Run target guardrails before writes",
+        "## 15. Write target tables",
+        "## 16. USER EDIT SECTION — lineage relationships",
+        "## 17. Write lineage",
+        "## 18. Write runtime summary",
     ]
     for section in expected_sections:
         assert section in markdown
@@ -82,6 +87,21 @@ def test_pipeline_notebook_contains_final_thin_flow_sections():
     assert "These are the default guardrails and write options applied to every target table" in markdown
 
 
+
+def test_source_loading_uses_existing_read_helpers_directly():
+    _markdown, code, _cells = _notebook_sources()
+
+    load_block = code[code.index("df_source_01 = read_lakehouse_table(") : code.index("SOURCE_TABLES = [")]
+    assert 'read_lakehouse_table(' in load_block
+    assert 'read_lakehouse_csv(' in load_block
+    assert 'read_lakehouse_parquet(' in load_block
+    assert 'read_lakehouse_excel(' in load_block
+    assert 'read_warehouse_table(' in load_block
+    assert 'spark.read.table("CHANGE_ME_database.CHANGE_ME_table")' in load_block
+    assert '"source",' in load_block
+    assert '"CHANGE_ME_source_table",' in load_block
+    assert 'spark_session=spark' in load_block
+
 def test_source_config_defaults_are_reduced_but_advanced_overrides_remain_discoverable():
     _markdown, code, _cells = _notebook_sources()
 
@@ -90,6 +110,7 @@ def test_source_config_defaults_are_reduced_but_advanced_overrides_remain_discov
     assert "SOURCE_TABLES = [" in code
     assert '"key": "source_01"' in code
     assert '"layer": "source"' in code
+    assert '"df": df_source_01' in code
     assert '"table_name": "CHANGE_ME_source_table"' in code
     assert '"watermark_column": "business_date"' in code
 
@@ -112,14 +133,15 @@ def test_source_config_defaults_are_reduced_but_advanced_overrides_remain_discov
         '"stage": "source"',
         '"watermark_value": "2026-01-31"',
         '"dq_preset": "approved_rules"',
-        '"read_type": "csv"',
-        '"relative_path": "CHANGE_ME/path/to/file.csv"',
-        '"spark_table": "CHANGE_ME_database.CHANGE_ME_table"',
     ]:
         assert advanced_override in source_user_block
 
     assert "SOURCE_TABLES, SOURCE_CONFIG_BY_KEY = prepare_pipeline_table_configs(" in code
-    assert 'table_role="source"' in code
+    source_prepare_block = code[code.index("SOURCE_TABLES, SOURCE_CONFIG_BY_KEY = prepare_pipeline_table_configs(") : code.index("df_source_01 = SOURCE_CONFIG_BY_KEY")]
+    assert 'table_role="source"' in source_prepare_block
+    assert "config=CONFIG" not in source_prepare_block
+    assert "env=ENV_NAME" not in source_prepare_block
+    assert "spark_session=spark" not in source_prepare_block
     assert 'df_source_01 = SOURCE_CONFIG_BY_KEY["source_01"]["df"]' in code
 
 

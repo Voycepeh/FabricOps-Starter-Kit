@@ -60,7 +60,7 @@ The following previous public/exported functions were removed from the v1 callab
 
 ## Added pipeline orchestration helpers
 
-`02_pipeline` keeps beginner-editable source configs, source guardrail defaults, transform logic, target configs, target guardrail/write defaults, lineage relationships, and pipeline naming visible. Reusable table preparation, guardrail orchestration, catalogue evidence, lineage persistence, and runtime summary logging live behind package helpers such as `prepare_pipeline_table_configs`, `run_table_guardrails`, `write_pipeline_lineage`, and `write_pipeline_run_summary`. Target writes intentionally remain visible in the notebook through existing `write_lakehouse_table` and `write_warehouse_table` calls.
+`02_pipeline` keeps source reads through the existing IO helpers, beginner-editable source configs, source guardrail defaults, transform logic, target configs, target guardrail/write defaults, target writes, lineage relationships, and pipeline naming visible. Reusable config enrichment, guardrail orchestration, catalogue evidence, lineage persistence, and runtime summary logging live behind package helpers such as `prepare_pipeline_table_configs`, `run_table_guardrails`, `write_pipeline_lineage`, and `write_pipeline_run_summary`. Target writes intentionally remain visible in the notebook through existing `write_lakehouse_table` and `write_warehouse_table` calls.
 
 ## Merged functions
 

@@ -9,15 +9,7 @@ from uuid import uuid4
 
 from .data_profiling import profile_dataframe
 from .drift import enforce_catalogue_stability, stop_if_failed, validate_schema
-from .fabric_input_output import (
-    read_lakehouse_csv,
-    read_lakehouse_excel,
-    read_lakehouse_parquet,
-    read_lakehouse_table,
-    read_warehouse_table,
-    write_lakehouse_table,
-    write_warehouse_table,
-)
+from .fabric_input_output import write_lakehouse_table
 from .governance_review import CATALOGUE_TABLE, LINEAGE_TABLE, enforce_dq_rules
 from .metadata import _build_metadata_table_key, _build_runtime_audit_fields
 
@@ -117,62 +109,6 @@ def _canonical_catalogue_profile_df(profile_df: Any):
     return profile_df.select(*expressions) if expressions else profile_df
 
 
-def _source_read_type(source_config: Mapping[str, Any]) -> str:
-    return str(source_config.get("read_type") or source_config.get("kind") or "lakehouse_table").lower()
-
-
-def _load_source_dataframe(source_config: Mapping[str, Any], *, config: Any, env: str, spark_session: Any):
-    read_type = _source_read_type(source_config)
-    layer = source_config["layer"]
-    table_name = source_config["table_name"]
-
-    if "df" in source_config:
-        return source_config["df"]
-    if read_type in {"lakehouse", "lakehouse_table", "table", "delta"}:
-        return read_lakehouse_table(config, env, layer, table_name, spark_session=spark_session)
-    if read_type in {"csv", "lakehouse_csv"}:
-        return read_lakehouse_csv(
-            config,
-            env,
-            layer,
-            source_config["relative_path"],
-            spark_session=spark_session,
-            header=source_config.get("header", True),
-        )
-    if read_type in {"parquet", "lakehouse_parquet"}:
-        return read_lakehouse_parquet(
-            config,
-            env,
-            layer,
-            source_config["relative_path"],
-            verbose=source_config.get("verbose", True),
-            spark_session=spark_session,
-        )
-    if read_type in {"excel", "lakehouse_excel"}:
-        excel_kwargs = dict(source_config.get("read_excel_kwargs") or {})
-        return read_lakehouse_excel(
-            config,
-            env,
-            layer,
-            source_config["relative_path"],
-            sheet_name=source_config.get("sheet_name", 0),
-            spark_session=spark_session,
-            **excel_kwargs,
-        )
-    if read_type in {"warehouse", "warehouse_table"}:
-        return read_warehouse_table(
-            config,
-            env,
-            source_config.get("warehouse_target", source_config.get("target", layer)),
-            source_config.get("schema", "dbo"),
-            source_config.get("warehouse_table", table_name),
-            spark_session=spark_session,
-        )
-    if read_type in {"spark_table", "custom_spark_table"}:
-        return spark_session.read.table(source_config.get("spark_table", table_name))
-    raise ValueError(f"Unsupported source read type for {source_config.get('key', table_name)}: {read_type}")
-
-
 
 def _add_audit_columns(dataframe: Any, *, run_id: str, pipeline_name: str):
     """Return a DataFrame with standard FabricOps target audit columns."""
@@ -209,17 +145,17 @@ def prepare_pipeline_table_configs(
         Default guardrails, and for targets write options, merged before each
         table config. Table-specific values take precedence.
     table_role : {"source", "target"}
-        Role-specific preparation mode. Source mode loads DataFrames; target
-        mode adds FabricOps audit columns and derives write metadata.
+        Role-specific preparation mode. Source mode validates that each config
+        already includes a DataFrame; target mode adds FabricOps audit columns
+        and derives write metadata.
     config : Any, optional
-        FabricOps framework configuration from ``00_env_config``. Required for
-        source reads unless each source config already includes ``df``.
+        Reserved for API symmetry with notebook setup; source DataFrames should
+        be loaded directly with the existing FabricOps read helpers before
+        calling this function.
     env : str, optional
-        Environment key used for configured source routing. Required for source
-        reads unless each source config already includes ``df``.
+        Reserved for API symmetry with notebook setup.
     spark_session : Any, optional
-        Spark session used for source reads. Required for source reads unless
-        each source config already includes ``df``.
+        Reserved for API symmetry with notebook setup.
     run_id : str, optional
         Pipeline run identifier used for target audit columns. Required for
         target role.
@@ -240,8 +176,8 @@ def prepare_pipeline_table_configs(
     -----
     Source configs derive ``dataset_name`` from ``table_name``, ``stage`` from
     ``layer``, and ``watermark_value`` from ``None`` unless overridden. Source
-    reads support Lakehouse tables, Lakehouse CSV/Parquet/Excel files,
-    Warehouse tables, custom Spark tables, or pre-supplied DataFrames.
+    DataFrames must be loaded directly in the notebook with the existing
+    FabricOps read helpers and supplied in each source config as ``df``.
 
     Target configs derive ``dataset_name``, ``stage``, ``target_layer``,
     ``target_name``, ``target_kind``, and ``watermark_value`` unless overridden,
@@ -259,18 +195,21 @@ def prepare_pipeline_table_configs(
         watermark_value = merged_config.get("watermark_value", None)
 
         if normalized_role == "source":
+            if "df" not in merged_config:
+                table_key = merged_config.get("key", merged_config.get("table_name", "<unknown>"))
+                raise ValueError(
+                    "Source table config "
+                    f"{table_key!r} must include a pre-loaded DataFrame in the 'df' key. "
+                    "Load the source with read_lakehouse_table, read_lakehouse_csv, "
+                    "read_lakehouse_parquet, read_lakehouse_excel, read_warehouse_table, "
+                    "or spark.read.table before calling prepare_pipeline_table_configs."
+                )
             enriched_table = {
                 **merged_config,
                 "dataset_name": dataset_name,
                 "stage": stage,
                 "watermark_value": watermark_value,
             }
-            enriched_table["df"] = _load_source_dataframe(
-                enriched_table,
-                config=config,
-                env=str(env or ""),
-                spark_session=spark_session,
-            )
         else:
             target_layer = merged_config.get("target_layer", merged_config["layer"])
             target_name = merged_config.get("target_name", merged_config["table_name"])

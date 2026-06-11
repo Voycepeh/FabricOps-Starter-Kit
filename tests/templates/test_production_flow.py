@@ -69,10 +69,18 @@ def test_guardrail_orchestration_is_imported_and_documents_simple_v1_behavior():
     assert "def _table_key(" not in production
     assert "run_table_guardrails," in production
     assert "prepare_pipeline_table_configs," in production
+    assert "read_lakehouse_table," in production
+    assert "read_lakehouse_csv," in production
+    assert "read_lakehouse_parquet," in production
+    assert "read_lakehouse_excel," in production
+    assert "read_warehouse_table," in production
     assert 'display(source_guardrail_results["summary"])' in production
     assert 'display(target_guardrail_results["summary"])' in production
     assert 'target_dq_results = target_guardrail_results["dq_results"]' in production
     assert "target_write_status = {}" in production
+    assert "_load_source_dataframe" not in production
+    assert "_read_source_dataframe" not in production
+    assert "read_type" not in production
     guardrail_docs = (ROOT / "docs" / "how-fabricops-works" / "schema-and-data-drift.md").read_text(encoding="utf-8")
     assert "Warning-severity failure" in guardrail_docs
     assert "Error-severity failure" in guardrail_docs
@@ -152,6 +160,9 @@ def test_smoke_test_example_notebook_exists_and_covers_end_to_end_pattern():
     assert "read_lakehouse_csv" not in smoke
     assert "read_lakehouse_excel" not in smoke
     assert "read_lakehouse_parquet" not in smoke
+    assert "_load_source_dataframe" not in smoke
+    assert "_read_source_dataframe" not in smoke
+    assert "read_type" not in smoke
     assert "def run_table_guardrails(" not in smoke
     assert "prepare_source_table_configs" not in smoke
     assert "prepare_target_table_configs" not in smoke

@@ -6,7 +6,7 @@ Prepare source or target table configs for 02_pipeline.
 
 Prepare source or target table configs for 02_pipeline.
 
-- Use after SOURCE_TABLES or TARGET_TABLES and their defaults are defined to derive standard config fields, load source DataFrames, or add target audit columns.
+- Use after SOURCE_TABLES or TARGET_TABLES and their defaults are defined to derive standard config fields or add target audit columns.
 
 ## When not to use it
 
@@ -15,7 +15,7 @@ Prepare source or target table configs for 02_pipeline.
 ## Example
 
 ```python
-SOURCE_TABLES, SOURCE_CONFIG_BY_KEY = prepare_pipeline_table_configs(SOURCE_TABLES, DEFAULT_SOURCE_GUARDRAILS, table_role="source", config=CONFIG, env=ENV_NAME, spark_session=spark)
+SOURCE_TABLES, SOURCE_CONFIG_BY_KEY = prepare_pipeline_table_configs(SOURCE_TABLES, DEFAULT_SOURCE_GUARDRAILS, table_role="source")
 ```
 
 ## Inputs
@@ -43,22 +43,22 @@ SOURCE_TABLES, SOURCE_CONFIG_BY_KEY = prepare_pipeline_table_configs(SOURCE_TABL
     <tr>
       <td data-label="Parameter"><code>table_role</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Role-specific preparation mode. Source mode loads DataFrames; target mode adds FabricOps audit columns and derives write metadata.</td>
+      <td data-label="Meaning">Role-specific preparation mode. Source mode validates that each config already includes a DataFrame; target mode adds FabricOps audit columns and derives write metadata.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>config</code></td>
       <td data-label="Required">No</td>
-      <td data-label="Meaning">FabricOps framework configuration from ``00_env_config``. Required for source reads unless each source config already includes ``df``.</td>
+      <td data-label="Meaning">Reserved for API symmetry with notebook setup; source DataFrames should be loaded directly with the existing FabricOps read helpers before calling this function.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>env</code></td>
       <td data-label="Required">No</td>
-      <td data-label="Meaning">Environment key used for configured source routing. Required for source reads unless each source config already includes ``df``.</td>
+      <td data-label="Meaning">Reserved for API symmetry with notebook setup.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>spark_session</code></td>
       <td data-label="Required">No</td>
-      <td data-label="Meaning">Spark session used for source reads. Required for source reads unless each source config already includes ``df``.</td>
+      <td data-label="Meaning">Reserved for API symmetry with notebook setup.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>run_id</code></td>
@@ -83,7 +83,7 @@ Enriched table configs and a dictionary keyed by table key.
 **Errors:** ValueError
     If ``table_role`` is not ``"source"`` or ``"target"``.
 
-**Side effects:** Source role reads configured source DataFrames. Target role adds FabricOps audit columns to target DataFrames.
+**Side effects:** Source role validates pre-loaded DataFrames. Target role adds FabricOps audit columns to target DataFrames.
 
 ## Related functions
 
@@ -94,14 +94,13 @@ Enriched table configs and a dictionary keyed by table key.
 <summary>Implementation details</summary>
 
 - <a href="../internal/pipeline__add_audit_columns/"><code>fabricops_kit.pipeline._add_audit_columns</code></a>
-- <a href="../internal/pipeline__load_source_dataframe/"><code>fabricops_kit.pipeline._load_source_dataframe</code></a>
 
 </details>
 
 ## Source
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/031081c64115c5424552b6af13bbaeb983c852dd/src/fabricops_kit/pipeline.py#L190-L290">View prepare_pipeline_table_configs on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/cb8dad0bc076c72220f65712e627dcc0b38043e0/src/fabricops_kit/pipeline.py#L126-L229">View prepare_pipeline_table_configs on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -129,17 +128,17 @@ def prepare_pipeline_table_configs(
         Default guardrails, and for targets write options, merged before each
         table config. Table-specific values take precedence.
     table_role : {"source", "target"}
-        Role-specific preparation mode. Source mode loads DataFrames; target
-        mode adds FabricOps audit columns and derives write metadata.
+        Role-specific preparation mode. Source mode validates that each config
+        already includes a DataFrame; target mode adds FabricOps audit columns
+        and derives write metadata.
     config : Any, optional
-        FabricOps framework configuration from ``00_env_config``. Required for
-        source reads unless each source config already includes ``df``.
+        Reserved for API symmetry with notebook setup; source DataFrames should
+        be loaded directly with the existing FabricOps read helpers before
+        calling this function.
     env : str, optional
-        Environment key used for configured source routing. Required for source
-        reads unless each source config already includes ``df``.
+        Reserved for API symmetry with notebook setup.
     spark_session : Any, optional
-        Spark session used for source reads. Required for source reads unless
-        each source config already includes ``df``.
+        Reserved for API symmetry with notebook setup.
     run_id : str, optional
         Pipeline run identifier used for target audit columns. Required for
         target role.
@@ -160,8 +159,8 @@ def prepare_pipeline_table_configs(
     -----
     Source configs derive ``dataset_name`` from ``table_name``, ``stage`` from
     ``layer``, and ``watermark_value`` from ``None`` unless overridden. Source
-    reads support Lakehouse tables, Lakehouse CSV/Parquet/Excel files,
-    Warehouse tables, custom Spark tables, or pre-supplied DataFrames.
+    DataFrames must be loaded directly in the notebook with the existing
+    FabricOps read helpers and supplied in each source config as ``df``.
 
     Target configs derive ``dataset_name``, ``stage``, ``target_layer``,
     ``target_name``, ``target_kind``, and ``watermark_value`` unless overridden,
@@ -179,18 +178,21 @@ def prepare_pipeline_table_configs(
         watermark_value = merged_config.get("watermark_value", None)
 
         if normalized_role == "source":
+            if "df" not in merged_config:
+                table_key = merged_config.get("key", merged_config.get("table_name", "<unknown>"))
+                raise ValueError(
+                    "Source table config "
+                    f"{table_key!r} must include a pre-loaded DataFrame in the 'df' key. "
+                    "Load the source with read_lakehouse_table, read_lakehouse_csv, "
+                    "read_lakehouse_parquet, read_lakehouse_excel, read_warehouse_table, "
+                    "or spark.read.table before calling prepare_pipeline_table_configs."
+                )
             enriched_table = {
                 **merged_config,
                 "dataset_name": dataset_name,
                 "stage": stage,
                 "watermark_value": watermark_value,
             }
-            enriched_table["df"] = _load_source_dataframe(
-                enriched_table,
-                config=config,
-                env=str(env or ""),
-                spark_session=spark_session,
-            )
         else:
             target_layer = merged_config.get("target_layer", merged_config["layer"])
             target_name = merged_config.get("target_name", merged_config["table_name"])
@@ -225,16 +227,16 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `pipeline`
 - Source file path: `src/fabricops_kit/pipeline.py`
-- Source line: `190`
+- Source line: `126`
 - Inbound references count: 0
-- Outbound references count: 2
+- Outbound references count: 1
 
 ### AI implementation contract
 
-- **required_context:** Uses CONFIG and env from 00_env_config for source reads; target audit columns require a Spark-compatible DataFrame.
-- **inputs:** table_configs, default_settings, table_role, and role-specific context such as config/env/spark_session for sources or run_id/pipeline_name for targets.
+- **required_context:** Source DataFrames should be loaded directly in the notebook with existing FabricOps read helpers. Target audit columns require a Spark-compatible DataFrame.
+- **inputs:** table_configs, default_settings, table_role, and role-specific context such as run_id/pipeline_name for targets.
 - **output:** Enriched table configs and a dictionary keyed by table key.
-- **side_effects:** Source role reads configured source DataFrames. Target role adds FabricOps audit columns to target DataFrames.
+- **side_effects:** Source role validates pre-loaded DataFrames. Target role adds FabricOps audit columns to target DataFrames.
 - **failure_modes:** ValueError
     If ``table_role`` is not ``"source"`` or ``"target"``.
 - **verification:** Verify the correct table_role is used and enriched configs are passed to run_table_guardrails before transformation or writes.
@@ -246,14 +248,13 @@ Not documented yet
 ### Outbound references
 
 - <a href="../internal/pipeline__add_audit_columns/"><code>fabricops_kit.pipeline._add_audit_columns</code></a>
-- <a href="../internal/pipeline__load_source_dataframe/"><code>fabricops_kit.pipeline._load_source_dataframe</code></a>
 
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/031081c64115c5424552b6af13bbaeb983c852dd/src/fabricops_kit/pipeline.py#L190-L290">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/031081c64115c5424552b6af13bbaeb983c852dd/src/fabricops_kit/pipeline.py#L190-L290</a>
-- Start line: `190`
-- End line: `290`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/cb8dad0bc076c72220f65712e627dcc0b38043e0/src/fabricops_kit/pipeline.py#L126-L229">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/cb8dad0bc076c72220f65712e627dcc0b38043e0/src/fabricops_kit/pipeline.py#L126-L229</a>
+- Start line: `126`
+- End line: `229`
 - Signature:
 
 ```python
@@ -270,6 +271,5 @@ def prepare_pipeline_table_configs(table_configs: list[dict[str, Any]], default_
 ### Internal implementation helpers
 
 - <a href="../internal/pipeline__add_audit_columns/"><code>fabricops_kit.pipeline._add_audit_columns</code></a>
-- <a href="../internal/pipeline__load_source_dataframe/"><code>fabricops_kit.pipeline._load_source_dataframe</code></a>
 
 </details>
