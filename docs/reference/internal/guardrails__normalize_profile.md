@@ -18,6 +18,7 @@ Do not call this helper directly from notebooks; use the public callable helpers
 ## Used by
 
 - <a href="../internal/guardrails__normalize_profile/"><code>fabricops_kit.guardrails._normalize_profile</code></a>
+- <a href="../internal/guardrails__profile_row_count/"><code>fabricops_kit.guardrails._profile_row_count</code></a>
 - <a href="../internal/guardrails__profile_watermark_bounds/"><code>fabricops_kit.guardrails._profile_watermark_bounds</code></a>
 
 ## Purpose
@@ -50,12 +51,13 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 - Classification: Internal
 - Related module: `guardrails`
 - Source file path: `src/fabricops_kit/guardrails.py`
-- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1bac7913a070db1a771a2991ff5421c37ffc9d94/src/fabricops_kit/guardrails.py#L201-L269">View source on GitHub</a>
-- Inbound references count: 2
+- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a80b5a6ddb4de14056095d4da916cd452e478ff8/src/fabricops_kit/guardrails.py#L201-L269">View source on GitHub</a>
+- Inbound references count: 3
 - Outbound references count: 1
 
 ## Inbound references
 - <a href="../internal/guardrails__normalize_profile/"><code>fabricops_kit.guardrails._normalize_profile</code></a>
+- <a href="../internal/guardrails__profile_row_count/"><code>fabricops_kit.guardrails._profile_row_count</code></a>
 - <a href="../internal/guardrails__profile_watermark_bounds/"><code>fabricops_kit.guardrails._profile_watermark_bounds</code></a>
 
 ## Outbound references

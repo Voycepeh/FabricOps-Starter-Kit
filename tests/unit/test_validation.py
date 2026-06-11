@@ -127,6 +127,62 @@ def test_enforce_profile_behavior_append_fails_when_watermark_min_moves_forward(
     assert "watermark_min" in result["stability_difference_summary"]
 
 
+
+def test_enforce_profile_behavior_does_not_use_non_watermark_row_for_watermark_comparison(monkeypatch):
+    from fabricops_kit import data_profiling
+
+    monkeypatch.setattr(data_profiling, "profile_dataframe", lambda *args, **kwargs: _profile_rows(12, minimum="2026-01-02", maximum="2026-01-31"))
+    non_watermark_previous = {
+        **_catalogue_row(10, minimum="2026-01-01", maximum="2026-01-31"),
+        "column_name": "customer_id",
+    }
+
+    result = enforce_profile_behavior(
+        None,
+        object(),
+        "METADATA_DATA_CATALOGUE",
+        "sales",
+        "orders",
+        stage="source",
+        run_id="current-run",
+        load_behavior="append",
+        watermark_column="business_date",
+        catalogue_df=[non_watermark_previous],
+    )
+
+    assert result["status"] == "passed"
+    assert result["can_continue"] is True
+    assert result["baseline_row_count"] == 10
+    assert result["baseline_watermark_min_value"] == ""
+    assert "watermark_comparison" in result["stability_difference_summary"]
+    assert "No previous accepted profile row" in result["stability_difference_summary"]
+
+
+def test_enforce_profile_behavior_reuses_current_profile_when_supplied(monkeypatch):
+    from fabricops_kit import data_profiling
+
+    def fail_profile(*args, **kwargs):
+        raise AssertionError("profile_dataframe should not be called when current_profile is provided")
+
+    monkeypatch.setattr(data_profiling, "profile_dataframe", fail_profile)
+
+    result = enforce_profile_behavior(
+        None,
+        object(),
+        "METADATA_DATA_CATALOGUE",
+        "sales",
+        "orders",
+        stage="source",
+        run_id="current-run",
+        load_behavior="append",
+        watermark_column="business_date",
+        catalogue_df=[_catalogue_row(10)],
+        current_profile=_profile_rows(12),
+    )
+
+    assert result["status"] == "passed"
+    assert result["row_count"] == 12
+
 def test_enforce_profile_behavior_overwrite_accepts_profile_differences(monkeypatch):
     from fabricops_kit import data_profiling
 

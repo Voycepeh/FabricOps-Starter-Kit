@@ -292,7 +292,7 @@ def _is_guardrail_excluded_column(column: str, exclude_columns: set[str]) -> boo
 
 
 def _profile_row_count(profile) -> int | None:
-    payload = _stable_profile_payload(profile)
+    payload = _normalize_profile(profile) or {}
     value = payload.get("row_count")
     try:
         return int(value) if value is not None else None
@@ -646,6 +646,7 @@ def enforce_profile_behavior(
     config=None,
     env: str | None = None,
     catalogue_df=None,
+    current_profile=None,
 ) -> dict:
     """Enforce profile behavior guardrails for append, overwrite, or skip loads.
 
@@ -684,6 +685,10 @@ def enforce_profile_behavior(
     catalogue_df : DataFrame or iterable of mappings, optional
         Preloaded ``METADATA_DATA_CATALOGUE`` evidence. When provided, no
         metadata read is performed.
+    current_profile : DataFrame or iterable of mappings, optional
+        Current profile evidence that has already been computed for this table.
+        When supplied, this function reuses it instead of profiling
+        ``dataframe`` again.
 
     Returns
     -------
@@ -697,14 +702,16 @@ def enforce_profile_behavior(
     watermark column's ``min_value`` and ``max_value``. Schema and DQ checks are
     enforced by their own guardrails.
     """
-    from fabricops_kit.data_profiling import profile_dataframe
-
     behavior = str(load_behavior or "").lower().strip()
     if behavior not in {"append", "overwrite", "skip"}:
         raise ValueError("load_behavior must be one of: append, overwrite, skip")
 
     effective_exclude_columns = _guardrail_exclude_columns(exclude_columns)
-    current_profile_df = profile_dataframe(dataframe, table_name, exclude_columns=effective_exclude_columns)
+    current_profile_df = current_profile
+    if current_profile_df is None:
+        from fabricops_kit.data_profiling import profile_dataframe
+
+        current_profile_df = profile_dataframe(dataframe, table_name, exclude_columns=effective_exclude_columns)
     current_row_count = _profile_row_count(current_profile_df)
     current_min, current_max = _profile_watermark_bounds(current_profile_df, watermark_column)
 
@@ -720,6 +727,7 @@ def enforce_profile_behavior(
                 raise
 
     baseline = None
+    watermark_baseline = None
     if behavior == "append":
         baseline = _latest_catalogue_behavior_profile_row(
             catalogue_df,
@@ -727,23 +735,23 @@ def enforce_profile_behavior(
             table_name=table_name,
             profile_stage=stage,
             load_behavior=behavior,
-            watermark_column=watermark_column,
             exclude_run_id=exclude_run_id or run_id,
         )
-        if baseline is None:
-            baseline = _latest_catalogue_behavior_profile_row(
+        if watermark_column:
+            watermark_baseline = _latest_catalogue_behavior_profile_row(
                 catalogue_df,
                 dataset_name=dataset_name,
                 table_name=table_name,
                 profile_stage=stage,
                 load_behavior=behavior,
+                watermark_column=watermark_column,
                 exclude_run_id=exclude_run_id or run_id,
             )
 
     baseline_run_id = _string_value(_catalogue_value(baseline or {}, "profile_run_id", "run_id"))
     baseline_row_count_raw = _catalogue_value(baseline or {}, "row_count", "profiled_row_count")
-    baseline_min = _string_value(_catalogue_value(baseline or {}, "min_value"))
-    baseline_max = _string_value(_catalogue_value(baseline or {}, "max_value"))
+    baseline_min = _string_value(_catalogue_value(watermark_baseline or {}, "min_value"))
+    baseline_max = _string_value(_catalogue_value(watermark_baseline or {}, "max_value"))
     try:
         baseline_row_count = int(baseline_row_count_raw) if baseline_row_count_raw is not None else None
     except (TypeError, ValueError):
@@ -786,12 +794,20 @@ def enforce_profile_behavior(
     if baseline_row_count is not None and current_row_count is not None and current_row_count < baseline_row_count:
         differences["row_count"] = {"previous": baseline_row_count, "current": current_row_count, "rule": "append_row_count_must_not_decrease"}
     if watermark_column:
-        if baseline_min and current_min and _is_greater_than(current_min, baseline_min):
-            differences["watermark_min"] = {"previous": baseline_min, "current": current_min, "column": watermark_column, "rule": "append_watermark_min_must_not_move_forward"}
-        if baseline_max and current_max and _is_less_than(current_max, baseline_max):
-            differences["watermark_max"] = {"previous": baseline_max, "current": current_max, "column": watermark_column, "rule": "append_watermark_max_must_not_move_backwards"}
+        if watermark_baseline is None:
+            differences["watermark_comparison"] = {
+                "status": "skipped",
+                "column": watermark_column,
+                "reason": "No previous accepted profile row was found for the configured watermark column.",
+            }
+        else:
+            if baseline_min and current_min and _is_greater_than(current_min, baseline_min):
+                differences["watermark_min"] = {"previous": baseline_min, "current": current_min, "column": watermark_column, "rule": "append_watermark_min_must_not_move_forward"}
+            if baseline_max and current_max and _is_less_than(current_max, baseline_max):
+                differences["watermark_max"] = {"previous": baseline_max, "current": current_max, "column": watermark_column, "rule": "append_watermark_max_must_not_move_backwards"}
 
-    if differences:
+    blocking_differences = {key: value for key, value in differences.items() if value.get("status") != "skipped"}
+    if blocking_differences:
         message = "Append load behavior failed because existing history appears to have been removed or moved."
         result.update(
             status="failed",
@@ -804,6 +820,8 @@ def enforce_profile_behavior(
         )
         return result
 
+    if differences:
+        result["stability_difference_summary"] = json.dumps(differences, default=str, sort_keys=True)
     result["message"] = result["stability_message"]
     return result
 

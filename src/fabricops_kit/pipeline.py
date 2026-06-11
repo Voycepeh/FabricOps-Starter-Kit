@@ -366,6 +366,7 @@ def run_table_guardrails(
             exclude_run_id=run_id,
             config=config,
             env=env,
+            current_profile=profiles[table_key],
         )
 
         if table_config.get("dq_preset", "approved_rules") == "skip":

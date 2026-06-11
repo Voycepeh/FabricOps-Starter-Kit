@@ -290,6 +290,8 @@ Owns schema, freshness, and profile behavior checks as pipeline guardrails durin
 </li>
 <li>
 <a class="reference-chip" href="#_profile_row_count"><code>_profile_row_count</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<a class="reference-chip" href="#_normalize_profile"><code>_normalize_profile</code></a>
 </li>
 <li>
 <a class="reference-chip" href="#_profile_watermark_bounds"><code>_profile_watermark_bounds</code></a>

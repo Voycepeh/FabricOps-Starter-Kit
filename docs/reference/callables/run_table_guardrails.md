@@ -125,7 +125,7 @@ Guardrail result bundle with profiles, schema results, freshness results, stabil
 ## Source
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1bac7913a070db1a771a2991ff5421c37ffc9d94/src/fabricops_kit/pipeline.py#L260-L446">View run_table_guardrails on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a80b5a6ddb4de14056095d4da916cd452e478ff8/src/fabricops_kit/pipeline.py#L260-L447">View run_table_guardrails on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -240,6 +240,7 @@ def run_table_guardrails(
             exclude_run_id=run_id,
             config=config,
             env=env,
+            current_profile=profiles[table_key],
         )
 
         if table_config.get("dq_preset", "approved_rules") == "skip":
@@ -370,9 +371,9 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1bac7913a070db1a771a2991ff5421c37ffc9d94/src/fabricops_kit/pipeline.py#L260-L446">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1bac7913a070db1a771a2991ff5421c37ffc9d94/src/fabricops_kit/pipeline.py#L260-L446</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a80b5a6ddb4de14056095d4da916cd452e478ff8/src/fabricops_kit/pipeline.py#L260-L447">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a80b5a6ddb4de14056095d4da916cd452e478ff8/src/fabricops_kit/pipeline.py#L260-L447</a>
 - Start line: `260`
-- End line: `446`
+- End line: `447`
 - Signature:
 
 ```python

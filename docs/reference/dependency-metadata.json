@@ -3653,9 +3653,10 @@
       "calls_count": 1,
       "used_by": [
         "fabricops_kit.guardrails._normalize_profile",
+        "fabricops_kit.guardrails._profile_row_count",
         "fabricops_kit.guardrails._profile_watermark_bounds"
       ],
-      "used_by_count": 2,
+      "used_by_count": 3,
       "internal_helpers_used": [
         "fabricops_kit.guardrails._normalize_profile"
       ],
@@ -3668,14 +3669,18 @@
       "callable": "_profile_row_count",
       "docs_url": "/FabricOps-Starter-Kit/reference/internal/guardrails/_profile_row_count/",
       "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
+      "calls": [
+        "fabricops_kit.guardrails._normalize_profile"
+      ],
+      "calls_count": 1,
       "used_by": [
         "fabricops_kit.guardrails.enforce_profile_behavior"
       ],
       "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
+      "internal_helpers_used": [
+        "fabricops_kit.guardrails._normalize_profile"
+      ],
+      "internal_helper_count": 1
     },
     "fabricops_kit.guardrails._profile_watermark_bounds": {
       "qualified_name": "fabricops_kit.guardrails._profile_watermark_bounds",

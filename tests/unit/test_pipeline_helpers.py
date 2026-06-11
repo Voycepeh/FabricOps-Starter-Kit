@@ -276,7 +276,7 @@ def test_run_table_guardrails_collects_results_and_returns_summary_before_report
         return {"status": "passed", "can_continue": True}
 
     def fake_stability(*args, **kwargs):
-        calls.append(("stability", args[4]))
+        calls.append(("stability", args[4], kwargs.get("current_profile")))
         return {"status": "passed", "can_continue": True}
 
     def fake_dq(dataframe, config, env, dataset_name, table_name, *, spark_session=None):
@@ -349,7 +349,7 @@ def test_run_table_guardrails_collects_results_and_returns_summary_before_report
     assert table_configs[0]["df"] == "df_good_checked"
     assert ("profile", "orders_bad") in calls
     assert ("freshness", "df_bad") in calls
-    assert ("stability", "orders_bad") in calls
+    assert ("stability", "orders_bad", result["profiles"]["bad"]) in calls
     assert catalogue_calls
     assert catalogue_calls[0][2]["schema_results"] == result["schema_results"]
     assert catalogue_calls[0][2]["freshness_results"] == result["freshness_results"]
