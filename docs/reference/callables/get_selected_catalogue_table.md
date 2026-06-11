@@ -75,7 +75,7 @@ get_selected_catalogue_table(...)
 ## Public callable source code
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/427905557f281c2de218c8d2213dc8798864c090/src/fabricops_kit/governance_review.py#L310-L334">View get_selected_catalogue_table on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/governance_review.py#L310-L334">View get_selected_catalogue_table on GitHub</a>
 
 ```python
 def get_selected_catalogue_table(table_selector: Any | None = None) -> dict[str, Any]:
@@ -105,12 +105,12 @@ def get_selected_catalogue_table(table_selector: Any | None = None) -> dict[str,
     raise ValueError("No catalogue table has been selected. Run widget_select_catalogue_table first.")
 ```
 
-## Nested helper functions
+## Maintainer internals
 
 ??? info "Nested helper functions: 0"
 
     No nested helper functions were detected for `get_selected_catalogue_table`.
-    
+
     <div class="module-table-scroll reference-input-table">
     <table class="reference-function-table">
       <thead>
@@ -170,7 +170,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/427905557f281c2de218c8d2213dc8798864c090/src/fabricops_kit/governance_review.py#L310-L334">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/427905557f281c2de218c8d2213dc8798864c090/src/fabricops_kit/governance_review.py#L310-L334</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/governance_review.py#L310-L334">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/governance_review.py#L310-L334</a>
 - Start line: `310`
 - End line: `334`
 - Signature:

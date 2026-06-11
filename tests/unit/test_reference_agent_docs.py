@@ -81,7 +81,8 @@ def test_every_callable_page_has_ai_reference_sections() -> None:
         assert "## Calls" in text, page
         assert "## Implementation details" in text, page
         assert "## Public callable source code" in text, page
-        assert "## Nested helper functions" in text, page
+        assert "## Maintainer internals" in text, page
+        assert "## Nested helper functions" not in text, page
         assert "## Source" not in text, page
         assert "\n## What this is for\n" not in text, page
         assert "\n## When to use it\n" not in text, page
@@ -135,7 +136,7 @@ def test_callable_pages_embed_public_first_implementation_details() -> None:
             "## Calls",
             "## Implementation details",
             "## Public callable source code",
-            "## Nested helper functions",
+            "## Maintainer internals",
         ]
         positions = [text.index(marker) for marker in ordered_markers]
         assert positions == sorted(positions), page
@@ -146,7 +147,22 @@ def test_callable_pages_embed_public_first_implementation_details() -> None:
         if '??? info "Nested helper functions: 0"' not in text:
             assert '??? example "View helper source code"' in text, page
         assert text.index("### Call flow") < text.index("## Public callable source code"), page
-        assert text.index("## Public callable source code") < text.index("## Nested helper functions"), page
+        assert text.index("## Public callable source code") < text.index("## Maintainer internals"), page
+        assert text.index("## Maintainer internals") < text.index("<summary>AI / machine-readable metadata"), page
+
+
+def test_indent_markdown_indents_multiline_items_and_blank_lines() -> None:
+    from scripts.generate_function_reference import _indent_markdown
+
+    assert _indent_markdown(["first", "", "```python\nprint('x')\n\nprint('y')\n```"], spaces=2) == [
+        "  first",
+        "",
+        "  ```python",
+        "  print('x')",
+        "",
+        "  print('y')",
+        "  ```",
+    ]
 
 
 def test_internal_reference_page_generation_flag(monkeypatch) -> None:

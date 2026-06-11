@@ -75,7 +75,7 @@ get_selected_agreement(...)
 ## Public callable source code
 
 - Source file path: `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/427905557f281c2de218c8d2213dc8798864c090/src/fabricops_kit/data_agreement.py#L1083-L1098">View get_selected_agreement on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/data_agreement.py#L1083-L1098">View get_selected_agreement on GitHub</a>
 
 ```python
 def get_selected_agreement() -> dict[str, Any]:
@@ -96,12 +96,12 @@ def get_selected_agreement() -> dict[str, Any]:
     return dict(_SELECTED_AGREEMENT)
 ```
 
-## Nested helper functions
+## Maintainer internals
 
 ??? info "Nested helper functions: 0"
 
     No nested helper functions were detected for `get_selected_agreement`.
-    
+
     <div class="module-table-scroll reference-input-table">
     <table class="reference-function-table">
       <thead>
@@ -158,7 +158,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/data_agreement.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/427905557f281c2de218c8d2213dc8798864c090/src/fabricops_kit/data_agreement.py#L1083-L1098">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/427905557f281c2de218c8d2213dc8798864c090/src/fabricops_kit/data_agreement.py#L1083-L1098</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/data_agreement.py#L1083-L1098">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/data_agreement.py#L1083-L1098</a>
 - Start line: `1083`
 - End line: `1098`
 - Signature:

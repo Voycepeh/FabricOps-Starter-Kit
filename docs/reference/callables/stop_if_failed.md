@@ -76,7 +76,7 @@ stop_if_failed(...)
 ## Public callable source code
 
 - Source file path: `src/fabricops_kit/guardrails.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/427905557f281c2de218c8d2213dc8798864c090/src/fabricops_kit/guardrails.py#L840-L859">View stop_if_failed on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/guardrails.py#L840-L859">View stop_if_failed on GitHub</a>
 
 ```python
 def stop_if_failed(result) -> None:
@@ -101,12 +101,12 @@ def stop_if_failed(result) -> None:
     raise SchemaDriftError(f"Guardrail blocked execution with status: {status}. {detail}")
 ```
 
-## Nested helper functions
+## Maintainer internals
 
 ??? info "Nested helper functions: 0"
 
     No nested helper functions were detected for `stop_if_failed`.
-    
+
     <div class="module-table-scroll reference-input-table">
     <table class="reference-function-table">
       <thead>
@@ -163,7 +163,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/guardrails.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/427905557f281c2de218c8d2213dc8798864c090/src/fabricops_kit/guardrails.py#L840-L859">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/427905557f281c2de218c8d2213dc8798864c090/src/fabricops_kit/guardrails.py#L840-L859</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/guardrails.py#L840-L859">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/guardrails.py#L840-L859</a>
 - Start line: `840`
 - End line: `859`
 - Signature:

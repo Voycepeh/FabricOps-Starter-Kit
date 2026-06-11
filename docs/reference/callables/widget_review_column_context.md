@@ -78,7 +78,7 @@ widget_review_column_context(...)
 ## Public callable source code
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/427905557f281c2de218c8d2213dc8798864c090/src/fabricops_kit/governance_review.py#L551-L569">View widget_review_column_context on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/governance_review.py#L551-L569">View widget_review_column_context on GitHub</a>
 
 ```python
 def widget_review_column_context(profile_rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -102,12 +102,12 @@ def widget_review_column_context(profile_rows: list[dict[str, Any]]) -> list[dic
     )
 ```
 
-## Nested helper functions
+## Maintainer internals
 
 ??? info "Nested helper functions: 2"
 
     These nested helpers support `widget_review_column_context` by handling lower-level implementation steps; expand this section only when maintaining or debugging the package internals.
-    
+
     <div class="module-table-scroll reference-input-table">
     <table class="reference-function-table">
       <thead>
@@ -121,50 +121,50 @@ def widget_review_column_context(profile_rows: list[dict[str, Any]]) -> list[dic
         <tr>
           <td data-label="Helper"><code>_display_review_guidance</code></td>
           <td data-label="Role">Internal helper used by the package implementation.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/427905557f281c2de218c8d2213dc8798864c090/src/fabricops_kit/governance_review.py#L534-L548">src/fabricops_kit/governance_review.py</a></td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/governance_review.py#L534-L548">src/fabricops_kit/governance_review.py</a></td>
         </tr>
         <tr>
           <td data-label="Helper"><code>_value</code></td>
           <td data-label="Role">Internal helper used by the package implementation.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/427905557f281c2de218c8d2213dc8798864c090/src/fabricops_kit/governance_review.py#L70-L71">src/fabricops_kit/governance_review.py</a></td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/governance_review.py#L70-L71">src/fabricops_kit/governance_review.py</a></td>
         </tr>
       </tbody>
     </table>
     </div>
-    
-    ??? example "View helper source code"
-    
-        **`def _display_review_guidance(title: str, profile_rows: list[dict[str, Any]], instructions: str) -> list[dict[str, Any]]`**
-        
-        Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/427905557f281c2de218c8d2213dc8798864c090/src/fabricops_kit/governance_review.py#L534-L548)
-        
-        ```python
-def _display_review_guidance(title: str, profile_rows: list[dict[str, Any]], instructions: str) -> list[dict[str, Any]]:
-    widgets = importlib.import_module("ipywidgets")
-    from IPython import display as ip
 
-    columns = [str(_value(row, "column_name")) for row in profile_rows]
-    html = widgets.HTML(
-        f"<h3>{title}</h3>"
-        f"<p>{instructions}</p>"
-        f"<p><b>Columns loaded:</b> {', '.join(columns)}</p>"
-        "<p>Return value is an editable list scaffold. Add reviewed dictionaries, set "
-        "<code>review_status='approved'</code> and <code>commit=True</code>, then pass the list to "
-        "<code>record_table_governance</code>.</p>"
-    )
-    ip.display(html)
-    return []
-```
-        
-        **`def _value(row: dict[str, Any], name: str, default: Any='') -> Any`**
-        
-        Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/427905557f281c2de218c8d2213dc8798864c090/src/fabricops_kit/governance_review.py#L70-L71)
-        
+    ??? example "View helper source code"
+
+        **`def _display_review_guidance(title: str, profile_rows: list[dict[str, Any]], instructions: str) -> list[dict[str, Any]]`**
+
+        Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/governance_review.py#L534-L548)
+
         ```python
-def _value(row: dict[str, Any], name: str, default: Any = "") -> Any:
-    return row.get(name, row.get(name.upper(), default))
-```
-        
+        def _display_review_guidance(title: str, profile_rows: list[dict[str, Any]], instructions: str) -> list[dict[str, Any]]:
+            widgets = importlib.import_module("ipywidgets")
+            from IPython import display as ip
+
+            columns = [str(_value(row, "column_name")) for row in profile_rows]
+            html = widgets.HTML(
+                f"<h3>{title}</h3>"
+                f"<p>{instructions}</p>"
+                f"<p><b>Columns loaded:</b> {', '.join(columns)}</p>"
+                "<p>Return value is an editable list scaffold. Add reviewed dictionaries, set "
+                "<code>review_status='approved'</code> and <code>commit=True</code>, then pass the list to "
+                "<code>record_table_governance</code>.</p>"
+            )
+            ip.display(html)
+            return []
+        ```
+
+        **`def _value(row: dict[str, Any], name: str, default: Any='') -> Any`**
+
+        Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/governance_review.py#L70-L71)
+
+        ```python
+        def _value(row: dict[str, Any], name: str, default: Any = "") -> Any:
+            return row.get(name, row.get(name.upper(), default))
+        ```
+
 
 <details class="reference-metadata-details">
 <summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
@@ -206,7 +206,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/427905557f281c2de218c8d2213dc8798864c090/src/fabricops_kit/governance_review.py#L551-L569">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/427905557f281c2de218c8d2213dc8798864c090/src/fabricops_kit/governance_review.py#L551-L569</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/governance_review.py#L551-L569">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/governance_review.py#L551-L569</a>
 - Start line: `551`
 - End line: `569`
 - Signature:

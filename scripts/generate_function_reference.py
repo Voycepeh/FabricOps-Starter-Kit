@@ -791,9 +791,13 @@ def _render_call_tree(
 
 
 def _indent_markdown(lines: list[str], spaces: int = 4) -> list[str]:
-    """Indent Markdown lines so they render inside MkDocs Material blocks."""
+    """Indent every physical Markdown line for MkDocs Material blocks."""
     prefix = " " * spaces
-    return [prefix if line == "" else f"{prefix}{line}" for line in lines]
+    indented: list[str] = []
+    for item in lines:
+        physical_lines = item.split("\n")
+        indented.extend("" if line == "" else f"{prefix}{line}" for line in physical_lines)
+    return indented
 
 
 def _render_nested_helper_section(
@@ -866,6 +870,7 @@ def _render_nested_helper_section(
         "",
         *_indent_markdown(body_lines),
     ]
+
 
 def function_chip_wrap(chips: list[str]) -> str:
     """Return a mobile-friendly chip wrapper for a generated docs table cell."""
@@ -1861,7 +1866,7 @@ def main() -> None:
                 "",
                 *public_source_lines,
                 "",
-                "## Nested helper functions",
+                "## Maintainer internals",
                 "",
                 *nested_helper_lines,
                 "",

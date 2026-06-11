@@ -89,7 +89,7 @@ validate_schema(...)
 ## Public callable source code
 
 - Source file path: `src/fabricops_kit/guardrails.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/427905557f281c2de218c8d2213dc8798864c090/src/fabricops_kit/guardrails.py#L109-L198">View validate_schema on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/guardrails.py#L109-L198">View validate_schema on GitHub</a>
 
 ```python
 def validate_schema(dataframe, expected_schema: dict[str, str], *, preset: str = "strict") -> dict:
@@ -184,12 +184,12 @@ def validate_schema(dataframe, expected_schema: dict[str, str], *, preset: str =
     }
 ```
 
-## Nested helper functions
+## Maintainer internals
 
 ??? info "Nested helper functions: 2"
 
     These nested helpers support `validate_schema` by handling lower-level implementation steps; expand this section only when maintaining or debugging the package internals.
-    
+
     <div class="module-table-scroll reference-input-table">
     <table class="reference-function-table">
       <thead>
@@ -203,96 +203,96 @@ def validate_schema(dataframe, expected_schema: dict[str, str], *, preset: str =
         <tr>
           <td data-label="Helper"><code>_actual_schema</code></td>
           <td data-label="Role">Internal helper used by the package implementation.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/427905557f281c2de218c8d2213dc8798864c090/src/fabricops_kit/guardrails.py#L86-L101">src/fabricops_kit/guardrails.py</a></td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/guardrails.py#L86-L101">src/fabricops_kit/guardrails.py</a></td>
         </tr>
         <tr>
           <td data-label="Helper"><code>_normalize_datatype</code></td>
           <td data-label="Role">Internal helper used by the package implementation.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/427905557f281c2de218c8d2213dc8798864c090/src/fabricops_kit/guardrails.py#L37-L83">src/fabricops_kit/guardrails.py</a></td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/guardrails.py#L37-L83">src/fabricops_kit/guardrails.py</a></td>
         </tr>
       </tbody>
     </table>
     </div>
-    
+
     ??? example "View helper source code"
-    
+
         **`def _actual_schema(df) -> tuple[list[str], dict[str, str]]`**
-        
-        Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/427905557f281c2de218c8d2213dc8798864c090/src/fabricops_kit/guardrails.py#L86-L101)
-        
+
+        Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/guardrails.py#L86-L101)
+
         ```python
-def _actual_schema(df) -> tuple[list[str], dict[str, str]]:
-    schema = getattr(df, "schema", None)
-    if schema is not None and hasattr(schema, "fields"):
-        columns = [str(field.name) for field in schema.fields]
-        types = {str(field.name): _normalize_datatype(getattr(field, "dataType", "")) for field in schema.fields}
-        return columns, types
+        def _actual_schema(df) -> tuple[list[str], dict[str, str]]:
+            schema = getattr(df, "schema", None)
+            if schema is not None and hasattr(schema, "fields"):
+                columns = [str(field.name) for field in schema.fields]
+                types = {str(field.name): _normalize_datatype(getattr(field, "dataType", "")) for field in schema.fields}
+                return columns, types
 
-    dtypes = getattr(df, "dtypes", None)
-    if dtypes is not None:
-        dtype_items = dtypes.items() if hasattr(dtypes, "items") else dtypes
-        types = {str(name): _normalize_datatype(dtype) for name, dtype in dtype_items}
-        columns = [str(column) for column in getattr(df, "columns", list(types))]
-        return columns, types
+            dtypes = getattr(df, "dtypes", None)
+            if dtypes is not None:
+                dtype_items = dtypes.items() if hasattr(dtypes, "items") else dtypes
+                types = {str(name): _normalize_datatype(dtype) for name, dtype in dtype_items}
+                columns = [str(column) for column in getattr(df, "columns", list(types))]
+                return columns, types
 
-    columns = [str(column) for column in getattr(df, "columns", [])]
-    return columns, {}
-```
-        
+            columns = [str(column) for column in getattr(df, "columns", [])]
+            return columns, {}
+        ```
+
         **`def _normalize_datatype(data_type) -> str`**
-        
-        Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/427905557f281c2de218c8d2213dc8798864c090/src/fabricops_kit/guardrails.py#L37-L83)
-        
+
+        Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/guardrails.py#L37-L83)
+
         ```python
-def _normalize_datatype(data_type) -> str:
-    raw = str(data_type).strip().lower()
-    raw = re.sub(r"\s+", "", raw)
+        def _normalize_datatype(data_type) -> str:
+            raw = str(data_type).strip().lower()
+            raw = re.sub(r"\s+", "", raw)
 
-    decimal_match = re.search(r"decimaltype\((\d+),(\d+)\)|decimal\((\d+),(\d+)\)", raw)
-    if decimal_match:
-        precision = decimal_match.group(1) or decimal_match.group(3)
-        scale = decimal_match.group(2) or decimal_match.group(4)
-        return f"decimal({precision},{scale})"
+            decimal_match = re.search(r"decimaltype\((\d+),(\d+)\)|decimal\((\d+),(\d+)\)", raw)
+            if decimal_match:
+                precision = decimal_match.group(1) or decimal_match.group(3)
+                scale = decimal_match.group(2) or decimal_match.group(4)
+                return f"decimal({precision},{scale})"
 
-    aliases = {
-        "integertype()": "int",
-        "integertype": "int",
-        "integer": "int",
-        "int32": "int",
-        "int": "int",
-        "longtype()": "bigint",
-        "longtype": "bigint",
-        "long": "bigint",
-        "int64": "bigint",
-        "bigint": "bigint",
-        "stringtype()": "string",
-        "stringtype": "string",
-        "str": "string",
-        "object": "string",
-        "string": "string",
-        "datetype()": "date",
-        "datetype": "date",
-        "date": "date",
-        "timestamptype()": "timestamp",
-        "timestamptype": "timestamp",
-        "timestamp": "timestamp",
-        "datetime64[ns]": "timestamp",
-        "doubletype()": "double",
-        "doubletype": "double",
-        "double": "double",
-        "float64": "double",
-        "floattype()": "float",
-        "floattype": "float",
-        "float32": "float",
-        "float": "float",
-        "booleantype()": "boolean",
-        "booleantype": "boolean",
-        "bool": "boolean",
-        "boolean": "boolean",
-    }
-    return aliases.get(raw, raw)
-```
-        
+            aliases = {
+                "integertype()": "int",
+                "integertype": "int",
+                "integer": "int",
+                "int32": "int",
+                "int": "int",
+                "longtype()": "bigint",
+                "longtype": "bigint",
+                "long": "bigint",
+                "int64": "bigint",
+                "bigint": "bigint",
+                "stringtype()": "string",
+                "stringtype": "string",
+                "str": "string",
+                "object": "string",
+                "string": "string",
+                "datetype()": "date",
+                "datetype": "date",
+                "date": "date",
+                "timestamptype()": "timestamp",
+                "timestamptype": "timestamp",
+                "timestamp": "timestamp",
+                "datetime64[ns]": "timestamp",
+                "doubletype()": "double",
+                "doubletype": "double",
+                "double": "double",
+                "float64": "double",
+                "floattype()": "float",
+                "floattype": "float",
+                "float32": "float",
+                "float": "float",
+                "booleantype()": "boolean",
+                "booleantype": "boolean",
+                "bool": "boolean",
+                "boolean": "boolean",
+            }
+            return aliases.get(raw, raw)
+        ```
+
 
 <details class="reference-metadata-details">
 <summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
@@ -332,7 +332,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/guardrails.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/427905557f281c2de218c8d2213dc8798864c090/src/fabricops_kit/guardrails.py#L109-L198">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/427905557f281c2de218c8d2213dc8798864c090/src/fabricops_kit/guardrails.py#L109-L198</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/guardrails.py#L109-L198">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/guardrails.py#L109-L198</a>
 - Start line: `109`
 - End line: `198`
 - Signature:

@@ -108,7 +108,7 @@ load_catalogue_profile_rows(...)
 ## Public callable source code
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/427905557f281c2de218c8d2213dc8798864c090/src/fabricops_kit/governance_review.py#L381-L406">View load_catalogue_profile_rows on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/governance_review.py#L381-L406">View load_catalogue_profile_rows on GitHub</a>
 
 ```python
 def load_catalogue_profile_rows(config: Any, env: str, selection: dict[str, Any], *, spark_session: Any) -> list[dict[str, Any]]:
@@ -139,12 +139,12 @@ def load_catalogue_profile_rows(config: Any, env: str, selection: dict[str, Any]
     return filtered
 ```
 
-## Nested helper functions
+## Maintainer internals
 
 ??? info "Nested helper functions: 5"
 
     These nested helpers support `load_catalogue_profile_rows` by handling lower-level implementation steps; expand this section only when maintaining or debugging the package internals.
-    
+
     <div class="module-table-scroll reference-input-table">
     <table class="reference-function-table">
       <thead>
@@ -158,84 +158,84 @@ def load_catalogue_profile_rows(config: Any, env: str, selection: dict[str, Any]
         <tr>
           <td data-label="Helper"><code>_coerce_rows</code></td>
           <td data-label="Role">Internal helper used by the package implementation.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/427905557f281c2de218c8d2213dc8798864c090/src/fabricops_kit/governance_review.py#L62-L67">src/fabricops_kit/governance_review.py</a></td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/governance_review.py#L62-L67">src/fabricops_kit/governance_review.py</a></td>
         </tr>
         <tr>
           <td data-label="Helper"><code>_is_success</code></td>
           <td data-label="Role">Internal helper used by the package implementation.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/427905557f281c2de218c8d2213dc8798864c090/src/fabricops_kit/governance_review.py#L74-L75">src/fabricops_kit/governance_review.py</a></td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/governance_review.py#L74-L75">src/fabricops_kit/governance_review.py</a></td>
         </tr>
         <tr>
           <td data-label="Helper"><code>_value</code></td>
           <td data-label="Role">Internal helper used by the package implementation.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/427905557f281c2de218c8d2213dc8798864c090/src/fabricops_kit/governance_review.py#L70-L71">src/fabricops_kit/governance_review.py</a></td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/governance_review.py#L70-L71">src/fabricops_kit/governance_review.py</a></td>
         </tr>
         <tr>
           <td data-label="Helper"><code>_build_metadata_table_key</code></td>
           <td data-label="Role">Internal helper used by the package implementation.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/427905557f281c2de218c8d2213dc8798864c090/src/fabricops_kit/metadata.py#L149-L150">src/fabricops_kit/metadata.py</a></td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/metadata.py#L149-L150">src/fabricops_kit/metadata.py</a></td>
         </tr>
         <tr>
           <td data-label="Helper"><code>_stable_metadata_key</code></td>
           <td data-label="Role">Internal helper used by the package implementation.</td>
-          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/427905557f281c2de218c8d2213dc8798864c090/src/fabricops_kit/metadata.py#L144-L146">src/fabricops_kit/metadata.py</a></td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/metadata.py#L144-L146">src/fabricops_kit/metadata.py</a></td>
         </tr>
       </tbody>
     </table>
     </div>
-    
+
     ??? example "View helper source code"
-    
+
         **`def _coerce_rows(rows_or_df: Any) -> list[dict[str, Any]]`**
-        
-        Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/427905557f281c2de218c8d2213dc8798864c090/src/fabricops_kit/governance_review.py#L62-L67)
-        
+
+        Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/governance_review.py#L62-L67)
+
         ```python
-def _coerce_rows(rows_or_df: Any) -> list[dict[str, Any]]:
-    if rows_or_df is None:
-        return []
-    if hasattr(rows_or_df, "collect"):
-        rows_or_df = rows_or_df.collect()
-    return [row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row) for row in rows_or_df]
-```
-        
+        def _coerce_rows(rows_or_df: Any) -> list[dict[str, Any]]:
+            if rows_or_df is None:
+                return []
+            if hasattr(rows_or_df, "collect"):
+                rows_or_df = rows_or_df.collect()
+            return [row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row) for row in rows_or_df]
+        ```
+
         **`def _is_success(row: dict[str, Any]) -> bool`**
-        
-        Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/427905557f281c2de218c8d2213dc8798864c090/src/fabricops_kit/governance_review.py#L74-L75)
-        
+
+        Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/governance_review.py#L74-L75)
+
         ```python
-def _is_success(row: dict[str, Any]) -> bool:
-    return str(_value(row, "profile_status", "")).strip().lower() in SUCCESS_STATUSES
-```
-        
+        def _is_success(row: dict[str, Any]) -> bool:
+            return str(_value(row, "profile_status", "")).strip().lower() in SUCCESS_STATUSES
+        ```
+
         **`def _value(row: dict[str, Any], name: str, default: Any='') -> Any`**
-        
-        Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/427905557f281c2de218c8d2213dc8798864c090/src/fabricops_kit/governance_review.py#L70-L71)
-        
+
+        Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/governance_review.py#L70-L71)
+
         ```python
-def _value(row: dict[str, Any], name: str, default: Any = "") -> Any:
-    return row.get(name, row.get(name.upper(), default))
-```
-        
+        def _value(row: dict[str, Any], name: str, default: Any = "") -> Any:
+            return row.get(name, row.get(name.upper(), default))
+        ```
+
         **`def _build_metadata_table_key(environment_name, dataset_name, table_name) -> str`**
-        
-        Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/427905557f281c2de218c8d2213dc8798864c090/src/fabricops_kit/metadata.py#L149-L150)
-        
+
+        Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/metadata.py#L149-L150)
+
         ```python
-def _build_metadata_table_key(environment_name, dataset_name, table_name) -> str:
-    return _stable_metadata_key(environment_name, dataset_name, table_name)
-```
-        
+        def _build_metadata_table_key(environment_name, dataset_name, table_name) -> str:
+            return _stable_metadata_key(environment_name, dataset_name, table_name)
+        ```
+
         **`def _stable_metadata_key(*parts: Any) -> str`**
-        
-        Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/427905557f281c2de218c8d2213dc8798864c090/src/fabricops_kit/metadata.py#L144-L146)
-        
+
+        Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/metadata.py#L144-L146)
+
         ```python
-def _stable_metadata_key(*parts: Any) -> str:
-    normalized = "|".join(str(part or "").strip().lower() for part in parts)
-    return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
-```
-        
+        def _stable_metadata_key(*parts: Any) -> str:
+            normalized = "|".join(str(part or "").strip().lower() for part in parts)
+            return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
+        ```
+
 
 <details class="reference-metadata-details">
 <summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
@@ -278,7 +278,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/427905557f281c2de218c8d2213dc8798864c090/src/fabricops_kit/governance_review.py#L381-L406">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/427905557f281c2de218c8d2213dc8798864c090/src/fabricops_kit/governance_review.py#L381-L406</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/governance_review.py#L381-L406">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/governance_review.py#L381-L406</a>
 - Start line: `381`
 - End line: `406`
 - Signature:
