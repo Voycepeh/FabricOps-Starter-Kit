@@ -7,6 +7,8 @@ AI-ready context for deterministic data quality rule hinting.
 
 from __future__ import annotations
 
+from .config import _audit_timestamp_expr, _validate_audit_timezone
+
 import json
 import re
 from typing import Any
@@ -225,7 +227,7 @@ def profile_dataframe(
     table_name: str,
     *,
     exclude_columns=None,
-    run_timestamp_timezone="Asia/Singapore",
+    run_timestamp_timezone="UTC",
     include_distributions: bool = False,
     distribution_columns: list[str] | set[str] | tuple[str, ...] | None = None,
     distribution_bin_edges: dict[str, list[float]] | None = None,
@@ -242,8 +244,8 @@ def profile_dataframe(
         Logical table name written into each profile row.
     exclude_columns : list[str] or set[str], optional
         Additional columns to skip, on top of the standard technical columns.
-    run_timestamp_timezone : str, default="Asia/Singapore"
-        Time zone used for the ``RUN_TIMESTAMP`` evidence field.
+    run_timestamp_timezone : str, default="UTC"
+        IANA time zone used for the ``RUN_TIMESTAMP`` evidence field.
     include_distributions : bool, default=False
         When true, add lightweight distribution summaries for suitable numeric
         and categorical columns. The default preserves the existing lightweight
@@ -278,6 +280,7 @@ def profile_dataframe(
     """
     from pyspark.sql import functions as F
 
+    run_timestamp_timezone = _validate_audit_timezone(run_timestamp_timezone)
     eligible_columns = _get_profiled_columns(df, exclude_columns=exclude_columns)
     if not eligible_columns:
         raise ValueError("No eligible non-technical columns found for metadata profiling.")
@@ -310,7 +313,7 @@ def profile_dataframe(
     for column_name in eligible_columns:
         select_exprs = [
             F.lit(table_name).alias("TABLE_NAME"),
-            F.from_utc_timestamp(F.current_timestamp(), run_timestamp_timezone).alias("RUN_TIMESTAMP"),
+            _audit_timestamp_expr(timezone_name=run_timestamp_timezone).alias("RUN_TIMESTAMP"),
             F.lit(column_name).alias("COLUMN_NAME"),
             F.lit(dtype_map[column_name]).alias("DATA_TYPE"),
             F.lit(row_count).alias("ROW_COUNT"),

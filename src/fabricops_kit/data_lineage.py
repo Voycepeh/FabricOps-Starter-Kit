@@ -1,8 +1,9 @@
 """Notebook lineage helpers for deterministic parsing and metadata-ready evidence."""
 from __future__ import annotations
 import ast
-from datetime import datetime, timezone
 from typing import Any
+
+from .config import _current_audit_timestamp
 
 _ALLOWED_TYPES = {"dataframe", "lakehouse_table", "warehouse_table", "file", "unknown"}
 _ALLOWED_CONFIDENCE = {"high", "medium", "low"}
@@ -188,7 +189,7 @@ def _build_lineage_records(dataset_name: str, lineage_steps: list[dict], run_id:
     validation = _validate_lineage_steps(lineage_steps)
     if not validation["is_valid"]:
         raise ValueError(f"Invalid lineage_steps: {validation['errors']}")
-    created_ts = datetime.now(timezone.utc).isoformat()
+    created_ts = _current_audit_timestamp(drop_microseconds=False)
     return [
         {
             "dataset_name": dataset_name,

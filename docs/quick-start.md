@@ -45,7 +45,7 @@ Start with one Governance workspace and one Engineering workspace. **Alternative
 
 | Step | Do this | Expected result | Read more |
 | ---- | ------- | --------------- |---------- |
-| 4    | Configure `00_env_config` and update the path via the lakehouse/warehouse urls   | Workspace, lakehouse, warehouse, and governance metadata paths are available to the downstream notebooks. |[Notebook Templates](how-fabricops-works/notebook-templates.md)  |
+| 4    | Configure `00_env_config`, update the lakehouse/warehouse URLs, and keep or set `FABRICOPS_AUDIT_TIMEZONE` with a valid IANA timezone. | Workspace, lakehouse, warehouse, registered governance metadata tables, and audit timestamp settings are available to downstream notebooks. |[Notebook Templates](how-fabricops-works/notebook-templates.md)  |
 
 ![IMG](assets/fabric-example-00_config_paths.png)
 

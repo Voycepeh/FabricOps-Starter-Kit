@@ -2,9 +2,9 @@
 
 FabricOps metadata tables live in the Governance workspace `metadata_lakehouse`. They coordinate the notebook workflow and keep metadata evidence available for review, support, and visibility.
 
-`00_env_config` creates every active metadata table on first run and validates the expected schemas on later runs. It registers these objects as Fabric Lakehouse Delta tables, so they should appear in `SHOW TABLES` for the configured metadata lakehouse. Most users should not create or edit these schemas by hand.
+`00_env_config` creates every active metadata table on first run and validates the expected schemas on later runs. The active setup-managed registry is source-driven and currently contains **11 registered Lakehouse Delta tables**. `METADATA_DATA_ACCESS` remains documented as optional access-capture metadata, but it is not created by the standard setup until an access-capture workflow enables it. Most users should not create or edit these schemas by hand.
 
-A healthy metadata table is rooted directly at `Tables/<metadata_table>/_delta_log`. If you find legacy folders such as `Tables/<metadata_table>/Unidentified/_delta_log`, treat them as migration evidence: do not delete user data automatically. Migrate or recreate those folders deliberately, then rerun `00_env_config` and confirm the table appears in `SHOW TABLES`.
+These objects should appear in Spark `SHOW TABLES` for the configured metadata lakehouse. A healthy metadata table is rooted directly at `Tables/<metadata_table>/_delta_log`; it should not be created as a nested path such as `Tables/<metadata_table>/Unidentified/_delta_log`. If you find an older nested folder, review and migrate the data manually if needed. FabricOps does not delete or migrate user data automatically.
 
 All workflow notebooks read and write metadata through the configured metadata route:
 
@@ -34,7 +34,7 @@ write_lakehouse_table(
 | `METADATA_DATA_LINEAGE_TABLE` | `02_pipeline` | Stores current table-level lineage evidence for a notebook. |
 | `METADATA_DATA_CATALOGUE` | `02_pipeline` | Stores table context, profile evidence, and guardrail context. |
 | `METADATA_PIPELINE_RUNS` | `02_pipeline` | Stores one runtime summary row per pipeline run, tied to agreement and notebook registry context. |
-| `METADATA_DATA_ACCESS` | Access capture process | Stores table-level access assignments when captured. |
+| `METADATA_DATA_ACCESS` | Optional access capture process | Optional table-level access assignments when captured; not part of the current 11-table setup registry. |
 | `METADATA_COLUMN_CONTEXT` | `03_governance` | Stores reviewed business meaning for catalogue columns. |
 | `METADATA_DQ_RULES` | `03_governance` | Stores approved DQ expectations only; runtime DQ results stay with notebook guardrail output and existing catalogue/profile evidence. |
 | `METADATA_COLUMN_CLASSIFICATION` | `03_governance` | Stores reviewed sensitivity and PII classifications. |
@@ -47,7 +47,7 @@ For how schema, source stability, and DQ settings produce this evidence, see [Pi
 
 ## Standard runtime audit columns
 
-Most metadata tables include these audit columns. They show who wrote the row, from where, and when.
+Most metadata tables include these audit columns. They show who wrote the row, from where, and when. FabricOps defaults generated audit timestamps to UTC. You can set `FABRICOPS_AUDIT_TIMEZONE` in `00_env_config` to a valid IANA timezone such as `Asia/Singapore`; the setting applies to metadata audit timestamps and technical timestamp columns added by helper functions.
 
 | Column | Purpose |
 | --- | --- |
@@ -261,8 +261,8 @@ This table stores one summary row per pipeline run. It is tied to the selected a
 | `notebook_type` | Notebook workflow type, usually `02_pipeline`. |
 | `pipeline_name` | User-friendly pipeline name. |
 | `environment_name` | Environment key from `00_env_config`. |
-| `started_at` | UTC timestamp captured when orchestration starts. |
-| `completed_at` | UTC timestamp captured when summary evidence is written. |
+| `started_at` | Audit timestamp captured when orchestration starts. |
+| `completed_at` | Audit timestamp captured when summary evidence is written. |
 | `status` | Overall pipeline status recorded by the notebook. |
 | `source_count` | Number of registered source DataFrames. |
 | `target_count` | Number of registered target DataFrames. |
@@ -273,11 +273,11 @@ This table stores one summary row per pipeline run. It is tied to the selected a
 | `catalogue_status` | Status returned by catalogue evidence writing. |
 | `message` | Human-readable run note. |
 | `run_summary_json` | JSON payload with guardrail results and source/target table lists. |
-| `created_at` | UTC timestamp when the metadata row was created. |
+| `created_at` | Audit timestamp when the metadata row was created. |
 
 ### `METADATA_DATA_ACCESS`
 
-**For:** table-level access assignments when a team chooses to capture them.
+**For:** optional table-level access assignments when a team chooses to capture them. This table is documented for the metadata model but is not part of the current 11-table `00_env_config` setup registry.
 
 | Column | Purpose |
 | --- | --- |

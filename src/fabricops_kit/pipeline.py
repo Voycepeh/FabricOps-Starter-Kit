@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
 import json
 from typing import Any, Mapping
 from uuid import uuid4
@@ -11,13 +10,14 @@ from .data_profiling import profile_dataframe
 from .drift import enforce_catalogue_stability, stop_if_failed, validate_schema
 from .fabric_input_output import write_lakehouse_table
 from .governance_review import CATALOGUE_TABLE, LINEAGE_TABLE, enforce_dq_rules
+from .config import _current_audit_timestamp, _get_audit_timezone
 from .metadata import _build_metadata_table_key, _build_runtime_audit_fields
 
 METADATA_PIPELINE_RUNS_TABLE = "METADATA_PIPELINE_RUNS"
 
 
-def _now_iso() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+def _now_iso(config: Any = None) -> str:
+    return _current_audit_timestamp(config=config)
 
 
 def _definition_name(name: str, definition: Mapping[str, Any]) -> str:
@@ -51,7 +51,7 @@ def _runtime_audit_fields(config: Any, env: str) -> dict[str, str]:
         return _build_runtime_audit_fields(config=config, env=env)
     except Exception:
         return {
-            "_committed_at": _now_iso(),
+            "_committed_at": _now_iso(config),
             "_committed_by": "unknown",
             "_workspace_name": "",
             "_notebook_name": "",
@@ -110,11 +110,11 @@ def _canonical_catalogue_profile_df(profile_df: Any):
 
 
 
-def _add_audit_columns(dataframe: Any, *, run_id: str, pipeline_name: str):
+def _add_audit_columns(dataframe: Any, *, run_id: str, pipeline_name: str, config: Any = None):
     """Return a DataFrame with standard FabricOps target audit columns."""
     from pyspark.sql import functions as F
 
-    audit_created_at = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+    audit_created_at = _current_audit_timestamp(config=config)
     return (
         dataframe
         .withColumn("_fabricops_run_id", F.lit(run_id))
@@ -207,7 +207,7 @@ def prepare_pipeline_table_configs(
             target_kind = merged_config.get("target_kind", merged_config.get("kind", "lakehouse"))
             enriched_table = {
                 **merged_config,
-                "df": _add_audit_columns(merged_config["df"], run_id=run_id, pipeline_name=pipeline_name),
+                "df": _add_audit_columns(merged_config["df"], run_id=run_id, pipeline_name=pipeline_name, config=merged_config.get("config", default_settings.get("config"))),
                 "dataset_name": dataset_name,
                 "stage": stage,
                 "target_layer": target_layer,
@@ -341,6 +341,7 @@ def run_table_guardrails(
             exclude_columns=table_config.get("exclude_columns"),
             include_distributions=True,
             distribution_columns=table_config.get("distribution_columns"),
+            run_timestamp_timezone=table_config.get("run_timestamp_timezone") or _get_audit_timezone(config),
         )
 
         schema_results[table_key] = validate_schema(
@@ -599,7 +600,7 @@ def write_pipeline_lineage(
         Status, row count, and written rows.
     """
     audit = _runtime_audit_fields(config, env)
-    created_at = _now_iso()
+    created_at = _now_iso(config)
     if relationships is None:
         relationships = [{"sources": list(source_definitions), "targets": list(target_definitions), "operation": "pipeline_transform", "description": "User-defined pipeline transformation."}]
     rows: list[dict[str, Any]] = []
@@ -706,7 +707,7 @@ def write_pipeline_run_summary(
     "metadata", metadata_table, mode="append")`` so runtime evidence never
     relies on a default attached lakehouse.
     """
-    completed = completed_at or _now_iso()
+    completed = completed_at or _now_iso(config)
     started = started_at or completed
     sources = source_definitions or {}
     targets = target_definitions or {}
@@ -744,7 +745,7 @@ def write_pipeline_run_summary(
         "catalogue_status": catalogue_status,
         "message": message,
         "run_summary_json": json.dumps(run_summary, default=str, sort_keys=True),
-        "created_at": _now_iso(),
+        "created_at": _now_iso(config),
     }
     write_lakehouse_table(spark.createDataFrame([row]), config, env, "metadata", metadata_table, mode=mode)
     return row

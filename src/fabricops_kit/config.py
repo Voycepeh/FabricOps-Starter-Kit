@@ -14,10 +14,73 @@ from dataclasses import dataclass, field
 from importlib.resources import files
 from pathlib import Path
 import re
+from datetime import datetime
 from typing import Any
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import yaml
 from jsonschema import Draft202012Validator
+
+DEFAULT_AUDIT_TIMEZONE = "UTC"
+
+
+def _validate_audit_timezone(timezone_name: str | None) -> str:
+    """Return a valid IANA audit timezone name.
+
+    Parameters
+    ----------
+    timezone_name : str or None
+        IANA timezone name to validate. Blank values default to ``"UTC"``.
+
+    Returns
+    -------
+    str
+        Validated timezone name.
+
+    Raises
+    ------
+    ValueError
+        If a non-blank value is not a valid IANA timezone name.
+    """
+    value = str(timezone_name or DEFAULT_AUDIT_TIMEZONE).strip() or DEFAULT_AUDIT_TIMEZONE
+    if value != DEFAULT_AUDIT_TIMEZONE and "/" not in value:
+        raise ValueError(
+            f'Invalid FABRICOPS_AUDIT_TIMEZONE: "{value}". '
+            'Use a valid IANA timezone name such as "Asia/Singapore" or keep the default "UTC".'
+        )
+    try:
+        ZoneInfo(value)
+    except ZoneInfoNotFoundError as exc:
+        raise ValueError(
+            f'Invalid FABRICOPS_AUDIT_TIMEZONE: "{value}". '
+            'Use a valid IANA timezone name such as "Asia/Singapore" or keep the default "UTC".'
+        ) from exc
+    return value
+
+
+def _get_audit_timezone(config: Any = None, timezone_name: str | None = None) -> str:
+    """Resolve the configured FabricOps audit timezone, defaulting to UTC."""
+    if timezone_name is not None:
+        return _validate_audit_timezone(timezone_name)
+    value = getattr(config, "audit_timezone", None) if config is not None else None
+    return _validate_audit_timezone(value)
+
+
+def _current_audit_timestamp(config: Any = None, timezone_name: str | None = None, *, drop_microseconds: bool = True) -> str:
+    """Return the current audit timestamp in the configured audit timezone."""
+    tz_name = _get_audit_timezone(config, timezone_name)
+    value = datetime.now(ZoneInfo(tz_name))
+    if drop_microseconds:
+        value = value.replace(microsecond=0)
+    return value.isoformat()
+
+
+def _audit_timestamp_expr(config: Any = None, timezone_name: str | None = None):
+    """Return a Spark expression for the current audit timestamp timezone."""
+    from pyspark.sql import functions as F
+
+    tz_name = _get_audit_timezone(config, timezone_name)
+    return F.current_timestamp() if tz_name == "UTC" else F.from_utc_timestamp(F.current_timestamp(), tz_name)
 
 
 class DatasetContractValidationError(Exception):
@@ -396,6 +459,8 @@ class FrameworkConfig:
         Notebook-native review, approval, and metadata destination settings.
     lineage_config : LineageConfig
         Default lineage capture behavior.
+    audit_timezone : str, default="UTC"
+        IANA timezone used for FabricOps-generated audit and technical timestamps.
 
     Examples
     --------
@@ -419,6 +484,10 @@ class FrameworkConfig:
     review_workflow_config: ReviewWorkflowConfig
     lineage_config: LineageConfig
     data_agreement_config: DataAgreementConfig = field(default_factory=DataAgreementConfig)
+    audit_timezone: str = DEFAULT_AUDIT_TIMEZONE
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "audit_timezone", _validate_audit_timezone(self.audit_timezone))
 
 
 @dataclass(frozen=True)
@@ -533,6 +602,7 @@ def _validate_framework_config(config: FrameworkConfig | dict[str, Any]) -> Fram
         raise ValueError("lineage_config must be a LineageConfig object.")
     if not isinstance(normalized.data_agreement_config, DataAgreementConfig):
         raise ValueError("data_agreement_config must be a DataAgreementConfig object.")
+    _validate_audit_timezone(normalized.audit_timezone)
 
     for env_name, targets in normalized.path_config.paths.items():
         if not isinstance(targets, dict) or not targets:
@@ -816,6 +886,36 @@ def setup_notebook(
     )
 
 
+def _get_active_metadata_tables(config: FrameworkConfig | dict[str, Any]) -> list[str]:
+    """Return the canonical active metadata tables prepared by ``00_env_config``.
+
+    The active registry is intentionally source-driven: agreement tables come
+    from ``DataAgreementConfig``, notebook registry from ``metadata.py``, and
+    governance/pipeline tables from the governance schema registry.
+    ``METADATA_DATA_ACCESS`` is documented as optional access-capture metadata
+    and is not part of the current active setup registry.
+    """
+    normalized = _validate_framework_config(config)
+    from fabricops_kit.data_agreement import DATA_AGREEMENT_EVIDENCE_TABLE, DATA_AGREEMENT_TABLE, DATA_STEWARD_TABLE
+    from fabricops_kit.governance_review import _get_governance_metadata_schemas
+    from fabricops_kit.metadata import NOTEBOOK_REGISTRY_TABLE
+
+    metadata_tables = normalized.data_agreement_config.metadata_tables or {}
+    tables = [
+        str(metadata_tables.get("data_steward", DATA_STEWARD_TABLE)),
+        str(metadata_tables.get("data_agreement", DATA_AGREEMENT_TABLE)),
+        str(metadata_tables.get("data_agreement_evidence", DATA_AGREEMENT_EVIDENCE_TABLE)),
+        NOTEBOOK_REGISTRY_TABLE,
+        *_get_governance_metadata_schemas().keys(),
+    ]
+    out: list[str] = []
+    for table in tables:
+        table_name = str(table or "").strip()
+        if table_name and table_name not in out:
+            out.append(table_name)
+    return out
+
+
 def _metadata_tables_from_setup_results(*summaries: dict[str, Any]) -> list[str]:
     """Return ordered metadata table names from setup helper summaries."""
     tables: list[str] = []
@@ -831,7 +931,7 @@ def _metadata_tables_from_setup_results(*summaries: dict[str, Any]) -> list[str]
 
 
 def _show_tables_for_metadata_lakehouse(*, spark: Any, config: FrameworkConfig | dict[str, Any], env: str) -> dict[str, Any]:
-    """Run SHOW TABLES for the configured metadata lakehouse when available."""
+    """Inspect registered tables for the configured metadata lakehouse."""
     metadata_store = _get_store(config=config, env=env, target="metadata")
     if metadata_store.kind != "lakehouse":
         raise ValueError(f"Target '{env}/metadata' is not a lakehouse store.")
@@ -868,24 +968,52 @@ def _show_tables_for_metadata_lakehouse(*, spark: Any, config: FrameworkConfig |
     return {"status": "skipped", "database": metadata_store.name, "tables": [], "message": f"SHOW TABLES was unavailable: {last_error}"}
 
 
+def _detect_nested_metadata_delta_folders(*, config: FrameworkConfig | dict[str, Any], env: str, expected_tables: list[str]) -> list[str]:
+    """Best-effort warning detector for legacy nested metadata Delta folders."""
+    try:
+        import notebookutils  # type: ignore
+    except Exception:
+        return []
+
+    fs = getattr(notebookutils, "fs", None)
+    exists = getattr(fs, "exists", None)
+    if not callable(exists):
+        return []
+    metadata_store = _get_store(config=config, env=env, target="metadata")
+    nested: list[str] = []
+    for table in expected_tables:
+        path = f"{metadata_store.root.rstrip('/')}/Tables/{table}/Unidentified/_delta_log"
+        try:
+            if exists(path):
+                nested.append(path)
+        except Exception:
+            continue
+    return nested
+
+
 def _validate_metadata_table_registration(
     *,
     spark: Any,
     config: FrameworkConfig | dict[str, Any],
     env: str,
-    expected_tables: list[str],
+    expected_tables: list[str] | None = None,
 ) -> dict[str, Any]:
-    """Validate that expected metadata tables are registered in Spark catalog."""
-    show_tables = _show_tables_for_metadata_lakehouse(spark=spark, config=config, env=env)
+    """Validate that active metadata tables are registered in the Spark catalog."""
+    normalized = _validate_framework_config(config)
+    expected = list(expected_tables or _get_active_metadata_tables(normalized))
+    show_tables = _show_tables_for_metadata_lakehouse(spark=spark, config=normalized, env=env)
     observed = {str(name).lower(): str(name) for name in show_tables.get("tables", [])}
     show_tables_ready = show_tables.get("status") == "ready"
-    missing = [table for table in expected_tables if table.lower() not in observed] if show_tables_ready else []
-    warnings = []
+    missing = [table for table in expected if table.lower() not in observed] if show_tables_ready else []
+    nested_paths = _detect_nested_metadata_delta_folders(config=normalized, env=env, expected_tables=expected)
+    warnings: list[str] = []
     if missing:
+        warnings.append("Expected metadata tables were not returned by SHOW TABLES.")
+    if nested_paths:
         warnings.append(
-            "Expected metadata tables were not returned by SHOW TABLES. If a previous run wrote Delta files under "
-            "Tables/<metadata_table>/Unidentified, do not delete data automatically; migrate or recreate those "
-            "folders deliberately, then rerun 00_env_config."
+            "Detected legacy nested metadata Delta folders under Tables/<metadata_table>/Unidentified/_delta_log. "
+            "FabricOps will not delete or migrate user data automatically; review and migrate those folders manually if needed. "
+            "New metadata setup writes to registered Lakehouse table paths directly."
         )
     if not show_tables_ready:
         warnings.append(str(show_tables.get("message") or "SHOW TABLES validation was skipped."))
@@ -893,11 +1021,14 @@ def _validate_metadata_table_registration(
     return {
         "status": status,
         "database": show_tables.get("database"),
-        "expected_tables": list(expected_tables),
+        "expected_tables": expected,
+        "expected_table_count": len(expected),
         "registered_tables": show_tables.get("tables", []),
         "missing_tables": missing,
+        "nested_metadata_delta_paths": nested_paths,
         "warnings": warnings,
         "show_tables_statement": show_tables.get("statement"),
+        "optional_documented_tables": ["METADATA_DATA_ACCESS"],
     }
 
 
@@ -946,21 +1077,25 @@ def setup_metadata_tables(
     )
     notebook_registry = _setup_notebook_registry_table(spark=spark, config=config, env=env)
     governance = _setup_governance_metadata_tables(spark=spark, config=config, env=env)
-    expected_tables = _metadata_tables_from_setup_results(data_agreement, notebook_registry, governance)
-    registration = _validate_metadata_table_registration(
+    expected_tables = _get_active_metadata_tables(config)
+    created_or_checked = _metadata_tables_from_setup_results(data_agreement, notebook_registry, governance)
+    registration_validation = _validate_metadata_table_registration(
         spark=spark,
         config=config,
         env=env,
         expected_tables=expected_tables,
     )
     statuses = [data_agreement.get("status"), notebook_registry.get("status"), governance.get("status")]
-    registration_status = registration.get("status")
+    registration_status = registration_validation.get("status")
     return {
         "status": "ready" if all(status == "ready" for status in statuses) and registration_status in {"ready", "skipped"} else "not_ready",
         "data_agreement": data_agreement,
         "notebook_registry": notebook_registry,
         "governance": governance,
-        "registration_validation": registration,
+        "active_metadata_tables": expected_tables,
+        "active_metadata_table_count": len(expected_tables),
+        "created_or_checked_tables": created_or_checked,
+        "registration_validation": registration_validation,
     }
 
 

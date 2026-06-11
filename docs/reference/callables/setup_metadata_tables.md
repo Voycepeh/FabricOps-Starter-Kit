@@ -72,8 +72,6 @@ Setup result describing metadata table creation or validation status.
 <details class="reference-implementation-details">
 <summary>Implementation details</summary>
 
-- <a href="../internal/config__metadata_tables_from_setup_results/"><code>fabricops_kit.config._metadata_tables_from_setup_results</code></a>
-- <a href="../internal/config__validate_metadata_table_registration/"><code>fabricops_kit.config._validate_metadata_table_registration</code></a>
 - <a href="../internal/data_agreement__setup_data_agreement_tables/"><code>fabricops_kit.data_agreement._setup_data_agreement_tables</code></a>
 - `fabricops_kit.data_agreement.get`
 - <a href="../internal/governance_review__setup_governance_metadata_tables/"><code>fabricops_kit.governance_review._setup_governance_metadata_tables</code></a>
@@ -84,7 +82,7 @@ Setup result describing metadata table creation or validation status.
 ## Source
 
 - Source file path: `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b37a3d3a2b947b2e265229d7ea688a0bac6a5396/src/fabricops_kit/config.py#L904-L964">View setup_metadata_tables on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a212c94775e71b6e429e41b51fbc57ac733903cb/src/fabricops_kit/config.py#L819-L870">View setup_metadata_tables on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -135,21 +133,12 @@ def setup_metadata_tables(
     )
     notebook_registry = _setup_notebook_registry_table(spark=spark, config=config, env=env)
     governance = _setup_governance_metadata_tables(spark=spark, config=config, env=env)
-    expected_tables = _metadata_tables_from_setup_results(data_agreement, notebook_registry, governance)
-    registration = _validate_metadata_table_registration(
-        spark=spark,
-        config=config,
-        env=env,
-        expected_tables=expected_tables,
-    )
     statuses = [data_agreement.get("status"), notebook_registry.get("status"), governance.get("status")]
-    registration_status = registration.get("status")
     return {
-        "status": "ready" if all(status == "ready" for status in statuses) and registration_status in {"ready", "skipped"} else "not_ready",
+        "status": "ready" if all(status == "ready" for status in statuses) else "not_ready",
         "data_agreement": data_agreement,
         "notebook_registry": notebook_registry,
         "governance": governance,
-        "registration_validation": registration,
     }
 ```
 
@@ -168,9 +157,9 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `config`
 - Source file path: `src/fabricops_kit/config.py`
-- Source line: `904`
+- Source line: `819`
 - Inbound references count: 0
-- Outbound references count: 6
+- Outbound references count: 4
 
 ### AI implementation contract
 
@@ -187,8 +176,6 @@ Not documented yet
 
 ### Outbound references
 
-- <a href="../internal/config__metadata_tables_from_setup_results/"><code>fabricops_kit.config._metadata_tables_from_setup_results</code></a>
-- <a href="../internal/config__validate_metadata_table_registration/"><code>fabricops_kit.config._validate_metadata_table_registration</code></a>
 - <a href="../internal/data_agreement__setup_data_agreement_tables/"><code>fabricops_kit.data_agreement._setup_data_agreement_tables</code></a>
 - <a href="../internal/governance_review__setup_governance_metadata_tables/"><code>fabricops_kit.governance_review._setup_governance_metadata_tables</code></a>
 - <a href="../internal/metadata__setup_notebook_registry_table/"><code>fabricops_kit.metadata._setup_notebook_registry_table</code></a>
@@ -196,9 +183,9 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/config.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b37a3d3a2b947b2e265229d7ea688a0bac6a5396/src/fabricops_kit/config.py#L904-L964">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b37a3d3a2b947b2e265229d7ea688a0bac6a5396/src/fabricops_kit/config.py#L904-L964</a>
-- Start line: `904`
-- End line: `964`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a212c94775e71b6e429e41b51fbc57ac733903cb/src/fabricops_kit/config.py#L819-L870">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a212c94775e71b6e429e41b51fbc57ac733903cb/src/fabricops_kit/config.py#L819-L870</a>
+- Start line: `819`
+- End line: `870`
 - Signature:
 
 ```python
@@ -214,8 +201,6 @@ def setup_metadata_tables(*, spark: Any, config: FrameworkConfig | dict[str, Any
 
 ### Internal implementation helpers
 
-- <a href="../internal/config__metadata_tables_from_setup_results/"><code>fabricops_kit.config._metadata_tables_from_setup_results</code></a>
-- <a href="../internal/config__validate_metadata_table_registration/"><code>fabricops_kit.config._validate_metadata_table_registration</code></a>
 - <a href="../internal/data_agreement__setup_data_agreement_tables/"><code>fabricops_kit.data_agreement._setup_data_agreement_tables</code></a>
 - `fabricops_kit.data_agreement.get`
 - <a href="../internal/governance_review__setup_governance_metadata_tables/"><code>fabricops_kit.governance_review._setup_governance_metadata_tables</code></a>

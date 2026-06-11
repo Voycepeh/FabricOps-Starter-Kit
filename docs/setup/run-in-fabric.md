@@ -14,9 +14,11 @@ Next read: [Setup / Create Wheel](create-wheel.md), [Start](../quick-start.md), 
 
 - Lakehouse/warehouse targets resolve in the selected environment.
 - Metadata target is configured for `metadata` routing.
+- `FABRICOPS_AUDIT_TIMEZONE` is either `UTC` or another valid IANA timezone such as `Asia/Singapore`.
 - Notebook runtime dependencies are available.
 
 ## First-run verification
 
-- Run `00_env_config` and confirm validation output.
+- Run `00_env_config` and confirm metadata table validation passes. The active setup registry currently contains 11 registered Lakehouse Delta tables; `METADATA_DATA_ACCESS` is optional access-capture metadata and is not created by the standard setup.
+- In the metadata lakehouse, run `SHOW TABLES` and confirm every active metadata table appears as a registered table.
 - Execute a minimal `01_agreement` → `02_pipeline` → `03_governance` path to verify end-to-end metadata writes. Use `99_explore` only when optional discovery or troubleshooting is needed.

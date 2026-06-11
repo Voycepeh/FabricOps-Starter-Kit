@@ -8,6 +8,7 @@ import pytest
 
 import fabricops_kit
 from fabricops_kit import pipeline
+from tests.helpers import framework_config
 
 pytestmark = pytest.mark.unit
 
@@ -194,6 +195,21 @@ def test_prepare_pipeline_table_configs_target_role_adds_audit_columns_and_deriv
         "_fabricops_created_at",
     ]
 
+    created_at = dict(df.with_columns)["_fabricops_created_at"][1]
+    assert created_at.endswith("+00:00")
+
+
+def test_add_audit_columns_uses_configured_audit_timezone(monkeypatch):
+    _install_fake_pyspark_functions(monkeypatch)
+    df = FakeDataFrame("target")
+    config = framework_config()
+    object.__setattr__(config, "audit_timezone", "Asia/Singapore")
+
+    pipeline._add_audit_columns(df, run_id="run-1", pipeline_name="pipeline-1", config=config)
+
+    created_at = dict(df.with_columns)["_fabricops_created_at"][1]
+    assert created_at.endswith("+08:00")
+
 
 def test_write_pipeline_lineage_supports_many_to_many_relationships(monkeypatch):
     writes = []
@@ -282,7 +298,7 @@ def test_run_table_guardrails_collects_results_and_returns_summary_before_report
     calls = []
     catalogue_calls = []
 
-    def fake_profile(dataframe, *, table_name, exclude_columns=None, include_distributions=True, distribution_columns=None):
+    def fake_profile(dataframe, *, table_name, exclude_columns=None, include_distributions=True, distribution_columns=None, **kwargs):
         calls.append(("profile", table_name))
         return {"profile_for": table_name, "df": dataframe}
 

@@ -9,7 +9,11 @@ import pytest
 from fabricops_kit.config import (
     DEFAULT_DQ_RULE_SUGGESTION_PROMPT_TEMPLATE,
     DataAgreementConfig,
+    FrameworkConfig,
     PathConfig,
+    _current_audit_timestamp,
+    _get_active_metadata_tables,
+    _validate_audit_timezone,
     _validate_metadata_table_registration,
     setup_metadata_tables,
     setup_notebook,
@@ -136,6 +140,7 @@ def test_setup_metadata_tables_delegates_v1_metadata_setup(monkeypatch):
     monkeypatch.setattr("fabricops_kit.data_agreement._setup_data_agreement_tables", data_agreement_setup)
     monkeypatch.setattr("fabricops_kit.metadata._setup_notebook_registry_table", notebook_registry_setup)
     monkeypatch.setattr("fabricops_kit.governance_review._setup_governance_metadata_tables", governance_setup)
+    monkeypatch.setattr("fabricops_kit.config._get_active_metadata_tables", lambda config: ["METADATA_DATA_STEWARD"])
     monkeypatch.setattr(
         "fabricops_kit.config._validate_metadata_table_registration",
         lambda **kwargs: {"status": "ready", "missing_tables": [], "expected_tables": kwargs["expected_tables"]},
@@ -150,10 +155,24 @@ def test_setup_metadata_tables_delegates_v1_metadata_setup(monkeypatch):
     assert calls[0][1] == {"spark": spark, "config": config, "env": "dev", "require_active_steward": True}
     assert calls[1][1] == {"spark": spark, "config": config, "env": "dev"}
     assert calls[2][1] == {"spark": spark, "config": config, "env": "dev"}
+    assert result["active_metadata_tables"] == ["METADATA_DATA_STEWARD"]
     assert result["registration_validation"]["status"] == "ready"
 
 
-def test_metadata_registration_validation_uses_show_tables_against_metadata_lakehouse():
+def test_active_metadata_tables_are_source_driven_and_explain_optional_access_table():
+    tables = _get_active_metadata_tables(framework_config())
+
+    assert len(tables) == 11
+    assert "METADATA_DATA_STEWARD" in tables
+    assert "METADATA_DATA_AGREEMENT" in tables
+    assert "METADATA_DATA_AGREEMENT_EVIDENCE" in tables
+    assert "METADATA_NOTEBOOK_REGISTRY" in tables
+    assert "METADATA_DQ_RULES" in tables
+    assert "METADATA_GOVERNANCE_REVIEWS" in tables
+    assert "METADATA_DATA_ACCESS" not in tables
+
+
+def test_metadata_registration_validation_uses_show_tables_against_active_registry():
     class Row(dict):
         def asDict(self, recursive=True):  # noqa: N802 - mirrors Spark API
             return dict(self)
@@ -180,6 +199,8 @@ def test_metadata_registration_validation_uses_show_tables_against_metadata_lake
 
     assert result["status"] == "ready"
     assert result["missing_tables"] == []
+    assert result["expected_table_count"] == 2
+    assert result["optional_documented_tables"] == ["METADATA_DATA_ACCESS"]
     assert spark.statements == ["SHOW TABLES IN `lh_metadata_dev`"]
 
 
@@ -201,7 +222,32 @@ def test_metadata_registration_validation_warns_for_missing_registered_tables():
 
     assert result["status"] == "not_ready"
     assert result["missing_tables"] == ["METADATA_DATA_STEWARD"]
-    assert "Unidentified" in result["warnings"][0]
+    assert "SHOW TABLES" in result["warnings"][0]
+
+
+def test_audit_timezone_defaults_validates_and_fails_clearly():
+    assert _validate_audit_timezone(None) == "UTC"
+    assert _validate_audit_timezone("Asia/Singapore") == "Asia/Singapore"
+    with pytest.raises(ValueError, match='Invalid FABRICOPS_AUDIT_TIMEZONE: "Singapore"'):
+        _validate_audit_timezone("Singapore")
+
+
+def test_framework_config_and_current_audit_timestamp_use_configured_timezone():
+    config = FrameworkConfig(
+        **{**framework_config().__dict__, "audit_timezone": "Asia/Singapore"}
+    )
+
+    assert config.audit_timezone == "Asia/Singapore"
+    assert _current_audit_timestamp(config=config).endswith("+08:00")
+
+
+def test_env_config_template_exposes_audit_timezone_setting():
+    notebook = json.loads(Path("templates/notebooks/00_env_config.ipynb").read_text(encoding="utf-8"))
+    source = "\n".join("".join(cell.get("source", [])) for cell in notebook["cells"])
+
+    assert 'FABRICOPS_AUDIT_TIMEZONE = "UTC"' in source
+    assert "_validate_audit_timezone(FABRICOPS_AUDIT_TIMEZONE)" in source
+    assert "audit_timezone=FABRICOPS_AUDIT_TIMEZONE" in source
 
 
 def test_governance_review_imports_current_prompt_constants():
