@@ -790,17 +790,41 @@ def _render_call_tree(
     return ["```text", *lines, "```"]
 
 
-def _render_internal_helper_details(
+def _indent_markdown(lines: list[str], spaces: int = 4) -> list[str]:
+    """Indent Markdown lines so they render inside MkDocs Material blocks."""
+    prefix = " " * spaces
+    return [prefix if line == "" else f"{prefix}{line}" for line in lines]
+
+
+def _render_nested_helper_section(
     root_qn: str,
     helper_qns: list[str],
     node_by_qn: dict[str, dict[str, Any]],
     module_data: dict[str, dict[str, Any]],
 ) -> list[str]:
-    """Render embedded maintainer details for internal helpers used by a callable."""
+    """Render collapsed maintainer details for internal helpers used by a callable."""
     root_name = node_by_qn[root_qn]["callable_name"]
+    helper_count = len(helper_qns)
+    summary = (
+        f"These nested helpers support `{root_name}` by handling lower-level implementation steps; "
+        "expand this section only when maintaining or debugging the package internals."
+    )
+    helper_rows: list[list[str]] = []
     if not helper_qns:
-        return [PLACEHOLDER]
-    lines: list[str] = []
+        body_lines = [
+            f"No nested helper functions were detected for `{root_name}`.",
+            "",
+            '<div class="module-table-scroll reference-input-table">',
+            *render_html_table(["Helper", "Role", "Source"], [["—", "No nested helper functions detected.", "—"]], table_class="reference-function-table"),
+            "</div>",
+        ]
+        return [
+            '??? info "Nested helper functions: 0"',
+            "",
+            *_indent_markdown(body_lines),
+        ]
+
+    source_lines: list[str] = []
     for helper_qn in helper_qns:
         helper_node = node_by_qn[helper_qn]
         helper_name = helper_node["callable_name"]
@@ -812,32 +836,36 @@ def _render_internal_helper_details(
         purpose = info.get("functions", {}).get(helper_name) or "Internal helper used by the package implementation."
         source_location = info.get("source_locations", {}).get(helper_name, {})
         source_url = github_source_url(source_path, source_location.get("start_line"), source_location.get("end_line"))
-        lines.extend([
-            f"### `{signature}`",
+        helper_rows.append([
+            f"<code>{html_escape(helper_name)}</code>",
+            html_escape(purpose),
+            f'<a class="reference-source-link" href="{source_url}">{html_escape(source_path)}</a>',
+        ])
+        source_lines.extend([
+            f"**`{signature}`**",
             "",
-            "**What it does:**",
-            "",
-            purpose,
-            "",
-            "**Source:**",
-            "",
-            f"- `{source_path}`",
-            f'- <a class="reference-source-link" href="{source_url}">View `{helper_name}` on GitHub</a>',
-            "",
-            "**Code:**",
+            f"Source: [`{source_path}`]({source_url})",
             "",
             _code_block(source_block) if source_block else PLACEHOLDER,
             "",
-            "**Used here because:**",
-            "",
-            f"`{root_name}` reaches this helper in its implementation path.",
-            "",
-            "**Modify this if:**",
-            "",
-            f"You want to change the implementation behavior summarized above for `{root_name}` or another caller that reaches `{helper_name}`.",
-            "",
         ])
-    return lines
+
+    body_lines = [
+        summary,
+        "",
+        '<div class="module-table-scroll reference-input-table">',
+        *render_html_table(["Helper", "Role", "Source"], helper_rows, table_class="reference-function-table"),
+        "</div>",
+        "",
+        '??? example "View helper source code"',
+        "",
+        *_indent_markdown(source_lines),
+    ]
+    return [
+        f'??? info "Nested helper functions: {helper_count}"',
+        "",
+        *_indent_markdown(body_lines),
+    ]
 
 def function_chip_wrap(chips: list[str]) -> str:
     """Return a mobile-friendly chip wrapper for a generated docs table cell."""
@@ -1706,11 +1734,14 @@ def main() -> None:
                 "### Call flow",
                 "",
                 *_render_call_tree(qn, calls_by_qn, node_by_qn),
-                "",
-                "### Internal helpers used by this callable",
-                "",
-                *_render_internal_helper_details(qn, helper_qns, node_by_qn, module_data),
             ]
+            public_source_lines = [
+                f"- Source file path: `{source_path}`",
+                f'- <a class="reference-source-link" href="{source_ref}">View {short_name} on GitHub</a>',
+                "",
+                _code_block(source_block) if source_block else PLACEHOLDER,
+            ]
+            nested_helper_lines = _render_nested_helper_section(qn, helper_qns, node_by_qn, module_data)
             human_use_when = _documented_text(metadata.get("use_when"), metadata.get("purpose"), purpose)
             human_use_bullets = _bullet_lines("\n".join(metadata["when_to_use"])) if metadata.get("when_to_use") else _bullet_lines(human_use_when)
             human_do_not_use = _documented_text(metadata.get("do_not_use_when"))
@@ -1742,6 +1773,7 @@ def main() -> None:
                 "### Internal implementation helpers",
                 "",
                 *(implementation_lines if implementation_lines else [PLACEHOLDER]),
+
             ]
             machine_metadata_lines = [
                 "These generated fields are for automation, AI agents, maintainers, and doc tooling. Skip this block when reading the docs normally.",
@@ -1775,57 +1807,63 @@ def main() -> None:
                 "",
                 purpose,
                 "",
-                "## What this is for and when to use it",
+                "## Purpose",
                 "",
                 _documented_text(metadata.get("purpose"), purpose),
                 "",
+                "## At a glance",
+                "",
+                "**Use when:**",
+                "",
                 *human_use_bullets,
                 "",
-                "## When not to use it",
+                "**Do not use when:**",
                 "",
                 *_bullet_lines(human_do_not_use),
                 "",
-                "## Example",
+                "**Example:**",
                 "",
                 _code_block(_documented_text(metadata.get("preferred_example"))),
                 "",
-                "## Inputs",
+                "**Errors:**",
+                "",
+                rendered_raises,
+                "",
+                "**Side effects:**",
+                "",
+                rendered_side_effects,
+                "",
+                "## Parameters",
                 "",
                 '<div class="module-table-scroll reference-input-table">',
                 *input_table,
                 "</div>",
                 "",
-                "## Output",
+                "## Returns",
                 "",
                 rendered_returns,
                 "",
-                "## Errors and side effects",
+                "## Used by",
                 "",
-                f"**Errors:** {rendered_raises}",
+                *(_fmt_links(used_by) if used_by else [PLACEHOLDER]),
                 "",
-                f"**Side effects:** {rendered_side_effects}",
+                "## Calls",
                 "",
-                "## Related functions",
+                *(_fmt_links(deps) if deps else [PLACEHOLDER]),
                 "",
             ]
-            lines.extend(related_lines if related_lines else [PLACEHOLDER])
-            if implementation_lines:
-                lines.extend([
-                    "",
-                    *markdown_details("Implementation details", implementation_lines, class_name="reference-implementation-details"),
-                ])
             lines.extend([
+                "## Implementation details",
                 "",
-                "## Source",
+                *implementation_lines,
                 "",
-                f"- Source file path: `{source_path}`",
-                f'- <a class="reference-source-link" href="{source_ref}">View {short_name} on GitHub</a>',
+                "## Public callable source code",
                 "",
-                *markdown_details(
-                    "Show source code",
-                    [_code_block(source_block) if source_block else PLACEHOLDER],
-                    class_name="reference-source-details",
-                ),
+                *public_source_lines,
+                "",
+                "## Nested helper functions",
+                "",
+                *nested_helper_lines,
                 "",
                 *markdown_details(
                     "AI / machine-readable metadata — skip this if you are reading the docs normally",

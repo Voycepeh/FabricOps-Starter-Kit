@@ -2,23 +2,36 @@
 
 Prepare source or target table configs for 02_pipeline.
 
-## What this is for and when to use it
+## Purpose
 
 Prepare source or target table configs for 02_pipeline.
 
+## At a glance
+
+**Use when:**
+
 - Use after SOURCE_TABLES or TARGET_TABLES and their defaults are defined to derive standard config fields or add target audit columns.
 
-## When not to use it
+**Do not use when:**
 
 - Do not use for ad hoc reads or writes outside the pipeline table-config pattern.
 
-## Example
+**Example:**
 
 ```python
 SOURCE_TABLES, SOURCE_CONFIG_BY_KEY = prepare_pipeline_table_configs(SOURCE_TABLES, DEFAULT_SOURCE_GUARDRAILS, table_role="source")
 ```
 
-## Inputs
+**Errors:**
+
+ValueError
+    If ``table_role`` is not ``"source"`` or ``"target"``.
+
+**Side effects:**
+
+Source role validates pre-loaded DataFrames. Target role adds FabricOps audit columns to target DataFrames.
+
+## Parameters
 
 <div class="module-table-scroll reference-input-table">
 <table class="reference-function-table">
@@ -59,24 +72,19 @@ SOURCE_TABLES, SOURCE_CONFIG_BY_KEY = prepare_pipeline_table_configs(SOURCE_TABL
 </table>
 </div>
 
-## Output
+## Returns
 
 Enriched table configs and a dictionary keyed by table key.
 
-## Errors and side effects
+## Used by
 
-**Errors:** ValueError
-    If ``table_role`` is not ``"source"`` or ``"target"``.
+Not documented yet
 
-**Side effects:** Source role validates pre-loaded DataFrames. Target role adds FabricOps audit columns to target DataFrames.
+## Calls
 
-## Related functions
+- `fabricops_kit.pipeline._add_audit_columns`
 
-- <a href="../run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
-- <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a>
-
-<details class="reference-implementation-details">
-<summary>Implementation details</summary>
+## Implementation details
 
 ### Call flow
 
@@ -88,170 +96,10 @@ prepare_pipeline_table_configs(...)
             └── _validate_audit_timezone(...)
 ```
 
-### Internal helpers used by this callable
-
-### `def _add_audit_columns(dataframe: Any, *, run_id: str, pipeline_name: str, config: Any=None)`
-
-**What it does:**
-
-Return a DataFrame with standard FabricOps target audit columns.
-
-**Source:**
-
-- `src/fabricops_kit/pipeline.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/pipeline.py#L113-L123">View `_add_audit_columns` on GitHub</a>
-
-**Code:**
-
-```python
-def _add_audit_columns(dataframe: Any, *, run_id: str, pipeline_name: str, config: Any = None):
-    """Return a DataFrame with standard FabricOps target audit columns."""
-    from pyspark.sql import functions as F
-
-    audit_created_at = _current_audit_timestamp(config=config)
-    return (
-        dataframe
-        .withColumn("_fabricops_run_id", F.lit(run_id))
-        .withColumn("_fabricops_pipeline_name", F.lit(pipeline_name))
-        .withColumn("_fabricops_created_at", F.lit(audit_created_at))
-    )
-```
-
-**Used here because:**
-
-`prepare_pipeline_table_configs` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `prepare_pipeline_table_configs` or another caller that reaches `_add_audit_columns`.
-
-### `def _current_audit_timestamp(config: Any=None, timezone_name: str | None=None, *, drop_microseconds: bool=True) -> str`
-
-**What it does:**
-
-Return the current audit timestamp in the configured audit timezone.
-
-**Source:**
-
-- `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L69-L75">View `_current_audit_timestamp` on GitHub</a>
-
-**Code:**
-
-```python
-def _current_audit_timestamp(config: Any = None, timezone_name: str | None = None, *, drop_microseconds: bool = True) -> str:
-    """Return the current audit timestamp in the configured audit timezone."""
-    tz_name = _get_audit_timezone(config, timezone_name)
-    value = datetime.now(ZoneInfo(tz_name))
-    if drop_microseconds:
-        value = value.replace(microsecond=0)
-    return value.isoformat()
-```
-
-**Used here because:**
-
-`prepare_pipeline_table_configs` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `prepare_pipeline_table_configs` or another caller that reaches `_current_audit_timestamp`.
-
-### `def _get_audit_timezone(config: Any=None, timezone_name: str | None=None) -> str`
-
-**What it does:**
-
-Resolve the configured FabricOps audit timezone, defaulting to UTC.
-
-**Source:**
-
-- `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L61-L66">View `_get_audit_timezone` on GitHub</a>
-
-**Code:**
-
-```python
-def _get_audit_timezone(config: Any = None, timezone_name: str | None = None) -> str:
-    """Resolve the configured FabricOps audit timezone, defaulting to UTC."""
-    if timezone_name is not None:
-        return _validate_audit_timezone(timezone_name)
-    value = getattr(config, "audit_timezone", None) if config is not None else None
-    return _validate_audit_timezone(value)
-```
-
-**Used here because:**
-
-`prepare_pipeline_table_configs` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `prepare_pipeline_table_configs` or another caller that reaches `_get_audit_timezone`.
-
-### `def _validate_audit_timezone(timezone_name: str | None) -> str`
-
-**What it does:**
-
-Return a valid IANA audit timezone name.
-
-**Source:**
-
-- `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L27-L58">View `_validate_audit_timezone` on GitHub</a>
-
-**Code:**
-
-```python
-def _validate_audit_timezone(timezone_name: str | None) -> str:
-    """Return a valid IANA audit timezone name.
-
-    Parameters
-    ----------
-    timezone_name : str or None
-        IANA timezone name to validate. Blank values default to ``"UTC"``.
-
-    Returns
-    -------
-    str
-        Validated timezone name.
-
-    Raises
-    ------
-    ValueError
-        If a non-blank value is not a valid IANA timezone name.
-    """
-    value = str(timezone_name or DEFAULT_AUDIT_TIMEZONE).strip() or DEFAULT_AUDIT_TIMEZONE
-    if value != DEFAULT_AUDIT_TIMEZONE and "/" not in value:
-        raise ValueError(
-            f'Invalid FABRICOPS_AUDIT_TIMEZONE: "{value}". '
-            'Use a valid IANA timezone name such as "Asia/Singapore" or keep the default "UTC".'
-        )
-    try:
-        ZoneInfo(value)
-    except ZoneInfoNotFoundError as exc:
-        raise ValueError(
-            f'Invalid FABRICOPS_AUDIT_TIMEZONE: "{value}". '
-            'Use a valid IANA timezone name such as "Asia/Singapore" or keep the default "UTC".'
-        ) from exc
-    return value
-```
-
-**Used here because:**
-
-`prepare_pipeline_table_configs` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `prepare_pipeline_table_configs` or another caller that reaches `_validate_audit_timezone`.
-
-
-</details>
-
-## Source
+## Public callable source code
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/pipeline.py#L126-L214">View prepare_pipeline_table_configs on GitHub</a>
-
-<details class="reference-source-details">
-<summary>Show source code</summary>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/427905557f281c2de218c8d2213dc8798864c090/src/fabricops_kit/pipeline.py#L126-L214">View prepare_pipeline_table_configs on GitHub</a>
 
 ```python
 def prepare_pipeline_table_configs(
@@ -345,7 +193,132 @@ def prepare_pipeline_table_configs(
     return enriched_tables, {table_config["key"]: table_config for table_config in enriched_tables}
 ```
 
-</details>
+## Nested helper functions
+
+??? info "Nested helper functions: 4"
+
+    These nested helpers support `prepare_pipeline_table_configs` by handling lower-level implementation steps; expand this section only when maintaining or debugging the package internals.
+    
+    <div class="module-table-scroll reference-input-table">
+    <table class="reference-function-table">
+      <thead>
+        <tr>
+          <th>Helper</th>
+          <th>Role</th>
+          <th>Source</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td data-label="Helper"><code>_add_audit_columns</code></td>
+          <td data-label="Role">Return a DataFrame with standard FabricOps target audit columns.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/427905557f281c2de218c8d2213dc8798864c090/src/fabricops_kit/pipeline.py#L113-L123">src/fabricops_kit/pipeline.py</a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_current_audit_timestamp</code></td>
+          <td data-label="Role">Return the current audit timestamp in the configured audit timezone.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/427905557f281c2de218c8d2213dc8798864c090/src/fabricops_kit/config.py#L69-L75">src/fabricops_kit/config.py</a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_get_audit_timezone</code></td>
+          <td data-label="Role">Resolve the configured FabricOps audit timezone, defaulting to UTC.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/427905557f281c2de218c8d2213dc8798864c090/src/fabricops_kit/config.py#L61-L66">src/fabricops_kit/config.py</a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_validate_audit_timezone</code></td>
+          <td data-label="Role">Return a valid IANA audit timezone name.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/427905557f281c2de218c8d2213dc8798864c090/src/fabricops_kit/config.py#L27-L58">src/fabricops_kit/config.py</a></td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+    
+    ??? example "View helper source code"
+    
+        **`def _add_audit_columns(dataframe: Any, *, run_id: str, pipeline_name: str, config: Any=None)`**
+        
+        Source: [`src/fabricops_kit/pipeline.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/427905557f281c2de218c8d2213dc8798864c090/src/fabricops_kit/pipeline.py#L113-L123)
+        
+        ```python
+def _add_audit_columns(dataframe: Any, *, run_id: str, pipeline_name: str, config: Any = None):
+    """Return a DataFrame with standard FabricOps target audit columns."""
+    from pyspark.sql import functions as F
+
+    audit_created_at = _current_audit_timestamp(config=config)
+    return (
+        dataframe
+        .withColumn("_fabricops_run_id", F.lit(run_id))
+        .withColumn("_fabricops_pipeline_name", F.lit(pipeline_name))
+        .withColumn("_fabricops_created_at", F.lit(audit_created_at))
+    )
+```
+        
+        **`def _current_audit_timestamp(config: Any=None, timezone_name: str | None=None, *, drop_microseconds: bool=True) -> str`**
+        
+        Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/427905557f281c2de218c8d2213dc8798864c090/src/fabricops_kit/config.py#L69-L75)
+        
+        ```python
+def _current_audit_timestamp(config: Any = None, timezone_name: str | None = None, *, drop_microseconds: bool = True) -> str:
+    """Return the current audit timestamp in the configured audit timezone."""
+    tz_name = _get_audit_timezone(config, timezone_name)
+    value = datetime.now(ZoneInfo(tz_name))
+    if drop_microseconds:
+        value = value.replace(microsecond=0)
+    return value.isoformat()
+```
+        
+        **`def _get_audit_timezone(config: Any=None, timezone_name: str | None=None) -> str`**
+        
+        Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/427905557f281c2de218c8d2213dc8798864c090/src/fabricops_kit/config.py#L61-L66)
+        
+        ```python
+def _get_audit_timezone(config: Any = None, timezone_name: str | None = None) -> str:
+    """Resolve the configured FabricOps audit timezone, defaulting to UTC."""
+    if timezone_name is not None:
+        return _validate_audit_timezone(timezone_name)
+    value = getattr(config, "audit_timezone", None) if config is not None else None
+    return _validate_audit_timezone(value)
+```
+        
+        **`def _validate_audit_timezone(timezone_name: str | None) -> str`**
+        
+        Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/427905557f281c2de218c8d2213dc8798864c090/src/fabricops_kit/config.py#L27-L58)
+        
+        ```python
+def _validate_audit_timezone(timezone_name: str | None) -> str:
+    """Return a valid IANA audit timezone name.
+
+    Parameters
+    ----------
+    timezone_name : str or None
+        IANA timezone name to validate. Blank values default to ``"UTC"``.
+
+    Returns
+    -------
+    str
+        Validated timezone name.
+
+    Raises
+    ------
+    ValueError
+        If a non-blank value is not a valid IANA timezone name.
+    """
+    value = str(timezone_name or DEFAULT_AUDIT_TIMEZONE).strip() or DEFAULT_AUDIT_TIMEZONE
+    if value != DEFAULT_AUDIT_TIMEZONE and "/" not in value:
+        raise ValueError(
+            f'Invalid FABRICOPS_AUDIT_TIMEZONE: "{value}". '
+            'Use a valid IANA timezone name such as "Asia/Singapore" or keep the default "UTC".'
+        )
+    try:
+        ZoneInfo(value)
+    except ZoneInfoNotFoundError as exc:
+        raise ValueError(
+            f'Invalid FABRICOPS_AUDIT_TIMEZONE: "{value}". '
+            'Use a valid IANA timezone name such as "Asia/Singapore" or keep the default "UTC".'
+        ) from exc
+    return value
+```
+        
 
 <details class="reference-metadata-details">
 <summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
@@ -385,7 +358,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/pipeline.py#L126-L214">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/pipeline.py#L126-L214</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/427905557f281c2de218c8d2213dc8798864c090/src/fabricops_kit/pipeline.py#L126-L214">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/427905557f281c2de218c8d2213dc8798864c090/src/fabricops_kit/pipeline.py#L126-L214</a>
 - Start line: `126`
 - End line: `214`
 - Signature:
@@ -412,160 +385,5 @@ prepare_pipeline_table_configs(...)
         └── _get_audit_timezone(...)
             └── _validate_audit_timezone(...)
 ```
-
-### Internal helpers used by this callable
-
-### `def _add_audit_columns(dataframe: Any, *, run_id: str, pipeline_name: str, config: Any=None)`
-
-**What it does:**
-
-Return a DataFrame with standard FabricOps target audit columns.
-
-**Source:**
-
-- `src/fabricops_kit/pipeline.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/pipeline.py#L113-L123">View `_add_audit_columns` on GitHub</a>
-
-**Code:**
-
-```python
-def _add_audit_columns(dataframe: Any, *, run_id: str, pipeline_name: str, config: Any = None):
-    """Return a DataFrame with standard FabricOps target audit columns."""
-    from pyspark.sql import functions as F
-
-    audit_created_at = _current_audit_timestamp(config=config)
-    return (
-        dataframe
-        .withColumn("_fabricops_run_id", F.lit(run_id))
-        .withColumn("_fabricops_pipeline_name", F.lit(pipeline_name))
-        .withColumn("_fabricops_created_at", F.lit(audit_created_at))
-    )
-```
-
-**Used here because:**
-
-`prepare_pipeline_table_configs` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `prepare_pipeline_table_configs` or another caller that reaches `_add_audit_columns`.
-
-### `def _current_audit_timestamp(config: Any=None, timezone_name: str | None=None, *, drop_microseconds: bool=True) -> str`
-
-**What it does:**
-
-Return the current audit timestamp in the configured audit timezone.
-
-**Source:**
-
-- `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L69-L75">View `_current_audit_timestamp` on GitHub</a>
-
-**Code:**
-
-```python
-def _current_audit_timestamp(config: Any = None, timezone_name: str | None = None, *, drop_microseconds: bool = True) -> str:
-    """Return the current audit timestamp in the configured audit timezone."""
-    tz_name = _get_audit_timezone(config, timezone_name)
-    value = datetime.now(ZoneInfo(tz_name))
-    if drop_microseconds:
-        value = value.replace(microsecond=0)
-    return value.isoformat()
-```
-
-**Used here because:**
-
-`prepare_pipeline_table_configs` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `prepare_pipeline_table_configs` or another caller that reaches `_current_audit_timestamp`.
-
-### `def _get_audit_timezone(config: Any=None, timezone_name: str | None=None) -> str`
-
-**What it does:**
-
-Resolve the configured FabricOps audit timezone, defaulting to UTC.
-
-**Source:**
-
-- `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L61-L66">View `_get_audit_timezone` on GitHub</a>
-
-**Code:**
-
-```python
-def _get_audit_timezone(config: Any = None, timezone_name: str | None = None) -> str:
-    """Resolve the configured FabricOps audit timezone, defaulting to UTC."""
-    if timezone_name is not None:
-        return _validate_audit_timezone(timezone_name)
-    value = getattr(config, "audit_timezone", None) if config is not None else None
-    return _validate_audit_timezone(value)
-```
-
-**Used here because:**
-
-`prepare_pipeline_table_configs` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `prepare_pipeline_table_configs` or another caller that reaches `_get_audit_timezone`.
-
-### `def _validate_audit_timezone(timezone_name: str | None) -> str`
-
-**What it does:**
-
-Return a valid IANA audit timezone name.
-
-**Source:**
-
-- `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L27-L58">View `_validate_audit_timezone` on GitHub</a>
-
-**Code:**
-
-```python
-def _validate_audit_timezone(timezone_name: str | None) -> str:
-    """Return a valid IANA audit timezone name.
-
-    Parameters
-    ----------
-    timezone_name : str or None
-        IANA timezone name to validate. Blank values default to ``"UTC"``.
-
-    Returns
-    -------
-    str
-        Validated timezone name.
-
-    Raises
-    ------
-    ValueError
-        If a non-blank value is not a valid IANA timezone name.
-    """
-    value = str(timezone_name or DEFAULT_AUDIT_TIMEZONE).strip() or DEFAULT_AUDIT_TIMEZONE
-    if value != DEFAULT_AUDIT_TIMEZONE and "/" not in value:
-        raise ValueError(
-            f'Invalid FABRICOPS_AUDIT_TIMEZONE: "{value}". '
-            'Use a valid IANA timezone name such as "Asia/Singapore" or keep the default "UTC".'
-        )
-    try:
-        ZoneInfo(value)
-    except ZoneInfoNotFoundError as exc:
-        raise ValueError(
-            f'Invalid FABRICOPS_AUDIT_TIMEZONE: "{value}". '
-            'Use a valid IANA timezone name such as "Asia/Singapore" or keep the default "UTC".'
-        ) from exc
-    return value
-```
-
-**Used here because:**
-
-`prepare_pipeline_table_configs` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `prepare_pipeline_table_configs` or another caller that reaches `_validate_audit_timezone`.
-
 
 </details>
