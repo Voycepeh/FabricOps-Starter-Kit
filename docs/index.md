@@ -16,7 +16,7 @@ Use it when you want Fabric notebooks to move data from source to target while k
 </div>
 
 <div class="fabricops-kpi-card" markdown="1">
-  <div class="fabricops-kpi-number">30</div>
+  <div class="fabricops-kpi-number">33</div>
   <div class="fabricops-kpi-label">reusable callables</div>
   <p>Notebook-friendly helper functions keep repeated setup, IO, profiling, guardrails, lineage, and review steps consistent.</p>
   <a href="reference/">View function reference</a>
