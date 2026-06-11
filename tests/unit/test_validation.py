@@ -229,6 +229,22 @@ def test_enforce_profile_behavior_skip_returns_skipped_and_can_continue(monkeypa
     assert result["stability_check_enabled"] is False
 
 
+
+def test_profile_row_count_falls_back_to_first_normalized_column_row_count():
+    from fabricops_kit.guardrails import _profile_row_count
+
+    result = _profile_row_count({"columns": [{"column_name": "business_date", "row_count": "42"}]})
+
+    assert result == 42
+
+
+def test_profile_row_count_returns_none_for_invalid_row_count():
+    from fabricops_kit.guardrails import _profile_row_count
+
+    result = _profile_row_count({"row_count": "not-a-number", "columns": [{"row_count": "also-invalid"}]})
+
+    assert result is None
+
 def test_enforce_freshness_passes_when_latest_value_within_lag():
     from fabricops_kit.guardrails import enforce_freshness
 

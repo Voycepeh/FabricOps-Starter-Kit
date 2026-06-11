@@ -292,10 +292,16 @@ def _is_guardrail_excluded_column(column: str, exclude_columns: set[str]) -> boo
 
 
 def _profile_row_count(profile) -> int | None:
-    payload = _normalize_profile(profile) or {}
-    value = payload.get("row_count")
+    normalized = _normalize_profile(profile) or {}
+    value = normalized.get("row_count")
+    if value in (None, ""):
+        columns = normalized.get("columns") or []
+        if columns:
+            first_column = columns[0] or {}
+            if isinstance(first_column, dict):
+                value = first_column.get("row_count")
     try:
-        return int(value) if value is not None else None
+        return int(value) if value not in (None, "") else None
     except (TypeError, ValueError):
         return None
 
