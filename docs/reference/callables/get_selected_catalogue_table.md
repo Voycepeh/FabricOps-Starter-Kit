@@ -2,23 +2,35 @@
 
 Return the table selected by widget_select_catalogue_table.
 
-## What this is for and when to use it
+## Purpose
 
 Return the table selected by widget_select_catalogue_table.
 
+## At a glance
+
+**Use when:**
+
 - Return the table selected by widget_select_catalogue_table.
 
-## When not to use it
+**Do not use when:**
 
 - Not documented yet
 
-## Example
+**Example:**
 
 ```python
 Not documented yet
 ```
 
-## Inputs
+**Errors:**
+
+Not documented yet
+
+**Side effects:**
+
+Not documented yet
+
+## Parameters
 
 <div class="module-table-scroll reference-input-table">
 <table class="reference-function-table">
@@ -39,23 +51,20 @@ Not documented yet
 </table>
 </div>
 
-## Output
+## Returns
 
 dict[str, Any]
     Stable table identity used by ``load_catalogue_profile_rows``.
 
-## Errors and side effects
-
-**Errors:** Not documented yet
-
-**Side effects:** Not documented yet
-
-## Related functions
+## Used by
 
 Not documented yet
 
-<details class="reference-implementation-details">
-<summary>Implementation details</summary>
+## Calls
+
+Not documented yet
+
+## Implementation details
 
 ### Call flow
 
@@ -63,19 +72,10 @@ Not documented yet
 get_selected_catalogue_table(...)
 ```
 
-### Internal helpers used by this callable
-
-Not documented yet
-
-</details>
-
-## Source
+## Public callable source code
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L310-L334">View get_selected_catalogue_table on GitHub</a>
-
-<details class="reference-source-details">
-<summary>Show source code</summary>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/governance_review.py#L310-L334">View get_selected_catalogue_table on GitHub</a>
 
 ```python
 def get_selected_catalogue_table(table_selector: Any | None = None) -> dict[str, Any]:
@@ -105,7 +105,30 @@ def get_selected_catalogue_table(table_selector: Any | None = None) -> dict[str,
     raise ValueError("No catalogue table has been selected. Run widget_select_catalogue_table first.")
 ```
 
-</details>
+## Maintainer internals
+
+??? info "Nested helper functions: 0"
+
+    No nested helper functions were detected for `get_selected_catalogue_table`.
+
+    <div class="module-table-scroll reference-input-table">
+    <table class="reference-function-table">
+      <thead>
+        <tr>
+          <th>Helper</th>
+          <th>Role</th>
+          <th>Source</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td data-label="Helper">—</td>
+          <td data-label="Role">No nested helper functions detected.</td>
+          <td data-label="Source">—</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
 
 <details class="reference-metadata-details">
 <summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
@@ -147,7 +170,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L310-L334">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L310-L334</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/governance_review.py#L310-L334">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/governance_review.py#L310-L334</a>
 - Start line: `310`
 - End line: `334`
 - Signature:
@@ -169,9 +192,5 @@ Not documented yet
 ```text
 get_selected_catalogue_table(...)
 ```
-
-### Internal helpers used by this callable
-
-Not documented yet
 
 </details>

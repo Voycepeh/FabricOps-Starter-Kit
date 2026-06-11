@@ -2,23 +2,35 @@
 
 Run profiling, schema, freshness, profile behavior, DQ, and catalogue guardrails for table configs.
 
-## What this is for and when to use it
+## Purpose
 
 Run profiling, schema, freshness, profile behavior, DQ, and catalogue guardrails for table configs.
 
+## At a glance
+
+**Use when:**
+
 - Use in 02_pipeline to run source guardrails before transformation and target guardrails before writes while keeping per-table results separated.
 
-## When not to use it
+**Do not use when:**
 
 - Do not use as a replacement for individual helper calls when debugging one specific guardrail interactively.
 
-## Example
+**Example:**
 
 ```python
 source_guardrail_results = run_table_guardrails(SOURCE_TABLES, config=CONFIG, env=ENV_NAME, run_id=RUN_ID, spark_session=spark, stop_on_failure=True)
 ```
 
-## Inputs
+**Errors:**
+
+Not documented yet
+
+**Side effects:**
+
+Profiles DataFrames, reads stability/DQ metadata through configured metadata routing, writes catalogue evidence, and may update table config DataFrames with DQ annotations.
+
+## Parameters
 
 <div class="module-table-scroll reference-input-table">
 <table class="reference-function-table">
@@ -89,23 +101,29 @@ source_guardrail_results = run_table_guardrails(SOURCE_TABLES, config=CONFIG, en
 </table>
 </div>
 
-## Output
+## Returns
 
 Guardrail result bundle with profiles, schema results, freshness results, stability results, DQ results, catalogue status, evidence definitions, summary, can_continue, and failed_tables.
 
-## Errors and side effects
+## Used by
 
-**Errors:** Not documented yet
+Not documented yet
 
-**Side effects:** Profiles DataFrames, reads stability/DQ metadata through configured metadata routing, writes catalogue evidence, and may update table config DataFrames with DQ annotations.
+## Calls
 
-## Related functions
-
-- <a href="../prepare_pipeline_table_configs/"><code>fabricops_kit.pipeline.prepare_pipeline_table_configs</code></a>
+- <a href="../profile_dataframe/"><code>fabricops_kit.data_profiling.profile_dataframe</code></a>
+- <a href="../enforce_dq_rules/"><code>fabricops_kit.governance_review.enforce_dq_rules</code></a>
+- <a href="../enforce_freshness/"><code>fabricops_kit.guardrails.enforce_freshness</code></a>
+- <a href="../enforce_profile_behavior/"><code>fabricops_kit.guardrails.enforce_profile_behavior</code></a>
+- <a href="../stop_if_failed/"><code>fabricops_kit.guardrails.stop_if_failed</code></a>
+- <a href="../validate_schema/"><code>fabricops_kit.guardrails.validate_schema</code></a>
+- `fabricops_kit.pipeline._build_guardrail_evidence_definitions`
+- `fabricops_kit.pipeline._guardrail_can_continue`
+- `fabricops_kit.pipeline._table_key`
+- `fabricops_kit.pipeline._table_name`
 - <a href="../write_catalogue_evidence/"><code>fabricops_kit.pipeline.write_catalogue_evidence</code></a>
 
-<details class="reference-implementation-details">
-<summary>Implementation details</summary>
+## Implementation details
 
 ### Call flow
 
@@ -263,150 +281,10 @@ run_table_guardrails(...)
         └── _uses_registered_metadata_table(...)
 ```
 
-### Internal helpers used by this callable
-
-### `def _build_guardrail_evidence_definitions(table_configs: list[Mapping[str, Any]]) -> dict[str, dict[str, Any]]`
-
-**What it does:**
-
-Build catalogue evidence definitions for pipeline table guardrails.
-
-**Source:**
-
-- `src/fabricops_kit/pipeline.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/pipeline.py#L228-L257">View `_build_guardrail_evidence_definitions` on GitHub</a>
-
-**Code:**
-
-```python
-def _build_guardrail_evidence_definitions(table_configs: list[Mapping[str, Any]]) -> dict[str, dict[str, Any]]:
-    """Build catalogue evidence definitions for pipeline table guardrails.
-
-    Parameters
-    ----------
-    table_configs : list of mapping
-        Source or target table configuration dictionaries. Each item must
-        include ``key`` and normally includes ``table_name``, ``stage``, and
-        optional target write metadata. DataFrame values are intentionally
-        omitted from the returned definitions.
-
-    Returns
-    -------
-    dict[str, dict[str, Any]]
-        Definitions keyed by table key, suitable for
-        :func:`write_catalogue_evidence`. Target definitions include resolved
-        write-layer, kind, and mode fields when the stage is ``target``.
-    """
-    definitions: dict[str, dict[str, Any]] = {}
-    for table_config in table_configs:
-        table_key = _table_key(table_config)
-        definition = {key: value for key, value in table_config.items() if key != "df"}
-        definition["table_name"] = _table_name(table_config)
-        definition["stage"] = table_config.get("stage", "target")
-        if definition["stage"] == "target":
-            definition["layer"] = table_config.get("target_layer", "unified")
-            definition["kind"] = table_config.get("target_kind", "lakehouse")
-            definition["mode"] = table_config.get("write_mode", "overwrite")
-        definitions[table_key] = definition
-    return definitions
-```
-
-**Used here because:**
-
-`run_table_guardrails` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `run_table_guardrails` or another caller that reaches `_build_guardrail_evidence_definitions`.
-
-### `def _table_key(table_config: Mapping[str, Any]) -> str`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/pipeline.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/pipeline.py#L216-L217">View `_table_key` on GitHub</a>
-
-**Code:**
-
-```python
-def _table_key(table_config: Mapping[str, Any]) -> str:
-    return str(table_config["key"])
-```
-
-**Used here because:**
-
-`run_table_guardrails` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `run_table_guardrails` or another caller that reaches `_table_key`.
-
-### `def _table_name(table_config: Mapping[str, Any]) -> str`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/pipeline.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/pipeline.py#L220-L221">View `_table_name` on GitHub</a>
-
-**Code:**
-
-```python
-def _table_name(table_config: Mapping[str, Any]) -> str:
-    return str(table_config.get("table_name") or table_config.get("target_name") or table_config["key"])
-```
-
-**Used here because:**
-
-`run_table_guardrails` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `run_table_guardrails` or another caller that reaches `_table_name`.
-
-### `def _guardrail_can_continue(result: Mapping[str, Any] | None) -> bool`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/pipeline.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/pipeline.py#L224-L225">View `_guardrail_can_continue` on GitHub</a>
-
-**Code:**
-
-```python
-def _guardrail_can_continue(result: Mapping[str, Any] | None) -> bool:
-    return bool((result or {}).get("can_continue", True))
-```
-
-**Used here because:**
-
-`run_table_guardrails` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `run_table_guardrails` or another caller that reaches `_guardrail_can_continue`.
-
-
-</details>
-
-## Source
+## Public callable source code
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/pipeline.py#L260-L448">View run_table_guardrails on GitHub</a>
-
-<details class="reference-source-details">
-<summary>Show source code</summary>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/pipeline.py#L260-L448">View run_table_guardrails on GitHub</a>
 
 ```python
 def run_table_guardrails(
@@ -600,7 +478,112 @@ def run_table_guardrails(
     return result
 ```
 
-</details>
+## Maintainer internals
+
+??? info "Nested helper functions: 4"
+
+    These nested helpers support `run_table_guardrails` by handling lower-level implementation steps; expand this section only when maintaining or debugging the package internals.
+
+    <div class="module-table-scroll reference-input-table">
+    <table class="reference-function-table">
+      <thead>
+        <tr>
+          <th>Helper</th>
+          <th>Role</th>
+          <th>Source</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td data-label="Helper"><code>_build_guardrail_evidence_definitions</code></td>
+          <td data-label="Role">Build catalogue evidence definitions for pipeline table guardrails.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/pipeline.py#L228-L257">src/fabricops_kit/pipeline.py</a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_table_key</code></td>
+          <td data-label="Role">Internal helper used by the package implementation.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/pipeline.py#L216-L217">src/fabricops_kit/pipeline.py</a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_table_name</code></td>
+          <td data-label="Role">Internal helper used by the package implementation.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/pipeline.py#L220-L221">src/fabricops_kit/pipeline.py</a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_guardrail_can_continue</code></td>
+          <td data-label="Role">Internal helper used by the package implementation.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/pipeline.py#L224-L225">src/fabricops_kit/pipeline.py</a></td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+
+    ??? example "View helper source code"
+
+        **`def _build_guardrail_evidence_definitions(table_configs: list[Mapping[str, Any]]) -> dict[str, dict[str, Any]]`**
+
+        Source: [`src/fabricops_kit/pipeline.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/pipeline.py#L228-L257)
+
+        ```python
+        def _build_guardrail_evidence_definitions(table_configs: list[Mapping[str, Any]]) -> dict[str, dict[str, Any]]:
+            """Build catalogue evidence definitions for pipeline table guardrails.
+
+            Parameters
+            ----------
+            table_configs : list of mapping
+                Source or target table configuration dictionaries. Each item must
+                include ``key`` and normally includes ``table_name``, ``stage``, and
+                optional target write metadata. DataFrame values are intentionally
+                omitted from the returned definitions.
+
+            Returns
+            -------
+            dict[str, dict[str, Any]]
+                Definitions keyed by table key, suitable for
+                :func:`write_catalogue_evidence`. Target definitions include resolved
+                write-layer, kind, and mode fields when the stage is ``target``.
+            """
+            definitions: dict[str, dict[str, Any]] = {}
+            for table_config in table_configs:
+                table_key = _table_key(table_config)
+                definition = {key: value for key, value in table_config.items() if key != "df"}
+                definition["table_name"] = _table_name(table_config)
+                definition["stage"] = table_config.get("stage", "target")
+                if definition["stage"] == "target":
+                    definition["layer"] = table_config.get("target_layer", "unified")
+                    definition["kind"] = table_config.get("target_kind", "lakehouse")
+                    definition["mode"] = table_config.get("write_mode", "overwrite")
+                definitions[table_key] = definition
+            return definitions
+        ```
+
+        **`def _table_key(table_config: Mapping[str, Any]) -> str`**
+
+        Source: [`src/fabricops_kit/pipeline.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/pipeline.py#L216-L217)
+
+        ```python
+        def _table_key(table_config: Mapping[str, Any]) -> str:
+            return str(table_config["key"])
+        ```
+
+        **`def _table_name(table_config: Mapping[str, Any]) -> str`**
+
+        Source: [`src/fabricops_kit/pipeline.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/pipeline.py#L220-L221)
+
+        ```python
+        def _table_name(table_config: Mapping[str, Any]) -> str:
+            return str(table_config.get("table_name") or table_config.get("target_name") or table_config["key"])
+        ```
+
+        **`def _guardrail_can_continue(result: Mapping[str, Any] | None) -> bool`**
+
+        Source: [`src/fabricops_kit/pipeline.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/pipeline.py#L224-L225)
+
+        ```python
+        def _guardrail_can_continue(result: Mapping[str, Any] | None) -> bool:
+            return bool((result or {}).get("can_continue", True))
+        ```
+
 
 <details class="reference-metadata-details">
 <summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
@@ -649,7 +632,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/pipeline.py#L260-L448">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/pipeline.py#L260-L448</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/pipeline.py#L260-L448">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/pipeline.py#L260-L448</a>
 - Start line: `260`
 - End line: `448`
 - Signature:
@@ -822,140 +805,5 @@ run_table_guardrails(...)
         │   └── _quote_identifier(...)
         └── _uses_registered_metadata_table(...)
 ```
-
-### Internal helpers used by this callable
-
-### `def _build_guardrail_evidence_definitions(table_configs: list[Mapping[str, Any]]) -> dict[str, dict[str, Any]]`
-
-**What it does:**
-
-Build catalogue evidence definitions for pipeline table guardrails.
-
-**Source:**
-
-- `src/fabricops_kit/pipeline.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/pipeline.py#L228-L257">View `_build_guardrail_evidence_definitions` on GitHub</a>
-
-**Code:**
-
-```python
-def _build_guardrail_evidence_definitions(table_configs: list[Mapping[str, Any]]) -> dict[str, dict[str, Any]]:
-    """Build catalogue evidence definitions for pipeline table guardrails.
-
-    Parameters
-    ----------
-    table_configs : list of mapping
-        Source or target table configuration dictionaries. Each item must
-        include ``key`` and normally includes ``table_name``, ``stage``, and
-        optional target write metadata. DataFrame values are intentionally
-        omitted from the returned definitions.
-
-    Returns
-    -------
-    dict[str, dict[str, Any]]
-        Definitions keyed by table key, suitable for
-        :func:`write_catalogue_evidence`. Target definitions include resolved
-        write-layer, kind, and mode fields when the stage is ``target``.
-    """
-    definitions: dict[str, dict[str, Any]] = {}
-    for table_config in table_configs:
-        table_key = _table_key(table_config)
-        definition = {key: value for key, value in table_config.items() if key != "df"}
-        definition["table_name"] = _table_name(table_config)
-        definition["stage"] = table_config.get("stage", "target")
-        if definition["stage"] == "target":
-            definition["layer"] = table_config.get("target_layer", "unified")
-            definition["kind"] = table_config.get("target_kind", "lakehouse")
-            definition["mode"] = table_config.get("write_mode", "overwrite")
-        definitions[table_key] = definition
-    return definitions
-```
-
-**Used here because:**
-
-`run_table_guardrails` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `run_table_guardrails` or another caller that reaches `_build_guardrail_evidence_definitions`.
-
-### `def _table_key(table_config: Mapping[str, Any]) -> str`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/pipeline.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/pipeline.py#L216-L217">View `_table_key` on GitHub</a>
-
-**Code:**
-
-```python
-def _table_key(table_config: Mapping[str, Any]) -> str:
-    return str(table_config["key"])
-```
-
-**Used here because:**
-
-`run_table_guardrails` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `run_table_guardrails` or another caller that reaches `_table_key`.
-
-### `def _table_name(table_config: Mapping[str, Any]) -> str`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/pipeline.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/pipeline.py#L220-L221">View `_table_name` on GitHub</a>
-
-**Code:**
-
-```python
-def _table_name(table_config: Mapping[str, Any]) -> str:
-    return str(table_config.get("table_name") or table_config.get("target_name") or table_config["key"])
-```
-
-**Used here because:**
-
-`run_table_guardrails` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `run_table_guardrails` or another caller that reaches `_table_name`.
-
-### `def _guardrail_can_continue(result: Mapping[str, Any] | None) -> bool`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/pipeline.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/pipeline.py#L224-L225">View `_guardrail_can_continue` on GitHub</a>
-
-**Code:**
-
-```python
-def _guardrail_can_continue(result: Mapping[str, Any] | None) -> bool:
-    return bool((result or {}).get("can_continue", True))
-```
-
-**Used here because:**
-
-`run_table_guardrails` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `run_table_guardrails` or another caller that reaches `_guardrail_can_continue`.
-
 
 </details>

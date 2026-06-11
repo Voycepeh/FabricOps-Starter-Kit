@@ -28,11 +28,10 @@ CORE_CALLABLES = {
     "record_table_governance",
 }
 CORE_PAGE_SECTIONS = (
-    "What this is for and when to use it",
-    "When not to use it",
-    "Example",
-    "Errors and side effects",
-    "Source",
+    "Purpose",
+    "At a glance",
+    "Returns",
+    "Public callable source code",
 )
 CORE_AGENT_FIELDS = (
     "use_when",
@@ -74,10 +73,17 @@ def test_every_callable_page_has_ai_reference_sections() -> None:
     assert callable_pages
     for page in callable_pages:
         text = page.read_text(encoding="utf-8")
-        assert "## What this is for and when to use it" in text, page
-        assert "## When not to use it" in text, page
-        assert "## Errors and side effects" in text, page
-        assert "## Source" in text, page
+        assert "## Purpose" in text, page
+        assert "## At a glance" in text, page
+        assert "## Parameters" in text, page
+        assert "## Returns" in text, page
+        assert "## Used by" in text, page
+        assert "## Calls" in text, page
+        assert "## Implementation details" in text, page
+        assert "## Public callable source code" in text, page
+        assert "## Maintainer internals" in text, page
+        assert "## Nested helper functions" not in text, page
+        assert "## Source" not in text, page
         assert "\n## What this is for\n" not in text, page
         assert "\n## When to use it\n" not in text, page
         assert "\n## Raises\n" not in text, page
@@ -115,20 +121,48 @@ def test_standalone_internal_pages_are_not_generated_by_default() -> None:
     assert internal_pages == []
 
 
-def test_callable_pages_embed_implementation_details() -> None:
+def test_callable_pages_embed_public_first_implementation_details() -> None:
     callable_pages = sorted((REFERENCE_DIR / "callables").glob("*.md"))
 
     assert callable_pages
     for page in callable_pages:
         text = page.read_text(encoding="utf-8")
-        assert "<summary>Implementation details</summary>" in text, page
+        ordered_markers = [
+            "## Purpose",
+            "## At a glance",
+            "## Parameters",
+            "## Returns",
+            "## Used by",
+            "## Calls",
+            "## Implementation details",
+            "## Public callable source code",
+            "## Maintainer internals",
+        ]
+        positions = [text.index(marker) for marker in ordered_markers]
+        assert positions == sorted(positions), page
         assert "### Call flow" in text, page
-        assert "### Internal helpers used by this callable" in text, page
-        if "**Source:**" in text or "**Code:**" in text:
-            assert "**Source:**" in text, page
-            assert "**Code:**" in text, page
+        assert "### Internal helpers used by this callable" not in text, page
+        assert '??? info "Nested helper functions:' in text, page
+        assert "Helper" in text and "Role" in text and "Source" in text, page
+        if '??? info "Nested helper functions: 0"' not in text:
+            assert '??? example "View helper source code"' in text, page
+        assert text.index("### Call flow") < text.index("## Public callable source code"), page
+        assert text.index("## Public callable source code") < text.index("## Maintainer internals"), page
+        assert text.index("## Maintainer internals") < text.index("<summary>AI / machine-readable metadata"), page
 
 
+def test_indent_markdown_indents_multiline_items_and_blank_lines() -> None:
+    from scripts.generate_function_reference import _indent_markdown
+
+    assert _indent_markdown(["first", "", "```python\nprint('x')\n\nprint('y')\n```"], spaces=2) == [
+        "  first",
+        "",
+        "  ```python",
+        "  print('x')",
+        "",
+        "  print('y')",
+        "  ```",
+    ]
 
 
 def test_internal_reference_page_generation_flag(monkeypatch) -> None:
@@ -158,8 +192,7 @@ def test_callable_pages_include_source_section_and_github_source_link() -> None:
     assert callable_pages
     for page in callable_pages:
         text = page.read_text(encoding="utf-8")
-        assert "## Source" in text, page
-        assert "Show source code" in text, page
+        assert "## Public callable source code" in text, page
         assert "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/" in text, page
         assert "/src/fabricops_kit/" in text, page
         assert "#L" in text, page
@@ -194,16 +227,16 @@ def test_setup_notebook_reference_uses_human_first_source_documentation() -> Non
     assert "../../api/modules/config/#setup_notebook" not in text
     assert "src/fabricops_kit/config.py#L" in text
     assert "setup_notebook on GitHub" in text
-    assert "## Example\n\n```python\ncontext = setup_notebook" in text
+    assert "**Example:**\n\n```python\ncontext = setup_notebook" in text
     first_metadata = text.index("<summary>AI / machine-readable metadata")
-    for marker in ("## What this is for and when to use it", "## When not to use it", "## Example", "## Errors and side effects"):
+    for marker in ("## Purpose", "## At a glance", "## Parameters", "## Returns"):
         assert text.index(marker) < first_metadata
     assert "## AI / machine-readable metadata" not in text
     assert "- Starting a FabricOps notebook from 00_env_config" in text
     assert "- Validating configured environment targets before downstream helpers run" in text
     assert "- Capturing runtime metadata for later lineage, review, or handover steps" in text
-    assert "## Inputs" in text
+    assert "## Parameters" in text
     assert "Parameter" in text
     assert "Required" in text
     assert "Meaning" in text
-    assert "Show source code" in text
+    assert "## Public callable source code" in text

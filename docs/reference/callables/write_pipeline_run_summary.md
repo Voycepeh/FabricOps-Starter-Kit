@@ -2,23 +2,35 @@
 
 Write one pipeline runtime summary row to metadata.
 
-## What this is for and when to use it
+## Purpose
 
 Write one pipeline runtime summary row to metadata.
 
+## At a glance
+
+**Use when:**
+
 - Use at the end of 02_pipeline to store operational run evidence in METADATA_PIPELINE_RUNS.
 
-## When not to use it
+**Do not use when:**
 
 - Not documented yet
 
-## Example
+**Example:**
 
 ```python
 Not documented yet
 ```
 
-## Inputs
+**Errors:**
+
+Not documented yet
+
+**Side effects:**
+
+Writes METADATA_PIPELINE_RUNS through the configured metadata lakehouse target.
+
+## Parameters
 
 <div class="module-table-scroll reference-input-table">
 <table class="reference-function-table">
@@ -174,24 +186,22 @@ Not documented yet
 </table>
 </div>
 
-## Output
+## Returns
 
 Runtime summary row that was written.
 
-## Errors and side effects
+## Used by
 
-**Errors:** Not documented yet
+Not documented yet
 
-**Side effects:** Writes METADATA_PIPELINE_RUNS through the configured metadata lakehouse target.
+## Calls
 
-## Related functions
-
-- <a href="../write_catalogue_evidence/"><code>fabricops_kit.pipeline.write_catalogue_evidence</code></a>
-- <a href="../write_pipeline_lineage/"><code>fabricops_kit.pipeline.write_pipeline_lineage</code></a>
 - <a href="../write_lakehouse_table/"><code>fabricops_kit.fabric_input_output.write_lakehouse_table</code></a>
+- `fabricops_kit.pipeline._definition_name`
+- `fabricops_kit.pipeline._now_iso`
+- `fabricops_kit.pipeline._summary_status`
 
-<details class="reference-implementation-details">
-<summary>Implementation details</summary>
+## Implementation details
 
 ### Call flow
 
@@ -212,231 +222,10 @@ write_pipeline_run_summary(...)
     └── _uses_registered_metadata_table(...)
 ```
 
-### Internal helpers used by this callable
-
-### `def _definition_name(name: str, definition: Mapping[str, Any]) -> str`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/pipeline.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/pipeline.py#L23-L24">View `_definition_name` on GitHub</a>
-
-**Code:**
-
-```python
-def _definition_name(name: str, definition: Mapping[str, Any]) -> str:
-    return str(definition.get("table_name") or definition.get("name") or name)
-```
-
-**Used here because:**
-
-`write_pipeline_run_summary` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `write_pipeline_run_summary` or another caller that reaches `_definition_name`.
-
-### `def _now_iso(config: Any=None) -> str`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/pipeline.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/pipeline.py#L19-L20">View `_now_iso` on GitHub</a>
-
-**Code:**
-
-```python
-def _now_iso(config: Any = None) -> str:
-    return _current_audit_timestamp(config=config)
-```
-
-**Used here because:**
-
-`write_pipeline_run_summary` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `write_pipeline_run_summary` or another caller that reaches `_now_iso`.
-
-### `def _current_audit_timestamp(config: Any=None, timezone_name: str | None=None, *, drop_microseconds: bool=True) -> str`
-
-**What it does:**
-
-Return the current audit timestamp in the configured audit timezone.
-
-**Source:**
-
-- `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L69-L75">View `_current_audit_timestamp` on GitHub</a>
-
-**Code:**
-
-```python
-def _current_audit_timestamp(config: Any = None, timezone_name: str | None = None, *, drop_microseconds: bool = True) -> str:
-    """Return the current audit timestamp in the configured audit timezone."""
-    tz_name = _get_audit_timezone(config, timezone_name)
-    value = datetime.now(ZoneInfo(tz_name))
-    if drop_microseconds:
-        value = value.replace(microsecond=0)
-    return value.isoformat()
-```
-
-**Used here because:**
-
-`write_pipeline_run_summary` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `write_pipeline_run_summary` or another caller that reaches `_current_audit_timestamp`.
-
-### `def _get_audit_timezone(config: Any=None, timezone_name: str | None=None) -> str`
-
-**What it does:**
-
-Resolve the configured FabricOps audit timezone, defaulting to UTC.
-
-**Source:**
-
-- `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L61-L66">View `_get_audit_timezone` on GitHub</a>
-
-**Code:**
-
-```python
-def _get_audit_timezone(config: Any = None, timezone_name: str | None = None) -> str:
-    """Resolve the configured FabricOps audit timezone, defaulting to UTC."""
-    if timezone_name is not None:
-        return _validate_audit_timezone(timezone_name)
-    value = getattr(config, "audit_timezone", None) if config is not None else None
-    return _validate_audit_timezone(value)
-```
-
-**Used here because:**
-
-`write_pipeline_run_summary` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `write_pipeline_run_summary` or another caller that reaches `_get_audit_timezone`.
-
-### `def _validate_audit_timezone(timezone_name: str | None) -> str`
-
-**What it does:**
-
-Return a valid IANA audit timezone name.
-
-**Source:**
-
-- `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L27-L58">View `_validate_audit_timezone` on GitHub</a>
-
-**Code:**
-
-```python
-def _validate_audit_timezone(timezone_name: str | None) -> str:
-    """Return a valid IANA audit timezone name.
-
-    Parameters
-    ----------
-    timezone_name : str or None
-        IANA timezone name to validate. Blank values default to ``"UTC"``.
-
-    Returns
-    -------
-    str
-        Validated timezone name.
-
-    Raises
-    ------
-    ValueError
-        If a non-blank value is not a valid IANA timezone name.
-    """
-    value = str(timezone_name or DEFAULT_AUDIT_TIMEZONE).strip() or DEFAULT_AUDIT_TIMEZONE
-    if value != DEFAULT_AUDIT_TIMEZONE and "/" not in value:
-        raise ValueError(
-            f'Invalid FABRICOPS_AUDIT_TIMEZONE: "{value}". '
-            'Use a valid IANA timezone name such as "Asia/Singapore" or keep the default "UTC".'
-        )
-    try:
-        ZoneInfo(value)
-    except ZoneInfoNotFoundError as exc:
-        raise ValueError(
-            f'Invalid FABRICOPS_AUDIT_TIMEZONE: "{value}". '
-            'Use a valid IANA timezone name such as "Asia/Singapore" or keep the default "UTC".'
-        ) from exc
-    return value
-```
-
-**Used here because:**
-
-`write_pipeline_run_summary` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `write_pipeline_run_summary` or another caller that reaches `_validate_audit_timezone`.
-
-### `def _summary_status(results: Mapping[str, Mapping[str, Any]]) -> str`
-
-**What it does:**
-
-Return a roll-up status for guardrail result mappings.
-
-**Source:**
-
-- `src/fabricops_kit/pipeline.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/pipeline.py#L27-L46">View `_summary_status` on GitHub</a>
-
-**Code:**
-
-```python
-def _summary_status(results: Mapping[str, Mapping[str, Any]]) -> str:
-    """Return a roll-up status for guardrail result mappings.
-
-    ``baseline_created`` is non-blocking and rolls up as ``passed``. ``skipped``
-    is ignored when other concrete results exist and is returned only when all
-    supplied results were skipped.
-    """
-    statuses = {str(result.get("status", "unknown")).lower() for result in results.values()}
-    if not statuses:
-        return "not_run"
-    concrete = statuses - {"skipped"}
-    if not concrete:
-        return "skipped"
-    if "failed" in concrete:
-        return "failed"
-    if "warning" in concrete:
-        return "warning"
-    if concrete <= {"passed", "success", "succeeded", "baseline_created"}:
-        return "passed"
-    return ",".join(sorted(concrete))
-```
-
-**Used here because:**
-
-`write_pipeline_run_summary` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `write_pipeline_run_summary` or another caller that reaches `_summary_status`.
-
-
-</details>
-
-## Source
+## Public callable source code
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/pipeline.py#L646-L758">View write_pipeline_run_summary on GitHub</a>
-
-<details class="reference-source-details">
-<summary>Show source code</summary>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/pipeline.py#L646-L758">View write_pipeline_run_summary on GitHub</a>
 
 ```python
 def write_pipeline_run_summary(
@@ -554,7 +343,169 @@ def write_pipeline_run_summary(
     return row
 ```
 
-</details>
+## Maintainer internals
+
+??? info "Nested helper functions: 6"
+
+    These nested helpers support `write_pipeline_run_summary` by handling lower-level implementation steps; expand this section only when maintaining or debugging the package internals.
+
+    <div class="module-table-scroll reference-input-table">
+    <table class="reference-function-table">
+      <thead>
+        <tr>
+          <th>Helper</th>
+          <th>Role</th>
+          <th>Source</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td data-label="Helper"><code>_definition_name</code></td>
+          <td data-label="Role">Internal helper used by the package implementation.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/pipeline.py#L23-L24">src/fabricops_kit/pipeline.py</a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_now_iso</code></td>
+          <td data-label="Role">Internal helper used by the package implementation.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/pipeline.py#L19-L20">src/fabricops_kit/pipeline.py</a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_current_audit_timestamp</code></td>
+          <td data-label="Role">Return the current audit timestamp in the configured audit timezone.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/config.py#L69-L75">src/fabricops_kit/config.py</a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_get_audit_timezone</code></td>
+          <td data-label="Role">Resolve the configured FabricOps audit timezone, defaulting to UTC.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/config.py#L61-L66">src/fabricops_kit/config.py</a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_validate_audit_timezone</code></td>
+          <td data-label="Role">Return a valid IANA audit timezone name.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/config.py#L27-L58">src/fabricops_kit/config.py</a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_summary_status</code></td>
+          <td data-label="Role">Return a roll-up status for guardrail result mappings.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/pipeline.py#L27-L46">src/fabricops_kit/pipeline.py</a></td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+
+    ??? example "View helper source code"
+
+        **`def _definition_name(name: str, definition: Mapping[str, Any]) -> str`**
+
+        Source: [`src/fabricops_kit/pipeline.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/pipeline.py#L23-L24)
+
+        ```python
+        def _definition_name(name: str, definition: Mapping[str, Any]) -> str:
+            return str(definition.get("table_name") or definition.get("name") or name)
+        ```
+
+        **`def _now_iso(config: Any=None) -> str`**
+
+        Source: [`src/fabricops_kit/pipeline.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/pipeline.py#L19-L20)
+
+        ```python
+        def _now_iso(config: Any = None) -> str:
+            return _current_audit_timestamp(config=config)
+        ```
+
+        **`def _current_audit_timestamp(config: Any=None, timezone_name: str | None=None, *, drop_microseconds: bool=True) -> str`**
+
+        Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/config.py#L69-L75)
+
+        ```python
+        def _current_audit_timestamp(config: Any = None, timezone_name: str | None = None, *, drop_microseconds: bool = True) -> str:
+            """Return the current audit timestamp in the configured audit timezone."""
+            tz_name = _get_audit_timezone(config, timezone_name)
+            value = datetime.now(ZoneInfo(tz_name))
+            if drop_microseconds:
+                value = value.replace(microsecond=0)
+            return value.isoformat()
+        ```
+
+        **`def _get_audit_timezone(config: Any=None, timezone_name: str | None=None) -> str`**
+
+        Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/config.py#L61-L66)
+
+        ```python
+        def _get_audit_timezone(config: Any = None, timezone_name: str | None = None) -> str:
+            """Resolve the configured FabricOps audit timezone, defaulting to UTC."""
+            if timezone_name is not None:
+                return _validate_audit_timezone(timezone_name)
+            value = getattr(config, "audit_timezone", None) if config is not None else None
+            return _validate_audit_timezone(value)
+        ```
+
+        **`def _validate_audit_timezone(timezone_name: str | None) -> str`**
+
+        Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/config.py#L27-L58)
+
+        ```python
+        def _validate_audit_timezone(timezone_name: str | None) -> str:
+            """Return a valid IANA audit timezone name.
+
+            Parameters
+            ----------
+            timezone_name : str or None
+                IANA timezone name to validate. Blank values default to ``"UTC"``.
+
+            Returns
+            -------
+            str
+                Validated timezone name.
+
+            Raises
+            ------
+            ValueError
+                If a non-blank value is not a valid IANA timezone name.
+            """
+            value = str(timezone_name or DEFAULT_AUDIT_TIMEZONE).strip() or DEFAULT_AUDIT_TIMEZONE
+            if value != DEFAULT_AUDIT_TIMEZONE and "/" not in value:
+                raise ValueError(
+                    f'Invalid FABRICOPS_AUDIT_TIMEZONE: "{value}". '
+                    'Use a valid IANA timezone name such as "Asia/Singapore" or keep the default "UTC".'
+                )
+            try:
+                ZoneInfo(value)
+            except ZoneInfoNotFoundError as exc:
+                raise ValueError(
+                    f'Invalid FABRICOPS_AUDIT_TIMEZONE: "{value}". '
+                    'Use a valid IANA timezone name such as "Asia/Singapore" or keep the default "UTC".'
+                ) from exc
+            return value
+        ```
+
+        **`def _summary_status(results: Mapping[str, Mapping[str, Any]]) -> str`**
+
+        Source: [`src/fabricops_kit/pipeline.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/pipeline.py#L27-L46)
+
+        ```python
+        def _summary_status(results: Mapping[str, Mapping[str, Any]]) -> str:
+            """Return a roll-up status for guardrail result mappings.
+
+            ``baseline_created`` is non-blocking and rolls up as ``passed``. ``skipped``
+            is ignored when other concrete results exist and is returned only when all
+            supplied results were skipped.
+            """
+            statuses = {str(result.get("status", "unknown")).lower() for result in results.values()}
+            if not statuses:
+                return "not_run"
+            concrete = statuses - {"skipped"}
+            if not concrete:
+                return "skipped"
+            if "failed" in concrete:
+                return "failed"
+            if "warning" in concrete:
+                return "warning"
+            if concrete <= {"passed", "success", "succeeded", "baseline_created"}:
+                return "passed"
+            return ",".join(sorted(concrete))
+        ```
+
 
 <details class="reference-metadata-details">
 <summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
@@ -596,7 +547,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/pipeline.py#L646-L758">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/pipeline.py#L646-L758</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/pipeline.py#L646-L758">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/pipeline.py#L646-L758</a>
 - Start line: `646`
 - End line: `758`
 - Signature:
@@ -633,221 +584,5 @@ write_pipeline_run_summary(...)
     │   └── _quote_identifier(...)
     └── _uses_registered_metadata_table(...)
 ```
-
-### Internal helpers used by this callable
-
-### `def _definition_name(name: str, definition: Mapping[str, Any]) -> str`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/pipeline.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/pipeline.py#L23-L24">View `_definition_name` on GitHub</a>
-
-**Code:**
-
-```python
-def _definition_name(name: str, definition: Mapping[str, Any]) -> str:
-    return str(definition.get("table_name") or definition.get("name") or name)
-```
-
-**Used here because:**
-
-`write_pipeline_run_summary` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `write_pipeline_run_summary` or another caller that reaches `_definition_name`.
-
-### `def _now_iso(config: Any=None) -> str`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/pipeline.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/pipeline.py#L19-L20">View `_now_iso` on GitHub</a>
-
-**Code:**
-
-```python
-def _now_iso(config: Any = None) -> str:
-    return _current_audit_timestamp(config=config)
-```
-
-**Used here because:**
-
-`write_pipeline_run_summary` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `write_pipeline_run_summary` or another caller that reaches `_now_iso`.
-
-### `def _current_audit_timestamp(config: Any=None, timezone_name: str | None=None, *, drop_microseconds: bool=True) -> str`
-
-**What it does:**
-
-Return the current audit timestamp in the configured audit timezone.
-
-**Source:**
-
-- `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L69-L75">View `_current_audit_timestamp` on GitHub</a>
-
-**Code:**
-
-```python
-def _current_audit_timestamp(config: Any = None, timezone_name: str | None = None, *, drop_microseconds: bool = True) -> str:
-    """Return the current audit timestamp in the configured audit timezone."""
-    tz_name = _get_audit_timezone(config, timezone_name)
-    value = datetime.now(ZoneInfo(tz_name))
-    if drop_microseconds:
-        value = value.replace(microsecond=0)
-    return value.isoformat()
-```
-
-**Used here because:**
-
-`write_pipeline_run_summary` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `write_pipeline_run_summary` or another caller that reaches `_current_audit_timestamp`.
-
-### `def _get_audit_timezone(config: Any=None, timezone_name: str | None=None) -> str`
-
-**What it does:**
-
-Resolve the configured FabricOps audit timezone, defaulting to UTC.
-
-**Source:**
-
-- `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L61-L66">View `_get_audit_timezone` on GitHub</a>
-
-**Code:**
-
-```python
-def _get_audit_timezone(config: Any = None, timezone_name: str | None = None) -> str:
-    """Resolve the configured FabricOps audit timezone, defaulting to UTC."""
-    if timezone_name is not None:
-        return _validate_audit_timezone(timezone_name)
-    value = getattr(config, "audit_timezone", None) if config is not None else None
-    return _validate_audit_timezone(value)
-```
-
-**Used here because:**
-
-`write_pipeline_run_summary` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `write_pipeline_run_summary` or another caller that reaches `_get_audit_timezone`.
-
-### `def _validate_audit_timezone(timezone_name: str | None) -> str`
-
-**What it does:**
-
-Return a valid IANA audit timezone name.
-
-**Source:**
-
-- `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L27-L58">View `_validate_audit_timezone` on GitHub</a>
-
-**Code:**
-
-```python
-def _validate_audit_timezone(timezone_name: str | None) -> str:
-    """Return a valid IANA audit timezone name.
-
-    Parameters
-    ----------
-    timezone_name : str or None
-        IANA timezone name to validate. Blank values default to ``"UTC"``.
-
-    Returns
-    -------
-    str
-        Validated timezone name.
-
-    Raises
-    ------
-    ValueError
-        If a non-blank value is not a valid IANA timezone name.
-    """
-    value = str(timezone_name or DEFAULT_AUDIT_TIMEZONE).strip() or DEFAULT_AUDIT_TIMEZONE
-    if value != DEFAULT_AUDIT_TIMEZONE and "/" not in value:
-        raise ValueError(
-            f'Invalid FABRICOPS_AUDIT_TIMEZONE: "{value}". '
-            'Use a valid IANA timezone name such as "Asia/Singapore" or keep the default "UTC".'
-        )
-    try:
-        ZoneInfo(value)
-    except ZoneInfoNotFoundError as exc:
-        raise ValueError(
-            f'Invalid FABRICOPS_AUDIT_TIMEZONE: "{value}". '
-            'Use a valid IANA timezone name such as "Asia/Singapore" or keep the default "UTC".'
-        ) from exc
-    return value
-```
-
-**Used here because:**
-
-`write_pipeline_run_summary` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `write_pipeline_run_summary` or another caller that reaches `_validate_audit_timezone`.
-
-### `def _summary_status(results: Mapping[str, Mapping[str, Any]]) -> str`
-
-**What it does:**
-
-Return a roll-up status for guardrail result mappings.
-
-**Source:**
-
-- `src/fabricops_kit/pipeline.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/pipeline.py#L27-L46">View `_summary_status` on GitHub</a>
-
-**Code:**
-
-```python
-def _summary_status(results: Mapping[str, Mapping[str, Any]]) -> str:
-    """Return a roll-up status for guardrail result mappings.
-
-    ``baseline_created`` is non-blocking and rolls up as ``passed``. ``skipped``
-    is ignored when other concrete results exist and is returned only when all
-    supplied results were skipped.
-    """
-    statuses = {str(result.get("status", "unknown")).lower() for result in results.values()}
-    if not statuses:
-        return "not_run"
-    concrete = statuses - {"skipped"}
-    if not concrete:
-        return "skipped"
-    if "failed" in concrete:
-        return "failed"
-    if "warning" in concrete:
-        return "warning"
-    if concrete <= {"passed", "success", "succeeded", "baseline_created"}:
-        return "passed"
-    return ",".join(sorted(concrete))
-```
-
-**Used here because:**
-
-`write_pipeline_run_summary` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `write_pipeline_run_summary` or another caller that reaches `_summary_status`.
-
 
 </details>

@@ -2,25 +2,37 @@
 
 Shared environment setup and runtime validation for notebook templates.
 
-## What this is for and when to use it
+## Purpose
 
 Prepare a FabricOps notebook by validating configuration, resolving environment targets, and returning reusable runtime context.
+
+## At a glance
+
+**Use when:**
 
 - Starting a FabricOps notebook from 00_env_config
 - Validating configured environment targets before downstream helpers run
 - Capturing runtime metadata for later lineage, review, or handover steps
 
-## When not to use it
+**Do not use when:**
 
 - Do not use as a replacement for metadata table setup or per-table governance writes; call setup_metadata_tables for metadata storage preparation.
 
-## Example
+**Example:**
 
 ```python
 context = setup_notebook(CONFIG, env="Sandbox", required_targets=["Source", "Unified"], notebook_name="00_env_config")
 ```
 
-## Inputs
+**Errors:**
+
+ValueError for invalid configuration sections, missing required paths, or unresolved required targets.
+
+**Side effects:**
+
+Runs configuration validation and Fabric readiness checks; it does not write FabricOps metadata tables.
+
+## Parameters
 
 <div class="module-table-scroll reference-input-table">
 <table class="reference-function-table">
@@ -66,22 +78,22 @@ context = setup_notebook(CONFIG, env="Sandbox", required_targets=["Source", "Uni
 </table>
 </div>
 
-## Output
+## Returns
 
 NotebookSetupContext with resolved configuration paths, runtime metadata, smoke-check results, and readiness status.
 
-## Errors and side effects
+## Used by
 
-**Errors:** ValueError for invalid configuration sections, missing required paths, or unresolved required targets.
+Not documented yet
 
-**Side effects:** Runs configuration validation and Fabric readiness checks; it does not write FabricOps metadata tables.
+## Calls
 
-## Related functions
+- `fabricops_kit.config.NotebookSetupContext`
+- `fabricops_kit.config._get_store`
+- `fabricops_kit.config._run_config_smoke_tests`
+- `fabricops_kit.config._validate_framework_config`
 
-- <a href="../setup_metadata_tables/"><code>fabricops_kit.config.setup_metadata_tables</code></a>
-
-<details class="reference-implementation-details">
-<summary>Implementation details</summary>
+## Implementation details
 
 ### Call flow
 
@@ -100,491 +112,10 @@ setup_notebook(...)
 └── NotebookSetupContext(...)
 ```
 
-### Internal helpers used by this callable
-
-### `def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any`
-
-**What it does:**
-
-Resolve a configured Fabric path for an environment and target.
-
-**Source:**
-
-- `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L627-L667">View `_get_store` on GitHub</a>
-
-**Code:**
-
-```python
-def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any:
-    """Resolve a configured Fabric path for an environment and target.
-
-    Parameters
-    ----------
-    env : str
-        Environment key such as ``Sandbox``, ``DE``, or ``Prod``.
-    target : str
-        Target key such as ``Source``, ``Unified``, ``Product``, or ``Warehouse``.
-    config : FrameworkConfig | PathConfig | None
-        Configuration that contains environment-to-target path mappings.
-
-    Returns
-    -------
-    Any
-        FabricStore object with ``workspace_id``, ``house_id``, ``house_name``, and ``root``.
-
-    Raises
-    ------
-    ValueError
-        If config is missing, or if the environment/target mapping does not exist.
-
-    Examples
-    --------
-    >>> get_path("Sandbox", "Source", config=CONFIG)
-    Housepath(...)
-    """
-    if config is None:
-        raise ValueError("No Fabric config was provided. Pass a FrameworkConfig or PathConfig instance.")
-    paths = config.path_config.paths if isinstance(config, FrameworkConfig) else config.paths
-    if env not in paths:
-        available_envs = ", ".join(sorted(paths.keys())) or "<none>"
-        raise ValueError(
-            f"Environment '{env}' was not found in Fabric config. Available environments: {available_envs}."
-        )
-    if target not in paths[env]:
-        available_targets = ", ".join(sorted(paths[env].keys())) or "<none>"
-        raise ValueError(
-            f"Target '{target}' was not found under environment '{env}'. Available targets: {available_targets}."
-        )
-    return paths[env][target]
-```
-
-**Used here because:**
-
-`setup_notebook` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `setup_notebook` or another caller that reaches `_get_store`.
-
-### `def _run_config_smoke_tests(config: FrameworkConfig, env: str='Sandbox', required_targets: list[str] | None=None, check_io_import: bool=False, notebook_name: str | None=None) -> list[ConfigSmokeCheckResult]`
-
-**What it does:**
-
-Run 00_env_config readiness smoke checks for configuration bootstrap.
-
-**Source:**
-
-- `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L684-L783">View `_run_config_smoke_tests` on GitHub</a>
-
-**Code:**
-
-```python
-def _run_config_smoke_tests(
-    config: FrameworkConfig,
-    env: str = "Sandbox",
-    required_targets: list[str] | None = None,
-    check_io_import: bool = False,
-    notebook_name: str | None = None,
-) -> list[ConfigSmokeCheckResult]:
-    """Run 00_env_config readiness smoke checks for configuration bootstrap.
-
-    Use this during environment bootstrap to verify Spark availability, Fabric
-    runtime context access, required path mappings, notebook naming policy, and
-    optional IO import readiness before executing downstream notebook steps.
-
-    Parameters
-    ----------
-    config : FrameworkConfig
-        Validated framework configuration to evaluate.
-    env : str, default="Sandbox"
-        Environment key used when resolving required target paths.
-    required_targets : list[str] | None, optional
-        Required targets expected in ``config.path_config``. Defaults to
-        ``["Source", "Unified"]`` when not provided.
-    check_io_import : bool, default=False
-        Whether to test importability of ``fabric_input_output`` helpers.
-    notebook_name : str | None, optional
-        Notebook name to validate against configured naming prefixes.
-
-    Returns
-    -------
-    list[ConfigSmokeCheckResult]
-        Ordered check results with ``pass``, ``warn``, ``fail``, or ``skipped``
-        statuses for each readiness dimension.
-
-    Raises
-    ------
-    ValueError
-        Propagated from config/path validation helpers when required targets or
-        configured environments are invalid.
-
-    Notes
-    -----
-    This helper performs validation and lightweight import/runtime checks only.
-    It does not create or mutate Fabric resources.
-
-    Examples
-    --------
-    >>> checks = _run_config_smoke_tests(config=my_config, env="Sandbox", notebook_name="00_env_config")
-    >>> any(c.status == "fail" for c in checks)
-    False
-    """
-    results: list[ConfigSmokeCheckResult] = []
-    required_targets = required_targets or ["Source", "Unified"]
-    spark_ready, spark_message = _check_spark_session()
-    results.append(ConfigSmokeCheckResult("spark_session", "pass" if spark_ready else "warn", spark_message))
-
-    runtime_meta = _get_fabric_runtime_metadata(notebook_name=notebook_name)
-    runtime_status = "pass" if runtime_meta.get("runtime_available") else "skipped"
-    runtime_message = (
-        "Fabric runtime context is readable."
-        if runtime_meta.get("runtime_available")
-        else "notebookutils.runtime unavailable outside Fabric runtime."
-    )
-    results.append(ConfigSmokeCheckResult("fabric_runtime_context", runtime_status, runtime_message))
-    try:
-        for target in required_targets:
-            p = _get_store(config=config, env=env, target=target)
-            missing = [attr for attr in ("workspace_id", "item_id", "name", "kind") if not getattr(p, attr, None)]
-            if missing:
-                results.append(ConfigSmokeCheckResult(f"path:{target}", "fail", f"Missing required fields: {missing}"))
-            elif p.kind == "lakehouse" and str(p.root).startswith("abfss://"):
-                results.append(
-                    ConfigSmokeCheckResult(
-                        f"path:{target}", "pass", "Lakehouse store is populated and ABFSS root is derivable."
-                    )
-                )
-            else:
-                results.append(ConfigSmokeCheckResult(f"path:{target}", "pass", "Store is populated."))
-    except Exception as exc:
-        results.append(ConfigSmokeCheckResult("path_resolution", "fail", str(exc)))
-
-    if notebook_name:
-        errors = _validate_notebook_name(notebook_name, config=config)
-        results.append(
-            ConfigSmokeCheckResult(
-                "notebook_naming", "pass" if not errors else "fail", "; ".join(errors) or "Notebook name is valid."
-            )
-        )
-    else:
-        results.append(ConfigSmokeCheckResult("notebook_naming", "skipped", "Notebook name check skipped."))
-
-    if check_io_import:
-        try:
-            from .fabric_input_output import read_lakehouse_table  # noqa: F401
-
-            results.append(ConfigSmokeCheckResult("fabric_io_import", "pass", "fabric_io helpers are importable."))
-        except Exception as exc:
-            results.append(ConfigSmokeCheckResult("fabric_io_import", "fail", str(exc)))
-    else:
-        results.append(ConfigSmokeCheckResult("fabric_io_import", "skipped", "IO import check disabled."))
-    return results
-```
-
-**Used here because:**
-
-`setup_notebook` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `setup_notebook` or another caller that reaches `_run_config_smoke_tests`.
-
-### `def _check_spark_session() -> tuple[bool, str]`
-
-**What it does:**
-
-Check whether a Spark session is available.
-
-**Source:**
-
-- `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L1111-L1116">View `_check_spark_session` on GitHub</a>
-
-**Code:**
-
-```python
-def _check_spark_session() -> tuple[bool, str]:
-    """Check whether a Spark session is available."""
-    spark_obj = globals().get("spark")
-    if spark_obj is not None:
-        return True, "Spark session is available."
-    return False, "Spark session not found; local fallback mode."
-```
-
-**Used here because:**
-
-`setup_notebook` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `setup_notebook` or another caller that reaches `_check_spark_session`.
-
-### `def _get_fabric_runtime_metadata(notebook_name: str | None=None) -> dict[str, Any]`
-
-**What it does:**
-
-Best-effort retrieval of Fabric runtime metadata.
-
-**Source:**
-
-- `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L1119-L1158">View `_get_fabric_runtime_metadata` on GitHub</a>
-
-**Code:**
-
-```python
-def _get_fabric_runtime_metadata(notebook_name: str | None = None) -> dict[str, Any]:
-    """Best-effort retrieval of Fabric runtime metadata."""
-    metadata: dict[str, Any] = {
-        "notebook_name": notebook_name,
-        "workspace_name": None,
-        "user_name": None,
-        "runtime_available": False,
-    }
-    try:
-        import notebookutils.runtime as nb_runtime  # type: ignore
-
-        metadata["runtime_available"] = True
-        context = getattr(nb_runtime, "context", None)
-        if context is not None:
-
-            def _ctx_value(*keys: str) -> Any:
-                for key in keys:
-                    if hasattr(context, key):
-                        value = getattr(context, key, None)
-                        if value is not None:
-                            return value
-                    if isinstance(context, dict):
-                        value = context.get(key)
-                        if value is not None:
-                            return value
-                    get_method = getattr(context, "get", None)
-                    if callable(get_method):
-                        value = get_method(key)
-                        if value is not None:
-                            return value
-                return None
-
-            metadata["notebook_name"] = metadata["notebook_name"] or _ctx_value(
-                "currentNotebookName", "current_notebook_name"
-            )
-            metadata["workspace_name"] = _ctx_value("currentWorkspaceName", "workspaceName", "workspace_name")
-            metadata["user_name"] = _ctx_value("userName", "user_name")
-    except Exception:
-        pass
-    return metadata
-```
-
-**Used here because:**
-
-`setup_notebook` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `setup_notebook` or another caller that reaches `_get_fabric_runtime_metadata`.
-
-### `def _validate_notebook_name(notebook_name: str, config: FrameworkConfig | None=None) -> list[str]`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L670-L681">View `_validate_notebook_name` on GitHub</a>
-
-**Code:**
-
-```python
-def _validate_notebook_name(notebook_name: str, config: FrameworkConfig | None = None) -> list[str]:
-    name = "_".join(str(notebook_name or "").strip().lower().split())
-    patterns = [
-        r"^00_env_config$",
-        r"^01_agreement(?:_[a-z0-9_]+)?$",
-        r"^02_pipeline(?:_[a-z0-9_]+)?$",
-        r"^03_governance(?:_[a-z0-9_]+)?$",
-        r"^99_explore(?:_[a-z0-9_]+)?$",
-    ]
-    if any(__import__("re").match(p, name) for p in patterns):
-        return []
-    return ["Notebook name does not match accepted FabricOps naming patterns."]
-```
-
-**Used here because:**
-
-`setup_notebook` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `setup_notebook` or another caller that reaches `_validate_notebook_name`.
-
-### `def _validate_framework_config(config: FrameworkConfig | dict[str, Any]) -> FrameworkConfig`
-
-**What it does:**
-
-Validate and normalize framework configuration input.
-
-**Source:**
-
-- `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L551-L624">View `_validate_framework_config` on GitHub</a>
-
-**Code:**
-
-```python
-def _validate_framework_config(config: FrameworkConfig | dict[str, Any]) -> FrameworkConfig:
-    """Validate and normalize framework configuration input.
-
-    Parameters
-    ----------
-    config : FrameworkConfig | dict[str, Any]
-        Existing framework config object or compatible mapping containing the
-        required user-facing component configs. Framework-only sections may be
-        omitted and will use package defaults.
-
-    Returns
-    -------
-    FrameworkConfig
-        Normalized, validated framework config object.
-
-    Raises
-    ------
-    ValueError
-        Raised when required sections are missing, component types are invalid,
-        or configured path targets are incomplete.
-
-    Notes
-    -----
-    Validation checks configuration shape and required FabricStore fields.
-    It does not perform external IO or provision Fabric resources.
-
-    Examples
-    --------
-    >>> normalized = _validate_framework_config(framework_config)
-    >>> isinstance(normalized, FrameworkConfig)
-    True
-    """
-    if isinstance(config, FrameworkConfig):
-        normalized = config
-    elif isinstance(config, dict):
-        required_keys = {
-            "path_config",
-            "notebook_runtime_config",
-            "ai_prompt_config",
-        }
-        missing_keys = sorted(required_keys.difference(config.keys()))
-        if missing_keys:
-            raise ValueError(f"Framework config is missing required keys: {', '.join(missing_keys)}.")
-        normalized = FrameworkConfig(**config)
-    else:
-        raise ValueError("config must be a FrameworkConfig object or compatible mapping.")
-
-    if not isinstance(normalized.path_config, PathConfig):
-        raise ValueError("path_config must be a PathConfig object.")
-    if not isinstance(normalized.notebook_runtime_config, NotebookRuntimeConfig):
-        raise ValueError("notebook_runtime_config must be a NotebookRuntimeConfig object.")
-    if not isinstance(normalized.ai_prompt_config, AIPromptConfig):
-        raise ValueError("ai_prompt_config must be an AIPromptConfig object.")
-    if not isinstance(normalized.quality_config, QualityConfig):
-        raise ValueError("quality_config must be a QualityConfig object.")
-    if not isinstance(normalized.governance_config, GovernanceConfig):
-        raise ValueError("governance_config must be a GovernanceConfig object.")
-    if not isinstance(normalized.review_workflow_config, ReviewWorkflowConfig):
-        raise ValueError("review_workflow_config must be a ReviewWorkflowConfig object.")
-    if not isinstance(normalized.lineage_config, LineageConfig):
-        raise ValueError("lineage_config must be a LineageConfig object.")
-    if not isinstance(normalized.data_agreement_config, DataAgreementConfig):
-        raise ValueError("data_agreement_config must be a DataAgreementConfig object.")
-    _validate_audit_timezone(normalized.audit_timezone)
-
-    for env_name, targets in normalized.path_config.paths.items():
-        if not isinstance(targets, dict) or not targets:
-            raise ValueError(f"Environment '{env_name}' must contain at least one target.")
-        for target_name, housepath in targets.items():
-            required = ("workspace_id", "item_id", "name", "kind")
-            if not all(hasattr(housepath, attr) for attr in required):
-                raise ValueError(f"Target '{env_name}/{target_name}' must provide FabricStore fields: {required}.")
-
-    return normalized
-```
-
-**Used here because:**
-
-`setup_notebook` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `setup_notebook` or another caller that reaches `_validate_framework_config`.
-
-### `def _validate_audit_timezone(timezone_name: str | None) -> str`
-
-**What it does:**
-
-Return a valid IANA audit timezone name.
-
-**Source:**
-
-- `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L27-L58">View `_validate_audit_timezone` on GitHub</a>
-
-**Code:**
-
-```python
-def _validate_audit_timezone(timezone_name: str | None) -> str:
-    """Return a valid IANA audit timezone name.
-
-    Parameters
-    ----------
-    timezone_name : str or None
-        IANA timezone name to validate. Blank values default to ``"UTC"``.
-
-    Returns
-    -------
-    str
-        Validated timezone name.
-
-    Raises
-    ------
-    ValueError
-        If a non-blank value is not a valid IANA timezone name.
-    """
-    value = str(timezone_name or DEFAULT_AUDIT_TIMEZONE).strip() or DEFAULT_AUDIT_TIMEZONE
-    if value != DEFAULT_AUDIT_TIMEZONE and "/" not in value:
-        raise ValueError(
-            f'Invalid FABRICOPS_AUDIT_TIMEZONE: "{value}". '
-            'Use a valid IANA timezone name such as "Asia/Singapore" or keep the default "UTC".'
-        )
-    try:
-        ZoneInfo(value)
-    except ZoneInfoNotFoundError as exc:
-        raise ValueError(
-            f'Invalid FABRICOPS_AUDIT_TIMEZONE: "{value}". '
-            'Use a valid IANA timezone name such as "Asia/Singapore" or keep the default "UTC".'
-        ) from exc
-    return value
-```
-
-**Used here because:**
-
-`setup_notebook` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `setup_notebook` or another caller that reaches `_validate_audit_timezone`.
-
-
-</details>
-
-## Source
+## Public callable source code
 
 - Source file path: `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L786-L895">View setup_notebook on GitHub</a>
-
-<details class="reference-source-details">
-<summary>Show source code</summary>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/config.py#L786-L895">View setup_notebook on GitHub</a>
 
 ```python
 def setup_notebook(
@@ -699,7 +230,417 @@ def setup_notebook(
     )
 ```
 
-</details>
+## Maintainer internals
+
+??? info "Nested helper functions: 7"
+
+    These nested helpers support `setup_notebook` by handling lower-level implementation steps; expand this section only when maintaining or debugging the package internals.
+
+    <div class="module-table-scroll reference-input-table">
+    <table class="reference-function-table">
+      <thead>
+        <tr>
+          <th>Helper</th>
+          <th>Role</th>
+          <th>Source</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td data-label="Helper"><code>_get_store</code></td>
+          <td data-label="Role">Resolve a configured Fabric path for an environment and target.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/config.py#L627-L667">src/fabricops_kit/config.py</a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_run_config_smoke_tests</code></td>
+          <td data-label="Role">Run 00_env_config readiness smoke checks for configuration bootstrap.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/config.py#L684-L783">src/fabricops_kit/config.py</a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_check_spark_session</code></td>
+          <td data-label="Role">Check whether a Spark session is available.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/config.py#L1111-L1116">src/fabricops_kit/config.py</a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_get_fabric_runtime_metadata</code></td>
+          <td data-label="Role">Best-effort retrieval of Fabric runtime metadata.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/config.py#L1119-L1158">src/fabricops_kit/config.py</a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_validate_notebook_name</code></td>
+          <td data-label="Role">Internal helper used by the package implementation.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/config.py#L670-L681">src/fabricops_kit/config.py</a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_validate_framework_config</code></td>
+          <td data-label="Role">Validate and normalize framework configuration input.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/config.py#L551-L624">src/fabricops_kit/config.py</a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_validate_audit_timezone</code></td>
+          <td data-label="Role">Return a valid IANA audit timezone name.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/config.py#L27-L58">src/fabricops_kit/config.py</a></td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+
+    ??? example "View helper source code"
+
+        **`def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any`**
+
+        Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/config.py#L627-L667)
+
+        ```python
+        def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any:
+            """Resolve a configured Fabric path for an environment and target.
+
+            Parameters
+            ----------
+            env : str
+                Environment key such as ``Sandbox``, ``DE``, or ``Prod``.
+            target : str
+                Target key such as ``Source``, ``Unified``, ``Product``, or ``Warehouse``.
+            config : FrameworkConfig | PathConfig | None
+                Configuration that contains environment-to-target path mappings.
+
+            Returns
+            -------
+            Any
+                FabricStore object with ``workspace_id``, ``house_id``, ``house_name``, and ``root``.
+
+            Raises
+            ------
+            ValueError
+                If config is missing, or if the environment/target mapping does not exist.
+
+            Examples
+            --------
+            >>> get_path("Sandbox", "Source", config=CONFIG)
+            Housepath(...)
+            """
+            if config is None:
+                raise ValueError("No Fabric config was provided. Pass a FrameworkConfig or PathConfig instance.")
+            paths = config.path_config.paths if isinstance(config, FrameworkConfig) else config.paths
+            if env not in paths:
+                available_envs = ", ".join(sorted(paths.keys())) or "<none>"
+                raise ValueError(
+                    f"Environment '{env}' was not found in Fabric config. Available environments: {available_envs}."
+                )
+            if target not in paths[env]:
+                available_targets = ", ".join(sorted(paths[env].keys())) or "<none>"
+                raise ValueError(
+                    f"Target '{target}' was not found under environment '{env}'. Available targets: {available_targets}."
+                )
+            return paths[env][target]
+        ```
+
+        **`def _run_config_smoke_tests(config: FrameworkConfig, env: str='Sandbox', required_targets: list[str] | None=None, check_io_import: bool=False, notebook_name: str | None=None) -> list[ConfigSmokeCheckResult]`**
+
+        Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/config.py#L684-L783)
+
+        ```python
+        def _run_config_smoke_tests(
+            config: FrameworkConfig,
+            env: str = "Sandbox",
+            required_targets: list[str] | None = None,
+            check_io_import: bool = False,
+            notebook_name: str | None = None,
+        ) -> list[ConfigSmokeCheckResult]:
+            """Run 00_env_config readiness smoke checks for configuration bootstrap.
+
+            Use this during environment bootstrap to verify Spark availability, Fabric
+            runtime context access, required path mappings, notebook naming policy, and
+            optional IO import readiness before executing downstream notebook steps.
+
+            Parameters
+            ----------
+            config : FrameworkConfig
+                Validated framework configuration to evaluate.
+            env : str, default="Sandbox"
+                Environment key used when resolving required target paths.
+            required_targets : list[str] | None, optional
+                Required targets expected in ``config.path_config``. Defaults to
+                ``["Source", "Unified"]`` when not provided.
+            check_io_import : bool, default=False
+                Whether to test importability of ``fabric_input_output`` helpers.
+            notebook_name : str | None, optional
+                Notebook name to validate against configured naming prefixes.
+
+            Returns
+            -------
+            list[ConfigSmokeCheckResult]
+                Ordered check results with ``pass``, ``warn``, ``fail``, or ``skipped``
+                statuses for each readiness dimension.
+
+            Raises
+            ------
+            ValueError
+                Propagated from config/path validation helpers when required targets or
+                configured environments are invalid.
+
+            Notes
+            -----
+            This helper performs validation and lightweight import/runtime checks only.
+            It does not create or mutate Fabric resources.
+
+            Examples
+            --------
+            >>> checks = _run_config_smoke_tests(config=my_config, env="Sandbox", notebook_name="00_env_config")
+            >>> any(c.status == "fail" for c in checks)
+            False
+            """
+            results: list[ConfigSmokeCheckResult] = []
+            required_targets = required_targets or ["Source", "Unified"]
+            spark_ready, spark_message = _check_spark_session()
+            results.append(ConfigSmokeCheckResult("spark_session", "pass" if spark_ready else "warn", spark_message))
+
+            runtime_meta = _get_fabric_runtime_metadata(notebook_name=notebook_name)
+            runtime_status = "pass" if runtime_meta.get("runtime_available") else "skipped"
+            runtime_message = (
+                "Fabric runtime context is readable."
+                if runtime_meta.get("runtime_available")
+                else "notebookutils.runtime unavailable outside Fabric runtime."
+            )
+            results.append(ConfigSmokeCheckResult("fabric_runtime_context", runtime_status, runtime_message))
+            try:
+                for target in required_targets:
+                    p = _get_store(config=config, env=env, target=target)
+                    missing = [attr for attr in ("workspace_id", "item_id", "name", "kind") if not getattr(p, attr, None)]
+                    if missing:
+                        results.append(ConfigSmokeCheckResult(f"path:{target}", "fail", f"Missing required fields: {missing}"))
+                    elif p.kind == "lakehouse" and str(p.root).startswith("abfss://"):
+                        results.append(
+                            ConfigSmokeCheckResult(
+                                f"path:{target}", "pass", "Lakehouse store is populated and ABFSS root is derivable."
+                            )
+                        )
+                    else:
+                        results.append(ConfigSmokeCheckResult(f"path:{target}", "pass", "Store is populated."))
+            except Exception as exc:
+                results.append(ConfigSmokeCheckResult("path_resolution", "fail", str(exc)))
+
+            if notebook_name:
+                errors = _validate_notebook_name(notebook_name, config=config)
+                results.append(
+                    ConfigSmokeCheckResult(
+                        "notebook_naming", "pass" if not errors else "fail", "; ".join(errors) or "Notebook name is valid."
+                    )
+                )
+            else:
+                results.append(ConfigSmokeCheckResult("notebook_naming", "skipped", "Notebook name check skipped."))
+
+            if check_io_import:
+                try:
+                    from .fabric_input_output import read_lakehouse_table  # noqa: F401
+
+                    results.append(ConfigSmokeCheckResult("fabric_io_import", "pass", "fabric_io helpers are importable."))
+                except Exception as exc:
+                    results.append(ConfigSmokeCheckResult("fabric_io_import", "fail", str(exc)))
+            else:
+                results.append(ConfigSmokeCheckResult("fabric_io_import", "skipped", "IO import check disabled."))
+            return results
+        ```
+
+        **`def _check_spark_session() -> tuple[bool, str]`**
+
+        Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/config.py#L1111-L1116)
+
+        ```python
+        def _check_spark_session() -> tuple[bool, str]:
+            """Check whether a Spark session is available."""
+            spark_obj = globals().get("spark")
+            if spark_obj is not None:
+                return True, "Spark session is available."
+            return False, "Spark session not found; local fallback mode."
+        ```
+
+        **`def _get_fabric_runtime_metadata(notebook_name: str | None=None) -> dict[str, Any]`**
+
+        Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/config.py#L1119-L1158)
+
+        ```python
+        def _get_fabric_runtime_metadata(notebook_name: str | None = None) -> dict[str, Any]:
+            """Best-effort retrieval of Fabric runtime metadata."""
+            metadata: dict[str, Any] = {
+                "notebook_name": notebook_name,
+                "workspace_name": None,
+                "user_name": None,
+                "runtime_available": False,
+            }
+            try:
+                import notebookutils.runtime as nb_runtime  # type: ignore
+
+                metadata["runtime_available"] = True
+                context = getattr(nb_runtime, "context", None)
+                if context is not None:
+
+                    def _ctx_value(*keys: str) -> Any:
+                        for key in keys:
+                            if hasattr(context, key):
+                                value = getattr(context, key, None)
+                                if value is not None:
+                                    return value
+                            if isinstance(context, dict):
+                                value = context.get(key)
+                                if value is not None:
+                                    return value
+                            get_method = getattr(context, "get", None)
+                            if callable(get_method):
+                                value = get_method(key)
+                                if value is not None:
+                                    return value
+                        return None
+
+                    metadata["notebook_name"] = metadata["notebook_name"] or _ctx_value(
+                        "currentNotebookName", "current_notebook_name"
+                    )
+                    metadata["workspace_name"] = _ctx_value("currentWorkspaceName", "workspaceName", "workspace_name")
+                    metadata["user_name"] = _ctx_value("userName", "user_name")
+            except Exception:
+                pass
+            return metadata
+        ```
+
+        **`def _validate_notebook_name(notebook_name: str, config: FrameworkConfig | None=None) -> list[str]`**
+
+        Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/config.py#L670-L681)
+
+        ```python
+        def _validate_notebook_name(notebook_name: str, config: FrameworkConfig | None = None) -> list[str]:
+            name = "_".join(str(notebook_name or "").strip().lower().split())
+            patterns = [
+                r"^00_env_config$",
+                r"^01_agreement(?:_[a-z0-9_]+)?$",
+                r"^02_pipeline(?:_[a-z0-9_]+)?$",
+                r"^03_governance(?:_[a-z0-9_]+)?$",
+                r"^99_explore(?:_[a-z0-9_]+)?$",
+            ]
+            if any(__import__("re").match(p, name) for p in patterns):
+                return []
+            return ["Notebook name does not match accepted FabricOps naming patterns."]
+        ```
+
+        **`def _validate_framework_config(config: FrameworkConfig | dict[str, Any]) -> FrameworkConfig`**
+
+        Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/config.py#L551-L624)
+
+        ```python
+        def _validate_framework_config(config: FrameworkConfig | dict[str, Any]) -> FrameworkConfig:
+            """Validate and normalize framework configuration input.
+
+            Parameters
+            ----------
+            config : FrameworkConfig | dict[str, Any]
+                Existing framework config object or compatible mapping containing the
+                required user-facing component configs. Framework-only sections may be
+                omitted and will use package defaults.
+
+            Returns
+            -------
+            FrameworkConfig
+                Normalized, validated framework config object.
+
+            Raises
+            ------
+            ValueError
+                Raised when required sections are missing, component types are invalid,
+                or configured path targets are incomplete.
+
+            Notes
+            -----
+            Validation checks configuration shape and required FabricStore fields.
+            It does not perform external IO or provision Fabric resources.
+
+            Examples
+            --------
+            >>> normalized = _validate_framework_config(framework_config)
+            >>> isinstance(normalized, FrameworkConfig)
+            True
+            """
+            if isinstance(config, FrameworkConfig):
+                normalized = config
+            elif isinstance(config, dict):
+                required_keys = {
+                    "path_config",
+                    "notebook_runtime_config",
+                    "ai_prompt_config",
+                }
+                missing_keys = sorted(required_keys.difference(config.keys()))
+                if missing_keys:
+                    raise ValueError(f"Framework config is missing required keys: {', '.join(missing_keys)}.")
+                normalized = FrameworkConfig(**config)
+            else:
+                raise ValueError("config must be a FrameworkConfig object or compatible mapping.")
+
+            if not isinstance(normalized.path_config, PathConfig):
+                raise ValueError("path_config must be a PathConfig object.")
+            if not isinstance(normalized.notebook_runtime_config, NotebookRuntimeConfig):
+                raise ValueError("notebook_runtime_config must be a NotebookRuntimeConfig object.")
+            if not isinstance(normalized.ai_prompt_config, AIPromptConfig):
+                raise ValueError("ai_prompt_config must be an AIPromptConfig object.")
+            if not isinstance(normalized.quality_config, QualityConfig):
+                raise ValueError("quality_config must be a QualityConfig object.")
+            if not isinstance(normalized.governance_config, GovernanceConfig):
+                raise ValueError("governance_config must be a GovernanceConfig object.")
+            if not isinstance(normalized.review_workflow_config, ReviewWorkflowConfig):
+                raise ValueError("review_workflow_config must be a ReviewWorkflowConfig object.")
+            if not isinstance(normalized.lineage_config, LineageConfig):
+                raise ValueError("lineage_config must be a LineageConfig object.")
+            if not isinstance(normalized.data_agreement_config, DataAgreementConfig):
+                raise ValueError("data_agreement_config must be a DataAgreementConfig object.")
+            _validate_audit_timezone(normalized.audit_timezone)
+
+            for env_name, targets in normalized.path_config.paths.items():
+                if not isinstance(targets, dict) or not targets:
+                    raise ValueError(f"Environment '{env_name}' must contain at least one target.")
+                for target_name, housepath in targets.items():
+                    required = ("workspace_id", "item_id", "name", "kind")
+                    if not all(hasattr(housepath, attr) for attr in required):
+                        raise ValueError(f"Target '{env_name}/{target_name}' must provide FabricStore fields: {required}.")
+
+            return normalized
+        ```
+
+        **`def _validate_audit_timezone(timezone_name: str | None) -> str`**
+
+        Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/config.py#L27-L58)
+
+        ```python
+        def _validate_audit_timezone(timezone_name: str | None) -> str:
+            """Return a valid IANA audit timezone name.
+
+            Parameters
+            ----------
+            timezone_name : str or None
+                IANA timezone name to validate. Blank values default to ``"UTC"``.
+
+            Returns
+            -------
+            str
+                Validated timezone name.
+
+            Raises
+            ------
+            ValueError
+                If a non-blank value is not a valid IANA timezone name.
+            """
+            value = str(timezone_name or DEFAULT_AUDIT_TIMEZONE).strip() or DEFAULT_AUDIT_TIMEZONE
+            if value != DEFAULT_AUDIT_TIMEZONE and "/" not in value:
+                raise ValueError(
+                    f'Invalid FABRICOPS_AUDIT_TIMEZONE: "{value}". '
+                    'Use a valid IANA timezone name such as "Asia/Singapore" or keep the default "UTC".'
+                )
+            try:
+                ZoneInfo(value)
+            except ZoneInfoNotFoundError as exc:
+                raise ValueError(
+                    f'Invalid FABRICOPS_AUDIT_TIMEZONE: "{value}". '
+                    'Use a valid IANA timezone name such as "Asia/Singapore" or keep the default "UTC".'
+                ) from exc
+            return value
+        ```
+
 
 <details class="reference-metadata-details">
 <summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
@@ -741,7 +682,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/config.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L786-L895">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L786-L895</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/config.py#L786-L895">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/config.py#L786-L895</a>
 - Start line: `786`
 - End line: `895`
 - Signature:
@@ -774,481 +715,5 @@ setup_notebook(...)
 │   └── FrameworkConfig(...)
 └── NotebookSetupContext(...)
 ```
-
-### Internal helpers used by this callable
-
-### `def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any`
-
-**What it does:**
-
-Resolve a configured Fabric path for an environment and target.
-
-**Source:**
-
-- `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L627-L667">View `_get_store` on GitHub</a>
-
-**Code:**
-
-```python
-def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any:
-    """Resolve a configured Fabric path for an environment and target.
-
-    Parameters
-    ----------
-    env : str
-        Environment key such as ``Sandbox``, ``DE``, or ``Prod``.
-    target : str
-        Target key such as ``Source``, ``Unified``, ``Product``, or ``Warehouse``.
-    config : FrameworkConfig | PathConfig | None
-        Configuration that contains environment-to-target path mappings.
-
-    Returns
-    -------
-    Any
-        FabricStore object with ``workspace_id``, ``house_id``, ``house_name``, and ``root``.
-
-    Raises
-    ------
-    ValueError
-        If config is missing, or if the environment/target mapping does not exist.
-
-    Examples
-    --------
-    >>> get_path("Sandbox", "Source", config=CONFIG)
-    Housepath(...)
-    """
-    if config is None:
-        raise ValueError("No Fabric config was provided. Pass a FrameworkConfig or PathConfig instance.")
-    paths = config.path_config.paths if isinstance(config, FrameworkConfig) else config.paths
-    if env not in paths:
-        available_envs = ", ".join(sorted(paths.keys())) or "<none>"
-        raise ValueError(
-            f"Environment '{env}' was not found in Fabric config. Available environments: {available_envs}."
-        )
-    if target not in paths[env]:
-        available_targets = ", ".join(sorted(paths[env].keys())) or "<none>"
-        raise ValueError(
-            f"Target '{target}' was not found under environment '{env}'. Available targets: {available_targets}."
-        )
-    return paths[env][target]
-```
-
-**Used here because:**
-
-`setup_notebook` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `setup_notebook` or another caller that reaches `_get_store`.
-
-### `def _run_config_smoke_tests(config: FrameworkConfig, env: str='Sandbox', required_targets: list[str] | None=None, check_io_import: bool=False, notebook_name: str | None=None) -> list[ConfigSmokeCheckResult]`
-
-**What it does:**
-
-Run 00_env_config readiness smoke checks for configuration bootstrap.
-
-**Source:**
-
-- `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L684-L783">View `_run_config_smoke_tests` on GitHub</a>
-
-**Code:**
-
-```python
-def _run_config_smoke_tests(
-    config: FrameworkConfig,
-    env: str = "Sandbox",
-    required_targets: list[str] | None = None,
-    check_io_import: bool = False,
-    notebook_name: str | None = None,
-) -> list[ConfigSmokeCheckResult]:
-    """Run 00_env_config readiness smoke checks for configuration bootstrap.
-
-    Use this during environment bootstrap to verify Spark availability, Fabric
-    runtime context access, required path mappings, notebook naming policy, and
-    optional IO import readiness before executing downstream notebook steps.
-
-    Parameters
-    ----------
-    config : FrameworkConfig
-        Validated framework configuration to evaluate.
-    env : str, default="Sandbox"
-        Environment key used when resolving required target paths.
-    required_targets : list[str] | None, optional
-        Required targets expected in ``config.path_config``. Defaults to
-        ``["Source", "Unified"]`` when not provided.
-    check_io_import : bool, default=False
-        Whether to test importability of ``fabric_input_output`` helpers.
-    notebook_name : str | None, optional
-        Notebook name to validate against configured naming prefixes.
-
-    Returns
-    -------
-    list[ConfigSmokeCheckResult]
-        Ordered check results with ``pass``, ``warn``, ``fail``, or ``skipped``
-        statuses for each readiness dimension.
-
-    Raises
-    ------
-    ValueError
-        Propagated from config/path validation helpers when required targets or
-        configured environments are invalid.
-
-    Notes
-    -----
-    This helper performs validation and lightweight import/runtime checks only.
-    It does not create or mutate Fabric resources.
-
-    Examples
-    --------
-    >>> checks = _run_config_smoke_tests(config=my_config, env="Sandbox", notebook_name="00_env_config")
-    >>> any(c.status == "fail" for c in checks)
-    False
-    """
-    results: list[ConfigSmokeCheckResult] = []
-    required_targets = required_targets or ["Source", "Unified"]
-    spark_ready, spark_message = _check_spark_session()
-    results.append(ConfigSmokeCheckResult("spark_session", "pass" if spark_ready else "warn", spark_message))
-
-    runtime_meta = _get_fabric_runtime_metadata(notebook_name=notebook_name)
-    runtime_status = "pass" if runtime_meta.get("runtime_available") else "skipped"
-    runtime_message = (
-        "Fabric runtime context is readable."
-        if runtime_meta.get("runtime_available")
-        else "notebookutils.runtime unavailable outside Fabric runtime."
-    )
-    results.append(ConfigSmokeCheckResult("fabric_runtime_context", runtime_status, runtime_message))
-    try:
-        for target in required_targets:
-            p = _get_store(config=config, env=env, target=target)
-            missing = [attr for attr in ("workspace_id", "item_id", "name", "kind") if not getattr(p, attr, None)]
-            if missing:
-                results.append(ConfigSmokeCheckResult(f"path:{target}", "fail", f"Missing required fields: {missing}"))
-            elif p.kind == "lakehouse" and str(p.root).startswith("abfss://"):
-                results.append(
-                    ConfigSmokeCheckResult(
-                        f"path:{target}", "pass", "Lakehouse store is populated and ABFSS root is derivable."
-                    )
-                )
-            else:
-                results.append(ConfigSmokeCheckResult(f"path:{target}", "pass", "Store is populated."))
-    except Exception as exc:
-        results.append(ConfigSmokeCheckResult("path_resolution", "fail", str(exc)))
-
-    if notebook_name:
-        errors = _validate_notebook_name(notebook_name, config=config)
-        results.append(
-            ConfigSmokeCheckResult(
-                "notebook_naming", "pass" if not errors else "fail", "; ".join(errors) or "Notebook name is valid."
-            )
-        )
-    else:
-        results.append(ConfigSmokeCheckResult("notebook_naming", "skipped", "Notebook name check skipped."))
-
-    if check_io_import:
-        try:
-            from .fabric_input_output import read_lakehouse_table  # noqa: F401
-
-            results.append(ConfigSmokeCheckResult("fabric_io_import", "pass", "fabric_io helpers are importable."))
-        except Exception as exc:
-            results.append(ConfigSmokeCheckResult("fabric_io_import", "fail", str(exc)))
-    else:
-        results.append(ConfigSmokeCheckResult("fabric_io_import", "skipped", "IO import check disabled."))
-    return results
-```
-
-**Used here because:**
-
-`setup_notebook` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `setup_notebook` or another caller that reaches `_run_config_smoke_tests`.
-
-### `def _check_spark_session() -> tuple[bool, str]`
-
-**What it does:**
-
-Check whether a Spark session is available.
-
-**Source:**
-
-- `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L1111-L1116">View `_check_spark_session` on GitHub</a>
-
-**Code:**
-
-```python
-def _check_spark_session() -> tuple[bool, str]:
-    """Check whether a Spark session is available."""
-    spark_obj = globals().get("spark")
-    if spark_obj is not None:
-        return True, "Spark session is available."
-    return False, "Spark session not found; local fallback mode."
-```
-
-**Used here because:**
-
-`setup_notebook` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `setup_notebook` or another caller that reaches `_check_spark_session`.
-
-### `def _get_fabric_runtime_metadata(notebook_name: str | None=None) -> dict[str, Any]`
-
-**What it does:**
-
-Best-effort retrieval of Fabric runtime metadata.
-
-**Source:**
-
-- `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L1119-L1158">View `_get_fabric_runtime_metadata` on GitHub</a>
-
-**Code:**
-
-```python
-def _get_fabric_runtime_metadata(notebook_name: str | None = None) -> dict[str, Any]:
-    """Best-effort retrieval of Fabric runtime metadata."""
-    metadata: dict[str, Any] = {
-        "notebook_name": notebook_name,
-        "workspace_name": None,
-        "user_name": None,
-        "runtime_available": False,
-    }
-    try:
-        import notebookutils.runtime as nb_runtime  # type: ignore
-
-        metadata["runtime_available"] = True
-        context = getattr(nb_runtime, "context", None)
-        if context is not None:
-
-            def _ctx_value(*keys: str) -> Any:
-                for key in keys:
-                    if hasattr(context, key):
-                        value = getattr(context, key, None)
-                        if value is not None:
-                            return value
-                    if isinstance(context, dict):
-                        value = context.get(key)
-                        if value is not None:
-                            return value
-                    get_method = getattr(context, "get", None)
-                    if callable(get_method):
-                        value = get_method(key)
-                        if value is not None:
-                            return value
-                return None
-
-            metadata["notebook_name"] = metadata["notebook_name"] or _ctx_value(
-                "currentNotebookName", "current_notebook_name"
-            )
-            metadata["workspace_name"] = _ctx_value("currentWorkspaceName", "workspaceName", "workspace_name")
-            metadata["user_name"] = _ctx_value("userName", "user_name")
-    except Exception:
-        pass
-    return metadata
-```
-
-**Used here because:**
-
-`setup_notebook` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `setup_notebook` or another caller that reaches `_get_fabric_runtime_metadata`.
-
-### `def _validate_notebook_name(notebook_name: str, config: FrameworkConfig | None=None) -> list[str]`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L670-L681">View `_validate_notebook_name` on GitHub</a>
-
-**Code:**
-
-```python
-def _validate_notebook_name(notebook_name: str, config: FrameworkConfig | None = None) -> list[str]:
-    name = "_".join(str(notebook_name or "").strip().lower().split())
-    patterns = [
-        r"^00_env_config$",
-        r"^01_agreement(?:_[a-z0-9_]+)?$",
-        r"^02_pipeline(?:_[a-z0-9_]+)?$",
-        r"^03_governance(?:_[a-z0-9_]+)?$",
-        r"^99_explore(?:_[a-z0-9_]+)?$",
-    ]
-    if any(__import__("re").match(p, name) for p in patterns):
-        return []
-    return ["Notebook name does not match accepted FabricOps naming patterns."]
-```
-
-**Used here because:**
-
-`setup_notebook` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `setup_notebook` or another caller that reaches `_validate_notebook_name`.
-
-### `def _validate_framework_config(config: FrameworkConfig | dict[str, Any]) -> FrameworkConfig`
-
-**What it does:**
-
-Validate and normalize framework configuration input.
-
-**Source:**
-
-- `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L551-L624">View `_validate_framework_config` on GitHub</a>
-
-**Code:**
-
-```python
-def _validate_framework_config(config: FrameworkConfig | dict[str, Any]) -> FrameworkConfig:
-    """Validate and normalize framework configuration input.
-
-    Parameters
-    ----------
-    config : FrameworkConfig | dict[str, Any]
-        Existing framework config object or compatible mapping containing the
-        required user-facing component configs. Framework-only sections may be
-        omitted and will use package defaults.
-
-    Returns
-    -------
-    FrameworkConfig
-        Normalized, validated framework config object.
-
-    Raises
-    ------
-    ValueError
-        Raised when required sections are missing, component types are invalid,
-        or configured path targets are incomplete.
-
-    Notes
-    -----
-    Validation checks configuration shape and required FabricStore fields.
-    It does not perform external IO or provision Fabric resources.
-
-    Examples
-    --------
-    >>> normalized = _validate_framework_config(framework_config)
-    >>> isinstance(normalized, FrameworkConfig)
-    True
-    """
-    if isinstance(config, FrameworkConfig):
-        normalized = config
-    elif isinstance(config, dict):
-        required_keys = {
-            "path_config",
-            "notebook_runtime_config",
-            "ai_prompt_config",
-        }
-        missing_keys = sorted(required_keys.difference(config.keys()))
-        if missing_keys:
-            raise ValueError(f"Framework config is missing required keys: {', '.join(missing_keys)}.")
-        normalized = FrameworkConfig(**config)
-    else:
-        raise ValueError("config must be a FrameworkConfig object or compatible mapping.")
-
-    if not isinstance(normalized.path_config, PathConfig):
-        raise ValueError("path_config must be a PathConfig object.")
-    if not isinstance(normalized.notebook_runtime_config, NotebookRuntimeConfig):
-        raise ValueError("notebook_runtime_config must be a NotebookRuntimeConfig object.")
-    if not isinstance(normalized.ai_prompt_config, AIPromptConfig):
-        raise ValueError("ai_prompt_config must be an AIPromptConfig object.")
-    if not isinstance(normalized.quality_config, QualityConfig):
-        raise ValueError("quality_config must be a QualityConfig object.")
-    if not isinstance(normalized.governance_config, GovernanceConfig):
-        raise ValueError("governance_config must be a GovernanceConfig object.")
-    if not isinstance(normalized.review_workflow_config, ReviewWorkflowConfig):
-        raise ValueError("review_workflow_config must be a ReviewWorkflowConfig object.")
-    if not isinstance(normalized.lineage_config, LineageConfig):
-        raise ValueError("lineage_config must be a LineageConfig object.")
-    if not isinstance(normalized.data_agreement_config, DataAgreementConfig):
-        raise ValueError("data_agreement_config must be a DataAgreementConfig object.")
-    _validate_audit_timezone(normalized.audit_timezone)
-
-    for env_name, targets in normalized.path_config.paths.items():
-        if not isinstance(targets, dict) or not targets:
-            raise ValueError(f"Environment '{env_name}' must contain at least one target.")
-        for target_name, housepath in targets.items():
-            required = ("workspace_id", "item_id", "name", "kind")
-            if not all(hasattr(housepath, attr) for attr in required):
-                raise ValueError(f"Target '{env_name}/{target_name}' must provide FabricStore fields: {required}.")
-
-    return normalized
-```
-
-**Used here because:**
-
-`setup_notebook` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `setup_notebook` or another caller that reaches `_validate_framework_config`.
-
-### `def _validate_audit_timezone(timezone_name: str | None) -> str`
-
-**What it does:**
-
-Return a valid IANA audit timezone name.
-
-**Source:**
-
-- `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L27-L58">View `_validate_audit_timezone` on GitHub</a>
-
-**Code:**
-
-```python
-def _validate_audit_timezone(timezone_name: str | None) -> str:
-    """Return a valid IANA audit timezone name.
-
-    Parameters
-    ----------
-    timezone_name : str or None
-        IANA timezone name to validate. Blank values default to ``"UTC"``.
-
-    Returns
-    -------
-    str
-        Validated timezone name.
-
-    Raises
-    ------
-    ValueError
-        If a non-blank value is not a valid IANA timezone name.
-    """
-    value = str(timezone_name or DEFAULT_AUDIT_TIMEZONE).strip() or DEFAULT_AUDIT_TIMEZONE
-    if value != DEFAULT_AUDIT_TIMEZONE and "/" not in value:
-        raise ValueError(
-            f'Invalid FABRICOPS_AUDIT_TIMEZONE: "{value}". '
-            'Use a valid IANA timezone name such as "Asia/Singapore" or keep the default "UTC".'
-        )
-    try:
-        ZoneInfo(value)
-    except ZoneInfoNotFoundError as exc:
-        raise ValueError(
-            f'Invalid FABRICOPS_AUDIT_TIMEZONE: "{value}". '
-            'Use a valid IANA timezone name such as "Asia/Singapore" or keep the default "UTC".'
-        ) from exc
-    return value
-```
-
-**Used here because:**
-
-`setup_notebook` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `setup_notebook` or another caller that reaches `_validate_audit_timezone`.
-
 
 </details>

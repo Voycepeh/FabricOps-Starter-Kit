@@ -2,24 +2,36 @@
 
 Return the agreement selected by widget_select_agreement.
 
-## What this is for and when to use it
+## Purpose
 
 Return the agreement selected by widget_select_agreement.
 
+## At a glance
+
+**Use when:**
+
 - Use immediately after widget_select_agreement to retrieve the selected agreement record for pipeline logic and evidence binding.
 
-## When not to use it
+**Do not use when:**
 
 - Do not use before rendering and completing widget_select_agreement, or as a substitute for querying all agreement metadata.
 
-## Example
+**Example:**
 
 ```python
 agreement = get_selected_agreement()
 dataset_name = agreement["dataset_name"]
 ```
 
-## Inputs
+**Errors:**
+
+Raises an error when no agreement has been selected in the current session.
+
+**Side effects:**
+
+Reads session/widget state only; it does not write metadata, tables, or files.
+
+## Parameters
 
 <div class="module-table-scroll reference-input-table">
 <table class="reference-function-table">
@@ -40,22 +52,19 @@ dataset_name = agreement["dataset_name"]
 </table>
 </div>
 
-## Output
+## Returns
 
 Selected agreement dictionary for the active notebook session.
 
-## Errors and side effects
+## Used by
 
-**Errors:** Raises an error when no agreement has been selected in the current session.
+Not documented yet
 
-**Side effects:** Reads session/widget state only; it does not write metadata, tables, or files.
+## Calls
 
-## Related functions
+Not documented yet
 
-- <a href="../widget_select_agreement/"><code>fabricops_kit.data_agreement.widget_select_agreement</code></a>
-
-<details class="reference-implementation-details">
-<summary>Implementation details</summary>
+## Implementation details
 
 ### Call flow
 
@@ -63,19 +72,10 @@ Selected agreement dictionary for the active notebook session.
 get_selected_agreement(...)
 ```
 
-### Internal helpers used by this callable
-
-Not documented yet
-
-</details>
-
-## Source
+## Public callable source code
 
 - Source file path: `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L1083-L1098">View get_selected_agreement on GitHub</a>
-
-<details class="reference-source-details">
-<summary>Show source code</summary>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/data_agreement.py#L1083-L1098">View get_selected_agreement on GitHub</a>
 
 ```python
 def get_selected_agreement() -> dict[str, Any]:
@@ -96,7 +96,30 @@ def get_selected_agreement() -> dict[str, Any]:
     return dict(_SELECTED_AGREEMENT)
 ```
 
-</details>
+## Maintainer internals
+
+??? info "Nested helper functions: 0"
+
+    No nested helper functions were detected for `get_selected_agreement`.
+
+    <div class="module-table-scroll reference-input-table">
+    <table class="reference-function-table">
+      <thead>
+        <tr>
+          <th>Helper</th>
+          <th>Role</th>
+          <th>Source</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td data-label="Helper">—</td>
+          <td data-label="Role">No nested helper functions detected.</td>
+          <td data-label="Source">—</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
 
 <details class="reference-metadata-details">
 <summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
@@ -135,7 +158,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/data_agreement.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L1083-L1098">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/data_agreement.py#L1083-L1098</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/data_agreement.py#L1083-L1098">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d01a524e6e404dc5b73c3d4ff41728d9f05e9cd8/src/fabricops_kit/data_agreement.py#L1083-L1098</a>
 - Start line: `1083`
 - End line: `1098`
 - Signature:
@@ -157,9 +180,5 @@ def get_selected_agreement() -> dict[str, Any]
 ```text
 get_selected_agreement(...)
 ```
-
-### Internal helpers used by this callable
-
-Not documented yet
 
 </details>
