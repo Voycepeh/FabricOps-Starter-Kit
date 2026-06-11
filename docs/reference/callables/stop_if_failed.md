@@ -60,15 +60,23 @@ None when execution may continue; otherwise raises or exits according to runtime
 <details class="reference-implementation-details">
 <summary>Implementation details</summary>
 
-- <a href="../run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
-- <a href="../internal/guardrails_SchemaDriftError/"><code>fabricops_kit.guardrails.SchemaDriftError</code></a>
+### Call flow
+
+```text
+stop_if_failed(...)
+└── SchemaDriftError(...)
+```
+
+### Internal helpers used by this callable
+
+Not documented yet
 
 </details>
 
 ## Source
 
 - Source file path: `src/fabricops_kit/guardrails.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a80b5a6ddb4de14056095d4da916cd452e478ff8/src/fabricops_kit/guardrails.py#L834-L853">View stop_if_failed on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L840-L859">View stop_if_failed on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -111,7 +119,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `guardrails`
 - Source file path: `src/fabricops_kit/guardrails.py`
-- Source line: `834`
+- Source line: `840`
 - Inbound references count: 1
 - Outbound references count: 1
 
@@ -130,14 +138,14 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 
 ### Outbound references
 
-- <a href="../internal/guardrails_SchemaDriftError/"><code>fabricops_kit.guardrails.SchemaDriftError</code></a>
+- `fabricops_kit.guardrails.SchemaDriftError`
 
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/guardrails.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a80b5a6ddb4de14056095d4da916cd452e478ff8/src/fabricops_kit/guardrails.py#L834-L853">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a80b5a6ddb4de14056095d4da916cd452e478ff8/src/fabricops_kit/guardrails.py#L834-L853</a>
-- Start line: `834`
-- End line: `853`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L840-L859">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L840-L859</a>
+- Start line: `840`
+- End line: `859`
 - Signature:
 
 ```python
@@ -155,7 +163,15 @@ def stop_if_failed(result) -> None
 
 ### Internal implementation helpers
 
-- <a href="../run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
-- <a href="../internal/guardrails_SchemaDriftError/"><code>fabricops_kit.guardrails.SchemaDriftError</code></a>
+### Call flow
+
+```text
+stop_if_failed(...)
+└── SchemaDriftError(...)
+```
+
+### Internal helpers used by this callable
+
+Not documented yet
 
 </details>

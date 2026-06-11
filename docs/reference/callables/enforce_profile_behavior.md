@@ -130,25 +130,606 @@ Guardrail result dictionary with status, can_continue, message, current profile,
 <details class="reference-implementation-details">
 <summary>Implementation details</summary>
 
-- <a href="../run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
-- <a href="../profile_dataframe/"><code>fabricops_kit.data_profiling.profile_dataframe</code></a>
-- <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a>
-- <a href="../internal/guardrails__catalogue_value/"><code>fabricops_kit.guardrails._catalogue_value</code></a>
-- <a href="../internal/guardrails__guardrail_exclude_columns/"><code>fabricops_kit.guardrails._guardrail_exclude_columns</code></a>
-- <a href="../internal/guardrails__is_greater_than/"><code>fabricops_kit.guardrails._is_greater_than</code></a>
-- <a href="../internal/guardrails__is_less_than/"><code>fabricops_kit.guardrails._is_less_than</code></a>
-- <a href="../internal/guardrails__is_missing_table_error/"><code>fabricops_kit.guardrails._is_missing_table_error</code></a>
-- <a href="../internal/guardrails__latest_catalogue_behavior_profile_row/"><code>fabricops_kit.guardrails._latest_catalogue_behavior_profile_row</code></a>
-- <a href="../internal/guardrails__profile_row_count/"><code>fabricops_kit.guardrails._profile_row_count</code></a>
-- <a href="../internal/guardrails__profile_watermark_bounds/"><code>fabricops_kit.guardrails._profile_watermark_bounds</code></a>
-- <a href="../internal/guardrails__string_value/"><code>fabricops_kit.guardrails._string_value</code></a>
+### Call flow
+
+```text
+enforce_profile_behavior(...)
+├── _catalogue_value(...)
+├── _guardrail_exclude_columns(...)
+├── _is_greater_than(...)
+│   └── _comparable_value(...)
+├── _is_less_than(...)
+│   └── _comparable_value(...)
+├── _is_missing_table_error(...)
+├── _latest_catalogue_behavior_profile_row(...)
+│   ├── _catalogue_value(...)
+│   ├── _is_missing_table_error(...)
+│   ├── _row_to_dict(...)
+│   └── _string_value(...)
+├── _profile_row_count(...)
+│   └── _normalize_profile(...)
+│       └── _normalize_profile(...) (recursive)
+├── _profile_watermark_bounds(...)
+│   ├── _normalize_profile(...)
+│   │   └── _normalize_profile(...) (recursive)
+│   └── _string_value(...)
+├── _string_value(...)
+├── profile_dataframe(...)
+│   ├── _audit_timestamp_expr(...)
+│   │   └── _get_audit_timezone(...)
+│   │       └── _validate_audit_timezone(...)
+│   ├── _build_distribution_summaries(...)
+│   │   ├── _build_categorical_distribution(...)
+│   │   ├── _build_numeric_distribution(...)
+│   │   └── _numeric_bin_edges(...)
+│   ├── _get_profiled_columns(...)
+│   ├── _is_min_max_supported_type(...)
+│   └── _validate_audit_timezone(...)
+└── read_lakehouse_table(...)
+    ├── _current_database_matches(...)
+    ├── _get_spark(...)
+    ├── _get_store(...)
+    ├── _normalize_table_name(...)
+    ├── _registered_table_identifier(...)
+    │   ├── _normalize_table_name(...)
+    │   └── _quote_identifier(...)
+    └── _uses_registered_metadata_table(...)
+```
+
+### Internal helpers used by this callable
+
+### `def _catalogue_value(row: dict, *names: str)`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/guardrails.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L467-L478">View `_catalogue_value` on GitHub</a>
+
+**Code:**
+
+```python
+def _catalogue_value(row: dict, *names: str):
+    for name in names:
+        if name in row:
+            return row.get(name)
+        upper = name.upper()
+        if upper in row:
+            return row.get(upper)
+        lower = name.lower()
+        for key, value in row.items():
+            if str(key).lower() == lower:
+                return value
+    return None
+```
+
+**Used here because:**
+
+`enforce_profile_behavior` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `enforce_profile_behavior` or another caller that reaches `_catalogue_value`.
+
+### `def _guardrail_exclude_columns(exclude_columns: list[str] | set[str] | tuple[str, ...] | None=None) -> set[str]`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/guardrails.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L282-L286">View `_guardrail_exclude_columns` on GitHub</a>
+
+**Code:**
+
+```python
+def _guardrail_exclude_columns(exclude_columns: list[str] | set[str] | tuple[str, ...] | None = None) -> set[str]:
+    excluded = set(_DEFAULT_STABILITY_EXCLUDE_COLUMNS)
+    if exclude_columns:
+        excluded.update(str(column) for column in exclude_columns)
+    return excluded
+```
+
+**Used here because:**
+
+`enforce_profile_behavior` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `enforce_profile_behavior` or another caller that reaches `_guardrail_exclude_columns`.
+
+### `def _is_greater_than(left, right) -> bool`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/guardrails.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L507-L514">View `_is_greater_than` on GitHub</a>
+
+**Code:**
+
+```python
+def _is_greater_than(left, right) -> bool:
+    left_value = _comparable_value(left)
+    right_value = _comparable_value(right)
+    if left_value is None or right_value is None:
+        return False
+    if isinstance(left_value, Decimal) and isinstance(right_value, Decimal):
+        return left_value > right_value
+    return str(left_value) > str(right_value)
+```
+
+**Used here because:**
+
+`enforce_profile_behavior` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `enforce_profile_behavior` or another caller that reaches `_is_greater_than`.
+
+### `def _comparable_value(value)`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/guardrails.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L485-L494">View `_comparable_value` on GitHub</a>
+
+**Code:**
+
+```python
+def _comparable_value(value):
+    if value in (None, ""):
+        return None
+    if hasattr(value, "isoformat"):
+        return value.isoformat()
+    text = str(value)
+    try:
+        return Decimal(text)
+    except Exception:
+        return text
+```
+
+**Used here because:**
+
+`enforce_profile_behavior` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `enforce_profile_behavior` or another caller that reaches `_comparable_value`.
+
+### `def _is_less_than(left, right) -> bool`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/guardrails.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L497-L504">View `_is_less_than` on GitHub</a>
+
+**Code:**
+
+```python
+def _is_less_than(left, right) -> bool:
+    left_value = _comparable_value(left)
+    right_value = _comparable_value(right)
+    if left_value is None or right_value is None:
+        return False
+    if isinstance(left_value, Decimal) and isinstance(right_value, Decimal):
+        return left_value < right_value
+    return str(left_value) < str(right_value)
+```
+
+**Used here because:**
+
+`enforce_profile_behavior` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `enforce_profile_behavior` or another caller that reaches `_is_less_than`.
+
+### `def _is_missing_table_error(exc: Exception) -> bool`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/guardrails.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L834-L837">View `_is_missing_table_error` on GitHub</a>
+
+**Code:**
+
+```python
+def _is_missing_table_error(exc: Exception) -> bool:
+    text = str(exc).lower()
+    patterns = ["not found", "table or view not found", "no such table", "cannot resolve", "missing"]
+    return any(pattern in text for pattern in patterns)
+```
+
+**Used here because:**
+
+`enforce_profile_behavior` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `enforce_profile_behavior` or another caller that reaches `_is_missing_table_error`.
+
+### `def _latest_catalogue_behavior_profile_row(catalogue_df, *, dataset_name: str, table_name: str, profile_stage: str, load_behavior: str, watermark_column: str | None=None, exclude_run_id: str | None=None) -> dict | None`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/guardrails.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L527-L636">View `_latest_catalogue_behavior_profile_row` on GitHub</a>
+
+**Code:**
+
+```python
+def _latest_catalogue_behavior_profile_row(
+    catalogue_df,
+    *,
+    dataset_name: str,
+    table_name: str,
+    profile_stage: str,
+    load_behavior: str,
+    watermark_column: str | None = None,
+    exclude_run_id: str | None = None,
+) -> dict | None:
+    if catalogue_df is None:
+        return None
+
+    try:
+        if hasattr(catalogue_df, "collect") and hasattr(catalogue_df, "columns"):
+            from pyspark.sql import functions as F
+
+            df = catalogue_df
+            columns_by_lower = {str(column).lower(): column for column in df.columns}
+
+            def catalogue_col(*names: str) -> str | None:
+                for name in names:
+                    if name in df.columns:
+                        return name
+                    if name.lower() in columns_by_lower:
+                        return columns_by_lower[name.lower()]
+                return None
+
+            stage = str(profile_stage).lower()
+            stage_roles = [stage, f"{stage}_profile"]
+            if stage == "target":
+                stage_roles.append("output_profile")
+
+            dataset_col = catalogue_col("dataset_name")
+            table_col = catalogue_col("table_name", "profiled_table_name")
+            stage_col = catalogue_col("profile_stage", "evidence_role")
+            behavior_col = catalogue_col("load_behavior")
+            stability_status_col = catalogue_col("stability_status")
+            profile_status_col = catalogue_col("profile_status")
+            run_col = catalogue_col("profile_run_id", "run_id")
+            time_col = catalogue_col("profiled_at", "run_timestamp", "created_at")
+            column_col = catalogue_col("column_name")
+            required = [dataset_col, table_col, stage_col, behavior_col, stability_status_col]
+            if watermark_column:
+                required.append(column_col)
+            if any(column is None for column in required):
+                return None
+
+            filters = [
+                F.col(dataset_col) == dataset_name,
+                F.col(table_col) == table_name,
+                F.lower(F.col(stage_col)).isin(stage_roles),
+                F.lower(F.col(behavior_col)) == str(load_behavior).lower(),
+                F.lower(F.col(stability_status_col)).isin("passed", "baseline_created"),
+            ]
+            if profile_status_col:
+                filters.append(F.lower(F.col(profile_status_col)).isin("success", "successful"))
+            if exclude_run_id and run_col:
+                filters.append(F.col(run_col) != exclude_run_id)
+            if watermark_column and column_col:
+                filters.append(F.lower(F.col(column_col)) == str(watermark_column).lower())
+
+            for condition in filters:
+                df = df.filter(condition)
+            order_columns = []
+            if time_col:
+                order_columns.append(F.col(time_col).desc())
+            if run_col:
+                order_columns.append(F.col(run_col).desc())
+            if order_columns:
+                df = df.orderBy(*order_columns)
+            rows = df.limit(1).collect()
+            return _row_to_dict(rows[0]) if rows else None
+
+        rows = catalogue_df
+        if isinstance(catalogue_df, dict):
+            rows = [catalogue_df]
+        candidates = []
+        stage = str(profile_stage).lower()
+        stage_roles = {stage, f"{stage}_profile"}
+        if stage == "target":
+            stage_roles.add("output_profile")
+        for raw_row in rows or []:
+            row = _row_to_dict(raw_row)
+            if str(_catalogue_value(row, "dataset_name")) != dataset_name:
+                continue
+            if str(_catalogue_value(row, "table_name", "profiled_table_name")) != table_name:
+                continue
+            if str(_catalogue_value(row, "profile_stage", "evidence_role")).lower() not in stage_roles:
+                continue
+            if str(_catalogue_value(row, "load_behavior")).lower() != str(load_behavior).lower():
+                continue
+            if str(_catalogue_value(row, "stability_status")).lower() not in {"passed", "baseline_created"}:
+                continue
+            profile_status = _catalogue_value(row, "profile_status")
+            if profile_status and str(profile_status).lower() not in {"success", "successful"}:
+                continue
+            if exclude_run_id and str(_catalogue_value(row, "profile_run_id", "run_id")) == str(exclude_run_id):
+                continue
+            if watermark_column and str(_catalogue_value(row, "column_name")).lower() != str(watermark_column).lower():
+                continue
+            candidates.append(row)
+        if not candidates:
+            return None
+        candidates.sort(key=lambda row: (_string_value(_catalogue_value(row, "profiled_at", "run_timestamp", "created_at")), _string_value(_catalogue_value(row, "profile_run_id", "run_id"))), reverse=True)
+        return candidates[0]
+    except Exception as exc:
+        if _is_missing_table_error(exc):
+            return None
+        raise
+```
+
+**Used here because:**
+
+`enforce_profile_behavior` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `enforce_profile_behavior` or another caller that reaches `_latest_catalogue_behavior_profile_row`.
+
+### `def _row_to_dict(row) -> dict`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/guardrails.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L272-L279">View `_row_to_dict` on GitHub</a>
+
+**Code:**
+
+```python
+def _row_to_dict(row) -> dict:
+    if row is None:
+        return {}
+    if isinstance(row, dict):
+        return dict(row)
+    if hasattr(row, "asDict"):
+        return row.asDict(recursive=True)
+    return {name: getattr(row, name) for name in dir(row) if not name.startswith("_")}
+```
+
+**Used here because:**
+
+`enforce_profile_behavior` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `enforce_profile_behavior` or another caller that reaches `_row_to_dict`.
+
+### `def _string_value(value) -> str`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/guardrails.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L481-L482">View `_string_value` on GitHub</a>
+
+**Code:**
+
+```python
+def _string_value(value) -> str:
+    return "" if value is None else str(value)
+```
+
+**Used here because:**
+
+`enforce_profile_behavior` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `enforce_profile_behavior` or another caller that reaches `_string_value`.
+
+### `def _profile_row_count(profile) -> int | None`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/guardrails.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L294-L306">View `_profile_row_count` on GitHub</a>
+
+**Code:**
+
+```python
+def _profile_row_count(profile) -> int | None:
+    normalized = _normalize_profile(profile) or {}
+    value = normalized.get("row_count")
+    if value in (None, ""):
+        columns = normalized.get("columns") or []
+        if columns:
+            first_column = columns[0] or {}
+            if isinstance(first_column, dict):
+                value = first_column.get("row_count")
+    try:
+        return int(value) if value not in (None, "") else None
+    except (TypeError, ValueError):
+        return None
+```
+
+**Used here because:**
+
+`enforce_profile_behavior` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `enforce_profile_behavior` or another caller that reaches `_profile_row_count`.
+
+### `def _normalize_profile(profile) -> dict | None`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/guardrails.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L201-L269">View `_normalize_profile` on GitHub</a>
+
+**Code:**
+
+```python
+def _normalize_profile(profile) -> dict | None:
+    def row_value(row, *names):
+        for name in names:
+            if isinstance(row, dict) and name in row:
+                return row.get(name)
+            if hasattr(row, "asDict"):
+                data = row.asDict(recursive=True)
+                if name in data:
+                    return data.get(name)
+            if hasattr(row, name):
+                return getattr(row, name)
+        return None
+
+    def distribution_payload(value):
+        if value in (None, ""):
+            return None
+        if isinstance(value, dict):
+            return value
+        try:
+            return json.loads(value)
+        except (TypeError, json.JSONDecodeError):
+            return None
+
+    if profile is None:
+        return None
+    if isinstance(profile, dict) and "columns" in profile:
+        return profile
+    if hasattr(profile, "collect"):
+        return _normalize_profile(profile.collect())
+    if isinstance(profile, (list, tuple)):
+        rows = list(profile)
+        if not rows:
+            return None
+        first = rows[0]
+        row_count = row_value(first, "row_count", "ROW_COUNT", "PROFILED_ROW_COUNT")
+        table_name = row_value(first, "table_name", "TABLE_NAME", "PROFILED_TABLE_NAME")
+        dataset_name = row_value(first, "dataset_name", "DATASET_NAME")
+        profile_stage = row_value(first, "profile_stage", "PROFILE_STAGE", "EVIDENCE_ROLE")
+        columns = []
+        for row in rows:
+            distribution_type = row_value(row, "distribution_type", "DISTRIBUTION_TYPE")
+            distribution = distribution_payload(row_value(row, "distribution", "DISTRIBUTION", "distribution_json", "DISTRIBUTION_JSON"))
+            column = {
+                "column_name": row_value(row, "column_name", "COLUMN_NAME"),
+                "data_type": row_value(row, "data_type", "DATA_TYPE"),
+                "row_count": row_value(row, "row_count", "ROW_COUNT", "PROFILED_ROW_COUNT"),
+                "null_count": row_value(row, "null_count", "NULL_COUNT"),
+                "null_pct": row_value(row, "null_pct", "NULL_PCT", "null_percent", "NULL_PERCENT"),
+                "distinct_count": row_value(row, "distinct_count", "DISTINCT_COUNT"),
+                "distinct_pct": row_value(row, "distinct_pct", "DISTINCT_PCT", "distinct_percent", "DISTINCT_PERCENT"),
+                "min_value": row_value(row, "min_value", "MIN_VALUE"),
+                "max_value": row_value(row, "max_value", "MAX_VALUE"),
+            }
+            if distribution_type:
+                column["distribution_type"] = distribution_type
+            if distribution is not None:
+                column["distribution"] = distribution
+            columns.append(column)
+        return {
+            "dataset_name": dataset_name,
+            "table_name": table_name,
+            "profile_stage": profile_stage,
+            "row_count": row_count,
+            "columns": columns,
+            "profile_status": row_value(first, "profile_status", "PROFILE_STATUS"),
+            "baseline_status": row_value(first, "baseline_status", "BASELINE_STATUS"),
+            "source_change_signal": distribution_payload(row_value(first, "source_change_signal", "SOURCE_CHANGE_SIGNAL_JSON")),
+        }
+    return profile
+```
+
+**Used here because:**
+
+`enforce_profile_behavior` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `enforce_profile_behavior` or another caller that reaches `_normalize_profile`.
+
+### `def _profile_watermark_bounds(profile, watermark_column: str | None) -> tuple[str, str]`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/guardrails.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L517-L524">View `_profile_watermark_bounds` on GitHub</a>
+
+**Code:**
+
+```python
+def _profile_watermark_bounds(profile, watermark_column: str | None) -> tuple[str, str]:
+    normalized = _normalize_profile(profile) or {}
+    if not watermark_column:
+        return "", ""
+    for column in normalized.get("columns", []) or []:
+        if str(column.get("column_name") or "").lower() == str(watermark_column).lower():
+            return _string_value(column.get("min_value")), _string_value(column.get("max_value"))
+    return "", ""
+```
+
+**Used here because:**
+
+`enforce_profile_behavior` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `enforce_profile_behavior` or another caller that reaches `_profile_watermark_bounds`.
+
 
 </details>
 
 ## Source
 
 - Source file path: `src/fabricops_kit/guardrails.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a80b5a6ddb4de14056095d4da916cd452e478ff8/src/fabricops_kit/guardrails.py#L633-L826">View enforce_profile_behavior on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L639-L832">View enforce_profile_behavior on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -365,7 +946,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `guardrails`
 - Source file path: `src/fabricops_kit/guardrails.py`
-- Source line: `633`
+- Source line: `639`
 - Inbound references count: 1
 - Outbound references count: 11
 
@@ -386,22 +967,22 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 
 - <a href="../profile_dataframe/"><code>fabricops_kit.data_profiling.profile_dataframe</code></a>
 - <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a>
-- <a href="../internal/guardrails__catalogue_value/"><code>fabricops_kit.guardrails._catalogue_value</code></a>
-- <a href="../internal/guardrails__guardrail_exclude_columns/"><code>fabricops_kit.guardrails._guardrail_exclude_columns</code></a>
-- <a href="../internal/guardrails__is_greater_than/"><code>fabricops_kit.guardrails._is_greater_than</code></a>
-- <a href="../internal/guardrails__is_less_than/"><code>fabricops_kit.guardrails._is_less_than</code></a>
-- <a href="../internal/guardrails__is_missing_table_error/"><code>fabricops_kit.guardrails._is_missing_table_error</code></a>
-- <a href="../internal/guardrails__latest_catalogue_behavior_profile_row/"><code>fabricops_kit.guardrails._latest_catalogue_behavior_profile_row</code></a>
-- <a href="../internal/guardrails__profile_row_count/"><code>fabricops_kit.guardrails._profile_row_count</code></a>
-- <a href="../internal/guardrails__profile_watermark_bounds/"><code>fabricops_kit.guardrails._profile_watermark_bounds</code></a>
-- <a href="../internal/guardrails__string_value/"><code>fabricops_kit.guardrails._string_value</code></a>
+- `fabricops_kit.guardrails._catalogue_value`
+- `fabricops_kit.guardrails._guardrail_exclude_columns`
+- `fabricops_kit.guardrails._is_greater_than`
+- `fabricops_kit.guardrails._is_less_than`
+- `fabricops_kit.guardrails._is_missing_table_error`
+- `fabricops_kit.guardrails._latest_catalogue_behavior_profile_row`
+- `fabricops_kit.guardrails._profile_row_count`
+- `fabricops_kit.guardrails._profile_watermark_bounds`
+- `fabricops_kit.guardrails._string_value`
 
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/guardrails.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a80b5a6ddb4de14056095d4da916cd452e478ff8/src/fabricops_kit/guardrails.py#L633-L826">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a80b5a6ddb4de14056095d4da916cd452e478ff8/src/fabricops_kit/guardrails.py#L633-L826</a>
-- Start line: `633`
-- End line: `826`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L639-L832">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L639-L832</a>
+- Start line: `639`
+- End line: `832`
 - Signature:
 
 ```python
@@ -419,17 +1000,598 @@ def enforce_profile_behavior(spark, dataframe, metadata_table: str, dataset_name
 
 ### Internal implementation helpers
 
-- <a href="../run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
-- <a href="../profile_dataframe/"><code>fabricops_kit.data_profiling.profile_dataframe</code></a>
-- <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a>
-- <a href="../internal/guardrails__catalogue_value/"><code>fabricops_kit.guardrails._catalogue_value</code></a>
-- <a href="../internal/guardrails__guardrail_exclude_columns/"><code>fabricops_kit.guardrails._guardrail_exclude_columns</code></a>
-- <a href="../internal/guardrails__is_greater_than/"><code>fabricops_kit.guardrails._is_greater_than</code></a>
-- <a href="../internal/guardrails__is_less_than/"><code>fabricops_kit.guardrails._is_less_than</code></a>
-- <a href="../internal/guardrails__is_missing_table_error/"><code>fabricops_kit.guardrails._is_missing_table_error</code></a>
-- <a href="../internal/guardrails__latest_catalogue_behavior_profile_row/"><code>fabricops_kit.guardrails._latest_catalogue_behavior_profile_row</code></a>
-- <a href="../internal/guardrails__profile_row_count/"><code>fabricops_kit.guardrails._profile_row_count</code></a>
-- <a href="../internal/guardrails__profile_watermark_bounds/"><code>fabricops_kit.guardrails._profile_watermark_bounds</code></a>
-- <a href="../internal/guardrails__string_value/"><code>fabricops_kit.guardrails._string_value</code></a>
+### Call flow
+
+```text
+enforce_profile_behavior(...)
+├── _catalogue_value(...)
+├── _guardrail_exclude_columns(...)
+├── _is_greater_than(...)
+│   └── _comparable_value(...)
+├── _is_less_than(...)
+│   └── _comparable_value(...)
+├── _is_missing_table_error(...)
+├── _latest_catalogue_behavior_profile_row(...)
+│   ├── _catalogue_value(...)
+│   ├── _is_missing_table_error(...)
+│   ├── _row_to_dict(...)
+│   └── _string_value(...)
+├── _profile_row_count(...)
+│   └── _normalize_profile(...)
+│       └── _normalize_profile(...) (recursive)
+├── _profile_watermark_bounds(...)
+│   ├── _normalize_profile(...)
+│   │   └── _normalize_profile(...) (recursive)
+│   └── _string_value(...)
+├── _string_value(...)
+├── profile_dataframe(...)
+│   ├── _audit_timestamp_expr(...)
+│   │   └── _get_audit_timezone(...)
+│   │       └── _validate_audit_timezone(...)
+│   ├── _build_distribution_summaries(...)
+│   │   ├── _build_categorical_distribution(...)
+│   │   ├── _build_numeric_distribution(...)
+│   │   └── _numeric_bin_edges(...)
+│   ├── _get_profiled_columns(...)
+│   ├── _is_min_max_supported_type(...)
+│   └── _validate_audit_timezone(...)
+└── read_lakehouse_table(...)
+    ├── _current_database_matches(...)
+    ├── _get_spark(...)
+    ├── _get_store(...)
+    ├── _normalize_table_name(...)
+    ├── _registered_table_identifier(...)
+    │   ├── _normalize_table_name(...)
+    │   └── _quote_identifier(...)
+    └── _uses_registered_metadata_table(...)
+```
+
+### Internal helpers used by this callable
+
+### `def _catalogue_value(row: dict, *names: str)`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/guardrails.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L467-L478">View `_catalogue_value` on GitHub</a>
+
+**Code:**
+
+```python
+def _catalogue_value(row: dict, *names: str):
+    for name in names:
+        if name in row:
+            return row.get(name)
+        upper = name.upper()
+        if upper in row:
+            return row.get(upper)
+        lower = name.lower()
+        for key, value in row.items():
+            if str(key).lower() == lower:
+                return value
+    return None
+```
+
+**Used here because:**
+
+`enforce_profile_behavior` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `enforce_profile_behavior` or another caller that reaches `_catalogue_value`.
+
+### `def _guardrail_exclude_columns(exclude_columns: list[str] | set[str] | tuple[str, ...] | None=None) -> set[str]`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/guardrails.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L282-L286">View `_guardrail_exclude_columns` on GitHub</a>
+
+**Code:**
+
+```python
+def _guardrail_exclude_columns(exclude_columns: list[str] | set[str] | tuple[str, ...] | None = None) -> set[str]:
+    excluded = set(_DEFAULT_STABILITY_EXCLUDE_COLUMNS)
+    if exclude_columns:
+        excluded.update(str(column) for column in exclude_columns)
+    return excluded
+```
+
+**Used here because:**
+
+`enforce_profile_behavior` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `enforce_profile_behavior` or another caller that reaches `_guardrail_exclude_columns`.
+
+### `def _is_greater_than(left, right) -> bool`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/guardrails.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L507-L514">View `_is_greater_than` on GitHub</a>
+
+**Code:**
+
+```python
+def _is_greater_than(left, right) -> bool:
+    left_value = _comparable_value(left)
+    right_value = _comparable_value(right)
+    if left_value is None or right_value is None:
+        return False
+    if isinstance(left_value, Decimal) and isinstance(right_value, Decimal):
+        return left_value > right_value
+    return str(left_value) > str(right_value)
+```
+
+**Used here because:**
+
+`enforce_profile_behavior` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `enforce_profile_behavior` or another caller that reaches `_is_greater_than`.
+
+### `def _comparable_value(value)`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/guardrails.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L485-L494">View `_comparable_value` on GitHub</a>
+
+**Code:**
+
+```python
+def _comparable_value(value):
+    if value in (None, ""):
+        return None
+    if hasattr(value, "isoformat"):
+        return value.isoformat()
+    text = str(value)
+    try:
+        return Decimal(text)
+    except Exception:
+        return text
+```
+
+**Used here because:**
+
+`enforce_profile_behavior` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `enforce_profile_behavior` or another caller that reaches `_comparable_value`.
+
+### `def _is_less_than(left, right) -> bool`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/guardrails.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L497-L504">View `_is_less_than` on GitHub</a>
+
+**Code:**
+
+```python
+def _is_less_than(left, right) -> bool:
+    left_value = _comparable_value(left)
+    right_value = _comparable_value(right)
+    if left_value is None or right_value is None:
+        return False
+    if isinstance(left_value, Decimal) and isinstance(right_value, Decimal):
+        return left_value < right_value
+    return str(left_value) < str(right_value)
+```
+
+**Used here because:**
+
+`enforce_profile_behavior` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `enforce_profile_behavior` or another caller that reaches `_is_less_than`.
+
+### `def _is_missing_table_error(exc: Exception) -> bool`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/guardrails.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L834-L837">View `_is_missing_table_error` on GitHub</a>
+
+**Code:**
+
+```python
+def _is_missing_table_error(exc: Exception) -> bool:
+    text = str(exc).lower()
+    patterns = ["not found", "table or view not found", "no such table", "cannot resolve", "missing"]
+    return any(pattern in text for pattern in patterns)
+```
+
+**Used here because:**
+
+`enforce_profile_behavior` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `enforce_profile_behavior` or another caller that reaches `_is_missing_table_error`.
+
+### `def _latest_catalogue_behavior_profile_row(catalogue_df, *, dataset_name: str, table_name: str, profile_stage: str, load_behavior: str, watermark_column: str | None=None, exclude_run_id: str | None=None) -> dict | None`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/guardrails.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L527-L636">View `_latest_catalogue_behavior_profile_row` on GitHub</a>
+
+**Code:**
+
+```python
+def _latest_catalogue_behavior_profile_row(
+    catalogue_df,
+    *,
+    dataset_name: str,
+    table_name: str,
+    profile_stage: str,
+    load_behavior: str,
+    watermark_column: str | None = None,
+    exclude_run_id: str | None = None,
+) -> dict | None:
+    if catalogue_df is None:
+        return None
+
+    try:
+        if hasattr(catalogue_df, "collect") and hasattr(catalogue_df, "columns"):
+            from pyspark.sql import functions as F
+
+            df = catalogue_df
+            columns_by_lower = {str(column).lower(): column for column in df.columns}
+
+            def catalogue_col(*names: str) -> str | None:
+                for name in names:
+                    if name in df.columns:
+                        return name
+                    if name.lower() in columns_by_lower:
+                        return columns_by_lower[name.lower()]
+                return None
+
+            stage = str(profile_stage).lower()
+            stage_roles = [stage, f"{stage}_profile"]
+            if stage == "target":
+                stage_roles.append("output_profile")
+
+            dataset_col = catalogue_col("dataset_name")
+            table_col = catalogue_col("table_name", "profiled_table_name")
+            stage_col = catalogue_col("profile_stage", "evidence_role")
+            behavior_col = catalogue_col("load_behavior")
+            stability_status_col = catalogue_col("stability_status")
+            profile_status_col = catalogue_col("profile_status")
+            run_col = catalogue_col("profile_run_id", "run_id")
+            time_col = catalogue_col("profiled_at", "run_timestamp", "created_at")
+            column_col = catalogue_col("column_name")
+            required = [dataset_col, table_col, stage_col, behavior_col, stability_status_col]
+            if watermark_column:
+                required.append(column_col)
+            if any(column is None for column in required):
+                return None
+
+            filters = [
+                F.col(dataset_col) == dataset_name,
+                F.col(table_col) == table_name,
+                F.lower(F.col(stage_col)).isin(stage_roles),
+                F.lower(F.col(behavior_col)) == str(load_behavior).lower(),
+                F.lower(F.col(stability_status_col)).isin("passed", "baseline_created"),
+            ]
+            if profile_status_col:
+                filters.append(F.lower(F.col(profile_status_col)).isin("success", "successful"))
+            if exclude_run_id and run_col:
+                filters.append(F.col(run_col) != exclude_run_id)
+            if watermark_column and column_col:
+                filters.append(F.lower(F.col(column_col)) == str(watermark_column).lower())
+
+            for condition in filters:
+                df = df.filter(condition)
+            order_columns = []
+            if time_col:
+                order_columns.append(F.col(time_col).desc())
+            if run_col:
+                order_columns.append(F.col(run_col).desc())
+            if order_columns:
+                df = df.orderBy(*order_columns)
+            rows = df.limit(1).collect()
+            return _row_to_dict(rows[0]) if rows else None
+
+        rows = catalogue_df
+        if isinstance(catalogue_df, dict):
+            rows = [catalogue_df]
+        candidates = []
+        stage = str(profile_stage).lower()
+        stage_roles = {stage, f"{stage}_profile"}
+        if stage == "target":
+            stage_roles.add("output_profile")
+        for raw_row in rows or []:
+            row = _row_to_dict(raw_row)
+            if str(_catalogue_value(row, "dataset_name")) != dataset_name:
+                continue
+            if str(_catalogue_value(row, "table_name", "profiled_table_name")) != table_name:
+                continue
+            if str(_catalogue_value(row, "profile_stage", "evidence_role")).lower() not in stage_roles:
+                continue
+            if str(_catalogue_value(row, "load_behavior")).lower() != str(load_behavior).lower():
+                continue
+            if str(_catalogue_value(row, "stability_status")).lower() not in {"passed", "baseline_created"}:
+                continue
+            profile_status = _catalogue_value(row, "profile_status")
+            if profile_status and str(profile_status).lower() not in {"success", "successful"}:
+                continue
+            if exclude_run_id and str(_catalogue_value(row, "profile_run_id", "run_id")) == str(exclude_run_id):
+                continue
+            if watermark_column and str(_catalogue_value(row, "column_name")).lower() != str(watermark_column).lower():
+                continue
+            candidates.append(row)
+        if not candidates:
+            return None
+        candidates.sort(key=lambda row: (_string_value(_catalogue_value(row, "profiled_at", "run_timestamp", "created_at")), _string_value(_catalogue_value(row, "profile_run_id", "run_id"))), reverse=True)
+        return candidates[0]
+    except Exception as exc:
+        if _is_missing_table_error(exc):
+            return None
+        raise
+```
+
+**Used here because:**
+
+`enforce_profile_behavior` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `enforce_profile_behavior` or another caller that reaches `_latest_catalogue_behavior_profile_row`.
+
+### `def _row_to_dict(row) -> dict`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/guardrails.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L272-L279">View `_row_to_dict` on GitHub</a>
+
+**Code:**
+
+```python
+def _row_to_dict(row) -> dict:
+    if row is None:
+        return {}
+    if isinstance(row, dict):
+        return dict(row)
+    if hasattr(row, "asDict"):
+        return row.asDict(recursive=True)
+    return {name: getattr(row, name) for name in dir(row) if not name.startswith("_")}
+```
+
+**Used here because:**
+
+`enforce_profile_behavior` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `enforce_profile_behavior` or another caller that reaches `_row_to_dict`.
+
+### `def _string_value(value) -> str`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/guardrails.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L481-L482">View `_string_value` on GitHub</a>
+
+**Code:**
+
+```python
+def _string_value(value) -> str:
+    return "" if value is None else str(value)
+```
+
+**Used here because:**
+
+`enforce_profile_behavior` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `enforce_profile_behavior` or another caller that reaches `_string_value`.
+
+### `def _profile_row_count(profile) -> int | None`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/guardrails.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L294-L306">View `_profile_row_count` on GitHub</a>
+
+**Code:**
+
+```python
+def _profile_row_count(profile) -> int | None:
+    normalized = _normalize_profile(profile) or {}
+    value = normalized.get("row_count")
+    if value in (None, ""):
+        columns = normalized.get("columns") or []
+        if columns:
+            first_column = columns[0] or {}
+            if isinstance(first_column, dict):
+                value = first_column.get("row_count")
+    try:
+        return int(value) if value not in (None, "") else None
+    except (TypeError, ValueError):
+        return None
+```
+
+**Used here because:**
+
+`enforce_profile_behavior` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `enforce_profile_behavior` or another caller that reaches `_profile_row_count`.
+
+### `def _normalize_profile(profile) -> dict | None`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/guardrails.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L201-L269">View `_normalize_profile` on GitHub</a>
+
+**Code:**
+
+```python
+def _normalize_profile(profile) -> dict | None:
+    def row_value(row, *names):
+        for name in names:
+            if isinstance(row, dict) and name in row:
+                return row.get(name)
+            if hasattr(row, "asDict"):
+                data = row.asDict(recursive=True)
+                if name in data:
+                    return data.get(name)
+            if hasattr(row, name):
+                return getattr(row, name)
+        return None
+
+    def distribution_payload(value):
+        if value in (None, ""):
+            return None
+        if isinstance(value, dict):
+            return value
+        try:
+            return json.loads(value)
+        except (TypeError, json.JSONDecodeError):
+            return None
+
+    if profile is None:
+        return None
+    if isinstance(profile, dict) and "columns" in profile:
+        return profile
+    if hasattr(profile, "collect"):
+        return _normalize_profile(profile.collect())
+    if isinstance(profile, (list, tuple)):
+        rows = list(profile)
+        if not rows:
+            return None
+        first = rows[0]
+        row_count = row_value(first, "row_count", "ROW_COUNT", "PROFILED_ROW_COUNT")
+        table_name = row_value(first, "table_name", "TABLE_NAME", "PROFILED_TABLE_NAME")
+        dataset_name = row_value(first, "dataset_name", "DATASET_NAME")
+        profile_stage = row_value(first, "profile_stage", "PROFILE_STAGE", "EVIDENCE_ROLE")
+        columns = []
+        for row in rows:
+            distribution_type = row_value(row, "distribution_type", "DISTRIBUTION_TYPE")
+            distribution = distribution_payload(row_value(row, "distribution", "DISTRIBUTION", "distribution_json", "DISTRIBUTION_JSON"))
+            column = {
+                "column_name": row_value(row, "column_name", "COLUMN_NAME"),
+                "data_type": row_value(row, "data_type", "DATA_TYPE"),
+                "row_count": row_value(row, "row_count", "ROW_COUNT", "PROFILED_ROW_COUNT"),
+                "null_count": row_value(row, "null_count", "NULL_COUNT"),
+                "null_pct": row_value(row, "null_pct", "NULL_PCT", "null_percent", "NULL_PERCENT"),
+                "distinct_count": row_value(row, "distinct_count", "DISTINCT_COUNT"),
+                "distinct_pct": row_value(row, "distinct_pct", "DISTINCT_PCT", "distinct_percent", "DISTINCT_PERCENT"),
+                "min_value": row_value(row, "min_value", "MIN_VALUE"),
+                "max_value": row_value(row, "max_value", "MAX_VALUE"),
+            }
+            if distribution_type:
+                column["distribution_type"] = distribution_type
+            if distribution is not None:
+                column["distribution"] = distribution
+            columns.append(column)
+        return {
+            "dataset_name": dataset_name,
+            "table_name": table_name,
+            "profile_stage": profile_stage,
+            "row_count": row_count,
+            "columns": columns,
+            "profile_status": row_value(first, "profile_status", "PROFILE_STATUS"),
+            "baseline_status": row_value(first, "baseline_status", "BASELINE_STATUS"),
+            "source_change_signal": distribution_payload(row_value(first, "source_change_signal", "SOURCE_CHANGE_SIGNAL_JSON")),
+        }
+    return profile
+```
+
+**Used here because:**
+
+`enforce_profile_behavior` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `enforce_profile_behavior` or another caller that reaches `_normalize_profile`.
+
+### `def _profile_watermark_bounds(profile, watermark_column: str | None) -> tuple[str, str]`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/guardrails.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L517-L524">View `_profile_watermark_bounds` on GitHub</a>
+
+**Code:**
+
+```python
+def _profile_watermark_bounds(profile, watermark_column: str | None) -> tuple[str, str]:
+    normalized = _normalize_profile(profile) or {}
+    if not watermark_column:
+        return "", ""
+    for column in normalized.get("columns", []) or []:
+        if str(column.get("column_name") or "").lower() == str(watermark_column).lower():
+            return _string_value(column.get("min_value")), _string_value(column.get("max_value"))
+    return "", ""
+```
+
+**Used here because:**
+
+`enforce_profile_behavior` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `enforce_profile_behavior` or another caller that reaches `_profile_watermark_bounds`.
+
 
 </details>

@@ -54,10 +54,25 @@ dict[str, Any]
 
 Not documented yet
 
+<details class="reference-implementation-details">
+<summary>Implementation details</summary>
+
+### Call flow
+
+```text
+get_selected_catalogue_table(...)
+```
+
+### Internal helpers used by this callable
+
+Not documented yet
+
+</details>
+
 ## Source
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a80b5a6ddb4de14056095d4da916cd452e478ff8/src/fabricops_kit/governance_review.py#L310-L334">View get_selected_catalogue_table on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L310-L334">View get_selected_catalogue_table on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -132,7 +147,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a80b5a6ddb4de14056095d4da916cd452e478ff8/src/fabricops_kit/governance_review.py#L310-L334">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a80b5a6ddb4de14056095d4da916cd452e478ff8/src/fabricops_kit/governance_review.py#L310-L334</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L310-L334">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L310-L334</a>
 - Start line: `310`
 - End line: `334`
 - Signature:
@@ -148,6 +163,14 @@ def get_selected_catalogue_table(table_selector: Any | None=None) -> dict[str, A
 Not documented yet
 
 ### Internal implementation helpers
+
+### Call flow
+
+```text
+get_selected_catalogue_table(...)
+```
+
+### Internal helpers used by this callable
 
 Not documented yet
 

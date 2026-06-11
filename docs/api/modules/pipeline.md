@@ -80,35 +80,35 @@ Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals
       <td>Callable</td>
       <td>function</td>
       <td>Prepare source or target table configs for 02_pipeline.</td>
-      <td><a href="../../reference/internal/pipeline/_add_audit_columns/"><code>_add_audit_columns</code></a> (internal)</td>
+      <td><code>_add_audit_columns</code> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/run_table_guardrails/"><code>run_table_guardrails</code></a></td>
       <td>Callable</td>
       <td>function</td>
       <td>Run profiling, schema, freshness, profile behavior, DQ, and catalogue guardrails for table configs.</td>
-      <td><a href="../../reference/internal/pipeline/_build_guardrail_evidence_definitions/"><code>_build_guardrail_evidence_definitions</code></a> (internal), <a href="../../reference/internal/pipeline/_guardrail_can_continue/"><code>_guardrail_can_continue</code></a> (internal), <a href="../../reference/internal/pipeline/_table_key/"><code>_table_key</code></a> (internal), <a href="../../reference/internal/pipeline/_table_name/"><code>_table_name</code></a> (internal)</td>
+      <td><code>_build_guardrail_evidence_definitions</code> (internal), <code>_guardrail_can_continue</code> (internal), <code>_table_key</code> (internal), <code>_table_name</code> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/write_catalogue_evidence/"><code>write_catalogue_evidence</code></a></td>
       <td>Callable</td>
       <td>function</td>
       <td>Enrich profile rows with guardrail context and write catalogue evidence.</td>
-      <td><a href="../../reference/internal/pipeline/_canonical_catalogue_profile_df/"><code>_canonical_catalogue_profile_df</code></a> (internal), <a href="../../reference/internal/pipeline/_definition_name/"><code>_definition_name</code></a> (internal), <a href="../../reference/internal/pipeline/_dq_summary_fields/"><code>_dq_summary_fields</code></a> (internal), <a href="../../reference/internal/pipeline/_now_iso/"><code>_now_iso</code></a> (internal), <a href="../../reference/internal/pipeline/_runtime_audit_fields/"><code>_runtime_audit_fields</code></a> (internal)</td>
+      <td><code>_canonical_catalogue_profile_df</code> (internal), <code>_definition_name</code> (internal), <code>_dq_summary_fields</code> (internal), <code>_now_iso</code> (internal), <code>_runtime_audit_fields</code> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/write_pipeline_lineage/"><code>write_pipeline_lineage</code></a></td>
       <td>Callable</td>
       <td>function</td>
       <td>Write many-to-many source-to-target lineage evidence.</td>
-      <td><a href="../../reference/internal/pipeline/_definition_name/"><code>_definition_name</code></a> (internal), <a href="../../reference/internal/pipeline/_now_iso/"><code>_now_iso</code></a> (internal), <a href="../../reference/internal/pipeline/_runtime_audit_fields/"><code>_runtime_audit_fields</code></a> (internal)</td>
+      <td><code>_definition_name</code> (internal), <code>_now_iso</code> (internal), <code>_runtime_audit_fields</code> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/write_pipeline_run_summary/"><code>write_pipeline_run_summary</code></a></td>
       <td>Callable</td>
       <td>function</td>
       <td>Write one pipeline runtime summary row to metadata.</td>
-      <td><a href="../../reference/internal/pipeline/_definition_name/"><code>_definition_name</code></a> (internal), <a href="../../reference/internal/pipeline/_now_iso/"><code>_now_iso</code></a> (internal), <a href="../../reference/internal/pipeline/_summary_status/"><code>_summary_status</code></a> (internal)</td>
+      <td><code>_definition_name</code> (internal), <code>_now_iso</code> (internal), <code>_summary_status</code> (internal)</td>
     </tr>
   </tbody>
 </table>
@@ -129,27 +129,27 @@ Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals
 <li>
 <a class="reference-chip" href="../../reference/prepare_pipeline_table_configs/"><code>prepare_pipeline_table_configs</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_add_audit_columns"><code>_add_audit_columns</code></a>
+<span class="reference-chip"><code>_add_audit_columns</code></span>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/run_table_guardrails/"><code>run_table_guardrails</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_build_guardrail_evidence_definitions"><code>_build_guardrail_evidence_definitions</code></a>, <a class="reference-chip" href="#_guardrail_can_continue"><code>_guardrail_can_continue</code></a>, <a class="reference-chip" href="#_table_key"><code>_table_key</code></a>, <a class="reference-chip" href="#_table_name"><code>_table_name</code></a>, <a class="reference-chip" href="../../reference/write_catalogue_evidence/"><code>write_catalogue_evidence</code></a>
+<span class="reference-chip"><code>_build_guardrail_evidence_definitions</code></span>, <span class="reference-chip"><code>_guardrail_can_continue</code></span>, <span class="reference-chip"><code>_table_key</code></span>, <span class="reference-chip"><code>_table_name</code></span>, <a class="reference-chip" href="../../reference/write_catalogue_evidence/"><code>write_catalogue_evidence</code></a>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/write_catalogue_evidence/"><code>write_catalogue_evidence</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_canonical_catalogue_profile_df"><code>_canonical_catalogue_profile_df</code></a>, <a class="reference-chip" href="#_definition_name"><code>_definition_name</code></a>, <a class="reference-chip" href="#_dq_summary_fields"><code>_dq_summary_fields</code></a>, <a class="reference-chip" href="#_now_iso"><code>_now_iso</code></a>, <a class="reference-chip" href="#_runtime_audit_fields"><code>_runtime_audit_fields</code></a>
+<span class="reference-chip"><code>_canonical_catalogue_profile_df</code></span>, <span class="reference-chip"><code>_definition_name</code></span>, <span class="reference-chip"><code>_dq_summary_fields</code></span>, <span class="reference-chip"><code>_now_iso</code></span>, <span class="reference-chip"><code>_runtime_audit_fields</code></span>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/write_pipeline_lineage/"><code>write_pipeline_lineage</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_definition_name"><code>_definition_name</code></a>, <a class="reference-chip" href="#_now_iso"><code>_now_iso</code></a>, <a class="reference-chip" href="#_runtime_audit_fields"><code>_runtime_audit_fields</code></a>
+<span class="reference-chip"><code>_definition_name</code></span>, <span class="reference-chip"><code>_now_iso</code></span>, <span class="reference-chip"><code>_runtime_audit_fields</code></span>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/write_pipeline_run_summary/"><code>write_pipeline_run_summary</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_definition_name"><code>_definition_name</code></a>, <a class="reference-chip" href="#_now_iso"><code>_now_iso</code></a>, <a class="reference-chip" href="#_summary_status"><code>_summary_status</code></a>
+<span class="reference-chip"><code>_definition_name</code></span>, <span class="reference-chip"><code>_now_iso</code></span>, <span class="reference-chip"><code>_summary_status</code></span>
 </li>
 </ul>
 </section>
@@ -169,47 +169,47 @@ Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals
   </thead>
   <tbody>
     <tr>
-      <td><a href="../../reference/internal/pipeline/_add_audit_columns/"><code>_add_audit_columns</code></a></td>
+      <td><code>_add_audit_columns</code></td>
       <td><a href="../../reference/prepare_pipeline_table_configs/"><code>prepare_pipeline_table_configs</code></a></td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/pipeline/_build_guardrail_evidence_definitions/"><code>_build_guardrail_evidence_definitions</code></a></td>
+      <td><code>_build_guardrail_evidence_definitions</code></td>
       <td><a href="../../reference/run_table_guardrails/"><code>run_table_guardrails</code></a></td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/pipeline/_canonical_catalogue_profile_df/"><code>_canonical_catalogue_profile_df</code></a></td>
+      <td><code>_canonical_catalogue_profile_df</code></td>
       <td><a href="../../reference/write_catalogue_evidence/"><code>write_catalogue_evidence</code></a></td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/pipeline/_definition_name/"><code>_definition_name</code></a></td>
+      <td><code>_definition_name</code></td>
       <td><a href="../../reference/write_catalogue_evidence/"><code>write_catalogue_evidence</code></a>, <a href="../../reference/write_pipeline_lineage/"><code>write_pipeline_lineage</code></a>, <a href="../../reference/write_pipeline_run_summary/"><code>write_pipeline_run_summary</code></a></td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/pipeline/_dq_summary_fields/"><code>_dq_summary_fields</code></a></td>
+      <td><code>_dq_summary_fields</code></td>
       <td><a href="../../reference/write_catalogue_evidence/"><code>write_catalogue_evidence</code></a></td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/pipeline/_guardrail_can_continue/"><code>_guardrail_can_continue</code></a></td>
+      <td><code>_guardrail_can_continue</code></td>
       <td><a href="../../reference/run_table_guardrails/"><code>run_table_guardrails</code></a></td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/pipeline/_now_iso/"><code>_now_iso</code></a></td>
+      <td><code>_now_iso</code></td>
       <td><a href="../../reference/write_catalogue_evidence/"><code>write_catalogue_evidence</code></a>, <a href="../../reference/write_pipeline_lineage/"><code>write_pipeline_lineage</code></a>, <a href="../../reference/write_pipeline_run_summary/"><code>write_pipeline_run_summary</code></a></td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/pipeline/_runtime_audit_fields/"><code>_runtime_audit_fields</code></a></td>
+      <td><code>_runtime_audit_fields</code></td>
       <td><a href="../../reference/write_catalogue_evidence/"><code>write_catalogue_evidence</code></a>, <a href="../../reference/write_pipeline_lineage/"><code>write_pipeline_lineage</code></a></td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/pipeline/_summary_status/"><code>_summary_status</code></a></td>
+      <td><code>_summary_status</code></td>
       <td><a href="../../reference/write_pipeline_run_summary/"><code>write_pipeline_run_summary</code></a></td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/pipeline/_table_key/"><code>_table_key</code></a></td>
+      <td><code>_table_key</code></td>
       <td><a href="../../reference/run_table_guardrails/"><code>run_table_guardrails</code></a></td>
     </tr>
     <tr>
-      <td><a href="../../reference/internal/pipeline/_table_name/"><code>_table_name</code></a></td>
+      <td><code>_table_name</code></td>
       <td><a href="../../reference/run_table_guardrails/"><code>run_table_guardrails</code></a></td>
     </tr>
   </tbody>
@@ -219,43 +219,43 @@ Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals
 <h6>Internal helpers details</h6>
 <ul class="callable-relationship-rows">
 <li>
-<a class="reference-chip" href="#_add_audit_columns"><code>_add_audit_columns</code></a>
+<span class="reference-chip"><code>_add_audit_columns</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_build_guardrail_evidence_definitions"><code>_build_guardrail_evidence_definitions</code></a>
+<span class="reference-chip"><code>_build_guardrail_evidence_definitions</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_table_key"><code>_table_key</code></a>, <a class="reference-chip" href="#_table_name"><code>_table_name</code></a>
+<span class="reference-chip"><code>_table_key</code></span>, <span class="reference-chip"><code>_table_name</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_canonical_catalogue_profile_df"><code>_canonical_catalogue_profile_df</code></a>
+<span class="reference-chip"><code>_canonical_catalogue_profile_df</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_definition_name"><code>_definition_name</code></a>
+<span class="reference-chip"><code>_definition_name</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_dq_summary_fields"><code>_dq_summary_fields</code></a>
+<span class="reference-chip"><code>_dq_summary_fields</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_now_iso"><code>_now_iso</code></a>
+<span class="reference-chip"><code>_now_iso</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_guardrail_can_continue"><code>_guardrail_can_continue</code></a>
+<span class="reference-chip"><code>_guardrail_can_continue</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_now_iso"><code>_now_iso</code></a>
+<span class="reference-chip"><code>_now_iso</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_runtime_audit_fields"><code>_runtime_audit_fields</code></a>
+<span class="reference-chip"><code>_runtime_audit_fields</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="#_now_iso"><code>_now_iso</code></a>
+<span class="reference-chip"><code>_now_iso</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_summary_status"><code>_summary_status</code></a>
+<span class="reference-chip"><code>_summary_status</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_table_key"><code>_table_key</code></a>
+<span class="reference-chip"><code>_table_key</code></span>
 </li>
 <li>
-<a class="reference-chip" href="#_table_name"><code>_table_name</code></a>
+<span class="reference-chip"><code>_table_name</code></span>
 </li>
 </ul>
 </details>

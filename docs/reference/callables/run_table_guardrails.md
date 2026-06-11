@@ -107,25 +107,389 @@ Guardrail result bundle with profiles, schema results, freshness results, stabil
 <details class="reference-implementation-details">
 <summary>Implementation details</summary>
 
-- <a href="../internal/config__get_audit_timezone/"><code>fabricops_kit.config._get_audit_timezone</code></a>
-- <a href="../profile_dataframe/"><code>fabricops_kit.data_profiling.profile_dataframe</code></a>
-- <a href="../enforce_dq_rules/"><code>fabricops_kit.governance_review.enforce_dq_rules</code></a>
-- <a href="../enforce_freshness/"><code>fabricops_kit.guardrails.enforce_freshness</code></a>
-- <a href="../enforce_profile_behavior/"><code>fabricops_kit.guardrails.enforce_profile_behavior</code></a>
-- <a href="../stop_if_failed/"><code>fabricops_kit.guardrails.stop_if_failed</code></a>
-- <a href="../validate_schema/"><code>fabricops_kit.guardrails.validate_schema</code></a>
-- <a href="../internal/pipeline__build_guardrail_evidence_definitions/"><code>fabricops_kit.pipeline._build_guardrail_evidence_definitions</code></a>
-- <a href="../internal/pipeline__guardrail_can_continue/"><code>fabricops_kit.pipeline._guardrail_can_continue</code></a>
-- <a href="../internal/pipeline__table_key/"><code>fabricops_kit.pipeline._table_key</code></a>
-- <a href="../internal/pipeline__table_name/"><code>fabricops_kit.pipeline._table_name</code></a>
-- <a href="../write_catalogue_evidence/"><code>fabricops_kit.pipeline.write_catalogue_evidence</code></a>
+### Call flow
+
+```text
+run_table_guardrails(...)
+├── _build_guardrail_evidence_definitions(...)
+│   ├── _table_key(...)
+│   └── _table_name(...)
+├── _get_audit_timezone(...)
+│   └── _validate_audit_timezone(...)
+├── _guardrail_can_continue(...)
+├── _table_key(...)
+├── _table_name(...)
+├── enforce_dq_rules(...)
+│   ├── _dq_failed_row_count(...)
+│   │   ├── _dq_failed_expression(...)
+│   │   │   ├── _spark_sql_helpers(...)
+│   │   │   └── _validate_dq_rules(...)
+│   │   │       └── _canonical_dq_rule_type(...)
+│   │   └── _spark_sql_helpers(...)
+│   ├── _dq_summary(...)
+│   │   ├── _current_audit_timestamp(...)
+│   │   │   └── _get_audit_timezone(...)
+│   │   │       └── _validate_audit_timezone(...)
+│   │   └── _summarize_dq_guardrail(...)
+│   ├── _dq_tagged_dataframe(...)
+│   │   ├── _dq_failed_expression(...)
+│   │   │   ├── _spark_sql_helpers(...)
+│   │   │   └── _validate_dq_rules(...)
+│   │   │       └── _canonical_dq_rule_type(...)
+│   │   └── _spark_sql_helpers(...)
+│   ├── _load_active_dq_rules(...)
+│   │   ├── _canonical_dq_rule_type(...)
+│   │   ├── _coerce_rows(...)
+│   │   ├── _latest_dq_rule_versions(...)
+│   │   │   └── _spark_sql_helpers(...)
+│   │   ├── _spark_sql_helpers(...)
+│   │   └── _validate_dq_rules(...)
+│   │       └── _canonical_dq_rule_type(...)
+│   ├── _run_dq_guardrail_checks(...)
+│   │   ├── _dq_check_status(...)
+│   │   ├── _dq_failed_expression(...)
+│   │   │   ├── _spark_sql_helpers(...)
+│   │   │   └── _validate_dq_rules(...)
+│   │   │       └── _canonical_dq_rule_type(...)
+│   │   ├── _spark_sql_helpers(...)
+│   │   └── _validate_dq_rules(...)
+│   │       └── _canonical_dq_rule_type(...)
+│   ├── _summarize_dq_guardrail(...)
+│   └── read_lakehouse_table(...)
+│       ├── _current_database_matches(...)
+│       ├── _get_spark(...)
+│       ├── _get_store(...)
+│       ├── _normalize_table_name(...)
+│       ├── _registered_table_identifier(...)
+│       │   ├── _normalize_table_name(...)
+│       │   └── _quote_identifier(...)
+│       └── _uses_registered_metadata_table(...)
+├── enforce_freshness(...)
+│   ├── _coerce_date(...)
+│   ├── _iso_date_value(...)
+│   │   └── _coerce_date(...)
+│   └── _max_column_value(...)
+├── enforce_profile_behavior(...)
+│   ├── _catalogue_value(...)
+│   ├── _guardrail_exclude_columns(...)
+│   ├── _is_greater_than(...)
+│   │   └── _comparable_value(...)
+│   ├── _is_less_than(...)
+│   │   └── _comparable_value(...)
+│   ├── _is_missing_table_error(...)
+│   ├── _latest_catalogue_behavior_profile_row(...)
+│   │   ├── _catalogue_value(...)
+│   │   ├── _is_missing_table_error(...)
+│   │   ├── _row_to_dict(...)
+│   │   └── _string_value(...)
+│   ├── _profile_row_count(...)
+│   │   └── _normalize_profile(...)
+│   │       └── _normalize_profile(...) (recursive)
+│   ├── _profile_watermark_bounds(...)
+│   │   ├── _normalize_profile(...)
+│   │   │   └── _normalize_profile(...) (recursive)
+│   │   └── _string_value(...)
+│   ├── _string_value(...)
+│   ├── profile_dataframe(...)
+│   │   ├── _audit_timestamp_expr(...)
+│   │   │   └── _get_audit_timezone(...)
+│   │   │       └── _validate_audit_timezone(...)
+│   │   ├── _build_distribution_summaries(...)
+│   │   │   ├── _build_categorical_distribution(...)
+│   │   │   ├── _build_numeric_distribution(...)
+│   │   │   └── _numeric_bin_edges(...)
+│   │   ├── _get_profiled_columns(...)
+│   │   ├── _is_min_max_supported_type(...)
+│   │   └── _validate_audit_timezone(...)
+│   └── read_lakehouse_table(...)
+│       ├── _current_database_matches(...)
+│       ├── _get_spark(...)
+│       ├── _get_store(...)
+│       ├── _normalize_table_name(...)
+│       ├── _registered_table_identifier(...)
+│       │   ├── _normalize_table_name(...)
+│       │   └── _quote_identifier(...)
+│       └── _uses_registered_metadata_table(...)
+├── profile_dataframe(...)
+│   ├── _audit_timestamp_expr(...)
+│   │   └── _get_audit_timezone(...)
+│   │       └── _validate_audit_timezone(...)
+│   ├── _build_distribution_summaries(...)
+│   │   ├── _build_categorical_distribution(...)
+│   │   ├── _build_numeric_distribution(...)
+│   │   └── _numeric_bin_edges(...)
+│   ├── _get_profiled_columns(...)
+│   ├── _is_min_max_supported_type(...)
+│   └── _validate_audit_timezone(...)
+├── stop_if_failed(...)
+│   └── SchemaDriftError(...)
+├── validate_schema(...)
+│   ├── _actual_schema(...)
+│   │   └── _normalize_datatype(...)
+│   └── _normalize_datatype(...)
+└── write_catalogue_evidence(...)
+    ├── _build_metadata_table_key(...)
+    │   └── _stable_metadata_key(...)
+    ├── _canonical_catalogue_profile_df(...)
+    ├── _definition_name(...)
+    ├── _dq_summary_fields(...)
+    │   └── _now_iso(...)
+    │       └── _current_audit_timestamp(...)
+    │           └── _get_audit_timezone(...)
+    │               └── _validate_audit_timezone(...)
+    ├── _now_iso(...)
+    │   └── _current_audit_timestamp(...)
+    │       └── _get_audit_timezone(...)
+    │           └── _validate_audit_timezone(...)
+    ├── _runtime_audit_fields(...)
+    │   ├── _build_runtime_audit_fields(...)
+    │   │   ├── _context_get(...)
+    │   │   ├── _current_audit_timestamp(...)
+    │   │   │   └── _get_audit_timezone(...)
+    │   │   │       └── _validate_audit_timezone(...)
+    │   │   ├── _runtime_context(...)
+    │   │   │   └── _context_get(...)
+    │   │   └── _safe_str(...)
+    │   └── _now_iso(...)
+    │       └── _current_audit_timestamp(...)
+    │           └── _get_audit_timezone(...)
+    │               └── _validate_audit_timezone(...)
+    └── write_lakehouse_table(...)
+        ├── _get_store(...)
+        ├── _normalize_table_name(...)
+        ├── _registered_table_identifier(...)
+        │   ├── _normalize_table_name(...)
+        │   └── _quote_identifier(...)
+        └── _uses_registered_metadata_table(...)
+```
+
+### Internal helpers used by this callable
+
+### `def _get_audit_timezone(config: Any=None, timezone_name: str | None=None) -> str`
+
+**What it does:**
+
+Resolve the configured FabricOps audit timezone, defaulting to UTC.
+
+**Source:**
+
+- `src/fabricops_kit/config.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L61-L66">View `_get_audit_timezone` on GitHub</a>
+
+**Code:**
+
+```python
+def _get_audit_timezone(config: Any = None, timezone_name: str | None = None) -> str:
+    """Resolve the configured FabricOps audit timezone, defaulting to UTC."""
+    if timezone_name is not None:
+        return _validate_audit_timezone(timezone_name)
+    value = getattr(config, "audit_timezone", None) if config is not None else None
+    return _validate_audit_timezone(value)
+```
+
+**Used here because:**
+
+`run_table_guardrails` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `run_table_guardrails` or another caller that reaches `_get_audit_timezone`.
+
+### `def _validate_audit_timezone(timezone_name: str | None) -> str`
+
+**What it does:**
+
+Return a valid IANA audit timezone name.
+
+**Source:**
+
+- `src/fabricops_kit/config.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L27-L58">View `_validate_audit_timezone` on GitHub</a>
+
+**Code:**
+
+```python
+def _validate_audit_timezone(timezone_name: str | None) -> str:
+    """Return a valid IANA audit timezone name.
+
+    Parameters
+    ----------
+    timezone_name : str or None
+        IANA timezone name to validate. Blank values default to ``"UTC"``.
+
+    Returns
+    -------
+    str
+        Validated timezone name.
+
+    Raises
+    ------
+    ValueError
+        If a non-blank value is not a valid IANA timezone name.
+    """
+    value = str(timezone_name or DEFAULT_AUDIT_TIMEZONE).strip() or DEFAULT_AUDIT_TIMEZONE
+    if value != DEFAULT_AUDIT_TIMEZONE and "/" not in value:
+        raise ValueError(
+            f'Invalid FABRICOPS_AUDIT_TIMEZONE: "{value}". '
+            'Use a valid IANA timezone name such as "Asia/Singapore" or keep the default "UTC".'
+        )
+    try:
+        ZoneInfo(value)
+    except ZoneInfoNotFoundError as exc:
+        raise ValueError(
+            f'Invalid FABRICOPS_AUDIT_TIMEZONE: "{value}". '
+            'Use a valid IANA timezone name such as "Asia/Singapore" or keep the default "UTC".'
+        ) from exc
+    return value
+```
+
+**Used here because:**
+
+`run_table_guardrails` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `run_table_guardrails` or another caller that reaches `_validate_audit_timezone`.
+
+### `def _build_guardrail_evidence_definitions(table_configs: list[Mapping[str, Any]]) -> dict[str, dict[str, Any]]`
+
+**What it does:**
+
+Build catalogue evidence definitions for pipeline table guardrails.
+
+**Source:**
+
+- `src/fabricops_kit/pipeline.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/pipeline.py#L228-L257">View `_build_guardrail_evidence_definitions` on GitHub</a>
+
+**Code:**
+
+```python
+def _build_guardrail_evidence_definitions(table_configs: list[Mapping[str, Any]]) -> dict[str, dict[str, Any]]:
+    """Build catalogue evidence definitions for pipeline table guardrails.
+
+    Parameters
+    ----------
+    table_configs : list of mapping
+        Source or target table configuration dictionaries. Each item must
+        include ``key`` and normally includes ``table_name``, ``stage``, and
+        optional target write metadata. DataFrame values are intentionally
+        omitted from the returned definitions.
+
+    Returns
+    -------
+    dict[str, dict[str, Any]]
+        Definitions keyed by table key, suitable for
+        :func:`write_catalogue_evidence`. Target definitions include resolved
+        write-layer, kind, and mode fields when the stage is ``target``.
+    """
+    definitions: dict[str, dict[str, Any]] = {}
+    for table_config in table_configs:
+        table_key = _table_key(table_config)
+        definition = {key: value for key, value in table_config.items() if key != "df"}
+        definition["table_name"] = _table_name(table_config)
+        definition["stage"] = table_config.get("stage", "target")
+        if definition["stage"] == "target":
+            definition["layer"] = table_config.get("target_layer", "unified")
+            definition["kind"] = table_config.get("target_kind", "lakehouse")
+            definition["mode"] = table_config.get("write_mode", "overwrite")
+        definitions[table_key] = definition
+    return definitions
+```
+
+**Used here because:**
+
+`run_table_guardrails` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `run_table_guardrails` or another caller that reaches `_build_guardrail_evidence_definitions`.
+
+### `def _table_key(table_config: Mapping[str, Any]) -> str`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/pipeline.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/pipeline.py#L216-L217">View `_table_key` on GitHub</a>
+
+**Code:**
+
+```python
+def _table_key(table_config: Mapping[str, Any]) -> str:
+    return str(table_config["key"])
+```
+
+**Used here because:**
+
+`run_table_guardrails` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `run_table_guardrails` or another caller that reaches `_table_key`.
+
+### `def _table_name(table_config: Mapping[str, Any]) -> str`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/pipeline.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/pipeline.py#L220-L221">View `_table_name` on GitHub</a>
+
+**Code:**
+
+```python
+def _table_name(table_config: Mapping[str, Any]) -> str:
+    return str(table_config.get("table_name") or table_config.get("target_name") or table_config["key"])
+```
+
+**Used here because:**
+
+`run_table_guardrails` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `run_table_guardrails` or another caller that reaches `_table_name`.
+
+### `def _guardrail_can_continue(result: Mapping[str, Any] | None) -> bool`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/pipeline.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/pipeline.py#L224-L225">View `_guardrail_can_continue` on GitHub</a>
+
+**Code:**
+
+```python
+def _guardrail_can_continue(result: Mapping[str, Any] | None) -> bool:
+    return bool((result or {}).get("can_continue", True))
+```
+
+**Used here because:**
+
+`run_table_guardrails` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `run_table_guardrails` or another caller that reaches `_guardrail_can_continue`.
+
 
 </details>
 
 ## Source
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a80b5a6ddb4de14056095d4da916cd452e478ff8/src/fabricops_kit/pipeline.py#L260-L447">View run_table_guardrails on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/pipeline.py#L260-L447">View run_table_guardrails on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -355,23 +719,23 @@ Not documented yet
 
 ### Outbound references
 
-- <a href="../internal/config__get_audit_timezone/"><code>fabricops_kit.config._get_audit_timezone</code></a>
+- `fabricops_kit.config._get_audit_timezone`
 - <a href="../profile_dataframe/"><code>fabricops_kit.data_profiling.profile_dataframe</code></a>
 - <a href="../enforce_dq_rules/"><code>fabricops_kit.governance_review.enforce_dq_rules</code></a>
 - <a href="../enforce_freshness/"><code>fabricops_kit.guardrails.enforce_freshness</code></a>
 - <a href="../enforce_profile_behavior/"><code>fabricops_kit.guardrails.enforce_profile_behavior</code></a>
 - <a href="../stop_if_failed/"><code>fabricops_kit.guardrails.stop_if_failed</code></a>
 - <a href="../validate_schema/"><code>fabricops_kit.guardrails.validate_schema</code></a>
-- <a href="../internal/pipeline__build_guardrail_evidence_definitions/"><code>fabricops_kit.pipeline._build_guardrail_evidence_definitions</code></a>
-- <a href="../internal/pipeline__guardrail_can_continue/"><code>fabricops_kit.pipeline._guardrail_can_continue</code></a>
-- <a href="../internal/pipeline__table_key/"><code>fabricops_kit.pipeline._table_key</code></a>
-- <a href="../internal/pipeline__table_name/"><code>fabricops_kit.pipeline._table_name</code></a>
+- `fabricops_kit.pipeline._build_guardrail_evidence_definitions`
+- `fabricops_kit.pipeline._guardrail_can_continue`
+- `fabricops_kit.pipeline._table_key`
+- `fabricops_kit.pipeline._table_name`
 - <a href="../write_catalogue_evidence/"><code>fabricops_kit.pipeline.write_catalogue_evidence</code></a>
 
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a80b5a6ddb4de14056095d4da916cd452e478ff8/src/fabricops_kit/pipeline.py#L260-L447">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a80b5a6ddb4de14056095d4da916cd452e478ff8/src/fabricops_kit/pipeline.py#L260-L447</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/pipeline.py#L260-L447">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/pipeline.py#L260-L447</a>
 - Start line: `260`
 - End line: `447`
 - Signature:
@@ -389,17 +753,381 @@ def run_table_guardrails(table_configs: list[dict[str, Any]], *, config: Any, en
 
 ### Internal implementation helpers
 
-- <a href="../internal/config__get_audit_timezone/"><code>fabricops_kit.config._get_audit_timezone</code></a>
-- <a href="../profile_dataframe/"><code>fabricops_kit.data_profiling.profile_dataframe</code></a>
-- <a href="../enforce_dq_rules/"><code>fabricops_kit.governance_review.enforce_dq_rules</code></a>
-- <a href="../enforce_freshness/"><code>fabricops_kit.guardrails.enforce_freshness</code></a>
-- <a href="../enforce_profile_behavior/"><code>fabricops_kit.guardrails.enforce_profile_behavior</code></a>
-- <a href="../stop_if_failed/"><code>fabricops_kit.guardrails.stop_if_failed</code></a>
-- <a href="../validate_schema/"><code>fabricops_kit.guardrails.validate_schema</code></a>
-- <a href="../internal/pipeline__build_guardrail_evidence_definitions/"><code>fabricops_kit.pipeline._build_guardrail_evidence_definitions</code></a>
-- <a href="../internal/pipeline__guardrail_can_continue/"><code>fabricops_kit.pipeline._guardrail_can_continue</code></a>
-- <a href="../internal/pipeline__table_key/"><code>fabricops_kit.pipeline._table_key</code></a>
-- <a href="../internal/pipeline__table_name/"><code>fabricops_kit.pipeline._table_name</code></a>
-- <a href="../write_catalogue_evidence/"><code>fabricops_kit.pipeline.write_catalogue_evidence</code></a>
+### Call flow
+
+```text
+run_table_guardrails(...)
+├── _build_guardrail_evidence_definitions(...)
+│   ├── _table_key(...)
+│   └── _table_name(...)
+├── _get_audit_timezone(...)
+│   └── _validate_audit_timezone(...)
+├── _guardrail_can_continue(...)
+├── _table_key(...)
+├── _table_name(...)
+├── enforce_dq_rules(...)
+│   ├── _dq_failed_row_count(...)
+│   │   ├── _dq_failed_expression(...)
+│   │   │   ├── _spark_sql_helpers(...)
+│   │   │   └── _validate_dq_rules(...)
+│   │   │       └── _canonical_dq_rule_type(...)
+│   │   └── _spark_sql_helpers(...)
+│   ├── _dq_summary(...)
+│   │   ├── _current_audit_timestamp(...)
+│   │   │   └── _get_audit_timezone(...)
+│   │   │       └── _validate_audit_timezone(...)
+│   │   └── _summarize_dq_guardrail(...)
+│   ├── _dq_tagged_dataframe(...)
+│   │   ├── _dq_failed_expression(...)
+│   │   │   ├── _spark_sql_helpers(...)
+│   │   │   └── _validate_dq_rules(...)
+│   │   │       └── _canonical_dq_rule_type(...)
+│   │   └── _spark_sql_helpers(...)
+│   ├── _load_active_dq_rules(...)
+│   │   ├── _canonical_dq_rule_type(...)
+│   │   ├── _coerce_rows(...)
+│   │   ├── _latest_dq_rule_versions(...)
+│   │   │   └── _spark_sql_helpers(...)
+│   │   ├── _spark_sql_helpers(...)
+│   │   └── _validate_dq_rules(...)
+│   │       └── _canonical_dq_rule_type(...)
+│   ├── _run_dq_guardrail_checks(...)
+│   │   ├── _dq_check_status(...)
+│   │   ├── _dq_failed_expression(...)
+│   │   │   ├── _spark_sql_helpers(...)
+│   │   │   └── _validate_dq_rules(...)
+│   │   │       └── _canonical_dq_rule_type(...)
+│   │   ├── _spark_sql_helpers(...)
+│   │   └── _validate_dq_rules(...)
+│   │       └── _canonical_dq_rule_type(...)
+│   ├── _summarize_dq_guardrail(...)
+│   └── read_lakehouse_table(...)
+│       ├── _current_database_matches(...)
+│       ├── _get_spark(...)
+│       ├── _get_store(...)
+│       ├── _normalize_table_name(...)
+│       ├── _registered_table_identifier(...)
+│       │   ├── _normalize_table_name(...)
+│       │   └── _quote_identifier(...)
+│       └── _uses_registered_metadata_table(...)
+├── enforce_freshness(...)
+│   ├── _coerce_date(...)
+│   ├── _iso_date_value(...)
+│   │   └── _coerce_date(...)
+│   └── _max_column_value(...)
+├── enforce_profile_behavior(...)
+│   ├── _catalogue_value(...)
+│   ├── _guardrail_exclude_columns(...)
+│   ├── _is_greater_than(...)
+│   │   └── _comparable_value(...)
+│   ├── _is_less_than(...)
+│   │   └── _comparable_value(...)
+│   ├── _is_missing_table_error(...)
+│   ├── _latest_catalogue_behavior_profile_row(...)
+│   │   ├── _catalogue_value(...)
+│   │   ├── _is_missing_table_error(...)
+│   │   ├── _row_to_dict(...)
+│   │   └── _string_value(...)
+│   ├── _profile_row_count(...)
+│   │   └── _normalize_profile(...)
+│   │       └── _normalize_profile(...) (recursive)
+│   ├── _profile_watermark_bounds(...)
+│   │   ├── _normalize_profile(...)
+│   │   │   └── _normalize_profile(...) (recursive)
+│   │   └── _string_value(...)
+│   ├── _string_value(...)
+│   ├── profile_dataframe(...)
+│   │   ├── _audit_timestamp_expr(...)
+│   │   │   └── _get_audit_timezone(...)
+│   │   │       └── _validate_audit_timezone(...)
+│   │   ├── _build_distribution_summaries(...)
+│   │   │   ├── _build_categorical_distribution(...)
+│   │   │   ├── _build_numeric_distribution(...)
+│   │   │   └── _numeric_bin_edges(...)
+│   │   ├── _get_profiled_columns(...)
+│   │   ├── _is_min_max_supported_type(...)
+│   │   └── _validate_audit_timezone(...)
+│   └── read_lakehouse_table(...)
+│       ├── _current_database_matches(...)
+│       ├── _get_spark(...)
+│       ├── _get_store(...)
+│       ├── _normalize_table_name(...)
+│       ├── _registered_table_identifier(...)
+│       │   ├── _normalize_table_name(...)
+│       │   └── _quote_identifier(...)
+│       └── _uses_registered_metadata_table(...)
+├── profile_dataframe(...)
+│   ├── _audit_timestamp_expr(...)
+│   │   └── _get_audit_timezone(...)
+│   │       └── _validate_audit_timezone(...)
+│   ├── _build_distribution_summaries(...)
+│   │   ├── _build_categorical_distribution(...)
+│   │   ├── _build_numeric_distribution(...)
+│   │   └── _numeric_bin_edges(...)
+│   ├── _get_profiled_columns(...)
+│   ├── _is_min_max_supported_type(...)
+│   └── _validate_audit_timezone(...)
+├── stop_if_failed(...)
+│   └── SchemaDriftError(...)
+├── validate_schema(...)
+│   ├── _actual_schema(...)
+│   │   └── _normalize_datatype(...)
+│   └── _normalize_datatype(...)
+└── write_catalogue_evidence(...)
+    ├── _build_metadata_table_key(...)
+    │   └── _stable_metadata_key(...)
+    ├── _canonical_catalogue_profile_df(...)
+    ├── _definition_name(...)
+    ├── _dq_summary_fields(...)
+    │   └── _now_iso(...)
+    │       └── _current_audit_timestamp(...)
+    │           └── _get_audit_timezone(...)
+    │               └── _validate_audit_timezone(...)
+    ├── _now_iso(...)
+    │   └── _current_audit_timestamp(...)
+    │       └── _get_audit_timezone(...)
+    │           └── _validate_audit_timezone(...)
+    ├── _runtime_audit_fields(...)
+    │   ├── _build_runtime_audit_fields(...)
+    │   │   ├── _context_get(...)
+    │   │   ├── _current_audit_timestamp(...)
+    │   │   │   └── _get_audit_timezone(...)
+    │   │   │       └── _validate_audit_timezone(...)
+    │   │   ├── _runtime_context(...)
+    │   │   │   └── _context_get(...)
+    │   │   └── _safe_str(...)
+    │   └── _now_iso(...)
+    │       └── _current_audit_timestamp(...)
+    │           └── _get_audit_timezone(...)
+    │               └── _validate_audit_timezone(...)
+    └── write_lakehouse_table(...)
+        ├── _get_store(...)
+        ├── _normalize_table_name(...)
+        ├── _registered_table_identifier(...)
+        │   ├── _normalize_table_name(...)
+        │   └── _quote_identifier(...)
+        └── _uses_registered_metadata_table(...)
+```
+
+### Internal helpers used by this callable
+
+### `def _get_audit_timezone(config: Any=None, timezone_name: str | None=None) -> str`
+
+**What it does:**
+
+Resolve the configured FabricOps audit timezone, defaulting to UTC.
+
+**Source:**
+
+- `src/fabricops_kit/config.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L61-L66">View `_get_audit_timezone` on GitHub</a>
+
+**Code:**
+
+```python
+def _get_audit_timezone(config: Any = None, timezone_name: str | None = None) -> str:
+    """Resolve the configured FabricOps audit timezone, defaulting to UTC."""
+    if timezone_name is not None:
+        return _validate_audit_timezone(timezone_name)
+    value = getattr(config, "audit_timezone", None) if config is not None else None
+    return _validate_audit_timezone(value)
+```
+
+**Used here because:**
+
+`run_table_guardrails` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `run_table_guardrails` or another caller that reaches `_get_audit_timezone`.
+
+### `def _validate_audit_timezone(timezone_name: str | None) -> str`
+
+**What it does:**
+
+Return a valid IANA audit timezone name.
+
+**Source:**
+
+- `src/fabricops_kit/config.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L27-L58">View `_validate_audit_timezone` on GitHub</a>
+
+**Code:**
+
+```python
+def _validate_audit_timezone(timezone_name: str | None) -> str:
+    """Return a valid IANA audit timezone name.
+
+    Parameters
+    ----------
+    timezone_name : str or None
+        IANA timezone name to validate. Blank values default to ``"UTC"``.
+
+    Returns
+    -------
+    str
+        Validated timezone name.
+
+    Raises
+    ------
+    ValueError
+        If a non-blank value is not a valid IANA timezone name.
+    """
+    value = str(timezone_name or DEFAULT_AUDIT_TIMEZONE).strip() or DEFAULT_AUDIT_TIMEZONE
+    if value != DEFAULT_AUDIT_TIMEZONE and "/" not in value:
+        raise ValueError(
+            f'Invalid FABRICOPS_AUDIT_TIMEZONE: "{value}". '
+            'Use a valid IANA timezone name such as "Asia/Singapore" or keep the default "UTC".'
+        )
+    try:
+        ZoneInfo(value)
+    except ZoneInfoNotFoundError as exc:
+        raise ValueError(
+            f'Invalid FABRICOPS_AUDIT_TIMEZONE: "{value}". '
+            'Use a valid IANA timezone name such as "Asia/Singapore" or keep the default "UTC".'
+        ) from exc
+    return value
+```
+
+**Used here because:**
+
+`run_table_guardrails` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `run_table_guardrails` or another caller that reaches `_validate_audit_timezone`.
+
+### `def _build_guardrail_evidence_definitions(table_configs: list[Mapping[str, Any]]) -> dict[str, dict[str, Any]]`
+
+**What it does:**
+
+Build catalogue evidence definitions for pipeline table guardrails.
+
+**Source:**
+
+- `src/fabricops_kit/pipeline.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/pipeline.py#L228-L257">View `_build_guardrail_evidence_definitions` on GitHub</a>
+
+**Code:**
+
+```python
+def _build_guardrail_evidence_definitions(table_configs: list[Mapping[str, Any]]) -> dict[str, dict[str, Any]]:
+    """Build catalogue evidence definitions for pipeline table guardrails.
+
+    Parameters
+    ----------
+    table_configs : list of mapping
+        Source or target table configuration dictionaries. Each item must
+        include ``key`` and normally includes ``table_name``, ``stage``, and
+        optional target write metadata. DataFrame values are intentionally
+        omitted from the returned definitions.
+
+    Returns
+    -------
+    dict[str, dict[str, Any]]
+        Definitions keyed by table key, suitable for
+        :func:`write_catalogue_evidence`. Target definitions include resolved
+        write-layer, kind, and mode fields when the stage is ``target``.
+    """
+    definitions: dict[str, dict[str, Any]] = {}
+    for table_config in table_configs:
+        table_key = _table_key(table_config)
+        definition = {key: value for key, value in table_config.items() if key != "df"}
+        definition["table_name"] = _table_name(table_config)
+        definition["stage"] = table_config.get("stage", "target")
+        if definition["stage"] == "target":
+            definition["layer"] = table_config.get("target_layer", "unified")
+            definition["kind"] = table_config.get("target_kind", "lakehouse")
+            definition["mode"] = table_config.get("write_mode", "overwrite")
+        definitions[table_key] = definition
+    return definitions
+```
+
+**Used here because:**
+
+`run_table_guardrails` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `run_table_guardrails` or another caller that reaches `_build_guardrail_evidence_definitions`.
+
+### `def _table_key(table_config: Mapping[str, Any]) -> str`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/pipeline.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/pipeline.py#L216-L217">View `_table_key` on GitHub</a>
+
+**Code:**
+
+```python
+def _table_key(table_config: Mapping[str, Any]) -> str:
+    return str(table_config["key"])
+```
+
+**Used here because:**
+
+`run_table_guardrails` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `run_table_guardrails` or another caller that reaches `_table_key`.
+
+### `def _table_name(table_config: Mapping[str, Any]) -> str`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/pipeline.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/pipeline.py#L220-L221">View `_table_name` on GitHub</a>
+
+**Code:**
+
+```python
+def _table_name(table_config: Mapping[str, Any]) -> str:
+    return str(table_config.get("table_name") or table_config.get("target_name") or table_config["key"])
+```
+
+**Used here because:**
+
+`run_table_guardrails` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `run_table_guardrails` or another caller that reaches `_table_name`.
+
+### `def _guardrail_can_continue(result: Mapping[str, Any] | None) -> bool`
+
+**What it does:**
+
+Internal helper used by the package implementation.
+
+**Source:**
+
+- `src/fabricops_kit/pipeline.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/pipeline.py#L224-L225">View `_guardrail_can_continue` on GitHub</a>
+
+**Code:**
+
+```python
+def _guardrail_can_continue(result: Mapping[str, Any] | None) -> bool:
+    return bool((result or {}).get("can_continue", True))
+```
+
+**Used here because:**
+
+`run_table_guardrails` reaches this helper in its implementation path.
+
+**Modify this if:**
+
+You want to change the implementation behavior summarized above for `run_table_guardrails` or another caller that reaches `_guardrail_can_continue`.
+
 
 </details>

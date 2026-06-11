@@ -16,7 +16,7 @@ Start with the existing generated function reference system. Do not replace it w
 - `docs/reference/agent-manifest.json` — AI-oriented callable and helper execution metadata.
 - `docs/reference/function-manifest.json` — machine-readable function inventory and dependency metadata.
 - `docs/reference/callables/` — public callable pages for notebook authors.
-- `docs/reference/internal/` — internal helper pages for package maintenance.
+- Public callable pages under `docs/reference/callables/` embed internal helper implementation details for package maintenance. Standalone `docs/reference/internal/` pages are generated only when explicitly enabled for maintainer diagnostics.
 - `docs/reference/dq-rules/` — generated DQ rule reference pages for supported rule types, parameters, and examples.
 - `docs/reference/template-function-map.md` — notebook-template to callable map.
 
@@ -84,7 +84,7 @@ DQ rules are governed evidence, not ad hoc notebook checks. They should flow thr
 - Use `docs/reference/agent-manifest.json` for required context, inputs, outputs, side effects, failure modes, verification, and related functions.
 - Use `docs/reference/function-manifest.json` for the machine-readable function inventory and dependency metadata.
 - Use pages in `docs/reference/callables/` for notebook authoring guidance.
-- Use pages in `docs/reference/internal/` only for package maintenance.
+- Use embedded Implementation details on public callable pages for package maintenance; standalone `docs/reference/internal/` pages are disabled by default and should only be used when explicitly generated for maintainer diagnostics.
 - Use `docs/reference/template-function-map.md` to connect notebook templates to callable references.
 - Do not manually edit generated reference files unless source inputs or generator behavior require it.
 - If source metadata, public API surface, callable documentation contracts, or generator behavior changes, regenerate the existing reference outputs with `PYTHONPATH=src python scripts/generate_function_reference.py` and run relevant tests.
@@ -96,5 +96,5 @@ DQ rules are governed evidence, not ad hoc notebook checks. They should flow thr
 3. Read the matching page in `docs/reference/callables/` before calling or recommending a public helper.
 4. For DQ work, read `docs/reference/dq-rules/index.md`, each relevant generated DQ rule page, and the callable page before generating notebook code.
 5. Inspect `docs/reference/agent-manifest.json` and `docs/reference/function-manifest.json` when you need execution metadata, dependencies, side effects, failure modes, or verification guidance.
-6. Use `docs/reference/internal/` only when maintaining package implementation details.
+6. Use embedded Implementation details on callable pages when maintaining package implementation details; only use `docs/reference/internal/` if standalone internal pages were explicitly generated for maintainer diagnostics.
 7. Preserve `00_env_config` metadata routing for reads and writes, especially governed evidence tables such as `METADATA_DQ_RULES`.
