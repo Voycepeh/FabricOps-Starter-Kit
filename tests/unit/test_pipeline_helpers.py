@@ -89,9 +89,6 @@ def test_prepare_pipeline_table_configs_source_role_derives_defaults_from_preloa
             "watermark_value": "default_should_be_overridden",
         },
         table_role="source",
-        config={"unused": True},
-        env="dev",
-        spark_session="spark",
     )
 
     assert enriched == [
@@ -126,6 +123,39 @@ def test_pipeline_module_does_not_expose_source_read_routing_wrappers():
     assert not hasattr(pipeline, "_source_read_type")
 
 
+
+def test_prepare_pipeline_table_configs_uses_only_table_watermark_values(monkeypatch):
+    _install_fake_pyspark_functions(monkeypatch)
+    source_df = FakeDataFrame("source")
+    target_df = FakeDataFrame("target")
+
+    source_tables, _source_by_key = pipeline.prepare_pipeline_table_configs(
+        [
+            {"key": "source_default", "df": source_df, "layer": "source", "table_name": "orders"},
+            {
+                "key": "source_override",
+                "df": source_df,
+                "layer": "source",
+                "table_name": "orders_daily",
+                "watermark_value": "2026-01-31",
+            },
+        ],
+        {"watermark_value": "default_should_not_apply", "schema_preset": "allow_new_columns"},
+        table_role="source",
+    )
+    target_tables, _target_by_key = pipeline.prepare_pipeline_table_configs(
+        [{"key": "target_default", "df": target_df, "layer": "unified", "table_name": "orders_curated"}],
+        {"watermark_value": "default_should_not_apply", "write_mode": "overwrite"},
+        table_role="target",
+        run_id="run-1",
+        pipeline_name="pipeline-1",
+    )
+
+    assert source_tables[0]["watermark_value"] is None
+    assert source_tables[1]["watermark_value"] == "2026-01-31"
+    assert target_tables[0]["watermark_value"] is None
+
+
 def test_prepare_pipeline_table_configs_target_role_adds_audit_columns_and_derives_write_defaults(monkeypatch):
     _install_fake_pyspark_functions(monkeypatch)
     df = FakeDataFrame("target")
@@ -139,7 +169,12 @@ def test_prepare_pipeline_table_configs_target_role_adds_audit_columns_and_deriv
                 "table_name": "orders_curated",
             }
         ],
-        {"schema_preset": "allow_new_columns", "write_mode": "overwrite", "target_kind": "lakehouse"},
+        {
+            "schema_preset": "allow_new_columns",
+            "write_mode": "overwrite",
+            "target_kind": "lakehouse",
+            "watermark_value": "default_should_be_overridden",
+        },
         table_role="target",
         run_id="run-1",
         pipeline_name="pipeline-1",

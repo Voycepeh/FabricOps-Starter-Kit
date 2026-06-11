@@ -128,9 +128,6 @@ def prepare_pipeline_table_configs(
     default_settings: Mapping[str, Any],
     *,
     table_role: str,
-    config: Any | None = None,
-    env: str | None = None,
-    spark_session: Any | None = None,
     run_id: str = "",
     pipeline_name: str = "",
 ) -> tuple[list[dict[str, Any]], dict[str, dict[str, Any]]]:
@@ -148,14 +145,6 @@ def prepare_pipeline_table_configs(
         Role-specific preparation mode. Source mode validates that each config
         already includes a DataFrame; target mode adds FabricOps audit columns
         and derives write metadata.
-    config : Any, optional
-        Reserved for API symmetry with notebook setup; source DataFrames should
-        be loaded directly with the existing FabricOps read helpers before
-        calling this function.
-    env : str, optional
-        Reserved for API symmetry with notebook setup.
-    spark_session : Any, optional
-        Reserved for API symmetry with notebook setup.
     run_id : str, optional
         Pipeline run identifier used for target audit columns. Required for
         target role.
@@ -175,7 +164,9 @@ def prepare_pipeline_table_configs(
     Notes
     -----
     Source configs derive ``dataset_name`` from ``table_name``, ``stage`` from
-    ``layer``, and ``watermark_value`` from ``None`` unless overridden. Source
+    ``layer``, and ``watermark_value`` from the individual table config only.
+    ``watermark_value`` defaults to ``None`` and is never inherited from
+    ``default_settings``. Source
     DataFrames must be loaded directly in the notebook with the existing
     FabricOps read helpers and supplied in each source config as ``df``.
 
@@ -192,7 +183,7 @@ def prepare_pipeline_table_configs(
         merged_config = {**default_settings, **table_config}
         dataset_name = merged_config.get("dataset_name", merged_config["table_name"])
         stage = merged_config.get("stage", merged_config["layer"])
-        watermark_value = merged_config.get("watermark_value", None)
+        watermark_value = table_config.get("watermark_value", None)
 
         if normalized_role == "source":
             if "df" not in merged_config:

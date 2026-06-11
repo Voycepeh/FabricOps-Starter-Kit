@@ -46,21 +46,6 @@ SOURCE_TABLES, SOURCE_CONFIG_BY_KEY = prepare_pipeline_table_configs(SOURCE_TABL
       <td data-label="Meaning">Role-specific preparation mode. Source mode validates that each config already includes a DataFrame; target mode adds FabricOps audit columns and derives write metadata.</td>
     </tr>
     <tr>
-      <td data-label="Parameter"><code>config</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Reserved for API symmetry with notebook setup; source DataFrames should be loaded directly with the existing FabricOps read helpers before calling this function.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>env</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Reserved for API symmetry with notebook setup.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>spark_session</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Reserved for API symmetry with notebook setup.</td>
-    </tr>
-    <tr>
       <td data-label="Parameter"><code>run_id</code></td>
       <td data-label="Required">No</td>
       <td data-label="Meaning">Pipeline run identifier used for target audit columns. Required for target role.</td>
@@ -100,7 +85,7 @@ Enriched table configs and a dictionary keyed by table key.
 ## Source
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/cb8dad0bc076c72220f65712e627dcc0b38043e0/src/fabricops_kit/pipeline.py#L126-L229">View prepare_pipeline_table_configs on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a212c94775e71b6e429e41b51fbc57ac733903cb/src/fabricops_kit/pipeline.py#L126-L220">View prepare_pipeline_table_configs on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -111,9 +96,6 @@ def prepare_pipeline_table_configs(
     default_settings: Mapping[str, Any],
     *,
     table_role: str,
-    config: Any | None = None,
-    env: str | None = None,
-    spark_session: Any | None = None,
     run_id: str = "",
     pipeline_name: str = "",
 ) -> tuple[list[dict[str, Any]], dict[str, dict[str, Any]]]:
@@ -131,14 +113,6 @@ def prepare_pipeline_table_configs(
         Role-specific preparation mode. Source mode validates that each config
         already includes a DataFrame; target mode adds FabricOps audit columns
         and derives write metadata.
-    config : Any, optional
-        Reserved for API symmetry with notebook setup; source DataFrames should
-        be loaded directly with the existing FabricOps read helpers before
-        calling this function.
-    env : str, optional
-        Reserved for API symmetry with notebook setup.
-    spark_session : Any, optional
-        Reserved for API symmetry with notebook setup.
     run_id : str, optional
         Pipeline run identifier used for target audit columns. Required for
         target role.
@@ -158,7 +132,9 @@ def prepare_pipeline_table_configs(
     Notes
     -----
     Source configs derive ``dataset_name`` from ``table_name``, ``stage`` from
-    ``layer``, and ``watermark_value`` from ``None`` unless overridden. Source
+    ``layer``, and ``watermark_value`` from the individual table config only.
+    ``watermark_value`` defaults to ``None`` and is never inherited from
+    ``default_settings``. Source
     DataFrames must be loaded directly in the notebook with the existing
     FabricOps read helpers and supplied in each source config as ``df``.
 
@@ -175,7 +151,7 @@ def prepare_pipeline_table_configs(
         merged_config = {**default_settings, **table_config}
         dataset_name = merged_config.get("dataset_name", merged_config["table_name"])
         stage = merged_config.get("stage", merged_config["layer"])
-        watermark_value = merged_config.get("watermark_value", None)
+        watermark_value = table_config.get("watermark_value", None)
 
         if normalized_role == "source":
             if "df" not in merged_config:
@@ -252,13 +228,13 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/cb8dad0bc076c72220f65712e627dcc0b38043e0/src/fabricops_kit/pipeline.py#L126-L229">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/cb8dad0bc076c72220f65712e627dcc0b38043e0/src/fabricops_kit/pipeline.py#L126-L229</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a212c94775e71b6e429e41b51fbc57ac733903cb/src/fabricops_kit/pipeline.py#L126-L220">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a212c94775e71b6e429e41b51fbc57ac733903cb/src/fabricops_kit/pipeline.py#L126-L220</a>
 - Start line: `126`
-- End line: `229`
+- End line: `220`
 - Signature:
 
 ```python
-def prepare_pipeline_table_configs(table_configs: list[dict[str, Any]], default_settings: Mapping[str, Any], *, table_role: str, config: Any | None=None, env: str | None=None, spark_session: Any | None=None, run_id: str='', pipeline_name: str='') -> tuple[list[dict[str, Any]], dict[str, dict[str, Any]]]
+def prepare_pipeline_table_configs(table_configs: list[dict[str, Any]], default_settings: Mapping[str, Any], *, table_role: str, run_id: str='', pipeline_name: str='') -> tuple[list[dict[str, Any]], dict[str, dict[str, Any]]]
 ```
 
 ### Internal relationship graph
