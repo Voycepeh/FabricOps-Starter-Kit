@@ -339,7 +339,7 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
 <a class="reference-chip" href="../metadata/#_build_runtime_audit_fields"><code>_build_runtime_audit_fields</code></a>, <a class="reference-chip" href="../metadata/#_now_utc_iso"><code>_now_utc_iso</code></a>, <a class="reference-chip" href="../metadata/#_register_current_notebook"><code>_register_current_notebook</code></a>
 
 **pipeline**
-<a class="reference-chip" href="../pipeline/#_add_audit_columns"><code>_add_audit_columns</code></a>, <a class="reference-chip" href="../pipeline/#_now_iso"><code>_now_iso</code></a>, <a class="reference-chip" href="../../reference/run_table_guardrails/"><code>run_table_guardrails</code></a>
+<a class="reference-chip" href="../pipeline/#_add_audit_columns"><code>_add_audit_columns</code></a>, <a class="reference-chip" href="../pipeline/#_now_iso"><code>_now_iso</code></a>
 
 ### External callees
 

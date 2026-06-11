@@ -111,7 +111,7 @@ Resolve a configured Fabric path for an environment and target.
 **Source:**
 
 - `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L618-L658">View `_get_store` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L627-L667">View `_get_store` on GitHub</a>
 
 **Code:**
 
@@ -176,7 +176,7 @@ Run 00_env_config readiness smoke checks for configuration bootstrap.
 **Source:**
 
 - `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L675-L774">View `_run_config_smoke_tests` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L684-L783">View `_run_config_smoke_tests` on GitHub</a>
 
 **Code:**
 
@@ -300,7 +300,7 @@ Check whether a Spark session is available.
 **Source:**
 
 - `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L1102-L1107">View `_check_spark_session` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L1111-L1116">View `_check_spark_session` on GitHub</a>
 
 **Code:**
 
@@ -330,7 +330,7 @@ Best-effort retrieval of Fabric runtime metadata.
 **Source:**
 
 - `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L1110-L1149">View `_get_fabric_runtime_metadata` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L1119-L1158">View `_get_fabric_runtime_metadata` on GitHub</a>
 
 **Code:**
 
@@ -394,7 +394,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L661-L672">View `_validate_notebook_name` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L670-L681">View `_validate_notebook_name` on GitHub</a>
 
 **Code:**
 
@@ -430,7 +430,7 @@ Validate and normalize framework configuration input.
 **Source:**
 
 - `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L539-L615">View `_validate_framework_config` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L551-L624">View `_validate_framework_config` on GitHub</a>
 
 **Code:**
 
@@ -441,8 +441,9 @@ def _validate_framework_config(config: FrameworkConfig | dict[str, Any]) -> Fram
     Parameters
     ----------
     config : FrameworkConfig | dict[str, Any]
-        Existing framework config object or compatible mapping containing all
-        required component configs.
+        Existing framework config object or compatible mapping containing the
+        required user-facing component configs. Framework-only sections may be
+        omitted and will use package defaults.
 
     Returns
     -------
@@ -473,10 +474,6 @@ def _validate_framework_config(config: FrameworkConfig | dict[str, Any]) -> Fram
             "path_config",
             "notebook_runtime_config",
             "ai_prompt_config",
-            "quality_config",
-            "governance_config",
-            "review_workflow_config",
-            "lineage_config",
         }
         missing_keys = sorted(required_keys.difference(config.keys()))
         if missing_keys:
@@ -531,7 +528,7 @@ Return a valid IANA audit timezone name.
 **Source:**
 
 - `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L27-L58">View `_validate_audit_timezone` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L27-L58">View `_validate_audit_timezone` on GitHub</a>
 
 **Code:**
 
@@ -584,7 +581,7 @@ You want to change the implementation behavior summarized above for `setup_noteb
 ## Source
 
 - Source file path: `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L777-L886">View setup_notebook on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L786-L895">View setup_notebook on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -717,7 +714,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `config`
 - Source file path: `src/fabricops_kit/config.py`
-- Source line: `777`
+- Source line: `786`
 - Inbound references count: 0
 - Outbound references count: 4
 
@@ -744,9 +741,9 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/config.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L777-L886">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L777-L886</a>
-- Start line: `777`
-- End line: `886`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L786-L895">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L786-L895</a>
+- Start line: `786`
+- End line: `895`
 - Signature:
 
 ```python
@@ -789,7 +786,7 @@ Resolve a configured Fabric path for an environment and target.
 **Source:**
 
 - `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L618-L658">View `_get_store` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L627-L667">View `_get_store` on GitHub</a>
 
 **Code:**
 
@@ -854,7 +851,7 @@ Run 00_env_config readiness smoke checks for configuration bootstrap.
 **Source:**
 
 - `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L675-L774">View `_run_config_smoke_tests` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L684-L783">View `_run_config_smoke_tests` on GitHub</a>
 
 **Code:**
 
@@ -978,7 +975,7 @@ Check whether a Spark session is available.
 **Source:**
 
 - `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L1102-L1107">View `_check_spark_session` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L1111-L1116">View `_check_spark_session` on GitHub</a>
 
 **Code:**
 
@@ -1008,7 +1005,7 @@ Best-effort retrieval of Fabric runtime metadata.
 **Source:**
 
 - `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L1110-L1149">View `_get_fabric_runtime_metadata` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L1119-L1158">View `_get_fabric_runtime_metadata` on GitHub</a>
 
 **Code:**
 
@@ -1072,7 +1069,7 @@ Internal helper used by the package implementation.
 **Source:**
 
 - `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L661-L672">View `_validate_notebook_name` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L670-L681">View `_validate_notebook_name` on GitHub</a>
 
 **Code:**
 
@@ -1108,7 +1105,7 @@ Validate and normalize framework configuration input.
 **Source:**
 
 - `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L539-L615">View `_validate_framework_config` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L551-L624">View `_validate_framework_config` on GitHub</a>
 
 **Code:**
 
@@ -1119,8 +1116,9 @@ def _validate_framework_config(config: FrameworkConfig | dict[str, Any]) -> Fram
     Parameters
     ----------
     config : FrameworkConfig | dict[str, Any]
-        Existing framework config object or compatible mapping containing all
-        required component configs.
+        Existing framework config object or compatible mapping containing the
+        required user-facing component configs. Framework-only sections may be
+        omitted and will use package defaults.
 
     Returns
     -------
@@ -1151,10 +1149,6 @@ def _validate_framework_config(config: FrameworkConfig | dict[str, Any]) -> Fram
             "path_config",
             "notebook_runtime_config",
             "ai_prompt_config",
-            "quality_config",
-            "governance_config",
-            "review_workflow_config",
-            "lineage_config",
         }
         missing_keys = sorted(required_keys.difference(config.keys()))
         if missing_keys:
@@ -1209,7 +1203,7 @@ Return a valid IANA audit timezone name.
 **Source:**
 
 - `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L27-L58">View `_validate_audit_timezone` on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L27-L58">View `_validate_audit_timezone` on GitHub</a>
 
 **Code:**
 

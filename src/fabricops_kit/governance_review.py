@@ -1597,7 +1597,7 @@ def _prepare_dq_profile_input_rows(*, profile_df=None, df=None, table_name: str,
     if (profile_df is None) == (df is None):
         raise ValueError("Provide exactly one of profile_df or df.")
     if profile_df is None:
-        profile_df = profile_dataframe(df, table_name=table_name, run_timestamp_timezone=_get_audit_timezone(config))
+        profile_df = profile_dataframe(df, table_name=table_name, config=config)
     cols = set(profile_df.columns)
     if {"column_name", "data_type", "row_count", "null_count", "distinct_count"}.issubset(cols):
         return profile_df

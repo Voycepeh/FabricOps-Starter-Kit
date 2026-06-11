@@ -1,16 +1,21 @@
 from __future__ import annotations
 
-import ast
 import json
 from pathlib import Path
 
 import pytest
 
 from fabricops_kit.config import (
+    AIPromptConfig,
     DEFAULT_DQ_RULE_SUGGESTION_PROMPT_TEMPLATE,
     DataAgreementConfig,
     FrameworkConfig,
+    GovernanceConfig,
+    LineageConfig,
+    NotebookRuntimeConfig,
     PathConfig,
+    QualityConfig,
+    ReviewWorkflowConfig,
     _current_audit_timestamp,
     _get_active_metadata_tables,
     _validate_audit_timezone,
@@ -18,50 +23,15 @@ from fabricops_kit.config import (
     setup_metadata_tables,
     setup_notebook,
 )
-from tests.helpers import framework_config
+from tests.helpers import framework_config, store
 
 pytestmark = pytest.mark.unit
 
 
-def _notebook_dq_prompt_template() -> str:
-    notebook = json.loads(Path("templates/notebooks/00_env_config.ipynb").read_text(encoding="utf-8"))
-    for cell in notebook["cells"]:
-        if cell.get("cell_type") != "code":
-            continue
-        source = "".join(cell.get("source", []))
-        if "DQ_RULE_SUGGESTION_PROMPT_TEMPLATE" not in source:
-            continue
-        tree = ast.parse(source)
-        for node in tree.body:
-            if not isinstance(node, ast.Assign):
-                continue
-            if not any(
-                isinstance(target, ast.Name) and target.id == "DQ_RULE_SUGGESTION_PROMPT_TEMPLATE"
-                for target in node.targets
-            ):
-                continue
-            if (
-                isinstance(node.value, ast.Call)
-                and isinstance(node.value.func, ast.Attribute)
-                and node.value.func.attr == "strip"
-            ):
-                value = node.value.func.value
-            else:
-                value = node.value
-            if isinstance(value, ast.Constant) and isinstance(value.value, str):
-                return value.value.strip()
-    raise AssertionError("DQ_RULE_SUGGESTION_PROMPT_TEMPLATE assignment not found in 00_env_config.ipynb")
-
-
-def test_dq_ai_suggestion_prompt_guidance_stays_aligned_with_notebook_template():
+def test_dq_ai_suggestion_prompt_guidance_stays_in_package_defaults():
     from fabricops_kit.governance_review import DQ_RULE_TYPES
 
-    prompts = {
-        "package default": DEFAULT_DQ_RULE_SUGGESTION_PROMPT_TEMPLATE,
-        "00_env_config notebook": _notebook_dq_prompt_template(),
-    }
-    assert prompts["package default"] == prompts["00_env_config notebook"]
-
+    prompt = DEFAULT_DQ_RULE_SUGGESTION_PROMPT_TEMPLATE
     required_strings = [
         "23",
         "FabricOps-native DQ rule types",
@@ -82,11 +52,70 @@ def test_dq_ai_suggestion_prompt_guidance_stays_aligned_with_notebook_template()
         "Schema guardrails and profile behavior guardrails are separate FabricOps layers",
     ]
 
-    for prompt_name, prompt in prompts.items():
-        for required in required_strings:
-            assert required in prompt, f"{prompt_name} DQ prompt missing {required!r}"
-        for rule_type in DQ_RULE_TYPES:
-            assert rule_type in prompt, f"{prompt_name} DQ prompt missing rule_type {rule_type!r}"
+    for required in required_strings:
+        assert required in prompt, f"package DQ prompt missing {required!r}"
+    for rule_type in DQ_RULE_TYPES:
+        assert rule_type in prompt, f"package DQ prompt missing rule_type {rule_type!r}"
+
+
+def test_ai_prompt_config_uses_only_implemented_prompt_defaults():
+    prompts = AIPromptConfig()
+
+    assert prompts.business_context_prompt_template.strip()
+    assert prompts.dq_rule_suggestion_prompt_template == DEFAULT_DQ_RULE_SUGGESTION_PROMPT_TEMPLATE
+    assert prompts.governance_personal_identifier_prompt_template.strip()
+    assert not hasattr(prompts, "governance_candidate_prompt_template")
+    assert not hasattr(prompts, "governance_review_prompt_template")
+
+
+def test_env_config_template_does_not_expose_prompt_boilerplate_or_unused_defaults():
+    notebook = json.loads(Path("templates/notebooks/00_env_config.ipynb").read_text(encoding="utf-8"))
+    source = "\n".join("".join(cell.get("source", [])) for cell in notebook["cells"])
+
+    assert "AI_PROMPTS = AIPromptConfig()" in source
+    assert "DQ_RULE_SUGGESTION_PROMPT_TEMPLATE =" not in source
+    assert "GOVERNANCE_CANDIDATE_PROMPT_TEMPLATE" not in source
+    assert "GOVERNANCE_REVIEW_PROMPT_TEMPLATE" not in source
+    assert "QUALITY_CONFIG = QualityConfig()" not in source
+    assert "GOVERNANCE_CONFIG = GovernanceConfig()" not in source
+    assert "REVIEW_WORKFLOW_CONFIG = ReviewWorkflowConfig()" not in source
+    assert "LINEAGE_CONFIG = LineageConfig()" not in source
+
+
+def test_framework_config_defaults_framework_only_sections_when_omitted():
+    config = FrameworkConfig(
+        path_config=PathConfig(paths={"dev": {"source": store()}}),
+        notebook_runtime_config=NotebookRuntimeConfig(),
+        ai_prompt_config=AIPromptConfig(),
+    )
+
+    assert isinstance(config.quality_config, QualityConfig)
+    assert isinstance(config.governance_config, GovernanceConfig)
+    assert isinstance(config.review_workflow_config, ReviewWorkflowConfig)
+    assert isinstance(config.lineage_config, LineageConfig)
+
+
+def test_dict_framework_config_defaults_framework_only_sections_when_omitted():
+    config = setup_notebook.__globals__["_validate_framework_config"]({
+        "path_config": PathConfig(paths={"dev": {"source": store(), "unified": store(name="unified")}}),
+        "notebook_runtime_config": NotebookRuntimeConfig(),
+        "ai_prompt_config": AIPromptConfig(),
+    })
+
+    assert isinstance(config.quality_config, QualityConfig)
+    assert isinstance(config.governance_config, GovernanceConfig)
+    assert isinstance(config.review_workflow_config, ReviewWorkflowConfig)
+    assert isinstance(config.lineage_config, LineageConfig)
+
+
+def test_framework_config_keeps_type_validation_for_present_defaulted_sections():
+    with pytest.raises(ValueError, match="quality_config must be a QualityConfig object"):
+        setup_notebook.__globals__["_validate_framework_config"]({
+            "path_config": PathConfig(paths={"dev": {"source": store()}}),
+            "notebook_runtime_config": NotebookRuntimeConfig(),
+            "ai_prompt_config": AIPromptConfig(),
+            "quality_config": object(),
+        })
 
 
 def test_setup_notebook_resolves_environment_paths_and_reports_invalid_targets(fake_notebookutils):
@@ -248,6 +277,28 @@ def test_env_config_template_exposes_audit_timezone_setting():
     assert 'FABRICOPS_AUDIT_TIMEZONE = "UTC"' in source
     assert "_validate_audit_timezone(FABRICOPS_AUDIT_TIMEZONE)" in source
     assert "audit_timezone=FABRICOPS_AUDIT_TIMEZONE" in source
+
+
+def test_downstream_notebooks_use_config_aware_audit_timestamps_only():
+    notebook_paths = [
+        Path("templates/notebooks/01_agreement.ipynb"),
+        Path("templates/notebooks/02_pipeline.ipynb"),
+        Path("templates/notebooks/03_governance.ipynb"),
+        Path("templates/notebooks/99_explore.ipynb"),
+        Path("templates/notebooks/example_pipeline_smoke_test.ipynb"),
+        Path("templates/notebooks/example_dq_rule_smoke_test.ipynb"),
+    ]
+
+    for path in notebook_paths:
+        source = path.read_text(encoding="utf-8")
+        assert 'FABRICOPS_AUDIT_TIMEZONE = "UTC"' not in source
+        assert 'DEFAULT_AUDIT_TIMEZONE = "UTC"' not in source
+        assert "datetime.now(timezone.utc)" not in source
+        assert "datetime.utcnow" not in source
+
+    pipeline_source = Path("templates/notebooks/02_pipeline.ipynb").read_text(encoding="utf-8")
+    assert "PIPELINE_STARTED_AT = _current_audit_timestamp(config=CONFIG)" in pipeline_source
+    assert "completed_at=_current_audit_timestamp(config=CONFIG)" in pipeline_source
 
 
 def test_governance_review_imports_current_prompt_constants():

@@ -717,7 +717,7 @@ def enforce_profile_behavior(
     if current_profile_df is None:
         from fabricops_kit.data_profiling import profile_dataframe
 
-        current_profile_df = profile_dataframe(dataframe, table_name, exclude_columns=effective_exclude_columns)
+        current_profile_df = profile_dataframe(dataframe, table_name, exclude_columns=effective_exclude_columns, config=config)
     current_row_count = _profile_row_count(current_profile_df)
     current_min, current_max = _profile_watermark_bounds(current_profile_df, watermark_column)
 

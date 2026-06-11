@@ -347,10 +347,9 @@
       "used_by": [
         "fabricops_kit.config._audit_timestamp_expr",
         "fabricops_kit.config._current_audit_timestamp",
-        "fabricops_kit.governance_review._prepare_dq_profile_input_rows",
-        "fabricops_kit.pipeline.run_table_guardrails"
+        "fabricops_kit.data_profiling.profile_dataframe"
       ],
-      "used_by_count": 4,
+      "used_by_count": 3,
       "internal_helpers_used": [
         "fabricops_kit.config._validate_audit_timezone"
       ],
@@ -528,10 +527,9 @@
       "calls_count": 0,
       "used_by": [
         "fabricops_kit.config._get_audit_timezone",
-        "fabricops_kit.config._validate_framework_config",
-        "fabricops_kit.data_profiling.profile_dataframe"
+        "fabricops_kit.config._validate_framework_config"
       ],
-      "used_by_count": 3,
+      "used_by_count": 2,
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
@@ -1848,7 +1846,7 @@
       "classification": "callable",
       "calls": [
         "fabricops_kit.config._audit_timestamp_expr",
-        "fabricops_kit.config._validate_audit_timezone",
+        "fabricops_kit.config._get_audit_timezone",
         "fabricops_kit.data_profiling._build_distribution_summaries",
         "fabricops_kit.data_profiling._get_profiled_columns",
         "fabricops_kit.data_profiling._is_min_max_supported_type"
@@ -2873,11 +2871,10 @@
       "classification": "internal",
       "calls": [
         "fabricops_kit.config._current_audit_timestamp",
-        "fabricops_kit.config._get_audit_timezone",
         "fabricops_kit.data_profiling.profile_dataframe",
         "fabricops_kit.governance_review._spark_sql_helpers"
       ],
-      "calls_count": 4,
+      "calls_count": 3,
       "used_by": [
         "fabricops_kit.governance_review._draft_dq_rules"
       ],
@@ -4469,7 +4466,6 @@
       "docs_url": "/FabricOps-Starter-Kit/reference/run_table_guardrails/",
       "classification": "callable",
       "calls": [
-        "fabricops_kit.config._get_audit_timezone",
         "fabricops_kit.data_profiling.profile_dataframe",
         "fabricops_kit.governance_review.enforce_dq_rules",
         "fabricops_kit.guardrails.enforce_freshness",
@@ -4482,7 +4478,7 @@
         "fabricops_kit.pipeline._table_name",
         "fabricops_kit.pipeline.write_catalogue_evidence"
       ],
-      "calls_count": 12,
+      "calls_count": 11,
       "used_by": [],
       "used_by_count": 0,
       "internal_helpers_used": [
