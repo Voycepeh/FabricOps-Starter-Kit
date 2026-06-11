@@ -15,7 +15,7 @@ Run profiling, schema, stability, DQ, and catalogue guardrails for table configs
 ## Example
 
 ```python
-source_guardrail_results = run_table_guardrails(SOURCE_TABLES, config=CONFIG, env=ENV_NAME, run_id=RUN_ID, spark_session=spark)
+source_guardrail_results = run_table_guardrails(SOURCE_TABLES, config=CONFIG, env=ENV_NAME, run_id=RUN_ID, spark_session=spark, stop_on_failure=True)
 ```
 
 ## Inputs
@@ -80,13 +80,18 @@ source_guardrail_results = run_table_guardrails(SOURCE_TABLES, config=CONFIG, en
       <td data-label="Required">No</td>
       <td data-label="Meaning">Not documented yet</td>
     </tr>
+    <tr>
+      <td data-label="Parameter"><code>stop_on_failure</code></td>
+      <td data-label="Required">No</td>
+      <td data-label="Meaning">When True, collect all guardrail results and catalogue evidence, then stop notebook execution via the standard guardrail stopper if any table cannot continue.</td>
+    </tr>
   </tbody>
 </table>
 </div>
 
 ## Output
 
-Guardrail result bundle with profiles, schema results, stability results, DQ results, catalogue status, evidence definitions, can_continue, and failed_tables.
+Guardrail result bundle with profiles, schema results, stability results, DQ results, catalogue status, evidence definitions, summary, can_continue, and failed_tables.
 
 ## Errors and side effects
 
@@ -96,8 +101,7 @@ Guardrail result bundle with profiles, schema results, stability results, DQ res
 
 ## Related functions
 
-- <a href="../guardrail_summary/"><code>fabricops_kit.pipeline.guardrail_summary</code></a>
-- <a href="../stop_if_any_guardrail_failed/"><code>fabricops_kit.pipeline.stop_if_any_guardrail_failed</code></a>
+- <a href="../prepare_pipeline_table_configs/"><code>fabricops_kit.pipeline.prepare_pipeline_table_configs</code></a>
 - <a href="../write_catalogue_evidence/"><code>fabricops_kit.pipeline.write_catalogue_evidence</code></a>
 
 <details class="reference-implementation-details">
@@ -105,12 +109,13 @@ Guardrail result bundle with profiles, schema results, stability results, DQ res
 
 - <a href="../profile_dataframe/"><code>fabricops_kit.data_profiling.profile_dataframe</code></a>
 - <a href="../enforce_catalogue_stability/"><code>fabricops_kit.drift.enforce_catalogue_stability</code></a>
+- <a href="../stop_if_failed/"><code>fabricops_kit.drift.stop_if_failed</code></a>
 - <a href="../validate_schema/"><code>fabricops_kit.drift.validate_schema</code></a>
 - <a href="../enforce_dq_rules/"><code>fabricops_kit.governance_review.enforce_dq_rules</code></a>
+- <a href="../internal/pipeline__build_guardrail_evidence_definitions/"><code>fabricops_kit.pipeline._build_guardrail_evidence_definitions</code></a>
 - <a href="../internal/pipeline__guardrail_can_continue/"><code>fabricops_kit.pipeline._guardrail_can_continue</code></a>
 - <a href="../internal/pipeline__table_key/"><code>fabricops_kit.pipeline._table_key</code></a>
 - <a href="../internal/pipeline__table_name/"><code>fabricops_kit.pipeline._table_name</code></a>
-- <a href="../build_guardrail_evidence_definitions/"><code>fabricops_kit.pipeline.build_guardrail_evidence_definitions</code></a>
 - <a href="../write_catalogue_evidence/"><code>fabricops_kit.pipeline.write_catalogue_evidence</code></a>
 
 </details>
@@ -118,7 +123,7 @@ Guardrail result bundle with profiles, schema results, stability results, DQ res
 ## Source
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7671b3d58873b7627843d2a35ac9cb4dae15eb9a/src/fabricops_kit/pipeline.py#L381-L532">View run_table_guardrails on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/031081c64115c5424552b6af13bbaeb983c852dd/src/fabricops_kit/pipeline.py#L336-L512">View run_table_guardrails on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -136,6 +141,7 @@ def run_table_guardrails(
     notebook_registry_id: str = "",
     notebook_id: str = "",
     pipeline_name: str = "",
+    stop_on_failure: bool = False,
 ) -> dict[str, Any]:
     """Run profiling, schema, stability, DQ, and catalogue guardrails.
 
@@ -158,14 +164,18 @@ def run_table_guardrails(
         Spark session used by stability and DQ helpers.
     agreement_id, agreement_contract_version, notebook_registry_id, notebook_id, pipeline_name : str, optional
         Governance context written with catalogue evidence.
+    stop_on_failure : bool, default False
+        When True, collect all guardrail results and catalogue evidence, then
+        stop notebook execution via the standard guardrail stopper if any table
+        cannot continue.
 
     Returns
     -------
     dict[str, Any]
         Guardrail result bundle containing profiles, schema results, stability
-        results, DQ results, catalogue status, evidence definitions,
-        ``can_continue``, and ``failed_tables``. Results remain separated by
-        table key and guardrail type.
+        results, DQ results, catalogue status, evidence definitions, concise
+        ``summary``, ``can_continue``, and ``failed_tables``. Results remain
+        separated by table key and guardrail type.
 
     Notes
     -----
@@ -180,7 +190,7 @@ def run_table_guardrails(
     stability_results: dict[str, Mapping[str, Any]] = {}
     dq_results: dict[str, Mapping[str, Any]] = {}
     failed_tables: list[str] = []
-    evidence_definitions = build_guardrail_evidence_definitions(table_configs)
+    evidence_definitions = _build_guardrail_evidence_definitions(table_configs)
 
     for table_config in table_configs:
         table_key = _table_key(table_config)
@@ -266,16 +276,36 @@ def run_table_guardrails(
         dq_results=dq_results,
     )
 
-    return {
+    summary = {
+        "schema_results": schema_results,
+        "stability_results": stability_results,
+        "dq_results": dq_results,
+        "catalogue_status": catalogue_status,
+        "failed_tables": failed_tables,
+    }
+    result = {
         "profiles": profiles,
         "schema_results": schema_results,
         "stability_results": stability_results,
         "dq_results": dq_results,
         "catalogue_status": catalogue_status,
         "evidence_definitions": evidence_definitions,
+        "summary": summary,
         "can_continue": not failed_tables,
         "failed_tables": failed_tables,
     }
+
+    if stop_on_failure and failed_tables:
+        stop_if_failed(
+            {
+                "status": "failed",
+                "can_continue": False,
+                "message": "Blocking guardrail failure for table(s): " + ", ".join(failed_tables),
+                "failed_tables": failed_tables,
+            }
+        )
+
+    return result
 ```
 
 </details>
@@ -293,18 +323,18 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `pipeline`
 - Source file path: `src/fabricops_kit/pipeline.py`
-- Source line: `381`
+- Source line: `336`
 - Inbound references count: 0
-- Outbound references count: 9
+- Outbound references count: 10
 
 ### AI implementation contract
 
 - **required_context:** Requires CONFIG and env from 00_env_config so metadata operations use the configured metadata target.
 - **inputs:** table_configs plus config, env, run_id, spark_session, and agreement/notebook context.
-- **output:** Guardrail result bundle with profiles, schema results, stability results, DQ results, catalogue status, evidence definitions, can_continue, and failed_tables.
+- **output:** Guardrail result bundle with profiles, schema results, stability results, DQ results, catalogue status, evidence definitions, summary, can_continue, and failed_tables.
 - **side_effects:** Profiles DataFrames, reads stability/DQ metadata through configured metadata routing, writes catalogue evidence, and may update table config DataFrames with DQ annotations.
 - **failure_modes:** Not documented yet
-- **verification:** Verify stop_if_any_guardrail_failed is called after displaying or inspecting results and before transformation or writes continue.
+- **verification:** Verify stop_on_failure=True is used before transformation or writes when blocking guardrails should stop execution.
 
 ### Inbound references
 
@@ -314,44 +344,45 @@ Not documented yet
 
 - <a href="../profile_dataframe/"><code>fabricops_kit.data_profiling.profile_dataframe</code></a>
 - <a href="../enforce_catalogue_stability/"><code>fabricops_kit.drift.enforce_catalogue_stability</code></a>
+- <a href="../stop_if_failed/"><code>fabricops_kit.drift.stop_if_failed</code></a>
 - <a href="../validate_schema/"><code>fabricops_kit.drift.validate_schema</code></a>
 - <a href="../enforce_dq_rules/"><code>fabricops_kit.governance_review.enforce_dq_rules</code></a>
+- <a href="../internal/pipeline__build_guardrail_evidence_definitions/"><code>fabricops_kit.pipeline._build_guardrail_evidence_definitions</code></a>
 - <a href="../internal/pipeline__guardrail_can_continue/"><code>fabricops_kit.pipeline._guardrail_can_continue</code></a>
 - <a href="../internal/pipeline__table_key/"><code>fabricops_kit.pipeline._table_key</code></a>
 - <a href="../internal/pipeline__table_name/"><code>fabricops_kit.pipeline._table_name</code></a>
-- <a href="../build_guardrail_evidence_definitions/"><code>fabricops_kit.pipeline.build_guardrail_evidence_definitions</code></a>
 - <a href="../write_catalogue_evidence/"><code>fabricops_kit.pipeline.write_catalogue_evidence</code></a>
 
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7671b3d58873b7627843d2a35ac9cb4dae15eb9a/src/fabricops_kit/pipeline.py#L381-L532">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7671b3d58873b7627843d2a35ac9cb4dae15eb9a/src/fabricops_kit/pipeline.py#L381-L532</a>
-- Start line: `381`
-- End line: `532`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/031081c64115c5424552b6af13bbaeb983c852dd/src/fabricops_kit/pipeline.py#L336-L512">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/031081c64115c5424552b6af13bbaeb983c852dd/src/fabricops_kit/pipeline.py#L336-L512</a>
+- Start line: `336`
+- End line: `512`
 - Signature:
 
 ```python
-def run_table_guardrails(table_configs: list[dict[str, Any]], *, config: Any, env: str, run_id: str, spark_session: Any, agreement_id: str='', agreement_contract_version: str='', notebook_registry_id: str='', notebook_id: str='', pipeline_name: str='') -> dict[str, Any]
+def run_table_guardrails(table_configs: list[dict[str, Any]], *, config: Any, env: str, run_id: str, spark_session: Any, agreement_id: str='', agreement_contract_version: str='', notebook_registry_id: str='', notebook_id: str='', pipeline_name: str='', stop_on_failure: bool=False) -> dict[str, Any]
 ```
 
 ### Internal relationship graph
 
 ### Public related functions
 
-- <a href="../guardrail_summary/"><code>fabricops_kit.pipeline.guardrail_summary</code></a>
-- <a href="../stop_if_any_guardrail_failed/"><code>fabricops_kit.pipeline.stop_if_any_guardrail_failed</code></a>
+- <a href="../prepare_pipeline_table_configs/"><code>fabricops_kit.pipeline.prepare_pipeline_table_configs</code></a>
 - <a href="../write_catalogue_evidence/"><code>fabricops_kit.pipeline.write_catalogue_evidence</code></a>
 
 ### Internal implementation helpers
 
 - <a href="../profile_dataframe/"><code>fabricops_kit.data_profiling.profile_dataframe</code></a>
 - <a href="../enforce_catalogue_stability/"><code>fabricops_kit.drift.enforce_catalogue_stability</code></a>
+- <a href="../stop_if_failed/"><code>fabricops_kit.drift.stop_if_failed</code></a>
 - <a href="../validate_schema/"><code>fabricops_kit.drift.validate_schema</code></a>
 - <a href="../enforce_dq_rules/"><code>fabricops_kit.governance_review.enforce_dq_rules</code></a>
+- <a href="../internal/pipeline__build_guardrail_evidence_definitions/"><code>fabricops_kit.pipeline._build_guardrail_evidence_definitions</code></a>
 - <a href="../internal/pipeline__guardrail_can_continue/"><code>fabricops_kit.pipeline._guardrail_can_continue</code></a>
 - <a href="../internal/pipeline__table_key/"><code>fabricops_kit.pipeline._table_key</code></a>
 - <a href="../internal/pipeline__table_name/"><code>fabricops_kit.pipeline._table_name</code></a>
-- <a href="../build_guardrail_evidence_definitions/"><code>fabricops_kit.pipeline.build_guardrail_evidence_definitions</code></a>
 - <a href="../write_catalogue_evidence/"><code>fabricops_kit.pipeline.write_catalogue_evidence</code></a>
 
 </details>

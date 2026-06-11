@@ -82,7 +82,7 @@ Spark DataFrame loaded from the configured warehouse table.
 <details class="reference-implementation-details">
 <summary>Implementation details</summary>
 
-- <a href="../internal/pipeline__read_source_dataframe/"><code>fabricops_kit.pipeline._read_source_dataframe</code></a>
+- <a href="../internal/pipeline__load_source_dataframe/"><code>fabricops_kit.pipeline._load_source_dataframe</code></a>
 - <a href="../internal/config__get_store/"><code>fabricops_kit.config._get_store</code></a>
 - <a href="../internal/fabric_input_output__get_spark/"><code>fabricops_kit.fabric_input_output._get_spark</code></a>
 
@@ -91,7 +91,7 @@ Spark DataFrame loaded from the configured warehouse table.
 ## Source
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7671b3d58873b7627843d2a35ac9cb4dae15eb9a/src/fabricops_kit/fabric_input_output.py#L323-L382">View read_warehouse_table on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/031081c64115c5424552b6af13bbaeb983c852dd/src/fabricops_kit/fabric_input_output.py#L323-L382">View read_warehouse_table on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -189,7 +189,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 
 ### Inbound references
 
-- <a href="../internal/pipeline__read_source_dataframe/"><code>fabricops_kit.pipeline._read_source_dataframe</code></a>
+- <a href="../internal/pipeline__load_source_dataframe/"><code>fabricops_kit.pipeline._load_source_dataframe</code></a>
 
 ### Outbound references
 
@@ -199,7 +199,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7671b3d58873b7627843d2a35ac9cb4dae15eb9a/src/fabricops_kit/fabric_input_output.py#L323-L382">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7671b3d58873b7627843d2a35ac9cb4dae15eb9a/src/fabricops_kit/fabric_input_output.py#L323-L382</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/031081c64115c5424552b6af13bbaeb983c852dd/src/fabricops_kit/fabric_input_output.py#L323-L382">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/031081c64115c5424552b6af13bbaeb983c852dd/src/fabricops_kit/fabric_input_output.py#L323-L382</a>
 - Start line: `323`
 - End line: `382`
 - Signature:
@@ -217,7 +217,7 @@ def read_warehouse_table(config, env, target, schema, table, spark_session=None)
 
 ### Internal implementation helpers
 
-- <a href="../internal/pipeline__read_source_dataframe/"><code>fabricops_kit.pipeline._read_source_dataframe</code></a>
+- <a href="../internal/pipeline__load_source_dataframe/"><code>fabricops_kit.pipeline._load_source_dataframe</code></a>
 - <a href="../internal/config__get_store/"><code>fabricops_kit.config._get_store</code></a>
 - <a href="../internal/fabric_input_output__get_spark/"><code>fabricops_kit.fabric_input_output._get_spark</code></a>
 

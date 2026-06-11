@@ -1,4 +1,4 @@
-# _canonical_catalogue_profile_df
+# _add_audit_columns
 
 **Module:** `pipeline`  
 **Classification:** Internal
@@ -17,16 +17,16 @@ Do not call this helper directly from notebooks; use the public callable helpers
 
 ## Used by
 
-- <a href="../write_catalogue_evidence/"><code>fabricops_kit.pipeline.write_catalogue_evidence</code></a>
+- <a href="../prepare_pipeline_table_configs/"><code>fabricops_kit.pipeline.prepare_pipeline_table_configs</code></a>
 
 ## Purpose
 
-Return profile evidence using lowercase catalogue column names only.
+Return a DataFrame with standard FabricOps target audit columns.
 
 ## Signature if available
 
 ```python
-def _canonical_catalogue_profile_df(profile_df: Any)
+def _add_audit_columns(dataframe: Any, *, run_id: str, pipeline_name: str)
 ```
 
 ## Side effects
@@ -43,15 +43,15 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 
 ## Function manifest
 
-- Fully qualified function name: `fabricops_kit.pipeline._canonical_catalogue_profile_df`
-- Short name: `_canonical_catalogue_profile_df`
+- Fully qualified function name: `fabricops_kit.pipeline._add_audit_columns`
+- Short name: `_add_audit_columns`
 - Module: `pipeline`
 - Classification: Internal
 - Related module: `pipeline`
 - Source file path: `src/fabricops_kit/pipeline.py`
-- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/031081c64115c5424552b6af13bbaeb983c852dd/src/fabricops_kit/pipeline.py#L89-L117">View source on GitHub</a>
+- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/031081c64115c5424552b6af13bbaeb983c852dd/src/fabricops_kit/pipeline.py#L177-L187">View source on GitHub</a>
 - Inbound references count: 1
 - Outbound references count: 0
 
 ## Inbound references
-- <a href="../write_catalogue_evidence/"><code>fabricops_kit.pipeline.write_catalogue_evidence</code></a>
+- <a href="../prepare_pipeline_table_configs/"><code>fabricops_kit.pipeline.prepare_pipeline_table_configs</code></a>

@@ -17,7 +17,7 @@ Do not call this helper directly from notebooks; use the public callable helpers
 
 ## Used by
 
-- <a href="../build_guardrail_evidence_definitions/"><code>fabricops_kit.pipeline.build_guardrail_evidence_definitions</code></a>
+- <a href="../internal/pipeline__build_guardrail_evidence_definitions/"><code>fabricops_kit.pipeline._build_guardrail_evidence_definitions</code></a>
 - <a href="../run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
 
 ## Purpose
@@ -50,10 +50,10 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 - Classification: Internal
 - Related module: `pipeline`
 - Source file path: `src/fabricops_kit/pipeline.py`
-- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7671b3d58873b7627843d2a35ac9cb4dae15eb9a/src/fabricops_kit/pipeline.py#L341-L342">View source on GitHub</a>
+- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/031081c64115c5424552b6af13bbaeb983c852dd/src/fabricops_kit/pipeline.py#L296-L297">View source on GitHub</a>
 - Inbound references count: 2
 - Outbound references count: 0
 
 ## Inbound references
-- <a href="../build_guardrail_evidence_definitions/"><code>fabricops_kit.pipeline.build_guardrail_evidence_definitions</code></a>
+- <a href="../internal/pipeline__build_guardrail_evidence_definitions/"><code>fabricops_kit.pipeline._build_guardrail_evidence_definitions</code></a>
 - <a href="../run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>

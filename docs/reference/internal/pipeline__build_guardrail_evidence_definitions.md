@@ -1,4 +1,4 @@
-# _table_key
+# _build_guardrail_evidence_definitions
 
 **Module:** `pipeline`  
 **Classification:** Internal
@@ -17,17 +17,16 @@ Do not call this helper directly from notebooks; use the public callable helpers
 
 ## Used by
 
-- <a href="../internal/pipeline__build_guardrail_evidence_definitions/"><code>fabricops_kit.pipeline._build_guardrail_evidence_definitions</code></a>
 - <a href="../run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
 
 ## Purpose
 
-No summary available.
+Build catalogue evidence definitions for pipeline table guardrails.
 
 ## Signature if available
 
 ```python
-def _table_key(table_config: Mapping[str, Any]) -> str
+def _build_guardrail_evidence_definitions(table_configs: list[Mapping[str, Any]]) -> dict[str, dict[str, Any]]
 ```
 
 ## Side effects
@@ -44,16 +43,19 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 
 ## Function manifest
 
-- Fully qualified function name: `fabricops_kit.pipeline._table_key`
-- Short name: `_table_key`
+- Fully qualified function name: `fabricops_kit.pipeline._build_guardrail_evidence_definitions`
+- Short name: `_build_guardrail_evidence_definitions`
 - Module: `pipeline`
 - Classification: Internal
 - Related module: `pipeline`
 - Source file path: `src/fabricops_kit/pipeline.py`
-- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/031081c64115c5424552b6af13bbaeb983c852dd/src/fabricops_kit/pipeline.py#L292-L293">View source on GitHub</a>
-- Inbound references count: 2
-- Outbound references count: 0
+- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/031081c64115c5424552b6af13bbaeb983c852dd/src/fabricops_kit/pipeline.py#L304-L333">View source on GitHub</a>
+- Inbound references count: 1
+- Outbound references count: 2
 
 ## Inbound references
-- <a href="../internal/pipeline__build_guardrail_evidence_definitions/"><code>fabricops_kit.pipeline._build_guardrail_evidence_definitions</code></a>
 - <a href="../run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
+
+## Outbound references
+- <a href="../internal/pipeline__table_key/"><code>fabricops_kit.pipeline._table_key</code></a>
+- <a href="../internal/pipeline__table_name/"><code>fabricops_kit.pipeline._table_name</code></a>

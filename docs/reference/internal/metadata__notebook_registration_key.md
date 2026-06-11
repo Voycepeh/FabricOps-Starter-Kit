@@ -51,7 +51,7 @@ Use internal pages only for package maintenance. Prefer public callable pages wh
 - Classification: Internal
 - Related module: `metadata`
 - Source file path: `src/fabricops_kit/metadata.py`
-- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7671b3d58873b7627843d2a35ac9cb4dae15eb9a/src/fabricops_kit/metadata.py#L40-L49">View source on GitHub</a>
+- Source reference: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/031081c64115c5424552b6af13bbaeb983c852dd/src/fabricops_kit/metadata.py#L40-L49">View source on GitHub</a>
 - Inbound references count: 3
 - Outbound references count: 0
 

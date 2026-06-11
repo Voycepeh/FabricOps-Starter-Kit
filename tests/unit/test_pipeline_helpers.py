@@ -22,17 +22,18 @@ class FakeSpark:
 
 
 def test_public_pipeline_helpers_are_exported_without_wrapper_bloat():
-    assert "prepare_source_table_configs" in fabricops_kit.__all__
-    assert "prepare_target_table_configs" in fabricops_kit.__all__
-    assert "write_target_tables" in fabricops_kit.__all__
-    assert "build_guardrail_evidence_definitions" in fabricops_kit.__all__
+    assert "prepare_pipeline_table_configs" in fabricops_kit.__all__
     assert "run_table_guardrails" in fabricops_kit.__all__
-    assert "guardrail_summary" in fabricops_kit.__all__
-    assert "stop_if_any_guardrail_failed" in fabricops_kit.__all__
     assert "write_catalogue_evidence" in fabricops_kit.__all__
     assert "write_pipeline_lineage" in fabricops_kit.__all__
     assert "write_pipeline_run_summary" in fabricops_kit.__all__
     for removed_name in {
+        "prepare_source_table_configs",
+        "prepare_target_table_configs",
+        "write_target_tables",
+        "build_guardrail_evidence_definitions",
+        "guardrail_summary",
+        "stop_if_any_guardrail_failed",
         "read_pipeline_sources",
         "profile_pipeline_datasets",
         "run_schema_guardrails",
@@ -66,7 +67,7 @@ def _install_fake_pyspark_functions(monkeypatch):
     monkeypatch.setitem(sys.modules, "pyspark.sql.functions", fake_functions)
 
 
-def test_prepare_source_table_configs_derives_defaults_and_reads_lakehouse_table(monkeypatch):
+def test_prepare_pipeline_table_configs_source_role_derives_defaults_and_reads_lakehouse_table(monkeypatch):
     calls = []
 
     def fake_read(config, env, layer, table, *, spark_session=None):
@@ -75,7 +76,7 @@ def test_prepare_source_table_configs_derives_defaults_and_reads_lakehouse_table
 
     monkeypatch.setattr(pipeline, "read_lakehouse_table", fake_read)
 
-    enriched, by_key = pipeline.prepare_source_table_configs(
+    enriched, by_key = pipeline.prepare_pipeline_table_configs(
         [
             {
                 "key": "source_01",
@@ -89,6 +90,7 @@ def test_prepare_source_table_configs_derives_defaults_and_reads_lakehouse_table
             "data_behavior": "changing",
             "watermark_value": "default_should_be_overridden",
         },
+        table_role="source",
         config={"config": True},
         env="dev",
         spark_session="spark",
@@ -112,7 +114,7 @@ def test_prepare_source_table_configs_derives_defaults_and_reads_lakehouse_table
     assert by_key["source_01"] is enriched[0]
 
 
-def test_prepare_source_table_configs_supports_explicit_read_patterns(monkeypatch):
+def test_prepare_pipeline_table_configs_source_role_supports_explicit_read_patterns(monkeypatch):
     calls = []
 
     monkeypatch.setattr(pipeline, "read_lakehouse_csv", lambda *args, **kwargs: calls.append(("csv", args, kwargs)) or "csv_df")
@@ -134,7 +136,7 @@ def test_prepare_source_table_configs_supports_explicit_read_patterns(monkeypatc
         {"key": "spark", "layer": "source", "table_name": "orders", "read_type": "spark_table", "spark_table": "db.orders"},
     ]
 
-    enriched, by_key = pipeline.prepare_source_table_configs(configs, {}, {}, "dev", fake_spark)
+    enriched, by_key = pipeline.prepare_pipeline_table_configs(configs, {}, table_role="source", config={}, env="dev", spark_session=fake_spark)
 
     assert [config["df"] for config in enriched] == ["csv_df", "parquet_df", "excel_df", "warehouse_df", "spark_table_df"]
     assert by_key["spark"]["dataset_name"] == "orders"
@@ -145,11 +147,11 @@ def test_prepare_source_table_configs_supports_explicit_read_patterns(monkeypatc
     assert calls[4] == ("spark_table", "db.orders")
 
 
-def test_prepare_target_table_configs_adds_audit_columns_and_derives_write_defaults(monkeypatch):
+def test_prepare_pipeline_table_configs_target_role_adds_audit_columns_and_derives_write_defaults(monkeypatch):
     _install_fake_pyspark_functions(monkeypatch)
     df = FakeDataFrame("target")
 
-    enriched, by_key = pipeline.prepare_target_table_configs(
+    enriched, by_key = pipeline.prepare_pipeline_table_configs(
         [
             {
                 "key": "target_01",
@@ -159,6 +161,7 @@ def test_prepare_target_table_configs_adds_audit_columns_and_derives_write_defau
             }
         ],
         {"schema_preset": "allow_new_columns", "write_mode": "overwrite", "target_kind": "lakehouse"},
+        table_role="target",
         run_id="run-1",
         pipeline_name="pipeline-1",
     )
@@ -176,61 +179,6 @@ def test_prepare_target_table_configs_adds_audit_columns_and_derives_write_defau
         "_fabricops_pipeline_name",
         "_fabricops_created_at",
     ]
-
-
-def test_write_target_tables_writes_lakehouse_and_warehouse_targets(monkeypatch):
-    calls = []
-    monkeypatch.setattr(pipeline, "write_lakehouse_table", lambda *args, **kwargs: calls.append(("lakehouse", args, kwargs)))
-    monkeypatch.setattr(pipeline, "write_warehouse_table", lambda *args, **kwargs: calls.append(("warehouse", args, kwargs)))
-
-    status = pipeline.write_target_tables(
-        [
-            {
-                "key": "lake",
-                "df": "lake_df",
-                "target_kind": "lakehouse",
-                "target_layer": "unified",
-                "target_name": "orders",
-                "write_mode": "overwrite",
-                "partition_by": ["business_date"],
-                "repartition_by": ["customer_id"],
-                "overwrite_schema": True,
-            },
-            {
-                "key": "wh",
-                "df": "warehouse_df",
-                "target_kind": "warehouse",
-                "target_layer": "product",
-                "schema": "sales",
-                "target_name": "orders_product",
-                "mode": "append",
-            },
-        ],
-        config={"config": True},
-        env="dev",
-    )
-
-    assert status == {"lake": "written", "wh": "written"}
-    assert calls[0] == (
-        "lakehouse",
-        ("lake_df", {"config": True}, "dev", "unified", "orders"),
-        {
-            "mode": "overwrite",
-            "partition_by": ["business_date"],
-            "repartition_by": ["customer_id"],
-            "overwrite_schema": True,
-        },
-    )
-    assert calls[1] == (
-        "warehouse",
-        ("warehouse_df", {"config": True}, "dev", "product", "sales", "orders_product"),
-        {"mode": "append"},
-    )
-
-
-def test_write_target_tables_rejects_unsupported_target_kind():
-    with pytest.raises(ValueError, match="Unsupported target kind for bad: file"):
-        pipeline.write_target_tables([{"key": "bad", "df": object(), "target_kind": "file"}], {}, "dev")
 
 
 def test_write_pipeline_lineage_supports_many_to_many_relationships(monkeypatch):
@@ -286,8 +234,8 @@ def test_summary_status_treats_baseline_created_as_passed_and_skipped_as_nonbloc
 
 
 
-def test_build_guardrail_evidence_definitions_excludes_dataframes_and_resolves_target_fields():
-    definitions = pipeline.build_guardrail_evidence_definitions(
+def test_private_guardrail_evidence_definitions_excludes_dataframes_and_resolves_target_fields():
+    definitions = pipeline._build_guardrail_evidence_definitions(
         [
             {
                 "key": "target_01",
@@ -316,7 +264,7 @@ def test_build_guardrail_evidence_definitions_excludes_dataframes_and_resolves_t
     }
 
 
-def test_run_table_guardrails_collects_results_before_reporting_failures(monkeypatch):
+def test_run_table_guardrails_collects_results_and_returns_summary_before_reporting_failures(monkeypatch):
     calls = []
     catalogue_calls = []
 
@@ -389,6 +337,13 @@ def test_run_table_guardrails_collects_results_before_reporting_failures(monkeyp
     assert set(result["schema_results"]) == {"good", "bad"}
     assert set(result["stability_results"]) == {"good", "bad"}
     assert result["dq_results"]["bad"]["status"] == "skipped"
+    assert result["summary"] == {
+        "schema_results": result["schema_results"],
+        "stability_results": result["stability_results"],
+        "dq_results": result["dq_results"],
+        "catalogue_status": result["catalogue_status"],
+        "failed_tables": ["bad"],
+    }
     assert table_configs[0]["df"] == "df_good_checked"
     assert ("profile", "orders_bad") in calls
     assert ("stability", "orders_bad") in calls
@@ -396,33 +351,34 @@ def test_run_table_guardrails_collects_results_before_reporting_failures(monkeyp
     assert catalogue_calls[0][2]["schema_results"] == result["schema_results"]
 
 
-def test_guardrail_summary_returns_concise_display_fields():
-    result = {
-        "schema_results": {"t": {"status": "passed"}},
-        "stability_results": {"t": {"status": "passed"}},
-        "dq_results": {"t": {"status": "passed"}},
-        "catalogue_status": {"status": "written"},
-        "failed_tables": [],
-        "profiles": {"t": object()},
-    }
 
-    assert pipeline.guardrail_summary(result) == {
-        "schema_results": result["schema_results"],
-        "stability_results": result["stability_results"],
-        "dq_results": result["dq_results"],
-        "catalogue_status": result["catalogue_status"],
-        "failed_tables": [],
-    }
-
-
-def test_stop_if_any_guardrail_failed_delegates_to_standard_stopper(monkeypatch):
+def test_run_table_guardrails_stop_on_failure_delegates_to_standard_stopper(monkeypatch):
     stopped = []
+
+    monkeypatch.setattr(pipeline, "profile_dataframe", lambda dataframe, **kwargs: {"profile_for": kwargs["table_name"]})
+    monkeypatch.setattr(pipeline, "validate_schema", lambda dataframe, expected_schema, *, preset="strict": {"status": "failed", "can_continue": False})
+    monkeypatch.setattr(pipeline, "enforce_catalogue_stability", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
+    monkeypatch.setattr(pipeline, "write_catalogue_evidence", lambda *args, **kwargs: {"status": "written"})
     monkeypatch.setattr(pipeline, "stop_if_failed", lambda result: stopped.append(result))
 
-    pipeline.stop_if_any_guardrail_failed({"can_continue": True, "failed_tables": []})
-    assert stopped == []
+    pipeline.run_table_guardrails(
+        [
+            {
+                "key": "target_01",
+                "df": "df",
+                "table_name": "orders",
+                "stage": "target",
+                "expected_schema": {"id": "bigint"},
+                "dq_preset": "skip",
+            }
+        ],
+        config={},
+        env="dev",
+        run_id="run-1",
+        spark_session="spark",
+        stop_on_failure=True,
+    )
 
-    pipeline.stop_if_any_guardrail_failed({"can_continue": False, "failed_tables": ["orders"]})
     assert stopped[0]["status"] == "failed"
     assert stopped[0]["can_continue"] is False
-    assert stopped[0]["failed_tables"] == ["orders"]
+    assert stopped[0]["failed_tables"] == ["target_01"]

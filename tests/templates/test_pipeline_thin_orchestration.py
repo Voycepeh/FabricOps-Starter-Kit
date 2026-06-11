@@ -21,46 +21,38 @@ def _notebook_sources() -> tuple[str, str, list[str]]:
     return "\n".join(markdown_cells), "\n".join(code_cells), code_cells
 
 
-def test_pipeline_notebook_uses_thin_package_helpers_instead_of_manual_plumbing():
+def test_pipeline_notebook_uses_minimal_public_helpers_and_no_pr_only_wrappers():
     markdown, code, _ = _notebook_sources()
 
     for helper in [
-        "prepare_source_table_configs",
-        "prepare_target_table_configs",
+        "prepare_pipeline_table_configs",
         "run_table_guardrails",
-        "guardrail_summary",
-        "stop_if_any_guardrail_failed",
-        "write_target_tables",
+        "write_lakehouse_table",
+        "write_warehouse_table",
         "write_pipeline_lineage",
         "write_pipeline_run_summary",
     ]:
         assert helper in code
 
-    for notebook_local_plumbing in [
+    for forbidden in [
+        "prepare_source_table_configs",
+        "prepare_target_table_configs",
+        "write_target_tables",
+        "guardrail_summary",
+        "stop_if_any_guardrail_failed",
+        "build_guardrail_evidence_definitions",
+        "write_catalogue_evidence",
         "def _table_key(",
         "def _table_name(",
-        "def _guardrail_can_continue(",
-        "def build_guardrail_evidence_definitions(",
         "def run_table_guardrails(",
-        "def stop_if_any_guardrail_failed(",
-        "for source_config in _SOURCE_TABLES_USER_CONFIG",
-        "enriched_source[\"df\"] = read_lakehouse_table(",
-        "target_dfs =",
-        "for target_config in TARGET_TABLES:",
-        "target_df = target_config[\"df\"]",
-        "write_lakehouse_table(",
-        "write_warehouse_table(",
-        "stop_if_failed(",
     ]:
-        assert notebook_local_plumbing not in code
+        assert forbidden not in code
 
-    assert "from fabricops_kit import (" in code
-    assert "stop_if_failed" not in code
-    assert "FabricOps then enriches those source and target entries" in markdown
-    assert "through imported package helpers" in markdown
+    assert "write_catalogue_evidence" not in code
+    assert "through `run_table_guardrails`" in markdown
 
 
-def test_pipeline_notebook_contains_clean_beginner_flow_sections():
+def test_pipeline_notebook_contains_final_thin_flow_sections():
     markdown, _code, _cells = _notebook_sources()
     expected_sections = [
         "## 1. Run `00_env_config`",
@@ -68,37 +60,26 @@ def test_pipeline_notebook_contains_clean_beginner_flow_sections():
         "## 3. Select data agreement and capture run context",
         "## 4. USER EDIT SECTION — source table configuration",
         "## 5. Source guardrail defaults",
-        "## 6. Load source tables",
+        "## 6. Prepare source table configs",
         "## 7. Optional: inspect a source schema",
-        "## 8. Guardrail orchestration is handled by FabricOps",
-        "## 9. Run source guardrails before transformation",
-        "## 10. Transform to target DataFrames",
-        "## TARGET USER EDIT SECTION — target table configuration",
-        "## Target guardrail and write defaults",
-        "## TARGET FRAMEWORK PREPARATION — enrich target configs",
+        "## 8. Run source guardrails before transformation",
+        "## 9. USER EDIT SECTION — DIY transformations",
+        "## 10. USER EDIT SECTION — target table configuration",
+        "## 11. Target guardrail and write defaults",
+        "## 12. Prepare target table configs",
         "## 13. Run target guardrails before writes",
         "## 14. Write target tables",
-        "## 15. Capture many-to-many lineage",
-        "## 16. Write runtime summary",
+        "## 15. USER EDIT SECTION — lineage relationships",
+        "## 16. Write lineage",
+        "## 17. Write runtime summary",
     ]
     for section in expected_sections:
         assert section in markdown
 
-    for user_editable in [
-        "PIPELINE_NAME",
-        "SOURCE_TABLES",
-        "DEFAULT_SOURCE_GUARDRAILS",
-        "TARGET_TABLES",
-        "DEFAULT_TARGET_GUARDRAILS_AND_WRITE_OPTIONS",
-        "LINEAGE_RELATIONSHIPS",
-    ]:
-        assert user_editable in markdown or user_editable in _code
-
     assert "This is the only section where most users write business transformation logic" in markdown
-    assert "FabricOps guardrails and audit columns are handled in later sections" in markdown
+    assert "Keep this section visible because it is the point where data is published" in markdown
     assert "These are the default guardrails applied to every source table" in markdown
     assert "These are the default guardrails and write options applied to every target table" in markdown
-    assert "To use a file, warehouse, or custom Spark table source, add the matching advanced read fields" in markdown
 
 
 def test_source_config_defaults_are_reduced_but_advanced_overrides_remain_discoverable():
@@ -137,8 +118,8 @@ def test_source_config_defaults_are_reduced_but_advanced_overrides_remain_discov
     ]:
         assert advanced_override in source_user_block
 
-    assert "SOURCE_TABLES, SOURCE_CONFIG_BY_KEY = prepare_source_table_configs(" in code
-    assert "DEFAULT_SOURCE_GUARDRAILS," in code
+    assert "SOURCE_TABLES, SOURCE_CONFIG_BY_KEY = prepare_pipeline_table_configs(" in code
+    assert 'table_role="source"' in code
     assert 'df_source_01 = SOURCE_CONFIG_BY_KEY["source_01"]["df"]' in code
 
 
@@ -165,6 +146,9 @@ def test_guardrail_default_sections_include_supported_preset_comments():
         '#   "append" = add rows to the target table',
         '#   "errorifexists" = fail if the target table already exists',
         '#   "ignore" = skip the write if the target table already exists',
+        '# Target kind options:',
+        '#   "lakehouse" = write a Lakehouse Delta table',
+        '#   "warehouse" = write a Fabric Warehouse table',
     ]:
         assert preset_comment in code
 
@@ -172,13 +156,12 @@ def test_guardrail_default_sections_include_supported_preset_comments():
     assert "DEFAULT_TARGET_GUARDRAILS_AND_WRITE_OPTIONS = {" in code
 
 
-def test_default_source_transform_and_target_schema_are_internally_consistent():
+def test_active_default_source_transform_and_target_schema_are_coherent_passthrough():
     _markdown, code, _cells = _notebook_sources()
 
     transform_block = code[code.index("# DIY your transformations here.") : code.index("TARGET_TABLES = [")]
-    assert "df_target_01 = df_source_01.withColumn(" in transform_block
-    assert '"amount_band"' in transform_block
-    assert 'F.col("amount")' in transform_block
+    assert "df_target_01 = df_source_01" in transform_block
+    assert '"amount_band"' in transform_block  # commented example only
 
     target_user_block = code[code.index("TARGET_TABLES = [") : code.index("DEFAULT_TARGET_GUARDRAILS_AND_WRITE_OPTIONS = {")]
     target_default_example = target_user_block[: target_user_block.index("# To add a second target table")]
@@ -190,33 +173,33 @@ def test_default_source_transform_and_target_schema_are_internally_consistent():
         '"amount": "double"',
         '"email": "string"',
         '"country_code": "string"',
-        '"amount_band": "string"',
         '"_fabricops_run_id": "string"',
         '"_fabricops_pipeline_name": "string"',
         '"_fabricops_created_at": "string"',
     ]:
         assert expected_column in target_default_example
+    assert '"amount_band": "string"' not in target_default_example
     for hidden_beginner_field in ['"dataset_name"', '"stage"', '"target_kind"', '"watermark_value"', '"kind"']:
         assert hidden_beginner_field not in target_default_example
 
-    assert "TARGET_TABLES, TARGET_CONFIG_BY_KEY = prepare_target_table_configs(" in code
-    assert "DEFAULT_TARGET_GUARDRAILS_AND_WRITE_OPTIONS," in code
+    assert "TARGET_TABLES, TARGET_CONFIG_BY_KEY = prepare_pipeline_table_configs(" in code
+    assert 'table_role="target"' in code
 
 
-def test_source_and_target_guardrails_stop_before_transform_and_writes():
+def test_guardrails_stop_before_transform_and_writes_via_run_table_guardrails_flag():
     _markdown, code, _cells = _notebook_sources()
 
     source_guardrails = code.index("source_guardrail_results = run_table_guardrails(")
-    source_stop = code.index("stop_if_any_guardrail_failed(source_guardrail_results)")
-    transform = code.index("df_target_01 = df_source_01.withColumn(")
-    target_prepare = code.index("TARGET_TABLES, TARGET_CONFIG_BY_KEY = prepare_target_table_configs(")
+    source_stop_flag = code.index("stop_on_failure=True", source_guardrails)
+    transform = code.index("df_target_01 = df_source_01")
+    target_prepare = code.index("TARGET_TABLES, TARGET_CONFIG_BY_KEY = prepare_pipeline_table_configs(")
     target_guardrails = code.index("target_guardrail_results = run_table_guardrails(")
-    target_stop = code.index("stop_if_any_guardrail_failed(target_guardrail_results)")
-    target_write = code.index("target_write_status = write_target_tables(TARGET_TABLES, CONFIG, ENV_NAME)")
+    target_stop_flag = code.index("stop_on_failure=True", target_guardrails)
+    target_write = code.index("target_write_status = {}")
 
-    assert source_guardrails < source_stop < transform < target_prepare < target_guardrails < target_stop < target_write
-    assert "display(guardrail_summary(source_guardrail_results))" in code
-    assert "display(guardrail_summary(target_guardrail_results))" in code
+    assert source_guardrails < source_stop_flag < transform < target_prepare < target_guardrails < target_stop_flag < target_write
+    assert 'display(source_guardrail_results["summary"])' in code
+    assert 'display(target_guardrail_results["summary"])' in code
 
     for runtime_alias in [
         'source_schema_results = source_guardrail_results["schema_results"]',
@@ -229,6 +212,18 @@ def test_source_and_target_guardrails_stop_before_transform_and_writes():
         'target_evidence_definitions = target_guardrail_results["evidence_definitions"]',
     ]:
         assert runtime_alias in code
+
+
+def test_explicit_target_write_loop_uses_existing_write_helpers_and_checked_dataframes():
+    _markdown, code, _cells = _notebook_sources()
+
+    write_block = code[code.index("target_write_status = {}") : code.index("LINEAGE_RELATIONSHIPS = [")]
+    assert "for target_config in TARGET_TABLES:" in write_block
+    assert "write_lakehouse_table(" in write_block
+    assert "write_warehouse_table(" in write_block
+    assert 'target_config["df"]' in write_block
+    assert "write_target_tables" not in write_block
+    assert "Unsupported target kind" in write_block
 
 
 def test_lineage_and_runtime_summary_still_use_package_evidence_outputs():

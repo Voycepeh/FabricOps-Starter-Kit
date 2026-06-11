@@ -3,7 +3,7 @@
 ## Summary
 
 - Before callable count: **71** exported callable functions across essential and optional categories.
-- Revised after callable count: **37** curated v1 template callables.
+- Revised after callable count: **32** curated v1 template callables.
 - Definition: a callable is a function that a notebook template user actively calls in a template cell or that a template imports as package-level orchestration.
 - Source of truth: `src/fabricops_kit/__init__.py::__all__`, enforced by `tests/contract/test_public_contract.py` and mirrored in `scripts/generate_function_reference.py::V1_CALLABLES`.
 
@@ -31,23 +31,18 @@ This list is kept as release-planning context only. The source of truth is the p
 18. `stop_if_failed`
 19. `enforce_dq_rules`
 20. `build_lineage_records`
-21. `build_guardrail_evidence_definitions`
-22. `prepare_source_table_configs`
-23. `prepare_target_table_configs`
-24. `run_table_guardrails`
-25. `guardrail_summary`
-26. `stop_if_any_guardrail_failed`
-27. `write_catalogue_evidence`
-28. `write_target_tables`
-29. `write_pipeline_lineage`
-30. `write_pipeline_run_summary`
-31. `widget_select_catalogue_table`
-32. `get_selected_catalogue_table`
-33. `load_catalogue_profile_rows`
-34. `widget_review_column_context`
-35. `widget_review_dq_rules`
-36. `widget_review_column_classification`
-37. `record_table_governance`
+21. `prepare_pipeline_table_configs`
+22. `run_table_guardrails`
+23. `write_catalogue_evidence`
+24. `write_pipeline_lineage`
+25. `write_pipeline_run_summary`
+26. `widget_select_catalogue_table`
+27. `get_selected_catalogue_table`
+28. `load_catalogue_profile_rows`
+29. `widget_review_column_context`
+30. `widget_review_dq_rules`
+31. `widget_review_column_classification`
+32. `record_table_governance`
 
 ## Deleted from the public callable surface
 
@@ -65,7 +60,7 @@ The following previous public/exported functions were removed from the v1 callab
 
 ## Added pipeline orchestration helpers
 
-`02_pipeline` now keeps beginner-editable source configs, source guardrail defaults, transform logic, target configs, target guardrail/write defaults, lineage relationships, and pipeline naming visible. Reusable setup, guardrail orchestration, target writes, catalogue evidence, lineage persistence, and runtime summary logging live behind package helpers such as `prepare_source_table_configs`, `run_table_guardrails`, `guardrail_summary`, `stop_if_any_guardrail_failed`, `prepare_target_table_configs`, `write_target_tables`, `write_pipeline_lineage`, and `write_pipeline_run_summary`.
+`02_pipeline` keeps beginner-editable source configs, source guardrail defaults, transform logic, target configs, target guardrail/write defaults, lineage relationships, and pipeline naming visible. Reusable table preparation, guardrail orchestration, catalogue evidence, lineage persistence, and runtime summary logging live behind package helpers such as `prepare_pipeline_table_configs`, `run_table_guardrails`, `write_pipeline_lineage`, and `write_pipeline_run_summary`. Target writes intentionally remain visible in the notebook through existing `write_lakehouse_table` and `write_warehouse_table` calls.
 
 ## Merged functions
 
@@ -94,4 +89,4 @@ The obsolete `handover`, `business_context`, `data_governance`, `data_quality`, 
 
 ## Rationale
 
-The v1 surface keeps one high-level function per notebook user action while preserving smaller standalone widget cells for Fabric stability. Notebook users configure business-specific values directly in templates and call package orchestration helpers for reusable setup, guardrails, writes, and evidence. Low-level coercion, key generation, row building, Spark conversion, docs metadata, and non-template helpers are internal implementation details rather than notebook-template callables.
+The v1 surface keeps one high-level function per notebook user action while preserving smaller standalone widget cells for Fabric stability. Notebook users configure business-specific values directly in templates and call package orchestration helpers for reusable setup, guardrails, and evidence. Low-level coercion, key generation, row building, Spark conversion, docs metadata, and non-template helpers are internal implementation details rather than notebook-template callables.

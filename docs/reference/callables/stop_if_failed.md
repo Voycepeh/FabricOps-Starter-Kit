@@ -59,7 +59,7 @@ None when execution may continue; otherwise raises or exits according to runtime
 <details class="reference-implementation-details">
 <summary>Implementation details</summary>
 
-- <a href="../stop_if_any_guardrail_failed/"><code>fabricops_kit.pipeline.stop_if_any_guardrail_failed</code></a>
+- <a href="../run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
 - <a href="../internal/drift_SchemaDriftError/"><code>fabricops_kit.drift.SchemaDriftError</code></a>
 
 </details>
@@ -67,7 +67,7 @@ None when execution may continue; otherwise raises or exits according to runtime
 ## Source
 
 - Source file path: `src/fabricops_kit/drift.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7671b3d58873b7627843d2a35ac9cb4dae15eb9a/src/fabricops_kit/drift.py#L670-L689">View stop_if_failed on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/031081c64115c5424552b6af13bbaeb983c852dd/src/fabricops_kit/drift.py#L670-L689">View stop_if_failed on GitHub</a>
 
 <details class="reference-source-details">
 <summary>Show source code</summary>
@@ -125,7 +125,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 
 ### Inbound references
 
-- <a href="../stop_if_any_guardrail_failed/"><code>fabricops_kit.pipeline.stop_if_any_guardrail_failed</code></a>
+- <a href="../run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
 
 ### Outbound references
 
@@ -134,7 +134,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/drift.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7671b3d58873b7627843d2a35ac9cb4dae15eb9a/src/fabricops_kit/drift.py#L670-L689">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7671b3d58873b7627843d2a35ac9cb4dae15eb9a/src/fabricops_kit/drift.py#L670-L689</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/031081c64115c5424552b6af13bbaeb983c852dd/src/fabricops_kit/drift.py#L670-L689">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/031081c64115c5424552b6af13bbaeb983c852dd/src/fabricops_kit/drift.py#L670-L689</a>
 - Start line: `670`
 - End line: `689`
 - Signature:
@@ -153,7 +153,7 @@ def stop_if_failed(result) -> None
 
 ### Internal implementation helpers
 
-- <a href="../stop_if_any_guardrail_failed/"><code>fabricops_kit.pipeline.stop_if_any_guardrail_failed</code></a>
+- <a href="../run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
 - <a href="../internal/drift_SchemaDriftError/"><code>fabricops_kit.drift.SchemaDriftError</code></a>
 
 </details>

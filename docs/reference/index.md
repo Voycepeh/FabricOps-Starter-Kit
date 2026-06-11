@@ -41,15 +41,6 @@ Use the finder below to look up public callables and internal support functions 
 ## Functions
 
 <div class="reference-catalogue-list">
-<article id="pipeline-build_guardrail_evidence_definitions" class="reference-catalogue-item" data-callable-row="true" data-callable-name="build_guardrail_evidence_definitions" data-callable-module="pipeline" data-callable-starter-path="—" data-function-type="callable" data-callable-purpose="Build catalogue evidence definitions for pipeline table guardrails.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/build_guardrail_evidence_definitions/"><code>build_guardrail_evidence_definitions</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Build catalogue evidence definitions for pipeline table guardrails.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/pipeline/" title="Open pipeline module page" aria-label="Open pipeline module page">pipeline</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>_table_key</code></li><li><code>_table_name</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>run_table_guardrails</code></li></ul></details>
-  </div>
-</article>
 <article id="data_lineage-build_lineage_records" class="reference-catalogue-item" data-callable-row="true" data-callable-name="build_lineage_records" data-callable-module="data_lineage" data-callable-starter-path="—" data-function-type="callable" data-callable-purpose="Build source-to-target lineage evidence records for a pipeline run.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/build_lineage_records/"><code>build_lineage_records</code></a></h3>
   <p class="reference-catalogue-item-purpose">Build source-to-target lineage evidence records for a pipeline run.</p>
@@ -95,15 +86,6 @@ Use the finder below to look up public callables and internal support functions 
 
   </div>
 </article>
-<article id="pipeline-guardrail_summary" class="reference-catalogue-item" data-callable-row="true" data-callable-name="guardrail_summary" data-callable-module="pipeline" data-callable-starter-path="02_pipeline" data-function-type="callable" data-callable-purpose="Return a concise display summary for table guardrail results.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/guardrail_summary/"><code>guardrail_summary</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Return a concise display summary for table guardrail results.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/pipeline/" title="Open pipeline module page" aria-label="Open pipeline module page">pipeline</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">02_pipeline</span></p>
-  <div class="reference-catalogue-item-counts">
-
-
-  </div>
-</article>
 <article id="governance_review-load_catalogue_profile_rows" class="reference-catalogue-item" data-callable-row="true" data-callable-name="load_catalogue_profile_rows" data-callable-module="governance_review" data-callable-starter-path="03_governance" data-function-type="callable" data-callable-purpose="Load column profile rows for the selected catalogue table.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/load_catalogue_profile_rows/"><code>load_catalogue_profile_rows</code></a></h3>
   <p class="reference-catalogue-item-purpose">Load column profile rows for the selected catalogue table.</p>
@@ -113,21 +95,12 @@ Use the finder below to look up public callables and internal support functions 
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_review_governance_evidence</code></li></ul></details>
   </div>
 </article>
-<article id="pipeline-prepare_source_table_configs" class="reference-catalogue-item" data-callable-row="true" data-callable-name="prepare_source_table_configs" data-callable-module="pipeline" data-callable-starter-path="02_pipeline" data-function-type="callable" data-callable-purpose="Enrich source table configs and load source DataFrames for 02_pipeline.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/prepare_source_table_configs/"><code>prepare_source_table_configs</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Enrich source table configs and load source DataFrames for 02_pipeline.</p>
+<article id="pipeline-prepare_pipeline_table_configs" class="reference-catalogue-item" data-callable-row="true" data-callable-name="prepare_pipeline_table_configs" data-callable-module="pipeline" data-callable-starter-path="02_pipeline" data-function-type="callable" data-callable-purpose="Prepare source or target table configs for 02_pipeline.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/prepare_pipeline_table_configs/"><code>prepare_pipeline_table_configs</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Prepare source or target table configs for 02_pipeline.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/pipeline/" title="Open pipeline module page" aria-label="Open pipeline module page">pipeline</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">02_pipeline</span></p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_read_source_dataframe</code></li></ul></details>
-
-  </div>
-</article>
-<article id="pipeline-prepare_target_table_configs" class="reference-catalogue-item" data-callable-row="true" data-callable-name="prepare_target_table_configs" data-callable-module="pipeline" data-callable-starter-path="02_pipeline" data-function-type="callable" data-callable-purpose="Enrich target table configs and add FabricOps audit columns for 02_pipeline.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/prepare_target_table_configs/"><code>prepare_target_table_configs</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Enrich target table configs and add FabricOps audit columns for 02_pipeline.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/pipeline/" title="Open pipeline module page" aria-label="Open pipeline module page">pipeline</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">02_pipeline</span></p>
-  <div class="reference-catalogue-item-counts">
-
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>_add_audit_columns</code></li><li><code>_load_source_dataframe</code></li></ul></details>
 
   </div>
 </article>
@@ -146,7 +119,7 @@ Use the finder below to look up public callables and internal support functions 
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">99_explore</span></p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 3</span></summary><ul><li><code>_get_store</code></li><li><code>_get_spark</code></li><li><code>_lakehouse_file_path</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_read_source_dataframe</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_load_source_dataframe</code></li></ul></details>
   </div>
 </article>
 <article id="fabric_input_output-read_lakehouse_excel" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_lakehouse_excel" data-callable-module="fabric_input_output" data-callable-starter-path="99_explore" data-function-type="callable" data-callable-purpose="Read an Excel file from a configured Fabric lakehouse Files path.">
@@ -155,7 +128,7 @@ Use the finder below to look up public callables and internal support functions 
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">99_explore</span></p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 3</span></summary><ul><li><code>_get_store</code></li><li><code>_get_spark</code></li><li><code>_lakehouse_file_path</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_read_source_dataframe</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_load_source_dataframe</code></li></ul></details>
   </div>
 </article>
 <article id="fabric_input_output-read_lakehouse_parquet" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_lakehouse_parquet" data-callable-module="fabric_input_output" data-callable-starter-path="99_explore" data-function-type="callable" data-callable-purpose="Read a Parquet path from a configured Fabric lakehouse Files path.">
@@ -164,7 +137,7 @@ Use the finder below to look up public callables and internal support functions 
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">99_explore</span></p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 4</span></summary><ul><li><code>_get_store</code></li><li><code>_convert_single_parquet_ns_to_us</code></li><li><code>_get_spark</code></li><li><code>_lakehouse_file_path</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_read_source_dataframe</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_load_source_dataframe</code></li></ul></details>
   </div>
 </article>
 <article id="fabric_input_output-read_lakehouse_table" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_lakehouse_table" data-callable-module="fabric_input_output" data-callable-starter-path="99_explore" data-function-type="callable" data-callable-purpose="Read a table from a configured Fabric lakehouse target.">
@@ -173,7 +146,7 @@ Use the finder below to look up public callables and internal support functions 
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">99_explore</span></p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>_get_store</code></li><li><code>_get_spark</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 12</span></summary><ul><li><code>_ensure_metadata_tables</code></li><li><code>_list_all_data_agreement_rows</code></li><li><code>_list_data_stewards</code></li><li><code>enforce_catalogue_stability</code></li><li><code>_read_metadata_rows</code></li><li><code>_setup_governance_metadata_tables</code></li><li><code>enforce_dq_rules</code></li><li><code>load_catalogue_profile_rows</code></li><li><code>widget_select_catalogue_table</code></li><li><code>_load_notebook_registry</code></li><li><code>_setup_notebook_registry_table</code></li><li><code>_read_source_dataframe</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 12</span></summary><ul><li><code>_ensure_metadata_tables</code></li><li><code>_list_all_data_agreement_rows</code></li><li><code>_list_data_stewards</code></li><li><code>enforce_catalogue_stability</code></li><li><code>_read_metadata_rows</code></li><li><code>_setup_governance_metadata_tables</code></li><li><code>enforce_dq_rules</code></li><li><code>load_catalogue_profile_rows</code></li><li><code>widget_select_catalogue_table</code></li><li><code>_load_notebook_registry</code></li><li><code>_setup_notebook_registry_table</code></li><li><code>_load_source_dataframe</code></li></ul></details>
   </div>
 </article>
 <article id="fabric_input_output-read_warehouse_table" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_warehouse_table" data-callable-module="fabric_input_output" data-callable-starter-path="99_explore" data-function-type="callable" data-callable-purpose="Read a table from a configured Fabric warehouse target.">
@@ -182,7 +155,7 @@ Use the finder below to look up public callables and internal support functions 
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">99_explore</span></p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>_get_store</code></li><li><code>_get_spark</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_read_source_dataframe</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_load_source_dataframe</code></li></ul></details>
   </div>
 </article>
 <article id="governance_review-record_table_governance" class="reference-catalogue-item" data-callable-row="true" data-callable-name="record_table_governance" data-callable-module="governance_review" data-callable-starter-path="03_governance" data-function-type="callable" data-callable-purpose="Persist approved table-governance context, DQ-rule, and classification evidence in one v1 commit action.">
@@ -199,7 +172,7 @@ Use the finder below to look up public callables and internal support functions 
   <p class="reference-catalogue-item-purpose">Run profiling, schema, stability, DQ, and catalogue guardrails for table configs.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/pipeline/" title="Open pipeline module page" aria-label="Open pipeline module page">pipeline</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">02_pipeline</span></p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 9</span></summary><ul><li><code>profile_dataframe</code></li><li><code>enforce_catalogue_stability</code></li><li><code>validate_schema</code></li><li><code>enforce_dq_rules</code></li><li><code>_guardrail_can_continue</code></li><li><code>_table_key</code></li><li><code>_table_name</code></li><li><code>build_guardrail_evidence_definitions</code></li><li><code>write_catalogue_evidence</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 10</span></summary><ul><li><code>profile_dataframe</code></li><li><code>enforce_catalogue_stability</code></li><li><code>stop_if_failed</code></li><li><code>validate_schema</code></li><li><code>enforce_dq_rules</code></li><li><code>_build_guardrail_evidence_definitions</code></li><li><code>_guardrail_can_continue</code></li><li><code>_table_key</code></li><li><code>_table_name</code></li><li><code>write_catalogue_evidence</code></li></ul></details>
 
   </div>
 </article>
@@ -221,22 +194,13 @@ Use the finder below to look up public callables and internal support functions 
 
   </div>
 </article>
-<article id="pipeline-stop_if_any_guardrail_failed" class="reference-catalogue-item" data-callable-row="true" data-callable-name="stop_if_any_guardrail_failed" data-callable-module="pipeline" data-callable-starter-path="02_pipeline" data-function-type="callable" data-callable-purpose="Stop notebook execution when any table guardrail is blocking.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/stop_if_any_guardrail_failed/"><code>stop_if_any_guardrail_failed</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Stop notebook execution when any table guardrail is blocking.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/pipeline/" title="Open pipeline module page" aria-label="Open pipeline module page">pipeline</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">02_pipeline</span></p>
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>stop_if_failed</code></li></ul></details>
-
-  </div>
-</article>
 <article id="drift-stop_if_failed" class="reference-catalogue-item" data-callable-row="true" data-callable-name="stop_if_failed" data-callable-module="drift" data-callable-starter-path="—" data-function-type="callable" data-callable-purpose="Stop a notebook only when a schema, stability, or DQ guardrail result blocks continuation.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/stop_if_failed/"><code>stop_if_failed</code></a></h3>
   <p class="reference-catalogue-item-purpose">Stop a notebook only when a schema, stability, or DQ guardrail result blocks continuation.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/drift/" title="Open drift module page" aria-label="Open drift module page">drift</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>SchemaDriftError</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>stop_if_any_guardrail_failed</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>run_table_guardrails</code></li></ul></details>
   </div>
 </article>
 <article id="drift-validate_schema" class="reference-catalogue-item" data-callable-row="true" data-callable-name="validate_schema" data-callable-module="drift" data-callable-starter-path="—" data-function-type="callable" data-callable-purpose="Validate a DataFrame schema using strict, allow-new-columns, or monitor-only presets.">
@@ -329,13 +293,13 @@ Use the finder below to look up public callables and internal support functions 
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>run_table_guardrails</code></li></ul></details>
   </div>
 </article>
-<article id="fabric_input_output-write_lakehouse_table" class="reference-catalogue-item" data-callable-row="true" data-callable-name="write_lakehouse_table" data-callable-module="fabric_input_output" data-callable-starter-path="—" data-function-type="callable" data-callable-purpose="Write a DataFrame to a configured Fabric lakehouse target.">
+<article id="fabric_input_output-write_lakehouse_table" class="reference-catalogue-item" data-callable-row="true" data-callable-name="write_lakehouse_table" data-callable-module="fabric_input_output" data-callable-starter-path="02_pipeline" data-function-type="callable" data-callable-purpose="Write a DataFrame to a configured Fabric lakehouse target.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/write_lakehouse_table/"><code>write_lakehouse_table</code></a></h3>
   <p class="reference-catalogue-item-purpose">Write a DataFrame to a configured Fabric lakehouse target.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">—</span></p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">02_pipeline</span></p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_get_store</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 11</span></summary><ul><li><code>_ensure_metadata_tables</code></li><li><code>_write_row</code></li><li><code>_review_governance_evidence</code></li><li><code>_setup_governance_metadata_tables</code></li><li><code>record_table_governance</code></li><li><code>_register_current_notebook</code></li><li><code>_setup_notebook_registry_table</code></li><li><code>write_catalogue_evidence</code></li><li><code>write_pipeline_lineage</code></li><li><code>write_pipeline_run_summary</code></li><li><code>write_target_tables</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 10</span></summary><ul><li><code>_ensure_metadata_tables</code></li><li><code>_write_row</code></li><li><code>_review_governance_evidence</code></li><li><code>_setup_governance_metadata_tables</code></li><li><code>record_table_governance</code></li><li><code>_register_current_notebook</code></li><li><code>_setup_notebook_registry_table</code></li><li><code>write_catalogue_evidence</code></li><li><code>write_pipeline_lineage</code></li><li><code>write_pipeline_run_summary</code></li></ul></details>
   </div>
 </article>
 <article id="pipeline-write_pipeline_lineage" class="reference-catalogue-item" data-callable-row="true" data-callable-name="write_pipeline_lineage" data-callable-module="pipeline" data-callable-starter-path="02_pipeline" data-function-type="callable" data-callable-purpose="Write many-to-many source-to-target lineage evidence.">
@@ -356,22 +320,13 @@ Use the finder below to look up public callables and internal support functions 
 
   </div>
 </article>
-<article id="pipeline-write_target_tables" class="reference-catalogue-item" data-callable-row="true" data-callable-name="write_target_tables" data-callable-module="pipeline" data-callable-starter-path="02_pipeline" data-function-type="callable" data-callable-purpose="Write checked target DataFrames from TARGET_TABLES to Fabric targets.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/write_target_tables/"><code>write_target_tables</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Write checked target DataFrames from TARGET_TABLES to Fabric targets.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/pipeline/" title="Open pipeline module page" aria-label="Open pipeline module page">pipeline</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">02_pipeline</span></p>
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>write_lakehouse_table</code></li><li><code>write_warehouse_table</code></li></ul></details>
-
-  </div>
-</article>
-<article id="fabric_input_output-write_warehouse_table" class="reference-catalogue-item" data-callable-row="true" data-callable-name="write_warehouse_table" data-callable-module="fabric_input_output" data-callable-starter-path="—" data-function-type="callable" data-callable-purpose="Write a DataFrame to a configured Fabric warehouse target.">
+<article id="fabric_input_output-write_warehouse_table" class="reference-catalogue-item" data-callable-row="true" data-callable-name="write_warehouse_table" data-callable-module="fabric_input_output" data-callable-starter-path="02_pipeline" data-function-type="callable" data-callable-purpose="Write a DataFrame to a configured Fabric warehouse target.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/write_warehouse_table/"><code>write_warehouse_table</code></a></h3>
   <p class="reference-catalogue-item-purpose">Write a DataFrame to a configured Fabric warehouse target.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">—</span></p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">02_pipeline</span></p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_get_store</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>write_target_tables</code></li></ul></details>
+
   </div>
 </article>
 <article id="data_agreement-_active_steward" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_active_steward" data-callable-module="data_agreement" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Internal helper used by the package.">
@@ -390,6 +345,15 @@ Use the finder below to look up public callables and internal support functions 
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_normalize_datatype</code></li></ul></details>
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 2</span></summary><ul><li><code>_schema_hash_from_dataframe</code></li><li><code>validate_schema</code></li></ul></details>
+  </div>
+</article>
+<article id="pipeline-_add_audit_columns" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_add_audit_columns" data-callable-module="pipeline" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Return a DataFrame with standard FabricOps target audit columns.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/pipeline__add_audit_columns/"><code>_add_audit_columns</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Return a DataFrame with standard FabricOps target audit columns.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/pipeline/" title="Open pipeline module page" aria-label="Open pipeline module page">pipeline</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>prepare_pipeline_table_configs</code></li></ul></details>
   </div>
 </article>
 <article id="data_agreement-_agreement_identity_text" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_agreement_identity_text" data-callable-module="data_agreement" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Return read-only agreement version context for the notebook form.">
@@ -480,6 +444,15 @@ Use the finder below to look up public callables and internal support functions 
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 7</span></summary><ul><li><code>_approved_column_identity</code></li><li><code>_approved_review_context</code></li><li><code>_canonical_dq_rule_type</code></li><li><code>_dq_rule_parameter_payload</code></li><li><code>_json</code></li><li><code>_validate_dq_rules</code></li><li><code>_build_dq_rule_key</code></li></ul></details>
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>record_table_governance</code></li></ul></details>
+  </div>
+</article>
+<article id="pipeline-_build_guardrail_evidence_definitions" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_build_guardrail_evidence_definitions" data-callable-module="pipeline" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Build catalogue evidence definitions for pipeline table guardrails.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/pipeline__build_guardrail_evidence_definitions/"><code>_build_guardrail_evidence_definitions</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Build catalogue evidence definitions for pipeline table guardrails.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/pipeline/" title="Open pipeline module page" aria-label="Open pipeline module page">pipeline</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>_table_key</code></li><li><code>_table_name</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>run_table_guardrails</code></li></ul></details>
   </div>
 </article>
 <article id="data_lineage-_build_lineage_records" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_build_lineage_records" data-callable-module="data_lineage" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Build metadata-ready lineage rows from validated lineage steps.">
@@ -1166,6 +1139,15 @@ Use the finder below to look up public callables and internal support functions 
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_validate_dataset_contract</code></li></ul></details>
   </div>
 </article>
+<article id="pipeline-_load_source_dataframe" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_load_source_dataframe" data-callable-module="pipeline" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Internal helper used by the package.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/pipeline__load_source_dataframe/"><code>_load_source_dataframe</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Internal helper used by the package.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/pipeline/" title="Open pipeline module page" aria-label="Open pipeline module page">pipeline</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 6</span></summary><ul><li><code>read_lakehouse_csv</code></li><li><code>read_lakehouse_excel</code></li><li><code>read_lakehouse_parquet</code></li><li><code>read_lakehouse_table</code></li><li><code>read_warehouse_table</code></li><li><code>_source_read_type</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>prepare_pipeline_table_configs</code></li></ul></details>
+  </div>
+</article>
 <article id="drift-_max_watermark_value" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_max_watermark_value" data-callable-module="drift" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Internal helper used by the package.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/drift__max_watermark_value/"><code>_max_watermark_value</code></a></h3>
   <p class="reference-catalogue-item-purpose">Internal helper used by the package.</p>
@@ -1317,15 +1299,6 @@ Use the finder below to look up public callables and internal support functions 
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>read_lakehouse_table</code></li><li><code>_coerce_rows</code></li></ul></details>
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_review_governance_evidence</code></li></ul></details>
-  </div>
-</article>
-<article id="pipeline-_read_source_dataframe" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_read_source_dataframe" data-callable-module="pipeline" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Internal helper used by the package.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="internal/pipeline__read_source_dataframe/"><code>_read_source_dataframe</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Internal helper used by the package.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/pipeline/" title="Open pipeline module page" aria-label="Open pipeline module page">pipeline</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 6</span></summary><ul><li><code>read_lakehouse_csv</code></li><li><code>read_lakehouse_excel</code></li><li><code>read_lakehouse_parquet</code></li><li><code>read_lakehouse_table</code></li><li><code>read_warehouse_table</code></li><li><code>_source_read_type</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>prepare_source_table_configs</code></li></ul></details>
   </div>
 </article>
 <article id="metadata-_register_current_notebook" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_register_current_notebook" data-callable-module="metadata" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Append a runtime notebook registration row.">
@@ -1586,7 +1559,7 @@ Use the finder below to look up public callables and internal support functions 
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/pipeline/" title="Open pipeline module page" aria-label="Open pipeline module page">pipeline</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
 
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_read_source_dataframe</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_load_source_dataframe</code></li></ul></details>
   </div>
 </article>
 <article id="governance_review-_spark_sql_helpers" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_spark_sql_helpers" data-callable-module="governance_review" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Return Spark SQL helper modules lazily for DQ runtime helpers.">
@@ -1685,7 +1658,7 @@ Use the finder below to look up public callables and internal support functions 
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/pipeline/" title="Open pipeline module page" aria-label="Open pipeline module page">pipeline</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
 
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 2</span></summary><ul><li><code>build_guardrail_evidence_definitions</code></li><li><code>run_table_guardrails</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 2</span></summary><ul><li><code>_build_guardrail_evidence_definitions</code></li><li><code>run_table_guardrails</code></li></ul></details>
   </div>
 </article>
 <article id="pipeline-_table_name" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_table_name" data-callable-module="pipeline" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Internal helper used by the package.">
@@ -1694,7 +1667,7 @@ Use the finder below to look up public callables and internal support functions 
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/pipeline/" title="Open pipeline module page" aria-label="Open pipeline module page">pipeline</a><span class="reference-chip reference-chip-type reference-chip-internal">Internal</span><span class="reference-chip">—</span></p>
   <div class="reference-catalogue-item-counts">
 
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 2</span></summary><ul><li><code>build_guardrail_evidence_definitions</code></li><li><code>run_table_guardrails</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 2</span></summary><ul><li><code>_build_guardrail_evidence_definitions</code></li><li><code>run_table_guardrails</code></li></ul></details>
   </div>
 </article>
 <article id="data_agreement-_to_bool" class="reference-catalogue-item" data-callable-row="true" data-callable-name="_to_bool" data-callable-module="data_agreement" data-callable-starter-path="—" data-function-type="internal" data-callable-purpose="Normalize common notebook and metadata boolean representations.">

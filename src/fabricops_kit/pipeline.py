@@ -121,7 +121,7 @@ def _source_read_type(source_config: Mapping[str, Any]) -> str:
     return str(source_config.get("read_type") or source_config.get("kind") or "lakehouse_table").lower()
 
 
-def _read_source_dataframe(source_config: Mapping[str, Any], *, config: Any, env: str, spark_session: Any):
+def _load_source_dataframe(source_config: Mapping[str, Any], *, config: Any, env: str, spark_session: Any):
     read_type = _source_read_type(source_config)
     layer = source_config["layer"]
     table_name = source_config["table_name"]
@@ -173,166 +173,121 @@ def _read_source_dataframe(source_config: Mapping[str, Any], *, config: Any, env
     raise ValueError(f"Unsupported source read type for {source_config.get('key', table_name)}: {read_type}")
 
 
-def prepare_source_table_configs(
-    source_table_configs: list[dict[str, Any]],
-    default_source_guardrails: Mapping[str, Any],
-    config: Any,
-    env: str,
-    spark_session: Any,
-) -> tuple[list[dict[str, Any]], dict[str, dict[str, Any]]]:
-    """Enrich source table configs and load source DataFrames.
 
-    Parameters
-    ----------
-    source_table_configs : list of dict
-        User-authored ``SOURCE_TABLES`` entries. Each entry must include
-        ``key``, ``layer``, and ``table_name``. Optional read settings include
-        ``read_type``/``kind``, ``relative_path``, ``schema``,
-        ``warehouse_target``, ``warehouse_table``, ``spark_table``, or ``df``.
-    default_source_guardrails : mapping
-        Default guardrail settings merged before each source config.
-    config : Any
-        FabricOps framework configuration from ``00_env_config``.
-    env : str
-        Environment key used for configured source routing.
-    spark_session : Any
-        Spark session used for table/file/warehouse reads.
-
-    Returns
-    -------
-    tuple[list[dict[str, Any]], dict[str, dict[str, Any]]]
-        Enriched source configs and a lookup keyed by source ``key``.
-    """
-    enriched_sources: list[dict[str, Any]] = []
-    for source_config in source_table_configs:
-        dataset_name = source_config.get("dataset_name", source_config["table_name"])
-        stage = source_config.get("stage", source_config["layer"])
-        watermark_value = source_config.get("watermark_value", None)
-        enriched_source = {
-            **default_source_guardrails,
-            **source_config,
-            "dataset_name": dataset_name,
-            "stage": stage,
-            "watermark_value": watermark_value,
-        }
-        enriched_source["df"] = _read_source_dataframe(enriched_source, config=config, env=env, spark_session=spark_session)
-        enriched_sources.append(enriched_source)
-    return enriched_sources, {source_config["key"]: source_config for source_config in enriched_sources}
-
-
-def prepare_target_table_configs(
-    target_table_configs: list[dict[str, Any]],
-    default_target_guardrails_and_write_options: Mapping[str, Any],
-    run_id: str,
-    pipeline_name: str,
-) -> tuple[list[dict[str, Any]], dict[str, dict[str, Any]]]:
-    """Enrich target table configs and add FabricOps runtime audit columns.
-
-    Parameters
-    ----------
-    target_table_configs : list of dict
-        User-authored ``TARGET_TABLES`` entries. Each entry must include
-        ``key``, ``df``, ``layer``, and ``table_name``.
-    default_target_guardrails_and_write_options : mapping
-        Default target guardrail and write settings merged before each target
-        config.
-    run_id : str
-        Current pipeline run identifier for audit columns.
-    pipeline_name : str
-        Pipeline name for audit columns.
-
-    Returns
-    -------
-    tuple[list[dict[str, Any]], dict[str, dict[str, Any]]]
-        Enriched target configs and a lookup keyed by target ``key``.
-    """
+def _add_audit_columns(dataframe: Any, *, run_id: str, pipeline_name: str):
+    """Return a DataFrame with standard FabricOps target audit columns."""
     from pyspark.sql import functions as F
 
     audit_created_at = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
-    enriched_targets: list[dict[str, Any]] = []
-    for target_config in target_table_configs:
-        merged_target = {**default_target_guardrails_and_write_options, **target_config}
-        target_df = (
-            merged_target["df"]
-            .withColumn("_fabricops_run_id", F.lit(run_id))
-            .withColumn("_fabricops_pipeline_name", F.lit(pipeline_name))
-            .withColumn("_fabricops_created_at", F.lit(audit_created_at))
-        )
-        dataset_name = merged_target.get("dataset_name", merged_target["table_name"])
-        stage = merged_target.get("stage", merged_target["layer"])
-        target_layer = merged_target.get("target_layer", merged_target["layer"])
-        target_name = merged_target.get("target_name", merged_target["table_name"])
-        target_kind = merged_target.get("target_kind", merged_target.get("kind", "lakehouse"))
-        watermark_value = merged_target.get("watermark_value", None)
-        enriched_target = {
-            **merged_target,
-            "df": target_df,
-            "dataset_name": dataset_name,
-            "stage": stage,
-            "target_layer": target_layer,
-            "target_name": target_name,
-            "target_kind": target_kind,
-            "watermark_value": watermark_value,
-        }
-        enriched_targets.append(enriched_target)
-    return enriched_targets, {target_config["key"]: target_config for target_config in enriched_targets}
+    return (
+        dataframe
+        .withColumn("_fabricops_run_id", F.lit(run_id))
+        .withColumn("_fabricops_pipeline_name", F.lit(pipeline_name))
+        .withColumn("_fabricops_created_at", F.lit(audit_created_at))
+    )
 
 
-def write_target_tables(target_table_configs: list[Mapping[str, Any]], config: Any, env: str) -> dict[str, str]:
-    """Write checked target DataFrames to configured Lakehouse or Warehouse targets.
+def prepare_pipeline_table_configs(
+    table_configs: list[dict[str, Any]],
+    default_settings: Mapping[str, Any],
+    *,
+    table_role: str,
+    config: Any | None = None,
+    env: str | None = None,
+    spark_session: Any | None = None,
+    run_id: str = "",
+    pipeline_name: str = "",
+) -> tuple[list[dict[str, Any]], dict[str, dict[str, Any]]]:
+    """Prepare source or target table configs for a pipeline notebook.
 
     Parameters
     ----------
-    target_table_configs : list of mapping
-        Enriched target configs, normally returned by
-        :func:`prepare_target_table_configs` and updated by
-        :func:`run_table_guardrails`.
-    config : Any
-        FabricOps framework configuration from ``00_env_config``.
-    env : str
-        Environment key used for configured target routing.
+    table_configs : list of dict
+        User-authored table config dictionaries from ``SOURCE_TABLES`` or
+        ``TARGET_TABLES``.
+    default_settings : mapping
+        Default guardrails, and for targets write options, merged before each
+        table config. Table-specific values take precedence.
+    table_role : {"source", "target"}
+        Role-specific preparation mode. Source mode loads DataFrames; target
+        mode adds FabricOps audit columns and derives write metadata.
+    config : Any, optional
+        FabricOps framework configuration from ``00_env_config``. Required for
+        source reads unless each source config already includes ``df``.
+    env : str, optional
+        Environment key used for configured source routing. Required for source
+        reads unless each source config already includes ``df``.
+    spark_session : Any, optional
+        Spark session used for source reads. Required for source reads unless
+        each source config already includes ``df``.
+    run_id : str, optional
+        Pipeline run identifier used for target audit columns. Required for
+        target role.
+    pipeline_name : str, optional
+        Pipeline name used for target audit columns. Required for target role.
 
     Returns
     -------
-    dict[str, str]
-        Write status keyed by target config ``key``.
-    """
-    target_write_status: dict[str, str] = {}
-    for target_config in target_table_configs:
-        target_key = target_config["key"]
-        target_df = target_config["df"]
-        target_kind = str(target_config.get("target_kind", target_config.get("kind", "lakehouse"))).lower()
-        target_layer = target_config.get("target_layer", target_config.get("layer", "unified"))
-        target_table = target_config.get("target_name", target_config.get("table_name", target_key))
-        target_mode = target_config.get("write_mode", target_config.get("mode", "overwrite"))
+    tuple[list[dict[str, Any]], dict[str, dict[str, Any]]]
+        Enriched table configs and a lookup keyed by table ``key``.
 
-        if target_kind == "lakehouse":
-            write_lakehouse_table(
-                target_df,
-                config,
-                env,
-                target_layer,
-                target_table,
-                mode=target_mode,
-                partition_by=target_config.get("partition_by"),
-                repartition_by=target_config.get("repartition_by"),
-                overwrite_schema=target_config.get("overwrite_schema", target_mode == "overwrite"),
-            )
-        elif target_kind == "warehouse":
-            write_warehouse_table(
-                target_df,
-                config,
-                env,
-                target_layer,
-                target_config.get("schema", "dbo"),
-                target_table,
-                mode=target_mode,
+    Raises
+    ------
+    ValueError
+        If ``table_role`` is not ``"source"`` or ``"target"``.
+
+    Notes
+    -----
+    Source configs derive ``dataset_name`` from ``table_name``, ``stage`` from
+    ``layer``, and ``watermark_value`` from ``None`` unless overridden. Source
+    reads support Lakehouse tables, Lakehouse CSV/Parquet/Excel files,
+    Warehouse tables, custom Spark tables, or pre-supplied DataFrames.
+
+    Target configs derive ``dataset_name``, ``stage``, ``target_layer``,
+    ``target_name``, ``target_kind``, and ``watermark_value`` unless overridden,
+    then add standard FabricOps audit columns.
+    """
+    normalized_role = str(table_role or "").lower().strip()
+    if normalized_role not in {"source", "target"}:
+        raise ValueError("table_role must be 'source' or 'target'.")
+
+    enriched_tables: list[dict[str, Any]] = []
+    for table_config in table_configs:
+        merged_config = {**default_settings, **table_config}
+        dataset_name = merged_config.get("dataset_name", merged_config["table_name"])
+        stage = merged_config.get("stage", merged_config["layer"])
+        watermark_value = merged_config.get("watermark_value", None)
+
+        if normalized_role == "source":
+            enriched_table = {
+                **merged_config,
+                "dataset_name": dataset_name,
+                "stage": stage,
+                "watermark_value": watermark_value,
+            }
+            enriched_table["df"] = _load_source_dataframe(
+                enriched_table,
+                config=config,
+                env=str(env or ""),
+                spark_session=spark_session,
             )
         else:
-            raise ValueError(f"Unsupported target kind for {target_key}: {target_kind}")
-        target_write_status[target_key] = "written"
-    return target_write_status
+            target_layer = merged_config.get("target_layer", merged_config["layer"])
+            target_name = merged_config.get("target_name", merged_config["table_name"])
+            target_kind = merged_config.get("target_kind", merged_config.get("kind", "lakehouse"))
+            enriched_table = {
+                **merged_config,
+                "df": _add_audit_columns(merged_config["df"], run_id=run_id, pipeline_name=pipeline_name),
+                "dataset_name": dataset_name,
+                "stage": stage,
+                "target_layer": target_layer,
+                "target_name": target_name,
+                "target_kind": target_kind,
+                "watermark_value": watermark_value,
+            }
+        enriched_tables.append(enriched_table)
 
+    return enriched_tables, {table_config["key"]: table_config for table_config in enriched_tables}
 
 def _table_key(table_config: Mapping[str, Any]) -> str:
     return str(table_config["key"])
@@ -346,7 +301,7 @@ def _guardrail_can_continue(result: Mapping[str, Any] | None) -> bool:
     return bool((result or {}).get("can_continue", True))
 
 
-def build_guardrail_evidence_definitions(table_configs: list[Mapping[str, Any]]) -> dict[str, dict[str, Any]]:
+def _build_guardrail_evidence_definitions(table_configs: list[Mapping[str, Any]]) -> dict[str, dict[str, Any]]:
     """Build catalogue evidence definitions for pipeline table guardrails.
 
     Parameters
@@ -390,6 +345,7 @@ def run_table_guardrails(
     notebook_registry_id: str = "",
     notebook_id: str = "",
     pipeline_name: str = "",
+    stop_on_failure: bool = False,
 ) -> dict[str, Any]:
     """Run profiling, schema, stability, DQ, and catalogue guardrails.
 
@@ -412,14 +368,18 @@ def run_table_guardrails(
         Spark session used by stability and DQ helpers.
     agreement_id, agreement_contract_version, notebook_registry_id, notebook_id, pipeline_name : str, optional
         Governance context written with catalogue evidence.
+    stop_on_failure : bool, default False
+        When True, collect all guardrail results and catalogue evidence, then
+        stop notebook execution via the standard guardrail stopper if any table
+        cannot continue.
 
     Returns
     -------
     dict[str, Any]
         Guardrail result bundle containing profiles, schema results, stability
-        results, DQ results, catalogue status, evidence definitions,
-        ``can_continue``, and ``failed_tables``. Results remain separated by
-        table key and guardrail type.
+        results, DQ results, catalogue status, evidence definitions, concise
+        ``summary``, ``can_continue``, and ``failed_tables``. Results remain
+        separated by table key and guardrail type.
 
     Notes
     -----
@@ -434,7 +394,7 @@ def run_table_guardrails(
     stability_results: dict[str, Mapping[str, Any]] = {}
     dq_results: dict[str, Mapping[str, Any]] = {}
     failed_tables: list[str] = []
-    evidence_definitions = build_guardrail_evidence_definitions(table_configs)
+    evidence_definitions = _build_guardrail_evidence_definitions(table_configs)
 
     for table_config in table_configs:
         table_key = _table_key(table_config)
@@ -520,70 +480,36 @@ def run_table_guardrails(
         dq_results=dq_results,
     )
 
-    return {
+    summary = {
+        "schema_results": schema_results,
+        "stability_results": stability_results,
+        "dq_results": dq_results,
+        "catalogue_status": catalogue_status,
+        "failed_tables": failed_tables,
+    }
+    result = {
         "profiles": profiles,
         "schema_results": schema_results,
         "stability_results": stability_results,
         "dq_results": dq_results,
         "catalogue_status": catalogue_status,
         "evidence_definitions": evidence_definitions,
+        "summary": summary,
         "can_continue": not failed_tables,
         "failed_tables": failed_tables,
     }
 
+    if stop_on_failure and failed_tables:
+        stop_if_failed(
+            {
+                "status": "failed",
+                "can_continue": False,
+                "message": "Blocking guardrail failure for table(s): " + ", ".join(failed_tables),
+                "failed_tables": failed_tables,
+            }
+        )
 
-def guardrail_summary(guardrail_results: Mapping[str, Any]) -> dict[str, Any]:
-    """Return a concise notebook display summary for guardrail results.
-
-    Parameters
-    ----------
-    guardrail_results : mapping
-        Result bundle returned by :func:`run_table_guardrails`.
-
-    Returns
-    -------
-    dict[str, Any]
-        Concise summary containing schema, stability, DQ, catalogue, and failed
-        table information for notebook display.
-    """
-    return {
-        "schema_results": guardrail_results["schema_results"],
-        "stability_results": guardrail_results["stability_results"],
-        "dq_results": guardrail_results["dq_results"],
-        "catalogue_status": guardrail_results["catalogue_status"],
-        "failed_tables": guardrail_results["failed_tables"],
-    }
-
-
-def stop_if_any_guardrail_failed(guardrail_results: Mapping[str, Any]) -> None:
-    """Stop notebook execution when any table guardrail is blocking.
-
-    Parameters
-    ----------
-    guardrail_results : mapping
-        Result bundle returned by :func:`run_table_guardrails`. The helper
-        checks ``can_continue`` and forwards a standard failed guardrail result
-        to :func:`fabricops_kit.drift.stop_if_failed` when one or more tables
-        failed.
-
-    Returns
-    -------
-    None
-        Returns normally when all guardrails can continue. Raises through
-        :func:`stop_if_failed` for blocking failures.
-    """
-    if guardrail_results.get("can_continue", True):
-        return
-
-    failed_tables = guardrail_results.get("failed_tables", [])
-    stop_if_failed(
-        {
-            "status": "failed",
-            "can_continue": False,
-            "message": "Blocking guardrail failure for table(s): " + ", ".join(failed_tables),
-            "failed_tables": failed_tables,
-        }
-    )
+    return result
 
 
 def write_catalogue_evidence(

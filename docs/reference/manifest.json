@@ -422,51 +422,12 @@
       "module_summary": "Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals, lineage persistence, and runtime summaries.",
       "sidebar_group": "3. Data engineer",
       "sidebar_include": true,
-      "callable_name": "build_guardrail_evidence_definitions",
+      "callable_name": "prepare_pipeline_table_configs",
       "callable_visibility": "public",
       "callable_type": "callable",
       "callable_role": "callable",
       "template_notebook": "02_pipeline",
-      "template_segment": "Guardrail orchestration"
-    },
-    {
-      "module_name": "pipeline",
-      "visibility": "public",
-      "module_summary": "Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals, lineage persistence, and runtime summaries.",
-      "sidebar_group": "3. Data engineer",
-      "sidebar_include": true,
-      "callable_name": "guardrail_summary",
-      "callable_visibility": "public",
-      "callable_type": "callable",
-      "callable_role": "callable",
-      "template_notebook": "02_pipeline",
-      "template_segment": "Guardrail summary"
-    },
-    {
-      "module_name": "pipeline",
-      "visibility": "public",
-      "module_summary": "Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals, lineage persistence, and runtime summaries.",
-      "sidebar_group": "3. Data engineer",
-      "sidebar_include": true,
-      "callable_name": "prepare_source_table_configs",
-      "callable_visibility": "public",
-      "callable_type": "callable",
-      "callable_role": "callable",
-      "template_notebook": "02_pipeline",
-      "template_segment": "Source preparation"
-    },
-    {
-      "module_name": "pipeline",
-      "visibility": "public",
-      "module_summary": "Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals, lineage persistence, and runtime summaries.",
-      "sidebar_group": "3. Data engineer",
-      "sidebar_include": true,
-      "callable_name": "prepare_target_table_configs",
-      "callable_visibility": "public",
-      "callable_type": "callable",
-      "callable_role": "callable",
-      "template_notebook": "02_pipeline",
-      "template_segment": "Target preparation"
+      "template_segment": "Table config preparation"
     },
     {
       "module_name": "pipeline",
@@ -480,19 +441,6 @@
       "callable_role": "callable",
       "template_notebook": "02_pipeline",
       "template_segment": "Guardrail orchestration"
-    },
-    {
-      "module_name": "pipeline",
-      "visibility": "public",
-      "module_summary": "Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals, lineage persistence, and runtime summaries.",
-      "sidebar_group": "3. Data engineer",
-      "sidebar_include": true,
-      "callable_name": "stop_if_any_guardrail_failed",
-      "callable_visibility": "public",
-      "callable_type": "callable",
-      "callable_role": "callable",
-      "template_notebook": "02_pipeline",
-      "template_segment": "Guardrail stopping"
     },
     {
       "module_name": "pipeline",
@@ -532,19 +480,6 @@
       "callable_role": "callable",
       "template_notebook": "02_pipeline",
       "template_segment": "Runtime summary"
-    },
-    {
-      "module_name": "pipeline",
-      "visibility": "public",
-      "module_summary": "Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals, lineage persistence, and runtime summaries.",
-      "sidebar_group": "3. Data engineer",
-      "sidebar_include": true,
-      "callable_name": "write_target_tables",
-      "callable_visibility": "public",
-      "callable_type": "callable",
-      "callable_role": "callable",
-      "template_notebook": "02_pipeline",
-      "template_segment": "Target writes"
     }
   ]
 }

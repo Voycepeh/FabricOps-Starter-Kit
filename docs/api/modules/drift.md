@@ -286,7 +286,7 @@ Owns schema and catalogue profile stability checks as engineering guardrails dur
 ### External callers
 
 **pipeline**
-<a class="reference-chip" href="../../reference/run_table_guardrails/"><code>run_table_guardrails</code></a>, <a class="reference-chip" href="../../reference/stop_if_any_guardrail_failed/"><code>stop_if_any_guardrail_failed</code></a>
+<a class="reference-chip" href="../../reference/run_table_guardrails/"><code>run_table_guardrails</code></a>
 
 ### External callees
 
