@@ -268,13 +268,23 @@ def _render_call_flow(qualified_name: str, *, max_depth: int = 6) -> str:
     return "```text\n" + "\n".join(lines) + "\n```"
 
 
-def _render_internal_helper_details(root_qn: str) -> list[str]:
+def _indent_markdown(lines: list[str], spaces: int = 4) -> list[str]:
+    prefix = " " * spaces
+    out: list[str] = []
+    for line in lines:
+        for split_line in (line.splitlines() or [""]):
+            out.append(prefix + split_line if split_line else "")
+    return out
+
+
+def _render_nested_helper_functions(root_qn: str) -> list[str]:
     _, root_name = _parts(root_qn)
     helper_qns = _collect_internal_helpers(root_qn)
     if not helper_qns:
-        return ["_No internal helper calls detected._"]
+        return ["## Nested helper functions", "", "No nested package helper functions are detected for this callable."]
 
-    lines: list[str] = []
+    rows = ["| Helper | Role | Source |", "| --- | --- | --- |"]
+    source_lines: list[str] = []
     for helper_qn in helper_qns:
         helper_module, helper_name = _parts(helper_qn)
         metadata = source_metadata.get(helper_module, {}).get(helper_name, {})
@@ -285,33 +295,34 @@ def _render_internal_helper_details(root_qn: str) -> list[str]:
         line_suffix = f" lines {start_line}-{end_line}" if start_line and end_line else ""
         source = str(metadata.get("source") or "")
         purpose = modules.get(helper_module, {}).get(helper_name) or "Internal helper used by the package implementation."
-        lines.extend(
-            [
-                f"### `{signature}`",
-                "",
-                purpose,
-                "",
-                "**Helper source path**",
-                "",
-                f"- `{source_path}`{line_suffix}",
-                "",
-                "**Helper code excerpt**",
-                "",
-                "```python",
-                source or "# Source excerpt unavailable.",
-                "```",
-                "",
-                "**Used here because**",
-                "",
-                f"`{root_name}` reaches `{helper_name}` in its implementation path.",
-                "",
-                "**Modify this if**",
-                "",
-                f"Change `{helper_name}` when the shared implementation behavior it provides to `{root_name}` or another caller needs to change.",
-                "",
-            ]
-        )
-    return lines
+        rows.append(f"| `{helper_name}` | {purpose} | `{source_path}`{line_suffix} |")
+        source_lines.extend([
+            f"**`{signature}`**",
+            "",
+            f"Used by `{root_name}` through the implementation path shown above.",
+            "",
+            "```python",
+            source or "# Source excerpt unavailable.",
+            "```",
+            "",
+        ])
+
+    body = [
+        f"These helpers support `{root_name}` by handling shared implementation tasks reached from the public call flow; expand the source block only when you need maintainer-level details.",
+        "",
+        *rows,
+        "",
+        '??? example "View helper source code"',
+        "",
+        *_indent_markdown(source_lines),
+    ]
+    return [
+        "## Nested helper functions",
+        "",
+        f'??? info "Nested helper functions: {len(helper_qns)}"',
+        "",
+        *_indent_markdown(body),
+    ]
 
 
 def _render_implementation_details(root_qn: str) -> list[str]:
@@ -321,12 +332,7 @@ def _render_implementation_details(root_qn: str) -> list[str]:
         "### Call flow",
         "",
         _render_call_flow(root_qn),
-        "",
-        "### Internal helpers used by this callable",
-        "",
-        *_render_internal_helper_details(root_qn),
     ]
-
 
 def _source_anchor(module_name: str, symbol_name: str) -> str:
     return f'<a href="../../modules/{module_name}/#{symbol_name}">{module_name} module</a>'
@@ -403,7 +409,17 @@ for row in sorted(public_symbol_docs, key=lambda item: item["symbol_name"]):
         for implementation_line in _render_implementation_details(qn):
             fd.write(f"{implementation_line}\n")
 
-        fd.write('\n???+ note "Function details and source"\n\n')
+        fd.write("\n## Public callable source code\n\n")
+        callable_source = str(source_metadata.get(module_name, {}).get(symbol_name, {}).get("source") or "")
+        fd.write(f"- Source file path: `src/{PACKAGE}/{module_name}.py`\n\n")
+        fd.write("```python\n")
+        fd.write(callable_source or "# Source excerpt unavailable.")
+        fd.write("\n```\n\n")
+
+        for helper_line in _render_nested_helper_functions(qn):
+            fd.write(f"{helper_line}\n")
+
+        fd.write('\n???+ note "Function details"\n\n')
         fd.write(f"    ::: {PACKAGE}.{module_name}.{symbol_name}\n")
         fd.write("        options:\n")
         fd.write("          show_root_heading: false\n")

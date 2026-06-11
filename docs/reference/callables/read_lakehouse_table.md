@@ -1,24 +1,51 @@
 # read_lakehouse_table
 
-Read a table from a configured Fabric lakehouse target.
-
-## What this is for and when to use it
+## Purpose
 
 Read a table from a configured Fabric lakehouse target.
 
-- Use when reading a Delta table from a configured Fabric lakehouse target.
+## At a glance
 
-## When not to use it
-
-- Do not use for lakehouse Files CSV, Parquet, or Excel paths, or for warehouse SQL tables.
-
-## Example
-
-```python
+<div class="module-table-scroll reference-input-table">
+<table class="reference-function-table">
+  <thead>
+    <tr>
+      <th>Item</th>
+      <th>Details</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td data-label="Item">Use when</td>
+      <td data-label="Details">Use when reading a Delta table from a configured Fabric lakehouse target.</td>
+    </tr>
+    <tr>
+      <td data-label="Item">Do not use when</td>
+      <td data-label="Details">Do not use for lakehouse Files CSV, Parquet, or Excel paths, or for warehouse SQL tables.</td>
+    </tr>
+    <tr>
+      <td data-label="Item">Example</td>
+      <td data-label="Details">```python
 df = read_lakehouse_table(CONFIG, env="Sandbox", target="Source", table="orders", spark_session=spark)
-```
+```</td>
+    </tr>
+    <tr>
+      <td data-label="Item">Errors</td>
+      <td data-label="Details">Raises configuration, Spark, or table-read errors when the target or table cannot be resolved/read.</td>
+    </tr>
+    <tr>
+      <td data-label="Item">Side effects</td>
+      <td data-label="Details">Reads from a lakehouse table; it does not write metadata, tables, or files.</td>
+    </tr>
+    <tr>
+      <td data-label="Item">Related functions</td>
+      <td data-label="Details">- <a href="../write_lakehouse_table/"><code>fabricops_kit.fabric_input_output.write_lakehouse_table</code></a><br>- <a href="../read_lakehouse_csv/"><code>fabricops_kit.fabric_input_output.read_lakehouse_csv</code></a><br>- <a href="../read_lakehouse_parquet/"><code>fabricops_kit.fabric_input_output.read_lakehouse_parquet</code></a><br>- <a href="../read_lakehouse_excel/"><code>fabricops_kit.fabric_input_output.read_lakehouse_excel</code></a></td>
+    </tr>
+  </tbody>
+</table>
+</div>
 
-## Inputs
+## Parameters
 
 <div class="module-table-scroll reference-input-table">
 <table class="reference-function-table">
@@ -59,25 +86,34 @@ df = read_lakehouse_table(CONFIG, env="Sandbox", target="Source", table="orders"
 </table>
 </div>
 
-## Output
+## Returns
 
 Spark DataFrame loaded from the configured lakehouse table.
 
-## Errors and side effects
+## Used by
 
-**Errors:** Raises configuration, Spark, or table-read errors when the target or table cannot be resolved/read.
+- `fabricops_kit.data_agreement._ensure_metadata_tables`
+- `fabricops_kit.data_agreement._list_all_data_agreement_rows`
+- `fabricops_kit.data_agreement._list_data_stewards`
+- `fabricops_kit.governance_review._read_metadata_rows`
+- `fabricops_kit.governance_review._setup_governance_metadata_tables`
+- <a href="../enforce_dq_rules/"><code>fabricops_kit.governance_review.enforce_dq_rules</code></a>
+- <a href="../load_catalogue_profile_rows/"><code>fabricops_kit.governance_review.load_catalogue_profile_rows</code></a>
+- <a href="../widget_select_catalogue_table/"><code>fabricops_kit.governance_review.widget_select_catalogue_table</code></a>
+- <a href="../enforce_profile_behavior/"><code>fabricops_kit.guardrails.enforce_profile_behavior</code></a>
+- `fabricops_kit.metadata._load_notebook_registry`
+- `fabricops_kit.metadata._setup_notebook_registry_table`
 
-**Side effects:** Reads from a lakehouse table; it does not write metadata, tables, or files.
+## Calls
 
-## Related functions
+- `fabricops_kit.config._get_store`
+- `fabricops_kit.fabric_input_output._current_database_matches`
+- `fabricops_kit.fabric_input_output._get_spark`
+- `fabricops_kit.fabric_input_output._normalize_table_name`
+- `fabricops_kit.fabric_input_output._registered_table_identifier`
+- `fabricops_kit.fabric_input_output._uses_registered_metadata_table`
 
-- <a href="../write_lakehouse_table/"><code>fabricops_kit.fabric_input_output.write_lakehouse_table</code></a>
-- <a href="../read_lakehouse_csv/"><code>fabricops_kit.fabric_input_output.read_lakehouse_csv</code></a>
-- <a href="../read_lakehouse_parquet/"><code>fabricops_kit.fabric_input_output.read_lakehouse_parquet</code></a>
-- <a href="../read_lakehouse_excel/"><code>fabricops_kit.fabric_input_output.read_lakehouse_excel</code></a>
-
-<details class="reference-implementation-details">
-<summary>Implementation details</summary>
+## Implementation details
 
 ### Call flow
 
@@ -93,285 +129,10 @@ read_lakehouse_table(...)
 └── _uses_registered_metadata_table(...)
 ```
 
-### Internal helpers used by this callable
-
-### `def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any`
-
-**What it does:**
-
-Resolve a configured Fabric path for an environment and target.
-
-**Source:**
-
-- `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L618-L658">View `_get_store` on GitHub</a>
-
-**Code:**
-
-```python
-def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any:
-    """Resolve a configured Fabric path for an environment and target.
-
-    Parameters
-    ----------
-    env : str
-        Environment key such as ``Sandbox``, ``DE``, or ``Prod``.
-    target : str
-        Target key such as ``Source``, ``Unified``, ``Product``, or ``Warehouse``.
-    config : FrameworkConfig | PathConfig | None
-        Configuration that contains environment-to-target path mappings.
-
-    Returns
-    -------
-    Any
-        FabricStore object with ``workspace_id``, ``house_id``, ``house_name``, and ``root``.
-
-    Raises
-    ------
-    ValueError
-        If config is missing, or if the environment/target mapping does not exist.
-
-    Examples
-    --------
-    >>> get_path("Sandbox", "Source", config=CONFIG)
-    Housepath(...)
-    """
-    if config is None:
-        raise ValueError("No Fabric config was provided. Pass a FrameworkConfig or PathConfig instance.")
-    paths = config.path_config.paths if isinstance(config, FrameworkConfig) else config.paths
-    if env not in paths:
-        available_envs = ", ".join(sorted(paths.keys())) or "<none>"
-        raise ValueError(
-            f"Environment '{env}' was not found in Fabric config. Available environments: {available_envs}."
-        )
-    if target not in paths[env]:
-        available_targets = ", ".join(sorted(paths[env].keys())) or "<none>"
-        raise ValueError(
-            f"Target '{target}' was not found under environment '{env}'. Available targets: {available_targets}."
-        )
-    return paths[env][target]
-```
-
-**Used here because:**
-
-`read_lakehouse_table` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `read_lakehouse_table` or another caller that reaches `_get_store`.
-
-### `def _current_database_matches(spark_obj: Any, store: FabricStore) -> bool`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/fabric_input_output.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/fabric_input_output.py#L107-L115">View `_current_database_matches` on GitHub</a>
-
-**Code:**
-
-```python
-def _current_database_matches(spark_obj: Any, store: FabricStore) -> bool:
-    catalog = getattr(spark_obj, "catalog", None)
-    current_database = getattr(catalog, "currentDatabase", None)
-    if not callable(current_database):
-        return False
-    try:
-        return str(current_database()).strip().lower() == store.name.strip().lower()
-    except Exception:
-        return False
-```
-
-**Used here because:**
-
-`read_lakehouse_table` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `read_lakehouse_table` or another caller that reaches `_current_database_matches`.
-
-### `def _get_spark(spark_session=None)`
-
-**What it does:**
-
-Return an explicit Spark session or the active notebook global `spark`.
-
-**Source:**
-
-- `src/fabricops_kit/fabric_input_output.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/fabric_input_output.py#L125-L155">View `_get_spark` on GitHub</a>
-
-**Code:**
-
-```python
-def _get_spark(spark_session=None):
-    """Return an explicit Spark session or the active notebook global `spark`.
-
-    Most Fabric notebooks already expose a global `spark` object. Tests and
-    local scripts can pass `spark_session` explicitly to avoid relying on the
-    notebook runtime.
-
-    Parameters
-    ----------
-    spark_session : object, optional
-        Spark session to use instead of the notebook global `spark`.
-
-    Returns
-    -------
-    object
-        Spark session object.
-
-    Raises
-    ------
-    RuntimeError
-        If no Spark session is passed and no global `spark` object exists.
-    """
-    if spark_session is not None:
-        return spark_session
-    try:
-        return globals()["spark"]
-    except KeyError as exc:
-        raise RuntimeError(
-            "Spark session was not provided and global 'spark' was not found. "
-            "Run this inside Fabric/Spark or pass spark_session explicitly."
-        ) from exc
-```
-
-**Used here because:**
-
-`read_lakehouse_table` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `read_lakehouse_table` or another caller that reaches `_get_spark`.
-
-### `def _normalize_table_name(table: str) -> str`
-
-**What it does:**
-
-Return a safe Spark table name, never a nested folder path.
-
-**Source:**
-
-- `src/fabricops_kit/fabric_input_output.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/fabric_input_output.py#L81-L90">View `_normalize_table_name` on GitHub</a>
-
-**Code:**
-
-```python
-def _normalize_table_name(table: str) -> str:
-    """Return a safe Spark table name, never a nested folder path."""
-    value = str(table or "").strip()
-    if not value:
-        raise ValueError("table is required.")
-    if any(separator in value for separator in ("/", "\\")) or ".." in value:
-        raise ValueError("table must be a table name, not a file path or nested folder path.")
-    if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", value):
-        raise ValueError("table must contain only letters, numbers, and underscores, and must not start with a number.")
-    return value
-```
-
-**Used here because:**
-
-`read_lakehouse_table` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `read_lakehouse_table` or another caller that reaches `_normalize_table_name`.
-
-### `def _registered_table_identifier(store: FabricStore, table: str) -> str`
-
-**What it does:**
-
-Return a metadata lakehouse-qualified Spark table identifier.
-
-**Source:**
-
-- `src/fabricops_kit/fabric_input_output.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/fabric_input_output.py#L97-L99">View `_registered_table_identifier` on GitHub</a>
-
-**Code:**
-
-```python
-def _registered_table_identifier(store: FabricStore, table: str) -> str:
-    """Return a metadata lakehouse-qualified Spark table identifier."""
-    return f"{_quote_identifier(store.name)}.{_quote_identifier(_normalize_table_name(table))}"
-```
-
-**Used here because:**
-
-`read_lakehouse_table` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `read_lakehouse_table` or another caller that reaches `_registered_table_identifier`.
-
-### `def _quote_identifier(identifier: str) -> str`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/fabric_input_output.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/fabric_input_output.py#L93-L94">View `_quote_identifier` on GitHub</a>
-
-**Code:**
-
-```python
-def _quote_identifier(identifier: str) -> str:
-    return f"`{str(identifier).replace('`', '``')}`"
-```
-
-**Used here because:**
-
-`read_lakehouse_table` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `read_lakehouse_table` or another caller that reaches `_quote_identifier`.
-
-### `def _uses_registered_metadata_table(target: str) -> bool`
-
-**What it does:**
-
-Return whether a target should use Spark table registration.
-
-**Source:**
-
-- `src/fabricops_kit/fabric_input_output.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/fabric_input_output.py#L102-L104">View `_uses_registered_metadata_table` on GitHub</a>
-
-**Code:**
-
-```python
-def _uses_registered_metadata_table(target: str) -> bool:
-    """Return whether a target should use Spark table registration."""
-    return str(target or "").strip().lower() == "metadata"
-```
-
-**Used here because:**
-
-`read_lakehouse_table` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `read_lakehouse_table` or another caller that reaches `_uses_registered_metadata_table`.
-
-
-</details>
-
-## Source
+## Public callable source code
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/fabric_input_output.py#L171-L224">View read_lakehouse_table on GitHub</a>
-
-<details class="reference-source-details">
-<summary>Show source code</summary>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/fabric_input_output.py#L171-L224">View read_lakehouse_table on GitHub</a>
 
 ```python
 def read_lakehouse_table(config, env, target, table, spark_session=None):
@@ -430,7 +191,209 @@ def read_lakehouse_table(config, env, target, table, spark_session=None):
     return spark_obj.read.format("delta").load(path)
 ```
 
-</details>
+## Nested helper functions
+
+??? info "Nested helper functions: 7"
+
+    These helpers support `read_lakehouse_table` by handling shared implementation tasks reached from the public call flow; expand the source block only when you need maintainer-level details.
+
+    <table class="reference-function-table">
+      <thead>
+        <tr>
+          <th>Helper</th>
+          <th>Role</th>
+          <th>Source</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td data-label="Helper"><code>_get_store</code></td>
+          <td data-label="Role">Resolve a configured Fabric path for an environment and target.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L618-L658"><code>src/fabricops_kit/config.py#L618-L658</code></a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_current_database_matches</code></td>
+          <td data-label="Role">Internal helper used by the package implementation.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/fabric_input_output.py#L107-L115"><code>src/fabricops_kit/fabric_input_output.py#L107-L115</code></a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_get_spark</code></td>
+          <td data-label="Role">Return an explicit Spark session or the active notebook global `spark`.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/fabric_input_output.py#L125-L155"><code>src/fabricops_kit/fabric_input_output.py#L125-L155</code></a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_normalize_table_name</code></td>
+          <td data-label="Role">Return a safe Spark table name, never a nested folder path.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/fabric_input_output.py#L81-L90"><code>src/fabricops_kit/fabric_input_output.py#L81-L90</code></a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_registered_table_identifier</code></td>
+          <td data-label="Role">Return a metadata lakehouse-qualified Spark table identifier.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/fabric_input_output.py#L97-L99"><code>src/fabricops_kit/fabric_input_output.py#L97-L99</code></a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_quote_identifier</code></td>
+          <td data-label="Role">Internal helper used by the package implementation.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/fabric_input_output.py#L93-L94"><code>src/fabricops_kit/fabric_input_output.py#L93-L94</code></a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_uses_registered_metadata_table</code></td>
+          <td data-label="Role">Return whether a target should use Spark table registration.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/fabric_input_output.py#L102-L104"><code>src/fabricops_kit/fabric_input_output.py#L102-L104</code></a></td>
+        </tr>
+      </tbody>
+    </table>
+
+    ??? example "View helper source code"
+
+        **`def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any`**
+
+        Used by `read_lakehouse_table` through the implementation path shown above.
+
+        ```python
+        def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any:
+            """Resolve a configured Fabric path for an environment and target.
+
+            Parameters
+            ----------
+            env : str
+                Environment key such as ``Sandbox``, ``DE``, or ``Prod``.
+            target : str
+                Target key such as ``Source``, ``Unified``, ``Product``, or ``Warehouse``.
+            config : FrameworkConfig | PathConfig | None
+                Configuration that contains environment-to-target path mappings.
+
+            Returns
+            -------
+            Any
+                FabricStore object with ``workspace_id``, ``house_id``, ``house_name``, and ``root``.
+
+            Raises
+            ------
+            ValueError
+                If config is missing, or if the environment/target mapping does not exist.
+
+            Examples
+            --------
+            >>> get_path("Sandbox", "Source", config=CONFIG)
+            Housepath(...)
+            """
+            if config is None:
+                raise ValueError("No Fabric config was provided. Pass a FrameworkConfig or PathConfig instance.")
+            paths = config.path_config.paths if isinstance(config, FrameworkConfig) else config.paths
+            if env not in paths:
+                available_envs = ", ".join(sorted(paths.keys())) or "<none>"
+                raise ValueError(
+                    f"Environment '{env}' was not found in Fabric config. Available environments: {available_envs}."
+                )
+            if target not in paths[env]:
+                available_targets = ", ".join(sorted(paths[env].keys())) or "<none>"
+                raise ValueError(
+                    f"Target '{target}' was not found under environment '{env}'. Available targets: {available_targets}."
+                )
+            return paths[env][target]
+        ```
+
+        **`def _current_database_matches(spark_obj: Any, store: FabricStore) -> bool`**
+
+        Used by `read_lakehouse_table` through the implementation path shown above.
+
+        ```python
+        def _current_database_matches(spark_obj: Any, store: FabricStore) -> bool:
+            catalog = getattr(spark_obj, "catalog", None)
+            current_database = getattr(catalog, "currentDatabase", None)
+            if not callable(current_database):
+                return False
+            try:
+                return str(current_database()).strip().lower() == store.name.strip().lower()
+            except Exception:
+                return False
+        ```
+
+        **`def _get_spark(spark_session=None)`**
+
+        Used by `read_lakehouse_table` through the implementation path shown above.
+
+        ```python
+        def _get_spark(spark_session=None):
+            """Return an explicit Spark session or the active notebook global `spark`.
+
+            Most Fabric notebooks already expose a global `spark` object. Tests and
+            local scripts can pass `spark_session` explicitly to avoid relying on the
+            notebook runtime.
+
+            Parameters
+            ----------
+            spark_session : object, optional
+                Spark session to use instead of the notebook global `spark`.
+
+            Returns
+            -------
+            object
+                Spark session object.
+
+            Raises
+            ------
+            RuntimeError
+                If no Spark session is passed and no global `spark` object exists.
+            """
+            if spark_session is not None:
+                return spark_session
+            try:
+                return globals()["spark"]
+            except KeyError as exc:
+                raise RuntimeError(
+                    "Spark session was not provided and global 'spark' was not found. "
+                    "Run this inside Fabric/Spark or pass spark_session explicitly."
+                ) from exc
+        ```
+
+        **`def _normalize_table_name(table: str) -> str`**
+
+        Used by `read_lakehouse_table` through the implementation path shown above.
+
+        ```python
+        def _normalize_table_name(table: str) -> str:
+            """Return a safe Spark table name, never a nested folder path."""
+            value = str(table or "").strip()
+            if not value:
+                raise ValueError("table is required.")
+            if any(separator in value for separator in ("/", "\\")) or ".." in value:
+                raise ValueError("table must be a table name, not a file path or nested folder path.")
+            if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", value):
+                raise ValueError("table must contain only letters, numbers, and underscores, and must not start with a number.")
+            return value
+        ```
+
+        **`def _registered_table_identifier(store: FabricStore, table: str) -> str`**
+
+        Used by `read_lakehouse_table` through the implementation path shown above.
+
+        ```python
+        def _registered_table_identifier(store: FabricStore, table: str) -> str:
+            """Return a metadata lakehouse-qualified Spark table identifier."""
+            return f"{_quote_identifier(store.name)}.{_quote_identifier(_normalize_table_name(table))}"
+        ```
+
+        **`def _quote_identifier(identifier: str) -> str`**
+
+        Used by `read_lakehouse_table` through the implementation path shown above.
+
+        ```python
+        def _quote_identifier(identifier: str) -> str:
+            return f"`{str(identifier).replace('`', '``')}`"
+        ```
+
+        **`def _uses_registered_metadata_table(target: str) -> bool`**
+
+        Used by `read_lakehouse_table` through the implementation path shown above.
+
+        ```python
+        def _uses_registered_metadata_table(target: str) -> bool:
+            """Return whether a target should use Spark table registration."""
+            return str(target or "").strip().lower() == "metadata"
+        ```
+
 
 <details class="reference-metadata-details">
 <summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
@@ -484,7 +447,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/fabric_input_output.py#L171-L224">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/fabric_input_output.py#L171-L224</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/fabric_input_output.py#L171-L224">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/fabric_input_output.py#L171-L224</a>
 - Start line: `171`
 - End line: `224`
 - Signature:
@@ -495,14 +458,14 @@ def read_lakehouse_table(config, env, target, table, spark_session=None)
 
 ### Internal relationship graph
 
+The human-readable implementation view above is the source of truth for public call flow, public callable source, and collapsed nested helper details.
+
 ### Public related functions
 
 - <a href="../write_lakehouse_table/"><code>fabricops_kit.fabric_input_output.write_lakehouse_table</code></a>
 - <a href="../read_lakehouse_csv/"><code>fabricops_kit.fabric_input_output.read_lakehouse_csv</code></a>
 - <a href="../read_lakehouse_parquet/"><code>fabricops_kit.fabric_input_output.read_lakehouse_parquet</code></a>
 - <a href="../read_lakehouse_excel/"><code>fabricops_kit.fabric_input_output.read_lakehouse_excel</code></a>
-
-### Internal implementation helpers
 
 ### Call flow
 
@@ -517,275 +480,5 @@ read_lakehouse_table(...)
 │   └── _quote_identifier(...)
 └── _uses_registered_metadata_table(...)
 ```
-
-### Internal helpers used by this callable
-
-### `def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any`
-
-**What it does:**
-
-Resolve a configured Fabric path for an environment and target.
-
-**Source:**
-
-- `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L618-L658">View `_get_store` on GitHub</a>
-
-**Code:**
-
-```python
-def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any:
-    """Resolve a configured Fabric path for an environment and target.
-
-    Parameters
-    ----------
-    env : str
-        Environment key such as ``Sandbox``, ``DE``, or ``Prod``.
-    target : str
-        Target key such as ``Source``, ``Unified``, ``Product``, or ``Warehouse``.
-    config : FrameworkConfig | PathConfig | None
-        Configuration that contains environment-to-target path mappings.
-
-    Returns
-    -------
-    Any
-        FabricStore object with ``workspace_id``, ``house_id``, ``house_name``, and ``root``.
-
-    Raises
-    ------
-    ValueError
-        If config is missing, or if the environment/target mapping does not exist.
-
-    Examples
-    --------
-    >>> get_path("Sandbox", "Source", config=CONFIG)
-    Housepath(...)
-    """
-    if config is None:
-        raise ValueError("No Fabric config was provided. Pass a FrameworkConfig or PathConfig instance.")
-    paths = config.path_config.paths if isinstance(config, FrameworkConfig) else config.paths
-    if env not in paths:
-        available_envs = ", ".join(sorted(paths.keys())) or "<none>"
-        raise ValueError(
-            f"Environment '{env}' was not found in Fabric config. Available environments: {available_envs}."
-        )
-    if target not in paths[env]:
-        available_targets = ", ".join(sorted(paths[env].keys())) or "<none>"
-        raise ValueError(
-            f"Target '{target}' was not found under environment '{env}'. Available targets: {available_targets}."
-        )
-    return paths[env][target]
-```
-
-**Used here because:**
-
-`read_lakehouse_table` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `read_lakehouse_table` or another caller that reaches `_get_store`.
-
-### `def _current_database_matches(spark_obj: Any, store: FabricStore) -> bool`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/fabric_input_output.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/fabric_input_output.py#L107-L115">View `_current_database_matches` on GitHub</a>
-
-**Code:**
-
-```python
-def _current_database_matches(spark_obj: Any, store: FabricStore) -> bool:
-    catalog = getattr(spark_obj, "catalog", None)
-    current_database = getattr(catalog, "currentDatabase", None)
-    if not callable(current_database):
-        return False
-    try:
-        return str(current_database()).strip().lower() == store.name.strip().lower()
-    except Exception:
-        return False
-```
-
-**Used here because:**
-
-`read_lakehouse_table` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `read_lakehouse_table` or another caller that reaches `_current_database_matches`.
-
-### `def _get_spark(spark_session=None)`
-
-**What it does:**
-
-Return an explicit Spark session or the active notebook global `spark`.
-
-**Source:**
-
-- `src/fabricops_kit/fabric_input_output.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/fabric_input_output.py#L125-L155">View `_get_spark` on GitHub</a>
-
-**Code:**
-
-```python
-def _get_spark(spark_session=None):
-    """Return an explicit Spark session or the active notebook global `spark`.
-
-    Most Fabric notebooks already expose a global `spark` object. Tests and
-    local scripts can pass `spark_session` explicitly to avoid relying on the
-    notebook runtime.
-
-    Parameters
-    ----------
-    spark_session : object, optional
-        Spark session to use instead of the notebook global `spark`.
-
-    Returns
-    -------
-    object
-        Spark session object.
-
-    Raises
-    ------
-    RuntimeError
-        If no Spark session is passed and no global `spark` object exists.
-    """
-    if spark_session is not None:
-        return spark_session
-    try:
-        return globals()["spark"]
-    except KeyError as exc:
-        raise RuntimeError(
-            "Spark session was not provided and global 'spark' was not found. "
-            "Run this inside Fabric/Spark or pass spark_session explicitly."
-        ) from exc
-```
-
-**Used here because:**
-
-`read_lakehouse_table` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `read_lakehouse_table` or another caller that reaches `_get_spark`.
-
-### `def _normalize_table_name(table: str) -> str`
-
-**What it does:**
-
-Return a safe Spark table name, never a nested folder path.
-
-**Source:**
-
-- `src/fabricops_kit/fabric_input_output.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/fabric_input_output.py#L81-L90">View `_normalize_table_name` on GitHub</a>
-
-**Code:**
-
-```python
-def _normalize_table_name(table: str) -> str:
-    """Return a safe Spark table name, never a nested folder path."""
-    value = str(table or "").strip()
-    if not value:
-        raise ValueError("table is required.")
-    if any(separator in value for separator in ("/", "\\")) or ".." in value:
-        raise ValueError("table must be a table name, not a file path or nested folder path.")
-    if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", value):
-        raise ValueError("table must contain only letters, numbers, and underscores, and must not start with a number.")
-    return value
-```
-
-**Used here because:**
-
-`read_lakehouse_table` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `read_lakehouse_table` or another caller that reaches `_normalize_table_name`.
-
-### `def _registered_table_identifier(store: FabricStore, table: str) -> str`
-
-**What it does:**
-
-Return a metadata lakehouse-qualified Spark table identifier.
-
-**Source:**
-
-- `src/fabricops_kit/fabric_input_output.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/fabric_input_output.py#L97-L99">View `_registered_table_identifier` on GitHub</a>
-
-**Code:**
-
-```python
-def _registered_table_identifier(store: FabricStore, table: str) -> str:
-    """Return a metadata lakehouse-qualified Spark table identifier."""
-    return f"{_quote_identifier(store.name)}.{_quote_identifier(_normalize_table_name(table))}"
-```
-
-**Used here because:**
-
-`read_lakehouse_table` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `read_lakehouse_table` or another caller that reaches `_registered_table_identifier`.
-
-### `def _quote_identifier(identifier: str) -> str`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/fabric_input_output.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/fabric_input_output.py#L93-L94">View `_quote_identifier` on GitHub</a>
-
-**Code:**
-
-```python
-def _quote_identifier(identifier: str) -> str:
-    return f"`{str(identifier).replace('`', '``')}`"
-```
-
-**Used here because:**
-
-`read_lakehouse_table` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `read_lakehouse_table` or another caller that reaches `_quote_identifier`.
-
-### `def _uses_registered_metadata_table(target: str) -> bool`
-
-**What it does:**
-
-Return whether a target should use Spark table registration.
-
-**Source:**
-
-- `src/fabricops_kit/fabric_input_output.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/fabric_input_output.py#L102-L104">View `_uses_registered_metadata_table` on GitHub</a>
-
-**Code:**
-
-```python
-def _uses_registered_metadata_table(target: str) -> bool:
-    """Return whether a target should use Spark table registration."""
-    return str(target or "").strip().lower() == "metadata"
-```
-
-**Used here because:**
-
-`read_lakehouse_table` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `read_lakehouse_table` or another caller that reaches `_uses_registered_metadata_table`.
-
 
 </details>

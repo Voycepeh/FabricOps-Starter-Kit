@@ -790,17 +790,31 @@ def _render_call_tree(
     return ["```text", *lines, "```"]
 
 
-def _render_internal_helper_details(
+def _indented(lines: list[str], spaces: int = 4) -> list[str]:
+    """Return Markdown lines indented for nested Material admonitions."""
+    prefix = " " * spaces
+    indented: list[str] = []
+    for line in lines:
+        split_lines = line.splitlines() or [""]
+        for split_line in split_lines:
+            indented.append(prefix + split_line if split_line else "")
+    return indented
+
+
+def _render_nested_helper_functions(
     root_qn: str,
     helper_qns: list[str],
     node_by_qn: dict[str, dict[str, Any]],
     module_data: dict[str, dict[str, Any]],
 ) -> list[str]:
-    """Render embedded maintainer details for internal helpers used by a callable."""
+    """Render collapsed nested helper details for a public callable page."""
     root_name = node_by_qn[root_qn]["callable_name"]
+    helper_count = len(helper_qns)
     if not helper_qns:
-        return [PLACEHOLDER]
-    lines: list[str] = []
+        return ["No nested package helper functions are detected for this callable."]
+
+    table_rows: list[list[str]] = []
+    source_lines: list[str] = []
     for helper_qn in helper_qns:
         helper_node = node_by_qn[helper_qn]
         helper_name = helper_node["callable_name"]
@@ -812,32 +826,35 @@ def _render_internal_helper_details(
         purpose = info.get("functions", {}).get(helper_name) or "Internal helper used by the package implementation."
         source_location = info.get("source_locations", {}).get(helper_name, {})
         source_url = github_source_url(source_path, source_location.get("start_line"), source_location.get("end_line"))
-        lines.extend([
-            f"### `{signature}`",
+        line_span = ""
+        if source_location.get("start_line"):
+            line_span = f"#L{source_location['start_line']}"
+            if source_location.get("end_line") and source_location.get("end_line") != source_location.get("start_line"):
+                line_span += f"-L{source_location['end_line']}"
+        table_rows.append([
+            f"<code>{html_escape(helper_name)}</code>",
+            html_escape(purpose),
+            f'<a class="reference-source-link" href="{source_url}"><code>{html_escape(source_path)}{html_escape(line_span)}</code></a>',
+        ])
+        source_lines.extend([
+            f"**`{signature}`**",
             "",
-            "**What it does:**",
-            "",
-            purpose,
-            "",
-            "**Source:**",
-            "",
-            f"- `{source_path}`",
-            f'- <a class="reference-source-link" href="{source_url}">View `{helper_name}` on GitHub</a>',
-            "",
-            "**Code:**",
+            f"Used by `{root_name}` through the implementation path shown above.",
             "",
             _code_block(source_block) if source_block else PLACEHOLDER,
             "",
-            "**Used here because:**",
-            "",
-            f"`{root_name}` reaches this helper in its implementation path.",
-            "",
-            "**Modify this if:**",
-            "",
-            f"You want to change the implementation behavior summarized above for `{root_name}` or another caller that reaches `{helper_name}`.",
-            "",
         ])
-    return lines
+
+    body = [
+        f"These helpers support `{root_name}` by handling shared implementation tasks reached from the public call flow; expand the source block only when you need maintainer-level details.",
+        "",
+        *render_html_table(["Helper", "Role", "Source"], table_rows, table_class="reference-function-table"),
+        "",
+        '??? example "View helper source code"',
+        "",
+        *_indented(source_lines),
+    ]
+    return [f'??? info "Nested helper functions: {helper_count}"', "", *_indented(body)]
 
 def function_chip_wrap(chips: list[str]) -> str:
     """Return a mobile-friendly chip wrapper for a generated docs table cell."""
@@ -1701,19 +1718,29 @@ def main() -> None:
             )
             related_public = [item for item in related_for_page if item in docs_metadata or node_by_qn.get(item, {}).get("exported")]
             related_lines = _related_function_links(related_public, node_by_qn, docs_metadata)
+            used_by_lines = _fmt_links(used_by) if used_by else ["No public or package-local callers detected by the generated dependency graph."]
+            calls_lines = _fmt_links(deps) if deps else ["No package-local calls detected by the generated dependency graph."]
             helper_qns = _collect_internal_helper_descendants(qn, calls_by_qn, node_by_qn)
-            implementation_lines = [
-                "### Call flow",
+            call_flow_lines = _render_call_tree(qn, calls_by_qn, node_by_qn)
+            nested_helper_lines = _render_nested_helper_functions(qn, helper_qns, node_by_qn, module_data)
+            source_code_lines = [
+                f"- Source file path: `{source_path}`",
+                f'- <a class="reference-source-link" href="{source_ref}">View {short_name} on GitHub</a>',
                 "",
-                *_render_call_tree(qn, calls_by_qn, node_by_qn),
-                "",
-                "### Internal helpers used by this callable",
-                "",
-                *_render_internal_helper_details(qn, helper_qns, node_by_qn, module_data),
+                _code_block(source_block) if source_block else PLACEHOLDER,
             ]
             human_use_when = _documented_text(metadata.get("use_when"), metadata.get("purpose"), purpose)
             human_use_bullets = _bullet_lines("\n".join(metadata["when_to_use"])) if metadata.get("when_to_use") else _bullet_lines(human_use_when)
             human_do_not_use = _documented_text(metadata.get("do_not_use_when"))
+            glance_rows = [
+                ["Use when", "<br>".join(html_escape(line.lstrip("- ").strip()) for line in human_use_bullets)],
+                ["Do not use when", html_escape(human_do_not_use)],
+                ["Example", _code_block(_documented_text(metadata.get("preferred_example")))],
+                ["Errors", html_escape(rendered_raises)],
+                ["Side effects", html_escape(rendered_side_effects)],
+                ["Related functions", "<br>".join(related_lines) if related_lines else PLACEHOLDER],
+            ]
+            at_a_glance_table = render_html_table(["Item", "Details"], glance_rows, table_class="reference-function-table")
             function_manifest_lines = [
                 f"- Fully qualified function name: `{qn}`",
                 f"- Short name: `{short_name}`",
@@ -1735,13 +1762,15 @@ def main() -> None:
                 _code_block(signature) if signature else PLACEHOLDER,
             ]
             internal_relationship_graph_lines = [
+                "The human-readable implementation view above is the source of truth for public call flow, public callable source, and collapsed nested helper details.",
+                "",
                 "### Public related functions",
                 "",
                 *(related_lines if related_lines else [PLACEHOLDER]),
                 "",
-                "### Internal implementation helpers",
+                "### Call flow",
                 "",
-                *(implementation_lines if implementation_lines else [PLACEHOLDER]),
+                *call_flow_lines,
             ]
             machine_metadata_lines = [
                 "These generated fields are for automation, AI agents, maintainers, and doc tooling. Skip this block when reading the docs normally.",
@@ -1773,66 +1802,54 @@ def main() -> None:
             lines = [
                 f"# {short_name}",
                 "",
-                purpose,
-                "",
-                "## What this is for and when to use it",
+                "## Purpose",
                 "",
                 _documented_text(metadata.get("purpose"), purpose),
                 "",
-                *human_use_bullets,
+                "## At a glance",
                 "",
-                "## When not to use it",
+                '<div class="module-table-scroll reference-input-table">',
+                *at_a_glance_table,
+                "</div>",
                 "",
-                *_bullet_lines(human_do_not_use),
-                "",
-                "## Example",
-                "",
-                _code_block(_documented_text(metadata.get("preferred_example"))),
-                "",
-                "## Inputs",
+                "## Parameters",
                 "",
                 '<div class="module-table-scroll reference-input-table">',
                 *input_table,
                 "</div>",
                 "",
-                "## Output",
+                "## Returns",
                 "",
                 rendered_returns,
                 "",
-                "## Errors and side effects",
+                "## Used by",
                 "",
-                f"**Errors:** {rendered_raises}",
+                *used_by_lines,
                 "",
-                f"**Side effects:** {rendered_side_effects}",
+                "## Calls",
                 "",
-                "## Related functions",
+                *calls_lines,
                 "",
-            ]
-            lines.extend(related_lines if related_lines else [PLACEHOLDER])
-            if implementation_lines:
-                lines.extend([
-                    "",
-                    *markdown_details("Implementation details", implementation_lines, class_name="reference-implementation-details"),
-                ])
-            lines.extend([
+                "## Implementation details",
                 "",
-                "## Source",
+                "### Call flow",
                 "",
-                f"- Source file path: `{source_path}`",
-                f'- <a class="reference-source-link" href="{source_ref}">View {short_name} on GitHub</a>',
+                *call_flow_lines,
                 "",
-                *markdown_details(
-                    "Show source code",
-                    [_code_block(source_block) if source_block else PLACEHOLDER],
-                    class_name="reference-source-details",
-                ),
+                "## Public callable source code",
+                "",
+                *source_code_lines,
+                "",
+                "## Nested helper functions",
+                "",
+                *nested_helper_lines,
                 "",
                 *markdown_details(
                     "AI / machine-readable metadata — skip this if you are reading the docs normally",
                     machine_metadata_lines,
                     class_name="reference-metadata-details",
                 ),
-            ])
+            ]
         else:
             lines = [
                 f"# {short_name}",

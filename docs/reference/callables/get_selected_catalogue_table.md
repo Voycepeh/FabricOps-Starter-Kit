@@ -1,24 +1,51 @@
 # get_selected_catalogue_table
 
-Return the table selected by widget_select_catalogue_table.
-
-## What this is for and when to use it
+## Purpose
 
 Return the table selected by widget_select_catalogue_table.
 
-- Return the table selected by widget_select_catalogue_table.
+## At a glance
 
-## When not to use it
-
-- Not documented yet
-
-## Example
-
-```python
+<div class="module-table-scroll reference-input-table">
+<table class="reference-function-table">
+  <thead>
+    <tr>
+      <th>Item</th>
+      <th>Details</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td data-label="Item">Use when</td>
+      <td data-label="Details">Return the table selected by widget_select_catalogue_table.</td>
+    </tr>
+    <tr>
+      <td data-label="Item">Do not use when</td>
+      <td data-label="Details">Not documented yet</td>
+    </tr>
+    <tr>
+      <td data-label="Item">Example</td>
+      <td data-label="Details">```python
 Not documented yet
-```
+```</td>
+    </tr>
+    <tr>
+      <td data-label="Item">Errors</td>
+      <td data-label="Details">Not documented yet</td>
+    </tr>
+    <tr>
+      <td data-label="Item">Side effects</td>
+      <td data-label="Details">Not documented yet</td>
+    </tr>
+    <tr>
+      <td data-label="Item">Related functions</td>
+      <td data-label="Details">Not documented yet</td>
+    </tr>
+  </tbody>
+</table>
+</div>
 
-## Inputs
+## Parameters
 
 <div class="module-table-scroll reference-input-table">
 <table class="reference-function-table">
@@ -39,23 +66,20 @@ Not documented yet
 </table>
 </div>
 
-## Output
+## Returns
 
 dict[str, Any]
     Stable table identity used by ``load_catalogue_profile_rows``.
 
-## Errors and side effects
+## Used by
 
-**Errors:** Not documented yet
+No public or package-local callers detected by the generated dependency graph.
 
-**Side effects:** Not documented yet
+## Calls
 
-## Related functions
+No package-local calls detected by the generated dependency graph.
 
-Not documented yet
-
-<details class="reference-implementation-details">
-<summary>Implementation details</summary>
+## Implementation details
 
 ### Call flow
 
@@ -63,19 +87,10 @@ Not documented yet
 get_selected_catalogue_table(...)
 ```
 
-### Internal helpers used by this callable
-
-Not documented yet
-
-</details>
-
-## Source
+## Public callable source code
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L310-L334">View get_selected_catalogue_table on GitHub</a>
-
-<details class="reference-source-details">
-<summary>Show source code</summary>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L310-L334">View get_selected_catalogue_table on GitHub</a>
 
 ```python
 def get_selected_catalogue_table(table_selector: Any | None = None) -> dict[str, Any]:
@@ -105,7 +120,9 @@ def get_selected_catalogue_table(table_selector: Any | None = None) -> dict[str,
     raise ValueError("No catalogue table has been selected. Run widget_select_catalogue_table first.")
 ```
 
-</details>
+## Nested helper functions
+
+No nested package helper functions are detected for this callable.
 
 <details class="reference-metadata-details">
 <summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
@@ -147,7 +164,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L310-L334">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L310-L334</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L310-L334">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L310-L334</a>
 - Start line: `310`
 - End line: `334`
 - Signature:
@@ -158,20 +175,16 @@ def get_selected_catalogue_table(table_selector: Any | None=None) -> dict[str, A
 
 ### Internal relationship graph
 
+The human-readable implementation view above is the source of truth for public call flow, public callable source, and collapsed nested helper details.
+
 ### Public related functions
 
 Not documented yet
-
-### Internal implementation helpers
 
 ### Call flow
 
 ```text
 get_selected_catalogue_table(...)
 ```
-
-### Internal helpers used by this callable
-
-Not documented yet
 
 </details>

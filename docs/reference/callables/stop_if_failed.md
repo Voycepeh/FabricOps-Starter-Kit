@@ -1,25 +1,52 @@
 # stop_if_failed
 
-Stop a notebook only when a schema, freshness, profile behavior, or DQ guardrail result blocks continuation.
-
-## What this is for and when to use it
+## Purpose
 
 Stop a notebook only when a schema, freshness, profile behavior, or DQ guardrail result blocks continuation.
 
-- Use after schema, freshness, profile behavior, or DQ guardrail helpers to stop the notebook when can_continue is false.
+## At a glance
 
-## When not to use it
-
-- Do not use for informational warnings that should not block execution, or before a guardrail result exists.
-
-## Example
-
-```python
+<div class="module-table-scroll reference-input-table">
+<table class="reference-function-table">
+  <thead>
+    <tr>
+      <th>Item</th>
+      <th>Details</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td data-label="Item">Use when</td>
+      <td data-label="Details">Use after schema, freshness, profile behavior, or DQ guardrail helpers to stop the notebook when can_continue is false.</td>
+    </tr>
+    <tr>
+      <td data-label="Item">Do not use when</td>
+      <td data-label="Details">Do not use for informational warnings that should not block execution, or before a guardrail result exists.</td>
+    </tr>
+    <tr>
+      <td data-label="Item">Example</td>
+      <td data-label="Details">```python
 schema_result = validate_schema(df, expected_schema)
 stop_if_failed(schema_result)
-```
+```</td>
+    </tr>
+    <tr>
+      <td data-label="Item">Errors</td>
+      <td data-label="Details">Raises RuntimeError outside Fabric notebook exit handling when a failed guardrail must stop execution.</td>
+    </tr>
+    <tr>
+      <td data-label="Item">Side effects</td>
+      <td data-label="Details">May terminate notebook execution through Fabric notebook utilities or raise an exception.</td>
+    </tr>
+    <tr>
+      <td data-label="Item">Related functions</td>
+      <td data-label="Details">- <a href="../validate_schema/"><code>fabricops_kit.guardrails.validate_schema</code></a><br>- <a href="../enforce_freshness/"><code>fabricops_kit.guardrails.enforce_freshness</code></a><br>- <a href="../enforce_profile_behavior/"><code>fabricops_kit.guardrails.enforce_profile_behavior</code></a><br>- <a href="../enforce_dq_rules/"><code>fabricops_kit.governance_review.enforce_dq_rules</code></a></td>
+    </tr>
+  </tbody>
+</table>
+</div>
 
-## Inputs
+## Parameters
 
 <div class="module-table-scroll reference-input-table">
 <table class="reference-function-table">
@@ -40,25 +67,19 @@ stop_if_failed(schema_result)
 </table>
 </div>
 
-## Output
+## Returns
 
 None when execution may continue; otherwise raises or exits according to runtime behavior.
 
-## Errors and side effects
+## Used by
 
-**Errors:** Raises RuntimeError outside Fabric notebook exit handling when a failed guardrail must stop execution.
+- <a href="../run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
 
-**Side effects:** May terminate notebook execution through Fabric notebook utilities or raise an exception.
+## Calls
 
-## Related functions
+- `fabricops_kit.guardrails.SchemaDriftError`
 
-- <a href="../validate_schema/"><code>fabricops_kit.guardrails.validate_schema</code></a>
-- <a href="../enforce_freshness/"><code>fabricops_kit.guardrails.enforce_freshness</code></a>
-- <a href="../enforce_profile_behavior/"><code>fabricops_kit.guardrails.enforce_profile_behavior</code></a>
-- <a href="../enforce_dq_rules/"><code>fabricops_kit.governance_review.enforce_dq_rules</code></a>
-
-<details class="reference-implementation-details">
-<summary>Implementation details</summary>
+## Implementation details
 
 ### Call flow
 
@@ -67,19 +88,10 @@ stop_if_failed(...)
 └── SchemaDriftError(...)
 ```
 
-### Internal helpers used by this callable
-
-Not documented yet
-
-</details>
-
-## Source
+## Public callable source code
 
 - Source file path: `src/fabricops_kit/guardrails.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L840-L859">View stop_if_failed on GitHub</a>
-
-<details class="reference-source-details">
-<summary>Show source code</summary>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/guardrails.py#L840-L859">View stop_if_failed on GitHub</a>
 
 ```python
 def stop_if_failed(result) -> None:
@@ -104,7 +116,9 @@ def stop_if_failed(result) -> None:
     raise SchemaDriftError(f"Guardrail blocked execution with status: {status}. {detail}")
 ```
 
-</details>
+## Nested helper functions
+
+No nested package helper functions are detected for this callable.
 
 <details class="reference-metadata-details">
 <summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
@@ -143,7 +157,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/guardrails.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L840-L859">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L840-L859</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/guardrails.py#L840-L859">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/guardrails.py#L840-L859</a>
 - Start line: `840`
 - End line: `859`
 - Signature:
@@ -154,6 +168,8 @@ def stop_if_failed(result) -> None
 
 ### Internal relationship graph
 
+The human-readable implementation view above is the source of truth for public call flow, public callable source, and collapsed nested helper details.
+
 ### Public related functions
 
 - <a href="../validate_schema/"><code>fabricops_kit.guardrails.validate_schema</code></a>
@@ -161,17 +177,11 @@ def stop_if_failed(result) -> None
 - <a href="../enforce_profile_behavior/"><code>fabricops_kit.guardrails.enforce_profile_behavior</code></a>
 - <a href="../enforce_dq_rules/"><code>fabricops_kit.governance_review.enforce_dq_rules</code></a>
 
-### Internal implementation helpers
-
 ### Call flow
 
 ```text
 stop_if_failed(...)
 └── SchemaDriftError(...)
 ```
-
-### Internal helpers used by this callable
-
-Not documented yet
 
 </details>

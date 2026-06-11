@@ -28,11 +28,22 @@ CORE_CALLABLES = {
     "record_table_governance",
 }
 CORE_PAGE_SECTIONS = (
-    "What this is for and when to use it",
-    "When not to use it",
-    "Example",
-    "Errors and side effects",
-    "Source",
+    "Purpose",
+    "At a glance",
+    "Parameters",
+    "Returns",
+    "Used by",
+    "Calls",
+    "Implementation details",
+    "Public callable source code",
+    "Nested helper functions",
+)
+CORE_NON_PLACEHOLDER_SECTIONS = (
+    "Purpose",
+    "At a glance",
+    "Returns",
+    "Implementation details",
+    "Public callable source code",
 )
 CORE_AGENT_FIELDS = (
     "use_when",
@@ -74,10 +85,8 @@ def test_every_callable_page_has_ai_reference_sections() -> None:
     assert callable_pages
     for page in callable_pages:
         text = page.read_text(encoding="utf-8")
-        assert "## What this is for and when to use it" in text, page
-        assert "## When not to use it" in text, page
-        assert "## Errors and side effects" in text, page
-        assert "## Source" in text, page
+        for section in CORE_PAGE_SECTIONS:
+            assert f"## {section}" in text, page
         assert "\n## What this is for\n" not in text, page
         assert "\n## When to use it\n" not in text, page
         assert "\n## Raises\n" not in text, page
@@ -90,7 +99,7 @@ def test_core_callable_pages_have_non_placeholder_ai_guidance() -> None:
     for callable_name in sorted(CORE_CALLABLES):
         page = REFERENCE_DIR / "callables" / f"{callable_name}.md"
         text = page.read_text(encoding="utf-8")
-        for section in CORE_PAGE_SECTIONS:
+        for section in CORE_NON_PLACEHOLDER_SECTIONS:
             section_text = _section_text(text, section)
             assert section_text
             assert PLACEHOLDER not in section_text, f"{page} has placeholder in {section}"
@@ -121,12 +130,14 @@ def test_callable_pages_embed_implementation_details() -> None:
     assert callable_pages
     for page in callable_pages:
         text = page.read_text(encoding="utf-8")
-        assert "<summary>Implementation details</summary>" in text, page
+        assert "## Implementation details" in text, page
         assert "### Call flow" in text, page
-        assert "### Internal helpers used by this callable" in text, page
-        if "**Source:**" in text or "**Code:**" in text:
-            assert "**Source:**" in text, page
-            assert "**Code:**" in text, page
+        assert "## Public callable source code" in text, page
+        assert "## Nested helper functions" in text, page
+        assert "Internal helpers used by this callable" not in text, page
+        if "??? info \"Nested helper functions:" in text:
+            assert "??? example \"View helper source code\"" in text, page
+            assert "| Helper | Role | Source |" in text or "<th>Helper</th>" in text, page
 
 
 
@@ -158,8 +169,7 @@ def test_callable_pages_include_source_section_and_github_source_link() -> None:
     assert callable_pages
     for page in callable_pages:
         text = page.read_text(encoding="utf-8")
-        assert "## Source" in text, page
-        assert "Show source code" in text, page
+        assert "## Public callable source code" in text, page
         assert "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/" in text, page
         assert "/src/fabricops_kit/" in text, page
         assert "#L" in text, page
@@ -194,16 +204,16 @@ def test_setup_notebook_reference_uses_human_first_source_documentation() -> Non
     assert "../../api/modules/config/#setup_notebook" not in text
     assert "src/fabricops_kit/config.py#L" in text
     assert "setup_notebook on GitHub" in text
-    assert "## Example\n\n```python\ncontext = setup_notebook" in text
+    assert "context = setup_notebook" in text
     first_metadata = text.index("<summary>AI / machine-readable metadata")
-    for marker in ("## What this is for and when to use it", "## When not to use it", "## Example", "## Errors and side effects"):
+    for marker in ("## Purpose", "## At a glance", "## Parameters", "## Returns", "## Used by", "## Calls", "## Implementation details", "## Public callable source code", "## Nested helper functions"):
         assert text.index(marker) < first_metadata
     assert "## AI / machine-readable metadata" not in text
-    assert "- Starting a FabricOps notebook from 00_env_config" in text
-    assert "- Validating configured environment targets before downstream helpers run" in text
-    assert "- Capturing runtime metadata for later lineage, review, or handover steps" in text
-    assert "## Inputs" in text
+    assert "Starting a FabricOps notebook from 00_env_config" in text
+    assert "Validating configured environment targets before downstream helpers run" in text
+    assert "Capturing runtime metadata for later lineage, review, or handover steps" in text
+    assert "## Parameters" in text
     assert "Parameter" in text
     assert "Required" in text
     assert "Meaning" in text
-    assert "Show source code" in text
+    assert "## Public callable source code" in text

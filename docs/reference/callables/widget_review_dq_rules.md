@@ -1,24 +1,51 @@
 # widget_review_dq_rules
 
-Render standalone DQ-rule review guidance for selected profile rows.
-
-## What this is for and when to use it
+## Purpose
 
 Render standalone DQ-rule review guidance for selected profile rows.
 
-- Render standalone DQ-rule review guidance for selected profile rows.
+## At a glance
 
-## When not to use it
-
-- Not documented yet
-
-## Example
-
-```python
+<div class="module-table-scroll reference-input-table">
+<table class="reference-function-table">
+  <thead>
+    <tr>
+      <th>Item</th>
+      <th>Details</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td data-label="Item">Use when</td>
+      <td data-label="Details">Render standalone DQ-rule review guidance for selected profile rows.</td>
+    </tr>
+    <tr>
+      <td data-label="Item">Do not use when</td>
+      <td data-label="Details">Not documented yet</td>
+    </tr>
+    <tr>
+      <td data-label="Item">Example</td>
+      <td data-label="Details">```python
 Not documented yet
-```
+```</td>
+    </tr>
+    <tr>
+      <td data-label="Item">Errors</td>
+      <td data-label="Details">Not documented yet</td>
+    </tr>
+    <tr>
+      <td data-label="Item">Side effects</td>
+      <td data-label="Details">Not documented yet</td>
+    </tr>
+    <tr>
+      <td data-label="Item">Related functions</td>
+      <td data-label="Details">Not documented yet</td>
+    </tr>
+  </tbody>
+</table>
+</div>
 
-## Inputs
+## Parameters
 
 <div class="module-table-scroll reference-input-table">
 <table class="reference-function-table">
@@ -69,25 +96,27 @@ Not documented yet
 </table>
 </div>
 
-## Output
+## Returns
 
 list[dict[str, Any]]
     Mutable review list. The widget appends approved create, update,
     deactivation, and reactivation dictionaries to this list; pass it to
     ``record_table_governance`` to persist append-only metadata history.
 
-## Errors and side effects
+## Used by
 
-**Errors:** Not documented yet
+No public or package-local callers detected by the generated dependency graph.
 
-**Side effects:** Not documented yet
+## Calls
 
-## Related functions
+- `fabricops_kit.governance_review._canonical_dq_rule_type`
+- `fabricops_kit.governance_review._dq_parameter_fields_for_rule_type`
+- `fabricops_kit.governance_review._dq_rule_display_rows`
+- `fabricops_kit.governance_review._draft_dq_rules`
+- `fabricops_kit.governance_review._validate_dq_rules`
+- `fabricops_kit.governance_review._value`
 
-Not documented yet
-
-<details class="reference-implementation-details">
-<summary>Implementation details</summary>
+## Implementation details
 
 ### Call flow
 
@@ -130,676 +159,10 @@ widget_review_dq_rules(...)
 └── _value(...)
 ```
 
-### Internal helpers used by this callable
-
-### `def _canonical_dq_rule_type(rule_type: Any) -> str`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L78-L79">View `_canonical_dq_rule_type` on GitHub</a>
-
-**Code:**
-
-```python
-def _canonical_dq_rule_type(rule_type: Any) -> str:
-    return str(rule_type or "").strip()
-```
-
-**Used here because:**
-
-`widget_review_dq_rules` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `widget_review_dq_rules` or another caller that reaches `_canonical_dq_rule_type`.
-
-### `def _dq_parameter_fields_for_rule_type(rule_type: str) -> list[str]`
-
-**What it does:**
-
-Return parameter names a reviewer should fill for a rule type.
-
-**Source:**
-
-- `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L623-L641">View `_dq_parameter_fields_for_rule_type` on GitHub</a>
-
-**Code:**
-
-```python
-def _dq_parameter_fields_for_rule_type(rule_type: str) -> list[str]:
-    """Return parameter names a reviewer should fill for a rule type."""
-    return {
-        "null_rate_below": ["max_null_percent"],
-        "accepted_values": ["allowed_values"],
-        "not_in_values": ["blocked_values"],
-        "between": ["min_value", "max_value"],
-        "date_between": ["min_value", "max_value"],
-        "greater_than": ["value"],
-        "greater_than_or_equal": ["value"],
-        "less_than": ["value"],
-        "less_than_or_equal": ["value"],
-        "regex_match": ["regex_pattern"],
-        "freshness": ["max_age_days"],
-        "max_age_days": ["max_age_days"],
-        "required_when": ["condition"],
-        "value_when": ["condition", "expected_value"],
-        "expression_true": ["expression"],
-    }.get(_canonical_dq_rule_type(rule_type), [])
-```
-
-**Used here because:**
-
-`widget_review_dq_rules` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `widget_review_dq_rules` or another caller that reaches `_dq_parameter_fields_for_rule_type`.
-
-### `def _dq_rule_display_rows(rules: list[dict[str, Any]]) -> list[dict[str, Any]]`
-
-**What it does:**
-
-Return table-shaped rows for active and inactive selected-table rules.
-
-**Source:**
-
-- `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L590-L620">View `_dq_rule_display_rows` on GitHub</a>
-
-**Code:**
-
-```python
-def _dq_rule_display_rows(rules: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Return table-shaped rows for active and inactive selected-table rules."""
-    rows = []
-    for rule in rules or []:
-        params = rule.get("rule_parameters") or {}
-        raw = rule.get("rule_parameters_json")
-        if raw and not params:
-            try:
-                params = json.loads(raw) if isinstance(raw, str) else {}
-            except Exception:
-                params = {}
-        cols = params.get("columns") or rule.get("columns") or rule.get("column_name") or ""
-        if isinstance(cols, list):
-            cols_display = ", ".join(str(c) for c in cols)
-        else:
-            cols_display = str(cols)
-        rows.append({
-            "Rule ID": str(rule.get("rule_id") or ""),
-            "Rule type": _canonical_dq_rule_type(rule.get("rule_type")),
-            "Column(s)": cols_display,
-            "Parameters summary": _dq_rule_parameters_summary(rule),
-            "Severity": str(rule.get("severity") or "warning"),
-            "Status": "active" if bool(rule.get("is_active", True)) else "inactive",
-            "Review status": str(rule.get("review_status") or ""),
-            "Approved by": str(rule.get("approved_by") or ""),
-            "Approved at": str(rule.get("approved_at") or ""),
-            "Last action": str(rule.get("action_type") or ""),
-            "Committed at": str(rule.get("_committed_at") or ""),
-            "Description": str(rule.get("description") or ""),
-        })
-    return rows
-```
-
-**Used here because:**
-
-`widget_review_dq_rules` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `widget_review_dq_rules` or another caller that reaches `_dq_rule_display_rows`.
-
-### `def _dq_rule_parameters_summary(rule: dict[str, Any]) -> str`
-
-**What it does:**
-
-Return compact display text for non-identity DQ parameters.
-
-**Source:**
-
-- `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L572-L587">View `_dq_rule_parameters_summary` on GitHub</a>
-
-**Code:**
-
-```python
-def _dq_rule_parameters_summary(rule: dict[str, Any]) -> str:
-    """Return compact display text for non-identity DQ parameters."""
-    params = dict(rule.get("rule_parameters") or {})
-    raw = rule.get("rule_parameters_json")
-    if raw and not params:
-        try:
-            params = json.loads(raw) if isinstance(raw, str) else dict(raw)
-        except Exception:
-            params = {}
-    if not params:
-        params = {k: v for k, v in rule.items() if k in {
-            "max_null_percent", "allowed_values", "blocked_values", "min_value", "max_value", "value",
-            "regex_pattern", "max_age_days", "condition", "expected_value", "expression",
-        }}
-    params.pop("columns", None)
-    return ", ".join(f"{k}={v}" for k, v in sorted(params.items()))
-```
-
-**Used here because:**
-
-`widget_review_dq_rules` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `widget_review_dq_rules` or another caller that reaches `_dq_rule_parameters_summary`.
-
-### `def _draft_dq_rules(*, profile_df=None, df=None, table_name: str, business_context: str='', prompt_template: str | None=None, output_col: str='response', config: Any=None) -> list[dict[str, Any]]`
-
-**What it does:**
-
-Draft candidate DQ rules from metadata profiles or a raw DataFrame fallback.
-
-**Source:**
-
-- `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L1622-L1630">View `_draft_dq_rules` on GitHub</a>
-
-**Code:**
-
-```python
-def _draft_dq_rules(*, profile_df=None, df=None, table_name: str, business_context: str = "", prompt_template: str | None = None, output_col: str = "response", config: Any = None) -> list[dict[str, Any]]:
-    """Draft candidate DQ rules from metadata profiles or a raw DataFrame fallback."""
-    prepared = _prepare_dq_profile_input_rows(profile_df=profile_df, df=df, table_name=table_name, business_context=business_context, config=config)
-    responses = _run_fabric_ai_drafting(prepared, prompt=prompt_template or DQ_RULE_SUGGESTION_PROMPT, output_col=output_col)
-    candidates = _extract_assignment_payload(responses, response_col=output_col, assignment_key="DQ_RULES", table_name=table_name)
-    by_id = {r.get("rule_id"): {**r, "rule_type": _canonical_dq_rule_type(r.get("rule_type"))} for r in candidates if r.get("rule_id")}
-    rules = list(by_id.values())
-    _validate_dq_rules(rules)
-    return rules
-```
-
-**Used here because:**
-
-`widget_review_dq_rules` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `widget_review_dq_rules` or another caller that reaches `_draft_dq_rules`.
-
-### `def _extract_assignment_payload(response_rows, *, response_col: str, assignment_key: str | None=None, table_name: str | None=None) -> list[dict[str, Any]]`
-
-**What it does:**
-
-Extract dictionary payloads from AI response rows with optional table-key narrowing.
-
-**Source:**
-
-- `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L1166-L1180">View `_extract_assignment_payload` on GitHub</a>
-
-**Code:**
-
-```python
-def _extract_assignment_payload(response_rows, *, response_col: str, assignment_key: str | None = None, table_name: str | None = None) -> list[dict[str, Any]]:
-    """Extract dictionary payloads from AI response rows with optional table-key narrowing."""
-    out: list[dict[str, Any]] = []
-    for row in _coerce_rows(response_rows):
-        parsed = _parse_ai_dict_response(row.get(response_col) or row.get("response") or row.get("ai_response") or "")
-        if not parsed:
-            continue
-        payload = parsed.get(assignment_key, parsed) if assignment_key else parsed
-        if table_name is not None:
-            payload = payload.get(table_name, []) if isinstance(payload, dict) else []
-        if isinstance(payload, list):
-            out.extend(dict(item) for item in payload if isinstance(item, dict))
-        elif isinstance(payload, dict):
-            out.append(payload)
-    return out
-```
-
-**Used here because:**
-
-`widget_review_dq_rules` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `widget_review_dq_rules` or another caller that reaches `_extract_assignment_payload`.
-
-### `def _coerce_rows(rows_or_df: Any) -> list[dict[str, Any]]`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L62-L67">View `_coerce_rows` on GitHub</a>
-
-**Code:**
-
-```python
-def _coerce_rows(rows_or_df: Any) -> list[dict[str, Any]]:
-    if rows_or_df is None:
-        return []
-    if hasattr(rows_or_df, "collect"):
-        rows_or_df = rows_or_df.collect()
-    return [row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row) for row in rows_or_df]
-```
-
-**Used here because:**
-
-`widget_review_dq_rules` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `widget_review_dq_rules` or another caller that reaches `_coerce_rows`.
-
-### `def _parse_ai_dict_response(text: str) -> dict[str, Any]`
-
-**What it does:**
-
-Parse JSON/Python-dict AI response text into a dictionary.
-
-**Source:**
-
-- `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L1148-L1163">View `_parse_ai_dict_response` on GitHub</a>
-
-**Code:**
-
-```python
-def _parse_ai_dict_response(text: str) -> dict[str, Any]:
-    """Parse JSON/Python-dict AI response text into a dictionary."""
-    cleaned = str(text or "").strip()
-    match = re.search(r"^[A-Z_]+\s*=\s*(\{.*\})\s*$", cleaned, flags=re.DOTALL)
-    if match:
-        cleaned = match.group(1)
-    if not cleaned:
-        return {}
-    for loader in (json.loads, ast.literal_eval):
-        try:
-            obj = loader(cleaned)
-        except Exception:
-            continue
-        if isinstance(obj, dict):
-            return obj
-    return {}
-```
-
-**Used here because:**
-
-`widget_review_dq_rules` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `widget_review_dq_rules` or another caller that reaches `_parse_ai_dict_response`.
-
-### `def _prepare_dq_profile_input_rows(*, profile_df=None, df=None, table_name: str, business_context: str='', config: Any=None)`
-
-**What it does:**
-
-Prepare DQ prompt profile rows from a profile DataFrame or raw DataFrame.
-
-**Source:**
-
-- `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L1595-L1619">View `_prepare_dq_profile_input_rows` on GitHub</a>
-
-**Code:**
-
-```python
-def _prepare_dq_profile_input_rows(*, profile_df=None, df=None, table_name: str, business_context: str = "", config: Any = None):
-    """Prepare DQ prompt profile rows from a profile DataFrame or raw DataFrame."""
-    if (profile_df is None) == (df is None):
-        raise ValueError("Provide exactly one of profile_df or df.")
-    if profile_df is None:
-        profile_df = profile_dataframe(df, table_name=table_name, run_timestamp_timezone=_get_audit_timezone(config))
-    cols = set(profile_df.columns)
-    if {"column_name", "data_type", "row_count", "null_count", "distinct_count"}.issubset(cols):
-        return profile_df
-    _, F, _ = _spark_sql_helpers()
-    return profile_df.select(
-        F.col("TABLE_NAME").alias("table_name"),
-        F.col("COLUMN_NAME").alias("column_name"),
-        F.col("DATA_TYPE").alias("data_type"),
-        F.col("ROW_COUNT").alias("row_count"),
-        F.col("NULL_COUNT").alias("null_count"),
-        F.col("NULL_PERCENT").alias("null_percent"),
-        F.col("DISTINCT_COUNT").alias("distinct_count"),
-        F.col("DISTINCT_PERCENT").alias("distinct_percent"),
-        F.col("MIN_VALUE").alias("min_value"),
-        F.col("MAX_VALUE").alias("max_value"),
-        F.lit("").alias("observed_values_sample"),
-        F.lit(business_context).alias("business_context"),
-        F.lit(_current_audit_timestamp(config=config, drop_microseconds=False)).alias("profile_timestamp"),
-    )
-```
-
-**Used here because:**
-
-`widget_review_dq_rules` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `widget_review_dq_rules` or another caller that reaches `_prepare_dq_profile_input_rows`.
-
-### `def _current_audit_timestamp(config: Any=None, timezone_name: str | None=None, *, drop_microseconds: bool=True) -> str`
-
-**What it does:**
-
-Return the current audit timestamp in the configured audit timezone.
-
-**Source:**
-
-- `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L69-L75">View `_current_audit_timestamp` on GitHub</a>
-
-**Code:**
-
-```python
-def _current_audit_timestamp(config: Any = None, timezone_name: str | None = None, *, drop_microseconds: bool = True) -> str:
-    """Return the current audit timestamp in the configured audit timezone."""
-    tz_name = _get_audit_timezone(config, timezone_name)
-    value = datetime.now(ZoneInfo(tz_name))
-    if drop_microseconds:
-        value = value.replace(microsecond=0)
-    return value.isoformat()
-```
-
-**Used here because:**
-
-`widget_review_dq_rules` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `widget_review_dq_rules` or another caller that reaches `_current_audit_timestamp`.
-
-### `def _get_audit_timezone(config: Any=None, timezone_name: str | None=None) -> str`
-
-**What it does:**
-
-Resolve the configured FabricOps audit timezone, defaulting to UTC.
-
-**Source:**
-
-- `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L61-L66">View `_get_audit_timezone` on GitHub</a>
-
-**Code:**
-
-```python
-def _get_audit_timezone(config: Any = None, timezone_name: str | None = None) -> str:
-    """Resolve the configured FabricOps audit timezone, defaulting to UTC."""
-    if timezone_name is not None:
-        return _validate_audit_timezone(timezone_name)
-    value = getattr(config, "audit_timezone", None) if config is not None else None
-    return _validate_audit_timezone(value)
-```
-
-**Used here because:**
-
-`widget_review_dq_rules` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `widget_review_dq_rules` or another caller that reaches `_get_audit_timezone`.
-
-### `def _validate_audit_timezone(timezone_name: str | None) -> str`
-
-**What it does:**
-
-Return a valid IANA audit timezone name.
-
-**Source:**
-
-- `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L27-L58">View `_validate_audit_timezone` on GitHub</a>
-
-**Code:**
-
-```python
-def _validate_audit_timezone(timezone_name: str | None) -> str:
-    """Return a valid IANA audit timezone name.
-
-    Parameters
-    ----------
-    timezone_name : str or None
-        IANA timezone name to validate. Blank values default to ``"UTC"``.
-
-    Returns
-    -------
-    str
-        Validated timezone name.
-
-    Raises
-    ------
-    ValueError
-        If a non-blank value is not a valid IANA timezone name.
-    """
-    value = str(timezone_name or DEFAULT_AUDIT_TIMEZONE).strip() or DEFAULT_AUDIT_TIMEZONE
-    if value != DEFAULT_AUDIT_TIMEZONE and "/" not in value:
-        raise ValueError(
-            f'Invalid FABRICOPS_AUDIT_TIMEZONE: "{value}". '
-            'Use a valid IANA timezone name such as "Asia/Singapore" or keep the default "UTC".'
-        )
-    try:
-        ZoneInfo(value)
-    except ZoneInfoNotFoundError as exc:
-        raise ValueError(
-            f'Invalid FABRICOPS_AUDIT_TIMEZONE: "{value}". '
-            'Use a valid IANA timezone name such as "Asia/Singapore" or keep the default "UTC".'
-        ) from exc
-    return value
-```
-
-**Used here because:**
-
-`widget_review_dq_rules` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `widget_review_dq_rules` or another caller that reaches `_validate_audit_timezone`.
-
-### `def _spark_sql_helpers()`
-
-**What it does:**
-
-Return Spark SQL helper modules lazily for DQ runtime helpers.
-
-**Source:**
-
-- `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L1120-L1127">View `_spark_sql_helpers` on GitHub</a>
-
-**Code:**
-
-```python
-def _spark_sql_helpers():
-    """Return Spark SQL helper modules lazily for DQ runtime helpers."""
-    try:
-        from pyspark.sql import SparkSession, functions as F
-        from pyspark.sql.window import Window
-    except Exception as exc:  # pragma: no cover - Fabric/runtime dependency guard
-        raise RuntimeError("DQ enforcement helpers require pyspark in the active runtime.") from exc
-    return SparkSession, F, Window
-```
-
-**Used here because:**
-
-`widget_review_dq_rules` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `widget_review_dq_rules` or another caller that reaches `_spark_sql_helpers`.
-
-### `def _run_fabric_ai_drafting(prepared_profile_df, *, prompt: str, output_col: str)`
-
-**What it does:**
-
-Run Fabric AI prompt drafting against prepared profile rows.
-
-**Source:**
-
-- `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L1130-L1135">View `_run_fabric_ai_drafting` on GitHub</a>
-
-**Code:**
-
-```python
-def _run_fabric_ai_drafting(prepared_profile_df, *, prompt: str, output_col: str):
-    """Run Fabric AI prompt drafting against prepared profile rows."""
-    ai = getattr(prepared_profile_df, "ai", None)
-    if ai is None or not hasattr(ai, "generate_response"):
-        raise RuntimeError("AI drafting requires Fabric DataFrame.ai.generate_response.")
-    return prepared_profile_df.ai.generate_response(prompt=prompt, is_prompt_template=True, output_col=output_col)
-```
-
-**Used here because:**
-
-`widget_review_dq_rules` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `widget_review_dq_rules` or another caller that reaches `_run_fabric_ai_drafting`.
-
-### `def _validate_dq_rules(rules: list[dict[str, Any]]) -> list[dict[str, Any]]`
-
-**What it does:**
-
-Validate canonical DQ rules before loading or enforcement.
-
-**Source:**
-
-- `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L1183-L1256">View `_validate_dq_rules` on GitHub</a>
-
-**Code:**
-
-```python
-def _validate_dq_rules(rules: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Validate canonical DQ rules before loading or enforcement."""
-    if not isinstance(rules, list):
-        raise ValueError("DQ rules must be a list of dictionaries.")
-
-    optional_common = {"severity", "description", "rule_id", "is_active", "review_status"}
-    del optional_common  # Documents intentionally accepted fields for callers and tests.
-
-    def require_columns(rule: dict[str, Any], count: int | None = None, *, minimum: int | None = None) -> list[str]:
-        cols = rule.get("columns")
-        if isinstance(cols, str):
-            cols = [c.strip() for c in cols.split(",") if c.strip()]
-            rule["columns"] = cols
-        if not isinstance(cols, list) or not cols or not all(str(c).strip() for c in cols):
-            raise ValueError(f"DQ rule '{rule.get('rule_id', '?')}' columns must be a non-empty list.")
-        cols = [str(c).strip() for c in cols]
-        rule["columns"] = cols
-        if count is not None and len(cols) != count:
-            raise ValueError(f"DQ rule '{rule.get('rule_id', '?')}' requires exactly {count} column(s).")
-        if minimum is not None and len(cols) < minimum:
-            raise ValueError(f"DQ rule '{rule.get('rule_id', '?')}' requires at least {minimum} column(s).")
-        return cols
-
-    for i, rule in enumerate(rules):
-        if not isinstance(rule, dict):
-            raise ValueError(f"DQ rule at index {i} must be a dictionary.")
-        rule.setdefault("rule_id", f"dq_rule_{i + 1}")
-        rule.setdefault("severity", "warning")
-        rule.setdefault("description", "")
-        rule["rule_type"] = _canonical_dq_rule_type(rule.get("rule_type"))
-        rtype = rule["rule_type"]
-        if rtype not in DQ_RULE_TYPES:
-            raise ValueError(f"DQ rule '{rule['rule_id']}' has unsupported rule_type '{rtype}'.")
-        if str(rule.get("severity", "warning")).lower() not in {"warning", "error"}:
-            raise ValueError(f"DQ rule '{rule['rule_id']}' severity must be warning or error.")
-
-        if rtype in {"not_null", "non_empty_string", "required_when"}:
-            require_columns(rule, minimum=1)
-        elif rtype in {
-            "null_rate_below", "unique", "accepted_values", "not_in_values", "between",
-            "greater_than", "greater_than_or_equal", "less_than", "less_than_or_equal",
-            "regex_match", "date_not_future", "date_between", "freshness", "max_age_days", "value_when",
-        }:
-            require_columns(rule, count=1)
-        elif rtype == "unique_combination":
-            require_columns(rule, minimum=2)
-        elif rtype in {"column_pair_equal", "column_a_gte_column_b", "column_a_gt_column_b"}:
-            require_columns(rule, count=2)
-        elif rtype == "expression_true":
-            if not str(rule.get("expression") or "").strip():
-                raise ValueError(f"DQ rule '{rule['rule_id']}' requires expression.")
-
-        if rtype == "null_rate_below" and rule.get("max_null_percent") is None:
-            raise ValueError(f"DQ rule '{rule['rule_id']}' requires max_null_percent.")
-        if rtype == "accepted_values" and "allowed_values" not in rule:
-            raise ValueError(f"DQ rule '{rule['rule_id']}' requires allowed_values.")
-        if rtype == "not_in_values" and "blocked_values" not in rule:
-            raise ValueError(f"DQ rule '{rule['rule_id']}' requires blocked_values.")
-        if rtype in {"between", "date_between"} and rule.get("min_value") is None and rule.get("max_value") is None:
-            raise ValueError(f"DQ rule '{rule['rule_id']}' requires min_value or max_value.")
-        if rtype in {"greater_than", "greater_than_or_equal", "less_than", "less_than_or_equal"} and rule.get("value") is None:
-            raise ValueError(f"DQ rule '{rule['rule_id']}' requires value.")
-        if rtype == "regex_match" and not str(rule.get("regex_pattern") or ""):
-            raise ValueError(f"DQ rule '{rule['rule_id']}' requires regex_pattern.")
-        if rtype in {"freshness", "max_age_days"} and rule.get("max_age_days") is None:
-            raise ValueError(f"DQ rule '{rule['rule_id']}' requires max_age_days.")
-        if rtype == "required_when" and not str(rule.get("condition") or "").strip():
-            raise ValueError(f"DQ rule '{rule['rule_id']}' requires condition.")
-        if rtype == "value_when":
-            if not str(rule.get("condition") or "").strip():
-                raise ValueError(f"DQ rule '{rule['rule_id']}' requires condition.")
-            if "expected_value" not in rule:
-                raise ValueError(f"DQ rule '{rule['rule_id']}' requires expected_value.")
-    return rules
-```
-
-**Used here because:**
-
-`widget_review_dq_rules` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `widget_review_dq_rules` or another caller that reaches `_validate_dq_rules`.
-
-### `def _value(row: dict[str, Any], name: str, default: Any='') -> Any`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L70-L71">View `_value` on GitHub</a>
-
-**Code:**
-
-```python
-def _value(row: dict[str, Any], name: str, default: Any = "") -> Any:
-    return row.get(name, row.get(name.upper(), default))
-```
-
-**Used here because:**
-
-`widget_review_dq_rules` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `widget_review_dq_rules` or another caller that reaches `_value`.
-
-
-</details>
-
-## Source
+## Public callable source code
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L661-L824">View widget_review_dq_rules on GitHub</a>
-
-<details class="reference-source-details">
-<summary>Show source code</summary>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L661-L824">View widget_review_dq_rules on GitHub</a>
 
 ```python
 def widget_review_dq_rules(
@@ -968,7 +331,492 @@ def widget_review_dq_rules(
     return review_rows
 ```
 
-</details>
+## Nested helper functions
+
+??? info "Nested helper functions: 16"
+
+    These helpers support `widget_review_dq_rules` by handling shared implementation tasks reached from the public call flow; expand the source block only when you need maintainer-level details.
+
+    <table class="reference-function-table">
+      <thead>
+        <tr>
+          <th>Helper</th>
+          <th>Role</th>
+          <th>Source</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td data-label="Helper"><code>_canonical_dq_rule_type</code></td>
+          <td data-label="Role">Internal helper used by the package implementation.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L78-L79"><code>src/fabricops_kit/governance_review.py#L78-L79</code></a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_dq_parameter_fields_for_rule_type</code></td>
+          <td data-label="Role">Return parameter names a reviewer should fill for a rule type.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L623-L641"><code>src/fabricops_kit/governance_review.py#L623-L641</code></a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_dq_rule_display_rows</code></td>
+          <td data-label="Role">Return table-shaped rows for active and inactive selected-table rules.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L590-L620"><code>src/fabricops_kit/governance_review.py#L590-L620</code></a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_dq_rule_parameters_summary</code></td>
+          <td data-label="Role">Return compact display text for non-identity DQ parameters.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L572-L587"><code>src/fabricops_kit/governance_review.py#L572-L587</code></a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_draft_dq_rules</code></td>
+          <td data-label="Role">Draft candidate DQ rules from metadata profiles or a raw DataFrame fallback.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L1622-L1630"><code>src/fabricops_kit/governance_review.py#L1622-L1630</code></a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_extract_assignment_payload</code></td>
+          <td data-label="Role">Extract dictionary payloads from AI response rows with optional table-key narrowing.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L1166-L1180"><code>src/fabricops_kit/governance_review.py#L1166-L1180</code></a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_coerce_rows</code></td>
+          <td data-label="Role">Internal helper used by the package implementation.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L62-L67"><code>src/fabricops_kit/governance_review.py#L62-L67</code></a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_parse_ai_dict_response</code></td>
+          <td data-label="Role">Parse JSON/Python-dict AI response text into a dictionary.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L1148-L1163"><code>src/fabricops_kit/governance_review.py#L1148-L1163</code></a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_prepare_dq_profile_input_rows</code></td>
+          <td data-label="Role">Prepare DQ prompt profile rows from a profile DataFrame or raw DataFrame.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L1595-L1619"><code>src/fabricops_kit/governance_review.py#L1595-L1619</code></a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_current_audit_timestamp</code></td>
+          <td data-label="Role">Return the current audit timestamp in the configured audit timezone.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L69-L75"><code>src/fabricops_kit/config.py#L69-L75</code></a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_get_audit_timezone</code></td>
+          <td data-label="Role">Resolve the configured FabricOps audit timezone, defaulting to UTC.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L61-L66"><code>src/fabricops_kit/config.py#L61-L66</code></a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_validate_audit_timezone</code></td>
+          <td data-label="Role">Return a valid IANA audit timezone name.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L27-L58"><code>src/fabricops_kit/config.py#L27-L58</code></a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_spark_sql_helpers</code></td>
+          <td data-label="Role">Return Spark SQL helper modules lazily for DQ runtime helpers.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L1120-L1127"><code>src/fabricops_kit/governance_review.py#L1120-L1127</code></a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_run_fabric_ai_drafting</code></td>
+          <td data-label="Role">Run Fabric AI prompt drafting against prepared profile rows.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L1130-L1135"><code>src/fabricops_kit/governance_review.py#L1130-L1135</code></a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_validate_dq_rules</code></td>
+          <td data-label="Role">Validate canonical DQ rules before loading or enforcement.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L1183-L1256"><code>src/fabricops_kit/governance_review.py#L1183-L1256</code></a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_value</code></td>
+          <td data-label="Role">Internal helper used by the package implementation.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L70-L71"><code>src/fabricops_kit/governance_review.py#L70-L71</code></a></td>
+        </tr>
+      </tbody>
+    </table>
+
+    ??? example "View helper source code"
+
+        **`def _canonical_dq_rule_type(rule_type: Any) -> str`**
+
+        Used by `widget_review_dq_rules` through the implementation path shown above.
+
+        ```python
+        def _canonical_dq_rule_type(rule_type: Any) -> str:
+            return str(rule_type or "").strip()
+        ```
+
+        **`def _dq_parameter_fields_for_rule_type(rule_type: str) -> list[str]`**
+
+        Used by `widget_review_dq_rules` through the implementation path shown above.
+
+        ```python
+        def _dq_parameter_fields_for_rule_type(rule_type: str) -> list[str]:
+            """Return parameter names a reviewer should fill for a rule type."""
+            return {
+                "null_rate_below": ["max_null_percent"],
+                "accepted_values": ["allowed_values"],
+                "not_in_values": ["blocked_values"],
+                "between": ["min_value", "max_value"],
+                "date_between": ["min_value", "max_value"],
+                "greater_than": ["value"],
+                "greater_than_or_equal": ["value"],
+                "less_than": ["value"],
+                "less_than_or_equal": ["value"],
+                "regex_match": ["regex_pattern"],
+                "freshness": ["max_age_days"],
+                "max_age_days": ["max_age_days"],
+                "required_when": ["condition"],
+                "value_when": ["condition", "expected_value"],
+                "expression_true": ["expression"],
+            }.get(_canonical_dq_rule_type(rule_type), [])
+        ```
+
+        **`def _dq_rule_display_rows(rules: list[dict[str, Any]]) -> list[dict[str, Any]]`**
+
+        Used by `widget_review_dq_rules` through the implementation path shown above.
+
+        ```python
+        def _dq_rule_display_rows(rules: list[dict[str, Any]]) -> list[dict[str, Any]]:
+            """Return table-shaped rows for active and inactive selected-table rules."""
+            rows = []
+            for rule in rules or []:
+                params = rule.get("rule_parameters") or {}
+                raw = rule.get("rule_parameters_json")
+                if raw and not params:
+                    try:
+                        params = json.loads(raw) if isinstance(raw, str) else {}
+                    except Exception:
+                        params = {}
+                cols = params.get("columns") or rule.get("columns") or rule.get("column_name") or ""
+                if isinstance(cols, list):
+                    cols_display = ", ".join(str(c) for c in cols)
+                else:
+                    cols_display = str(cols)
+                rows.append({
+                    "Rule ID": str(rule.get("rule_id") or ""),
+                    "Rule type": _canonical_dq_rule_type(rule.get("rule_type")),
+                    "Column(s)": cols_display,
+                    "Parameters summary": _dq_rule_parameters_summary(rule),
+                    "Severity": str(rule.get("severity") or "warning"),
+                    "Status": "active" if bool(rule.get("is_active", True)) else "inactive",
+                    "Review status": str(rule.get("review_status") or ""),
+                    "Approved by": str(rule.get("approved_by") or ""),
+                    "Approved at": str(rule.get("approved_at") or ""),
+                    "Last action": str(rule.get("action_type") or ""),
+                    "Committed at": str(rule.get("_committed_at") or ""),
+                    "Description": str(rule.get("description") or ""),
+                })
+            return rows
+        ```
+
+        **`def _dq_rule_parameters_summary(rule: dict[str, Any]) -> str`**
+
+        Used by `widget_review_dq_rules` through the implementation path shown above.
+
+        ```python
+        def _dq_rule_parameters_summary(rule: dict[str, Any]) -> str:
+            """Return compact display text for non-identity DQ parameters."""
+            params = dict(rule.get("rule_parameters") or {})
+            raw = rule.get("rule_parameters_json")
+            if raw and not params:
+                try:
+                    params = json.loads(raw) if isinstance(raw, str) else dict(raw)
+                except Exception:
+                    params = {}
+            if not params:
+                params = {k: v for k, v in rule.items() if k in {
+                    "max_null_percent", "allowed_values", "blocked_values", "min_value", "max_value", "value",
+                    "regex_pattern", "max_age_days", "condition", "expected_value", "expression",
+                }}
+            params.pop("columns", None)
+            return ", ".join(f"{k}={v}" for k, v in sorted(params.items()))
+        ```
+
+        **`def _draft_dq_rules(*, profile_df=None, df=None, table_name: str, business_context: str='', prompt_template: str | None=None, output_col: str='response', config: Any=None) -> list[dict[str, Any]]`**
+
+        Used by `widget_review_dq_rules` through the implementation path shown above.
+
+        ```python
+        def _draft_dq_rules(*, profile_df=None, df=None, table_name: str, business_context: str = "", prompt_template: str | None = None, output_col: str = "response", config: Any = None) -> list[dict[str, Any]]:
+            """Draft candidate DQ rules from metadata profiles or a raw DataFrame fallback."""
+            prepared = _prepare_dq_profile_input_rows(profile_df=profile_df, df=df, table_name=table_name, business_context=business_context, config=config)
+            responses = _run_fabric_ai_drafting(prepared, prompt=prompt_template or DQ_RULE_SUGGESTION_PROMPT, output_col=output_col)
+            candidates = _extract_assignment_payload(responses, response_col=output_col, assignment_key="DQ_RULES", table_name=table_name)
+            by_id = {r.get("rule_id"): {**r, "rule_type": _canonical_dq_rule_type(r.get("rule_type"))} for r in candidates if r.get("rule_id")}
+            rules = list(by_id.values())
+            _validate_dq_rules(rules)
+            return rules
+        ```
+
+        **`def _extract_assignment_payload(response_rows, *, response_col: str, assignment_key: str | None=None, table_name: str | None=None) -> list[dict[str, Any]]`**
+
+        Used by `widget_review_dq_rules` through the implementation path shown above.
+
+        ```python
+        def _extract_assignment_payload(response_rows, *, response_col: str, assignment_key: str | None = None, table_name: str | None = None) -> list[dict[str, Any]]:
+            """Extract dictionary payloads from AI response rows with optional table-key narrowing."""
+            out: list[dict[str, Any]] = []
+            for row in _coerce_rows(response_rows):
+                parsed = _parse_ai_dict_response(row.get(response_col) or row.get("response") or row.get("ai_response") or "")
+                if not parsed:
+                    continue
+                payload = parsed.get(assignment_key, parsed) if assignment_key else parsed
+                if table_name is not None:
+                    payload = payload.get(table_name, []) if isinstance(payload, dict) else []
+                if isinstance(payload, list):
+                    out.extend(dict(item) for item in payload if isinstance(item, dict))
+                elif isinstance(payload, dict):
+                    out.append(payload)
+            return out
+        ```
+
+        **`def _coerce_rows(rows_or_df: Any) -> list[dict[str, Any]]`**
+
+        Used by `widget_review_dq_rules` through the implementation path shown above.
+
+        ```python
+        def _coerce_rows(rows_or_df: Any) -> list[dict[str, Any]]:
+            if rows_or_df is None:
+                return []
+            if hasattr(rows_or_df, "collect"):
+                rows_or_df = rows_or_df.collect()
+            return [row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row) for row in rows_or_df]
+        ```
+
+        **`def _parse_ai_dict_response(text: str) -> dict[str, Any]`**
+
+        Used by `widget_review_dq_rules` through the implementation path shown above.
+
+        ```python
+        def _parse_ai_dict_response(text: str) -> dict[str, Any]:
+            """Parse JSON/Python-dict AI response text into a dictionary."""
+            cleaned = str(text or "").strip()
+            match = re.search(r"^[A-Z_]+\s*=\s*(\{.*\})\s*$", cleaned, flags=re.DOTALL)
+            if match:
+                cleaned = match.group(1)
+            if not cleaned:
+                return {}
+            for loader in (json.loads, ast.literal_eval):
+                try:
+                    obj = loader(cleaned)
+                except Exception:
+                    continue
+                if isinstance(obj, dict):
+                    return obj
+            return {}
+        ```
+
+        **`def _prepare_dq_profile_input_rows(*, profile_df=None, df=None, table_name: str, business_context: str='', config: Any=None)`**
+
+        Used by `widget_review_dq_rules` through the implementation path shown above.
+
+        ```python
+        def _prepare_dq_profile_input_rows(*, profile_df=None, df=None, table_name: str, business_context: str = "", config: Any = None):
+            """Prepare DQ prompt profile rows from a profile DataFrame or raw DataFrame."""
+            if (profile_df is None) == (df is None):
+                raise ValueError("Provide exactly one of profile_df or df.")
+            if profile_df is None:
+                profile_df = profile_dataframe(df, table_name=table_name, run_timestamp_timezone=_get_audit_timezone(config))
+            cols = set(profile_df.columns)
+            if {"column_name", "data_type", "row_count", "null_count", "distinct_count"}.issubset(cols):
+                return profile_df
+            _, F, _ = _spark_sql_helpers()
+            return profile_df.select(
+                F.col("TABLE_NAME").alias("table_name"),
+                F.col("COLUMN_NAME").alias("column_name"),
+                F.col("DATA_TYPE").alias("data_type"),
+                F.col("ROW_COUNT").alias("row_count"),
+                F.col("NULL_COUNT").alias("null_count"),
+                F.col("NULL_PERCENT").alias("null_percent"),
+                F.col("DISTINCT_COUNT").alias("distinct_count"),
+                F.col("DISTINCT_PERCENT").alias("distinct_percent"),
+                F.col("MIN_VALUE").alias("min_value"),
+                F.col("MAX_VALUE").alias("max_value"),
+                F.lit("").alias("observed_values_sample"),
+                F.lit(business_context).alias("business_context"),
+                F.lit(_current_audit_timestamp(config=config, drop_microseconds=False)).alias("profile_timestamp"),
+            )
+        ```
+
+        **`def _current_audit_timestamp(config: Any=None, timezone_name: str | None=None, *, drop_microseconds: bool=True) -> str`**
+
+        Used by `widget_review_dq_rules` through the implementation path shown above.
+
+        ```python
+        def _current_audit_timestamp(config: Any = None, timezone_name: str | None = None, *, drop_microseconds: bool = True) -> str:
+            """Return the current audit timestamp in the configured audit timezone."""
+            tz_name = _get_audit_timezone(config, timezone_name)
+            value = datetime.now(ZoneInfo(tz_name))
+            if drop_microseconds:
+                value = value.replace(microsecond=0)
+            return value.isoformat()
+        ```
+
+        **`def _get_audit_timezone(config: Any=None, timezone_name: str | None=None) -> str`**
+
+        Used by `widget_review_dq_rules` through the implementation path shown above.
+
+        ```python
+        def _get_audit_timezone(config: Any = None, timezone_name: str | None = None) -> str:
+            """Resolve the configured FabricOps audit timezone, defaulting to UTC."""
+            if timezone_name is not None:
+                return _validate_audit_timezone(timezone_name)
+            value = getattr(config, "audit_timezone", None) if config is not None else None
+            return _validate_audit_timezone(value)
+        ```
+
+        **`def _validate_audit_timezone(timezone_name: str | None) -> str`**
+
+        Used by `widget_review_dq_rules` through the implementation path shown above.
+
+        ```python
+        def _validate_audit_timezone(timezone_name: str | None) -> str:
+            """Return a valid IANA audit timezone name.
+
+            Parameters
+            ----------
+            timezone_name : str or None
+                IANA timezone name to validate. Blank values default to ``"UTC"``.
+
+            Returns
+            -------
+            str
+                Validated timezone name.
+
+            Raises
+            ------
+            ValueError
+                If a non-blank value is not a valid IANA timezone name.
+            """
+            value = str(timezone_name or DEFAULT_AUDIT_TIMEZONE).strip() or DEFAULT_AUDIT_TIMEZONE
+            if value != DEFAULT_AUDIT_TIMEZONE and "/" not in value:
+                raise ValueError(
+                    f'Invalid FABRICOPS_AUDIT_TIMEZONE: "{value}". '
+                    'Use a valid IANA timezone name such as "Asia/Singapore" or keep the default "UTC".'
+                )
+            try:
+                ZoneInfo(value)
+            except ZoneInfoNotFoundError as exc:
+                raise ValueError(
+                    f'Invalid FABRICOPS_AUDIT_TIMEZONE: "{value}". '
+                    'Use a valid IANA timezone name such as "Asia/Singapore" or keep the default "UTC".'
+                ) from exc
+            return value
+        ```
+
+        **`def _spark_sql_helpers()`**
+
+        Used by `widget_review_dq_rules` through the implementation path shown above.
+
+        ```python
+        def _spark_sql_helpers():
+            """Return Spark SQL helper modules lazily for DQ runtime helpers."""
+            try:
+                from pyspark.sql import SparkSession, functions as F
+                from pyspark.sql.window import Window
+            except Exception as exc:  # pragma: no cover - Fabric/runtime dependency guard
+                raise RuntimeError("DQ enforcement helpers require pyspark in the active runtime.") from exc
+            return SparkSession, F, Window
+        ```
+
+        **`def _run_fabric_ai_drafting(prepared_profile_df, *, prompt: str, output_col: str)`**
+
+        Used by `widget_review_dq_rules` through the implementation path shown above.
+
+        ```python
+        def _run_fabric_ai_drafting(prepared_profile_df, *, prompt: str, output_col: str):
+            """Run Fabric AI prompt drafting against prepared profile rows."""
+            ai = getattr(prepared_profile_df, "ai", None)
+            if ai is None or not hasattr(ai, "generate_response"):
+                raise RuntimeError("AI drafting requires Fabric DataFrame.ai.generate_response.")
+            return prepared_profile_df.ai.generate_response(prompt=prompt, is_prompt_template=True, output_col=output_col)
+        ```
+
+        **`def _validate_dq_rules(rules: list[dict[str, Any]]) -> list[dict[str, Any]]`**
+
+        Used by `widget_review_dq_rules` through the implementation path shown above.
+
+        ```python
+        def _validate_dq_rules(rules: list[dict[str, Any]]) -> list[dict[str, Any]]:
+            """Validate canonical DQ rules before loading or enforcement."""
+            if not isinstance(rules, list):
+                raise ValueError("DQ rules must be a list of dictionaries.")
+
+            optional_common = {"severity", "description", "rule_id", "is_active", "review_status"}
+            del optional_common  # Documents intentionally accepted fields for callers and tests.
+
+            def require_columns(rule: dict[str, Any], count: int | None = None, *, minimum: int | None = None) -> list[str]:
+                cols = rule.get("columns")
+                if isinstance(cols, str):
+                    cols = [c.strip() for c in cols.split(",") if c.strip()]
+                    rule["columns"] = cols
+                if not isinstance(cols, list) or not cols or not all(str(c).strip() for c in cols):
+                    raise ValueError(f"DQ rule '{rule.get('rule_id', '?')}' columns must be a non-empty list.")
+                cols = [str(c).strip() for c in cols]
+                rule["columns"] = cols
+                if count is not None and len(cols) != count:
+                    raise ValueError(f"DQ rule '{rule.get('rule_id', '?')}' requires exactly {count} column(s).")
+                if minimum is not None and len(cols) < minimum:
+                    raise ValueError(f"DQ rule '{rule.get('rule_id', '?')}' requires at least {minimum} column(s).")
+                return cols
+
+            for i, rule in enumerate(rules):
+                if not isinstance(rule, dict):
+                    raise ValueError(f"DQ rule at index {i} must be a dictionary.")
+                rule.setdefault("rule_id", f"dq_rule_{i + 1}")
+                rule.setdefault("severity", "warning")
+                rule.setdefault("description", "")
+                rule["rule_type"] = _canonical_dq_rule_type(rule.get("rule_type"))
+                rtype = rule["rule_type"]
+                if rtype not in DQ_RULE_TYPES:
+                    raise ValueError(f"DQ rule '{rule['rule_id']}' has unsupported rule_type '{rtype}'.")
+                if str(rule.get("severity", "warning")).lower() not in {"warning", "error"}:
+                    raise ValueError(f"DQ rule '{rule['rule_id']}' severity must be warning or error.")
+
+                if rtype in {"not_null", "non_empty_string", "required_when"}:
+                    require_columns(rule, minimum=1)
+                elif rtype in {
+                    "null_rate_below", "unique", "accepted_values", "not_in_values", "between",
+                    "greater_than", "greater_than_or_equal", "less_than", "less_than_or_equal",
+                    "regex_match", "date_not_future", "date_between", "freshness", "max_age_days", "value_when",
+                }:
+                    require_columns(rule, count=1)
+                elif rtype == "unique_combination":
+                    require_columns(rule, minimum=2)
+                elif rtype in {"column_pair_equal", "column_a_gte_column_b", "column_a_gt_column_b"}:
+                    require_columns(rule, count=2)
+                elif rtype == "expression_true":
+                    if not str(rule.get("expression") or "").strip():
+                        raise ValueError(f"DQ rule '{rule['rule_id']}' requires expression.")
+
+                if rtype == "null_rate_below" and rule.get("max_null_percent") is None:
+                    raise ValueError(f"DQ rule '{rule['rule_id']}' requires max_null_percent.")
+                if rtype == "accepted_values" and "allowed_values" not in rule:
+                    raise ValueError(f"DQ rule '{rule['rule_id']}' requires allowed_values.")
+                if rtype == "not_in_values" and "blocked_values" not in rule:
+                    raise ValueError(f"DQ rule '{rule['rule_id']}' requires blocked_values.")
+                if rtype in {"between", "date_between"} and rule.get("min_value") is None and rule.get("max_value") is None:
+                    raise ValueError(f"DQ rule '{rule['rule_id']}' requires min_value or max_value.")
+                if rtype in {"greater_than", "greater_than_or_equal", "less_than", "less_than_or_equal"} and rule.get("value") is None:
+                    raise ValueError(f"DQ rule '{rule['rule_id']}' requires value.")
+                if rtype == "regex_match" and not str(rule.get("regex_pattern") or ""):
+                    raise ValueError(f"DQ rule '{rule['rule_id']}' requires regex_pattern.")
+                if rtype in {"freshness", "max_age_days"} and rule.get("max_age_days") is None:
+                    raise ValueError(f"DQ rule '{rule['rule_id']}' requires max_age_days.")
+                if rtype == "required_when" and not str(rule.get("condition") or "").strip():
+                    raise ValueError(f"DQ rule '{rule['rule_id']}' requires condition.")
+                if rtype == "value_when":
+                    if not str(rule.get("condition") or "").strip():
+                        raise ValueError(f"DQ rule '{rule['rule_id']}' requires condition.")
+                    if "expected_value" not in rule:
+                        raise ValueError(f"DQ rule '{rule['rule_id']}' requires expected_value.")
+            return rules
+        ```
+
+        **`def _value(row: dict[str, Any], name: str, default: Any='') -> Any`**
+
+        Used by `widget_review_dq_rules` through the implementation path shown above.
+
+        ```python
+        def _value(row: dict[str, Any], name: str, default: Any = "") -> Any:
+            return row.get(name, row.get(name.upper(), default))
+        ```
+
 
 <details class="reference-metadata-details">
 <summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
@@ -1026,7 +874,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L661-L824">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L661-L824</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L661-L824">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L661-L824</a>
 - Start line: `661`
 - End line: `824`
 - Signature:
@@ -1037,11 +885,11 @@ def widget_review_dq_rules(profile_rows: list[dict[str, Any]], *, existing_rules
 
 ### Internal relationship graph
 
+The human-readable implementation view above is the source of truth for public call flow, public callable source, and collapsed nested helper details.
+
 ### Public related functions
 
 Not documented yet
-
-### Internal implementation helpers
 
 ### Call flow
 
@@ -1083,666 +931,5 @@ widget_review_dq_rules(...)
 │   └── _canonical_dq_rule_type(...)
 └── _value(...)
 ```
-
-### Internal helpers used by this callable
-
-### `def _canonical_dq_rule_type(rule_type: Any) -> str`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L78-L79">View `_canonical_dq_rule_type` on GitHub</a>
-
-**Code:**
-
-```python
-def _canonical_dq_rule_type(rule_type: Any) -> str:
-    return str(rule_type or "").strip()
-```
-
-**Used here because:**
-
-`widget_review_dq_rules` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `widget_review_dq_rules` or another caller that reaches `_canonical_dq_rule_type`.
-
-### `def _dq_parameter_fields_for_rule_type(rule_type: str) -> list[str]`
-
-**What it does:**
-
-Return parameter names a reviewer should fill for a rule type.
-
-**Source:**
-
-- `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L623-L641">View `_dq_parameter_fields_for_rule_type` on GitHub</a>
-
-**Code:**
-
-```python
-def _dq_parameter_fields_for_rule_type(rule_type: str) -> list[str]:
-    """Return parameter names a reviewer should fill for a rule type."""
-    return {
-        "null_rate_below": ["max_null_percent"],
-        "accepted_values": ["allowed_values"],
-        "not_in_values": ["blocked_values"],
-        "between": ["min_value", "max_value"],
-        "date_between": ["min_value", "max_value"],
-        "greater_than": ["value"],
-        "greater_than_or_equal": ["value"],
-        "less_than": ["value"],
-        "less_than_or_equal": ["value"],
-        "regex_match": ["regex_pattern"],
-        "freshness": ["max_age_days"],
-        "max_age_days": ["max_age_days"],
-        "required_when": ["condition"],
-        "value_when": ["condition", "expected_value"],
-        "expression_true": ["expression"],
-    }.get(_canonical_dq_rule_type(rule_type), [])
-```
-
-**Used here because:**
-
-`widget_review_dq_rules` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `widget_review_dq_rules` or another caller that reaches `_dq_parameter_fields_for_rule_type`.
-
-### `def _dq_rule_display_rows(rules: list[dict[str, Any]]) -> list[dict[str, Any]]`
-
-**What it does:**
-
-Return table-shaped rows for active and inactive selected-table rules.
-
-**Source:**
-
-- `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L590-L620">View `_dq_rule_display_rows` on GitHub</a>
-
-**Code:**
-
-```python
-def _dq_rule_display_rows(rules: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Return table-shaped rows for active and inactive selected-table rules."""
-    rows = []
-    for rule in rules or []:
-        params = rule.get("rule_parameters") or {}
-        raw = rule.get("rule_parameters_json")
-        if raw and not params:
-            try:
-                params = json.loads(raw) if isinstance(raw, str) else {}
-            except Exception:
-                params = {}
-        cols = params.get("columns") or rule.get("columns") or rule.get("column_name") or ""
-        if isinstance(cols, list):
-            cols_display = ", ".join(str(c) for c in cols)
-        else:
-            cols_display = str(cols)
-        rows.append({
-            "Rule ID": str(rule.get("rule_id") or ""),
-            "Rule type": _canonical_dq_rule_type(rule.get("rule_type")),
-            "Column(s)": cols_display,
-            "Parameters summary": _dq_rule_parameters_summary(rule),
-            "Severity": str(rule.get("severity") or "warning"),
-            "Status": "active" if bool(rule.get("is_active", True)) else "inactive",
-            "Review status": str(rule.get("review_status") or ""),
-            "Approved by": str(rule.get("approved_by") or ""),
-            "Approved at": str(rule.get("approved_at") or ""),
-            "Last action": str(rule.get("action_type") or ""),
-            "Committed at": str(rule.get("_committed_at") or ""),
-            "Description": str(rule.get("description") or ""),
-        })
-    return rows
-```
-
-**Used here because:**
-
-`widget_review_dq_rules` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `widget_review_dq_rules` or another caller that reaches `_dq_rule_display_rows`.
-
-### `def _dq_rule_parameters_summary(rule: dict[str, Any]) -> str`
-
-**What it does:**
-
-Return compact display text for non-identity DQ parameters.
-
-**Source:**
-
-- `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L572-L587">View `_dq_rule_parameters_summary` on GitHub</a>
-
-**Code:**
-
-```python
-def _dq_rule_parameters_summary(rule: dict[str, Any]) -> str:
-    """Return compact display text for non-identity DQ parameters."""
-    params = dict(rule.get("rule_parameters") or {})
-    raw = rule.get("rule_parameters_json")
-    if raw and not params:
-        try:
-            params = json.loads(raw) if isinstance(raw, str) else dict(raw)
-        except Exception:
-            params = {}
-    if not params:
-        params = {k: v for k, v in rule.items() if k in {
-            "max_null_percent", "allowed_values", "blocked_values", "min_value", "max_value", "value",
-            "regex_pattern", "max_age_days", "condition", "expected_value", "expression",
-        }}
-    params.pop("columns", None)
-    return ", ".join(f"{k}={v}" for k, v in sorted(params.items()))
-```
-
-**Used here because:**
-
-`widget_review_dq_rules` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `widget_review_dq_rules` or another caller that reaches `_dq_rule_parameters_summary`.
-
-### `def _draft_dq_rules(*, profile_df=None, df=None, table_name: str, business_context: str='', prompt_template: str | None=None, output_col: str='response', config: Any=None) -> list[dict[str, Any]]`
-
-**What it does:**
-
-Draft candidate DQ rules from metadata profiles or a raw DataFrame fallback.
-
-**Source:**
-
-- `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L1622-L1630">View `_draft_dq_rules` on GitHub</a>
-
-**Code:**
-
-```python
-def _draft_dq_rules(*, profile_df=None, df=None, table_name: str, business_context: str = "", prompt_template: str | None = None, output_col: str = "response", config: Any = None) -> list[dict[str, Any]]:
-    """Draft candidate DQ rules from metadata profiles or a raw DataFrame fallback."""
-    prepared = _prepare_dq_profile_input_rows(profile_df=profile_df, df=df, table_name=table_name, business_context=business_context, config=config)
-    responses = _run_fabric_ai_drafting(prepared, prompt=prompt_template or DQ_RULE_SUGGESTION_PROMPT, output_col=output_col)
-    candidates = _extract_assignment_payload(responses, response_col=output_col, assignment_key="DQ_RULES", table_name=table_name)
-    by_id = {r.get("rule_id"): {**r, "rule_type": _canonical_dq_rule_type(r.get("rule_type"))} for r in candidates if r.get("rule_id")}
-    rules = list(by_id.values())
-    _validate_dq_rules(rules)
-    return rules
-```
-
-**Used here because:**
-
-`widget_review_dq_rules` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `widget_review_dq_rules` or another caller that reaches `_draft_dq_rules`.
-
-### `def _extract_assignment_payload(response_rows, *, response_col: str, assignment_key: str | None=None, table_name: str | None=None) -> list[dict[str, Any]]`
-
-**What it does:**
-
-Extract dictionary payloads from AI response rows with optional table-key narrowing.
-
-**Source:**
-
-- `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L1166-L1180">View `_extract_assignment_payload` on GitHub</a>
-
-**Code:**
-
-```python
-def _extract_assignment_payload(response_rows, *, response_col: str, assignment_key: str | None = None, table_name: str | None = None) -> list[dict[str, Any]]:
-    """Extract dictionary payloads from AI response rows with optional table-key narrowing."""
-    out: list[dict[str, Any]] = []
-    for row in _coerce_rows(response_rows):
-        parsed = _parse_ai_dict_response(row.get(response_col) or row.get("response") or row.get("ai_response") or "")
-        if not parsed:
-            continue
-        payload = parsed.get(assignment_key, parsed) if assignment_key else parsed
-        if table_name is not None:
-            payload = payload.get(table_name, []) if isinstance(payload, dict) else []
-        if isinstance(payload, list):
-            out.extend(dict(item) for item in payload if isinstance(item, dict))
-        elif isinstance(payload, dict):
-            out.append(payload)
-    return out
-```
-
-**Used here because:**
-
-`widget_review_dq_rules` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `widget_review_dq_rules` or another caller that reaches `_extract_assignment_payload`.
-
-### `def _coerce_rows(rows_or_df: Any) -> list[dict[str, Any]]`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L62-L67">View `_coerce_rows` on GitHub</a>
-
-**Code:**
-
-```python
-def _coerce_rows(rows_or_df: Any) -> list[dict[str, Any]]:
-    if rows_or_df is None:
-        return []
-    if hasattr(rows_or_df, "collect"):
-        rows_or_df = rows_or_df.collect()
-    return [row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row) for row in rows_or_df]
-```
-
-**Used here because:**
-
-`widget_review_dq_rules` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `widget_review_dq_rules` or another caller that reaches `_coerce_rows`.
-
-### `def _parse_ai_dict_response(text: str) -> dict[str, Any]`
-
-**What it does:**
-
-Parse JSON/Python-dict AI response text into a dictionary.
-
-**Source:**
-
-- `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L1148-L1163">View `_parse_ai_dict_response` on GitHub</a>
-
-**Code:**
-
-```python
-def _parse_ai_dict_response(text: str) -> dict[str, Any]:
-    """Parse JSON/Python-dict AI response text into a dictionary."""
-    cleaned = str(text or "").strip()
-    match = re.search(r"^[A-Z_]+\s*=\s*(\{.*\})\s*$", cleaned, flags=re.DOTALL)
-    if match:
-        cleaned = match.group(1)
-    if not cleaned:
-        return {}
-    for loader in (json.loads, ast.literal_eval):
-        try:
-            obj = loader(cleaned)
-        except Exception:
-            continue
-        if isinstance(obj, dict):
-            return obj
-    return {}
-```
-
-**Used here because:**
-
-`widget_review_dq_rules` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `widget_review_dq_rules` or another caller that reaches `_parse_ai_dict_response`.
-
-### `def _prepare_dq_profile_input_rows(*, profile_df=None, df=None, table_name: str, business_context: str='', config: Any=None)`
-
-**What it does:**
-
-Prepare DQ prompt profile rows from a profile DataFrame or raw DataFrame.
-
-**Source:**
-
-- `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L1595-L1619">View `_prepare_dq_profile_input_rows` on GitHub</a>
-
-**Code:**
-
-```python
-def _prepare_dq_profile_input_rows(*, profile_df=None, df=None, table_name: str, business_context: str = "", config: Any = None):
-    """Prepare DQ prompt profile rows from a profile DataFrame or raw DataFrame."""
-    if (profile_df is None) == (df is None):
-        raise ValueError("Provide exactly one of profile_df or df.")
-    if profile_df is None:
-        profile_df = profile_dataframe(df, table_name=table_name, run_timestamp_timezone=_get_audit_timezone(config))
-    cols = set(profile_df.columns)
-    if {"column_name", "data_type", "row_count", "null_count", "distinct_count"}.issubset(cols):
-        return profile_df
-    _, F, _ = _spark_sql_helpers()
-    return profile_df.select(
-        F.col("TABLE_NAME").alias("table_name"),
-        F.col("COLUMN_NAME").alias("column_name"),
-        F.col("DATA_TYPE").alias("data_type"),
-        F.col("ROW_COUNT").alias("row_count"),
-        F.col("NULL_COUNT").alias("null_count"),
-        F.col("NULL_PERCENT").alias("null_percent"),
-        F.col("DISTINCT_COUNT").alias("distinct_count"),
-        F.col("DISTINCT_PERCENT").alias("distinct_percent"),
-        F.col("MIN_VALUE").alias("min_value"),
-        F.col("MAX_VALUE").alias("max_value"),
-        F.lit("").alias("observed_values_sample"),
-        F.lit(business_context).alias("business_context"),
-        F.lit(_current_audit_timestamp(config=config, drop_microseconds=False)).alias("profile_timestamp"),
-    )
-```
-
-**Used here because:**
-
-`widget_review_dq_rules` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `widget_review_dq_rules` or another caller that reaches `_prepare_dq_profile_input_rows`.
-
-### `def _current_audit_timestamp(config: Any=None, timezone_name: str | None=None, *, drop_microseconds: bool=True) -> str`
-
-**What it does:**
-
-Return the current audit timestamp in the configured audit timezone.
-
-**Source:**
-
-- `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L69-L75">View `_current_audit_timestamp` on GitHub</a>
-
-**Code:**
-
-```python
-def _current_audit_timestamp(config: Any = None, timezone_name: str | None = None, *, drop_microseconds: bool = True) -> str:
-    """Return the current audit timestamp in the configured audit timezone."""
-    tz_name = _get_audit_timezone(config, timezone_name)
-    value = datetime.now(ZoneInfo(tz_name))
-    if drop_microseconds:
-        value = value.replace(microsecond=0)
-    return value.isoformat()
-```
-
-**Used here because:**
-
-`widget_review_dq_rules` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `widget_review_dq_rules` or another caller that reaches `_current_audit_timestamp`.
-
-### `def _get_audit_timezone(config: Any=None, timezone_name: str | None=None) -> str`
-
-**What it does:**
-
-Resolve the configured FabricOps audit timezone, defaulting to UTC.
-
-**Source:**
-
-- `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L61-L66">View `_get_audit_timezone` on GitHub</a>
-
-**Code:**
-
-```python
-def _get_audit_timezone(config: Any = None, timezone_name: str | None = None) -> str:
-    """Resolve the configured FabricOps audit timezone, defaulting to UTC."""
-    if timezone_name is not None:
-        return _validate_audit_timezone(timezone_name)
-    value = getattr(config, "audit_timezone", None) if config is not None else None
-    return _validate_audit_timezone(value)
-```
-
-**Used here because:**
-
-`widget_review_dq_rules` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `widget_review_dq_rules` or another caller that reaches `_get_audit_timezone`.
-
-### `def _validate_audit_timezone(timezone_name: str | None) -> str`
-
-**What it does:**
-
-Return a valid IANA audit timezone name.
-
-**Source:**
-
-- `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L27-L58">View `_validate_audit_timezone` on GitHub</a>
-
-**Code:**
-
-```python
-def _validate_audit_timezone(timezone_name: str | None) -> str:
-    """Return a valid IANA audit timezone name.
-
-    Parameters
-    ----------
-    timezone_name : str or None
-        IANA timezone name to validate. Blank values default to ``"UTC"``.
-
-    Returns
-    -------
-    str
-        Validated timezone name.
-
-    Raises
-    ------
-    ValueError
-        If a non-blank value is not a valid IANA timezone name.
-    """
-    value = str(timezone_name or DEFAULT_AUDIT_TIMEZONE).strip() or DEFAULT_AUDIT_TIMEZONE
-    if value != DEFAULT_AUDIT_TIMEZONE and "/" not in value:
-        raise ValueError(
-            f'Invalid FABRICOPS_AUDIT_TIMEZONE: "{value}". '
-            'Use a valid IANA timezone name such as "Asia/Singapore" or keep the default "UTC".'
-        )
-    try:
-        ZoneInfo(value)
-    except ZoneInfoNotFoundError as exc:
-        raise ValueError(
-            f'Invalid FABRICOPS_AUDIT_TIMEZONE: "{value}". '
-            'Use a valid IANA timezone name such as "Asia/Singapore" or keep the default "UTC".'
-        ) from exc
-    return value
-```
-
-**Used here because:**
-
-`widget_review_dq_rules` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `widget_review_dq_rules` or another caller that reaches `_validate_audit_timezone`.
-
-### `def _spark_sql_helpers()`
-
-**What it does:**
-
-Return Spark SQL helper modules lazily for DQ runtime helpers.
-
-**Source:**
-
-- `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L1120-L1127">View `_spark_sql_helpers` on GitHub</a>
-
-**Code:**
-
-```python
-def _spark_sql_helpers():
-    """Return Spark SQL helper modules lazily for DQ runtime helpers."""
-    try:
-        from pyspark.sql import SparkSession, functions as F
-        from pyspark.sql.window import Window
-    except Exception as exc:  # pragma: no cover - Fabric/runtime dependency guard
-        raise RuntimeError("DQ enforcement helpers require pyspark in the active runtime.") from exc
-    return SparkSession, F, Window
-```
-
-**Used here because:**
-
-`widget_review_dq_rules` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `widget_review_dq_rules` or another caller that reaches `_spark_sql_helpers`.
-
-### `def _run_fabric_ai_drafting(prepared_profile_df, *, prompt: str, output_col: str)`
-
-**What it does:**
-
-Run Fabric AI prompt drafting against prepared profile rows.
-
-**Source:**
-
-- `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L1130-L1135">View `_run_fabric_ai_drafting` on GitHub</a>
-
-**Code:**
-
-```python
-def _run_fabric_ai_drafting(prepared_profile_df, *, prompt: str, output_col: str):
-    """Run Fabric AI prompt drafting against prepared profile rows."""
-    ai = getattr(prepared_profile_df, "ai", None)
-    if ai is None or not hasattr(ai, "generate_response"):
-        raise RuntimeError("AI drafting requires Fabric DataFrame.ai.generate_response.")
-    return prepared_profile_df.ai.generate_response(prompt=prompt, is_prompt_template=True, output_col=output_col)
-```
-
-**Used here because:**
-
-`widget_review_dq_rules` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `widget_review_dq_rules` or another caller that reaches `_run_fabric_ai_drafting`.
-
-### `def _validate_dq_rules(rules: list[dict[str, Any]]) -> list[dict[str, Any]]`
-
-**What it does:**
-
-Validate canonical DQ rules before loading or enforcement.
-
-**Source:**
-
-- `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L1183-L1256">View `_validate_dq_rules` on GitHub</a>
-
-**Code:**
-
-```python
-def _validate_dq_rules(rules: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Validate canonical DQ rules before loading or enforcement."""
-    if not isinstance(rules, list):
-        raise ValueError("DQ rules must be a list of dictionaries.")
-
-    optional_common = {"severity", "description", "rule_id", "is_active", "review_status"}
-    del optional_common  # Documents intentionally accepted fields for callers and tests.
-
-    def require_columns(rule: dict[str, Any], count: int | None = None, *, minimum: int | None = None) -> list[str]:
-        cols = rule.get("columns")
-        if isinstance(cols, str):
-            cols = [c.strip() for c in cols.split(",") if c.strip()]
-            rule["columns"] = cols
-        if not isinstance(cols, list) or not cols or not all(str(c).strip() for c in cols):
-            raise ValueError(f"DQ rule '{rule.get('rule_id', '?')}' columns must be a non-empty list.")
-        cols = [str(c).strip() for c in cols]
-        rule["columns"] = cols
-        if count is not None and len(cols) != count:
-            raise ValueError(f"DQ rule '{rule.get('rule_id', '?')}' requires exactly {count} column(s).")
-        if minimum is not None and len(cols) < minimum:
-            raise ValueError(f"DQ rule '{rule.get('rule_id', '?')}' requires at least {minimum} column(s).")
-        return cols
-
-    for i, rule in enumerate(rules):
-        if not isinstance(rule, dict):
-            raise ValueError(f"DQ rule at index {i} must be a dictionary.")
-        rule.setdefault("rule_id", f"dq_rule_{i + 1}")
-        rule.setdefault("severity", "warning")
-        rule.setdefault("description", "")
-        rule["rule_type"] = _canonical_dq_rule_type(rule.get("rule_type"))
-        rtype = rule["rule_type"]
-        if rtype not in DQ_RULE_TYPES:
-            raise ValueError(f"DQ rule '{rule['rule_id']}' has unsupported rule_type '{rtype}'.")
-        if str(rule.get("severity", "warning")).lower() not in {"warning", "error"}:
-            raise ValueError(f"DQ rule '{rule['rule_id']}' severity must be warning or error.")
-
-        if rtype in {"not_null", "non_empty_string", "required_when"}:
-            require_columns(rule, minimum=1)
-        elif rtype in {
-            "null_rate_below", "unique", "accepted_values", "not_in_values", "between",
-            "greater_than", "greater_than_or_equal", "less_than", "less_than_or_equal",
-            "regex_match", "date_not_future", "date_between", "freshness", "max_age_days", "value_when",
-        }:
-            require_columns(rule, count=1)
-        elif rtype == "unique_combination":
-            require_columns(rule, minimum=2)
-        elif rtype in {"column_pair_equal", "column_a_gte_column_b", "column_a_gt_column_b"}:
-            require_columns(rule, count=2)
-        elif rtype == "expression_true":
-            if not str(rule.get("expression") or "").strip():
-                raise ValueError(f"DQ rule '{rule['rule_id']}' requires expression.")
-
-        if rtype == "null_rate_below" and rule.get("max_null_percent") is None:
-            raise ValueError(f"DQ rule '{rule['rule_id']}' requires max_null_percent.")
-        if rtype == "accepted_values" and "allowed_values" not in rule:
-            raise ValueError(f"DQ rule '{rule['rule_id']}' requires allowed_values.")
-        if rtype == "not_in_values" and "blocked_values" not in rule:
-            raise ValueError(f"DQ rule '{rule['rule_id']}' requires blocked_values.")
-        if rtype in {"between", "date_between"} and rule.get("min_value") is None and rule.get("max_value") is None:
-            raise ValueError(f"DQ rule '{rule['rule_id']}' requires min_value or max_value.")
-        if rtype in {"greater_than", "greater_than_or_equal", "less_than", "less_than_or_equal"} and rule.get("value") is None:
-            raise ValueError(f"DQ rule '{rule['rule_id']}' requires value.")
-        if rtype == "regex_match" and not str(rule.get("regex_pattern") or ""):
-            raise ValueError(f"DQ rule '{rule['rule_id']}' requires regex_pattern.")
-        if rtype in {"freshness", "max_age_days"} and rule.get("max_age_days") is None:
-            raise ValueError(f"DQ rule '{rule['rule_id']}' requires max_age_days.")
-        if rtype == "required_when" and not str(rule.get("condition") or "").strip():
-            raise ValueError(f"DQ rule '{rule['rule_id']}' requires condition.")
-        if rtype == "value_when":
-            if not str(rule.get("condition") or "").strip():
-                raise ValueError(f"DQ rule '{rule['rule_id']}' requires condition.")
-            if "expected_value" not in rule:
-                raise ValueError(f"DQ rule '{rule['rule_id']}' requires expected_value.")
-    return rules
-```
-
-**Used here because:**
-
-`widget_review_dq_rules` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `widget_review_dq_rules` or another caller that reaches `_validate_dq_rules`.
-
-### `def _value(row: dict[str, Any], name: str, default: Any='') -> Any`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L70-L71">View `_value` on GitHub</a>
-
-**Code:**
-
-```python
-def _value(row: dict[str, Any], name: str, default: Any = "") -> Any:
-    return row.get(name, row.get(name.upper(), default))
-```
-
-**Used here because:**
-
-`widget_review_dq_rules` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `widget_review_dq_rules` or another caller that reaches `_value`.
-
 
 </details>

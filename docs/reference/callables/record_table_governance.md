@@ -1,24 +1,51 @@
 # record_table_governance
 
-Persist approved table-governance context, DQ-rule, and classification evidence in one v1 commit action.
-
-## What this is for and when to use it
+## Purpose
 
 Persist approved table-governance context, DQ-rule, and classification evidence in one v1 commit action.
 
-- Use in 03_governance after human approval to persist approved column context, DQ rules, and classification evidence for a profiled table.
+## At a glance
 
-## When not to use it
-
-- Do not use to draft governance recommendations, bypass review approval, or write unapproved rows.
-
-## Example
-
-```python
+<div class="module-table-scroll reference-input-table">
+<table class="reference-function-table">
+  <thead>
+    <tr>
+      <th>Item</th>
+      <th>Details</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td data-label="Item">Use when</td>
+      <td data-label="Details">Use in 03_governance after human approval to persist approved column context, DQ rules, and classification evidence for a profiled table.</td>
+    </tr>
+    <tr>
+      <td data-label="Item">Do not use when</td>
+      <td data-label="Details">Do not use to draft governance recommendations, bypass review approval, or write unapproved rows.</td>
+    </tr>
+    <tr>
+      <td data-label="Item">Example</td>
+      <td data-label="Details">```python
 written = record_table_governance(CONFIG, env, profile_rows, spark_session=spark, context_reviews=context_rows, dq_rule_reviews=dq_rows, classification_reviews=classification_rows, approved_by="reviewer")
-```
+```</td>
+    </tr>
+    <tr>
+      <td data-label="Item">Errors</td>
+      <td data-label="Details">Raises configuration, validation, Spark, or metadata-write errors when approved records cannot be built or persisted.</td>
+    </tr>
+    <tr>
+      <td data-label="Item">Side effects</td>
+      <td data-label="Details">Writes approved governance metadata records to configured metadata tables.</td>
+    </tr>
+    <tr>
+      <td data-label="Item">Related functions</td>
+      <td data-label="Details">- <a href="../load_catalogue_profile_rows/"><code>fabricops_kit.governance_review.load_catalogue_profile_rows</code></a><br>- <a href="../enforce_dq_rules/"><code>fabricops_kit.governance_review.enforce_dq_rules</code></a><br>- <a href="../setup_metadata_tables/"><code>fabricops_kit.config.setup_metadata_tables</code></a></td>
+    </tr>
+  </tbody>
+</table>
+</div>
 
-## Inputs
+## Parameters
 
 <div class="module-table-scroll reference-input-table">
 <table class="reference-function-table">
@@ -89,24 +116,23 @@ written = record_table_governance(CONFIG, env, profile_rows, spark_session=spark
 </table>
 </div>
 
-## Output
+## Returns
 
 Dictionary of records written for column_context, dq_rules, and column_classification.
 
-## Errors and side effects
+## Used by
 
-**Errors:** Raises configuration, validation, Spark, or metadata-write errors when approved records cannot be built or persisted.
+No public or package-local callers detected by the generated dependency graph.
 
-**Side effects:** Writes approved governance metadata records to configured metadata tables.
+## Calls
 
-## Related functions
+- <a href="../write_lakehouse_table/"><code>fabricops_kit.fabric_input_output.write_lakehouse_table</code></a>
+- `fabricops_kit.governance_review._build_classification_records`
+- `fabricops_kit.governance_review._build_column_context_records`
+- `fabricops_kit.governance_review._build_dq_rule_records`
+- `fabricops_kit.governance_review._review_governance_evidence`
 
-- <a href="../load_catalogue_profile_rows/"><code>fabricops_kit.governance_review.load_catalogue_profile_rows</code></a>
-- <a href="../enforce_dq_rules/"><code>fabricops_kit.governance_review.enforce_dq_rules</code></a>
-- <a href="../setup_metadata_tables/"><code>fabricops_kit.config.setup_metadata_tables</code></a>
-
-<details class="reference-implementation-details">
-<summary>Implementation details</summary>
+## Implementation details
 
 ### Call flow
 
@@ -263,1262 +289,10 @@ record_table_governance(...)
     └── _uses_registered_metadata_table(...)
 ```
 
-### Internal helpers used by this callable
-
-### `def _build_classification_records(profile_rows: list[dict[str, Any]], reviewed_rows: list[dict[str, Any]], *, config: Any=None, env: str | None=None, approved_by: str | None=None) -> list[dict[str, Any]]`
-
-**What it does:**
-
-Build append-only approved sensitivity and PII classification records.
-
-**Source:**
-
-- `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L503-L524">View `_build_classification_records` on GitHub</a>
-
-**Code:**
-
-```python
-def _build_classification_records(profile_rows: list[dict[str, Any]], reviewed_rows: list[dict[str, Any]], *, config: Any = None, env: str | None = None, approved_by: str | None = None) -> list[dict[str, Any]]:
-    """Build append-only approved sensitivity and PII classification records."""
-    profile, actor, now, audit = _approved_review_context(profile_rows, config=config, env=env, approved_by=approved_by)
-    rows = []
-    for review in reviewed_rows or []:
-        if str(review.get("review_status", "approved")).lower() != "approved" or not review.get("commit"):
-            continue
-        sensitivity = str(review.get("sensitivity_label") or "internal")
-        classification = str(review.get("personal_data_classification") or "unknown")
-        if sensitivity not in SENSITIVITY_LABELS:
-            raise ValueError(f"Unsupported sensitivity_label: {sensitivity}")
-        if classification not in PERSONAL_DATA_CLASSIFICATIONS:
-            raise ValueError(f"Unsupported personal_data_classification: {classification}")
-        identity = _approved_column_identity(profile.get(str(review.get("column_name")), {}), review, env=env)
-        rows.append({
-            **identity,
-            "sensitivity_label": sensitivity, "personal_data_classification": classification,
-            "pii_identifier_type": str(review.get("pii_identifier_type") or ""), "handling_requirement": str(review.get("handling_requirement") or ""),
-            "reasoning": str(review.get("reasoning") or ""), "review_status": "approved", "approved_by": actor, "approved_at": now,
-            "ai_suggestion_json": _json(review.get("ai_suggestion_json") or review.get("ai_suggestion")), **audit,
-        })
-    return rows
-```
-
-**Used here because:**
-
-`record_table_governance` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `record_table_governance` or another caller that reaches `_build_classification_records`.
-
-### `def _approved_column_identity(profile_row: dict[str, Any], review_row: dict[str, Any], *, env: str | None=None) -> dict[str, str]`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L88-L100">View `_approved_column_identity` on GitHub</a>
-
-**Code:**
-
-```python
-def _approved_column_identity(profile_row: dict[str, Any], review_row: dict[str, Any], *, env: str | None = None) -> dict[str, str]:
-    col = str(review_row.get("column_name") or _value(profile_row, "column_name") or ((review_row.get("columns") or [""])[0]))
-    env_name = str(_value(profile_row, "environment_name") or review_row.get("environment_name") or env or "")
-    dataset = str(_value(profile_row, "dataset_name") or review_row.get("dataset_name") or "")
-    table = str(_value(profile_row, "table_name") or review_row.get("table_name") or "")
-    return {
-        "metadata_column_key": str(_value(profile_row, "metadata_column_key") or review_row.get("metadata_column_key") or _build_metadata_column_key(env_name, dataset, table, col)),
-        "metadata_table_key": str(_value(profile_row, "metadata_table_key") or review_row.get("metadata_table_key") or _build_metadata_table_key(env_name, dataset, table)),
-        "environment_name": env_name,
-        "dataset_name": dataset,
-        "table_name": table,
-        "column_name": col,
-    }
-```
-
-**Used here because:**
-
-`record_table_governance` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `record_table_governance` or another caller that reaches `_approved_column_identity`.
-
-### `def _value(row: dict[str, Any], name: str, default: Any='') -> Any`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L70-L71">View `_value` on GitHub</a>
-
-**Code:**
-
-```python
-def _value(row: dict[str, Any], name: str, default: Any = "") -> Any:
-    return row.get(name, row.get(name.upper(), default))
-```
-
-**Used here because:**
-
-`record_table_governance` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `record_table_governance` or another caller that reaches `_value`.
-
-### `def _build_metadata_column_key(environment_name, dataset_name, table_name, column_name) -> str`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/metadata.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L153-L154">View `_build_metadata_column_key` on GitHub</a>
-
-**Code:**
-
-```python
-def _build_metadata_column_key(environment_name, dataset_name, table_name, column_name) -> str:
-    return _stable_metadata_key(environment_name, dataset_name, table_name, column_name)
-```
-
-**Used here because:**
-
-`record_table_governance` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `record_table_governance` or another caller that reaches `_build_metadata_column_key`.
-
-### `def _stable_metadata_key(*parts: Any) -> str`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/metadata.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L144-L146">View `_stable_metadata_key` on GitHub</a>
-
-**Code:**
-
-```python
-def _stable_metadata_key(*parts: Any) -> str:
-    normalized = "|".join(str(part or "").strip().lower() for part in parts)
-    return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
-```
-
-**Used here because:**
-
-`record_table_governance` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `record_table_governance` or another caller that reaches `_stable_metadata_key`.
-
-### `def _build_metadata_table_key(environment_name, dataset_name, table_name) -> str`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/metadata.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L149-L150">View `_build_metadata_table_key` on GitHub</a>
-
-**Code:**
-
-```python
-def _build_metadata_table_key(environment_name, dataset_name, table_name) -> str:
-    return _stable_metadata_key(environment_name, dataset_name, table_name)
-```
-
-**Used here because:**
-
-`record_table_governance` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `record_table_governance` or another caller that reaches `_build_metadata_table_key`.
-
-### `def _approved_review_context(profile_rows: list[dict[str, Any]], *, config: Any=None, env: str | None=None, approved_by: str | None=None) -> tuple[dict[str, dict[str, Any]], str, str, dict[str, Any]]`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L82-L85">View `_approved_review_context` on GitHub</a>
-
-**Code:**
-
-```python
-def _approved_review_context(profile_rows: list[dict[str, Any]], *, config: Any = None, env: str | None = None, approved_by: str | None = None) -> tuple[dict[str, dict[str, Any]], str, str, dict[str, Any]]:
-    actor = _resolve_action_by(approved_by)
-    audit = _build_runtime_audit_fields(config=config, env=env or "", committed_by=actor) if config is not None and env is not None else {}
-    return {str(_value(r, "column_name")): r for r in profile_rows}, actor, _now_utc_iso(config), audit
-```
-
-**Used here because:**
-
-`record_table_governance` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `record_table_governance` or another caller that reaches `_approved_review_context`.
-
-### `def _build_runtime_audit_fields(*, config: Any=None, env: str | None=None, timestamp_field: str='_committed_at', user_field: str='_committed_by', workspace_field: str='_workspace_name', notebook_field: str='_notebook_name', metadata_lakehouse_field: str='_metadata_lakehouse_name', activity_field: str='_activity_id', committed_by: str | None=None, committed_at: str | None=None, runtime_context: dict[str, Any] | None=None) -> dict[str, str]`
-
-**What it does:**
-
-Build reusable framework-managed audit fields for metadata-table rows.
-
-**Source:**
-
-- `src/fabricops_kit/metadata.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L219-L289">View `_build_runtime_audit_fields` on GitHub</a>
-
-**Code:**
-
-```python
-def _build_runtime_audit_fields(
-    *,
-    config: Any = None,
-    env: str | None = None,
-    timestamp_field: str = "_committed_at",
-    user_field: str = "_committed_by",
-    workspace_field: str = "_workspace_name",
-    notebook_field: str = "_notebook_name",
-    metadata_lakehouse_field: str = "_metadata_lakehouse_name",
-    activity_field: str = "_activity_id",
-    committed_by: str | None = None,
-    committed_at: str | None = None,
-    runtime_context: dict[str, Any] | None = None,
-) -> dict[str, str]:
-    """Build reusable framework-managed audit fields for metadata-table rows.
-
-    Parameters
-    ----------
-    config : FrameworkConfig | dict, optional
-        Framework config containing ``path_config.paths[env]["metadata"]``.
-    env : str, optional
-        Environment key paired with ``config``.
-    timestamp_field, user_field, workspace_field, notebook_field : str
-        Output keys for timestamp, user, workspace, and notebook audit values.
-    metadata_lakehouse_field, activity_field : str
-        Output keys for metadata lakehouse and Fabric activity audit values.
-    committed_by, committed_at : str, optional
-        Deterministic audit overrides. When omitted, values resolve from Fabric
-        runtime context and the configured audit timezone timestamp.
-    runtime_context : dict[str, Any], optional
-        Values merged over :func:`_runtime_context`, primarily for tests or
-        controlled notebook overrides.
-
-    Returns
-    -------
-    dict[str, str]
-        Framework-managed metadata audit values keyed by the supplied field
-        names.
-
-    Notes
-    -----
-    DataFrame runtime audit columns and metadata-table audit fields both use
-    underscore-prefixed names. This helper centralizes the metadata-table
-    convention so notebooks can reuse runtime context when adding dataframe
-    audit columns inline.
-    """
-    context = {**_runtime_context(), **(runtime_context or {})}
-
-    def _first_non_blank(*keys: str) -> Any:
-        for key in keys:
-            value = _context_get(context, key)
-            if value is not None and str(value).strip():
-                return value
-        return None
-
-    metadata_lakehouse_name = ""
-    if config is not None and env is not None:
-        paths = config.path_config.paths if hasattr(config, "path_config") else config.paths
-        metadata_lakehouse_name = _safe_str(paths[env]["metadata"].name)
-    return {
-        user_field: _safe_str(committed_by).strip()
-        if committed_by and _safe_str(committed_by).strip()
-        else _safe_str(_first_non_blank("userName", "userId") or "unknown"),
-        timestamp_field: _safe_str(committed_at)
-        if committed_at
-        else _current_audit_timestamp(config=config),
-        workspace_field: _safe_str(_first_non_blank("currentWorkspaceName", "workspaceName") or ""),
-        notebook_field: _safe_str(_first_non_blank("currentNotebookName", "notebookName") or ""),
-        metadata_lakehouse_field: metadata_lakehouse_name,
-        activity_field: _safe_str(_first_non_blank("activityId") or ""),
-    }
-```
-
-**Used here because:**
-
-`record_table_governance` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `record_table_governance` or another caller that reaches `_build_runtime_audit_fields`.
-
-### `def _current_audit_timestamp(config: Any=None, timezone_name: str | None=None, *, drop_microseconds: bool=True) -> str`
-
-**What it does:**
-
-Return the current audit timestamp in the configured audit timezone.
-
-**Source:**
-
-- `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L69-L75">View `_current_audit_timestamp` on GitHub</a>
-
-**Code:**
-
-```python
-def _current_audit_timestamp(config: Any = None, timezone_name: str | None = None, *, drop_microseconds: bool = True) -> str:
-    """Return the current audit timestamp in the configured audit timezone."""
-    tz_name = _get_audit_timezone(config, timezone_name)
-    value = datetime.now(ZoneInfo(tz_name))
-    if drop_microseconds:
-        value = value.replace(microsecond=0)
-    return value.isoformat()
-```
-
-**Used here because:**
-
-`record_table_governance` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `record_table_governance` or another caller that reaches `_current_audit_timestamp`.
-
-### `def _get_audit_timezone(config: Any=None, timezone_name: str | None=None) -> str`
-
-**What it does:**
-
-Resolve the configured FabricOps audit timezone, defaulting to UTC.
-
-**Source:**
-
-- `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L61-L66">View `_get_audit_timezone` on GitHub</a>
-
-**Code:**
-
-```python
-def _get_audit_timezone(config: Any = None, timezone_name: str | None = None) -> str:
-    """Resolve the configured FabricOps audit timezone, defaulting to UTC."""
-    if timezone_name is not None:
-        return _validate_audit_timezone(timezone_name)
-    value = getattr(config, "audit_timezone", None) if config is not None else None
-    return _validate_audit_timezone(value)
-```
-
-**Used here because:**
-
-`record_table_governance` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `record_table_governance` or another caller that reaches `_get_audit_timezone`.
-
-### `def _validate_audit_timezone(timezone_name: str | None) -> str`
-
-**What it does:**
-
-Return a valid IANA audit timezone name.
-
-**Source:**
-
-- `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L27-L58">View `_validate_audit_timezone` on GitHub</a>
-
-**Code:**
-
-```python
-def _validate_audit_timezone(timezone_name: str | None) -> str:
-    """Return a valid IANA audit timezone name.
-
-    Parameters
-    ----------
-    timezone_name : str or None
-        IANA timezone name to validate. Blank values default to ``"UTC"``.
-
-    Returns
-    -------
-    str
-        Validated timezone name.
-
-    Raises
-    ------
-    ValueError
-        If a non-blank value is not a valid IANA timezone name.
-    """
-    value = str(timezone_name or DEFAULT_AUDIT_TIMEZONE).strip() or DEFAULT_AUDIT_TIMEZONE
-    if value != DEFAULT_AUDIT_TIMEZONE and "/" not in value:
-        raise ValueError(
-            f'Invalid FABRICOPS_AUDIT_TIMEZONE: "{value}". '
-            'Use a valid IANA timezone name such as "Asia/Singapore" or keep the default "UTC".'
-        )
-    try:
-        ZoneInfo(value)
-    except ZoneInfoNotFoundError as exc:
-        raise ValueError(
-            f'Invalid FABRICOPS_AUDIT_TIMEZONE: "{value}". '
-            'Use a valid IANA timezone name such as "Asia/Singapore" or keep the default "UTC".'
-        ) from exc
-    return value
-```
-
-**Used here because:**
-
-`record_table_governance` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `record_table_governance` or another caller that reaches `_validate_audit_timezone`.
-
-### `def _context_get(context: Any, *keys: str) -> Any`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/metadata.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L173-L185">View `_context_get` on GitHub</a>
-
-**Code:**
-
-```python
-def _context_get(context: Any, *keys: str) -> Any:
-    for key in keys:
-        try:
-            if isinstance(context, dict):
-                value = context.get(key)
-            else:
-                getter = getattr(context, "get", None)
-                value = getter(key) if callable(getter) else None
-        except Exception:
-            value = None
-        if value is not None:
-            return value
-    return None
-```
-
-**Used here because:**
-
-`record_table_governance` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `record_table_governance` or another caller that reaches `_context_get`.
-
-### `def _runtime_context() -> dict[str, Any]`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/metadata.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L192-L216">View `_runtime_context` on GitHub</a>
-
-**Code:**
-
-```python
-def _runtime_context() -> dict[str, Any]:
-    try:
-        import notebookutils  # type: ignore
-    except Exception:
-        return {}
-
-    runtime = getattr(notebookutils, "runtime", None)
-    context = getattr(runtime, "context", None)
-    if context is None:
-        return {}
-
-    keys = [
-        "currentWorkspaceId",
-        "currentWorkspaceName",
-        "currentNotebookId",
-        "currentNotebookName",
-        "workspaceId",
-        "workspaceName",
-        "notebookId",
-        "notebookName",
-        "userId",
-        "userName",
-        "activityId",
-    ]
-    return {key: _context_get(context, key) for key in keys}
-```
-
-**Used here because:**
-
-`record_table_governance` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `record_table_governance` or another caller that reaches `_runtime_context`.
-
-### `def _safe_str(value: Any) -> str`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/metadata.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L188-L189">View `_safe_str` on GitHub</a>
-
-**Code:**
-
-```python
-def _safe_str(value: Any) -> str:
-    return "" if value is None else str(value)
-```
-
-**Used here because:**
-
-`record_table_governance` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `record_table_governance` or another caller that reaches `_safe_str`.
-
-### `def _now_utc_iso(config: Any=None) -> str`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/metadata.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L133-L134">View `_now_utc_iso` on GitHub</a>
-
-**Code:**
-
-```python
-def _now_utc_iso(config: Any = None) -> str:
-    return _current_audit_timestamp(config=config, drop_microseconds=False)
-```
-
-**Used here because:**
-
-`record_table_governance` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `record_table_governance` or another caller that reaches `_now_utc_iso`.
-
-### `def _resolve_action_by(action_by: str | None=None) -> str`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/metadata.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L137-L141">View `_resolve_action_by` on GitHub</a>
-
-**Code:**
-
-```python
-def _resolve_action_by(action_by: str | None = None) -> str:
-    if action_by:
-        return str(action_by)
-    context = _runtime_context()
-    return str(_context_get(context, "userName", "userId") or "unknown")
-```
-
-**Used here because:**
-
-`record_table_governance` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `record_table_governance` or another caller that reaches `_resolve_action_by`.
-
-### `def _json(value: Any) -> str`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L526-L531">View `_json` on GitHub</a>
-
-**Code:**
-
-```python
-def _json(value: Any) -> str:
-    if value in (None, ""):
-        return ""
-    if isinstance(value, str):
-        return value
-    return json.dumps(value, sort_keys=True)
-```
-
-**Used here because:**
-
-`record_table_governance` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `record_table_governance` or another caller that reaches `_json`.
-
-### `def _build_column_context_records(profile_rows: list[dict[str, Any]], reviewed_rows: list[dict[str, Any]], *, config: Any=None, env: str | None=None, approved_by: str | None=None) -> list[dict[str, Any]]`
-
-**What it does:**
-
-Build append-only approved business-context records from explicit reviews.
-
-**Source:**
-
-- `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L409-L422">View `_build_column_context_records` on GitHub</a>
-
-**Code:**
-
-```python
-def _build_column_context_records(profile_rows: list[dict[str, Any]], reviewed_rows: list[dict[str, Any]], *, config: Any = None, env: str | None = None, approved_by: str | None = None) -> list[dict[str, Any]]:
-    """Build append-only approved business-context records from explicit reviews."""
-    profile, actor, now, audit = _approved_review_context(profile_rows, config=config, env=env, approved_by=approved_by)
-    rows = []
-    for review in reviewed_rows or []:
-        if str(review.get("review_status", "approved")).lower() != "approved" or not review.get("commit"):
-            continue
-        identity = _approved_column_identity(profile.get(str(review.get("column_name")), {}), review, env=env)
-        rows.append({
-            **identity,
-            "business_context": str(review.get("business_context") or ""), "notes": str(review.get("notes") or ""), "review_status": "approved",
-            "approved_by": actor, "approved_at": now, "ai_suggestion_json": _json(review.get("ai_suggestion_json") or review.get("ai_suggestion")), **audit,
-        })
-    return rows
-```
-
-**Used here because:**
-
-`record_table_governance` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `record_table_governance` or another caller that reaches `_build_column_context_records`.
-
-### `def _build_dq_rule_records(profile_rows: list[dict[str, Any]], reviewed_rules: list[dict[str, Any]], *, config: Any=None, env: str | None=None, approved_by: str | None=None) -> list[dict[str, Any]]`
-
-**What it does:**
-
-Build append-only approved DQ-rule records without enforcing them.
-
-**Source:**
-
-- `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L450-L501">View `_build_dq_rule_records` on GitHub</a>
-
-**Code:**
-
-```python
-def _build_dq_rule_records(profile_rows: list[dict[str, Any]], reviewed_rules: list[dict[str, Any]], *, config: Any = None, env: str | None = None, approved_by: str | None = None) -> list[dict[str, Any]]:
-    """Build append-only approved DQ-rule records without enforcing them."""
-    profile, actor, now, audit = _approved_review_context(profile_rows, config=config, env=env, approved_by=approved_by)
-    rows = []
-    for rule in reviewed_rules or []:
-        if not rule.get("commit"):
-            continue
-        review_status = str(rule.get("review_status", "approved")).lower()
-        action_type = str(rule.get("action_type") or ("created" if rule.get("is_active", True) else "deactivated")).lower()
-        if action_type == "delete":
-            action_type = "deactivated"
-        if action_type not in {"created", "updated", "deactivated", "reactivated", "approved"}:
-            raise ValueError(f"Unsupported DQ action_type: {action_type}")
-        is_active = bool(rule.get("is_active", action_type != "deactivated"))
-        if action_type == "deactivated":
-            is_active = False
-        if action_type == "reactivated":
-            is_active = True
-        if review_status != "approved":
-            continue
-        draft = dict(rule)
-        draft["rule_type"] = _canonical_dq_rule_type(draft.get("rule_type"))
-        if draft["rule_type"] != "expression_true":
-            columns = draft.get("columns") or ([draft.get("column_name")] if draft.get("column_name") else [])
-            if isinstance(columns, str):
-                columns = [c.strip() for c in columns.split(",") if c.strip()]
-            draft["columns"] = list(columns or [])
-        _validate_dq_rules([draft])
-        columns = [str(c) for c in draft.get("columns", [])]
-        display_column = str(rule.get("column_name") or ", ".join(columns) or "")
-        primary_column = columns[0] if columns else display_column
-        identity = _approved_column_identity(profile.get(primary_column, {}), {**rule, "column_name": display_column, "columns": columns}, env=env)
-        identity["column_name"] = display_column
-        rule_id = str(rule.get("rule_id") or f"{identity['table_name']}.{display_column or 'table'}.{draft['rule_type']}")
-        params = _dq_rule_parameter_payload(draft, columns)
-        rows.append({
-            "rule_key": str(rule.get("rule_key") or _build_dq_rule_key(identity["environment_name"], identity["dataset_name"], identity["table_name"], rule_id)),
-            "rule_id": rule_id,
-            **identity,
-            "rule_type": draft["rule_type"],
-            "rule_parameters_json": _json(params),
-            "severity": str(rule.get("severity") or "warning").lower(),
-            "description": str(rule.get("description") or ""),
-            "is_active": is_active,
-            "review_status": "approved",
-            "approved_by": str(rule.get("approved_by") or actor),
-            "approved_at": str(rule.get("approved_at") or now),
-            "ai_suggestion_json": _json(rule.get("ai_suggestion_json") or rule.get("ai_suggestion")),
-            "action_type": action_type,
-            **audit,
-        })
-    return rows
-```
-
-**Used here because:**
-
-`record_table_governance` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `record_table_governance` or another caller that reaches `_build_dq_rule_records`.
-
-### `def _canonical_dq_rule_type(rule_type: Any) -> str`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L78-L79">View `_canonical_dq_rule_type` on GitHub</a>
-
-**Code:**
-
-```python
-def _canonical_dq_rule_type(rule_type: Any) -> str:
-    return str(rule_type or "").strip()
-```
-
-**Used here because:**
-
-`record_table_governance` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `record_table_governance` or another caller that reaches `_canonical_dq_rule_type`.
-
-### `def _dq_rule_parameter_payload(rule: dict[str, Any], columns: list[str]) -> dict[str, Any]`
-
-**What it does:**
-
-Return rule parameters stored inside ``rule_parameters_json``.
-
-**Source:**
-
-- `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L425-L447">View `_dq_rule_parameter_payload` on GitHub</a>
-
-**Code:**
-
-```python
-def _dq_rule_parameter_payload(rule: dict[str, Any], columns: list[str]) -> dict[str, Any]:
-    """Return rule parameters stored inside ``rule_parameters_json``."""
-    metadata_fields = {
-        "rule_key", "rule_id", "metadata_column_key", "metadata_table_key", "environment_name", "dataset_name",
-        "table_name", "column_name", "rule_type", "rule_parameters", "rule_parameters_json", "severity",
-        "description", "is_active", "review_status", "approved_by", "approved_at", "ai_suggestion_json",
-        "ai_suggestion", "action_type", "commit", "_committed_at", "_committed_by", "_workspace_name",
-        "_notebook_name", "_metadata_lakehouse_name", "_activity_id",
-    }
-    payload: dict[str, Any] = {"columns": columns}
-    raw = rule.get("rule_parameters") or rule.get("rule_parameters_json") or {}
-    if isinstance(raw, str) and raw.strip():
-        try:
-            raw = json.loads(raw)
-        except Exception:
-            raw = {}
-    if isinstance(raw, dict):
-        payload.update(raw)
-    for key, value in rule.items():
-        if key not in metadata_fields and value is not None:
-            payload[key] = value
-    payload["columns"] = columns
-    return payload
-```
-
-**Used here because:**
-
-`record_table_governance` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `record_table_governance` or another caller that reaches `_dq_rule_parameter_payload`.
-
-### `def _validate_dq_rules(rules: list[dict[str, Any]]) -> list[dict[str, Any]]`
-
-**What it does:**
-
-Validate canonical DQ rules before loading or enforcement.
-
-**Source:**
-
-- `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L1183-L1256">View `_validate_dq_rules` on GitHub</a>
-
-**Code:**
-
-```python
-def _validate_dq_rules(rules: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Validate canonical DQ rules before loading or enforcement."""
-    if not isinstance(rules, list):
-        raise ValueError("DQ rules must be a list of dictionaries.")
-
-    optional_common = {"severity", "description", "rule_id", "is_active", "review_status"}
-    del optional_common  # Documents intentionally accepted fields for callers and tests.
-
-    def require_columns(rule: dict[str, Any], count: int | None = None, *, minimum: int | None = None) -> list[str]:
-        cols = rule.get("columns")
-        if isinstance(cols, str):
-            cols = [c.strip() for c in cols.split(",") if c.strip()]
-            rule["columns"] = cols
-        if not isinstance(cols, list) or not cols or not all(str(c).strip() for c in cols):
-            raise ValueError(f"DQ rule '{rule.get('rule_id', '?')}' columns must be a non-empty list.")
-        cols = [str(c).strip() for c in cols]
-        rule["columns"] = cols
-        if count is not None and len(cols) != count:
-            raise ValueError(f"DQ rule '{rule.get('rule_id', '?')}' requires exactly {count} column(s).")
-        if minimum is not None and len(cols) < minimum:
-            raise ValueError(f"DQ rule '{rule.get('rule_id', '?')}' requires at least {minimum} column(s).")
-        return cols
-
-    for i, rule in enumerate(rules):
-        if not isinstance(rule, dict):
-            raise ValueError(f"DQ rule at index {i} must be a dictionary.")
-        rule.setdefault("rule_id", f"dq_rule_{i + 1}")
-        rule.setdefault("severity", "warning")
-        rule.setdefault("description", "")
-        rule["rule_type"] = _canonical_dq_rule_type(rule.get("rule_type"))
-        rtype = rule["rule_type"]
-        if rtype not in DQ_RULE_TYPES:
-            raise ValueError(f"DQ rule '{rule['rule_id']}' has unsupported rule_type '{rtype}'.")
-        if str(rule.get("severity", "warning")).lower() not in {"warning", "error"}:
-            raise ValueError(f"DQ rule '{rule['rule_id']}' severity must be warning or error.")
-
-        if rtype in {"not_null", "non_empty_string", "required_when"}:
-            require_columns(rule, minimum=1)
-        elif rtype in {
-            "null_rate_below", "unique", "accepted_values", "not_in_values", "between",
-            "greater_than", "greater_than_or_equal", "less_than", "less_than_or_equal",
-            "regex_match", "date_not_future", "date_between", "freshness", "max_age_days", "value_when",
-        }:
-            require_columns(rule, count=1)
-        elif rtype == "unique_combination":
-            require_columns(rule, minimum=2)
-        elif rtype in {"column_pair_equal", "column_a_gte_column_b", "column_a_gt_column_b"}:
-            require_columns(rule, count=2)
-        elif rtype == "expression_true":
-            if not str(rule.get("expression") or "").strip():
-                raise ValueError(f"DQ rule '{rule['rule_id']}' requires expression.")
-
-        if rtype == "null_rate_below" and rule.get("max_null_percent") is None:
-            raise ValueError(f"DQ rule '{rule['rule_id']}' requires max_null_percent.")
-        if rtype == "accepted_values" and "allowed_values" not in rule:
-            raise ValueError(f"DQ rule '{rule['rule_id']}' requires allowed_values.")
-        if rtype == "not_in_values" and "blocked_values" not in rule:
-            raise ValueError(f"DQ rule '{rule['rule_id']}' requires blocked_values.")
-        if rtype in {"between", "date_between"} and rule.get("min_value") is None and rule.get("max_value") is None:
-            raise ValueError(f"DQ rule '{rule['rule_id']}' requires min_value or max_value.")
-        if rtype in {"greater_than", "greater_than_or_equal", "less_than", "less_than_or_equal"} and rule.get("value") is None:
-            raise ValueError(f"DQ rule '{rule['rule_id']}' requires value.")
-        if rtype == "regex_match" and not str(rule.get("regex_pattern") or ""):
-            raise ValueError(f"DQ rule '{rule['rule_id']}' requires regex_pattern.")
-        if rtype in {"freshness", "max_age_days"} and rule.get("max_age_days") is None:
-            raise ValueError(f"DQ rule '{rule['rule_id']}' requires max_age_days.")
-        if rtype == "required_when" and not str(rule.get("condition") or "").strip():
-            raise ValueError(f"DQ rule '{rule['rule_id']}' requires condition.")
-        if rtype == "value_when":
-            if not str(rule.get("condition") or "").strip():
-                raise ValueError(f"DQ rule '{rule['rule_id']}' requires condition.")
-            if "expected_value" not in rule:
-                raise ValueError(f"DQ rule '{rule['rule_id']}' requires expected_value.")
-    return rules
-```
-
-**Used here because:**
-
-`record_table_governance` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `record_table_governance` or another caller that reaches `_validate_dq_rules`.
-
-### `def _build_dq_rule_key(environment_name, dataset_name, table_name, rule_id) -> str`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/metadata.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L157-L158">View `_build_dq_rule_key` on GitHub</a>
-
-**Code:**
-
-```python
-def _build_dq_rule_key(environment_name, dataset_name, table_name, rule_id) -> str:
-    return _stable_metadata_key(environment_name, dataset_name, table_name, rule_id)
-```
-
-**Used here because:**
-
-`record_table_governance` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `record_table_governance` or another caller that reaches `_build_dq_rule_key`.
-
-### `def _review_governance_evidence(config: Any, env: str, selection: dict[str, Any], *, spark_session: Any, reviewed_by: str | None=None, mode: str='append') -> dict[str, Any]`
-
-**What it does:**
-
-Review persisted v1 evidence and write a governance outcome row.
-
-**Source:**
-
-- `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L867-L1013">View `_review_governance_evidence` on GitHub</a>
-
-**Code:**
-
-```python
-def _review_governance_evidence(
-    config: Any,
-    env: str,
-    selection: dict[str, Any],
-    *,
-    spark_session: Any,
-    reviewed_by: str | None = None,
-    mode: str = "append",
-) -> dict[str, Any]:
-    """Review persisted v1 evidence and write a governance outcome row.
-
-    Parameters
-    ----------
-    config : FrameworkConfig or dict
-        Shared ``00_env_config`` configuration used for metadata lakehouse routing.
-    env : str
-        Environment key in ``config``.
-    selection : dict[str, Any]
-        Catalogue-table selection returned by ``get_selected_catalogue_table``.
-    spark_session : pyspark.sql.SparkSession
-        Spark session used to read and write metadata tables.
-    reviewed_by : str, optional
-        Reviewer identity. Runtime user metadata is used when omitted.
-    mode : str, default="append"
-        Write mode for ``METADATA_GOVERNANCE_REVIEWS``.
-
-    Returns
-    -------
-    dict[str, Any]
-        Governance review row plus blocker, warning, and evidence details.
-
-    Notes
-    -----
-    The function intentionally re-reads agreement, catalogue, pipeline-run, and
-    evidence metadata from the configured ``metadata`` target so ``03_governance``
-    can run in a separate session after ``02_pipeline``.
-    """
-    profile_rows = load_catalogue_profile_rows(config, env, selection, spark_session=spark_session)
-    first_profile = profile_rows[0]
-    env_name = str(_value(first_profile, "environment_name") or selection.get("environment_name") or env)
-    dataset_name = str(_value(first_profile, "dataset_name") or selection.get("dataset_name") or "")
-    table_name = str(_value(first_profile, "table_name") or selection.get("table_name") or "")
-    table_key = str(_value(first_profile, "metadata_table_key") or selection.get("metadata_table_key") or _build_metadata_table_key(env_name, dataset_name, table_name))
-    profile_run_id = str(_value(first_profile, "profile_run_id") or selection.get("profile_run_id") or "")
-    profile_stage = str(_value(first_profile, "profile_stage") or selection.get("profile_stage") or "")
-    agreement_id = str(_value(first_profile, "agreement_id") or _value(first_profile, "AGREEMENT_ID") or "")
-    agreement_contract_version = str(_value(first_profile, "contract_version") or _value(first_profile, "AGREEMENT_CONTRACT_VERSION") or "")
-
-    all_pipeline_rows = [
-        row for row in _read_metadata_rows(config, env, PIPELINE_RUNS_TABLE, spark_session=spark_session)
-        if str(_value(row, "environment_name")) == env_name
-    ]
-    related_pipeline_rows = [
-        row for row in all_pipeline_rows
-        if not agreement_id or str(_value(row, "agreement_id")) == agreement_id
-    ]
-    pipeline_rows = [
-        row for row in related_pipeline_rows
-        if not profile_run_id or str(_value(row, "run_id")) == profile_run_id
-    ]
-    latest_pipeline = _latest_row(pipeline_rows, "completed_at", "created_at", "run_id")
-
-    agreement_rows = [
-        row for row in _read_metadata_rows(config, env, DATA_AGREEMENT_TABLE, spark_session=spark_session)
-        if agreement_id and str(_value(row, "agreement_id")) == agreement_id
-        and (not agreement_contract_version or str(_value(row, "contract_version")) == agreement_contract_version)
-    ]
-    attachment_rows = [
-        row for row in _read_metadata_rows(config, env, DATA_AGREEMENT_EVIDENCE_TABLE, spark_session=spark_session)
-        if agreement_id and str(_value(row, "agreement_id")) == agreement_id
-        and (not agreement_contract_version or str(_value(row, "contract_version")) == agreement_contract_version)
-    ]
-
-    blockers: list[dict[str, str]] = []
-    warnings: list[dict[str, str]] = []
-
-    def _append_once(items: list[dict[str, str]], *, code: str, message: str) -> None:
-        if not any(item.get("code") == code for item in items):
-            items.append({"code": code, "message": message})
-
-    if not agreement_id:
-        _append_once(blockers, code="missing_agreement_id", message="Catalogue evidence is not linked to an agreement.")
-    elif not agreement_rows:
-        _append_once(blockers, code="missing_agreement_metadata", message="No matching agreement metadata row was found.")
-    if latest_pipeline is None:
-        _append_once(blockers, code="missing_pipeline_run", message="No matching pipeline run summary was found.")
-    elif _status_is_failed(_value(latest_pipeline, "status")):
-        _append_once(blockers, code="pipeline_failed", message="Latest pipeline run did not complete successfully.")
-
-    dq_statuses = {str(_value(row, "dq_status") or "").lower() for row in profile_rows}
-    dq_error_count = sum(int(_value(row, "dq_error_rule_count", 0) or 0) for row in profile_rows)
-    dq_failed_count = sum(int(_value(row, "dq_failed_rule_count", 0) or 0) for row in profile_rows)
-    if "failed" in dq_statuses or dq_error_count > 0:
-        _append_once(blockers, code="dq_failed", message="Failed DQ evidence blocks approval.")
-    elif "warning" in dq_statuses or dq_failed_count > 0:
-        _append_once(warnings, code="dq_warning", message="DQ warning evidence requires remediation review.")
-
-    if latest_pipeline is not None:
-        pipeline_dq_status = _value(latest_pipeline, "dq_status")
-        if _status_is_failed(pipeline_dq_status):
-            _append_once(blockers, code="dq_failed", message="Pipeline DQ status blocks approval.")
-        elif _status_is_warning(pipeline_dq_status):
-            _append_once(warnings, code="dq_warning", message="Pipeline DQ status requires remediation review.")
-
-        for field in ("source_guardrail_status", "target_guardrail_status"):
-            status = _value(latest_pipeline, field)
-            if _status_is_failed(status):
-                blockers.append({"code": f"{field}_failed", "message": f"{field} is {status}; schema drift or guardrail failure is present."})
-            elif _status_is_warning(status):
-                warnings.append({"code": f"{field}_warning", "message": f"{field} is {status}; schema drift is surfaced for review."})
-
-    outcome = "rejected" if blockers else ("needs_remediation" if warnings else "approved")
-    reviewed_at = _now_utc_iso(config)
-    actor = _resolve_action_by(reviewed_by)
-    audit = _build_runtime_audit_fields(config=config, env=env, committed_by=actor, committed_at=reviewed_at)
-    evidence_summary = {
-        "agreement_row_count": len(agreement_rows),
-        "agreement_attachment_count": len(attachment_rows),
-        "profile_column_count": len(profile_rows),
-        "pipeline_run_count": len(pipeline_rows),
-        "related_pipeline_run_count": len(related_pipeline_rows),
-        "prior_pipeline_run_ids": [str(_value(row, "run_id")) for row in related_pipeline_rows if str(_value(row, "run_id")) != profile_run_id],
-        "latest_pipeline_run": latest_pipeline or {},
-    }
-    row = {
-        "review_id": f"{profile_run_id or 'profile'}-{uuid.uuid4().hex[:12]}",
-        "environment_name": env_name,
-        "dataset_name": dataset_name,
-        "table_name": table_name,
-        "metadata_table_key": table_key,
-        "profile_run_id": profile_run_id,
-        "profile_stage": profile_stage,
-        "pipeline_run_id": str(_value(latest_pipeline or {}, "run_id")),
-        "agreement_id": agreement_id,
-        "agreement_contract_version": agreement_contract_version,
-        "outcome": outcome,
-        "blocker_count": len(blockers),
-        "warning_count": len(warnings),
-        "blockers_json": json.dumps(blockers, sort_keys=True),
-        "warnings_json": json.dumps(warnings, sort_keys=True),
-        "evidence_summary_json": json.dumps(evidence_summary, default=str, sort_keys=True),
-        "reviewed_at": reviewed_at,
-        "reviewed_by": actor,
-        **audit,
-    }
-    write_lakehouse_table(spark_session.createDataFrame([row]), config, env, "metadata", GOVERNANCE_REVIEWS_TABLE, mode=mode)
-    return {"review": row, "outcome": outcome, "blockers": blockers, "warnings": warnings, "evidence_summary": evidence_summary}
-```
-
-**Used here because:**
-
-`record_table_governance` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `record_table_governance` or another caller that reaches `_review_governance_evidence`.
-
-### `def _latest_row(rows: list[dict[str, Any]], *order_fields: str) -> dict[str, Any] | None`
-
-**What it does:**
-
-Return the latest row using lexicographic string timestamps/ids.
-
-**Source:**
-
-- `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L848-L852">View `_latest_row` on GitHub</a>
-
-**Code:**
-
-```python
-def _latest_row(rows: list[dict[str, Any]], *order_fields: str) -> dict[str, Any] | None:
-    """Return the latest row using lexicographic string timestamps/ids."""
-    if not rows:
-        return None
-    return max(rows, key=lambda row: tuple(str(_value(row, field)) for field in order_fields))
-```
-
-**Used here because:**
-
-`record_table_governance` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `record_table_governance` or another caller that reaches `_latest_row`.
-
-### `def _read_metadata_rows(config: Any, env: str, table: str, *, spark_session: Any) -> list[dict[str, Any]]`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L863-L864">View `_read_metadata_rows` on GitHub</a>
-
-**Code:**
-
-```python
-def _read_metadata_rows(config: Any, env: str, table: str, *, spark_session: Any) -> list[dict[str, Any]]:
-    return _coerce_rows(read_lakehouse_table(config, env, "metadata", table, spark_session=spark_session))
-```
-
-**Used here because:**
-
-`record_table_governance` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `record_table_governance` or another caller that reaches `_read_metadata_rows`.
-
-### `def _coerce_rows(rows_or_df: Any) -> list[dict[str, Any]]`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L62-L67">View `_coerce_rows` on GitHub</a>
-
-**Code:**
-
-```python
-def _coerce_rows(rows_or_df: Any) -> list[dict[str, Any]]:
-    if rows_or_df is None:
-        return []
-    if hasattr(rows_or_df, "collect"):
-        rows_or_df = rows_or_df.collect()
-    return [row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row) for row in rows_or_df]
-```
-
-**Used here because:**
-
-`record_table_governance` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `record_table_governance` or another caller that reaches `_coerce_rows`.
-
-### `def _status_is_failed(value: Any) -> bool`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L855-L856">View `_status_is_failed` on GitHub</a>
-
-**Code:**
-
-```python
-def _status_is_failed(value: Any) -> bool:
-    return str(value or "").strip().lower() in {"failed", "fail", "error", "errors", "rejected"}
-```
-
-**Used here because:**
-
-`record_table_governance` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `record_table_governance` or another caller that reaches `_status_is_failed`.
-
-### `def _status_is_warning(value: Any) -> bool`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L859-L860">View `_status_is_warning` on GitHub</a>
-
-**Code:**
-
-```python
-def _status_is_warning(value: Any) -> bool:
-    return str(value or "").strip().lower() in {"warning", "warnings", "needs_remediation", "drift"}
-```
-
-**Used here because:**
-
-`record_table_governance` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `record_table_governance` or another caller that reaches `_status_is_warning`.
-
-
-</details>
-
-## Source
+## Public callable source code
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L1015-L1117">View record_table_governance on GitHub</a>
-
-<details class="reference-source-details">
-<summary>Show source code</summary>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L1015-L1117">View record_table_governance on GitHub</a>
 
 ```python
 def record_table_governance(
@@ -1626,7 +400,922 @@ def record_table_governance(
     }
 ```
 
-</details>
+## Nested helper functions
+
+??? info "Nested helper functions: 29"
+
+    These helpers support `record_table_governance` by handling shared implementation tasks reached from the public call flow; expand the source block only when you need maintainer-level details.
+
+    <table class="reference-function-table">
+      <thead>
+        <tr>
+          <th>Helper</th>
+          <th>Role</th>
+          <th>Source</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td data-label="Helper"><code>_build_classification_records</code></td>
+          <td data-label="Role">Build append-only approved sensitivity and PII classification records.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L503-L524"><code>src/fabricops_kit/governance_review.py#L503-L524</code></a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_approved_column_identity</code></td>
+          <td data-label="Role">Internal helper used by the package implementation.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L88-L100"><code>src/fabricops_kit/governance_review.py#L88-L100</code></a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_value</code></td>
+          <td data-label="Role">Internal helper used by the package implementation.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L70-L71"><code>src/fabricops_kit/governance_review.py#L70-L71</code></a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_build_metadata_column_key</code></td>
+          <td data-label="Role">Internal helper used by the package implementation.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/metadata.py#L153-L154"><code>src/fabricops_kit/metadata.py#L153-L154</code></a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_stable_metadata_key</code></td>
+          <td data-label="Role">Internal helper used by the package implementation.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/metadata.py#L144-L146"><code>src/fabricops_kit/metadata.py#L144-L146</code></a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_build_metadata_table_key</code></td>
+          <td data-label="Role">Internal helper used by the package implementation.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/metadata.py#L149-L150"><code>src/fabricops_kit/metadata.py#L149-L150</code></a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_approved_review_context</code></td>
+          <td data-label="Role">Internal helper used by the package implementation.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L82-L85"><code>src/fabricops_kit/governance_review.py#L82-L85</code></a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_build_runtime_audit_fields</code></td>
+          <td data-label="Role">Build reusable framework-managed audit fields for metadata-table rows.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/metadata.py#L219-L289"><code>src/fabricops_kit/metadata.py#L219-L289</code></a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_current_audit_timestamp</code></td>
+          <td data-label="Role">Return the current audit timestamp in the configured audit timezone.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L69-L75"><code>src/fabricops_kit/config.py#L69-L75</code></a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_get_audit_timezone</code></td>
+          <td data-label="Role">Resolve the configured FabricOps audit timezone, defaulting to UTC.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L61-L66"><code>src/fabricops_kit/config.py#L61-L66</code></a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_validate_audit_timezone</code></td>
+          <td data-label="Role">Return a valid IANA audit timezone name.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L27-L58"><code>src/fabricops_kit/config.py#L27-L58</code></a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_context_get</code></td>
+          <td data-label="Role">Internal helper used by the package implementation.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/metadata.py#L173-L185"><code>src/fabricops_kit/metadata.py#L173-L185</code></a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_runtime_context</code></td>
+          <td data-label="Role">Internal helper used by the package implementation.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/metadata.py#L192-L216"><code>src/fabricops_kit/metadata.py#L192-L216</code></a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_safe_str</code></td>
+          <td data-label="Role">Internal helper used by the package implementation.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/metadata.py#L188-L189"><code>src/fabricops_kit/metadata.py#L188-L189</code></a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_now_utc_iso</code></td>
+          <td data-label="Role">Internal helper used by the package implementation.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/metadata.py#L133-L134"><code>src/fabricops_kit/metadata.py#L133-L134</code></a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_resolve_action_by</code></td>
+          <td data-label="Role">Internal helper used by the package implementation.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/metadata.py#L137-L141"><code>src/fabricops_kit/metadata.py#L137-L141</code></a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_json</code></td>
+          <td data-label="Role">Internal helper used by the package implementation.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L526-L531"><code>src/fabricops_kit/governance_review.py#L526-L531</code></a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_build_column_context_records</code></td>
+          <td data-label="Role">Build append-only approved business-context records from explicit reviews.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L409-L422"><code>src/fabricops_kit/governance_review.py#L409-L422</code></a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_build_dq_rule_records</code></td>
+          <td data-label="Role">Build append-only approved DQ-rule records without enforcing them.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L450-L501"><code>src/fabricops_kit/governance_review.py#L450-L501</code></a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_canonical_dq_rule_type</code></td>
+          <td data-label="Role">Internal helper used by the package implementation.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L78-L79"><code>src/fabricops_kit/governance_review.py#L78-L79</code></a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_dq_rule_parameter_payload</code></td>
+          <td data-label="Role">Return rule parameters stored inside ``rule_parameters_json``.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L425-L447"><code>src/fabricops_kit/governance_review.py#L425-L447</code></a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_validate_dq_rules</code></td>
+          <td data-label="Role">Validate canonical DQ rules before loading or enforcement.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L1183-L1256"><code>src/fabricops_kit/governance_review.py#L1183-L1256</code></a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_build_dq_rule_key</code></td>
+          <td data-label="Role">Internal helper used by the package implementation.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/metadata.py#L157-L158"><code>src/fabricops_kit/metadata.py#L157-L158</code></a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_review_governance_evidence</code></td>
+          <td data-label="Role">Review persisted v1 evidence and write a governance outcome row.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L867-L1013"><code>src/fabricops_kit/governance_review.py#L867-L1013</code></a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_latest_row</code></td>
+          <td data-label="Role">Return the latest row using lexicographic string timestamps/ids.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L848-L852"><code>src/fabricops_kit/governance_review.py#L848-L852</code></a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_read_metadata_rows</code></td>
+          <td data-label="Role">Internal helper used by the package implementation.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L863-L864"><code>src/fabricops_kit/governance_review.py#L863-L864</code></a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_coerce_rows</code></td>
+          <td data-label="Role">Internal helper used by the package implementation.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L62-L67"><code>src/fabricops_kit/governance_review.py#L62-L67</code></a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_status_is_failed</code></td>
+          <td data-label="Role">Internal helper used by the package implementation.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L855-L856"><code>src/fabricops_kit/governance_review.py#L855-L856</code></a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_status_is_warning</code></td>
+          <td data-label="Role">Internal helper used by the package implementation.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L859-L860"><code>src/fabricops_kit/governance_review.py#L859-L860</code></a></td>
+        </tr>
+      </tbody>
+    </table>
+
+    ??? example "View helper source code"
+
+        **`def _build_classification_records(profile_rows: list[dict[str, Any]], reviewed_rows: list[dict[str, Any]], *, config: Any=None, env: str | None=None, approved_by: str | None=None) -> list[dict[str, Any]]`**
+
+        Used by `record_table_governance` through the implementation path shown above.
+
+        ```python
+        def _build_classification_records(profile_rows: list[dict[str, Any]], reviewed_rows: list[dict[str, Any]], *, config: Any = None, env: str | None = None, approved_by: str | None = None) -> list[dict[str, Any]]:
+            """Build append-only approved sensitivity and PII classification records."""
+            profile, actor, now, audit = _approved_review_context(profile_rows, config=config, env=env, approved_by=approved_by)
+            rows = []
+            for review in reviewed_rows or []:
+                if str(review.get("review_status", "approved")).lower() != "approved" or not review.get("commit"):
+                    continue
+                sensitivity = str(review.get("sensitivity_label") or "internal")
+                classification = str(review.get("personal_data_classification") or "unknown")
+                if sensitivity not in SENSITIVITY_LABELS:
+                    raise ValueError(f"Unsupported sensitivity_label: {sensitivity}")
+                if classification not in PERSONAL_DATA_CLASSIFICATIONS:
+                    raise ValueError(f"Unsupported personal_data_classification: {classification}")
+                identity = _approved_column_identity(profile.get(str(review.get("column_name")), {}), review, env=env)
+                rows.append({
+                    **identity,
+                    "sensitivity_label": sensitivity, "personal_data_classification": classification,
+                    "pii_identifier_type": str(review.get("pii_identifier_type") or ""), "handling_requirement": str(review.get("handling_requirement") or ""),
+                    "reasoning": str(review.get("reasoning") or ""), "review_status": "approved", "approved_by": actor, "approved_at": now,
+                    "ai_suggestion_json": _json(review.get("ai_suggestion_json") or review.get("ai_suggestion")), **audit,
+                })
+            return rows
+        ```
+
+        **`def _approved_column_identity(profile_row: dict[str, Any], review_row: dict[str, Any], *, env: str | None=None) -> dict[str, str]`**
+
+        Used by `record_table_governance` through the implementation path shown above.
+
+        ```python
+        def _approved_column_identity(profile_row: dict[str, Any], review_row: dict[str, Any], *, env: str | None = None) -> dict[str, str]:
+            col = str(review_row.get("column_name") or _value(profile_row, "column_name") or ((review_row.get("columns") or [""])[0]))
+            env_name = str(_value(profile_row, "environment_name") or review_row.get("environment_name") or env or "")
+            dataset = str(_value(profile_row, "dataset_name") or review_row.get("dataset_name") or "")
+            table = str(_value(profile_row, "table_name") or review_row.get("table_name") or "")
+            return {
+                "metadata_column_key": str(_value(profile_row, "metadata_column_key") or review_row.get("metadata_column_key") or _build_metadata_column_key(env_name, dataset, table, col)),
+                "metadata_table_key": str(_value(profile_row, "metadata_table_key") or review_row.get("metadata_table_key") or _build_metadata_table_key(env_name, dataset, table)),
+                "environment_name": env_name,
+                "dataset_name": dataset,
+                "table_name": table,
+                "column_name": col,
+            }
+        ```
+
+        **`def _value(row: dict[str, Any], name: str, default: Any='') -> Any`**
+
+        Used by `record_table_governance` through the implementation path shown above.
+
+        ```python
+        def _value(row: dict[str, Any], name: str, default: Any = "") -> Any:
+            return row.get(name, row.get(name.upper(), default))
+        ```
+
+        **`def _build_metadata_column_key(environment_name, dataset_name, table_name, column_name) -> str`**
+
+        Used by `record_table_governance` through the implementation path shown above.
+
+        ```python
+        def _build_metadata_column_key(environment_name, dataset_name, table_name, column_name) -> str:
+            return _stable_metadata_key(environment_name, dataset_name, table_name, column_name)
+        ```
+
+        **`def _stable_metadata_key(*parts: Any) -> str`**
+
+        Used by `record_table_governance` through the implementation path shown above.
+
+        ```python
+        def _stable_metadata_key(*parts: Any) -> str:
+            normalized = "|".join(str(part or "").strip().lower() for part in parts)
+            return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
+        ```
+
+        **`def _build_metadata_table_key(environment_name, dataset_name, table_name) -> str`**
+
+        Used by `record_table_governance` through the implementation path shown above.
+
+        ```python
+        def _build_metadata_table_key(environment_name, dataset_name, table_name) -> str:
+            return _stable_metadata_key(environment_name, dataset_name, table_name)
+        ```
+
+        **`def _approved_review_context(profile_rows: list[dict[str, Any]], *, config: Any=None, env: str | None=None, approved_by: str | None=None) -> tuple[dict[str, dict[str, Any]], str, str, dict[str, Any]]`**
+
+        Used by `record_table_governance` through the implementation path shown above.
+
+        ```python
+        def _approved_review_context(profile_rows: list[dict[str, Any]], *, config: Any = None, env: str | None = None, approved_by: str | None = None) -> tuple[dict[str, dict[str, Any]], str, str, dict[str, Any]]:
+            actor = _resolve_action_by(approved_by)
+            audit = _build_runtime_audit_fields(config=config, env=env or "", committed_by=actor) if config is not None and env is not None else {}
+            return {str(_value(r, "column_name")): r for r in profile_rows}, actor, _now_utc_iso(config), audit
+        ```
+
+        **`def _build_runtime_audit_fields(*, config: Any=None, env: str | None=None, timestamp_field: str='_committed_at', user_field: str='_committed_by', workspace_field: str='_workspace_name', notebook_field: str='_notebook_name', metadata_lakehouse_field: str='_metadata_lakehouse_name', activity_field: str='_activity_id', committed_by: str | None=None, committed_at: str | None=None, runtime_context: dict[str, Any] | None=None) -> dict[str, str]`**
+
+        Used by `record_table_governance` through the implementation path shown above.
+
+        ```python
+        def _build_runtime_audit_fields(
+            *,
+            config: Any = None,
+            env: str | None = None,
+            timestamp_field: str = "_committed_at",
+            user_field: str = "_committed_by",
+            workspace_field: str = "_workspace_name",
+            notebook_field: str = "_notebook_name",
+            metadata_lakehouse_field: str = "_metadata_lakehouse_name",
+            activity_field: str = "_activity_id",
+            committed_by: str | None = None,
+            committed_at: str | None = None,
+            runtime_context: dict[str, Any] | None = None,
+        ) -> dict[str, str]:
+            """Build reusable framework-managed audit fields for metadata-table rows.
+
+            Parameters
+            ----------
+            config : FrameworkConfig | dict, optional
+                Framework config containing ``path_config.paths[env]["metadata"]``.
+            env : str, optional
+                Environment key paired with ``config``.
+            timestamp_field, user_field, workspace_field, notebook_field : str
+                Output keys for timestamp, user, workspace, and notebook audit values.
+            metadata_lakehouse_field, activity_field : str
+                Output keys for metadata lakehouse and Fabric activity audit values.
+            committed_by, committed_at : str, optional
+                Deterministic audit overrides. When omitted, values resolve from Fabric
+                runtime context and the configured audit timezone timestamp.
+            runtime_context : dict[str, Any], optional
+                Values merged over :func:`_runtime_context`, primarily for tests or
+                controlled notebook overrides.
+
+            Returns
+            -------
+            dict[str, str]
+                Framework-managed metadata audit values keyed by the supplied field
+                names.
+
+            Notes
+            -----
+            DataFrame runtime audit columns and metadata-table audit fields both use
+            underscore-prefixed names. This helper centralizes the metadata-table
+            convention so notebooks can reuse runtime context when adding dataframe
+            audit columns inline.
+            """
+            context = {**_runtime_context(), **(runtime_context or {})}
+
+            def _first_non_blank(*keys: str) -> Any:
+                for key in keys:
+                    value = _context_get(context, key)
+                    if value is not None and str(value).strip():
+                        return value
+                return None
+
+            metadata_lakehouse_name = ""
+            if config is not None and env is not None:
+                paths = config.path_config.paths if hasattr(config, "path_config") else config.paths
+                metadata_lakehouse_name = _safe_str(paths[env]["metadata"].name)
+            return {
+                user_field: _safe_str(committed_by).strip()
+                if committed_by and _safe_str(committed_by).strip()
+                else _safe_str(_first_non_blank("userName", "userId") or "unknown"),
+                timestamp_field: _safe_str(committed_at)
+                if committed_at
+                else _current_audit_timestamp(config=config),
+                workspace_field: _safe_str(_first_non_blank("currentWorkspaceName", "workspaceName") or ""),
+                notebook_field: _safe_str(_first_non_blank("currentNotebookName", "notebookName") or ""),
+                metadata_lakehouse_field: metadata_lakehouse_name,
+                activity_field: _safe_str(_first_non_blank("activityId") or ""),
+            }
+        ```
+
+        **`def _current_audit_timestamp(config: Any=None, timezone_name: str | None=None, *, drop_microseconds: bool=True) -> str`**
+
+        Used by `record_table_governance` through the implementation path shown above.
+
+        ```python
+        def _current_audit_timestamp(config: Any = None, timezone_name: str | None = None, *, drop_microseconds: bool = True) -> str:
+            """Return the current audit timestamp in the configured audit timezone."""
+            tz_name = _get_audit_timezone(config, timezone_name)
+            value = datetime.now(ZoneInfo(tz_name))
+            if drop_microseconds:
+                value = value.replace(microsecond=0)
+            return value.isoformat()
+        ```
+
+        **`def _get_audit_timezone(config: Any=None, timezone_name: str | None=None) -> str`**
+
+        Used by `record_table_governance` through the implementation path shown above.
+
+        ```python
+        def _get_audit_timezone(config: Any = None, timezone_name: str | None = None) -> str:
+            """Resolve the configured FabricOps audit timezone, defaulting to UTC."""
+            if timezone_name is not None:
+                return _validate_audit_timezone(timezone_name)
+            value = getattr(config, "audit_timezone", None) if config is not None else None
+            return _validate_audit_timezone(value)
+        ```
+
+        **`def _validate_audit_timezone(timezone_name: str | None) -> str`**
+
+        Used by `record_table_governance` through the implementation path shown above.
+
+        ```python
+        def _validate_audit_timezone(timezone_name: str | None) -> str:
+            """Return a valid IANA audit timezone name.
+
+            Parameters
+            ----------
+            timezone_name : str or None
+                IANA timezone name to validate. Blank values default to ``"UTC"``.
+
+            Returns
+            -------
+            str
+                Validated timezone name.
+
+            Raises
+            ------
+            ValueError
+                If a non-blank value is not a valid IANA timezone name.
+            """
+            value = str(timezone_name or DEFAULT_AUDIT_TIMEZONE).strip() or DEFAULT_AUDIT_TIMEZONE
+            if value != DEFAULT_AUDIT_TIMEZONE and "/" not in value:
+                raise ValueError(
+                    f'Invalid FABRICOPS_AUDIT_TIMEZONE: "{value}". '
+                    'Use a valid IANA timezone name such as "Asia/Singapore" or keep the default "UTC".'
+                )
+            try:
+                ZoneInfo(value)
+            except ZoneInfoNotFoundError as exc:
+                raise ValueError(
+                    f'Invalid FABRICOPS_AUDIT_TIMEZONE: "{value}". '
+                    'Use a valid IANA timezone name such as "Asia/Singapore" or keep the default "UTC".'
+                ) from exc
+            return value
+        ```
+
+        **`def _context_get(context: Any, *keys: str) -> Any`**
+
+        Used by `record_table_governance` through the implementation path shown above.
+
+        ```python
+        def _context_get(context: Any, *keys: str) -> Any:
+            for key in keys:
+                try:
+                    if isinstance(context, dict):
+                        value = context.get(key)
+                    else:
+                        getter = getattr(context, "get", None)
+                        value = getter(key) if callable(getter) else None
+                except Exception:
+                    value = None
+                if value is not None:
+                    return value
+            return None
+        ```
+
+        **`def _runtime_context() -> dict[str, Any]`**
+
+        Used by `record_table_governance` through the implementation path shown above.
+
+        ```python
+        def _runtime_context() -> dict[str, Any]:
+            try:
+                import notebookutils  # type: ignore
+            except Exception:
+                return {}
+
+            runtime = getattr(notebookutils, "runtime", None)
+            context = getattr(runtime, "context", None)
+            if context is None:
+                return {}
+
+            keys = [
+                "currentWorkspaceId",
+                "currentWorkspaceName",
+                "currentNotebookId",
+                "currentNotebookName",
+                "workspaceId",
+                "workspaceName",
+                "notebookId",
+                "notebookName",
+                "userId",
+                "userName",
+                "activityId",
+            ]
+            return {key: _context_get(context, key) for key in keys}
+        ```
+
+        **`def _safe_str(value: Any) -> str`**
+
+        Used by `record_table_governance` through the implementation path shown above.
+
+        ```python
+        def _safe_str(value: Any) -> str:
+            return "" if value is None else str(value)
+        ```
+
+        **`def _now_utc_iso(config: Any=None) -> str`**
+
+        Used by `record_table_governance` through the implementation path shown above.
+
+        ```python
+        def _now_utc_iso(config: Any = None) -> str:
+            return _current_audit_timestamp(config=config, drop_microseconds=False)
+        ```
+
+        **`def _resolve_action_by(action_by: str | None=None) -> str`**
+
+        Used by `record_table_governance` through the implementation path shown above.
+
+        ```python
+        def _resolve_action_by(action_by: str | None = None) -> str:
+            if action_by:
+                return str(action_by)
+            context = _runtime_context()
+            return str(_context_get(context, "userName", "userId") or "unknown")
+        ```
+
+        **`def _json(value: Any) -> str`**
+
+        Used by `record_table_governance` through the implementation path shown above.
+
+        ```python
+        def _json(value: Any) -> str:
+            if value in (None, ""):
+                return ""
+            if isinstance(value, str):
+                return value
+            return json.dumps(value, sort_keys=True)
+        ```
+
+        **`def _build_column_context_records(profile_rows: list[dict[str, Any]], reviewed_rows: list[dict[str, Any]], *, config: Any=None, env: str | None=None, approved_by: str | None=None) -> list[dict[str, Any]]`**
+
+        Used by `record_table_governance` through the implementation path shown above.
+
+        ```python
+        def _build_column_context_records(profile_rows: list[dict[str, Any]], reviewed_rows: list[dict[str, Any]], *, config: Any = None, env: str | None = None, approved_by: str | None = None) -> list[dict[str, Any]]:
+            """Build append-only approved business-context records from explicit reviews."""
+            profile, actor, now, audit = _approved_review_context(profile_rows, config=config, env=env, approved_by=approved_by)
+            rows = []
+            for review in reviewed_rows or []:
+                if str(review.get("review_status", "approved")).lower() != "approved" or not review.get("commit"):
+                    continue
+                identity = _approved_column_identity(profile.get(str(review.get("column_name")), {}), review, env=env)
+                rows.append({
+                    **identity,
+                    "business_context": str(review.get("business_context") or ""), "notes": str(review.get("notes") or ""), "review_status": "approved",
+                    "approved_by": actor, "approved_at": now, "ai_suggestion_json": _json(review.get("ai_suggestion_json") or review.get("ai_suggestion")), **audit,
+                })
+            return rows
+        ```
+
+        **`def _build_dq_rule_records(profile_rows: list[dict[str, Any]], reviewed_rules: list[dict[str, Any]], *, config: Any=None, env: str | None=None, approved_by: str | None=None) -> list[dict[str, Any]]`**
+
+        Used by `record_table_governance` through the implementation path shown above.
+
+        ```python
+        def _build_dq_rule_records(profile_rows: list[dict[str, Any]], reviewed_rules: list[dict[str, Any]], *, config: Any = None, env: str | None = None, approved_by: str | None = None) -> list[dict[str, Any]]:
+            """Build append-only approved DQ-rule records without enforcing them."""
+            profile, actor, now, audit = _approved_review_context(profile_rows, config=config, env=env, approved_by=approved_by)
+            rows = []
+            for rule in reviewed_rules or []:
+                if not rule.get("commit"):
+                    continue
+                review_status = str(rule.get("review_status", "approved")).lower()
+                action_type = str(rule.get("action_type") or ("created" if rule.get("is_active", True) else "deactivated")).lower()
+                if action_type == "delete":
+                    action_type = "deactivated"
+                if action_type not in {"created", "updated", "deactivated", "reactivated", "approved"}:
+                    raise ValueError(f"Unsupported DQ action_type: {action_type}")
+                is_active = bool(rule.get("is_active", action_type != "deactivated"))
+                if action_type == "deactivated":
+                    is_active = False
+                if action_type == "reactivated":
+                    is_active = True
+                if review_status != "approved":
+                    continue
+                draft = dict(rule)
+                draft["rule_type"] = _canonical_dq_rule_type(draft.get("rule_type"))
+                if draft["rule_type"] != "expression_true":
+                    columns = draft.get("columns") or ([draft.get("column_name")] if draft.get("column_name") else [])
+                    if isinstance(columns, str):
+                        columns = [c.strip() for c in columns.split(",") if c.strip()]
+                    draft["columns"] = list(columns or [])
+                _validate_dq_rules([draft])
+                columns = [str(c) for c in draft.get("columns", [])]
+                display_column = str(rule.get("column_name") or ", ".join(columns) or "")
+                primary_column = columns[0] if columns else display_column
+                identity = _approved_column_identity(profile.get(primary_column, {}), {**rule, "column_name": display_column, "columns": columns}, env=env)
+                identity["column_name"] = display_column
+                rule_id = str(rule.get("rule_id") or f"{identity['table_name']}.{display_column or 'table'}.{draft['rule_type']}")
+                params = _dq_rule_parameter_payload(draft, columns)
+                rows.append({
+                    "rule_key": str(rule.get("rule_key") or _build_dq_rule_key(identity["environment_name"], identity["dataset_name"], identity["table_name"], rule_id)),
+                    "rule_id": rule_id,
+                    **identity,
+                    "rule_type": draft["rule_type"],
+                    "rule_parameters_json": _json(params),
+                    "severity": str(rule.get("severity") or "warning").lower(),
+                    "description": str(rule.get("description") or ""),
+                    "is_active": is_active,
+                    "review_status": "approved",
+                    "approved_by": str(rule.get("approved_by") or actor),
+                    "approved_at": str(rule.get("approved_at") or now),
+                    "ai_suggestion_json": _json(rule.get("ai_suggestion_json") or rule.get("ai_suggestion")),
+                    "action_type": action_type,
+                    **audit,
+                })
+            return rows
+        ```
+
+        **`def _canonical_dq_rule_type(rule_type: Any) -> str`**
+
+        Used by `record_table_governance` through the implementation path shown above.
+
+        ```python
+        def _canonical_dq_rule_type(rule_type: Any) -> str:
+            return str(rule_type or "").strip()
+        ```
+
+        **`def _dq_rule_parameter_payload(rule: dict[str, Any], columns: list[str]) -> dict[str, Any]`**
+
+        Used by `record_table_governance` through the implementation path shown above.
+
+        ```python
+        def _dq_rule_parameter_payload(rule: dict[str, Any], columns: list[str]) -> dict[str, Any]:
+            """Return rule parameters stored inside ``rule_parameters_json``."""
+            metadata_fields = {
+                "rule_key", "rule_id", "metadata_column_key", "metadata_table_key", "environment_name", "dataset_name",
+                "table_name", "column_name", "rule_type", "rule_parameters", "rule_parameters_json", "severity",
+                "description", "is_active", "review_status", "approved_by", "approved_at", "ai_suggestion_json",
+                "ai_suggestion", "action_type", "commit", "_committed_at", "_committed_by", "_workspace_name",
+                "_notebook_name", "_metadata_lakehouse_name", "_activity_id",
+            }
+            payload: dict[str, Any] = {"columns": columns}
+            raw = rule.get("rule_parameters") or rule.get("rule_parameters_json") or {}
+            if isinstance(raw, str) and raw.strip():
+                try:
+                    raw = json.loads(raw)
+                except Exception:
+                    raw = {}
+            if isinstance(raw, dict):
+                payload.update(raw)
+            for key, value in rule.items():
+                if key not in metadata_fields and value is not None:
+                    payload[key] = value
+            payload["columns"] = columns
+            return payload
+        ```
+
+        **`def _validate_dq_rules(rules: list[dict[str, Any]]) -> list[dict[str, Any]]`**
+
+        Used by `record_table_governance` through the implementation path shown above.
+
+        ```python
+        def _validate_dq_rules(rules: list[dict[str, Any]]) -> list[dict[str, Any]]:
+            """Validate canonical DQ rules before loading or enforcement."""
+            if not isinstance(rules, list):
+                raise ValueError("DQ rules must be a list of dictionaries.")
+
+            optional_common = {"severity", "description", "rule_id", "is_active", "review_status"}
+            del optional_common  # Documents intentionally accepted fields for callers and tests.
+
+            def require_columns(rule: dict[str, Any], count: int | None = None, *, minimum: int | None = None) -> list[str]:
+                cols = rule.get("columns")
+                if isinstance(cols, str):
+                    cols = [c.strip() for c in cols.split(",") if c.strip()]
+                    rule["columns"] = cols
+                if not isinstance(cols, list) or not cols or not all(str(c).strip() for c in cols):
+                    raise ValueError(f"DQ rule '{rule.get('rule_id', '?')}' columns must be a non-empty list.")
+                cols = [str(c).strip() for c in cols]
+                rule["columns"] = cols
+                if count is not None and len(cols) != count:
+                    raise ValueError(f"DQ rule '{rule.get('rule_id', '?')}' requires exactly {count} column(s).")
+                if minimum is not None and len(cols) < minimum:
+                    raise ValueError(f"DQ rule '{rule.get('rule_id', '?')}' requires at least {minimum} column(s).")
+                return cols
+
+            for i, rule in enumerate(rules):
+                if not isinstance(rule, dict):
+                    raise ValueError(f"DQ rule at index {i} must be a dictionary.")
+                rule.setdefault("rule_id", f"dq_rule_{i + 1}")
+                rule.setdefault("severity", "warning")
+                rule.setdefault("description", "")
+                rule["rule_type"] = _canonical_dq_rule_type(rule.get("rule_type"))
+                rtype = rule["rule_type"]
+                if rtype not in DQ_RULE_TYPES:
+                    raise ValueError(f"DQ rule '{rule['rule_id']}' has unsupported rule_type '{rtype}'.")
+                if str(rule.get("severity", "warning")).lower() not in {"warning", "error"}:
+                    raise ValueError(f"DQ rule '{rule['rule_id']}' severity must be warning or error.")
+
+                if rtype in {"not_null", "non_empty_string", "required_when"}:
+                    require_columns(rule, minimum=1)
+                elif rtype in {
+                    "null_rate_below", "unique", "accepted_values", "not_in_values", "between",
+                    "greater_than", "greater_than_or_equal", "less_than", "less_than_or_equal",
+                    "regex_match", "date_not_future", "date_between", "freshness", "max_age_days", "value_when",
+                }:
+                    require_columns(rule, count=1)
+                elif rtype == "unique_combination":
+                    require_columns(rule, minimum=2)
+                elif rtype in {"column_pair_equal", "column_a_gte_column_b", "column_a_gt_column_b"}:
+                    require_columns(rule, count=2)
+                elif rtype == "expression_true":
+                    if not str(rule.get("expression") or "").strip():
+                        raise ValueError(f"DQ rule '{rule['rule_id']}' requires expression.")
+
+                if rtype == "null_rate_below" and rule.get("max_null_percent") is None:
+                    raise ValueError(f"DQ rule '{rule['rule_id']}' requires max_null_percent.")
+                if rtype == "accepted_values" and "allowed_values" not in rule:
+                    raise ValueError(f"DQ rule '{rule['rule_id']}' requires allowed_values.")
+                if rtype == "not_in_values" and "blocked_values" not in rule:
+                    raise ValueError(f"DQ rule '{rule['rule_id']}' requires blocked_values.")
+                if rtype in {"between", "date_between"} and rule.get("min_value") is None and rule.get("max_value") is None:
+                    raise ValueError(f"DQ rule '{rule['rule_id']}' requires min_value or max_value.")
+                if rtype in {"greater_than", "greater_than_or_equal", "less_than", "less_than_or_equal"} and rule.get("value") is None:
+                    raise ValueError(f"DQ rule '{rule['rule_id']}' requires value.")
+                if rtype == "regex_match" and not str(rule.get("regex_pattern") or ""):
+                    raise ValueError(f"DQ rule '{rule['rule_id']}' requires regex_pattern.")
+                if rtype in {"freshness", "max_age_days"} and rule.get("max_age_days") is None:
+                    raise ValueError(f"DQ rule '{rule['rule_id']}' requires max_age_days.")
+                if rtype == "required_when" and not str(rule.get("condition") or "").strip():
+                    raise ValueError(f"DQ rule '{rule['rule_id']}' requires condition.")
+                if rtype == "value_when":
+                    if not str(rule.get("condition") or "").strip():
+                        raise ValueError(f"DQ rule '{rule['rule_id']}' requires condition.")
+                    if "expected_value" not in rule:
+                        raise ValueError(f"DQ rule '{rule['rule_id']}' requires expected_value.")
+            return rules
+        ```
+
+        **`def _build_dq_rule_key(environment_name, dataset_name, table_name, rule_id) -> str`**
+
+        Used by `record_table_governance` through the implementation path shown above.
+
+        ```python
+        def _build_dq_rule_key(environment_name, dataset_name, table_name, rule_id) -> str:
+            return _stable_metadata_key(environment_name, dataset_name, table_name, rule_id)
+        ```
+
+        **`def _review_governance_evidence(config: Any, env: str, selection: dict[str, Any], *, spark_session: Any, reviewed_by: str | None=None, mode: str='append') -> dict[str, Any]`**
+
+        Used by `record_table_governance` through the implementation path shown above.
+
+        ```python
+        def _review_governance_evidence(
+            config: Any,
+            env: str,
+            selection: dict[str, Any],
+            *,
+            spark_session: Any,
+            reviewed_by: str | None = None,
+            mode: str = "append",
+        ) -> dict[str, Any]:
+            """Review persisted v1 evidence and write a governance outcome row.
+
+            Parameters
+            ----------
+            config : FrameworkConfig or dict
+                Shared ``00_env_config`` configuration used for metadata lakehouse routing.
+            env : str
+                Environment key in ``config``.
+            selection : dict[str, Any]
+                Catalogue-table selection returned by ``get_selected_catalogue_table``.
+            spark_session : pyspark.sql.SparkSession
+                Spark session used to read and write metadata tables.
+            reviewed_by : str, optional
+                Reviewer identity. Runtime user metadata is used when omitted.
+            mode : str, default="append"
+                Write mode for ``METADATA_GOVERNANCE_REVIEWS``.
+
+            Returns
+            -------
+            dict[str, Any]
+                Governance review row plus blocker, warning, and evidence details.
+
+            Notes
+            -----
+            The function intentionally re-reads agreement, catalogue, pipeline-run, and
+            evidence metadata from the configured ``metadata`` target so ``03_governance``
+            can run in a separate session after ``02_pipeline``.
+            """
+            profile_rows = load_catalogue_profile_rows(config, env, selection, spark_session=spark_session)
+            first_profile = profile_rows[0]
+            env_name = str(_value(first_profile, "environment_name") or selection.get("environment_name") or env)
+            dataset_name = str(_value(first_profile, "dataset_name") or selection.get("dataset_name") or "")
+            table_name = str(_value(first_profile, "table_name") or selection.get("table_name") or "")
+            table_key = str(_value(first_profile, "metadata_table_key") or selection.get("metadata_table_key") or _build_metadata_table_key(env_name, dataset_name, table_name))
+            profile_run_id = str(_value(first_profile, "profile_run_id") or selection.get("profile_run_id") or "")
+            profile_stage = str(_value(first_profile, "profile_stage") or selection.get("profile_stage") or "")
+            agreement_id = str(_value(first_profile, "agreement_id") or _value(first_profile, "AGREEMENT_ID") or "")
+            agreement_contract_version = str(_value(first_profile, "contract_version") or _value(first_profile, "AGREEMENT_CONTRACT_VERSION") or "")
+
+            all_pipeline_rows = [
+                row for row in _read_metadata_rows(config, env, PIPELINE_RUNS_TABLE, spark_session=spark_session)
+                if str(_value(row, "environment_name")) == env_name
+            ]
+            related_pipeline_rows = [
+                row for row in all_pipeline_rows
+                if not agreement_id or str(_value(row, "agreement_id")) == agreement_id
+            ]
+            pipeline_rows = [
+                row for row in related_pipeline_rows
+                if not profile_run_id or str(_value(row, "run_id")) == profile_run_id
+            ]
+            latest_pipeline = _latest_row(pipeline_rows, "completed_at", "created_at", "run_id")
+
+            agreement_rows = [
+                row for row in _read_metadata_rows(config, env, DATA_AGREEMENT_TABLE, spark_session=spark_session)
+                if agreement_id and str(_value(row, "agreement_id")) == agreement_id
+                and (not agreement_contract_version or str(_value(row, "contract_version")) == agreement_contract_version)
+            ]
+            attachment_rows = [
+                row for row in _read_metadata_rows(config, env, DATA_AGREEMENT_EVIDENCE_TABLE, spark_session=spark_session)
+                if agreement_id and str(_value(row, "agreement_id")) == agreement_id
+                and (not agreement_contract_version or str(_value(row, "contract_version")) == agreement_contract_version)
+            ]
+
+            blockers: list[dict[str, str]] = []
+            warnings: list[dict[str, str]] = []
+
+            def _append_once(items: list[dict[str, str]], *, code: str, message: str) -> None:
+                if not any(item.get("code") == code for item in items):
+                    items.append({"code": code, "message": message})
+
+            if not agreement_id:
+                _append_once(blockers, code="missing_agreement_id", message="Catalogue evidence is not linked to an agreement.")
+            elif not agreement_rows:
+                _append_once(blockers, code="missing_agreement_metadata", message="No matching agreement metadata row was found.")
+            if latest_pipeline is None:
+                _append_once(blockers, code="missing_pipeline_run", message="No matching pipeline run summary was found.")
+            elif _status_is_failed(_value(latest_pipeline, "status")):
+                _append_once(blockers, code="pipeline_failed", message="Latest pipeline run did not complete successfully.")
+
+            dq_statuses = {str(_value(row, "dq_status") or "").lower() for row in profile_rows}
+            dq_error_count = sum(int(_value(row, "dq_error_rule_count", 0) or 0) for row in profile_rows)
+            dq_failed_count = sum(int(_value(row, "dq_failed_rule_count", 0) or 0) for row in profile_rows)
+            if "failed" in dq_statuses or dq_error_count > 0:
+                _append_once(blockers, code="dq_failed", message="Failed DQ evidence blocks approval.")
+            elif "warning" in dq_statuses or dq_failed_count > 0:
+                _append_once(warnings, code="dq_warning", message="DQ warning evidence requires remediation review.")
+
+            if latest_pipeline is not None:
+                pipeline_dq_status = _value(latest_pipeline, "dq_status")
+                if _status_is_failed(pipeline_dq_status):
+                    _append_once(blockers, code="dq_failed", message="Pipeline DQ status blocks approval.")
+                elif _status_is_warning(pipeline_dq_status):
+                    _append_once(warnings, code="dq_warning", message="Pipeline DQ status requires remediation review.")
+
+                for field in ("source_guardrail_status", "target_guardrail_status"):
+                    status = _value(latest_pipeline, field)
+                    if _status_is_failed(status):
+                        blockers.append({"code": f"{field}_failed", "message": f"{field} is {status}; schema drift or guardrail failure is present."})
+                    elif _status_is_warning(status):
+                        warnings.append({"code": f"{field}_warning", "message": f"{field} is {status}; schema drift is surfaced for review."})
+
+            outcome = "rejected" if blockers else ("needs_remediation" if warnings else "approved")
+            reviewed_at = _now_utc_iso(config)
+            actor = _resolve_action_by(reviewed_by)
+            audit = _build_runtime_audit_fields(config=config, env=env, committed_by=actor, committed_at=reviewed_at)
+            evidence_summary = {
+                "agreement_row_count": len(agreement_rows),
+                "agreement_attachment_count": len(attachment_rows),
+                "profile_column_count": len(profile_rows),
+                "pipeline_run_count": len(pipeline_rows),
+                "related_pipeline_run_count": len(related_pipeline_rows),
+                "prior_pipeline_run_ids": [str(_value(row, "run_id")) for row in related_pipeline_rows if str(_value(row, "run_id")) != profile_run_id],
+                "latest_pipeline_run": latest_pipeline or {},
+            }
+            row = {
+                "review_id": f"{profile_run_id or 'profile'}-{uuid.uuid4().hex[:12]}",
+                "environment_name": env_name,
+                "dataset_name": dataset_name,
+                "table_name": table_name,
+                "metadata_table_key": table_key,
+                "profile_run_id": profile_run_id,
+                "profile_stage": profile_stage,
+                "pipeline_run_id": str(_value(latest_pipeline or {}, "run_id")),
+                "agreement_id": agreement_id,
+                "agreement_contract_version": agreement_contract_version,
+                "outcome": outcome,
+                "blocker_count": len(blockers),
+                "warning_count": len(warnings),
+                "blockers_json": json.dumps(blockers, sort_keys=True),
+                "warnings_json": json.dumps(warnings, sort_keys=True),
+                "evidence_summary_json": json.dumps(evidence_summary, default=str, sort_keys=True),
+                "reviewed_at": reviewed_at,
+                "reviewed_by": actor,
+                **audit,
+            }
+            write_lakehouse_table(spark_session.createDataFrame([row]), config, env, "metadata", GOVERNANCE_REVIEWS_TABLE, mode=mode)
+            return {"review": row, "outcome": outcome, "blockers": blockers, "warnings": warnings, "evidence_summary": evidence_summary}
+        ```
+
+        **`def _latest_row(rows: list[dict[str, Any]], *order_fields: str) -> dict[str, Any] | None`**
+
+        Used by `record_table_governance` through the implementation path shown above.
+
+        ```python
+        def _latest_row(rows: list[dict[str, Any]], *order_fields: str) -> dict[str, Any] | None:
+            """Return the latest row using lexicographic string timestamps/ids."""
+            if not rows:
+                return None
+            return max(rows, key=lambda row: tuple(str(_value(row, field)) for field in order_fields))
+        ```
+
+        **`def _read_metadata_rows(config: Any, env: str, table: str, *, spark_session: Any) -> list[dict[str, Any]]`**
+
+        Used by `record_table_governance` through the implementation path shown above.
+
+        ```python
+        def _read_metadata_rows(config: Any, env: str, table: str, *, spark_session: Any) -> list[dict[str, Any]]:
+            return _coerce_rows(read_lakehouse_table(config, env, "metadata", table, spark_session=spark_session))
+        ```
+
+        **`def _coerce_rows(rows_or_df: Any) -> list[dict[str, Any]]`**
+
+        Used by `record_table_governance` through the implementation path shown above.
+
+        ```python
+        def _coerce_rows(rows_or_df: Any) -> list[dict[str, Any]]:
+            if rows_or_df is None:
+                return []
+            if hasattr(rows_or_df, "collect"):
+                rows_or_df = rows_or_df.collect()
+            return [row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row) for row in rows_or_df]
+        ```
+
+        **`def _status_is_failed(value: Any) -> bool`**
+
+        Used by `record_table_governance` through the implementation path shown above.
+
+        ```python
+        def _status_is_failed(value: Any) -> bool:
+            return str(value or "").strip().lower() in {"failed", "fail", "error", "errors", "rejected"}
+        ```
+
+        **`def _status_is_warning(value: Any) -> bool`**
+
+        Used by `record_table_governance` through the implementation path shown above.
+
+        ```python
+        def _status_is_warning(value: Any) -> bool:
+            return str(value or "").strip().lower() in {"warning", "warnings", "needs_remediation", "drift"}
+        ```
+
 
 <details class="reference-metadata-details">
 <summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
@@ -1669,7 +1358,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L1015-L1117">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L1015-L1117</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L1015-L1117">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/governance_review.py#L1015-L1117</a>
 - Start line: `1015`
 - End line: `1117`
 - Signature:
@@ -1680,13 +1369,13 @@ def record_table_governance(config: Any, env: str, profile_rows: list[dict[str, 
 
 ### Internal relationship graph
 
+The human-readable implementation view above is the source of truth for public call flow, public callable source, and collapsed nested helper details.
+
 ### Public related functions
 
 - <a href="../load_catalogue_profile_rows/"><code>fabricops_kit.governance_review.load_catalogue_profile_rows</code></a>
 - <a href="../enforce_dq_rules/"><code>fabricops_kit.governance_review.enforce_dq_rules</code></a>
 - <a href="../setup_metadata_tables/"><code>fabricops_kit.config.setup_metadata_tables</code></a>
-
-### Internal implementation helpers
 
 ### Call flow
 
@@ -1842,1252 +1531,5 @@ record_table_governance(...)
     │   └── _quote_identifier(...)
     └── _uses_registered_metadata_table(...)
 ```
-
-### Internal helpers used by this callable
-
-### `def _build_classification_records(profile_rows: list[dict[str, Any]], reviewed_rows: list[dict[str, Any]], *, config: Any=None, env: str | None=None, approved_by: str | None=None) -> list[dict[str, Any]]`
-
-**What it does:**
-
-Build append-only approved sensitivity and PII classification records.
-
-**Source:**
-
-- `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L503-L524">View `_build_classification_records` on GitHub</a>
-
-**Code:**
-
-```python
-def _build_classification_records(profile_rows: list[dict[str, Any]], reviewed_rows: list[dict[str, Any]], *, config: Any = None, env: str | None = None, approved_by: str | None = None) -> list[dict[str, Any]]:
-    """Build append-only approved sensitivity and PII classification records."""
-    profile, actor, now, audit = _approved_review_context(profile_rows, config=config, env=env, approved_by=approved_by)
-    rows = []
-    for review in reviewed_rows or []:
-        if str(review.get("review_status", "approved")).lower() != "approved" or not review.get("commit"):
-            continue
-        sensitivity = str(review.get("sensitivity_label") or "internal")
-        classification = str(review.get("personal_data_classification") or "unknown")
-        if sensitivity not in SENSITIVITY_LABELS:
-            raise ValueError(f"Unsupported sensitivity_label: {sensitivity}")
-        if classification not in PERSONAL_DATA_CLASSIFICATIONS:
-            raise ValueError(f"Unsupported personal_data_classification: {classification}")
-        identity = _approved_column_identity(profile.get(str(review.get("column_name")), {}), review, env=env)
-        rows.append({
-            **identity,
-            "sensitivity_label": sensitivity, "personal_data_classification": classification,
-            "pii_identifier_type": str(review.get("pii_identifier_type") or ""), "handling_requirement": str(review.get("handling_requirement") or ""),
-            "reasoning": str(review.get("reasoning") or ""), "review_status": "approved", "approved_by": actor, "approved_at": now,
-            "ai_suggestion_json": _json(review.get("ai_suggestion_json") or review.get("ai_suggestion")), **audit,
-        })
-    return rows
-```
-
-**Used here because:**
-
-`record_table_governance` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `record_table_governance` or another caller that reaches `_build_classification_records`.
-
-### `def _approved_column_identity(profile_row: dict[str, Any], review_row: dict[str, Any], *, env: str | None=None) -> dict[str, str]`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L88-L100">View `_approved_column_identity` on GitHub</a>
-
-**Code:**
-
-```python
-def _approved_column_identity(profile_row: dict[str, Any], review_row: dict[str, Any], *, env: str | None = None) -> dict[str, str]:
-    col = str(review_row.get("column_name") or _value(profile_row, "column_name") or ((review_row.get("columns") or [""])[0]))
-    env_name = str(_value(profile_row, "environment_name") or review_row.get("environment_name") or env or "")
-    dataset = str(_value(profile_row, "dataset_name") or review_row.get("dataset_name") or "")
-    table = str(_value(profile_row, "table_name") or review_row.get("table_name") or "")
-    return {
-        "metadata_column_key": str(_value(profile_row, "metadata_column_key") or review_row.get("metadata_column_key") or _build_metadata_column_key(env_name, dataset, table, col)),
-        "metadata_table_key": str(_value(profile_row, "metadata_table_key") or review_row.get("metadata_table_key") or _build_metadata_table_key(env_name, dataset, table)),
-        "environment_name": env_name,
-        "dataset_name": dataset,
-        "table_name": table,
-        "column_name": col,
-    }
-```
-
-**Used here because:**
-
-`record_table_governance` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `record_table_governance` or another caller that reaches `_approved_column_identity`.
-
-### `def _value(row: dict[str, Any], name: str, default: Any='') -> Any`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L70-L71">View `_value` on GitHub</a>
-
-**Code:**
-
-```python
-def _value(row: dict[str, Any], name: str, default: Any = "") -> Any:
-    return row.get(name, row.get(name.upper(), default))
-```
-
-**Used here because:**
-
-`record_table_governance` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `record_table_governance` or another caller that reaches `_value`.
-
-### `def _build_metadata_column_key(environment_name, dataset_name, table_name, column_name) -> str`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/metadata.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L153-L154">View `_build_metadata_column_key` on GitHub</a>
-
-**Code:**
-
-```python
-def _build_metadata_column_key(environment_name, dataset_name, table_name, column_name) -> str:
-    return _stable_metadata_key(environment_name, dataset_name, table_name, column_name)
-```
-
-**Used here because:**
-
-`record_table_governance` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `record_table_governance` or another caller that reaches `_build_metadata_column_key`.
-
-### `def _stable_metadata_key(*parts: Any) -> str`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/metadata.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L144-L146">View `_stable_metadata_key` on GitHub</a>
-
-**Code:**
-
-```python
-def _stable_metadata_key(*parts: Any) -> str:
-    normalized = "|".join(str(part or "").strip().lower() for part in parts)
-    return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
-```
-
-**Used here because:**
-
-`record_table_governance` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `record_table_governance` or another caller that reaches `_stable_metadata_key`.
-
-### `def _build_metadata_table_key(environment_name, dataset_name, table_name) -> str`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/metadata.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L149-L150">View `_build_metadata_table_key` on GitHub</a>
-
-**Code:**
-
-```python
-def _build_metadata_table_key(environment_name, dataset_name, table_name) -> str:
-    return _stable_metadata_key(environment_name, dataset_name, table_name)
-```
-
-**Used here because:**
-
-`record_table_governance` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `record_table_governance` or another caller that reaches `_build_metadata_table_key`.
-
-### `def _approved_review_context(profile_rows: list[dict[str, Any]], *, config: Any=None, env: str | None=None, approved_by: str | None=None) -> tuple[dict[str, dict[str, Any]], str, str, dict[str, Any]]`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L82-L85">View `_approved_review_context` on GitHub</a>
-
-**Code:**
-
-```python
-def _approved_review_context(profile_rows: list[dict[str, Any]], *, config: Any = None, env: str | None = None, approved_by: str | None = None) -> tuple[dict[str, dict[str, Any]], str, str, dict[str, Any]]:
-    actor = _resolve_action_by(approved_by)
-    audit = _build_runtime_audit_fields(config=config, env=env or "", committed_by=actor) if config is not None and env is not None else {}
-    return {str(_value(r, "column_name")): r for r in profile_rows}, actor, _now_utc_iso(config), audit
-```
-
-**Used here because:**
-
-`record_table_governance` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `record_table_governance` or another caller that reaches `_approved_review_context`.
-
-### `def _build_runtime_audit_fields(*, config: Any=None, env: str | None=None, timestamp_field: str='_committed_at', user_field: str='_committed_by', workspace_field: str='_workspace_name', notebook_field: str='_notebook_name', metadata_lakehouse_field: str='_metadata_lakehouse_name', activity_field: str='_activity_id', committed_by: str | None=None, committed_at: str | None=None, runtime_context: dict[str, Any] | None=None) -> dict[str, str]`
-
-**What it does:**
-
-Build reusable framework-managed audit fields for metadata-table rows.
-
-**Source:**
-
-- `src/fabricops_kit/metadata.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L219-L289">View `_build_runtime_audit_fields` on GitHub</a>
-
-**Code:**
-
-```python
-def _build_runtime_audit_fields(
-    *,
-    config: Any = None,
-    env: str | None = None,
-    timestamp_field: str = "_committed_at",
-    user_field: str = "_committed_by",
-    workspace_field: str = "_workspace_name",
-    notebook_field: str = "_notebook_name",
-    metadata_lakehouse_field: str = "_metadata_lakehouse_name",
-    activity_field: str = "_activity_id",
-    committed_by: str | None = None,
-    committed_at: str | None = None,
-    runtime_context: dict[str, Any] | None = None,
-) -> dict[str, str]:
-    """Build reusable framework-managed audit fields for metadata-table rows.
-
-    Parameters
-    ----------
-    config : FrameworkConfig | dict, optional
-        Framework config containing ``path_config.paths[env]["metadata"]``.
-    env : str, optional
-        Environment key paired with ``config``.
-    timestamp_field, user_field, workspace_field, notebook_field : str
-        Output keys for timestamp, user, workspace, and notebook audit values.
-    metadata_lakehouse_field, activity_field : str
-        Output keys for metadata lakehouse and Fabric activity audit values.
-    committed_by, committed_at : str, optional
-        Deterministic audit overrides. When omitted, values resolve from Fabric
-        runtime context and the configured audit timezone timestamp.
-    runtime_context : dict[str, Any], optional
-        Values merged over :func:`_runtime_context`, primarily for tests or
-        controlled notebook overrides.
-
-    Returns
-    -------
-    dict[str, str]
-        Framework-managed metadata audit values keyed by the supplied field
-        names.
-
-    Notes
-    -----
-    DataFrame runtime audit columns and metadata-table audit fields both use
-    underscore-prefixed names. This helper centralizes the metadata-table
-    convention so notebooks can reuse runtime context when adding dataframe
-    audit columns inline.
-    """
-    context = {**_runtime_context(), **(runtime_context or {})}
-
-    def _first_non_blank(*keys: str) -> Any:
-        for key in keys:
-            value = _context_get(context, key)
-            if value is not None and str(value).strip():
-                return value
-        return None
-
-    metadata_lakehouse_name = ""
-    if config is not None and env is not None:
-        paths = config.path_config.paths if hasattr(config, "path_config") else config.paths
-        metadata_lakehouse_name = _safe_str(paths[env]["metadata"].name)
-    return {
-        user_field: _safe_str(committed_by).strip()
-        if committed_by and _safe_str(committed_by).strip()
-        else _safe_str(_first_non_blank("userName", "userId") or "unknown"),
-        timestamp_field: _safe_str(committed_at)
-        if committed_at
-        else _current_audit_timestamp(config=config),
-        workspace_field: _safe_str(_first_non_blank("currentWorkspaceName", "workspaceName") or ""),
-        notebook_field: _safe_str(_first_non_blank("currentNotebookName", "notebookName") or ""),
-        metadata_lakehouse_field: metadata_lakehouse_name,
-        activity_field: _safe_str(_first_non_blank("activityId") or ""),
-    }
-```
-
-**Used here because:**
-
-`record_table_governance` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `record_table_governance` or another caller that reaches `_build_runtime_audit_fields`.
-
-### `def _current_audit_timestamp(config: Any=None, timezone_name: str | None=None, *, drop_microseconds: bool=True) -> str`
-
-**What it does:**
-
-Return the current audit timestamp in the configured audit timezone.
-
-**Source:**
-
-- `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L69-L75">View `_current_audit_timestamp` on GitHub</a>
-
-**Code:**
-
-```python
-def _current_audit_timestamp(config: Any = None, timezone_name: str | None = None, *, drop_microseconds: bool = True) -> str:
-    """Return the current audit timestamp in the configured audit timezone."""
-    tz_name = _get_audit_timezone(config, timezone_name)
-    value = datetime.now(ZoneInfo(tz_name))
-    if drop_microseconds:
-        value = value.replace(microsecond=0)
-    return value.isoformat()
-```
-
-**Used here because:**
-
-`record_table_governance` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `record_table_governance` or another caller that reaches `_current_audit_timestamp`.
-
-### `def _get_audit_timezone(config: Any=None, timezone_name: str | None=None) -> str`
-
-**What it does:**
-
-Resolve the configured FabricOps audit timezone, defaulting to UTC.
-
-**Source:**
-
-- `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L61-L66">View `_get_audit_timezone` on GitHub</a>
-
-**Code:**
-
-```python
-def _get_audit_timezone(config: Any = None, timezone_name: str | None = None) -> str:
-    """Resolve the configured FabricOps audit timezone, defaulting to UTC."""
-    if timezone_name is not None:
-        return _validate_audit_timezone(timezone_name)
-    value = getattr(config, "audit_timezone", None) if config is not None else None
-    return _validate_audit_timezone(value)
-```
-
-**Used here because:**
-
-`record_table_governance` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `record_table_governance` or another caller that reaches `_get_audit_timezone`.
-
-### `def _validate_audit_timezone(timezone_name: str | None) -> str`
-
-**What it does:**
-
-Return a valid IANA audit timezone name.
-
-**Source:**
-
-- `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L27-L58">View `_validate_audit_timezone` on GitHub</a>
-
-**Code:**
-
-```python
-def _validate_audit_timezone(timezone_name: str | None) -> str:
-    """Return a valid IANA audit timezone name.
-
-    Parameters
-    ----------
-    timezone_name : str or None
-        IANA timezone name to validate. Blank values default to ``"UTC"``.
-
-    Returns
-    -------
-    str
-        Validated timezone name.
-
-    Raises
-    ------
-    ValueError
-        If a non-blank value is not a valid IANA timezone name.
-    """
-    value = str(timezone_name or DEFAULT_AUDIT_TIMEZONE).strip() or DEFAULT_AUDIT_TIMEZONE
-    if value != DEFAULT_AUDIT_TIMEZONE and "/" not in value:
-        raise ValueError(
-            f'Invalid FABRICOPS_AUDIT_TIMEZONE: "{value}". '
-            'Use a valid IANA timezone name such as "Asia/Singapore" or keep the default "UTC".'
-        )
-    try:
-        ZoneInfo(value)
-    except ZoneInfoNotFoundError as exc:
-        raise ValueError(
-            f'Invalid FABRICOPS_AUDIT_TIMEZONE: "{value}". '
-            'Use a valid IANA timezone name such as "Asia/Singapore" or keep the default "UTC".'
-        ) from exc
-    return value
-```
-
-**Used here because:**
-
-`record_table_governance` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `record_table_governance` or another caller that reaches `_validate_audit_timezone`.
-
-### `def _context_get(context: Any, *keys: str) -> Any`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/metadata.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L173-L185">View `_context_get` on GitHub</a>
-
-**Code:**
-
-```python
-def _context_get(context: Any, *keys: str) -> Any:
-    for key in keys:
-        try:
-            if isinstance(context, dict):
-                value = context.get(key)
-            else:
-                getter = getattr(context, "get", None)
-                value = getter(key) if callable(getter) else None
-        except Exception:
-            value = None
-        if value is not None:
-            return value
-    return None
-```
-
-**Used here because:**
-
-`record_table_governance` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `record_table_governance` or another caller that reaches `_context_get`.
-
-### `def _runtime_context() -> dict[str, Any]`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/metadata.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L192-L216">View `_runtime_context` on GitHub</a>
-
-**Code:**
-
-```python
-def _runtime_context() -> dict[str, Any]:
-    try:
-        import notebookutils  # type: ignore
-    except Exception:
-        return {}
-
-    runtime = getattr(notebookutils, "runtime", None)
-    context = getattr(runtime, "context", None)
-    if context is None:
-        return {}
-
-    keys = [
-        "currentWorkspaceId",
-        "currentWorkspaceName",
-        "currentNotebookId",
-        "currentNotebookName",
-        "workspaceId",
-        "workspaceName",
-        "notebookId",
-        "notebookName",
-        "userId",
-        "userName",
-        "activityId",
-    ]
-    return {key: _context_get(context, key) for key in keys}
-```
-
-**Used here because:**
-
-`record_table_governance` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `record_table_governance` or another caller that reaches `_runtime_context`.
-
-### `def _safe_str(value: Any) -> str`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/metadata.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L188-L189">View `_safe_str` on GitHub</a>
-
-**Code:**
-
-```python
-def _safe_str(value: Any) -> str:
-    return "" if value is None else str(value)
-```
-
-**Used here because:**
-
-`record_table_governance` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `record_table_governance` or another caller that reaches `_safe_str`.
-
-### `def _now_utc_iso(config: Any=None) -> str`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/metadata.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L133-L134">View `_now_utc_iso` on GitHub</a>
-
-**Code:**
-
-```python
-def _now_utc_iso(config: Any = None) -> str:
-    return _current_audit_timestamp(config=config, drop_microseconds=False)
-```
-
-**Used here because:**
-
-`record_table_governance` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `record_table_governance` or another caller that reaches `_now_utc_iso`.
-
-### `def _resolve_action_by(action_by: str | None=None) -> str`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/metadata.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L137-L141">View `_resolve_action_by` on GitHub</a>
-
-**Code:**
-
-```python
-def _resolve_action_by(action_by: str | None = None) -> str:
-    if action_by:
-        return str(action_by)
-    context = _runtime_context()
-    return str(_context_get(context, "userName", "userId") or "unknown")
-```
-
-**Used here because:**
-
-`record_table_governance` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `record_table_governance` or another caller that reaches `_resolve_action_by`.
-
-### `def _json(value: Any) -> str`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L526-L531">View `_json` on GitHub</a>
-
-**Code:**
-
-```python
-def _json(value: Any) -> str:
-    if value in (None, ""):
-        return ""
-    if isinstance(value, str):
-        return value
-    return json.dumps(value, sort_keys=True)
-```
-
-**Used here because:**
-
-`record_table_governance` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `record_table_governance` or another caller that reaches `_json`.
-
-### `def _build_column_context_records(profile_rows: list[dict[str, Any]], reviewed_rows: list[dict[str, Any]], *, config: Any=None, env: str | None=None, approved_by: str | None=None) -> list[dict[str, Any]]`
-
-**What it does:**
-
-Build append-only approved business-context records from explicit reviews.
-
-**Source:**
-
-- `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L409-L422">View `_build_column_context_records` on GitHub</a>
-
-**Code:**
-
-```python
-def _build_column_context_records(profile_rows: list[dict[str, Any]], reviewed_rows: list[dict[str, Any]], *, config: Any = None, env: str | None = None, approved_by: str | None = None) -> list[dict[str, Any]]:
-    """Build append-only approved business-context records from explicit reviews."""
-    profile, actor, now, audit = _approved_review_context(profile_rows, config=config, env=env, approved_by=approved_by)
-    rows = []
-    for review in reviewed_rows or []:
-        if str(review.get("review_status", "approved")).lower() != "approved" or not review.get("commit"):
-            continue
-        identity = _approved_column_identity(profile.get(str(review.get("column_name")), {}), review, env=env)
-        rows.append({
-            **identity,
-            "business_context": str(review.get("business_context") or ""), "notes": str(review.get("notes") or ""), "review_status": "approved",
-            "approved_by": actor, "approved_at": now, "ai_suggestion_json": _json(review.get("ai_suggestion_json") or review.get("ai_suggestion")), **audit,
-        })
-    return rows
-```
-
-**Used here because:**
-
-`record_table_governance` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `record_table_governance` or another caller that reaches `_build_column_context_records`.
-
-### `def _build_dq_rule_records(profile_rows: list[dict[str, Any]], reviewed_rules: list[dict[str, Any]], *, config: Any=None, env: str | None=None, approved_by: str | None=None) -> list[dict[str, Any]]`
-
-**What it does:**
-
-Build append-only approved DQ-rule records without enforcing them.
-
-**Source:**
-
-- `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L450-L501">View `_build_dq_rule_records` on GitHub</a>
-
-**Code:**
-
-```python
-def _build_dq_rule_records(profile_rows: list[dict[str, Any]], reviewed_rules: list[dict[str, Any]], *, config: Any = None, env: str | None = None, approved_by: str | None = None) -> list[dict[str, Any]]:
-    """Build append-only approved DQ-rule records without enforcing them."""
-    profile, actor, now, audit = _approved_review_context(profile_rows, config=config, env=env, approved_by=approved_by)
-    rows = []
-    for rule in reviewed_rules or []:
-        if not rule.get("commit"):
-            continue
-        review_status = str(rule.get("review_status", "approved")).lower()
-        action_type = str(rule.get("action_type") or ("created" if rule.get("is_active", True) else "deactivated")).lower()
-        if action_type == "delete":
-            action_type = "deactivated"
-        if action_type not in {"created", "updated", "deactivated", "reactivated", "approved"}:
-            raise ValueError(f"Unsupported DQ action_type: {action_type}")
-        is_active = bool(rule.get("is_active", action_type != "deactivated"))
-        if action_type == "deactivated":
-            is_active = False
-        if action_type == "reactivated":
-            is_active = True
-        if review_status != "approved":
-            continue
-        draft = dict(rule)
-        draft["rule_type"] = _canonical_dq_rule_type(draft.get("rule_type"))
-        if draft["rule_type"] != "expression_true":
-            columns = draft.get("columns") or ([draft.get("column_name")] if draft.get("column_name") else [])
-            if isinstance(columns, str):
-                columns = [c.strip() for c in columns.split(",") if c.strip()]
-            draft["columns"] = list(columns or [])
-        _validate_dq_rules([draft])
-        columns = [str(c) for c in draft.get("columns", [])]
-        display_column = str(rule.get("column_name") or ", ".join(columns) or "")
-        primary_column = columns[0] if columns else display_column
-        identity = _approved_column_identity(profile.get(primary_column, {}), {**rule, "column_name": display_column, "columns": columns}, env=env)
-        identity["column_name"] = display_column
-        rule_id = str(rule.get("rule_id") or f"{identity['table_name']}.{display_column or 'table'}.{draft['rule_type']}")
-        params = _dq_rule_parameter_payload(draft, columns)
-        rows.append({
-            "rule_key": str(rule.get("rule_key") or _build_dq_rule_key(identity["environment_name"], identity["dataset_name"], identity["table_name"], rule_id)),
-            "rule_id": rule_id,
-            **identity,
-            "rule_type": draft["rule_type"],
-            "rule_parameters_json": _json(params),
-            "severity": str(rule.get("severity") or "warning").lower(),
-            "description": str(rule.get("description") or ""),
-            "is_active": is_active,
-            "review_status": "approved",
-            "approved_by": str(rule.get("approved_by") or actor),
-            "approved_at": str(rule.get("approved_at") or now),
-            "ai_suggestion_json": _json(rule.get("ai_suggestion_json") or rule.get("ai_suggestion")),
-            "action_type": action_type,
-            **audit,
-        })
-    return rows
-```
-
-**Used here because:**
-
-`record_table_governance` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `record_table_governance` or another caller that reaches `_build_dq_rule_records`.
-
-### `def _canonical_dq_rule_type(rule_type: Any) -> str`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L78-L79">View `_canonical_dq_rule_type` on GitHub</a>
-
-**Code:**
-
-```python
-def _canonical_dq_rule_type(rule_type: Any) -> str:
-    return str(rule_type or "").strip()
-```
-
-**Used here because:**
-
-`record_table_governance` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `record_table_governance` or another caller that reaches `_canonical_dq_rule_type`.
-
-### `def _dq_rule_parameter_payload(rule: dict[str, Any], columns: list[str]) -> dict[str, Any]`
-
-**What it does:**
-
-Return rule parameters stored inside ``rule_parameters_json``.
-
-**Source:**
-
-- `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L425-L447">View `_dq_rule_parameter_payload` on GitHub</a>
-
-**Code:**
-
-```python
-def _dq_rule_parameter_payload(rule: dict[str, Any], columns: list[str]) -> dict[str, Any]:
-    """Return rule parameters stored inside ``rule_parameters_json``."""
-    metadata_fields = {
-        "rule_key", "rule_id", "metadata_column_key", "metadata_table_key", "environment_name", "dataset_name",
-        "table_name", "column_name", "rule_type", "rule_parameters", "rule_parameters_json", "severity",
-        "description", "is_active", "review_status", "approved_by", "approved_at", "ai_suggestion_json",
-        "ai_suggestion", "action_type", "commit", "_committed_at", "_committed_by", "_workspace_name",
-        "_notebook_name", "_metadata_lakehouse_name", "_activity_id",
-    }
-    payload: dict[str, Any] = {"columns": columns}
-    raw = rule.get("rule_parameters") or rule.get("rule_parameters_json") or {}
-    if isinstance(raw, str) and raw.strip():
-        try:
-            raw = json.loads(raw)
-        except Exception:
-            raw = {}
-    if isinstance(raw, dict):
-        payload.update(raw)
-    for key, value in rule.items():
-        if key not in metadata_fields and value is not None:
-            payload[key] = value
-    payload["columns"] = columns
-    return payload
-```
-
-**Used here because:**
-
-`record_table_governance` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `record_table_governance` or another caller that reaches `_dq_rule_parameter_payload`.
-
-### `def _validate_dq_rules(rules: list[dict[str, Any]]) -> list[dict[str, Any]]`
-
-**What it does:**
-
-Validate canonical DQ rules before loading or enforcement.
-
-**Source:**
-
-- `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L1183-L1256">View `_validate_dq_rules` on GitHub</a>
-
-**Code:**
-
-```python
-def _validate_dq_rules(rules: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Validate canonical DQ rules before loading or enforcement."""
-    if not isinstance(rules, list):
-        raise ValueError("DQ rules must be a list of dictionaries.")
-
-    optional_common = {"severity", "description", "rule_id", "is_active", "review_status"}
-    del optional_common  # Documents intentionally accepted fields for callers and tests.
-
-    def require_columns(rule: dict[str, Any], count: int | None = None, *, minimum: int | None = None) -> list[str]:
-        cols = rule.get("columns")
-        if isinstance(cols, str):
-            cols = [c.strip() for c in cols.split(",") if c.strip()]
-            rule["columns"] = cols
-        if not isinstance(cols, list) or not cols or not all(str(c).strip() for c in cols):
-            raise ValueError(f"DQ rule '{rule.get('rule_id', '?')}' columns must be a non-empty list.")
-        cols = [str(c).strip() for c in cols]
-        rule["columns"] = cols
-        if count is not None and len(cols) != count:
-            raise ValueError(f"DQ rule '{rule.get('rule_id', '?')}' requires exactly {count} column(s).")
-        if minimum is not None and len(cols) < minimum:
-            raise ValueError(f"DQ rule '{rule.get('rule_id', '?')}' requires at least {minimum} column(s).")
-        return cols
-
-    for i, rule in enumerate(rules):
-        if not isinstance(rule, dict):
-            raise ValueError(f"DQ rule at index {i} must be a dictionary.")
-        rule.setdefault("rule_id", f"dq_rule_{i + 1}")
-        rule.setdefault("severity", "warning")
-        rule.setdefault("description", "")
-        rule["rule_type"] = _canonical_dq_rule_type(rule.get("rule_type"))
-        rtype = rule["rule_type"]
-        if rtype not in DQ_RULE_TYPES:
-            raise ValueError(f"DQ rule '{rule['rule_id']}' has unsupported rule_type '{rtype}'.")
-        if str(rule.get("severity", "warning")).lower() not in {"warning", "error"}:
-            raise ValueError(f"DQ rule '{rule['rule_id']}' severity must be warning or error.")
-
-        if rtype in {"not_null", "non_empty_string", "required_when"}:
-            require_columns(rule, minimum=1)
-        elif rtype in {
-            "null_rate_below", "unique", "accepted_values", "not_in_values", "between",
-            "greater_than", "greater_than_or_equal", "less_than", "less_than_or_equal",
-            "regex_match", "date_not_future", "date_between", "freshness", "max_age_days", "value_when",
-        }:
-            require_columns(rule, count=1)
-        elif rtype == "unique_combination":
-            require_columns(rule, minimum=2)
-        elif rtype in {"column_pair_equal", "column_a_gte_column_b", "column_a_gt_column_b"}:
-            require_columns(rule, count=2)
-        elif rtype == "expression_true":
-            if not str(rule.get("expression") or "").strip():
-                raise ValueError(f"DQ rule '{rule['rule_id']}' requires expression.")
-
-        if rtype == "null_rate_below" and rule.get("max_null_percent") is None:
-            raise ValueError(f"DQ rule '{rule['rule_id']}' requires max_null_percent.")
-        if rtype == "accepted_values" and "allowed_values" not in rule:
-            raise ValueError(f"DQ rule '{rule['rule_id']}' requires allowed_values.")
-        if rtype == "not_in_values" and "blocked_values" not in rule:
-            raise ValueError(f"DQ rule '{rule['rule_id']}' requires blocked_values.")
-        if rtype in {"between", "date_between"} and rule.get("min_value") is None and rule.get("max_value") is None:
-            raise ValueError(f"DQ rule '{rule['rule_id']}' requires min_value or max_value.")
-        if rtype in {"greater_than", "greater_than_or_equal", "less_than", "less_than_or_equal"} and rule.get("value") is None:
-            raise ValueError(f"DQ rule '{rule['rule_id']}' requires value.")
-        if rtype == "regex_match" and not str(rule.get("regex_pattern") or ""):
-            raise ValueError(f"DQ rule '{rule['rule_id']}' requires regex_pattern.")
-        if rtype in {"freshness", "max_age_days"} and rule.get("max_age_days") is None:
-            raise ValueError(f"DQ rule '{rule['rule_id']}' requires max_age_days.")
-        if rtype == "required_when" and not str(rule.get("condition") or "").strip():
-            raise ValueError(f"DQ rule '{rule['rule_id']}' requires condition.")
-        if rtype == "value_when":
-            if not str(rule.get("condition") or "").strip():
-                raise ValueError(f"DQ rule '{rule['rule_id']}' requires condition.")
-            if "expected_value" not in rule:
-                raise ValueError(f"DQ rule '{rule['rule_id']}' requires expected_value.")
-    return rules
-```
-
-**Used here because:**
-
-`record_table_governance` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `record_table_governance` or another caller that reaches `_validate_dq_rules`.
-
-### `def _build_dq_rule_key(environment_name, dataset_name, table_name, rule_id) -> str`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/metadata.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/metadata.py#L157-L158">View `_build_dq_rule_key` on GitHub</a>
-
-**Code:**
-
-```python
-def _build_dq_rule_key(environment_name, dataset_name, table_name, rule_id) -> str:
-    return _stable_metadata_key(environment_name, dataset_name, table_name, rule_id)
-```
-
-**Used here because:**
-
-`record_table_governance` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `record_table_governance` or another caller that reaches `_build_dq_rule_key`.
-
-### `def _review_governance_evidence(config: Any, env: str, selection: dict[str, Any], *, spark_session: Any, reviewed_by: str | None=None, mode: str='append') -> dict[str, Any]`
-
-**What it does:**
-
-Review persisted v1 evidence and write a governance outcome row.
-
-**Source:**
-
-- `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L867-L1013">View `_review_governance_evidence` on GitHub</a>
-
-**Code:**
-
-```python
-def _review_governance_evidence(
-    config: Any,
-    env: str,
-    selection: dict[str, Any],
-    *,
-    spark_session: Any,
-    reviewed_by: str | None = None,
-    mode: str = "append",
-) -> dict[str, Any]:
-    """Review persisted v1 evidence and write a governance outcome row.
-
-    Parameters
-    ----------
-    config : FrameworkConfig or dict
-        Shared ``00_env_config`` configuration used for metadata lakehouse routing.
-    env : str
-        Environment key in ``config``.
-    selection : dict[str, Any]
-        Catalogue-table selection returned by ``get_selected_catalogue_table``.
-    spark_session : pyspark.sql.SparkSession
-        Spark session used to read and write metadata tables.
-    reviewed_by : str, optional
-        Reviewer identity. Runtime user metadata is used when omitted.
-    mode : str, default="append"
-        Write mode for ``METADATA_GOVERNANCE_REVIEWS``.
-
-    Returns
-    -------
-    dict[str, Any]
-        Governance review row plus blocker, warning, and evidence details.
-
-    Notes
-    -----
-    The function intentionally re-reads agreement, catalogue, pipeline-run, and
-    evidence metadata from the configured ``metadata`` target so ``03_governance``
-    can run in a separate session after ``02_pipeline``.
-    """
-    profile_rows = load_catalogue_profile_rows(config, env, selection, spark_session=spark_session)
-    first_profile = profile_rows[0]
-    env_name = str(_value(first_profile, "environment_name") or selection.get("environment_name") or env)
-    dataset_name = str(_value(first_profile, "dataset_name") or selection.get("dataset_name") or "")
-    table_name = str(_value(first_profile, "table_name") or selection.get("table_name") or "")
-    table_key = str(_value(first_profile, "metadata_table_key") or selection.get("metadata_table_key") or _build_metadata_table_key(env_name, dataset_name, table_name))
-    profile_run_id = str(_value(first_profile, "profile_run_id") or selection.get("profile_run_id") or "")
-    profile_stage = str(_value(first_profile, "profile_stage") or selection.get("profile_stage") or "")
-    agreement_id = str(_value(first_profile, "agreement_id") or _value(first_profile, "AGREEMENT_ID") or "")
-    agreement_contract_version = str(_value(first_profile, "contract_version") or _value(first_profile, "AGREEMENT_CONTRACT_VERSION") or "")
-
-    all_pipeline_rows = [
-        row for row in _read_metadata_rows(config, env, PIPELINE_RUNS_TABLE, spark_session=spark_session)
-        if str(_value(row, "environment_name")) == env_name
-    ]
-    related_pipeline_rows = [
-        row for row in all_pipeline_rows
-        if not agreement_id or str(_value(row, "agreement_id")) == agreement_id
-    ]
-    pipeline_rows = [
-        row for row in related_pipeline_rows
-        if not profile_run_id or str(_value(row, "run_id")) == profile_run_id
-    ]
-    latest_pipeline = _latest_row(pipeline_rows, "completed_at", "created_at", "run_id")
-
-    agreement_rows = [
-        row for row in _read_metadata_rows(config, env, DATA_AGREEMENT_TABLE, spark_session=spark_session)
-        if agreement_id and str(_value(row, "agreement_id")) == agreement_id
-        and (not agreement_contract_version or str(_value(row, "contract_version")) == agreement_contract_version)
-    ]
-    attachment_rows = [
-        row for row in _read_metadata_rows(config, env, DATA_AGREEMENT_EVIDENCE_TABLE, spark_session=spark_session)
-        if agreement_id and str(_value(row, "agreement_id")) == agreement_id
-        and (not agreement_contract_version or str(_value(row, "contract_version")) == agreement_contract_version)
-    ]
-
-    blockers: list[dict[str, str]] = []
-    warnings: list[dict[str, str]] = []
-
-    def _append_once(items: list[dict[str, str]], *, code: str, message: str) -> None:
-        if not any(item.get("code") == code for item in items):
-            items.append({"code": code, "message": message})
-
-    if not agreement_id:
-        _append_once(blockers, code="missing_agreement_id", message="Catalogue evidence is not linked to an agreement.")
-    elif not agreement_rows:
-        _append_once(blockers, code="missing_agreement_metadata", message="No matching agreement metadata row was found.")
-    if latest_pipeline is None:
-        _append_once(blockers, code="missing_pipeline_run", message="No matching pipeline run summary was found.")
-    elif _status_is_failed(_value(latest_pipeline, "status")):
-        _append_once(blockers, code="pipeline_failed", message="Latest pipeline run did not complete successfully.")
-
-    dq_statuses = {str(_value(row, "dq_status") or "").lower() for row in profile_rows}
-    dq_error_count = sum(int(_value(row, "dq_error_rule_count", 0) or 0) for row in profile_rows)
-    dq_failed_count = sum(int(_value(row, "dq_failed_rule_count", 0) or 0) for row in profile_rows)
-    if "failed" in dq_statuses or dq_error_count > 0:
-        _append_once(blockers, code="dq_failed", message="Failed DQ evidence blocks approval.")
-    elif "warning" in dq_statuses or dq_failed_count > 0:
-        _append_once(warnings, code="dq_warning", message="DQ warning evidence requires remediation review.")
-
-    if latest_pipeline is not None:
-        pipeline_dq_status = _value(latest_pipeline, "dq_status")
-        if _status_is_failed(pipeline_dq_status):
-            _append_once(blockers, code="dq_failed", message="Pipeline DQ status blocks approval.")
-        elif _status_is_warning(pipeline_dq_status):
-            _append_once(warnings, code="dq_warning", message="Pipeline DQ status requires remediation review.")
-
-        for field in ("source_guardrail_status", "target_guardrail_status"):
-            status = _value(latest_pipeline, field)
-            if _status_is_failed(status):
-                blockers.append({"code": f"{field}_failed", "message": f"{field} is {status}; schema drift or guardrail failure is present."})
-            elif _status_is_warning(status):
-                warnings.append({"code": f"{field}_warning", "message": f"{field} is {status}; schema drift is surfaced for review."})
-
-    outcome = "rejected" if blockers else ("needs_remediation" if warnings else "approved")
-    reviewed_at = _now_utc_iso(config)
-    actor = _resolve_action_by(reviewed_by)
-    audit = _build_runtime_audit_fields(config=config, env=env, committed_by=actor, committed_at=reviewed_at)
-    evidence_summary = {
-        "agreement_row_count": len(agreement_rows),
-        "agreement_attachment_count": len(attachment_rows),
-        "profile_column_count": len(profile_rows),
-        "pipeline_run_count": len(pipeline_rows),
-        "related_pipeline_run_count": len(related_pipeline_rows),
-        "prior_pipeline_run_ids": [str(_value(row, "run_id")) for row in related_pipeline_rows if str(_value(row, "run_id")) != profile_run_id],
-        "latest_pipeline_run": latest_pipeline or {},
-    }
-    row = {
-        "review_id": f"{profile_run_id or 'profile'}-{uuid.uuid4().hex[:12]}",
-        "environment_name": env_name,
-        "dataset_name": dataset_name,
-        "table_name": table_name,
-        "metadata_table_key": table_key,
-        "profile_run_id": profile_run_id,
-        "profile_stage": profile_stage,
-        "pipeline_run_id": str(_value(latest_pipeline or {}, "run_id")),
-        "agreement_id": agreement_id,
-        "agreement_contract_version": agreement_contract_version,
-        "outcome": outcome,
-        "blocker_count": len(blockers),
-        "warning_count": len(warnings),
-        "blockers_json": json.dumps(blockers, sort_keys=True),
-        "warnings_json": json.dumps(warnings, sort_keys=True),
-        "evidence_summary_json": json.dumps(evidence_summary, default=str, sort_keys=True),
-        "reviewed_at": reviewed_at,
-        "reviewed_by": actor,
-        **audit,
-    }
-    write_lakehouse_table(spark_session.createDataFrame([row]), config, env, "metadata", GOVERNANCE_REVIEWS_TABLE, mode=mode)
-    return {"review": row, "outcome": outcome, "blockers": blockers, "warnings": warnings, "evidence_summary": evidence_summary}
-```
-
-**Used here because:**
-
-`record_table_governance` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `record_table_governance` or another caller that reaches `_review_governance_evidence`.
-
-### `def _latest_row(rows: list[dict[str, Any]], *order_fields: str) -> dict[str, Any] | None`
-
-**What it does:**
-
-Return the latest row using lexicographic string timestamps/ids.
-
-**Source:**
-
-- `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L848-L852">View `_latest_row` on GitHub</a>
-
-**Code:**
-
-```python
-def _latest_row(rows: list[dict[str, Any]], *order_fields: str) -> dict[str, Any] | None:
-    """Return the latest row using lexicographic string timestamps/ids."""
-    if not rows:
-        return None
-    return max(rows, key=lambda row: tuple(str(_value(row, field)) for field in order_fields))
-```
-
-**Used here because:**
-
-`record_table_governance` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `record_table_governance` or another caller that reaches `_latest_row`.
-
-### `def _read_metadata_rows(config: Any, env: str, table: str, *, spark_session: Any) -> list[dict[str, Any]]`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L863-L864">View `_read_metadata_rows` on GitHub</a>
-
-**Code:**
-
-```python
-def _read_metadata_rows(config: Any, env: str, table: str, *, spark_session: Any) -> list[dict[str, Any]]:
-    return _coerce_rows(read_lakehouse_table(config, env, "metadata", table, spark_session=spark_session))
-```
-
-**Used here because:**
-
-`record_table_governance` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `record_table_governance` or another caller that reaches `_read_metadata_rows`.
-
-### `def _coerce_rows(rows_or_df: Any) -> list[dict[str, Any]]`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L62-L67">View `_coerce_rows` on GitHub</a>
-
-**Code:**
-
-```python
-def _coerce_rows(rows_or_df: Any) -> list[dict[str, Any]]:
-    if rows_or_df is None:
-        return []
-    if hasattr(rows_or_df, "collect"):
-        rows_or_df = rows_or_df.collect()
-    return [row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row) for row in rows_or_df]
-```
-
-**Used here because:**
-
-`record_table_governance` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `record_table_governance` or another caller that reaches `_coerce_rows`.
-
-### `def _status_is_failed(value: Any) -> bool`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L855-L856">View `_status_is_failed` on GitHub</a>
-
-**Code:**
-
-```python
-def _status_is_failed(value: Any) -> bool:
-    return str(value or "").strip().lower() in {"failed", "fail", "error", "errors", "rejected"}
-```
-
-**Used here because:**
-
-`record_table_governance` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `record_table_governance` or another caller that reaches `_status_is_failed`.
-
-### `def _status_is_warning(value: Any) -> bool`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/governance_review.py#L859-L860">View `_status_is_warning` on GitHub</a>
-
-**Code:**
-
-```python
-def _status_is_warning(value: Any) -> bool:
-    return str(value or "").strip().lower() in {"warning", "warnings", "needs_remediation", "drift"}
-```
-
-**Used here because:**
-
-`record_table_governance` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `record_table_governance` or another caller that reaches `_status_is_warning`.
-
 
 </details>

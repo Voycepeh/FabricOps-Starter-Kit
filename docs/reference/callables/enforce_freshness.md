@@ -1,25 +1,52 @@
 # enforce_freshness
 
-Enforce whether the latest data arrived within the configured freshness lag.
-
-## What this is for and when to use it
+## Purpose
 
 Enforce whether the latest data arrived within the configured freshness lag.
 
-- Use in 02_pipeline to validate max(freshness_column) is at least today minus freshness_max_lag_days.
+## At a glance
 
-## When not to use it
-
-- Do not use for schema validation, load-behavior enforcement, or DQ-rule enforcement; use validate_schema, enforce_profile_behavior, or enforce_dq_rules for those checks.
-
-## Example
-
-```python
+<div class="module-table-scroll reference-input-table">
+<table class="reference-function-table">
+  <thead>
+    <tr>
+      <th>Item</th>
+      <th>Details</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td data-label="Item">Use when</td>
+      <td data-label="Details">Use in 02_pipeline to validate max(freshness_column) is at least today minus freshness_max_lag_days.</td>
+    </tr>
+    <tr>
+      <td data-label="Item">Do not use when</td>
+      <td data-label="Details">Do not use for schema validation, load-behavior enforcement, or DQ-rule enforcement; use validate_schema, enforce_profile_behavior, or enforce_dq_rules for those checks.</td>
+    </tr>
+    <tr>
+      <td data-label="Item">Example</td>
+      <td data-label="Details">```python
 freshness_result = enforce_freshness(df, "business_date", 1, severity="blocking")
 stop_if_failed(freshness_result)
-```
+```</td>
+    </tr>
+    <tr>
+      <td data-label="Item">Errors</td>
+      <td data-label="Details">ValueError when severity is unsupported, lag is missing for a configured column, lag is negative, or reference_date is invalid.</td>
+    </tr>
+    <tr>
+      <td data-label="Item">Side effects</td>
+      <td data-label="Details">Computes max(freshness_column) on the provided DataFrame; it does not write metadata, tables, or files.</td>
+    </tr>
+    <tr>
+      <td data-label="Item">Related functions</td>
+      <td data-label="Details">- <a href="../validate_schema/"><code>fabricops_kit.guardrails.validate_schema</code></a><br>- <a href="../enforce_profile_behavior/"><code>fabricops_kit.guardrails.enforce_profile_behavior</code></a><br>- <a href="../stop_if_failed/"><code>fabricops_kit.guardrails.stop_if_failed</code></a></td>
+    </tr>
+  </tbody>
+</table>
+</div>
 
-## Inputs
+## Parameters
 
 <div class="module-table-scroll reference-input-table">
 <table class="reference-function-table">
@@ -60,24 +87,21 @@ stop_if_failed(freshness_result)
 </table>
 </div>
 
-## Output
+## Returns
 
 Guardrail result dictionary with status, can_continue, latest_value, required_min_value, and freshness evidence fields.
 
-## Errors and side effects
+## Used by
 
-**Errors:** ValueError when severity is unsupported, lag is missing for a configured column, lag is negative, or reference_date is invalid.
+- <a href="../run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
 
-**Side effects:** Computes max(freshness_column) on the provided DataFrame; it does not write metadata, tables, or files.
+## Calls
 
-## Related functions
+- `fabricops_kit.guardrails._coerce_date`
+- `fabricops_kit.guardrails._iso_date_value`
+- `fabricops_kit.guardrails._max_column_value`
 
-- <a href="../validate_schema/"><code>fabricops_kit.guardrails.validate_schema</code></a>
-- <a href="../enforce_profile_behavior/"><code>fabricops_kit.guardrails.enforce_profile_behavior</code></a>
-- <a href="../stop_if_failed/"><code>fabricops_kit.guardrails.stop_if_failed</code></a>
-
-<details class="reference-implementation-details">
-<summary>Implementation details</summary>
+## Implementation details
 
 ### Call flow
 
@@ -89,142 +113,10 @@ enforce_freshness(...)
 └── _max_column_value(...)
 ```
 
-### Internal helpers used by this callable
-
-### `def _coerce_date(value) -> date | None`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/guardrails.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L342-L359">View `_coerce_date` on GitHub</a>
-
-**Code:**
-
-```python
-def _coerce_date(value) -> date | None:
-    if value in (None, ""):
-        return None
-    if isinstance(value, datetime):
-        return value.date()
-    if isinstance(value, date):
-        return value
-    text = str(value).strip()
-    if not text:
-        return None
-    try:
-        return datetime.fromisoformat(text.replace("Z", "+00:00")).date()
-    except ValueError:
-        pass
-    try:
-        return date.fromisoformat(text[:10])
-    except ValueError:
-        return None
-```
-
-**Used here because:**
-
-`enforce_freshness` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `enforce_freshness` or another caller that reaches `_coerce_date`.
-
-### `def _iso_date_value(value) -> str`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/guardrails.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L362-L364">View `_iso_date_value` on GitHub</a>
-
-**Code:**
-
-```python
-def _iso_date_value(value) -> str:
-    parsed = _coerce_date(value)
-    return parsed.isoformat() if parsed is not None else ("" if value is None else str(value))
-```
-
-**Used here because:**
-
-`enforce_freshness` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `enforce_freshness` or another caller that reaches `_iso_date_value`.
-
-### `def _max_column_value(dataframe, column_name: str)`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/guardrails.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L309-L339">View `_max_column_value` on GitHub</a>
-
-**Code:**
-
-```python
-def _max_column_value(dataframe, column_name: str):
-    if dataframe is None or not column_name:
-        return None
-    if hasattr(dataframe, "agg"):
-        from pyspark.sql import functions as F
-
-        rows = dataframe.agg(F.max(F.col(column_name)).alias("latest_value")).collect()
-        if not rows:
-            return None
-        row = rows[0]
-        if isinstance(row, dict):
-            return row.get("latest_value")
-        if hasattr(row, "asDict"):
-            return row.asDict().get("latest_value")
-        try:
-            return row["latest_value"]
-        except Exception:
-            return getattr(row, "latest_value", None)
-    if isinstance(dataframe, dict):
-        values = [dataframe.get(column_name)]
-    else:
-        values = []
-        for row in dataframe or []:
-            if isinstance(row, dict):
-                values.append(row.get(column_name))
-            elif hasattr(row, "asDict"):
-                values.append(row.asDict().get(column_name))
-            else:
-                values.append(getattr(row, column_name, None))
-    values = [value for value in values if value not in (None, "")]
-    return max(values) if values else None
-```
-
-**Used here because:**
-
-`enforce_freshness` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `enforce_freshness` or another caller that reaches `_max_column_value`.
-
-
-</details>
-
-## Source
+## Public callable source code
 
 - Source file path: `src/fabricops_kit/guardrails.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L367-L464">View enforce_freshness on GitHub</a>
-
-<details class="reference-source-details">
-<summary>Show source code</summary>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/guardrails.py#L367-L464">View enforce_freshness on GitHub</a>
 
 ```python
 def enforce_freshness(
@@ -327,7 +219,114 @@ def enforce_freshness(
     return base_result
 ```
 
-</details>
+## Nested helper functions
+
+??? info "Nested helper functions: 3"
+
+    These helpers support `enforce_freshness` by handling shared implementation tasks reached from the public call flow; expand the source block only when you need maintainer-level details.
+
+    <table class="reference-function-table">
+      <thead>
+        <tr>
+          <th>Helper</th>
+          <th>Role</th>
+          <th>Source</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td data-label="Helper"><code>_coerce_date</code></td>
+          <td data-label="Role">Internal helper used by the package implementation.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/guardrails.py#L342-L359"><code>src/fabricops_kit/guardrails.py#L342-L359</code></a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_iso_date_value</code></td>
+          <td data-label="Role">Internal helper used by the package implementation.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/guardrails.py#L362-L364"><code>src/fabricops_kit/guardrails.py#L362-L364</code></a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_max_column_value</code></td>
+          <td data-label="Role">Internal helper used by the package implementation.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/guardrails.py#L309-L339"><code>src/fabricops_kit/guardrails.py#L309-L339</code></a></td>
+        </tr>
+      </tbody>
+    </table>
+
+    ??? example "View helper source code"
+
+        **`def _coerce_date(value) -> date | None`**
+
+        Used by `enforce_freshness` through the implementation path shown above.
+
+        ```python
+        def _coerce_date(value) -> date | None:
+            if value in (None, ""):
+                return None
+            if isinstance(value, datetime):
+                return value.date()
+            if isinstance(value, date):
+                return value
+            text = str(value).strip()
+            if not text:
+                return None
+            try:
+                return datetime.fromisoformat(text.replace("Z", "+00:00")).date()
+            except ValueError:
+                pass
+            try:
+                return date.fromisoformat(text[:10])
+            except ValueError:
+                return None
+        ```
+
+        **`def _iso_date_value(value) -> str`**
+
+        Used by `enforce_freshness` through the implementation path shown above.
+
+        ```python
+        def _iso_date_value(value) -> str:
+            parsed = _coerce_date(value)
+            return parsed.isoformat() if parsed is not None else ("" if value is None else str(value))
+        ```
+
+        **`def _max_column_value(dataframe, column_name: str)`**
+
+        Used by `enforce_freshness` through the implementation path shown above.
+
+        ```python
+        def _max_column_value(dataframe, column_name: str):
+            if dataframe is None or not column_name:
+                return None
+            if hasattr(dataframe, "agg"):
+                from pyspark.sql import functions as F
+
+                rows = dataframe.agg(F.max(F.col(column_name)).alias("latest_value")).collect()
+                if not rows:
+                    return None
+                row = rows[0]
+                if isinstance(row, dict):
+                    return row.get("latest_value")
+                if hasattr(row, "asDict"):
+                    return row.asDict().get("latest_value")
+                try:
+                    return row["latest_value"]
+                except Exception:
+                    return getattr(row, "latest_value", None)
+            if isinstance(dataframe, dict):
+                values = [dataframe.get(column_name)]
+            else:
+                values = []
+                for row in dataframe or []:
+                    if isinstance(row, dict):
+                        values.append(row.get(column_name))
+                    elif hasattr(row, "asDict"):
+                        values.append(row.asDict().get(column_name))
+                    else:
+                        values.append(getattr(row, column_name, None))
+            values = [value for value in values if value not in (None, "")]
+            return max(values) if values else None
+        ```
+
 
 <details class="reference-metadata-details">
 <summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
@@ -368,7 +367,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/guardrails.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L367-L464">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L367-L464</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/guardrails.py#L367-L464">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/guardrails.py#L367-L464</a>
 - Start line: `367`
 - End line: `464`
 - Signature:
@@ -379,13 +378,13 @@ def enforce_freshness(dataframe, freshness_column: str | None, max_lag_days: int
 
 ### Internal relationship graph
 
+The human-readable implementation view above is the source of truth for public call flow, public callable source, and collapsed nested helper details.
+
 ### Public related functions
 
 - <a href="../validate_schema/"><code>fabricops_kit.guardrails.validate_schema</code></a>
 - <a href="../enforce_profile_behavior/"><code>fabricops_kit.guardrails.enforce_profile_behavior</code></a>
 - <a href="../stop_if_failed/"><code>fabricops_kit.guardrails.stop_if_failed</code></a>
-
-### Internal implementation helpers
 
 ### Call flow
 
@@ -396,132 +395,5 @@ enforce_freshness(...)
 │   └── _coerce_date(...)
 └── _max_column_value(...)
 ```
-
-### Internal helpers used by this callable
-
-### `def _coerce_date(value) -> date | None`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/guardrails.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L342-L359">View `_coerce_date` on GitHub</a>
-
-**Code:**
-
-```python
-def _coerce_date(value) -> date | None:
-    if value in (None, ""):
-        return None
-    if isinstance(value, datetime):
-        return value.date()
-    if isinstance(value, date):
-        return value
-    text = str(value).strip()
-    if not text:
-        return None
-    try:
-        return datetime.fromisoformat(text.replace("Z", "+00:00")).date()
-    except ValueError:
-        pass
-    try:
-        return date.fromisoformat(text[:10])
-    except ValueError:
-        return None
-```
-
-**Used here because:**
-
-`enforce_freshness` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `enforce_freshness` or another caller that reaches `_coerce_date`.
-
-### `def _iso_date_value(value) -> str`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/guardrails.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L362-L364">View `_iso_date_value` on GitHub</a>
-
-**Code:**
-
-```python
-def _iso_date_value(value) -> str:
-    parsed = _coerce_date(value)
-    return parsed.isoformat() if parsed is not None else ("" if value is None else str(value))
-```
-
-**Used here because:**
-
-`enforce_freshness` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `enforce_freshness` or another caller that reaches `_iso_date_value`.
-
-### `def _max_column_value(dataframe, column_name: str)`
-
-**What it does:**
-
-Internal helper used by the package implementation.
-
-**Source:**
-
-- `src/fabricops_kit/guardrails.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/guardrails.py#L309-L339">View `_max_column_value` on GitHub</a>
-
-**Code:**
-
-```python
-def _max_column_value(dataframe, column_name: str):
-    if dataframe is None or not column_name:
-        return None
-    if hasattr(dataframe, "agg"):
-        from pyspark.sql import functions as F
-
-        rows = dataframe.agg(F.max(F.col(column_name)).alias("latest_value")).collect()
-        if not rows:
-            return None
-        row = rows[0]
-        if isinstance(row, dict):
-            return row.get("latest_value")
-        if hasattr(row, "asDict"):
-            return row.asDict().get("latest_value")
-        try:
-            return row["latest_value"]
-        except Exception:
-            return getattr(row, "latest_value", None)
-    if isinstance(dataframe, dict):
-        values = [dataframe.get(column_name)]
-    else:
-        values = []
-        for row in dataframe or []:
-            if isinstance(row, dict):
-                values.append(row.get(column_name))
-            elif hasattr(row, "asDict"):
-                values.append(row.asDict().get(column_name))
-            else:
-                values.append(getattr(row, column_name, None))
-    values = [value for value in values if value not in (None, "")]
-    return max(values) if values else None
-```
-
-**Used here because:**
-
-`enforce_freshness` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `enforce_freshness` or another caller that reaches `_max_column_value`.
-
 
 </details>

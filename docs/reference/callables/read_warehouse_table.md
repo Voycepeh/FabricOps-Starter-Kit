@@ -1,24 +1,51 @@
 # read_warehouse_table
 
-Read a table from a configured Fabric warehouse target.
-
-## What this is for and when to use it
+## Purpose
 
 Read a table from a configured Fabric warehouse target.
 
-- Use when reading a table from a configured Fabric warehouse target.
+## At a glance
 
-## When not to use it
-
-- Do not use for lakehouse Delta tables or lakehouse Files CSV, Parquet, or Excel paths.
-
-## Example
-
-```python
+<div class="module-table-scroll reference-input-table">
+<table class="reference-function-table">
+  <thead>
+    <tr>
+      <th>Item</th>
+      <th>Details</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td data-label="Item">Use when</td>
+      <td data-label="Details">Use when reading a table from a configured Fabric warehouse target.</td>
+    </tr>
+    <tr>
+      <td data-label="Item">Do not use when</td>
+      <td data-label="Details">Do not use for lakehouse Delta tables or lakehouse Files CSV, Parquet, or Excel paths.</td>
+    </tr>
+    <tr>
+      <td data-label="Item">Example</td>
+      <td data-label="Details">```python
 df = read_warehouse_table(CONFIG, env="Sandbox", target="Warehouse", schema="dbo", table="orders", spark_session=spark)
-```
+```</td>
+    </tr>
+    <tr>
+      <td data-label="Item">Errors</td>
+      <td data-label="Details">Raises configuration, Spark SQL, or warehouse-read errors when the target/table cannot be resolved/read.</td>
+    </tr>
+    <tr>
+      <td data-label="Item">Side effects</td>
+      <td data-label="Details">Reads from a warehouse table; it does not write metadata, tables, or files.</td>
+    </tr>
+    <tr>
+      <td data-label="Item">Related functions</td>
+      <td data-label="Details">- <a href="../write_warehouse_table/"><code>fabricops_kit.fabric_input_output.write_warehouse_table</code></a><br>- <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a></td>
+    </tr>
+  </tbody>
+</table>
+</div>
 
-## Inputs
+## Parameters
 
 <div class="module-table-scroll reference-input-table">
 <table class="reference-function-table">
@@ -64,23 +91,20 @@ df = read_warehouse_table(CONFIG, env="Sandbox", target="Warehouse", schema="dbo
 </table>
 </div>
 
-## Output
+## Returns
 
 Spark DataFrame loaded from the configured warehouse table.
 
-## Errors and side effects
+## Used by
 
-**Errors:** Raises configuration, Spark SQL, or warehouse-read errors when the target/table cannot be resolved/read.
+No public or package-local callers detected by the generated dependency graph.
 
-**Side effects:** Reads from a warehouse table; it does not write metadata, tables, or files.
+## Calls
 
-## Related functions
+- `fabricops_kit.config._get_store`
+- `fabricops_kit.fabric_input_output._get_spark`
 
-- <a href="../write_warehouse_table/"><code>fabricops_kit.fabric_input_output.write_warehouse_table</code></a>
-- <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a>
-
-<details class="reference-implementation-details">
-<summary>Implementation details</summary>
+## Implementation details
 
 ### Call flow
 
@@ -90,138 +114,10 @@ read_warehouse_table(...)
 └── _get_store(...)
 ```
 
-### Internal helpers used by this callable
-
-### `def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any`
-
-**What it does:**
-
-Resolve a configured Fabric path for an environment and target.
-
-**Source:**
-
-- `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L618-L658">View `_get_store` on GitHub</a>
-
-**Code:**
-
-```python
-def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any:
-    """Resolve a configured Fabric path for an environment and target.
-
-    Parameters
-    ----------
-    env : str
-        Environment key such as ``Sandbox``, ``DE``, or ``Prod``.
-    target : str
-        Target key such as ``Source``, ``Unified``, ``Product``, or ``Warehouse``.
-    config : FrameworkConfig | PathConfig | None
-        Configuration that contains environment-to-target path mappings.
-
-    Returns
-    -------
-    Any
-        FabricStore object with ``workspace_id``, ``house_id``, ``house_name``, and ``root``.
-
-    Raises
-    ------
-    ValueError
-        If config is missing, or if the environment/target mapping does not exist.
-
-    Examples
-    --------
-    >>> get_path("Sandbox", "Source", config=CONFIG)
-    Housepath(...)
-    """
-    if config is None:
-        raise ValueError("No Fabric config was provided. Pass a FrameworkConfig or PathConfig instance.")
-    paths = config.path_config.paths if isinstance(config, FrameworkConfig) else config.paths
-    if env not in paths:
-        available_envs = ", ".join(sorted(paths.keys())) or "<none>"
-        raise ValueError(
-            f"Environment '{env}' was not found in Fabric config. Available environments: {available_envs}."
-        )
-    if target not in paths[env]:
-        available_targets = ", ".join(sorted(paths[env].keys())) or "<none>"
-        raise ValueError(
-            f"Target '{target}' was not found under environment '{env}'. Available targets: {available_targets}."
-        )
-    return paths[env][target]
-```
-
-**Used here because:**
-
-`read_warehouse_table` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `read_warehouse_table` or another caller that reaches `_get_store`.
-
-### `def _get_spark(spark_session=None)`
-
-**What it does:**
-
-Return an explicit Spark session or the active notebook global `spark`.
-
-**Source:**
-
-- `src/fabricops_kit/fabric_input_output.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/fabric_input_output.py#L125-L155">View `_get_spark` on GitHub</a>
-
-**Code:**
-
-```python
-def _get_spark(spark_session=None):
-    """Return an explicit Spark session or the active notebook global `spark`.
-
-    Most Fabric notebooks already expose a global `spark` object. Tests and
-    local scripts can pass `spark_session` explicitly to avoid relying on the
-    notebook runtime.
-
-    Parameters
-    ----------
-    spark_session : object, optional
-        Spark session to use instead of the notebook global `spark`.
-
-    Returns
-    -------
-    object
-        Spark session object.
-
-    Raises
-    ------
-    RuntimeError
-        If no Spark session is passed and no global `spark` object exists.
-    """
-    if spark_session is not None:
-        return spark_session
-    try:
-        return globals()["spark"]
-    except KeyError as exc:
-        raise RuntimeError(
-            "Spark session was not provided and global 'spark' was not found. "
-            "Run this inside Fabric/Spark or pass spark_session explicitly."
-        ) from exc
-```
-
-**Used here because:**
-
-`read_warehouse_table` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `read_warehouse_table` or another caller that reaches `_get_spark`.
-
-
-</details>
-
-## Source
+## Public callable source code
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/fabric_input_output.py#L371-L430">View read_warehouse_table on GitHub</a>
-
-<details class="reference-source-details">
-<summary>Show source code</summary>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/fabric_input_output.py#L371-L430">View read_warehouse_table on GitHub</a>
 
 ```python
 def read_warehouse_table(config, env, target, schema, table, spark_session=None):
@@ -286,7 +182,122 @@ def read_warehouse_table(config, env, target, schema, table, spark_session=None)
     )
 ```
 
-</details>
+## Nested helper functions
+
+??? info "Nested helper functions: 2"
+
+    These helpers support `read_warehouse_table` by handling shared implementation tasks reached from the public call flow; expand the source block only when you need maintainer-level details.
+
+    <table class="reference-function-table">
+      <thead>
+        <tr>
+          <th>Helper</th>
+          <th>Role</th>
+          <th>Source</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td data-label="Helper"><code>_get_store</code></td>
+          <td data-label="Role">Resolve a configured Fabric path for an environment and target.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L618-L658"><code>src/fabricops_kit/config.py#L618-L658</code></a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_get_spark</code></td>
+          <td data-label="Role">Return an explicit Spark session or the active notebook global `spark`.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/fabric_input_output.py#L125-L155"><code>src/fabricops_kit/fabric_input_output.py#L125-L155</code></a></td>
+        </tr>
+      </tbody>
+    </table>
+
+    ??? example "View helper source code"
+
+        **`def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any`**
+
+        Used by `read_warehouse_table` through the implementation path shown above.
+
+        ```python
+        def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any:
+            """Resolve a configured Fabric path for an environment and target.
+
+            Parameters
+            ----------
+            env : str
+                Environment key such as ``Sandbox``, ``DE``, or ``Prod``.
+            target : str
+                Target key such as ``Source``, ``Unified``, ``Product``, or ``Warehouse``.
+            config : FrameworkConfig | PathConfig | None
+                Configuration that contains environment-to-target path mappings.
+
+            Returns
+            -------
+            Any
+                FabricStore object with ``workspace_id``, ``house_id``, ``house_name``, and ``root``.
+
+            Raises
+            ------
+            ValueError
+                If config is missing, or if the environment/target mapping does not exist.
+
+            Examples
+            --------
+            >>> get_path("Sandbox", "Source", config=CONFIG)
+            Housepath(...)
+            """
+            if config is None:
+                raise ValueError("No Fabric config was provided. Pass a FrameworkConfig or PathConfig instance.")
+            paths = config.path_config.paths if isinstance(config, FrameworkConfig) else config.paths
+            if env not in paths:
+                available_envs = ", ".join(sorted(paths.keys())) or "<none>"
+                raise ValueError(
+                    f"Environment '{env}' was not found in Fabric config. Available environments: {available_envs}."
+                )
+            if target not in paths[env]:
+                available_targets = ", ".join(sorted(paths[env].keys())) or "<none>"
+                raise ValueError(
+                    f"Target '{target}' was not found under environment '{env}'. Available targets: {available_targets}."
+                )
+            return paths[env][target]
+        ```
+
+        **`def _get_spark(spark_session=None)`**
+
+        Used by `read_warehouse_table` through the implementation path shown above.
+
+        ```python
+        def _get_spark(spark_session=None):
+            """Return an explicit Spark session or the active notebook global `spark`.
+
+            Most Fabric notebooks already expose a global `spark` object. Tests and
+            local scripts can pass `spark_session` explicitly to avoid relying on the
+            notebook runtime.
+
+            Parameters
+            ----------
+            spark_session : object, optional
+                Spark session to use instead of the notebook global `spark`.
+
+            Returns
+            -------
+            object
+                Spark session object.
+
+            Raises
+            ------
+            RuntimeError
+                If no Spark session is passed and no global `spark` object exists.
+            """
+            if spark_session is not None:
+                return spark_session
+            try:
+                return globals()["spark"]
+            except KeyError as exc:
+                raise RuntimeError(
+                    "Spark session was not provided and global 'spark' was not found. "
+                    "Run this inside Fabric/Spark or pass spark_session explicitly."
+                ) from exc
+        ```
+
 
 <details class="reference-metadata-details">
 <summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
@@ -326,7 +337,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/fabric_input_output.py#L371-L430">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/fabric_input_output.py#L371-L430</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/fabric_input_output.py#L371-L430">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/fabric_input_output.py#L371-L430</a>
 - Start line: `371`
 - End line: `430`
 - Signature:
@@ -337,12 +348,12 @@ def read_warehouse_table(config, env, target, schema, table, spark_session=None)
 
 ### Internal relationship graph
 
+The human-readable implementation view above is the source of truth for public call flow, public callable source, and collapsed nested helper details.
+
 ### Public related functions
 
 - <a href="../write_warehouse_table/"><code>fabricops_kit.fabric_input_output.write_warehouse_table</code></a>
 - <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a>
-
-### Internal implementation helpers
 
 ### Call flow
 
@@ -351,128 +362,5 @@ read_warehouse_table(...)
 ├── _get_spark(...)
 └── _get_store(...)
 ```
-
-### Internal helpers used by this callable
-
-### `def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any`
-
-**What it does:**
-
-Resolve a configured Fabric path for an environment and target.
-
-**Source:**
-
-- `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L618-L658">View `_get_store` on GitHub</a>
-
-**Code:**
-
-```python
-def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any:
-    """Resolve a configured Fabric path for an environment and target.
-
-    Parameters
-    ----------
-    env : str
-        Environment key such as ``Sandbox``, ``DE``, or ``Prod``.
-    target : str
-        Target key such as ``Source``, ``Unified``, ``Product``, or ``Warehouse``.
-    config : FrameworkConfig | PathConfig | None
-        Configuration that contains environment-to-target path mappings.
-
-    Returns
-    -------
-    Any
-        FabricStore object with ``workspace_id``, ``house_id``, ``house_name``, and ``root``.
-
-    Raises
-    ------
-    ValueError
-        If config is missing, or if the environment/target mapping does not exist.
-
-    Examples
-    --------
-    >>> get_path("Sandbox", "Source", config=CONFIG)
-    Housepath(...)
-    """
-    if config is None:
-        raise ValueError("No Fabric config was provided. Pass a FrameworkConfig or PathConfig instance.")
-    paths = config.path_config.paths if isinstance(config, FrameworkConfig) else config.paths
-    if env not in paths:
-        available_envs = ", ".join(sorted(paths.keys())) or "<none>"
-        raise ValueError(
-            f"Environment '{env}' was not found in Fabric config. Available environments: {available_envs}."
-        )
-    if target not in paths[env]:
-        available_targets = ", ".join(sorted(paths[env].keys())) or "<none>"
-        raise ValueError(
-            f"Target '{target}' was not found under environment '{env}'. Available targets: {available_targets}."
-        )
-    return paths[env][target]
-```
-
-**Used here because:**
-
-`read_warehouse_table` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `read_warehouse_table` or another caller that reaches `_get_store`.
-
-### `def _get_spark(spark_session=None)`
-
-**What it does:**
-
-Return an explicit Spark session or the active notebook global `spark`.
-
-**Source:**
-
-- `src/fabricops_kit/fabric_input_output.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/fabric_input_output.py#L125-L155">View `_get_spark` on GitHub</a>
-
-**Code:**
-
-```python
-def _get_spark(spark_session=None):
-    """Return an explicit Spark session or the active notebook global `spark`.
-
-    Most Fabric notebooks already expose a global `spark` object. Tests and
-    local scripts can pass `spark_session` explicitly to avoid relying on the
-    notebook runtime.
-
-    Parameters
-    ----------
-    spark_session : object, optional
-        Spark session to use instead of the notebook global `spark`.
-
-    Returns
-    -------
-    object
-        Spark session object.
-
-    Raises
-    ------
-    RuntimeError
-        If no Spark session is passed and no global `spark` object exists.
-    """
-    if spark_session is not None:
-        return spark_session
-    try:
-        return globals()["spark"]
-    except KeyError as exc:
-        raise RuntimeError(
-            "Spark session was not provided and global 'spark' was not found. "
-            "Run this inside Fabric/Spark or pass spark_session explicitly."
-        ) from exc
-```
-
-**Used here because:**
-
-`read_warehouse_table` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `read_warehouse_table` or another caller that reaches `_get_spark`.
-
 
 </details>

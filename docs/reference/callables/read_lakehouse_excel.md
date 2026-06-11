@@ -1,24 +1,51 @@
 # read_lakehouse_excel
 
-Read an Excel file from a configured Fabric lakehouse Files path.
-
-## What this is for and when to use it
+## Purpose
 
 Read an Excel file from a configured Fabric lakehouse Files path.
 
-- Use when reading .xlsx files from a configured Fabric lakehouse Files path, especially small reference files, mapping tables, or manually maintained business inputs.
+## At a glance
 
-## When not to use it
-
-- Do not use for Delta tables, CSV files, Parquet files, or warehouse SQL tables.
-
-## Example
-
-```python
+<div class="module-table-scroll reference-input-table">
+<table class="reference-function-table">
+  <thead>
+    <tr>
+      <th>Item</th>
+      <th>Details</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td data-label="Item">Use when</td>
+      <td data-label="Details">Use when reading .xlsx files from a configured Fabric lakehouse Files path, especially small reference files, mapping tables, or manually maintained business inputs.</td>
+    </tr>
+    <tr>
+      <td data-label="Item">Do not use when</td>
+      <td data-label="Details">Do not use for Delta tables, CSV files, Parquet files, or warehouse SQL tables.</td>
+    </tr>
+    <tr>
+      <td data-label="Item">Example</td>
+      <td data-label="Details">```python
 mapping_df = read_lakehouse_excel(CONFIG, env="Sandbox", target="Source", relative_path="reference/faculty_mapping.xlsx", sheet_name=0, spark_session=spark)
-```
+```</td>
+    </tr>
+    <tr>
+      <td data-label="Item">Errors</td>
+      <td data-label="Details">Raises ValueError for invalid or non-Excel paths and Fabric/Spark/pandas errors when the file cannot be read.</td>
+    </tr>
+    <tr>
+      <td data-label="Item">Side effects</td>
+      <td data-label="Details">Reads from lakehouse Files through a temporary local Excel file; it does not write metadata, tables, or files.</td>
+    </tr>
+    <tr>
+      <td data-label="Item">Related functions</td>
+      <td data-label="Details">- <a href="../read_lakehouse_csv/"><code>fabricops_kit.fabric_input_output.read_lakehouse_csv</code></a><br>- <a href="../read_lakehouse_parquet/"><code>fabricops_kit.fabric_input_output.read_lakehouse_parquet</code></a><br>- <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a></td>
+    </tr>
+  </tbody>
+</table>
+</div>
 
-## Inputs
+## Parameters
 
 <div class="module-table-scroll reference-input-table">
 <table class="reference-function-table">
@@ -64,24 +91,21 @@ mapping_df = read_lakehouse_excel(CONFIG, env="Sandbox", target="Source", relati
 </table>
 </div>
 
-## Output
+## Returns
 
 Spark DataFrame converted from the selected Excel worksheet.
 
-## Errors and side effects
+## Used by
 
-**Errors:** Raises ValueError for invalid or non-Excel paths and Fabric/Spark/pandas errors when the file cannot be read.
+No public or package-local callers detected by the generated dependency graph.
 
-**Side effects:** Reads from lakehouse Files through a temporary local Excel file; it does not write metadata, tables, or files.
+## Calls
 
-## Related functions
+- `fabricops_kit.config._get_store`
+- `fabricops_kit.fabric_input_output._get_spark`
+- `fabricops_kit.fabric_input_output._lakehouse_file_path`
 
-- <a href="../read_lakehouse_csv/"><code>fabricops_kit.fabric_input_output.read_lakehouse_csv</code></a>
-- <a href="../read_lakehouse_parquet/"><code>fabricops_kit.fabric_input_output.read_lakehouse_parquet</code></a>
-- <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a>
-
-<details class="reference-implementation-details">
-<summary>Implementation details</summary>
+## Implementation details
 
 ### Call flow
 
@@ -92,173 +116,10 @@ read_lakehouse_excel(...)
 └── _lakehouse_file_path(...)
 ```
 
-### Internal helpers used by this callable
-
-### `def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any`
-
-**What it does:**
-
-Resolve a configured Fabric path for an environment and target.
-
-**Source:**
-
-- `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L618-L658">View `_get_store` on GitHub</a>
-
-**Code:**
-
-```python
-def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any:
-    """Resolve a configured Fabric path for an environment and target.
-
-    Parameters
-    ----------
-    env : str
-        Environment key such as ``Sandbox``, ``DE``, or ``Prod``.
-    target : str
-        Target key such as ``Source``, ``Unified``, ``Product``, or ``Warehouse``.
-    config : FrameworkConfig | PathConfig | None
-        Configuration that contains environment-to-target path mappings.
-
-    Returns
-    -------
-    Any
-        FabricStore object with ``workspace_id``, ``house_id``, ``house_name``, and ``root``.
-
-    Raises
-    ------
-    ValueError
-        If config is missing, or if the environment/target mapping does not exist.
-
-    Examples
-    --------
-    >>> get_path("Sandbox", "Source", config=CONFIG)
-    Housepath(...)
-    """
-    if config is None:
-        raise ValueError("No Fabric config was provided. Pass a FrameworkConfig or PathConfig instance.")
-    paths = config.path_config.paths if isinstance(config, FrameworkConfig) else config.paths
-    if env not in paths:
-        available_envs = ", ".join(sorted(paths.keys())) or "<none>"
-        raise ValueError(
-            f"Environment '{env}' was not found in Fabric config. Available environments: {available_envs}."
-        )
-    if target not in paths[env]:
-        available_targets = ", ".join(sorted(paths[env].keys())) or "<none>"
-        raise ValueError(
-            f"Target '{target}' was not found under environment '{env}'. Available targets: {available_targets}."
-        )
-    return paths[env][target]
-```
-
-**Used here because:**
-
-`read_lakehouse_excel` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `read_lakehouse_excel` or another caller that reaches `_get_store`.
-
-### `def _get_spark(spark_session=None)`
-
-**What it does:**
-
-Return an explicit Spark session or the active notebook global `spark`.
-
-**Source:**
-
-- `src/fabricops_kit/fabric_input_output.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/fabric_input_output.py#L125-L155">View `_get_spark` on GitHub</a>
-
-**Code:**
-
-```python
-def _get_spark(spark_session=None):
-    """Return an explicit Spark session or the active notebook global `spark`.
-
-    Most Fabric notebooks already expose a global `spark` object. Tests and
-    local scripts can pass `spark_session` explicitly to avoid relying on the
-    notebook runtime.
-
-    Parameters
-    ----------
-    spark_session : object, optional
-        Spark session to use instead of the notebook global `spark`.
-
-    Returns
-    -------
-    object
-        Spark session object.
-
-    Raises
-    ------
-    RuntimeError
-        If no Spark session is passed and no global `spark` object exists.
-    """
-    if spark_session is not None:
-        return spark_session
-    try:
-        return globals()["spark"]
-    except KeyError as exc:
-        raise RuntimeError(
-            "Spark session was not provided and global 'spark' was not found. "
-            "Run this inside Fabric/Spark or pass spark_session explicitly."
-        ) from exc
-```
-
-**Used here because:**
-
-`read_lakehouse_excel` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `read_lakehouse_excel` or another caller that reaches `_get_spark`.
-
-### `def _lakehouse_file_path(store, env: str, target: str, relative_path: str) -> str`
-
-**What it does:**
-
-Return an ABFSS path under a configured lakehouse Files area.
-
-**Source:**
-
-- `src/fabricops_kit/fabric_input_output.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/fabric_input_output.py#L158-L168">View `_lakehouse_file_path` on GitHub</a>
-
-**Code:**
-
-```python
-def _lakehouse_file_path(store, env: str, target: str, relative_path: str) -> str:
-    """Return an ABFSS path under a configured lakehouse Files area."""
-    if store.kind != "lakehouse":
-        raise ValueError(f"Target '{env}/{target}' is not a lakehouse store.")
-    if not isinstance(relative_path, str) or not relative_path.strip():
-        raise ValueError("relative_path must be a non-empty string.")
-
-    normalized_relative_path = relative_path.strip().lstrip("/")
-    if normalized_relative_path.startswith("Files/"):
-        normalized_relative_path = normalized_relative_path[len("Files/") :]
-    return f"{store.root.rstrip('/')}/Files/{normalized_relative_path}"
-```
-
-**Used here because:**
-
-`read_lakehouse_excel` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `read_lakehouse_excel` or another caller that reaches `_lakehouse_file_path`.
-
-
-</details>
-
-## Source
+## Public callable source code
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/fabric_input_output.py#L680-L767">View read_lakehouse_excel on GitHub</a>
-
-<details class="reference-source-details">
-<summary>Show source code</summary>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/fabric_input_output.py#L680-L767">View read_lakehouse_excel on GitHub</a>
 
 ```python
 def read_lakehouse_excel(config, env, target, relative_path, sheet_name=0, spark_session=None, **read_excel_kwargs):
@@ -351,7 +212,145 @@ def read_lakehouse_excel(config, env, target, relative_path, sheet_name=0, spark
     return spark_obj.createDataFrame(pandas_df)
 ```
 
-</details>
+## Nested helper functions
+
+??? info "Nested helper functions: 3"
+
+    These helpers support `read_lakehouse_excel` by handling shared implementation tasks reached from the public call flow; expand the source block only when you need maintainer-level details.
+
+    <table class="reference-function-table">
+      <thead>
+        <tr>
+          <th>Helper</th>
+          <th>Role</th>
+          <th>Source</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td data-label="Helper"><code>_get_store</code></td>
+          <td data-label="Role">Resolve a configured Fabric path for an environment and target.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/config.py#L618-L658"><code>src/fabricops_kit/config.py#L618-L658</code></a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_get_spark</code></td>
+          <td data-label="Role">Return an explicit Spark session or the active notebook global `spark`.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/fabric_input_output.py#L125-L155"><code>src/fabricops_kit/fabric_input_output.py#L125-L155</code></a></td>
+        </tr>
+        <tr>
+          <td data-label="Helper"><code>_lakehouse_file_path</code></td>
+          <td data-label="Role">Return an ABFSS path under a configured lakehouse Files area.</td>
+          <td data-label="Source"><a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/fabric_input_output.py#L158-L168"><code>src/fabricops_kit/fabric_input_output.py#L158-L168</code></a></td>
+        </tr>
+      </tbody>
+    </table>
+
+    ??? example "View helper source code"
+
+        **`def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any`**
+
+        Used by `read_lakehouse_excel` through the implementation path shown above.
+
+        ```python
+        def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any:
+            """Resolve a configured Fabric path for an environment and target.
+
+            Parameters
+            ----------
+            env : str
+                Environment key such as ``Sandbox``, ``DE``, or ``Prod``.
+            target : str
+                Target key such as ``Source``, ``Unified``, ``Product``, or ``Warehouse``.
+            config : FrameworkConfig | PathConfig | None
+                Configuration that contains environment-to-target path mappings.
+
+            Returns
+            -------
+            Any
+                FabricStore object with ``workspace_id``, ``house_id``, ``house_name``, and ``root``.
+
+            Raises
+            ------
+            ValueError
+                If config is missing, or if the environment/target mapping does not exist.
+
+            Examples
+            --------
+            >>> get_path("Sandbox", "Source", config=CONFIG)
+            Housepath(...)
+            """
+            if config is None:
+                raise ValueError("No Fabric config was provided. Pass a FrameworkConfig or PathConfig instance.")
+            paths = config.path_config.paths if isinstance(config, FrameworkConfig) else config.paths
+            if env not in paths:
+                available_envs = ", ".join(sorted(paths.keys())) or "<none>"
+                raise ValueError(
+                    f"Environment '{env}' was not found in Fabric config. Available environments: {available_envs}."
+                )
+            if target not in paths[env]:
+                available_targets = ", ".join(sorted(paths[env].keys())) or "<none>"
+                raise ValueError(
+                    f"Target '{target}' was not found under environment '{env}'. Available targets: {available_targets}."
+                )
+            return paths[env][target]
+        ```
+
+        **`def _get_spark(spark_session=None)`**
+
+        Used by `read_lakehouse_excel` through the implementation path shown above.
+
+        ```python
+        def _get_spark(spark_session=None):
+            """Return an explicit Spark session or the active notebook global `spark`.
+
+            Most Fabric notebooks already expose a global `spark` object. Tests and
+            local scripts can pass `spark_session` explicitly to avoid relying on the
+            notebook runtime.
+
+            Parameters
+            ----------
+            spark_session : object, optional
+                Spark session to use instead of the notebook global `spark`.
+
+            Returns
+            -------
+            object
+                Spark session object.
+
+            Raises
+            ------
+            RuntimeError
+                If no Spark session is passed and no global `spark` object exists.
+            """
+            if spark_session is not None:
+                return spark_session
+            try:
+                return globals()["spark"]
+            except KeyError as exc:
+                raise RuntimeError(
+                    "Spark session was not provided and global 'spark' was not found. "
+                    "Run this inside Fabric/Spark or pass spark_session explicitly."
+                ) from exc
+        ```
+
+        **`def _lakehouse_file_path(store, env: str, target: str, relative_path: str) -> str`**
+
+        Used by `read_lakehouse_excel` through the implementation path shown above.
+
+        ```python
+        def _lakehouse_file_path(store, env: str, target: str, relative_path: str) -> str:
+            """Return an ABFSS path under a configured lakehouse Files area."""
+            if store.kind != "lakehouse":
+                raise ValueError(f"Target '{env}/{target}' is not a lakehouse store.")
+            if not isinstance(relative_path, str) or not relative_path.strip():
+                raise ValueError("relative_path must be a non-empty string.")
+
+            normalized_relative_path = relative_path.strip().lstrip("/")
+            if normalized_relative_path.startswith("Files/"):
+                normalized_relative_path = normalized_relative_path[len("Files/") :]
+            return f"{store.root.rstrip('/')}/Files/{normalized_relative_path}"
+        ```
+
 
 <details class="reference-metadata-details">
 <summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
@@ -392,7 +391,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/fabric_input_output.py#L680-L767">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/fabric_input_output.py#L680-L767</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/fabric_input_output.py#L680-L767">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/83d4716971843467c062fedf57d0ef56cc62beea/src/fabricops_kit/fabric_input_output.py#L680-L767</a>
 - Start line: `680`
 - End line: `767`
 - Signature:
@@ -403,13 +402,13 @@ def read_lakehouse_excel(config, env, target, relative_path, sheet_name=0, spark
 
 ### Internal relationship graph
 
+The human-readable implementation view above is the source of truth for public call flow, public callable source, and collapsed nested helper details.
+
 ### Public related functions
 
 - <a href="../read_lakehouse_csv/"><code>fabricops_kit.fabric_input_output.read_lakehouse_csv</code></a>
 - <a href="../read_lakehouse_parquet/"><code>fabricops_kit.fabric_input_output.read_lakehouse_parquet</code></a>
 - <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a>
-
-### Internal implementation helpers
 
 ### Call flow
 
@@ -419,163 +418,5 @@ read_lakehouse_excel(...)
 ├── _get_store(...)
 └── _lakehouse_file_path(...)
 ```
-
-### Internal helpers used by this callable
-
-### `def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any`
-
-**What it does:**
-
-Resolve a configured Fabric path for an environment and target.
-
-**Source:**
-
-- `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/config.py#L618-L658">View `_get_store` on GitHub</a>
-
-**Code:**
-
-```python
-def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any:
-    """Resolve a configured Fabric path for an environment and target.
-
-    Parameters
-    ----------
-    env : str
-        Environment key such as ``Sandbox``, ``DE``, or ``Prod``.
-    target : str
-        Target key such as ``Source``, ``Unified``, ``Product``, or ``Warehouse``.
-    config : FrameworkConfig | PathConfig | None
-        Configuration that contains environment-to-target path mappings.
-
-    Returns
-    -------
-    Any
-        FabricStore object with ``workspace_id``, ``house_id``, ``house_name``, and ``root``.
-
-    Raises
-    ------
-    ValueError
-        If config is missing, or if the environment/target mapping does not exist.
-
-    Examples
-    --------
-    >>> get_path("Sandbox", "Source", config=CONFIG)
-    Housepath(...)
-    """
-    if config is None:
-        raise ValueError("No Fabric config was provided. Pass a FrameworkConfig or PathConfig instance.")
-    paths = config.path_config.paths if isinstance(config, FrameworkConfig) else config.paths
-    if env not in paths:
-        available_envs = ", ".join(sorted(paths.keys())) or "<none>"
-        raise ValueError(
-            f"Environment '{env}' was not found in Fabric config. Available environments: {available_envs}."
-        )
-    if target not in paths[env]:
-        available_targets = ", ".join(sorted(paths[env].keys())) or "<none>"
-        raise ValueError(
-            f"Target '{target}' was not found under environment '{env}'. Available targets: {available_targets}."
-        )
-    return paths[env][target]
-```
-
-**Used here because:**
-
-`read_lakehouse_excel` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `read_lakehouse_excel` or another caller that reaches `_get_store`.
-
-### `def _get_spark(spark_session=None)`
-
-**What it does:**
-
-Return an explicit Spark session or the active notebook global `spark`.
-
-**Source:**
-
-- `src/fabricops_kit/fabric_input_output.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/fabric_input_output.py#L125-L155">View `_get_spark` on GitHub</a>
-
-**Code:**
-
-```python
-def _get_spark(spark_session=None):
-    """Return an explicit Spark session or the active notebook global `spark`.
-
-    Most Fabric notebooks already expose a global `spark` object. Tests and
-    local scripts can pass `spark_session` explicitly to avoid relying on the
-    notebook runtime.
-
-    Parameters
-    ----------
-    spark_session : object, optional
-        Spark session to use instead of the notebook global `spark`.
-
-    Returns
-    -------
-    object
-        Spark session object.
-
-    Raises
-    ------
-    RuntimeError
-        If no Spark session is passed and no global `spark` object exists.
-    """
-    if spark_session is not None:
-        return spark_session
-    try:
-        return globals()["spark"]
-    except KeyError as exc:
-        raise RuntimeError(
-            "Spark session was not provided and global 'spark' was not found. "
-            "Run this inside Fabric/Spark or pass spark_session explicitly."
-        ) from exc
-```
-
-**Used here because:**
-
-`read_lakehouse_excel` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `read_lakehouse_excel` or another caller that reaches `_get_spark`.
-
-### `def _lakehouse_file_path(store, env: str, target: str, relative_path: str) -> str`
-
-**What it does:**
-
-Return an ABFSS path under a configured lakehouse Files area.
-
-**Source:**
-
-- `src/fabricops_kit/fabric_input_output.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4effb3776a2bd42fe144261564c324aeb0e0d9c8/src/fabricops_kit/fabric_input_output.py#L158-L168">View `_lakehouse_file_path` on GitHub</a>
-
-**Code:**
-
-```python
-def _lakehouse_file_path(store, env: str, target: str, relative_path: str) -> str:
-    """Return an ABFSS path under a configured lakehouse Files area."""
-    if store.kind != "lakehouse":
-        raise ValueError(f"Target '{env}/{target}' is not a lakehouse store.")
-    if not isinstance(relative_path, str) or not relative_path.strip():
-        raise ValueError("relative_path must be a non-empty string.")
-
-    normalized_relative_path = relative_path.strip().lstrip("/")
-    if normalized_relative_path.startswith("Files/"):
-        normalized_relative_path = normalized_relative_path[len("Files/") :]
-    return f"{store.root.rstrip('/')}/Files/{normalized_relative_path}"
-```
-
-**Used here because:**
-
-`read_lakehouse_excel` reaches this helper in its implementation path.
-
-**Modify this if:**
-
-You want to change the implementation behavior summarized above for `read_lakehouse_excel` or another caller that reaches `_lakehouse_file_path`.
-
 
 </details>
