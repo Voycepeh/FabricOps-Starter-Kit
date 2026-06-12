@@ -189,7 +189,10 @@ def test_template_function_map_matches_actual_template_calls_and_pages():
     assert called <= manifest_callables
     assert {"prepare_pipeline_table_configs", "run_table_guardrails", "write_pipeline_lineage", "write_pipeline_run_summary"} <= called
     for callable_name in manifest_callables:
-        assert (root / "docs" / "reference" / "callables" / f"{callable_name}.md").exists()
+        canonical_page = root / "docs" / "api" / "reference" / f"{callable_name}.md"
+        legacy_page = root / "docs" / "reference" / "callables" / f"{callable_name}.md"
+        assert canonical_page.exists()
+        assert not legacy_page.exists(), f"{legacy_page} duplicates canonical full-content page"
 
 
 def test_generated_module_docs_surface_only_active_v1_modules():
