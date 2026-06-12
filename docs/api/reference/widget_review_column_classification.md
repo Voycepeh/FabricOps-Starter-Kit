@@ -1,55 +1,72 @@
 # widget_review_column_classification
 
+## Signature
+
+```python
+def widget_review_column_classification(profile_rows: list[dict[str, Any]]) -> list[dict[str, Any]]
+```
+
+## Summary
+
 Render standalone sensitivity and PII classification review guidance for selected profile rows.
 
-## Purpose
-
-Renders sensitivity and PII classification review guidance for columns in a selected table.
-
-## When to use this
+## Usage note
 
 - Use in 03_governance when reviewers need to approve classification metadata before governance records are written.
-
-## At a glance
 
 **Do not use when:**
 
 - Not documented yet
 
-**Errors:**
+**Additional context:**
+
+Renders sensitivity and PII classification review guidance for columns in a selected table.
+
+## Parameters
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `profile_rows` | `list[dict[str, Any]]` | Yes | Selected column profile evidence from ``load_catalogue_profile_rows``. |
+
+## Returns
+
+list[dict[str, Any]]
+    Empty editable review list. Add approved classification dictionaries
+    before calling ``record_table_governance``.
+
+### Return interpretation
+
+The widget captures classification review state; approved classifications must be included in record_table_governance to persist them.
+
+## Raises / Errors
 
 Not documented yet
 
-**Side effects:**
+### Common failure causes
 
+- No selected profile rows are available.
+- Classification choices are incomplete.
+- Reviewer approval status is missing.
+- Widget state is not collected before persistence.
+
+## Example
+
+```python
 Not documented yet
+```
 
-## Key terms
+## See also
+
+- [Governance Review](../../how-fabricops-works/governance-review.md)
+
+**Glossary terms**
 
 - **Catalogue evidence:** Reviewed metadata that explains what FabricOps knows about a dataset or table.
 - **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
 
 See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
 
-## Related guides
-
-- [Governance Review](../../how-fabricops-works/governance-review.md)
-
-## Used in templates
-
-- `03_governance`
-
-## Used by
-
-Not documented yet
-
-## Calls
-
-- `fabricops_kit.governance_review._display_review_guidance`
-
-## Function details and source
-
-### Function details
+## Developer details
 
 - Module: `governance_review`
 - Classification: Callable
@@ -61,64 +78,21 @@ Not documented yet
 def widget_review_column_classification(profile_rows: list[dict[str, Any]]) -> list[dict[str, Any]]
 ```
 
-### Parameters
+**Used in templates:**
 
-`profile_rows` : `list[dict[str, Any]]`, required
-: Selected column profile evidence from ``load_catalogue_profile_rows``.
+- `03_governance`
 
-### Returns
+**Side effects:**
 
-list[dict[str, Any]]
-    Empty editable review list. Add approved classification dictionaries
-    before calling ``record_table_governance``.
+Not documented yet
 
-### Return interpretation
-
-The widget captures classification review state; approved classifications must be included in record_table_governance to persist them.
-
-### Common failure causes
-
-- No selected profile rows are available.
-- Classification choices are incomplete.
-- Reviewer approval status is missing.
-- Widget state is not collected before persistence.
-
-### Notes
+**Notes:**
 
 No additional callable notes are documented.
 
-### Example
+## Calls
 
-```python
-Not documented yet
-```
-
-### Public callable source code
-
-- Source file path: `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/governance_review.py#L789-L807">View widget_review_column_classification on GitHub</a>
-
-```python
-def widget_review_column_classification(profile_rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Render standalone sensitivity and PII classification review guidance.
-
-    Parameters
-    ----------
-    profile_rows : list of dict
-        Selected column profile evidence from ``load_catalogue_profile_rows``.
-
-    Returns
-    -------
-    list[dict[str, Any]]
-        Empty editable review list. Add approved classification dictionaries
-        before calling ``record_table_governance``.
-    """
-    return _display_review_guidance(
-        "Sensitivity and PII classification review",
-        profile_rows,
-        "Review sensitivity labels, personal-data classifications, identifier types, and handling requirements.",
-    )
-```
+- `fabricops_kit.governance_review._display_review_guidance`
 
 ## Internal implementation summary
 
@@ -159,7 +133,7 @@ def widget_review_column_classification(profile_rows: list[dict[str, Any]]) -> l
 
             **`def _display_review_guidance(title: str, profile_rows: list[dict[str, Any]], instructions: str) -> list[dict[str, Any]]`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/governance_review.py#L497-L511)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L497-L511)
 
             ```python
             def _display_review_guidance(title: str, profile_rows: list[dict[str, Any]], instructions: str) -> list[dict[str, Any]]:
@@ -181,13 +155,40 @@ def widget_review_column_classification(profile_rows: list[dict[str, Any]]) -> l
 
             **`def _value(row: dict[str, Any], name: str, default: Any='') -> Any`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/governance_review.py#L70-L71)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L70-L71)
 
             ```python
             def _value(row: dict[str, Any], name: str, default: Any = "") -> Any:
                 return row.get(name, row.get(name.upper(), default))
             ```
 
+
+## Source link
+
+- Source file path: `src/fabricops_kit/governance_review.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L789-L807">View widget_review_column_classification on GitHub</a>
+
+```python
+def widget_review_column_classification(profile_rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Render standalone sensitivity and PII classification review guidance.
+
+    Parameters
+    ----------
+    profile_rows : list of dict
+        Selected column profile evidence from ``load_catalogue_profile_rows``.
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Empty editable review list. Add approved classification dictionaries
+        before calling ``record_table_governance``.
+    """
+    return _display_review_guidance(
+        "Sensitivity and PII classification review",
+        profile_rows,
+        "Review sensitivity labels, personal-data classifications, identifier types, and handling requirements.",
+    )
+```
 
 <details class="reference-metadata-details">
 <summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
@@ -231,7 +232,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/governance_review.py#L789-L807">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/governance_review.py#L789-L807</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L789-L807">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L789-L807</a>
 - Start line: `789`
 - End line: `807`
 - Signature:

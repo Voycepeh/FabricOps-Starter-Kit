@@ -29,7 +29,7 @@ CORE_CALLABLES = {
     "record_table_governance",
 }
 CORE_PAGE_SECTIONS = (
-    "At a glance",
+    "Usage note",
 )
 CORE_AGENT_FIELDS = (
     "use_when",
@@ -78,21 +78,21 @@ def test_every_callable_page_has_ai_reference_sections() -> None:
     assert callable_pages
     for page in callable_pages:
         text = page.read_text(encoding="utf-8")
-        assert "## When to use this" in text, page
-        assert "## At a glance" in text, page
-        assert "## Used in templates" in text, page
-        assert "## Used by" in text, page
+        assert "## Signature" in text, page
+        assert "## Summary" in text, page
+        assert "## Usage note" in text, page
+        assert "## Parameters" in text, page
+        assert "## Returns" in text, page
+        assert "## Raises / Errors" in text, page
+        assert "## Example" in text, page
+        assert "## See also" in text, page
+        assert "## Developer details" in text, page
+        assert "**Used in templates:**" in text, page
         assert "## Calls" in text, page
-        assert "## Function details and source" in text, page
-        assert "### Function details" in text, page
-        assert "### Parameters" in text, page
-        assert "### Returns" in text, page
-        assert "### Notes" in text, page
-        assert "### Example" in text, page
-        assert "### Public callable source code" in text, page
+        assert "## Source link" in text, page
         assert "## Internal implementation summary" in text, page
         assert "## Nested helper functions" not in text, page
-        assert "## Source" not in text, page
+        assert "\n## Source\n" not in text, page
         assert "\n## What this is for\n" not in text, page
         assert "\n## When to use it\n" not in text, page
         assert "\n## Raises\n" not in text, page
@@ -110,6 +110,25 @@ def test_core_callable_pages_have_non_placeholder_ai_guidance() -> None:
             assert section_text
             assert PLACEHOLDER not in section_text, f"{page} has placeholder in {section}"
 
+
+def test_setup_metadata_tables_reference_uses_keyword_only_example() -> None:
+    text = (API_REFERENCE_DIR / "setup_metadata_tables.md").read_text(encoding="utf-8")
+
+    assert "## At a glance" not in text
+    assert "## Purpose" not in text
+    assert "## Related guides" not in text
+    assert "## See also" in text
+    assert "## Used by" not in text
+    assert "Used by: Not documented yet" not in text
+    assert "setup_metadata_tables(CONFIG" not in text
+    assert "spark_session=spark" not in _section_text(text, "Example")
+    assert _section_text(text, "Example") == """```python
+setup_metadata_tables(
+    spark=spark,
+    config=CONFIG,
+    env="Sandbox",
+)
+```"""
 
 def test_core_agent_manifest_entries_have_non_placeholder_ai_fields() -> None:
     manifest = json.loads((REFERENCE_DIR / "agent-manifest.json").read_text(encoding="utf-8"))
@@ -137,25 +156,25 @@ def test_callable_pages_embed_public_first_implementation_details() -> None:
     for page in callable_pages:
         text = page.read_text(encoding="utf-8")
         ordered_markers = [
-            "## When to use this",
-            "## At a glance",
-            "## Used in templates",
-            "## Used by",
+            "## Signature",
+            "## Summary",
+            "## Usage note",
+            "## Parameters",
+            "## Returns",
+            "## Raises / Errors",
+            "## Example",
+            "## See also",
+            "## Developer details",
             "## Calls",
-            "## Function details and source",
-            "### Function details",
-            "### Parameters",
-            "### Returns",
-            "### Notes",
-            "### Example",
-            "### Public callable source code",
             "## Internal implementation summary",
+            "## Source link",
         ]
-        if "## Purpose" in text:
-            ordered_markers.insert(0, "## Purpose")
-        for optional_marker in ("### Return interpretation", "### Common failure causes"):
-            if optional_marker in text:
-                ordered_markers.insert(ordered_markers.index("### Notes"), optional_marker)
+        if "## Used by" in text:
+            ordered_markers.insert(ordered_markers.index("## Source link"), "## Used by")
+        if "### Return interpretation" in text:
+            ordered_markers.insert(ordered_markers.index("## Raises / Errors"), "### Return interpretation")
+        if "### Common failure causes" in text:
+            ordered_markers.insert(ordered_markers.index("## Example"), "### Common failure causes")
         positions = [text.index(marker) for marker in ordered_markers]
         assert positions == sorted(positions), page
         assert '??? info "Call flow"' in text, page
@@ -165,10 +184,10 @@ def test_callable_pages_embed_public_first_implementation_details() -> None:
         assert '??? info "Nested helper functions:' not in text, page
         assert '??? info "Internal helpers used:' in text, page
         assert "Area" in text and "Helpers" in text and "What they do" in text, page
-        public_source_pos = text.index("### Public callable source code")
+        source_link_pos = text.index("## Source link")
         internal_summary_pos = text.index("## Internal implementation summary")
         call_flow_pos = text.index('??? info "Call flow"')
-        assert public_source_pos < internal_summary_pos < call_flow_pos, page
+        assert internal_summary_pos < call_flow_pos < source_link_pos, page
         if '??? info "Internal helpers used: 0"' not in text:
             assert '??? example "View helper source by area"' in text, page
             assert text.index('??? example "View helper source by area"') > internal_summary_pos, page
@@ -194,7 +213,7 @@ def test_enforce_dq_rules_large_helper_set_is_grouped_by_area() -> None:
         assert f'<td data-label="Area">{area}</td>' in text
         assert f'??? example "{area} helpers"' in text
     assert "Expanded internal helper tree is available in the internal implementation summary." in text
-    assert text.index("### Public callable source code") < text.index("## Internal implementation summary")
+    assert text.index("## Internal implementation summary") < text.index("## Source link")
     assert text.index("## Internal implementation summary") < text.index('??? info "Call flow"')
     assert text.index('??? info "Call flow"') < text.index('??? info "Internal helpers used: 16"')
     assert text.index('??? example "View helper source by area"') < text.index('??? example "Audit timestamp helpers"')
@@ -241,7 +260,7 @@ def test_callable_pages_include_source_section_and_github_source_link() -> None:
     assert callable_pages
     for page in callable_pages:
         text = page.read_text(encoding="utf-8")
-        assert "### Public callable source code" in text, page
+        assert "## Source link" in text, page
         assert "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/" in text, page
         assert "/src/fabricops_kit/" in text, page
         assert "#L" in text, page
@@ -276,18 +295,18 @@ def test_setup_notebook_reference_uses_human_first_source_documentation() -> Non
     assert "../../api/modules/config/#setup_notebook" not in text
     assert "src/fabricops_kit/config.py#L" in text
     assert "setup_notebook on GitHub" in text
-    assert "### Example\n\n```python\ncontext = setup_notebook" in text
+    assert "## Example\n\n```python\ncontext = setup_notebook" in text
     first_metadata = text.index("<summary>AI / machine-readable metadata")
-    for marker in ("## At a glance", "### Parameters", "### Returns"):
+    for marker in ("## Usage note", "## Parameters", "## Returns"):
         assert text.index(marker) < first_metadata
     assert "## AI / machine-readable metadata" not in text
     assert "- Starting a FabricOps notebook from 00_env_config" in text
     assert "- Validating configured environment targets before downstream helpers run" in text
     assert "- Capturing runtime metadata for later lineage, review, or handover steps" in text
-    assert "### Parameters" in text
-    assert "`config` :" in text
-    assert ", required" in text or ", optional" in text
-    assert "### Public callable source code" in text
+    assert "## Parameters" in text
+    assert "| `config` |" in text
+    assert "| Yes |" in text or "| No |" in text
+    assert "## Source link" in text
 
 
 def test_public_callables_have_one_canonical_full_content_page() -> None:
@@ -301,7 +320,7 @@ def test_public_callables_have_one_canonical_full_content_page() -> None:
         assert canonical_page.exists(), name
         assert not legacy_page.exists(), f"{legacy_page} duplicates canonical full-content page"
         text = canonical_page.read_text(encoding="utf-8")
-        assert "## At a glance" in text, canonical_page
+        assert "## Usage note" in text, canonical_page
         assert "## Internal implementation summary" in text, canonical_page
 
     generated_pages = sorted(page.stem for page in API_REFERENCE_DIR.glob("*.md"))
@@ -381,7 +400,7 @@ def test_callable_pages_with_glossary_terms_render_shared_key_terms() -> None:
         if entry.get("classification") != "Callable" or not entry.get("glossary_terms"):
             continue
         text = (API_REFERENCE_DIR / f"{entry['name']}.md").read_text(encoding="utf-8")
-        key_terms = _section_text(text, "Key terms")
+        key_terms = _section_text(text, "See also")
         for term in entry["glossary_terms"]:
             label = term if "_" in term else term.capitalize()
             assert f"**{label}:** {glossary[term]}" in key_terms, entry["name"]
@@ -393,7 +412,7 @@ def test_enforce_profile_behavior_renders_glossary_backed_api_guidance() -> None
 
     assert "profile behavior" in entry["glossary_terms"]
     assert "can_continue" in entry["glossary_terms"]
-    assert "## Key terms" in text
+    assert "**Glossary terms**" in text
     assert "**Profile behavior:** The expected way a table is loaded." in text
     assert "**can_continue:** A returned true/false value that tells downstream code whether the pipeline should keep running." in text
     assert "See the [full glossary](../../../reference/glossary/)" in text
@@ -441,11 +460,10 @@ def test_related_guides_metadata_renders_before_template_and_call_graph_sections
     assert agent_by_name["run_table_guardrails"]["related_guides"] == related_guides
 
     text = (API_REFERENCE_DIR / "run_table_guardrails.md").read_text(encoding="utf-8")
-    assert "## Related guides" in text
+    assert "## See also" in text
     assert "- [Pipeline Guardrails](../../how-fabricops-works/pipeline-guardrails.md)" in text
-    assert text.index("## Related guides") < text.index("## Used in templates")
-    assert text.index("## Related guides") < text.index("## Used by")
-    assert text.index("## Related guides") < text.index("## Calls")
+    assert text.index("## See also") < text.index("## Developer details")
+    assert text.index("## See also") < text.index("## Calls")
 
 
 def test_concept_pages_link_back_to_key_callable_references() -> None:
@@ -489,23 +507,19 @@ def test_template_usage_metadata_renders_from_structured_reference_model() -> No
         assert "Outbound" in article or "Inbound" in article
 
         detail_text = (API_REFERENCE_DIR / f"{callable_name}.md").read_text(encoding="utf-8")
-        assert "## Used in templates" in detail_text
-        used_in_section = _section_text(detail_text, "Used in templates")
-        assert used_in_section.count("`02_pipeline`") == 1
+        assert "**Used in templates:**" in detail_text
+        developer_section = _section_text(detail_text, "Developer details")
+        assert developer_section.count("`02_pipeline`") == 1
 
 
-def test_callable_parameters_render_as_definition_list_not_table() -> None:
+def test_callable_parameters_render_as_api_table() -> None:
     text = (API_REFERENCE_DIR / "enforce_profile_behavior.md").read_text(encoding="utf-8")
-    parameters = _subsection_text(text, "Parameters")
+    parameters = _section_text(text, "Parameters")
 
-    assert "| Parameter | Required | Meaning |" not in parameters
-    assert "<table" not in parameters
-    assert '<div class="module-table-scroll reference-input-table">' not in parameters
-    assert "`dataset_name` : `str`, required" in parameters
-    assert ": Dataset name used to find matching catalogue evidence." in parameters
-    assert "`stage` : `str`, required" in parameters
-    assert ": The part of the pipeline being checked, such as source or target." in parameters
-    assert "`exclude_run_id` : `str | None`, optional" in parameters
+    assert "| Parameter | Type | Required | Description |" in parameters
+    assert "| `dataset_name` | `str` | Yes | Dataset name used to find matching catalogue evidence. |" in parameters
+    assert "| `stage` | `str` | Yes | The part of the pipeline being checked, such as source or target. |" in parameters
+    assert r"| `exclude_run_id` | `str \| None` | No |" in parameters
 
 
 def test_enforce_profile_behavior_preserves_relationship_sections_after_readability_changes() -> None:
@@ -552,19 +566,22 @@ def test_generated_public_callable_links_use_canonical_route() -> None:
 def test_enforce_dq_rules_canonical_page_section_order_and_no_old_helper_dump() -> None:
     text = (API_REFERENCE_DIR / "enforce_dq_rules.md").read_text(encoding="utf-8")
     ordered_markers = [
-        "## When to use this",
-        "## At a glance",
-        "## Used in templates",
-        "## Used by",
+        "## Signature",
+        "## Summary",
+        "## Usage note",
+        "## Parameters",
+        "## Returns",
+        "## Raises / Errors",
+        "## Example",
+        "## See also",
+        "## Developer details",
         "## Calls",
-        "## Function details and source",
-        "### Function details",
-        "### Public callable source code",
         "## Internal implementation summary",
+        "## Source link",
         '<summary>AI / machine-readable metadata',
     ]
-    if "## Purpose" in text:
-        ordered_markers.insert(0, "## Purpose")
+    if "## Used by" in text:
+        ordered_markers.insert(ordered_markers.index("## Source link"), "## Used by")
 
     assert [text.index(marker) for marker in ordered_markers] == sorted(text.index(marker) for marker in ordered_markers)
     assert "Internal helpers used by this callable" not in text

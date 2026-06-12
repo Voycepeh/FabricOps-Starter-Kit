@@ -1,56 +1,76 @@
 # widget_render_agreement_evidence
 
+## Signature
+
+```python
+def widget_render_agreement_evidence(config: Any, env_name: str, *, spark: Any) -> dict[str, Any]
+```
+
+## Summary
+
 Render the standalone agreement-evidence widget.
 
-## Purpose
-
-Renders the supporting-evidence widget for agreement workflows so users can record links or files that justify an agreement.
-
-## When to use this
+## Usage note
 
 - Use in 01_agreement when agreement records need supporting evidence that downstream users can audit.
-
-## At a glance
 
 **Do not use when:**
 
 - Not documented yet
 
-**Errors:**
+**Additional context:**
+
+Renders the supporting-evidence widget for agreement workflows so users can record links or files that justify an agreement.
+
+## Parameters
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `config` | `Any` | Yes | Configuration containing agreement metadata routing and evidence table settings. |
+| `env_name` | `str` | Yes | Environment key configured by ``00_env_config``. |
+| `spark` | `Any` | Yes | Fabric Spark session used for metadata reads, file writes, and append-only evidence metadata writes. |
+
+## Returns
+
+dict[str, Any]
+    Rendered controls for selecting an agreement version, pasting
+    metadata lakehouse evidence file paths, refreshing agreement options,
+    and saving evidence metadata rows.
+
+### Return interpretation
+
+The widget records evidence references when saved; review the resulting metadata rows before relying on them in handover or audit flows.
+
+## Raises / Errors
 
 Not documented yet
 
-**Side effects:**
+### Common failure causes
 
+- Evidence details are incomplete.
+- File or URL references are malformed.
+- Widget state is reset before saving.
+- The configured metadata target is not writable.
+
+## Example
+
+```python
 Not documented yet
+```
 
-## Key terms
+## See also
+
+- [Notebook Templates](../../how-fabricops-works/notebook-templates.md)
+- [Metadata Tables](../../how-fabricops-works/metadata-tables.md)
+
+**Glossary terms**
 
 - **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
 - **Catalogue evidence:** Reviewed metadata that explains what FabricOps knows about a dataset or table.
 
 See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
 
-## Related guides
-
-- [Notebook Templates](../../how-fabricops-works/notebook-templates.md)
-- [Metadata Tables](../../how-fabricops-works/metadata-tables.md)
-
-## Used in templates
-
-- `01_agreement`
-
-## Used by
-
-Not documented yet
-
-## Calls
-
-- `fabricops_kit.data_agreement._render_agreement_evidence_widget`
-
-## Function details and source
-
-### Function details
+## Developer details
 
 - Module: `data_agreement`
 - Classification: Callable
@@ -62,36 +82,15 @@ Not documented yet
 def widget_render_agreement_evidence(config: Any, env_name: str, *, spark: Any) -> dict[str, Any]
 ```
 
-### Parameters
+**Used in templates:**
 
-`config` : `Any`, required
-: Configuration containing agreement metadata routing and evidence table settings.
+- `01_agreement`
 
-`env_name` : `str`, required
-: Environment key configured by ``00_env_config``.
+**Side effects:**
 
-`spark` : `Any`, required
-: Fabric Spark session used for metadata reads, file writes, and append-only evidence metadata writes.
+Not documented yet
 
-### Returns
-
-dict[str, Any]
-    Rendered controls for selecting an agreement version, pasting
-    metadata lakehouse evidence file paths, refreshing agreement options,
-    and saving evidence metadata rows.
-
-### Return interpretation
-
-The widget records evidence references when saved; review the resulting metadata rows before relying on them in handover or audit flows.
-
-### Common failure causes
-
-- Evidence details are incomplete.
-- File or URL references are malformed.
-- Widget state is reset before saving.
-- The configured metadata target is not writable.
-
-### Notes
+**Notes:**
 
 This public wrapper is intended for the separate-widget ``01_agreement`` layout.
 Evidence files must be uploaded manually to the metadata lakehouse
@@ -99,53 +98,9 @@ Evidence files must be uploaded manually to the metadata lakehouse
 pasted ``Files/...`` path to ``METADATA_DATA_AGREEMENT_EVIDENCE`` and
 does not read or write binary file content.
 
-### Example
+## Calls
 
-```python
-Not documented yet
-```
-
-### Public callable source code
-
-- Source file path: `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/data_agreement.py#L1379-L1412">View widget_render_agreement_evidence on GitHub</a>
-
-```python
-def widget_render_agreement_evidence(config: Any, env_name: str, *, spark: Any) -> dict[str, Any]:
-    """Render standalone agreement evidence upload controls.
-
-    Parameters
-    ----------
-    config : FrameworkConfig or dict
-        Configuration containing agreement metadata routing and evidence table
-        settings.
-    env_name : str
-        Environment key configured by ``00_env_config``.
-    spark : pyspark.sql.SparkSession
-        Fabric Spark session used for metadata reads, file writes, and
-        append-only evidence metadata writes.
-
-    Returns
-    -------
-    dict[str, Any]
-        Rendered controls for selecting an agreement version, pasting
-        metadata lakehouse evidence file paths, refreshing agreement options,
-        and saving evidence metadata rows.
-
-    Notes
-    -----
-    This public wrapper is intended for the separate-widget ``01_agreement`` layout.
-    Evidence files must be uploaded manually to the metadata lakehouse
-    ``Files`` area first. The widget appends one file-reference row per
-    pasted ``Files/...`` path to ``METADATA_DATA_AGREEMENT_EVIDENCE`` and
-    does not read or write binary file content.
-    """
-    return _render_agreement_evidence_widget(
-        spark=spark,
-        config=config,
-        env_name=env_name,
-    )
-```
+- `fabricops_kit.data_agreement._render_agreement_evidence_widget`
 
 ## Internal implementation summary
 
@@ -217,7 +172,7 @@ def widget_render_agreement_evidence(config: Any, env_name: str, *, spark: Any) 
 
             **`def _build_runtime_audit_fields(*, config: Any=None, env: str | None=None, timestamp_field: str='_committed_at', user_field: str='_committed_by', workspace_field: str='_workspace_name', notebook_field: str='_notebook_name', metadata_lakehouse_field: str='_metadata_lakehouse_name', activity_field: str='_activity_id', committed_by: str | None=None, committed_at: str | None=None, runtime_context: dict[str, Any] | None=None) -> dict[str, str]`**
 
-            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/metadata.py#L147-L217)
+            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/metadata.py#L147-L217)
 
             ```python
             def _build_runtime_audit_fields(
@@ -295,7 +250,7 @@ def widget_render_agreement_evidence(config: Any, env_name: str, *, spark: Any) 
 
             **`def _current_audit_timestamp(config: Any=None, timezone_name: str | None=None, *, drop_microseconds: bool=True) -> str`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/config.py#L69-L75)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L69-L75)
 
             ```python
             def _current_audit_timestamp(config: Any = None, timezone_name: str | None = None, *, drop_microseconds: bool = True) -> str:
@@ -309,7 +264,7 @@ def widget_render_agreement_evidence(config: Any, env_name: str, *, spark: Any) 
 
             **`def _get_audit_timezone(config: Any=None, timezone_name: str | None=None) -> str`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/config.py#L61-L66)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L61-L66)
 
             ```python
             def _get_audit_timezone(config: Any = None, timezone_name: str | None = None) -> str:
@@ -322,7 +277,7 @@ def widget_render_agreement_evidence(config: Any, env_name: str, *, spark: Any) 
 
             **`def _validate_audit_timezone(timezone_name: str | None) -> str`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/config.py#L27-L58)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L27-L58)
 
             ```python
             def _validate_audit_timezone(timezone_name: str | None) -> str:
@@ -363,7 +318,7 @@ def widget_render_agreement_evidence(config: Any, env_name: str, *, spark: Any) 
 
             **`def _list_all_data_agreement_rows(config: Any, env_name: str, *, spark_session: Any=None, missing_ok: bool=False) -> list[dict[str, Any]]`**
 
-            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/data_agreement.py#L589-L598)
+            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L589-L598)
 
             ```python
             def _list_all_data_agreement_rows(config: Any, env_name: str, *, spark_session: Any = None, missing_ok: bool = False) -> list[dict[str, Any]]:
@@ -380,7 +335,7 @@ def widget_render_agreement_evidence(config: Any, env_name: str, *, spark: Any) 
 
             **`def _render_agreement_evidence_widget(*, spark: Any, config: Any, env_name: str, display_widget: bool=True) -> dict[str, Any]`**
 
-            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/data_agreement.py#L1258-L1376)
+            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L1258-L1376)
 
             ```python
             def _render_agreement_evidence_widget(*, spark: Any, config: Any, env_name: str, display_widget: bool = True) -> dict[str, Any]:
@@ -506,7 +461,7 @@ def widget_render_agreement_evidence(config: Any, env_name: str, *, spark: Any) 
 
             **`def _render_searchable_selector(*, widgets: Any, label: str, rows: list[dict[str, Any]], label_fn: Callable[[dict[str, Any]], str], value_fn: Callable[[dict[str, Any]], str], placeholder: str='Search...', max_results: int=25, search_fields: list[str] | None=None, context_fields: list[tuple[str, str]] | None=None, empty_label: str | None=None, selected_value: str | None=None) -> dict[str, Any]`**
 
-            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/data_agreement.py#L198-L308)
+            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L198-L308)
 
             ```python
             def _render_searchable_selector(
@@ -624,7 +579,7 @@ def widget_render_agreement_evidence(config: Any, env_name: str, *, spark: Any) 
 
             **`def _save_agreement_evidence_records(*, spark: Any, config: Any, env_name: str, agreement_id: str, contract_version: str, evidence_type: str, evidence_file_paths: Any, committed_by: str | None=None, committed_at: str | None=None, runtime_context: dict[str, Any] | None=None) -> list[dict[str, Any]]`**
 
-            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/data_agreement.py#L739-L770)
+            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L739-L770)
 
             ```python
             def _save_agreement_evidence_records(*, spark: Any, config: Any, env_name: str, agreement_id: str, contract_version: str, evidence_type: str, evidence_file_paths: Any, committed_by: str | None = None, committed_at: str | None = None, runtime_context: dict[str, Any] | None = None) -> list[dict[str, Any]]:
@@ -665,7 +620,7 @@ def widget_render_agreement_evidence(config: Any, env_name: str, *, spark: Any) 
 
             **`def _prepare_evidence_file_references(paths_value: Any) -> list[dict[str, str]]`**
 
-            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/data_agreement.py#L687-L737)
+            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L687-L737)
 
             ```python
             def _prepare_evidence_file_references(paths_value: Any) -> list[dict[str, str]]:
@@ -725,7 +680,7 @@ def widget_render_agreement_evidence(config: Any, env_name: str, *, spark: Any) 
 
             **`def _get_notebookutils() -> Any`**
 
-            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/data_agreement.py#L675-L684)
+            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L675-L684)
 
             ```python
             def _get_notebookutils() -> Any:
@@ -744,7 +699,7 @@ def widget_render_agreement_evidence(config: Any, env_name: str, *, spark: Any) 
 
             **`def _coerce_row_dicts(rows: Any) -> list[dict[str, Any]]`**
 
-            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/data_agreement.py#L397-L402)
+            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L397-L402)
 
             ```python
             def _coerce_row_dicts(rows: Any) -> list[dict[str, Any]]:
@@ -757,7 +712,7 @@ def widget_render_agreement_evidence(config: Any, env_name: str, *, spark: Any) 
 
             **`def _config_value(config: Any, name: str, default: Any) -> Any`**
 
-            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/data_agreement.py#L149-L153)
+            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L149-L153)
 
             ```python
             def _config_value(config: Any, name: str, default: Any) -> Any:
@@ -769,7 +724,7 @@ def widget_render_agreement_evidence(config: Any, env_name: str, *, spark: Any) 
 
             **`def _context_get(context: Any, *keys: str) -> Any`**
 
-            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/metadata.py#L101-L113)
+            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/metadata.py#L101-L113)
 
             ```python
             def _context_get(context: Any, *keys: str) -> Any:
@@ -789,7 +744,7 @@ def widget_render_agreement_evidence(config: Any, env_name: str, *, spark: Any) 
 
             **`def _html_escape(value: Any) -> str`**
 
-            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/data_agreement.py#L192-L195)
+            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L192-L195)
 
             ```python
             def _html_escape(value: Any) -> str:
@@ -800,7 +755,7 @@ def widget_render_agreement_evidence(config: Any, env_name: str, *, spark: Any) 
 
             **`def _require_ipywidgets()`**
 
-            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/data_agreement.py#L63-L72)
+            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L63-L72)
 
             ```python
             def _require_ipywidgets():
@@ -817,7 +772,7 @@ def widget_render_agreement_evidence(config: Any, env_name: str, *, spark: Any) 
 
             **`def _runtime_context() -> dict[str, Any]`**
 
-            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/metadata.py#L120-L144)
+            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/metadata.py#L120-L144)
 
             ```python
             def _runtime_context() -> dict[str, Any]:
@@ -849,7 +804,7 @@ def widget_render_agreement_evidence(config: Any, env_name: str, *, spark: Any) 
 
             **`def _safe_str(value: Any) -> str`**
 
-            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/metadata.py#L116-L117)
+            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/metadata.py#L116-L117)
 
             ```python
             def _safe_str(value: Any) -> str:
@@ -858,7 +813,7 @@ def widget_render_agreement_evidence(config: Any, env_name: str, *, spark: Any) 
 
             **`def _widget_common(widgets_module: Any, description: str, *, textarea: bool=False) -> dict[str, Any]`**
 
-            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/data_agreement.py#L180-L189)
+            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L180-L189)
 
             ```python
             def _widget_common(widgets_module: Any, description: str, *, textarea: bool = False) -> dict[str, Any]:
@@ -875,13 +830,55 @@ def widget_render_agreement_evidence(config: Any, env_name: str, *, spark: Any) 
 
             **`def _write_row(*, spark: Any, config: Any, env_name: str, table: str, row: dict[str, Any]) -> None`**
 
-            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/data_agreement.py#L485-L486)
+            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L485-L486)
 
             ```python
             def _write_row(*, spark: Any, config: Any, env_name: str, table: str, row: dict[str, Any]) -> None:
                 write_lakehouse_table(spark.createDataFrame([row]), config, env_name, "metadata", table, mode="append")
             ```
 
+
+## Source link
+
+- Source file path: `src/fabricops_kit/data_agreement.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L1379-L1412">View widget_render_agreement_evidence on GitHub</a>
+
+```python
+def widget_render_agreement_evidence(config: Any, env_name: str, *, spark: Any) -> dict[str, Any]:
+    """Render standalone agreement evidence upload controls.
+
+    Parameters
+    ----------
+    config : FrameworkConfig or dict
+        Configuration containing agreement metadata routing and evidence table
+        settings.
+    env_name : str
+        Environment key configured by ``00_env_config``.
+    spark : pyspark.sql.SparkSession
+        Fabric Spark session used for metadata reads, file writes, and
+        append-only evidence metadata writes.
+
+    Returns
+    -------
+    dict[str, Any]
+        Rendered controls for selecting an agreement version, pasting
+        metadata lakehouse evidence file paths, refreshing agreement options,
+        and saving evidence metadata rows.
+
+    Notes
+    -----
+    This public wrapper is intended for the separate-widget ``01_agreement`` layout.
+    Evidence files must be uploaded manually to the metadata lakehouse
+    ``Files`` area first. The widget appends one file-reference row per
+    pasted ``Files/...`` path to ``METADATA_DATA_AGREEMENT_EVIDENCE`` and
+    does not read or write binary file content.
+    """
+    return _render_agreement_evidence_widget(
+        spark=spark,
+        config=config,
+        env_name=env_name,
+    )
+```
 
 <details class="reference-metadata-details">
 <summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
@@ -932,7 +929,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/data_agreement.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/data_agreement.py#L1379-L1412">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/data_agreement.py#L1379-L1412</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L1379-L1412">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L1379-L1412</a>
 - Start line: `1379`
 - End line: `1412`
 - Signature:

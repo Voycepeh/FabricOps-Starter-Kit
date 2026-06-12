@@ -1,57 +1,73 @@
 # widget_select_catalogue_table
 
+## Signature
+
+```python
+def widget_select_catalogue_table(config: Any, env: str, *, spark_session: Any)
+```
+
+## Summary
+
 Render a searchable selector for latest successful catalogue profiles.
 
-## Purpose
-
-Renders a selector for catalogue profile rows so governance reviewers can choose the table they are reviewing.
-
-## When to use this
+## Usage note
 
 - Use at the start of 03_governance before column context, DQ, or classification review widgets need a selected table.
-
-## At a glance
 
 **Do not use when:**
 
 - Not documented yet
 
-**Errors:**
+**Additional context:**
+
+Renders a selector for catalogue profile rows so governance reviewers can choose the table they are reviewing.
+
+## Parameters
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `config` | `Any` | Yes | Runtime config containing the metadata lakehouse route. |
+| `env` | `str` | Yes | Environment used to read ``METADATA_DATA_CATALOGUE``. |
+| `spark_session` | `Any` | Yes | Spark session used for the catalogue read. |
+
+## Returns
+
+ipywidgets.Combobox
+    Searchable selector whose value stores stable JSON identity.
+
+### Return interpretation
+
+The widget stores the selected table in notebook state; call get_selected_catalogue_table after the user chooses a row.
+
+## Raises / Errors
 
 Not documented yet
 
-**Side effects:**
+### Common failure causes
 
+- No catalogue profile rows are available.
+- The user has not selected a table.
+- Profile metadata cannot be read.
+- Widget state was reset by rerunning cells.
+
+## Example
+
+```python
 Not documented yet
+```
 
-## Key terms
+## See also
+
+- [Governance Review](../../how-fabricops-works/governance-review.md)
+
+**Glossary terms**
 
 - **Catalogue evidence:** Reviewed metadata that explains what FabricOps knows about a dataset or table.
 - **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
 
 See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
 
-## Related guides
-
-- [Governance Review](../../how-fabricops-works/governance-review.md)
-
-## Used in templates
-
-- `03_governance`
-
-## Used by
-
-Not documented yet
-
-## Calls
-
-- <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a>
-- `fabricops_kit.governance_review._catalogue_table_options`
-- `fabricops_kit.governance_review._coerce_rows`
-
-## Function details and source
-
-### Function details
+## Developer details
 
 - Module: `governance_review`
 - Classification: Callable
@@ -63,92 +79,23 @@ Not documented yet
 def widget_select_catalogue_table(config: Any, env: str, *, spark_session: Any)
 ```
 
-### Parameters
+**Used in templates:**
 
-`config` : `Any`, required
-: Runtime config containing the metadata lakehouse route.
+- `03_governance`
 
-`env` : `str`, required
-: Environment used to read ``METADATA_DATA_CATALOGUE``.
+**Side effects:**
 
-`spark_session` : `Any`, required
-: Spark session used for the catalogue read.
+Not documented yet
 
-### Returns
-
-ipywidgets.Combobox
-    Searchable selector whose value stores stable JSON identity.
-
-### Return interpretation
-
-The widget stores the selected table in notebook state; call get_selected_catalogue_table after the user chooses a row.
-
-### Common failure causes
-
-- No catalogue profile rows are available.
-- The user has not selected a table.
-- Profile metadata cannot be read.
-- Widget state was reset by rerunning cells.
-
-### Notes
+**Notes:**
 
 No additional callable notes are documented.
 
-### Example
+## Calls
 
-```python
-Not documented yet
-```
-
-### Public callable source code
-
-- Source file path: `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/governance_review.py#L300-L341">View widget_select_catalogue_table on GitHub</a>
-
-```python
-def widget_select_catalogue_table(config: Any, env: str, *, spark_session: Any):
-    """Render a searchable selector for latest successful catalogue tables.
-
-    Parameters
-    ----------
-    config : FrameworkConfig or dict
-        Runtime config containing the metadata lakehouse route.
-    env : str
-        Environment used to read ``METADATA_DATA_CATALOGUE``.
-    spark_session : pyspark.sql.SparkSession
-        Spark session used for the catalogue read.
-
-    Returns
-    -------
-    ipywidgets.Combobox
-        Searchable selector whose value stores stable JSON identity.
-    """
-    global _SELECTED_CATALOGUE_TABLE
-    widgets = importlib.import_module("ipywidgets")
-    from IPython import display as ip
-
-    rows = _coerce_rows(read_lakehouse_table(config, env, "metadata", CATALOGUE_TABLE, spark_session=spark_session))
-    options = _catalogue_table_options(rows)
-    by_label = {o["label"]: o for o in options}
-    combo = widgets.Combobox(placeholder="Search profiled tables", options=[o["label"] for o in options], description="Table", ensure_option=True, layout=widgets.Layout(width="980px"))
-    context = widgets.HTML()
-
-    def select(label: str) -> None:
-        global _SELECTED_CATALOGUE_TABLE
-        option = by_label.get(label) or options[0]
-        _SELECTED_CATALOGUE_TABLE = {k: option[k] for k in ["environment_name", "dataset_name", "table_name", "metadata_table_key", "profile_run_id", "profile_stage", "layer", "asset_kind", "profiled_at"]}
-        context.value = f"<b>Selected table:</b> {_SELECTED_CATALOGUE_TABLE['environment_name']} / {_SELECTED_CATALOGUE_TABLE['dataset_name']} / {_SELECTED_CATALOGUE_TABLE['table_name']}<br/><b>Profile run:</b> {_SELECTED_CATALOGUE_TABLE['profile_run_id']} ({_SELECTED_CATALOGUE_TABLE['profile_stage']})"
-
-    def on_change(change: dict[str, Any]) -> None:
-        if change.get("name") == "value" and change.get("new") in by_label:
-            select(change["new"])
-
-    combo.observe(on_change, names="value")
-    combo.value = options[0]["label"]
-    select(combo.value)
-    ip.display(widgets.VBox([combo, context]))
-    return combo
-```
+- <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a>
+- `fabricops_kit.governance_review._catalogue_table_options`
+- `fabricops_kit.governance_review._coerce_rows`
 
 ## Internal implementation summary
 
@@ -208,7 +155,7 @@ def widget_select_catalogue_table(config: Any, env: str, *, spark_session: Any):
 
             **`def _build_metadata_table_key(environment_name, dataset_name, table_name) -> str`**
 
-            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/metadata.py#L77-L78)
+            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/metadata.py#L77-L78)
 
             ```python
             def _build_metadata_table_key(environment_name, dataset_name, table_name) -> str:
@@ -217,7 +164,7 @@ def widget_select_catalogue_table(config: Any, env: str, *, spark_session: Any):
 
             **`def _catalogue_table_options(catalogue_rows: Iterable[dict[str, Any]]) -> list[dict[str, Any]]`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/governance_review.py#L221-L270)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L221-L270)
 
             ```python
             def _catalogue_table_options(catalogue_rows: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -274,7 +221,7 @@ def widget_select_catalogue_table(config: Any, env: str, *, spark_session: Any):
 
             **`def _stable_metadata_key(*parts: Any) -> str`**
 
-            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/metadata.py#L72-L74)
+            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/metadata.py#L72-L74)
 
             ```python
             def _stable_metadata_key(*parts: Any) -> str:
@@ -286,7 +233,7 @@ def widget_select_catalogue_table(config: Any, env: str, *, spark_session: Any):
 
             **`def _coerce_rows(rows_or_df: Any) -> list[dict[str, Any]]`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/governance_review.py#L62-L67)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L62-L67)
 
             ```python
             def _coerce_rows(rows_or_df: Any) -> list[dict[str, Any]]:
@@ -299,7 +246,7 @@ def widget_select_catalogue_table(config: Any, env: str, *, spark_session: Any):
 
             **`def _is_success(row: dict[str, Any]) -> bool`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/governance_review.py#L74-L75)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L74-L75)
 
             ```python
             def _is_success(row: dict[str, Any]) -> bool:
@@ -308,13 +255,63 @@ def widget_select_catalogue_table(config: Any, env: str, *, spark_session: Any):
 
             **`def _value(row: dict[str, Any], name: str, default: Any='') -> Any`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/governance_review.py#L70-L71)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L70-L71)
 
             ```python
             def _value(row: dict[str, Any], name: str, default: Any = "") -> Any:
                 return row.get(name, row.get(name.upper(), default))
             ```
 
+
+## Source link
+
+- Source file path: `src/fabricops_kit/governance_review.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L300-L341">View widget_select_catalogue_table on GitHub</a>
+
+```python
+def widget_select_catalogue_table(config: Any, env: str, *, spark_session: Any):
+    """Render a searchable selector for latest successful catalogue tables.
+
+    Parameters
+    ----------
+    config : FrameworkConfig or dict
+        Runtime config containing the metadata lakehouse route.
+    env : str
+        Environment used to read ``METADATA_DATA_CATALOGUE``.
+    spark_session : pyspark.sql.SparkSession
+        Spark session used for the catalogue read.
+
+    Returns
+    -------
+    ipywidgets.Combobox
+        Searchable selector whose value stores stable JSON identity.
+    """
+    global _SELECTED_CATALOGUE_TABLE
+    widgets = importlib.import_module("ipywidgets")
+    from IPython import display as ip
+
+    rows = _coerce_rows(read_lakehouse_table(config, env, "metadata", CATALOGUE_TABLE, spark_session=spark_session))
+    options = _catalogue_table_options(rows)
+    by_label = {o["label"]: o for o in options}
+    combo = widgets.Combobox(placeholder="Search profiled tables", options=[o["label"] for o in options], description="Table", ensure_option=True, layout=widgets.Layout(width="980px"))
+    context = widgets.HTML()
+
+    def select(label: str) -> None:
+        global _SELECTED_CATALOGUE_TABLE
+        option = by_label.get(label) or options[0]
+        _SELECTED_CATALOGUE_TABLE = {k: option[k] for k in ["environment_name", "dataset_name", "table_name", "metadata_table_key", "profile_run_id", "profile_stage", "layer", "asset_kind", "profiled_at"]}
+        context.value = f"<b>Selected table:</b> {_SELECTED_CATALOGUE_TABLE['environment_name']} / {_SELECTED_CATALOGUE_TABLE['dataset_name']} / {_SELECTED_CATALOGUE_TABLE['table_name']}<br/><b>Profile run:</b> {_SELECTED_CATALOGUE_TABLE['profile_run_id']} ({_SELECTED_CATALOGUE_TABLE['profile_stage']})"
+
+    def on_change(change: dict[str, Any]) -> None:
+        if change.get("name") == "value" and change.get("new") in by_label:
+            select(change["new"])
+
+    combo.observe(on_change, names="value")
+    combo.value = options[0]["label"]
+    select(combo.value)
+    ip.display(widgets.VBox([combo, context]))
+    return combo
+```
 
 <details class="reference-metadata-details">
 <summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
@@ -363,7 +360,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/governance_review.py#L300-L341">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/governance_review.py#L300-L341</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L300-L341">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L300-L341</a>
 - Start line: `300`
 - End line: `341`
 - Signature:

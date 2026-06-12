@@ -182,7 +182,7 @@ PUBLIC_SYMBOL_DOCS: list[PublicSymbolDocMetadata] = [{'kind': 'function',
               'workflows.',
   'do_not_use_when': 'Do not use for writing business data or pipeline target tables; use '
                      'write_lakehouse_table or write_warehouse_table for data outputs.',
-  'parameters': 'config, env, optional spark_session, and mode/check options used to prepare '
+  'parameters': 'spark, config, env, and optional require_active_steward controls used to prepare '
                 'metadata storage through configured metadata routing.',
   'returns': 'Setup result describing metadata table creation or validation status.',
   'raises': 'Raises configuration, Spark, or storage errors when metadata routing or table '
@@ -193,7 +193,7 @@ PUBLIC_SYMBOL_DOCS: list[PublicSymbolDocMetadata] = [{'kind': 'function',
                     'routed through CONFIG.path_config paths for the selected env.',
   'ai_verification': 'Verify metadata setup completes before recommending agreement, profiling, '
                      'lineage, stability, or governance workflows that persist evidence.',
-  'preferred_example': 'setup_metadata_tables(CONFIG, env="Sandbox", spark_session=spark)',
+  'preferred_example': 'setup_metadata_tables(\n    spark=spark,\n    config=CONFIG,\n    env="Sandbox",\n)',
   'related_functions': ['setup_notebook', 'record_table_governance']},
  {'kind': 'function',
   'module': 'data_agreement',

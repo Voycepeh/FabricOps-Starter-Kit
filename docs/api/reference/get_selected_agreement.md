@@ -1,54 +1,68 @@
 # get_selected_agreement
 
+## Signature
+
+```python
+def get_selected_agreement() -> dict[str, Any]
+```
+
+## Summary
+
 Return the agreement selected by widget_select_agreement.
 
-## Purpose
-
-Returns the agreement chosen by widget_select_agreement so downstream cells can pass consistent agreement identifiers to pipeline helpers.
-
-## When to use this
+## Usage note
 
 - Use after rendering and completing widget_select_agreement when code needs the selected agreement values.
-
-## At a glance
 
 **Do not use when:**
 
 - Do not use before rendering and completing widget_select_agreement, or as a substitute for querying all agreement metadata.
 
-**Errors:**
+**Additional context:**
+
+Returns the agreement chosen by widget_select_agreement so downstream cells can pass consistent agreement identifiers to pipeline helpers.
+
+## Parameters
+
+No parameters.
+
+## Returns
+
+Selected agreement dictionary for the active notebook session.
+
+### Return interpretation
+
+A returned dictionary contains the selected agreement fields. A missing value means the selector has not been completed in the current notebook state.
+
+## Raises / Errors
 
 Raises an error when no agreement has been selected in the current session.
 
-**Side effects:**
+### Common failure causes
 
-Reads session/widget state only; it does not write metadata, tables, or files.
+- widget_select_agreement has not been run.
+- The user has not selected an agreement.
+- Notebook state was reset.
+- The selected row is no longer present in metadata.
 
-## Key terms
+## Example
+
+```python
+agreement = get_selected_agreement()
+dataset_name = agreement["dataset_name"]
+```
+
+## See also
+
+- [Notebook Templates](../../how-fabricops-works/notebook-templates.md)
+
+**Glossary terms**
 
 - **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
 
 See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
 
-## Related guides
-
-- [Notebook Templates](../../how-fabricops-works/notebook-templates.md)
-
-## Used in templates
-
-- `02_pipeline`
-
-## Used by
-
-Not documented yet
-
-## Calls
-
-Not documented yet
-
-## Function details and source
-
-### Function details
+## Developer details
 
 - Module: `data_agreement`
 - Classification: Callable
@@ -60,59 +74,21 @@ Not documented yet
 def get_selected_agreement() -> dict[str, Any]
 ```
 
-### Parameters
+**Used in templates:**
 
-No parameters.
+- `02_pipeline`
 
-### Returns
+**Side effects:**
 
-Selected agreement dictionary for the active notebook session.
+Reads session/widget state only; it does not write metadata, tables, or files.
 
-### Return interpretation
-
-A returned dictionary contains the selected agreement fields. A missing value means the selector has not been completed in the current notebook state.
-
-### Common failure causes
-
-- widget_select_agreement has not been run.
-- The user has not selected an agreement.
-- Notebook state was reset.
-- The selected row is no longer present in metadata.
-
-### Notes
+**Notes:**
 
 No additional callable notes are documented.
 
-### Example
+## Calls
 
-```python
-agreement = get_selected_agreement()
-dataset_name = agreement["dataset_name"]
-```
-
-### Public callable source code
-
-- Source file path: `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/data_agreement.py#L1000-L1015">View get_selected_agreement on GitHub</a>
-
-```python
-def get_selected_agreement() -> dict[str, Any]:
-    """Return the agreement selected by :func:`widget_select_agreement`.
-
-    Returns
-    -------
-    dict[str, Any]
-        Selected latest-version agreement row.
-
-    Raises
-    ------
-    RuntimeError
-        If no selector has established a selected agreement.
-    """
-    if not _SELECTED_AGREEMENT:
-        raise RuntimeError("No agreement selected. Run widget_select_agreement(...) first.")
-    return dict(_SELECTED_AGREEMENT)
-```
+Not documented yet
 
 ## Internal implementation summary
 
@@ -144,6 +120,30 @@ def get_selected_agreement() -> dict[str, Any]:
       </tbody>
     </table>
     </div>
+
+## Source link
+
+- Source file path: `src/fabricops_kit/data_agreement.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L1000-L1015">View get_selected_agreement on GitHub</a>
+
+```python
+def get_selected_agreement() -> dict[str, Any]:
+    """Return the agreement selected by :func:`widget_select_agreement`.
+
+    Returns
+    -------
+    dict[str, Any]
+        Selected latest-version agreement row.
+
+    Raises
+    ------
+    RuntimeError
+        If no selector has established a selected agreement.
+    """
+    if not _SELECTED_AGREEMENT:
+        raise RuntimeError("No agreement selected. Run widget_select_agreement(...) first.")
+    return dict(_SELECTED_AGREEMENT)
+```
 
 <details class="reference-metadata-details">
 <summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
@@ -184,7 +184,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/data_agreement.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/data_agreement.py#L1000-L1015">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/data_agreement.py#L1000-L1015</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L1000-L1015">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L1000-L1015</a>
 - Start line: `1000`
 - End line: `1015`
 - Signature:

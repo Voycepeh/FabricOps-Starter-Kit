@@ -1,32 +1,85 @@
 # enforce_profile_behavior
 
+## Signature
+
+```python
+def enforce_profile_behavior(spark, dataframe, metadata_table: str, dataset_name: str, table_name: str, *, stage: str, run_id: str, load_behavior: str, watermark_column: str | None=None, exclude_columns: list[str] | set[str] | tuple[str, ...] | None=None, exclude_run_id: str | None=None, config=None, env: str | None=None, catalogue_df=None, current_profile=None) -> dict
+```
+
+## Summary
+
 Enforce append, overwrite, or skip profile behavior against accepted catalogue profile evidence.
 
-## Purpose
-
-This function protects against accidental changes in how a table is loaded. For example, it can stop a pipeline from overwriting a dataset that was previously approved as append-only.
-
-It compares the current load behavior with the previously accepted catalogue profile. If the current behavior no longer matches the approved baseline, the function returns a failed guardrail result so the pipeline can stop before writing data.
-
-## When to use this
+## Usage note
 
 - Use this when promoting or running a pipeline that should follow a previously approved loading pattern. It is especially useful when an overwrite could remove existing history, or when an append-only table suddenly behaves like a full refresh.
-
-## At a glance
 
 **Do not use when:**
 
 - Do not use for simple schema validation or DQ-rule enforcement; use validate_schema or enforce_dq_rules for those checks.
 
-**Errors:**
+**Additional context:**
+
+This function protects against accidental changes in how a table is loaded. For example, it can stop a pipeline from overwriting a dataset that was previously approved as append-only.
+
+It compares the current load behavior with the previously accepted catalogue profile. If the current behavior no longer matches the approved baseline, the function returns a failed guardrail result so the pipeline can stop before writing data.
+
+## Parameters
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `spark` | `Any` | Yes | Spark session used to read accepted profile evidence from the configured metadata target. |
+| `dataframe` | `Any` | Yes | Current source or target DataFrame being checked. |
+| `metadata_table` | `str` | Yes | Metadata table that stores accepted catalogue profile evidence. |
+| `dataset_name` | `str` | Yes | Dataset name used to find matching catalogue evidence. |
+| `table_name` | `str` | Yes | Table name used to find matching catalogue evidence. |
+| `stage` | `str` | Yes | The part of the pipeline being checked, such as source or target. |
+| `run_id` | `str` | Yes | Current pipeline run identifier recorded in the generated profile evidence. |
+| `load_behavior` | `str` | Yes | Current load behavior to compare with the accepted baseline, commonly append, overwrite, or skip. |
+| `watermark_column` | `str \| None` | No | Optional column used to compare append watermark movement when available. |
+| `exclude_columns` | `list[str] \| set[str] \| tuple[str, ...] \| None` | No | Optional columns to ignore while comparing profile fields. |
+| `exclude_run_id` | `str \| None` | No | Optional run id to exclude when selecting the accepted baseline evidence. |
+| `config` | `object, str` | No | Metadata route from ``00_env_config`` used to read the catalogue table via ``read_lakehouse_table`` when ``catalogue_df`` is not supplied. |
+| `env` | `str \| None` | No | Not documented yet |
+| `catalogue_df` | `DataFrame or iterable of mappings` | No | Preloaded ``METADATA_DATA_CATALOGUE`` evidence. When provided, no metadata read is performed. |
+| `current_profile` | `DataFrame or iterable of mappings` | No | Current profile evidence that has already been computed for this table. When supplied, this function reuses it instead of profiling ``dataframe`` again. |
+
+## Returns
+
+Guardrail result dictionary with status, can_continue, message, current profile, baseline details, and profile behavior checks.
+
+### Return interpretation
+
+If can_continue is true, the current load behavior matches the accepted baseline and the pipeline can continue. If can_continue is false, review whether the behavior change is intentional before writing the table. If intentional, update or reapprove the catalogue profile evidence. If not intentional, fix the pipeline configuration.
+
+## Raises / Errors
 
 Raises Spark or metadata-read errors when baseline profile evidence cannot be loaded or compared.
 
-**Side effects:**
+### Common failure causes
 
-Reads baseline profile metadata and computes current profile evidence; it does not write target data.
+- Accepted profile evidence has not been created or approved yet.
+- The current load behavior does not match the accepted baseline.
+- The configured dataset or table name does not match catalogue evidence.
+- The configured stage does not match the accepted evidence.
+- The metadata lakehouse or catalogue profile table cannot be read.
+- The accepted evidence is missing required behavior fields.
+- The current behavior value is invalid or unsupported.
+- The accepted evidence is stale or incomplete.
 
-## Key terms
+## Example
+
+```python
+stability_result = enforce_profile_behavior(spark, df, "METADATA_DATA_CATALOGUE", dataset_name, table_name, stage="target", run_id=run_id, load_behavior="overwrite")
+stop_if_failed(stability_result)
+```
+
+## See also
+
+- [Pipeline Guardrails](../../how-fabricops-works/pipeline-guardrails.md)
+- [Governance Review](../../how-fabricops-works/governance-review.md)
+
+**Glossary terms**
 
 - **Profile behavior:** The expected way a table is loaded.
 - **Accepted catalogue profile evidence:** The approved profile record that FabricOps treats as the trusted baseline for a table.
@@ -42,18 +95,31 @@ Reads baseline profile metadata and computes current profile evidence; it does n
 
 See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
 
-## Related guides
+## Developer details
 
-- [Pipeline Guardrails](../../how-fabricops-works/pipeline-guardrails.md)
-- [Governance Review](../../how-fabricops-works/governance-review.md)
+- Module: `guardrails`
+- Classification: Callable
+- Source file path: `src/fabricops_kit/guardrails.py`
+- Source line: `639`
+- Signature:
 
-## Used in templates
+```python
+def enforce_profile_behavior(spark, dataframe, metadata_table: str, dataset_name: str, table_name: str, *, stage: str, run_id: str, load_behavior: str, watermark_column: str | None=None, exclude_columns: list[str] | set[str] | tuple[str, ...] | None=None, exclude_run_id: str | None=None, config=None, env: str | None=None, catalogue_df=None, current_profile=None) -> dict
+```
+
+**Used in templates:**
 
 - `02_pipeline`
 
-## Used by
+**Side effects:**
 
-- <a href="../run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
+Reads baseline profile metadata and computes current profile evidence; it does not write target data.
+
+**Notes:**
+
+This guardrail uses existing profile evidence: row count plus the configured
+watermark column's ``min_value`` and ``max_value``. Schema and DQ checks are
+enforced by their own guardrails.
 
 ## Calls
 
@@ -69,103 +135,446 @@ See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
 - `fabricops_kit.guardrails._profile_watermark_bounds`
 - `fabricops_kit.guardrails._string_value`
 
-## Function details and source
+## Internal implementation summary
 
-### Function details
+??? info "Call flow"
 
-- Module: `guardrails`
-- Classification: Callable
+    ```text
+    enforce_profile_behavior(...)
+    ├── _catalogue_value(...)
+    ├── _guardrail_exclude_columns(...)
+    ├── _is_greater_than(...)
+    │   └── _comparable_value(...)
+    ├── _is_less_than(...)
+    │   └── _comparable_value(...)
+    ├── _is_missing_table_error(...)
+    ├── _latest_catalogue_behavior_profile_row(...)
+    │   ├── _catalogue_value(...)
+    │   ├── _is_missing_table_error(...)
+    │   ├── _row_to_dict(...)
+    │   └── _string_value(...)
+    ├── _profile_row_count(...)
+    │   └── _normalize_profile(...)
+    │       └── _normalize_profile(...) (recursive)
+    ├── _profile_watermark_bounds(...)
+    │   ├── _normalize_profile(...)
+    │   │   └── _normalize_profile(...) (recursive)
+    │   └── _string_value(...)
+    ├── _string_value(...)
+    ├── profile_dataframe(...)
+    │   ├── _audit_timestamp_expr(...)
+    │   │   └── _get_audit_timezone(...)
+    │   │       └── _validate_audit_timezone(...)
+    │   ├── _build_distribution_summaries(...)
+    │   │   ├── _build_categorical_distribution(...)
+    │   │   ├── _build_numeric_distribution(...)
+    │   │   └── _numeric_bin_edges(...)
+    │   ├── _get_audit_timezone(...)
+    │   │   └── _validate_audit_timezone(...)
+    │   ├── _get_profiled_columns(...)
+    │   └── _is_min_max_supported_type(...)
+    └── read_lakehouse_table(...)
+        ├── _current_database_matches(...)
+        ├── _get_spark(...)
+        ├── _get_store(...)
+        ├── _normalize_table_name(...)
+        ├── _registered_table_identifier(...)
+        │   ├── _normalize_table_name(...)
+        │   └── _quote_identifier(...)
+        └── _uses_registered_metadata_table(...)
+    ```
+
+??? info "Internal helpers used: 12"
+
+    This callable uses 12 internal helpers for metadata loading, rule parsing, and other.
+
+    <div class="module-table-scroll reference-input-table">
+    <table class="reference-function-table">
+      <thead>
+        <tr>
+          <th>Area</th>
+          <th>Helpers</th>
+          <th>What they do</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td data-label="Area">Metadata loading</td>
+          <td data-label="Helpers"><code>_is_missing_table_error</code></td>
+          <td data-label="What they do">Load and identify the metadata or table context needed by the callable.</td>
+        </tr>
+        <tr>
+          <td data-label="Area">Rule parsing</td>
+          <td data-label="Helpers"><code>_normalize_profile</code></td>
+          <td data-label="What they do">Normalize stored or user-provided values before applying rules.</td>
+        </tr>
+        <tr>
+          <td data-label="Area">Other</td>
+          <td data-label="Helpers"><code>_catalogue_value</code>, <code>_comparable_value</code>, <code>_guardrail_exclude_columns</code>, <code>_is_greater_than</code>, <code>_is_less_than</code>, <code>_latest_catalogue_behavior_profile_row</code>, <code>_profile_row_count</code>, <code>_profile_watermark_bounds</code>, <code>_row_to_dict</code>, <code>_string_value</code></td>
+          <td data-label="What they do">Support lower-level implementation details that do not fit the main helper areas.</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+
+    ??? example "View helper source by area"
+
+        ??? example "Metadata loading helpers"
+
+            **`def _is_missing_table_error(exc: Exception) -> bool`**
+
+            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/guardrails.py#L834-L837)
+
+            ```python
+            def _is_missing_table_error(exc: Exception) -> bool:
+                text = str(exc).lower()
+                patterns = ["not found", "table or view not found", "no such table", "cannot resolve", "missing"]
+                return any(pattern in text for pattern in patterns)
+            ```
+
+        ??? example "Rule parsing helpers"
+
+            **`def _normalize_profile(profile) -> dict | None`**
+
+            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/guardrails.py#L201-L269)
+
+            ```python
+            def _normalize_profile(profile) -> dict | None:
+                def row_value(row, *names):
+                    for name in names:
+                        if isinstance(row, dict) and name in row:
+                            return row.get(name)
+                        if hasattr(row, "asDict"):
+                            data = row.asDict(recursive=True)
+                            if name in data:
+                                return data.get(name)
+                        if hasattr(row, name):
+                            return getattr(row, name)
+                    return None
+
+                def distribution_payload(value):
+                    if value in (None, ""):
+                        return None
+                    if isinstance(value, dict):
+                        return value
+                    try:
+                        return json.loads(value)
+                    except (TypeError, json.JSONDecodeError):
+                        return None
+
+                if profile is None:
+                    return None
+                if isinstance(profile, dict) and "columns" in profile:
+                    return profile
+                if hasattr(profile, "collect"):
+                    return _normalize_profile(profile.collect())
+                if isinstance(profile, (list, tuple)):
+                    rows = list(profile)
+                    if not rows:
+                        return None
+                    first = rows[0]
+                    row_count = row_value(first, "row_count", "ROW_COUNT", "PROFILED_ROW_COUNT")
+                    table_name = row_value(first, "table_name", "TABLE_NAME", "PROFILED_TABLE_NAME")
+                    dataset_name = row_value(first, "dataset_name", "DATASET_NAME")
+                    profile_stage = row_value(first, "profile_stage", "PROFILE_STAGE", "EVIDENCE_ROLE")
+                    columns = []
+                    for row in rows:
+                        distribution_type = row_value(row, "distribution_type", "DISTRIBUTION_TYPE")
+                        distribution = distribution_payload(row_value(row, "distribution", "DISTRIBUTION", "distribution_json", "DISTRIBUTION_JSON"))
+                        column = {
+                            "column_name": row_value(row, "column_name", "COLUMN_NAME"),
+                            "data_type": row_value(row, "data_type", "DATA_TYPE"),
+                            "row_count": row_value(row, "row_count", "ROW_COUNT", "PROFILED_ROW_COUNT"),
+                            "null_count": row_value(row, "null_count", "NULL_COUNT"),
+                            "null_pct": row_value(row, "null_pct", "NULL_PCT", "null_percent", "NULL_PERCENT"),
+                            "distinct_count": row_value(row, "distinct_count", "DISTINCT_COUNT"),
+                            "distinct_pct": row_value(row, "distinct_pct", "DISTINCT_PCT", "distinct_percent", "DISTINCT_PERCENT"),
+                            "min_value": row_value(row, "min_value", "MIN_VALUE"),
+                            "max_value": row_value(row, "max_value", "MAX_VALUE"),
+                        }
+                        if distribution_type:
+                            column["distribution_type"] = distribution_type
+                        if distribution is not None:
+                            column["distribution"] = distribution
+                        columns.append(column)
+                    return {
+                        "dataset_name": dataset_name,
+                        "table_name": table_name,
+                        "profile_stage": profile_stage,
+                        "row_count": row_count,
+                        "columns": columns,
+                        "profile_status": row_value(first, "profile_status", "PROFILE_STATUS"),
+                        "baseline_status": row_value(first, "baseline_status", "BASELINE_STATUS"),
+                        "source_change_signal": distribution_payload(row_value(first, "source_change_signal", "SOURCE_CHANGE_SIGNAL_JSON")),
+                    }
+                return profile
+            ```
+
+        ??? example "Other helpers"
+
+            **`def _catalogue_value(row: dict, *names: str)`**
+
+            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/guardrails.py#L467-L478)
+
+            ```python
+            def _catalogue_value(row: dict, *names: str):
+                for name in names:
+                    if name in row:
+                        return row.get(name)
+                    upper = name.upper()
+                    if upper in row:
+                        return row.get(upper)
+                    lower = name.lower()
+                    for key, value in row.items():
+                        if str(key).lower() == lower:
+                            return value
+                return None
+            ```
+
+            **`def _comparable_value(value)`**
+
+            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/guardrails.py#L485-L494)
+
+            ```python
+            def _comparable_value(value):
+                if value in (None, ""):
+                    return None
+                if hasattr(value, "isoformat"):
+                    return value.isoformat()
+                text = str(value)
+                try:
+                    return Decimal(text)
+                except Exception:
+                    return text
+            ```
+
+            **`def _guardrail_exclude_columns(exclude_columns: list[str] | set[str] | tuple[str, ...] | None=None) -> set[str]`**
+
+            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/guardrails.py#L282-L286)
+
+            ```python
+            def _guardrail_exclude_columns(exclude_columns: list[str] | set[str] | tuple[str, ...] | None = None) -> set[str]:
+                excluded = set(_DEFAULT_STABILITY_EXCLUDE_COLUMNS)
+                if exclude_columns:
+                    excluded.update(str(column) for column in exclude_columns)
+                return excluded
+            ```
+
+            **`def _is_greater_than(left, right) -> bool`**
+
+            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/guardrails.py#L507-L514)
+
+            ```python
+            def _is_greater_than(left, right) -> bool:
+                left_value = _comparable_value(left)
+                right_value = _comparable_value(right)
+                if left_value is None or right_value is None:
+                    return False
+                if isinstance(left_value, Decimal) and isinstance(right_value, Decimal):
+                    return left_value > right_value
+                return str(left_value) > str(right_value)
+            ```
+
+            **`def _is_less_than(left, right) -> bool`**
+
+            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/guardrails.py#L497-L504)
+
+            ```python
+            def _is_less_than(left, right) -> bool:
+                left_value = _comparable_value(left)
+                right_value = _comparable_value(right)
+                if left_value is None or right_value is None:
+                    return False
+                if isinstance(left_value, Decimal) and isinstance(right_value, Decimal):
+                    return left_value < right_value
+                return str(left_value) < str(right_value)
+            ```
+
+            **`def _latest_catalogue_behavior_profile_row(catalogue_df, *, dataset_name: str, table_name: str, profile_stage: str, load_behavior: str, watermark_column: str | None=None, exclude_run_id: str | None=None) -> dict | None`**
+
+            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/guardrails.py#L527-L636)
+
+            ```python
+            def _latest_catalogue_behavior_profile_row(
+                catalogue_df,
+                *,
+                dataset_name: str,
+                table_name: str,
+                profile_stage: str,
+                load_behavior: str,
+                watermark_column: str | None = None,
+                exclude_run_id: str | None = None,
+            ) -> dict | None:
+                if catalogue_df is None:
+                    return None
+
+                try:
+                    if hasattr(catalogue_df, "collect") and hasattr(catalogue_df, "columns"):
+                        from pyspark.sql import functions as F
+
+                        df = catalogue_df
+                        columns_by_lower = {str(column).lower(): column for column in df.columns}
+
+                        def catalogue_col(*names: str) -> str | None:
+                            for name in names:
+                                if name in df.columns:
+                                    return name
+                                if name.lower() in columns_by_lower:
+                                    return columns_by_lower[name.lower()]
+                            return None
+
+                        stage = str(profile_stage).lower()
+                        stage_roles = [stage, f"{stage}_profile"]
+                        if stage == "target":
+                            stage_roles.append("output_profile")
+
+                        dataset_col = catalogue_col("dataset_name")
+                        table_col = catalogue_col("table_name", "profiled_table_name")
+                        stage_col = catalogue_col("profile_stage", "evidence_role")
+                        behavior_col = catalogue_col("load_behavior")
+                        stability_status_col = catalogue_col("stability_status")
+                        profile_status_col = catalogue_col("profile_status")
+                        run_col = catalogue_col("profile_run_id", "run_id")
+                        time_col = catalogue_col("profiled_at", "run_timestamp", "created_at")
+                        column_col = catalogue_col("column_name")
+                        required = [dataset_col, table_col, stage_col, behavior_col, stability_status_col]
+                        if watermark_column:
+                            required.append(column_col)
+                        if any(column is None for column in required):
+                            return None
+
+                        filters = [
+                            F.col(dataset_col) == dataset_name,
+                            F.col(table_col) == table_name,
+                            F.lower(F.col(stage_col)).isin(stage_roles),
+                            F.lower(F.col(behavior_col)) == str(load_behavior).lower(),
+                            F.lower(F.col(stability_status_col)).isin("passed", "baseline_created"),
+                        ]
+                        if profile_status_col:
+                            filters.append(F.lower(F.col(profile_status_col)).isin("success", "successful"))
+                        if exclude_run_id and run_col:
+                            filters.append(F.col(run_col) != exclude_run_id)
+                        if watermark_column and column_col:
+                            filters.append(F.lower(F.col(column_col)) == str(watermark_column).lower())
+
+                        for condition in filters:
+                            df = df.filter(condition)
+                        order_columns = []
+                        if time_col:
+                            order_columns.append(F.col(time_col).desc())
+                        if run_col:
+                            order_columns.append(F.col(run_col).desc())
+                        if order_columns:
+                            df = df.orderBy(*order_columns)
+                        rows = df.limit(1).collect()
+                        return _row_to_dict(rows[0]) if rows else None
+
+                    rows = catalogue_df
+                    if isinstance(catalogue_df, dict):
+                        rows = [catalogue_df]
+                    candidates = []
+                    stage = str(profile_stage).lower()
+                    stage_roles = {stage, f"{stage}_profile"}
+                    if stage == "target":
+                        stage_roles.add("output_profile")
+                    for raw_row in rows or []:
+                        row = _row_to_dict(raw_row)
+                        if str(_catalogue_value(row, "dataset_name")) != dataset_name:
+                            continue
+                        if str(_catalogue_value(row, "table_name", "profiled_table_name")) != table_name:
+                            continue
+                        if str(_catalogue_value(row, "profile_stage", "evidence_role")).lower() not in stage_roles:
+                            continue
+                        if str(_catalogue_value(row, "load_behavior")).lower() != str(load_behavior).lower():
+                            continue
+                        if str(_catalogue_value(row, "stability_status")).lower() not in {"passed", "baseline_created"}:
+                            continue
+                        profile_status = _catalogue_value(row, "profile_status")
+                        if profile_status and str(profile_status).lower() not in {"success", "successful"}:
+                            continue
+                        if exclude_run_id and str(_catalogue_value(row, "profile_run_id", "run_id")) == str(exclude_run_id):
+                            continue
+                        if watermark_column and str(_catalogue_value(row, "column_name")).lower() != str(watermark_column).lower():
+                            continue
+                        candidates.append(row)
+                    if not candidates:
+                        return None
+                    candidates.sort(key=lambda row: (_string_value(_catalogue_value(row, "profiled_at", "run_timestamp", "created_at")), _string_value(_catalogue_value(row, "profile_run_id", "run_id"))), reverse=True)
+                    return candidates[0]
+                except Exception as exc:
+                    if _is_missing_table_error(exc):
+                        return None
+                    raise
+            ```
+
+            **`def _profile_row_count(profile) -> int | None`**
+
+            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/guardrails.py#L294-L306)
+
+            ```python
+            def _profile_row_count(profile) -> int | None:
+                normalized = _normalize_profile(profile) or {}
+                value = normalized.get("row_count")
+                if value in (None, ""):
+                    columns = normalized.get("columns") or []
+                    if columns:
+                        first_column = columns[0] or {}
+                        if isinstance(first_column, dict):
+                            value = first_column.get("row_count")
+                try:
+                    return int(value) if value not in (None, "") else None
+                except (TypeError, ValueError):
+                    return None
+            ```
+
+            **`def _profile_watermark_bounds(profile, watermark_column: str | None) -> tuple[str, str]`**
+
+            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/guardrails.py#L517-L524)
+
+            ```python
+            def _profile_watermark_bounds(profile, watermark_column: str | None) -> tuple[str, str]:
+                normalized = _normalize_profile(profile) or {}
+                if not watermark_column:
+                    return "", ""
+                for column in normalized.get("columns", []) or []:
+                    if str(column.get("column_name") or "").lower() == str(watermark_column).lower():
+                        return _string_value(column.get("min_value")), _string_value(column.get("max_value"))
+                return "", ""
+            ```
+
+            **`def _row_to_dict(row) -> dict`**
+
+            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/guardrails.py#L272-L279)
+
+            ```python
+            def _row_to_dict(row) -> dict:
+                if row is None:
+                    return {}
+                if isinstance(row, dict):
+                    return dict(row)
+                if hasattr(row, "asDict"):
+                    return row.asDict(recursive=True)
+                return {name: getattr(row, name) for name in dir(row) if not name.startswith("_")}
+            ```
+
+            **`def _string_value(value) -> str`**
+
+            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/guardrails.py#L481-L482)
+
+            ```python
+            def _string_value(value) -> str:
+                return "" if value is None else str(value)
+            ```
+
+
+## Used by
+
+- <a href="../run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
+
+## Source link
+
 - Source file path: `src/fabricops_kit/guardrails.py`
-- Source line: `639`
-- Signature:
-
-```python
-def enforce_profile_behavior(spark, dataframe, metadata_table: str, dataset_name: str, table_name: str, *, stage: str, run_id: str, load_behavior: str, watermark_column: str | None=None, exclude_columns: list[str] | set[str] | tuple[str, ...] | None=None, exclude_run_id: str | None=None, config=None, env: str | None=None, catalogue_df=None, current_profile=None) -> dict
-```
-
-### Parameters
-
-`spark` : `Any`, required
-: Spark session used to read accepted profile evidence from the configured metadata target.
-
-`dataframe` : `Any`, required
-: Current source or target DataFrame being checked.
-
-`metadata_table` : `str`, required
-: Metadata table that stores accepted catalogue profile evidence.
-
-`dataset_name` : `str`, required
-: Dataset name used to find matching catalogue evidence.
-
-`table_name` : `str`, required
-: Table name used to find matching catalogue evidence.
-
-`stage` : `str`, required
-: The part of the pipeline being checked, such as source or target.
-
-`run_id` : `str`, required
-: Current pipeline run identifier recorded in the generated profile evidence.
-
-`load_behavior` : `str`, required
-: Current load behavior to compare with the accepted baseline, commonly append, overwrite, or skip.
-
-`watermark_column` : `str | None`, optional
-: Optional column used to compare append watermark movement when available.
-
-`exclude_columns` : `list[str] | set[str] | tuple[str, ...] | None`, optional
-: Optional columns to ignore while comparing profile fields.
-
-`exclude_run_id` : `str | None`, optional
-: Optional run id to exclude when selecting the accepted baseline evidence.
-
-`config` : `object, str`, optional
-: Metadata route from ``00_env_config`` used to read the catalogue table via ``read_lakehouse_table`` when ``catalogue_df`` is not supplied.
-
-`env` : `str | None`, optional
-: Not documented yet
-
-`catalogue_df` : `DataFrame or iterable of mappings`, optional
-: Preloaded ``METADATA_DATA_CATALOGUE`` evidence. When provided, no metadata read is performed.
-
-`current_profile` : `DataFrame or iterable of mappings`, optional
-: Current profile evidence that has already been computed for this table. When supplied, this function reuses it instead of profiling ``dataframe`` again.
-
-### Returns
-
-Guardrail result dictionary with status, can_continue, message, current profile, baseline details, and profile behavior checks.
-
-### Return interpretation
-
-If can_continue is true, the current load behavior matches the accepted baseline and the pipeline can continue. If can_continue is false, review whether the behavior change is intentional before writing the table. If intentional, update or reapprove the catalogue profile evidence. If not intentional, fix the pipeline configuration.
-
-### Common failure causes
-
-- Accepted profile evidence has not been created or approved yet.
-- The current load behavior does not match the accepted baseline.
-- The configured dataset or table name does not match catalogue evidence.
-- The configured stage does not match the accepted evidence.
-- The metadata lakehouse or catalogue profile table cannot be read.
-- The accepted evidence is missing required behavior fields.
-- The current behavior value is invalid or unsupported.
-- The accepted evidence is stale or incomplete.
-
-### Notes
-
-This guardrail uses existing profile evidence: row count plus the configured
-watermark column's ``min_value`` and ``max_value``. Schema and DQ checks are
-enforced by their own guardrails.
-
-### Example
-
-```python
-stability_result = enforce_profile_behavior(spark, df, "METADATA_DATA_CATALOGUE", dataset_name, table_name, stage="target", run_id=run_id, load_behavior="overwrite")
-stop_if_failed(stability_result)
-```
-
-### Public callable source code
-
-- Source file path: `src/fabricops_kit/guardrails.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/guardrails.py#L639-L832">View enforce_profile_behavior on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/guardrails.py#L639-L832">View enforce_profile_behavior on GitHub</a>
 
 ```python
 def enforce_profile_behavior(
@@ -364,438 +773,6 @@ def enforce_profile_behavior(
     return result
 ```
 
-## Internal implementation summary
-
-??? info "Call flow"
-
-    ```text
-    enforce_profile_behavior(...)
-    ├── _catalogue_value(...)
-    ├── _guardrail_exclude_columns(...)
-    ├── _is_greater_than(...)
-    │   └── _comparable_value(...)
-    ├── _is_less_than(...)
-    │   └── _comparable_value(...)
-    ├── _is_missing_table_error(...)
-    ├── _latest_catalogue_behavior_profile_row(...)
-    │   ├── _catalogue_value(...)
-    │   ├── _is_missing_table_error(...)
-    │   ├── _row_to_dict(...)
-    │   └── _string_value(...)
-    ├── _profile_row_count(...)
-    │   └── _normalize_profile(...)
-    │       └── _normalize_profile(...) (recursive)
-    ├── _profile_watermark_bounds(...)
-    │   ├── _normalize_profile(...)
-    │   │   └── _normalize_profile(...) (recursive)
-    │   └── _string_value(...)
-    ├── _string_value(...)
-    ├── profile_dataframe(...)
-    │   ├── _audit_timestamp_expr(...)
-    │   │   └── _get_audit_timezone(...)
-    │   │       └── _validate_audit_timezone(...)
-    │   ├── _build_distribution_summaries(...)
-    │   │   ├── _build_categorical_distribution(...)
-    │   │   ├── _build_numeric_distribution(...)
-    │   │   └── _numeric_bin_edges(...)
-    │   ├── _get_audit_timezone(...)
-    │   │   └── _validate_audit_timezone(...)
-    │   ├── _get_profiled_columns(...)
-    │   └── _is_min_max_supported_type(...)
-    └── read_lakehouse_table(...)
-        ├── _current_database_matches(...)
-        ├── _get_spark(...)
-        ├── _get_store(...)
-        ├── _normalize_table_name(...)
-        ├── _registered_table_identifier(...)
-        │   ├── _normalize_table_name(...)
-        │   └── _quote_identifier(...)
-        └── _uses_registered_metadata_table(...)
-    ```
-
-??? info "Internal helpers used: 12"
-
-    This callable uses 12 internal helpers for metadata loading, rule parsing, and other.
-
-    <div class="module-table-scroll reference-input-table">
-    <table class="reference-function-table">
-      <thead>
-        <tr>
-          <th>Area</th>
-          <th>Helpers</th>
-          <th>What they do</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td data-label="Area">Metadata loading</td>
-          <td data-label="Helpers"><code>_is_missing_table_error</code></td>
-          <td data-label="What they do">Load and identify the metadata or table context needed by the callable.</td>
-        </tr>
-        <tr>
-          <td data-label="Area">Rule parsing</td>
-          <td data-label="Helpers"><code>_normalize_profile</code></td>
-          <td data-label="What they do">Normalize stored or user-provided values before applying rules.</td>
-        </tr>
-        <tr>
-          <td data-label="Area">Other</td>
-          <td data-label="Helpers"><code>_catalogue_value</code>, <code>_comparable_value</code>, <code>_guardrail_exclude_columns</code>, <code>_is_greater_than</code>, <code>_is_less_than</code>, <code>_latest_catalogue_behavior_profile_row</code>, <code>_profile_row_count</code>, <code>_profile_watermark_bounds</code>, <code>_row_to_dict</code>, <code>_string_value</code></td>
-          <td data-label="What they do">Support lower-level implementation details that do not fit the main helper areas.</td>
-        </tr>
-      </tbody>
-    </table>
-    </div>
-
-    ??? example "View helper source by area"
-
-        ??? example "Metadata loading helpers"
-
-            **`def _is_missing_table_error(exc: Exception) -> bool`**
-
-            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/guardrails.py#L834-L837)
-
-            ```python
-            def _is_missing_table_error(exc: Exception) -> bool:
-                text = str(exc).lower()
-                patterns = ["not found", "table or view not found", "no such table", "cannot resolve", "missing"]
-                return any(pattern in text for pattern in patterns)
-            ```
-
-        ??? example "Rule parsing helpers"
-
-            **`def _normalize_profile(profile) -> dict | None`**
-
-            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/guardrails.py#L201-L269)
-
-            ```python
-            def _normalize_profile(profile) -> dict | None:
-                def row_value(row, *names):
-                    for name in names:
-                        if isinstance(row, dict) and name in row:
-                            return row.get(name)
-                        if hasattr(row, "asDict"):
-                            data = row.asDict(recursive=True)
-                            if name in data:
-                                return data.get(name)
-                        if hasattr(row, name):
-                            return getattr(row, name)
-                    return None
-
-                def distribution_payload(value):
-                    if value in (None, ""):
-                        return None
-                    if isinstance(value, dict):
-                        return value
-                    try:
-                        return json.loads(value)
-                    except (TypeError, json.JSONDecodeError):
-                        return None
-
-                if profile is None:
-                    return None
-                if isinstance(profile, dict) and "columns" in profile:
-                    return profile
-                if hasattr(profile, "collect"):
-                    return _normalize_profile(profile.collect())
-                if isinstance(profile, (list, tuple)):
-                    rows = list(profile)
-                    if not rows:
-                        return None
-                    first = rows[0]
-                    row_count = row_value(first, "row_count", "ROW_COUNT", "PROFILED_ROW_COUNT")
-                    table_name = row_value(first, "table_name", "TABLE_NAME", "PROFILED_TABLE_NAME")
-                    dataset_name = row_value(first, "dataset_name", "DATASET_NAME")
-                    profile_stage = row_value(first, "profile_stage", "PROFILE_STAGE", "EVIDENCE_ROLE")
-                    columns = []
-                    for row in rows:
-                        distribution_type = row_value(row, "distribution_type", "DISTRIBUTION_TYPE")
-                        distribution = distribution_payload(row_value(row, "distribution", "DISTRIBUTION", "distribution_json", "DISTRIBUTION_JSON"))
-                        column = {
-                            "column_name": row_value(row, "column_name", "COLUMN_NAME"),
-                            "data_type": row_value(row, "data_type", "DATA_TYPE"),
-                            "row_count": row_value(row, "row_count", "ROW_COUNT", "PROFILED_ROW_COUNT"),
-                            "null_count": row_value(row, "null_count", "NULL_COUNT"),
-                            "null_pct": row_value(row, "null_pct", "NULL_PCT", "null_percent", "NULL_PERCENT"),
-                            "distinct_count": row_value(row, "distinct_count", "DISTINCT_COUNT"),
-                            "distinct_pct": row_value(row, "distinct_pct", "DISTINCT_PCT", "distinct_percent", "DISTINCT_PERCENT"),
-                            "min_value": row_value(row, "min_value", "MIN_VALUE"),
-                            "max_value": row_value(row, "max_value", "MAX_VALUE"),
-                        }
-                        if distribution_type:
-                            column["distribution_type"] = distribution_type
-                        if distribution is not None:
-                            column["distribution"] = distribution
-                        columns.append(column)
-                    return {
-                        "dataset_name": dataset_name,
-                        "table_name": table_name,
-                        "profile_stage": profile_stage,
-                        "row_count": row_count,
-                        "columns": columns,
-                        "profile_status": row_value(first, "profile_status", "PROFILE_STATUS"),
-                        "baseline_status": row_value(first, "baseline_status", "BASELINE_STATUS"),
-                        "source_change_signal": distribution_payload(row_value(first, "source_change_signal", "SOURCE_CHANGE_SIGNAL_JSON")),
-                    }
-                return profile
-            ```
-
-        ??? example "Other helpers"
-
-            **`def _catalogue_value(row: dict, *names: str)`**
-
-            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/guardrails.py#L467-L478)
-
-            ```python
-            def _catalogue_value(row: dict, *names: str):
-                for name in names:
-                    if name in row:
-                        return row.get(name)
-                    upper = name.upper()
-                    if upper in row:
-                        return row.get(upper)
-                    lower = name.lower()
-                    for key, value in row.items():
-                        if str(key).lower() == lower:
-                            return value
-                return None
-            ```
-
-            **`def _comparable_value(value)`**
-
-            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/guardrails.py#L485-L494)
-
-            ```python
-            def _comparable_value(value):
-                if value in (None, ""):
-                    return None
-                if hasattr(value, "isoformat"):
-                    return value.isoformat()
-                text = str(value)
-                try:
-                    return Decimal(text)
-                except Exception:
-                    return text
-            ```
-
-            **`def _guardrail_exclude_columns(exclude_columns: list[str] | set[str] | tuple[str, ...] | None=None) -> set[str]`**
-
-            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/guardrails.py#L282-L286)
-
-            ```python
-            def _guardrail_exclude_columns(exclude_columns: list[str] | set[str] | tuple[str, ...] | None = None) -> set[str]:
-                excluded = set(_DEFAULT_STABILITY_EXCLUDE_COLUMNS)
-                if exclude_columns:
-                    excluded.update(str(column) for column in exclude_columns)
-                return excluded
-            ```
-
-            **`def _is_greater_than(left, right) -> bool`**
-
-            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/guardrails.py#L507-L514)
-
-            ```python
-            def _is_greater_than(left, right) -> bool:
-                left_value = _comparable_value(left)
-                right_value = _comparable_value(right)
-                if left_value is None or right_value is None:
-                    return False
-                if isinstance(left_value, Decimal) and isinstance(right_value, Decimal):
-                    return left_value > right_value
-                return str(left_value) > str(right_value)
-            ```
-
-            **`def _is_less_than(left, right) -> bool`**
-
-            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/guardrails.py#L497-L504)
-
-            ```python
-            def _is_less_than(left, right) -> bool:
-                left_value = _comparable_value(left)
-                right_value = _comparable_value(right)
-                if left_value is None or right_value is None:
-                    return False
-                if isinstance(left_value, Decimal) and isinstance(right_value, Decimal):
-                    return left_value < right_value
-                return str(left_value) < str(right_value)
-            ```
-
-            **`def _latest_catalogue_behavior_profile_row(catalogue_df, *, dataset_name: str, table_name: str, profile_stage: str, load_behavior: str, watermark_column: str | None=None, exclude_run_id: str | None=None) -> dict | None`**
-
-            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/guardrails.py#L527-L636)
-
-            ```python
-            def _latest_catalogue_behavior_profile_row(
-                catalogue_df,
-                *,
-                dataset_name: str,
-                table_name: str,
-                profile_stage: str,
-                load_behavior: str,
-                watermark_column: str | None = None,
-                exclude_run_id: str | None = None,
-            ) -> dict | None:
-                if catalogue_df is None:
-                    return None
-
-                try:
-                    if hasattr(catalogue_df, "collect") and hasattr(catalogue_df, "columns"):
-                        from pyspark.sql import functions as F
-
-                        df = catalogue_df
-                        columns_by_lower = {str(column).lower(): column for column in df.columns}
-
-                        def catalogue_col(*names: str) -> str | None:
-                            for name in names:
-                                if name in df.columns:
-                                    return name
-                                if name.lower() in columns_by_lower:
-                                    return columns_by_lower[name.lower()]
-                            return None
-
-                        stage = str(profile_stage).lower()
-                        stage_roles = [stage, f"{stage}_profile"]
-                        if stage == "target":
-                            stage_roles.append("output_profile")
-
-                        dataset_col = catalogue_col("dataset_name")
-                        table_col = catalogue_col("table_name", "profiled_table_name")
-                        stage_col = catalogue_col("profile_stage", "evidence_role")
-                        behavior_col = catalogue_col("load_behavior")
-                        stability_status_col = catalogue_col("stability_status")
-                        profile_status_col = catalogue_col("profile_status")
-                        run_col = catalogue_col("profile_run_id", "run_id")
-                        time_col = catalogue_col("profiled_at", "run_timestamp", "created_at")
-                        column_col = catalogue_col("column_name")
-                        required = [dataset_col, table_col, stage_col, behavior_col, stability_status_col]
-                        if watermark_column:
-                            required.append(column_col)
-                        if any(column is None for column in required):
-                            return None
-
-                        filters = [
-                            F.col(dataset_col) == dataset_name,
-                            F.col(table_col) == table_name,
-                            F.lower(F.col(stage_col)).isin(stage_roles),
-                            F.lower(F.col(behavior_col)) == str(load_behavior).lower(),
-                            F.lower(F.col(stability_status_col)).isin("passed", "baseline_created"),
-                        ]
-                        if profile_status_col:
-                            filters.append(F.lower(F.col(profile_status_col)).isin("success", "successful"))
-                        if exclude_run_id and run_col:
-                            filters.append(F.col(run_col) != exclude_run_id)
-                        if watermark_column and column_col:
-                            filters.append(F.lower(F.col(column_col)) == str(watermark_column).lower())
-
-                        for condition in filters:
-                            df = df.filter(condition)
-                        order_columns = []
-                        if time_col:
-                            order_columns.append(F.col(time_col).desc())
-                        if run_col:
-                            order_columns.append(F.col(run_col).desc())
-                        if order_columns:
-                            df = df.orderBy(*order_columns)
-                        rows = df.limit(1).collect()
-                        return _row_to_dict(rows[0]) if rows else None
-
-                    rows = catalogue_df
-                    if isinstance(catalogue_df, dict):
-                        rows = [catalogue_df]
-                    candidates = []
-                    stage = str(profile_stage).lower()
-                    stage_roles = {stage, f"{stage}_profile"}
-                    if stage == "target":
-                        stage_roles.add("output_profile")
-                    for raw_row in rows or []:
-                        row = _row_to_dict(raw_row)
-                        if str(_catalogue_value(row, "dataset_name")) != dataset_name:
-                            continue
-                        if str(_catalogue_value(row, "table_name", "profiled_table_name")) != table_name:
-                            continue
-                        if str(_catalogue_value(row, "profile_stage", "evidence_role")).lower() not in stage_roles:
-                            continue
-                        if str(_catalogue_value(row, "load_behavior")).lower() != str(load_behavior).lower():
-                            continue
-                        if str(_catalogue_value(row, "stability_status")).lower() not in {"passed", "baseline_created"}:
-                            continue
-                        profile_status = _catalogue_value(row, "profile_status")
-                        if profile_status and str(profile_status).lower() not in {"success", "successful"}:
-                            continue
-                        if exclude_run_id and str(_catalogue_value(row, "profile_run_id", "run_id")) == str(exclude_run_id):
-                            continue
-                        if watermark_column and str(_catalogue_value(row, "column_name")).lower() != str(watermark_column).lower():
-                            continue
-                        candidates.append(row)
-                    if not candidates:
-                        return None
-                    candidates.sort(key=lambda row: (_string_value(_catalogue_value(row, "profiled_at", "run_timestamp", "created_at")), _string_value(_catalogue_value(row, "profile_run_id", "run_id"))), reverse=True)
-                    return candidates[0]
-                except Exception as exc:
-                    if _is_missing_table_error(exc):
-                        return None
-                    raise
-            ```
-
-            **`def _profile_row_count(profile) -> int | None`**
-
-            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/guardrails.py#L294-L306)
-
-            ```python
-            def _profile_row_count(profile) -> int | None:
-                normalized = _normalize_profile(profile) or {}
-                value = normalized.get("row_count")
-                if value in (None, ""):
-                    columns = normalized.get("columns") or []
-                    if columns:
-                        first_column = columns[0] or {}
-                        if isinstance(first_column, dict):
-                            value = first_column.get("row_count")
-                try:
-                    return int(value) if value not in (None, "") else None
-                except (TypeError, ValueError):
-                    return None
-            ```
-
-            **`def _profile_watermark_bounds(profile, watermark_column: str | None) -> tuple[str, str]`**
-
-            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/guardrails.py#L517-L524)
-
-            ```python
-            def _profile_watermark_bounds(profile, watermark_column: str | None) -> tuple[str, str]:
-                normalized = _normalize_profile(profile) or {}
-                if not watermark_column:
-                    return "", ""
-                for column in normalized.get("columns", []) or []:
-                    if str(column.get("column_name") or "").lower() == str(watermark_column).lower():
-                        return _string_value(column.get("min_value")), _string_value(column.get("max_value"))
-                return "", ""
-            ```
-
-            **`def _row_to_dict(row) -> dict`**
-
-            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/guardrails.py#L272-L279)
-
-            ```python
-            def _row_to_dict(row) -> dict:
-                if row is None:
-                    return {}
-                if isinstance(row, dict):
-                    return dict(row)
-                if hasattr(row, "asDict"):
-                    return row.asDict(recursive=True)
-                return {name: getattr(row, name) for name in dir(row) if not name.startswith("_")}
-            ```
-
-            **`def _string_value(value) -> str`**
-
-            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/guardrails.py#L481-L482)
-
-            ```python
-            def _string_value(value) -> str:
-                return "" if value is None else str(value)
-            ```
-
-
 <details class="reference-metadata-details">
 <summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
 
@@ -855,7 +832,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/guardrails.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/guardrails.py#L639-L832">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/guardrails.py#L639-L832</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/guardrails.py#L639-L832">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/guardrails.py#L639-L832</a>
 - Start line: `639`
 - End line: `832`
 - Signature:

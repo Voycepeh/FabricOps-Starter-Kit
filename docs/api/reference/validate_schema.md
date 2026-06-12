@@ -1,30 +1,66 @@
 # validate_schema
 
+## Signature
+
+```python
+def validate_schema(dataframe, expected_schema: dict[str, str], *, preset: str='strict') -> dict
+```
+
+## Summary
+
 Validate a DataFrame schema using strict, allow-new-columns, or monitor-only presets.
 
-## Purpose
-
-Checks whether a DataFrame contains the expected columns and compatible types before downstream transformations or writes continue.
-
-## When to use this
+## Usage note
 
 - Use as an early guardrail when a source or target DataFrame must match a known schema contract.
-
-## At a glance
 
 **Do not use when:**
 
 - Do not use for DQ-rule enforcement or metadata persistence.
 
-**Errors:**
+**Additional context:**
+
+Checks whether a DataFrame contains the expected columns and compatible types before downstream transformations or writes continue.
+
+## Parameters
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `dataframe` | `Any` | Yes | Spark, pandas, or dataframe-like object with schema metadata. |
+| `expected_schema` | `dict[str, str]` | Yes | Mapping of required column names to expected datatype strings. |
+| `preset` | `str` | No | Schema validation intent. ``strict`` blocks missing columns, datatype changes, and unexpected columns. ``allow_new_columns`` blocks missing columns and datatype changes while reporting additional columns as a warning. ``monitor_only`` reports all differences without blocking. |
+
+## Returns
+
+Guardrail result dictionary with status, can_continue, checks, message, and schema difference details.
+
+### Return interpretation
+
+When can_continue is true, schema checks passed or only non-blocking issues were found. When false, fix missing or mismatched columns before writing data.
+
+## Raises / Errors
 
 ValueError when preset is not one of the supported schema presets.
 
-**Side effects:**
+### Common failure causes
 
-Inspects DataFrame schema only; it does not write metadata, tables, or files.
+- Required columns are missing.
+- Column types differ from expected schema.
+- The expected schema configuration is incomplete.
+- The DataFrame supplied to the check is not the intended table.
 
-## Key terms
+## Example
+
+```python
+schema_result = validate_schema(df, {"order_id": "string"}, preset="allow_new_columns")
+stop_if_failed(schema_result)
+```
+
+## See also
+
+- [Pipeline Guardrails](../../how-fabricops-works/pipeline-guardrails.md)
+
+**Glossary terms**
 
 - **Guardrail:** A check that tells the notebook whether it is safe to continue.
 - **can_continue:** A returned true/false value that tells downstream code whether the pipeline should keep running.
@@ -33,26 +69,7 @@ Inspects DataFrame schema only; it does not write metadata, tables, or files.
 
 See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
 
-## Related guides
-
-- [Pipeline Guardrails](../../how-fabricops-works/pipeline-guardrails.md)
-
-## Used in templates
-
-- `02_pipeline`
-
-## Used by
-
-- <a href="../run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
-
-## Calls
-
-- `fabricops_kit.guardrails._actual_schema`
-- `fabricops_kit.guardrails._normalize_datatype`
-
-## Function details and source
-
-### Function details
+## Developer details
 
 - Module: `guardrails`
 - Classification: Callable
@@ -64,47 +81,154 @@ See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
 def validate_schema(dataframe, expected_schema: dict[str, str], *, preset: str='strict') -> dict
 ```
 
-### Parameters
+**Used in templates:**
 
-`dataframe` : `Any`, required
-: Spark, pandas, or dataframe-like object with schema metadata.
+- `02_pipeline`
 
-`expected_schema` : `dict[str, str]`, required
-: Mapping of required column names to expected datatype strings.
+**Side effects:**
 
-`preset` : `str`, optional
-: Schema validation intent. ``strict`` blocks missing columns, datatype changes, and unexpected columns. ``allow_new_columns`` blocks missing columns and datatype changes while reporting additional columns as a warning. ``monitor_only`` reports all differences without blocking.
+Inspects DataFrame schema only; it does not write metadata, tables, or files.
 
-### Returns
-
-Guardrail result dictionary with status, can_continue, checks, message, and schema difference details.
-
-### Return interpretation
-
-When can_continue is true, schema checks passed or only non-blocking issues were found. When false, fix missing or mismatched columns before writing data.
-
-### Common failure causes
-
-- Required columns are missing.
-- Column types differ from expected schema.
-- The expected schema configuration is incomplete.
-- The DataFrame supplied to the check is not the intended table.
-
-### Notes
+**Notes:**
 
 No additional callable notes are documented.
 
-### Example
+## Calls
 
-```python
-schema_result = validate_schema(df, {"order_id": "string"}, preset="allow_new_columns")
-stop_if_failed(schema_result)
-```
+- `fabricops_kit.guardrails._actual_schema`
+- `fabricops_kit.guardrails._normalize_datatype`
 
-### Public callable source code
+## Internal implementation summary
+
+??? info "Call flow"
+
+    ```text
+    validate_schema(...)
+    ├── _actual_schema(...)
+    │   └── _normalize_datatype(...)
+    └── _normalize_datatype(...)
+    ```
+
+??? info "Internal helpers used: 2"
+
+    This callable uses 2 internal helpers for rule parsing and other.
+
+    <div class="module-table-scroll reference-input-table">
+    <table class="reference-function-table">
+      <thead>
+        <tr>
+          <th>Area</th>
+          <th>Helpers</th>
+          <th>What they do</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td data-label="Area">Rule parsing</td>
+          <td data-label="Helpers"><code>_normalize_datatype</code></td>
+          <td data-label="What they do">Normalize stored or user-provided values before applying rules.</td>
+        </tr>
+        <tr>
+          <td data-label="Area">Other</td>
+          <td data-label="Helpers"><code>_actual_schema</code></td>
+          <td data-label="What they do">Support lower-level implementation details that do not fit the main helper areas.</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+
+    ??? example "View helper source by area"
+
+        ??? example "Rule parsing helpers"
+
+            **`def _normalize_datatype(data_type) -> str`**
+
+            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/guardrails.py#L37-L83)
+
+            ```python
+            def _normalize_datatype(data_type) -> str:
+                raw = str(data_type).strip().lower()
+                raw = re.sub(r"\s+", "", raw)
+
+                decimal_match = re.search(r"decimaltype\((\d+),(\d+)\)|decimal\((\d+),(\d+)\)", raw)
+                if decimal_match:
+                    precision = decimal_match.group(1) or decimal_match.group(3)
+                    scale = decimal_match.group(2) or decimal_match.group(4)
+                    return f"decimal({precision},{scale})"
+
+                aliases = {
+                    "integertype()": "int",
+                    "integertype": "int",
+                    "integer": "int",
+                    "int32": "int",
+                    "int": "int",
+                    "longtype()": "bigint",
+                    "longtype": "bigint",
+                    "long": "bigint",
+                    "int64": "bigint",
+                    "bigint": "bigint",
+                    "stringtype()": "string",
+                    "stringtype": "string",
+                    "str": "string",
+                    "object": "string",
+                    "string": "string",
+                    "datetype()": "date",
+                    "datetype": "date",
+                    "date": "date",
+                    "timestamptype()": "timestamp",
+                    "timestamptype": "timestamp",
+                    "timestamp": "timestamp",
+                    "datetime64[ns]": "timestamp",
+                    "doubletype()": "double",
+                    "doubletype": "double",
+                    "double": "double",
+                    "float64": "double",
+                    "floattype()": "float",
+                    "floattype": "float",
+                    "float32": "float",
+                    "float": "float",
+                    "booleantype()": "boolean",
+                    "booleantype": "boolean",
+                    "bool": "boolean",
+                    "boolean": "boolean",
+                }
+                return aliases.get(raw, raw)
+            ```
+
+        ??? example "Other helpers"
+
+            **`def _actual_schema(df) -> tuple[list[str], dict[str, str]]`**
+
+            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/guardrails.py#L86-L101)
+
+            ```python
+            def _actual_schema(df) -> tuple[list[str], dict[str, str]]:
+                schema = getattr(df, "schema", None)
+                if schema is not None and hasattr(schema, "fields"):
+                    columns = [str(field.name) for field in schema.fields]
+                    types = {str(field.name): _normalize_datatype(getattr(field, "dataType", "")) for field in schema.fields}
+                    return columns, types
+
+                dtypes = getattr(df, "dtypes", None)
+                if dtypes is not None:
+                    dtype_items = dtypes.items() if hasattr(dtypes, "items") else dtypes
+                    types = {str(name): _normalize_datatype(dtype) for name, dtype in dtype_items}
+                    columns = [str(column) for column in getattr(df, "columns", list(types))]
+                    return columns, types
+
+                columns = [str(column) for column in getattr(df, "columns", [])]
+                return columns, {}
+            ```
+
+
+## Used by
+
+- <a href="../run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
+
+## Source link
 
 - Source file path: `src/fabricops_kit/guardrails.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/guardrails.py#L109-L198">View validate_schema on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/guardrails.py#L109-L198">View validate_schema on GitHub</a>
 
 ```python
 def validate_schema(dataframe, expected_schema: dict[str, str], *, preset: str = "strict") -> dict:
@@ -199,129 +323,6 @@ def validate_schema(dataframe, expected_schema: dict[str, str], *, preset: str =
     }
 ```
 
-## Internal implementation summary
-
-??? info "Call flow"
-
-    ```text
-    validate_schema(...)
-    ├── _actual_schema(...)
-    │   └── _normalize_datatype(...)
-    └── _normalize_datatype(...)
-    ```
-
-??? info "Internal helpers used: 2"
-
-    This callable uses 2 internal helpers for rule parsing and other.
-
-    <div class="module-table-scroll reference-input-table">
-    <table class="reference-function-table">
-      <thead>
-        <tr>
-          <th>Area</th>
-          <th>Helpers</th>
-          <th>What they do</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td data-label="Area">Rule parsing</td>
-          <td data-label="Helpers"><code>_normalize_datatype</code></td>
-          <td data-label="What they do">Normalize stored or user-provided values before applying rules.</td>
-        </tr>
-        <tr>
-          <td data-label="Area">Other</td>
-          <td data-label="Helpers"><code>_actual_schema</code></td>
-          <td data-label="What they do">Support lower-level implementation details that do not fit the main helper areas.</td>
-        </tr>
-      </tbody>
-    </table>
-    </div>
-
-    ??? example "View helper source by area"
-
-        ??? example "Rule parsing helpers"
-
-            **`def _normalize_datatype(data_type) -> str`**
-
-            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/guardrails.py#L37-L83)
-
-            ```python
-            def _normalize_datatype(data_type) -> str:
-                raw = str(data_type).strip().lower()
-                raw = re.sub(r"\s+", "", raw)
-
-                decimal_match = re.search(r"decimaltype\((\d+),(\d+)\)|decimal\((\d+),(\d+)\)", raw)
-                if decimal_match:
-                    precision = decimal_match.group(1) or decimal_match.group(3)
-                    scale = decimal_match.group(2) or decimal_match.group(4)
-                    return f"decimal({precision},{scale})"
-
-                aliases = {
-                    "integertype()": "int",
-                    "integertype": "int",
-                    "integer": "int",
-                    "int32": "int",
-                    "int": "int",
-                    "longtype()": "bigint",
-                    "longtype": "bigint",
-                    "long": "bigint",
-                    "int64": "bigint",
-                    "bigint": "bigint",
-                    "stringtype()": "string",
-                    "stringtype": "string",
-                    "str": "string",
-                    "object": "string",
-                    "string": "string",
-                    "datetype()": "date",
-                    "datetype": "date",
-                    "date": "date",
-                    "timestamptype()": "timestamp",
-                    "timestamptype": "timestamp",
-                    "timestamp": "timestamp",
-                    "datetime64[ns]": "timestamp",
-                    "doubletype()": "double",
-                    "doubletype": "double",
-                    "double": "double",
-                    "float64": "double",
-                    "floattype()": "float",
-                    "floattype": "float",
-                    "float32": "float",
-                    "float": "float",
-                    "booleantype()": "boolean",
-                    "booleantype": "boolean",
-                    "bool": "boolean",
-                    "boolean": "boolean",
-                }
-                return aliases.get(raw, raw)
-            ```
-
-        ??? example "Other helpers"
-
-            **`def _actual_schema(df) -> tuple[list[str], dict[str, str]]`**
-
-            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/guardrails.py#L86-L101)
-
-            ```python
-            def _actual_schema(df) -> tuple[list[str], dict[str, str]]:
-                schema = getattr(df, "schema", None)
-                if schema is not None and hasattr(schema, "fields"):
-                    columns = [str(field.name) for field in schema.fields]
-                    types = {str(field.name): _normalize_datatype(getattr(field, "dataType", "")) for field in schema.fields}
-                    return columns, types
-
-                dtypes = getattr(df, "dtypes", None)
-                if dtypes is not None:
-                    dtype_items = dtypes.items() if hasattr(dtypes, "items") else dtypes
-                    types = {str(name): _normalize_datatype(dtype) for name, dtype in dtype_items}
-                    columns = [str(column) for column in getattr(df, "columns", list(types))]
-                    return columns, types
-
-                columns = [str(column) for column in getattr(df, "columns", [])]
-                return columns, {}
-            ```
-
-
 <details class="reference-metadata-details">
 <summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
 
@@ -362,7 +363,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/guardrails.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/guardrails.py#L109-L198">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/guardrails.py#L109-L198</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/guardrails.py#L109-L198">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/guardrails.py#L109-L198</a>
 - Start line: `109`
 - End line: `198`
 - Signature:

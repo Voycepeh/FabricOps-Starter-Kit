@@ -1,30 +1,69 @@
 # build_lineage_records
 
+## Signature
+
+```python
+def build_lineage_records(*, dataset_name: str, run_id: str, source_tables: list[str], target_table: str, transformation_steps: list[dict], config: Any=None) -> list[dict]
+```
+
+## Summary
+
 Build source-to-target lineage evidence records for a pipeline run.
 
-## Purpose
-
-Builds source-to-target transformation records that describe how a pipeline output was produced during a run.
-
-## When to use this
+## Usage note
 
 - Use in 02_pipeline when transformation steps should be persisted as lineage evidence after a target is prepared.
-
-## At a glance
 
 **Do not use when:**
 
 - Do not use to scan notebooks automatically or persist metadata; it only builds records from supplied lineage inputs.
 
-**Errors:**
+**Additional context:**
+
+Builds source-to-target transformation records that describe how a pipeline output was produced during a run.
+
+## Parameters
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `dataset_name` | `str` | Yes | Dataset identifier for all output rows. |
+| `run_id` | `str` | Yes | Unique run identifier. |
+| `source_tables` | `list[str]` | Yes | Source table names captured for the run. |
+| `target_table` | `str` | Yes | Target table name produced by the run. |
+| `transformation_steps` | `list[dict]` | Yes | Transformation step dictionaries to merge into each output row. |
+| `config` | `Any` | No | Framework configuration used to resolve the configured audit timezone when adding timestamp metadata. |
+
+## Returns
+
+List of lineage record dictionaries suitable for metadata persistence.
+
+### Return interpretation
+
+Each returned dictionary is one lineage metadata row ready for persistence; review source, target, and step fields before writing.
+
+## Raises / Errors
 
 Raises normal Python errors if required lineage inputs are missing or malformed.
 
-**Side effects:**
+### Common failure causes
 
-Pure record-building helper; it does not write metadata, tables, or files.
+- run_id or dataset_name is missing.
+- Source or target table names are blank.
+- Transformation step dictionaries are malformed.
+- Configuration is missing audit timestamp settings.
 
-## Key terms
+## Example
+
+```python
+lineage_rows = build_lineage_records(dataset_name=dataset_name, run_id=run_id, source_tables=["source.orders"], target_table="unified.orders", transformation_steps=[{"step": "clean_orders"}])
+```
+
+## See also
+
+- [Notebook Templates](../../how-fabricops-works/notebook-templates.md)
+- [Metadata Tables](../../how-fabricops-works/metadata-tables.md)
+
+**Glossary terms**
 
 - **Source table:** An input table or file read by the pipeline.
 - **Target table:** An output table written by the pipeline.
@@ -32,26 +71,7 @@ Pure record-building helper; it does not write metadata, tables, or files.
 
 See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
 
-## Related guides
-
-- [Notebook Templates](../../how-fabricops-works/notebook-templates.md)
-- [Metadata Tables](../../how-fabricops-works/metadata-tables.md)
-
-## Used in templates
-
-None.
-
-## Used by
-
-Not documented yet
-
-## Calls
-
-- `fabricops_kit.config._current_audit_timestamp`
-
-## Function details and source
-
-### Function details
+## Developer details
 
 - Module: `data_lineage`
 - Classification: Callable
@@ -63,83 +83,21 @@ Not documented yet
 def build_lineage_records(*, dataset_name: str, run_id: str, source_tables: list[str], target_table: str, transformation_steps: list[dict], config: Any=None) -> list[dict]
 ```
 
-### Parameters
+**Used in templates:**
 
-`dataset_name` : `str`, required
-: Dataset identifier for all output rows.
+None.
 
-`run_id` : `str`, required
-: Unique run identifier.
+**Side effects:**
 
-`source_tables` : `list[str]`, required
-: Source table names captured for the run.
+Pure record-building helper; it does not write metadata, tables, or files.
 
-`target_table` : `str`, required
-: Target table name produced by the run.
-
-`transformation_steps` : `list[dict]`, required
-: Transformation step dictionaries to merge into each output row.
-
-`config` : `Any`, optional
-: Framework configuration used to resolve the configured audit timezone when adding timestamp metadata.
-
-### Returns
-
-List of lineage record dictionaries suitable for metadata persistence.
-
-### Return interpretation
-
-Each returned dictionary is one lineage metadata row ready for persistence; review source, target, and step fields before writing.
-
-### Common failure causes
-
-- run_id or dataset_name is missing.
-- Source or target table names are blank.
-- Transformation step dictionaries are malformed.
-- Configuration is missing audit timestamp settings.
-
-### Notes
+**Notes:**
 
 No additional callable notes are documented.
 
-### Example
+## Calls
 
-```python
-lineage_rows = build_lineage_records(dataset_name=dataset_name, run_id=run_id, source_tables=["source.orders"], target_table="unified.orders", transformation_steps=[{"step": "clean_orders"}])
-```
-
-### Public callable source code
-
-- Source file path: `src/fabricops_kit/data_lineage.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/data_lineage.py#L212-L236">View build_lineage_records on GitHub</a>
-
-```python
-def build_lineage_records(*, dataset_name: str, run_id: str, source_tables: list[str], target_table: str, transformation_steps: list[dict], config: Any = None) -> list[dict]:
-    """Build compact lineage records for downstream metadata sinks.
-
-    Parameters
-    ----------
-    dataset_name : str
-        Dataset identifier for all output rows.
-    run_id : str
-        Unique run identifier.
-    source_tables : list of str
-        Source table names captured for the run.
-    target_table : str
-        Target table name produced by the run.
-    transformation_steps : list of dict
-        Transformation step dictionaries to merge into each output row.
-    config : Any, optional
-        Framework configuration used to resolve the configured audit timezone
-        when adding timestamp metadata.
-
-    Returns
-    -------
-    list of dict
-        Row dictionaries suitable for metadata persistence.
-    """
-    return [{"run_id": run_id, "dataset_name": dataset_name, "source_tables": source_tables, "target_table": target_table, **({"created_ts": _current_audit_timestamp(config=config, drop_microseconds=False)} if config is not None else {}), **s} for s in transformation_steps]
-```
+- `fabricops_kit.config._current_audit_timestamp`
 
 ## Internal implementation summary
 
@@ -181,7 +139,7 @@ def build_lineage_records(*, dataset_name: str, run_id: str, source_tables: list
 
             **`def _current_audit_timestamp(config: Any=None, timezone_name: str | None=None, *, drop_microseconds: bool=True) -> str`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/config.py#L69-L75)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L69-L75)
 
             ```python
             def _current_audit_timestamp(config: Any = None, timezone_name: str | None = None, *, drop_microseconds: bool = True) -> str:
@@ -195,7 +153,7 @@ def build_lineage_records(*, dataset_name: str, run_id: str, source_tables: list
 
             **`def _get_audit_timezone(config: Any=None, timezone_name: str | None=None) -> str`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/config.py#L61-L66)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L61-L66)
 
             ```python
             def _get_audit_timezone(config: Any = None, timezone_name: str | None = None) -> str:
@@ -208,7 +166,7 @@ def build_lineage_records(*, dataset_name: str, run_id: str, source_tables: list
 
             **`def _validate_audit_timezone(timezone_name: str | None) -> str`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/config.py#L27-L58)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L27-L58)
 
             ```python
             def _validate_audit_timezone(timezone_name: str | None) -> str:
@@ -245,6 +203,39 @@ def build_lineage_records(*, dataset_name: str, run_id: str, source_tables: list
                 return value
             ```
 
+
+## Source link
+
+- Source file path: `src/fabricops_kit/data_lineage.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_lineage.py#L212-L236">View build_lineage_records on GitHub</a>
+
+```python
+def build_lineage_records(*, dataset_name: str, run_id: str, source_tables: list[str], target_table: str, transformation_steps: list[dict], config: Any = None) -> list[dict]:
+    """Build compact lineage records for downstream metadata sinks.
+
+    Parameters
+    ----------
+    dataset_name : str
+        Dataset identifier for all output rows.
+    run_id : str
+        Unique run identifier.
+    source_tables : list of str
+        Source table names captured for the run.
+    target_table : str
+        Target table name produced by the run.
+    transformation_steps : list of dict
+        Transformation step dictionaries to merge into each output row.
+    config : Any, optional
+        Framework configuration used to resolve the configured audit timezone
+        when adding timestamp metadata.
+
+    Returns
+    -------
+    list of dict
+        Row dictionaries suitable for metadata persistence.
+    """
+    return [{"run_id": run_id, "dataset_name": dataset_name, "source_tables": source_tables, "target_table": target_table, **({"created_ts": _current_audit_timestamp(config=config, drop_microseconds=False)} if config is not None else {}), **s} for s in transformation_steps]
+```
 
 <details class="reference-metadata-details">
 <summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
@@ -285,7 +276,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/data_lineage.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/data_lineage.py#L212-L236">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/data_lineage.py#L212-L236</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_lineage.py#L212-L236">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_lineage.py#L212-L236</a>
 - Start line: `212`
 - End line: `236`
 - Signature:

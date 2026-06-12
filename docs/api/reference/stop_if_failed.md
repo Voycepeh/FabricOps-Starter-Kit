@@ -1,55 +1,71 @@
 # stop_if_failed
 
+## Signature
+
+```python
+def stop_if_failed(result) -> None
+```
+
+## Summary
+
 Stop a notebook only when a schema, freshness, profile behavior, or DQ guardrail result blocks continuation.
 
-## Purpose
-
-Stops or raises for a blocking guardrail result so a notebook does not continue into unsafe downstream writes.
-
-## When to use this
+## Usage note
 
 - Use immediately after schema, freshness, profile behavior, or DQ guardrail helpers when can_continue controls whether the pipeline should proceed.
-
-## At a glance
 
 **Do not use when:**
 
 - Do not use for informational warnings that should not block execution, or before a guardrail result exists.
 
-**Errors:**
+**Additional context:**
+
+Stops or raises for a blocking guardrail result so a notebook does not continue into unsafe downstream writes.
+
+## Parameters
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `result` | `dict` | Yes | Direct schema, freshness, profile behavior, or DQ guardrail result. |
+
+## Returns
+
+None when execution may continue; otherwise raises or exits according to runtime behavior.
+
+### Return interpretation
+
+No return value means execution may continue. A blocking result raises or exits according to runtime settings.
+
+## Raises / Errors
 
 Raises RuntimeError outside Fabric notebook exit handling when a failed guardrail must stop execution.
 
-**Side effects:**
+### Common failure causes
 
-May terminate notebook execution through Fabric notebook utilities or raise an exception.
+- The guardrail result is missing can_continue or status fields.
+- A blocking guardrail returned can_continue as false.
+- Notebook exit behavior is not supported in the current runtime.
+- The caller passed a warning result that should not stop execution.
 
-## Key terms
+## Example
+
+```python
+schema_result = validate_schema(df, expected_schema)
+stop_if_failed(schema_result)
+```
+
+## See also
+
+- [Pipeline Guardrails](../../how-fabricops-works/pipeline-guardrails.md)
+
+**Glossary terms**
 
 - **Guardrail:** A check that tells the notebook whether it is safe to continue.
 - **can_continue:** A returned true/false value that tells downstream code whether the pipeline should keep running.
 
 See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
 
-## Related guides
-
-- [Pipeline Guardrails](../../how-fabricops-works/pipeline-guardrails.md)
-
-## Used in templates
-
-- `02_pipeline`
-
-## Used by
-
-- <a href="../run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
-
-## Calls
-
-- `fabricops_kit.guardrails.SchemaDriftError`
-
-## Function details and source
-
-### Function details
+## Developer details
 
 - Module: `guardrails`
 - Classification: Callable
@@ -61,64 +77,21 @@ See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
 def stop_if_failed(result) -> None
 ```
 
-### Parameters
+**Used in templates:**
 
-`result` : `dict`, required
-: Direct schema, freshness, profile behavior, or DQ guardrail result.
+- `02_pipeline`
 
-### Returns
+**Side effects:**
 
-None when execution may continue; otherwise raises or exits according to runtime behavior.
+May terminate notebook execution through Fabric notebook utilities or raise an exception.
 
-### Return interpretation
-
-No return value means execution may continue. A blocking result raises or exits according to runtime settings.
-
-### Common failure causes
-
-- The guardrail result is missing can_continue or status fields.
-- A blocking guardrail returned can_continue as false.
-- Notebook exit behavior is not supported in the current runtime.
-- The caller passed a warning result that should not stop execution.
-
-### Notes
+**Notes:**
 
 No additional callable notes are documented.
 
-### Example
+## Calls
 
-```python
-schema_result = validate_schema(df, expected_schema)
-stop_if_failed(schema_result)
-```
-
-### Public callable source code
-
-- Source file path: `src/fabricops_kit/guardrails.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/guardrails.py#L840-L859">View stop_if_failed on GitHub</a>
-
-```python
-def stop_if_failed(result) -> None:
-    """Stop notebook execution when a guardrail result is blocking.
-
-    Parameters
-    ----------
-    result : dict
-        Direct schema, freshness, profile behavior, or DQ guardrail result.
-
-    Raises
-    ------
-    SchemaDriftError
-        If the resolved result has ``can_continue=False``.
-    """
-    resolved = (result or {}).get("result") if isinstance(result, dict) and "result" in result else result
-    resolved = resolved or {}
-    if bool(resolved.get("can_continue", True)):
-        return
-    status = resolved.get("status", "failed")
-    detail = resolved.get("message") or resolved.get("summary") or "Guardrail blocked execution."
-    raise SchemaDriftError(f"Guardrail blocked execution with status: {status}. {detail}")
-```
+- `fabricops_kit.guardrails.SchemaDriftError`
 
 ## Internal implementation summary
 
@@ -151,6 +124,38 @@ def stop_if_failed(result) -> None:
       </tbody>
     </table>
     </div>
+
+## Used by
+
+- <a href="../run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
+
+## Source link
+
+- Source file path: `src/fabricops_kit/guardrails.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/guardrails.py#L840-L859">View stop_if_failed on GitHub</a>
+
+```python
+def stop_if_failed(result) -> None:
+    """Stop notebook execution when a guardrail result is blocking.
+
+    Parameters
+    ----------
+    result : dict
+        Direct schema, freshness, profile behavior, or DQ guardrail result.
+
+    Raises
+    ------
+    SchemaDriftError
+        If the resolved result has ``can_continue=False``.
+    """
+    resolved = (result or {}).get("result") if isinstance(result, dict) and "result" in result else result
+    resolved = resolved or {}
+    if bool(resolved.get("can_continue", True)):
+        return
+    status = resolved.get("status", "failed")
+    detail = resolved.get("message") or resolved.get("summary") or "Guardrail blocked execution."
+    raise SchemaDriftError(f"Guardrail blocked execution with status: {status}. {detail}")
+```
 
 <details class="reference-metadata-details">
 <summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
@@ -191,7 +196,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/guardrails.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/guardrails.py#L840-L859">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/guardrails.py#L840-L859</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/guardrails.py#L840-L859">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/guardrails.py#L840-L859</a>
 - Start line: `840`
 - End line: `859`
 - Signature:
