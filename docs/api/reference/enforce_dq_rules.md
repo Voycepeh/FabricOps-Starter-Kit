@@ -1,16 +1,11 @@
 # enforce_dq_rules
 
-## Signature
-
-```python
-def enforce_dq_rules(dataframe, config, env, dataset_name, table_name, *, spark_session=None) -> dict
-```
-
-## Summary
-
 Enforce approved active DQ rules as a target-write guardrail without filtering rows.
 
-## Usage note
+<details class="reference-usage-details">
+<summary>Usage guidance</summary>
+
+**Use when:**
 
 - Use in pipeline guardrails after governance-approved DQ rules exist for the dataset and table.
 
@@ -21,6 +16,36 @@ Enforce approved active DQ rules as a target-write guardrail without filtering r
 **Additional context:**
 
 Evaluates approved data-quality rules against a DataFrame and returns guardrail evidence that can block unsafe writes.
+
+</details>
+
+## Signature
+
+<div class="reference-api-definition" markdown="1">
+
+```python
+def enforce_dq_rules(
+    dataframe,
+    config,
+    env,
+    dataset_name,
+    table_name,
+    spark_session=None,
+) -> dict:
+```
+
+</div>
+
+## Example usage
+
+<div class="reference-example-usage" markdown="1">
+
+```python
+dq_result = enforce_dq_rules(df, CONFIG, env, dataset_name, table_name, spark_session=spark)
+stop_if_failed(dq_result)
+```
+
+</div>
 
 ## Parameters
 
@@ -52,38 +77,26 @@ Raises configuration, metadata-read, or Spark expression errors when approved ru
 - Required columns are missing from the DataFrame.
 - The metadata lakehouse cannot be read.
 
-## Example
+## Relationships
 
-```python
-dq_result = enforce_dq_rules(df, CONFIG, env, dataset_name, table_name, spark_session=spark)
-stop_if_failed(dq_result)
-```
+### Used by
 
-## See also
+- <a href="../run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
 
-- [Pipeline Guardrails](../../how-fabricops-works/pipeline-guardrails.md)
-- [Governance Review](../../how-fabricops-works/governance-review.md)
+### Calls
 
-**Glossary terms**
+- <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a>
+- `fabricops_kit.governance_review._dq_failed_row_count`
+- `fabricops_kit.governance_review._dq_summary`
+- `fabricops_kit.governance_review._dq_tagged_dataframe`
+- `fabricops_kit.governance_review._load_active_dq_rules`
+- `fabricops_kit.governance_review._run_dq_guardrail_checks`
+- `fabricops_kit.governance_review._summarize_dq_guardrail`
 
-- **Guardrail:** A check that tells the notebook whether it is safe to continue.
-- **can_continue:** A returned true/false value that tells downstream code whether the pipeline should keep running.
-- **Catalogue evidence:** Reviewed metadata that explains what FabricOps knows about a dataset or table.
-- **Metadata lakehouse:** The configured Fabric lakehouse where FabricOps stores governance and runtime metadata.
+## Implementation details
 
-See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
-
-## Developer details
-
-- Module: `governance_review`
-- Classification: Callable
-- Source file path: `src/fabricops_kit/governance_review.py`
-- Source line: `1499`
-- Signature:
-
-```python
-def enforce_dq_rules(dataframe, config, env, dataset_name, table_name, *, spark_session=None) -> dict
-```
+<details class="reference-implementation-details">
+<summary>Notes, side effects, and template usage</summary>
 
 **Used in templates:**
 
@@ -101,23 +114,13 @@ the configured metadata route. It records aggregate rule outcomes only; it
 does not quarantine rows, write row-level failure metadata, filter invalid
 rows, send alerts, or partially write targets.
 
-## Calls
-
-- <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a>
-- `fabricops_kit.governance_review._dq_failed_row_count`
-- `fabricops_kit.governance_review._dq_summary`
-- `fabricops_kit.governance_review._dq_tagged_dataframe`
-- `fabricops_kit.governance_review._load_active_dq_rules`
-- `fabricops_kit.governance_review._run_dq_guardrail_checks`
-- `fabricops_kit.governance_review._summarize_dq_guardrail`
-
-## Internal implementation summary
+</details>
 
 ??? info "Call flow"
 
     Large call graph shown to two levels.
 
-    Expanded internal helper tree is available in the internal implementation summary.
+    Expanded internal helper tree is available in Implementation details.
 
     ```text
     enforce_dq_rules(...)
@@ -163,48 +166,59 @@ rows, send alerts, or partially write targets.
 
     This callable uses 16 internal helpers for audit timestamp, metadata loading, validation, rule parsing, rule evaluation, and other.
 
-    <div class="module-table-scroll reference-input-table">
-    <table class="reference-function-table">
-      <thead>
-        <tr>
-          <th>Area</th>
-          <th>Helpers</th>
-          <th>What they do</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td data-label="Area">Audit timestamp</td>
-          <td data-label="Helpers"><code>_current_audit_timestamp</code>, <code>_get_audit_timezone</code>, <code>_validate_audit_timezone</code></td>
-          <td data-label="What they do">Resolve and stamp audit time consistently.</td>
-        </tr>
-        <tr>
-          <td data-label="Area">Metadata loading</td>
-          <td data-label="Helpers"><code>_latest_dq_rule_versions</code>, <code>_load_active_dq_rules</code>, <code>_validate_dq_rules</code></td>
-          <td data-label="What they do">Load and identify the metadata or table context needed by the callable.</td>
-        </tr>
-        <tr>
-          <td data-label="Area">Validation</td>
-          <td data-label="Helpers"><code>_dq_check_status</code>, <code>_run_dq_guardrail_checks</code></td>
-          <td data-label="What they do">Validate inputs and guard conditions before the workflow continues.</td>
-        </tr>
-        <tr>
-          <td data-label="Area">Rule parsing</td>
-          <td data-label="Helpers"><code>_canonical_dq_rule_type</code></td>
-          <td data-label="What they do">Normalize stored or user-provided values before applying rules.</td>
-        </tr>
-        <tr>
-          <td data-label="Area">Rule evaluation</td>
-          <td data-label="Helpers"><code>_dq_failed_expression</code>, <code>_dq_failed_row_count</code>, <code>_dq_summary</code>, <code>_dq_tagged_dataframe</code>, <code>_spark_sql_helpers</code>, <code>_summarize_dq_guardrail</code></td>
-          <td data-label="What they do">Convert configured rules into executable checks and evaluation results.</td>
-        </tr>
-        <tr>
-          <td data-label="Area">Other</td>
-          <td data-label="Helpers"><code>_coerce_rows</code></td>
-          <td data-label="What they do">Support lower-level implementation details that do not fit the main helper areas.</td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="reference-helper-groups">
+      <section class="reference-helper-group">
+        <h4>Audit timestamp</h4>
+        <p>Resolve and stamp audit time consistently.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L69-L75"><code>_current_audit_timestamp</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L61-L66"><code>_get_audit_timezone</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L27-L58"><code>_validate_audit_timezone</code></a>
+        </div>
+      </section>
+      <section class="reference-helper-group">
+        <h4>Metadata loading</h4>
+        <p>Load and identify the metadata or table context needed by the callable.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L1221-L1242"><code>_latest_dq_rule_versions</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L1245-L1280"><code>_load_active_dq_rules</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L1146-L1219"><code>_validate_dq_rules</code></a>
+        </div>
+      </section>
+      <section class="reference-helper-group">
+        <h4>Validation</h4>
+        <p>Validate inputs and guard conditions before the workflow continues.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L1368-L1371"><code>_dq_check_status</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L1374-L1409"><code>_run_dq_guardrail_checks</code></a>
+        </div>
+      </section>
+      <section class="reference-helper-group">
+        <h4>Rule parsing</h4>
+        <p>Normalize stored or user-provided values before applying rules.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L78-L79"><code>_canonical_dq_rule_type</code></a>
+        </div>
+      </section>
+      <section class="reference-helper-group">
+        <h4>Rule evaluation</h4>
+        <p>Convert configured rules into executable checks and evaluation results.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L1284-L1366"><code>_dq_failed_expression</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L1448-L1458"><code>_dq_failed_row_count</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L1461-L1476"><code>_dq_summary</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L1412-L1445"><code>_dq_tagged_dataframe</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L1083-L1090"><code>_spark_sql_helpers</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L1479-L1496"><code>_summarize_dq_guardrail</code></a>
+        </div>
+      </section>
+      <section class="reference-helper-group">
+        <h4>Other</h4>
+        <p>Support lower-level implementation details that do not fit the main helper areas.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L62-L67"><code>_coerce_rows</code></a>
+        </div>
+      </section>
     </div>
 
     ??? example "View helper source by area"
@@ -729,78 +743,76 @@ rows, send alerts, or partially write targets.
             ```
 
 
-## Used by
+<div class="reference-source-card">
+  <p><strong>Source:</strong> <code>fabricops_kit/governance_review.py:1499</code></p>
+  <p><strong>Actions:</strong> <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L1499-L1556">View on GitHub</a></p>
+</div>
 
-- <a href="../run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
+??? example "Source code"
 
-## Source link
+    ```python
+    def enforce_dq_rules(
+        dataframe,
+        config,
+        env,
+        dataset_name,
+        table_name,
+        *,
+        spark_session=None,
+    ) -> dict:
+        """Enforce active approved DQ rules as a simple pipeline guardrail.
 
-- Source file path: `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L1499-L1556">View enforce_dq_rules on GitHub</a>
+        Parameters
+        ----------
+        dataframe : Any
+            Spark DataFrame to evaluate before the target write. The full DataFrame
+            is never filtered or split by this helper.
+        config : FrameworkConfig or dict
+            Runtime configuration containing the configured metadata lakehouse
+            route from ``00_env_config``.
+        env : str
+            Environment name used to read ``METADATA_DQ_RULES`` from the configured
+            metadata target.
+        dataset_name : str
+            Dataset identifier used with ``table_name`` to scope approved DQ rules
+            when those columns exist in the metadata table.
+        table_name : str
+            Target table name whose approved active DQ rules should be enforced.
+        spark_session : pyspark.sql.SparkSession, optional
+            Spark session used to read metadata when required by the configured
+            storage helper.
 
-```python
-def enforce_dq_rules(
-    dataframe,
-    config,
-    env,
-    dataset_name,
-    table_name,
-    *,
-    spark_session=None,
-) -> dict:
-    """Enforce active approved DQ rules as a simple pipeline guardrail.
+        Returns
+        -------
+        dict
+            Guardrail result with ``status``, ``can_continue``, ``checks``, and
+            ``message``. The result also carries the full tagged ``dataframe`` and
+            aggregate ``summary`` fields for the existing catalogue evidence path.
+            Error-severity rule failures return ``status='failed'`` and
+            ``can_continue=False``. Warning-severity failures return
+            ``status='warning'`` and ``can_continue=True``. Passing or absent rules
+            return ``status='passed'`` and ``can_continue=True``.
 
-    Parameters
-    ----------
-    dataframe : Any
-        Spark DataFrame to evaluate before the target write. The full DataFrame
-        is never filtered or split by this helper.
-    config : FrameworkConfig or dict
-        Runtime configuration containing the configured metadata lakehouse
-        route from ``00_env_config``.
-    env : str
-        Environment name used to read ``METADATA_DQ_RULES`` from the configured
-        metadata target.
-    dataset_name : str
-        Dataset identifier used with ``table_name`` to scope approved DQ rules
-        when those columns exist in the metadata table.
-    table_name : str
-        Target table name whose approved active DQ rules should be enforced.
-    spark_session : pyspark.sql.SparkSession, optional
-        Spark session used to read metadata when required by the configured
-        storage helper.
-
-    Returns
-    -------
-    dict
-        Guardrail result with ``status``, ``can_continue``, ``checks``, and
-        ``message``. The result also carries the full tagged ``dataframe`` and
-        aggregate ``summary`` fields for the existing catalogue evidence path.
-        Error-severity rule failures return ``status='failed'`` and
-        ``can_continue=False``. Warning-severity failures return
-        ``status='warning'`` and ``can_continue=True``. Passing or absent rules
-        return ``status='passed'`` and ``can_continue=True``.
-
-    Notes
-    -----
-    This v1 guardrail reads approved active rules from ``METADATA_DQ_RULES`` via
-    the configured metadata route. It records aggregate rule outcomes only; it
-    does not quarantine rows, write row-level failure metadata, filter invalid
-    rows, send alerts, or partially write targets.
-    """
-    metadata_df = read_lakehouse_table(config, env, "metadata", DQ_RULES_TABLE, spark_session=spark_session)
-    rules = _load_active_dq_rules(metadata_df, table_name=table_name, env_name=env, dataset_name=dataset_name)
-    checks = _run_dq_guardrail_checks(dataframe, table_name=table_name, rules=rules) if rules else []
-    total_count = int(dataframe.count())
-    failed_row_count = _dq_failed_row_count(dataframe, rules) if rules else 0
-    result = _summarize_dq_guardrail(checks)
-    result["dataframe"] = _dq_tagged_dataframe(dataframe, rules)
-    result["summary"] = _dq_summary(checks, total_count, failed_row_count, config=config)
-    return result
-```
+        Notes
+        -----
+        This v1 guardrail reads approved active rules from ``METADATA_DQ_RULES`` via
+        the configured metadata route. It records aggregate rule outcomes only; it
+        does not quarantine rows, write row-level failure metadata, filter invalid
+        rows, send alerts, or partially write targets.
+        """
+        metadata_df = read_lakehouse_table(config, env, "metadata", DQ_RULES_TABLE, spark_session=spark_session)
+        rules = _load_active_dq_rules(metadata_df, table_name=table_name, env_name=env, dataset_name=dataset_name)
+        checks = _run_dq_guardrail_checks(dataframe, table_name=table_name, rules=rules) if rules else []
+        total_count = int(dataframe.count())
+        failed_row_count = _dq_failed_row_count(dataframe, rules) if rules else 0
+        result = _summarize_dq_guardrail(checks)
+        result["dataframe"] = _dq_tagged_dataframe(dataframe, rules)
+        result["summary"] = _dq_summary(checks, total_count, failed_row_count, config=config)
+        return result
+    ```
 
 <details class="reference-metadata-details">
-<summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
+<summary>Machine-readable metadata / metadata details</summary>
 
 These generated fields are for automation, AI agents, maintainers, and doc tooling. Skip this block when reading the docs normally.
 
@@ -850,7 +862,14 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Signature:
 
 ```python
-def enforce_dq_rules(dataframe, config, env, dataset_name, table_name, *, spark_session=None) -> dict
+def enforce_dq_rules(
+    dataframe,
+    config,
+    env,
+    dataset_name,
+    table_name,
+    spark_session=None,
+) -> dict:
 ```
 
 ### Internal relationship graph
@@ -863,6 +882,25 @@ def enforce_dq_rules(dataframe, config, env, dataset_name, table_name, *, spark_
 ### Internal implementation summary
 
 - Internal helper count: 16
-- Grouped helper summary and optional source snippets are rendered in the page-level Internal implementation summary section.
+- Grouped helper summary and optional source snippets are rendered in the page-level Implementation details section.
 
 </details>
+
+## Source link
+
+- Source: `fabricops_kit/governance_review.py:1499`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L1499-L1556">View enforce_dq_rules on GitHub</a>
+
+## Glossary
+
+- **Guardrail:** A check that tells the notebook whether it is safe to continue.
+- **can_continue:** A returned true/false value that tells downstream code whether the pipeline should keep running.
+- **Catalogue evidence:** Reviewed metadata that explains what FabricOps knows about a dataset or table.
+- **Metadata lakehouse:** The configured Fabric lakehouse where FabricOps stores governance and runtime metadata.
+
+See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
+
+## See also
+
+- [Pipeline Guardrails](../../how-fabricops-works/pipeline-guardrails.md)
+- [Governance Review](../../how-fabricops-works/governance-review.md)

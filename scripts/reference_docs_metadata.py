@@ -552,7 +552,17 @@ PUBLIC_SYMBOL_DOCS: list[PublicSymbolDocMetadata] = [{'kind': 'function',
                     'metadata target and a valid source/target stage.',
   'ai_verification': 'Verify baseline selection, status, and can_continue before allowing '
                      'downstream writes or calling stop_if_failed.',
-  'preferred_example': 'stability_result = enforce_profile_behavior(spark, df, "METADATA_DATA_CATALOGUE", dataset_name, table_name, stage="target", run_id=run_id, load_behavior="overwrite")\n'
+  'preferred_example': 'stability_result = enforce_profile_behavior(\n'
+                       '    spark=spark,\n'
+                       '    dataframe=df,\n'
+                       '    metadata_table="METADATA_DATA_CATALOGUE",\n'
+                       '    dataset_name="sales_orders",\n'
+                       '    table_name="orders_raw",\n'
+                       '    stage="target",\n'
+                       '    run_id=run_id,\n'
+                       '    load_behavior="append",\n'
+                       '    watermark_column="updated_at",\n'
+                       ')\n'
                        'stop_if_failed(stability_result)',
   'related_functions': ['profile_dataframe', 'validate_schema', 'enforce_freshness', 'stop_if_failed']},
  {'kind': 'function',

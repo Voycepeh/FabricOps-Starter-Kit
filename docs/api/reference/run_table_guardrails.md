@@ -1,16 +1,11 @@
 # run_table_guardrails
 
-## Signature
-
-```python
-def run_table_guardrails(table_configs: list[dict[str, Any]], *, config: Any, env: str, run_id: str, spark_session: Any, agreement_id: str='', agreement_contract_version: str='', notebook_registry_id: str='', notebook_id: str='', pipeline_name: str='', stop_on_failure: bool=False) -> dict[str, Any]
-```
-
-## Summary
-
 Run profiling, schema, freshness, profile behavior, DQ, and catalogue guardrails for table configs.
 
-## Usage note
+<details class="reference-usage-details">
+<summary>Usage guidance</summary>
+
+**Use when:**
 
 - Use in 02_pipeline before transformations or writes when table configs should be validated by the standard guardrail sequence.
 
@@ -21,6 +16,40 @@ Run profiling, schema, freshness, profile behavior, DQ, and catalogue guardrails
 **Additional context:**
 
 Coordinates profiling, schema, freshness, profile behavior, DQ, and catalogue evidence checks for a group of pipeline table configs.
+
+</details>
+
+## Signature
+
+<div class="reference-api-definition" markdown="1">
+
+```python
+def run_table_guardrails(
+    table_configs: list[dict[str, Any]],
+    config: Any,
+    env: str,
+    run_id: str,
+    spark_session: Any,
+    agreement_id: str='',
+    agreement_contract_version: str='',
+    notebook_registry_id: str='',
+    notebook_id: str='',
+    pipeline_name: str='',
+    stop_on_failure: bool=False,
+) -> dict[str, Any]:
+```
+
+</div>
+
+## Example usage
+
+<div class="reference-example-usage" markdown="1">
+
+```python
+source_guardrail_results = run_table_guardrails(SOURCE_TABLES, config=CONFIG, env=ENV_NAME, run_id=RUN_ID, spark_session=spark, stop_on_failure=True)
+```
+
+</div>
 
 ## Parameters
 
@@ -57,37 +86,30 @@ Not documented yet
 - Approved metadata evidence cannot be read.
 - Spark cannot profile or validate one of the DataFrames.
 
-## Example
+## Relationships
 
-```python
-source_guardrail_results = run_table_guardrails(SOURCE_TABLES, config=CONFIG, env=ENV_NAME, run_id=RUN_ID, spark_session=spark, stop_on_failure=True)
-```
+### Used by
 
-## See also
+Not documented yet
 
-- [Pipeline Guardrails](../../how-fabricops-works/pipeline-guardrails.md)
+### Calls
 
-**Glossary terms**
+- <a href="../profile_dataframe/"><code>fabricops_kit.data_profiling.profile_dataframe</code></a>
+- <a href="../enforce_dq_rules/"><code>fabricops_kit.governance_review.enforce_dq_rules</code></a>
+- <a href="../enforce_freshness/"><code>fabricops_kit.guardrails.enforce_freshness</code></a>
+- <a href="../enforce_profile_behavior/"><code>fabricops_kit.guardrails.enforce_profile_behavior</code></a>
+- <a href="../stop_if_failed/"><code>fabricops_kit.guardrails.stop_if_failed</code></a>
+- <a href="../validate_schema/"><code>fabricops_kit.guardrails.validate_schema</code></a>
+- `fabricops_kit.pipeline._build_guardrail_evidence_definitions`
+- `fabricops_kit.pipeline._guardrail_can_continue`
+- `fabricops_kit.pipeline._table_key`
+- `fabricops_kit.pipeline._table_name`
+- <a href="../write_catalogue_evidence/"><code>fabricops_kit.pipeline.write_catalogue_evidence</code></a>
 
-- **Guardrail:** A check that tells the notebook whether it is safe to continue.
-- **can_continue:** A returned true/false value that tells downstream code whether the pipeline should keep running.
-- **Source table:** An input table or file read by the pipeline.
-- **Target table:** An output table written by the pipeline.
-- **Catalogue evidence:** Reviewed metadata that explains what FabricOps knows about a dataset or table.
+## Implementation details
 
-See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
-
-## Developer details
-
-- Module: `pipeline`
-- Classification: Callable
-- Source file path: `src/fabricops_kit/pipeline.py`
-- Source line: `260`
-- Signature:
-
-```python
-def run_table_guardrails(table_configs: list[dict[str, Any]], *, config: Any, env: str, run_id: str, spark_session: Any, agreement_id: str='', agreement_contract_version: str='', notebook_registry_id: str='', notebook_id: str='', pipeline_name: str='', stop_on_failure: bool=False) -> dict[str, Any]
-```
+<details class="reference-implementation-details">
+<summary>Notes, side effects, and template usage</summary>
 
 **Used in templates:**
 
@@ -105,21 +127,7 @@ annotated DataFrame update the corresponding table config ``df`` in place
 so downstream writes use the checked DataFrame. Metadata reads and writes
 are routed through the configured metadata target by the called helpers.
 
-## Calls
-
-- <a href="../profile_dataframe/"><code>fabricops_kit.data_profiling.profile_dataframe</code></a>
-- <a href="../enforce_dq_rules/"><code>fabricops_kit.governance_review.enforce_dq_rules</code></a>
-- <a href="../enforce_freshness/"><code>fabricops_kit.guardrails.enforce_freshness</code></a>
-- <a href="../enforce_profile_behavior/"><code>fabricops_kit.guardrails.enforce_profile_behavior</code></a>
-- <a href="../stop_if_failed/"><code>fabricops_kit.guardrails.stop_if_failed</code></a>
-- <a href="../validate_schema/"><code>fabricops_kit.guardrails.validate_schema</code></a>
-- `fabricops_kit.pipeline._build_guardrail_evidence_definitions`
-- `fabricops_kit.pipeline._guardrail_can_continue`
-- `fabricops_kit.pipeline._table_key`
-- `fabricops_kit.pipeline._table_name`
-- <a href="../write_catalogue_evidence/"><code>fabricops_kit.pipeline.write_catalogue_evidence</code></a>
-
-## Internal implementation summary
+</details>
 
 ??? info "Call flow"
 
@@ -281,28 +289,23 @@ are routed through the configured metadata target by the called helpers.
 
     This callable uses 4 internal helpers for metadata loading and other.
 
-    <div class="module-table-scroll reference-input-table">
-    <table class="reference-function-table">
-      <thead>
-        <tr>
-          <th>Area</th>
-          <th>Helpers</th>
-          <th>What they do</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td data-label="Area">Metadata loading</td>
-          <td data-label="Helpers"><code>_build_guardrail_evidence_definitions</code>, <code>_table_key</code>, <code>_table_name</code></td>
-          <td data-label="What they do">Load and identify the metadata or table context needed by the callable.</td>
-        </tr>
-        <tr>
-          <td data-label="Area">Other</td>
-          <td data-label="Helpers"><code>_guardrail_can_continue</code></td>
-          <td data-label="What they do">Support lower-level implementation details that do not fit the main helper areas.</td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="reference-helper-groups">
+      <section class="reference-helper-group">
+        <h4>Metadata loading</h4>
+        <p>Load and identify the metadata or table context needed by the callable.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/pipeline.py#L228-L257"><code>_build_guardrail_evidence_definitions</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/pipeline.py#L216-L217"><code>_table_key</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/pipeline.py#L220-L221"><code>_table_name</code></a>
+        </div>
+      </section>
+      <section class="reference-helper-group">
+        <h4>Other</h4>
+        <p>Support lower-level implementation details that do not fit the main helper areas.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/pipeline.py#L224-L225"><code>_guardrail_can_continue</code></a>
+        </div>
+      </section>
     </div>
 
     ??? example "View helper source by area"
@@ -376,205 +379,207 @@ are routed through the configured metadata target by the called helpers.
             ```
 
 
-## Source link
+<div class="reference-source-card">
+  <p><strong>Source:</strong> <code>fabricops_kit/pipeline.py:260</code></p>
+  <p><strong>Actions:</strong> <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/pipeline.py#L260-L448">View on GitHub</a></p>
+</div>
 
-- Source file path: `src/fabricops_kit/pipeline.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/pipeline.py#L260-L448">View run_table_guardrails on GitHub</a>
+??? example "Source code"
 
-```python
-def run_table_guardrails(
-    table_configs: list[dict[str, Any]],
-    *,
-    config: Any,
-    env: str,
-    run_id: str,
-    spark_session: Any,
-    agreement_id: str = "",
-    agreement_contract_version: str = "",
-    notebook_registry_id: str = "",
-    notebook_id: str = "",
-    pipeline_name: str = "",
-    stop_on_failure: bool = False,
-) -> dict[str, Any]:
-    """Run profiling, schema, freshness, profile behavior, DQ, and catalogue guardrails.
+    ```python
+    def run_table_guardrails(
+        table_configs: list[dict[str, Any]],
+        *,
+        config: Any,
+        env: str,
+        run_id: str,
+        spark_session: Any,
+        agreement_id: str = "",
+        agreement_contract_version: str = "",
+        notebook_registry_id: str = "",
+        notebook_id: str = "",
+        pipeline_name: str = "",
+        stop_on_failure: bool = False,
+    ) -> dict[str, Any]:
+        """Run profiling, schema, freshness, profile behavior, DQ, and catalogue guardrails.
 
-    Parameters
-    ----------
-    table_configs : list of dict
-        Source or target table configs. Each config must contain ``key``,
-        ``df``, and ``expected_schema``. Optional keys such as
-        ``dataset_name``, ``stage``, ``schema_preset``, ``load_behavior``,
-        ``watermark_column``,
-        ``dq_preset``, ``distribution_columns``, and ``exclude_columns``
-        control the guardrail behavior.
-    config : Any
-        FabricOps framework configuration from ``00_env_config``.
-    env : str
-        Environment key used for configured metadata routing.
-    run_id : str
-        Current pipeline run identifier.
-    spark_session : Any
-        Spark session used by profile behavior and DQ helpers.
-    agreement_id, agreement_contract_version, notebook_registry_id, notebook_id, pipeline_name : str, optional
-        Governance context written with catalogue evidence.
-    stop_on_failure : bool, default False
-        When True, collect all guardrail results and catalogue evidence, then
-        stop notebook execution via the standard guardrail stopper if any table
-        cannot continue.
+        Parameters
+        ----------
+        table_configs : list of dict
+            Source or target table configs. Each config must contain ``key``,
+            ``df``, and ``expected_schema``. Optional keys such as
+            ``dataset_name``, ``stage``, ``schema_preset``, ``load_behavior``,
+            ``watermark_column``,
+            ``dq_preset``, ``distribution_columns``, and ``exclude_columns``
+            control the guardrail behavior.
+        config : Any
+            FabricOps framework configuration from ``00_env_config``.
+        env : str
+            Environment key used for configured metadata routing.
+        run_id : str
+            Current pipeline run identifier.
+        spark_session : Any
+            Spark session used by profile behavior and DQ helpers.
+        agreement_id, agreement_contract_version, notebook_registry_id, notebook_id, pipeline_name : str, optional
+            Governance context written with catalogue evidence.
+        stop_on_failure : bool, default False
+            When True, collect all guardrail results and catalogue evidence, then
+            stop notebook execution via the standard guardrail stopper if any table
+            cannot continue.
 
-    Returns
-    -------
-    dict[str, Any]
-        Guardrail result bundle containing profiles, schema results, freshness
-        results, profile behavior results, DQ results, catalogue status, evidence definitions, concise
-        ``summary``, ``can_continue``, and ``failed_tables``. Results remain
-        separated by table key and guardrail type.
+        Returns
+        -------
+        dict[str, Any]
+            Guardrail result bundle containing profiles, schema results, freshness
+            results, profile behavior results, DQ results, catalogue status, evidence definitions, concise
+            ``summary``, ``can_continue``, and ``failed_tables``. Results remain
+            separated by table key and guardrail type.
 
-    Notes
-    -----
-    This helper intentionally collects all per-table schema, freshness, profile behavior, and DQ
-    results before reporting blocking failures. DQ results that return an
-    annotated DataFrame update the corresponding table config ``df`` in place
-    so downstream writes use the checked DataFrame. Metadata reads and writes
-    are routed through the configured metadata target by the called helpers.
-    """
-    profiles: dict[str, Any] = {}
-    schema_results: dict[str, Mapping[str, Any]] = {}
-    freshness_results: dict[str, Mapping[str, Any]] = {}
-    stability_results: dict[str, Mapping[str, Any]] = {}
-    dq_results: dict[str, Mapping[str, Any]] = {}
-    failed_tables: list[str] = []
-    evidence_definitions = _build_guardrail_evidence_definitions(table_configs)
+        Notes
+        -----
+        This helper intentionally collects all per-table schema, freshness, profile behavior, and DQ
+        results before reporting blocking failures. DQ results that return an
+        annotated DataFrame update the corresponding table config ``df`` in place
+        so downstream writes use the checked DataFrame. Metadata reads and writes
+        are routed through the configured metadata target by the called helpers.
+        """
+        profiles: dict[str, Any] = {}
+        schema_results: dict[str, Mapping[str, Any]] = {}
+        freshness_results: dict[str, Mapping[str, Any]] = {}
+        stability_results: dict[str, Mapping[str, Any]] = {}
+        dq_results: dict[str, Mapping[str, Any]] = {}
+        failed_tables: list[str] = []
+        evidence_definitions = _build_guardrail_evidence_definitions(table_configs)
 
-    for table_config in table_configs:
-        table_key = _table_key(table_config)
-        table_name = _table_name(table_config)
-        dataset_name = table_config.get("dataset_name", table_name)
-        stage = table_config.get("stage", "target")
-        dataframe = table_config["df"]
+        for table_config in table_configs:
+            table_key = _table_key(table_config)
+            table_name = _table_name(table_config)
+            dataset_name = table_config.get("dataset_name", table_name)
+            stage = table_config.get("stage", "target")
+            dataframe = table_config["df"]
 
-        profiles[table_key] = profile_dataframe(
-            dataframe,
-            table_name=table_name,
-            # profile_dataframe automatically excludes FabricOps/DQ technical annotation columns
-            # and unions those defaults with any table-specific exclude_columns.
-            exclude_columns=table_config.get("exclude_columns"),
-            include_distributions=True,
-            distribution_columns=table_config.get("distribution_columns"),
-            config=config,
-            run_timestamp_timezone=table_config.get("run_timestamp_timezone"),
-        )
-
-        schema_results[table_key] = validate_schema(
-            dataframe,
-            table_config["expected_schema"],
-            preset=table_config.get("schema_preset", "strict"),
-        )
-
-        freshness_results[table_key] = enforce_freshness(
-            dataframe,
-            table_config.get("freshness_column"),
-            table_config.get("freshness_max_lag_days"),
-            severity=table_config.get("freshness_severity", "blocking"),
-        )
-
-        stability_results[table_key] = enforce_profile_behavior(
-            spark_session,
-            dataframe,
-            CATALOGUE_TABLE,
-            dataset_name,
-            table_name,
-            stage=stage,
-            run_id=run_id,
-            load_behavior=table_config.get("load_behavior", "append"),
-            watermark_column=table_config.get("watermark_column"),
-            exclude_columns=table_config.get("exclude_columns"),
-            exclude_run_id=run_id,
-            config=config,
-            env=env,
-            current_profile=profiles[table_key],
-        )
-
-        if table_config.get("dq_preset", "approved_rules") == "skip":
-            dq_results[table_key] = {
-                "status": "skipped",
-                "can_continue": True,
-                "checks": [],
-                "message": "DQ guardrail skipped by preset.",
-            }
-        else:
-            dq_results[table_key] = enforce_dq_rules(
+            profiles[table_key] = profile_dataframe(
                 dataframe,
-                config,
-                env,
-                dataset_name,
-                table_name,
-                spark_session=spark_session,
+                table_name=table_name,
+                # profile_dataframe automatically excludes FabricOps/DQ technical annotation columns
+                # and unions those defaults with any table-specific exclude_columns.
+                exclude_columns=table_config.get("exclude_columns"),
+                include_distributions=True,
+                distribution_columns=table_config.get("distribution_columns"),
+                config=config,
+                run_timestamp_timezone=table_config.get("run_timestamp_timezone"),
             )
 
-        if "dataframe" in dq_results[table_key]:
-            table_config["df"] = dq_results[table_key]["dataframe"]
+            schema_results[table_key] = validate_schema(
+                dataframe,
+                table_config["expected_schema"],
+                preset=table_config.get("schema_preset", "strict"),
+            )
 
-        table_can_continue = all(
-            _guardrail_can_continue(result)
-            for result in (schema_results[table_key], freshness_results[table_key], stability_results[table_key], dq_results[table_key])
+            freshness_results[table_key] = enforce_freshness(
+                dataframe,
+                table_config.get("freshness_column"),
+                table_config.get("freshness_max_lag_days"),
+                severity=table_config.get("freshness_severity", "blocking"),
+            )
+
+            stability_results[table_key] = enforce_profile_behavior(
+                spark_session,
+                dataframe,
+                CATALOGUE_TABLE,
+                dataset_name,
+                table_name,
+                stage=stage,
+                run_id=run_id,
+                load_behavior=table_config.get("load_behavior", "append"),
+                watermark_column=table_config.get("watermark_column"),
+                exclude_columns=table_config.get("exclude_columns"),
+                exclude_run_id=run_id,
+                config=config,
+                env=env,
+                current_profile=profiles[table_key],
+            )
+
+            if table_config.get("dq_preset", "approved_rules") == "skip":
+                dq_results[table_key] = {
+                    "status": "skipped",
+                    "can_continue": True,
+                    "checks": [],
+                    "message": "DQ guardrail skipped by preset.",
+                }
+            else:
+                dq_results[table_key] = enforce_dq_rules(
+                    dataframe,
+                    config,
+                    env,
+                    dataset_name,
+                    table_name,
+                    spark_session=spark_session,
+                )
+
+            if "dataframe" in dq_results[table_key]:
+                table_config["df"] = dq_results[table_key]["dataframe"]
+
+            table_can_continue = all(
+                _guardrail_can_continue(result)
+                for result in (schema_results[table_key], freshness_results[table_key], stability_results[table_key], dq_results[table_key])
+            )
+            if not table_can_continue:
+                failed_tables.append(table_key)
+
+        catalogue_status = write_catalogue_evidence(
+            profiles,
+            evidence_definitions,
+            config=config,
+            env=env,
+            run_id=run_id,
+            agreement_id=agreement_id,
+            agreement_contract_version=agreement_contract_version,
+            notebook_registry_id=notebook_registry_id,
+            notebook_id=notebook_id,
+            pipeline_name=pipeline_name,
+            schema_results=schema_results,
+            freshness_results=freshness_results,
+            stability_results=stability_results,
+            dq_results=dq_results,
         )
-        if not table_can_continue:
-            failed_tables.append(table_key)
 
-    catalogue_status = write_catalogue_evidence(
-        profiles,
-        evidence_definitions,
-        config=config,
-        env=env,
-        run_id=run_id,
-        agreement_id=agreement_id,
-        agreement_contract_version=agreement_contract_version,
-        notebook_registry_id=notebook_registry_id,
-        notebook_id=notebook_id,
-        pipeline_name=pipeline_name,
-        schema_results=schema_results,
-        freshness_results=freshness_results,
-        stability_results=stability_results,
-        dq_results=dq_results,
-    )
+        summary = {
+            "schema_results": schema_results,
+            "freshness_results": freshness_results,
+            "stability_results": stability_results,
+            "dq_results": dq_results,
+            "catalogue_status": catalogue_status,
+            "failed_tables": failed_tables,
+        }
+        result = {
+            "profiles": profiles,
+            "schema_results": schema_results,
+            "freshness_results": freshness_results,
+            "stability_results": stability_results,
+            "dq_results": dq_results,
+            "catalogue_status": catalogue_status,
+            "evidence_definitions": evidence_definitions,
+            "summary": summary,
+            "can_continue": not failed_tables,
+            "failed_tables": failed_tables,
+        }
 
-    summary = {
-        "schema_results": schema_results,
-        "freshness_results": freshness_results,
-        "stability_results": stability_results,
-        "dq_results": dq_results,
-        "catalogue_status": catalogue_status,
-        "failed_tables": failed_tables,
-    }
-    result = {
-        "profiles": profiles,
-        "schema_results": schema_results,
-        "freshness_results": freshness_results,
-        "stability_results": stability_results,
-        "dq_results": dq_results,
-        "catalogue_status": catalogue_status,
-        "evidence_definitions": evidence_definitions,
-        "summary": summary,
-        "can_continue": not failed_tables,
-        "failed_tables": failed_tables,
-    }
+        if stop_on_failure and failed_tables:
+            stop_if_failed(
+                {
+                    "status": "failed",
+                    "can_continue": False,
+                    "message": "Blocking guardrail failure for table(s): " + ", ".join(failed_tables),
+                    "failed_tables": failed_tables,
+                }
+            )
 
-    if stop_on_failure and failed_tables:
-        stop_if_failed(
-            {
-                "status": "failed",
-                "can_continue": False,
-                "message": "Blocking guardrail failure for table(s): " + ", ".join(failed_tables),
-                "failed_tables": failed_tables,
-            }
-        )
-
-    return result
-```
+        return result
+    ```
 
 <details class="reference-metadata-details">
-<summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
+<summary>Machine-readable metadata / metadata details</summary>
 
 These generated fields are for automation, AI agents, maintainers, and doc tooling. Skip this block when reading the docs normally.
 
@@ -628,7 +633,19 @@ Not documented yet
 - Signature:
 
 ```python
-def run_table_guardrails(table_configs: list[dict[str, Any]], *, config: Any, env: str, run_id: str, spark_session: Any, agreement_id: str='', agreement_contract_version: str='', notebook_registry_id: str='', notebook_id: str='', pipeline_name: str='', stop_on_failure: bool=False) -> dict[str, Any]
+def run_table_guardrails(
+    table_configs: list[dict[str, Any]],
+    config: Any,
+    env: str,
+    run_id: str,
+    spark_session: Any,
+    agreement_id: str='',
+    agreement_contract_version: str='',
+    notebook_registry_id: str='',
+    notebook_id: str='',
+    pipeline_name: str='',
+    stop_on_failure: bool=False,
+) -> dict[str, Any]:
 ```
 
 ### Internal relationship graph
@@ -641,6 +658,25 @@ def run_table_guardrails(table_configs: list[dict[str, Any]], *, config: Any, en
 ### Internal implementation summary
 
 - Internal helper count: 4
-- Grouped helper summary and optional source snippets are rendered in the page-level Internal implementation summary section.
+- Grouped helper summary and optional source snippets are rendered in the page-level Implementation details section.
 
 </details>
+
+## Source link
+
+- Source: `fabricops_kit/pipeline.py:260`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/pipeline.py#L260-L448">View run_table_guardrails on GitHub</a>
+
+## Glossary
+
+- **Guardrail:** A check that tells the notebook whether it is safe to continue.
+- **can_continue:** A returned true/false value that tells downstream code whether the pipeline should keep running.
+- **Source table:** An input table or file read by the pipeline.
+- **Target table:** An output table written by the pipeline.
+- **Catalogue evidence:** Reviewed metadata that explains what FabricOps knows about a dataset or table.
+
+See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
+
+## See also
+
+- [Pipeline Guardrails](../../how-fabricops-works/pipeline-guardrails.md)

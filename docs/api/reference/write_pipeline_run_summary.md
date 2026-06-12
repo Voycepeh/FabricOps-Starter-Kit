@@ -1,26 +1,68 @@
 # write_pipeline_run_summary
 
-## Signature
-
-```python
-def write_pipeline_run_summary(*, spark: Any, config: Any, env: str, run_id: str, agreement_id: str='', agreement_contract_version: str='', notebook_registry_id: str='', notebook_id: str='', notebook_type: str='02_pipeline', pipeline_name: str='', started_at: str | None=None, completed_at: str | None=None, status: str='completed', source_definitions: Mapping[str, Mapping[str, Any]] | None=None, target_definitions: Mapping[str, Mapping[str, Any]] | None=None, source_schema_results: Mapping[str, Mapping[str, Any]] | None=None, target_schema_results: Mapping[str, Mapping[str, Any]] | None=None, source_freshness_results: Mapping[str, Mapping[str, Any]] | None=None, target_freshness_results: Mapping[str, Mapping[str, Any]] | None=None, source_stability_results: Mapping[str, Mapping[str, Any]] | None=None, target_stability_results: Mapping[str, Mapping[str, Any]] | None=None, source_dq_results: Mapping[str, Mapping[str, Any]] | None=None, target_dq_results: Mapping[str, Mapping[str, Any]] | None=None, lineage_status: str='not_run', catalogue_status: str='not_run', message: str='', metadata_table: str=METADATA_PIPELINE_RUNS_TABLE, mode: str='append') -> dict[str, Any]
-```
-
-## Summary
-
 Write one pipeline runtime summary row to metadata.
 
-## Usage note
+<details class="reference-usage-details">
+<summary>Usage guidance</summary>
+
+**Use when:**
 
 - Use at the end of 02_pipeline when downstream operators need one metadata record describing the run outcome.
-
-**Do not use when:**
-
-- Not documented yet
 
 **Additional context:**
 
 Writes a compact run-level summary that ties pipeline name, agreement context, guardrail results, lineage, and write outcomes together.
+
+</details>
+
+## Signature
+
+<div class="reference-api-definition" markdown="1">
+
+```python
+def write_pipeline_run_summary(
+    spark: Any,
+    config: Any,
+    env: str,
+    run_id: str,
+    agreement_id: str='',
+    agreement_contract_version: str='',
+    notebook_registry_id: str='',
+    notebook_id: str='',
+    notebook_type: str='02_pipeline',
+    pipeline_name: str='',
+    started_at: str | None=None,
+    completed_at: str | None=None,
+    status: str='completed',
+    source_definitions: Mapping[str, Mapping[str, Any]] | None=None,
+    target_definitions: Mapping[str, Mapping[str, Any]] | None=None,
+    source_schema_results: Mapping[str, Mapping[str, Any]] | None=None,
+    target_schema_results: Mapping[str, Mapping[str, Any]] | None=None,
+    source_freshness_results: Mapping[str, Mapping[str, Any]] | None=None,
+    target_freshness_results: Mapping[str, Mapping[str, Any]] | None=None,
+    source_stability_results: Mapping[str, Mapping[str, Any]] | None=None,
+    target_stability_results: Mapping[str, Mapping[str, Any]] | None=None,
+    source_dq_results: Mapping[str, Mapping[str, Any]] | None=None,
+    target_dq_results: Mapping[str, Mapping[str, Any]] | None=None,
+    lineage_status: str='not_run',
+    catalogue_status: str='not_run',
+    message: str='',
+    metadata_table: str=METADATA_PIPELINE_RUNS_TABLE,
+    mode: str='append',
+) -> dict[str, Any]:
+```
+
+</div>
+
+## Example usage
+
+<div class="reference-example-usage" markdown="1">
+
+```python
+Not documented yet
+```
+
+</div>
 
 ## Parameters
 
@@ -74,37 +116,23 @@ Not documented yet
 - Metadata routing is unavailable.
 - The configured summary table cannot be written.
 
-## Example
+## Relationships
 
-```python
+### Used by
+
 Not documented yet
-```
 
-## See also
+### Calls
 
-- [Pipeline Guardrails](../../how-fabricops-works/pipeline-guardrails.md)
-- [Metadata Tables](../../how-fabricops-works/metadata-tables.md)
+- <a href="../write_lakehouse_table/"><code>fabricops_kit.fabric_input_output.write_lakehouse_table</code></a>
+- `fabricops_kit.pipeline._definition_name`
+- `fabricops_kit.pipeline._now_iso`
+- `fabricops_kit.pipeline._summary_status`
 
-**Glossary terms**
+## Implementation details
 
-- **Guardrail:** A check that tells the notebook whether it is safe to continue.
-- **can_continue:** A returned true/false value that tells downstream code whether the pipeline should keep running.
-- **Catalogue evidence:** Reviewed metadata that explains what FabricOps knows about a dataset or table.
-- **Metadata lakehouse:** The configured Fabric lakehouse where FabricOps stores governance and runtime metadata.
-
-See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
-
-## Developer details
-
-- Module: `pipeline`
-- Classification: Callable
-- Source file path: `src/fabricops_kit/pipeline.py`
-- Source line: `646`
-- Signature:
-
-```python
-def write_pipeline_run_summary(*, spark: Any, config: Any, env: str, run_id: str, agreement_id: str='', agreement_contract_version: str='', notebook_registry_id: str='', notebook_id: str='', notebook_type: str='02_pipeline', pipeline_name: str='', started_at: str | None=None, completed_at: str | None=None, status: str='completed', source_definitions: Mapping[str, Mapping[str, Any]] | None=None, target_definitions: Mapping[str, Mapping[str, Any]] | None=None, source_schema_results: Mapping[str, Mapping[str, Any]] | None=None, target_schema_results: Mapping[str, Mapping[str, Any]] | None=None, source_freshness_results: Mapping[str, Mapping[str, Any]] | None=None, target_freshness_results: Mapping[str, Mapping[str, Any]] | None=None, source_stability_results: Mapping[str, Mapping[str, Any]] | None=None, target_stability_results: Mapping[str, Mapping[str, Any]] | None=None, source_dq_results: Mapping[str, Mapping[str, Any]] | None=None, target_dq_results: Mapping[str, Mapping[str, Any]] | None=None, lineage_status: str='not_run', catalogue_status: str='not_run', message: str='', metadata_table: str=METADATA_PIPELINE_RUNS_TABLE, mode: str='append') -> dict[str, Any]
-```
+<details class="reference-implementation-details">
+<summary>Notes, side effects, and template usage</summary>
 
 **Used in templates:**
 
@@ -120,14 +148,7 @@ The row is written via ``write_lakehouse_table(..., config, env,
 "metadata", metadata_table, mode="append")`` so runtime evidence never
 relies on a default attached lakehouse.
 
-## Calls
-
-- <a href="../write_lakehouse_table/"><code>fabricops_kit.fabric_input_output.write_lakehouse_table</code></a>
-- `fabricops_kit.pipeline._definition_name`
-- `fabricops_kit.pipeline._now_iso`
-- `fabricops_kit.pipeline._summary_status`
-
-## Internal implementation summary
+</details>
 
 ??? info "Call flow"
 
@@ -152,38 +173,37 @@ relies on a default attached lakehouse.
 
     This callable uses 6 internal helpers for audit timestamp, rule parsing, result summary, and other.
 
-    <div class="module-table-scroll reference-input-table">
-    <table class="reference-function-table">
-      <thead>
-        <tr>
-          <th>Area</th>
-          <th>Helpers</th>
-          <th>What they do</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td data-label="Area">Audit timestamp</td>
-          <td data-label="Helpers"><code>_current_audit_timestamp</code>, <code>_get_audit_timezone</code>, <code>_validate_audit_timezone</code></td>
-          <td data-label="What they do">Resolve and stamp audit time consistently.</td>
-        </tr>
-        <tr>
-          <td data-label="Area">Rule parsing</td>
-          <td data-label="Helpers"><code>_definition_name</code></td>
-          <td data-label="What they do">Normalize stored or user-provided values before applying rules.</td>
-        </tr>
-        <tr>
-          <td data-label="Area">Result summary</td>
-          <td data-label="Helpers"><code>_summary_status</code></td>
-          <td data-label="What they do">Build final statuses, counts, and messages for the caller.</td>
-        </tr>
-        <tr>
-          <td data-label="Area">Other</td>
-          <td data-label="Helpers"><code>_now_iso</code></td>
-          <td data-label="What they do">Support lower-level implementation details that do not fit the main helper areas.</td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="reference-helper-groups">
+      <section class="reference-helper-group">
+        <h4>Audit timestamp</h4>
+        <p>Resolve and stamp audit time consistently.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L69-L75"><code>_current_audit_timestamp</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L61-L66"><code>_get_audit_timezone</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L27-L58"><code>_validate_audit_timezone</code></a>
+        </div>
+      </section>
+      <section class="reference-helper-group">
+        <h4>Rule parsing</h4>
+        <p>Normalize stored or user-provided values before applying rules.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/pipeline.py#L23-L24"><code>_definition_name</code></a>
+        </div>
+      </section>
+      <section class="reference-helper-group">
+        <h4>Result summary</h4>
+        <p>Build final statuses, counts, and messages for the caller.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/pipeline.py#L27-L46"><code>_summary_status</code></a>
+        </div>
+      </section>
+      <section class="reference-helper-group">
+        <h4>Other</h4>
+        <p>Support lower-level implementation details that do not fit the main helper areas.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/pipeline.py#L19-L20"><code>_now_iso</code></a>
+        </div>
+      </section>
     </div>
 
     ??? example "View helper source by area"
@@ -308,129 +328,131 @@ relies on a default attached lakehouse.
             ```
 
 
-## Source link
+<div class="reference-source-card">
+  <p><strong>Source:</strong> <code>fabricops_kit/pipeline.py:646</code></p>
+  <p><strong>Actions:</strong> <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/pipeline.py#L646-L758">View on GitHub</a></p>
+</div>
 
-- Source file path: `src/fabricops_kit/pipeline.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/pipeline.py#L646-L758">View write_pipeline_run_summary on GitHub</a>
+??? example "Source code"
 
-```python
-def write_pipeline_run_summary(
-    *,
-    spark: Any,
-    config: Any,
-    env: str,
-    run_id: str,
-    agreement_id: str = "",
-    agreement_contract_version: str = "",
-    notebook_registry_id: str = "",
-    notebook_id: str = "",
-    notebook_type: str = "02_pipeline",
-    pipeline_name: str = "",
-    started_at: str | None = None,
-    completed_at: str | None = None,
-    status: str = "completed",
-    source_definitions: Mapping[str, Mapping[str, Any]] | None = None,
-    target_definitions: Mapping[str, Mapping[str, Any]] | None = None,
-    source_schema_results: Mapping[str, Mapping[str, Any]] | None = None,
-    target_schema_results: Mapping[str, Mapping[str, Any]] | None = None,
-    source_freshness_results: Mapping[str, Mapping[str, Any]] | None = None,
-    target_freshness_results: Mapping[str, Mapping[str, Any]] | None = None,
-    source_stability_results: Mapping[str, Mapping[str, Any]] | None = None,
-    target_stability_results: Mapping[str, Mapping[str, Any]] | None = None,
-    source_dq_results: Mapping[str, Mapping[str, Any]] | None = None,
-    target_dq_results: Mapping[str, Mapping[str, Any]] | None = None,
-    lineage_status: str = "not_run",
-    catalogue_status: str = "not_run",
-    message: str = "",
-    metadata_table: str = METADATA_PIPELINE_RUNS_TABLE,
-    mode: str = "append",
-) -> dict[str, Any]:
-    """Write a pipeline runtime summary to metadata.
+    ```python
+    def write_pipeline_run_summary(
+        *,
+        spark: Any,
+        config: Any,
+        env: str,
+        run_id: str,
+        agreement_id: str = "",
+        agreement_contract_version: str = "",
+        notebook_registry_id: str = "",
+        notebook_id: str = "",
+        notebook_type: str = "02_pipeline",
+        pipeline_name: str = "",
+        started_at: str | None = None,
+        completed_at: str | None = None,
+        status: str = "completed",
+        source_definitions: Mapping[str, Mapping[str, Any]] | None = None,
+        target_definitions: Mapping[str, Mapping[str, Any]] | None = None,
+        source_schema_results: Mapping[str, Mapping[str, Any]] | None = None,
+        target_schema_results: Mapping[str, Mapping[str, Any]] | None = None,
+        source_freshness_results: Mapping[str, Mapping[str, Any]] | None = None,
+        target_freshness_results: Mapping[str, Mapping[str, Any]] | None = None,
+        source_stability_results: Mapping[str, Mapping[str, Any]] | None = None,
+        target_stability_results: Mapping[str, Mapping[str, Any]] | None = None,
+        source_dq_results: Mapping[str, Mapping[str, Any]] | None = None,
+        target_dq_results: Mapping[str, Mapping[str, Any]] | None = None,
+        lineage_status: str = "not_run",
+        catalogue_status: str = "not_run",
+        message: str = "",
+        metadata_table: str = METADATA_PIPELINE_RUNS_TABLE,
+        mode: str = "append",
+    ) -> dict[str, Any]:
+        """Write a pipeline runtime summary to metadata.
 
-    Parameters
-    ----------
-    spark : pyspark.sql.SparkSession
-        Spark session used to create the one-row summary DataFrame.
-    config, env : object, str
-        Metadata route from ``00_env_config``.
-    run_id : str
-        Pipeline run identifier.
-    agreement_id, agreement_contract_version, notebook_registry_id, notebook_id, notebook_type, pipeline_name : str, optional
-        Agreement and notebook registry context.
-    started_at, completed_at : str, optional
-        Runtime timestamps. Defaults to current UTC time when omitted.
-    status : str, default="completed"
-        Overall pipeline status.
-    source_definitions, target_definitions : mapping, optional
-        Dataset definitions used to compute source and target counts.
-    source_schema_results, target_schema_results, source_freshness_results, target_freshness_results, source_stability_results, target_stability_results, source_dq_results, target_dq_results : mapping, optional
-        Guardrail result dictionaries included in the JSON summary.
-    lineage_status, catalogue_status, message : str, optional
-        Evidence write statuses and support message.
-    metadata_table : str, default="METADATA_PIPELINE_RUNS"
-        Metadata table that stores runtime summaries.
-    mode : str, default="append"
-        Write mode for the runtime summary row.
+        Parameters
+        ----------
+        spark : pyspark.sql.SparkSession
+            Spark session used to create the one-row summary DataFrame.
+        config, env : object, str
+            Metadata route from ``00_env_config``.
+        run_id : str
+            Pipeline run identifier.
+        agreement_id, agreement_contract_version, notebook_registry_id, notebook_id, notebook_type, pipeline_name : str, optional
+            Agreement and notebook registry context.
+        started_at, completed_at : str, optional
+            Runtime timestamps. Defaults to current UTC time when omitted.
+        status : str, default="completed"
+            Overall pipeline status.
+        source_definitions, target_definitions : mapping, optional
+            Dataset definitions used to compute source and target counts.
+        source_schema_results, target_schema_results, source_freshness_results, target_freshness_results, source_stability_results, target_stability_results, source_dq_results, target_dq_results : mapping, optional
+            Guardrail result dictionaries included in the JSON summary.
+        lineage_status, catalogue_status, message : str, optional
+            Evidence write statuses and support message.
+        metadata_table : str, default="METADATA_PIPELINE_RUNS"
+            Metadata table that stores runtime summaries.
+        mode : str, default="append"
+            Write mode for the runtime summary row.
 
-    Returns
-    -------
-    dict[str, Any]
-        The summary row that was written.
+        Returns
+        -------
+        dict[str, Any]
+            The summary row that was written.
 
-    Notes
-    -----
-    The row is written via ``write_lakehouse_table(..., config, env,
-    "metadata", metadata_table, mode="append")`` so runtime evidence never
-    relies on a default attached lakehouse.
-    """
-    completed = completed_at or _now_iso(config)
-    started = started_at or completed
-    sources = source_definitions or {}
-    targets = target_definitions or {}
-    source_guardrail_status = _summary_status({**(source_schema_results or {}), **(source_freshness_results or {}), **(source_stability_results or {})})
-    target_guardrail_status = _summary_status({**(target_schema_results or {}), **(target_freshness_results or {}), **(target_stability_results or {})})
-    dq_status = _summary_status({**(source_dq_results or {}), **(target_dq_results or {})})
-    run_summary = {
-        "source_schema_results": source_schema_results or {},
-        "target_schema_results": target_schema_results or {},
-        "source_freshness_results": source_freshness_results or {},
-        "target_freshness_results": target_freshness_results or {},
-        "source_stability_results": source_stability_results or {},
-        "target_stability_results": target_stability_results or {},
-        "source_dq_results": source_dq_results or {},
-        "target_dq_results": target_dq_results or {},
-        "source_tables": [_definition_name(name, definition) for name, definition in sources.items()],
-        "target_tables": [_definition_name(name, definition) for name, definition in targets.items()],
-    }
-    row = {
-        "run_id": run_id or str(uuid4()),
-        "agreement_id": agreement_id,
-        "agreement_contract_version": agreement_contract_version,
-        "notebook_registry_id": notebook_registry_id,
-        "notebook_id": notebook_id,
-        "notebook_type": notebook_type,
-        "pipeline_name": pipeline_name,
-        "environment_name": env,
-        "started_at": started,
-        "completed_at": completed,
-        "status": status,
-        "source_count": len(sources),
-        "target_count": len(targets),
-        "source_guardrail_status": source_guardrail_status,
-        "target_guardrail_status": target_guardrail_status,
-        "dq_status": dq_status,
-        "lineage_status": lineage_status,
-        "catalogue_status": catalogue_status,
-        "message": message,
-        "run_summary_json": json.dumps(run_summary, default=str, sort_keys=True),
-        "created_at": _now_iso(config),
-    }
-    write_lakehouse_table(spark.createDataFrame([row]), config, env, "metadata", metadata_table, mode=mode)
-    return row
-```
+        Notes
+        -----
+        The row is written via ``write_lakehouse_table(..., config, env,
+        "metadata", metadata_table, mode="append")`` so runtime evidence never
+        relies on a default attached lakehouse.
+        """
+        completed = completed_at or _now_iso(config)
+        started = started_at or completed
+        sources = source_definitions or {}
+        targets = target_definitions or {}
+        source_guardrail_status = _summary_status({**(source_schema_results or {}), **(source_freshness_results or {}), **(source_stability_results or {})})
+        target_guardrail_status = _summary_status({**(target_schema_results or {}), **(target_freshness_results or {}), **(target_stability_results or {})})
+        dq_status = _summary_status({**(source_dq_results or {}), **(target_dq_results or {})})
+        run_summary = {
+            "source_schema_results": source_schema_results or {},
+            "target_schema_results": target_schema_results or {},
+            "source_freshness_results": source_freshness_results or {},
+            "target_freshness_results": target_freshness_results or {},
+            "source_stability_results": source_stability_results or {},
+            "target_stability_results": target_stability_results or {},
+            "source_dq_results": source_dq_results or {},
+            "target_dq_results": target_dq_results or {},
+            "source_tables": [_definition_name(name, definition) for name, definition in sources.items()],
+            "target_tables": [_definition_name(name, definition) for name, definition in targets.items()],
+        }
+        row = {
+            "run_id": run_id or str(uuid4()),
+            "agreement_id": agreement_id,
+            "agreement_contract_version": agreement_contract_version,
+            "notebook_registry_id": notebook_registry_id,
+            "notebook_id": notebook_id,
+            "notebook_type": notebook_type,
+            "pipeline_name": pipeline_name,
+            "environment_name": env,
+            "started_at": started,
+            "completed_at": completed,
+            "status": status,
+            "source_count": len(sources),
+            "target_count": len(targets),
+            "source_guardrail_status": source_guardrail_status,
+            "target_guardrail_status": target_guardrail_status,
+            "dq_status": dq_status,
+            "lineage_status": lineage_status,
+            "catalogue_status": catalogue_status,
+            "message": message,
+            "run_summary_json": json.dumps(run_summary, default=str, sort_keys=True),
+            "created_at": _now_iso(config),
+        }
+        write_lakehouse_table(spark.createDataFrame([row]), config, env, "metadata", metadata_table, mode=mode)
+        return row
+    ```
 
 <details class="reference-metadata-details">
-<summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
+<summary>Machine-readable metadata / metadata details</summary>
 
 These generated fields are for automation, AI agents, maintainers, and doc tooling. Skip this block when reading the docs normally.
 
@@ -477,7 +499,36 @@ Not documented yet
 - Signature:
 
 ```python
-def write_pipeline_run_summary(*, spark: Any, config: Any, env: str, run_id: str, agreement_id: str='', agreement_contract_version: str='', notebook_registry_id: str='', notebook_id: str='', notebook_type: str='02_pipeline', pipeline_name: str='', started_at: str | None=None, completed_at: str | None=None, status: str='completed', source_definitions: Mapping[str, Mapping[str, Any]] | None=None, target_definitions: Mapping[str, Mapping[str, Any]] | None=None, source_schema_results: Mapping[str, Mapping[str, Any]] | None=None, target_schema_results: Mapping[str, Mapping[str, Any]] | None=None, source_freshness_results: Mapping[str, Mapping[str, Any]] | None=None, target_freshness_results: Mapping[str, Mapping[str, Any]] | None=None, source_stability_results: Mapping[str, Mapping[str, Any]] | None=None, target_stability_results: Mapping[str, Mapping[str, Any]] | None=None, source_dq_results: Mapping[str, Mapping[str, Any]] | None=None, target_dq_results: Mapping[str, Mapping[str, Any]] | None=None, lineage_status: str='not_run', catalogue_status: str='not_run', message: str='', metadata_table: str=METADATA_PIPELINE_RUNS_TABLE, mode: str='append') -> dict[str, Any]
+def write_pipeline_run_summary(
+    spark: Any,
+    config: Any,
+    env: str,
+    run_id: str,
+    agreement_id: str='',
+    agreement_contract_version: str='',
+    notebook_registry_id: str='',
+    notebook_id: str='',
+    notebook_type: str='02_pipeline',
+    pipeline_name: str='',
+    started_at: str | None=None,
+    completed_at: str | None=None,
+    status: str='completed',
+    source_definitions: Mapping[str, Mapping[str, Any]] | None=None,
+    target_definitions: Mapping[str, Mapping[str, Any]] | None=None,
+    source_schema_results: Mapping[str, Mapping[str, Any]] | None=None,
+    target_schema_results: Mapping[str, Mapping[str, Any]] | None=None,
+    source_freshness_results: Mapping[str, Mapping[str, Any]] | None=None,
+    target_freshness_results: Mapping[str, Mapping[str, Any]] | None=None,
+    source_stability_results: Mapping[str, Mapping[str, Any]] | None=None,
+    target_stability_results: Mapping[str, Mapping[str, Any]] | None=None,
+    source_dq_results: Mapping[str, Mapping[str, Any]] | None=None,
+    target_dq_results: Mapping[str, Mapping[str, Any]] | None=None,
+    lineage_status: str='not_run',
+    catalogue_status: str='not_run',
+    message: str='',
+    metadata_table: str=METADATA_PIPELINE_RUNS_TABLE,
+    mode: str='append',
+) -> dict[str, Any]:
 ```
 
 ### Internal relationship graph
@@ -491,6 +542,25 @@ def write_pipeline_run_summary(*, spark: Any, config: Any, env: str, run_id: str
 ### Internal implementation summary
 
 - Internal helper count: 6
-- Grouped helper summary and optional source snippets are rendered in the page-level Internal implementation summary section.
+- Grouped helper summary and optional source snippets are rendered in the page-level Implementation details section.
 
 </details>
+
+## Source link
+
+- Source: `fabricops_kit/pipeline.py:646`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/pipeline.py#L646-L758">View write_pipeline_run_summary on GitHub</a>
+
+## Glossary
+
+- **Guardrail:** A check that tells the notebook whether it is safe to continue.
+- **can_continue:** A returned true/false value that tells downstream code whether the pipeline should keep running.
+- **Catalogue evidence:** Reviewed metadata that explains what FabricOps knows about a dataset or table.
+- **Metadata lakehouse:** The configured Fabric lakehouse where FabricOps stores governance and runtime metadata.
+
+See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
+
+## See also
+
+- [Pipeline Guardrails](../../how-fabricops-works/pipeline-guardrails.md)
+- [Metadata Tables](../../how-fabricops-works/metadata-tables.md)

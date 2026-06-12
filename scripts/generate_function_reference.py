@@ -580,7 +580,7 @@ def _render_key_terms(glossary_terms: list[str], glossary: dict[str, dict[str, A
     """Render compact glossary-backed key terms for a callable page."""
     if not glossary_terms:
         return []
-    lines = ["**Glossary terms**", ""]
+    lines: list[str] = []
     seen: set[str] = set()
     for term in glossary_terms:
         key = term.lower()
@@ -593,7 +593,7 @@ def _render_key_terms(glossary_terms: list[str], glossary: dict[str, dict[str, A
         term_text = str(entry["term"])
         display_term = term_text if "_" in term_text else term_text.capitalize()
         lines.append(f"- **{display_term}:** {entry['plain_language_definition']}")
-    lines.extend(["", "See the [full glossary](../../../reference/glossary/) for more FabricOps terms.", ""])
+    lines.extend(["", "See the [full glossary](../../../reference/glossary/) for more FabricOps terms."])
     return lines
 
 
@@ -852,6 +852,39 @@ def function_chip(name: str, href: str) -> str:
     return f'<a class="function-chip" href="{html_escape(href)}"><code>{html_escape(name)}</code></a>'
 
 
+def _display_source_path(source_path: str) -> str:
+    """Return the package-relative source path used in compact source cards."""
+    return source_path.removeprefix("src/")
+
+
+def _source_card_lines(
+    *,
+    source_path: str,
+    source_start_line: int | None,
+    source_ref: str,
+    short_name: str,
+) -> list[str]:
+    """Render a compact source location card with a visible GitHub action."""
+    display_path = _display_source_path(source_path)
+    line_suffix = f":{source_start_line}" if source_start_line else ""
+    return [
+        '<div class="reference-source-card">',
+        f'  <p><strong>Source:</strong> <code>{html_escape(display_path)}{line_suffix}</code></p>',
+        '  <p><strong>Actions:</strong> '
+        f'<a class="reference-source-link" href="{source_ref}">View on GitHub</a></p>',
+        "</div>",
+    ]
+
+
+def _source_code_details_lines(source_block: str) -> list[str]:
+    """Render collapsed source code for implementation details."""
+    return [
+        '??? example "Source code"',
+        "",
+        *_indent_markdown([_code_block(source_block) if source_block else PLACEHOLDER]),
+    ]
+
+
 PLACEHOLDER = "Not documented yet"
 
 
@@ -878,6 +911,78 @@ def _documented_text(*values: Any) -> str:
 def _code_block(text: str) -> str:
     """Return a fenced Python block for generated reference pages."""
     return f"```python\n{text}\n```"
+
+
+def _split_top_level_csv(text: str) -> list[str]:
+    """Split a comma-separated string while respecting bracketed type expressions."""
+    parts: list[str] = []
+    current: list[str] = []
+    depth = 0
+    quote: str | None = None
+    escape = False
+    for char in text:
+        if quote:
+            current.append(char)
+            if escape:
+                escape = False
+            elif char == "\\":
+                escape = True
+            elif char == quote:
+                quote = None
+            continue
+        if char in {"'", '"'}:
+            quote = char
+            current.append(char)
+            continue
+        if char in "([{":
+            depth += 1
+        elif char in ")]}":
+            depth = max(0, depth - 1)
+        if char == "," and depth == 0:
+            part = "".join(current).strip()
+            if part:
+                parts.append(part)
+            current = []
+        else:
+            current.append(char)
+    tail = "".join(current).strip()
+    if tail:
+        parts.append(tail)
+    return parts
+
+
+def _format_api_signature(signature: str, *, max_inline_length: int = 88) -> str:
+    """Return a compact, readable API-definition signature for callable pages."""
+    cleaned = signature.strip()
+    if not cleaned or len(cleaned) <= max_inline_length or not cleaned.startswith(("def ", "async def ")):
+        return cleaned
+
+    match = re.match(r"(?P<prefix>async def|def) (?P<name>\w+)\((?P<body>.*)\)(?P<returns>\s*->\s*.+)?$", cleaned)
+    if not match:
+        return cleaned
+
+    args = _split_top_level_csv(match.group("body"))
+    returns = (match.group("returns") or "").strip()
+    rendered_args: list[str] = []
+    for arg in args:
+        if arg == "*":
+            continue
+        rendered_args.append(f"    {arg},")
+    suffix = f" {returns}" if returns else ""
+    return "\n".join([f"{match.group('prefix')} {match.group('name')}(", *rendered_args, f"){suffix}:"])
+
+
+def _reference_code_block(text: str, *, class_name: str) -> list[str]:
+    """Return a styled Markdown-in-HTML code block for callable reference pages."""
+    if not text:
+        return [PLACEHOLDER]
+    return [
+        f'<div class="{class_name}" markdown="1">',
+        "",
+        _code_block(text),
+        "",
+        "</div>",
+    ]
 
 
 def _bullet_lines(text: str) -> list[str]:
@@ -1022,6 +1127,20 @@ def _indent_markdown(lines: list[str], spaces: int = 4) -> list[str]:
 def _helper_area(helper_name: str, purpose: str) -> tuple[str, str]:
     """Return the implementation area and plain-English role for an internal helper."""
     haystack = f"{helper_name} {purpose}".lower()
+    if helper_name in {"_guardrail_exclude_columns", "_get_profiled_columns"} or "exclude_columns" in haystack:
+        return "Column handling", "Select, exclude, and normalize column names used by the callable."
+    if helper_name in {
+        "_catalogue_value",
+        "_comparable_value",
+        "_is_greater_than",
+        "_is_less_than",
+        "_latest_catalogue_behavior_profile_row",
+        "_profile_row_count",
+        "_profile_watermark_bounds",
+        "_row_to_dict",
+        "_string_value",
+    }:
+        return "Profile comparison", "Compare current evidence with accepted profile values and behavior baselines."
     if any(token in haystack for token in ("audit", "timestamp", "timezone")):
         return "Audit timestamp", "Resolve and stamp audit time consistently."
     if any(
@@ -1049,6 +1168,8 @@ def _ordered_helper_areas(area_names: Iterable[str]) -> list[str]:
         "Metadata loading",
         "Validation",
         "Rule parsing",
+        "Profile comparison",
+        "Column handling",
         "Rule evaluation",
         "Result summary",
         "Fabric or Spark access",
@@ -1070,6 +1191,41 @@ def _helper_area_purposes(area_names: list[str]) -> str:
     return f"{', '.join(labels[:-1])}, and {labels[-1]}"
 
 
+def _helper_chip(helper: dict[str, Any]) -> str:
+    """Return a wrapped, clickable helper chip for grouped implementation summaries."""
+    source_location = helper["source_location"]
+    source_url = github_source_url(
+        helper["source_path"],
+        source_location.get("start_line"),
+        source_location.get("end_line"),
+    )
+    return (
+        f'<a class="reference-helper-chip" href="{html_escape(source_url)}">'
+        f'<code>{html_escape(helper["name"])}</code>'
+        "</a>"
+    )
+
+
+def _render_helper_group_cards(grouped: dict[str, dict[str, Any]], area_order: list[str]) -> list[str]:
+    """Render internal helpers as responsive grouped cards instead of a wide table."""
+    lines = ['<div class="reference-helper-groups">']
+    for area in area_order:
+        helpers = grouped[area]["helpers"]
+        lines.extend(
+            [
+                '  <section class="reference-helper-group">',
+                f'    <h4>{html_escape(area)}</h4>',
+                f'    <p>{html_escape(grouped[area]["role"])}</p>',
+                '    <div class="reference-helper-chip-wrap">',
+            ]
+        )
+        for helper in helpers:
+            lines.append(f"      {_helper_chip(helper)}")
+        lines.extend(["    </div>", "  </section>"])
+    lines.append("</div>")
+    return lines
+
+
 def _render_nested_helper_section(
     root_qn: str,
     helper_qns: list[str],
@@ -1086,12 +1242,11 @@ def _render_nested_helper_section(
                 "helper descendants in the generated call graph."
             ),
             "",
-            '<div class="module-table-scroll reference-input-table">',
-            *render_html_table(
-                ["Area", "Helpers", "What they do"],
-                [["—", "—", "No internal helpers detected."]],
-                table_class="reference-function-table",
-            ),
+            '<div class="reference-helper-groups">',
+            '  <section class="reference-helper-group reference-helper-group-empty">',
+            '    <h4>No internal helpers detected</h4>',
+            '    <p>This callable does not have package-local helper descendants in the generated call graph.</p>',
+            "  </section>",
             "</div>",
         ]
         return [
@@ -1120,17 +1275,8 @@ def _render_nested_helper_section(
         )
 
     area_order = _ordered_helper_areas(grouped)
-    helper_rows: list[list[str]] = []
     for area in area_order:
-        helpers = sorted(grouped[area]["helpers"], key=lambda item: item["name"].lower())
-        grouped[area]["helpers"] = helpers
-        helper_rows.append(
-            [
-                html_escape(area),
-                ", ".join(f"<code>{html_escape(helper['name'])}</code>" for helper in helpers),
-                html_escape(grouped[area]["role"]),
-            ]
-        )
+        grouped[area]["helpers"] = sorted(grouped[area]["helpers"], key=lambda item: item["name"].lower())
 
     source_by_area_lines: list[str] = []
     for area in area_order:
@@ -1158,9 +1304,7 @@ def _render_nested_helper_section(
     body_lines = [
         f"This callable uses {helper_count} internal helpers for {_helper_area_purposes(area_order)}.",
         "",
-        '<div class="module-table-scroll reference-input-table">',
-        *render_html_table(["Area", "Helpers", "What they do"], helper_rows, table_class="reference-function-table"),
-        "</div>",
+        *_render_helper_group_cards(grouped, area_order),
         "",
         '??? example "View helper source by area"',
         "",
@@ -2075,7 +2219,7 @@ def main() -> None:
                         [
                             "Large call graph shown to two levels.",
                             "",
-                            "Expanded internal helper tree is available in the internal implementation summary.",
+                            "Expanded internal helper tree is available in Implementation details.",
                             "",
                         ]
                         if call_tree_depth == 2
@@ -2084,35 +2228,52 @@ def main() -> None:
                     *_render_call_tree(qn, calls_by_qn, node_by_qn, max_depth=call_tree_depth),
                 ]),
             ]
-            function_detail_lines = [
-                f"- Module: `{rel_module}`",
-                "- Classification: Callable",
-                f"- Source file path: `{source_path}`",
-                f"- Source line: `{source_start_line}`",
-                "- Signature:",
+            source_code_lines = [
+                *_source_card_lines(
+                    source_path=source_path,
+                    source_start_line=source_start_line,
+                    source_ref=source_ref,
+                    short_name=short_name,
+                ),
                 "",
-                _code_block(signature) if signature else PLACEHOLDER,
+                *_source_code_details_lines(source_block),
             ]
-            public_source_lines = [
-                f"- Source file path: `{source_path}`",
+            source_link_lines = [
+                f'- Source: `{_display_source_path(source_path)}:{source_start_line}`',
                 f'- <a class="reference-source-link" href="{source_ref}">View {short_name} on GitHub</a>',
-                "",
-                _code_block(source_block) if source_block else PLACEHOLDER,
             ]
             nested_helper_lines = _render_nested_helper_section(qn, helper_qns, node_by_qn, module_data)
             human_use_when = _documented_text(metadata.get("when_to_use"))
             human_do_not_use = _documented_text(metadata.get("do_not_use_when"))
             expanded_purpose = _documented_text(metadata.get("expanded_purpose"))
-            purpose_lines: list[str] = []
+            usage_guidance_lines: list[str] = []
+            usage_guidance_body: list[str] = []
+            if human_use_when != PLACEHOLDER:
+                usage_guidance_body.extend(["**Use when:**", "", *_bullet_lines(human_use_when), ""])
+            if human_do_not_use != PLACEHOLDER:
+                usage_guidance_body.extend(["**Do not use when:**", "", *_bullet_lines(human_do_not_use), ""])
             if expanded_purpose != PLACEHOLDER:
-                purpose_lines = ["**Additional context:**", "", expanded_purpose, ""]
+                usage_guidance_body.extend(["**Additional context:**", "", expanded_purpose])
+            if usage_guidance_body:
+                usage_guidance_lines = markdown_details(
+                    "Usage guidance",
+                    usage_guidance_body,
+                    class_name="reference-usage-details",
+                )
             used_in_templates = template_usage_by_symbol.get(short_name, [])
             used_in_template_lines = [f"- `{template}`" for template in used_in_templates] if used_in_templates else ["None."]
             key_term_lines = _render_key_terms(list(metadata.get("glossary_terms", [])), glossary)
+            glossary_section_lines: list[str] = []
+            if key_term_lines:
+                glossary_terms = list(dict.fromkeys(metadata.get("glossary_terms", [])))
+                glossary_body = (
+                    markdown_details("Glossary terms", key_term_lines, class_name="reference-glossary-details")
+                    if len(glossary_terms) > 5
+                    else key_term_lines
+                )
+                glossary_section_lines = ["## Glossary", "", *glossary_body, ""]
             related_guide_lines = _render_related_guides(list(metadata.get("related_guides", [])))
             see_also_lines = related_guide_lines if related_guide_lines else ["## See also", "", "No related guides documented.", ""]
-            if key_term_lines:
-                see_also_lines.extend(key_term_lines)
             preferred_example = _render_preferred_example(short_name, signature, metadata)
             return_interpretation_lines = (
                 ["### Return interpretation", "", rendered_return_interpretation, ""]
@@ -2123,6 +2284,23 @@ def main() -> None:
                 ["### Common failure causes", "", rendered_common_failure_causes, ""]
                 if metadata.get("common_failure_causes")
                 else []
+            )
+            notes_and_side_effects_lines = markdown_details(
+                "Notes, side effects, and template usage",
+                [
+                    "**Used in templates:**",
+                    "",
+                    *used_in_template_lines,
+                    "",
+                    "**Side effects:**",
+                    "",
+                    rendered_side_effects,
+                    "",
+                    "**Notes:**",
+                    "",
+                    rendered_notes,
+                ],
+                class_name="reference-implementation-details",
             )
             function_manifest_lines = [
                 f"- Fully qualified function name: `{qn}`",
@@ -2144,7 +2322,7 @@ def main() -> None:
                 f"- End line: `{source_end_line}`",
                 "- Signature:",
                 "",
-                _code_block(signature) if signature else PLACEHOLDER,
+                _code_block(_format_api_signature(signature)) if signature else PLACEHOLDER,
             ]
             internal_relationship_graph_lines = [
                 "### Public related functions",
@@ -2156,7 +2334,7 @@ def main() -> None:
                 f"- Internal helper count: {len(helper_qns)}",
                 (
                     "- Grouped helper summary and optional source snippets are rendered in the page-level "
-                    "Internal implementation summary section."
+                    "Implementation details section."
                 ),
             ]
             machine_metadata_lines = [
@@ -2189,23 +2367,18 @@ def main() -> None:
             lines = [
                 f"# {short_name}",
                 "",
-                "## Signature",
-                "",
-                _code_block(signature) if signature else PLACEHOLDER,
-                "",
-                "## Summary",
-                "",
                 purpose,
                 "",
-                "## Usage note",
+                *usage_guidance_lines,
                 "",
-                *(_bullet_lines(human_use_when) if human_use_when != PLACEHOLDER else [PLACEHOLDER]),
+                "## Signature",
                 "",
-                "**Do not use when:**",
+                *_reference_code_block(_format_api_signature(signature), class_name="reference-api-definition"),
                 "",
-                *_bullet_lines(human_do_not_use),
+                "## Example usage",
                 "",
-                *purpose_lines,
+                *_reference_code_block(preferred_example, class_name="reference-example-usage"),
+                "",
                 "## Parameters",
                 "",
                 *input_lines,
@@ -2220,53 +2393,39 @@ def main() -> None:
                 rendered_raises,
                 "",
                 *common_failure_cause_lines,
-                "## Example",
+                "## Relationships",
                 "",
-                _code_block(preferred_example),
+                "### Used by",
                 "",
-                *see_also_lines,
-                "## Developer details",
+                *(_fmt_links(used_by) if used_by else [PLACEHOLDER]),
                 "",
-                *function_detail_lines,
-                "",
-                "**Used in templates:**",
-                "",
-                *used_in_template_lines,
-                "",
-                "**Side effects:**",
-                "",
-                rendered_side_effects,
-                "",
-                "**Notes:**",
-                "",
-                rendered_notes,
-                "",
-                "## Calls",
+                "### Calls",
                 "",
                 *(_fmt_links(deps) if deps else [PLACEHOLDER]),
                 "",
-                "## Internal implementation summary",
+                "## Implementation details",
+                "",
+                *notes_and_side_effects_lines,
                 "",
                 *call_flow_lines,
                 "",
                 *nested_helper_lines,
                 "",
-            ]
-            if used_by:
-                lines.extend(["## Used by", "", *_fmt_links(used_by), ""])
-            lines.extend([
-                "## Source link",
+                *source_code_lines,
                 "",
-                *public_source_lines,
-                "",
-            ])
-            lines.extend([
                 *markdown_details(
-                    "AI / machine-readable metadata — skip this if you are reading the docs normally",
+                    "Machine-readable metadata / metadata details",
                     machine_metadata_lines,
                     class_name="reference-metadata-details",
                 ),
-            ])
+                "",
+                "## Source link",
+                "",
+                *source_link_lines,
+                "",
+                *glossary_section_lines,
+                *see_also_lines,
+            ]
         else:
             lines = [
                 f"# {short_name}",
@@ -2298,7 +2457,7 @@ def main() -> None:
                 "",
                 "## Signature if available",
                 "",
-                _code_block(signature) if signature else PLACEHOLDER,
+                _code_block(_format_api_signature(signature)) if signature else PLACEHOLDER,
                 "",
                 "## Side effects",
                 "",
@@ -2334,9 +2493,9 @@ def main() -> None:
                 lines.extend(["", "_No inbound or outbound references detected._"])
 
         if node["exported"]:
-            (CALLABLE_REFERENCE_DIR / f"{short_name}.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+            (CALLABLE_REFERENCE_DIR / f"{short_name}.md").write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
         elif generate_internal_pages:
-            (INTERNAL_REFERENCE_DIR / f"{module_name}_{short_name}.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+            (INTERNAL_REFERENCE_DIR / f"{module_name}_{short_name}.md").write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
 
         record_used_in_templates = template_usage_by_symbol.get(short_name, []) if node["exported"] else []
         record_when_to_use = metadata.get("when_to_use") if node["exported"] else None

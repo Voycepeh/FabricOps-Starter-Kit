@@ -1,26 +1,39 @@
 # get_selected_catalogue_table
 
+Return the table selected by widget_select_catalogue_table.
+
+<details class="reference-usage-details">
+<summary>Usage guidance</summary>
+
+**Use when:**
+
+- Use after the catalogue selector has been rendered and the reviewer has chosen a table.
+
+**Additional context:**
+
+Returns the catalogue table selected by widget_select_catalogue_table for downstream governance review cells.
+
+</details>
+
 ## Signature
+
+<div class="reference-api-definition" markdown="1">
 
 ```python
 def get_selected_catalogue_table(table_selector: Any | None=None) -> dict[str, Any]
 ```
 
-## Summary
+</div>
 
-Return the table selected by widget_select_catalogue_table.
+## Example usage
 
-## Usage note
+<div class="reference-example-usage" markdown="1">
 
-- Use after the catalogue selector has been rendered and the reviewer has chosen a table.
+```python
+Not documented yet
+```
 
-**Do not use when:**
-
-- Not documented yet
-
-**Additional context:**
-
-Returns the catalogue table selected by widget_select_catalogue_table for downstream governance review cells.
+</div>
 
 ## Parameters
 
@@ -48,34 +61,20 @@ Not documented yet
 - Notebook state was cleared.
 - The selected metadata row is no longer available.
 
-## Example
+## Relationships
 
-```python
+### Used by
+
 Not documented yet
-```
 
-## See also
+### Calls
 
-- [Governance Review](../../how-fabricops-works/governance-review.md)
+Not documented yet
 
-**Glossary terms**
+## Implementation details
 
-- **Catalogue evidence:** Reviewed metadata that explains what FabricOps knows about a dataset or table.
-- **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
-
-See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
-
-## Developer details
-
-- Module: `governance_review`
-- Classification: Callable
-- Source file path: `src/fabricops_kit/governance_review.py`
-- Source line: `273`
-- Signature:
-
-```python
-def get_selected_catalogue_table(table_selector: Any | None=None) -> dict[str, Any]
-```
+<details class="reference-implementation-details">
+<summary>Notes, side effects, and template usage</summary>
 
 **Used in templates:**
 
@@ -89,11 +88,7 @@ Not documented yet
 
 No additional callable notes are documented.
 
-## Calls
-
-Not documented yet
-
-## Internal implementation summary
+</details>
 
 ??? info "Call flow"
 
@@ -105,60 +100,50 @@ Not documented yet
 
     This callable uses 0 internal helpers; `get_selected_catalogue_table` does not have package-local helper descendants in the generated call graph.
 
-    <div class="module-table-scroll reference-input-table">
-    <table class="reference-function-table">
-      <thead>
-        <tr>
-          <th>Area</th>
-          <th>Helpers</th>
-          <th>What they do</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td data-label="Area">—</td>
-          <td data-label="Helpers">—</td>
-          <td data-label="What they do">No internal helpers detected.</td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="reference-helper-groups">
+      <section class="reference-helper-group reference-helper-group-empty">
+        <h4>No internal helpers detected</h4>
+        <p>This callable does not have package-local helper descendants in the generated call graph.</p>
+      </section>
     </div>
 
-## Source link
+<div class="reference-source-card">
+  <p><strong>Source:</strong> <code>fabricops_kit/governance_review.py:273</code></p>
+  <p><strong>Actions:</strong> <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L273-L297">View on GitHub</a></p>
+</div>
 
-- Source file path: `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L273-L297">View get_selected_catalogue_table on GitHub</a>
+??? example "Source code"
 
-```python
-def get_selected_catalogue_table(table_selector: Any | None = None) -> dict[str, Any]:
-    """Return the catalogue table selected by ``widget_select_catalogue_table``.
+    ```python
+    def get_selected_catalogue_table(table_selector: Any | None = None) -> dict[str, Any]:
+        """Return the catalogue table selected by ``widget_select_catalogue_table``.
 
-    Parameters
-    ----------
-    table_selector : ipywidgets.Combobox, optional
-        Selector returned by ``widget_select_catalogue_table``. Passing it is
-        optional because the widget also maintains module-level selection state.
+        Parameters
+        ----------
+        table_selector : ipywidgets.Combobox, optional
+            Selector returned by ``widget_select_catalogue_table``. Passing it is
+            optional because the widget also maintains module-level selection state.
 
-    Returns
-    -------
-    dict[str, Any]
-        Stable table identity used by ``load_catalogue_profile_rows``.
-    """
-    if _SELECTED_CATALOGUE_TABLE is not None:
-        return dict(_SELECTED_CATALOGUE_TABLE)
-    raw_value = getattr(table_selector, "value", None) if table_selector is not None else None
-    if raw_value:
-        try:
-            parsed = json.loads(str(raw_value))
-            if isinstance(parsed, dict):
-                return dict(parsed)
-        except json.JSONDecodeError:
-            pass
-    raise ValueError("No catalogue table has been selected. Run widget_select_catalogue_table first.")
-```
+        Returns
+        -------
+        dict[str, Any]
+            Stable table identity used by ``load_catalogue_profile_rows``.
+        """
+        if _SELECTED_CATALOGUE_TABLE is not None:
+            return dict(_SELECTED_CATALOGUE_TABLE)
+        raw_value = getattr(table_selector, "value", None) if table_selector is not None else None
+        if raw_value:
+            try:
+                parsed = json.loads(str(raw_value))
+                if isinstance(parsed, dict):
+                    return dict(parsed)
+            except json.JSONDecodeError:
+                pass
+        raise ValueError("No catalogue table has been selected. Run widget_select_catalogue_table first.")
+    ```
 
 <details class="reference-metadata-details">
-<summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
+<summary>Machine-readable metadata / metadata details</summary>
 
 These generated fields are for automation, AI agents, maintainers, and doc tooling. Skip this block when reading the docs normally.
 
@@ -217,6 +202,22 @@ Not documented yet
 ### Internal implementation summary
 
 - Internal helper count: 0
-- Grouped helper summary and optional source snippets are rendered in the page-level Internal implementation summary section.
+- Grouped helper summary and optional source snippets are rendered in the page-level Implementation details section.
 
 </details>
+
+## Source link
+
+- Source: `fabricops_kit/governance_review.py:273`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L273-L297">View get_selected_catalogue_table on GitHub</a>
+
+## Glossary
+
+- **Catalogue evidence:** Reviewed metadata that explains what FabricOps knows about a dataset or table.
+- **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
+
+See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
+
+## See also
+
+- [Governance Review](../../how-fabricops-works/governance-review.md)

@@ -1,26 +1,43 @@
 # widget_render_data_agreement
 
-## Signature
-
-```python
-def widget_render_data_agreement(config: Any, env_name: str, *, spark: Any) -> dict[str, Any]
-```
-
-## Summary
-
 Render the standalone data-agreement intake widget.
 
-## Usage note
+<details class="reference-usage-details">
+<summary>Usage guidance</summary>
+
+**Use when:**
 
 - Use in 01_agreement after steward context exists and before pipeline or governance notebooks need an approved agreement selection.
-
-**Do not use when:**
-
-- Not documented yet
 
 **Additional context:**
 
 Renders the data agreement intake widget used to capture agreement identity, scope, and business metadata for later notebook workflows.
+
+</details>
+
+## Signature
+
+<div class="reference-api-definition" markdown="1">
+
+```python
+def widget_render_data_agreement(
+    config: Any,
+    env_name: str,
+    spark: Any,
+) -> dict[str, Any]:
+```
+
+</div>
+
+## Example usage
+
+<div class="reference-example-usage" markdown="1">
+
+```python
+Not documented yet
+```
+
+</div>
 
 ## Parameters
 
@@ -50,33 +67,20 @@ Not documented yet
 - Agreement identifiers conflict with existing metadata.
 - The metadata target cannot be written.
 
-## Example
+## Relationships
 
-```python
+### Used by
+
 Not documented yet
-```
 
-## See also
+### Calls
 
-- [Notebook Templates](../../how-fabricops-works/notebook-templates.md)
+- `fabricops_kit.data_agreement._render_maintenance_widget`
 
-**Glossary terms**
+## Implementation details
 
-- **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
-
-See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
-
-## Developer details
-
-- Module: `data_agreement`
-- Classification: Callable
-- Source file path: `src/fabricops_kit/data_agreement.py`
-- Source line: `1435`
-- Signature:
-
-```python
-def widget_render_data_agreement(config: Any, env_name: str, *, spark: Any) -> dict[str, Any]
-```
+<details class="reference-implementation-details">
+<summary>Notes, side effects, and template usage</summary>
 
 **Used in templates:**
 
@@ -90,17 +94,13 @@ Not documented yet
 
 No additional callable notes are documented.
 
-## Calls
-
-- `fabricops_kit.data_agreement._render_maintenance_widget`
-
-## Internal implementation summary
+</details>
 
 ??? info "Call flow"
 
     Large call graph shown to two levels.
 
-    Expanded internal helper tree is available in the internal implementation summary.
+    Expanded internal helper tree is available in Implementation details.
 
     ```text
     widget_render_data_agreement(...)
@@ -136,43 +136,75 @@ No additional callable notes are documented.
 
     This callable uses 38 internal helpers for audit timestamp, metadata loading, validation, rule parsing, and other.
 
-    <div class="module-table-scroll reference-input-table">
-    <table class="reference-function-table">
-      <thead>
-        <tr>
-          <th>Area</th>
-          <th>Helpers</th>
-          <th>What they do</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td data-label="Area">Audit timestamp</td>
-          <td data-label="Helpers"><code>_build_runtime_audit_fields</code>, <code>_create_or_update_data_steward</code>, <code>_current_audit_timestamp</code>, <code>_get_audit_timezone</code>, <code>_get_widget_visible_fields</code>, <code>_validate_audit_timezone</code></td>
-          <td data-label="What they do">Resolve and stamp audit time consistently.</td>
-        </tr>
-        <tr>
-          <td data-label="Area">Metadata loading</td>
-          <td data-label="Helpers"><code>_generate_steward_id</code>, <code>_latest_agreement_versions</code>, <code>_list_all_data_agreement_rows</code>, <code>_list_data_agreements</code>, <code>_list_data_stewards</code>, <code>_render_searchable_selector</code>, <code>_to_bool</code></td>
-          <td data-label="What they do">Load and identify the metadata or table context needed by the callable.</td>
-        </tr>
-        <tr>
-          <td data-label="Area">Validation</td>
-          <td data-label="Helpers"><code>_collect_custom_fields</code>, <code>_parse_iso_date</code></td>
-          <td data-label="What they do">Validate inputs and guard conditions before the workflow continues.</td>
-        </tr>
-        <tr>
-          <td data-label="Area">Rule parsing</td>
-          <td data-label="Helpers"><code>_deserialize_custom_fields</code>, <code>_parse_contract_version</code>, <code>_serialize_custom_fields</code></td>
-          <td data-label="What they do">Normalize stored or user-provided values before applying rules.</td>
-        </tr>
-        <tr>
-          <td data-label="Area">Other</td>
-          <td data-label="Helpers"><code>_active_steward</code>, <code>_agreement_identity_text</code>, <code>_business_agreement_snapshot</code>, <code>_coerce_row_dicts</code>, <code>_config_value</code>, <code>_context_get</code>, <code>_create_or_update_data_agreement</code>, <code>_generate_agreement_id</code>, <code>_html_escape</code>, <code>_latest_by_key</code>, <code>_next_minor_version</code>, <code>_render_custom_fields</code>, <code>_render_maintenance_widget</code>, <code>_require_ipywidgets</code>, <code>_runtime_context</code>, <code>_safe_str</code>, <code>_standard_widget</code>, <code>_to_iso_date</code>, <code>_widget_common</code>, <code>_write_row</code></td>
-          <td data-label="What they do">Support lower-level implementation details that do not fit the main helper areas.</td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="reference-helper-groups">
+      <section class="reference-helper-group">
+        <h4>Audit timestamp</h4>
+        <p>Resolve and stamp audit time consistently.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/metadata.py#L147-L217"><code>_build_runtime_audit_fields</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L502-L552"><code>_create_or_update_data_steward</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L69-L75"><code>_current_audit_timestamp</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L61-L66"><code>_get_audit_timezone</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L156-L177"><code>_get_widget_visible_fields</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L27-L58"><code>_validate_audit_timezone</code></a>
+        </div>
+      </section>
+      <section class="reference-helper-group">
+        <h4>Metadata loading</h4>
+        <p>Load and identify the metadata or table context needed by the callable.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L446-L450"><code>_generate_steward_id</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L570-L586"><code>_latest_agreement_versions</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L589-L598"><code>_list_all_data_agreement_rows</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L601-L608"><code>_list_data_agreements</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L453-L482"><code>_list_data_stewards</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L198-L308"><code>_render_searchable_selector</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L414-L430"><code>_to_bool</code></a>
+        </div>
+      </section>
+      <section class="reference-helper-group">
+        <h4>Validation</h4>
+        <p>Validate inputs and guard conditions before the workflow continues.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L362-L394"><code>_collect_custom_fields</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L489-L499"><code>_parse_iso_date</code></a>
+        </div>
+      </section>
+      <section class="reference-helper-group">
+        <h4>Rule parsing</h4>
+        <p>Normalize stored or user-provided values before applying rules.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L118-L146"><code>_deserialize_custom_fields</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L555-L561"><code>_parse_contract_version</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L102-L115"><code>_serialize_custom_fields</code></a>
+        </div>
+      </section>
+      <section class="reference-helper-group">
+        <h4>Other</h4>
+        <p>Support lower-level implementation details that do not fit the main helper areas.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L433-L443"><code>_active_steward</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L1034-L1044"><code>_agreement_identity_text</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L621-L625"><code>_business_agreement_snapshot</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L397-L402"><code>_coerce_row_dicts</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L149-L153"><code>_config_value</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/metadata.py#L101-L113"><code>_context_get</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L628-L672"><code>_create_or_update_data_agreement</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L611-L612"><code>_generate_agreement_id</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L192-L195"><code>_html_escape</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L405-L411"><code>_latest_by_key</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L564-L567"><code>_next_minor_version</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L310-L359"><code>_render_custom_fields</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L1047-L1255"><code>_render_maintenance_widget</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L63-L72"><code>_require_ipywidgets</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/metadata.py#L120-L144"><code>_runtime_context</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/metadata.py#L116-L117"><code>_safe_str</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L1018-L1031"><code>_standard_widget</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L615-L618"><code>_to_iso_date</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L180-L189"><code>_widget_common</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L485-L486"><code>_write_row</code></a>
+        </div>
+      </section>
     </div>
 
     ??? example "View helper source by area"
@@ -1374,34 +1406,36 @@ No additional callable notes are documented.
             ```
 
 
-## Source link
+<div class="reference-source-card">
+  <p><strong>Source:</strong> <code>fabricops_kit/data_agreement.py:1435</code></p>
+  <p><strong>Actions:</strong> <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L1435-L1452">View on GitHub</a></p>
+</div>
 
-- Source file path: `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L1435-L1452">View widget_render_data_agreement on GitHub</a>
+??? example "Source code"
 
-```python
-def widget_render_data_agreement(config: Any, env_name: str, *, spark: Any) -> dict[str, Any]:
-    """Render append-only agreement create/update maintenance using active stewards.
+    ```python
+    def widget_render_data_agreement(config: Any, env_name: str, *, spark: Any) -> dict[str, Any]:
+        """Render append-only agreement create/update maintenance using active stewards.
 
-    Parameters
-    ----------
-    config : FrameworkConfig or dict
-        Configuration containing agreement widget fields and metadata routing.
-    env_name : str
-        Environment key configured by ``00_env_config``.
-    spark : pyspark.sql.SparkSession
-        Fabric Spark session used for metadata reads and append-only writes.
+        Parameters
+        ----------
+        config : FrameworkConfig or dict
+            Configuration containing agreement widget fields and metadata routing.
+        env_name : str
+            Environment key configured by ``00_env_config``.
+        spark : pyspark.sql.SparkSession
+            Fabric Spark session used for metadata reads and append-only writes.
 
-    Returns
-    -------
-    dict[str, Any]
-        Rendered controls, including read-only generated-identifier context.
-    """
-    return _render_maintenance_widget(spark=spark, config=config, env_name=env_name, kind="data_agreement_widget")
-```
+        Returns
+        -------
+        dict[str, Any]
+            Rendered controls, including read-only generated-identifier context.
+        """
+        return _render_maintenance_widget(spark=spark, config=config, env_name=env_name, kind="data_agreement_widget")
+    ```
 
 <details class="reference-metadata-details">
-<summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
+<summary>Machine-readable metadata / metadata details</summary>
 
 These generated fields are for automation, AI agents, maintainers, and doc tooling. Skip this block when reading the docs normally.
 
@@ -1451,7 +1485,11 @@ Not documented yet
 - Signature:
 
 ```python
-def widget_render_data_agreement(config: Any, env_name: str, *, spark: Any) -> dict[str, Any]
+def widget_render_data_agreement(
+    config: Any,
+    env_name: str,
+    spark: Any,
+) -> dict[str, Any]:
 ```
 
 ### Internal relationship graph
@@ -1463,6 +1501,21 @@ Not documented yet
 ### Internal implementation summary
 
 - Internal helper count: 38
-- Grouped helper summary and optional source snippets are rendered in the page-level Internal implementation summary section.
+- Grouped helper summary and optional source snippets are rendered in the page-level Implementation details section.
 
 </details>
+
+## Source link
+
+- Source: `fabricops_kit/data_agreement.py:1435`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L1435-L1452">View widget_render_data_agreement on GitHub</a>
+
+## Glossary
+
+- **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
+
+See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
+
+## See also
+
+- [Notebook Templates](../../how-fabricops-works/notebook-templates.md)

@@ -1,26 +1,43 @@
 # widget_render_agreement_evidence
 
-## Signature
-
-```python
-def widget_render_agreement_evidence(config: Any, env_name: str, *, spark: Any) -> dict[str, Any]
-```
-
-## Summary
-
 Render the standalone agreement-evidence widget.
 
-## Usage note
+<details class="reference-usage-details">
+<summary>Usage guidance</summary>
+
+**Use when:**
 
 - Use in 01_agreement when agreement records need supporting evidence that downstream users can audit.
-
-**Do not use when:**
-
-- Not documented yet
 
 **Additional context:**
 
 Renders the supporting-evidence widget for agreement workflows so users can record links or files that justify an agreement.
+
+</details>
+
+## Signature
+
+<div class="reference-api-definition" markdown="1">
+
+```python
+def widget_render_agreement_evidence(
+    config: Any,
+    env_name: str,
+    spark: Any,
+) -> dict[str, Any]:
+```
+
+</div>
+
+## Example usage
+
+<div class="reference-example-usage" markdown="1">
+
+```python
+Not documented yet
+```
+
+</div>
 
 ## Parameters
 
@@ -52,35 +69,20 @@ Not documented yet
 - Widget state is reset before saving.
 - The configured metadata target is not writable.
 
-## Example
+## Relationships
 
-```python
+### Used by
+
 Not documented yet
-```
 
-## See also
+### Calls
 
-- [Notebook Templates](../../how-fabricops-works/notebook-templates.md)
-- [Metadata Tables](../../how-fabricops-works/metadata-tables.md)
+- `fabricops_kit.data_agreement._render_agreement_evidence_widget`
 
-**Glossary terms**
+## Implementation details
 
-- **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
-- **Catalogue evidence:** Reviewed metadata that explains what FabricOps knows about a dataset or table.
-
-See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
-
-## Developer details
-
-- Module: `data_agreement`
-- Classification: Callable
-- Source file path: `src/fabricops_kit/data_agreement.py`
-- Source line: `1379`
-- Signature:
-
-```python
-def widget_render_agreement_evidence(config: Any, env_name: str, *, spark: Any) -> dict[str, Any]
-```
+<details class="reference-implementation-details">
+<summary>Notes, side effects, and template usage</summary>
 
 **Used in templates:**
 
@@ -98,17 +100,13 @@ Evidence files must be uploaded manually to the metadata lakehouse
 pasted ``Files/...`` path to ``METADATA_DATA_AGREEMENT_EVIDENCE`` and
 does not read or write binary file content.
 
-## Calls
-
-- `fabricops_kit.data_agreement._render_agreement_evidence_widget`
-
-## Internal implementation summary
+</details>
 
 ??? info "Call flow"
 
     Large call graph shown to two levels.
 
-    Expanded internal helper tree is available in the internal implementation summary.
+    Expanded internal helper tree is available in Implementation details.
 
     ```text
     widget_render_agreement_evidence(...)
@@ -127,43 +125,56 @@ does not read or write binary file content.
 
     This callable uses 19 internal helpers for audit timestamp, metadata loading, validation, fabric or spark access, and other.
 
-    <div class="module-table-scroll reference-input-table">
-    <table class="reference-function-table">
-      <thead>
-        <tr>
-          <th>Area</th>
-          <th>Helpers</th>
-          <th>What they do</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td data-label="Area">Audit timestamp</td>
-          <td data-label="Helpers"><code>_build_runtime_audit_fields</code>, <code>_current_audit_timestamp</code>, <code>_get_audit_timezone</code>, <code>_validate_audit_timezone</code></td>
-          <td data-label="What they do">Resolve and stamp audit time consistently.</td>
-        </tr>
-        <tr>
-          <td data-label="Area">Metadata loading</td>
-          <td data-label="Helpers"><code>_list_all_data_agreement_rows</code>, <code>_render_agreement_evidence_widget</code>, <code>_render_searchable_selector</code>, <code>_save_agreement_evidence_records</code></td>
-          <td data-label="What they do">Load and identify the metadata or table context needed by the callable.</td>
-        </tr>
-        <tr>
-          <td data-label="Area">Validation</td>
-          <td data-label="Helpers"><code>_prepare_evidence_file_references</code></td>
-          <td data-label="What they do">Validate inputs and guard conditions before the workflow continues.</td>
-        </tr>
-        <tr>
-          <td data-label="Area">Fabric or Spark access</td>
-          <td data-label="Helpers"><code>_get_notebookutils</code></td>
-          <td data-label="What they do">Access Fabric or Spark runtime services used by the implementation.</td>
-        </tr>
-        <tr>
-          <td data-label="Area">Other</td>
-          <td data-label="Helpers"><code>_coerce_row_dicts</code>, <code>_config_value</code>, <code>_context_get</code>, <code>_html_escape</code>, <code>_require_ipywidgets</code>, <code>_runtime_context</code>, <code>_safe_str</code>, <code>_widget_common</code>, <code>_write_row</code></td>
-          <td data-label="What they do">Support lower-level implementation details that do not fit the main helper areas.</td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="reference-helper-groups">
+      <section class="reference-helper-group">
+        <h4>Audit timestamp</h4>
+        <p>Resolve and stamp audit time consistently.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/metadata.py#L147-L217"><code>_build_runtime_audit_fields</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L69-L75"><code>_current_audit_timestamp</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L61-L66"><code>_get_audit_timezone</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L27-L58"><code>_validate_audit_timezone</code></a>
+        </div>
+      </section>
+      <section class="reference-helper-group">
+        <h4>Metadata loading</h4>
+        <p>Load and identify the metadata or table context needed by the callable.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L589-L598"><code>_list_all_data_agreement_rows</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L1258-L1376"><code>_render_agreement_evidence_widget</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L198-L308"><code>_render_searchable_selector</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L739-L770"><code>_save_agreement_evidence_records</code></a>
+        </div>
+      </section>
+      <section class="reference-helper-group">
+        <h4>Validation</h4>
+        <p>Validate inputs and guard conditions before the workflow continues.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L687-L737"><code>_prepare_evidence_file_references</code></a>
+        </div>
+      </section>
+      <section class="reference-helper-group">
+        <h4>Fabric or Spark access</h4>
+        <p>Access Fabric or Spark runtime services used by the implementation.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L675-L684"><code>_get_notebookutils</code></a>
+        </div>
+      </section>
+      <section class="reference-helper-group">
+        <h4>Other</h4>
+        <p>Support lower-level implementation details that do not fit the main helper areas.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L397-L402"><code>_coerce_row_dicts</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L149-L153"><code>_config_value</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/metadata.py#L101-L113"><code>_context_get</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L192-L195"><code>_html_escape</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L63-L72"><code>_require_ipywidgets</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/metadata.py#L120-L144"><code>_runtime_context</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/metadata.py#L116-L117"><code>_safe_str</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L180-L189"><code>_widget_common</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L485-L486"><code>_write_row</code></a>
+        </div>
+      </section>
     </div>
 
     ??? example "View helper source by area"
@@ -838,50 +849,52 @@ does not read or write binary file content.
             ```
 
 
-## Source link
+<div class="reference-source-card">
+  <p><strong>Source:</strong> <code>fabricops_kit/data_agreement.py:1379</code></p>
+  <p><strong>Actions:</strong> <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L1379-L1412">View on GitHub</a></p>
+</div>
 
-- Source file path: `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L1379-L1412">View widget_render_agreement_evidence on GitHub</a>
+??? example "Source code"
 
-```python
-def widget_render_agreement_evidence(config: Any, env_name: str, *, spark: Any) -> dict[str, Any]:
-    """Render standalone agreement evidence upload controls.
+    ```python
+    def widget_render_agreement_evidence(config: Any, env_name: str, *, spark: Any) -> dict[str, Any]:
+        """Render standalone agreement evidence upload controls.
 
-    Parameters
-    ----------
-    config : FrameworkConfig or dict
-        Configuration containing agreement metadata routing and evidence table
-        settings.
-    env_name : str
-        Environment key configured by ``00_env_config``.
-    spark : pyspark.sql.SparkSession
-        Fabric Spark session used for metadata reads, file writes, and
-        append-only evidence metadata writes.
+        Parameters
+        ----------
+        config : FrameworkConfig or dict
+            Configuration containing agreement metadata routing and evidence table
+            settings.
+        env_name : str
+            Environment key configured by ``00_env_config``.
+        spark : pyspark.sql.SparkSession
+            Fabric Spark session used for metadata reads, file writes, and
+            append-only evidence metadata writes.
 
-    Returns
-    -------
-    dict[str, Any]
-        Rendered controls for selecting an agreement version, pasting
-        metadata lakehouse evidence file paths, refreshing agreement options,
-        and saving evidence metadata rows.
+        Returns
+        -------
+        dict[str, Any]
+            Rendered controls for selecting an agreement version, pasting
+            metadata lakehouse evidence file paths, refreshing agreement options,
+            and saving evidence metadata rows.
 
-    Notes
-    -----
-    This public wrapper is intended for the separate-widget ``01_agreement`` layout.
-    Evidence files must be uploaded manually to the metadata lakehouse
-    ``Files`` area first. The widget appends one file-reference row per
-    pasted ``Files/...`` path to ``METADATA_DATA_AGREEMENT_EVIDENCE`` and
-    does not read or write binary file content.
-    """
-    return _render_agreement_evidence_widget(
-        spark=spark,
-        config=config,
-        env_name=env_name,
-    )
-```
+        Notes
+        -----
+        This public wrapper is intended for the separate-widget ``01_agreement`` layout.
+        Evidence files must be uploaded manually to the metadata lakehouse
+        ``Files`` area first. The widget appends one file-reference row per
+        pasted ``Files/...`` path to ``METADATA_DATA_AGREEMENT_EVIDENCE`` and
+        does not read or write binary file content.
+        """
+        return _render_agreement_evidence_widget(
+            spark=spark,
+            config=config,
+            env_name=env_name,
+        )
+    ```
 
 <details class="reference-metadata-details">
-<summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
+<summary>Machine-readable metadata / metadata details</summary>
 
 These generated fields are for automation, AI agents, maintainers, and doc tooling. Skip this block when reading the docs normally.
 
@@ -935,7 +948,11 @@ Not documented yet
 - Signature:
 
 ```python
-def widget_render_agreement_evidence(config: Any, env_name: str, *, spark: Any) -> dict[str, Any]
+def widget_render_agreement_evidence(
+    config: Any,
+    env_name: str,
+    spark: Any,
+) -> dict[str, Any]:
 ```
 
 ### Internal relationship graph
@@ -947,6 +964,23 @@ Not documented yet
 ### Internal implementation summary
 
 - Internal helper count: 19
-- Grouped helper summary and optional source snippets are rendered in the page-level Internal implementation summary section.
+- Grouped helper summary and optional source snippets are rendered in the page-level Implementation details section.
 
 </details>
+
+## Source link
+
+- Source: `fabricops_kit/data_agreement.py:1379`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L1379-L1412">View widget_render_agreement_evidence on GitHub</a>
+
+## Glossary
+
+- **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
+- **Catalogue evidence:** Reviewed metadata that explains what FabricOps knows about a dataset or table.
+
+See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
+
+## See also
+
+- [Notebook Templates](../../how-fabricops-works/notebook-templates.md)
+- [Metadata Tables](../../how-fabricops-works/metadata-tables.md)

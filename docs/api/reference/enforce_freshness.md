@@ -1,16 +1,11 @@
 # enforce_freshness
 
-## Signature
-
-```python
-def enforce_freshness(dataframe, freshness_column: str | None, max_lag_days: int | str | None, severity: str='blocking', *, reference_date: date | datetime | str | None=None) -> dict
-```
-
-## Summary
-
 Enforce whether the latest data arrived within the configured freshness lag.
 
-## Usage note
+<details class="reference-usage-details">
+<summary>Usage guidance</summary>
+
+**Use when:**
 
 - Use as a pipeline guardrail when stale source or target data should block or warn before downstream work proceeds.
 
@@ -21,6 +16,35 @@ Enforce whether the latest data arrived within the configured freshness lag.
 **Additional context:**
 
 Checks whether the latest value in a freshness column is recent enough for the configured maximum lag before pipeline writes continue.
+
+</details>
+
+## Signature
+
+<div class="reference-api-definition" markdown="1">
+
+```python
+def enforce_freshness(
+    dataframe,
+    freshness_column: str | None,
+    max_lag_days: int | str | None,
+    severity: str='blocking',
+    reference_date: date | datetime | str | None=None,
+) -> dict:
+```
+
+</div>
+
+## Example usage
+
+<div class="reference-example-usage" markdown="1">
+
+```python
+freshness_result = enforce_freshness(df, "business_date", 1, severity="blocking")
+stop_if_failed(freshness_result)
+```
+
+</div>
 
 ## Parameters
 
@@ -51,37 +75,22 @@ ValueError when severity is unsupported, lag is missing for a configured column,
 - The latest date is older than the allowed lag.
 - Severity is invalid or configured as blocking for stale data.
 
-## Example
+## Relationships
 
-```python
-freshness_result = enforce_freshness(df, "business_date", 1, severity="blocking")
-stop_if_failed(freshness_result)
-```
+### Used by
 
-## See also
+- <a href="../run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
 
-- [Pipeline Guardrails](../../how-fabricops-works/pipeline-guardrails.md)
+### Calls
 
-**Glossary terms**
+- `fabricops_kit.guardrails._coerce_date`
+- `fabricops_kit.guardrails._iso_date_value`
+- `fabricops_kit.guardrails._max_column_value`
 
-- **Guardrail:** A check that tells the notebook whether it is safe to continue.
-- **can_continue:** A returned true/false value that tells downstream code whether the pipeline should keep running.
-- **Source table:** An input table or file read by the pipeline.
-- **Target table:** An output table written by the pipeline.
+## Implementation details
 
-See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
-
-## Developer details
-
-- Module: `guardrails`
-- Classification: Callable
-- Source file path: `src/fabricops_kit/guardrails.py`
-- Source line: `367`
-- Signature:
-
-```python
-def enforce_freshness(dataframe, freshness_column: str | None, max_lag_days: int | str | None, severity: str='blocking', *, reference_date: date | datetime | str | None=None) -> dict
-```
+<details class="reference-implementation-details">
+<summary>Notes, side effects, and template usage</summary>
 
 **Used in templates:**
 
@@ -96,13 +105,7 @@ Computes max(freshness_column) on the provided DataFrame; it does not write meta
 Freshness is separate from profile behavior. ``load_behavior="skip"`` only
 skips profile behavior enforcement; freshness still runs when configured.
 
-## Calls
-
-- `fabricops_kit.guardrails._coerce_date`
-- `fabricops_kit.guardrails._iso_date_value`
-- `fabricops_kit.guardrails._max_column_value`
-
-## Internal implementation summary
+</details>
 
 ??? info "Call flow"
 
@@ -118,23 +121,16 @@ skips profile behavior enforcement; freshness still runs when configured.
 
     This callable uses 3 internal helpers for other.
 
-    <div class="module-table-scroll reference-input-table">
-    <table class="reference-function-table">
-      <thead>
-        <tr>
-          <th>Area</th>
-          <th>Helpers</th>
-          <th>What they do</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td data-label="Area">Other</td>
-          <td data-label="Helpers"><code>_coerce_date</code>, <code>_iso_date_value</code>, <code>_max_column_value</code></td>
-          <td data-label="What they do">Support lower-level implementation details that do not fit the main helper areas.</td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="reference-helper-groups">
+      <section class="reference-helper-group">
+        <h4>Other</h4>
+        <p>Support lower-level implementation details that do not fit the main helper areas.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/guardrails.py#L342-L359"><code>_coerce_date</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/guardrails.py#L362-L364"><code>_iso_date_value</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/guardrails.py#L309-L339"><code>_max_column_value</code></a>
+        </div>
+      </section>
     </div>
 
     ??? example "View helper source by area"
@@ -215,118 +211,116 @@ skips profile behavior enforcement; freshness still runs when configured.
             ```
 
 
-## Used by
+<div class="reference-source-card">
+  <p><strong>Source:</strong> <code>fabricops_kit/guardrails.py:367</code></p>
+  <p><strong>Actions:</strong> <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/guardrails.py#L367-L464">View on GitHub</a></p>
+</div>
 
-- <a href="../run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
+??? example "Source code"
 
-## Source link
+    ```python
+    def enforce_freshness(
+        dataframe,
+        freshness_column: str | None,
+        max_lag_days: int | str | None,
+        severity: str = "blocking",
+        *,
+        reference_date: date | datetime | str | None = None,
+    ) -> dict:
+        """Enforce that a DataFrame contains recent enough data.
 
-- Source file path: `src/fabricops_kit/guardrails.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/guardrails.py#L367-L464">View enforce_freshness on GitHub</a>
+        Parameters
+        ----------
+        dataframe : Any
+            Spark DataFrame or iterable of row-like mappings to check.
+        freshness_column : str or None
+            Column whose maximum value represents the latest available data date.
+            When omitted, the freshness guardrail is skipped.
+        max_lag_days : int or str or None
+            Maximum allowed lag, in days, between ``reference_date`` and the latest
+            value in ``freshness_column``. Required when ``freshness_column`` is set.
+        severity : {"blocking", "warning"}, default="blocking"
+            Whether stale data blocks continuation or returns a non-blocking warning.
+        reference_date : date, datetime, str, optional
+            Date used as "today" for comparison. Defaults to the current local date.
 
-```python
-def enforce_freshness(
-    dataframe,
-    freshness_column: str | None,
-    max_lag_days: int | str | None,
-    severity: str = "blocking",
-    *,
-    reference_date: date | datetime | str | None = None,
-) -> dict:
-    """Enforce that a DataFrame contains recent enough data.
+        Returns
+        -------
+        dict
+            Standard guardrail result with ``status``, ``can_continue``,
+            ``check_type``, latest value, required minimum value, and message.
 
-    Parameters
-    ----------
-    dataframe : Any
-        Spark DataFrame or iterable of row-like mappings to check.
-    freshness_column : str or None
-        Column whose maximum value represents the latest available data date.
-        When omitted, the freshness guardrail is skipped.
-    max_lag_days : int or str or None
-        Maximum allowed lag, in days, between ``reference_date`` and the latest
-        value in ``freshness_column``. Required when ``freshness_column`` is set.
-    severity : {"blocking", "warning"}, default="blocking"
-        Whether stale data blocks continuation or returns a non-blocking warning.
-    reference_date : date, datetime, str, optional
-        Date used as "today" for comparison. Defaults to the current local date.
+        Notes
+        -----
+        Freshness is separate from profile behavior. ``load_behavior="skip"`` only
+        skips profile behavior enforcement; freshness still runs when configured.
+        """
+        column = str(freshness_column or "").strip()
+        normalized_severity = str(severity or "blocking").lower().strip()
+        if normalized_severity not in {"blocking", "warning"}:
+            raise ValueError("severity must be one of: blocking, warning")
 
-    Returns
-    -------
-    dict
-        Standard guardrail result with ``status``, ``can_continue``,
-        ``check_type``, latest value, required minimum value, and message.
+        base_result = {
+            "status": "skipped",
+            "can_continue": True,
+            "check_type": "freshness",
+            "freshness_column": column,
+            "freshness_max_lag_days": "" if max_lag_days in (None, "") else max_lag_days,
+            "freshness_severity": normalized_severity,
+            "latest_value": "",
+            "required_min_value": "",
+            "freshness_status": "skipped",
+            "freshness_can_continue": True,
+            "freshness_message": "Freshness check skipped because no freshness column is configured.",
+            "message": "Freshness check skipped because no freshness column is configured.",
+        }
+        if not column:
+            return base_result
+        if max_lag_days is None or str(max_lag_days).strip() == "":
+            raise ValueError("max_lag_days is required when freshness_column is set")
+        lag_days = int(max_lag_days)
+        if lag_days < 0:
+            raise ValueError("max_lag_days must be greater than or equal to zero")
+        base_result["freshness_max_lag_days"] = lag_days
 
-    Notes
-    -----
-    Freshness is separate from profile behavior. ``load_behavior="skip"`` only
-    skips profile behavior enforcement; freshness still runs when configured.
-    """
-    column = str(freshness_column or "").strip()
-    normalized_severity = str(severity or "blocking").lower().strip()
-    if normalized_severity not in {"blocking", "warning"}:
-        raise ValueError("severity must be one of: blocking, warning")
+        today = _coerce_date(reference_date) if reference_date is not None else date.today()
+        if today is None:
+            raise ValueError("reference_date must be a date, datetime, or ISO date string")
+        required_min = today - timedelta(days=lag_days)
+        latest_raw = _max_column_value(dataframe, column)
+        latest_date = _coerce_date(latest_raw)
+        latest_display = _iso_date_value(latest_raw)
+        required_display = required_min.isoformat()
+        base_result.update(latest_value=latest_display, required_min_value=required_display)
 
-    base_result = {
-        "status": "skipped",
-        "can_continue": True,
-        "check_type": "freshness",
-        "freshness_column": column,
-        "freshness_max_lag_days": "" if max_lag_days in (None, "") else max_lag_days,
-        "freshness_severity": normalized_severity,
-        "latest_value": "",
-        "required_min_value": "",
-        "freshness_status": "skipped",
-        "freshness_can_continue": True,
-        "freshness_message": "Freshness check skipped because no freshness column is configured.",
-        "message": "Freshness check skipped because no freshness column is configured.",
-    }
-    if not column:
-        return base_result
-    if max_lag_days is None or str(max_lag_days).strip() == "":
-        raise ValueError("max_lag_days is required when freshness_column is set")
-    lag_days = int(max_lag_days)
-    if lag_days < 0:
-        raise ValueError("max_lag_days must be greater than or equal to zero")
-    base_result["freshness_max_lag_days"] = lag_days
+        if latest_date is not None and latest_date >= required_min:
+            message = "Freshness check passed."
+            base_result.update(
+                status="passed",
+                can_continue=True,
+                freshness_status="passed",
+                freshness_can_continue=True,
+                freshness_message=message,
+                message=message,
+            )
+            return base_result
 
-    today = _coerce_date(reference_date) if reference_date is not None else date.today()
-    if today is None:
-        raise ValueError("reference_date must be a date, datetime, or ISO date string")
-    required_min = today - timedelta(days=lag_days)
-    latest_raw = _max_column_value(dataframe, column)
-    latest_date = _coerce_date(latest_raw)
-    latest_display = _iso_date_value(latest_raw)
-    required_display = required_min.isoformat()
-    base_result.update(latest_value=latest_display, required_min_value=required_display)
-
-    if latest_date is not None and latest_date >= required_min:
-        message = "Freshness check passed."
+        message = f"Freshness check failed: latest {column} is older than allowed lag."
+        status = "failed" if normalized_severity == "blocking" else "warning"
+        can_continue = normalized_severity == "warning"
         base_result.update(
-            status="passed",
-            can_continue=True,
-            freshness_status="passed",
-            freshness_can_continue=True,
+            status=status,
+            can_continue=can_continue,
+            freshness_status=status,
+            freshness_can_continue=can_continue,
             freshness_message=message,
             message=message,
         )
         return base_result
-
-    message = f"Freshness check failed: latest {column} is older than allowed lag."
-    status = "failed" if normalized_severity == "blocking" else "warning"
-    can_continue = normalized_severity == "warning"
-    base_result.update(
-        status=status,
-        can_continue=can_continue,
-        freshness_status=status,
-        freshness_can_continue=can_continue,
-        freshness_message=message,
-        message=message,
-    )
-    return base_result
-```
+    ```
 
 <details class="reference-metadata-details">
-<summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
+<summary>Machine-readable metadata / metadata details</summary>
 
 These generated fields are for automation, AI agents, maintainers, and doc tooling. Skip this block when reading the docs normally.
 
@@ -372,7 +366,13 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Signature:
 
 ```python
-def enforce_freshness(dataframe, freshness_column: str | None, max_lag_days: int | str | None, severity: str='blocking', *, reference_date: date | datetime | str | None=None) -> dict
+def enforce_freshness(
+    dataframe,
+    freshness_column: str | None,
+    max_lag_days: int | str | None,
+    severity: str='blocking',
+    reference_date: date | datetime | str | None=None,
+) -> dict:
 ```
 
 ### Internal relationship graph
@@ -386,6 +386,24 @@ def enforce_freshness(dataframe, freshness_column: str | None, max_lag_days: int
 ### Internal implementation summary
 
 - Internal helper count: 3
-- Grouped helper summary and optional source snippets are rendered in the page-level Internal implementation summary section.
+- Grouped helper summary and optional source snippets are rendered in the page-level Implementation details section.
 
 </details>
+
+## Source link
+
+- Source: `fabricops_kit/guardrails.py:367`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/guardrails.py#L367-L464">View enforce_freshness on GitHub</a>
+
+## Glossary
+
+- **Guardrail:** A check that tells the notebook whether it is safe to continue.
+- **can_continue:** A returned true/false value that tells downstream code whether the pipeline should keep running.
+- **Source table:** An input table or file read by the pipeline.
+- **Target table:** An output table written by the pipeline.
+
+See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
+
+## See also
+
+- [Pipeline Guardrails](../../how-fabricops-works/pipeline-guardrails.md)

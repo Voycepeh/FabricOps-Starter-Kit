@@ -1,16 +1,11 @@
 # read_lakehouse_csv
 
-## Signature
-
-```python
-def read_lakehouse_csv(config, env, target, relative_path, spark_session=None, header=True)
-```
-
-## Summary
-
 Read a CSV file from a configured Fabric lakehouse Files path.
 
-## Usage note
+<details class="reference-usage-details">
+<summary>Usage guidance</summary>
+
+**Use when:**
 
 - Use for file-based source ingestion when the source is CSV and should be resolved through configured lakehouse paths.
 
@@ -21,6 +16,35 @@ Read a CSV file from a configured Fabric lakehouse Files path.
 **Additional context:**
 
 Reads a CSV file from the Files area of a configured Fabric lakehouse and returns it as a Spark DataFrame.
+
+</details>
+
+## Signature
+
+<div class="reference-api-definition" markdown="1">
+
+```python
+def read_lakehouse_csv(
+    config,
+    env,
+    target,
+    relative_path,
+    spark_session=None,
+    header=True,
+):
+```
+
+</div>
+
+## Example usage
+
+<div class="reference-example-usage" markdown="1">
+
+```python
+df = read_lakehouse_csv(CONFIG, env="Sandbox", target="Source", relative_path="raw/orders/orders.csv", header=True, spark_session=spark)
+```
+
+</div>
 
 ## Parameters
 
@@ -52,34 +76,22 @@ Raises ValueError for invalid file paths and configuration/Spark errors when the
 - Spark cannot access the file.
 - The selected environment is missing the source lakehouse target.
 
-## Example
+## Relationships
 
-```python
-df = read_lakehouse_csv(CONFIG, env="Sandbox", target="Source", relative_path="raw/orders/orders.csv", header=True, spark_session=spark)
-```
+### Used by
 
-## See also
+Not documented yet
 
-- [Notebook Templates](../../how-fabricops-works/notebook-templates.md)
+### Calls
 
-**Glossary terms**
+- `fabricops_kit.config._get_store`
+- `fabricops_kit.fabric_input_output._get_spark`
+- `fabricops_kit.fabric_input_output._lakehouse_file_path`
 
-- **Source table:** An input table or file read by the pipeline.
-- **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
+## Implementation details
 
-See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
-
-## Developer details
-
-- Module: `fabric_input_output`
-- Classification: Callable
-- Source file path: `src/fabricops_kit/fabric_input_output.py`
-- Source line: `326`
-- Signature:
-
-```python
-def read_lakehouse_csv(config, env, target, relative_path, spark_session=None, header=True)
-```
+<details class="reference-implementation-details">
+<summary>Notes, side effects, and template usage</summary>
 
 **Used in templates:**
 
@@ -95,13 +107,7 @@ Reads from lakehouse Files; it does not write metadata, tables, or files.
 
 No additional callable notes are documented.
 
-## Calls
-
-- `fabricops_kit.config._get_store`
-- `fabricops_kit.fabric_input_output._get_spark`
-- `fabricops_kit.fabric_input_output._lakehouse_file_path`
-
-## Internal implementation summary
+</details>
 
 ??? info "Call flow"
 
@@ -116,28 +122,22 @@ No additional callable notes are documented.
 
     This callable uses 3 internal helpers for metadata loading and fabric or spark access.
 
-    <div class="module-table-scroll reference-input-table">
-    <table class="reference-function-table">
-      <thead>
-        <tr>
-          <th>Area</th>
-          <th>Helpers</th>
-          <th>What they do</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td data-label="Area">Metadata loading</td>
-          <td data-label="Helpers"><code>_lakehouse_file_path</code></td>
-          <td data-label="What they do">Load and identify the metadata or table context needed by the callable.</td>
-        </tr>
-        <tr>
-          <td data-label="Area">Fabric or Spark access</td>
-          <td data-label="Helpers"><code>_get_spark</code>, <code>_get_store</code></td>
-          <td data-label="What they do">Access Fabric or Spark runtime services used by the implementation.</td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="reference-helper-groups">
+      <section class="reference-helper-group">
+        <h4>Metadata loading</h4>
+        <p>Load and identify the metadata or table context needed by the callable.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L158-L168"><code>_lakehouse_file_path</code></a>
+        </div>
+      </section>
+      <section class="reference-helper-group">
+        <h4>Fabric or Spark access</h4>
+        <p>Access Fabric or Spark runtime services used by the implementation.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L125-L155"><code>_get_spark</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L627-L667"><code>_get_store</code></a>
+        </div>
+      </section>
     </div>
 
     ??? example "View helper source by area"
@@ -251,59 +251,61 @@ No additional callable notes are documented.
             ```
 
 
-## Source link
+<div class="reference-source-card">
+  <p><strong>Source:</strong> <code>fabricops_kit/fabric_input_output.py:326</code></p>
+  <p><strong>Actions:</strong> <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L326-L368">View on GitHub</a></p>
+</div>
 
-- Source file path: `src/fabricops_kit/fabric_input_output.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L326-L368">View read_lakehouse_csv on GitHub</a>
+??? example "Source code"
 
-```python
-def read_lakehouse_csv(config, env, target, relative_path, spark_session=None, header=True):
-    """Read a CSV file from a Fabric lakehouse Files path.
+    ```python
+    def read_lakehouse_csv(config, env, target, relative_path, spark_session=None, header=True):
+        """Read a CSV file from a Fabric lakehouse Files path.
 
-    This reads from the lakehouse `Files/` area using the ABFSS root stored in
-    a `FabricStore`. In the Source step, use it for raw file ingestion before
-    standardisation or conversion to Delta tables.
+        This reads from the lakehouse `Files/` area using the ABFSS root stored in
+        a `FabricStore`. In the Source step, use it for raw file ingestion before
+        standardisation or conversion to Delta tables.
 
-    Parameters
-    ----------
-    config : FrameworkConfig | dict
-        FabricOps FrameworkConfig or compatible config object.
-    env : str
-        Environment key such as `"dev"`.
-    target : str
-        Logical target name such as `"source"` or `"unified"`.
-    relative_path : str
-        Path to the CSV file or folder under the lakehouse root, for example
-        `"Files/raw/orders.csv"` or `"Files/raw/orders/"`.
-    spark_session : object, optional
-        Spark session to use. If omitted, the helper uses the notebook global
-        `spark`.
-    header : bool, default True
-        Whether the first row of the CSV file contains column names.
+        Parameters
+        ----------
+        config : FrameworkConfig | dict
+            FabricOps FrameworkConfig or compatible config object.
+        env : str
+            Environment key such as `"dev"`.
+        target : str
+            Logical target name such as `"source"` or `"unified"`.
+        relative_path : str
+            Path to the CSV file or folder under the lakehouse root, for example
+            `"Files/raw/orders.csv"` or `"Files/raw/orders/"`.
+        spark_session : object, optional
+            Spark session to use. If omitted, the helper uses the notebook global
+            `spark`.
+        header : bool, default True
+            Whether the first row of the CSV file contains column names.
 
-    Returns
-    -------
-    pyspark.sql.DataFrame
-        Spark DataFrame loaded from the CSV path.
+        Returns
+        -------
+        pyspark.sql.DataFrame
+            Spark DataFrame loaded from the CSV path.
 
-    Raises
-    ------
-    ValueError
-        If `relative_path` is missing or the resolved target is not a lakehouse.
-    RuntimeError
-        If no Spark session is available.
+        Raises
+        ------
+        ValueError
+            If `relative_path` is missing or the resolved target is not a lakehouse.
+        RuntimeError
+            If no Spark session is available.
 
-    Examples
-    --------
-    >>> df = read_lakehouse_csv(CONFIG, ENV, "source", "raw/orders.csv")
-    """
-    store = _get_store(config, env, target)
-    spark_obj = _get_spark(spark_session)
-    return spark_obj.read.option("header", header).csv(_lakehouse_file_path(store, env, target, relative_path))
-```
+        Examples
+        --------
+        >>> df = read_lakehouse_csv(CONFIG, ENV, "source", "raw/orders.csv")
+        """
+        store = _get_store(config, env, target)
+        spark_obj = _get_spark(spark_session)
+        return spark_obj.read.option("header", header).csv(_lakehouse_file_path(store, env, target, relative_path))
+    ```
 
 <details class="reference-metadata-details">
-<summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
+<summary>Machine-readable metadata / metadata details</summary>
 
 These generated fields are for automation, AI agents, maintainers, and doc tooling. Skip this block when reading the docs normally.
 
@@ -349,7 +351,14 @@ Not documented yet
 - Signature:
 
 ```python
-def read_lakehouse_csv(config, env, target, relative_path, spark_session=None, header=True)
+def read_lakehouse_csv(
+    config,
+    env,
+    target,
+    relative_path,
+    spark_session=None,
+    header=True,
+):
 ```
 
 ### Internal relationship graph
@@ -363,6 +372,22 @@ def read_lakehouse_csv(config, env, target, relative_path, spark_session=None, h
 ### Internal implementation summary
 
 - Internal helper count: 3
-- Grouped helper summary and optional source snippets are rendered in the page-level Internal implementation summary section.
+- Grouped helper summary and optional source snippets are rendered in the page-level Implementation details section.
 
 </details>
+
+## Source link
+
+- Source: `fabricops_kit/fabric_input_output.py:326`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L326-L368">View read_lakehouse_csv on GitHub</a>
+
+## Glossary
+
+- **Source table:** An input table or file read by the pipeline.
+- **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
+
+See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
+
+## See also
+
+- [Notebook Templates](../../how-fabricops-works/notebook-templates.md)

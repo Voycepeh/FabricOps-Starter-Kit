@@ -1,16 +1,11 @@
 # setup_notebook
 
-## Signature
-
-```python
-def setup_notebook(config: FrameworkConfig | dict[str, Any], env: str='Sandbox', required_targets: list[str] | None=None, notebook_name: str | None=None, run_id_prefix: str='run', local_fallback_name: str | None=None) -> NotebookSetupContext
-```
-
-## Summary
-
 Shared environment setup and runtime validation for notebook templates.
 
-## Usage note
+<details class="reference-usage-details">
+<summary>Usage guidance</summary>
+
+**Use when:**
 
 - Starting a FabricOps notebook from 00_env_config
 - Validating configured environment targets before downstream helpers run
@@ -23,6 +18,35 @@ Shared environment setup and runtime validation for notebook templates.
 **Additional context:**
 
 Validates the selected FabricOps environment, resolves configured runtime targets, and returns the notebook context that downstream helpers depend on.
+
+</details>
+
+## Signature
+
+<div class="reference-api-definition" markdown="1">
+
+```python
+def setup_notebook(
+    config: FrameworkConfig | dict[str, Any],
+    env: str='Sandbox',
+    required_targets: list[str] | None=None,
+    notebook_name: str | None=None,
+    run_id_prefix: str='run',
+    local_fallback_name: str | None=None,
+) -> NotebookSetupContext:
+```
+
+</div>
+
+## Example usage
+
+<div class="reference-example-usage" markdown="1">
+
+```python
+context = setup_notebook(CONFIG, env="Sandbox", required_targets=["Source", "Unified"], notebook_name="00_env_config")
+```
+
+</div>
 
 ## Parameters
 
@@ -54,35 +78,23 @@ ValueError for invalid configuration sections, missing required paths, or unreso
 - Fabric runtime metadata is unavailable and no local fallback was provided.
 - Configured lakehouse or warehouse targets cannot be resolved.
 
-## Example
+## Relationships
 
-```python
-context = setup_notebook(CONFIG, env="Sandbox", required_targets=["Source", "Unified"], notebook_name="00_env_config")
-```
+### Used by
 
-## See also
+Not documented yet
 
-- [Notebook Templates](../../how-fabricops-works/notebook-templates.md)
-- [Metadata Tables](../../how-fabricops-works/metadata-tables.md)
+### Calls
 
-**Glossary terms**
+- `fabricops_kit.config.NotebookSetupContext`
+- `fabricops_kit.config._get_store`
+- `fabricops_kit.config._run_config_smoke_tests`
+- `fabricops_kit.config._validate_framework_config`
 
-- **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
-- **Metadata lakehouse:** The configured Fabric lakehouse where FabricOps stores governance and runtime metadata.
+## Implementation details
 
-See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
-
-## Developer details
-
-- Module: `config`
-- Classification: Callable
-- Source file path: `src/fabricops_kit/config.py`
-- Source line: `786`
-- Signature:
-
-```python
-def setup_notebook(config: FrameworkConfig | dict[str, Any], env: str='Sandbox', required_targets: list[str] | None=None, notebook_name: str | None=None, run_id_prefix: str='run', local_fallback_name: str | None=None) -> NotebookSetupContext
-```
+<details class="reference-implementation-details">
+<summary>Notes, side effects, and template usage</summary>
 
 **Used in templates:**
 
@@ -97,14 +109,7 @@ Runs configuration validation and Fabric readiness checks; it does not write Fab
 Validation and smoke checks are local to notebook startup. This helper does
 not provision Fabric resources or persist metadata.
 
-## Calls
-
-- `fabricops_kit.config.NotebookSetupContext`
-- `fabricops_kit.config._get_store`
-- `fabricops_kit.config._run_config_smoke_tests`
-- `fabricops_kit.config._validate_framework_config`
-
-## Internal implementation summary
+</details>
 
 ??? info "Call flow"
 
@@ -127,38 +132,38 @@ not provision Fabric resources or persist metadata.
 
     This callable uses 7 internal helpers for audit timestamp, metadata loading, validation, and fabric or spark access.
 
-    <div class="module-table-scroll reference-input-table">
-    <table class="reference-function-table">
-      <thead>
-        <tr>
-          <th>Area</th>
-          <th>Helpers</th>
-          <th>What they do</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td data-label="Area">Audit timestamp</td>
-          <td data-label="Helpers"><code>_validate_audit_timezone</code></td>
-          <td data-label="What they do">Resolve and stamp audit time consistently.</td>
-        </tr>
-        <tr>
-          <td data-label="Area">Metadata loading</td>
-          <td data-label="Helpers"><code>_get_fabric_runtime_metadata</code></td>
-          <td data-label="What they do">Load and identify the metadata or table context needed by the callable.</td>
-        </tr>
-        <tr>
-          <td data-label="Area">Validation</td>
-          <td data-label="Helpers"><code>_check_spark_session</code>, <code>_run_config_smoke_tests</code>, <code>_validate_framework_config</code>, <code>_validate_notebook_name</code></td>
-          <td data-label="What they do">Validate inputs and guard conditions before the workflow continues.</td>
-        </tr>
-        <tr>
-          <td data-label="Area">Fabric or Spark access</td>
-          <td data-label="Helpers"><code>_get_store</code></td>
-          <td data-label="What they do">Access Fabric or Spark runtime services used by the implementation.</td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="reference-helper-groups">
+      <section class="reference-helper-group">
+        <h4>Audit timestamp</h4>
+        <p>Resolve and stamp audit time consistently.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L27-L58"><code>_validate_audit_timezone</code></a>
+        </div>
+      </section>
+      <section class="reference-helper-group">
+        <h4>Metadata loading</h4>
+        <p>Load and identify the metadata or table context needed by the callable.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L1228-L1267"><code>_get_fabric_runtime_metadata</code></a>
+        </div>
+      </section>
+      <section class="reference-helper-group">
+        <h4>Validation</h4>
+        <p>Validate inputs and guard conditions before the workflow continues.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L1220-L1225"><code>_check_spark_session</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L684-L783"><code>_run_config_smoke_tests</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L551-L624"><code>_validate_framework_config</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L670-L681"><code>_validate_notebook_name</code></a>
+        </div>
+      </section>
+      <section class="reference-helper-group">
+        <h4>Fabric or Spark access</h4>
+        <p>Access Fabric or Spark runtime services used by the implementation.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L627-L667"><code>_get_store</code></a>
+        </div>
+      </section>
     </div>
 
     ??? example "View helper source by area"
@@ -526,126 +531,128 @@ not provision Fabric resources or persist metadata.
             ```
 
 
-## Source link
+<div class="reference-source-card">
+  <p><strong>Source:</strong> <code>fabricops_kit/config.py:786</code></p>
+  <p><strong>Actions:</strong> <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L786-L895">View on GitHub</a></p>
+</div>
 
-- Source file path: `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L786-L895">View setup_notebook on GitHub</a>
+??? example "Source code"
 
-```python
-def setup_notebook(
-    config: FrameworkConfig | dict[str, Any],
-    env: str = "Sandbox",
-    required_targets: list[str] | None = None,
-    notebook_name: str | None = None,
-    run_id_prefix: str = "run",
-    local_fallback_name: str | None = None,
-) -> NotebookSetupContext:
-    """Run consolidated FabricOps startup for delivery and optional support notebooks.
+    ```python
+    def setup_notebook(
+        config: FrameworkConfig | dict[str, Any],
+        env: str = "Sandbox",
+        required_targets: list[str] | None = None,
+        notebook_name: str | None = None,
+        run_id_prefix: str = "run",
+        local_fallback_name: str | None = None,
+    ) -> NotebookSetupContext:
+        """Run consolidated FabricOps startup for delivery and optional support notebooks.
 
-    Parameters
-    ----------
-    config : FrameworkConfig | dict[str, Any]
-        Framework configuration object or compatible mapping. The setup flow
-        validates required sections and configured Fabric targets before
-        running readiness checks.
-    env : str, default="Sandbox"
-        Environment key used to resolve target paths.
-    required_targets : list[str] | None, optional
-        Target names that must resolve for ``env``. Defaults to
-        ``["Source", "Unified"]``.
-    notebook_name : str | None, optional
-        Explicit notebook name used for runtime metadata and naming checks.
-    run_id_prefix : str, default="run"
-        Prefix used when a Fabric runtime run identifier is unavailable.
-    local_fallback_name : str | None, optional
-        Notebook name used when neither ``notebook_name`` nor Fabric runtime
-        context provides one.
+        Parameters
+        ----------
+        config : FrameworkConfig | dict[str, Any]
+            Framework configuration object or compatible mapping. The setup flow
+            validates required sections and configured Fabric targets before
+            running readiness checks.
+        env : str, default="Sandbox"
+            Environment key used to resolve target paths.
+        required_targets : list[str] | None, optional
+            Target names that must resolve for ``env``. Defaults to
+            ``["Source", "Unified"]``.
+        notebook_name : str | None, optional
+            Explicit notebook name used for runtime metadata and naming checks.
+        run_id_prefix : str, default="run"
+            Prefix used when a Fabric runtime run identifier is unavailable.
+        local_fallback_name : str | None, optional
+            Notebook name used when neither ``notebook_name`` nor Fabric runtime
+            context provides one.
 
-    Returns
-    -------
-    NotebookSetupContext
-        Validated runtime context with resolved paths, smoke-check results,
-        runtime metadata, and overall readiness status.
+        Returns
+        -------
+        NotebookSetupContext
+            Validated runtime context with resolved paths, smoke-check results,
+            runtime metadata, and overall readiness status.
 
-    Raises
-    ------
-    ValueError
-        Raised when config sections are invalid or required targets cannot be
-        resolved for the selected environment.
+        Raises
+        ------
+        ValueError
+            Raised when config sections are invalid or required targets cannot be
+            resolved for the selected environment.
 
-    Notes
-    -----
-    Validation and smoke checks are local to notebook startup. This helper does
-    not provision Fabric resources or persist metadata.
-    """
-    from uuid import uuid4
-    from datetime import datetime, timezone
+        Notes
+        -----
+        Validation and smoke checks are local to notebook startup. This helper does
+        not provision Fabric resources or persist metadata.
+        """
+        from uuid import uuid4
+        from datetime import datetime, timezone
 
-    normalized = _validate_framework_config(config)
-    required_targets = required_targets or ["Source", "Unified"]
-    resolved_paths = {target: _get_store(config=normalized, env=env, target=target) for target in required_targets}
+        normalized = _validate_framework_config(config)
+        required_targets = required_targets or ["Source", "Unified"]
+        resolved_paths = {target: _get_store(config=normalized, env=env, target=target) for target in required_targets}
 
-    context = None
-    try:
-        import notebookutils.runtime as nb_runtime  # type: ignore
-
-        context = getattr(nb_runtime, "context", None)
-    except Exception:
         context = None
+        try:
+            import notebookutils.runtime as nb_runtime  # type: ignore
 
-    def ctx(key: str) -> Any:
-        if context is None:
-            return None
-        if isinstance(context, dict):
-            return context.get(key)
-        get_method = getattr(context, "get", None)
-        if callable(get_method):
-            try:
-                return get_method(key)
-            except Exception:
+            context = getattr(nb_runtime, "context", None)
+        except Exception:
+            context = None
+
+        def ctx(key: str) -> Any:
+            if context is None:
                 return None
-        return getattr(context, key, None)
+            if isinstance(context, dict):
+                return context.get(key)
+            get_method = getattr(context, "get", None)
+            if callable(get_method):
+                try:
+                    return get_method(key)
+                except Exception:
+                    return None
+            return getattr(context, key, None)
 
-    resolved_notebook_name = notebook_name or ctx("currentNotebookName") or local_fallback_name
-    user_name = ctx("userName") or ctx("userId") or "unknown"
-    run_id = (
-        ctx("currentRunId")
-        or f"{run_id_prefix}_{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}_{uuid4().hex[:8]}"
-    )
+        resolved_notebook_name = notebook_name or ctx("currentNotebookName") or local_fallback_name
+        user_name = ctx("userName") or ctx("userId") or "unknown"
+        run_id = (
+            ctx("currentRunId")
+            or f"{run_id_prefix}_{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}_{uuid4().hex[:8]}"
+        )
 
-    runtime_meta = {
-        "notebook_name": resolved_notebook_name,
-        "workspace_name": ctx("currentWorkspaceName"),
-        "workspace_id": ctx("currentWorkspaceId"),
-        "user_name": user_name,
-        "user_id": ctx("userId"),
-        "current_run_id": ctx("currentRunId"),
-        "is_for_pipeline": ctx("isForPipeline"),
-        "is_for_interactive": ctx("isForInteractive"),
-        "is_reference_run": ctx("isReferenceRun"),
-        "runtime_available": context is not None,
-    }
+        runtime_meta = {
+            "notebook_name": resolved_notebook_name,
+            "workspace_name": ctx("currentWorkspaceName"),
+            "workspace_id": ctx("currentWorkspaceId"),
+            "user_name": user_name,
+            "user_id": ctx("userId"),
+            "current_run_id": ctx("currentRunId"),
+            "is_for_pipeline": ctx("isForPipeline"),
+            "is_for_interactive": ctx("isForInteractive"),
+            "is_reference_run": ctx("isReferenceRun"),
+            "runtime_available": context is not None,
+        }
 
-    checks = _run_config_smoke_tests(
-        config=normalized, env=env, required_targets=required_targets, notebook_name=resolved_notebook_name
-    )
-    readiness_status = "ready" if all(r.status in {"pass", "warn", "skipped"} for r in checks) else "not_ready"
+        checks = _run_config_smoke_tests(
+            config=normalized, env=env, required_targets=required_targets, notebook_name=resolved_notebook_name
+        )
+        readiness_status = "ready" if all(r.status in {"pass", "warn", "skipped"} for r in checks) else "not_ready"
 
-    return NotebookSetupContext(
-        run_id=str(run_id),
-        notebook_name=resolved_notebook_name,
-        workspace_name=runtime_meta.get("workspace_name"),
-        user_name=str(user_name),
-        environment=env,
-        paths=resolved_paths,
-        validation_results=checks,
-        runtime_metadata=runtime_meta,
-        readiness_status=readiness_status,
-    )
-```
+        return NotebookSetupContext(
+            run_id=str(run_id),
+            notebook_name=resolved_notebook_name,
+            workspace_name=runtime_meta.get("workspace_name"),
+            user_name=str(user_name),
+            environment=env,
+            paths=resolved_paths,
+            validation_results=checks,
+            runtime_metadata=runtime_meta,
+            readiness_status=readiness_status,
+        )
+    ```
 
 <details class="reference-metadata-details">
-<summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
+<summary>Machine-readable metadata / metadata details</summary>
 
 These generated fields are for automation, AI agents, maintainers, and doc tooling. Skip this block when reading the docs normally.
 
@@ -692,7 +699,14 @@ Not documented yet
 - Signature:
 
 ```python
-def setup_notebook(config: FrameworkConfig | dict[str, Any], env: str='Sandbox', required_targets: list[str] | None=None, notebook_name: str | None=None, run_id_prefix: str='run', local_fallback_name: str | None=None) -> NotebookSetupContext
+def setup_notebook(
+    config: FrameworkConfig | dict[str, Any],
+    env: str='Sandbox',
+    required_targets: list[str] | None=None,
+    notebook_name: str | None=None,
+    run_id_prefix: str='run',
+    local_fallback_name: str | None=None,
+) -> NotebookSetupContext:
 ```
 
 ### Internal relationship graph
@@ -704,6 +718,23 @@ def setup_notebook(config: FrameworkConfig | dict[str, Any], env: str='Sandbox',
 ### Internal implementation summary
 
 - Internal helper count: 7
-- Grouped helper summary and optional source snippets are rendered in the page-level Internal implementation summary section.
+- Grouped helper summary and optional source snippets are rendered in the page-level Implementation details section.
 
 </details>
+
+## Source link
+
+- Source: `fabricops_kit/config.py:786`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L786-L895">View setup_notebook on GitHub</a>
+
+## Glossary
+
+- **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
+- **Metadata lakehouse:** The configured Fabric lakehouse where FabricOps stores governance and runtime metadata.
+
+See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
+
+## See also
+
+- [Notebook Templates](../../how-fabricops-works/notebook-templates.md)
+- [Metadata Tables](../../how-fabricops-works/metadata-tables.md)
