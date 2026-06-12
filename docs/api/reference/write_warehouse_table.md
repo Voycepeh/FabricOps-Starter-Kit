@@ -1,16 +1,11 @@
 # write_warehouse_table
 
-## Signature
-
-```python
-def write_warehouse_table(df, config, env, target, schema, table, mode='append')
-```
-
-## Summary
-
 Write a DataFrame to a configured Fabric warehouse target.
 
-## Usage note
+<details class="reference-usage-details">
+<summary>Usage guidance</summary>
+
+**Use when:**
 
 - Use for target writes after guardrails pass and the configured output layer is a warehouse table.
 
@@ -21,6 +16,28 @@ Write a DataFrame to a configured Fabric warehouse target.
 **Additional context:**
 
 Writes a DataFrame to a configured Fabric Warehouse destination for pipeline outputs that belong in warehouse storage.
+
+</details>
+
+## Signature
+
+<div class="reference-api-definition" markdown="1">
+
+```python
+def write_warehouse_table(df, config, env, target, schema, table, mode='append')
+```
+
+</div>
+
+## Example usage
+
+<div class="reference-example-usage" markdown="1">
+
+```python
+write_warehouse_table(serving_df, CONFIG, env="Sandbox", target="Warehouse", schema="dbo", table="orders_serving", mode="append")
+```
+
+</div>
 
 ## Parameters
 
@@ -53,34 +70,20 @@ Raises configuration, Spark connector, or warehouse write errors when the target
 - Warehouse connector support is unavailable.
 - The caller lacks write permission.
 
-## Example
+## Relationships
 
-```python
-write_warehouse_table(serving_df, CONFIG, env="Sandbox", target="Warehouse", schema="dbo", table="orders_serving", mode="append")
-```
+### Used by
 
-## See also
+Not documented yet
 
-- [Notebook Templates](../../how-fabricops-works/notebook-templates.md)
+### Calls
 
-**Glossary terms**
+- `fabricops_kit.config._get_store`
 
-- **Target table:** An output table written by the pipeline.
-- **Guardrail:** A check that tells the notebook whether it is safe to continue.
+## Implementation details
 
-See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
-
-## Developer details
-
-- Module: `fabric_input_output`
-- Classification: Callable
-- Source file path: `src/fabricops_kit/fabric_input_output.py`
-- Source line: `433`
-- Signature:
-
-```python
-def write_warehouse_table(df, config, env, target, schema, table, mode='append')
-```
+<details class="reference-implementation-details">
+<summary>Notes, side effects, and template usage</summary>
 
 **Used in templates:**
 
@@ -96,11 +99,7 @@ Writes data to a Fabric warehouse table using the selected mode.
 Side effect: performs a write operation to the target warehouse object via
 Fabric runtime connector APIs.
 
-## Calls
-
-- `fabricops_kit.config._get_store`
-
-## Internal implementation summary
+</details>
 
 ??? info "Call flow"
 
@@ -113,23 +112,14 @@ Fabric runtime connector APIs.
 
     This callable uses 1 internal helpers for fabric or spark access.
 
-    <div class="module-table-scroll reference-input-table">
-    <table class="reference-function-table">
-      <thead>
-        <tr>
-          <th>Area</th>
-          <th>Helpers</th>
-          <th>What they do</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td data-label="Area">Fabric or Spark access</td>
-          <td data-label="Helpers"><code>_get_store</code></td>
-          <td data-label="What they do">Access Fabric or Spark runtime services used by the implementation.</td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="reference-helper-groups">
+      <section class="reference-helper-group">
+        <h4>Fabric or Spark access</h4>
+        <p>Access Fabric or Spark runtime services used by the implementation.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L627-L667"><code>_get_store</code></a>
+        </div>
+      </section>
     </div>
 
     ??? example "View helper source by area"
@@ -185,81 +175,86 @@ Fabric runtime connector APIs.
             ```
 
 
-## Source link
+<div class="reference-source-card" markdown="1">
+**Source**
 
-- Source file path: `src/fabricops_kit/fabric_input_output.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L433-L497">View write_warehouse_table on GitHub</a>
+`fabricops_kit/fabric_input_output.py:433`
 
-```python
-def write_warehouse_table(df, config, env, target, schema, table, mode="append"):
-    """Write a Spark DataFrame to a Microsoft Fabric warehouse table.
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L433-L497">View on GitHub</a>
+</div>
 
-    This uses Fabric Spark's `synapsesql` connector to write to a warehouse
-    configured in the framework `CONFIG` mapping. Use this near the end of the
-    Product step when publishing serving tables.
+??? example "Source code"
 
-    Parameters
-    ----------
-    df : pyspark.sql.DataFrame
-        Spark DataFrame to write.
-    config : FrameworkConfig | dict
-        FabricOps FrameworkConfig or compatible config object.
-    env : str
-        Environment name in the config mapping, for example `"Sandbox"` or `"DE"`.
-    target : str
-        Warehouse target name under the selected environment, for example
-        `"Warehouse"` or `"wh_Bronze"`.
-    schema : str
-        Warehouse schema name, for example `"dbo"`.
-    table : str
-        Warehouse table name.
-    mode : str, default "append"
-        Spark write mode, for example `"append"` or `"overwrite"`.
+    ```python
+    def write_warehouse_table(df, config, env, target, schema, table, mode="append"):
+        """Write a Spark DataFrame to a Microsoft Fabric warehouse table.
 
-    Returns
-    -------
-    None
-        The DataFrame is written to the target warehouse table.
+        This uses Fabric Spark's `synapsesql` connector to write to a warehouse
+        configured in the framework `CONFIG` mapping. Use this near the end of the
+        Product step when publishing serving tables.
 
-    Notes
-    -----
-    Side effect: performs a write operation to the target warehouse object via
-    Fabric runtime connector APIs.
+        Parameters
+        ----------
+        df : pyspark.sql.DataFrame
+            Spark DataFrame to write.
+        config : FrameworkConfig | dict
+            FabricOps FrameworkConfig or compatible config object.
+        env : str
+            Environment name in the config mapping, for example `"Sandbox"` or `"DE"`.
+        target : str
+            Warehouse target name under the selected environment, for example
+            `"Warehouse"` or `"wh_Bronze"`.
+        schema : str
+            Warehouse schema name, for example `"dbo"`.
+        table : str
+            Warehouse table name.
+        mode : str, default "append"
+            Spark write mode, for example `"append"` or `"overwrite"`.
 
-    Raises
-    ------
-    RuntimeError
-        If the Microsoft Fabric Spark connector is unavailable.
-    ValueError
-        If the selected environment or target is missing from the config.
+        Returns
+        -------
+        None
+            The DataFrame is written to the target warehouse table.
 
-    Examples
-    --------
-    >>> write_warehouse_table(df, CONFIG, ENV, "product", "dbo", "TABLE_NAME")
-    """
-    store = _get_store(config, env, target)
-    if store.kind != "warehouse":
-        raise ValueError(f"Target '{env}/{target}' is not a warehouse store.")
+        Notes
+        -----
+        Side effect: performs a write operation to the target warehouse object via
+        Fabric runtime connector APIs.
 
-    try:
-        import com.microsoft.spark.fabric
-        from com.microsoft.spark.fabric.Constants import Constants
-    except Exception as exc:
-        raise RuntimeError(
-            "This function must run inside Microsoft Fabric Spark with "
-            "com.microsoft.spark.fabric available."
-        ) from exc
+        Raises
+        ------
+        RuntimeError
+            If the Microsoft Fabric Spark connector is unavailable.
+        ValueError
+            If the selected environment or target is missing from the config.
 
-    (
-        df.write.mode(mode)
-        .option(Constants.WorkspaceId, store.workspace_id)
-        .option(Constants.DatawarehouseId, store.item_id)
-        .synapsesql(f"{store.name}.{schema}.{table}")
-    )
-```
+        Examples
+        --------
+        >>> write_warehouse_table(df, CONFIG, ENV, "product", "dbo", "TABLE_NAME")
+        """
+        store = _get_store(config, env, target)
+        if store.kind != "warehouse":
+            raise ValueError(f"Target '{env}/{target}' is not a warehouse store.")
+
+        try:
+            import com.microsoft.spark.fabric
+            from com.microsoft.spark.fabric.Constants import Constants
+        except Exception as exc:
+            raise RuntimeError(
+                "This function must run inside Microsoft Fabric Spark with "
+                "com.microsoft.spark.fabric available."
+            ) from exc
+
+        (
+            df.write.mode(mode)
+            .option(Constants.WorkspaceId, store.workspace_id)
+            .option(Constants.DatawarehouseId, store.item_id)
+            .synapsesql(f"{store.name}.{schema}.{table}")
+        )
+    ```
 
 <details class="reference-metadata-details">
-<summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
+<summary>Machine-readable metadata / metadata details</summary>
 
 These generated fields are for automation, AI agents, maintainers, and doc tooling. Skip this block when reading the docs normally.
 
@@ -317,6 +312,27 @@ def write_warehouse_table(df, config, env, target, schema, table, mode='append')
 ### Internal implementation summary
 
 - Internal helper count: 1
-- Grouped helper summary and optional source snippets are rendered in the page-level Internal implementation summary section.
+- Grouped helper summary and optional source snippets are rendered in the page-level Implementation details section.
 
 </details>
+
+## Source link
+
+<div class="reference-source-card" markdown="1">
+**Source**
+
+`fabricops_kit/fabric_input_output.py:433`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L433-L497">View on GitHub</a>
+</div>
+
+## Glossary
+
+- **Target table:** An output table written by the pipeline.
+- **Guardrail:** A check that tells the notebook whether it is safe to continue.
+
+See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
+
+## See also
+
+- [Notebook Templates](../../how-fabricops-works/notebook-templates.md)

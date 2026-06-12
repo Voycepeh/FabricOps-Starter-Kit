@@ -1,16 +1,11 @@
 # get_selected_agreement
 
-## Signature
-
-```python
-def get_selected_agreement() -> dict[str, Any]
-```
-
-## Summary
-
 Return the agreement selected by widget_select_agreement.
 
-## Usage note
+<details class="reference-usage-details">
+<summary>Usage guidance</summary>
+
+**Use when:**
 
 - Use after rendering and completing widget_select_agreement when code needs the selected agreement values.
 
@@ -21,6 +16,29 @@ Return the agreement selected by widget_select_agreement.
 **Additional context:**
 
 Returns the agreement chosen by widget_select_agreement so downstream cells can pass consistent agreement identifiers to pipeline helpers.
+
+</details>
+
+## Signature
+
+<div class="reference-api-definition" markdown="1">
+
+```python
+def get_selected_agreement() -> dict[str, Any]
+```
+
+</div>
+
+## Example usage
+
+<div class="reference-example-usage" markdown="1">
+
+```python
+agreement = get_selected_agreement()
+dataset_name = agreement["dataset_name"]
+```
+
+</div>
 
 ## Parameters
 
@@ -45,34 +63,20 @@ Raises an error when no agreement has been selected in the current session.
 - Notebook state was reset.
 - The selected row is no longer present in metadata.
 
-## Example
+## Relationships
 
-```python
-agreement = get_selected_agreement()
-dataset_name = agreement["dataset_name"]
-```
+### Used by
 
-## See also
+Not documented yet
 
-- [Notebook Templates](../../how-fabricops-works/notebook-templates.md)
+### Calls
 
-**Glossary terms**
+Not documented yet
 
-- **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
+## Implementation details
 
-See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
-
-## Developer details
-
-- Module: `data_agreement`
-- Classification: Callable
-- Source file path: `src/fabricops_kit/data_agreement.py`
-- Source line: `1000`
-- Signature:
-
-```python
-def get_selected_agreement() -> dict[str, Any]
-```
+<details class="reference-implementation-details">
+<summary>Notes, side effects, and template usage</summary>
 
 **Used in templates:**
 
@@ -86,11 +90,7 @@ Reads session/widget state only; it does not write metadata, tables, or files.
 
 No additional callable notes are documented.
 
-## Calls
-
-Not documented yet
-
-## Internal implementation summary
+</details>
 
 ??? info "Call flow"
 
@@ -102,51 +102,44 @@ Not documented yet
 
     This callable uses 0 internal helpers; `get_selected_agreement` does not have package-local helper descendants in the generated call graph.
 
-    <div class="module-table-scroll reference-input-table">
-    <table class="reference-function-table">
-      <thead>
-        <tr>
-          <th>Area</th>
-          <th>Helpers</th>
-          <th>What they do</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td data-label="Area">—</td>
-          <td data-label="Helpers">—</td>
-          <td data-label="What they do">No internal helpers detected.</td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="reference-helper-groups">
+      <section class="reference-helper-group reference-helper-group-empty">
+        <h4>No internal helpers detected</h4>
+        <p>This callable does not have package-local helper descendants in the generated call graph.</p>
+      </section>
     </div>
 
-## Source link
+<div class="reference-source-card" markdown="1">
+**Source**
 
-- Source file path: `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L1000-L1015">View get_selected_agreement on GitHub</a>
+`fabricops_kit/data_agreement.py:1000`
 
-```python
-def get_selected_agreement() -> dict[str, Any]:
-    """Return the agreement selected by :func:`widget_select_agreement`.
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L1000-L1015">View on GitHub</a>
+</div>
 
-    Returns
-    -------
-    dict[str, Any]
-        Selected latest-version agreement row.
+??? example "Source code"
 
-    Raises
-    ------
-    RuntimeError
-        If no selector has established a selected agreement.
-    """
-    if not _SELECTED_AGREEMENT:
-        raise RuntimeError("No agreement selected. Run widget_select_agreement(...) first.")
-    return dict(_SELECTED_AGREEMENT)
-```
+    ```python
+    def get_selected_agreement() -> dict[str, Any]:
+        """Return the agreement selected by :func:`widget_select_agreement`.
+
+        Returns
+        -------
+        dict[str, Any]
+            Selected latest-version agreement row.
+
+        Raises
+        ------
+        RuntimeError
+            If no selector has established a selected agreement.
+        """
+        if not _SELECTED_AGREEMENT:
+            raise RuntimeError("No agreement selected. Run widget_select_agreement(...) first.")
+        return dict(_SELECTED_AGREEMENT)
+    ```
 
 <details class="reference-metadata-details">
-<summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
+<summary>Machine-readable metadata / metadata details</summary>
 
 These generated fields are for automation, AI agents, maintainers, and doc tooling. Skip this block when reading the docs normally.
 
@@ -202,6 +195,26 @@ def get_selected_agreement() -> dict[str, Any]
 ### Internal implementation summary
 
 - Internal helper count: 0
-- Grouped helper summary and optional source snippets are rendered in the page-level Internal implementation summary section.
+- Grouped helper summary and optional source snippets are rendered in the page-level Implementation details section.
 
 </details>
+
+## Source link
+
+<div class="reference-source-card" markdown="1">
+**Source**
+
+`fabricops_kit/data_agreement.py:1000`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L1000-L1015">View on GitHub</a>
+</div>
+
+## Glossary
+
+- **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
+
+See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
+
+## See also
+
+- [Notebook Templates](../../how-fabricops-works/notebook-templates.md)

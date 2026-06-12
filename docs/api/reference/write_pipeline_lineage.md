@@ -1,26 +1,49 @@
 # write_pipeline_lineage
 
-## Signature
-
-```python
-def write_pipeline_lineage(*, spark: Any, config: Any, env: str, run_id: str, source_definitions: Mapping[str, Mapping[str, Any]], target_definitions: Mapping[str, Mapping[str, Any]], relationships: list[Mapping[str, Any]] | None=None, dataset_name: str='', agreement_id: str='', agreement_contract_version: str='', notebook_registry_id: str='', notebook_id: str='', pipeline_name: str='', metadata_table: str=LINEAGE_TABLE, mode: str='append') -> dict[str, Any]
-```
-
-## Summary
-
 Write many-to-many source-to-target lineage evidence.
 
-## Usage note
+<details class="reference-usage-details">
+<summary>Usage guidance</summary>
+
+**Use when:**
 
 - Use near the end of 02_pipeline after transformations and target config resolution have produced lineage-ready records.
-
-**Do not use when:**
-
-- Not documented yet
 
 **Additional context:**
 
 Persists lineage records for a pipeline run so source tables, target tables, and transformation steps remain traceable.
+
+</details>
+
+## Signature
+
+<div class="reference-api-definition" markdown="1">
+
+```python
+def write_pipeline_lineage(
+    spark: Any,
+    config: Any,
+    env: str,
+    run_id: str,
+    source_definitions: Mapping[str, Mapping[str, Any]],
+    target_definitions: Mapping[str, Mapping[str, Any]],
+    relationships: list[Mapping[str, Any]] | None=None,
+    dataset_name: str='',
+    agreement_id: str='',
+    agreement_contract_version: str='',
+    notebook_registry_id: str='',
+    notebook_id: str='',
+    pipeline_name: str='',
+    metadata_table: str=LINEAGE_TABLE,
+    mode: str='append',
+) -> dict[str, Any]:
+```
+
+</div>
+
+## Example usage
+
+Example usage not documented yet.
 
 ## Parameters
 
@@ -61,37 +84,24 @@ Not documented yet
 - The metadata table cannot be written.
 - Audit fields cannot be resolved from configuration.
 
-## Example
+## Relationships
 
-```python
+### Used by
+
 Not documented yet
-```
 
-## See also
+### Calls
 
-- [Notebook Templates](../../how-fabricops-works/notebook-templates.md)
-- [Metadata Tables](../../how-fabricops-works/metadata-tables.md)
+- <a href="../write_lakehouse_table/"><code>fabricops_kit.fabric_input_output.write_lakehouse_table</code></a>
+- `fabricops_kit.metadata._build_metadata_table_key`
+- `fabricops_kit.pipeline._definition_name`
+- `fabricops_kit.pipeline._now_iso`
+- `fabricops_kit.pipeline._runtime_audit_fields`
 
-**Glossary terms**
+## Implementation details
 
-- **Source table:** An input table or file read by the pipeline.
-- **Target table:** An output table written by the pipeline.
-- **Catalogue evidence:** Reviewed metadata that explains what FabricOps knows about a dataset or table.
-- **Metadata lakehouse:** The configured Fabric lakehouse where FabricOps stores governance and runtime metadata.
-
-See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
-
-## Developer details
-
-- Module: `pipeline`
-- Classification: Callable
-- Source file path: `src/fabricops_kit/pipeline.py`
-- Source line: `559`
-- Signature:
-
-```python
-def write_pipeline_lineage(*, spark: Any, config: Any, env: str, run_id: str, source_definitions: Mapping[str, Mapping[str, Any]], target_definitions: Mapping[str, Mapping[str, Any]], relationships: list[Mapping[str, Any]] | None=None, dataset_name: str='', agreement_id: str='', agreement_contract_version: str='', notebook_registry_id: str='', notebook_id: str='', pipeline_name: str='', metadata_table: str=LINEAGE_TABLE, mode: str='append') -> dict[str, Any]
-```
+<details class="reference-implementation-details">
+<summary>Notes, side effects, and template usage</summary>
 
 **Used in templates:**
 
@@ -105,15 +115,7 @@ Writes METADATA_DATA_LINEAGE_TABLE through the configured metadata lakehouse tar
 
 No additional callable notes are documented.
 
-## Calls
-
-- <a href="../write_lakehouse_table/"><code>fabricops_kit.fabric_input_output.write_lakehouse_table</code></a>
-- `fabricops_kit.metadata._build_metadata_table_key`
-- `fabricops_kit.pipeline._definition_name`
-- `fabricops_kit.pipeline._now_iso`
-- `fabricops_kit.pipeline._runtime_audit_fields`
-
-## Internal implementation summary
+</details>
 
 ??? info "Call flow"
 
@@ -152,38 +154,43 @@ No additional callable notes are documented.
 
     This callable uses 12 internal helpers for audit timestamp, metadata loading, rule parsing, and other.
 
-    <div class="module-table-scroll reference-input-table">
-    <table class="reference-function-table">
-      <thead>
-        <tr>
-          <th>Area</th>
-          <th>Helpers</th>
-          <th>What they do</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td data-label="Area">Audit timestamp</td>
-          <td data-label="Helpers"><code>_build_runtime_audit_fields</code>, <code>_current_audit_timestamp</code>, <code>_get_audit_timezone</code>, <code>_runtime_audit_fields</code>, <code>_validate_audit_timezone</code></td>
-          <td data-label="What they do">Resolve and stamp audit time consistently.</td>
-        </tr>
-        <tr>
-          <td data-label="Area">Metadata loading</td>
-          <td data-label="Helpers"><code>_build_metadata_table_key</code>, <code>_stable_metadata_key</code></td>
-          <td data-label="What they do">Load and identify the metadata or table context needed by the callable.</td>
-        </tr>
-        <tr>
-          <td data-label="Area">Rule parsing</td>
-          <td data-label="Helpers"><code>_definition_name</code></td>
-          <td data-label="What they do">Normalize stored or user-provided values before applying rules.</td>
-        </tr>
-        <tr>
-          <td data-label="Area">Other</td>
-          <td data-label="Helpers"><code>_context_get</code>, <code>_now_iso</code>, <code>_runtime_context</code>, <code>_safe_str</code></td>
-          <td data-label="What they do">Support lower-level implementation details that do not fit the main helper areas.</td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="reference-helper-groups">
+      <section class="reference-helper-group">
+        <h4>Audit timestamp</h4>
+        <p>Resolve and stamp audit time consistently.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/metadata.py#L147-L217"><code>_build_runtime_audit_fields</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L69-L75"><code>_current_audit_timestamp</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L61-L66"><code>_get_audit_timezone</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/pipeline.py#L49-L60"><code>_runtime_audit_fields</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L27-L58"><code>_validate_audit_timezone</code></a>
+        </div>
+      </section>
+      <section class="reference-helper-group">
+        <h4>Metadata loading</h4>
+        <p>Load and identify the metadata or table context needed by the callable.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/metadata.py#L77-L78"><code>_build_metadata_table_key</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/metadata.py#L72-L74"><code>_stable_metadata_key</code></a>
+        </div>
+      </section>
+      <section class="reference-helper-group">
+        <h4>Rule parsing</h4>
+        <p>Normalize stored or user-provided values before applying rules.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/pipeline.py#L23-L24"><code>_definition_name</code></a>
+        </div>
+      </section>
+      <section class="reference-helper-group">
+        <h4>Other</h4>
+        <p>Support lower-level implementation details that do not fit the main helper areas.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/metadata.py#L101-L113"><code>_context_get</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/pipeline.py#L19-L20"><code>_now_iso</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/metadata.py#L120-L144"><code>_runtime_context</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/metadata.py#L116-L117"><code>_safe_str</code></a>
+        </div>
+      </section>
     </div>
 
     ??? example "View helper source by area"
@@ -458,101 +465,106 @@ No additional callable notes are documented.
             ```
 
 
-## Source link
+<div class="reference-source-card" markdown="1">
+**Source**
 
-- Source file path: `src/fabricops_kit/pipeline.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/pipeline.py#L559-L643">View write_pipeline_lineage on GitHub</a>
+`fabricops_kit/pipeline.py:559`
 
-```python
-def write_pipeline_lineage(
-    *,
-    spark: Any,
-    config: Any,
-    env: str,
-    run_id: str,
-    source_definitions: Mapping[str, Mapping[str, Any]],
-    target_definitions: Mapping[str, Mapping[str, Any]],
-    relationships: list[Mapping[str, Any]] | None = None,
-    dataset_name: str = "",
-    agreement_id: str = "",
-    agreement_contract_version: str = "",
-    notebook_registry_id: str = "",
-    notebook_id: str = "",
-    pipeline_name: str = "",
-    metadata_table: str = LINEAGE_TABLE,
-    mode: str = "append",
-) -> dict[str, Any]:
-    """Write many-to-many source-to-target lineage evidence.
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/pipeline.py#L559-L643">View on GitHub</a>
+</div>
 
-    Parameters
-    ----------
-    spark : pyspark.sql.SparkSession
-        Spark session used to create lineage rows.
-    config, env : object, str
-        Metadata route from ``00_env_config``.
-    run_id : str
-        Pipeline run identifier.
-    source_definitions, target_definitions : mapping
-        Source and target definitions keyed by alias.
-    relationships : list of mapping, optional
-        Many-to-many lineage relationships. Each item may contain ``sources``,
-        ``targets``, ``operation``, and ``description``. When omitted, every
-        source is linked to every target.
-    dataset_name, agreement_id, agreement_contract_version, notebook_registry_id, notebook_id, pipeline_name : str, optional
-        Governance context embedded in lineage payloads.
-    metadata_table : str, default="METADATA_DATA_LINEAGE_TABLE"
-        Metadata lineage table.
-    mode : str, default="append"
-        Write mode for lineage evidence.
+??? example "Source code"
 
-    Returns
-    -------
-    dict[str, Any]
-        Status, row count, and written rows.
-    """
-    audit = _runtime_audit_fields(config, env)
-    created_at = _now_iso(config)
-    if relationships is None:
-        relationships = [{"sources": list(source_definitions), "targets": list(target_definitions), "operation": "pipeline_transform", "description": "User-defined pipeline transformation."}]
-    rows: list[dict[str, Any]] = []
-    sequence = 0
-    for relationship in relationships:
-        for source_alias in relationship.get("sources", []):
-            for target_alias in relationship.get("targets", []):
-                sequence += 1
-                source_table = _definition_name(str(source_alias), source_definitions[str(source_alias)])
-                target_table = _definition_name(str(target_alias), target_definitions[str(target_alias)])
-                payload = {
-                    "run_id": run_id,
-                    "agreement_id": agreement_id,
-                    "agreement_contract_version": agreement_contract_version,
-                    "notebook_registry_id": notebook_registry_id,
-                    "notebook_id": notebook_id,
-                    "pipeline_name": pipeline_name,
-                    "source_alias": source_alias,
-                    "target_alias": target_alias,
-                    "operation": relationship.get("operation", "pipeline_transform"),
-                    "description": relationship.get("description", ""),
-                }
-                rows.append({
-                    "lineage_id": f"{run_id}_{sequence}",
-                    "dataset_name": dataset_name or str(target_definitions[str(target_alias)].get("dataset_name") or target_table),
-                    "run_id": run_id,
-                    "source_table": source_table,
-                    "target_table": target_table,
-                    "source_table_key": _build_metadata_table_key(env, str(source_definitions[str(source_alias)].get("dataset_name") or source_table), source_table),
-                    "target_table_key": _build_metadata_table_key(env, str(target_definitions[str(target_alias)].get("dataset_name") or target_table), target_table),
-                    "transformation_steps_json": json.dumps(payload, default=str, sort_keys=True),
-                    "created_at": created_at,
-                    **audit,
-                })
-    if rows:
-        write_lakehouse_table(spark.createDataFrame(rows), config, env, "metadata", metadata_table, mode=mode)
-    return {"status": "written" if rows else "skipped", "row_count": len(rows), "rows": rows}
-```
+    ```python
+    def write_pipeline_lineage(
+        *,
+        spark: Any,
+        config: Any,
+        env: str,
+        run_id: str,
+        source_definitions: Mapping[str, Mapping[str, Any]],
+        target_definitions: Mapping[str, Mapping[str, Any]],
+        relationships: list[Mapping[str, Any]] | None = None,
+        dataset_name: str = "",
+        agreement_id: str = "",
+        agreement_contract_version: str = "",
+        notebook_registry_id: str = "",
+        notebook_id: str = "",
+        pipeline_name: str = "",
+        metadata_table: str = LINEAGE_TABLE,
+        mode: str = "append",
+    ) -> dict[str, Any]:
+        """Write many-to-many source-to-target lineage evidence.
+
+        Parameters
+        ----------
+        spark : pyspark.sql.SparkSession
+            Spark session used to create lineage rows.
+        config, env : object, str
+            Metadata route from ``00_env_config``.
+        run_id : str
+            Pipeline run identifier.
+        source_definitions, target_definitions : mapping
+            Source and target definitions keyed by alias.
+        relationships : list of mapping, optional
+            Many-to-many lineage relationships. Each item may contain ``sources``,
+            ``targets``, ``operation``, and ``description``. When omitted, every
+            source is linked to every target.
+        dataset_name, agreement_id, agreement_contract_version, notebook_registry_id, notebook_id, pipeline_name : str, optional
+            Governance context embedded in lineage payloads.
+        metadata_table : str, default="METADATA_DATA_LINEAGE_TABLE"
+            Metadata lineage table.
+        mode : str, default="append"
+            Write mode for lineage evidence.
+
+        Returns
+        -------
+        dict[str, Any]
+            Status, row count, and written rows.
+        """
+        audit = _runtime_audit_fields(config, env)
+        created_at = _now_iso(config)
+        if relationships is None:
+            relationships = [{"sources": list(source_definitions), "targets": list(target_definitions), "operation": "pipeline_transform", "description": "User-defined pipeline transformation."}]
+        rows: list[dict[str, Any]] = []
+        sequence = 0
+        for relationship in relationships:
+            for source_alias in relationship.get("sources", []):
+                for target_alias in relationship.get("targets", []):
+                    sequence += 1
+                    source_table = _definition_name(str(source_alias), source_definitions[str(source_alias)])
+                    target_table = _definition_name(str(target_alias), target_definitions[str(target_alias)])
+                    payload = {
+                        "run_id": run_id,
+                        "agreement_id": agreement_id,
+                        "agreement_contract_version": agreement_contract_version,
+                        "notebook_registry_id": notebook_registry_id,
+                        "notebook_id": notebook_id,
+                        "pipeline_name": pipeline_name,
+                        "source_alias": source_alias,
+                        "target_alias": target_alias,
+                        "operation": relationship.get("operation", "pipeline_transform"),
+                        "description": relationship.get("description", ""),
+                    }
+                    rows.append({
+                        "lineage_id": f"{run_id}_{sequence}",
+                        "dataset_name": dataset_name or str(target_definitions[str(target_alias)].get("dataset_name") or target_table),
+                        "run_id": run_id,
+                        "source_table": source_table,
+                        "target_table": target_table,
+                        "source_table_key": _build_metadata_table_key(env, str(source_definitions[str(source_alias)].get("dataset_name") or source_table), source_table),
+                        "target_table_key": _build_metadata_table_key(env, str(target_definitions[str(target_alias)].get("dataset_name") or target_table), target_table),
+                        "transformation_steps_json": json.dumps(payload, default=str, sort_keys=True),
+                        "created_at": created_at,
+                        **audit,
+                    })
+        if rows:
+            write_lakehouse_table(spark.createDataFrame(rows), config, env, "metadata", metadata_table, mode=mode)
+        return {"status": "written" if rows else "skipped", "row_count": len(rows), "rows": rows}
+    ```
 
 <details class="reference-metadata-details">
-<summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
+<summary>Machine-readable metadata / metadata details</summary>
 
 These generated fields are for automation, AI agents, maintainers, and doc tooling. Skip this block when reading the docs normally.
 
@@ -600,7 +612,23 @@ Not documented yet
 - Signature:
 
 ```python
-def write_pipeline_lineage(*, spark: Any, config: Any, env: str, run_id: str, source_definitions: Mapping[str, Mapping[str, Any]], target_definitions: Mapping[str, Mapping[str, Any]], relationships: list[Mapping[str, Any]] | None=None, dataset_name: str='', agreement_id: str='', agreement_contract_version: str='', notebook_registry_id: str='', notebook_id: str='', pipeline_name: str='', metadata_table: str=LINEAGE_TABLE, mode: str='append') -> dict[str, Any]
+def write_pipeline_lineage(
+    spark: Any,
+    config: Any,
+    env: str,
+    run_id: str,
+    source_definitions: Mapping[str, Mapping[str, Any]],
+    target_definitions: Mapping[str, Mapping[str, Any]],
+    relationships: list[Mapping[str, Any]] | None=None,
+    dataset_name: str='',
+    agreement_id: str='',
+    agreement_contract_version: str='',
+    notebook_registry_id: str='',
+    notebook_id: str='',
+    pipeline_name: str='',
+    metadata_table: str=LINEAGE_TABLE,
+    mode: str='append',
+) -> dict[str, Any]:
 ```
 
 ### Internal relationship graph
@@ -613,6 +641,30 @@ def write_pipeline_lineage(*, spark: Any, config: Any, env: str, run_id: str, so
 ### Internal implementation summary
 
 - Internal helper count: 12
-- Grouped helper summary and optional source snippets are rendered in the page-level Internal implementation summary section.
+- Grouped helper summary and optional source snippets are rendered in the page-level Implementation details section.
 
 </details>
+
+## Source link
+
+<div class="reference-source-card" markdown="1">
+**Source**
+
+`fabricops_kit/pipeline.py:559`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/pipeline.py#L559-L643">View on GitHub</a>
+</div>
+
+## Glossary
+
+- **Source table:** An input table or file read by the pipeline.
+- **Target table:** An output table written by the pipeline.
+- **Catalogue evidence:** Reviewed metadata that explains what FabricOps knows about a dataset or table.
+- **Metadata lakehouse:** The configured Fabric lakehouse where FabricOps stores governance and runtime metadata.
+
+See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
+
+## See also
+
+- [Notebook Templates](../../how-fabricops-works/notebook-templates.md)
+- [Metadata Tables](../../how-fabricops-works/metadata-tables.md)

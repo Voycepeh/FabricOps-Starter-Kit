@@ -1,26 +1,38 @@
 # load_catalogue_profile_rows
 
-## Signature
-
-```python
-def load_catalogue_profile_rows(config: Any, env: str, selection: dict[str, Any], *, spark_session: Any) -> list[dict[str, Any]]
-```
-
-## Summary
-
 Load column profile rows for the selected catalogue table.
 
-## Usage note
+<details class="reference-usage-details">
+<summary>Usage guidance</summary>
+
+**Use when:**
 
 - Use in 03_governance after selecting a catalogue table and before rendering review widgets.
-
-**Do not use when:**
-
-- Not documented yet
 
 **Additional context:**
 
 Loads catalogue profile evidence rows for a selected table so governance review widgets can display approved or proposed context.
+
+</details>
+
+## Signature
+
+<div class="reference-api-definition" markdown="1">
+
+```python
+def load_catalogue_profile_rows(
+    config: Any,
+    env: str,
+    selection: dict[str, Any],
+    spark_session: Any,
+) -> list[dict[str, Any]]:
+```
+
+</div>
+
+## Example usage
+
+Example usage not documented yet.
 
 ## Parameters
 
@@ -50,36 +62,24 @@ Not documented yet
 - Profile evidence has not been generated yet.
 - Filters for dataset, table, or stage do not match stored evidence.
 
-## Example
+## Relationships
 
-```python
-Not documented yet
-```
+### Used by
 
-## See also
+- `fabricops_kit.governance_review._review_governance_evidence`
 
-- [Governance Review](../../how-fabricops-works/governance-review.md)
-- [Metadata Tables](../../how-fabricops-works/metadata-tables.md)
+### Calls
 
-**Glossary terms**
+- <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a>
+- `fabricops_kit.governance_review._coerce_rows`
+- `fabricops_kit.governance_review._is_success`
+- `fabricops_kit.governance_review._value`
+- `fabricops_kit.metadata._build_metadata_table_key`
 
-- **Catalogue evidence:** Reviewed metadata that explains what FabricOps knows about a dataset or table.
-- **Accepted catalogue profile evidence:** The approved profile record that FabricOps treats as the trusted baseline for a table.
-- **Metadata lakehouse:** The configured Fabric lakehouse where FabricOps stores governance and runtime metadata.
+## Implementation details
 
-See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
-
-## Developer details
-
-- Module: `governance_review`
-- Classification: Callable
-- Source file path: `src/fabricops_kit/governance_review.py`
-- Source line: `344`
-- Signature:
-
-```python
-def load_catalogue_profile_rows(config: Any, env: str, selection: dict[str, Any], *, spark_session: Any) -> list[dict[str, Any]]
-```
+<details class="reference-implementation-details">
+<summary>Notes, side effects, and template usage</summary>
 
 **Used in templates:**
 
@@ -93,15 +93,7 @@ Not documented yet
 
 No additional callable notes are documented.
 
-## Calls
-
-- <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a>
-- `fabricops_kit.governance_review._coerce_rows`
-- `fabricops_kit.governance_review._is_success`
-- `fabricops_kit.governance_review._value`
-- `fabricops_kit.metadata._build_metadata_table_key`
-
-## Internal implementation summary
+</details>
 
 ??? info "Call flow"
 
@@ -128,28 +120,24 @@ No additional callable notes are documented.
 
     This callable uses 5 internal helpers for metadata loading and other.
 
-    <div class="module-table-scroll reference-input-table">
-    <table class="reference-function-table">
-      <thead>
-        <tr>
-          <th>Area</th>
-          <th>Helpers</th>
-          <th>What they do</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td data-label="Area">Metadata loading</td>
-          <td data-label="Helpers"><code>_build_metadata_table_key</code>, <code>_stable_metadata_key</code></td>
-          <td data-label="What they do">Load and identify the metadata or table context needed by the callable.</td>
-        </tr>
-        <tr>
-          <td data-label="Area">Other</td>
-          <td data-label="Helpers"><code>_coerce_rows</code>, <code>_is_success</code>, <code>_value</code></td>
-          <td data-label="What they do">Support lower-level implementation details that do not fit the main helper areas.</td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="reference-helper-groups">
+      <section class="reference-helper-group">
+        <h4>Metadata loading</h4>
+        <p>Load and identify the metadata or table context needed by the callable.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/metadata.py#L77-L78"><code>_build_metadata_table_key</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/metadata.py#L72-L74"><code>_stable_metadata_key</code></a>
+        </div>
+      </section>
+      <section class="reference-helper-group">
+        <h4>Other</h4>
+        <p>Support lower-level implementation details that do not fit the main helper areas.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L62-L67"><code>_coerce_rows</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L74-L75"><code>_is_success</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L70-L71"><code>_value</code></a>
+        </div>
+      </section>
     </div>
 
     ??? example "View helper source by area"
@@ -209,46 +197,47 @@ No additional callable notes are documented.
             ```
 
 
-## Used by
+<div class="reference-source-card" markdown="1">
+**Source**
 
-- `fabricops_kit.governance_review._review_governance_evidence`
+`fabricops_kit/governance_review.py:344`
 
-## Source link
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L344-L369">View on GitHub</a>
+</div>
 
-- Source file path: `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L344-L369">View load_catalogue_profile_rows on GitHub</a>
+??? example "Source code"
 
-```python
-def load_catalogue_profile_rows(config: Any, env: str, selection: dict[str, Any], *, spark_session: Any) -> list[dict[str, Any]]:
-    """Load column rows for the selected latest successful profile run."""
-    rows = _coerce_rows(read_lakehouse_table(config, env, "metadata", CATALOGUE_TABLE, spark_session=spark_session))
-    filtered = []
-    for row in rows:
-        table_key = str(
-            _value(row, "metadata_table_key")
-            or _build_metadata_table_key(
-                _value(row, "environment_name"),
-                _value(row, "dataset_name"),
-                _value(row, "table_name"),
+    ```python
+    def load_catalogue_profile_rows(config: Any, env: str, selection: dict[str, Any], *, spark_session: Any) -> list[dict[str, Any]]:
+        """Load column rows for the selected latest successful profile run."""
+        rows = _coerce_rows(read_lakehouse_table(config, env, "metadata", CATALOGUE_TABLE, spark_session=spark_session))
+        filtered = []
+        for row in rows:
+            table_key = str(
+                _value(row, "metadata_table_key")
+                or _build_metadata_table_key(
+                    _value(row, "environment_name"),
+                    _value(row, "dataset_name"),
+                    _value(row, "table_name"),
+                )
             )
-        )
-        if (
-            _is_success(row)
-            and str(_value(row, "environment_name")) == str(selection["environment_name"])
-            and str(_value(row, "dataset_name")) == str(selection["dataset_name"])
-            and str(_value(row, "table_name")) == str(selection["table_name"])
-            and str(_value(row, "profile_run_id")) == str(selection["profile_run_id"])
-            and str(_value(row, "profile_stage")) == str(selection["profile_stage"])
-            and table_key == str(selection["metadata_table_key"])
-        ):
-            filtered.append(row)
-    if not filtered:
-        raise ValueError("The selected successful profile has no column rows in METADATA_DATA_CATALOGUE.")
-    return filtered
-```
+            if (
+                _is_success(row)
+                and str(_value(row, "environment_name")) == str(selection["environment_name"])
+                and str(_value(row, "dataset_name")) == str(selection["dataset_name"])
+                and str(_value(row, "table_name")) == str(selection["table_name"])
+                and str(_value(row, "profile_run_id")) == str(selection["profile_run_id"])
+                and str(_value(row, "profile_stage")) == str(selection["profile_stage"])
+                and table_key == str(selection["metadata_table_key"])
+            ):
+                filtered.append(row)
+        if not filtered:
+            raise ValueError("The selected successful profile has no column rows in METADATA_DATA_CATALOGUE.")
+        return filtered
+    ```
 
 <details class="reference-metadata-details">
-<summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
+<summary>Machine-readable metadata / metadata details</summary>
 
 These generated fields are for automation, AI agents, maintainers, and doc tooling. Skip this block when reading the docs normally.
 
@@ -296,7 +285,12 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Signature:
 
 ```python
-def load_catalogue_profile_rows(config: Any, env: str, selection: dict[str, Any], *, spark_session: Any) -> list[dict[str, Any]]
+def load_catalogue_profile_rows(
+    config: Any,
+    env: str,
+    selection: dict[str, Any],
+    spark_session: Any,
+) -> list[dict[str, Any]]:
 ```
 
 ### Internal relationship graph
@@ -308,6 +302,29 @@ def load_catalogue_profile_rows(config: Any, env: str, selection: dict[str, Any]
 ### Internal implementation summary
 
 - Internal helper count: 5
-- Grouped helper summary and optional source snippets are rendered in the page-level Internal implementation summary section.
+- Grouped helper summary and optional source snippets are rendered in the page-level Implementation details section.
 
 </details>
+
+## Source link
+
+<div class="reference-source-card" markdown="1">
+**Source**
+
+`fabricops_kit/governance_review.py:344`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L344-L369">View on GitHub</a>
+</div>
+
+## Glossary
+
+- **Catalogue evidence:** Reviewed metadata that explains what FabricOps knows about a dataset or table.
+- **Accepted catalogue profile evidence:** The approved profile record that FabricOps treats as the trusted baseline for a table.
+- **Metadata lakehouse:** The configured Fabric lakehouse where FabricOps stores governance and runtime metadata.
+
+See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
+
+## See also
+
+- [Governance Review](../../how-fabricops-works/governance-review.md)
+- [Metadata Tables](../../how-fabricops-works/metadata-tables.md)

@@ -1,16 +1,11 @@
 # read_warehouse_table
 
-## Signature
-
-```python
-def read_warehouse_table(config, env, target, schema, table, spark_session=None)
-```
-
-## Summary
-
 Read a table from a configured Fabric warehouse target.
 
-## Usage note
+<details class="reference-usage-details">
+<summary>Usage guidance</summary>
+
+**Use when:**
 
 - Use when source data lives in a Fabric Warehouse rather than a lakehouse file or Delta table.
 
@@ -21,6 +16,28 @@ Read a table from a configured Fabric warehouse target.
 **Additional context:**
 
 Reads data from a configured Fabric Warehouse table or query target into a Spark DataFrame.
+
+</details>
+
+## Signature
+
+<div class="reference-api-definition" markdown="1">
+
+```python
+def read_warehouse_table(config, env, target, schema, table, spark_session=None)
+```
+
+</div>
+
+## Example usage
+
+<div class="reference-example-usage" markdown="1">
+
+```python
+df = read_warehouse_table(CONFIG, env="Sandbox", target="Warehouse", schema="dbo", table="orders", spark_session=spark)
+```
+
+</div>
 
 ## Parameters
 
@@ -52,34 +69,21 @@ Raises configuration, Spark SQL, or warehouse-read errors when the target/table 
 - Warehouse connector context is unavailable.
 - The caller lacks warehouse read permission.
 
-## Example
+## Relationships
 
-```python
-df = read_warehouse_table(CONFIG, env="Sandbox", target="Warehouse", schema="dbo", table="orders", spark_session=spark)
-```
+### Used by
 
-## See also
+Not documented yet
 
-- [Notebook Templates](../../how-fabricops-works/notebook-templates.md)
+### Calls
 
-**Glossary terms**
+- `fabricops_kit.config._get_store`
+- `fabricops_kit.fabric_input_output._get_spark`
 
-- **Source table:** An input table or file read by the pipeline.
-- **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
+## Implementation details
 
-See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
-
-## Developer details
-
-- Module: `fabric_input_output`
-- Classification: Callable
-- Source file path: `src/fabricops_kit/fabric_input_output.py`
-- Source line: `371`
-- Signature:
-
-```python
-def read_warehouse_table(config, env, target, schema, table, spark_session=None)
-```
+<details class="reference-implementation-details">
+<summary>Notes, side effects, and template usage</summary>
 
 **Used in templates:**
 
@@ -95,12 +99,7 @@ Reads from a warehouse table; it does not write metadata, tables, or files.
 
 No additional callable notes are documented.
 
-## Calls
-
-- `fabricops_kit.config._get_store`
-- `fabricops_kit.fabric_input_output._get_spark`
-
-## Internal implementation summary
+</details>
 
 ??? info "Call flow"
 
@@ -114,23 +113,15 @@ No additional callable notes are documented.
 
     This callable uses 2 internal helpers for fabric or spark access.
 
-    <div class="module-table-scroll reference-input-table">
-    <table class="reference-function-table">
-      <thead>
-        <tr>
-          <th>Area</th>
-          <th>Helpers</th>
-          <th>What they do</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td data-label="Area">Fabric or Spark access</td>
-          <td data-label="Helpers"><code>_get_spark</code>, <code>_get_store</code></td>
-          <td data-label="What they do">Access Fabric or Spark runtime services used by the implementation.</td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="reference-helper-groups">
+      <section class="reference-helper-group">
+        <h4>Fabric or Spark access</h4>
+        <p>Access Fabric or Spark runtime services used by the implementation.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L125-L155"><code>_get_spark</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L627-L667"><code>_get_store</code></a>
+        </div>
+      </section>
     </div>
 
     ??? example "View helper source by area"
@@ -224,76 +215,81 @@ No additional callable notes are documented.
             ```
 
 
-## Source link
+<div class="reference-source-card" markdown="1">
+**Source**
 
-- Source file path: `src/fabricops_kit/fabric_input_output.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L371-L430">View read_warehouse_table on GitHub</a>
+`fabricops_kit/fabric_input_output.py:371`
 
-```python
-def read_warehouse_table(config, env, target, schema, table, spark_session=None):
-    """Read a table from a Microsoft Fabric warehouse.
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L371-L430">View on GitHub</a>
+</div>
 
-    This uses Fabric Spark's `synapsesql` connector to read from a warehouse
-    configured in the framework `CONFIG` mapping. In Source → Unified →
-    Product workflows, this is commonly used when curated inputs are stored in
-    Fabric Warehouse instead of Lakehouse tables.
+??? example "Source code"
 
-    Parameters
-    ----------
-    config : FrameworkConfig | dict
-        FabricOps FrameworkConfig or compatible config object.
-    env : str
-        Environment name in the config mapping, for example `"Sandbox"` or `"DE"`.
-    target : str
-        Warehouse target name under the selected environment, for example
-        `"Warehouse"` or `"wh_Bronze"`.
-    schema : str
-        Warehouse schema name, for example `"dbo"`.
-    table : str
-        Warehouse table name.
-    spark_session : object, optional
-        Spark session to use. If omitted, the helper uses the notebook global
-        `spark`.
+    ```python
+    def read_warehouse_table(config, env, target, schema, table, spark_session=None):
+        """Read a table from a Microsoft Fabric warehouse.
 
-    Returns
-    -------
-    pyspark.sql.DataFrame
-        Spark DataFrame loaded from the Fabric warehouse table.
+        This uses Fabric Spark's `synapsesql` connector to read from a warehouse
+        configured in the framework `CONFIG` mapping. In Source → Unified →
+        Product workflows, this is commonly used when curated inputs are stored in
+        Fabric Warehouse instead of Lakehouse tables.
 
-    Raises
-    ------
-    RuntimeError
-        If the Microsoft Fabric Spark connector is unavailable.
-    ValueError
-        If the selected environment or target is missing from the config.
+        Parameters
+        ----------
+        config : FrameworkConfig | dict
+            FabricOps FrameworkConfig or compatible config object.
+        env : str
+            Environment name in the config mapping, for example `"Sandbox"` or `"DE"`.
+        target : str
+            Warehouse target name under the selected environment, for example
+            `"Warehouse"` or `"wh_Bronze"`.
+        schema : str
+            Warehouse schema name, for example `"dbo"`.
+        table : str
+            Warehouse table name.
+        spark_session : object, optional
+            Spark session to use. If omitted, the helper uses the notebook global
+            `spark`.
 
-    Examples
-    --------
-    >>> df = read_warehouse_table(CONFIG, ENV, "product", "dbo", "TABLE_NAME")
-    """
-    spark_obj = _get_spark(spark_session)
-    store = _get_store(config, env, target)
-    if store.kind != "warehouse":
-        raise ValueError(f"Target '{env}/{target}' is not a warehouse store.")
+        Returns
+        -------
+        pyspark.sql.DataFrame
+            Spark DataFrame loaded from the Fabric warehouse table.
 
-    try:
-        import com.microsoft.spark.fabric
-        from com.microsoft.spark.fabric.Constants import Constants
-    except Exception as exc:
-        raise RuntimeError(
-            "This function must run inside Microsoft Fabric Spark with "
-            "com.microsoft.spark.fabric available."
-        ) from exc
+        Raises
+        ------
+        RuntimeError
+            If the Microsoft Fabric Spark connector is unavailable.
+        ValueError
+            If the selected environment or target is missing from the config.
 
-    return (
-        spark_obj.read.option(Constants.WorkspaceId, store.workspace_id)
-        .option(Constants.DatawarehouseId, store.item_id)
-        .synapsesql(f"{store.name}.{schema}.{table}")
-    )
-```
+        Examples
+        --------
+        >>> df = read_warehouse_table(CONFIG, ENV, "product", "dbo", "TABLE_NAME")
+        """
+        spark_obj = _get_spark(spark_session)
+        store = _get_store(config, env, target)
+        if store.kind != "warehouse":
+            raise ValueError(f"Target '{env}/{target}' is not a warehouse store.")
+
+        try:
+            import com.microsoft.spark.fabric
+            from com.microsoft.spark.fabric.Constants import Constants
+        except Exception as exc:
+            raise RuntimeError(
+                "This function must run inside Microsoft Fabric Spark with "
+                "com.microsoft.spark.fabric available."
+            ) from exc
+
+        return (
+            spark_obj.read.option(Constants.WorkspaceId, store.workspace_id)
+            .option(Constants.DatawarehouseId, store.item_id)
+            .synapsesql(f"{store.name}.{schema}.{table}")
+        )
+    ```
 
 <details class="reference-metadata-details">
-<summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
+<summary>Machine-readable metadata / metadata details</summary>
 
 These generated fields are for automation, AI agents, maintainers, and doc tooling. Skip this block when reading the docs normally.
 
@@ -351,6 +347,27 @@ def read_warehouse_table(config, env, target, schema, table, spark_session=None)
 ### Internal implementation summary
 
 - Internal helper count: 2
-- Grouped helper summary and optional source snippets are rendered in the page-level Internal implementation summary section.
+- Grouped helper summary and optional source snippets are rendered in the page-level Implementation details section.
 
 </details>
+
+## Source link
+
+<div class="reference-source-card" markdown="1">
+**Source**
+
+`fabricops_kit/fabric_input_output.py:371`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L371-L430">View on GitHub</a>
+</div>
+
+## Glossary
+
+- **Source table:** An input table or file read by the pipeline.
+- **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
+
+See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
+
+## See also
+
+- [Notebook Templates](../../how-fabricops-works/notebook-templates.md)

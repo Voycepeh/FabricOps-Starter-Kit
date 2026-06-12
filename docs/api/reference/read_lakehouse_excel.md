@@ -1,16 +1,11 @@
 # read_lakehouse_excel
 
-## Signature
-
-```python
-def read_lakehouse_excel(config, env, target, relative_path, sheet_name=0, spark_session=None, **read_excel_kwargs)
-```
-
-## Summary
-
 Read an Excel file from a configured Fabric lakehouse Files path.
 
-## Usage note
+<details class="reference-usage-details">
+<summary>Usage guidance</summary>
+
+**Use when:**
 
 - Use when source data arrives as an Excel workbook and should still follow configured Fabric lakehouse routing.
 
@@ -21,6 +16,36 @@ Read an Excel file from a configured Fabric lakehouse Files path.
 **Additional context:**
 
 Reads an Excel file from a configured lakehouse Files path and converts it into a Spark DataFrame for notebook processing.
+
+</details>
+
+## Signature
+
+<div class="reference-api-definition" markdown="1">
+
+```python
+def read_lakehouse_excel(
+    config,
+    env,
+    target,
+    relative_path,
+    sheet_name=0,
+    spark_session=None,
+    **read_excel_kwargs,
+):
+```
+
+</div>
+
+## Example usage
+
+<div class="reference-example-usage" markdown="1">
+
+```python
+mapping_df = read_lakehouse_excel(CONFIG, env="Sandbox", target="Source", relative_path="reference/faculty_mapping.xlsx", sheet_name=0, spark_session=spark)
+```
+
+</div>
 
 ## Parameters
 
@@ -52,34 +77,22 @@ Raises ValueError for invalid or non-Excel paths and Fabric/Spark/pandas errors 
 - The workbook layout does not match expected headers.
 - The configured lakehouse target cannot be read.
 
-## Example
+## Relationships
 
-```python
-mapping_df = read_lakehouse_excel(CONFIG, env="Sandbox", target="Source", relative_path="reference/faculty_mapping.xlsx", sheet_name=0, spark_session=spark)
-```
+### Used by
 
-## See also
+Not documented yet
 
-- [Notebook Templates](../../how-fabricops-works/notebook-templates.md)
+### Calls
 
-**Glossary terms**
+- `fabricops_kit.config._get_store`
+- `fabricops_kit.fabric_input_output._get_spark`
+- `fabricops_kit.fabric_input_output._lakehouse_file_path`
 
-- **Source table:** An input table or file read by the pipeline.
-- **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
+## Implementation details
 
-See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
-
-## Developer details
-
-- Module: `fabric_input_output`
-- Classification: Callable
-- Source file path: `src/fabricops_kit/fabric_input_output.py`
-- Source line: `680`
-- Signature:
-
-```python
-def read_lakehouse_excel(config, env, target, relative_path, sheet_name=0, spark_session=None, **read_excel_kwargs)
-```
+<details class="reference-implementation-details">
+<summary>Notes, side effects, and template usage</summary>
 
 **Used in templates:**
 
@@ -96,13 +109,7 @@ Side effects:
 - Creates a temporary local file during conversion.
 - Materializes rows through pandas before creating a Spark DataFrame.
 
-## Calls
-
-- `fabricops_kit.config._get_store`
-- `fabricops_kit.fabric_input_output._get_spark`
-- `fabricops_kit.fabric_input_output._lakehouse_file_path`
-
-## Internal implementation summary
+</details>
 
 ??? info "Call flow"
 
@@ -117,28 +124,22 @@ Side effects:
 
     This callable uses 3 internal helpers for metadata loading and fabric or spark access.
 
-    <div class="module-table-scroll reference-input-table">
-    <table class="reference-function-table">
-      <thead>
-        <tr>
-          <th>Area</th>
-          <th>Helpers</th>
-          <th>What they do</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td data-label="Area">Metadata loading</td>
-          <td data-label="Helpers"><code>_lakehouse_file_path</code></td>
-          <td data-label="What they do">Load and identify the metadata or table context needed by the callable.</td>
-        </tr>
-        <tr>
-          <td data-label="Area">Fabric or Spark access</td>
-          <td data-label="Helpers"><code>_get_spark</code>, <code>_get_store</code></td>
-          <td data-label="What they do">Access Fabric or Spark runtime services used by the implementation.</td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="reference-helper-groups">
+      <section class="reference-helper-group">
+        <h4>Metadata loading</h4>
+        <p>Load and identify the metadata or table context needed by the callable.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L158-L168"><code>_lakehouse_file_path</code></a>
+        </div>
+      </section>
+      <section class="reference-helper-group">
+        <h4>Fabric or Spark access</h4>
+        <p>Access Fabric or Spark runtime services used by the implementation.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L125-L155"><code>_get_spark</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L627-L667"><code>_get_store</code></a>
+        </div>
+      </section>
     </div>
 
     ??? example "View helper source by area"
@@ -252,104 +253,109 @@ Side effects:
             ```
 
 
-## Source link
+<div class="reference-source-card" markdown="1">
+**Source**
 
-- Source file path: `src/fabricops_kit/fabric_input_output.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L680-L767">View read_lakehouse_excel on GitHub</a>
+`fabricops_kit/fabric_input_output.py:680`
 
-```python
-def read_lakehouse_excel(config, env, target, relative_path, sheet_name=0, spark_session=None, **read_excel_kwargs):
-    """Read an Excel file from a Fabric lakehouse Files path.
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L680-L767">View on GitHub</a>
+</div>
 
-    Spark does not natively read Excel files. This helper reads the Excel file
-    as binary from the lakehouse, writes it to a temporary local file, loads it
-    with pandas, then converts it into a Spark DataFrame.
+??? example "Source code"
 
-    This is intended for small reference files, mapping tables, and manually
-    maintained business inputs. Large source datasets should be stored as
-    Delta, Parquet, or CSV instead.
+    ```python
+    def read_lakehouse_excel(config, env, target, relative_path, sheet_name=0, spark_session=None, **read_excel_kwargs):
+        """Read an Excel file from a Fabric lakehouse Files path.
 
-    Parameters
-    ----------
-    config : FrameworkConfig | dict
-        FabricOps FrameworkConfig or compatible config object.
-    env : str
-        Environment key such as `"dev"`.
-    target : str
-        Logical target name such as `"source"` or `"unified"`.
-    relative_path : str
-        Path to the Excel file relative to the lakehouse ``Files`` area, for
-        example ``"reference/faculty_mapping.xlsx"``. A leading ``"Files/"``
-        prefix is accepted for consistency with notebook examples and is
-        normalized away before the lakehouse path is resolved.
-    sheet_name : str or int, default 0
-        Worksheet name or index to read. Defaults to the first worksheet.
-    spark_session : object, optional
-        Spark session to use. If omitted, the helper uses the notebook global
-        `spark`.
-    **read_excel_kwargs
-        Additional keyword arguments passed directly to
-        :func:`pandas.read_excel`. Common options include ``skiprows`` for
-        title rows above the real header, ``header`` for custom header-row
-        selection, ``usecols`` for column filtering, ``dtype`` for mixed-type
-        columns, and ``nrows`` for sampling or bounded reads.
+        Spark does not natively read Excel files. This helper reads the Excel file
+        as binary from the lakehouse, writes it to a temporary local file, loads it
+        with pandas, then converts it into a Spark DataFrame.
 
-    Returns
-    -------
-    pyspark.sql.DataFrame
-        Spark DataFrame converted from the selected Excel worksheet.
+        This is intended for small reference files, mapping tables, and manually
+        maintained business inputs. Large source datasets should be stored as
+        Delta, Parquet, or CSV instead.
 
-    Raises
-    ------
-    ValueError
-        If `relative_path` is missing or the resolved target is not a lakehouse.
-    FileNotFoundError
-        If the Excel file cannot be found at the resolved lakehouse path.
-    RuntimeError
-        If no Spark session is available.
+        Parameters
+        ----------
+        config : FrameworkConfig | dict
+            FabricOps FrameworkConfig or compatible config object.
+        env : str
+            Environment key such as `"dev"`.
+        target : str
+            Logical target name such as `"source"` or `"unified"`.
+        relative_path : str
+            Path to the Excel file relative to the lakehouse ``Files`` area, for
+            example ``"reference/faculty_mapping.xlsx"``. A leading ``"Files/"``
+            prefix is accepted for consistency with notebook examples and is
+            normalized away before the lakehouse path is resolved.
+        sheet_name : str or int, default 0
+            Worksheet name or index to read. Defaults to the first worksheet.
+        spark_session : object, optional
+            Spark session to use. If omitted, the helper uses the notebook global
+            `spark`.
+        **read_excel_kwargs
+            Additional keyword arguments passed directly to
+            :func:`pandas.read_excel`. Common options include ``skiprows`` for
+            title rows above the real header, ``header`` for custom header-row
+            selection, ``usecols`` for column filtering, ``dtype`` for mixed-type
+            columns, and ``nrows`` for sampling or bounded reads.
 
-    Examples
-    --------
-    >>> df_mapping = read_lakehouse_excel(CONFIG, ENV, "source", "reference/mapping.xlsx")
-    >>> df_publications = read_lakehouse_excel(
-    ...     CONFIG,
-    ...     ENV,
-    ...     "source",
-    ...     "Publications_at_the_National_University_of_Singapore_2020_-_2026.xlsx",
-    ...     sheet_name=0,
-    ...     skiprows=1,
-    ... )
-    Notes
-    -----
-    Side effects:
-    - Creates a temporary local file during conversion.
-    - Materializes rows through pandas before creating a Spark DataFrame.
-    """
-    store = _get_store(config, env, target)
-    spark_obj = _get_spark(spark_session)
-    lakehouse_file_path = _lakehouse_file_path(store, env, target, relative_path)
+        Returns
+        -------
+        pyspark.sql.DataFrame
+            Spark DataFrame converted from the selected Excel worksheet.
 
-    bin_df = (
-        spark_obj.read.format("binaryFile")
-        .option("recursiveFileLookup", "false")
-        .load(lakehouse_file_path)
-    )
+        Raises
+        ------
+        ValueError
+            If `relative_path` is missing or the resolved target is not a lakehouse.
+        FileNotFoundError
+            If the Excel file cannot be found at the resolved lakehouse path.
+        RuntimeError
+            If no Spark session is available.
 
-    if bin_df.count() == 0:
-        raise FileNotFoundError(f"No file found at path: {lakehouse_file_path}")
+        Examples
+        --------
+        >>> df_mapping = read_lakehouse_excel(CONFIG, ENV, "source", "reference/mapping.xlsx")
+        >>> df_publications = read_lakehouse_excel(
+        ...     CONFIG,
+        ...     ENV,
+        ...     "source",
+        ...     "Publications_at_the_National_University_of_Singapore_2020_-_2026.xlsx",
+        ...     sheet_name=0,
+        ...     skiprows=1,
+        ... )
+        Notes
+        -----
+        Side effects:
+        - Creates a temporary local file during conversion.
+        - Materializes rows through pandas before creating a Spark DataFrame.
+        """
+        store = _get_store(config, env, target)
+        spark_obj = _get_spark(spark_session)
+        lakehouse_file_path = _lakehouse_file_path(store, env, target, relative_path)
 
-    content = bin_df.select("content").collect()[0][0]
+        bin_df = (
+            spark_obj.read.format("binaryFile")
+            .option("recursiveFileLookup", "false")
+            .load(lakehouse_file_path)
+        )
 
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as temp_file:
-        temp_file.write(bytearray(content))
-        temp_file_path = temp_file.name
+        if bin_df.count() == 0:
+            raise FileNotFoundError(f"No file found at path: {lakehouse_file_path}")
 
-    pandas_df = pd.read_excel(temp_file_path, sheet_name=sheet_name, **read_excel_kwargs)
-    return spark_obj.createDataFrame(pandas_df)
-```
+        content = bin_df.select("content").collect()[0][0]
+
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as temp_file:
+            temp_file.write(bytearray(content))
+            temp_file_path = temp_file.name
+
+        pandas_df = pd.read_excel(temp_file_path, sheet_name=sheet_name, **read_excel_kwargs)
+        return spark_obj.createDataFrame(pandas_df)
+    ```
 
 <details class="reference-metadata-details">
-<summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
+<summary>Machine-readable metadata / metadata details</summary>
 
 These generated fields are for automation, AI agents, maintainers, and doc tooling. Skip this block when reading the docs normally.
 
@@ -395,7 +401,15 @@ Not documented yet
 - Signature:
 
 ```python
-def read_lakehouse_excel(config, env, target, relative_path, sheet_name=0, spark_session=None, **read_excel_kwargs)
+def read_lakehouse_excel(
+    config,
+    env,
+    target,
+    relative_path,
+    sheet_name=0,
+    spark_session=None,
+    **read_excel_kwargs,
+):
 ```
 
 ### Internal relationship graph
@@ -409,6 +423,27 @@ def read_lakehouse_excel(config, env, target, relative_path, sheet_name=0, spark
 ### Internal implementation summary
 
 - Internal helper count: 3
-- Grouped helper summary and optional source snippets are rendered in the page-level Internal implementation summary section.
+- Grouped helper summary and optional source snippets are rendered in the page-level Implementation details section.
 
 </details>
+
+## Source link
+
+<div class="reference-source-card" markdown="1">
+**Source**
+
+`fabricops_kit/fabric_input_output.py:680`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L680-L767">View on GitHub</a>
+</div>
+
+## Glossary
+
+- **Source table:** An input table or file read by the pipeline.
+- **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
+
+See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
+
+## See also
+
+- [Notebook Templates](../../how-fabricops-works/notebook-templates.md)

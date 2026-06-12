@@ -1,16 +1,11 @@
 # write_lakehouse_table
 
-## Signature
-
-```python
-def write_lakehouse_table(df, config, env, target, table, mode='append', partition_by=None, repartition_by=None, overwrite_schema=True)
-```
-
-## Summary
-
 Write a DataFrame to a configured Fabric lakehouse target.
 
-## Usage note
+<details class="reference-usage-details">
+<summary>Usage guidance</summary>
+
+**Use when:**
 
 - Use for pipeline target writes after guardrails have passed and the destination is a lakehouse table.
 
@@ -21,6 +16,38 @@ Write a DataFrame to a configured Fabric lakehouse target.
 **Additional context:**
 
 Writes a DataFrame to a configured Fabric lakehouse table while keeping target resolution centralized in environment configuration.
+
+</details>
+
+## Signature
+
+<div class="reference-api-definition" markdown="1">
+
+```python
+def write_lakehouse_table(
+    df,
+    config,
+    env,
+    target,
+    table,
+    mode='append',
+    partition_by=None,
+    repartition_by=None,
+    overwrite_schema=True,
+):
+```
+
+</div>
+
+## Example usage
+
+<div class="reference-example-usage" markdown="1">
+
+```python
+write_lakehouse_table(curated_df, CONFIG, env="Sandbox", target="Unified", table="orders_curated", mode="overwrite")
+```
+
+</div>
 
 ## Parameters
 
@@ -55,36 +82,30 @@ Raises configuration, Spark, or write errors when the target cannot be resolved 
 - The write mode is unsupported for the destination.
 - The caller lacks write permission or Spark cannot create the table.
 
-## Example
+## Relationships
 
-```python
-write_lakehouse_table(curated_df, CONFIG, env="Sandbox", target="Unified", table="orders_curated", mode="overwrite")
-```
+### Used by
 
-## See also
+- `fabricops_kit.config._setup_metadata_table_registry`
+- `fabricops_kit.data_agreement._write_row`
+- `fabricops_kit.governance_review._review_governance_evidence`
+- <a href="../record_table_governance/"><code>fabricops_kit.governance_review.record_table_governance</code></a>
+- `fabricops_kit.metadata._register_current_notebook`
+- <a href="../write_catalogue_evidence/"><code>fabricops_kit.pipeline.write_catalogue_evidence</code></a>
+- <a href="../write_pipeline_lineage/"><code>fabricops_kit.pipeline.write_pipeline_lineage</code></a>
+- <a href="../write_pipeline_run_summary/"><code>fabricops_kit.pipeline.write_pipeline_run_summary</code></a>
 
-- [Notebook Templates](../../how-fabricops-works/notebook-templates.md)
-- [Metadata Tables](../../how-fabricops-works/metadata-tables.md)
+### Calls
 
-**Glossary terms**
+- `fabricops_kit.config._get_store`
+- `fabricops_kit.fabric_input_output._normalize_table_name`
+- `fabricops_kit.fabric_input_output._registered_table_identifier`
+- `fabricops_kit.fabric_input_output._uses_registered_metadata_table`
 
-- **Target table:** An output table written by the pipeline.
-- **Guardrail:** A check that tells the notebook whether it is safe to continue.
-- **Metadata lakehouse:** The configured Fabric lakehouse where FabricOps stores governance and runtime metadata.
+## Implementation details
 
-See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
-
-## Developer details
-
-- Module: `fabric_input_output`
-- Classification: Callable
-- Source file path: `src/fabricops_kit/fabric_input_output.py`
-- Source line: `227`
-- Signature:
-
-```python
-def write_lakehouse_table(df, config, env, target, table, mode='append', partition_by=None, repartition_by=None, overwrite_schema=True)
-```
+<details class="reference-implementation-details">
+<summary>Notes, side effects, and template usage</summary>
 
 **Used in templates:**
 
@@ -105,14 +126,7 @@ Side effects:
 - Optional repartitioning can change output file sizing and partition
   layout.
 
-## Calls
-
-- `fabricops_kit.config._get_store`
-- `fabricops_kit.fabric_input_output._normalize_table_name`
-- `fabricops_kit.fabric_input_output._registered_table_identifier`
-- `fabricops_kit.fabric_input_output._uses_registered_metadata_table`
-
-## Internal implementation summary
+</details>
 
 ??? info "Call flow"
 
@@ -130,33 +144,30 @@ Side effects:
 
     This callable uses 5 internal helpers for metadata loading, fabric or spark access, and other.
 
-    <div class="module-table-scroll reference-input-table">
-    <table class="reference-function-table">
-      <thead>
-        <tr>
-          <th>Area</th>
-          <th>Helpers</th>
-          <th>What they do</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td data-label="Area">Metadata loading</td>
-          <td data-label="Helpers"><code>_normalize_table_name</code>, <code>_registered_table_identifier</code>, <code>_uses_registered_metadata_table</code></td>
-          <td data-label="What they do">Load and identify the metadata or table context needed by the callable.</td>
-        </tr>
-        <tr>
-          <td data-label="Area">Fabric or Spark access</td>
-          <td data-label="Helpers"><code>_get_store</code></td>
-          <td data-label="What they do">Access Fabric or Spark runtime services used by the implementation.</td>
-        </tr>
-        <tr>
-          <td data-label="Area">Other</td>
-          <td data-label="Helpers"><code>_quote_identifier</code></td>
-          <td data-label="What they do">Support lower-level implementation details that do not fit the main helper areas.</td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="reference-helper-groups">
+      <section class="reference-helper-group">
+        <h4>Metadata loading</h4>
+        <p>Load and identify the metadata or table context needed by the callable.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L81-L90"><code>_normalize_table_name</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L97-L99"><code>_registered_table_identifier</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L102-L104"><code>_uses_registered_metadata_table</code></a>
+        </div>
+      </section>
+      <section class="reference-helper-group">
+        <h4>Fabric or Spark access</h4>
+        <p>Access Fabric or Spark runtime services used by the implementation.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L627-L667"><code>_get_store</code></a>
+        </div>
+      </section>
+      <section class="reference-helper-group">
+        <h4>Other</h4>
+        <p>Support lower-level implementation details that do not fit the main helper areas.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L93-L94"><code>_quote_identifier</code></a>
+        </div>
+      </section>
     </div>
 
     ??? example "View helper source by area"
@@ -262,124 +273,118 @@ Side effects:
             ```
 
 
-## Used by
+<div class="reference-source-card" markdown="1">
+**Source**
 
-- `fabricops_kit.config._setup_metadata_table_registry`
-- `fabricops_kit.data_agreement._write_row`
-- `fabricops_kit.governance_review._review_governance_evidence`
-- <a href="../record_table_governance/"><code>fabricops_kit.governance_review.record_table_governance</code></a>
-- `fabricops_kit.metadata._register_current_notebook`
-- <a href="../write_catalogue_evidence/"><code>fabricops_kit.pipeline.write_catalogue_evidence</code></a>
-- <a href="../write_pipeline_lineage/"><code>fabricops_kit.pipeline.write_pipeline_lineage</code></a>
-- <a href="../write_pipeline_run_summary/"><code>fabricops_kit.pipeline.write_pipeline_run_summary</code></a>
+`fabricops_kit/fabric_input_output.py:227`
 
-## Source link
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L227-L323">View on GitHub</a>
+</div>
 
-- Source file path: `src/fabricops_kit/fabric_input_output.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L227-L323">View write_lakehouse_table on GitHub</a>
+??? example "Source code"
 
-```python
-def write_lakehouse_table(
-    df,
-    config,
-    env,
-    target,
-    table,
-    mode="append",
-    partition_by=None,
-    repartition_by=None,
-    overwrite_schema=True,
-):
-    """Write a Spark DataFrame to a Fabric lakehouse Delta table.
+    ```python
+    def write_lakehouse_table(
+        df,
+        config,
+        env,
+        target,
+        table,
+        mode="append",
+        partition_by=None,
+        repartition_by=None,
+        overwrite_schema=True,
+    ):
+        """Write a Spark DataFrame to a Fabric lakehouse Delta table.
 
-    This writes to the lakehouse `Tables/` area using the ABFSS root stored in
-    a `FabricStore`. Use this in the Unified/Product stage after transformations,
-    DQ checks, and runtime audit-column enrichment are complete.
+        This writes to the lakehouse `Tables/` area using the ABFSS root stored in
+        a `FabricStore`. Use this in the Unified/Product stage after transformations,
+        DQ checks, and runtime audit-column enrichment are complete.
 
-    Parameters
-    ----------
-    df : pyspark.sql.DataFrame
-        Spark DataFrame to write.
-    config : FrameworkConfig | dict
-        FabricOps FrameworkConfig or compatible config object.
-    env : str
-        Environment key such as `"dev"`.
-    target : str
-        Logical target name such as `"source"` or `"unified"`.
-    table : str
-        Target table name under the lakehouse `Tables` area.
-    mode : str, default "append"
-        Spark write mode. Supported values are `"append"`, `"overwrite"`,
-        `"errorifexists"`, and `"ignore"`.
-    partition_by : str or list[str], optional
-        Column or columns used to physically partition the Delta table.
-    repartition_by : int, str, list, or tuple, optional
-        Optional repartitioning before write.
-    overwrite_schema : bool, default True
-        Whether to set Spark Delta `overwriteSchema=true` before saving.
+        Parameters
+        ----------
+        df : pyspark.sql.DataFrame
+            Spark DataFrame to write.
+        config : FrameworkConfig | dict
+            FabricOps FrameworkConfig or compatible config object.
+        env : str
+            Environment key such as `"dev"`.
+        target : str
+            Logical target name such as `"source"` or `"unified"`.
+        table : str
+            Target table name under the lakehouse `Tables` area.
+        mode : str, default "append"
+            Spark write mode. Supported values are `"append"`, `"overwrite"`,
+            `"errorifexists"`, and `"ignore"`.
+        partition_by : str or list[str], optional
+            Column or columns used to physically partition the Delta table.
+        repartition_by : int, str, list, or tuple, optional
+            Optional repartitioning before write.
+        overwrite_schema : bool, default True
+            Whether to set Spark Delta `overwriteSchema=true` before saving.
 
-    Returns
-    -------
-    None
-        The DataFrame is written to the target Delta table path.
+        Returns
+        -------
+        None
+            The DataFrame is written to the target Delta table path.
 
-    Notes
-    -----
-    Side effects:
-    - Persists data to OneLake Delta storage under ``Tables/<table>``.
-    - Optional repartitioning can change output file sizing and partition
-      layout.
+        Notes
+        -----
+        Side effects:
+        - Persists data to OneLake Delta storage under ``Tables/<table>``.
+        - Optional repartitioning can change output file sizing and partition
+          layout.
 
-    Raises
-    ------
-    ValueError
-        If `table` is missing, `mode` is invalid, or the resolved target is not a lakehouse.
+        Raises
+        ------
+        ValueError
+            If `table` is missing, `mode` is invalid, or the resolved target is not a lakehouse.
 
-    Examples
-    --------
-    >>> write_lakehouse_table(df, CONFIG, ENV, "unified", "CLEAN_ORDERS")
-    """
-    store = _get_store(config, env, target)
-    if store.kind != "lakehouse":
-        raise ValueError(f"Target '{env}/{target}' is not a lakehouse store.")
-    table_name = _normalize_table_name(table)
+        Examples
+        --------
+        >>> write_lakehouse_table(df, CONFIG, ENV, "unified", "CLEAN_ORDERS")
+        """
+        store = _get_store(config, env, target)
+        if store.kind != "lakehouse":
+            raise ValueError(f"Target '{env}/{target}' is not a lakehouse store.")
+        table_name = _normalize_table_name(table)
 
-    normalized_mode = str(mode or "").lower().strip()
-    if normalized_mode not in {"append", "overwrite", "errorifexists", "ignore"}:
-        raise ValueError("mode must be one of append, overwrite, errorifexists, ignore.")
+        normalized_mode = str(mode or "").lower().strip()
+        if normalized_mode not in {"append", "overwrite", "errorifexists", "ignore"}:
+            raise ValueError("mode must be one of append, overwrite, errorifexists, ignore.")
 
-    path = f"{store.root.rstrip('/')}/Tables/{table_name}"
+        path = f"{store.root.rstrip('/')}/Tables/{table_name}"
 
-    if repartition_by is not None:
-        if isinstance(repartition_by, (list, tuple)):
-            if len(repartition_by) > 0 and isinstance(repartition_by[0], int):
-                df = df.repartition(repartition_by[0], *repartition_by[1:])
+        if repartition_by is not None:
+            if isinstance(repartition_by, (list, tuple)):
+                if len(repartition_by) > 0 and isinstance(repartition_by[0], int):
+                    df = df.repartition(repartition_by[0], *repartition_by[1:])
+                else:
+                    df = df.repartition(*repartition_by)
+            elif isinstance(repartition_by, int):
+                df = df.repartition(repartition_by)
             else:
-                df = df.repartition(*repartition_by)
-        elif isinstance(repartition_by, int):
-            df = df.repartition(repartition_by)
+                df = df.repartition(repartition_by)
+
+        writer = df.write.mode(normalized_mode).format("delta")
+
+        if partition_by is not None:
+            if isinstance(partition_by, (list, tuple)):
+                writer = writer.partitionBy(*partition_by)
+            else:
+                writer = writer.partitionBy(partition_by)
+
+        if overwrite_schema:
+            writer = writer.option("overwriteSchema", "true")
+
+        if _uses_registered_metadata_table(target):
+            writer.saveAsTable(_registered_table_identifier(store, table_name))
         else:
-            df = df.repartition(repartition_by)
-
-    writer = df.write.mode(normalized_mode).format("delta")
-
-    if partition_by is not None:
-        if isinstance(partition_by, (list, tuple)):
-            writer = writer.partitionBy(*partition_by)
-        else:
-            writer = writer.partitionBy(partition_by)
-
-    if overwrite_schema:
-        writer = writer.option("overwriteSchema", "true")
-
-    if _uses_registered_metadata_table(target):
-        writer.saveAsTable(_registered_table_identifier(store, table_name))
-    else:
-        writer.save(path)
-```
+            writer.save(path)
+    ```
 
 <details class="reference-metadata-details">
-<summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
+<summary>Machine-readable metadata / metadata details</summary>
 
 These generated fields are for automation, AI agents, maintainers, and doc tooling. Skip this block when reading the docs normally.
 
@@ -433,7 +438,17 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Signature:
 
 ```python
-def write_lakehouse_table(df, config, env, target, table, mode='append', partition_by=None, repartition_by=None, overwrite_schema=True)
+def write_lakehouse_table(
+    df,
+    config,
+    env,
+    target,
+    table,
+    mode='append',
+    partition_by=None,
+    repartition_by=None,
+    overwrite_schema=True,
+):
 ```
 
 ### Internal relationship graph
@@ -447,6 +462,29 @@ def write_lakehouse_table(df, config, env, target, table, mode='append', partiti
 ### Internal implementation summary
 
 - Internal helper count: 5
-- Grouped helper summary and optional source snippets are rendered in the page-level Internal implementation summary section.
+- Grouped helper summary and optional source snippets are rendered in the page-level Implementation details section.
 
 </details>
+
+## Source link
+
+<div class="reference-source-card" markdown="1">
+**Source**
+
+`fabricops_kit/fabric_input_output.py:227`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L227-L323">View on GitHub</a>
+</div>
+
+## Glossary
+
+- **Target table:** An output table written by the pipeline.
+- **Guardrail:** A check that tells the notebook whether it is safe to continue.
+- **Metadata lakehouse:** The configured Fabric lakehouse where FabricOps stores governance and runtime metadata.
+
+See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
+
+## See also
+
+- [Notebook Templates](../../how-fabricops-works/notebook-templates.md)
+- [Metadata Tables](../../how-fabricops-works/metadata-tables.md)

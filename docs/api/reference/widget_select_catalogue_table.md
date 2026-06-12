@@ -1,26 +1,33 @@
 # widget_select_catalogue_table
 
+Render a searchable selector for latest successful catalogue profiles.
+
+<details class="reference-usage-details">
+<summary>Usage guidance</summary>
+
+**Use when:**
+
+- Use at the start of 03_governance before column context, DQ, or classification review widgets need a selected table.
+
+**Additional context:**
+
+Renders a selector for catalogue profile rows so governance reviewers can choose the table they are reviewing.
+
+</details>
+
 ## Signature
+
+<div class="reference-api-definition" markdown="1">
 
 ```python
 def widget_select_catalogue_table(config: Any, env: str, *, spark_session: Any)
 ```
 
-## Summary
+</div>
 
-Render a searchable selector for latest successful catalogue profiles.
+## Example usage
 
-## Usage note
-
-- Use at the start of 03_governance before column context, DQ, or classification review widgets need a selected table.
-
-**Do not use when:**
-
-- Not documented yet
-
-**Additional context:**
-
-Renders a selector for catalogue profile rows so governance reviewers can choose the table they are reviewing.
+Example usage not documented yet.
 
 ## Parameters
 
@@ -50,34 +57,22 @@ Not documented yet
 - Profile metadata cannot be read.
 - Widget state was reset by rerunning cells.
 
-## Example
+## Relationships
 
-```python
+### Used by
+
 Not documented yet
-```
 
-## See also
+### Calls
 
-- [Governance Review](../../how-fabricops-works/governance-review.md)
+- <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a>
+- `fabricops_kit.governance_review._catalogue_table_options`
+- `fabricops_kit.governance_review._coerce_rows`
 
-**Glossary terms**
+## Implementation details
 
-- **Catalogue evidence:** Reviewed metadata that explains what FabricOps knows about a dataset or table.
-- **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
-
-See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
-
-## Developer details
-
-- Module: `governance_review`
-- Classification: Callable
-- Source file path: `src/fabricops_kit/governance_review.py`
-- Source line: `300`
-- Signature:
-
-```python
-def widget_select_catalogue_table(config: Any, env: str, *, spark_session: Any)
-```
+<details class="reference-implementation-details">
+<summary>Notes, side effects, and template usage</summary>
 
 **Used in templates:**
 
@@ -91,13 +86,7 @@ Not documented yet
 
 No additional callable notes are documented.
 
-## Calls
-
-- <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a>
-- `fabricops_kit.governance_review._catalogue_table_options`
-- `fabricops_kit.governance_review._coerce_rows`
-
-## Internal implementation summary
+</details>
 
 ??? info "Call flow"
 
@@ -125,28 +114,25 @@ No additional callable notes are documented.
 
     This callable uses 6 internal helpers for metadata loading and other.
 
-    <div class="module-table-scroll reference-input-table">
-    <table class="reference-function-table">
-      <thead>
-        <tr>
-          <th>Area</th>
-          <th>Helpers</th>
-          <th>What they do</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td data-label="Area">Metadata loading</td>
-          <td data-label="Helpers"><code>_build_metadata_table_key</code>, <code>_catalogue_table_options</code>, <code>_stable_metadata_key</code></td>
-          <td data-label="What they do">Load and identify the metadata or table context needed by the callable.</td>
-        </tr>
-        <tr>
-          <td data-label="Area">Other</td>
-          <td data-label="Helpers"><code>_coerce_rows</code>, <code>_is_success</code>, <code>_value</code></td>
-          <td data-label="What they do">Support lower-level implementation details that do not fit the main helper areas.</td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="reference-helper-groups">
+      <section class="reference-helper-group">
+        <h4>Metadata loading</h4>
+        <p>Load and identify the metadata or table context needed by the callable.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/metadata.py#L77-L78"><code>_build_metadata_table_key</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L221-L270"><code>_catalogue_table_options</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/metadata.py#L72-L74"><code>_stable_metadata_key</code></a>
+        </div>
+      </section>
+      <section class="reference-helper-group">
+        <h4>Other</h4>
+        <p>Support lower-level implementation details that do not fit the main helper areas.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L62-L67"><code>_coerce_rows</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L74-L75"><code>_is_success</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L70-L71"><code>_value</code></a>
+        </div>
+      </section>
     </div>
 
     ??? example "View helper source by area"
@@ -263,58 +249,63 @@ No additional callable notes are documented.
             ```
 
 
-## Source link
+<div class="reference-source-card" markdown="1">
+**Source**
 
-- Source file path: `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L300-L341">View widget_select_catalogue_table on GitHub</a>
+`fabricops_kit/governance_review.py:300`
 
-```python
-def widget_select_catalogue_table(config: Any, env: str, *, spark_session: Any):
-    """Render a searchable selector for latest successful catalogue tables.
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L300-L341">View on GitHub</a>
+</div>
 
-    Parameters
-    ----------
-    config : FrameworkConfig or dict
-        Runtime config containing the metadata lakehouse route.
-    env : str
-        Environment used to read ``METADATA_DATA_CATALOGUE``.
-    spark_session : pyspark.sql.SparkSession
-        Spark session used for the catalogue read.
+??? example "Source code"
 
-    Returns
-    -------
-    ipywidgets.Combobox
-        Searchable selector whose value stores stable JSON identity.
-    """
-    global _SELECTED_CATALOGUE_TABLE
-    widgets = importlib.import_module("ipywidgets")
-    from IPython import display as ip
+    ```python
+    def widget_select_catalogue_table(config: Any, env: str, *, spark_session: Any):
+        """Render a searchable selector for latest successful catalogue tables.
 
-    rows = _coerce_rows(read_lakehouse_table(config, env, "metadata", CATALOGUE_TABLE, spark_session=spark_session))
-    options = _catalogue_table_options(rows)
-    by_label = {o["label"]: o for o in options}
-    combo = widgets.Combobox(placeholder="Search profiled tables", options=[o["label"] for o in options], description="Table", ensure_option=True, layout=widgets.Layout(width="980px"))
-    context = widgets.HTML()
+        Parameters
+        ----------
+        config : FrameworkConfig or dict
+            Runtime config containing the metadata lakehouse route.
+        env : str
+            Environment used to read ``METADATA_DATA_CATALOGUE``.
+        spark_session : pyspark.sql.SparkSession
+            Spark session used for the catalogue read.
 
-    def select(label: str) -> None:
+        Returns
+        -------
+        ipywidgets.Combobox
+            Searchable selector whose value stores stable JSON identity.
+        """
         global _SELECTED_CATALOGUE_TABLE
-        option = by_label.get(label) or options[0]
-        _SELECTED_CATALOGUE_TABLE = {k: option[k] for k in ["environment_name", "dataset_name", "table_name", "metadata_table_key", "profile_run_id", "profile_stage", "layer", "asset_kind", "profiled_at"]}
-        context.value = f"<b>Selected table:</b> {_SELECTED_CATALOGUE_TABLE['environment_name']} / {_SELECTED_CATALOGUE_TABLE['dataset_name']} / {_SELECTED_CATALOGUE_TABLE['table_name']}<br/><b>Profile run:</b> {_SELECTED_CATALOGUE_TABLE['profile_run_id']} ({_SELECTED_CATALOGUE_TABLE['profile_stage']})"
+        widgets = importlib.import_module("ipywidgets")
+        from IPython import display as ip
 
-    def on_change(change: dict[str, Any]) -> None:
-        if change.get("name") == "value" and change.get("new") in by_label:
-            select(change["new"])
+        rows = _coerce_rows(read_lakehouse_table(config, env, "metadata", CATALOGUE_TABLE, spark_session=spark_session))
+        options = _catalogue_table_options(rows)
+        by_label = {o["label"]: o for o in options}
+        combo = widgets.Combobox(placeholder="Search profiled tables", options=[o["label"] for o in options], description="Table", ensure_option=True, layout=widgets.Layout(width="980px"))
+        context = widgets.HTML()
 
-    combo.observe(on_change, names="value")
-    combo.value = options[0]["label"]
-    select(combo.value)
-    ip.display(widgets.VBox([combo, context]))
-    return combo
-```
+        def select(label: str) -> None:
+            global _SELECTED_CATALOGUE_TABLE
+            option = by_label.get(label) or options[0]
+            _SELECTED_CATALOGUE_TABLE = {k: option[k] for k in ["environment_name", "dataset_name", "table_name", "metadata_table_key", "profile_run_id", "profile_stage", "layer", "asset_kind", "profiled_at"]}
+            context.value = f"<b>Selected table:</b> {_SELECTED_CATALOGUE_TABLE['environment_name']} / {_SELECTED_CATALOGUE_TABLE['dataset_name']} / {_SELECTED_CATALOGUE_TABLE['table_name']}<br/><b>Profile run:</b> {_SELECTED_CATALOGUE_TABLE['profile_run_id']} ({_SELECTED_CATALOGUE_TABLE['profile_stage']})"
+
+        def on_change(change: dict[str, Any]) -> None:
+            if change.get("name") == "value" and change.get("new") in by_label:
+                select(change["new"])
+
+        combo.observe(on_change, names="value")
+        combo.value = options[0]["label"]
+        select(combo.value)
+        ip.display(widgets.VBox([combo, context]))
+        return combo
+    ```
 
 <details class="reference-metadata-details">
-<summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
+<summary>Machine-readable metadata / metadata details</summary>
 
 These generated fields are for automation, AI agents, maintainers, and doc tooling. Skip this block when reading the docs normally.
 
@@ -378,6 +369,27 @@ def widget_select_catalogue_table(config: Any, env: str, *, spark_session: Any)
 ### Internal implementation summary
 
 - Internal helper count: 6
-- Grouped helper summary and optional source snippets are rendered in the page-level Internal implementation summary section.
+- Grouped helper summary and optional source snippets are rendered in the page-level Implementation details section.
 
 </details>
+
+## Source link
+
+<div class="reference-source-card" markdown="1">
+**Source**
+
+`fabricops_kit/governance_review.py:300`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L300-L341">View on GitHub</a>
+</div>
+
+## Glossary
+
+- **Catalogue evidence:** Reviewed metadata that explains what FabricOps knows about a dataset or table.
+- **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
+
+See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
+
+## See also
+
+- [Governance Review](../../how-fabricops-works/governance-review.md)

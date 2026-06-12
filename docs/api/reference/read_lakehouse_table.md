@@ -1,16 +1,11 @@
 # read_lakehouse_table
 
-## Signature
-
-```python
-def read_lakehouse_table(config, env, target, table, spark_session=None)
-```
-
-## Summary
-
 Read a table from a configured Fabric lakehouse target.
 
-## Usage note
+<details class="reference-usage-details">
+<summary>Usage guidance</summary>
+
+**Use when:**
 
 - Use when notebook code needs a managed lakehouse table rather than a file path or warehouse SQL query.
 
@@ -21,6 +16,28 @@ Read a table from a configured Fabric lakehouse target.
 **Additional context:**
 
 Reads a Delta table from a configured Fabric lakehouse target using the environment routing supplied by 00_env_config.
+
+</details>
+
+## Signature
+
+<div class="reference-api-definition" markdown="1">
+
+```python
+def read_lakehouse_table(config, env, target, table, spark_session=None)
+```
+
+</div>
+
+## Example usage
+
+<div class="reference-example-usage" markdown="1">
+
+```python
+df = read_lakehouse_table(CONFIG, env="Sandbox", target="Source", table="orders", spark_session=spark)
+```
+
+</div>
 
 ## Parameters
 
@@ -51,34 +68,34 @@ Raises configuration, Spark, or table-read errors when the target or table canno
 - Spark cannot access the table.
 - The caller lacks permission to read the lakehouse.
 
-## Example
+## Relationships
 
-```python
-df = read_lakehouse_table(CONFIG, env="Sandbox", target="Source", table="orders", spark_session=spark)
-```
+### Used by
 
-## See also
+- `fabricops_kit.config._setup_metadata_table_registry`
+- `fabricops_kit.config._validate_metadata_table_registration`
+- `fabricops_kit.data_agreement._list_all_data_agreement_rows`
+- `fabricops_kit.data_agreement._list_data_stewards`
+- `fabricops_kit.governance_review._read_metadata_rows`
+- <a href="../enforce_dq_rules/"><code>fabricops_kit.governance_review.enforce_dq_rules</code></a>
+- <a href="../load_catalogue_profile_rows/"><code>fabricops_kit.governance_review.load_catalogue_profile_rows</code></a>
+- <a href="../widget_select_catalogue_table/"><code>fabricops_kit.governance_review.widget_select_catalogue_table</code></a>
+- <a href="../enforce_profile_behavior/"><code>fabricops_kit.guardrails.enforce_profile_behavior</code></a>
+- `fabricops_kit.metadata._load_notebook_registry`
 
-- [Notebook Templates](../../how-fabricops-works/notebook-templates.md)
+### Calls
 
-**Glossary terms**
+- `fabricops_kit.config._get_store`
+- `fabricops_kit.fabric_input_output._current_database_matches`
+- `fabricops_kit.fabric_input_output._get_spark`
+- `fabricops_kit.fabric_input_output._normalize_table_name`
+- `fabricops_kit.fabric_input_output._registered_table_identifier`
+- `fabricops_kit.fabric_input_output._uses_registered_metadata_table`
 
-- **Source table:** An input table or file read by the pipeline.
-- **Metadata lakehouse:** The configured Fabric lakehouse where FabricOps stores governance and runtime metadata.
+## Implementation details
 
-See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
-
-## Developer details
-
-- Module: `fabric_input_output`
-- Classification: Callable
-- Source file path: `src/fabricops_kit/fabric_input_output.py`
-- Source line: `171`
-- Signature:
-
-```python
-def read_lakehouse_table(config, env, target, table, spark_session=None)
-```
+<details class="reference-implementation-details">
+<summary>Notes, side effects, and template usage</summary>
 
 **Used in templates:**
 
@@ -96,16 +113,7 @@ Reads from a lakehouse table; it does not write metadata, tables, or files.
 
 No additional callable notes are documented.
 
-## Calls
-
-- `fabricops_kit.config._get_store`
-- `fabricops_kit.fabric_input_output._current_database_matches`
-- `fabricops_kit.fabric_input_output._get_spark`
-- `fabricops_kit.fabric_input_output._normalize_table_name`
-- `fabricops_kit.fabric_input_output._registered_table_identifier`
-- `fabricops_kit.fabric_input_output._uses_registered_metadata_table`
-
-## Internal implementation summary
+</details>
 
 ??? info "Call flow"
 
@@ -125,33 +133,32 @@ No additional callable notes are documented.
 
     This callable uses 7 internal helpers for metadata loading, fabric or spark access, and other.
 
-    <div class="module-table-scroll reference-input-table">
-    <table class="reference-function-table">
-      <thead>
-        <tr>
-          <th>Area</th>
-          <th>Helpers</th>
-          <th>What they do</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td data-label="Area">Metadata loading</td>
-          <td data-label="Helpers"><code>_current_database_matches</code>, <code>_normalize_table_name</code>, <code>_registered_table_identifier</code>, <code>_uses_registered_metadata_table</code></td>
-          <td data-label="What they do">Load and identify the metadata or table context needed by the callable.</td>
-        </tr>
-        <tr>
-          <td data-label="Area">Fabric or Spark access</td>
-          <td data-label="Helpers"><code>_get_spark</code>, <code>_get_store</code></td>
-          <td data-label="What they do">Access Fabric or Spark runtime services used by the implementation.</td>
-        </tr>
-        <tr>
-          <td data-label="Area">Other</td>
-          <td data-label="Helpers"><code>_quote_identifier</code></td>
-          <td data-label="What they do">Support lower-level implementation details that do not fit the main helper areas.</td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="reference-helper-groups">
+      <section class="reference-helper-group">
+        <h4>Metadata loading</h4>
+        <p>Load and identify the metadata or table context needed by the callable.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L107-L115"><code>_current_database_matches</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L81-L90"><code>_normalize_table_name</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L97-L99"><code>_registered_table_identifier</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L102-L104"><code>_uses_registered_metadata_table</code></a>
+        </div>
+      </section>
+      <section class="reference-helper-group">
+        <h4>Fabric or Spark access</h4>
+        <p>Access Fabric or Spark runtime services used by the implementation.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L125-L155"><code>_get_spark</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L627-L667"><code>_get_store</code></a>
+        </div>
+      </section>
+      <section class="reference-helper-group">
+        <h4>Other</h4>
+        <p>Support lower-level implementation details that do not fit the main helper areas.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L93-L94"><code>_quote_identifier</code></a>
+        </div>
+      </section>
     </div>
 
     ??? example "View helper source by area"
@@ -311,83 +318,75 @@ No additional callable notes are documented.
             ```
 
 
-## Used by
+<div class="reference-source-card" markdown="1">
+**Source**
 
-- `fabricops_kit.config._setup_metadata_table_registry`
-- `fabricops_kit.config._validate_metadata_table_registration`
-- `fabricops_kit.data_agreement._list_all_data_agreement_rows`
-- `fabricops_kit.data_agreement._list_data_stewards`
-- `fabricops_kit.governance_review._read_metadata_rows`
-- <a href="../enforce_dq_rules/"><code>fabricops_kit.governance_review.enforce_dq_rules</code></a>
-- <a href="../load_catalogue_profile_rows/"><code>fabricops_kit.governance_review.load_catalogue_profile_rows</code></a>
-- <a href="../widget_select_catalogue_table/"><code>fabricops_kit.governance_review.widget_select_catalogue_table</code></a>
-- <a href="../enforce_profile_behavior/"><code>fabricops_kit.guardrails.enforce_profile_behavior</code></a>
-- `fabricops_kit.metadata._load_notebook_registry`
+`fabricops_kit/fabric_input_output.py:171`
 
-## Source link
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L171-L224">View on GitHub</a>
+</div>
 
-- Source file path: `src/fabricops_kit/fabric_input_output.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L171-L224">View read_lakehouse_table on GitHub</a>
+??? example "Source code"
 
-```python
-def read_lakehouse_table(config, env, target, table, spark_session=None):
-    """Read a Delta table from a Fabric lakehouse.
+    ```python
+    def read_lakehouse_table(config, env, target, table, spark_session=None):
+        """Read a Delta table from a Fabric lakehouse.
 
-    This reads from the lakehouse `Tables/` area using the ABFSS root stored in
-    a `FabricStore`. In the notebook lifecycle, call this near the start of the
-    Source or Unified step when loading Delta-backed source datasets.
+        This reads from the lakehouse `Tables/` area using the ABFSS root stored in
+        a `FabricStore`. In the notebook lifecycle, call this near the start of the
+        Source or Unified step when loading Delta-backed source datasets.
 
-    Parameters
-    ----------
-    config : FrameworkConfig | dict
-        FabricOps FrameworkConfig or compatible config object.
-    env : str
-        Environment key such as `"dev"`.
-    target : str
-        Logical target name such as `"source"` or `"unified"`.
-    table : str
-        Table name under the lakehouse `Tables` area.
-    spark_session : object, optional
-        Spark session to use. If omitted, the helper uses the notebook global
-        `spark`.
+        Parameters
+        ----------
+        config : FrameworkConfig | dict
+            FabricOps FrameworkConfig or compatible config object.
+        env : str
+            Environment key such as `"dev"`.
+        target : str
+            Logical target name such as `"source"` or `"unified"`.
+        table : str
+            Table name under the lakehouse `Tables` area.
+        spark_session : object, optional
+            Spark session to use. If omitted, the helper uses the notebook global
+            `spark`.
 
-    Returns
-    -------
-    pyspark.sql.DataFrame
-        Spark DataFrame loaded from the Delta table.
+        Returns
+        -------
+        pyspark.sql.DataFrame
+            Spark DataFrame loaded from the Delta table.
 
-    Raises
-    ------
-    ValueError
-        If `table` is missing or the resolved target is not a lakehouse.
-    RuntimeError
-        If no Spark session is available.
+        Raises
+        ------
+        ValueError
+            If `table` is missing or the resolved target is not a lakehouse.
+        RuntimeError
+            If no Spark session is available.
 
-    Examples
-    --------
-    >>> df = read_lakehouse_table(CONFIG, ENV, "source", "RAW_ORDERS")
-    """
-    store = _get_store(config, env, target)
-    if store.kind != "lakehouse":
-        raise ValueError(f"Target '{env}/{target}' is not a lakehouse store.")
-    table_name = _normalize_table_name(table)
+        Examples
+        --------
+        >>> df = read_lakehouse_table(CONFIG, ENV, "source", "RAW_ORDERS")
+        """
+        store = _get_store(config, env, target)
+        if store.kind != "lakehouse":
+            raise ValueError(f"Target '{env}/{target}' is not a lakehouse store.")
+        table_name = _normalize_table_name(table)
 
-    spark_obj = _get_spark(spark_session)
-    if _uses_registered_metadata_table(target):
-        try:
-            return spark_obj.table(_registered_table_identifier(store, table_name))
-        except Exception:
-            if _current_database_matches(spark_obj, store):
-                try:
-                    return spark_obj.table(table_name)
-                except Exception:
-                    pass
-    path = f"{store.root.rstrip('/')}/Tables/{table_name}"
-    return spark_obj.read.format("delta").load(path)
-```
+        spark_obj = _get_spark(spark_session)
+        if _uses_registered_metadata_table(target):
+            try:
+                return spark_obj.table(_registered_table_identifier(store, table_name))
+            except Exception:
+                if _current_database_matches(spark_obj, store):
+                    try:
+                        return spark_obj.table(table_name)
+                    except Exception:
+                        pass
+        path = f"{store.root.rstrip('/')}/Tables/{table_name}"
+        return spark_obj.read.format("delta").load(path)
+    ```
 
 <details class="reference-metadata-details">
-<summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
+<summary>Machine-readable metadata / metadata details</summary>
 
 These generated fields are for automation, AI agents, maintainers, and doc tooling. Skip this block when reading the docs normally.
 
@@ -460,6 +459,27 @@ def read_lakehouse_table(config, env, target, table, spark_session=None)
 ### Internal implementation summary
 
 - Internal helper count: 7
-- Grouped helper summary and optional source snippets are rendered in the page-level Internal implementation summary section.
+- Grouped helper summary and optional source snippets are rendered in the page-level Implementation details section.
 
 </details>
+
+## Source link
+
+<div class="reference-source-card" markdown="1">
+**Source**
+
+`fabricops_kit/fabric_input_output.py:171`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L171-L224">View on GitHub</a>
+</div>
+
+## Glossary
+
+- **Source table:** An input table or file read by the pipeline.
+- **Metadata lakehouse:** The configured Fabric lakehouse where FabricOps stores governance and runtime metadata.
+
+See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
+
+## See also
+
+- [Notebook Templates](../../how-fabricops-works/notebook-templates.md)

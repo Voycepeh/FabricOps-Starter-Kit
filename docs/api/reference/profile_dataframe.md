@@ -1,16 +1,11 @@
 # profile_dataframe
 
-## Signature
-
-```python
-def profile_dataframe(df, table_name: str, *, exclude_columns=None, run_timestamp_timezone: str | None=None, config: Any=None, include_distributions: bool=False, distribution_columns: list[str] | set[str] | tuple[str, ...] | None=None, distribution_bin_edges: dict[str, list[float]] | None=None, categorical_categories: dict[str, list[str]] | None=None, categorical_top_n: int=20)
-```
-
-## Summary
-
 Profile a source or target DataFrame for schema, quality, and catalogue evidence.
 
-## Usage note
+<details class="reference-usage-details">
+<summary>Usage guidance</summary>
+
+**Use when:**
 
 - Use during exploration, governance review, or guardrail preparation when a table needs reproducible profile evidence.
 
@@ -21,6 +16,39 @@ Profile a source or target DataFrame for schema, quality, and catalogue evidence
 **Additional context:**
 
 Builds deterministic profile evidence for a DataFrame, including schema, row counts, nulls, distinct counts, and optional summary values.
+
+</details>
+
+## Signature
+
+<div class="reference-api-definition" markdown="1">
+
+```python
+def profile_dataframe(
+    df,
+    table_name: str,
+    exclude_columns=None,
+    run_timestamp_timezone: str | None=None,
+    config: Any=None,
+    include_distributions: bool=False,
+    distribution_columns: list[str] | set[str] | tuple[str, ...] | None=None,
+    distribution_bin_edges: dict[str, list[float]] | None=None,
+    categorical_categories: dict[str, list[str]] | None=None,
+    categorical_top_n: int=20,
+):
+```
+
+</div>
+
+## Example usage
+
+<div class="reference-example-usage" markdown="1">
+
+```python
+profile_rows_df = profile_dataframe(df, table_name="orders", include_distributions=True, distribution_columns=["status"] )
+```
+
+</div>
 
 ## Parameters
 
@@ -56,36 +84,26 @@ Raises Spark/DataFrame errors when profiling expressions cannot be evaluated.
 - Spark actions fail while computing counts or summaries.
 - Excluded columns remove fields needed for review.
 
-## Example
+## Relationships
 
-```python
-profile_rows_df = profile_dataframe(df, table_name="orders", include_distributions=True, distribution_columns=["status"] )
-```
+### Used by
 
-## See also
+- `fabricops_kit.governance_review._prepare_dq_profile_input_rows`
+- <a href="../enforce_profile_behavior/"><code>fabricops_kit.guardrails.enforce_profile_behavior</code></a>
+- <a href="../run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
 
-- [Pipeline Guardrails](../../how-fabricops-works/pipeline-guardrails.md)
-- [Governance Review](../../how-fabricops-works/governance-review.md)
+### Calls
 
-**Glossary terms**
+- `fabricops_kit.config._audit_timestamp_expr`
+- `fabricops_kit.config._get_audit_timezone`
+- `fabricops_kit.data_profiling._build_distribution_summaries`
+- `fabricops_kit.data_profiling._get_profiled_columns`
+- `fabricops_kit.data_profiling._is_min_max_supported_type`
 
-- **Catalogue evidence:** Reviewed metadata that explains what FabricOps knows about a dataset or table.
-- **Source table:** An input table or file read by the pipeline.
-- **Target table:** An output table written by the pipeline.
+## Implementation details
 
-See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
-
-## Developer details
-
-- Module: `data_profiling`
-- Classification: Callable
-- Source file path: `src/fabricops_kit/data_profiling.py`
-- Source line: `225`
-- Signature:
-
-```python
-def profile_dataframe(df, table_name: str, *, exclude_columns=None, run_timestamp_timezone: str | None=None, config: Any=None, include_distributions: bool=False, distribution_columns: list[str] | set[str] | tuple[str, ...] | None=None, distribution_bin_edges: dict[str, list[float]] | None=None, categorical_categories: dict[str, list[str]] | None=None, categorical_top_n: int=20)
-```
+<details class="reference-implementation-details">
+<summary>Notes, side effects, and template usage</summary>
 
 **Used in templates:**
 
@@ -103,15 +121,7 @@ Distribution profiling only collects aggregated Spark results such as
 quantiles, bucket counts, and grouped category counts. It does not collect
 complete datasets to the driver.
 
-## Calls
-
-- `fabricops_kit.config._audit_timestamp_expr`
-- `fabricops_kit.config._get_audit_timezone`
-- `fabricops_kit.data_profiling._build_distribution_summaries`
-- `fabricops_kit.data_profiling._get_profiled_columns`
-- `fabricops_kit.data_profiling._is_min_max_supported_type`
-
-## Internal implementation summary
+</details>
 
 ??? info "Call flow"
 
@@ -132,45 +142,48 @@ complete datasets to the driver.
 
 ??? info "Internal helpers used: 9"
 
-    This callable uses 9 internal helpers for audit timestamp, rule parsing, result summary, fabric or spark access, and other.
+    This callable uses 9 internal helpers for audit timestamp, column handling, result summary, fabric or spark access, and other.
 
-    <div class="module-table-scroll reference-input-table">
-    <table class="reference-function-table">
-      <thead>
-        <tr>
-          <th>Area</th>
-          <th>Helpers</th>
-          <th>What they do</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td data-label="Area">Audit timestamp</td>
-          <td data-label="Helpers"><code>_audit_timestamp_expr</code>, <code>_get_audit_timezone</code>, <code>_validate_audit_timezone</code></td>
-          <td data-label="What they do">Resolve and stamp audit time consistently.</td>
-        </tr>
-        <tr>
-          <td data-label="Area">Rule parsing</td>
-          <td data-label="Helpers"><code>_get_profiled_columns</code></td>
-          <td data-label="What they do">Normalize stored or user-provided values before applying rules.</td>
-        </tr>
-        <tr>
-          <td data-label="Area">Result summary</td>
-          <td data-label="Helpers"><code>_build_distribution_summaries</code></td>
-          <td data-label="What they do">Build final statuses, counts, and messages for the caller.</td>
-        </tr>
-        <tr>
-          <td data-label="Area">Fabric or Spark access</td>
-          <td data-label="Helpers"><code>_is_min_max_supported_type</code></td>
-          <td data-label="What they do">Access Fabric or Spark runtime services used by the implementation.</td>
-        </tr>
-        <tr>
-          <td data-label="Area">Other</td>
-          <td data-label="Helpers"><code>_build_categorical_distribution</code>, <code>_build_numeric_distribution</code>, <code>_numeric_bin_edges</code></td>
-          <td data-label="What they do">Support lower-level implementation details that do not fit the main helper areas.</td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="reference-helper-groups">
+      <section class="reference-helper-group">
+        <h4>Audit timestamp</h4>
+        <p>Resolve and stamp audit time consistently.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L78-L83"><code>_audit_timestamp_expr</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L61-L66"><code>_get_audit_timezone</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L27-L58"><code>_validate_audit_timezone</code></a>
+        </div>
+      </section>
+      <section class="reference-helper-group">
+        <h4>Column handling</h4>
+        <p>Select, exclude, and normalize column names used by the callable.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_profiling.py#L59-L81"><code>_get_profiled_columns</code></a>
+        </div>
+      </section>
+      <section class="reference-helper-group">
+        <h4>Result summary</h4>
+        <p>Build final statuses, counts, and messages for the caller.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_profiling.py#L192-L222"><code>_build_distribution_summaries</code></a>
+        </div>
+      </section>
+      <section class="reference-helper-group">
+        <h4>Fabric or Spark access</h4>
+        <p>Access Fabric or Spark runtime services used by the implementation.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_profiling.py#L84-L104"><code>_is_min_max_supported_type</code></a>
+        </div>
+      </section>
+      <section class="reference-helper-group">
+        <h4>Other</h4>
+        <p>Support lower-level implementation details that do not fit the main helper areas.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_profiling.py#L152-L189"><code>_build_categorical_distribution</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_profiling.py#L120-L149"><code>_build_numeric_distribution</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_profiling.py#L107-L117"><code>_numeric_bin_edges</code></a>
+        </div>
+      </section>
     </div>
 
     ??? example "View helper source by area"
@@ -242,7 +255,7 @@ complete datasets to the driver.
                 return value
             ```
 
-        ??? example "Rule parsing helpers"
+        ??? example "Column handling helpers"
 
             **`def _get_profiled_columns(df, exclude_columns: list[str] | set[str] | None=None) -> list[str]`**
 
@@ -447,143 +460,142 @@ complete datasets to the driver.
             ```
 
 
-## Used by
+<div class="reference-source-card" markdown="1">
+**Source**
 
-- `fabricops_kit.governance_review._prepare_dq_profile_input_rows`
-- <a href="../enforce_profile_behavior/"><code>fabricops_kit.guardrails.enforce_profile_behavior</code></a>
-- <a href="../run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
+`fabricops_kit/data_profiling.py:225`
 
-## Source link
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_profiling.py#L225-L345">View on GitHub</a>
+</div>
 
-- Source file path: `src/fabricops_kit/data_profiling.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_profiling.py#L225-L345">View profile_dataframe on GitHub</a>
+??? example "Source code"
 
-```python
-def profile_dataframe(
-    df,
-    table_name: str,
-    *,
-    exclude_columns=None,
-    run_timestamp_timezone: str | None = None,
-    config: Any = None,
-    include_distributions: bool = False,
-    distribution_columns: list[str] | set[str] | tuple[str, ...] | None = None,
-    distribution_bin_edges: dict[str, list[float]] | None = None,
-    categorical_categories: dict[str, list[str]] | None = None,
-    categorical_top_n: int = 20,
-):
-    """Build canonical DQ-ready profiling rows from a Spark DataFrame.
-
-    Parameters
-    ----------
-    df : Any
-        Spark DataFrame to profile.
-    table_name : str
-        Logical table name written into each profile row.
-    exclude_columns : list[str] or set[str], optional
-        Additional columns to skip, on top of the standard technical columns.
-    run_timestamp_timezone : str, optional
-        Explicit IANA time zone used for the ``RUN_TIMESTAMP`` evidence field.
-        When omitted, ``config.audit_timezone`` is used and falls back to UTC.
-    config : Any, optional
-        Framework-like configuration carrying ``audit_timezone`` for audit
-        timestamp consistency.
-    include_distributions : bool, default=False
-        When true, add lightweight distribution summaries for suitable numeric
-        and categorical columns. The default preserves the existing lightweight
-        profile shape and behavior.
-    distribution_columns : list[str] or set[str] or tuple[str, ...], optional
-        Optional allow-list of important columns for distribution summaries.
-        ``None`` profiles every suitable business column.
-    distribution_bin_edges : dict[str, list[float]], optional
-        Optional numeric bin edges keyed by column name. Pass baseline edges to
-        make the current profile directly comparable with a previous profile.
-    categorical_categories : dict[str, list[str]], optional
-        Optional baseline category vocabulary keyed by column name. When
-        supplied, those categories are counted explicitly and all other non-null
-        values are rolled into ``other_count`` so the current profile remains
-        comparable with the baseline.
-    categorical_top_n : int, default=20
-        Maximum number of non-null category values to keep per categorical
-        column before rolling the remainder into ``other_count``.
-
-    Returns
-    -------
-    Any
-        Spark DataFrame containing one profile row per eligible business
-        column. Existing columns are preserved; distribution-enabled runs also
-        include ``DISTRIBUTION_TYPE`` and ``DISTRIBUTION_JSON``.
-
-    Notes
-    -----
-    Distribution profiling only collects aggregated Spark results such as
-    quantiles, bucket counts, and grouped category counts. It does not collect
-    complete datasets to the driver.
-    """
-    from pyspark.sql import functions as F
-
-    run_timestamp_timezone = _get_audit_timezone(config=config, timezone_name=run_timestamp_timezone)
-    eligible_columns = _get_profiled_columns(df, exclude_columns=exclude_columns)
-    if not eligible_columns:
-        raise ValueError("No eligible non-technical columns found for metadata profiling.")
-
-    dtype_map = dict(df.dtypes)
-    row_count = int(df.count())
-    distributions = _build_distribution_summaries(
+    ```python
+    def profile_dataframe(
         df,
-        eligible_columns,
-        dtype_map,
-        include_distributions=include_distributions,
-        distribution_columns=distribution_columns,
-        distribution_bin_edges=distribution_bin_edges,
-        categorical_categories=categorical_categories,
-        categorical_top_n=categorical_top_n,
-    )
+        table_name: str,
+        *,
+        exclude_columns=None,
+        run_timestamp_timezone: str | None = None,
+        config: Any = None,
+        include_distributions: bool = False,
+        distribution_columns: list[str] | set[str] | tuple[str, ...] | None = None,
+        distribution_bin_edges: dict[str, list[float]] | None = None,
+        categorical_categories: dict[str, list[str]] | None = None,
+        categorical_top_n: int = 20,
+    ):
+        """Build canonical DQ-ready profiling rows from a Spark DataFrame.
 
-    agg_exprs = []
-    for column_name in eligible_columns:
-        agg_exprs.append(F.sum(F.col(column_name).isNull().cast("int")).alias(f"{column_name}_NULL_COUNT"))
-        agg_exprs.append(F.countDistinct(F.col(column_name)).alias(f"{column_name}_DISTINCT_COUNT"))
-        if _is_min_max_supported_type(dtype_map[column_name]):
-            agg_exprs.append(F.min(F.col(column_name)).alias(f"{column_name}_MIN"))
-            agg_exprs.append(F.max(F.col(column_name)).alias(f"{column_name}_MAX"))
+        Parameters
+        ----------
+        df : Any
+            Spark DataFrame to profile.
+        table_name : str
+            Logical table name written into each profile row.
+        exclude_columns : list[str] or set[str], optional
+            Additional columns to skip, on top of the standard technical columns.
+        run_timestamp_timezone : str, optional
+            Explicit IANA time zone used for the ``RUN_TIMESTAMP`` evidence field.
+            When omitted, ``config.audit_timezone`` is used and falls back to UTC.
+        config : Any, optional
+            Framework-like configuration carrying ``audit_timezone`` for audit
+            timestamp consistency.
+        include_distributions : bool, default=False
+            When true, add lightweight distribution summaries for suitable numeric
+            and categorical columns. The default preserves the existing lightweight
+            profile shape and behavior.
+        distribution_columns : list[str] or set[str] or tuple[str, ...], optional
+            Optional allow-list of important columns for distribution summaries.
+            ``None`` profiles every suitable business column.
+        distribution_bin_edges : dict[str, list[float]], optional
+            Optional numeric bin edges keyed by column name. Pass baseline edges to
+            make the current profile directly comparable with a previous profile.
+        categorical_categories : dict[str, list[str]], optional
+            Optional baseline category vocabulary keyed by column name. When
+            supplied, those categories are counted explicitly and all other non-null
+            values are rolled into ``other_count`` so the current profile remains
+            comparable with the baseline.
+        categorical_top_n : int, default=20
+            Maximum number of non-null category values to keep per categorical
+            column before rolling the remainder into ``other_count``.
 
-    agg_df = df.agg(*agg_exprs)
-    denominator = F.lit(row_count if row_count > 0 else 1).cast("double")
+        Returns
+        -------
+        Any
+            Spark DataFrame containing one profile row per eligible business
+            column. Existing columns are preserved; distribution-enabled runs also
+            include ``DISTRIBUTION_TYPE`` and ``DISTRIBUTION_JSON``.
 
-    rows = []
-    for column_name in eligible_columns:
-        select_exprs = [
-            F.lit(table_name).alias("TABLE_NAME"),
-            _audit_timestamp_expr(timezone_name=run_timestamp_timezone).alias("RUN_TIMESTAMP"),
-            F.lit(column_name).alias("COLUMN_NAME"),
-            F.lit(dtype_map[column_name]).alias("DATA_TYPE"),
-            F.lit(row_count).alias("ROW_COUNT"),
-            F.coalesce(F.col(f"{column_name}_NULL_COUNT"), F.lit(0)).cast("long").alias("NULL_COUNT"),
-            F.round((F.coalesce(F.col(f"{column_name}_NULL_COUNT"), F.lit(0)).cast("double") / denominator) * 100, 3).alias("NULL_PERCENT"),
-            F.coalesce(F.col(f"{column_name}_DISTINCT_COUNT"), F.lit(0)).cast("long").alias("DISTINCT_COUNT"),
-            F.round((F.coalesce(F.col(f"{column_name}_DISTINCT_COUNT"), F.lit(0)).cast("double") / denominator) * 100, 3).alias("DISTINCT_PERCENT"),
-            F.col(f"{column_name}_MIN").cast("string").alias("MIN_VALUE") if f"{column_name}_MIN" in agg_df.columns else F.lit(None).cast("string").alias("MIN_VALUE"),
-            F.col(f"{column_name}_MAX").cast("string").alias("MAX_VALUE") if f"{column_name}_MAX" in agg_df.columns else F.lit(None).cast("string").alias("MAX_VALUE"),
-        ]
-        if include_distributions:
-            distribution_type, distribution_payload = distributions.get(column_name, (None, None))
-            select_exprs.extend(
-                [
-                    F.lit(distribution_type).cast("string").alias("DISTRIBUTION_TYPE"),
-                    F.lit(json.dumps(distribution_payload, sort_keys=True) if distribution_payload is not None else None).cast("string").alias("DISTRIBUTION_JSON"),
-                ]
-            )
-        rows.append(agg_df.select(*select_exprs))
+        Notes
+        -----
+        Distribution profiling only collects aggregated Spark results such as
+        quantiles, bucket counts, and grouped category counts. It does not collect
+        complete datasets to the driver.
+        """
+        from pyspark.sql import functions as F
 
-    out = rows[0]
-    for next_row in rows[1:]:
-        out = out.unionByName(next_row)
-    return out
-```
+        run_timestamp_timezone = _get_audit_timezone(config=config, timezone_name=run_timestamp_timezone)
+        eligible_columns = _get_profiled_columns(df, exclude_columns=exclude_columns)
+        if not eligible_columns:
+            raise ValueError("No eligible non-technical columns found for metadata profiling.")
+
+        dtype_map = dict(df.dtypes)
+        row_count = int(df.count())
+        distributions = _build_distribution_summaries(
+            df,
+            eligible_columns,
+            dtype_map,
+            include_distributions=include_distributions,
+            distribution_columns=distribution_columns,
+            distribution_bin_edges=distribution_bin_edges,
+            categorical_categories=categorical_categories,
+            categorical_top_n=categorical_top_n,
+        )
+
+        agg_exprs = []
+        for column_name in eligible_columns:
+            agg_exprs.append(F.sum(F.col(column_name).isNull().cast("int")).alias(f"{column_name}_NULL_COUNT"))
+            agg_exprs.append(F.countDistinct(F.col(column_name)).alias(f"{column_name}_DISTINCT_COUNT"))
+            if _is_min_max_supported_type(dtype_map[column_name]):
+                agg_exprs.append(F.min(F.col(column_name)).alias(f"{column_name}_MIN"))
+                agg_exprs.append(F.max(F.col(column_name)).alias(f"{column_name}_MAX"))
+
+        agg_df = df.agg(*agg_exprs)
+        denominator = F.lit(row_count if row_count > 0 else 1).cast("double")
+
+        rows = []
+        for column_name in eligible_columns:
+            select_exprs = [
+                F.lit(table_name).alias("TABLE_NAME"),
+                _audit_timestamp_expr(timezone_name=run_timestamp_timezone).alias("RUN_TIMESTAMP"),
+                F.lit(column_name).alias("COLUMN_NAME"),
+                F.lit(dtype_map[column_name]).alias("DATA_TYPE"),
+                F.lit(row_count).alias("ROW_COUNT"),
+                F.coalesce(F.col(f"{column_name}_NULL_COUNT"), F.lit(0)).cast("long").alias("NULL_COUNT"),
+                F.round((F.coalesce(F.col(f"{column_name}_NULL_COUNT"), F.lit(0)).cast("double") / denominator) * 100, 3).alias("NULL_PERCENT"),
+                F.coalesce(F.col(f"{column_name}_DISTINCT_COUNT"), F.lit(0)).cast("long").alias("DISTINCT_COUNT"),
+                F.round((F.coalesce(F.col(f"{column_name}_DISTINCT_COUNT"), F.lit(0)).cast("double") / denominator) * 100, 3).alias("DISTINCT_PERCENT"),
+                F.col(f"{column_name}_MIN").cast("string").alias("MIN_VALUE") if f"{column_name}_MIN" in agg_df.columns else F.lit(None).cast("string").alias("MIN_VALUE"),
+                F.col(f"{column_name}_MAX").cast("string").alias("MAX_VALUE") if f"{column_name}_MAX" in agg_df.columns else F.lit(None).cast("string").alias("MAX_VALUE"),
+            ]
+            if include_distributions:
+                distribution_type, distribution_payload = distributions.get(column_name, (None, None))
+                select_exprs.extend(
+                    [
+                        F.lit(distribution_type).cast("string").alias("DISTRIBUTION_TYPE"),
+                        F.lit(json.dumps(distribution_payload, sort_keys=True) if distribution_payload is not None else None).cast("string").alias("DISTRIBUTION_JSON"),
+                    ]
+                )
+            rows.append(agg_df.select(*select_exprs))
+
+        out = rows[0]
+        for next_row in rows[1:]:
+            out = out.unionByName(next_row)
+        return out
+    ```
 
 <details class="reference-metadata-details">
-<summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
+<summary>Machine-readable metadata / metadata details</summary>
 
 These generated fields are for automation, AI agents, maintainers, and doc tooling. Skip this block when reading the docs normally.
 
@@ -633,7 +645,18 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Signature:
 
 ```python
-def profile_dataframe(df, table_name: str, *, exclude_columns=None, run_timestamp_timezone: str | None=None, config: Any=None, include_distributions: bool=False, distribution_columns: list[str] | set[str] | tuple[str, ...] | None=None, distribution_bin_edges: dict[str, list[float]] | None=None, categorical_categories: dict[str, list[str]] | None=None, categorical_top_n: int=20)
+def profile_dataframe(
+    df,
+    table_name: str,
+    exclude_columns=None,
+    run_timestamp_timezone: str | None=None,
+    config: Any=None,
+    include_distributions: bool=False,
+    distribution_columns: list[str] | set[str] | tuple[str, ...] | None=None,
+    distribution_bin_edges: dict[str, list[float]] | None=None,
+    categorical_categories: dict[str, list[str]] | None=None,
+    categorical_top_n: int=20,
+):
 ```
 
 ### Internal relationship graph
@@ -646,6 +669,29 @@ def profile_dataframe(df, table_name: str, *, exclude_columns=None, run_timestam
 ### Internal implementation summary
 
 - Internal helper count: 9
-- Grouped helper summary and optional source snippets are rendered in the page-level Internal implementation summary section.
+- Grouped helper summary and optional source snippets are rendered in the page-level Implementation details section.
 
 </details>
+
+## Source link
+
+<div class="reference-source-card" markdown="1">
+**Source**
+
+`fabricops_kit/data_profiling.py:225`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_profiling.py#L225-L345">View on GitHub</a>
+</div>
+
+## Glossary
+
+- **Catalogue evidence:** Reviewed metadata that explains what FabricOps knows about a dataset or table.
+- **Source table:** An input table or file read by the pipeline.
+- **Target table:** An output table written by the pipeline.
+
+See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
+
+## See also
+
+- [Pipeline Guardrails](../../how-fabricops-works/pipeline-guardrails.md)
+- [Governance Review](../../how-fabricops-works/governance-review.md)

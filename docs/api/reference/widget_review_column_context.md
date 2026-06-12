@@ -1,26 +1,35 @@
 # widget_review_column_context
 
-## Signature
-
-```python
-def widget_review_column_context(profile_rows: list[dict[str, Any]]) -> list[dict[str, Any]]
-```
-
-## Summary
-
 Render standalone business-context review guidance for selected profile rows.
 
-## Usage note
+<details class="reference-usage-details">
+<summary>Usage guidance</summary>
+
+**Use when:**
 
 - Use in 03_governance when profile rows need human-reviewed column descriptions or business meaning.
-
-**Do not use when:**
-
-- Not documented yet
 
 **Additional context:**
 
 Renders review guidance for column business context so reviewers can approve or edit metadata for a selected table.
+
+</details>
+
+## Signature
+
+<div class="reference-api-definition" markdown="1">
+
+```python
+def widget_review_column_context(
+    profile_rows: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+```
+
+</div>
+
+## Example usage
+
+Example usage not documented yet.
 
 ## Parameters
 
@@ -49,34 +58,20 @@ Not documented yet
 - Widget dependencies are unavailable.
 - Reviewer changes are not committed before persistence.
 
-## Example
+## Relationships
 
-```python
+### Used by
+
 Not documented yet
-```
 
-## See also
+### Calls
 
-- [Governance Review](../../how-fabricops-works/governance-review.md)
+- `fabricops_kit.governance_review._display_review_guidance`
 
-**Glossary terms**
+## Implementation details
 
-- **Catalogue evidence:** Reviewed metadata that explains what FabricOps knows about a dataset or table.
-- **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
-
-See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
-
-## Developer details
-
-- Module: `governance_review`
-- Classification: Callable
-- Source file path: `src/fabricops_kit/governance_review.py`
-- Source line: `514`
-- Signature:
-
-```python
-def widget_review_column_context(profile_rows: list[dict[str, Any]]) -> list[dict[str, Any]]
-```
+<details class="reference-implementation-details">
+<summary>Notes, side effects, and template usage</summary>
 
 **Used in templates:**
 
@@ -90,11 +85,7 @@ Not documented yet
 
 No additional callable notes are documented.
 
-## Calls
-
-- `fabricops_kit.governance_review._display_review_guidance`
-
-## Internal implementation summary
+</details>
 
 ??? info "Call flow"
 
@@ -108,23 +99,15 @@ No additional callable notes are documented.
 
     This callable uses 2 internal helpers for other.
 
-    <div class="module-table-scroll reference-input-table">
-    <table class="reference-function-table">
-      <thead>
-        <tr>
-          <th>Area</th>
-          <th>Helpers</th>
-          <th>What they do</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td data-label="Area">Other</td>
-          <td data-label="Helpers"><code>_display_review_guidance</code>, <code>_value</code></td>
-          <td data-label="What they do">Support lower-level implementation details that do not fit the main helper areas.</td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="reference-helper-groups">
+      <section class="reference-helper-group">
+        <h4>Other</h4>
+        <p>Support lower-level implementation details that do not fit the main helper areas.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L497-L511"><code>_display_review_guidance</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L70-L71"><code>_value</code></a>
+        </div>
+      </section>
     </div>
 
     ??? example "View helper source by area"
@@ -163,35 +146,40 @@ No additional callable notes are documented.
             ```
 
 
-## Source link
+<div class="reference-source-card" markdown="1">
+**Source**
 
-- Source file path: `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L514-L532">View widget_review_column_context on GitHub</a>
+`fabricops_kit/governance_review.py:514`
 
-```python
-def widget_review_column_context(profile_rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Render standalone business-context review guidance for ``03_governance``.
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L514-L532">View on GitHub</a>
+</div>
 
-    Parameters
-    ----------
-    profile_rows : list of dict
-        Selected column profile evidence from ``load_catalogue_profile_rows``.
+??? example "Source code"
 
-    Returns
-    -------
-    list[dict[str, Any]]
-        Empty editable review list. Add approved context rows before calling
-        ``record_table_governance``.
-    """
-    return _display_review_guidance(
-        "Business context review",
-        profile_rows,
-        "Describe human-approved business meaning for each column. AI suggestions, if used, are advisory only.",
-    )
-```
+    ```python
+    def widget_review_column_context(profile_rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """Render standalone business-context review guidance for ``03_governance``.
+
+        Parameters
+        ----------
+        profile_rows : list of dict
+            Selected column profile evidence from ``load_catalogue_profile_rows``.
+
+        Returns
+        -------
+        list[dict[str, Any]]
+            Empty editable review list. Add approved context rows before calling
+            ``record_table_governance``.
+        """
+        return _display_review_guidance(
+            "Business context review",
+            profile_rows,
+            "Describe human-approved business meaning for each column. AI suggestions, if used, are advisory only.",
+        )
+    ```
 
 <details class="reference-metadata-details">
-<summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
+<summary>Machine-readable metadata / metadata details</summary>
 
 These generated fields are for automation, AI agents, maintainers, and doc tooling. Skip this block when reading the docs normally.
 
@@ -238,7 +226,9 @@ Not documented yet
 - Signature:
 
 ```python
-def widget_review_column_context(profile_rows: list[dict[str, Any]]) -> list[dict[str, Any]]
+def widget_review_column_context(
+    profile_rows: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
 ```
 
 ### Internal relationship graph
@@ -250,6 +240,27 @@ Not documented yet
 ### Internal implementation summary
 
 - Internal helper count: 2
-- Grouped helper summary and optional source snippets are rendered in the page-level Internal implementation summary section.
+- Grouped helper summary and optional source snippets are rendered in the page-level Implementation details section.
 
 </details>
+
+## Source link
+
+<div class="reference-source-card" markdown="1">
+**Source**
+
+`fabricops_kit/governance_review.py:514`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L514-L532">View on GitHub</a>
+</div>
+
+## Glossary
+
+- **Catalogue evidence:** Reviewed metadata that explains what FabricOps knows about a dataset or table.
+- **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
+
+See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
+
+## See also
+
+- [Governance Review](../../how-fabricops-works/governance-review.md)

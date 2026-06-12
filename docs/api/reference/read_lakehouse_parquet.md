@@ -1,16 +1,11 @@
 # read_lakehouse_parquet
 
-## Signature
-
-```python
-def read_lakehouse_parquet(config, env, target, relative_path, verbose=True, spark_session=None)
-```
-
-## Summary
-
 Read a Parquet path from a configured Fabric lakehouse Files path.
 
-## Usage note
+<details class="reference-usage-details">
+<summary>Usage guidance</summary>
+
+**Use when:**
 
 - Use for file-based source ingestion when the source is Parquet rather than a managed table.
 
@@ -21,6 +16,35 @@ Read a Parquet path from a configured Fabric lakehouse Files path.
 **Additional context:**
 
 Reads a Parquet file or folder from the Files area of a configured Fabric lakehouse into a Spark DataFrame.
+
+</details>
+
+## Signature
+
+<div class="reference-api-definition" markdown="1">
+
+```python
+def read_lakehouse_parquet(
+    config,
+    env,
+    target,
+    relative_path,
+    verbose=True,
+    spark_session=None,
+):
+```
+
+</div>
+
+## Example usage
+
+<div class="reference-example-usage" markdown="1">
+
+```python
+df = read_lakehouse_parquet(CONFIG, env="Sandbox", target="Source", relative_path="raw/orders/orders.parquet", spark_session=spark)
+```
+
+</div>
 
 ## Parameters
 
@@ -52,34 +76,23 @@ Raises ValueError for invalid relative paths and Spark/read errors when the Parq
 - The configured lakehouse target is unavailable.
 - The caller lacks read permission.
 
-## Example
+## Relationships
 
-```python
-df = read_lakehouse_parquet(CONFIG, env="Sandbox", target="Source", relative_path="raw/orders/orders.parquet", spark_session=spark)
-```
+### Used by
 
-## See also
+Not documented yet
 
-- [Notebook Templates](../../how-fabricops-works/notebook-templates.md)
+### Calls
 
-**Glossary terms**
+- `fabricops_kit.config._get_store`
+- `fabricops_kit.fabric_input_output._convert_single_parquet_ns_to_us`
+- `fabricops_kit.fabric_input_output._get_spark`
+- `fabricops_kit.fabric_input_output._lakehouse_file_path`
 
-- **Source table:** An input table or file read by the pipeline.
-- **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
+## Implementation details
 
-See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
-
-## Developer details
-
-- Module: `fabric_input_output`
-- Classification: Callable
-- Source file path: `src/fabricops_kit/fabric_input_output.py`
-- Source line: `555`
-- Signature:
-
-```python
-def read_lakehouse_parquet(config, env, target, relative_path, verbose=True, spark_session=None)
-```
+<details class="reference-implementation-details">
+<summary>Notes, side effects, and template usage</summary>
 
 **Used in templates:**
 
@@ -95,14 +108,7 @@ Reads from lakehouse Files and may create a local timestamp-converted fallback f
 Assumes Fabric notebook runtime filesystem conventions for local fallback
 conversion paths (``/lakehouse/default/Files/...``).
 
-## Calls
-
-- `fabricops_kit.config._get_store`
-- `fabricops_kit.fabric_input_output._convert_single_parquet_ns_to_us`
-- `fabricops_kit.fabric_input_output._get_spark`
-- `fabricops_kit.fabric_input_output._lakehouse_file_path`
-
-## Internal implementation summary
+</details>
 
 ??? info "Call flow"
 
@@ -118,33 +124,29 @@ conversion paths (``/lakehouse/default/Files/...``).
 
     This callable uses 4 internal helpers for audit timestamp, metadata loading, and fabric or spark access.
 
-    <div class="module-table-scroll reference-input-table">
-    <table class="reference-function-table">
-      <thead>
-        <tr>
-          <th>Area</th>
-          <th>Helpers</th>
-          <th>What they do</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td data-label="Area">Audit timestamp</td>
-          <td data-label="Helpers"><code>_convert_single_parquet_ns_to_us</code></td>
-          <td data-label="What they do">Resolve and stamp audit time consistently.</td>
-        </tr>
-        <tr>
-          <td data-label="Area">Metadata loading</td>
-          <td data-label="Helpers"><code>_lakehouse_file_path</code></td>
-          <td data-label="What they do">Load and identify the metadata or table context needed by the callable.</td>
-        </tr>
-        <tr>
-          <td data-label="Area">Fabric or Spark access</td>
-          <td data-label="Helpers"><code>_get_spark</code>, <code>_get_store</code></td>
-          <td data-label="What they do">Access Fabric or Spark runtime services used by the implementation.</td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="reference-helper-groups">
+      <section class="reference-helper-group">
+        <h4>Audit timestamp</h4>
+        <p>Resolve and stamp audit time consistently.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L500-L552"><code>_convert_single_parquet_ns_to_us</code></a>
+        </div>
+      </section>
+      <section class="reference-helper-group">
+        <h4>Metadata loading</h4>
+        <p>Load and identify the metadata or table context needed by the callable.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L158-L168"><code>_lakehouse_file_path</code></a>
+        </div>
+      </section>
+      <section class="reference-helper-group">
+        <h4>Fabric or Spark access</h4>
+        <p>Access Fabric or Spark runtime services used by the implementation.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L125-L155"><code>_get_spark</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L627-L667"><code>_get_store</code></a>
+        </div>
+      </section>
     </div>
 
     ??? example "View helper source by area"
@@ -320,139 +322,144 @@ conversion paths (``/lakehouse/default/Files/...``).
             ```
 
 
-## Source link
+<div class="reference-source-card" markdown="1">
+**Source**
 
-- Source file path: `src/fabricops_kit/fabric_input_output.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L555-L677">View read_lakehouse_parquet on GitHub</a>
+`fabricops_kit/fabric_input_output.py:555`
 
-```python
-def read_lakehouse_parquet(config, env, target, relative_path, verbose=True, spark_session=None):
-    """Read a Parquet file from a Fabric lakehouse Files path.
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L555-L677">View on GitHub</a>
+</div>
 
-    This reads from the lakehouse `Files/` area using Spark. If Spark cannot
-    read the original Parquet file because of timestamp precision issues, the
-    helper tries a fallback `_tsus` path. If that fallback file does not exist,
-    it converts the single local Parquet file from nanosecond to microsecond
-    timestamps and retries the fallback path.
+??? example "Source code"
 
-    Parameters
-    ----------
-    config : FrameworkConfig | dict
-        FabricOps FrameworkConfig or compatible config object.
-    env : str
-        Environment key such as `"dev"`.
-    target : str
-        Logical target name such as `"source"` or `"unified"`.
-    relative_path : str
-        Path to the Parquet file under the lakehouse `Files/` folder, without
-        the leading `"Files/"`. For example:
-        `"raw/orders/orders_2026.parquet"`.
-    verbose : bool, default True
-        Whether to print read and fallback progress.
-    spark_session : object, optional
-        Spark session to use. If omitted, the helper uses the notebook global
-        `spark`.
+    ```python
+    def read_lakehouse_parquet(config, env, target, relative_path, verbose=True, spark_session=None):
+        """Read a Parquet file from a Fabric lakehouse Files path.
 
-    Returns
-    -------
-    pyspark.sql.DataFrame
-        Spark DataFrame loaded from the original or converted Parquet path.
+        This reads from the lakehouse `Files/` area using Spark. If Spark cannot
+        read the original Parquet file because of timestamp precision issues, the
+        helper tries a fallback `_tsus` path. If that fallback file does not exist,
+        it converts the single local Parquet file from nanosecond to microsecond
+        timestamps and retries the fallback path.
 
-    Raises
-    ------
-    ValueError
-        If `relative_path` is not a nested file path.
-    RuntimeError
-        If neither the original path nor the converted fallback path can be
-        read successfully.
+        Parameters
+        ----------
+        config : FrameworkConfig | dict
+            FabricOps FrameworkConfig or compatible config object.
+        env : str
+            Environment key such as `"dev"`.
+        target : str
+            Logical target name such as `"source"` or `"unified"`.
+        relative_path : str
+            Path to the Parquet file under the lakehouse `Files/` folder, without
+            the leading `"Files/"`. For example:
+            `"raw/orders/orders_2026.parquet"`.
+        verbose : bool, default True
+            Whether to print read and fallback progress.
+        spark_session : object, optional
+            Spark session to use. If omitted, the helper uses the notebook global
+            `spark`.
 
-    Examples
-    --------
-    >>> df = read_lakehouse_parquet(CONFIG, ENV, "source", "raw/orders.parquet")
-    Notes
-    -----
-    Assumes Fabric notebook runtime filesystem conventions for local fallback
-    conversion paths (``/lakehouse/default/Files/...``).
-    """
-    store = _get_store(config, env, target)
-    spark_obj = _get_spark(spark_session)
-    orig_spark_path = _lakehouse_file_path(store, env, target, relative_path)
+        Returns
+        -------
+        pyspark.sql.DataFrame
+            Spark DataFrame loaded from the original or converted Parquet path.
 
-    normalized_relative_path = str(relative_path).strip().lstrip("/")
-    if normalized_relative_path.startswith("Files/"):
-        normalized_relative_path = normalized_relative_path[len("Files/") :]
+        Raises
+        ------
+        ValueError
+            If `relative_path` is not a nested file path.
+        RuntimeError
+            If neither the original path nor the converted fallback path can be
+            read successfully.
 
-    lakehouse_prefix = "/lakehouse/default/"
-    parts = normalized_relative_path.split("/")
+        Examples
+        --------
+        >>> df = read_lakehouse_parquet(CONFIG, ENV, "source", "raw/orders.parquet")
+        Notes
+        -----
+        Assumes Fabric notebook runtime filesystem conventions for local fallback
+        conversion paths (``/lakehouse/default/Files/...``).
+        """
+        store = _get_store(config, env, target)
+        spark_obj = _get_spark(spark_session)
+        orig_spark_path = _lakehouse_file_path(store, env, target, relative_path)
 
-    if len(parts) < 2:
-        raise ValueError("relative_path should look like folder/file.parquet or folder/subfolder/file.parquet.")
+        normalized_relative_path = str(relative_path).strip().lstrip("/")
+        if normalized_relative_path.startswith("Files/"):
+            normalized_relative_path = normalized_relative_path[len("Files/") :]
 
-    tsus_dir = parts[:-2] + [parts[-2] + "_tsus"]
-    tsus_relative_path = "/".join(tsus_dir + [parts[-1]])
-    tsus_spark_path = _lakehouse_file_path(store, env, target, tsus_relative_path)
+        lakehouse_prefix = "/lakehouse/default/"
+        parts = normalized_relative_path.split("/")
 
-    orig_local_path = f"{lakehouse_prefix}Files/{normalized_relative_path}"
-    tsus_local_path = f"{lakehouse_prefix}Files/{tsus_relative_path}"
+        if len(parts) < 2:
+            raise ValueError("relative_path should look like folder/file.parquet or folder/subfolder/file.parquet.")
 
-    if verbose:
-        print(f"Try Spark read: {orig_spark_path}")
+        tsus_dir = parts[:-2] + [parts[-2] + "_tsus"]
+        tsus_relative_path = "/".join(tsus_dir + [parts[-1]])
+        tsus_spark_path = _lakehouse_file_path(store, env, target, tsus_relative_path)
 
-    try:
-        df = spark_obj.read.parquet(orig_spark_path)
-        _ = df.limit(1).collect()
-        if verbose:
-            print("SUCCESS: Spark read original path.")
-        return df
-    except Exception as exc:
-        if verbose:
-            print(f"Original Parquet read failed. Will try fallback path. Exception: {exc}")
-
-    for try_convert in range(2):
-        tag = " after single-file convert" if try_convert else ""
+        orig_local_path = f"{lakehouse_prefix}Files/{normalized_relative_path}"
+        tsus_local_path = f"{lakehouse_prefix}Files/{tsus_relative_path}"
 
         if verbose:
-            print(f"Try Spark read: {tsus_spark_path}{tag}")
+            print(f"Try Spark read: {orig_spark_path}")
 
         try:
-            df = spark_obj.read.parquet(tsus_spark_path)
+            df = spark_obj.read.parquet(orig_spark_path)
             _ = df.limit(1).collect()
             if verbose:
-                print("SUCCESS: Spark read _tsus path.")
+                print("SUCCESS: Spark read original path.")
             return df
-
         except Exception as exc:
-            msg = str(exc)
-            path_not_found = (
-                "[PATH_NOT_FOUND]" in msg
-                or "Path does not exist" in msg
-                or "No such file or directory" in msg
-            )
+            if verbose:
+                print(f"Original Parquet read failed. Will try fallback path. Exception: {exc}")
 
-            if try_convert == 0 and path_not_found:
+        for try_convert in range(2):
+            tag = " after single-file convert" if try_convert else ""
+
+            if verbose:
+                print(f"Try Spark read: {tsus_spark_path}{tag}")
+
+            try:
+                df = spark_obj.read.parquet(tsus_spark_path)
+                _ = df.limit(1).collect()
                 if verbose:
-                    print("PATH NOT FOUND for _tsus parquet. Will convert one file and retry.")
+                    print("SUCCESS: Spark read _tsus path.")
+                return df
 
-                try:
-                    mssparkutils.fs.mkdirs(_lakehouse_file_path(store, env, target, "/".join(tsus_dir)))
-                except Exception:
-                    pass
-
-                _convert_single_parquet_ns_to_us(
-                    local_in_path=orig_local_path,
-                    local_out_path=tsus_local_path,
-                    verbose=verbose,
+            except Exception as exc:
+                msg = str(exc)
+                path_not_found = (
+                    "[PATH_NOT_FOUND]" in msg
+                    or "Path does not exist" in msg
+                    or "No such file or directory" in msg
                 )
-            else:
-                if verbose:
-                    print(f"FAILED: Spark read _tsus path. Exception: {exc}")
-                break
 
-    raise RuntimeError("Failed to read from both original and _tsus Parquet paths.")
-```
+                if try_convert == 0 and path_not_found:
+                    if verbose:
+                        print("PATH NOT FOUND for _tsus parquet. Will convert one file and retry.")
+
+                    try:
+                        mssparkutils.fs.mkdirs(_lakehouse_file_path(store, env, target, "/".join(tsus_dir)))
+                    except Exception:
+                        pass
+
+                    _convert_single_parquet_ns_to_us(
+                        local_in_path=orig_local_path,
+                        local_out_path=tsus_local_path,
+                        verbose=verbose,
+                    )
+                else:
+                    if verbose:
+                        print(f"FAILED: Spark read _tsus path. Exception: {exc}")
+                    break
+
+        raise RuntimeError("Failed to read from both original and _tsus Parquet paths.")
+    ```
 
 <details class="reference-metadata-details">
-<summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
+<summary>Machine-readable metadata / metadata details</summary>
 
 These generated fields are for automation, AI agents, maintainers, and doc tooling. Skip this block when reading the docs normally.
 
@@ -499,7 +506,14 @@ Not documented yet
 - Signature:
 
 ```python
-def read_lakehouse_parquet(config, env, target, relative_path, verbose=True, spark_session=None)
+def read_lakehouse_parquet(
+    config,
+    env,
+    target,
+    relative_path,
+    verbose=True,
+    spark_session=None,
+):
 ```
 
 ### Internal relationship graph
@@ -513,6 +527,27 @@ def read_lakehouse_parquet(config, env, target, relative_path, verbose=True, spa
 ### Internal implementation summary
 
 - Internal helper count: 4
-- Grouped helper summary and optional source snippets are rendered in the page-level Internal implementation summary section.
+- Grouped helper summary and optional source snippets are rendered in the page-level Implementation details section.
 
 </details>
+
+## Source link
+
+<div class="reference-source-card" markdown="1">
+**Source**
+
+`fabricops_kit/fabric_input_output.py:555`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L555-L677">View on GitHub</a>
+</div>
+
+## Glossary
+
+- **Source table:** An input table or file read by the pipeline.
+- **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
+
+See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
+
+## See also
+
+- [Notebook Templates](../../how-fabricops-works/notebook-templates.md)

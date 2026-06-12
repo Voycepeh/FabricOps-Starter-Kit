@@ -1,16 +1,11 @@
 # widget_select_agreement
 
-## Signature
-
-```python
-def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None=None, *, spark_session: Any=None, register_notebook: bool=False, notebook_type: str | None=None, environment_name: str | None=None, dataset_name: str | None=None, table_name: str | None=None, topic: str | None=None, pipeline_name: str | None=None) -> Any
-```
-
-## Summary
-
 Render an agreement selector and optionally register the active notebook.
 
-## Usage note
+<details class="reference-usage-details">
+<summary>Usage guidance</summary>
+
+**Use when:**
 
 - Use near the start of 02_pipeline or 99_explore before reads, profiling, lineage, or governance evidence need an agreement id.
 
@@ -21,6 +16,40 @@ Render an agreement selector and optionally register the active notebook.
 **Additional context:**
 
 Displays an agreement selector and stores the chosen agreement so pipeline and exploration notebooks can bind work to approved business context.
+
+</details>
+
+## Signature
+
+<div class="reference-api-definition" markdown="1">
+
+```python
+def widget_select_agreement(
+    agreement_rows_or_config: Any,
+    env_name: str | None=None,
+    spark_session: Any=None,
+    register_notebook: bool=False,
+    notebook_type: str | None=None,
+    environment_name: str | None=None,
+    dataset_name: str | None=None,
+    table_name: str | None=None,
+    topic: str | None=None,
+    pipeline_name: str | None=None,
+) -> Any:
+```
+
+</div>
+
+## Example usage
+
+<div class="reference-example-usage" markdown="1">
+
+```python
+widget_select_agreement(CONFIG, env="Sandbox", spark_session=spark)
+agreement = get_selected_agreement()
+```
+
+</div>
 
 ## Parameters
 
@@ -56,34 +85,26 @@ Raises metadata read, widget dependency, or configuration errors when agreement 
 - Notebook registration metadata cannot be written.
 - The configured metadata lakehouse cannot be read.
 
-## Example
+## Relationships
 
-```python
-widget_select_agreement(CONFIG, env="Sandbox", spark_session=spark)
-agreement = get_selected_agreement()
-```
+### Used by
 
-## See also
+Not documented yet
 
-- [Notebook Templates](../../how-fabricops-works/notebook-templates.md)
+### Calls
 
-**Glossary terms**
+- `fabricops_kit.data_agreement._html_escape`
+- `fabricops_kit.data_agreement._latest_agreement_versions`
+- `fabricops_kit.data_agreement._list_data_agreements`
+- `fabricops_kit.data_agreement._render_searchable_selector`
+- `fabricops_kit.data_agreement._require_ipywidgets`
+- `fabricops_kit.metadata._current_notebook_active_registrations`
+- `fabricops_kit.metadata._register_current_notebook`
 
-- **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
+## Implementation details
 
-See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
-
-## Developer details
-
-- Module: `data_agreement`
-- Classification: Callable
-- Source file path: `src/fabricops_kit/data_agreement.py`
-- Source line: `773`
-- Signature:
-
-```python
-def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None=None, *, spark_session: Any=None, register_notebook: bool=False, notebook_type: str | None=None, environment_name: str | None=None, dataset_name: str | None=None, table_name: str | None=None, topic: str | None=None, pipeline_name: str | None=None) -> Any
-```
+<details class="reference-implementation-details">
+<summary>Notes, side effects, and template usage</summary>
 
 **Used in templates:**
 
@@ -98,23 +119,13 @@ Displays an IPython widget and may register the active notebook selection in met
 
 No additional callable notes are documented.
 
-## Calls
-
-- `fabricops_kit.data_agreement._html_escape`
-- `fabricops_kit.data_agreement._latest_agreement_versions`
-- `fabricops_kit.data_agreement._list_data_agreements`
-- `fabricops_kit.data_agreement._render_searchable_selector`
-- `fabricops_kit.data_agreement._require_ipywidgets`
-- `fabricops_kit.metadata._current_notebook_active_registrations`
-- `fabricops_kit.metadata._register_current_notebook`
-
-## Internal implementation summary
+</details>
 
 ??? info "Call flow"
 
     Large call graph shown to two levels.
 
-    Expanded internal helper tree is available in the internal implementation summary.
+    Expanded internal helper tree is available in Implementation details.
 
     ```text
     widget_select_agreement(...)
@@ -155,43 +166,59 @@ No additional callable notes are documented.
 
     This callable uses 22 internal helpers for audit timestamp, metadata loading, rule parsing, fabric or spark access, and other.
 
-    <div class="module-table-scroll reference-input-table">
-    <table class="reference-function-table">
-      <thead>
-        <tr>
-          <th>Area</th>
-          <th>Helpers</th>
-          <th>What they do</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td data-label="Area">Audit timestamp</td>
-          <td data-label="Helpers"><code>_current_audit_timestamp</code>, <code>_get_audit_timezone</code>, <code>_validate_audit_timezone</code></td>
-          <td data-label="What they do">Resolve and stamp audit time consistently.</td>
-        </tr>
-        <tr>
-          <td data-label="Area">Metadata loading</td>
-          <td data-label="Helpers"><code>_latest_agreement_versions</code>, <code>_list_all_data_agreement_rows</code>, <code>_list_data_agreements</code>, <code>_load_notebook_registry</code>, <code>_render_searchable_selector</code></td>
-          <td data-label="What they do">Load and identify the metadata or table context needed by the callable.</td>
-        </tr>
-        <tr>
-          <td data-label="Area">Rule parsing</td>
-          <td data-label="Helpers"><code>_parse_contract_version</code></td>
-          <td data-label="What they do">Normalize stored or user-provided values before applying rules.</td>
-        </tr>
-        <tr>
-          <td data-label="Area">Fabric or Spark access</td>
-          <td data-label="Helpers"><code>_rows_for_spark</code></td>
-          <td data-label="What they do">Access Fabric or Spark runtime services used by the implementation.</td>
-        </tr>
-        <tr>
-          <td data-label="Area">Other</td>
-          <td data-label="Helpers"><code>_coerce_row_dicts</code>, <code>_coerce_row_dicts</code>, <code>_config_value</code>, <code>_context_get</code>, <code>_current_notebook_active_registrations</code>, <code>_html_escape</code>, <code>_notebook_registration_key</code>, <code>_register_current_notebook</code>, <code>_require_ipywidgets</code>, <code>_runtime_context</code>, <code>_safe_str</code>, <code>_widget_common</code></td>
-          <td data-label="What they do">Support lower-level implementation details that do not fit the main helper areas.</td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="reference-helper-groups">
+      <section class="reference-helper-group">
+        <h4>Audit timestamp</h4>
+        <p>Resolve and stamp audit time consistently.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L69-L75"><code>_current_audit_timestamp</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L61-L66"><code>_get_audit_timezone</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L27-L58"><code>_validate_audit_timezone</code></a>
+        </div>
+      </section>
+      <section class="reference-helper-group">
+        <h4>Metadata loading</h4>
+        <p>Load and identify the metadata or table context needed by the callable.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L570-L586"><code>_latest_agreement_versions</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L589-L598"><code>_list_all_data_agreement_rows</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L601-L608"><code>_list_data_agreements</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/metadata.py#L336-L387"><code>_load_notebook_registry</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L198-L308"><code>_render_searchable_selector</code></a>
+        </div>
+      </section>
+      <section class="reference-helper-group">
+        <h4>Rule parsing</h4>
+        <p>Normalize stored or user-provided values before applying rules.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L555-L561"><code>_parse_contract_version</code></a>
+        </div>
+      </section>
+      <section class="reference-helper-group">
+        <h4>Fabric or Spark access</h4>
+        <p>Access Fabric or Spark runtime services used by the implementation.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/metadata.py#L89-L98"><code>_rows_for_spark</code></a>
+        </div>
+      </section>
+      <section class="reference-helper-group">
+        <h4>Other</h4>
+        <p>Support lower-level implementation details that do not fit the main helper areas.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L397-L402"><code>_coerce_row_dicts</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/metadata.py#L53-L58"><code>_coerce_row_dicts</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L149-L153"><code>_config_value</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/metadata.py#L101-L113"><code>_context_get</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/metadata.py#L390-L440"><code>_current_notebook_active_registrations</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L192-L195"><code>_html_escape</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/metadata.py#L41-L50"><code>_notebook_registration_key</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/metadata.py#L220-L333"><code>_register_current_notebook</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L63-L72"><code>_require_ipywidgets</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/metadata.py#L120-L144"><code>_runtime_context</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/metadata.py#L116-L117"><code>_safe_str</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L180-L189"><code>_widget_common</code></a>
+        </div>
+      </section>
     </div>
 
     ??? example "View helper source by area"
@@ -877,241 +904,246 @@ No additional callable notes are documented.
             ```
 
 
-## Source link
+<div class="reference-source-card" markdown="1">
+**Source**
 
-- Source file path: `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L773-L997">View widget_select_agreement on GitHub</a>
+`fabricops_kit/data_agreement.py:773`
 
-```python
-def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None = None, *, spark_session: Any = None, register_notebook: bool = False, notebook_type: str | None = None, environment_name: str | None = None, dataset_name: str | None = None, table_name: str | None = None, topic: str | None = None, pipeline_name: str | None = None) -> Any:
-    """Render a downstream agreement selector and retain the selected row.
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L773-L997">View on GitHub</a>
+</div>
 
-    Parameters
-    ----------
-    agreement_rows_or_config : FrameworkConfig or iterable
-        Pass ``CONFIG`` in normal notebooks, or provide preloaded agreement
-        rows when the caller already has them available.
-    env_name : str, optional
-        Environment key used to load agreements when ``CONFIG`` is supplied.
-    spark_session : pyspark.sql.SparkSession, optional
-        Fabric Spark session used for configured metadata-table reads.
-    register_notebook : bool, default=False
-        When True, render registration status and a button that links the
-        current notebook to the selected agreement.
-    notebook_type, environment_name, dataset_name, table_name, topic, pipeline_name : str, optional
-        Workflow metadata passed to ``_register_current_notebook`` when
-        ``register_notebook`` is enabled.
+??? example "Source code"
 
-    Returns
-    -------
-    ipywidgets.Select
-        Displayed searchable latest-version agreement selector control. Its
-        ``value`` remains the stable ``agreement_id`` for existing callers.
-        When registration is enabled, registration widgets are attached as
-        attributes on the selector for advanced notebook automation.
-    """
-    widgets = _require_ipywidgets()
-    from IPython import display as ip
+    ```python
+    def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None = None, *, spark_session: Any = None, register_notebook: bool = False, notebook_type: str | None = None, environment_name: str | None = None, dataset_name: str | None = None, table_name: str | None = None, topic: str | None = None, pipeline_name: str | None = None) -> Any:
+        """Render a downstream agreement selector and retain the selected row.
 
-    global _SELECTED_AGREEMENT
-    if env_name is not None:
-        try:
-            rows = _list_data_agreements(agreement_rows_or_config, env_name, spark_session=spark_session)
-        except Exception as exc:
-            raise RuntimeError("No agreements found. Run 01_agreement first.") from exc
-    else:
-        rows = agreement_rows_or_config
-    latest_rows = _latest_agreement_versions(rows)
-    if not latest_rows:
-        raise ValueError("No agreements found. Save a data agreement in notebook 01_agreement first.")
-    rows_by_id = {str(row.get("agreement_id") or "").strip(): row for row in latest_rows if str(row.get("agreement_id") or "").strip()}
+        Parameters
+        ----------
+        agreement_rows_or_config : FrameworkConfig or iterable
+            Pass ``CONFIG`` in normal notebooks, or provide preloaded agreement
+            rows when the caller already has them available.
+        env_name : str, optional
+            Environment key used to load agreements when ``CONFIG`` is supplied.
+        spark_session : pyspark.sql.SparkSession, optional
+            Fabric Spark session used for configured metadata-table reads.
+        register_notebook : bool, default=False
+            When True, render registration status and a button that links the
+            current notebook to the selected agreement.
+        notebook_type, environment_name, dataset_name, table_name, topic, pipeline_name : str, optional
+            Workflow metadata passed to ``_register_current_notebook`` when
+            ``register_notebook`` is enabled.
 
-    def _agreement_label(row: dict[str, Any]) -> str:
-        agreement_id = str(row.get("agreement_id") or "").strip()
-        return f"{row.get('agreement_name', '') or agreement_id} ({agreement_id} / v{row.get('contract_version', '')})"
+        Returns
+        -------
+        ipywidgets.Select
+            Displayed searchable latest-version agreement selector control. Its
+            ``value`` remains the stable ``agreement_id`` for existing callers.
+            When registration is enabled, registration widgets are attached as
+            attributes on the selector for advanced notebook automation.
+        """
+        widgets = _require_ipywidgets()
+        from IPython import display as ip
 
-    selector_parts = _render_searchable_selector(
-        widgets=widgets,
-        label="Agreement",
-        rows=latest_rows,
-        label_fn=_agreement_label,
-        value_fn=lambda row: str(row.get("agreement_id") or "").strip(),
-        placeholder="Search agreements...",
-        search_fields=["agreement_name", "agreement_id", "contract_version", "domain", "recipient"],
-        context_fields=[("agreement_name", "Agreement name"), ("agreement_id", "Agreement ID"), ("contract_version", "Current version"), ("recipient", "Recipient")],
-    )
-    selector = selector_parts["selector"]
-
-    def _on_change(change: dict[str, Any]) -> None:
         global _SELECTED_AGREEMENT
-        if change.get("name") == "value" and change.get("new") is not None:
-            selected_row = rows_by_id.get(str(change["new"]))
-            if selected_row is not None:
-                _SELECTED_AGREEMENT = dict(selected_row)
+        if env_name is not None:
+            try:
+                rows = _list_data_agreements(agreement_rows_or_config, env_name, spark_session=spark_session)
+            except Exception as exc:
+                raise RuntimeError("No agreements found. Run 01_agreement first.") from exc
+        else:
+            rows = agreement_rows_or_config
+        latest_rows = _latest_agreement_versions(rows)
+        if not latest_rows:
+            raise ValueError("No agreements found. Save a data agreement in notebook 01_agreement first.")
+        rows_by_id = {str(row.get("agreement_id") or "").strip(): row for row in latest_rows if str(row.get("agreement_id") or "").strip()}
 
-    selector.observe(_on_change, names="value")
-    if selector.value in rows_by_id:
-        _SELECTED_AGREEMENT = dict(rows_by_id[str(selector.value)])
-    selector.search_box = selector_parts["search"]
-    selector.context_html = selector_parts["context"]
+        def _agreement_label(row: dict[str, Any]) -> str:
+            agreement_id = str(row.get("agreement_id") or "").strip()
+            return f"{row.get('agreement_name', '') or agreement_id} ({agreement_id} / v{row.get('contract_version', '')})"
 
-    registration_status = None
-    registration_action = None
-    register_button = None
-    registration_output = None
-    active_rows: list[dict[str, Any]] = []
-    active_primary_rows: list[dict[str, Any]] = []
-
-    def _selected_row() -> dict[str, Any] | None:
-        return rows_by_id.get(str(selector.value or ""))
-
-    def _status_message() -> str:
-        selected = _selected_row()
-        if not selected:
-            return "Select an agreement before registering this notebook."
-        selected_id = str(selected.get("agreement_id") or "")
-        selected_version = str(selected.get("contract_version") or "")
-        same_active = [row for row in active_rows if str(row.get("agreement_id") or "") == selected_id and str(row.get("agreement_contract_version") or "") == selected_version]
-        same_primary = [row for row in same_active if str(row.get("registration_role") or "primary") == "primary"]
-        other = [row for row in active_primary_rows if row not in same_primary]
-        if same_primary:
-            return f"Registration status: already registered to {selected_id} version {selected_version} as the primary active agreement."
-        if same_active:
-            role = str(same_active[0].get("registration_role") or "additional")
-            return f"Registration status: already registered to {selected_id} version {selected_version} as an active {role} agreement link."
-        if other:
-            current = other[0]
-            current_version = str(current.get("agreement_contract_version") or "unknown version")
-            return f"Registration status: this notebook is already registered to {current.get('agreement_id', '')} version {current_version}. Choose how to handle the selected agreement."
-        return "Registration status: not registered to an active agreement."
-
-    def _refresh_registration_status(*_: Any) -> None:
-        if registration_status is None:
-            return
-        registration_status.value = _html_escape(_status_message())
-
-    if register_notebook:
-        if env_name is None or spark_session is None:
-            raise ValueError("widget_select_agreement(..., register_notebook=True) requires CONFIG, env_name, and spark_session.")
-        config = agreement_rows_or_config
-        active_rows = _current_notebook_active_registrations(
-            spark_session,
-            config=config,
-            env=env_name,
-            notebook_type=notebook_type,
-            environment_name=environment_name or env_name,
+        selector_parts = _render_searchable_selector(
+            widgets=widgets,
+            label="Agreement",
+            rows=latest_rows,
+            label_fn=_agreement_label,
+            value_fn=lambda row: str(row.get("agreement_id") or "").strip(),
+            placeholder="Search agreements...",
+            search_fields=["agreement_name", "agreement_id", "contract_version", "domain", "recipient"],
+            context_fields=[("agreement_name", "Agreement name"), ("agreement_id", "Agreement ID"), ("contract_version", "Current version"), ("recipient", "Recipient")],
         )
-        active_primary_rows = [row for row in active_rows if str(row.get("registration_role") or "primary") == "primary"]
-        registration_status = widgets.HTML(value="")
-        registration_action = widgets.ToggleButtons(
-            options=["Cancel", "Replace active registration", "Add another agreement link"],
-            value="Cancel",
-            description="If already linked",
-        )
-        register_button = widgets.Button(description="Register notebook", button_style="primary")
-        registration_output = widgets.Output()
+        selector = selector_parts["selector"]
 
-        def _register(_: Any = None) -> None:
+        def _on_change(change: dict[str, Any]) -> None:
+            global _SELECTED_AGREEMENT
+            if change.get("name") == "value" and change.get("new") is not None:
+                selected_row = rows_by_id.get(str(change["new"]))
+                if selected_row is not None:
+                    _SELECTED_AGREEMENT = dict(selected_row)
+
+        selector.observe(_on_change, names="value")
+        if selector.value in rows_by_id:
+            _SELECTED_AGREEMENT = dict(rows_by_id[str(selector.value)])
+        selector.search_box = selector_parts["search"]
+        selector.context_html = selector_parts["context"]
+
+        registration_status = None
+        registration_action = None
+        register_button = None
+        registration_output = None
+        active_rows: list[dict[str, Any]] = []
+        active_primary_rows: list[dict[str, Any]] = []
+
+        def _selected_row() -> dict[str, Any] | None:
+            return rows_by_id.get(str(selector.value or ""))
+
+        def _status_message() -> str:
             selected = _selected_row()
-            if registration_output is not None:
-                registration_output.clear_output()
             if not selected:
-                if registration_status is not None:
-                    registration_status.value = "Select an agreement before registering this notebook."
-                return
+                return "Select an agreement before registering this notebook."
             selected_id = str(selected.get("agreement_id") or "")
             selected_version = str(selected.get("contract_version") or "")
             same_active = [row for row in active_rows if str(row.get("agreement_id") or "") == selected_id and str(row.get("agreement_contract_version") or "") == selected_version]
             same_primary = [row for row in same_active if str(row.get("registration_role") or "primary") == "primary"]
             other = [row for row in active_primary_rows if row not in same_primary]
+            if same_primary:
+                return f"Registration status: already registered to {selected_id} version {selected_version} as the primary active agreement."
             if same_active:
-                role = str(same_active[0].get("registration_role") or "primary")
-                if registration_status is not None:
-                    registration_status.value = _html_escape(f"Notebook is already registered to {selected_id} version {selected_version} as an active {role} agreement link; no duplicate was created.")
-                return
-
-            role = "primary"
+                role = str(same_active[0].get("registration_role") or "additional")
+                return f"Registration status: already registered to {selected_id} version {selected_version} as an active {role} agreement link."
             if other:
-                choice = getattr(registration_action, "value", "Cancel")
-                if choice == "Cancel":
-                    if registration_status is not None:
-                        registration_status.value = "Registration canceled. Existing active registration was not changed."
-                    return
-                if choice == "Add another agreement link":
-                    role = "additional"
-                elif choice == "Replace active registration":
-                    role = "primary"
-                else:
-                    return
+                current = other[0]
+                current_version = str(current.get("agreement_contract_version") or "unknown version")
+                return f"Registration status: this notebook is already registered to {current.get('agreement_id', '')} version {current_version}. Choose how to handle the selected agreement."
+            return "Registration status: not registered to an active agreement."
 
-            new_row = _register_current_notebook(
+        def _refresh_registration_status(*_: Any) -> None:
+            if registration_status is None:
+                return
+            registration_status.value = _html_escape(_status_message())
+
+        if register_notebook:
+            if env_name is None or spark_session is None:
+                raise ValueError("widget_select_agreement(..., register_notebook=True) requires CONFIG, env_name, and spark_session.")
+            config = agreement_rows_or_config
+            active_rows = _current_notebook_active_registrations(
                 spark_session,
                 config=config,
                 env=env_name,
-                agreement_id=selected_id,
-                contract_version=selected_version,
-                registration_role=role,
-                registration_status="active",
                 notebook_type=notebook_type,
                 environment_name=environment_name or env_name,
-                dataset_name=dataset_name,
-                table_name=table_name,
-                topic=topic,
-                pipeline_name=pipeline_name,
             )
-            if other and role == "primary":
-                superseded_at = _current_audit_timestamp(config=config, drop_microseconds=False)
-                for previous in other:
-                    _register_current_notebook(
-                        spark_session,
-                        config=config,
-                        env=env_name,
-                        agreement_id=previous.get("agreement_id"),
-                        contract_version=previous.get("agreement_contract_version"),
-                        registration_role=previous.get("registration_role") or "primary",
-                        registration_status="superseded",
-                        registration_id=previous.get("registration_id"),
-                        superseded_at=superseded_at,
-                        superseded_by_registration_id=new_row.get("registration_id"),
-                        notebook_type=previous.get("notebook_type") or notebook_type,
-                        environment_name=previous.get("environment_name") or environment_name or env_name,
-                        dataset_name=previous.get("dataset_name") or dataset_name,
-                        table_name=previous.get("table_name") or table_name,
-                        topic=previous.get("topic") or topic,
-                        pipeline_name=previous.get("pipeline_name") or pipeline_name,
-                    )
-                for previous in other:
-                    if previous in active_rows:
-                        active_rows.remove(previous)
-                active_rows.append(new_row)
-                active_primary_rows[:] = [new_row]
-                message = f"Replaced active registration with {selected_id} version {selected_version}. Previous registration history remains in the audit trail."
-            elif role == "additional":
-                active_rows.append(new_row)
-                message = f"Added additional agreement link to {selected_id} version {selected_version}. Existing primary registration remains active."
-            else:
-                active_rows.append(new_row)
-                active_primary_rows[:] = [new_row]
-                message = f"Registered notebook to {selected_id} version {selected_version}."
-            if registration_status is not None:
-                registration_status.value = _html_escape(message)
+            active_primary_rows = [row for row in active_rows if str(row.get("registration_role") or "primary") == "primary"]
+            registration_status = widgets.HTML(value="")
+            registration_action = widgets.ToggleButtons(
+                options=["Cancel", "Replace active registration", "Add another agreement link"],
+                value="Cancel",
+                description="If already linked",
+            )
+            register_button = widgets.Button(description="Register notebook", button_style="primary")
+            registration_output = widgets.Output()
 
-        register_button.on_click(_register)
-        selector.observe(lambda change: _refresh_registration_status() if change.get("name") == "value" else None, names="value")
-        _refresh_registration_status()
-        selector.registration_status = registration_status
-        selector.registration_action = registration_action
-        selector.register_button = register_button
-        selector.registration_output = registration_output
-        selector.container = widgets.VBox([selector_parts["container"], registration_status, registration_action, register_button, registration_output])
-    else:
-        selector.container = selector_parts["container"]
-    ip.display(selector.container)
-    return selector
-```
+            def _register(_: Any = None) -> None:
+                selected = _selected_row()
+                if registration_output is not None:
+                    registration_output.clear_output()
+                if not selected:
+                    if registration_status is not None:
+                        registration_status.value = "Select an agreement before registering this notebook."
+                    return
+                selected_id = str(selected.get("agreement_id") or "")
+                selected_version = str(selected.get("contract_version") or "")
+                same_active = [row for row in active_rows if str(row.get("agreement_id") or "") == selected_id and str(row.get("agreement_contract_version") or "") == selected_version]
+                same_primary = [row for row in same_active if str(row.get("registration_role") or "primary") == "primary"]
+                other = [row for row in active_primary_rows if row not in same_primary]
+                if same_active:
+                    role = str(same_active[0].get("registration_role") or "primary")
+                    if registration_status is not None:
+                        registration_status.value = _html_escape(f"Notebook is already registered to {selected_id} version {selected_version} as an active {role} agreement link; no duplicate was created.")
+                    return
+
+                role = "primary"
+                if other:
+                    choice = getattr(registration_action, "value", "Cancel")
+                    if choice == "Cancel":
+                        if registration_status is not None:
+                            registration_status.value = "Registration canceled. Existing active registration was not changed."
+                        return
+                    if choice == "Add another agreement link":
+                        role = "additional"
+                    elif choice == "Replace active registration":
+                        role = "primary"
+                    else:
+                        return
+
+                new_row = _register_current_notebook(
+                    spark_session,
+                    config=config,
+                    env=env_name,
+                    agreement_id=selected_id,
+                    contract_version=selected_version,
+                    registration_role=role,
+                    registration_status="active",
+                    notebook_type=notebook_type,
+                    environment_name=environment_name or env_name,
+                    dataset_name=dataset_name,
+                    table_name=table_name,
+                    topic=topic,
+                    pipeline_name=pipeline_name,
+                )
+                if other and role == "primary":
+                    superseded_at = _current_audit_timestamp(config=config, drop_microseconds=False)
+                    for previous in other:
+                        _register_current_notebook(
+                            spark_session,
+                            config=config,
+                            env=env_name,
+                            agreement_id=previous.get("agreement_id"),
+                            contract_version=previous.get("agreement_contract_version"),
+                            registration_role=previous.get("registration_role") or "primary",
+                            registration_status="superseded",
+                            registration_id=previous.get("registration_id"),
+                            superseded_at=superseded_at,
+                            superseded_by_registration_id=new_row.get("registration_id"),
+                            notebook_type=previous.get("notebook_type") or notebook_type,
+                            environment_name=previous.get("environment_name") or environment_name or env_name,
+                            dataset_name=previous.get("dataset_name") or dataset_name,
+                            table_name=previous.get("table_name") or table_name,
+                            topic=previous.get("topic") or topic,
+                            pipeline_name=previous.get("pipeline_name") or pipeline_name,
+                        )
+                    for previous in other:
+                        if previous in active_rows:
+                            active_rows.remove(previous)
+                    active_rows.append(new_row)
+                    active_primary_rows[:] = [new_row]
+                    message = f"Replaced active registration with {selected_id} version {selected_version}. Previous registration history remains in the audit trail."
+                elif role == "additional":
+                    active_rows.append(new_row)
+                    message = f"Added additional agreement link to {selected_id} version {selected_version}. Existing primary registration remains active."
+                else:
+                    active_rows.append(new_row)
+                    active_primary_rows[:] = [new_row]
+                    message = f"Registered notebook to {selected_id} version {selected_version}."
+                if registration_status is not None:
+                    registration_status.value = _html_escape(message)
+
+            register_button.on_click(_register)
+            selector.observe(lambda change: _refresh_registration_status() if change.get("name") == "value" else None, names="value")
+            _refresh_registration_status()
+            selector.registration_status = registration_status
+            selector.registration_action = registration_action
+            selector.register_button = register_button
+            selector.registration_output = registration_output
+            selector.container = widgets.VBox([selector_parts["container"], registration_status, registration_action, register_button, registration_output])
+        else:
+            selector.container = selector_parts["container"]
+        ip.display(selector.container)
+        return selector
+    ```
 
 <details class="reference-metadata-details">
-<summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
+<summary>Machine-readable metadata / metadata details</summary>
 
 These generated fields are for automation, AI agents, maintainers, and doc tooling. Skip this block when reading the docs normally.
 
@@ -1161,7 +1193,18 @@ Not documented yet
 - Signature:
 
 ```python
-def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None=None, *, spark_session: Any=None, register_notebook: bool=False, notebook_type: str | None=None, environment_name: str | None=None, dataset_name: str | None=None, table_name: str | None=None, topic: str | None=None, pipeline_name: str | None=None) -> Any
+def widget_select_agreement(
+    agreement_rows_or_config: Any,
+    env_name: str | None=None,
+    spark_session: Any=None,
+    register_notebook: bool=False,
+    notebook_type: str | None=None,
+    environment_name: str | None=None,
+    dataset_name: str | None=None,
+    table_name: str | None=None,
+    topic: str | None=None,
+    pipeline_name: str | None=None,
+) -> Any:
 ```
 
 ### Internal relationship graph
@@ -1174,6 +1217,26 @@ def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None=
 ### Internal implementation summary
 
 - Internal helper count: 22
-- Grouped helper summary and optional source snippets are rendered in the page-level Internal implementation summary section.
+- Grouped helper summary and optional source snippets are rendered in the page-level Implementation details section.
 
 </details>
+
+## Source link
+
+<div class="reference-source-card" markdown="1">
+**Source**
+
+`fabricops_kit/data_agreement.py:773`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L773-L997">View on GitHub</a>
+</div>
+
+## Glossary
+
+- **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
+
+See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
+
+## See also
+
+- [Notebook Templates](../../how-fabricops-works/notebook-templates.md)
