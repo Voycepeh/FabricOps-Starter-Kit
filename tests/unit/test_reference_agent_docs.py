@@ -542,7 +542,7 @@ def test_generated_public_callable_links_use_canonical_route() -> None:
     assert "/reference/callables/" not in combined
     assert "../callables/" not in combined
     combined_without_glossary_links = combined.replace("../../../reference/glossary/", "")
-    assert "api/reference/" in combined
+    assert "api/reference/" in combined_without_glossary_links
     assert "../api/reference/enforce_dq_rules/" in combined
     assert "../../reference/enforce_dq_rules/" in combined
     assert "api/modules/reference/" not in combined
