@@ -214,7 +214,7 @@ def test_setup_metadata_tables_creates_missing_tables_with_write_helper(monkeypa
     assert result["active_metadata_tables"] == list(schemas)
     assert [table for _, _, table, _ in writes] == list(schemas)
     assert all(target == "metadata" for _, target, _, _ in writes)
-    assert all(kwargs == {"mode": "ignore", "overwrite_schema": True} for *_, kwargs in writes)
+    assert all(kwargs == {"mode": "overwrite", "overwrite_schema": True} for *_, kwargs in writes)
     assert spark.created_dataframes == [([], schema.fieldNames()) for schema in schemas.values()]
 
 

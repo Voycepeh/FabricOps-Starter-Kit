@@ -104,8 +104,8 @@ No additional callable notes are documented.
         <h4>Other</h4>
         <p>Support lower-level implementation details that do not fit the main helper areas.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L497-L511"><code>_display_review_guidance</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L70-L71"><code>_value</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/49b66befe4534bc43d6bccbed2445ec23dd02d36/src/fabricops_kit/governance_review.py#L497-L511"><code>_display_review_guidance</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/49b66befe4534bc43d6bccbed2445ec23dd02d36/src/fabricops_kit/governance_review.py#L70-L71"><code>_value</code></a>
         </div>
       </section>
     </div>
@@ -116,7 +116,7 @@ No additional callable notes are documented.
 
             **`def _display_review_guidance(title: str, profile_rows: list[dict[str, Any]], instructions: str) -> list[dict[str, Any]]`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L497-L511)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/49b66befe4534bc43d6bccbed2445ec23dd02d36/src/fabricops_kit/governance_review.py#L497-L511)
 
             ```python
             def _display_review_guidance(title: str, profile_rows: list[dict[str, Any]], instructions: str) -> list[dict[str, Any]]:
@@ -138,7 +138,7 @@ No additional callable notes are documented.
 
             **`def _value(row: dict[str, Any], name: str, default: Any='') -> Any`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L70-L71)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/49b66befe4534bc43d6bccbed2445ec23dd02d36/src/fabricops_kit/governance_review.py#L70-L71)
 
             ```python
             def _value(row: dict[str, Any], name: str, default: Any = "") -> Any:
@@ -151,7 +151,7 @@ No additional callable notes are documented.
 
 `fabricops_kit/governance_review.py:514`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L514-L532">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/49b66befe4534bc43d6bccbed2445ec23dd02d36/src/fabricops_kit/governance_review.py#L514-L532">View on GitHub</a>
 </div>
 
 ??? example "Source code"
@@ -220,7 +220,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L514-L532">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L514-L532</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/49b66befe4534bc43d6bccbed2445ec23dd02d36/src/fabricops_kit/governance_review.py#L514-L532">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/49b66befe4534bc43d6bccbed2445ec23dd02d36/src/fabricops_kit/governance_review.py#L514-L532</a>
 - Start line: `514`
 - End line: `532`
 - Signature:
@@ -251,7 +251,7 @@ Not documented yet
 
 `fabricops_kit/governance_review.py:514`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L514-L532">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/49b66befe4534bc43d6bccbed2445ec23dd02d36/src/fabricops_kit/governance_review.py#L514-L532">View on GitHub</a>
 </div>
 
 ## Glossary

@@ -2069,23 +2069,6 @@
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
-    "fabricops_kit.fabric_input_output._current_database_matches": {
-      "qualified_name": "fabricops_kit.fabric_input_output._current_database_matches",
-      "short_name": "_current_database_matches",
-      "module": "fabric_input_output",
-      "callable": "_current_database_matches",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.fabric_input_output.read_lakehouse_table"
-      ],
-      "used_by_count": 1,
-      "used_in_templates": [],
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
     "fabricops_kit.fabric_input_output._get_spark": {
       "qualified_name": "fabricops_kit.fabric_input_output._get_spark",
       "short_name": "_get_spark",
@@ -2131,66 +2114,6 @@
       "short_name": "_normalize_table_name",
       "module": "fabric_input_output",
       "callable": "_normalize_table_name",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.fabric_input_output._registered_table_identifier",
-        "fabricops_kit.fabric_input_output.read_lakehouse_table",
-        "fabricops_kit.fabric_input_output.write_lakehouse_table"
-      ],
-      "used_by_count": 3,
-      "used_in_templates": [],
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.fabric_input_output._quote_identifier": {
-      "qualified_name": "fabricops_kit.fabric_input_output._quote_identifier",
-      "short_name": "_quote_identifier",
-      "module": "fabric_input_output",
-      "callable": "_quote_identifier",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.fabric_input_output._registered_table_identifier"
-      ],
-      "used_by_count": 1,
-      "used_in_templates": [],
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.fabric_input_output._registered_table_identifier": {
-      "qualified_name": "fabricops_kit.fabric_input_output._registered_table_identifier",
-      "short_name": "_registered_table_identifier",
-      "module": "fabric_input_output",
-      "callable": "_registered_table_identifier",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.fabric_input_output._normalize_table_name",
-        "fabricops_kit.fabric_input_output._quote_identifier"
-      ],
-      "calls_count": 2,
-      "used_by": [
-        "fabricops_kit.fabric_input_output.read_lakehouse_table",
-        "fabricops_kit.fabric_input_output.write_lakehouse_table"
-      ],
-      "used_by_count": 2,
-      "used_in_templates": [],
-      "internal_helpers_used": [
-        "fabricops_kit.fabric_input_output._normalize_table_name",
-        "fabricops_kit.fabric_input_output._quote_identifier"
-      ],
-      "internal_helper_count": 2
-    },
-    "fabricops_kit.fabric_input_output._uses_registered_metadata_table": {
-      "qualified_name": "fabricops_kit.fabric_input_output._uses_registered_metadata_table",
-      "short_name": "_uses_registered_metadata_table",
-      "module": "fabric_input_output",
-      "callable": "_uses_registered_metadata_table",
       "docs_url": null,
       "classification": "internal",
       "calls": [],
@@ -2291,13 +2214,10 @@
       "classification": "callable",
       "calls": [
         "fabricops_kit.config._get_store",
-        "fabricops_kit.fabric_input_output._current_database_matches",
         "fabricops_kit.fabric_input_output._get_spark",
-        "fabricops_kit.fabric_input_output._normalize_table_name",
-        "fabricops_kit.fabric_input_output._registered_table_identifier",
-        "fabricops_kit.fabric_input_output._uses_registered_metadata_table"
+        "fabricops_kit.fabric_input_output._normalize_table_name"
       ],
-      "calls_count": 6,
+      "calls_count": 3,
       "used_by": [
         "fabricops_kit.config._setup_metadata_table_registry",
         "fabricops_kit.config._validate_metadata_table_registration",
@@ -2319,13 +2239,10 @@
         "99_explore"
       ],
       "internal_helpers_used": [
-        "fabricops_kit.fabric_input_output._current_database_matches",
         "fabricops_kit.fabric_input_output._get_spark",
-        "fabricops_kit.fabric_input_output._normalize_table_name",
-        "fabricops_kit.fabric_input_output._registered_table_identifier",
-        "fabricops_kit.fabric_input_output._uses_registered_metadata_table"
+        "fabricops_kit.fabric_input_output._normalize_table_name"
       ],
-      "internal_helper_count": 5
+      "internal_helper_count": 2
     },
     "fabricops_kit.fabric_input_output.read_warehouse_table": {
       "qualified_name": "fabricops_kit.fabric_input_output.read_warehouse_table",
@@ -2360,11 +2277,9 @@
       "classification": "callable",
       "calls": [
         "fabricops_kit.config._get_store",
-        "fabricops_kit.fabric_input_output._normalize_table_name",
-        "fabricops_kit.fabric_input_output._registered_table_identifier",
-        "fabricops_kit.fabric_input_output._uses_registered_metadata_table"
+        "fabricops_kit.fabric_input_output._normalize_table_name"
       ],
-      "calls_count": 4,
+      "calls_count": 2,
       "used_by": [
         "fabricops_kit.config._setup_metadata_table_registry",
         "fabricops_kit.data_agreement._write_row",
@@ -2384,11 +2299,9 @@
         "99_explore"
       ],
       "internal_helpers_used": [
-        "fabricops_kit.fabric_input_output._normalize_table_name",
-        "fabricops_kit.fabric_input_output._registered_table_identifier",
-        "fabricops_kit.fabric_input_output._uses_registered_metadata_table"
+        "fabricops_kit.fabric_input_output._normalize_table_name"
       ],
-      "internal_helper_count": 3
+      "internal_helper_count": 1
     },
     "fabricops_kit.fabric_input_output.write_warehouse_table": {
       "qualified_name": "fabricops_kit.fabric_input_output.write_warehouse_table",
@@ -4901,7 +4814,7 @@
     },
     "fabric_input_output": {
       "callable_count": 7,
-      "internal_count": 8,
+      "internal_count": 4,
       "outbound_modules": [
         "config"
       ],

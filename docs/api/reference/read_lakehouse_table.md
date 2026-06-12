@@ -1,13 +1,13 @@
 # read_lakehouse_table
 
-Read a table from a configured Fabric lakehouse target.
+Read a Delta table from a configured Fabric lakehouse target by ABFSS path.
 
 <details class="reference-usage-details">
 <summary>Usage guidance</summary>
 
 **Use when:**
 
-- Use when notebook code needs a managed lakehouse table rather than a file path or warehouse SQL query.
+- Use when notebook code needs a managed lakehouse Delta table by ABFSS path rather than a file path, registered Spark table name, or warehouse SQL query.
 
 **Do not use when:**
 
@@ -15,7 +15,7 @@ Read a table from a configured Fabric lakehouse target.
 
 **Additional context:**
 
-Reads a Delta table from a configured Fabric lakehouse target using the environment routing supplied by 00_env_config.
+Reads a Delta table from {store.root}/Tables/{table} for the configured Fabric lakehouse target, including metadata, without requiring an attached default lakehouse.
 
 </details>
 
@@ -86,11 +86,8 @@ Raises configuration, Spark, or table-read errors when the target or table canno
 ### Calls
 
 - `fabricops_kit.config._get_store`
-- `fabricops_kit.fabric_input_output._current_database_matches`
 - `fabricops_kit.fabric_input_output._get_spark`
 - `fabricops_kit.fabric_input_output._normalize_table_name`
-- `fabricops_kit.fabric_input_output._registered_table_identifier`
-- `fabricops_kit.fabric_input_output._uses_registered_metadata_table`
 
 ## Implementation details
 
@@ -119,44 +116,29 @@ No additional callable notes are documented.
 
     ```text
     read_lakehouse_table(...)
-    ├── _current_database_matches(...)
     ├── _get_spark(...)
     ├── _get_store(...)
-    ├── _normalize_table_name(...)
-    ├── _registered_table_identifier(...)
-    │   ├── _normalize_table_name(...)
-    │   └── _quote_identifier(...)
-    └── _uses_registered_metadata_table(...)
+    └── _normalize_table_name(...)
     ```
 
-??? info "Internal helpers used: 7"
+??? info "Internal helpers used: 3"
 
-    This callable uses 7 internal helpers for metadata loading, fabric or spark access, and other.
+    This callable uses 3 internal helpers for metadata loading and fabric or spark access.
 
     <div class="reference-helper-groups">
       <section class="reference-helper-group">
         <h4>Metadata loading</h4>
         <p>Load and identify the metadata or table context needed by the callable.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L107-L115"><code>_current_database_matches</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L81-L90"><code>_normalize_table_name</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L97-L99"><code>_registered_table_identifier</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L102-L104"><code>_uses_registered_metadata_table</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/49b66befe4534bc43d6bccbed2445ec23dd02d36/src/fabricops_kit/fabric_input_output.py#L81-L90"><code>_normalize_table_name</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Fabric or Spark access</h4>
         <p>Access Fabric or Spark runtime services used by the implementation.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L125-L155"><code>_get_spark</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L627-L667"><code>_get_store</code></a>
-        </div>
-      </section>
-      <section class="reference-helper-group">
-        <h4>Other</h4>
-        <p>Support lower-level implementation details that do not fit the main helper areas.</p>
-        <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L93-L94"><code>_quote_identifier</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/49b66befe4534bc43d6bccbed2445ec23dd02d36/src/fabricops_kit/fabric_input_output.py#L100-L130"><code>_get_spark</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/49b66befe4534bc43d6bccbed2445ec23dd02d36/src/fabricops_kit/config.py#L627-L667"><code>_get_store</code></a>
         </div>
       </section>
     </div>
@@ -165,25 +147,9 @@ No additional callable notes are documented.
 
         ??? example "Metadata loading helpers"
 
-            **`def _current_database_matches(spark_obj: Any, store: FabricStore) -> bool`**
-
-            Source: [`src/fabricops_kit/fabric_input_output.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L107-L115)
-
-            ```python
-            def _current_database_matches(spark_obj: Any, store: FabricStore) -> bool:
-                catalog = getattr(spark_obj, "catalog", None)
-                current_database = getattr(catalog, "currentDatabase", None)
-                if not callable(current_database):
-                    return False
-                try:
-                    return str(current_database()).strip().lower() == store.name.strip().lower()
-                except Exception:
-                    return False
-            ```
-
             **`def _normalize_table_name(table: str) -> str`**
 
-            Source: [`src/fabricops_kit/fabric_input_output.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L81-L90)
+            Source: [`src/fabricops_kit/fabric_input_output.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/49b66befe4534bc43d6bccbed2445ec23dd02d36/src/fabricops_kit/fabric_input_output.py#L81-L90)
 
             ```python
             def _normalize_table_name(table: str) -> str:
@@ -198,31 +164,11 @@ No additional callable notes are documented.
                 return value
             ```
 
-            **`def _registered_table_identifier(store: FabricStore, table: str) -> str`**
-
-            Source: [`src/fabricops_kit/fabric_input_output.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L97-L99)
-
-            ```python
-            def _registered_table_identifier(store: FabricStore, table: str) -> str:
-                """Return a metadata lakehouse-qualified Spark table identifier."""
-                return f"{_quote_identifier(store.name)}.{_quote_identifier(_normalize_table_name(table))}"
-            ```
-
-            **`def _uses_registered_metadata_table(target: str) -> bool`**
-
-            Source: [`src/fabricops_kit/fabric_input_output.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L102-L104)
-
-            ```python
-            def _uses_registered_metadata_table(target: str) -> bool:
-                """Return whether a target should use Spark table registration."""
-                return str(target or "").strip().lower() == "metadata"
-            ```
-
         ??? example "Fabric or Spark access helpers"
 
             **`def _get_spark(spark_session=None)`**
 
-            Source: [`src/fabricops_kit/fabric_input_output.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L125-L155)
+            Source: [`src/fabricops_kit/fabric_input_output.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/49b66befe4534bc43d6bccbed2445ec23dd02d36/src/fabricops_kit/fabric_input_output.py#L100-L130)
 
             ```python
             def _get_spark(spark_session=None):
@@ -260,7 +206,7 @@ No additional callable notes are documented.
 
             **`def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L627-L667)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/49b66befe4534bc43d6bccbed2445ec23dd02d36/src/fabricops_kit/config.py#L627-L667)
 
             ```python
             def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any:
@@ -306,24 +252,13 @@ No additional callable notes are documented.
                 return paths[env][target]
             ```
 
-        ??? example "Other helpers"
-
-            **`def _quote_identifier(identifier: str) -> str`**
-
-            Source: [`src/fabricops_kit/fabric_input_output.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L93-L94)
-
-            ```python
-            def _quote_identifier(identifier: str) -> str:
-                return f"`{str(identifier).replace('`', '``')}`"
-            ```
-
 
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/fabric_input_output.py:171`
+`fabricops_kit/fabric_input_output.py:146`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L171-L224">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/49b66befe4534bc43d6bccbed2445ec23dd02d36/src/fabricops_kit/fabric_input_output.py#L146-L192">View on GitHub</a>
 </div>
 
 ??? example "Source code"
@@ -332,9 +267,11 @@ No additional callable notes are documented.
     def read_lakehouse_table(config, env, target, table, spark_session=None):
         """Read a Delta table from a Fabric lakehouse.
 
-        This reads from the lakehouse `Tables/` area using the ABFSS root stored in
-        a `FabricStore`. In the notebook lifecycle, call this near the start of the
-        Source or Unified step when loading Delta-backed source datasets.
+        This reads from the lakehouse `Tables/` area by loading the ABFSS path from
+        the configured `FabricStore` root. It does not use registered Spark table
+        names, partial namespaces, or the current/default lakehouse context. In the
+        notebook lifecycle, call this near the start of the Source or Unified step
+        when loading Delta-backed source datasets.
 
         Parameters
         ----------
@@ -372,15 +309,6 @@ No additional callable notes are documented.
         table_name = _normalize_table_name(table)
 
         spark_obj = _get_spark(spark_session)
-        if _uses_registered_metadata_table(target):
-            try:
-                return spark_obj.table(_registered_table_identifier(store, table_name))
-            except Exception:
-                if _current_database_matches(spark_obj, store):
-                    try:
-                        return spark_obj.table(table_name)
-                    except Exception:
-                        pass
         path = f"{store.root.rstrip('/')}/Tables/{table_name}"
         return spark_obj.read.format("delta").load(path)
     ```
@@ -398,15 +326,15 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `fabric_input_output`
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- Source line: `171`
+- Source line: `146`
 - Inbound references count: 10
-- Outbound references count: 6
+- Outbound references count: 3
 - Used in templates: 00_env_config, 01_agreement, 02_pipeline, 03_governance, 99_explore
 - Glossary terms: source table, metadata lakehouse
 
 ### AI implementation contract
 
-- **required_context:** Requires the FrameworkConfig or compatible CONFIG from 00_env_config plus the intended env name; never hardcode Fabric workspace or item identifiers.
+- **required_context:** Requires the FrameworkConfig or compatible CONFIG from 00_env_config plus the intended env name; loads {store.root}/Tables/{table} and never uses registered Spark table names, partial namespaces, or the current/default lakehouse.
 - **inputs:** config, env, target, table, optional schema, verbose flag, and spark_session.
 - **output:** Spark DataFrame loaded from the configured lakehouse table.
 - **side_effects:** Reads from a lakehouse table; it does not write metadata, tables, or files.
@@ -429,18 +357,15 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 ### Outbound references
 
 - `fabricops_kit.config._get_store`
-- `fabricops_kit.fabric_input_output._current_database_matches`
 - `fabricops_kit.fabric_input_output._get_spark`
 - `fabricops_kit.fabric_input_output._normalize_table_name`
-- `fabricops_kit.fabric_input_output._registered_table_identifier`
-- `fabricops_kit.fabric_input_output._uses_registered_metadata_table`
 
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L171-L224">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L171-L224</a>
-- Start line: `171`
-- End line: `224`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/49b66befe4534bc43d6bccbed2445ec23dd02d36/src/fabricops_kit/fabric_input_output.py#L146-L192">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/49b66befe4534bc43d6bccbed2445ec23dd02d36/src/fabricops_kit/fabric_input_output.py#L146-L192</a>
+- Start line: `146`
+- End line: `192`
 - Signature:
 
 ```python
@@ -458,7 +383,7 @@ def read_lakehouse_table(config, env, target, table, spark_session=None)
 
 ### Internal implementation summary
 
-- Internal helper count: 7
+- Internal helper count: 3
 - Grouped helper summary and optional source snippets are rendered in the page-level Implementation details section.
 
 </details>
@@ -468,9 +393,9 @@ def read_lakehouse_table(config, env, target, table, spark_session=None)
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/fabric_input_output.py:171`
+`fabricops_kit/fabric_input_output.py:146`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L171-L224">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/49b66befe4534bc43d6bccbed2445ec23dd02d36/src/fabricops_kit/fabric_input_output.py#L146-L192">View on GitHub</a>
 </div>
 
 ## Glossary

@@ -187,10 +187,10 @@ PUBLIC_SYMBOL_DOCS: list[PublicSymbolDocMetadata] = [{'kind': 'function',
   'returns': 'Setup result describing metadata table creation or validation status.',
   'raises': 'Raises configuration, Spark, or storage errors when metadata routing or table '
             'preparation fails.',
-  'side_effects': 'Creates or validates FabricOps metadata tables in the configured metadata '
-                  'lakehouse target.',
-  'fabric_context': 'Requires the metadata target from 00_env_config; metadata tables must be '
-                    'routed through CONFIG.path_config paths for the selected env.',
+  'side_effects': 'Creates or validates FabricOps metadata tables through configured metadata '
+                  'target ABFSS paths, not Spark partial namespaces.',
+  'fabric_context': 'Requires the metadata target from 00_env_config; metadata tables are created '
+                    'and validated through configured metadata target paths and do not require an attached default lakehouse.',
   'ai_verification': 'Verify metadata setup completes before recommending agreement, profiling, '
                      'lineage, stability, or governance workflows that persist evidence.',
   'preferred_example': 'setup_metadata_tables(\n    spark=spark,\n    config=CONFIG,\n    env="Sandbox",\n)',
@@ -267,11 +267,11 @@ PUBLIC_SYMBOL_DOCS: list[PublicSymbolDocMetadata] = [{'kind': 'function',
  {'kind': 'function',
   'module': 'fabric_input_output',
   'function_type': 'callable',
-  'summary_override': 'Read a table from a configured Fabric lakehouse target.',
+  'summary_override': 'Read a Delta table from a configured Fabric lakehouse target by ABFSS path.',
   'symbol_name': 'read_lakehouse_table',
   'template_notebook': '02_pipeline / optional 99_explore',
   'template_segment': 'Fabric IO',
-  'use_when': 'Use when reading a Delta table from a configured Fabric lakehouse target.',
+  'use_when': 'Use when reading a Delta table from a configured Fabric lakehouse target by ABFSS Tables path without an attached default lakehouse.',
   'do_not_use_when': 'Do not use for lakehouse Files CSV, Parquet, or Excel paths, or for '
                      'warehouse SQL tables.',
   'parameters': 'config, env, target, table, optional schema, verbose flag, and spark_session.',
@@ -280,7 +280,7 @@ PUBLIC_SYMBOL_DOCS: list[PublicSymbolDocMetadata] = [{'kind': 'function',
             'resolved/read.',
   'side_effects': 'Reads from a lakehouse table; it does not write metadata, tables, or files.',
   'fabric_context': 'Requires the FrameworkConfig or compatible CONFIG from 00_env_config plus the '
-                    'intended env name; never hardcode Fabric workspace or item identifiers.',
+                    'intended env name; loads {store.root}/Tables/{table} and never uses registered Spark table names, partial namespaces, or the current/default lakehouse.',
   'ai_verification': 'Verify the target/table name comes from CONFIG and check the returned '
                      'DataFrame schema or row count before downstream transformations.',
   'preferred_example': 'df = read_lakehouse_table(CONFIG, env="Sandbox", target="Source", '
@@ -292,21 +292,20 @@ PUBLIC_SYMBOL_DOCS: list[PublicSymbolDocMetadata] = [{'kind': 'function',
  {'kind': 'function',
   'module': 'fabric_input_output',
   'function_type': 'callable',
-  'summary_override': 'Write a DataFrame to a configured Fabric lakehouse target.',
+  'summary_override': 'Write a DataFrame to a configured Fabric lakehouse target by ABFSS path.',
   'symbol_name': 'write_lakehouse_table',
   'template_notebook': '02_pipeline',
   'template_segment': 'Fabric IO',
-  'use_when': 'Use when publishing a Spark DataFrame to a configured Fabric lakehouse table.',
-  'do_not_use_when': 'Do not use for metadata evidence tables unless the helper explicitly routes '
-                     'metadata, and do not use for warehouse tables.',
+  'use_when': 'Use when publishing a Spark DataFrame to a configured Fabric lakehouse Delta table by ABFSS Tables path without an attached default lakehouse.',
+  'do_not_use_when': 'Do not use for warehouse tables; metadata evidence tables are supported through the configured metadata lakehouse target.',
   'parameters': 'df, config, env, target, table, optional schema, mode, and partitioning/write '
                 'options.',
   'returns': 'None; the DataFrame is written to the configured lakehouse table.',
   'raises': 'Raises configuration, Spark, or write errors when the target cannot be resolved or '
             'the write fails.',
-  'side_effects': 'Writes data to a Fabric lakehouse table using the selected write mode.',
+  'side_effects': 'Writes data to a Fabric lakehouse Delta table by saving to {store.root}/Tables/{table} using the selected write mode.',
   'fabric_context': 'Requires the FrameworkConfig or compatible CONFIG from 00_env_config plus the '
-                    'intended env name; never hardcode Fabric workspace or item identifiers.',
+                    'intended env name; saves {store.root}/Tables/{table} and never uses saveAsTable, registered Spark table names, partial namespaces, or the current/default lakehouse.',
   'ai_verification': 'Verify upstream guardrails passed, confirm target routing from CONFIG, and '
                      'check the intended write mode before generating code that calls this helper.',
   'preferred_example': 'write_lakehouse_table(curated_df, CONFIG, env="Sandbox", target="Unified", '
@@ -770,11 +769,11 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL: dict[str, dict[str, object]] = {
         "common_failure_causes": ["The environment name is not present in CONFIG.", "Required targets are missing from path configuration.", "Fabric runtime metadata is unavailable and no local fallback was provided.", "Configured lakehouse or warehouse targets cannot be resolved."],
     },
     "setup_metadata_tables": {
-        "expanded_purpose": "Prepares the FabricOps metadata tables used by agreement, profiling, governance, lineage, and pipeline evidence workflows.",
+        "expanded_purpose": "Prepares FabricOps metadata tables through configured metadata target ABFSS paths, not Spark partial namespaces or an attached default lakehouse.",
         "when_to_use": "Use after setup_notebook in 00_env_config when bootstrapping or validating the metadata store for an environment.",
         "glossary_terms": ["metadata lakehouse", "catalogue evidence"],
         "return_interpretation": "The returned setup status tells you which metadata tables were created or validated and whether the environment is ready for workflows that write evidence.",
-        "common_failure_causes": ["The configured metadata lakehouse path is missing or invalid.", "Spark cannot create or inspect the metadata tables.", "The selected environment does not include metadata routing.", "The caller lacks permission to create or update metadata tables."],
+        "common_failure_causes": ["The configured metadata lakehouse ABFSS path is missing or invalid.", "Spark cannot create or inspect metadata tables through the configured ABFSS paths.", "The selected environment does not include metadata routing.", "The caller lacks permission to create or update metadata tables."],
     },
     "widget_render_data_steward": {
         "expanded_purpose": "Renders the data steward intake widget so a notebook user can capture steward contact and ownership details for an agreement workflow.",
@@ -812,15 +811,15 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL: dict[str, dict[str, object]] = {
         "common_failure_causes": ["widget_select_agreement has not been run.", "The user has not selected an agreement.", "Notebook state was reset.", "The selected row is no longer present in metadata."],
     },
     "read_lakehouse_table": {
-        "expanded_purpose": "Reads a Delta table from a configured Fabric lakehouse target using the environment routing supplied by 00_env_config.",
-        "when_to_use": "Use when notebook code needs a managed lakehouse table rather than a file path or warehouse SQL query.",
+        "expanded_purpose": "Reads a Delta table from {store.root}/Tables/{table} for the configured Fabric lakehouse target, including metadata, without requiring an attached default lakehouse.",
+        "when_to_use": "Use when notebook code needs a managed lakehouse Delta table by ABFSS path rather than a file path, registered Spark table name, or warehouse SQL query.",
         "glossary_terms": ["source table", "metadata lakehouse"],
         "return_interpretation": "The returned DataFrame represents the resolved lakehouse table; validate row counts and schema before relying on it for guardrails or writes.",
         "common_failure_causes": ["The target or table name is misspelled.", "The selected environment does not define the requested lakehouse target.", "Spark cannot access the table.", "The caller lacks permission to read the lakehouse."],
     },
     "write_lakehouse_table": {
-        "expanded_purpose": "Writes a DataFrame to a configured Fabric lakehouse table while keeping target resolution centralized in environment configuration.",
-        "when_to_use": "Use for pipeline target writes after guardrails have passed and the destination is a lakehouse table.",
+        "expanded_purpose": "Writes a DataFrame to {store.root}/Tables/{table} for the configured Fabric lakehouse target, including metadata, without requiring an attached default lakehouse.",
+        "when_to_use": "Use for lakehouse or metadata table writes after guardrails have passed when the destination should be saved by ABFSS Delta path, not saveAsTable or a Spark namespace.",
         "glossary_terms": ["target table", "guardrail", "metadata lakehouse"],
         "return_interpretation": "The helper returns the write operation result from the underlying DataFrame writer when available; verify downstream table state for business validation.",
         "common_failure_causes": ["Guardrails were skipped before a target write.", "The target lakehouse is not configured for the environment.", "The write mode is unsupported for the destination.", "The caller lacks write permission or Spark cannot create the table."],
