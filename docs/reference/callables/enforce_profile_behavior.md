@@ -167,7 +167,7 @@ enforced by their own guardrails.
 ### Public callable source code
 
 - Source file path: `src/fabricops_kit/guardrails.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/guardrails.py#L639-L832">View enforce_profile_behavior on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/guardrails.py#L639-L832">View enforce_profile_behavior on GitHub</a>
 
 ```python
 def enforce_profile_behavior(
@@ -454,7 +454,7 @@ def enforce_profile_behavior(
 
             **`def _is_missing_table_error(exc: Exception) -> bool`**
 
-            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/guardrails.py#L834-L837)
+            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/guardrails.py#L834-L837)
 
             ```python
             def _is_missing_table_error(exc: Exception) -> bool:
@@ -467,7 +467,7 @@ def enforce_profile_behavior(
 
             **`def _normalize_profile(profile) -> dict | None`**
 
-            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/guardrails.py#L201-L269)
+            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/guardrails.py#L201-L269)
 
             ```python
             def _normalize_profile(profile) -> dict | None:
@@ -545,7 +545,7 @@ def enforce_profile_behavior(
 
             **`def _catalogue_value(row: dict, *names: str)`**
 
-            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/guardrails.py#L467-L478)
+            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/guardrails.py#L467-L478)
 
             ```python
             def _catalogue_value(row: dict, *names: str):
@@ -564,7 +564,7 @@ def enforce_profile_behavior(
 
             **`def _comparable_value(value)`**
 
-            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/guardrails.py#L485-L494)
+            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/guardrails.py#L485-L494)
 
             ```python
             def _comparable_value(value):
@@ -581,7 +581,7 @@ def enforce_profile_behavior(
 
             **`def _guardrail_exclude_columns(exclude_columns: list[str] | set[str] | tuple[str, ...] | None=None) -> set[str]`**
 
-            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/guardrails.py#L282-L286)
+            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/guardrails.py#L282-L286)
 
             ```python
             def _guardrail_exclude_columns(exclude_columns: list[str] | set[str] | tuple[str, ...] | None = None) -> set[str]:
@@ -593,7 +593,7 @@ def enforce_profile_behavior(
 
             **`def _is_greater_than(left, right) -> bool`**
 
-            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/guardrails.py#L507-L514)
+            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/guardrails.py#L507-L514)
 
             ```python
             def _is_greater_than(left, right) -> bool:
@@ -608,7 +608,7 @@ def enforce_profile_behavior(
 
             **`def _is_less_than(left, right) -> bool`**
 
-            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/guardrails.py#L497-L504)
+            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/guardrails.py#L497-L504)
 
             ```python
             def _is_less_than(left, right) -> bool:
@@ -623,7 +623,7 @@ def enforce_profile_behavior(
 
             **`def _latest_catalogue_behavior_profile_row(catalogue_df, *, dataset_name: str, table_name: str, profile_stage: str, load_behavior: str, watermark_column: str | None=None, exclude_run_id: str | None=None) -> dict | None`**
 
-            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/guardrails.py#L527-L636)
+            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/guardrails.py#L527-L636)
 
             ```python
             def _latest_catalogue_behavior_profile_row(
@@ -740,7 +740,7 @@ def enforce_profile_behavior(
 
             **`def _profile_row_count(profile) -> int | None`**
 
-            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/guardrails.py#L294-L306)
+            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/guardrails.py#L294-L306)
 
             ```python
             def _profile_row_count(profile) -> int | None:
@@ -760,7 +760,7 @@ def enforce_profile_behavior(
 
             **`def _profile_watermark_bounds(profile, watermark_column: str | None) -> tuple[str, str]`**
 
-            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/guardrails.py#L517-L524)
+            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/guardrails.py#L517-L524)
 
             ```python
             def _profile_watermark_bounds(profile, watermark_column: str | None) -> tuple[str, str]:
@@ -775,7 +775,7 @@ def enforce_profile_behavior(
 
             **`def _row_to_dict(row) -> dict`**
 
-            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/guardrails.py#L272-L279)
+            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/guardrails.py#L272-L279)
 
             ```python
             def _row_to_dict(row) -> dict:
@@ -790,7 +790,7 @@ def enforce_profile_behavior(
 
             **`def _string_value(value) -> str`**
 
-            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/guardrails.py#L481-L482)
+            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/guardrails.py#L481-L482)
 
             ```python
             def _string_value(value) -> str:
@@ -845,7 +845,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/guardrails.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/guardrails.py#L639-L832">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/guardrails.py#L639-L832</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/guardrails.py#L639-L832">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/guardrails.py#L639-L832</a>
 - Start line: `639`
 - End line: `832`
 - Signature:

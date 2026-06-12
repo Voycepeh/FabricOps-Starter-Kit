@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 8</span><span class="reference-chip">Internal helpers: 47</span><span class="reference-chip">Outbound: 4</span><span class="reference-chip">Inbound: 2</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 8</span><span class="reference-chip">Internal helpers: 46</span><span class="reference-chip">Outbound: 4</span><span class="reference-chip">Inbound: 2</span></div>
 
 ## Module purpose
 
@@ -40,7 +40,7 @@ Owns table-scoped 03_governance catalogue selection, business context review, DQ
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>47</td>
+      <td>46</td>
     </tr>
     <tr>
       <td>Inbound module count</td>
@@ -357,10 +357,6 @@ Owns table-scoped 03_governance catalogue selection, business context review, DQ
       <td>—</td>
     </tr>
     <tr>
-      <td><code>_setup_governance_metadata_tables</code></td>
-      <td>—</td>
-    </tr>
-    <tr>
       <td><code>_spark_sql_helpers</code></td>
       <td>—</td>
     </tr>
@@ -569,11 +565,6 @@ Owns table-scoped 03_governance catalogue selection, business context review, DQ
 <span class="reference-chip"><code>_schema_field_names</code></span>
 </li>
 <li>
-<span class="reference-chip"><code>_setup_governance_metadata_tables</code></span>
- <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_coerce_rows</code></span>, <span class="reference-chip"><code>_get_governance_metadata_schemas</code></span>, <span class="reference-chip"><code>_is_table_not_found_error</code></span>, <span class="reference-chip"><code>_schema_field_names</code></span>
-</li>
-<li>
 <span class="reference-chip"><code>_spark_sql_helpers</code></span>
 </li>
 <li>
@@ -605,7 +596,7 @@ Owns table-scoped 03_governance catalogue selection, business context review, DQ
 ### External callers
 
 **config**
-<a class="reference-chip" href="../config/#_get_active_metadata_tables"><code>_get_active_metadata_tables</code></a>, <a class="reference-chip" href="../../reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a>
+<a class="reference-chip" href="../config/#_get_active_metadata_tables"><code>_get_active_metadata_tables</code></a>, <a class="reference-chip" href="../config/#_get_metadata_table_schema_registry"><code>_get_metadata_table_schema_registry</code></a>, <a class="reference-chip" href="../config/#_setup_metadata_table_registry"><code>_setup_metadata_table_registry</code></a>, <a class="reference-chip" href="../../reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a>
 
 **pipeline**
 <a class="reference-chip" href="../../reference/run_table_guardrails/"><code>run_table_guardrails</code></a>

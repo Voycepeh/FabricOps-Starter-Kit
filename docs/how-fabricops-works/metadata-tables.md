@@ -2,9 +2,9 @@
 
 FabricOps metadata tables live in the Governance workspace `metadata_lakehouse`. They coordinate the notebook workflow and keep metadata evidence available for review, support, and visibility.
 
-`00_env_config` creates every active metadata table on first run and validates the expected schemas on later runs. The active setup-managed registry is source-driven and currently contains **11 registered Lakehouse Delta tables**. `METADATA_DATA_ACCESS` remains documented as optional access-capture metadata, but it is not created by the standard setup until an access-capture workflow enables it. Most users should not create or edit these schemas by hand.
+`00_env_config` creates the current 11 active metadata tables on first run and validates the expected schemas on later runs. It creates missing metadata tables by building empty Spark DataFrames from the known schemas and writing them through the configured `metadata` lakehouse target; the notebook does **not** need a default lakehouse attachment for metadata setup. `METADATA_DATA_ACCESS` remains documented as optional access-capture metadata, but it is not created by the standard setup until an access-capture workflow enables it. Most users should not create or edit these schemas by hand.
 
-These objects should appear in Spark `SHOW TABLES` for the configured metadata lakehouse. A healthy metadata table is rooted directly at `Tables/<metadata_table>/_delta_log`; it should not be created as a nested path such as `Tables/<metadata_table>/Unidentified/_delta_log`. If you find an older nested folder, review and migrate the data manually if needed. FabricOps does not delete or migrate user data automatically.
+A healthy metadata table is rooted directly at `Tables/<metadata_table>/_delta_log`; it should not be created as a nested path such as `Tables/<metadata_table>/Unidentified/_delta_log`. FabricOps does not automatically migrate older or malformed metadata tables. If schema validation reports missing columns or you find an older nested folder, recreate the affected table or manually migrate the data before rerunning setup. If you choose to inspect the metadata lakehouse catalog manually, run catalog checks against the configured metadata lakehouse rather than relying on a notebook default lakehouse.
 
 All workflow notebooks read and write metadata through the configured metadata route:
 

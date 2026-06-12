@@ -137,7 +137,7 @@ complete datasets to the driver.
 ### Public callable source code
 
 - Source file path: `src/fabricops_kit/data_profiling.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/data_profiling.py#L225-L345">View profile_dataframe on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/data_profiling.py#L225-L345">View profile_dataframe on GitHub</a>
 
 ```python
 def profile_dataframe(
@@ -331,7 +331,7 @@ def profile_dataframe(
 
             **`def _audit_timestamp_expr(config: Any=None, timezone_name: str | None=None)`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/config.py#L78-L83)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/config.py#L78-L83)
 
             ```python
             def _audit_timestamp_expr(config: Any = None, timezone_name: str | None = None):
@@ -344,7 +344,7 @@ def profile_dataframe(
 
             **`def _get_audit_timezone(config: Any=None, timezone_name: str | None=None) -> str`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/config.py#L61-L66)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/config.py#L61-L66)
 
             ```python
             def _get_audit_timezone(config: Any = None, timezone_name: str | None = None) -> str:
@@ -357,7 +357,7 @@ def profile_dataframe(
 
             **`def _validate_audit_timezone(timezone_name: str | None) -> str`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/config.py#L27-L58)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/config.py#L27-L58)
 
             ```python
             def _validate_audit_timezone(timezone_name: str | None) -> str:
@@ -398,7 +398,7 @@ def profile_dataframe(
 
             **`def _get_profiled_columns(df, exclude_columns: list[str] | set[str] | None=None) -> list[str]`**
 
-            Source: [`src/fabricops_kit/data_profiling.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/data_profiling.py#L59-L81)
+            Source: [`src/fabricops_kit/data_profiling.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/data_profiling.py#L59-L81)
 
             ```python
             def _get_profiled_columns(df, exclude_columns: list[str] | set[str] | None = None) -> list[str]:
@@ -430,7 +430,7 @@ def profile_dataframe(
 
             **`def _build_distribution_summaries(df, eligible_columns: list[str], dtype_map: dict[str, str], *, include_distributions: bool, distribution_columns: list[str] | set[str] | tuple[str, ...] | None, distribution_bin_edges: dict[str, list[float]] | None, categorical_categories: dict[str, list[str]] | None, categorical_top_n: int) -> dict[str, tuple[str, dict[str, Any]]]`**
 
-            Source: [`src/fabricops_kit/data_profiling.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/data_profiling.py#L192-L222)
+            Source: [`src/fabricops_kit/data_profiling.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/data_profiling.py#L192-L222)
 
             ```python
             def _build_distribution_summaries(
@@ -470,7 +470,7 @@ def profile_dataframe(
 
             **`def _is_min_max_supported_type(data_type: str) -> bool`**
 
-            Source: [`src/fabricops_kit/data_profiling.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/data_profiling.py#L84-L104)
+            Source: [`src/fabricops_kit/data_profiling.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/data_profiling.py#L84-L104)
 
             ```python
             def _is_min_max_supported_type(data_type: str) -> bool:
@@ -500,7 +500,7 @@ def profile_dataframe(
 
             **`def _build_categorical_distribution(df, column_name: str, *, top_n: int=20, categories: list[str] | set[str] | tuple[str, ...] | None=None) -> dict[str, Any] | None`**
 
-            Source: [`src/fabricops_kit/data_profiling.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/data_profiling.py#L152-L189)
+            Source: [`src/fabricops_kit/data_profiling.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/data_profiling.py#L152-L189)
 
             ```python
             def _build_categorical_distribution(df, column_name: str, *, top_n: int = 20, categories: list[str] | set[str] | tuple[str, ...] | None = None) -> dict[str, Any] | None:
@@ -545,7 +545,7 @@ def profile_dataframe(
 
             **`def _build_numeric_distribution(df, column_name: str, edges: list[float]) -> dict[str, list[float] | list[int]] | None`**
 
-            Source: [`src/fabricops_kit/data_profiling.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/data_profiling.py#L120-L149)
+            Source: [`src/fabricops_kit/data_profiling.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/data_profiling.py#L120-L149)
 
             ```python
             def _build_numeric_distribution(df, column_name: str, edges: list[float]) -> dict[str, list[float] | list[int]] | None:
@@ -582,7 +582,7 @@ def profile_dataframe(
 
             **`def _numeric_bin_edges(df, column_name: str, *, bin_count: int=10) -> list[float]`**
 
-            Source: [`src/fabricops_kit/data_profiling.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/data_profiling.py#L107-L117)
+            Source: [`src/fabricops_kit/data_profiling.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/data_profiling.py#L107-L117)
 
             ```python
             def _numeric_bin_edges(df, column_name: str, *, bin_count: int = 10) -> list[float]:
@@ -642,7 +642,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/data_profiling.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/data_profiling.py#L225-L345">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/data_profiling.py#L225-L345</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/data_profiling.py#L225-L345">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/data_profiling.py#L225-L345</a>
 - Start line: `225`
 - End line: `345`
 - Signature:

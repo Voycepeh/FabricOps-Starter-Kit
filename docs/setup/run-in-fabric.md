@@ -19,6 +19,6 @@ Next read: [Setup / Create Wheel](create-wheel.md), [Start](../quick-start.md), 
 
 ## First-run verification
 
-- Run `00_env_config` and confirm metadata table validation passes. The active setup registry currently contains 11 registered Lakehouse Delta tables; `METADATA_DATA_ACCESS` is optional access-capture metadata and is not created by the standard setup.
-- In the metadata lakehouse, run `SHOW TABLES` and confirm every active metadata table appears as a registered table.
+- Run `00_env_config` and confirm metadata table validation passes. The active setup registry contains the current 11 Lakehouse Delta metadata tables; `METADATA_DATA_ACCESS` is optional access-capture metadata and is not created by the standard setup. Metadata setup writes missing tables to the configured `metadata` lakehouse target and does not require a default lakehouse attachment.
+- If schema validation reports missing columns, recreate or manually migrate the affected metadata table; setup does not automatically migrate older or malformed schemas. If you inspect the metadata lakehouse catalog manually, run the check against the configured metadata lakehouse target and confirm every active metadata table appears as a registered table.
 - Execute a minimal `01_agreement` → `02_pipeline` → `03_governance` path to verify end-to-end metadata writes. Use `99_explore` only when optional discovery or troubleshooting is needed.
