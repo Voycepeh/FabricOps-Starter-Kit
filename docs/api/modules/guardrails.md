@@ -76,28 +76,28 @@ Owns schema, freshness, and profile behavior checks as pipeline guardrails durin
   </thead>
   <tbody>
     <tr>
-      <td><a href="../../reference/enforce_freshness/"><code>enforce_freshness</code></a></td>
+      <td><a href="../reference/enforce_freshness/"><code>enforce_freshness</code></a></td>
       <td>Callable</td>
       <td>function</td>
       <td>Enforce whether the latest data arrived within the configured freshness lag.</td>
       <td><code>_coerce_date</code> (internal), <code>_iso_date_value</code> (internal), <code>_max_column_value</code> (internal)</td>
     </tr>
     <tr>
-      <td><a href="../../reference/enforce_profile_behavior/"><code>enforce_profile_behavior</code></a></td>
+      <td><a href="../reference/enforce_profile_behavior/"><code>enforce_profile_behavior</code></a></td>
       <td>Callable</td>
       <td>function</td>
       <td>Enforce append, overwrite, or skip profile behavior against accepted catalogue profile evidence.</td>
       <td><code>_catalogue_value</code> (internal), <code>_guardrail_exclude_columns</code> (internal), <code>_is_greater_than</code> (internal), <code>_is_less_than</code> (internal), <code>_is_missing_table_error</code> (internal), <code>_latest_catalogue_behavior_profile_row</code> (internal), <code>_profile_row_count</code> (internal), <code>_profile_watermark_bounds</code> (internal), <code>_string_value</code> (internal)</td>
     </tr>
     <tr>
-      <td><a href="../../reference/stop_if_failed/"><code>stop_if_failed</code></a></td>
+      <td><a href="../reference/stop_if_failed/"><code>stop_if_failed</code></a></td>
       <td>Callable</td>
       <td>function</td>
       <td>Stop a notebook only when a schema, freshness, profile behavior, or DQ guardrail result blocks continuation.</td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/validate_schema/"><code>validate_schema</code></a></td>
+      <td><a href="../reference/validate_schema/"><code>validate_schema</code></a></td>
       <td>Callable</td>
       <td>function</td>
       <td>Validate a DataFrame schema using strict, allow-new-columns, or monitor-only presets.</td>
@@ -120,22 +120,22 @@ Owns schema, freshness, and profile behavior checks as pipeline guardrails durin
 <h6>Public callables</h6>
 <ul class="callable-relationship-rows">
 <li>
-<a class="reference-chip" href="../../reference/enforce_freshness/"><code>enforce_freshness</code></a>
+<a class="reference-chip" href="../reference/enforce_freshness/"><code>enforce_freshness</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_coerce_date</code></span>, <span class="reference-chip"><code>_iso_date_value</code></span>, <span class="reference-chip"><code>_max_column_value</code></span>
 </li>
 <li>
-<a class="reference-chip" href="../../reference/enforce_profile_behavior/"><code>enforce_profile_behavior</code></a>
+<a class="reference-chip" href="../reference/enforce_profile_behavior/"><code>enforce_profile_behavior</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_catalogue_value</code></span>, <span class="reference-chip"><code>_guardrail_exclude_columns</code></span>, <span class="reference-chip"><code>_is_greater_than</code></span>, <span class="reference-chip"><code>_is_less_than</code></span>, <span class="reference-chip"><code>_is_missing_table_error</code></span>, <span class="reference-chip"><code>_latest_catalogue_behavior_profile_row</code></span>, <span class="reference-chip"><code>_profile_row_count</code></span>, <span class="reference-chip"><code>_profile_watermark_bounds</code></span>, <span class="reference-chip"><code>_string_value</code></span>
 </li>
 <li>
-<a class="reference-chip" href="../../reference/stop_if_failed/"><code>stop_if_failed</code></a>
+<a class="reference-chip" href="../reference/stop_if_failed/"><code>stop_if_failed</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <span>None.</span>
 </li>
 <li>
-<a class="reference-chip" href="../../reference/validate_schema/"><code>validate_schema</code></a>
+<a class="reference-chip" href="../reference/validate_schema/"><code>validate_schema</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_actual_schema</code></span>, <span class="reference-chip"><code>_normalize_datatype</code></span>
 </li>
@@ -158,15 +158,15 @@ Owns schema, freshness, and profile behavior checks as pipeline guardrails durin
   <tbody>
     <tr>
       <td><code>_actual_schema</code></td>
-      <td><a href="../../reference/validate_schema/"><code>validate_schema</code></a></td>
+      <td><a href="../reference/validate_schema/"><code>validate_schema</code></a></td>
     </tr>
     <tr>
       <td><code>_catalogue_value</code></td>
-      <td><a href="../../reference/enforce_profile_behavior/"><code>enforce_profile_behavior</code></a></td>
+      <td><a href="../reference/enforce_profile_behavior/"><code>enforce_profile_behavior</code></a></td>
     </tr>
     <tr>
       <td><code>_coerce_date</code></td>
-      <td><a href="../../reference/enforce_freshness/"><code>enforce_freshness</code></a></td>
+      <td><a href="../reference/enforce_freshness/"><code>enforce_freshness</code></a></td>
     </tr>
     <tr>
       <td><code>_comparable_value</code></td>
@@ -174,11 +174,11 @@ Owns schema, freshness, and profile behavior checks as pipeline guardrails durin
     </tr>
     <tr>
       <td><code>_guardrail_exclude_columns</code></td>
-      <td><a href="../../reference/enforce_profile_behavior/"><code>enforce_profile_behavior</code></a></td>
+      <td><a href="../reference/enforce_profile_behavior/"><code>enforce_profile_behavior</code></a></td>
     </tr>
     <tr>
       <td><code>_is_greater_than</code></td>
-      <td><a href="../../reference/enforce_profile_behavior/"><code>enforce_profile_behavior</code></a></td>
+      <td><a href="../reference/enforce_profile_behavior/"><code>enforce_profile_behavior</code></a></td>
     </tr>
     <tr>
       <td><code>_is_guardrail_excluded_column</code></td>
@@ -186,27 +186,27 @@ Owns schema, freshness, and profile behavior checks as pipeline guardrails durin
     </tr>
     <tr>
       <td><code>_is_less_than</code></td>
-      <td><a href="../../reference/enforce_profile_behavior/"><code>enforce_profile_behavior</code></a></td>
+      <td><a href="../reference/enforce_profile_behavior/"><code>enforce_profile_behavior</code></a></td>
     </tr>
     <tr>
       <td><code>_is_missing_table_error</code></td>
-      <td><a href="../../reference/enforce_profile_behavior/"><code>enforce_profile_behavior</code></a></td>
+      <td><a href="../reference/enforce_profile_behavior/"><code>enforce_profile_behavior</code></a></td>
     </tr>
     <tr>
       <td><code>_iso_date_value</code></td>
-      <td><a href="../../reference/enforce_freshness/"><code>enforce_freshness</code></a></td>
+      <td><a href="../reference/enforce_freshness/"><code>enforce_freshness</code></a></td>
     </tr>
     <tr>
       <td><code>_latest_catalogue_behavior_profile_row</code></td>
-      <td><a href="../../reference/enforce_profile_behavior/"><code>enforce_profile_behavior</code></a></td>
+      <td><a href="../reference/enforce_profile_behavior/"><code>enforce_profile_behavior</code></a></td>
     </tr>
     <tr>
       <td><code>_max_column_value</code></td>
-      <td><a href="../../reference/enforce_freshness/"><code>enforce_freshness</code></a></td>
+      <td><a href="../reference/enforce_freshness/"><code>enforce_freshness</code></a></td>
     </tr>
     <tr>
       <td><code>_normalize_datatype</code></td>
-      <td><a href="../../reference/validate_schema/"><code>validate_schema</code></a></td>
+      <td><a href="../reference/validate_schema/"><code>validate_schema</code></a></td>
     </tr>
     <tr>
       <td><code>_normalize_profile</code></td>
@@ -214,11 +214,11 @@ Owns schema, freshness, and profile behavior checks as pipeline guardrails durin
     </tr>
     <tr>
       <td><code>_profile_row_count</code></td>
-      <td><a href="../../reference/enforce_profile_behavior/"><code>enforce_profile_behavior</code></a></td>
+      <td><a href="../reference/enforce_profile_behavior/"><code>enforce_profile_behavior</code></a></td>
     </tr>
     <tr>
       <td><code>_profile_watermark_bounds</code></td>
-      <td><a href="../../reference/enforce_profile_behavior/"><code>enforce_profile_behavior</code></a></td>
+      <td><a href="../reference/enforce_profile_behavior/"><code>enforce_profile_behavior</code></a></td>
     </tr>
     <tr>
       <td><code>_row_to_dict</code></td>
@@ -226,7 +226,7 @@ Owns schema, freshness, and profile behavior checks as pipeline guardrails durin
     </tr>
     <tr>
       <td><code>_string_value</code></td>
-      <td><a href="../../reference/enforce_profile_behavior/"><code>enforce_profile_behavior</code></a></td>
+      <td><a href="../reference/enforce_profile_behavior/"><code>enforce_profile_behavior</code></a></td>
     </tr>
   </tbody>
 </table>
@@ -310,12 +310,12 @@ Owns schema, freshness, and profile behavior checks as pipeline guardrails durin
 ### External callers
 
 **pipeline**
-<a class="reference-chip" href="../../reference/run_table_guardrails/"><code>run_table_guardrails</code></a>
+<a class="reference-chip" href="../reference/run_table_guardrails/"><code>run_table_guardrails</code></a>
 
 ### External callees
 
 **data_profiling**
-<a class="reference-chip" href="../../reference/profile_dataframe/"><code>profile_dataframe</code></a>
+<a class="reference-chip" href="../reference/profile_dataframe/"><code>profile_dataframe</code></a>
 
 **fabric_input_output**
-<a class="reference-chip" href="../../reference/read_lakehouse_table/"><code>read_lakehouse_table</code></a>
+<a class="reference-chip" href="../reference/read_lakehouse_table/"><code>read_lakehouse_table</code></a>

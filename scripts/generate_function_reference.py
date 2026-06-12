@@ -18,7 +18,8 @@ MODULE_DIR = ROOT / "docs" / "api" / "modules"
 MKDOCS_PATH = ROOT / "mkdocs.yml"
 DEPENDENCY_METADATA_PATH = ROOT / "docs" / "reference" / "dependency-metadata.json"
 CALL_GRAPH_PAGE_PATH = ROOT / "docs" / "reference" / "call-graph.md"
-CALLABLE_REFERENCE_DIR = ROOT / "docs" / "reference" / "callables"
+CALLABLE_REFERENCE_DIR = ROOT / "docs" / "api" / "reference"
+LEGACY_CALLABLE_REFERENCE_DIR = ROOT / "docs" / "reference" / "callables"
 INTERNAL_REFERENCE_DIR = ROOT / "docs" / "reference" / "internal"
 MANIFEST_PATH = ROOT / "docs" / "reference" / "manifest.json"
 AGENT_MANIFEST_PATH = ROOT / "docs" / "reference" / "agent-manifest.json"
@@ -524,11 +525,11 @@ def public_reference_link(
     if symbol not in docs_metadata:
         raise RuntimeError(f"Missing PUBLIC_SYMBOL_DOCS entry for exported symbol: {symbol}")
     if context == "module":
-        return f"../../reference/{symbol}/"
+        return f"../reference/{symbol}/"
     if context == "reference":
         return f"../api/reference/{symbol}/"
     if context == "notebook":
-        return f"../../api/reference/{symbol}/"
+        return f"../api/reference/{symbol}/"
     raise RuntimeError(f"Unknown link context: {context}")
 
 
@@ -1553,7 +1554,7 @@ def main() -> None:
             unique_symbols = sorted(set(segment["symbols"]), key=segment["symbols"].index)
             if not unique_symbols:
                 continue
-            chips = [function_chip(symbol_name, f"../callables/{symbol_name}/") for symbol_name in unique_symbols]
+            chips = [function_chip(symbol_name, f"../api/reference/{symbol_name}/") for symbol_name in unique_symbols]
             template_function_map.extend([
                 '<div class="template-function-row">',
                 f'<span class="template-function-segment">{html_escape(segment["title"])}</span>',
@@ -1638,7 +1639,7 @@ def main() -> None:
         [
             "## Find a function",
             "",
-            "Use the finder below to look up public callables from active v1 modules. For internal helper behavior, open the public callable page and expand Implementation details.",
+            "Use the finder below to look up public callables from active v1 modules. For internal helper behavior, open the public callable page and expand the Internal implementation summary.",
             "",
             '<div class="callable-finder" data-callable-finder>',
             '  <label class="callable-finder-label" for="callable-finder-input">Search functions</label>',
@@ -1736,8 +1737,13 @@ def main() -> None:
 
     generate_internal_pages = generate_internal_reference_pages()
     CALLABLE_REFERENCE_DIR.mkdir(parents=True, exist_ok=True)
+    LEGACY_CALLABLE_REFERENCE_DIR.mkdir(parents=True, exist_ok=True)
     INTERNAL_REFERENCE_DIR.mkdir(parents=True, exist_ok=True)
-    for generated_page in [*CALLABLE_REFERENCE_DIR.glob("*.md"), *INTERNAL_REFERENCE_DIR.glob("*.md")]:
+    for generated_page in [
+        *CALLABLE_REFERENCE_DIR.glob("*.md"),
+        *LEGACY_CALLABLE_REFERENCE_DIR.glob("*.md"),
+        *INTERNAL_REFERENCE_DIR.glob("*.md"),
+    ]:
         generated_page.unlink()
     agent_manifest: list[dict[str, Any]] = []
     function_manifest: list[dict[str, Any]] = []
@@ -1751,7 +1757,7 @@ def main() -> None:
         doc_sections = module_info.get("doc_sections", {}).get(short_name, {})
         signature = module_info.get("signatures", {}).get(short_name, "")
         summary = metadata.get("summary_override") or ""
-        docs_path = f"reference/{short_name}.md" if node["exported"] else (
+        docs_path = f"api/reference/{short_name}.md" if node["exported"] else (
             f"reference/internal/{module_name}_{short_name}.md" if generate_internal_pages else None
         )
         source_path = f"src/fabricops_kit/{module_name}.py"
@@ -2075,6 +2081,7 @@ def main() -> None:
             "source_start_line": source_start_line,
             "source_end_line": source_end_line,
             "source_url": source_ref,
+            "docs_path": docs_path,
             "summary": purpose,
             "use_when": _documented_text(metadata.get("use_when"), metadata.get("purpose"), purpose) if node["exported"] else PLACEHOLDER,
             "do_not_use_when": _documented_text(metadata.get("do_not_use_when")),

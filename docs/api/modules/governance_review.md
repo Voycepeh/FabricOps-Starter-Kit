@@ -76,56 +76,56 @@ Owns table-scoped 03_governance catalogue selection, business context review, DQ
   </thead>
   <tbody>
     <tr>
-      <td><a href="../../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a></td>
+      <td><a href="../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a></td>
       <td>Callable</td>
       <td>function</td>
       <td>Enforce approved active DQ rules as a target-write guardrail without filtering rows.</td>
       <td><code>_dq_failed_row_count</code> (internal), <code>_dq_summary</code> (internal), <code>_dq_tagged_dataframe</code> (internal), <code>_load_active_dq_rules</code> (internal), <code>_run_dq_guardrail_checks</code> (internal), <code>_summarize_dq_guardrail</code> (internal)</td>
     </tr>
     <tr>
-      <td><a href="../../reference/get_selected_catalogue_table/"><code>get_selected_catalogue_table</code></a></td>
+      <td><a href="../reference/get_selected_catalogue_table/"><code>get_selected_catalogue_table</code></a></td>
       <td>Callable</td>
       <td>function</td>
       <td>Return the table selected by widget_select_catalogue_table.</td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/load_catalogue_profile_rows/"><code>load_catalogue_profile_rows</code></a></td>
+      <td><a href="../reference/load_catalogue_profile_rows/"><code>load_catalogue_profile_rows</code></a></td>
       <td>Callable</td>
       <td>function</td>
       <td>Load column profile rows for the selected catalogue table.</td>
       <td><code>_coerce_rows</code> (internal), <code>_is_success</code> (internal), <code>_value</code> (internal)</td>
     </tr>
     <tr>
-      <td><a href="../../reference/record_table_governance/"><code>record_table_governance</code></a></td>
+      <td><a href="../reference/record_table_governance/"><code>record_table_governance</code></a></td>
       <td>Callable</td>
       <td>function</td>
       <td>Persist approved table-governance context, DQ-rule, and classification evidence in one v1 commit action.</td>
       <td><code>_build_classification_records</code> (internal), <code>_build_column_context_records</code> (internal), <code>_build_dq_rule_records</code> (internal), <code>_review_governance_evidence</code> (internal)</td>
     </tr>
     <tr>
-      <td><a href="../../reference/widget_review_column_classification/"><code>widget_review_column_classification</code></a></td>
+      <td><a href="../reference/widget_review_column_classification/"><code>widget_review_column_classification</code></a></td>
       <td>Callable</td>
       <td>function</td>
       <td>Render standalone sensitivity and PII classification review guidance for selected profile rows.</td>
       <td><code>_display_review_guidance</code> (internal)</td>
     </tr>
     <tr>
-      <td><a href="../../reference/widget_review_column_context/"><code>widget_review_column_context</code></a></td>
+      <td><a href="../reference/widget_review_column_context/"><code>widget_review_column_context</code></a></td>
       <td>Callable</td>
       <td>function</td>
       <td>Render standalone business-context review guidance for selected profile rows.</td>
       <td><code>_display_review_guidance</code> (internal)</td>
     </tr>
     <tr>
-      <td><a href="../../reference/widget_review_dq_rules/"><code>widget_review_dq_rules</code></a></td>
+      <td><a href="../reference/widget_review_dq_rules/"><code>widget_review_dq_rules</code></a></td>
       <td>Callable</td>
       <td>function</td>
       <td>Render standalone DQ-rule review guidance for selected profile rows.</td>
       <td><code>_canonical_dq_rule_type</code> (internal), <code>_dq_parameter_fields_for_rule_type</code> (internal), <code>_dq_rule_display_rows</code> (internal), <code>_draft_dq_rules</code> (internal), <code>_validate_dq_rules</code> (internal), <code>_value</code> (internal)</td>
     </tr>
     <tr>
-      <td><a href="../../reference/widget_select_catalogue_table/"><code>widget_select_catalogue_table</code></a></td>
+      <td><a href="../reference/widget_select_catalogue_table/"><code>widget_select_catalogue_table</code></a></td>
       <td>Callable</td>
       <td>function</td>
       <td>Render a searchable selector for latest successful catalogue profiles.</td>
@@ -148,42 +148,42 @@ Owns table-scoped 03_governance catalogue selection, business context review, DQ
 <h6>Public callables</h6>
 <ul class="callable-relationship-rows">
 <li>
-<a class="reference-chip" href="../../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a>
+<a class="reference-chip" href="../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_dq_failed_row_count</code></span>, <span class="reference-chip"><code>_dq_summary</code></span>, <span class="reference-chip"><code>_dq_tagged_dataframe</code></span>, <span class="reference-chip"><code>_load_active_dq_rules</code></span>, <span class="reference-chip"><code>_run_dq_guardrail_checks</code></span>, <span class="reference-chip"><code>_summarize_dq_guardrail</code></span>
 </li>
 <li>
-<a class="reference-chip" href="../../reference/get_selected_catalogue_table/"><code>get_selected_catalogue_table</code></a>
+<a class="reference-chip" href="../reference/get_selected_catalogue_table/"><code>get_selected_catalogue_table</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <span>None.</span>
 </li>
 <li>
-<a class="reference-chip" href="../../reference/load_catalogue_profile_rows/"><code>load_catalogue_profile_rows</code></a>
+<a class="reference-chip" href="../reference/load_catalogue_profile_rows/"><code>load_catalogue_profile_rows</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_coerce_rows</code></span>, <span class="reference-chip"><code>_is_success</code></span>, <span class="reference-chip"><code>_value</code></span>
 </li>
 <li>
-<a class="reference-chip" href="../../reference/record_table_governance/"><code>record_table_governance</code></a>
+<a class="reference-chip" href="../reference/record_table_governance/"><code>record_table_governance</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_build_classification_records</code></span>, <span class="reference-chip"><code>_build_column_context_records</code></span>, <span class="reference-chip"><code>_build_dq_rule_records</code></span>, <span class="reference-chip"><code>_review_governance_evidence</code></span>
 </li>
 <li>
-<a class="reference-chip" href="../../reference/widget_review_column_classification/"><code>widget_review_column_classification</code></a>
+<a class="reference-chip" href="../reference/widget_review_column_classification/"><code>widget_review_column_classification</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_display_review_guidance</code></span>
 </li>
 <li>
-<a class="reference-chip" href="../../reference/widget_review_column_context/"><code>widget_review_column_context</code></a>
+<a class="reference-chip" href="../reference/widget_review_column_context/"><code>widget_review_column_context</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_display_review_guidance</code></span>
 </li>
 <li>
-<a class="reference-chip" href="../../reference/widget_review_dq_rules/"><code>widget_review_dq_rules</code></a>
+<a class="reference-chip" href="../reference/widget_review_dq_rules/"><code>widget_review_dq_rules</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_canonical_dq_rule_type</code></span>, <span class="reference-chip"><code>_dq_parameter_fields_for_rule_type</code></span>, <span class="reference-chip"><code>_dq_rule_display_rows</code></span>, <span class="reference-chip"><code>_draft_dq_rules</code></span>, <span class="reference-chip"><code>_validate_dq_rules</code></span>, <span class="reference-chip"><code>_value</code></span>
 </li>
 <li>
-<a class="reference-chip" href="../../reference/widget_select_catalogue_table/"><code>widget_select_catalogue_table</code></a>
+<a class="reference-chip" href="../reference/widget_select_catalogue_table/"><code>widget_select_catalogue_table</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_catalogue_table_options</code></span>, <span class="reference-chip"><code>_coerce_rows</code></span>
 </li>
@@ -214,31 +214,31 @@ Owns table-scoped 03_governance catalogue selection, business context review, DQ
     </tr>
     <tr>
       <td><code>_build_classification_records</code></td>
-      <td><a href="../../reference/record_table_governance/"><code>record_table_governance</code></a></td>
+      <td><a href="../reference/record_table_governance/"><code>record_table_governance</code></a></td>
     </tr>
     <tr>
       <td><code>_build_column_context_records</code></td>
-      <td><a href="../../reference/record_table_governance/"><code>record_table_governance</code></a></td>
+      <td><a href="../reference/record_table_governance/"><code>record_table_governance</code></a></td>
     </tr>
     <tr>
       <td><code>_build_dq_rule_records</code></td>
-      <td><a href="../../reference/record_table_governance/"><code>record_table_governance</code></a></td>
+      <td><a href="../reference/record_table_governance/"><code>record_table_governance</code></a></td>
     </tr>
     <tr>
       <td><code>_canonical_dq_rule_type</code></td>
-      <td><a href="../../reference/widget_review_dq_rules/"><code>widget_review_dq_rules</code></a></td>
+      <td><a href="../reference/widget_review_dq_rules/"><code>widget_review_dq_rules</code></a></td>
     </tr>
     <tr>
       <td><code>_catalogue_table_options</code></td>
-      <td><a href="../../reference/widget_select_catalogue_table/"><code>widget_select_catalogue_table</code></a></td>
+      <td><a href="../reference/widget_select_catalogue_table/"><code>widget_select_catalogue_table</code></a></td>
     </tr>
     <tr>
       <td><code>_coerce_rows</code></td>
-      <td><a href="../../reference/load_catalogue_profile_rows/"><code>load_catalogue_profile_rows</code></a>, <a href="../../reference/widget_select_catalogue_table/"><code>widget_select_catalogue_table</code></a></td>
+      <td><a href="../reference/load_catalogue_profile_rows/"><code>load_catalogue_profile_rows</code></a>, <a href="../reference/widget_select_catalogue_table/"><code>widget_select_catalogue_table</code></a></td>
     </tr>
     <tr>
       <td><code>_display_review_guidance</code></td>
-      <td><a href="../../reference/widget_review_column_classification/"><code>widget_review_column_classification</code></a>, <a href="../../reference/widget_review_column_context/"><code>widget_review_column_context</code></a></td>
+      <td><a href="../reference/widget_review_column_classification/"><code>widget_review_column_classification</code></a>, <a href="../reference/widget_review_column_context/"><code>widget_review_column_context</code></a></td>
     </tr>
     <tr>
       <td><code>_dq_check_status</code></td>
@@ -250,15 +250,15 @@ Owns table-scoped 03_governance catalogue selection, business context review, DQ
     </tr>
     <tr>
       <td><code>_dq_failed_row_count</code></td>
-      <td><a href="../../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a></td>
+      <td><a href="../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a></td>
     </tr>
     <tr>
       <td><code>_dq_parameter_fields_for_rule_type</code></td>
-      <td><a href="../../reference/widget_review_dq_rules/"><code>widget_review_dq_rules</code></a></td>
+      <td><a href="../reference/widget_review_dq_rules/"><code>widget_review_dq_rules</code></a></td>
     </tr>
     <tr>
       <td><code>_dq_rule_display_rows</code></td>
-      <td><a href="../../reference/widget_review_dq_rules/"><code>widget_review_dq_rules</code></a></td>
+      <td><a href="../reference/widget_review_dq_rules/"><code>widget_review_dq_rules</code></a></td>
     </tr>
     <tr>
       <td><code>_dq_rule_parameter_payload</code></td>
@@ -270,11 +270,11 @@ Owns table-scoped 03_governance catalogue selection, business context review, DQ
     </tr>
     <tr>
       <td><code>_dq_summary</code></td>
-      <td><a href="../../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a></td>
+      <td><a href="../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a></td>
     </tr>
     <tr>
       <td><code>_dq_tagged_dataframe</code></td>
-      <td><a href="../../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a></td>
+      <td><a href="../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a></td>
     </tr>
     <tr>
       <td><code>_draft_business_context</code></td>
@@ -282,7 +282,7 @@ Owns table-scoped 03_governance catalogue selection, business context review, DQ
     </tr>
     <tr>
       <td><code>_draft_dq_rules</code></td>
-      <td><a href="../../reference/widget_review_dq_rules/"><code>widget_review_dq_rules</code></a></td>
+      <td><a href="../reference/widget_review_dq_rules/"><code>widget_review_dq_rules</code></a></td>
     </tr>
     <tr>
       <td><code>_draft_governance</code></td>
@@ -298,7 +298,7 @@ Owns table-scoped 03_governance catalogue selection, business context review, DQ
     </tr>
     <tr>
       <td><code>_is_success</code></td>
-      <td><a href="../../reference/load_catalogue_profile_rows/"><code>load_catalogue_profile_rows</code></a></td>
+      <td><a href="../reference/load_catalogue_profile_rows/"><code>load_catalogue_profile_rows</code></a></td>
     </tr>
     <tr>
       <td><code>_is_table_not_found_error</code></td>
@@ -318,7 +318,7 @@ Owns table-scoped 03_governance catalogue selection, business context review, DQ
     </tr>
     <tr>
       <td><code>_load_active_dq_rules</code></td>
-      <td><a href="../../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a></td>
+      <td><a href="../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a></td>
     </tr>
     <tr>
       <td><code>_parse_ai_dict_response</code></td>
@@ -338,11 +338,11 @@ Owns table-scoped 03_governance catalogue selection, business context review, DQ
     </tr>
     <tr>
       <td><code>_review_governance_evidence</code></td>
-      <td><a href="../../reference/record_table_governance/"><code>record_table_governance</code></a></td>
+      <td><a href="../reference/record_table_governance/"><code>record_table_governance</code></a></td>
     </tr>
     <tr>
       <td><code>_run_dq_guardrail_checks</code></td>
-      <td><a href="../../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a></td>
+      <td><a href="../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a></td>
     </tr>
     <tr>
       <td><code>_run_fabric_ai_drafting</code></td>
@@ -374,11 +374,11 @@ Owns table-scoped 03_governance catalogue selection, business context review, DQ
     </tr>
     <tr>
       <td><code>_summarize_dq_guardrail</code></td>
-      <td><a href="../../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a></td>
+      <td><a href="../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a></td>
     </tr>
     <tr>
       <td><code>_validate_dq_rules</code></td>
-      <td><a href="../../reference/widget_review_dq_rules/"><code>widget_review_dq_rules</code></a></td>
+      <td><a href="../reference/widget_review_dq_rules/"><code>widget_review_dq_rules</code></a></td>
     </tr>
     <tr>
       <td><code>_validate_schema_field_names</code></td>
@@ -386,7 +386,7 @@ Owns table-scoped 03_governance catalogue selection, business context review, DQ
     </tr>
     <tr>
       <td><code>_value</code></td>
-      <td><a href="../../reference/load_catalogue_profile_rows/"><code>load_catalogue_profile_rows</code></a>, <a href="../../reference/widget_review_dq_rules/"><code>widget_review_dq_rules</code></a></td>
+      <td><a href="../reference/load_catalogue_profile_rows/"><code>load_catalogue_profile_rows</code></a>, <a href="../reference/widget_review_dq_rules/"><code>widget_review_dq_rules</code></a></td>
     </tr>
   </tbody>
 </table>
@@ -546,7 +546,7 @@ Owns table-scoped 03_governance catalogue selection, business context review, DQ
 <li>
 <span class="reference-chip"><code>_review_governance_evidence</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_latest_row</code></span>, <span class="reference-chip"><code>_read_metadata_rows</code></span>, <span class="reference-chip"><code>_status_is_failed</code></span>, <span class="reference-chip"><code>_status_is_warning</code></span>, <span class="reference-chip"><code>_value</code></span>, <a class="reference-chip" href="../../reference/load_catalogue_profile_rows/"><code>load_catalogue_profile_rows</code></a>
+<span class="reference-chip"><code>_latest_row</code></span>, <span class="reference-chip"><code>_read_metadata_rows</code></span>, <span class="reference-chip"><code>_status_is_failed</code></span>, <span class="reference-chip"><code>_status_is_warning</code></span>, <span class="reference-chip"><code>_value</code></span>, <a class="reference-chip" href="../reference/load_catalogue_profile_rows/"><code>load_catalogue_profile_rows</code></a>
 </li>
 <li>
 <span class="reference-chip"><code>_run_dq_guardrail_checks</code></span>
@@ -596,10 +596,10 @@ Owns table-scoped 03_governance catalogue selection, business context review, DQ
 ### External callers
 
 **config**
-<a class="reference-chip" href="../config/#_get_active_metadata_tables"><code>_get_active_metadata_tables</code></a>, <a class="reference-chip" href="../config/#_get_metadata_table_schema_registry"><code>_get_metadata_table_schema_registry</code></a>, <a class="reference-chip" href="../config/#_setup_metadata_table_registry"><code>_setup_metadata_table_registry</code></a>, <a class="reference-chip" href="../../reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a>
+<a class="reference-chip" href="../config/#_get_active_metadata_tables"><code>_get_active_metadata_tables</code></a>, <a class="reference-chip" href="../config/#_get_metadata_table_schema_registry"><code>_get_metadata_table_schema_registry</code></a>, <a class="reference-chip" href="../config/#_setup_metadata_table_registry"><code>_setup_metadata_table_registry</code></a>, <a class="reference-chip" href="../reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a>
 
 **pipeline**
-<a class="reference-chip" href="../../reference/run_table_guardrails/"><code>run_table_guardrails</code></a>
+<a class="reference-chip" href="../reference/run_table_guardrails/"><code>run_table_guardrails</code></a>
 
 ### External callees
 
@@ -607,10 +607,10 @@ Owns table-scoped 03_governance catalogue selection, business context review, DQ
 <a class="reference-chip" href="../config/#_current_audit_timestamp"><code>_current_audit_timestamp</code></a>
 
 **data_profiling**
-<a class="reference-chip" href="../../reference/profile_dataframe/"><code>profile_dataframe</code></a>
+<a class="reference-chip" href="../reference/profile_dataframe/"><code>profile_dataframe</code></a>
 
 **fabric_input_output**
-<a class="reference-chip" href="../../reference/read_lakehouse_table/"><code>read_lakehouse_table</code></a>, <a class="reference-chip" href="../../reference/write_lakehouse_table/"><code>write_lakehouse_table</code></a>
+<a class="reference-chip" href="../reference/read_lakehouse_table/"><code>read_lakehouse_table</code></a>, <a class="reference-chip" href="../reference/write_lakehouse_table/"><code>write_lakehouse_table</code></a>
 
 **metadata**
 <a class="reference-chip" href="../metadata/#_build_dq_rule_key"><code>_build_dq_rule_key</code></a>, <a class="reference-chip" href="../metadata/#_build_metadata_column_key"><code>_build_metadata_column_key</code></a>, <a class="reference-chip" href="../metadata/#_build_metadata_table_key"><code>_build_metadata_table_key</code></a>, <a class="reference-chip" href="../metadata/#_build_runtime_audit_fields"><code>_build_runtime_audit_fields</code></a>, <a class="reference-chip" href="../metadata/#_now_utc_iso"><code>_now_utc_iso</code></a>, <a class="reference-chip" href="../metadata/#_resolve_action_by"><code>_resolve_action_by</code></a>
