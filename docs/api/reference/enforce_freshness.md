@@ -54,44 +54,20 @@ def enforce_freshness(dataframe, freshness_column: str | None, max_lag_days: int
 
 ### Parameters
 
-<div class="module-table-scroll reference-input-table">
-<table class="reference-function-table">
-  <thead>
-    <tr>
-      <th>Parameter</th>
-      <th>Required</th>
-      <th>Meaning</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td data-label="Parameter"><code>dataframe</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Spark DataFrame or iterable of row-like mappings to check.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>freshness_column</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Column whose maximum value represents the latest available data date. When omitted, the freshness guardrail is skipped.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>max_lag_days</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Maximum allowed lag, in days, between ``reference_date`` and the latest value in ``freshness_column``. Required when ``freshness_column`` is set.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>severity</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Whether stale data blocks continuation or returns a non-blocking warning.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>reference_date</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Date used as &quot;today&quot; for comparison. Defaults to the current local date.</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+`dataframe` : `Any`, required
+: Spark DataFrame or iterable of row-like mappings to check.
+
+`freshness_column` : `str | None`, required
+: Column whose maximum value represents the latest available data date. When omitted, the freshness guardrail is skipped.
+
+`max_lag_days` : `int | str | None`, required
+: Maximum allowed lag, in days, between ``reference_date`` and the latest value in ``freshness_column``. Required when ``freshness_column`` is set.
+
+`severity` : `str`, optional
+: Whether stale data blocks continuation or returns a non-blocking warning.
+
+`reference_date` : `date | datetime | str | None`, optional
+: Date used as "today" for comparison. Defaults to the current local date.
 
 ### Returns
 

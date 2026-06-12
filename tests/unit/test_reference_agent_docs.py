@@ -52,6 +52,13 @@ def _section_text(page_text: str, section: str) -> str:
     return section.strip()
 
 
+def _subsection_text(page_text: str, subsection: str) -> str:
+    marker = f"### {subsection}\n"
+    assert marker in page_text
+    after = page_text.split(marker, 1)[1]
+    return after.split("\n### ", 1)[0].strip()
+
+
 def test_reference_ai_manifest_files_exist_and_are_valid_json() -> None:
     agent_manifest = REFERENCE_DIR / "agent-manifest.json"
     function_manifest = REFERENCE_DIR / "function-manifest.json"
@@ -280,9 +287,8 @@ def test_setup_notebook_reference_uses_human_first_source_documentation() -> Non
     assert "- Validating configured environment targets before downstream helpers run" in text
     assert "- Capturing runtime metadata for later lineage, review, or handover steps" in text
     assert "### Parameters" in text
-    assert "Parameter" in text
-    assert "Required" in text
-    assert "Meaning" in text
+    assert "`config` :" in text
+    assert ", required" in text or ", optional" in text
     assert "### Public callable source code" in text
 
 
@@ -409,6 +415,29 @@ def test_template_usage_metadata_renders_from_structured_reference_model() -> No
         used_in_section = _section_text(detail_text, "Used in templates")
         assert used_in_section.count("`02_pipeline`") == 1
 
+
+def test_callable_parameters_render_as_definition_list_not_table() -> None:
+    text = (API_REFERENCE_DIR / "enforce_profile_behavior.md").read_text(encoding="utf-8")
+    parameters = _subsection_text(text, "Parameters")
+
+    assert "| Parameter | Required | Meaning |" not in parameters
+    assert "<table" not in parameters
+    assert '<div class="module-table-scroll reference-input-table">' not in parameters
+    assert "`dataset_name` : `str`, required" in parameters
+    assert ": Dataset name used to find matching catalogue evidence." in parameters
+    assert "`stage` : `str`, required" in parameters
+    assert ": The part of the pipeline being checked, such as source or target." in parameters
+    assert "`exclude_run_id` : `str | None`, optional" in parameters
+
+
+def test_enforce_profile_behavior_preserves_relationship_sections_after_readability_changes() -> None:
+    text = (API_REFERENCE_DIR / "enforce_profile_behavior.md").read_text(encoding="utf-8")
+
+    used_by = _section_text(text, "Used by")
+    calls = _section_text(text, "Calls")
+    assert "fabricops_kit.pipeline.run_table_guardrails" in used_by
+    assert "fabricops_kit.data_profiling.profile_dataframe" in calls
+    assert "fabricops_kit.fabric_input_output.read_lakehouse_table" in calls
 
 def test_generated_public_callable_links_use_canonical_route() -> None:
     generated_markdown = [

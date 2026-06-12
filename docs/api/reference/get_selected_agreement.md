@@ -52,24 +52,7 @@ def get_selected_agreement() -> dict[str, Any]
 
 ### Parameters
 
-<div class="module-table-scroll reference-input-table">
-<table class="reference-function-table">
-  <thead>
-    <tr>
-      <th>Parameter</th>
-      <th>Required</th>
-      <th>Meaning</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td data-label="Parameter">—</td>
-      <td data-label="Required">—</td>
-      <td data-label="Meaning">Not documented yet</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+No parameters.
 
 ### Returns
 

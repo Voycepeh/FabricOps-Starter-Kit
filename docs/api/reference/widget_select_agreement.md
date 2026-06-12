@@ -59,69 +59,35 @@ def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None=
 
 ### Parameters
 
-<div class="module-table-scroll reference-input-table">
-<table class="reference-function-table">
-  <thead>
-    <tr>
-      <th>Parameter</th>
-      <th>Required</th>
-      <th>Meaning</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td data-label="Parameter"><code>agreement_rows_or_config</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Pass ``CONFIG`` in normal notebooks, or provide preloaded agreement rows when the caller already has them available.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>env_name</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Environment key used to load agreements when ``CONFIG`` is supplied.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>spark_session</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Fabric Spark session used for configured metadata-table reads.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>register_notebook</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">When True, render registration status and a button that links the current notebook to the selected agreement.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>notebook_type</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Workflow metadata passed to ``_register_current_notebook`` when ``register_notebook`` is enabled.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>environment_name</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Not documented yet</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>dataset_name</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Not documented yet</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>table_name</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Not documented yet</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>topic</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Not documented yet</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>pipeline_name</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Not documented yet</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+`agreement_rows_or_config` : `Any`, required
+: Pass ``CONFIG`` in normal notebooks, or provide preloaded agreement rows when the caller already has them available.
+
+`env_name` : `str | None`, optional
+: Environment key used to load agreements when ``CONFIG`` is supplied.
+
+`spark_session` : `Any`, optional
+: Fabric Spark session used for configured metadata-table reads.
+
+`register_notebook` : `bool`, optional
+: When True, render registration status and a button that links the current notebook to the selected agreement.
+
+`notebook_type` : `str | None`, optional
+: Workflow metadata passed to ``_register_current_notebook`` when ``register_notebook`` is enabled.
+
+`environment_name` : `str | None`, optional
+: Not documented yet
+
+`dataset_name` : `str | None`, optional
+: Not documented yet
+
+`table_name` : `str | None`, optional
+: Not documented yet
+
+`topic` : `str | None`, optional
+: Not documented yet
+
+`pipeline_name` : `str | None`, optional
+: Not documented yet
 
 ### Returns
 

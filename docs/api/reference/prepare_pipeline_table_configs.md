@@ -53,44 +53,20 @@ def prepare_pipeline_table_configs(table_configs: list[dict[str, Any]], default_
 
 ### Parameters
 
-<div class="module-table-scroll reference-input-table">
-<table class="reference-function-table">
-  <thead>
-    <tr>
-      <th>Parameter</th>
-      <th>Required</th>
-      <th>Meaning</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td data-label="Parameter"><code>table_configs</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">User-authored table config dictionaries from ``SOURCE_TABLES`` or ``TARGET_TABLES``.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>default_settings</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Default guardrails, and for targets write options, merged before each table config. Table-specific values take precedence.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>table_role</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Role-specific preparation mode. Source mode validates that each config already includes a DataFrame; target mode adds FabricOps audit columns and derives write metadata.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>run_id</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Pipeline run identifier used for target audit columns. Required for target role.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>pipeline_name</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Pipeline name used for target audit columns. Required for target role.</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+`table_configs` : `list[dict[str, Any]]`, required
+: User-authored table config dictionaries from ``SOURCE_TABLES`` or ``TARGET_TABLES``.
+
+`default_settings` : `Mapping[str, Any]`, required
+: Default guardrails, and for targets write options, merged before each table config. Table-specific values take precedence.
+
+`table_role` : `str`, required
+: Role-specific preparation mode. Source mode validates that each config already includes a DataFrame; target mode adds FabricOps audit columns and derives write metadata.
+
+`run_id` : `str`, optional
+: Pipeline run identifier used for target audit columns. Required for target role.
+
+`pipeline_name` : `str`, optional
+: Pipeline name used for target audit columns. Required for target role.
 
 ### Returns
 

@@ -70,44 +70,20 @@ def read_lakehouse_table(config, env, target, table, spark_session=None)
 
 ### Parameters
 
-<div class="module-table-scroll reference-input-table">
-<table class="reference-function-table">
-  <thead>
-    <tr>
-      <th>Parameter</th>
-      <th>Required</th>
-      <th>Meaning</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td data-label="Parameter"><code>config</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">FabricOps FrameworkConfig or compatible config object.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>env</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Environment key such as `&quot;dev&quot;`.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>target</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Logical target name such as `&quot;source&quot;` or `&quot;unified&quot;`.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>table</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Table name under the lakehouse `Tables` area.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>spark_session</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Spark session to use. If omitted, the helper uses the notebook global `spark`.</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+`config` : `FrameworkConfig | dict`, required
+: FabricOps FrameworkConfig or compatible config object.
+
+`env` : `str`, required
+: Environment key such as `"dev"`.
+
+`target` : `str`, required
+: Logical target name such as `"source"` or `"unified"`.
+
+`table` : `str`, required
+: Table name under the lakehouse `Tables` area.
+
+`spark_session` : `object`, optional
+: Spark session to use. If omitted, the helper uses the notebook global `spark`.
 
 ### Returns
 

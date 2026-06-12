@@ -52,24 +52,8 @@ def widget_review_column_context(profile_rows: list[dict[str, Any]]) -> list[dic
 
 ### Parameters
 
-<div class="module-table-scroll reference-input-table">
-<table class="reference-function-table">
-  <thead>
-    <tr>
-      <th>Parameter</th>
-      <th>Required</th>
-      <th>Meaning</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td data-label="Parameter"><code>profile_rows</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Selected column profile evidence from ``load_catalogue_profile_rows``.</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+`profile_rows` : `list[dict[str, Any]]`, required
+: Selected column profile evidence from ``load_catalogue_profile_rows``.
 
 ### Returns
 

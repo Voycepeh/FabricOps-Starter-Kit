@@ -54,34 +54,14 @@ def widget_select_catalogue_table(config: Any, env: str, *, spark_session: Any)
 
 ### Parameters
 
-<div class="module-table-scroll reference-input-table">
-<table class="reference-function-table">
-  <thead>
-    <tr>
-      <th>Parameter</th>
-      <th>Required</th>
-      <th>Meaning</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td data-label="Parameter"><code>config</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Runtime config containing the metadata lakehouse route.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>env</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Environment used to read ``METADATA_DATA_CATALOGUE``.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>spark_session</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Spark session used for the catalogue read.</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+`config` : `Any`, required
+: Runtime config containing the metadata lakehouse route.
+
+`env` : `str`, required
+: Environment used to read ``METADATA_DATA_CATALOGUE``.
+
+`spark_session` : `Any`, required
+: Spark session used for the catalogue read.
 
 ### Returns
 

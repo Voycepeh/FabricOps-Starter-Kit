@@ -60,69 +60,35 @@ def profile_dataframe(df, table_name: str, *, exclude_columns=None, run_timestam
 
 ### Parameters
 
-<div class="module-table-scroll reference-input-table">
-<table class="reference-function-table">
-  <thead>
-    <tr>
-      <th>Parameter</th>
-      <th>Required</th>
-      <th>Meaning</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td data-label="Parameter"><code>df</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Spark DataFrame to profile.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>table_name</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Logical table name written into each profile row.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>exclude_columns</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Additional columns to skip, on top of the standard technical columns.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>run_timestamp_timezone</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Explicit IANA time zone used for the ``RUN_TIMESTAMP`` evidence field. When omitted, ``config.audit_timezone`` is used and falls back to UTC.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>config</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Framework-like configuration carrying ``audit_timezone`` for audit timestamp consistency.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>include_distributions</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">When true, add lightweight distribution summaries for suitable numeric and categorical columns. The default preserves the existing lightweight profile shape and behavior.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>distribution_columns</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Optional allow-list of important columns for distribution summaries. ``None`` profiles every suitable business column.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>distribution_bin_edges</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Optional numeric bin edges keyed by column name. Pass baseline edges to make the current profile directly comparable with a previous profile.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>categorical_categories</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Optional baseline category vocabulary keyed by column name. When supplied, those categories are counted explicitly and all other non-null values are rolled into ``other_count`` so the current profile remains comparable with the baseline.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>categorical_top_n</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Maximum number of non-null category values to keep per categorical column before rolling the remainder into ``other_count``.</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+`df` : `Any`, required
+: Spark DataFrame to profile.
+
+`table_name` : `str`, required
+: Logical table name written into each profile row.
+
+`exclude_columns` : `list[str] or set[str]`, optional
+: Additional columns to skip, on top of the standard technical columns.
+
+`run_timestamp_timezone` : `str | None`, optional
+: Explicit IANA time zone used for the ``RUN_TIMESTAMP`` evidence field. When omitted, ``config.audit_timezone`` is used and falls back to UTC.
+
+`config` : `Any`, optional
+: Framework-like configuration carrying ``audit_timezone`` for audit timestamp consistency.
+
+`include_distributions` : `bool`, optional
+: When true, add lightweight distribution summaries for suitable numeric and categorical columns. The default preserves the existing lightweight profile shape and behavior.
+
+`distribution_columns` : `list[str] | set[str] | tuple[str, ...] | None`, optional
+: Optional allow-list of important columns for distribution summaries. ``None`` profiles every suitable business column.
+
+`distribution_bin_edges` : `dict[str, list[float]] | None`, optional
+: Optional numeric bin edges keyed by column name. Pass baseline edges to make the current profile directly comparable with a previous profile.
+
+`categorical_categories` : `dict[str, list[str]] | None`, optional
+: Optional baseline category vocabulary keyed by column name. When supplied, those categories are counted explicitly and all other non-null values are rolled into ``other_count`` so the current profile remains comparable with the baseline.
+
+`categorical_top_n` : `int`, optional
+: Maximum number of non-null category values to keep per categorical column before rolling the remainder into ``other_count``.
 
 ### Returns
 

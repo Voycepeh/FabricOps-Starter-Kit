@@ -52,49 +52,23 @@ def build_lineage_records(*, dataset_name: str, run_id: str, source_tables: list
 
 ### Parameters
 
-<div class="module-table-scroll reference-input-table">
-<table class="reference-function-table">
-  <thead>
-    <tr>
-      <th>Parameter</th>
-      <th>Required</th>
-      <th>Meaning</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td data-label="Parameter"><code>dataset_name</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Dataset identifier for all output rows.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>run_id</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Unique run identifier.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>source_tables</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Source table names captured for the run.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>target_table</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Target table name produced by the run.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>transformation_steps</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Transformation step dictionaries to merge into each output row.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>config</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Framework configuration used to resolve the configured audit timezone when adding timestamp metadata.</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+`dataset_name` : `str`, required
+: Dataset identifier for all output rows.
+
+`run_id` : `str`, required
+: Unique run identifier.
+
+`source_tables` : `list[str]`, required
+: Source table names captured for the run.
+
+`target_table` : `str`, required
+: Target table name produced by the run.
+
+`transformation_steps` : `list[dict]`, required
+: Transformation step dictionaries to merge into each output row.
+
+`config` : `Any`, optional
+: Framework configuration used to resolve the configured audit timezone when adding timestamp metadata.
 
 ### Returns
 

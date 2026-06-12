@@ -56,49 +56,23 @@ def read_lakehouse_parquet(config, env, target, relative_path, verbose=True, spa
 
 ### Parameters
 
-<div class="module-table-scroll reference-input-table">
-<table class="reference-function-table">
-  <thead>
-    <tr>
-      <th>Parameter</th>
-      <th>Required</th>
-      <th>Meaning</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td data-label="Parameter"><code>config</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">FabricOps FrameworkConfig or compatible config object.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>env</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Environment key such as `&quot;dev&quot;`.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>target</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Logical target name such as `&quot;source&quot;` or `&quot;unified&quot;`.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>relative_path</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Path to the Parquet file under the lakehouse `Files/` folder, without the leading `&quot;Files/&quot;`. For example: `&quot;raw/orders/orders_2026.parquet&quot;`.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>verbose</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Whether to print read and fallback progress.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>spark_session</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Spark session to use. If omitted, the helper uses the notebook global `spark`.</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+`config` : `FrameworkConfig | dict`, required
+: FabricOps FrameworkConfig or compatible config object.
+
+`env` : `str`, required
+: Environment key such as `"dev"`.
+
+`target` : `str`, required
+: Logical target name such as `"source"` or `"unified"`.
+
+`relative_path` : `str`, required
+: Path to the Parquet file under the lakehouse `Files/` folder, without the leading `"Files/"`. For example: `"raw/orders/orders_2026.parquet"`.
+
+`verbose` : `bool, default True`, optional
+: Whether to print read and fallback progress.
+
+`spark_session` : `object`, optional
+: Spark session to use. If omitted, the helper uses the notebook global `spark`.
 
 ### Returns
 

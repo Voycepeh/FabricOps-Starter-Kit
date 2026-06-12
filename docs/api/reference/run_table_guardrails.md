@@ -62,74 +62,38 @@ def run_table_guardrails(table_configs: list[dict[str, Any]], *, config: Any, en
 
 ### Parameters
 
-<div class="module-table-scroll reference-input-table">
-<table class="reference-function-table">
-  <thead>
-    <tr>
-      <th>Parameter</th>
-      <th>Required</th>
-      <th>Meaning</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td data-label="Parameter"><code>table_configs</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Source or target table configs. Each config must contain ``key``, ``df``, and ``expected_schema``. Optional keys such as ``dataset_name``, ``stage``, ``schema_preset``, ``load_behavior``, ``watermark_column``, ``dq_preset``, ``distribution_columns``, and ``exclude_columns`` control the guardrail behavior.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>config</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">FabricOps framework configuration from ``00_env_config``.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>env</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Environment key used for configured metadata routing.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>run_id</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Current pipeline run identifier.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>spark_session</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Spark session used by profile behavior and DQ helpers.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>agreement_id</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Governance context written with catalogue evidence.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>agreement_contract_version</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Not documented yet</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>notebook_registry_id</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Not documented yet</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>notebook_id</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Not documented yet</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>pipeline_name</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Not documented yet</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>stop_on_failure</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">When True, collect all guardrail results and catalogue evidence, then stop notebook execution via the standard guardrail stopper if any table cannot continue.</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+`table_configs` : `list[dict[str, Any]]`, required
+: Source or target table configs. Each config must contain ``key``, ``df``, and ``expected_schema``. Optional keys such as ``dataset_name``, ``stage``, ``schema_preset``, ``load_behavior``, ``watermark_column``, ``dq_preset``, ``distribution_columns``, and ``exclude_columns`` control the guardrail behavior.
+
+`config` : `Any`, required
+: FabricOps framework configuration from ``00_env_config``.
+
+`env` : `str`, required
+: Environment key used for configured metadata routing.
+
+`run_id` : `str`, required
+: Current pipeline run identifier.
+
+`spark_session` : `Any`, required
+: Spark session used by profile behavior and DQ helpers.
+
+`agreement_id` : `str`, optional
+: Governance context written with catalogue evidence.
+
+`agreement_contract_version` : `str`, optional
+: Not documented yet
+
+`notebook_registry_id` : `str`, optional
+: Not documented yet
+
+`notebook_id` : `str`, optional
+: Not documented yet
+
+`pipeline_name` : `str`, optional
+: Not documented yet
+
+`stop_on_failure` : `bool`, optional
+: When True, collect all guardrail results and catalogue evidence, then stop notebook execution via the standard guardrail stopper if any table cannot continue.
 
 ### Returns
 

@@ -56,74 +56,38 @@ def record_table_governance(config: Any, env: str, profile_rows: list[dict[str, 
 
 ### Parameters
 
-<div class="module-table-scroll reference-input-table">
-<table class="reference-function-table">
-  <thead>
-    <tr>
-      <th>Parameter</th>
-      <th>Required</th>
-      <th>Meaning</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td data-label="Parameter"><code>config</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Shared ``00_env_config`` configuration that routes metadata writes to the configured metadata lakehouse target.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>env</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Environment key in ``config``.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>profile_rows</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Column-profile rows loaded for the selected catalogue table.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>spark_session</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Spark session used to create DataFrames for metadata writes.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>context_reviews</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Human-approved rows from the governance review workflow. Only rows with ``review_status=&quot;approved&quot;`` and ``commit=True`` are written.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>dq_rule_reviews</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Not documented yet</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>classification_reviews</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Not documented yet</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>approved_by</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Reviewer identity to stamp on records. When omitted, runtime defaults are used.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>governance_selection</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Catalogue selection used to re-read persisted evidence and write a final governance outcome row.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>write_governance_review</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Whether to append a ``METADATA_GOVERNANCE_REVIEWS`` outcome row after checking agreement, pipeline, schema/profile, and DQ evidence.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>mode</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Write mode for metadata table commits.</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+`config` : `Any`, required
+: Shared ``00_env_config`` configuration that routes metadata writes to the configured metadata lakehouse target.
+
+`env` : `str`, required
+: Environment key in ``config``.
+
+`profile_rows` : `list[dict[str, Any]]`, required
+: Column-profile rows loaded for the selected catalogue table.
+
+`spark_session` : `Any`, required
+: Spark session used to create DataFrames for metadata writes.
+
+`context_reviews` : `list[dict[str, Any]] | None`, optional
+: Human-approved rows from the governance review workflow. Only rows with ``review_status="approved"`` and ``commit=True`` are written.
+
+`dq_rule_reviews` : `list[dict[str, Any]] | None`, optional
+: Not documented yet
+
+`classification_reviews` : `list[dict[str, Any]] | None`, optional
+: Not documented yet
+
+`approved_by` : `str | None`, optional
+: Reviewer identity to stamp on records. When omitted, runtime defaults are used.
+
+`governance_selection` : `dict[str, Any] | None`, optional
+: Catalogue selection used to re-read persisted evidence and write a final governance outcome row.
+
+`write_governance_review` : `bool`, optional
+: Whether to append a ``METADATA_GOVERNANCE_REVIEWS`` outcome row after checking agreement, pipeline, schema/profile, and DQ evidence.
+
+`mode` : `str`, optional
+: Write mode for metadata table commits.
 
 ### Returns
 

@@ -57,54 +57,26 @@ def widget_review_dq_rules(profile_rows: list[dict[str, Any]], *, existing_rules
 
 ### Parameters
 
-<div class="module-table-scroll reference-input-table">
-<table class="reference-function-table">
-  <thead>
-    <tr>
-      <th>Parameter</th>
-      <th>Required</th>
-      <th>Meaning</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td data-label="Parameter"><code>profile_rows</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Selected catalogue profile rows containing columns and profile evidence.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>existing_rules</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Previously persisted active and inactive DQ rule rows for the selected table. When supplied, the widget displays them in an editable review table. Runtime enforcement still reads ``METADATA_DQ_RULES`` later.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>config</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Runtime objects used only when reviewers click AI suggestion actions.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>env</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Not documented yet</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>spark_session</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Not documented yet</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>table_name</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Selected table name. Defaults to the table in ``profile_rows``.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>business_context</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Optional context sent to the Fabric AI suggestion helper.</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+`profile_rows` : `list[dict[str, Any]]`, required
+: Selected catalogue profile rows containing columns and profile evidence.
+
+`existing_rules` : `list[dict[str, Any]] | None`, optional
+: Previously persisted active and inactive DQ rule rows for the selected table. When supplied, the widget displays them in an editable review table. Runtime enforcement still reads ``METADATA_DQ_RULES`` later.
+
+`config` : `Any`, optional
+: Runtime objects used only when reviewers click AI suggestion actions.
+
+`env` : `str | None`, optional
+: Not documented yet
+
+`spark_session` : `Any`, optional
+: Not documented yet
+
+`table_name` : `str | None`, optional
+: Selected table name. Defaults to the table in ``profile_rows``.
+
+`business_context` : `str`, optional
+: Optional context sent to the Fabric AI suggestion helper.
 
 ### Returns
 

@@ -52,34 +52,14 @@ def widget_render_data_steward(config: Any, env_name: str, *, spark: Any) -> dic
 
 ### Parameters
 
-<div class="module-table-scroll reference-input-table">
-<table class="reference-function-table">
-  <thead>
-    <tr>
-      <th>Parameter</th>
-      <th>Required</th>
-      <th>Meaning</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td data-label="Parameter"><code>config</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Configuration containing steward widget fields and metadata routing.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>env_name</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Environment key configured by ``00_env_config``.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>spark</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Fabric Spark session used for metadata reads and append-only writes.</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+`config` : `Any`, required
+: Configuration containing steward widget fields and metadata routing.
+
+`env_name` : `str`, required
+: Environment key configured by ``00_env_config``.
+
+`spark` : `Any`, required
+: Fabric Spark session used for metadata reads and append-only writes.
 
 ### Returns
 

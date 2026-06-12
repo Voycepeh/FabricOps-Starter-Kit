@@ -53,54 +53,26 @@ def write_warehouse_table(df, config, env, target, schema, table, mode='append')
 
 ### Parameters
 
-<div class="module-table-scroll reference-input-table">
-<table class="reference-function-table">
-  <thead>
-    <tr>
-      <th>Parameter</th>
-      <th>Required</th>
-      <th>Meaning</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td data-label="Parameter"><code>df</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Spark DataFrame to write.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>config</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">FabricOps FrameworkConfig or compatible config object.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>env</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Environment name in the config mapping, for example `&quot;Sandbox&quot;` or `&quot;DE&quot;`.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>target</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Warehouse target name under the selected environment, for example `&quot;Warehouse&quot;` or `&quot;wh_Bronze&quot;`.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>schema</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Warehouse schema name, for example `&quot;dbo&quot;`.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>table</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Warehouse table name.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>mode</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Spark write mode, for example `&quot;append&quot;` or `&quot;overwrite&quot;`.</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+`df` : `pyspark.sql.DataFrame`, required
+: Spark DataFrame to write.
+
+`config` : `FrameworkConfig | dict`, required
+: FabricOps FrameworkConfig or compatible config object.
+
+`env` : `str`, required
+: Environment name in the config mapping, for example `"Sandbox"` or `"DE"`.
+
+`target` : `str`, required
+: Warehouse target name under the selected environment, for example `"Warehouse"` or `"wh_Bronze"`.
+
+`schema` : `str`, required
+: Warehouse schema name, for example `"dbo"`.
+
+`table` : `str`, required
+: Warehouse table name.
+
+`mode` : `str, default "append"`, optional
+: Spark write mode, for example `"append"` or `"overwrite"`.
 
 ### Returns
 

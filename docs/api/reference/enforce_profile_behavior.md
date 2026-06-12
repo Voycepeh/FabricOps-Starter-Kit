@@ -80,94 +80,50 @@ def enforce_profile_behavior(spark, dataframe, metadata_table: str, dataset_name
 
 ### Parameters
 
-<div class="module-table-scroll reference-input-table">
-<table class="reference-function-table">
-  <thead>
-    <tr>
-      <th>Parameter</th>
-      <th>Required</th>
-      <th>Meaning</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td data-label="Parameter"><code>spark</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Spark session used to read accepted profile evidence from the configured metadata target.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>dataframe</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Current source or target DataFrame being checked.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>metadata_table</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Metadata table that stores accepted catalogue profile evidence.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>dataset_name</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Dataset name used to find matching catalogue evidence.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>table_name</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Table name used to find matching catalogue evidence.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>stage</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">The part of the pipeline being checked, such as source or target.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>run_id</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Current pipeline run identifier recorded in the generated profile evidence.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>load_behavior</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Current load behavior to compare with the accepted baseline, commonly append, overwrite, or skip.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>watermark_column</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Optional column used to compare append watermark movement when available.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>exclude_columns</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Optional columns to ignore while comparing profile fields.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>exclude_run_id</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Optional run id to exclude when selecting the accepted baseline evidence.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>config</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Metadata route from ``00_env_config`` used to read the catalogue table via ``read_lakehouse_table`` when ``catalogue_df`` is not supplied.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>env</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Not documented yet</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>catalogue_df</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Preloaded ``METADATA_DATA_CATALOGUE`` evidence. When provided, no metadata read is performed.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>current_profile</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Current profile evidence that has already been computed for this table. When supplied, this function reuses it instead of profiling ``dataframe`` again.</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+`spark` : `Any`, required
+: Spark session used to read accepted profile evidence from the configured metadata target.
+
+`dataframe` : `Any`, required
+: Current source or target DataFrame being checked.
+
+`metadata_table` : `str`, required
+: Metadata table that stores accepted catalogue profile evidence.
+
+`dataset_name` : `str`, required
+: Dataset name used to find matching catalogue evidence.
+
+`table_name` : `str`, required
+: Table name used to find matching catalogue evidence.
+
+`stage` : `str`, required
+: The part of the pipeline being checked, such as source or target.
+
+`run_id` : `str`, required
+: Current pipeline run identifier recorded in the generated profile evidence.
+
+`load_behavior` : `str`, required
+: Current load behavior to compare with the accepted baseline, commonly append, overwrite, or skip.
+
+`watermark_column` : `str | None`, optional
+: Optional column used to compare append watermark movement when available.
+
+`exclude_columns` : `list[str] | set[str] | tuple[str, ...] | None`, optional
+: Optional columns to ignore while comparing profile fields.
+
+`exclude_run_id` : `str | None`, optional
+: Optional run id to exclude when selecting the accepted baseline evidence.
+
+`config` : `object, str`, optional
+: Metadata route from ``00_env_config`` used to read the catalogue table via ``read_lakehouse_table`` when ``catalogue_df`` is not supplied.
+
+`env` : `str | None`, optional
+: Not documented yet
+
+`catalogue_df` : `DataFrame or iterable of mappings`, optional
+: Preloaded ``METADATA_DATA_CATALOGUE`` evidence. When provided, no metadata read is performed.
+
+`current_profile` : `DataFrame or iterable of mappings`, optional
+: Current profile evidence that has already been computed for this table. When supplied, this function reuses it instead of profiling ``dataframe`` again.
 
 ### Returns
 

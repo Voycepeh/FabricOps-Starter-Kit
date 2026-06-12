@@ -58,99 +58,53 @@ def write_catalogue_evidence(profiles: Mapping[str, Any], dataset_definitions: M
 
 ### Parameters
 
-<div class="module-table-scroll reference-input-table">
-<table class="reference-function-table">
-  <thead>
-    <tr>
-      <th>Parameter</th>
-      <th>Required</th>
-      <th>Meaning</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td data-label="Parameter"><code>profiles</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Profile DataFrames produced by ``profile_dataframe`` for each dataset.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>dataset_definitions</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Source or target definitions containing table, stage, and layer context.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>config</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Metadata lakehouse route from ``00_env_config``.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>env</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Not documented yet</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>run_id</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Pipeline run identifier.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>agreement_id</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Governance context added to each catalogue row.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>agreement_contract_version</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Not documented yet</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>notebook_registry_id</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Not documented yet</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>notebook_id</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Not documented yet</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>pipeline_name</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Not documented yet</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>schema_results</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Guardrail results keyed by dataset alias.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>freshness_results</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Not documented yet</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>stability_results</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Not documented yet</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>dq_results</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Not documented yet</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>metadata_table</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Metadata table to append.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>mode</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Write mode for catalogue evidence.</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+`profiles` : `Mapping[str, Any]`, required
+: Profile DataFrames produced by ``profile_dataframe`` for each dataset.
+
+`dataset_definitions` : `Mapping[str, Mapping[str, Any]]`, required
+: Source or target definitions containing table, stage, and layer context.
+
+`config` : `Any`, required
+: Metadata lakehouse route from ``00_env_config``.
+
+`env` : `str`, required
+: Not documented yet
+
+`run_id` : `str`, required
+: Pipeline run identifier.
+
+`agreement_id` : `str`, optional
+: Governance context added to each catalogue row.
+
+`agreement_contract_version` : `str`, optional
+: Not documented yet
+
+`notebook_registry_id` : `str`, optional
+: Not documented yet
+
+`notebook_id` : `str`, optional
+: Not documented yet
+
+`pipeline_name` : `str`, optional
+: Not documented yet
+
+`schema_results` : `Mapping[str, Mapping[str, Any]] | None`, optional
+: Guardrail results keyed by dataset alias.
+
+`freshness_results` : `Mapping[str, Mapping[str, Any]] | None`, optional
+: Not documented yet
+
+`stability_results` : `Mapping[str, Mapping[str, Any]] | None`, optional
+: Not documented yet
+
+`dq_results` : `Mapping[str, Mapping[str, Any]] | None`, optional
+: Not documented yet
+
+`metadata_table` : `str`, optional
+: Metadata table to append.
+
+`mode` : `str`, optional
+: Write mode for catalogue evidence.
 
 ### Returns
 

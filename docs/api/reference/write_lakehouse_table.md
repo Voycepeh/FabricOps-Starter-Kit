@@ -66,64 +66,32 @@ def write_lakehouse_table(df, config, env, target, table, mode='append', partiti
 
 ### Parameters
 
-<div class="module-table-scroll reference-input-table">
-<table class="reference-function-table">
-  <thead>
-    <tr>
-      <th>Parameter</th>
-      <th>Required</th>
-      <th>Meaning</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td data-label="Parameter"><code>df</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Spark DataFrame to write.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>config</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">FabricOps FrameworkConfig or compatible config object.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>env</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Environment key such as `&quot;dev&quot;`.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>target</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Logical target name such as `&quot;source&quot;` or `&quot;unified&quot;`.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>table</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Target table name under the lakehouse `Tables` area.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>mode</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Spark write mode. Supported values are `&quot;append&quot;`, `&quot;overwrite&quot;`, `&quot;errorifexists&quot;`, and `&quot;ignore&quot;`.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>partition_by</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Column or columns used to physically partition the Delta table.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>repartition_by</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Optional repartitioning before write.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>overwrite_schema</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Whether to set Spark Delta `overwriteSchema=true` before saving.</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+`df` : `pyspark.sql.DataFrame`, required
+: Spark DataFrame to write.
+
+`config` : `FrameworkConfig | dict`, required
+: FabricOps FrameworkConfig or compatible config object.
+
+`env` : `str`, required
+: Environment key such as `"dev"`.
+
+`target` : `str`, required
+: Logical target name such as `"source"` or `"unified"`.
+
+`table` : `str`, required
+: Target table name under the lakehouse `Tables` area.
+
+`mode` : `str, default "append"`, optional
+: Spark write mode. Supported values are `"append"`, `"overwrite"`, `"errorifexists"`, and `"ignore"`.
+
+`partition_by` : `str or list[str]`, optional
+: Column or columns used to physically partition the Delta table.
+
+`repartition_by` : `int, str, list, or tuple`, optional
+: Optional repartitioning before write.
+
+`overwrite_schema` : `bool, default True`, optional
+: Whether to set Spark Delta `overwriteSchema=true` before saving.
 
 ### Returns
 

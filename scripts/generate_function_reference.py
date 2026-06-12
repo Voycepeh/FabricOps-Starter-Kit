@@ -159,9 +159,9 @@ def _docstring_sections(doc: str | None) -> dict[str, str]:
 
 
 
-def _parameter_descriptions(parameters_section: str) -> dict[str, str]:
-    """Return first-paragraph descriptions keyed by NumPy-style parameter name."""
-    descriptions: dict[str, list[str]] = {}
+def _parameter_doc_metadata(parameters_section: str) -> dict[str, dict[str, str]]:
+    """Return first-paragraph NumPy-style parameter docs keyed by parameter name."""
+    docs: dict[str, dict[str, Any]] = {}
     current: str | None = None
     for raw_line in parameters_section.splitlines():
         line = raw_line.rstrip()
@@ -169,37 +169,48 @@ def _parameter_descriptions(parameters_section: str) -> dict[str, str]:
         if not stripped:
             continue
         if not line.startswith(" ") and " : " in line:
-            names = stripped.split(" : ", 1)[0].split(",")
+            names_part, type_part = stripped.split(" : ", 1)
+            names = names_part.split(",")
             current = names[0].strip()
-            descriptions[current] = []
+            docs[current] = {"type": type_part.strip(), "description_lines": []}
             continue
         if current is not None:
-            descriptions[current].append(stripped)
-    return {name: " ".join(lines).strip() for name, lines in descriptions.items()}
+            docs[current]["description_lines"].append(stripped)
+    return {
+        name: {"type": str(values.get("type", "")).strip(), "description": " ".join(values.get("description_lines", [])).strip()}
+        for name, values in docs.items()
+    }
+
+
+def _clean_parameter_type(type_text: str) -> str:
+    """Return a compact parameter type label for definition-list rendering."""
+    cleaned = type_text.replace("``", "").strip()
+    for suffix in (", optional", ", default=None", ", default = None"):
+        cleaned = cleaned.replace(suffix, "")
+    return cleaned.strip()
 
 
 def _parameter_rows_from_node(node: ast.FunctionDef | ast.AsyncFunctionDef, parameters_section: str) -> list[dict[str, str]]:
-    """Return compact parameter metadata for generated callable input tables."""
-    descriptions = _parameter_descriptions(parameters_section)
+    """Return compact parameter metadata for generated callable input sections."""
+    docs = _parameter_doc_metadata(parameters_section)
     positional = [arg for arg in [*node.args.posonlyargs, *node.args.args] if arg.arg not in {"self", "cls"}]
     positional_required = len(positional) - len(node.args.defaults)
     rows: list[dict[str, str]] = []
+
+    def _row(arg: ast.arg, required: bool) -> dict[str, str]:
+        doc = docs.get(arg.arg, {})
+        annotation = ast.unparse(arg.annotation) if arg.annotation is not None else ""
+        return {
+            "name": arg.arg,
+            "required": "Yes" if required else "No",
+            "type": _clean_parameter_type(annotation or doc.get("type", "")),
+            "description": doc.get("description", PLACEHOLDER) or PLACEHOLDER,
+        }
+
     for index, arg in enumerate(positional):
-        rows.append(
-            {
-                "name": arg.arg,
-                "required": "Yes" if index < positional_required else "No",
-                "description": descriptions.get(arg.arg, PLACEHOLDER),
-            }
-        )
+        rows.append(_row(arg, index < positional_required))
     for arg, default in zip(node.args.kwonlyargs, node.args.kw_defaults):
-        rows.append(
-            {
-                "name": arg.arg,
-                "required": "Yes" if default is None else "No",
-                "description": descriptions.get(arg.arg, PLACEHOLDER),
-            }
-        )
+        rows.append(_row(arg, default is None))
     return rows
 
 
@@ -577,6 +588,21 @@ def _metadata_parameter_overrides(value: Any) -> dict[str, str]:
     if isinstance(value, dict):
         return {str(key): str(item) for key, item in value.items()}
     return {}
+
+
+def _render_parameter_definitions(parameter_rows: list[dict[str, str]], parameter_overrides: dict[str, str]) -> list[str]:
+    """Render parameters as a NumPy/Sphinx-inspired Markdown definition list."""
+    if not parameter_rows:
+        return ["No parameters."]
+    lines: list[str] = []
+    for row in parameter_rows:
+        name = row["name"]
+        required_label = "required" if row.get("required") == "Yes" else "optional"
+        type_text = row.get("type", "").strip()
+        descriptor = f"`{type_text}`, {required_label}" if type_text else required_label
+        meaning = parameter_overrides.get(name, row.get("description", PLACEHOLDER))
+        lines.extend([f"`{name}` : {descriptor}", f": {meaning}", ""])
+    return lines[:-1]
 
 def _read_template_source(template_path: str) -> str:
     """Return searchable source text from a starter notebook/template file."""
@@ -1966,19 +1992,7 @@ def main() -> None:
 
         if node["exported"]:
             parameter_overrides = _metadata_parameter_overrides(metadata.get("parameters"))
-            input_rows = [
-                [
-                    f"<code>{html_escape(row['name'])}</code>",
-                    row["required"],
-                    html_escape(parameter_overrides.get(row["name"], row["description"])),
-                ]
-                for row in parameter_rows
-            ]
-            input_table = render_html_table(
-                ["Parameter", "Required", "Meaning"],
-                input_rows or [["—", "—", PLACEHOLDER]],
-                table_class="reference-function-table",
-            )
+            input_lines = _render_parameter_definitions(parameter_rows, parameter_overrides)
             related_public = [item for item in related_for_page if item in docs_metadata or node_by_qn.get(item, {}).get("exported")]
             related_lines = _related_function_links(related_public, node_by_qn, docs_metadata)
             helper_qns = _collect_internal_helper_descendants(qn, calls_by_qn, node_by_qn)
@@ -2139,9 +2153,7 @@ def main() -> None:
                 "",
                 "### Parameters",
                 "",
-                '<div class="module-table-scroll reference-input-table">',
-                *input_table,
-                "</div>",
+                *input_lines,
                 "",
                 "### Returns",
                 "",

@@ -59,49 +59,23 @@ def enforce_dq_rules(dataframe, config, env, dataset_name, table_name, *, spark_
 
 ### Parameters
 
-<div class="module-table-scroll reference-input-table">
-<table class="reference-function-table">
-  <thead>
-    <tr>
-      <th>Parameter</th>
-      <th>Required</th>
-      <th>Meaning</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td data-label="Parameter"><code>dataframe</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Spark DataFrame to evaluate before the target write. The full DataFrame is never filtered or split by this helper.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>config</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Runtime configuration containing the configured metadata lakehouse route from ``00_env_config``.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>env</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Environment name used to read ``METADATA_DQ_RULES`` from the configured metadata target.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>dataset_name</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Dataset identifier used with ``table_name`` to scope approved DQ rules when those columns exist in the metadata table.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>table_name</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Target table name whose approved active DQ rules should be enforced.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>spark_session</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Spark session used to read metadata when required by the configured storage helper.</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+`dataframe` : `Any`, required
+: Spark DataFrame to evaluate before the target write. The full DataFrame is never filtered or split by this helper.
+
+`config` : `FrameworkConfig or dict`, required
+: Runtime configuration containing the configured metadata lakehouse route from ``00_env_config``.
+
+`env` : `str`, required
+: Environment name used to read ``METADATA_DQ_RULES`` from the configured metadata target.
+
+`dataset_name` : `str`, required
+: Dataset identifier used with ``table_name`` to scope approved DQ rules when those columns exist in the metadata table.
+
+`table_name` : `str`, required
+: Target table name whose approved active DQ rules should be enforced.
+
+`spark_session` : `pyspark.sql.SparkSession`, optional
+: Spark session used to read metadata when required by the configured storage helper.
 
 ### Returns
 

@@ -52,24 +52,8 @@ def get_selected_catalogue_table(table_selector: Any | None=None) -> dict[str, A
 
 ### Parameters
 
-<div class="module-table-scroll reference-input-table">
-<table class="reference-function-table">
-  <thead>
-    <tr>
-      <th>Parameter</th>
-      <th>Required</th>
-      <th>Meaning</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td data-label="Parameter"><code>table_selector</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Selector returned by ``widget_select_catalogue_table``. Passing it is optional because the widget also maintains module-level selection state.</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+`table_selector` : `Any | None`, optional
+: Selector returned by ``widget_select_catalogue_table``. Passing it is optional because the widget also maintains module-level selection state.
 
 ### Returns
 

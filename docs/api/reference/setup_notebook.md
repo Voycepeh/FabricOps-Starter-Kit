@@ -57,49 +57,23 @@ def setup_notebook(config: FrameworkConfig | dict[str, Any], env: str='Sandbox',
 
 ### Parameters
 
-<div class="module-table-scroll reference-input-table">
-<table class="reference-function-table">
-  <thead>
-    <tr>
-      <th>Parameter</th>
-      <th>Required</th>
-      <th>Meaning</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td data-label="Parameter"><code>config</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Framework configuration object or compatible mapping. The setup flow validates required sections and configured Fabric targets before running readiness checks.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>env</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Environment key used to resolve target paths.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>required_targets</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Target names that must resolve for ``env``. Defaults to ``[&quot;Source&quot;, &quot;Unified&quot;]``.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>notebook_name</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Explicit notebook name used for runtime metadata and naming checks.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>run_id_prefix</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Prefix used when a Fabric runtime run identifier is unavailable.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>local_fallback_name</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Notebook name used when neither ``notebook_name`` nor Fabric runtime context provides one.</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+`config` : `FrameworkConfig | dict[str, Any]`, required
+: Framework configuration object or compatible mapping. The setup flow validates required sections and configured Fabric targets before running readiness checks.
+
+`env` : `str`, optional
+: Environment key used to resolve target paths.
+
+`required_targets` : `list[str] | None`, optional
+: Target names that must resolve for ``env``. Defaults to ``["Source", "Unified"]``.
+
+`notebook_name` : `str | None`, optional
+: Explicit notebook name used for runtime metadata and naming checks.
+
+`run_id_prefix` : `str`, optional
+: Prefix used when a Fabric runtime run identifier is unavailable.
+
+`local_fallback_name` : `str | None`, optional
+: Notebook name used when neither ``notebook_name`` nor Fabric runtime context provides one.
 
 ### Returns
 

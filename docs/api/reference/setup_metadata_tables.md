@@ -59,39 +59,17 @@ def setup_metadata_tables(*, spark: Any, config: FrameworkConfig | dict[str, Any
 
 ### Parameters
 
-<div class="module-table-scroll reference-input-table">
-<table class="reference-function-table">
-  <thead>
-    <tr>
-      <th>Parameter</th>
-      <th>Required</th>
-      <th>Meaning</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td data-label="Parameter"><code>spark</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Fabric Spark session used by the table setup helpers.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>config</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Shared ``00_env_config`` configuration containing the metadata target.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>env</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Environment key to prepare.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>require_active_steward</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Forwarded to the agreement metadata setup to optionally require an active steward before returning success.</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+`spark` : `Any`, required
+: Fabric Spark session used by the table setup helpers.
+
+`config` : `FrameworkConfig | dict[str, Any]`, required
+: Shared ``00_env_config`` configuration containing the metadata target.
+
+`env` : `str`, required
+: Environment key to prepare.
+
+`require_active_steward` : `bool`, optional
+: Forwarded to the agreement metadata setup to optionally require an active steward before returning success.
 
 ### Returns
 

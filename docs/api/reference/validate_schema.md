@@ -53,34 +53,14 @@ def validate_schema(dataframe, expected_schema: dict[str, str], *, preset: str='
 
 ### Parameters
 
-<div class="module-table-scroll reference-input-table">
-<table class="reference-function-table">
-  <thead>
-    <tr>
-      <th>Parameter</th>
-      <th>Required</th>
-      <th>Meaning</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td data-label="Parameter"><code>dataframe</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Spark, pandas, or dataframe-like object with schema metadata.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>expected_schema</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Mapping of required column names to expected datatype strings.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>preset</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Schema validation intent. ``strict`` blocks missing columns, datatype changes, and unexpected columns. ``allow_new_columns`` blocks missing columns and datatype changes while reporting additional columns as a warning. ``monitor_only`` reports all differences without blocking.</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+`dataframe` : `Any`, required
+: Spark, pandas, or dataframe-like object with schema metadata.
+
+`expected_schema` : `dict[str, str]`, required
+: Mapping of required column names to expected datatype strings.
+
+`preset` : `str`, optional
+: Schema validation intent. ``strict`` blocks missing columns, datatype changes, and unexpected columns. ``allow_new_columns`` blocks missing columns and datatype changes while reporting additional columns as a warning. ``monitor_only`` reports all differences without blocking.
 
 ### Returns
 

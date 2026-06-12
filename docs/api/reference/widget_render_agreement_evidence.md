@@ -52,34 +52,14 @@ def widget_render_agreement_evidence(config: Any, env_name: str, *, spark: Any) 
 
 ### Parameters
 
-<div class="module-table-scroll reference-input-table">
-<table class="reference-function-table">
-  <thead>
-    <tr>
-      <th>Parameter</th>
-      <th>Required</th>
-      <th>Meaning</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td data-label="Parameter"><code>config</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Configuration containing agreement metadata routing and evidence table settings.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>env_name</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Environment key configured by ``00_env_config``.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>spark</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Fabric Spark session used for metadata reads, file writes, and append-only evidence metadata writes.</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+`config` : `Any`, required
+: Configuration containing agreement metadata routing and evidence table settings.
+
+`env_name` : `str`, required
+: Environment key configured by ``00_env_config``.
+
+`spark` : `Any`, required
+: Fabric Spark session used for metadata reads, file writes, and append-only evidence metadata writes.
 
 ### Returns
 

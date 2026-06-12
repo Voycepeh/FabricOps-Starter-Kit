@@ -56,39 +56,17 @@ def load_catalogue_profile_rows(config: Any, env: str, selection: dict[str, Any]
 
 ### Parameters
 
-<div class="module-table-scroll reference-input-table">
-<table class="reference-function-table">
-  <thead>
-    <tr>
-      <th>Parameter</th>
-      <th>Required</th>
-      <th>Meaning</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td data-label="Parameter"><code>config</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Not documented yet</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>env</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Not documented yet</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>selection</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Not documented yet</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>spark_session</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Not documented yet</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+`config` : `Any`, required
+: Not documented yet
+
+`env` : `str`, required
+: Not documented yet
+
+`selection` : `dict[str, Any]`, required
+: Not documented yet
+
+`spark_session` : `Any`, required
+: Not documented yet
 
 ### Returns
 

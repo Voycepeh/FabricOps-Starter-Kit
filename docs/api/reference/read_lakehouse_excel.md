@@ -55,49 +55,23 @@ def read_lakehouse_excel(config, env, target, relative_path, sheet_name=0, spark
 
 ### Parameters
 
-<div class="module-table-scroll reference-input-table">
-<table class="reference-function-table">
-  <thead>
-    <tr>
-      <th>Parameter</th>
-      <th>Required</th>
-      <th>Meaning</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td data-label="Parameter"><code>config</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">FabricOps FrameworkConfig or compatible config object.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>env</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Environment key such as `&quot;dev&quot;`.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>target</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Logical target name such as `&quot;source&quot;` or `&quot;unified&quot;`.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>relative_path</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Path to the Excel file relative to the lakehouse ``Files`` area, for example ``&quot;reference/faculty_mapping.xlsx&quot;``. A leading ``&quot;Files/&quot;`` prefix is accepted for consistency with notebook examples and is normalized away before the lakehouse path is resolved.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>sheet_name</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Worksheet name or index to read. Defaults to the first worksheet.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>spark_session</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Spark session to use. If omitted, the helper uses the notebook global `spark`. **read_excel_kwargs Additional keyword arguments passed directly to :func:`pandas.read_excel`. Common options include ``skiprows`` for title rows above the real header, ``header`` for custom header-row selection, ``usecols`` for column filtering, ``dtype`` for mixed-type columns, and ``nrows`` for sampling or bounded reads.</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+`config` : `FrameworkConfig | dict`, required
+: FabricOps FrameworkConfig or compatible config object.
+
+`env` : `str`, required
+: Environment key such as `"dev"`.
+
+`target` : `str`, required
+: Logical target name such as `"source"` or `"unified"`.
+
+`relative_path` : `str`, required
+: Path to the Excel file relative to the lakehouse ``Files`` area, for example ``"reference/faculty_mapping.xlsx"``. A leading ``"Files/"`` prefix is accepted for consistency with notebook examples and is normalized away before the lakehouse path is resolved.
+
+`sheet_name` : `str or int, default 0`, optional
+: Worksheet name or index to read. Defaults to the first worksheet.
+
+`spark_session` : `object`, optional
+: Spark session to use. If omitted, the helper uses the notebook global `spark`. **read_excel_kwargs Additional keyword arguments passed directly to :func:`pandas.read_excel`. Common options include ``skiprows`` for title rows above the real header, ``header`` for custom header-row selection, ``usecols`` for column filtering, ``dtype`` for mixed-type columns, and ``nrows`` for sampling or bounded reads.
 
 ### Returns
 

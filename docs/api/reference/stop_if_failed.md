@@ -52,24 +52,8 @@ def stop_if_failed(result) -> None
 
 ### Parameters
 
-<div class="module-table-scroll reference-input-table">
-<table class="reference-function-table">
-  <thead>
-    <tr>
-      <th>Parameter</th>
-      <th>Required</th>
-      <th>Meaning</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td data-label="Parameter"><code>result</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Direct schema, freshness, profile behavior, or DQ guardrail result.</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+`result` : `dict`, required
+: Direct schema, freshness, profile behavior, or DQ guardrail result.
 
 ### Returns
 
